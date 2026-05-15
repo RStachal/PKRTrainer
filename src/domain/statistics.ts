@@ -23,6 +23,16 @@ export function getSuccessRate(stat: SpotStat): number | null {
   return stat.correct / stat.attempts;
 }
 
+export function getOverallStatistics(statistics: TrainingStatistics): SpotStat {
+  return Object.values(statistics.bySpot).reduce<SpotStat>(
+    (total, stat) => ({
+      attempts: total.attempts + stat.attempts,
+      correct: total.correct + stat.correct,
+    }),
+    { attempts: 0, correct: 0 },
+  );
+}
+
 export function recordSpotAnswer(
   statistics: TrainingStatistics,
   spotId: string,

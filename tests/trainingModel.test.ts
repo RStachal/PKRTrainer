@@ -4,6 +4,7 @@ import { getSpotWeight, selectNextSpot } from "../src/domain/selectNextSpot";
 import { TRAINING_SPOTS } from "../src/domain/spot";
 import {
   EMPTY_STATISTICS,
+  getOverallStatistics,
   getSpotStat,
   getSuccessRate,
   recordSpotAnswer,
@@ -31,7 +32,14 @@ describe("univerzální tréninkový model", () => {
       format: "MTT_15_25BB",
       phase: "PREFLOP",
       category: "OPEN",
+      heroHand: ["A♠", "8♦"],
+      effectiveStack: "20 BB",
       correctAction: "OPEN",
+    });
+    expect(TRAINING_SPOTS[0].seats).toContainEqual({
+      position: "BTN",
+      label: "Hero",
+      isHero: true,
     });
     expect(TRAINING_SPOTS[0].range.cells).toContainEqual({
       hand: "A8o",
@@ -49,6 +57,19 @@ describe("univerzální tréninkový model", () => {
     expect(getSpotStat(second, "spot-a")).toEqual({ attempts: 2, correct: 1 });
     expect(getSuccessRate(getSpotStat(second, "spot-a"))).toBe(0.5);
     expect(getSuccessRate(getSpotStat(second, "unknown"))).toBeNull();
+  });
+
+  it("spočítá celkové statistiky napříč spoty", () => {
+    let statistics = EMPTY_STATISTICS;
+
+    statistics = recordSpotAnswer(statistics, "spot-a", true);
+    statistics = recordSpotAnswer(statistics, "spot-a", false);
+    statistics = recordSpotAnswer(statistics, "spot-b", true);
+
+    expect(getOverallStatistics(statistics)).toEqual({
+      attempts: 3,
+      correct: 2,
+    });
   });
 
   it("dává vyšší váhu novým a slabším spotům", () => {
