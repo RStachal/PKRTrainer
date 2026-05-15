@@ -1,4 +1,5 @@
 import { CATEGORY_VALUES } from "./domain/constants";
+import { TRAINING_FORMATS } from "./domain/trainingFormat";
 
 export function createAppMarkup(): string {
   return `
@@ -21,8 +22,12 @@ export function createAppMarkup(): string {
             <dd>Načteno ${CATEGORY_VALUES.length} konstant</dd>
           </div>
           <div>
+            <dt>Tréninkové formáty</dt>
+            <dd>Připraveno ${TRAINING_FORMATS.length} univerzálních formátů</dd>
+          </div>
+          <div>
             <dt>Další krok</dt>
-            <dd>Postupné přenášení čisté logiky s paritními testy</dd>
+            <dd>Napojení mobilního pokerového shellu na spoty, range a statistiky</dd>
           </div>
         </dl>
       </section>
