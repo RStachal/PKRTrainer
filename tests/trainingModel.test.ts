@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { TRAINING_SPOTS } from "../src/content/spots";
+import {
+  getPreflopHand,
+  PREFLOP_HAND_MATRIX,
+  PREFLOP_HANDS,
+} from "../src/domain/preflopMatrix";
 import { mulberry32 } from "../src/domain/random";
 import { getSpotWeight, selectNextSpot } from "../src/domain/selectNextSpot";
-import { TRAINING_SPOTS } from "../src/domain/spot";
 import {
   EMPTY_STATISTICS,
   getOverallStatistics,
@@ -47,6 +52,16 @@ describe("univerzální tréninkový model", () => {
       weight: "pure",
     });
     expect(TRAINING_SPOTS[0].explanation).toContain("standardní open");
+  });
+
+  it("má standardní 13x13 preflop matici", () => {
+    expect(PREFLOP_HAND_MATRIX).toHaveLength(13);
+    expect(PREFLOP_HAND_MATRIX.every((row) => row.length === 13)).toBe(true);
+    expect(PREFLOP_HANDS).toHaveLength(169);
+    expect(getPreflopHand("A", "A")).toBe("AA");
+    expect(getPreflopHand("A", "K")).toBe("AKs");
+    expect(getPreflopHand("K", "A")).toBe("AKo");
+    expect(PREFLOP_HAND_MATRIX[12][12]).toBe("22");
   });
 
   it("ukládá statistiky úspěšnosti bez mutace původního objektu", () => {

@@ -43,7 +43,12 @@ select {
   margin: 0;
 }
 
-.format-picker {
+.top-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-picker {
   color: #9fb0bd;
   display: grid;
   font-size: 0.78rem;
@@ -52,7 +57,7 @@ select {
   min-width: 190px;
 }
 
-.format-picker select {
+.filter-picker select {
   appearance: none;
   background: #121b24;
   border: 1px solid #2a3a46;
@@ -69,6 +74,26 @@ select {
   grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
   margin: 0 auto 16px;
   max-width: 1180px;
+}
+
+.empty-state {
+  background: #121b24;
+  border: 1px solid #243441;
+  border-radius: 8px;
+  margin: 0 auto;
+  max-width: 720px;
+  padding: 28px;
+}
+
+.empty-state h2 {
+  font-size: 1.4rem;
+  margin: 0 0 10px;
+}
+
+.empty-state p {
+  color: #c8d3dc;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .stats-strip div {
@@ -400,6 +425,53 @@ select {
   margin: 16px 0 20px;
 }
 
+.range-matrix {
+  display: grid;
+  gap: 2px;
+  grid-template-columns: 24px repeat(13, minmax(28px, 1fr));
+  margin: 16px 0 20px;
+  overflow-x: auto;
+}
+
+.matrix-corner,
+.matrix-head,
+.matrix-cell {
+  border-radius: 4px;
+  min-height: 28px;
+}
+
+.matrix-head {
+  align-items: center;
+  background: #0d151b;
+  color: #9fb0bd;
+  display: flex;
+  font-size: 0.68rem;
+  font-weight: 900;
+  justify-content: center;
+}
+
+.matrix-cell {
+  background: rgba(169, 58, 58, 0.16);
+  border: 1px solid rgba(238, 244, 247, 0.06);
+  box-sizing: border-box;
+  display: grid;
+  min-width: 28px;
+  padding: 3px;
+  place-items: center;
+}
+
+.matrix-cell strong {
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.matrix-cell span {
+  color: #dce5eb;
+  font-size: 0.48rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
 .range-cell {
   border: 1px solid #2a3a46;
   border-radius: 8px;
@@ -458,7 +530,11 @@ select {
     display: grid;
   }
 
-  .format-picker {
+  .top-controls {
+    display: grid;
+  }
+
+  .filter-picker {
     min-width: 0;
   }
 
