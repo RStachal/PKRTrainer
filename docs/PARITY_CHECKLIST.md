@@ -11,6 +11,8 @@ Goal: move the current Vite/TypeScript app toward feature parity with `legacy/PK
 - [x] Basic preflop matrix renderer exists.
 - [x] Basic table, decision panel, range panel and stats strip exist.
 - [x] Tests cover RNG, storage keys, statistics, storage parsing and basic training model behavior.
+- [x] Typed training question model exists.
+- [x] Pure training session engine exists.
 - [ ] Full legacy behavior is not yet ported.
 
 ## Priority 0 - Repository stability
@@ -38,16 +40,17 @@ Legacy behavior to preserve:
 
 Porting checklist:
 
-- [ ] Create a typed `TrainingSession` model separate from rendered UI state.
-- [ ] Port seeded category pool generation.
+- [x] Create a typed `TrainingSession` model separate from rendered UI state.
+- [x] Add deterministic seeded question ordering for the current question set.
+- [ ] Port full legacy seeded category pool generation.
 - [ ] Port block size and seed controls.
 - [ ] Port category filter UI using `CATEGORY_OPTIONS`.
 - [ ] Port mixed category selection rules.
-- [ ] Port missed-only mode.
-- [ ] Port strict/lenient mode into scoring.
-- [ ] Add tests for deterministic seeded pool order.
-- [ ] Add tests for no repeated questions in a block.
-- [ ] Add tests for strict vs lenient scoring.
+- [x] Port missed-only mode at the domain engine level.
+- [x] Port strict/lenient mode into scoring at the domain engine level.
+- [x] Add tests for deterministic seeded question order.
+- [x] Add tests for no repeated questions in a block.
+- [x] Add tests for strict vs lenient scoring.
 
 ## Priority 2 - Question generation and poker content
 

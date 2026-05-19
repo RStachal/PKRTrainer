@@ -19,7 +19,7 @@ function renderActionButtons(
               : "";
 
       return `
-        <button class="action-button ${resultClass}" data-action="${action}" type="button" ${selectedAction === null ? "" : "disabled"}>
+        <button class="action-button ${resultClass}" data-action="${action}" type="button" aria-disabled="${selectedAction === null ? "false" : "true"}">
           ${getActionLabel(action)}
         </button>
       `;
