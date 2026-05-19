@@ -19,7 +19,7 @@ function renderActionButtons(
               : "";
 
       return `
-        <button class="action-button ${resultClass}" data-action="${action}" type="button">
+        <button class="action-button ${resultClass}" data-action="${action}" type="button" ${selectedAction === null ? "" : "disabled"}>
           ${getActionLabel(action)}
         </button>
       `;

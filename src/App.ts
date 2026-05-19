@@ -117,6 +117,8 @@ export function renderApp(root: HTMLElement): void {
 
     const actionButton = target.closest<HTMLButtonElement>("[data-action]");
     if (actionButton && state.spot) {
+      if (state.selectedAction !== null) return;
+
       const action = actionButton.dataset.action as ActionId;
       state.selectedAction = action;
       state.statistics = recordSpotAnswer(
