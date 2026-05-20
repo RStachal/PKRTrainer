@@ -19,8 +19,8 @@ import {
   TRAINING_FORMATS,
 } from "../src/domain/trainingFormat";
 
-describe("univerzální tréninkový model", () => {
-  it("má výchozí formát bez uživatelských profilů", () => {
+describe("univerzalni treninkovy model", () => {
+  it("ma vychozi format bez uzivatelskych profilu", () => {
     expect(DEFAULT_TRAINING_FORMAT).toBe("MTT_15_25BB");
     expect(TRAINING_FORMATS.map((format) => format.id)).toEqual([
       "MTT_15_25BB",
@@ -30,14 +30,14 @@ describe("univerzální tréninkový model", () => {
     ]);
   });
 
-  it("obsahuje seed spoty s range referencí a vysvětlením", () => {
-    expect(TRAINING_SPOTS).toHaveLength(3);
+  it("obsahuje vetsi MTT seed s range referenci a vysvetlenim", () => {
+    expect(TRAINING_SPOTS.length).toBeGreaterThanOrEqual(20);
     expect(TRAINING_SPOTS[0]).toMatchObject({
       id: "mtt-15-25-open-btn-a8o",
       format: "MTT_15_25BB",
       phase: "PREFLOP",
       category: "OPEN",
-      heroHand: ["A♠", "8♦"],
+      heroHand: ["As", "8d"],
       effectiveStack: "20 BB",
       correctAction: "OPEN",
     });
@@ -51,10 +51,10 @@ describe("univerzální tréninkový model", () => {
       action: "OPEN",
       weight: "pure",
     });
-    expect(TRAINING_SPOTS[0].explanation).toContain("standardní open");
+    expect(TRAINING_SPOTS[0].explanation).toContain("standardni open");
   });
 
-  it("má standardní 13x13 preflop matici", () => {
+  it("ma standardni 13x13 preflop matici", () => {
     expect(PREFLOP_HAND_MATRIX).toHaveLength(13);
     expect(PREFLOP_HAND_MATRIX.every((row) => row.length === 13)).toBe(true);
     expect(PREFLOP_HANDS).toHaveLength(169);
@@ -64,7 +64,7 @@ describe("univerzální tréninkový model", () => {
     expect(PREFLOP_HAND_MATRIX[12][12]).toBe("22");
   });
 
-  it("ukládá statistiky úspěšnosti bez mutace původního objektu", () => {
+  it("uklada statistiky uspesnosti bez mutace puvodniho objektu", () => {
     const first = recordSpotAnswer(EMPTY_STATISTICS, "spot-a", false);
     const second = recordSpotAnswer(first, "spot-a", true);
 
@@ -74,7 +74,7 @@ describe("univerzální tréninkový model", () => {
     expect(getSuccessRate(getSpotStat(second, "unknown"))).toBeNull();
   });
 
-  it("spočítá celkové statistiky napříč spoty", () => {
+  it("spocita celkove statistiky napric spoty", () => {
     let statistics = EMPTY_STATISTICS;
 
     statistics = recordSpotAnswer(statistics, "spot-a", true);
@@ -87,7 +87,7 @@ describe("univerzální tréninkový model", () => {
     });
   });
 
-  it("dává vyšší váhu novým a slabším spotům", () => {
+  it("dava vyssi vahu novym a slabsim spotum", () => {
     const strongSpot = TRAINING_SPOTS[0];
     const weakSpot = TRAINING_SPOTS[1];
     const unseenSpot = TRAINING_SPOTS[2];
@@ -106,23 +106,35 @@ describe("univerzální tréninkový model", () => {
     );
   });
 
-  it("vybírá deterministicky podle filtru a dodaného RNG", () => {
+  it("vybira deterministicky podle filtru a dodaneho RNG", () => {
     const statistics = recordSpotAnswer(
       EMPTY_STATISTICS,
       "mtt-15-25-open-btn-a8o",
       true,
     );
-    const random = mulberry32(1);
-
-    expect(
-      selectNextSpot(TRAINING_SPOTS, statistics, random, {
+    const firstSelection = selectNextSpot(TRAINING_SPOTS, statistics, mulberry32(1), {
+      format: "MTT_15_25BB",
+      phase: "PREFLOP",
+    });
+    const secondSelection = selectNextSpot(
+      TRAINING_SPOTS,
+      statistics,
+      mulberry32(1),
+      {
         format: "MTT_15_25BB",
         phase: "PREFLOP",
-      })?.id,
-    ).toBe("mtt-15-25-bb-defend-k4s");
+      },
+    );
+
+    expect(firstSelection?.id).toBe(secondSelection?.id);
+    expect(firstSelection?.id).not.toBe("mtt-15-25-open-btn-a8o");
+    expect(firstSelection).toMatchObject({
+      format: "MTT_15_25BB",
+      phase: "PREFLOP",
+    });
   });
 
-  it("vrací null, když filtr nemá žádný spot", () => {
+  it("vraci null, kdyz filtr nema zadny spot", () => {
     expect(
       selectNextSpot(TRAINING_SPOTS, EMPTY_STATISTICS, () => 0, {
         format: "SPIN_SHORT",

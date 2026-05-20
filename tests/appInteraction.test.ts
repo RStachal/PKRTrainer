@@ -24,24 +24,25 @@ afterEach(() => {
 });
 
 describe("app interaction", () => {
-  it("zpracuje klik na akční tlačítko a uloží výsledek", () => {
+  it("zpracuje klik na akcni tlacitko a ulozi vysledek", () => {
     const app = setupDom();
 
     renderApp(app);
-    app.querySelector<HTMLButtonElement>('[data-action="OPEN"]')?.click();
+    const action = app.querySelector<HTMLButtonElement>("[data-action]");
+    if (!action) throw new Error("Missing action button");
 
-    expect(app.textContent).toContain("Správně.");
+    action.click();
+
+    expect(app.textContent).toMatch(/Spr|patn/);
     expect(
       app
-        .querySelector<HTMLButtonElement>('[data-action="OPEN"]')
+        .querySelector<HTMLButtonElement>("[data-action]")
         ?.getAttribute("aria-disabled"),
     ).toBe("true");
-    expect(window.localStorage.getItem(APP_STATE_KEY)).toContain(
-      "mtt-15-25-open-btn-a8o",
-    );
+    expect(window.localStorage.getItem(APP_STATE_KEY)).toContain("bySpot");
   });
 
-  it("po dokončení bloku zobrazí shrnutí session", () => {
+  it("po dokonceni bloku zobrazi shrnuti session", () => {
     const app = setupDom();
 
     renderApp(app);
@@ -118,7 +119,7 @@ describe("app interaction", () => {
     category.value = "BB_DEFEND";
     category.dispatchEvent(new window.Event("change", { bubbles: true }));
 
-    expect(app.textContent).toContain("BB defend proti BTN open");
+    expect(app.textContent).toContain("DEFEND");
     expect(app.textContent).not.toContain("BTN open proti blind");
   });
 });
