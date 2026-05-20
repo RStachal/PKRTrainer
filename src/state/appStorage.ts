@@ -1,4 +1,8 @@
-import type { CategoryOptionPhase } from "../domain/constants";
+import {
+  CATEGORY_VALUES,
+  type CategoryOptionPhase,
+  type CategoryValue,
+} from "../domain/constants";
 import {
   EMPTY_STATISTICS,
   type SpotStat,
@@ -22,6 +26,7 @@ type StorageLike = Pick<Storage, "getItem" | "removeItem" | "setItem">;
 export type PersistedSessionSettings = {
   readonly format: TrainingFormatId;
   readonly phase: CategoryOptionPhase;
+  readonly category: CategoryValue;
   readonly blockSize: number;
   readonly seed: number;
   readonly mode: TrainingMode;
@@ -95,6 +100,13 @@ function isPhase(value: unknown): value is CategoryOptionPhase {
   );
 }
 
+function isCategory(value: unknown): value is CategoryValue {
+  return (
+    typeof value === "string" &&
+    CATEGORY_VALUES.includes(value as CategoryValue)
+  );
+}
+
 function isMode(value: unknown): value is TrainingMode {
   return value === "MIXED" || value === "MISSED";
 }
@@ -164,10 +176,12 @@ function parseSettings(value: unknown): PersistedSessionSettings | null {
 
   const blockSize = value.blockSize;
   const seed = value.seed;
+  const category = value.category ?? "ALL";
 
   if (
     !isFormat(value.format) ||
     !isPhase(value.phase) ||
+    !isCategory(category) ||
     typeof blockSize !== "number" ||
     !Number.isInteger(blockSize) ||
     blockSize < MIN_BLOCK_SIZE ||
@@ -183,6 +197,7 @@ function parseSettings(value: unknown): PersistedSessionSettings | null {
   return {
     format: value.format,
     phase: value.phase,
+    category,
     blockSize,
     seed,
     mode: value.mode,

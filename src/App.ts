@@ -1,6 +1,7 @@
-import type { CategoryPhase } from "./domain/constants";
+import type { CategoryPhase, CategoryValue } from "./domain/constants";
 import { TRAINING_SPOTS } from "./content/spots";
-import { questionFromSpot, type TrainingQuestion } from "./domain/question";
+import type { TrainingQuestion } from "./domain/question";
+import { questionFromSpot } from "./domain/questionFromSpot";
 import type { ActionId, TrainingSpot } from "./domain/spot";
 import {
   EMPTY_STATISTICS,
@@ -46,6 +47,7 @@ type SessionConfig = {
 type AppState = {
   format: TrainingFormatId;
   phase: PhaseFilter;
+  category: CategoryValue;
   config: SessionConfig;
   progress: TrainingProgress;
   session: TrainingSession;
@@ -75,6 +77,7 @@ function persistState(state: AppState): void {
     settings: {
       format: state.format,
       phase: state.phase,
+      category: state.category,
       blockSize: state.config.blockSize,
       seed: state.config.seed,
       mode: state.config.mode,
@@ -99,6 +102,7 @@ function getSpotByQuestionId(questionId: string | null): TrainingSpot | null {
 function createSession(
   format: TrainingFormatId,
   phase: CategoryPhase | undefined,
+  category: CategoryValue,
   config: SessionConfig,
   progress: TrainingProgress,
 ): Pick<AppState, "session" | "currentQuestion" | "currentSpot"> {
@@ -111,6 +115,7 @@ function createSession(
       mode: config.mode,
       strict: config.strict,
       phase: phase ?? "ALL",
+      category,
     },
     progress,
   );
@@ -129,6 +134,7 @@ function restartBlock(state: AppState): void {
     createSession(
       state.format,
       toSelectionPhase(state.phase),
+      state.category,
       state.config,
       state.progress,
     ),
@@ -175,7 +181,7 @@ function createAppMarkup(state: AppState): string {
 
   return `
     <main class="trainer-shell" aria-labelledby="app-title">
-      ${renderTopBar(state.format, state.phase)}
+      ${renderTopBar(state.format, state.phase, state.category)}
       ${renderSessionControls(state.config)}
       ${renderStatsStrip(state.statistics, sessionProgress)}
       ${
@@ -213,6 +219,7 @@ export function renderApp(root: HTMLElement): void {
         }
       : loadAppState(window.localStorage);
   const defaultPhase: PhaseFilter = persisted.settings?.phase ?? "ALL";
+  const defaultCategory: CategoryValue = persisted.settings?.category ?? "ALL";
   const initialConfig: SessionConfig = {
     blockSize: persisted.settings?.blockSize ?? DEFAULT_SESSION_CONFIG.blockSize,
     seed: persisted.settings?.seed ?? DEFAULT_SESSION_CONFIG.seed,
@@ -222,12 +229,14 @@ export function renderApp(root: HTMLElement): void {
   const initialSession = createSession(
     persisted.settings?.format ?? DEFAULT_TRAINING_FORMAT,
     toSelectionPhase(defaultPhase),
+    defaultCategory,
     initialConfig,
     persisted.progress,
   );
   const state: AppState = {
     format: persisted.settings?.format ?? DEFAULT_TRAINING_FORMAT,
     phase: defaultPhase,
+    category: defaultCategory,
     config: initialConfig,
     progress: persisted.progress,
     ...initialSession,
@@ -241,8 +250,12 @@ export function renderApp(root: HTMLElement): void {
 
     if (target.matches("[data-format]")) {
       state.format = (target as HTMLSelectElement).value as TrainingFormatId;
+      state.category = "ALL";
     } else if (target.matches("[data-phase]")) {
       state.phase = (target as HTMLSelectElement).value as PhaseFilter;
+      state.category = "ALL";
+    } else if (target.matches("[data-category]")) {
+      state.category = (target as HTMLSelectElement).value as CategoryValue;
     } else if (target.matches("[data-mode]")) {
       state.config = {
         ...state.config,

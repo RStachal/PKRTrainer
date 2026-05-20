@@ -106,4 +106,19 @@ describe("app interaction", () => {
       "STRICT",
     );
   });
+
+  it("filtruje blok podle vybrane kategorie", () => {
+    const app = setupDom();
+
+    renderApp(app);
+
+    const category = app.querySelector<HTMLSelectElement>("[data-category]");
+    if (!category) throw new Error("Missing category select");
+
+    category.value = "BB_DEFEND";
+    category.dispatchEvent(new window.Event("change", { bubbles: true }));
+
+    expect(app.textContent).toContain("BB defend proti BTN open");
+    expect(app.textContent).not.toContain("BTN open proti blind");
+  });
 });

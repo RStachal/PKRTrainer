@@ -91,6 +91,7 @@ describe("nove ukladani statistik aplikace", () => {
       settings: {
         format: "MTT_15_25BB",
         phase: "PREFLOP",
+        category: "BB_DEFEND",
         blockSize: 25,
         seed: 42,
         mode: "MISSED",
@@ -117,6 +118,7 @@ describe("nove ukladani statistik aplikace", () => {
       settings: {
         format: "MTT_15_25BB",
         phase: "PREFLOP",
+        category: "BB_DEFEND",
         blockSize: 25,
         seed: 42,
         mode: "MISSED",
@@ -135,6 +137,7 @@ describe("nove ukladani statistik aplikace", () => {
           settings: {
             format: "UNKNOWN",
             phase: "PREFLOP",
+            category: "ALL",
             blockSize: 25,
             seed: 1,
             mode: "MIXED",

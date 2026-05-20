@@ -1,3 +1,4 @@
+import { CATEGORY_OPTIONS, type CategoryValue } from "../domain/constants";
 import { TRAINING_FORMATS, type TrainingFormatId } from "../domain/trainingFormat";
 import { PHASE_FILTERS, type PhaseFilter } from "./phaseFilter";
 
@@ -21,27 +22,54 @@ function renderPhaseOptions(selectedPhase: PhaseFilter): string {
   ).join("");
 }
 
+function renderCategoryOptions(
+  selectedCategory: CategoryValue,
+  selectedPhase: PhaseFilter,
+): string {
+  return CATEGORY_OPTIONS.filter(
+    (category) =>
+      category.phase === "ALL" ||
+      selectedPhase === "ALL" ||
+      category.phase === selectedPhase,
+  )
+    .map(
+      (category) => `
+      <option value="${category.value}" ${category.value === selectedCategory ? "selected" : ""}>
+        ${category.label}
+      </option>
+    `,
+    )
+    .join("");
+}
+
 export function renderTopBar(
   selectedFormat: TrainingFormatId,
   selectedPhase: PhaseFilter,
+  selectedCategory: CategoryValue,
 ): string {
   return `
     <header class="top-bar">
       <div>
-        <p class="app-kicker">Univerzální pokerový trenér</p>
+        <p class="app-kicker">Univerzalni pokerovy trener</p>
         <h1 id="app-title">PKRTrainer 2.0</h1>
       </div>
       <div class="top-controls">
         <label class="filter-picker">
-          <span>Formát</span>
+          <span>Format</span>
           <select data-format>
             ${renderFormatOptions(selectedFormat)}
           </select>
         </label>
         <label class="filter-picker">
-          <span>Fáze</span>
+          <span>Faze</span>
           <select data-phase>
             ${renderPhaseOptions(selectedPhase)}
+          </select>
+        </label>
+        <label class="filter-picker category-picker">
+          <span>Kategorie</span>
+          <select data-category>
+            ${renderCategoryOptions(selectedCategory, selectedPhase)}
           </select>
         </label>
       </div>

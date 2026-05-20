@@ -33,6 +33,8 @@ export type TableSeat = {
   readonly isHero?: boolean;
 };
 
+// Content/UI model for a concrete poker spot. Convert it to TrainingQuestion
+// before passing it into the training engine.
 export type TrainingSpot = {
   readonly id: string;
   readonly format: TrainingFormatId;
