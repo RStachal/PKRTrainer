@@ -40,4 +40,26 @@ describe("app interaction", () => {
       "mtt-15-25-open-btn-a8o",
     );
   });
+
+  it("po deseti odpovědích zobrazí shrnutí session", () => {
+    const app = setupDom();
+
+    renderApp(app);
+
+    for (let i = 0; i < 10; i += 1) {
+      const action = app.querySelector<HTMLButtonElement>("[data-action]");
+      if (!action) throw new Error("Missing action button");
+
+      action.click();
+      app.querySelector<HTMLButtonElement>("[data-next]")?.click();
+    }
+
+    expect(app.textContent).toContain("Session dokončena");
+    expect(app.textContent).toContain("/ 10 správně");
+
+    app.querySelector<HTMLButtonElement>("[data-new-session]")?.click();
+
+    expect(app.textContent).toContain("1 / 10");
+    expect(app.textContent).not.toContain("Session dokončena");
+  });
 });

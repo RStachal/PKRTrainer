@@ -71,7 +71,7 @@ select {
   align-items: center;
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
   margin: 0 auto 16px;
   max-width: 1180px;
 }
@@ -94,6 +94,35 @@ select {
   color: #c8d3dc;
   line-height: 1.5;
   margin: 0;
+}
+
+.session-summary {
+  background: #121b24;
+  border: 1px solid #243441;
+  border-radius: 8px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  margin: 0 auto;
+  max-width: 620px;
+  padding: 28px;
+}
+
+.summary-kicker {
+  color: #7fd6b2;
+  font-size: 0.78rem;
+  font-weight: 900;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+}
+
+.session-summary h2 {
+  font-size: 1.6rem;
+  margin: 0 0 10px;
+}
+
+.session-summary p:not(.summary-kicker) {
+  color: #c8d3dc;
+  line-height: 1.5;
+  margin: 0 0 20px;
 }
 
 .stats-strip div {

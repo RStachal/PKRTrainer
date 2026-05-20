@@ -31,10 +31,26 @@ type AppState = {
   phase: PhaseFilter;
   spot: TrainingSpot | null;
   selectedAction: ActionId | null;
+  session: SessionState;
   statistics: TrainingStatistics;
 };
 
+type SessionState = {
+  answered: number;
+  correct: number;
+  isComplete: boolean;
+};
+
+const SESSION_GOAL = 10;
 const rng = mulberry32(1);
+
+function createEmptySession(): SessionState {
+  return {
+    answered: 0,
+    correct: 0,
+    isComplete: false,
+  };
+}
 
 function getFirstSpot(
   format: TrainingFormatId,
@@ -56,21 +72,49 @@ function selectSpot(state: AppState): TrainingSpot | null {
   });
 }
 
+function renderSessionSummary(session: SessionState): string {
+  const successRate =
+    session.answered === 0
+      ? 0
+      : Math.round((session.correct / session.answered) * 100);
+
+  return `
+    <section class="session-summary" aria-label="Shrnutí session">
+      <p class="summary-kicker">Session dokončena</p>
+      <h2>${session.correct} / ${session.answered} správně</h2>
+      <p>Úspěšnost ${successRate} %. Dej si další kolo a nech statistiky ukázat, které spoty si říkají o opakování.</p>
+      <button class="next-button" data-new-session type="button">Nová session</button>
+    </section>
+  `;
+}
+
 function createAppMarkup(state: AppState): string {
+  const sessionProgress = {
+    answered: state.session.answered,
+    correct: state.session.correct,
+    goal: SESSION_GOAL,
+  };
+
   return `
     <main class="trainer-shell" aria-labelledby="app-title">
       ${renderTopBar(state.format, state.phase)}
-      ${renderStatsStrip(state.statistics)}
+      ${renderStatsStrip(state.statistics, sessionProgress)}
       ${
-        state.spot
-          ? `
-            <section class="client-layout">
-              ${renderTable(state.spot)}
-              ${renderDecisionPanel(state.spot, state.selectedAction)}
-              ${renderRangePanel(state.spot, state.statistics)}
-            </section>
-          `
-          : renderEmptyState(state.format, state.phase)
+        state.session.isComplete
+          ? renderSessionSummary(state.session)
+          : state.spot
+            ? `
+              <section class="client-layout">
+                ${renderTable(state.spot)}
+                ${renderDecisionPanel(
+                  state.spot,
+                  state.selectedAction,
+                  state.session.answered >= SESSION_GOAL,
+                )}
+                ${renderRangePanel(state.spot, state.statistics)}
+              </section>
+            `
+            : renderEmptyState(state.format, state.phase)
       }
     </main>
   `;
@@ -91,6 +135,7 @@ export function renderApp(root: HTMLElement): void {
     phase: defaultPhase,
     spot: getFirstSpot(DEFAULT_TRAINING_FORMAT, toSelectionPhase(defaultPhase)),
     selectedAction: null,
+    session: createEmptySession(),
     statistics,
   };
 
@@ -108,6 +153,7 @@ export function renderApp(root: HTMLElement): void {
 
     state.spot = getFirstSpot(state.format, toSelectionPhase(state.phase));
     state.selectedAction = null;
+    state.session = createEmptySession();
     render(root, state);
   });
 
@@ -120,11 +166,17 @@ export function renderApp(root: HTMLElement): void {
       if (state.selectedAction !== null) return;
 
       const action = actionButton.dataset.action as ActionId;
+      const wasCorrect = action === state.spot.correctAction;
       state.selectedAction = action;
+      state.session = {
+        answered: state.session.answered + 1,
+        correct: state.session.correct + (wasCorrect ? 1 : 0),
+        isComplete: false,
+      };
       state.statistics = recordSpotAnswer(
         state.statistics,
         state.spot.id,
-        action === state.spot.correctAction,
+        wasCorrect,
       );
       saveStatistics(window.localStorage, state.statistics);
       render(root, state);
@@ -132,6 +184,25 @@ export function renderApp(root: HTMLElement): void {
     }
 
     if (target.closest("[data-next]")) {
+      if (state.session.answered >= SESSION_GOAL) {
+        state.session = {
+          ...state.session,
+          isComplete: true,
+        };
+        render(root, state);
+        return;
+      }
+
+      state.spot =
+        selectSpot(state) ??
+        getFirstSpot(state.format, toSelectionPhase(state.phase));
+      state.selectedAction = null;
+      render(root, state);
+      return;
+    }
+
+    if (target.closest("[data-new-session]")) {
+      state.session = createEmptySession();
       state.spot =
         selectSpot(state) ??
         getFirstSpot(state.format, toSelectionPhase(state.phase));

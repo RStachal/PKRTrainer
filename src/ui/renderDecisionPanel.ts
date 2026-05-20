@@ -27,7 +27,10 @@ function renderActionButtons(
     .join("");
 }
 
-function renderFeedback(spot: TrainingSpot, selectedAction: ActionId | null): string {
+function renderFeedback(
+  spot: TrainingSpot,
+  selectedAction: ActionId | null,
+): string {
   if (selectedAction === null) {
     return `<p class="feedback is-neutral">Vyber výchozí akci pro daný spot.</p>`;
   }
@@ -44,6 +47,7 @@ function renderFeedback(spot: TrainingSpot, selectedAction: ActionId | null): st
 export function renderDecisionPanel(
   spot: TrainingSpot,
   selectedAction: ActionId | null,
+  isLastQuestion = false,
 ): string {
   return `
     <section class="decision-panel" aria-label="Tréninková otázka">
@@ -54,7 +58,7 @@ export function renderDecisionPanel(
       <p class="prompt">${spot.prompt}</p>
       <div class="action-grid">${renderActionButtons(spot, selectedAction)}</div>
       ${renderFeedback(spot, selectedAction)}
-      <button class="next-button" data-next type="button">Další spot</button>
+      <button class="next-button" data-next type="button">${isLastQuestion ? "Zobrazit shrnutí" : "Další spot"}</button>
     </section>
   `;
 }
