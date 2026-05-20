@@ -6,8 +6,15 @@
     sans-serif;
 }
 
+html {
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 
 button,
@@ -19,7 +26,9 @@ select {
 .trainer-shell {
   box-sizing: border-box;
   min-height: 100vh;
-  padding: 20px;
+  min-height: 100dvh;
+  padding: clamp(8px, 2vw, 20px);
+  width: 100%;
 }
 
 .top-bar {
@@ -47,6 +56,7 @@ select {
 .top-controls {
   display: flex;
   gap: 10px;
+  min-width: 0;
 }
 
 .filter-picker {
@@ -78,6 +88,7 @@ select {
   grid-template-columns: repeat(6, minmax(0, 1fr)) auto;
   margin: 0 auto 16px;
   max-width: 1180px;
+  width: 100%;
 }
 
 .session-controls {
@@ -87,6 +98,7 @@ select {
   grid-template-columns: minmax(130px, 0.7fr) minmax(120px, 0.7fr) repeat(2, minmax(150px, 1fr)) auto;
   margin: 0 auto 16px;
   max-width: 1180px;
+  width: 100%;
 }
 
 .empty-state {
@@ -181,6 +193,7 @@ select {
   grid-template-columns: minmax(300px, 420px) minmax(320px, 1fr) minmax(280px, 360px);
   margin: 0 auto;
   max-width: 1180px;
+  width: 100%;
 }
 
 .phone-client,
@@ -190,6 +203,8 @@ select {
   border: 1px solid #243441;
   border-radius: 8px;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .phone-client {
@@ -562,15 +577,7 @@ select {
   }
 
   .phone-client {
-    margin: 0 auto;
-    max-width: 420px;
     width: 100%;
-  }
-}
-
-@media (max-width: 640px) {
-  .trainer-shell {
-    padding: 12px;
   }
 
   .top-bar {
@@ -580,17 +587,161 @@ select {
 
   .top-controls {
     display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .filter-picker {
     min-width: 0;
   }
+}
+
+@media (max-width: 640px) {
+  .trainer-shell {
+    padding: 8px;
+  }
+
+  .top-bar,
+  .session-controls,
+  .stats-strip,
+  .client-layout {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .top-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .category-picker {
+    grid-column: 1 / -1;
+  }
 
   .stats-strip {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .session-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .session-controls .filter-picker:nth-child(3),
+  .session-controls .filter-picker:nth-child(4) {
+    grid-column: span 1;
+  }
+
+  .new-block-button,
+  .reset-button {
+    min-height: 44px;
+  }
+
+  .new-block-button {
+    grid-column: 1 / -1;
+  }
+
+  .phone-client,
+  .decision-panel,
+  .range-panel,
+  .session-summary,
+  .empty-state {
+    border-radius: 6px;
+    padding: 12px;
+  }
+
+  .phone-client {
+    gap: 10px;
+  }
+
+  .client-status {
+    gap: 8px;
+  }
+
+  .client-status span,
+  .client-status strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+
+  .poker-table {
+    border-radius: 20px;
+  }
+
+  .pot {
+    min-width: 104px;
+    padding: 8px 10px;
+  }
+
+  .seat {
+    min-width: 66px;
+    padding: 6px 8px;
+  }
+
+  .seat span {
+    font-size: 0.66rem;
+  }
+
+  .seat strong {
+    font-size: 0.74rem;
+  }
+
+  .hero-hand .card {
+    height: 52px;
+    width: 38px;
+  }
+
+  .spot-heading h2,
+  .range-panel h2 {
+    font-size: 1.18rem;
+  }
+
+  .prompt,
+  .range-panel p {
+    margin: 10px 0;
+  }
+
+  .action-grid {
+    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 12px;
+  }
+
+  .action-button,
+  .next-button {
+    min-height: 44px;
+  }
+
+  .feedback {
+    margin: 12px 0;
+    padding: 10px;
+  }
+
+  .mini-stat {
+    margin-bottom: 12px;
+  }
+
+  .range-matrix {
+    grid-template-columns: 20px repeat(13, minmax(24px, 1fr));
+    margin: 12px 0 16px;
+  }
+
+  .matrix-cell {
+    min-width: 24px;
+    min-height: 26px;
+    padding: 2px;
+  }
+
+  .matrix-cell strong {
+    font-size: 0.55rem;
+  }
+
+  .matrix-cell span {
+    font-size: 0.42rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .session-controls,
+  .stats-strip {
     grid-template-columns: 1fr;
   }
 
