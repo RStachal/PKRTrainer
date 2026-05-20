@@ -94,6 +94,35 @@ function getQuestionsForFormat(
   );
 }
 
+function getQuestionsForSelection(
+  format: TrainingFormatId,
+  phase: PhaseFilter,
+): readonly TrainingQuestion[] {
+  const selectedPhase = toSelectionPhase(phase);
+
+  return getQuestionsForFormat(format).filter(
+    (question) => !selectedPhase || question.phase === selectedPhase,
+  );
+}
+
+function getAvailableCategories(
+  format: TrainingFormatId,
+  phase: PhaseFilter,
+): readonly CategoryValue[] {
+  return Array.from(
+    new Set(getQuestionsForSelection(format, phase).map((question) => question.category)),
+  ).sort();
+}
+
+function normalizeCategory(
+  category: CategoryValue,
+  format: TrainingFormatId,
+  phase: PhaseFilter,
+): CategoryValue {
+  if (category === "ALL") return category;
+  return getAvailableCategories(format, phase).includes(category) ? category : "ALL";
+}
+
 function getSpotByQuestionId(questionId: string | null): TrainingSpot | null {
   if (!questionId) return null;
   return TRAINING_SPOTS.find((spot) => spot.id === questionId) ?? null;
@@ -129,6 +158,7 @@ function createSession(
 }
 
 function restartBlock(state: AppState): void {
+  state.category = normalizeCategory(state.category, state.format, state.phase);
   Object.assign(
     state,
     createSession(
@@ -181,7 +211,12 @@ function createAppMarkup(state: AppState): string {
 
   return `
     <main class="trainer-shell" aria-labelledby="app-title">
-      ${renderTopBar(state.format, state.phase, state.category)}
+      ${renderTopBar(
+        state.format,
+        state.phase,
+        state.category,
+        getAvailableCategories(state.format, state.phase),
+      )}
       ${renderSessionControls(state.config)}
       ${renderStatsStrip(state.statistics, sessionProgress)}
       ${
@@ -219,7 +254,11 @@ export function renderApp(root: HTMLElement): void {
         }
       : loadAppState(window.localStorage);
   const defaultPhase: PhaseFilter = persisted.settings?.phase ?? "ALL";
-  const defaultCategory: CategoryValue = persisted.settings?.category ?? "ALL";
+  const defaultCategory = normalizeCategory(
+    persisted.settings?.category ?? "ALL",
+    persisted.settings?.format ?? DEFAULT_TRAINING_FORMAT,
+    defaultPhase,
+  );
   const initialConfig: SessionConfig = {
     blockSize: persisted.settings?.blockSize ?? DEFAULT_SESSION_CONFIG.blockSize,
     seed: persisted.settings?.seed ?? DEFAULT_SESSION_CONFIG.seed,

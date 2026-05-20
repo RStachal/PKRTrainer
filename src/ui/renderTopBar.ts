@@ -25,12 +25,16 @@ function renderPhaseOptions(selectedPhase: PhaseFilter): string {
 function renderCategoryOptions(
   selectedCategory: CategoryValue,
   selectedPhase: PhaseFilter,
+  availableCategories: readonly CategoryValue[],
 ): string {
+  const available = new Set<CategoryValue>(["ALL", ...availableCategories]);
+
   return CATEGORY_OPTIONS.filter(
     (category) =>
-      category.phase === "ALL" ||
-      selectedPhase === "ALL" ||
-      category.phase === selectedPhase,
+      available.has(category.value as CategoryValue) &&
+      (category.phase === "ALL" ||
+        selectedPhase === "ALL" ||
+        category.phase === selectedPhase),
   )
     .map(
       (category) => `
@@ -46,6 +50,7 @@ export function renderTopBar(
   selectedFormat: TrainingFormatId,
   selectedPhase: PhaseFilter,
   selectedCategory: CategoryValue,
+  availableCategories: readonly CategoryValue[],
 ): string {
   return `
     <header class="top-bar">
@@ -69,7 +74,11 @@ export function renderTopBar(
         <label class="filter-picker category-picker">
           <span>Kategorie</span>
           <select data-category>
-            ${renderCategoryOptions(selectedCategory, selectedPhase)}
+            ${renderCategoryOptions(
+              selectedCategory,
+              selectedPhase,
+              availableCategories,
+            )}
           </select>
         </label>
       </div>

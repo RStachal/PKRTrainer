@@ -12,8 +12,10 @@ function toQuestionCategory(spot: TrainingSpot): Exclude<CategoryValue, "ALL"> {
   }
 
   if (spot.category === "OPEN") return "OPEN_HJ_CO_BTN";
+  if (spot.category === "SB_OPEN") return "SB_OPEN";
   if (spot.category === "ISO") return "ISO_LIMP";
   if (spot.category === "DEFEND") return "BB_DEFEND";
+  if (spot.category === "DEFEND_2X") return "BB_DEFEND_2X";
   if (spot.category === "REJAM") return "REJAM";
   if (spot.category === "BARREL") return "TURN_PFR_BARREL_DRY";
   if (spot.category === "BLUFFCATCH") return "RIVER_DEFEND_BLUFCATCH";

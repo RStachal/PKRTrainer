@@ -185,7 +185,7 @@ export const MTT_15_25BB_SPOTS = [
   }),
   makeSpot({
     id: "mtt-15-25-open-sb-q9o",
-    category: "OPEN",
+    category: "SB_OPEN",
     title: "SB open Q9o",
     prompt:
       "MTT, efektivne 22 BB. Vse foldne k tobe na SB, drzis Q9o. BB defenduje standardne. Jaka je vychozi akce?",
@@ -209,7 +209,7 @@ export const MTT_15_25BB_SPOTS = [
   }),
   makeSpot({
     id: "mtt-15-25-open-sb-72o",
-    category: "OPEN",
+    category: "SB_OPEN",
     title: "SB bottom fold",
     prompt:
       "MTT, efektivne 19 BB. Vse foldne k tobe na SB s 72o. BB neni vyrazne tight. Jaka je vychozi akce?",
@@ -632,5 +632,550 @@ export const MTT_15_25BB_SPOTS = [
     ],
     explanation:
       "QTs ma slusnou equity proti callum a blokuje cast pokracovaci range. Ze SB je rejam casto cistsi nez call mimo pozici.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-open-sb-a2o",
+    category: "SB_OPEN",
+    title: "SB open A2o",
+    prompt:
+      "MTT, efektivne 20 BB. Vse foldne k tobe na SB s A2o. BB defenduje standardne. Jaka je vychozi akce?",
+    heroHand: ["Ad", "2s"],
+    effectiveStack: "20 BB",
+    potLabel: "SB unopened",
+    seats: SB_OPEN_SEATS,
+    answerOptions: ["FOLD", "OPEN", "JAM"],
+    correctAction: "OPEN",
+    rangeTitle: "SB open esa",
+    rangeSummary:
+      "Heads-up proti BB otevirame vetsinu es mensim sizingem a nechavame si prostor proti agresi.",
+    rangeCells: [
+      { hand: "A2o", action: "OPEN", weight: "pure" },
+      { hand: "A8o", action: "OPEN", weight: "pure" },
+      { hand: "K4o", action: "OPEN", weight: "mix" },
+      { hand: "92o", action: "FOLD", weight: "pure" },
+    ],
+    explanation:
+      "A2o ma blocker a dost equity na BvB open. Jam by byl bez specificke dynamiky zbytecne hruby.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-open-sb-k4o",
+    category: "SB_OPEN",
+    title: "SB mix open K4o",
+    prompt:
+      "MTT, efektivne 24 BB. Vse foldne k tobe na SB s K4o. BB neni vyrazne loose. Jaka je vychozi akce?",
+    heroHand: ["Ks", "4d"],
+    effectiveStack: "24 BB",
+    potLabel: "SB unopened",
+    seats: SB_OPEN_SEATS,
+    answerOptions: ["FOLD", "OPEN", "JAM"],
+    correctAction: "OPEN",
+    rangeTitle: "SB kralove offsuit",
+    rangeSummary:
+      "Offsuit kingove se v BvB casto oteviraji diky blockeru a heads-up charakteru spotu.",
+    rangeCells: [
+      { hand: "K4o", action: "OPEN", weight: "mix" },
+      { hand: "K8o", action: "OPEN", weight: "pure" },
+      { hand: "Q4o", action: "FOLD", weight: "mix" },
+      { hand: "J2o", action: "FOLD", weight: "pure" },
+    ],
+    explanation:
+      "K4o neni krasna handa, ale v SB proti jedinemu souperi funguje jako nizkofrekvencni open. Default proti normalnimu BB je open.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-open-sb-j8o",
+    category: "SB_OPEN",
+    title: "SB open J8o",
+    prompt:
+      "MTT, efektivne 18 BB. Vse foldne k tobe na SB s J8o. BB brani rozumne. Jaka je vychozi akce?",
+    heroHand: ["Jh", "8c"],
+    effectiveStack: "18 BB",
+    potLabel: "SB unopened",
+    seats: SB_OPEN_SEATS,
+    answerOptions: ["FOLD", "OPEN", "JAM"],
+    correctAction: "OPEN",
+    rangeTitle: "SB broadway low",
+    rangeSummary:
+      "Jx offsuit se slusnym kickerem ma v BvB dost showdown a realizace pro mensi open.",
+    rangeCells: [
+      { hand: "J8o", action: "OPEN", weight: "mix" },
+      { hand: "JTo", action: "OPEN", weight: "pure" },
+      { hand: "J4o", action: "FOLD", weight: "mix" },
+      { hand: "T6o", action: "OPEN", weight: "mix" },
+    ],
+    explanation:
+      "J8o je nad uplnym spodkem SB range. Otevirame mensim sizingem, ne jamem.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-open-sb-94o",
+    category: "SB_OPEN",
+    title: "SB fold 94o",
+    prompt:
+      "MTT, efektivne 22 BB. Vse foldne k tobe na SB s 94o. BB neni prilis tight. Jaka je vychozi akce?",
+    heroHand: ["9s", "4h"],
+    effectiveStack: "22 BB",
+    potLabel: "SB unopened",
+    seats: SB_OPEN_SEATS,
+    answerOptions: ["FOLD", "OPEN", "JAM"],
+    correctAction: "FOLD",
+    rangeTitle: "SB slabsi offsuit konec",
+    rangeSummary:
+      "Nejslabsi disconnected offsuit handy nemaji dost equity ani blockeru na default open.",
+    rangeCells: [
+      { hand: "94o", action: "FOLD", weight: "pure" },
+      { hand: "T4o", action: "OPEN", weight: "mix" },
+      { hand: "96o", action: "OPEN", weight: "mix" },
+      { hand: "83o", action: "FOLD", weight: "pure" },
+    ],
+    explanation:
+      "94o je prilis nizko a spatne realizuje equity. Pokud BB neni prehnane tight, fold je cisty default.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-open-sb-86s",
+    category: "SB_OPEN",
+    title: "SB open 86s",
+    prompt:
+      "MTT, efektivne 25 BB. Vse foldne k tobe na SB s 86s. Jaka je vychozi akce?",
+    heroHand: ["8c", "6c"],
+    effectiveStack: "25 BB",
+    potLabel: "SB unopened",
+    seats: SB_OPEN_SEATS,
+    answerOptions: ["FOLD", "OPEN", "JAM"],
+    correctAction: "OPEN",
+    rangeTitle: "SB suited connectory",
+    rangeSummary:
+      "Suited a connected handy maji v BvB dobrou hratelnost, hlavne pri 20+ BB.",
+    rangeCells: [
+      { hand: "86s", action: "OPEN", weight: "pure" },
+      { hand: "64s", action: "OPEN", weight: "mix" },
+      { hand: "T6o", action: "OPEN", weight: "mix" },
+      { hand: "85o", action: "FOLD", weight: "mix" },
+    ],
+    explanation:
+      "86s dobre realizuje equity a muze trefit silne draw. Mensi open je prirozeny default.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-2x-btn-q6s",
+    category: "DEFEND_2X",
+    title: "BB defend Q6s vs BTN 2x",
+    prompt:
+      "MTT, efektivne 20 BB. BTN minraisne 2x, SB fold, jsi na BB s Q6s. Jaka je vychozi akce?",
+    heroHand: ["Qd", "6d"],
+    effectiveStack: "20 BB",
+    potLabel: "BTN open 2x",
+    seats: [
+      { position: "BTN", label: "Open 2x" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "CALL",
+    rangeTitle: "BB defend vs BTN 2x",
+    rangeSummary:
+      "Proti minraisu ma BB vybornou cenu a brani sireji, hlavne suited handy.",
+    rangeCells: [
+      { hand: "Q6s", action: "CALL", weight: "pure" },
+      { hand: "Q2s", action: "CALL", weight: "mix" },
+      { hand: "Q6o", action: "FOLD", weight: "mix" },
+      { hand: "J8s", action: "CALL", weight: "pure" },
+    ],
+    explanation:
+      "Q6s ma proti 2x open dostatecnou cenu a hratelnost. Fold by byl proti minraisu prilis tight.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-2x-btn-84s",
+    category: "DEFEND_2X",
+    title: "BB defend 84s vs BTN 2x",
+    prompt:
+      "MTT, efektivne 22 BB. BTN otevre 2x, SB fold, jsi na BB s 84s. Jaka je vychozi akce?",
+    heroHand: ["8s", "4s"],
+    effectiveStack: "22 BB",
+    potLabel: "BTN open 2x",
+    seats: [
+      { position: "BTN", label: "Open 2x" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "CALL",
+    rangeTitle: "BB suited low vs minraise",
+    rangeSummary:
+      "Cast slabych suited hand je proti 2x stale defend diky cene a implied odds.",
+    rangeCells: [
+      { hand: "84s", action: "CALL", weight: "mix" },
+      { hand: "94s", action: "CALL", weight: "mix" },
+      { hand: "84o", action: "FOLD", weight: "pure" },
+      { hand: "75s", action: "CALL", weight: "pure" },
+    ],
+    explanation:
+      "84s je okrajovy, ale proti 2x sizingu se casto brani. Offsuit varianta by uz byla fold.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-2x-co-j9o",
+    category: "DEFEND_2X",
+    title: "BB defend J9o vs CO 2x",
+    prompt:
+      "MTT, efektivne 24 BB. CO otevre 2x, BTN a SB fold, jsi na BB s J9o. Jaka je vychozi akce?",
+    heroHand: ["Jc", "9h"],
+    effectiveStack: "24 BB",
+    potLabel: "CO open 2x",
+    seats: [
+      { position: "CO", label: "Open 2x" },
+      { position: "BTN", label: "Fold" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "CALL",
+    rangeTitle: "BB vs CO minraise",
+    rangeSummary:
+      "Proti CO je range silnejsi, ale minraise dava dobrou cenu na cast offsuit broadwayi.",
+    rangeCells: [
+      { hand: "J9o", action: "CALL", weight: "mix" },
+      { hand: "J7o", action: "FOLD", weight: "mix" },
+      { hand: "Q9o", action: "CALL", weight: "mix" },
+      { hand: "T9s", action: "CALL", weight: "pure" },
+    ],
+    explanation:
+      "J9o je proti CO 2x na hranici, ale casto obhajitelny defend. Proti vetsimu sizingu by fold daval vetsi smysl.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-2x-sb-62o",
+    category: "DEFEND_2X",
+    title: "BB fold 62o vs SB 2x",
+    prompt:
+      "MTT, efektivne 20 BB. SB otevre 2x, jsi na BB s 62o. Jaka je vychozi akce?",
+    heroHand: ["6d", "2c"],
+    effectiveStack: "20 BB",
+    potLabel: "SB open 2x",
+    seats: [
+      { position: "SB", label: "Open 2x" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "FOLD",
+    rangeTitle: "BB vs SB bottom offsuit",
+    rangeSummary:
+      "I proti SB minraisu ma uplny spodek offsuit range spatnou realizaci.",
+    rangeCells: [
+      { hand: "62o", action: "FOLD", weight: "pure" },
+      { hand: "82o", action: "CALL", weight: "mix" },
+      { hand: "62s", action: "CALL", weight: "mix" },
+      { hand: "T2o", action: "CALL", weight: "mix" },
+    ],
+    explanation:
+      "62o nema blocker, konektivitu ani suited hodnotu. I za dobrou cenu muze zustat fold.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-2x-btn-a7o",
+    category: "DEFEND_2X",
+    title: "BB defend A7o vs BTN 2x",
+    prompt:
+      "MTT, efektivne 19 BB. BTN otevre 2x, SB fold, jsi na BB s A7o. Jaka je vychozi akce?",
+    heroHand: ["Ah", "7d"],
+    effectiveStack: "19 BB",
+    potLabel: "BTN open 2x",
+    seats: [
+      { position: "BTN", label: "Open 2x" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "CALL",
+    rangeTitle: "BB offsuit esa vs 2x",
+    rangeSummary:
+      "Proti sirokemu BTN minraisu se cast offsuit es brani callem, silnejsi cast muze mixovat raise.",
+    rangeCells: [
+      { hand: "A7o", action: "CALL", weight: "mix" },
+      { hand: "A2o", action: "CALL", weight: "mix" },
+      { hand: "ATo", action: "RAISE", weight: "mix" },
+      { hand: "K7o", action: "FOLD", weight: "mix" },
+    ],
+    explanation:
+      "A7o dominuje cast BTN range a dostava dobrou cenu. Call je standardni default proti 2x.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-iso-co-qjo",
+    category: "ISO",
+    title: "CO iso QJo",
+    prompt:
+      "MTT, efektivne 23 BB. MP limpne, jsi na CO s QJo. Za tebou jsou standardni stacky. Jaka je vychozi akce?",
+    heroHand: ["Qh", "Jc"],
+    effectiveStack: "23 BB",
+    potLabel: "MP limp",
+    seats: [
+      { position: "MP", label: "Limp" },
+      { position: "CO", label: "Hero", isHero: true },
+      { position: "BTN", label: "BTN" },
+      { position: "SB", label: "SB" },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "RAISE",
+    rangeTitle: "Iso broadwaye",
+    rangeSummary:
+      "Broadway handy casto dominuji limp range a chteji hrat pot s iniciativou.",
+    rangeCells: [
+      { hand: "QJo", action: "RAISE", weight: "mix" },
+      { hand: "KJo", action: "RAISE", weight: "pure" },
+      { hand: "Q9o", action: "FOLD", weight: "mix" },
+      { hand: "JTs", action: "RAISE", weight: "mix" },
+    ],
+    explanation:
+      "QJo je dost silna na izolaci limpera z CO. Limp behind by zbytecne poustel blindy levne do hry.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-iso-btn-a4s",
+    category: "ISO",
+    title: "BTN iso A4s",
+    prompt:
+      "MTT, efektivne 21 BB. CO limpne, jsi na BTN s A4s. Jaka je vychozi akce?",
+    heroHand: ["As", "4s"],
+    effectiveStack: "21 BB",
+    potLabel: "CO limp",
+    seats: [
+      { position: "CO", label: "Limp" },
+      { position: "BTN", label: "Hero", isHero: true },
+      { position: "SB", label: "SB" },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "RAISE",
+    rangeTitle: "BTN iso suited wheel esa",
+    rangeSummary:
+      "Suited wheel esa maji blocker, equity a dobrou hratelnost po izolaci.",
+    rangeCells: [
+      { hand: "A4s", action: "RAISE", weight: "pure" },
+      { hand: "A2s", action: "RAISE", weight: "mix" },
+      { hand: "A7o", action: "RAISE", weight: "mix" },
+      { hand: "54s", action: "CALL", weight: "mix" },
+    ],
+    explanation:
+      "A4s je velmi dobry iso kandidát. Raise vyuzije pozici a fold equity proti limperovi.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-iso-btn-k8o",
+    category: "ISO",
+    title: "BTN fold K8o vs limp",
+    prompt:
+      "MTT, efektivne 20 BB. HJ limpne, CO fold, jsi na BTN s K8o. Jaka je vychozi akce?",
+    heroHand: ["Kd", "8c"],
+    effectiveStack: "20 BB",
+    potLabel: "HJ limp",
+    seats: [
+      { position: "HJ", label: "Limp" },
+      { position: "CO", label: "Fold" },
+      { position: "BTN", label: "Hero", isHero: true },
+      { position: "SB", label: "SB" },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "FOLD",
+    rangeTitle: "BTN slabsi offsuit iso",
+    rangeSummary:
+      "Slabsi offsuit kingove casto nedostatecne dominuji limp range a spatne hraji multiway.",
+    rangeCells: [
+      { hand: "K8o", action: "FOLD", weight: "mix" },
+      { hand: "KTo", action: "RAISE", weight: "mix" },
+      { hand: "K8s", action: "RAISE", weight: "mix" },
+      { hand: "Q9o", action: "FOLD", weight: "pure" },
+    ],
+    explanation:
+      "K8o je casto prilis slabe na izolaci a call muze vytvorit multiway pot bez iniciativy. Fold je rozumny default.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-iso-bb-q9s",
+    category: "ISO",
+    title: "BB raise vs SB limp Q9s",
+    prompt:
+      "MTT, efektivne 22 BB. SB limpne, jsi na BB s Q9s. Jaka je vychozi akce?",
+    heroHand: ["Qs", "9s"],
+    effectiveStack: "22 BB",
+    potLabel: "SB limp",
+    seats: [
+      { position: "SB", label: "Limp" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["CHECK", "RAISE", "FOLD"],
+    correctAction: "RAISE",
+    rangeTitle: "BB iso vs SB limp",
+    rangeSummary:
+      "Proti SB limpu muze BB raisovat silnejsi suited broadwaye a potrestat pasivni vstup.",
+    rangeCells: [
+      { hand: "Q9s", action: "RAISE", weight: "mix" },
+      { hand: "K9o", action: "RAISE", weight: "mix" },
+      { hand: "74o", action: "CHECK", weight: "pure" },
+      { hand: "A2o", action: "RAISE", weight: "mix" },
+    ],
+    explanation:
+      "Q9s je dost silna na raise proti SB limpu. Check je hratelny, ale default exploit proti limpu je casto izolace.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-iso-bb-74o",
+    category: "ISO",
+    title: "BB check 74o vs SB limp",
+    prompt:
+      "MTT, efektivne 25 BB. SB limpne, jsi na BB s 74o. Jaka je vychozi akce?",
+    heroHand: ["7c", "4d"],
+    effectiveStack: "25 BB",
+    potLabel: "SB limp",
+    seats: [
+      { position: "SB", label: "Limp" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["CHECK", "RAISE", "FOLD"],
+    correctAction: "CHECK",
+    rangeTitle: "BB checkback trash vs SB limp",
+    rangeSummary:
+      "Slabe offsuit handy muzou zdarma realizovat equity checkem; raise by zbytecne nafukoval pot.",
+    rangeCells: [
+      { hand: "74o", action: "CHECK", weight: "pure" },
+      { hand: "T4o", action: "CHECK", weight: "mix" },
+      { hand: "Q9s", action: "RAISE", weight: "mix" },
+      { hand: "A8o", action: "RAISE", weight: "pure" },
+    ],
+    explanation:
+      "BB nemusi proti SB limpu raiseovat vsechno. 74o ma malo equity a zadny dobry blocker, check je nejlepsi.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-rejam-bb-22-btn",
+    category: "REJAM",
+    title: "BB 22 vs BTN open",
+    prompt:
+      "MTT, efektivne 16 BB. BTN otevre 2x, SB fold, jsi na BB s 22. Jaka je vychozi akce?",
+    heroHand: ["2c", "2d"],
+    effectiveStack: "16 BB",
+    potLabel: "BTN open 2x",
+    seats: [
+      { position: "BTN", label: "Open 2x" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "JAM"],
+    correctAction: "JAM",
+    rangeTitle: "BB small pairs vs BTN",
+    rangeSummary:
+      "Male pary pri kratkych stackach casto preferuji jam a fold equity pred callem mimo pozici.",
+    rangeCells: [
+      { hand: "22", action: "JAM", weight: "mix" },
+      { hand: "55", action: "JAM", weight: "pure" },
+      { hand: "A2s", action: "JAM", weight: "mix" },
+      { hand: "K5s", action: "CALL", weight: "mix" },
+    ],
+    explanation:
+      "22 se po callu spatne realizuje, ale all-in ma fold equity a proti callum ma casto coinflip equity.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-rejam-sb-a9o-btn",
+    category: "REJAM",
+    title: "SB A9o vs BTN open",
+    prompt:
+      "MTT, efektivne 17 BB. BTN otevre 2.2x, jsi na SB s A9o. Jaka je vychozi akce?",
+    heroHand: ["Ac", "9d"],
+    effectiveStack: "17 BB",
+    potLabel: "BTN open 2.2x",
+    seats: [
+      { position: "BTN", label: "Open 2.2x" },
+      { position: "SB", label: "Hero", isHero: true },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "JAM"],
+    correctAction: "JAM",
+    rangeTitle: "SB offsuit esa vs BTN",
+    rangeSummary:
+      "Proti sirokemu BTN openu jsou stredni offsuit esa casto rejam pro blocker a equity.",
+    rangeCells: [
+      { hand: "A9o", action: "JAM", weight: "mix" },
+      { hand: "A5o", action: "FOLD", weight: "mix" },
+      { hand: "ATo", action: "JAM", weight: "pure" },
+      { hand: "KJo", action: "JAM", weight: "mix" },
+    ],
+    explanation:
+      "A9o blokuje cast silnych callu a dobre stoji proti BTN steal range. Ze SB nechceme casto callovat mimo pozici.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-rejam-btn-44-co",
+    category: "REJAM",
+    title: "BTN 44 vs CO open",
+    prompt:
+      "MTT, efektivne 18 BB. CO otevre 2.2x, jsi na BTN se 44. Jaka je vychozi akce?",
+    heroHand: ["4s", "4h"],
+    effectiveStack: "18 BB",
+    potLabel: "CO open 2.2x",
+    seats: [
+      { position: "CO", label: "Open 2.2x" },
+      { position: "BTN", label: "Hero", isHero: true },
+      { position: "SB", label: "SB" },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "JAM"],
+    correctAction: "JAM",
+    rangeTitle: "BTN pair rejam vs CO",
+    rangeSummary:
+      "Male pary na BTN pri 18 BB casto maji dobry rejam proti CO, pokud za nami nejsou agresivni shorti.",
+    rangeCells: [
+      { hand: "44", action: "JAM", weight: "mix" },
+      { hand: "66", action: "JAM", weight: "pure" },
+      { hand: "22", action: "FOLD", weight: "mix" },
+      { hand: "A9s", action: "JAM", weight: "mix" },
+    ],
+    explanation:
+      "44 nechce casto callovat a hrat multiway. Rejam vyuzije fold equity a zabere dead money.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-rejam-co-ats-hj",
+    category: "REJAM",
+    title: "CO ATs vs HJ open",
+    prompt:
+      "MTT, efektivne 19 BB. HJ otevre 2.2x, jsi na CO s ATs. Jaka je vychozi akce?",
+    heroHand: ["Ah", "Th"],
+    effectiveStack: "19 BB",
+    potLabel: "HJ open 2.2x",
+    seats: [
+      { position: "HJ", label: "Open 2.2x" },
+      { position: "CO", label: "Hero", isHero: true },
+      { position: "BTN", label: "BTN" },
+      { position: "SB", label: "SB" },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "JAM"],
+    correctAction: "JAM",
+    rangeTitle: "CO suited ace vs HJ",
+    rangeSummary:
+      "ATs ma blocker, equity a realizaci, casto funguje jako rejam proti HJ pri 19 BB.",
+    rangeCells: [
+      { hand: "ATs", action: "JAM", weight: "mix" },
+      { hand: "AJs", action: "JAM", weight: "pure" },
+      { hand: "A8s", action: "CALL", weight: "mix" },
+      { hand: "KQs", action: "CALL", weight: "mix" },
+    ],
+    explanation:
+      "ATs je dost silna na tlak proti HJ a blokuje cast nejhorsich callu. Call je mozny, ale rejam je cisty default.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-rejam-bb-kjo-sb",
+    category: "REJAM",
+    title: "BB KJo vs SB open",
+    prompt:
+      "MTT, efektivne 15 BB. SB otevre 2.5x, jsi na BB s KJo. Jaka je vychozi akce?",
+    heroHand: ["Kd", "Js"],
+    effectiveStack: "15 BB",
+    potLabel: "SB open 2.5x",
+    seats: [
+      { position: "SB", label: "Open 2.5x" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "JAM"],
+    correctAction: "JAM",
+    rangeTitle: "BB rejam BvB 15 BB",
+    rangeSummary:
+      "BvB jsou range siroke a pri 15 BB mnoho broadwayi prirozene tlaci all-in.",
+    rangeCells: [
+      { hand: "KJo", action: "JAM", weight: "pure" },
+      { hand: "K9o", action: "JAM", weight: "mix" },
+      { hand: "QTo", action: "JAM", weight: "mix" },
+      { hand: "J8o", action: "CALL", weight: "mix" },
+    ],
+    explanation:
+      "KJo je proti SB open range velmi silna. Pri 15 BB rejam dobre realizuje equity a tresta siroky open.",
   }),
 ] as const satisfies readonly TrainingSpot[];

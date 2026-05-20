@@ -122,4 +122,44 @@ describe("app interaction", () => {
     expect(app.textContent).toContain("DEFEND");
     expect(app.textContent).not.toContain("BTN open proti blind");
   });
+
+  it("nabizi jen kategorie s dostupnym obsahem pro aktualni format a fazi", () => {
+    const app = setupDom();
+
+    renderApp(app);
+
+    const category = app.querySelector<HTMLSelectElement>("[data-category]");
+    if (!category) throw new Error("Missing category select");
+
+    const initialOptions = Array.from(category.options).map(
+      (option) => option.value,
+    );
+
+    expect(initialOptions).toContain("OPEN_HJ_CO_BTN");
+    expect(initialOptions).toContain("BB_DEFEND");
+    expect(initialOptions).toContain("BB_DEFEND_2X");
+    expect(initialOptions).toContain("REJAM");
+    expect(initialOptions).toContain("SB_OPEN");
+    expect(initialOptions).not.toContain("RIVER_PFR_VALUEBET");
+
+    const format = app.querySelector<HTMLSelectElement>("[data-format]");
+    if (!format) throw new Error("Missing format select");
+
+    format.value = "CASH_100BB";
+    format.dispatchEvent(new window.Event("change", { bubbles: true }));
+
+    const phase = app.querySelector<HTMLSelectElement>("[data-phase]");
+    if (!phase) throw new Error("Missing phase select");
+
+    phase.value = "FLOP";
+    phase.dispatchEvent(new window.Event("change", { bubbles: true }));
+
+    const flopCategory = app.querySelector<HTMLSelectElement>("[data-category]");
+    if (!flopCategory) throw new Error("Missing category select after phase");
+
+    expect(Array.from(flopCategory.options).map((option) => option.value)).toEqual([
+      "ALL",
+      "FLOP_CBET_HU_DRY_PFR",
+    ]);
+  });
 });

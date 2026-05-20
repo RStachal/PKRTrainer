@@ -5,7 +5,9 @@ export type ActionId = "FOLD" | "CHECK" | "CALL" | "BET" | "RAISE" | "OPEN" | "J
 
 export type SpotCategory =
   | "OPEN"
+  | "SB_OPEN"
   | "DEFEND"
+  | "DEFEND_2X"
   | "ISO"
   | "REJAM"
   | "CBET"
