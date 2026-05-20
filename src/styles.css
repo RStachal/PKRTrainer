@@ -11,6 +11,7 @@ body {
 }
 
 button,
+input,
 select {
   font: inherit;
 }
@@ -57,21 +58,33 @@ select {
   min-width: 190px;
 }
 
+.filter-picker input,
 .filter-picker select {
   appearance: none;
   background: #121b24;
   border: 1px solid #2a3a46;
   border-radius: 8px;
+  box-sizing: border-box;
   color: #eef4f7;
   min-height: 42px;
   padding: 0 12px;
+  width: 100%;
 }
 
 .stats-strip {
   align-items: center;
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) auto;
+  margin: 0 auto 16px;
+  max-width: 1180px;
+}
+
+.session-controls {
+  align-items: end;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(130px, 0.7fr) minmax(120px, 0.7fr) repeat(2, minmax(150px, 1fr)) auto;
   margin: 0 auto 16px;
   max-width: 1180px;
 }
@@ -146,6 +159,7 @@ select {
   font-size: 1rem;
 }
 
+.new-block-button,
 .reset-button {
   background: #243441;
   border: 1px solid #3a4d5c;
@@ -155,6 +169,10 @@ select {
   font-weight: 900;
   min-height: 50px;
   padding: 0 14px;
+}
+
+.new-block-button {
+  background: #217a57;
 }
 
 .client-layout {
@@ -383,6 +401,7 @@ select {
 
 .action-button:hover,
 .next-button:hover,
+.new-block-button:hover,
 .reset-button:hover {
   filter: brightness(1.08);
 }
@@ -568,6 +587,10 @@ select {
   }
 
   .stats-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .session-controls {
     grid-template-columns: 1fr;
   }
 

@@ -1,7 +1,6 @@
 import type { CategoryPhase } from "./domain/constants";
 import { TRAINING_SPOTS } from "./content/spots";
-import { mulberry32 } from "./domain/random";
-import { selectNextSpot } from "./domain/selectNextSpot";
+import { questionFromSpot, type TrainingQuestion } from "./domain/question";
 import type { ActionId, TrainingSpot } from "./domain/spot";
 import {
   EMPTY_STATISTICS,
@@ -9,109 +8,189 @@ import {
   type TrainingStatistics,
 } from "./domain/statistics";
 import {
+  clampBlockSize,
+  createTrainingSession,
+  EMPTY_TRAINING_PROGRESS,
+  getNextQuestion,
+  recordQuestionAnswer,
+  type TrainingProgress,
+  type TrainingSession,
+} from "./domain/trainingSession";
+import {
   DEFAULT_TRAINING_FORMAT,
   type TrainingFormatId,
 } from "./domain/trainingFormat";
+import type { StrictMode, TrainingMode } from "./domain/types";
 import {
-  loadStatistics,
-  resetStatistics,
-  saveStatistics,
+  loadAppState,
+  resetAppState,
+  saveAppState,
 } from "./state/appStorage";
 import type { PhaseFilter } from "./ui/phaseFilter";
 import { toSelectionPhase } from "./ui/phaseFilter";
 import { renderDecisionPanel } from "./ui/renderDecisionPanel";
 import { renderEmptyState } from "./ui/renderEmptyState";
 import { renderRangePanel } from "./ui/renderRangePanel";
+import { renderSessionControls } from "./ui/renderSessionControls";
 import { renderStatsStrip } from "./ui/renderStatsStrip";
 import { renderTable } from "./ui/renderTable";
 import { renderTopBar } from "./ui/renderTopBar";
 
+type SessionConfig = {
+  blockSize: number;
+  seed: number;
+  mode: TrainingMode;
+  strict: StrictMode;
+};
+
 type AppState = {
   format: TrainingFormatId;
   phase: PhaseFilter;
-  spot: TrainingSpot | null;
+  config: SessionConfig;
+  progress: TrainingProgress;
+  session: TrainingSession;
+  currentQuestion: TrainingQuestion | null;
+  currentSpot: TrainingSpot | null;
   selectedAction: ActionId | null;
-  session: SessionState;
   statistics: TrainingStatistics;
 };
 
-type SessionState = {
-  answered: number;
-  correct: number;
-  isComplete: boolean;
+const DEFAULT_SESSION_CONFIG: SessionConfig = {
+  blockSize: 10,
+  seed: 1,
+  mode: "MIXED",
+  strict: "LENIENT",
 };
+const QUESTIONS_BY_SPOT_ID = new Map(
+  TRAINING_SPOTS.map((spot) => [spot.id, questionFromSpot(spot)]),
+);
 
-const SESSION_GOAL = 10;
-const rng = mulberry32(1);
+function persistState(state: AppState): void {
+  if (typeof window === "undefined") return;
 
-function createEmptySession(): SessionState {
-  return {
-    answered: 0,
-    correct: 0,
-    isComplete: false,
-  };
-}
-
-function getFirstSpot(
-  format: TrainingFormatId,
-  phase: CategoryPhase | undefined,
-): TrainingSpot | null {
-  return (
-    TRAINING_SPOTS.find((spot) => {
-      if (spot.format !== format) return false;
-      if (phase && spot.phase !== phase) return false;
-      return true;
-    }) ?? null
-  );
-}
-
-function selectSpot(state: AppState): TrainingSpot | null {
-  return selectNextSpot(TRAINING_SPOTS, state.statistics, rng, {
-    format: state.format,
-    phase: toSelectionPhase(state.phase),
+  saveAppState(window.localStorage, {
+    version: 2,
+    statistics: state.statistics,
+    progress: state.progress,
+    settings: {
+      format: state.format,
+      phase: state.phase,
+      blockSize: state.config.blockSize,
+      seed: state.config.seed,
+      mode: state.config.mode,
+      strict: state.config.strict,
+    },
   });
 }
 
-function renderSessionSummary(session: SessionState): string {
+function getQuestionsForFormat(
+  format: TrainingFormatId,
+): readonly TrainingQuestion[] {
+  return TRAINING_SPOTS.filter((spot) => spot.format === format).map(
+    (spot) => QUESTIONS_BY_SPOT_ID.get(spot.id) ?? questionFromSpot(spot),
+  );
+}
+
+function getSpotByQuestionId(questionId: string | null): TrainingSpot | null {
+  if (!questionId) return null;
+  return TRAINING_SPOTS.find((spot) => spot.id === questionId) ?? null;
+}
+
+function createSession(
+  format: TrainingFormatId,
+  phase: CategoryPhase | undefined,
+  config: SessionConfig,
+  progress: TrainingProgress,
+): Pick<AppState, "session" | "currentQuestion" | "currentSpot"> {
+  const questions = getQuestionsForFormat(format);
+  const session = createTrainingSession(
+    questions,
+    {
+      blockSize: config.blockSize,
+      seed: config.seed,
+      mode: config.mode,
+      strict: config.strict,
+      phase: phase ?? "ALL",
+    },
+    progress,
+  );
+  const next = getNextQuestion(session, questions);
+
+  return {
+    session: next.session,
+    currentQuestion: next.question,
+    currentSpot: getSpotByQuestionId(next.question?.id ?? null),
+  };
+}
+
+function restartBlock(state: AppState): void {
+  Object.assign(
+    state,
+    createSession(
+      state.format,
+      toSelectionPhase(state.phase),
+      state.config,
+      state.progress,
+    ),
+  );
+  state.selectedAction = null;
+}
+
+function advanceSession(
+  state: AppState,
+): Pick<AppState, "session" | "currentQuestion" | "currentSpot"> {
+  const next = getNextQuestion(state.session, getQuestionsForFormat(state.format));
+
+  return {
+    session: next.session,
+    currentQuestion: next.question,
+    currentSpot: getSpotByQuestionId(next.question?.id ?? null),
+  };
+}
+
+function renderSessionSummary(session: TrainingSession): string {
+  const { answered, correct } = session.progress;
   const successRate =
-    session.answered === 0
-      ? 0
-      : Math.round((session.correct / session.answered) * 100);
+    answered === 0 ? 0 : Math.round((correct / answered) * 100);
 
   return `
-    <section class="session-summary" aria-label="Shrnutí session">
-      <p class="summary-kicker">Session dokončena</p>
-      <h2>${session.correct} / ${session.answered} správně</h2>
-      <p>Úspěšnost ${successRate} %. Dej si další kolo a nech statistiky ukázat, které spoty si říkají o opakování.</p>
-      <button class="next-button" data-new-session type="button">Nová session</button>
+    <section class="session-summary" aria-label="Shrnuti session">
+      <p class="summary-kicker">Session dokoncena</p>
+      <h2>${correct} / ${answered} spravne</h2>
+      <p>Uspesnost ${successRate} %. Dej si dalsi blok a nech statistiky ukazat, ktere spoty si rikaji o opakovani.</p>
+      <button class="next-button" data-new-block type="button">Novy blok</button>
     </section>
   `;
 }
 
 function createAppMarkup(state: AppState): string {
+  const blockSize = state.session.questionOrder.length;
+  const isComplete = blockSize > 0 && state.currentSpot === null;
   const sessionProgress = {
-    answered: state.session.answered,
-    correct: state.session.correct,
-    goal: SESSION_GOAL,
+    answered: state.session.progress.answered,
+    correct: state.session.progress.correct,
+    remaining: state.session.remaining,
+    streak: state.session.progress.streak,
   };
 
   return `
     <main class="trainer-shell" aria-labelledby="app-title">
       ${renderTopBar(state.format, state.phase)}
+      ${renderSessionControls(state.config)}
       ${renderStatsStrip(state.statistics, sessionProgress)}
       ${
-        state.session.isComplete
+        isComplete
           ? renderSessionSummary(state.session)
-          : state.spot
+          : state.currentSpot
             ? `
               <section class="client-layout">
-                ${renderTable(state.spot)}
+                ${renderTable(state.currentSpot)}
                 ${renderDecisionPanel(
-                  state.spot,
+                  state.currentSpot,
                   state.selectedAction,
-                  state.session.answered >= SESSION_GOAL,
+                  state.session.remaining === 0,
                 )}
-                ${renderRangePanel(state.spot, state.statistics)}
+                ${renderRangePanel(state.currentSpot, state.statistics)}
               </section>
             `
             : renderEmptyState(state.format, state.phase)
@@ -125,35 +204,72 @@ function render(root: HTMLElement, state: AppState): void {
 }
 
 export function renderApp(root: HTMLElement): void {
-  const statistics =
+  const persisted =
     typeof window === "undefined"
-      ? EMPTY_STATISTICS
-      : loadStatistics(window.localStorage);
-  const defaultPhase: PhaseFilter = "ALL";
+      ? {
+          statistics: EMPTY_STATISTICS,
+          progress: EMPTY_TRAINING_PROGRESS,
+          settings: null,
+        }
+      : loadAppState(window.localStorage);
+  const defaultPhase: PhaseFilter = persisted.settings?.phase ?? "ALL";
+  const initialConfig: SessionConfig = {
+    blockSize: persisted.settings?.blockSize ?? DEFAULT_SESSION_CONFIG.blockSize,
+    seed: persisted.settings?.seed ?? DEFAULT_SESSION_CONFIG.seed,
+    mode: persisted.settings?.mode ?? DEFAULT_SESSION_CONFIG.mode,
+    strict: persisted.settings?.strict ?? DEFAULT_SESSION_CONFIG.strict,
+  };
+  const initialSession = createSession(
+    persisted.settings?.format ?? DEFAULT_TRAINING_FORMAT,
+    toSelectionPhase(defaultPhase),
+    initialConfig,
+    persisted.progress,
+  );
   const state: AppState = {
-    format: DEFAULT_TRAINING_FORMAT,
+    format: persisted.settings?.format ?? DEFAULT_TRAINING_FORMAT,
     phase: defaultPhase,
-    spot: getFirstSpot(DEFAULT_TRAINING_FORMAT, toSelectionPhase(defaultPhase)),
+    config: initialConfig,
+    progress: persisted.progress,
+    ...initialSession,
     selectedAction: null,
-    session: createEmptySession(),
-    statistics,
+    statistics: persisted.statistics,
   };
 
   root.addEventListener("change", (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLSelectElement)) return;
+    if (!(target instanceof HTMLElement)) return;
 
     if (target.matches("[data-format]")) {
-      state.format = target.value as TrainingFormatId;
+      state.format = (target as HTMLSelectElement).value as TrainingFormatId;
     } else if (target.matches("[data-phase]")) {
-      state.phase = target.value as PhaseFilter;
+      state.phase = (target as HTMLSelectElement).value as PhaseFilter;
+    } else if (target.matches("[data-mode]")) {
+      state.config = {
+        ...state.config,
+        mode: (target as HTMLSelectElement).value as TrainingMode,
+      };
+    } else if (target.matches("[data-strict]")) {
+      state.config = {
+        ...state.config,
+        strict: (target as HTMLSelectElement).value as StrictMode,
+      };
+    } else if (target.matches("[data-block-size]")) {
+      state.config = {
+        ...state.config,
+        blockSize: clampBlockSize(Number((target as HTMLInputElement).value)),
+      };
+    } else if (target.matches("[data-seed]")) {
+      const seed = Number((target as HTMLInputElement).value);
+      state.config = {
+        ...state.config,
+        seed: Number.isFinite(seed) ? Math.trunc(seed) : 1,
+      };
     } else {
       return;
     }
 
-    state.spot = getFirstSpot(state.format, toSelectionPhase(state.phase));
-    state.selectedAction = null;
-    state.session = createEmptySession();
+    restartBlock(state);
+    persistState(state);
     render(root, state);
   });
 
@@ -162,59 +278,53 @@ export function renderApp(root: HTMLElement): void {
     if (!(target instanceof HTMLElement)) return;
 
     const actionButton = target.closest<HTMLButtonElement>("[data-action]");
-    if (actionButton && state.spot) {
+    if (actionButton && state.currentSpot && state.currentQuestion) {
       if (state.selectedAction !== null) return;
 
       const action = actionButton.dataset.action as ActionId;
-      const wasCorrect = action === state.spot.correctAction;
+      const answer = recordQuestionAnswer(
+        state.session.progress,
+        state.currentQuestion,
+        action,
+        state.session.strict,
+      );
+
       state.selectedAction = action;
+      state.progress = answer.progress;
       state.session = {
-        answered: state.session.answered + 1,
-        correct: state.session.correct + (wasCorrect ? 1 : 0),
-        isComplete: false,
+        ...state.session,
+        progress: answer.progress,
       };
       state.statistics = recordSpotAnswer(
         state.statistics,
-        state.spot.id,
-        wasCorrect,
+        state.currentSpot.id,
+        answer.result.isCorrect,
       );
-      saveStatistics(window.localStorage, state.statistics);
+      persistState(state);
       render(root, state);
       return;
     }
 
     if (target.closest("[data-next]")) {
-      if (state.session.answered >= SESSION_GOAL) {
-        state.session = {
-          ...state.session,
-          isComplete: true,
-        };
-        render(root, state);
-        return;
-      }
-
-      state.spot =
-        selectSpot(state) ??
-        getFirstSpot(state.format, toSelectionPhase(state.phase));
+      Object.assign(state, advanceSession(state));
       state.selectedAction = null;
       render(root, state);
       return;
     }
 
-    if (target.closest("[data-new-session]")) {
-      state.session = createEmptySession();
-      state.spot =
-        selectSpot(state) ??
-        getFirstSpot(state.format, toSelectionPhase(state.phase));
-      state.selectedAction = null;
+    if (target.closest("[data-new-block]")) {
+      restartBlock(state);
+      persistState(state);
       render(root, state);
       return;
     }
 
     if (target.closest("[data-reset-stats]")) {
-      resetStatistics(window.localStorage);
+      resetAppState(window.localStorage);
       state.statistics = EMPTY_STATISTICS;
-      state.selectedAction = null;
+      state.progress = EMPTY_TRAINING_PROGRESS;
+      restartBlock(state);
+      persistState(state);
       render(root, state);
     }
   });

@@ -7,43 +7,46 @@ import {
 type SessionProgress = {
   readonly answered: number;
   readonly correct: number;
-  readonly goal: number;
+  readonly remaining: number;
+  readonly streak: number;
 };
 
 export function renderStatsStrip(
   statistics: TrainingStatistics,
-  session?: SessionProgress,
+  session: SessionProgress,
 ): string {
   const overall = getOverallStatistics(statistics);
   const overallSuccessRate = getSuccessRate(overall);
-  const sessionSuccessRate =
-    !session || session.answered === 0
+  const sessionAccuracy =
+    session.answered === 0
       ? null
       : Math.round((session.correct / session.answered) * 100);
 
   return `
-    <section class="stats-strip" aria-label="Celkové statistiky">
-      ${
-        session
-          ? `
-            <div>
-              <span>Session</span>
-              <strong>${Math.min(session.answered + 1, session.goal)} / ${session.goal}</strong>
-            </div>
-            <div>
-              <span>Skóre session</span>
-              <strong>${sessionSuccessRate === null ? "Nová session" : `${sessionSuccessRate} %`}</strong>
-            </div>
-          `
-          : ""
-      }
+    <section class="stats-strip" aria-label="Celkove statistiky">
       <div>
-        <span>Celkem odpovědí</span>
+        <span>Remaining</span>
+        <strong>${session.remaining}</strong>
+      </div>
+      <div>
+        <span>Streak</span>
+        <strong>${session.streak}</strong>
+      </div>
+      <div>
+        <span>Answered</span>
+        <strong>${session.answered}</strong>
+      </div>
+      <div>
+        <span>Accuracy</span>
+        <strong>${sessionAccuracy === null ? "Novy blok" : `${sessionAccuracy} %`}</strong>
+      </div>
+      <div>
+        <span>Celkem</span>
         <strong>${overall.attempts}</strong>
       </div>
       <div>
-        <span>Celková úspěšnost</span>
-        <strong>${overallSuccessRate === null ? "Nový trénink" : `${Math.round(overallSuccessRate * 100)} %`}</strong>
+        <span>Historie</span>
+        <strong>${overallSuccessRate === null ? "Novy trenink" : `${Math.round(overallSuccessRate * 100)} %`}</strong>
       </div>
       <button class="reset-button" data-reset-stats type="button">Reset statistik</button>
     </section>
