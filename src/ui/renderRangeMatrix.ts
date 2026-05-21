@@ -25,12 +25,13 @@ export function renderRangeMatrix(cells: readonly RangeCell[]): string {
             .map((hand) => {
               const cell = byHand.get(hand);
               const weight = cell?.weight ?? "none";
-              const label = cell ? getActionLabel(cell.action) : "Fold";
+              const label = cell ? getActionLabel(cell.action) : "";
+              const emptyClass = cell ? "" : " is-empty";
 
               return `
-                <div class="matrix-cell weight-${weight}" role="gridcell" aria-label="${hand}: ${label}">
+                <div class="matrix-cell weight-${weight}${emptyClass}" role="gridcell" aria-label="${label ? `${hand}: ${label}` : hand}">
                   <strong>${hand}</strong>
-                  <span>${label}</span>
+                  <span>${label || "-"}</span>
                 </div>
               `;
             })

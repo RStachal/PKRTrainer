@@ -7,6 +7,24 @@ import {
 import { getActionLabel } from "./actionLabels";
 import { renderRangeMatrix } from "./renderRangeMatrix";
 
+function renderRangeContext(spot: TrainingSpot): string {
+  const heroSeat = spot.seats.find((seat) => seat.isHero);
+  const opponentSeats = spot.seats
+    .filter((seat) => !seat.isHero)
+    .map((seat) => `${seat.position}: ${seat.label}`)
+    .join(" / ");
+
+  return `
+    <div class="range-context" aria-label="Kontext range">
+      <span>${spot.format}</span>
+      <span>${spot.effectiveStack}</span>
+      <span>${spot.category}</span>
+      ${heroSeat ? `<span>Hero ${heroSeat.position}</span>` : ""}
+      ${opponentSeats ? `<span>${opponentSeats}</span>` : ""}
+    </div>
+  `;
+}
+
 function renderRange(spot: TrainingSpot): string {
   return spot.range.cells
     .map(
@@ -28,20 +46,21 @@ export function renderRangePanel(
   const successRate = getSuccessRate(stat);
 
   return `
-    <section class="range-panel" aria-label="Range a vysvětlení">
+    <section class="range-panel" aria-label="Range a vysvetleni">
       <div class="mini-stat">
-        <span>Úspěšnost spotu</span>
-        <strong>${successRate === null ? "Nový" : `${Math.round(successRate * 100)} %`}</strong>
-        <small>${stat.attempts} odpovědí</small>
+        <span>Uspesnost spotu</span>
+        <strong>${successRate === null ? "Novy" : `${Math.round(successRate * 100)} %`}</strong>
+        <small>${stat.attempts} odpovedi</small>
       </div>
       <h2>${spot.range.title}</h2>
+      ${renderRangeContext(spot)}
       <p>${spot.range.summary}</p>
       ${
         spot.phase === "PREFLOP"
           ? renderRangeMatrix(spot.range.cells)
           : `<div class="range-grid">${renderRange(spot)}</div>`
       }
-      <h3>Vysvětlení</h3>
+      <h3>Vysvetleni spravne odpovedi</h3>
       <p>${spot.explanation}</p>
     </section>
   `;

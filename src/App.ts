@@ -231,7 +231,11 @@ function createAppMarkup(state: AppState): string {
                   state.selectedAction,
                   state.session.remaining === 0,
                 )}
-                ${renderRangePanel(state.currentSpot, state.statistics)}
+                ${
+                  state.selectedAction === null
+                    ? ""
+                    : renderRangePanel(state.currentSpot, state.statistics)
+                }
               </section>
             `
             : renderEmptyState(state.format, state.phase)

@@ -32,7 +32,7 @@ function renderFeedback(
   selectedAction: ActionId | null,
 ): string {
   if (selectedAction === null) {
-    return `<p class="feedback is-neutral">Vyber výchozí akci pro daný spot.</p>`;
+    return "";
   }
 
   const isCorrect = selectedAction === spot.correctAction;
@@ -58,7 +58,11 @@ export function renderDecisionPanel(
       <p class="prompt">${spot.prompt}</p>
       <div class="action-grid">${renderActionButtons(spot, selectedAction)}</div>
       ${renderFeedback(spot, selectedAction)}
-      <button class="next-button" data-next type="button">${isLastQuestion ? "Zobrazit shrnutí" : "Další spot"}</button>
+      ${
+        selectedAction === null
+          ? ""
+          : `<button class="next-button" data-next type="button">${isLastQuestion ? "Zobrazit shrnutí" : "Další spot"}</button>`
+      }
     </section>
   `;
 }

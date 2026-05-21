@@ -28,11 +28,16 @@ describe("app interaction", () => {
     const app = setupDom();
 
     renderApp(app);
+    expect(app.querySelector(".range-panel")).toBeNull();
+    expect(app.textContent).not.toContain("Vysvetleni spravne odpovedi");
+
     const action = app.querySelector<HTMLButtonElement>("[data-action]");
     if (!action) throw new Error("Missing action button");
 
     action.click();
 
+    expect(app.querySelector(".range-panel")).not.toBeNull();
+    expect(app.textContent).toContain("Vysvetleni spravne odpovedi");
     expect(app.textContent).toMatch(/Spr|patn/);
     expect(
       app
