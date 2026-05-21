@@ -1,4 +1,13 @@
 import type { ActionId, SpotCategory, TrainingSpot } from "../../domain/spot";
+import {
+  MTT_BB_DEFEND_BTN_2X,
+  MTT_BB_DEFEND_BTN_2_2X,
+  MTT_BB_DEFEND_BTN_2_5X,
+  MTT_BB_DEFEND_CO_2X,
+  MTT_BB_DEFEND_CO_2_3X,
+  MTT_BB_DEFEND_SB_2X,
+  MTT_BB_DEFEND_SB_2_5X,
+} from "../ranges/mttPreflopRanges";
 
 type SpotInput = {
   id: string;
@@ -249,14 +258,8 @@ export const MTT_15_25BB_SPOTS = [
     correctAction: "CALL",
     rangeTitle: "BB defend vs BTN 2.5x",
     rangeSummary:
-      "Suited kingove maji proti BTN openum dobrou realizaci equity a casto zustavaji v callovaci casti range.",
-    rangeCells: [
-      { hand: "K4s", action: "CALL", weight: "pure" },
-      { hand: "K2o", action: "FOLD", weight: "pure" },
-      { hand: "A5s", action: "RAISE", weight: "mix" },
-      { hand: "76s", action: "CALL", weight: "mix" },
-      { hand: "Q3o", action: "FOLD", weight: "pure" },
-    ],
+      "MTT BB proti BTN 2.5x brani porad siroce: suited handy, pary, broadwaye a cast lepsich offsuit kombinaci. Nejde jen o konkretni hero handu.",
+    rangeCells: MTT_BB_DEFEND_BTN_2_5X,
     explanation:
       "K4s je suited handa s dostatecnou hratelnosti proti BTN. Proti 2.5x patri do defenzivni range.",
   }),
@@ -278,13 +281,8 @@ export const MTT_15_25BB_SPOTS = [
     correctAction: "CALL",
     rangeTitle: "BB defend vs maly BTN open",
     rangeSummary:
-      "Proti mensimu sizingu musi BB branit sireji, hlavne suited kombinace s realizaci.",
-    rangeCells: [
-      { hand: "J7s", action: "CALL", weight: "pure" },
-      { hand: "J4s", action: "CALL", weight: "mix" },
-      { hand: "J7o", action: "FOLD", weight: "pure" },
-      { hand: "T8s", action: "CALL", weight: "pure" },
-    ],
+      "Proti 2.2x BTN openu ma BB lepsi cenu nez proti 2.5x, proto pribyva vice suited trash, slabsi broadwaye a cast offsuit konektivity.",
+    rangeCells: MTT_BB_DEFEND_BTN_2_2X,
     explanation:
       "J7s ma proti malemu BTN openu dost equity a hratelnosti. Fold by zahazoval prilis mnoho blindu.",
   }),
@@ -306,13 +304,8 @@ export const MTT_15_25BB_SPOTS = [
     correctAction: "FOLD",
     rangeTitle: "BB offsuit trash vs BTN",
     rangeSummary:
-      "Cast offsuit queen low kombinaci nema dost realizace proti vetsimu BTN sizingu.",
-    rangeCells: [
-      { hand: "Q3o", action: "FOLD", weight: "pure" },
-      { hand: "Q8o", action: "CALL", weight: "mix" },
-      { hand: "Q5s", action: "CALL", weight: "pure" },
-      { hand: "K2o", action: "FOLD", weight: "pure" },
-    ],
+      "BB defend proti BTN 2.5x je siroky, ale uplny spodek offsuit Qx/Kx bez suited realizace zustava mimo default call.",
+    rangeCells: MTT_BB_DEFEND_BTN_2_5X,
     explanation:
       "Q3o je proti 2.5x open slabsi nez vypada. Offsuit kicker realizuje spatne a handa casto dominuje sama sebe.",
   }),
@@ -333,13 +326,8 @@ export const MTT_15_25BB_SPOTS = [
     correctAction: "CALL",
     rangeTitle: "BB defend vs SB",
     rangeSummary:
-      "BvB range jsou siroke a BB realizuje equity v pozici, proto brani i cast offsuit hand.",
-    rangeCells: [
-      { hand: "T6o", action: "CALL", weight: "mix" },
-      { hand: "T8o", action: "CALL", weight: "pure" },
-      { hand: "T3o", action: "FOLD", weight: "mix" },
-      { hand: "86s", action: "CALL", weight: "pure" },
-    ],
+      "BvB je BB v pozici a proti SB openu brani velmi siroce, vcetne mnoha offsuit hand, ktere by proti CO/BTN vetsimu sizingu uz foldoval.",
+    rangeCells: MTT_BB_DEFEND_SB_2_5X,
     explanation:
       "Proti SB openu hrajeme postflop v pozici a dostavame dobrou cenu. T6o je rozumny defend, hlavne proti standardnimu souperi.",
   }),
@@ -362,13 +350,8 @@ export const MTT_15_25BB_SPOTS = [
     correctAction: "FOLD",
     rangeTitle: "BB defend vs CO",
     rangeSummary:
-      "Proti CO je range silnejsi nez BTN a male offsuit esa casto realizuji spatne.",
-    rangeCells: [
-      { hand: "A2o", action: "FOLD", weight: "mix" },
-      { hand: "A7o", action: "CALL", weight: "mix" },
-      { hand: "A2s", action: "CALL", weight: "pure" },
-      { hand: "K9s", action: "CALL", weight: "pure" },
-    ],
+      "Proti CO je opening range silnejsi nez BTN, takze BB stale brani suited equity a pary, ale slabsi offsuit esa jsou uz casto jen nizkofrekvencni defend nebo fold.",
+    rangeCells: MTT_BB_DEFEND_CO_2_3X,
     explanation:
       "A2o ma sice eso blocker, ale po callu casto hraje dominovanou top pair. Proti CO je default spis fold.",
   }),
@@ -771,13 +754,8 @@ export const MTT_15_25BB_SPOTS = [
     correctAction: "CALL",
     rangeTitle: "BB defend vs BTN 2x",
     rangeSummary:
-      "Proti minraisu ma BB vybornou cenu a brani sireji, hlavne suited handy.",
-    rangeCells: [
-      { hand: "Q6s", action: "CALL", weight: "pure" },
-      { hand: "Q2s", action: "CALL", weight: "mix" },
-      { hand: "Q6o", action: "FOLD", weight: "mix" },
-      { hand: "J8s", action: "CALL", weight: "pure" },
-    ],
+      "Proti BTN minraisu ma BB vybornou cenu a v MTT brani opravdu siroce: vetsinu suited kombinaci, vsechny pary a mnoho offsuit hand.",
+    rangeCells: MTT_BB_DEFEND_BTN_2X,
     explanation:
       "Q6s ma proti 2x open dostatecnou cenu a hratelnost. Fold by byl proti minraisu prilis tight.",
   }),
@@ -799,13 +777,8 @@ export const MTT_15_25BB_SPOTS = [
     correctAction: "CALL",
     rangeTitle: "BB suited low vs minraise",
     rangeSummary:
-      "Cast slabych suited hand je proti 2x stale defend diky cene a implied odds.",
-    rangeCells: [
-      { hand: "84s", action: "CALL", weight: "mix" },
-      { hand: "94s", action: "CALL", weight: "mix" },
-      { hand: "84o", action: "FOLD", weight: "pure" },
-      { hand: "75s", action: "CALL", weight: "pure" },
-    ],
+      "BTN 2x dava BB tak dobrou cenu, ze se brani i slabe suited kombinace. Tyhle handy nejsou izolovane vyjimky, ale soucast siroke defend range.",
+    rangeCells: MTT_BB_DEFEND_BTN_2X,
     explanation:
       "84s je okrajovy, ale proti 2x sizingu se casto brani. Offsuit varianta by uz byla fold.",
   }),
@@ -828,13 +801,8 @@ export const MTT_15_25BB_SPOTS = [
     correctAction: "CALL",
     rangeTitle: "BB vs CO minraise",
     rangeSummary:
-      "Proti CO je range silnejsi, ale minraise dava dobrou cenu na cast offsuit broadwayi.",
-    rangeCells: [
-      { hand: "J9o", action: "CALL", weight: "mix" },
-      { hand: "J7o", action: "FOLD", weight: "mix" },
-      { hand: "Q9o", action: "CALL", weight: "mix" },
-      { hand: "T9s", action: "CALL", weight: "pure" },
-    ],
+      "CO minraise je porad silnejsi nez BTN, ale sizing 2x otevre BB defend o dalsi suited handy a cast offsuit broadway konektivity.",
+    rangeCells: MTT_BB_DEFEND_CO_2X,
     explanation:
       "J9o je proti CO 2x na hranici, ale casto obhajitelny defend. Proti vetsimu sizingu by fold daval vetsi smysl.",
   }),
@@ -855,13 +823,8 @@ export const MTT_15_25BB_SPOTS = [
     correctAction: "FOLD",
     rangeTitle: "BB vs SB bottom offsuit",
     rangeSummary:
-      "I proti SB minraisu ma uplny spodek offsuit range spatnou realizaci.",
-    rangeCells: [
-      { hand: "62o", action: "FOLD", weight: "pure" },
-      { hand: "82o", action: "CALL", weight: "mix" },
-      { hand: "62s", action: "CALL", weight: "mix" },
-      { hand: "T2o", action: "CALL", weight: "mix" },
-    ],
+      "Proti SB minraisu brani BB nejvetsi cast range, protoze hraje v pozici. Uplny spodek offsuit kombinaci ale muze zustat fold.",
+    rangeCells: MTT_BB_DEFEND_SB_2X,
     explanation:
       "62o nema blocker, konektivitu ani suited hodnotu. I za dobrou cenu muze zustat fold.",
   }),
@@ -883,13 +846,8 @@ export const MTT_15_25BB_SPOTS = [
     correctAction: "CALL",
     rangeTitle: "BB offsuit esa vs 2x",
     rangeSummary:
-      "Proti sirokemu BTN minraisu se cast offsuit es brani callem, silnejsi cast muze mixovat raise.",
-    rangeCells: [
-      { hand: "A7o", action: "CALL", weight: "mix" },
-      { hand: "A2o", action: "CALL", weight: "mix" },
-      { hand: "ATo", action: "RAISE", weight: "mix" },
-      { hand: "K7o", action: "FOLD", weight: "mix" },
-    ],
+      "Proti sirokemu BTN minraisu se brani i offsuit esa a cast slabsiho Kx/Qx. Silnejsi cast range muze mixovat raise.",
+    rangeCells: MTT_BB_DEFEND_BTN_2X,
     explanation:
       "A7o dominuje cast BTN range a dostava dobrou cenu. Call je standardni default proti 2x.",
   }),

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { TRAINING_SPOTS } from "../src/content/spots";
 import { CATEGORY_VALUES } from "../src/domain/constants";
 import { questionFromSpot } from "../src/domain/questionFromSpot";
+import type { TrainingSpot } from "../src/domain/spot";
 
 const SUPPORTED_CONTENT_CATEGORIES = [
   "OPEN_HJ_CO_BTN",
@@ -12,6 +13,24 @@ const SUPPORTED_CONTENT_CATEGORIES = [
   "SB_OPEN",
   "FLOP_CBET_HU_DRY_PFR",
 ] as const;
+
+const RANK_ORDER = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
+
+function toPreflopHand(cards: TrainingSpot["heroHand"]): string {
+  const [first, second] = cards;
+  const firstRank = first[0];
+  const secondRank = second[0];
+
+  if (firstRank === secondRank) return `${firstRank}${secondRank}`;
+
+  const [high, low] =
+    RANK_ORDER.indexOf(firstRank) < RANK_ORDER.indexOf(secondRank)
+      ? [firstRank, secondRank]
+      : [secondRank, firstRank];
+  const suitedness = first[1] === second[1] ? "s" : "o";
+
+  return `${high}${low}${suitedness}`;
+}
 
 describe("training content validation", () => {
   it("ma unikatni id pro kazdy spot", () => {
@@ -64,5 +83,47 @@ describe("training content validation", () => {
     for (const category of SUPPORTED_CONTENT_CATEGORIES) {
       expect(availableCategories, category).toContain(category);
     }
+  });
+
+  it("pouziva pro MTT BB defend realnejsi siroke range profily", () => {
+    const bbDefendSpots = TRAINING_SPOTS.filter(
+      (spot) =>
+        spot.format === "MTT_15_25BB" &&
+        (spot.category === "DEFEND" || spot.category === "DEFEND_2X") &&
+        spot.seats.some((seat) => seat.position === "BB" && seat.isHero),
+    );
+
+    for (const spot of bbDefendSpots) {
+      const heroHand = toPreflopHand(spot.heroHand);
+
+      expect(spot.range.cells.length, spot.id).toBeGreaterThanOrEqual(45);
+      expect(
+        spot.range.cells.some((cell) => cell.hand === heroHand),
+        `${spot.id}:${heroHand}`,
+      ).toBe(true);
+    }
+  });
+
+  it("ukazuje BTN minraise defend jako sirsi nez BTN 2.5x defend", () => {
+    const btn25 = TRAINING_SPOTS.find(
+      (spot) => spot.id === "mtt-15-25-bb-defend-btn-q3o",
+    );
+    const btn2 = TRAINING_SPOTS.find(
+      (spot) => spot.id === "mtt-15-25-bb-defend-2x-btn-q6s",
+    );
+
+    if (!btn25 || !btn2) throw new Error("Missing BTN defend fixtures");
+
+    expect(btn2.range.cells.length).toBeGreaterThan(btn25.range.cells.length);
+    expect(btn25.range.cells).toContainEqual({
+      hand: "Q5s",
+      action: "CALL",
+      weight: "pure",
+    });
+    expect(btn25.range.cells).toContainEqual({
+      hand: "Q3o",
+      action: "FOLD",
+      weight: "pure",
+    });
   });
 });
