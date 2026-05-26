@@ -13,10 +13,12 @@ import {
   MAX_BLOCK_SIZE,
   MIN_BLOCK_SIZE,
   type QuestionProgress,
+  type StackBandKey,
   type TrainingProgress,
 } from "../domain/trainingSession";
 import { TRAINING_FORMATS, type TrainingFormatId } from "../domain/trainingFormat";
 import type { StrictMode, TrainingMode } from "../domain/types";
+import type { StackBandFilter } from "../domain/stackBand";
 
 export const APP_STATE_KEY = "pkrtrainer_v2_app_state_v2";
 export const APP_STATISTICS_KEY = "pkrtrainer_v2_statistics_v1";
@@ -31,6 +33,7 @@ export type PersistedSessionSettings = {
   readonly seed: number;
   readonly mode: TrainingMode;
   readonly strict: StrictMode;
+  readonly stackBand: StackBandFilter;
 };
 
 export type AppStorageState = {
@@ -83,6 +86,10 @@ function isQuestionProgress(value: unknown): value is QuestionProgress {
   );
 }
 
+function isStackBandKey(value: string): value is StackBandKey {
+  return value === "BB_15_20" || value === "BB_21_25";
+}
+
 function isFormat(value: unknown): value is TrainingFormatId {
   return (
     typeof value === "string" &&
@@ -113,6 +120,10 @@ function isMode(value: unknown): value is TrainingMode {
 
 function isStrict(value: unknown): value is StrictMode {
   return value === "LENIENT" || value === "STRICT";
+}
+
+function isStackBand(value: unknown): value is StackBandFilter {
+  return value === "ALL" || value === "BB_15_20" || value === "BB_21_25";
 }
 
 function parseJson(value: string | null): unknown {
@@ -160,6 +171,12 @@ function parseProgress(value: unknown): TrainingProgress {
   const byCategory = Object.entries(value.byCategory).filter(
     (entry): entry is [string, QuestionProgress] => isQuestionProgress(entry[1]),
   );
+  const byStackBand = isRecord(value.byStackBand)
+    ? Object.entries(value.byStackBand).filter(
+        (entry): entry is [StackBandKey, QuestionProgress] =>
+          isStackBandKey(entry[0]) && isQuestionProgress(entry[1]),
+      )
+    : [];
 
   return {
     answered: value.answered,
@@ -168,6 +185,7 @@ function parseProgress(value: unknown): TrainingProgress {
     seen: value.seen,
     missed: value.missed,
     byCategory: Object.fromEntries(byCategory),
+    byStackBand: Object.fromEntries(byStackBand),
   };
 }
 
@@ -177,6 +195,7 @@ function parseSettings(value: unknown): PersistedSessionSettings | null {
   const blockSize = value.blockSize;
   const seed = value.seed;
   const category = value.category ?? "ALL";
+  const stackBand = value.stackBand ?? "ALL";
 
   if (
     !isFormat(value.format) ||
@@ -189,7 +208,8 @@ function parseSettings(value: unknown): PersistedSessionSettings | null {
     typeof seed !== "number" ||
     !Number.isInteger(seed) ||
     !isMode(value.mode) ||
-    !isStrict(value.strict)
+    !isStrict(value.strict) ||
+    !isStackBand(stackBand)
   ) {
     return null;
   }
@@ -202,6 +222,7 @@ function parseSettings(value: unknown): PersistedSessionSettings | null {
     seed,
     mode: value.mode,
     strict: value.strict,
+    stackBand,
   };
 }
 

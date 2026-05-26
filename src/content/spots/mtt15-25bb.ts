@@ -513,6 +513,151 @@ export const MTT_15_25BB_SPOTS = [
       "QTs ma slusnou equity proti callum a blokuje cast pokracovaci range. Ze SB je rejam casto cistsi nez call mimo pozici.",
   }),
   makeSpot({
+    id: "mtt-21-25-rejam-bb-77-btn",
+    category: "REJAM",
+    title: "BB call 77 vs BTN open pri 24 BB",
+    prompt:
+      "MTT, efektivne 24 BB. BTN otevre 2.2x, SB fold, jsi na BB se 77. Jaka je vychozi akce?",
+    heroHand: ["7s", "7d"],
+    effectiveStack: "24 BB",
+    potLabel: "BTN open 2.2x",
+    seats: [
+      { position: "BTN", label: "Open 2.2x" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "JAM"],
+    correctAction: "CALL",
+    rangeProfileId: "mtt-15-20-rejam-bb-vs-btn",
+    explanation:
+      "Pri 24 BB je 77 casteji call nez jam. Udrzime stabilnejsi stack a vyuzijeme realizaci equity po flopu.",
+  }),
+  makeSpot({
+    id: "mtt-21-25-rejam-bb-a9o-co",
+    category: "REJAM",
+    title: "BB fold A9o vs CO open pri 23 BB",
+    prompt:
+      "MTT, efektivne 23 BB. CO otevre 2.2x, BTN a SB fold, jsi na BB s A9o. Jaka je vychozi akce?",
+    heroHand: ["Ah", "9c"],
+    effectiveStack: "23 BB",
+    potLabel: "CO open 2.2x",
+    seats: [
+      { position: "CO", label: "Open 2.2x" },
+      { position: "BTN", label: "Fold" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "JAM"],
+    correctAction: "FOLD",
+    rangeProfileId: "mtt-15-20-rejam-bb-vs-co",
+    explanation:
+      "Na 23 BB A9o casto nema dost hodnoty na reshove proti CO. Lepsi default je fold a cekat na silnejsi spot.",
+  }),
+  makeSpot({
+    id: "mtt-21-25-rejam-sb-66-co",
+    category: "REJAM",
+    title: "SB call 66 vs CO open pri 25 BB",
+    prompt:
+      "MTT, efektivne 25 BB. CO otevre 2.2x, BTN fold, jsi na SB se 66. Jaka je vychozi akce?",
+    heroHand: ["6c", "6d"],
+    effectiveStack: "25 BB",
+    potLabel: "CO open 2.2x",
+    seats: [
+      { position: "CO", label: "Open 2.2x" },
+      { position: "BTN", label: "Fold" },
+      { position: "SB", label: "Hero", isHero: true },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "JAM"],
+    correctAction: "CALL",
+    rangeProfileId: "mtt-15-20-rejam-sb-vs-co",
+    explanation:
+      "Pri 25 BB uz 66 casto nepushujeme automaticky. Call drzi pot kontrolovanejsi a nechava prostor na postflop realizaci.",
+  }),
+  makeSpot({
+    id: "mtt-21-25-rejam-btn-ajo-hj",
+    category: "REJAM",
+    title: "BTN call AJo vs HJ open pri 22 BB",
+    prompt:
+      "MTT, efektivne 22 BB. HJ otevre 2.2x, CO fold, jsi na BTN s AJo. Jaka je vychozi akce?",
+    heroHand: ["As", "Jd"],
+    effectiveStack: "22 BB",
+    potLabel: "HJ open 2.2x",
+    seats: [
+      { position: "HJ", label: "Open 2.2x" },
+      { position: "CO", label: "Fold" },
+      { position: "BTN", label: "Hero", isHero: true },
+      { position: "SB", label: "SB" },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "JAM"],
+    correctAction: "CALL",
+    rangeProfileId: "mtt-15-20-rejam-btn-vs-co-hj",
+    explanation:
+      "AJo je na 22 BB casto vhodnejsi na call v pozici nez na cisty reshove. Zachovava to EV a snizuje variance.",
+  }),
+  makeSpot({
+    id: "mtt-21-25-rejam-sb-ato-btn",
+    category: "REJAM",
+    title: "SB fold ATo vs BTN open pri 24 BB",
+    prompt:
+      "MTT, efektivne 24 BB. BTN otevre 2x, jsi na SB s ATo. BB je bez specifickych tendenci. Jaka je vychozi akce?",
+    heroHand: ["Ac", "Td"],
+    effectiveStack: "24 BB",
+    potLabel: "BTN open 2x",
+    seats: [
+      { position: "BTN", label: "Open 2x" },
+      { position: "SB", label: "Hero", isHero: true },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "JAM"],
+    correctAction: "FOLD",
+    rangeProfileId: "mtt-15-20-rejam-sb-vs-btn",
+    explanation:
+      "Na vyssim stacku uz ATo neni automaticky reshove kandidat. Bez exploitu je konzervativni fold standardni linie.",
+  }),
+  makeSpot({
+    id: "mtt-21-25-rejam-bb-kjo-sb",
+    category: "REJAM",
+    title: "BB fold KJo vs SB open pri 23 BB",
+    prompt:
+      "MTT, efektivne 23 BB. SB otevre 2.5x, jsi na BB s KJo. Jaka je vychozi akce?",
+    heroHand: ["Kh", "Jc"],
+    effectiveStack: "23 BB",
+    potLabel: "SB open 2.5x",
+    seats: [
+      { position: "SB", label: "Open 2.5x" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "JAM"],
+    correctAction: "FOLD",
+    rangeProfileId: "mtt-15-20-rejam-bb-vs-sb",
+    explanation:
+      "KJo je pri 23 BB proti SB openu uz casto mimo profitabilni jam cast. Fold je default bez silne read-based upravy.",
+  }),
+  makeSpot({
+    id: "mtt-21-25-rejam-co-ajo-hj",
+    category: "REJAM",
+    title: "CO call AJo vs HJ open pri 21 BB",
+    prompt:
+      "MTT, efektivne 21 BB. HJ otevre 2.2x, jsi na CO s AJo. Jaka je vychozi akce?",
+    heroHand: ["Ad", "Js"],
+    effectiveStack: "21 BB",
+    potLabel: "HJ open 2.2x",
+    seats: [
+      { position: "HJ", label: "Open 2.2x" },
+      { position: "CO", label: "Hero", isHero: true },
+      { position: "BTN", label: "BTN" },
+      { position: "SB", label: "SB" },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "JAM"],
+    correctAction: "CALL",
+    rangeProfileId: "mtt-15-20-rejam-co-vs-hj",
+    explanation:
+      "Na 21 BB ma AJo casto vetsi hodnotu jako call nez jako reshove. Drzime flexibilni postflop plan a mene riskujeme turnajovy zivot.",
+  }),
+  makeSpot({
     id: "mtt-15-25-open-sb-a2o",
     category: "SB_OPEN",
     title: "SB open A2o",

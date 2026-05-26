@@ -23,6 +23,9 @@ const QUESTIONS = [
     ],
     correctKeys: ["OPEN_2X", "OPEN_25X"],
     strictCorrect: ["OPEN_2X"],
+    context: {
+      effectiveStack: "20 BB",
+    },
   },
   {
     id: "bb-defend-k4s",
@@ -37,6 +40,9 @@ const QUESTIONS = [
     ],
     correctKeys: ["CALL"],
     strictCorrect: ["CALL"],
+    context: {
+      effectiveStack: "20 BB",
+    },
   },
   {
     id: "flop-cbet-kqo",
@@ -51,6 +57,9 @@ const QUESTIONS = [
     ],
     correctKeys: ["CBET_33"],
     strictCorrect: ["CBET_33"],
+    context: {
+      effectiveStack: "100 BB",
+    },
   },
 ] as const satisfies readonly TrainingQuestion[];
 
@@ -141,6 +150,10 @@ describe("training session engine", () => {
     expect(fixed.missed).toEqual({});
     expect(fixed.streak).toBe(1);
     expect(fixed.byCategory.BB_DEFEND).toEqual({
+      answered: 2,
+      correct: 1,
+    });
+    expect(fixed.byStackBand.BB_15_20).toEqual({
       answered: 2,
       correct: 1,
     });

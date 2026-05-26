@@ -2,6 +2,7 @@ import {
   MAX_BLOCK_SIZE,
   MIN_BLOCK_SIZE,
 } from "../domain/trainingSession";
+import type { StackBandFilter } from "../domain/stackBand";
 import type { StrictMode, TrainingMode } from "../domain/types";
 
 type SessionControlsState = {
@@ -9,6 +10,7 @@ type SessionControlsState = {
   readonly seed: number;
   readonly mode: TrainingMode;
   readonly strict: StrictMode;
+  readonly stackBand: StackBandFilter;
 };
 
 function renderModeOption(
@@ -43,6 +45,14 @@ export function renderSessionControls(state: SessionControlsState): string {
         <select data-mode>
           ${renderModeOption("MIXED", "Mixed", state.mode)}
           ${renderModeOption("MISSED", "Missed-only", state.mode)}
+        </select>
+      </label>
+      <label class="filter-picker">
+        <span>Stack band</span>
+        <select data-stack-band>
+          <option value="ALL" ${state.stackBand === "ALL" ? "selected" : ""}>All</option>
+          <option value="BB_15_20" ${state.stackBand === "BB_15_20" ? "selected" : ""}>15-20 BB</option>
+          <option value="BB_21_25" ${state.stackBand === "BB_21_25" ? "selected" : ""}>21-25 BB</option>
         </select>
       </label>
       <label class="filter-picker">

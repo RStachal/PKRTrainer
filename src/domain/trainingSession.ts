@@ -12,6 +12,8 @@ export type QuestionProgress = {
   readonly correct: number;
 };
 
+export type StackBandKey = "BB_15_20" | "BB_21_25";
+
 export type TrainingProgress = {
   readonly answered: number;
   readonly correct: number;
@@ -19,6 +21,7 @@ export type TrainingProgress = {
   readonly seen: Readonly<Record<string, true>>;
   readonly missed: Readonly<Record<string, true>>;
   readonly byCategory: Readonly<Record<string, QuestionProgress>>;
+  readonly byStackBand: Readonly<Partial<Record<StackBandKey, QuestionProgress>>>;
 };
 
 export type TrainingSessionConfig = {
@@ -56,6 +59,7 @@ export const EMPTY_TRAINING_PROGRESS: TrainingProgress = {
   seen: {},
   missed: {},
   byCategory: {},
+  byStackBand: {},
 };
 
 export function clampBlockSize(value: number | undefined): number {
@@ -203,6 +207,10 @@ export function recordQuestionAnswer(
     answered: 0,
     correct: 0,
   };
+  const stackBand = getStackBandFromQuestion(question);
+  const currentStackBand = stackBand
+    ? progress.byStackBand[stackBand] ?? { answered: 0, correct: 0 }
+    : null;
 
   return {
     result,
@@ -227,8 +235,32 @@ export function recordQuestionAnswer(
           correct: currentCategory.correct + (result.isCorrect ? 1 : 0),
         },
       },
+      byStackBand:
+        stackBand && currentStackBand
+          ? {
+              ...progress.byStackBand,
+              [stackBand]: {
+                answered: currentStackBand.answered + 1,
+                correct: currentStackBand.correct + (result.isCorrect ? 1 : 0),
+              },
+            }
+          : progress.byStackBand,
     },
   };
+}
+
+function getStackBandFromQuestion(question: TrainingQuestion): StackBandKey | null {
+  const effectiveStack = question.context?.effectiveStack;
+  if (!effectiveStack) return null;
+
+  const match = effectiveStack.match(/(\d+(?:\.\d+)?)\s*BB/i);
+  if (!match) return null;
+
+  const value = Number(match[1]);
+  if (value >= 15 && value <= 20) return "BB_15_20";
+  if (value >= 21 && value <= 25) return "BB_21_25";
+
+  return null;
 }
 
 function omitRecordKey<T>(

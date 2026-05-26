@@ -87,6 +87,10 @@ describe("nove ukladani statistik aplikace", () => {
         byCategory: {
           BB_DEFEND: { answered: 3, correct: 2 },
         },
+        byStackBand: {
+          BB_15_20: { answered: 2, correct: 1 },
+          BB_21_25: { answered: 1, correct: 1 },
+        },
       },
       settings: {
         format: "MTT_15_25BB",
@@ -96,6 +100,7 @@ describe("nove ukladani statistik aplikace", () => {
         seed: 42,
         mode: "MISSED",
         strict: "STRICT",
+        stackBand: "BB_21_25",
       },
     });
 
@@ -114,6 +119,10 @@ describe("nove ukladani statistik aplikace", () => {
         byCategory: {
           BB_DEFEND: { answered: 3, correct: 2 },
         },
+        byStackBand: {
+          BB_15_20: { answered: 2, correct: 1 },
+          BB_21_25: { answered: 1, correct: 1 },
+        },
       },
       settings: {
         format: "MTT_15_25BB",
@@ -123,6 +132,7 @@ describe("nove ukladani statistik aplikace", () => {
         seed: 42,
         mode: "MISSED",
         strict: "STRICT",
+        stackBand: "BB_21_25",
       },
     });
   });
@@ -142,6 +152,7 @@ describe("nove ukladani statistik aplikace", () => {
             seed: 1,
             mode: "MIXED",
             strict: "LENIENT",
+            stackBand: "ALL",
           },
         }),
       ),

@@ -23,6 +23,10 @@ import {
 } from "./domain/trainingFormat";
 import type { StrictMode, TrainingMode } from "./domain/types";
 import {
+  matchesStackBandFilter,
+  type StackBandFilter,
+} from "./domain/stackBand";
+import {
   loadAppState,
   resetAppState,
   saveAppState,
@@ -42,6 +46,7 @@ type SessionConfig = {
   seed: number;
   mode: TrainingMode;
   strict: StrictMode;
+  stackBand: StackBandFilter;
 };
 
 type AppState = {
@@ -62,6 +67,7 @@ const DEFAULT_SESSION_CONFIG: SessionConfig = {
   seed: 1,
   mode: "MIXED",
   strict: "LENIENT",
+  stackBand: "ALL",
 };
 const QUESTIONS_BY_SPOT_ID = new Map(
   TRAINING_SPOTS.map((spot) => [spot.id, questionFromSpot(spot)]),
@@ -82,25 +88,30 @@ function persistState(state: AppState): void {
       seed: state.config.seed,
       mode: state.config.mode,
       strict: state.config.strict,
+      stackBand: state.config.stackBand,
     },
   });
 }
 
 function getQuestionsForFormat(
   format: TrainingFormatId,
+  stackBand: StackBandFilter,
 ): readonly TrainingQuestion[] {
-  return TRAINING_SPOTS.filter((spot) => spot.format === format).map(
-    (spot) => QUESTIONS_BY_SPOT_ID.get(spot.id) ?? questionFromSpot(spot),
-  );
+  return TRAINING_SPOTS.filter(
+    (spot) =>
+      spot.format === format &&
+      matchesStackBandFilter(spot.effectiveStack, stackBand),
+  ).map((spot) => QUESTIONS_BY_SPOT_ID.get(spot.id) ?? questionFromSpot(spot));
 }
 
 function getQuestionsForSelection(
   format: TrainingFormatId,
   phase: PhaseFilter,
+  stackBand: StackBandFilter,
 ): readonly TrainingQuestion[] {
   const selectedPhase = toSelectionPhase(phase);
 
-  return getQuestionsForFormat(format).filter(
+  return getQuestionsForFormat(format, stackBand).filter(
     (question) => !selectedPhase || question.phase === selectedPhase,
   );
 }
@@ -108,9 +119,14 @@ function getQuestionsForSelection(
 function getAvailableCategories(
   format: TrainingFormatId,
   phase: PhaseFilter,
+  stackBand: StackBandFilter,
 ): readonly CategoryValue[] {
   return Array.from(
-    new Set(getQuestionsForSelection(format, phase).map((question) => question.category)),
+    new Set(
+      getQuestionsForSelection(format, phase, stackBand).map(
+        (question) => question.category,
+      ),
+    ),
   ).sort();
 }
 
@@ -118,9 +134,12 @@ function normalizeCategory(
   category: CategoryValue,
   format: TrainingFormatId,
   phase: PhaseFilter,
+  stackBand: StackBandFilter,
 ): CategoryValue {
   if (category === "ALL") return category;
-  return getAvailableCategories(format, phase).includes(category) ? category : "ALL";
+  return getAvailableCategories(format, phase, stackBand).includes(category)
+    ? category
+    : "ALL";
 }
 
 function getSpotByQuestionId(questionId: string | null): TrainingSpot | null {
@@ -135,7 +154,7 @@ function createSession(
   config: SessionConfig,
   progress: TrainingProgress,
 ): Pick<AppState, "session" | "currentQuestion" | "currentSpot"> {
-  const questions = getQuestionsForFormat(format);
+  const questions = getQuestionsForFormat(format, config.stackBand);
   const session = createTrainingSession(
     questions,
     {
@@ -158,7 +177,12 @@ function createSession(
 }
 
 function restartBlock(state: AppState): void {
-  state.category = normalizeCategory(state.category, state.format, state.phase);
+  state.category = normalizeCategory(
+    state.category,
+    state.format,
+    state.phase,
+    state.config.stackBand,
+  );
   Object.assign(
     state,
     createSession(
@@ -175,7 +199,10 @@ function restartBlock(state: AppState): void {
 function advanceSession(
   state: AppState,
 ): Pick<AppState, "session" | "currentQuestion" | "currentSpot"> {
-  const next = getNextQuestion(state.session, getQuestionsForFormat(state.format));
+  const next = getNextQuestion(
+    state.session,
+    getQuestionsForFormat(state.format, state.config.stackBand),
+  );
 
   return {
     session: next.session,
@@ -188,12 +215,34 @@ function renderSessionSummary(session: TrainingSession): string {
   const { answered, correct } = session.progress;
   const successRate =
     answered === 0 ? 0 : Math.round((correct / answered) * 100);
+  const stack15 = session.progress.byStackBand.BB_15_20;
+  const stack21 = session.progress.byStackBand.BB_21_25;
+  const stack15Rate =
+    !stack15 || stack15.answered === 0
+      ? null
+      : Math.round((stack15.correct / stack15.answered) * 100);
+  const stack21Rate =
+    !stack21 || stack21.answered === 0
+      ? null
+      : Math.round((stack21.correct / stack21.answered) * 100);
 
   return `
     <section class="session-summary" aria-label="Shrnuti session">
       <p class="summary-kicker">Session dokoncena</p>
       <h2>${correct} / ${answered} spravne</h2>
       <p>Uspesnost ${successRate} %. Dej si dalsi blok a nech statistiky ukazat, ktere spoty si rikaji o opakovani.</p>
+      <div class="stack-summary">
+        <div>
+          <span>15-20 BB</span>
+          <strong>${!stack15 ? "0/0" : `${stack15.correct}/${stack15.answered}`}</strong>
+          <small>${stack15Rate === null ? "-" : `${stack15Rate} %`}</small>
+        </div>
+        <div>
+          <span>21-25 BB</span>
+          <strong>${!stack21 ? "0/0" : `${stack21.correct}/${stack21.answered}`}</strong>
+          <small>${stack21Rate === null ? "-" : `${stack21Rate} %`}</small>
+        </div>
+      </div>
       <button class="next-button" data-new-block type="button">Novy blok</button>
     </section>
   `;
@@ -207,6 +256,8 @@ function createAppMarkup(state: AppState): string {
     correct: state.session.progress.correct,
     remaining: state.session.remaining,
     streak: state.session.progress.streak,
+    stackBand: state.config.stackBand,
+    byStackBand: state.session.progress.byStackBand,
   };
 
   return `
@@ -215,7 +266,7 @@ function createAppMarkup(state: AppState): string {
         state.format,
         state.phase,
         state.category,
-        getAvailableCategories(state.format, state.phase),
+        getAvailableCategories(state.format, state.phase, state.config.stackBand),
       )}
       ${renderSessionControls(state.config)}
       ${renderStatsStrip(state.statistics, sessionProgress)}
@@ -262,12 +313,14 @@ export function renderApp(root: HTMLElement): void {
     persisted.settings?.category ?? "ALL",
     persisted.settings?.format ?? DEFAULT_TRAINING_FORMAT,
     defaultPhase,
+    persisted.settings?.stackBand ?? DEFAULT_SESSION_CONFIG.stackBand,
   );
   const initialConfig: SessionConfig = {
     blockSize: persisted.settings?.blockSize ?? DEFAULT_SESSION_CONFIG.blockSize,
     seed: persisted.settings?.seed ?? DEFAULT_SESSION_CONFIG.seed,
     mode: persisted.settings?.mode ?? DEFAULT_SESSION_CONFIG.mode,
     strict: persisted.settings?.strict ?? DEFAULT_SESSION_CONFIG.strict,
+    stackBand: persisted.settings?.stackBand ?? DEFAULT_SESSION_CONFIG.stackBand,
   };
   const initialSession = createSession(
     persisted.settings?.format ?? DEFAULT_TRAINING_FORMAT,
@@ -308,6 +361,11 @@ export function renderApp(root: HTMLElement): void {
       state.config = {
         ...state.config,
         strict: (target as HTMLSelectElement).value as StrictMode,
+      };
+    } else if (target.matches("[data-stack-band]")) {
+      state.config = {
+        ...state.config,
+        stackBand: (target as HTMLSelectElement).value as StackBandFilter,
       };
     } else if (target.matches("[data-block-size]")) {
       state.config = {
@@ -372,6 +430,21 @@ export function renderApp(root: HTMLElement): void {
       restartBlock(state);
       persistState(state);
       render(root, state);
+      return;
+    }
+
+    const stackFocusButton = target.closest<HTMLButtonElement>("[data-stack-focus]");
+    if (stackFocusButton) {
+      const stackFocus = stackFocusButton.dataset.stackFocus;
+      if (stackFocus === "BB_15_20" || stackFocus === "BB_21_25") {
+        state.config = {
+          ...state.config,
+          stackBand: stackFocus,
+        };
+        restartBlock(state);
+        persistState(state);
+        render(root, state);
+      }
       return;
     }
 
