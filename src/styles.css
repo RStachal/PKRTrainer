@@ -387,6 +387,14 @@ select {
   margin: 0;
 }
 
+.range-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+
 .prompt,
 .range-panel p {
   color: #c8d3dc;
@@ -503,6 +511,27 @@ select {
   font-size: 0.72rem;
   font-weight: 800;
   padding: 6px 9px;
+}
+
+.range-badge {
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  padding: 5px 10px;
+  text-transform: uppercase;
+}
+
+.range-badge.is-reviewed {
+  background: rgba(33, 122, 87, 0.22);
+  border: 1px solid rgba(127, 214, 178, 0.4);
+  color: #8de2be;
+}
+
+.range-badge.is-draft {
+  background: rgba(216, 180, 95, 0.2);
+  border: 1px solid rgba(216, 180, 95, 0.4);
+  color: #f2d089;
 }
 
 .range-matrix {
@@ -719,6 +748,11 @@ select {
   .spot-heading h2,
   .range-panel h2 {
     font-size: 1.18rem;
+  }
+
+  .range-badge {
+    font-size: 0.62rem;
+    padding: 4px 8px;
   }
 
   .prompt,

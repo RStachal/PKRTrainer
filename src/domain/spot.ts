@@ -51,6 +51,7 @@ export type TrainingSpot = {
   readonly seats: readonly TableSeat[];
   readonly answerOptions: readonly ActionId[];
   readonly correctAction: ActionId;
+  readonly rangeProfileId?: string;
   readonly range: RangeReference;
   readonly explanation: string;
 };

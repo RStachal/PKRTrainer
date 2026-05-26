@@ -1,13 +1,5 @@
 import type { ActionId, SpotCategory, TrainingSpot } from "../../domain/spot";
-import {
-  MTT_BB_DEFEND_BTN_2X,
-  MTT_BB_DEFEND_BTN_2_2X,
-  MTT_BB_DEFEND_BTN_2_5X,
-  MTT_BB_DEFEND_CO_2X,
-  MTT_BB_DEFEND_CO_2_3X,
-  MTT_BB_DEFEND_SB_2X,
-  MTT_BB_DEFEND_SB_2_5X,
-} from "../ranges/mttPreflopRanges";
+import { getRangeProfile } from "../ranges/rangeProfileRegistry";
 
 type SpotInput = {
   id: string;
@@ -20,13 +12,60 @@ type SpotInput = {
   seats: TrainingSpot["seats"];
   answerOptions: readonly ActionId[];
   correctAction: ActionId;
-  rangeTitle: string;
-  rangeSummary: string;
-  rangeCells: TrainingSpot["range"]["cells"];
+  rangeProfileId: string;
   explanation: string;
 };
 
+function parseBbStack(effectiveStack: string): number | null {
+  const match = effectiveStack.match(/(\d+(?:\.\d+)?)\s*BB/i);
+  if (!match) return null;
+  return Number(match[1]);
+}
+
+function pickStackBandProfileId(baseProfileId: string, effectiveStack: string): string {
+  const stack = parseBbStack(effectiveStack);
+  const isShallow = stack === null ? false : stack <= 20;
+
+  if (baseProfileId === "mtt-15-25-open-btn") {
+    return isShallow ? "mtt-15-20-open-btn" : "mtt-21-25-open-btn";
+  }
+
+  if (baseProfileId === "mtt-15-25-open-co-hj") {
+    return isShallow ? "mtt-15-20-open-co-hj" : "mtt-21-25-open-co-hj";
+  }
+
+  if (baseProfileId === "mtt-15-25-open-sb") {
+    return isShallow ? "mtt-15-20-open-sb" : "mtt-21-25-open-sb";
+  }
+
+  if (baseProfileId.startsWith("mtt-15-20-rejam-")) {
+    return isShallow
+      ? baseProfileId
+      : baseProfileId.replace("mtt-15-20-rejam-", "mtt-21-25-rejam-");
+  }
+
+  if (baseProfileId.startsWith("mtt-15-25-bb-defend-")) {
+    return isShallow
+      ? baseProfileId.replace("mtt-15-25-bb-defend-", "mtt-15-20-bb-defend-")
+      : baseProfileId.replace("mtt-15-25-bb-defend-", "mtt-21-25-bb-defend-");
+  }
+
+  if (baseProfileId.startsWith("mtt-15-25-iso-")) {
+    return isShallow
+      ? baseProfileId.replace("mtt-15-25-iso-", "mtt-15-20-iso-")
+      : baseProfileId.replace("mtt-15-25-iso-", "mtt-21-25-iso-");
+  }
+
+  return baseProfileId;
+}
+
 function makeSpot(input: SpotInput): TrainingSpot {
+  const rangeProfileId = pickStackBandProfileId(
+    input.rangeProfileId,
+    input.effectiveStack,
+  );
+  const rangeProfile = getRangeProfile(rangeProfileId);
+
   return {
     id: input.id,
     format: "MTT_15_25BB",
@@ -40,10 +79,11 @@ function makeSpot(input: SpotInput): TrainingSpot {
     seats: input.seats,
     answerOptions: input.answerOptions,
     correctAction: input.correctAction,
+    rangeProfileId,
     range: {
-      title: input.rangeTitle,
-      summary: input.rangeSummary,
-      cells: input.rangeCells,
+      title: rangeProfile.title,
+      summary: rangeProfile.summary,
+      cells: rangeProfile.cells,
     },
     explanation: input.explanation,
   };
@@ -73,16 +113,7 @@ export const MTT_15_25BB_SPOTS = [
     seats: BLINDS_SEATS,
     answerOptions: ["FOLD", "OPEN", "JAM"],
     correctAction: "OPEN",
-    rangeTitle: "BTN open 20 BB",
-    rangeSummary:
-      "Button otevira siroce, ale vetsinu hratelnych kombinaci stale preferuje otevrit mensim sizingem.",
-    rangeCells: [
-      { hand: "A8o", action: "OPEN", weight: "pure" },
-      { hand: "A2o", action: "OPEN", weight: "mix" },
-      { hand: "K7s", action: "OPEN", weight: "mix" },
-      { hand: "Q5o", action: "FOLD", weight: "pure" },
-      { hand: "22", action: "OPEN", weight: "pure" },
-    ],
+    rangeProfileId: "mtt-15-25-open-btn",
     explanation:
       "A8o je pro BTN pri 20 BB standardni open. Jam nechavame hlavne pro specificke exploit spoty.",
   }),
@@ -98,15 +129,7 @@ export const MTT_15_25BB_SPOTS = [
     seats: BLINDS_SEATS,
     answerOptions: ["FOLD", "OPEN", "JAM"],
     correctAction: "OPEN",
-    rangeTitle: "BTN open suited kingove",
-    rangeSummary:
-      "Suited kingove maji dobrou hratelnost a blocker efekt, proto casto zustavaji v open range.",
-    rangeCells: [
-      { hand: "K5s", action: "OPEN", weight: "pure" },
-      { hand: "K2s", action: "OPEN", weight: "mix" },
-      { hand: "K8o", action: "OPEN", weight: "mix" },
-      { hand: "Q4o", action: "FOLD", weight: "pure" },
-    ],
+    rangeProfileId: "mtt-15-25-open-btn",
     explanation:
       "K5s je na BTN pri 18 BB dost silna handa na mensi open. Open zachova prostor na fold proti nevhodne akci.",
   }),
@@ -122,15 +145,7 @@ export const MTT_15_25BB_SPOTS = [
     seats: BLINDS_SEATS,
     answerOptions: ["FOLD", "OPEN", "JAM"],
     correctAction: "FOLD",
-    rangeTitle: "BTN marginalni offsuit handy",
-    rangeSummary:
-      "Nejslabsi offsuit queen kombinace casto nemaji dost equity ani realizace pro default open.",
-    rangeCells: [
-      { hand: "Q4o", action: "FOLD", weight: "pure" },
-      { hand: "Q8o", action: "OPEN", weight: "mix" },
-      { hand: "Q5s", action: "OPEN", weight: "mix" },
-      { hand: "J5o", action: "FOLD", weight: "pure" },
-    ],
+    rangeProfileId: "mtt-15-25-open-btn",
     explanation:
       "Q4o je prilis slaba offsuit kombinace. Bez exploitu na blindy je fold lepsi nez automaticky krast.",
   }),
@@ -151,15 +166,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "OPEN", "JAM"],
     correctAction: "OPEN",
-    rangeTitle: "CO open 24 BB",
-    rangeSummary:
-      "CO oteviraci range je uzsi nez BTN, ale K9s je porad standardni open.",
-    rangeCells: [
-      { hand: "K9s", action: "OPEN", weight: "pure" },
-      { hand: "K5s", action: "OPEN", weight: "mix" },
-      { hand: "Q9o", action: "FOLD", weight: "mix" },
-      { hand: "A2s", action: "OPEN", weight: "pure" },
-    ],
+    rangeProfileId: "mtt-15-25-open-co-hj",
     explanation:
       "K9s ma solidni equity, blocker a hratelnost po flopu. Pri 24 BB nejde o jam, ale o standardni open.",
   }),
@@ -180,15 +187,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "OPEN", "JAM"],
     correctAction: "FOLD",
-    rangeTitle: "CO offsuit hranice",
-    rangeSummary:
-      "Slabe offsuit broadway-ish handy z CO casto trpi proti callum a 3betum za nami.",
-    rangeCells: [
-      { hand: "Q8o", action: "FOLD", weight: "pure" },
-      { hand: "QTo", action: "OPEN", weight: "pure" },
-      { hand: "Q9s", action: "OPEN", weight: "pure" },
-      { hand: "K9o", action: "FOLD", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-25-open-co-hj",
     explanation:
       "Q8o je z CO mimo default open range. BTN a blindy maji dost prostoru nas potrestat.",
   }),
@@ -204,15 +203,7 @@ export const MTT_15_25BB_SPOTS = [
     seats: SB_OPEN_SEATS,
     answerOptions: ["FOLD", "OPEN", "JAM"],
     correctAction: "OPEN",
-    rangeTitle: "SB open vs BB",
-    rangeSummary:
-      "V BvB otevirame siroce, ale porad typicky mensim sizingem misto zbytecneho jamu.",
-    rangeCells: [
-      { hand: "Q9o", action: "OPEN", weight: "pure" },
-      { hand: "Q5o", action: "OPEN", weight: "mix" },
-      { hand: "72o", action: "FOLD", weight: "pure" },
-      { hand: "A2o", action: "OPEN", weight: "pure" },
-    ],
+    rangeProfileId: "mtt-15-25-open-sb",
     explanation:
       "Q9o je v heads-up blind souboji dost silna handa na open. Jam by zbytecne riskoval stack proti normalni obrane.",
   }),
@@ -228,15 +219,7 @@ export const MTT_15_25BB_SPOTS = [
     seats: SB_OPEN_SEATS,
     answerOptions: ["FOLD", "OPEN", "JAM"],
     correctAction: "FOLD",
-    rangeTitle: "SB nejslabsi handy",
-    rangeSummary:
-      "I v BvB maji nejslabsi offsuit kombinace spatnou realizaci a neblokujici strukturu.",
-    rangeCells: [
-      { hand: "72o", action: "FOLD", weight: "pure" },
-      { hand: "82o", action: "FOLD", weight: "pure" },
-      { hand: "T4o", action: "OPEN", weight: "mix" },
-      { hand: "54s", action: "OPEN", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-25-open-sb",
     explanation:
       "72o je i v SB prilis nizko. Bez silneho exploitu proti BB je fold standard.",
   }),
@@ -256,10 +239,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "CALL",
-    rangeTitle: "BB defend vs BTN 2.5x",
-    rangeSummary:
-      "MTT BB proti BTN 2.5x brani porad siroce: suited handy, pary, broadwaye a cast lepsich offsuit kombinaci. Nejde jen o konkretni hero handu.",
-    rangeCells: MTT_BB_DEFEND_BTN_2_5X,
+    rangeProfileId: "mtt-15-25-bb-defend-btn-2-5x",
     explanation:
       "K4s je suited handa s dostatecnou hratelnosti proti BTN. Proti 2.5x patri do defenzivni range.",
   }),
@@ -279,10 +259,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "CALL",
-    rangeTitle: "BB defend vs maly BTN open",
-    rangeSummary:
-      "Proti 2.2x BTN openu ma BB lepsi cenu nez proti 2.5x, proto pribyva vice suited trash, slabsi broadwaye a cast offsuit konektivity.",
-    rangeCells: MTT_BB_DEFEND_BTN_2_2X,
+    rangeProfileId: "mtt-15-25-bb-defend-btn-2-2x",
     explanation:
       "J7s ma proti malemu BTN openu dost equity a hratelnosti. Fold by zahazoval prilis mnoho blindu.",
   }),
@@ -302,10 +279,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "FOLD",
-    rangeTitle: "BB offsuit trash vs BTN",
-    rangeSummary:
-      "BB defend proti BTN 2.5x je siroky, ale uplny spodek offsuit Qx/Kx bez suited realizace zustava mimo default call.",
-    rangeCells: MTT_BB_DEFEND_BTN_2_5X,
+    rangeProfileId: "mtt-15-25-bb-defend-btn-2-5x",
     explanation:
       "Q3o je proti 2.5x open slabsi nez vypada. Offsuit kicker realizuje spatne a handa casto dominuje sama sebe.",
   }),
@@ -324,10 +298,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "CALL",
-    rangeTitle: "BB defend vs SB",
-    rangeSummary:
-      "BvB je BB v pozici a proti SB openu brani velmi siroce, vcetne mnoha offsuit hand, ktere by proti CO/BTN vetsimu sizingu uz foldoval.",
-    rangeCells: MTT_BB_DEFEND_SB_2_5X,
+    rangeProfileId: "mtt-15-25-bb-defend-sb-2-5x",
     explanation:
       "Proti SB openu hrajeme postflop v pozici a dostavame dobrou cenu. T6o je rozumny defend, hlavne proti standardnimu souperi.",
   }),
@@ -348,10 +319,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "FOLD",
-    rangeTitle: "BB defend vs CO",
-    rangeSummary:
-      "Proti CO je opening range silnejsi nez BTN, takze BB stale brani suited equity a pary, ale slabsi offsuit esa jsou uz casto jen nizkofrekvencni defend nebo fold.",
-    rangeCells: MTT_BB_DEFEND_CO_2_3X,
+    rangeProfileId: "mtt-15-25-bb-defend-co-2-3x",
     explanation:
       "A2o ma sice eso blocker, ale po callu casto hraje dominovanou top pair. Proti CO je default spis fold.",
   }),
@@ -373,15 +341,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "RAISE",
-    rangeTitle: "Iso vs limp",
-    rangeSummary:
-      "Silne suited broadway/ace handy chteji izolovat limpera a hrat pot s iniciativou.",
-    rangeCells: [
-      { hand: "A9s", action: "RAISE", weight: "pure" },
-      { hand: "A4s", action: "RAISE", weight: "mix" },
-      { hand: "KJo", action: "RAISE", weight: "mix" },
-      { hand: "54s", action: "CALL", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-25-iso-co-hj-limp",
     explanation:
       "A9s je prilis silne na pasivni overlimp. Iso raise bere iniciativu a casto vyhraje pot uz pred flopem.",
   }),
@@ -403,15 +363,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "RAISE",
-    rangeTitle: "BTN iso vs limp",
-    rangeSummary:
-      "BTN muze izolovat siroce diky pozici, hlavne s handami, ktere dominují limp/call range.",
-    rangeCells: [
-      { hand: "KJo", action: "RAISE", weight: "pure" },
-      { hand: "K9o", action: "FOLD", weight: "mix" },
-      { hand: "QJo", action: "RAISE", weight: "mix" },
-      { hand: "J8s", action: "RAISE", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-25-iso-btn-limp",
     explanation:
       "KJo na BTN dobre dominuje slabsi kingy a jacky v limp range. Raise je lepsi nez call bez iniciativy.",
   }),
@@ -431,15 +383,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "FOLD",
-    rangeTitle: "SB vs BTN limp",
-    rangeSummary:
-      "Ze SB mimo pozici nechceme prilis casto dokompletovavat slabe spekulativni handy pri nizsim stacku.",
-    rangeCells: [
-      { hand: "54s", action: "FOLD", weight: "mix" },
-      { hand: "A8o", action: "RAISE", weight: "pure" },
-      { hand: "KTo", action: "RAISE", weight: "mix" },
-      { hand: "98s", action: "CALL", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-25-iso-sb-vs-btn-limp",
     explanation:
       "54s vypada hratelne, ale ze SB bude casto mimo pozici a stack neni hluboky. Default je fold bez specialni dynamiky.",
   }),
@@ -459,15 +403,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "JAM"],
     correctAction: "JAM",
-    rangeTitle: "BB rejam vs BTN 17 BB",
-    rangeSummary:
-      "Suited wheel esa jsou dobre rejam kandidaty diky blockeru, equity a fold equity.",
-    rangeCells: [
-      { hand: "A5s", action: "JAM", weight: "mix" },
-      { hand: "A9o", action: "JAM", weight: "mix" },
-      { hand: "KQo", action: "JAM", weight: "mix" },
-      { hand: "K7s", action: "CALL", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-20-rejam-bb-vs-btn",
     explanation:
       "A5s blokuje silna esa a pri callu ma slusnou equity. Proti sirokemu BTN openu je rejam standardni soucast strategie.",
   }),
@@ -488,15 +424,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "JAM"],
     correctAction: "CALL",
-    rangeTitle: "BB vs CO open 18 BB",
-    rangeSummary:
-      "Proti CO je open range silnejsi nez BTN. Cast suited kingu je lepsi realizovat callem nez tlacit all-in.",
-    rangeCells: [
-      { hand: "K7s", action: "CALL", weight: "mix" },
-      { hand: "KTs", action: "JAM", weight: "mix" },
-      { hand: "K5s", action: "FOLD", weight: "mix" },
-      { hand: "A5s", action: "JAM", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-20-rejam-bb-vs-co",
     explanation:
       "K7s nema tolik blocker hodnoty ani equity proti CO call range. Call je casto lepsi default nez rejam.",
   }),
@@ -517,15 +445,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "JAM"],
     correctAction: "JAM",
-    rangeTitle: "SB rejam pary",
-    rangeSummary:
-      "Stredni a nizsi pary pri 15-20 BB casto preferuji rejam pred callem mimo pozici.",
-    rangeCells: [
-      { hand: "66", action: "JAM", weight: "pure" },
-      { hand: "44", action: "JAM", weight: "mix" },
-      { hand: "22", action: "FOLD", weight: "mix" },
-      { hand: "99", action: "JAM", weight: "pure" },
-    ],
+    rangeProfileId: "mtt-15-20-rejam-sb-vs-co",
     explanation:
       "66 ma dobrou equity, ale spatne se hraje callem mimo pozici. Rejam maximalizuje fold equity a realizaci.",
   }),
@@ -547,15 +467,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "JAM"],
     correctAction: "CALL",
-    rangeTitle: "BTN vs HJ open",
-    rangeSummary:
-      "KQo je silna, ale proti HJ range nechceme vzdy izolovat do top calling range all-inem.",
-    rangeCells: [
-      { hand: "KQo", action: "CALL", weight: "mix" },
-      { hand: "AQo", action: "JAM", weight: "mix" },
-      { hand: "KJo", action: "FOLD", weight: "mix" },
-      { hand: "AJs", action: "JAM", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-20-rejam-btn-vs-co-hj",
     explanation:
       "Proti HJ openu je KQo casto moc dobra na fold, ale ne vzdy dost dobra na cisty rejam. Call v pozici je solidni default.",
   }),
@@ -576,15 +488,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "JAM"],
     correctAction: "JAM",
-    rangeTitle: "BB 15 BB vs CO",
-    rangeSummary:
-      "Pri 15 BB je mnoho silnych broadway es prirozeny rejam proti late-position openum.",
-    rangeCells: [
-      { hand: "AJo", action: "JAM", weight: "pure" },
-      { hand: "ATo", action: "JAM", weight: "mix" },
-      { hand: "A9o", action: "CALL", weight: "mix" },
-      { hand: "KQo", action: "JAM", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-20-rejam-bb-vs-co",
     explanation:
       "AJo je pri 15 BB velmi silna handa proti CO openu. Rejam bere fold equity a vyhne se slozitemu postflopu mimo pozici.",
   }),
@@ -604,15 +508,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "JAM"],
     correctAction: "JAM",
-    rangeTitle: "SB rejam suited broadwaye",
-    rangeSummary:
-      "Suited broadwaye dobre funguji jako rejam proti sirokemu BTN open range, hlavne ze SB mimo pozici.",
-    rangeCells: [
-      { hand: "QTs", action: "JAM", weight: "mix" },
-      { hand: "JTs", action: "JAM", weight: "mix" },
-      { hand: "Q9s", action: "CALL", weight: "mix" },
-      { hand: "KTs", action: "JAM", weight: "pure" },
-    ],
+    rangeProfileId: "mtt-15-20-rejam-sb-vs-btn",
     explanation:
       "QTs ma slusnou equity proti callum a blokuje cast pokracovaci range. Ze SB je rejam casto cistsi nez call mimo pozici.",
   }),
@@ -628,15 +524,7 @@ export const MTT_15_25BB_SPOTS = [
     seats: SB_OPEN_SEATS,
     answerOptions: ["FOLD", "OPEN", "JAM"],
     correctAction: "OPEN",
-    rangeTitle: "SB open esa",
-    rangeSummary:
-      "Heads-up proti BB otevirame vetsinu es mensim sizingem a nechavame si prostor proti agresi.",
-    rangeCells: [
-      { hand: "A2o", action: "OPEN", weight: "pure" },
-      { hand: "A8o", action: "OPEN", weight: "pure" },
-      { hand: "K4o", action: "OPEN", weight: "mix" },
-      { hand: "92o", action: "FOLD", weight: "pure" },
-    ],
+    rangeProfileId: "mtt-15-25-open-sb",
     explanation:
       "A2o ma blocker a dost equity na BvB open. Jam by byl bez specificke dynamiky zbytecne hruby.",
   }),
@@ -652,15 +540,7 @@ export const MTT_15_25BB_SPOTS = [
     seats: SB_OPEN_SEATS,
     answerOptions: ["FOLD", "OPEN", "JAM"],
     correctAction: "OPEN",
-    rangeTitle: "SB kralove offsuit",
-    rangeSummary:
-      "Offsuit kingove se v BvB casto oteviraji diky blockeru a heads-up charakteru spotu.",
-    rangeCells: [
-      { hand: "K4o", action: "OPEN", weight: "mix" },
-      { hand: "K8o", action: "OPEN", weight: "pure" },
-      { hand: "Q4o", action: "FOLD", weight: "mix" },
-      { hand: "J2o", action: "FOLD", weight: "pure" },
-    ],
+    rangeProfileId: "mtt-15-25-open-sb",
     explanation:
       "K4o neni krasna handa, ale v SB proti jedinemu souperi funguje jako nizkofrekvencni open. Default proti normalnimu BB je open.",
   }),
@@ -676,15 +556,7 @@ export const MTT_15_25BB_SPOTS = [
     seats: SB_OPEN_SEATS,
     answerOptions: ["FOLD", "OPEN", "JAM"],
     correctAction: "OPEN",
-    rangeTitle: "SB broadway low",
-    rangeSummary:
-      "Jx offsuit se slusnym kickerem ma v BvB dost showdown a realizace pro mensi open.",
-    rangeCells: [
-      { hand: "J8o", action: "OPEN", weight: "mix" },
-      { hand: "JTo", action: "OPEN", weight: "pure" },
-      { hand: "J4o", action: "FOLD", weight: "mix" },
-      { hand: "T6o", action: "OPEN", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-25-open-sb",
     explanation:
       "J8o je nad uplnym spodkem SB range. Otevirame mensim sizingem, ne jamem.",
   }),
@@ -700,15 +572,7 @@ export const MTT_15_25BB_SPOTS = [
     seats: SB_OPEN_SEATS,
     answerOptions: ["FOLD", "OPEN", "JAM"],
     correctAction: "FOLD",
-    rangeTitle: "SB slabsi offsuit konec",
-    rangeSummary:
-      "Nejslabsi disconnected offsuit handy nemaji dost equity ani blockeru na default open.",
-    rangeCells: [
-      { hand: "94o", action: "FOLD", weight: "pure" },
-      { hand: "T4o", action: "OPEN", weight: "mix" },
-      { hand: "96o", action: "OPEN", weight: "mix" },
-      { hand: "83o", action: "FOLD", weight: "pure" },
-    ],
+    rangeProfileId: "mtt-15-25-open-sb",
     explanation:
       "94o je prilis nizko a spatne realizuje equity. Pokud BB neni prehnane tight, fold je cisty default.",
   }),
@@ -724,15 +588,7 @@ export const MTT_15_25BB_SPOTS = [
     seats: SB_OPEN_SEATS,
     answerOptions: ["FOLD", "OPEN", "JAM"],
     correctAction: "OPEN",
-    rangeTitle: "SB suited connectory",
-    rangeSummary:
-      "Suited a connected handy maji v BvB dobrou hratelnost, hlavne pri 20+ BB.",
-    rangeCells: [
-      { hand: "86s", action: "OPEN", weight: "pure" },
-      { hand: "64s", action: "OPEN", weight: "mix" },
-      { hand: "T6o", action: "OPEN", weight: "mix" },
-      { hand: "85o", action: "FOLD", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-25-open-sb",
     explanation:
       "86s dobre realizuje equity a muze trefit silne draw. Mensi open je prirozeny default.",
   }),
@@ -752,10 +608,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "CALL",
-    rangeTitle: "BB defend vs BTN 2x",
-    rangeSummary:
-      "Proti BTN minraisu ma BB vybornou cenu a v MTT brani opravdu siroce: vetsinu suited kombinaci, vsechny pary a mnoho offsuit hand.",
-    rangeCells: MTT_BB_DEFEND_BTN_2X,
+    rangeProfileId: "mtt-15-25-bb-defend-btn-2x",
     explanation:
       "Q6s ma proti 2x open dostatecnou cenu a hratelnost. Fold by byl proti minraisu prilis tight.",
   }),
@@ -775,10 +628,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "CALL",
-    rangeTitle: "BB suited low vs minraise",
-    rangeSummary:
-      "BTN 2x dava BB tak dobrou cenu, ze se brani i slabe suited kombinace. Tyhle handy nejsou izolovane vyjimky, ale soucast siroke defend range.",
-    rangeCells: MTT_BB_DEFEND_BTN_2X,
+    rangeProfileId: "mtt-15-25-bb-defend-btn-2x",
     explanation:
       "84s je okrajovy, ale proti 2x sizingu se casto brani. Offsuit varianta by uz byla fold.",
   }),
@@ -799,10 +649,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "CALL",
-    rangeTitle: "BB vs CO minraise",
-    rangeSummary:
-      "CO minraise je porad silnejsi nez BTN, ale sizing 2x otevre BB defend o dalsi suited handy a cast offsuit broadway konektivity.",
-    rangeCells: MTT_BB_DEFEND_CO_2X,
+    rangeProfileId: "mtt-15-25-bb-defend-co-2x",
     explanation:
       "J9o je proti CO 2x na hranici, ale casto obhajitelny defend. Proti vetsimu sizingu by fold daval vetsi smysl.",
   }),
@@ -821,10 +668,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "FOLD",
-    rangeTitle: "BB vs SB bottom offsuit",
-    rangeSummary:
-      "Proti SB minraisu brani BB nejvetsi cast range, protoze hraje v pozici. Uplny spodek offsuit kombinaci ale muze zustat fold.",
-    rangeCells: MTT_BB_DEFEND_SB_2X,
+    rangeProfileId: "mtt-15-25-bb-defend-sb-2x",
     explanation:
       "62o nema blocker, konektivitu ani suited hodnotu. I za dobrou cenu muze zustat fold.",
   }),
@@ -844,10 +688,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "CALL",
-    rangeTitle: "BB offsuit esa vs 2x",
-    rangeSummary:
-      "Proti sirokemu BTN minraisu se brani i offsuit esa a cast slabsiho Kx/Qx. Silnejsi cast range muze mixovat raise.",
-    rangeCells: MTT_BB_DEFEND_BTN_2X,
+    rangeProfileId: "mtt-15-25-bb-defend-btn-2x",
     explanation:
       "A7o dominuje cast BTN range a dostava dobrou cenu. Call je standardni default proti 2x.",
   }),
@@ -869,15 +710,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "RAISE",
-    rangeTitle: "Iso broadwaye",
-    rangeSummary:
-      "Broadway handy casto dominuji limp range a chteji hrat pot s iniciativou.",
-    rangeCells: [
-      { hand: "QJo", action: "RAISE", weight: "mix" },
-      { hand: "KJo", action: "RAISE", weight: "pure" },
-      { hand: "Q9o", action: "FOLD", weight: "mix" },
-      { hand: "JTs", action: "RAISE", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-25-iso-co-hj-limp",
     explanation:
       "QJo je dost silna na izolaci limpera z CO. Limp behind by zbytecne poustel blindy levne do hry.",
   }),
@@ -898,15 +731,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "RAISE",
-    rangeTitle: "BTN iso suited wheel esa",
-    rangeSummary:
-      "Suited wheel esa maji blocker, equity a dobrou hratelnost po izolaci.",
-    rangeCells: [
-      { hand: "A4s", action: "RAISE", weight: "pure" },
-      { hand: "A2s", action: "RAISE", weight: "mix" },
-      { hand: "A7o", action: "RAISE", weight: "mix" },
-      { hand: "54s", action: "CALL", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-25-iso-btn-limp",
     explanation:
       "A4s je velmi dobry iso kandidát. Raise vyuzije pozici a fold equity proti limperovi.",
   }),
@@ -928,15 +753,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "RAISE"],
     correctAction: "FOLD",
-    rangeTitle: "BTN slabsi offsuit iso",
-    rangeSummary:
-      "Slabsi offsuit kingove casto nedostatecne dominuji limp range a spatne hraji multiway.",
-    rangeCells: [
-      { hand: "K8o", action: "FOLD", weight: "mix" },
-      { hand: "KTo", action: "RAISE", weight: "mix" },
-      { hand: "K8s", action: "RAISE", weight: "mix" },
-      { hand: "Q9o", action: "FOLD", weight: "pure" },
-    ],
+    rangeProfileId: "mtt-15-25-iso-btn-limp",
     explanation:
       "K8o je casto prilis slabe na izolaci a call muze vytvorit multiway pot bez iniciativy. Fold je rozumny default.",
   }),
@@ -955,15 +772,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["CHECK", "RAISE", "FOLD"],
     correctAction: "RAISE",
-    rangeTitle: "BB iso vs SB limp",
-    rangeSummary:
-      "Proti SB limpu muze BB raisovat silnejsi suited broadwaye a potrestat pasivni vstup.",
-    rangeCells: [
-      { hand: "Q9s", action: "RAISE", weight: "mix" },
-      { hand: "K9o", action: "RAISE", weight: "mix" },
-      { hand: "74o", action: "CHECK", weight: "pure" },
-      { hand: "A2o", action: "RAISE", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-25-iso-bb-vs-sb-limp",
     explanation:
       "Q9s je dost silna na raise proti SB limpu. Check je hratelny, ale default exploit proti limpu je casto izolace.",
   }),
@@ -982,15 +791,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["CHECK", "RAISE", "FOLD"],
     correctAction: "CHECK",
-    rangeTitle: "BB checkback trash vs SB limp",
-    rangeSummary:
-      "Slabe offsuit handy muzou zdarma realizovat equity checkem; raise by zbytecne nafukoval pot.",
-    rangeCells: [
-      { hand: "74o", action: "CHECK", weight: "pure" },
-      { hand: "T4o", action: "CHECK", weight: "mix" },
-      { hand: "Q9s", action: "RAISE", weight: "mix" },
-      { hand: "A8o", action: "RAISE", weight: "pure" },
-    ],
+    rangeProfileId: "mtt-15-25-iso-bb-vs-sb-limp",
     explanation:
       "BB nemusi proti SB limpu raiseovat vsechno. 74o ma malo equity a zadny dobry blocker, check je nejlepsi.",
   }),
@@ -1010,15 +811,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "JAM"],
     correctAction: "JAM",
-    rangeTitle: "BB small pairs vs BTN",
-    rangeSummary:
-      "Male pary pri kratkych stackach casto preferuji jam a fold equity pred callem mimo pozici.",
-    rangeCells: [
-      { hand: "22", action: "JAM", weight: "mix" },
-      { hand: "55", action: "JAM", weight: "pure" },
-      { hand: "A2s", action: "JAM", weight: "mix" },
-      { hand: "K5s", action: "CALL", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-20-rejam-bb-vs-btn",
     explanation:
       "22 se po callu spatne realizuje, ale all-in ma fold equity a proti callum ma casto coinflip equity.",
   }),
@@ -1038,15 +831,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "JAM"],
     correctAction: "JAM",
-    rangeTitle: "SB offsuit esa vs BTN",
-    rangeSummary:
-      "Proti sirokemu BTN openu jsou stredni offsuit esa casto rejam pro blocker a equity.",
-    rangeCells: [
-      { hand: "A9o", action: "JAM", weight: "mix" },
-      { hand: "A5o", action: "FOLD", weight: "mix" },
-      { hand: "ATo", action: "JAM", weight: "pure" },
-      { hand: "KJo", action: "JAM", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-20-rejam-sb-vs-btn",
     explanation:
       "A9o blokuje cast silnych callu a dobre stoji proti BTN steal range. Ze SB nechceme casto callovat mimo pozici.",
   }),
@@ -1067,15 +852,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "JAM"],
     correctAction: "JAM",
-    rangeTitle: "BTN pair rejam vs CO",
-    rangeSummary:
-      "Male pary na BTN pri 18 BB casto maji dobry rejam proti CO, pokud za nami nejsou agresivni shorti.",
-    rangeCells: [
-      { hand: "44", action: "JAM", weight: "mix" },
-      { hand: "66", action: "JAM", weight: "pure" },
-      { hand: "22", action: "FOLD", weight: "mix" },
-      { hand: "A9s", action: "JAM", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-20-rejam-btn-vs-co-hj",
     explanation:
       "44 nechce casto callovat a hrat multiway. Rejam vyuzije fold equity a zabere dead money.",
   }),
@@ -1097,15 +874,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "JAM"],
     correctAction: "JAM",
-    rangeTitle: "CO suited ace vs HJ",
-    rangeSummary:
-      "ATs ma blocker, equity a realizaci, casto funguje jako rejam proti HJ pri 19 BB.",
-    rangeCells: [
-      { hand: "ATs", action: "JAM", weight: "mix" },
-      { hand: "AJs", action: "JAM", weight: "pure" },
-      { hand: "A8s", action: "CALL", weight: "mix" },
-      { hand: "KQs", action: "CALL", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-20-rejam-co-vs-hj",
     explanation:
       "ATs je dost silna na tlak proti HJ a blokuje cast nejhorsich callu. Call je mozny, ale rejam je cisty default.",
   }),
@@ -1124,15 +893,7 @@ export const MTT_15_25BB_SPOTS = [
     ],
     answerOptions: ["FOLD", "CALL", "JAM"],
     correctAction: "JAM",
-    rangeTitle: "BB rejam BvB 15 BB",
-    rangeSummary:
-      "BvB jsou range siroke a pri 15 BB mnoho broadwayi prirozene tlaci all-in.",
-    rangeCells: [
-      { hand: "KJo", action: "JAM", weight: "pure" },
-      { hand: "K9o", action: "JAM", weight: "mix" },
-      { hand: "QTo", action: "JAM", weight: "mix" },
-      { hand: "J8o", action: "CALL", weight: "mix" },
-    ],
+    rangeProfileId: "mtt-15-20-rejam-bb-vs-sb",
     explanation:
       "KJo je proti SB open range velmi silna. Pri 15 BB rejam dobre realizuje equity a tresta siroky open.",
   }),

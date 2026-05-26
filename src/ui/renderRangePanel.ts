@@ -4,6 +4,8 @@ import {
   getSuccessRate,
   type TrainingStatistics,
 } from "../domain/statistics";
+import type { RangeProfileSourceQuality } from "../domain/rangeProfile";
+import { getRangeProfile } from "../content/ranges/rangeProfileRegistry";
 import { getActionLabel } from "./actionLabels";
 import { renderRangeMatrix } from "./renderRangeMatrix";
 
@@ -38,12 +40,31 @@ function renderRange(spot: TrainingSpot): string {
     .join("");
 }
 
+function getRangeSourceQuality(spot: TrainingSpot): RangeProfileSourceQuality {
+  if (!spot.rangeProfileId) {
+    return "draft";
+  }
+
+  try {
+    return getRangeProfile(spot.rangeProfileId).sourceQuality;
+  } catch {
+    return "draft";
+  }
+}
+
+function renderRangeQualityBadge(quality: RangeProfileSourceQuality): string {
+  const isReviewed = quality === "reviewed";
+
+  return `<span class="range-badge ${isReviewed ? "is-reviewed" : "is-draft"}">${isReviewed ? "Reviewed" : "Draft"}</span>`;
+}
+
 export function renderRangePanel(
   spot: TrainingSpot,
   statistics: TrainingStatistics,
 ): string {
   const stat = getSpotStat(statistics, spot.id);
   const successRate = getSuccessRate(stat);
+  const quality = getRangeSourceQuality(spot);
 
   return `
     <section class="range-panel" aria-label="Range a vysvetleni">
@@ -52,7 +73,10 @@ export function renderRangePanel(
         <strong>${successRate === null ? "Novy" : `${Math.round(successRate * 100)} %`}</strong>
         <small>${stat.attempts} odpovedi</small>
       </div>
-      <h2>${spot.range.title}</h2>
+      <div class="range-header">
+        <h2>${spot.range.title}</h2>
+        ${renderRangeQualityBadge(quality)}
+      </div>
       ${renderRangeContext(spot)}
       <p>${spot.range.summary}</p>
       ${
