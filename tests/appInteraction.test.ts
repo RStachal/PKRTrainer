@@ -203,6 +203,40 @@ describe("app interaction", () => {
     expect(stackBand.value).toBe(initialBand);
   });
 
+  it("umi aplikovat focused block preset jednim klikem", () => {
+    const app = setupDom();
+
+    renderApp(app);
+
+    const preset = app.querySelector<HTMLButtonElement>(
+      '[data-session-preset="REJAM_15_20_STRICT"]',
+    );
+    if (!preset) throw new Error("Missing preset button");
+    preset.click();
+
+    expect(app.querySelector<HTMLInputElement>("[data-block-size]")?.value).toBe(
+      "20",
+    );
+    expect(app.querySelector<HTMLSelectElement>("[data-mode]")?.value).toBe(
+      "MIXED",
+    );
+    expect(app.querySelector<HTMLSelectElement>("[data-strict]")?.value).toBe(
+      "STRICT",
+    );
+    expect(app.querySelector<HTMLSelectElement>("[data-stack-band]")?.value).toBe(
+      "BB_15_20",
+    );
+    expect(app.querySelector<HTMLSelectElement>("[data-format]")?.value).toBe(
+      "MTT_15_25BB",
+    );
+    expect(app.querySelector<HTMLSelectElement>("[data-phase]")?.value).toBe(
+      "PREFLOP",
+    );
+    expect(app.querySelector<HTMLSelectElement>("[data-category]")?.value).toBe(
+      "REJAM",
+    );
+  });
+
   it("filtruje blok podle vybrane kategorie", () => {
     const app = setupDom();
 

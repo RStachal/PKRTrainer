@@ -49,6 +49,11 @@ type SessionConfig = {
   stackBand: StackBandFilter;
 };
 
+type SessionPresetId =
+  | "REJAM_15_20_STRICT"
+  | "BB_DEFEND_21_25_STRICT"
+  | "ISO_15_20_STRICT";
+
 type AppState = {
   format: TrainingFormatId;
   phase: PhaseFilter;
@@ -68,6 +73,53 @@ const DEFAULT_SESSION_CONFIG: SessionConfig = {
   mode: "MIXED",
   strict: "LENIENT",
   stackBand: "ALL",
+};
+
+const SESSION_PRESETS: Record<
+  SessionPresetId,
+  {
+    readonly format: TrainingFormatId;
+    readonly phase: PhaseFilter;
+    readonly category: CategoryValue;
+    readonly config: SessionConfig;
+  }
+> = {
+  REJAM_15_20_STRICT: {
+    format: "MTT_15_25BB",
+    phase: "PREFLOP",
+    category: "REJAM",
+    config: {
+      blockSize: 20,
+      seed: 1,
+      mode: "MIXED",
+      strict: "STRICT",
+      stackBand: "BB_15_20",
+    },
+  },
+  BB_DEFEND_21_25_STRICT: {
+    format: "MTT_15_25BB",
+    phase: "PREFLOP",
+    category: "BB_DEFEND",
+    config: {
+      blockSize: 20,
+      seed: 1,
+      mode: "MIXED",
+      strict: "STRICT",
+      stackBand: "BB_21_25",
+    },
+  },
+  ISO_15_20_STRICT: {
+    format: "MTT_15_25BB",
+    phase: "PREFLOP",
+    category: "ISO_LIMP",
+    config: {
+      blockSize: 20,
+      seed: 1,
+      mode: "MIXED",
+      strict: "STRICT",
+      stackBand: "BB_15_20",
+    },
+  },
 };
 const QUESTIONS_BY_SPOT_ID = new Map(
   TRAINING_SPOTS.map((spot) => [spot.id, questionFromSpot(spot)]),
@@ -209,6 +261,17 @@ function advanceSession(
     currentQuestion: next.question,
     currentSpot: getSpotByQuestionId(next.question?.id ?? null),
   };
+}
+
+function applySessionPreset(state: AppState, presetId: SessionPresetId): void {
+  const preset = SESSION_PRESETS[presetId];
+
+  state.format = preset.format;
+  state.phase = preset.phase;
+  state.category = preset.category;
+  state.config = { ...preset.config };
+
+  restartBlock(state);
 }
 
 function renderSessionSummary(session: TrainingSession): string {
@@ -430,6 +493,21 @@ export function renderApp(root: HTMLElement): void {
       restartBlock(state);
       persistState(state);
       render(root, state);
+      return;
+    }
+
+    const sessionPresetButton = target.closest<HTMLButtonElement>(
+      "[data-session-preset]",
+    );
+    if (sessionPresetButton) {
+      const presetId = sessionPresetButton.dataset.sessionPreset as
+        | SessionPresetId
+        | undefined;
+      if (presetId && presetId in SESSION_PRESETS) {
+        applySessionPreset(state, presetId);
+        persistState(state);
+        render(root, state);
+      }
       return;
     }
 

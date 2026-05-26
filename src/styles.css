@@ -105,6 +105,30 @@ select {
   width: 100%;
 }
 
+.session-presets {
+  display: grid;
+  gap: 8px;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.session-preset-button {
+  background: #182632;
+  border: 1px solid #2f4556;
+  border-radius: 8px;
+  color: #dce5eb;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+  min-height: 40px;
+  padding: 0 10px;
+  text-align: center;
+}
+
+.session-preset-button:hover {
+  filter: brightness(1.08);
+}
+
 .empty-state {
   background: #121b24;
   border: 1px solid #243441;
@@ -768,6 +792,10 @@ select {
 
   .session-controls {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .session-presets {
+    grid-template-columns: 1fr;
   }
 
   .session-controls .filter-picker:nth-child(3),

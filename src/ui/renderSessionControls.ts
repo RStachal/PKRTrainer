@@ -63,6 +63,11 @@ export function renderSessionControls(state: SessionControlsState): string {
         </select>
       </label>
       <button class="new-block-button" data-new-block type="button">Novy blok</button>
+      <div class="session-presets" aria-label="Focused block presety">
+        <button class="session-preset-button" data-session-preset="REJAM_15_20_STRICT" type="button">Preset: REJAM 15-20</button>
+        <button class="session-preset-button" data-session-preset="BB_DEFEND_21_25_STRICT" type="button">Preset: BB defend 21-25</button>
+        <button class="session-preset-button" data-session-preset="ISO_15_20_STRICT" type="button">Preset: ISO 15-20</button>
+      </div>
     </section>
   `;
 }
