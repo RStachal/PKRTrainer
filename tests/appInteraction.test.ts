@@ -212,11 +212,16 @@ describe("app interaction", () => {
       '[data-session-preset="REJAM_15_20_STRICT"]',
     );
     if (!preset) throw new Error("Missing preset button");
+    const availableCount = Number(preset.dataset.presetAvailable);
+    if (!Number.isFinite(availableCount) || availableCount <= 0) {
+      throw new Error("Missing preset available count");
+    }
     preset.click();
 
-    expect(app.querySelector<HTMLInputElement>("[data-block-size]")?.value).toBe(
-      "20",
+    const blockSizeValue = Number(
+      app.querySelector<HTMLInputElement>("[data-block-size]")?.value,
     );
+    expect(blockSizeValue).toBe(Math.min(20, availableCount));
     expect(app.querySelector<HTMLSelectElement>("[data-mode]")?.value).toBe(
       "MIXED",
     );

@@ -1,4 +1,6 @@
 import type { RangeProfile } from "../../domain/rangeProfile";
+import type { TrainingSpot } from "../../domain/spot";
+import { TRAINING_SPOTS } from "../spots";
 import { RANGE_PROFILES } from "./rangeProfileRegistry";
 
 export type RangeReviewSummary = {
@@ -7,6 +9,11 @@ export type RangeReviewSummary = {
   draft: number;
   reviewCoverage: number;
   pendingIds: readonly string[];
+};
+
+export type ProfileReviewCandidate = {
+  readonly profile: RangeProfile;
+  readonly usageCount: number;
 };
 
 export function getPendingRangeProfiles(
@@ -42,4 +49,43 @@ export function hasValidReviewMetadata(profile: RangeProfile): boolean {
   }
 
   return Boolean(profile.reviewedAt && profile.reviewedBy);
+}
+
+export function getProfileUsageCounts(
+  spots: readonly TrainingSpot[] = TRAINING_SPOTS,
+): ReadonlyMap<string, number> {
+  const counts = new Map<string, number>();
+
+  for (const spot of spots) {
+    if (!spot.rangeProfileId) continue;
+    counts.set(spot.rangeProfileId, (counts.get(spot.rangeProfileId) ?? 0) + 1);
+  }
+
+  return counts;
+}
+
+export function getOrphanRangeProfiles(
+  spots: readonly TrainingSpot[] = TRAINING_SPOTS,
+  profiles: readonly RangeProfile[] = RANGE_PROFILES,
+): readonly RangeProfile[] {
+  const usage = getProfileUsageCounts(spots);
+
+  return profiles.filter((profile) => (usage.get(profile.id) ?? 0) === 0);
+}
+
+export function getDraftReviewQueue(
+  spots: readonly TrainingSpot[] = TRAINING_SPOTS,
+  profiles: readonly RangeProfile[] = RANGE_PROFILES,
+): readonly ProfileReviewCandidate[] {
+  const usage = getProfileUsageCounts(spots);
+
+  return getPendingRangeProfiles(profiles)
+    .map((profile) => ({
+      profile,
+      usageCount: usage.get(profile.id) ?? 0,
+    }))
+    .sort((a, b) => {
+      if (b.usageCount !== a.usageCount) return b.usageCount - a.usageCount;
+      return a.profile.id.localeCompare(b.profile.id);
+    });
 }

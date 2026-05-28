@@ -1,7 +1,5 @@
 import type { CategoryPhase, CategoryValue } from "./domain/constants";
-import { TRAINING_SPOTS } from "./content/spots";
 import type { TrainingQuestion } from "./domain/question";
-import { questionFromSpot } from "./domain/questionFromSpot";
 import type { ActionId, TrainingSpot } from "./domain/spot";
 import {
   EMPTY_STATISTICS,
@@ -22,15 +20,19 @@ import {
   type TrainingFormatId,
 } from "./domain/trainingFormat";
 import type { StrictMode, TrainingMode } from "./domain/types";
+import type { StackBandFilter } from "./domain/stackBand";
 import {
-  matchesStackBandFilter,
-  type StackBandFilter,
-} from "./domain/stackBand";
-import {
+  getPresetAvailableQuestions,
   getSessionPreset,
   SESSION_PRESETS,
   type SessionPresetId,
 } from "./domain/sessionPresets";
+import {
+  getAvailableCategories,
+  getQuestionsForFormat,
+  getSpotByQuestionId,
+  normalizeCategory,
+} from "./domain/appSelectors";
 import {
   loadAppState,
   resetAppState,
@@ -74,9 +76,6 @@ const DEFAULT_SESSION_CONFIG: SessionConfig = {
   strict: "LENIENT",
   stackBand: "ALL",
 };
-const QUESTIONS_BY_SPOT_ID = new Map(
-  TRAINING_SPOTS.map((spot) => [spot.id, questionFromSpot(spot)]),
-);
 
 function persistState(state: AppState): void {
   if (typeof window === "undefined") return;
@@ -96,60 +95,6 @@ function persistState(state: AppState): void {
       stackBand: state.config.stackBand,
     },
   });
-}
-
-function getQuestionsForFormat(
-  format: TrainingFormatId,
-  stackBand: StackBandFilter,
-): readonly TrainingQuestion[] {
-  return TRAINING_SPOTS.filter(
-    (spot) =>
-      spot.format === format &&
-      matchesStackBandFilter(spot.effectiveStack, stackBand),
-  ).map((spot) => QUESTIONS_BY_SPOT_ID.get(spot.id) ?? questionFromSpot(spot));
-}
-
-function getQuestionsForSelection(
-  format: TrainingFormatId,
-  phase: PhaseFilter,
-  stackBand: StackBandFilter,
-): readonly TrainingQuestion[] {
-  const selectedPhase = toSelectionPhase(phase);
-
-  return getQuestionsForFormat(format, stackBand).filter(
-    (question) => !selectedPhase || question.phase === selectedPhase,
-  );
-}
-
-function getAvailableCategories(
-  format: TrainingFormatId,
-  phase: PhaseFilter,
-  stackBand: StackBandFilter,
-): readonly CategoryValue[] {
-  return Array.from(
-    new Set(
-      getQuestionsForSelection(format, phase, stackBand).map(
-        (question) => question.category,
-      ),
-    ),
-  ).sort();
-}
-
-function normalizeCategory(
-  category: CategoryValue,
-  format: TrainingFormatId,
-  phase: PhaseFilter,
-  stackBand: StackBandFilter,
-): CategoryValue {
-  if (category === "ALL") return category;
-  return getAvailableCategories(format, phase, stackBand).includes(category)
-    ? category
-    : "ALL";
-}
-
-function getSpotByQuestionId(questionId: string | null): TrainingSpot | null {
-  if (!questionId) return null;
-  return TRAINING_SPOTS.find((spot) => spot.id === questionId) ?? null;
 }
 
 function createSession(
@@ -218,11 +163,15 @@ function advanceSession(
 
 function applySessionPreset(state: AppState, presetId: SessionPresetId): void {
   const preset = getSessionPreset(presetId);
+  const availableCount = getPresetAvailableQuestions(presetId).length;
+  const scaledBlockSize = clampBlockSize(
+    Math.min(preset.config.blockSize, availableCount),
+  );
 
   state.format = preset.format;
   state.phase = preset.phase;
   state.category = preset.category;
-  state.config = { ...preset.config };
+  state.config = { ...preset.config, blockSize: scaledBlockSize };
 
   restartBlock(state);
 }

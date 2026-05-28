@@ -58,7 +58,7 @@ export const SESSION_PRESETS = [
       strict: "STRICT",
       stackBand: "BB_21_25",
     },
-    minimumAvailableSpots: 3,
+    minimumAvailableSpots: 8,
   },
   {
     id: "ISO_15_20_STRICT",
@@ -73,7 +73,7 @@ export const SESSION_PRESETS = [
       strict: "STRICT",
       stackBand: "BB_15_20",
     },
-    minimumAvailableSpots: 2,
+    minimumAvailableSpots: 8,
   },
 ] as const satisfies readonly SessionPreset[];
 

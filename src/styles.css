@@ -129,6 +129,21 @@ select {
   filter: brightness(1.08);
 }
 
+.session-preset-count {
+  color: #8aa3b4;
+  font-weight: 600;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+.session-preset-button--thin {
+  border-color: #5a4226;
+}
+
+.session-preset-button--thin .session-preset-count {
+  color: #d4a056;
+}
+
 .empty-state {
   background: #121b24;
   border: 1px solid #243441;

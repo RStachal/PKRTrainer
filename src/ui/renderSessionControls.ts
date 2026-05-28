@@ -3,7 +3,10 @@ import {
   MIN_BLOCK_SIZE,
 } from "../domain/trainingSession";
 import type { StackBandFilter } from "../domain/stackBand";
-import { SESSION_PRESETS } from "../domain/sessionPresets";
+import {
+  getPresetAvailableQuestions,
+  SESSION_PRESETS,
+} from "../domain/sessionPresets";
 import type { StrictMode, TrainingMode } from "../domain/types";
 
 type SessionControlsState = {
@@ -31,10 +34,15 @@ function renderStrictOption(
 }
 
 function renderPresetButtons(): string {
-  return SESSION_PRESETS.map(
-    (preset) =>
-      `<button class="session-preset-button" data-session-preset="${preset.id}" type="button">${preset.label}</button>`,
-  ).join("");
+  return SESSION_PRESETS.map((preset) => {
+    const availableCount = getPresetAvailableQuestions(preset.id).length;
+    const isThin = availableCount < preset.config.blockSize;
+    const className = isThin
+      ? "session-preset-button session-preset-button--thin"
+      : "session-preset-button";
+
+    return `<button class="${className}" data-session-preset="${preset.id}" type="button" data-preset-available="${availableCount}">${preset.label} <span class="session-preset-count">· ${availableCount} spotů</span></button>`;
+  }).join("");
 }
 
 export function renderSessionControls(state: SessionControlsState): string {

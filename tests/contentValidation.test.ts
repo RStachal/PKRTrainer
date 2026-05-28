@@ -71,11 +71,49 @@ function toPreflopHand(cards: TrainingSpot["heroHand"]): string {
   return `${high}${low}${suitedness}`;
 }
 
+type IdTokenRule = {
+  readonly required: readonly string[];
+  readonly forbidden: readonly string[];
+};
+
+const CATEGORY_ID_TOKENS: Record<TrainingSpot["category"], IdTokenRule> = {
+  OPEN: { required: ["-open-"], forbidden: ["-open-sb-"] },
+  SB_OPEN: { required: ["-open-sb-"], forbidden: [] },
+  DEFEND: { required: ["-bb-defend-"], forbidden: ["-bb-defend-2x-"] },
+  DEFEND_2X: { required: ["-bb-defend-2x-"], forbidden: [] },
+  ISO: { required: ["-iso-"], forbidden: [] },
+  REJAM: { required: ["-rejam-"], forbidden: [] },
+  CBET: { required: ["-cbet-"], forbidden: [] },
+  BARREL: { required: ["-barrel-"], forbidden: [] },
+  BLUFFCATCH: { required: ["-bluffcatch-"], forbidden: [] },
+  VALUE: { required: ["-value-"], forbidden: [] },
+};
+
 describe("training content validation", () => {
   it("ma unikatni id pro kazdy spot", () => {
     const ids = TRAINING_SPOTS.map((spot) => spot.id);
 
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("ma id obsahujici token odpovidajici kategorii spotu", () => {
+    for (const spot of TRAINING_SPOTS) {
+      const rule = CATEGORY_ID_TOKENS[spot.category];
+      const id = spot.id;
+
+      for (const token of rule.required) {
+        expect(
+          id.includes(token),
+          `${id} (${spot.category}) must contain "${token}"`,
+        ).toBe(true);
+      }
+      for (const token of rule.forbidden) {
+        expect(
+          id.includes(token),
+          `${id} (${spot.category}) must NOT contain "${token}"`,
+        ).toBe(false);
+      }
+    }
   });
 
   it("ma correctAction mezi answerOptions", () => {

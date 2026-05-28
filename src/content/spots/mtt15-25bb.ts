@@ -1042,4 +1042,330 @@ export const MTT_15_25BB_SPOTS = [
     explanation:
       "KJo je proti SB open range velmi silna. Pri 15 BB rejam dobre realizuje equity a tresta siroky open.",
   }),
+  makeSpot({
+    id: "mtt-15-25-iso-co-tt",
+    category: "ISO",
+    title: "CO iso TT vs UTG limp",
+    prompt:
+      "MTT, efektivne 17 BB. UTG limpne, jsi na CO s TT a za tebou jsou bezni hraci. Jaka je vychozi akce?",
+    heroHand: ["Tc", "Td"],
+    effectiveStack: "17 BB",
+    potLabel: "UTG limp",
+    seats: [
+      { position: "UTG", label: "Limp" },
+      { position: "CO", label: "Hero", isHero: true },
+      { position: "BTN", label: "BTN" },
+      { position: "SB", label: "SB" },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "RAISE",
+    rangeProfileId: "mtt-15-25-iso-co-hj-limp",
+    explanation:
+      "TT je pri 17 BB clear iso. Pasivni call by zbytecne pustil blindy do potu a snizil fold equity proti limp range.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-iso-hj-77",
+    category: "ISO",
+    title: "HJ fold 77 vs UTG limp",
+    prompt:
+      "MTT, efektivne 19 BB. UTG limpne, jsi na HJ s 77 a za tebou jsou 4 hraci. Jaka je vychozi akce?",
+    heroHand: ["7c", "7s"],
+    effectiveStack: "19 BB",
+    potLabel: "UTG limp",
+    seats: [
+      { position: "UTG", label: "Limp" },
+      { position: "HJ", label: "Hero", isHero: true },
+      { position: "CO", label: "CO" },
+      { position: "BTN", label: "BTN" },
+      { position: "SB", label: "SB" },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "FOLD",
+    rangeProfileId: "mtt-15-25-iso-co-hj-limp",
+    explanation:
+      "Pri 15-20 BB s sesti hraci za sebou je 77 z HJ casto fold. Iso nesnasi vetsi field a postflop hra mimo pozici je tvrda.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-iso-btn-qjo",
+    category: "ISO",
+    title: "BTN iso QJo vs CO limp",
+    prompt:
+      "MTT, efektivne 17 BB. CO limpne, jsi na BTN s QJo. Jaka je vychozi akce?",
+    heroHand: ["Qd", "Js"],
+    effectiveStack: "17 BB",
+    potLabel: "CO limp",
+    seats: [
+      { position: "CO", label: "Limp" },
+      { position: "BTN", label: "Hero", isHero: true },
+      { position: "SB", label: "SB" },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "RAISE",
+    rangeProfileId: "mtt-15-25-iso-btn-limp",
+    explanation:
+      "QJo dominuje cast CO limp range a v pozici dobre hraje postflop. Iso je standardni default i pri kratsim stacku.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-iso-btn-a4s-vs-hj",
+    category: "ISO",
+    title: "BTN fold A4s vs HJ limp (shallow)",
+    prompt:
+      "MTT, efektivne 18 BB. HJ limpne, CO fold, jsi na BTN s A4s. Jaka je vychozi akce?",
+    heroHand: ["As", "4s"],
+    effectiveStack: "18 BB",
+    potLabel: "HJ limp",
+    seats: [
+      { position: "HJ", label: "Limp" },
+      { position: "CO", label: "Fold" },
+      { position: "BTN", label: "Hero", isHero: true },
+      { position: "SB", label: "SB" },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "FOLD",
+    rangeProfileId: "mtt-15-25-iso-btn-limp",
+    explanation:
+      "Pri 21-25 BB by A4s byl iso, ale pri 15-20 BB ztraci realizovatelnost a casto skonci dominovany. Fold je tady cisty default.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-iso-sb-87s",
+    category: "ISO",
+    title: "SB fold 87s vs BTN limp",
+    prompt:
+      "MTT, efektivne 17 BB. BTN limpne, jsi na SB s 87s. Jaka je vychozi akce?",
+    heroHand: ["8h", "7h"],
+    effectiveStack: "17 BB",
+    potLabel: "BTN limp",
+    seats: [
+      { position: "BTN", label: "Limp" },
+      { position: "SB", label: "Hero", isHero: true },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "FOLD",
+    rangeProfileId: "mtt-15-25-iso-sb-vs-btn-limp",
+    explanation:
+      "87s vypada hratelne, ale ze SB pri 15-20 BB casto realizuje malo equity. Fold zabranuje volatilnimu potu mimo pozici.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-iso-bb-55-vs-sb",
+    category: "ISO",
+    title: "BB check 55 vs SB limp",
+    prompt:
+      "MTT, efektivne 18 BB. SB limpne, jsi na BB s 55. Jaka je vychozi akce?",
+    heroHand: ["5c", "5d"],
+    effectiveStack: "18 BB",
+    potLabel: "SB limp",
+    seats: [
+      { position: "SB", label: "Limp" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["CHECK", "RAISE", "FOLD"],
+    correctAction: "CHECK",
+    rangeProfileId: "mtt-15-25-iso-bb-vs-sb-limp",
+    explanation:
+      "Pri 15-20 BB raisuje BB selektivneji. 55 ma slusnou equity, ale set mining v levnem potu je hodnotnejsi nez tlak proti tightnejsi SB call range.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-btn-88-2-5x",
+    category: "DEFEND",
+    title: "BB defend 88 vs BTN 2.5x",
+    prompt:
+      "MTT, efektivne 22 BB. BTN otevre 2.5x, SB fold, jsi na BB s 88. Jaka je vychozi akce?",
+    heroHand: ["8c", "8d"],
+    effectiveStack: "22 BB",
+    potLabel: "BTN open 2.5x",
+    seats: [
+      { position: "BTN", label: "Open 2.5x" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "CALL",
+    rangeProfileId: "mtt-15-25-bb-defend-btn-2-5x",
+    explanation:
+      "88 ma slusnou equity proti BTN range, ale pri 22 BB realizuje hodnotu lepe callem nez 3betem. Rejam by zbytecne riskoval proti silne 4bet range.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-btn-k2o-2-5x",
+    category: "DEFEND",
+    title: "BB fold K2o vs BTN 2.5x",
+    prompt:
+      "MTT, efektivne 23 BB. BTN otevre 2.5x, SB fold, jsi na BB s K2o. Jaka je vychozi akce?",
+    heroHand: ["Kh", "2d"],
+    effectiveStack: "23 BB",
+    potLabel: "BTN open 2.5x",
+    seats: [
+      { position: "BTN", label: "Open 2.5x" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "FOLD",
+    rangeProfileId: "mtt-15-25-bb-defend-btn-2-5x",
+    explanation:
+      "K2o ma blocker, ale offsuit kicker realizuje spatne a casto je dominovany. Proti 2.5x sizingu uz tahle handa cisty fold.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-btn-96s-2-2x",
+    category: "DEFEND",
+    title: "BB defend 96s vs BTN 2.2x",
+    prompt:
+      "MTT, efektivne 24 BB. BTN otevre 2.2x, SB fold, jsi na BB s 96s. Jaka je vychozi akce?",
+    heroHand: ["9c", "6c"],
+    effectiveStack: "24 BB",
+    potLabel: "BTN open 2.2x",
+    seats: [
+      { position: "BTN", label: "Open 2.2x" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "CALL",
+    rangeProfileId: "mtt-15-25-bb-defend-btn-2-2x",
+    explanation:
+      "Pri 2.2x sizingu dostava BB lepsi cenu a 96s zacina hratelne defendovat. Suited konektivita kompenzuje slabou top kartu.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-co-87s-2-3x",
+    category: "DEFEND",
+    title: "BB defend 87s vs CO 2.3x",
+    prompt:
+      "MTT, efektivne 25 BB. CO otevre 2.3x, BTN a SB fold, jsi na BB s 87s. Jaka je vychozi akce?",
+    heroHand: ["8s", "7s"],
+    effectiveStack: "25 BB",
+    potLabel: "CO open 2.3x",
+    seats: [
+      { position: "CO", label: "Open 2.3x" },
+      { position: "BTN", label: "Fold" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "CALL",
+    rangeProfileId: "mtt-15-25-bb-defend-co-2-3x",
+    explanation:
+      "87s ma vybornou postflop hratelnost a dost equity proti CO open range. Call dostava cisty default vyber.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-sb-32o-2-5x",
+    category: "DEFEND",
+    title: "BB fold 32o vs SB 2.5x",
+    prompt:
+      "MTT, efektivne 22 BB. SB otevre 2.5x, jsi na BB s 32o. Jaka je vychozi akce?",
+    heroHand: ["3c", "2d"],
+    effectiveStack: "22 BB",
+    potLabel: "SB open 2.5x",
+    seats: [
+      { position: "SB", label: "Open 2.5x" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "FOLD",
+    rangeProfileId: "mtt-15-25-bb-defend-sb-2-5x",
+    explanation:
+      "I BvB dynamika ma sve dno. 32o nema blocker, konektivitu ani suited hodnotu a proti 2.5x sizingu uz patri pryc.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-btn-j8o-2-5x",
+    category: "DEFEND",
+    title: "BB fold J8o vs BTN 2.5x (shallow)",
+    prompt:
+      "MTT, efektivne 18 BB. BTN otevre 2.5x, SB fold, jsi na BB s J8o. Jaka je vychozi akce?",
+    heroHand: ["Jh", "8c"],
+    effectiveStack: "18 BB",
+    potLabel: "BTN open 2.5x",
+    seats: [
+      { position: "BTN", label: "Open 2.5x" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "FOLD",
+    rangeProfileId: "mtt-15-25-bb-defend-btn-2-5x",
+    explanation:
+      "J8o by pri 21-25 BB jeste defendoval, ale pri 15-20 BB s mensim SPR a horsi realizaci uz patri pryc proti 2.5x sizingu.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-2x-co-87s",
+    category: "DEFEND_2X",
+    title: "BB defend 87s vs CO 2x",
+    prompt:
+      "MTT, efektivne 17 BB. CO otevre 2x, BTN a SB fold, jsi na BB s 87s. Jaka je vychozi akce?",
+    heroHand: ["8s", "7s"],
+    effectiveStack: "17 BB",
+    potLabel: "CO open 2x",
+    seats: [
+      { position: "CO", label: "Open 2x" },
+      { position: "BTN", label: "Fold" },
+      { position: "SB", label: "Fold" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "CALL",
+    rangeProfileId: "mtt-15-25-bb-defend-co-2x",
+    explanation:
+      "87s ma vybornou postflop hratelnost a proti minraisu z CO dostava dost dobrou cenu i pri 15-20 BB. Standardni defend.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-sb-k3o-2-5x",
+    category: "DEFEND",
+    title: "BB fold K3o vs SB 2.5x (shallow)",
+    prompt:
+      "MTT, efektivne 17 BB. SB otevre 2.5x, jsi na BB s K3o. Jaka je vychozi akce?",
+    heroHand: ["Kc", "3d"],
+    effectiveStack: "17 BB",
+    potLabel: "SB open 2.5x",
+    seats: [
+      { position: "SB", label: "Open 2.5x" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "FOLD",
+    rangeProfileId: "mtt-15-25-bb-defend-sb-2-5x",
+    explanation:
+      "Pri 15-20 BB BvB cast slabsich offsuit kombinaci uz folduje. K3o ma blocker, ale offsuit kicker realizuje spatne v melkem stacku.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-bb-defend-2x-sb-52o",
+    category: "DEFEND_2X",
+    title: "BB fold 52o vs SB 2x",
+    prompt:
+      "MTT, efektivne 22 BB. SB otevre 2x, jsi na BB s 52o. Jaka je vychozi akce?",
+    heroHand: ["5d", "2h"],
+    effectiveStack: "22 BB",
+    potLabel: "SB open 2x",
+    seats: [
+      { position: "SB", label: "Open 2x" },
+      { position: "BB", label: "Hero", isHero: true },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "FOLD",
+    rangeProfileId: "mtt-15-25-bb-defend-sb-2x",
+    explanation:
+      "I za vybornou cenu proti minraisu ma 52o tak malo equity a realizacni hodnoty, ze patri do uzkeho jadra cistych foldu.",
+  }),
+  makeSpot({
+    id: "mtt-15-25-iso-sb-kjo",
+    category: "ISO",
+    title: "SB iso KJo vs BTN limp",
+    prompt:
+      "MTT, efektivne 24 BB. BTN limpne, jsi na SB s KJo. Jaka je vychozi akce?",
+    heroHand: ["Kh", "Jd"],
+    effectiveStack: "24 BB",
+    potLabel: "BTN limp",
+    seats: [
+      { position: "BTN", label: "Limp" },
+      { position: "SB", label: "Hero", isHero: true },
+      { position: "BB", label: "BB" },
+    ],
+    answerOptions: ["FOLD", "CALL", "RAISE"],
+    correctAction: "RAISE",
+    rangeProfileId: "mtt-15-25-iso-sb-vs-btn-limp",
+    explanation:
+      "KJo dominuje cast BTN limp range a izolace zapina jak fold equity, tak postflop iniciativu. Pasivni call mimo pozici by promarnil hodnotu handy.",
+  }),
 ] as const satisfies readonly TrainingSpot[];
