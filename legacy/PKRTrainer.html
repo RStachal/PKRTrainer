@@ -1,0 +1,4442 @@
+<!DOCTYPE html>
+
+<html lang="cs">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>JungleStyle1 Drill</title>
+<style>
+    :root { --bg:#0b0d12; --card:#121826; --muted:#93a4c7; --txt:#e8ecf7; --ok:#2bd576; --bad:#ff5b5b; --warn:#ffd15b; }
+    body { margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--txt); }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 18px; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; }
+    .card { background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:16px; flex:1; min-width: 300px;}
+    h1 { font-size: 16px; margin: 0 0 10px 0; font-weight: 900; letter-spacing: .2px;}
+    h2 { font-size: 14px; margin: 0 0 10px 0; color: var(--muted); font-weight: 800; }
+    .small { font-size: 12px; color: var(--muted); line-height: 1.35; white-space: pre-wrap; }
+    .q { font-size: 16px; line-height: 1.35; margin: 10px 0 14px 0; white-space: pre-wrap;}
+    .pill { display:inline-block; padding: 4px 9px; border-radius: 999px; background: rgba(255,255,255,.08); color: var(--muted); font-size: 12px; margin-right: 6px;}
+    .btns { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px;}
+    button { background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color: var(--txt); padding:8px 11px; border-radius: 12px; cursor:pointer; font-weight: 800; font-size:13px; }
+    button:hover { background: rgba(255,255,255,.12); }
+    button.primary { background: rgba(43,213,118,.15); border-color: rgba(43,213,118,.35); }
+    button.danger { background: rgba(255,91,91,.12); border-color: rgba(255,91,91,.35); }
+    button.ghost { background: transparent; border-color: rgba(255,255,255,.12); color: var(--muted); }
+    .feedback { margin-top: 12px; padding: 12px; border-radius: 12px; border:1px solid rgba(255,255,255,.10); }
+    .ok { border-color: rgba(43,213,118,.45); background: rgba(43,213,118,.08); }
+    .bad { border-color: rgba(255,91,91,.45); background: rgba(255,91,91,.08); }
+    .warn { border-color: rgba(255,209,91,.45); background: rgba(255,209,91,.07); }
+    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 960px){ .grid2{ grid-template-columns: 1fr; } }
+
+    /* Select styling including options (Chrome/Edge allow; other browsers may ignore option styles) */
+    select, input[type="number"] {
+      background: #0f1522;
+      border:1px solid rgba(255,255,255,.22);
+      color: var(--txt);
+      padding:8px 10px;
+      border-radius: 12px;
+      width: 100%;
+      box-sizing: border-box;
+      font-weight: 900;
+    }
+    select:focus { outline: 2px solid rgba(72,145,255,.55); outline-offset: 2px; }
+    option { background: #0f1522; color: #e8ecf7; font-weight: 900; }
+option.optPre  { background: #a7862a; color: #fff8de; }
+option.optFlop { background: #4d3a0b; color: #fff6d6; }
+option.optTurn { background: #7a3d0a; color: #fff2e8; }
+option.optRiver{ background: #6e1414; color: #fff2f2; }
+option.optAll  { background: #1b2334; color: #f8fafc; }
+
+    .topbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+    /* Table simulation */
+    .tableSimWrap { position: relative; margin-top: 10px; margin-bottom: 10px; }
+
+    .simGrid{ display:grid; grid-template-columns: minmax(360px, 1fr) 420px; gap:16px; align-items:start; margin-top:10px; }
+    .simLeft{ min-width:0; }
+    .simRight{ min-width:0; display:flex; flex-direction:column; gap:10px; }
+.simQA{ background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:14px; }
+.simQA .q{ font-size:15px; font-weight:800; line-height:1.22; margin:0 0 8px 0; }
+.simQA .btns{ display:flex; flex-wrap:wrap; gap:10px; }
+.simQA .btns button{ flex:0 0 auto; min-width:110px; }
+
+    .simRight .q{ margin:0; }
+    #answerBtns{ margin-top:0; }
+    @media (max-width: 980px){
+      .simGrid{ grid-template-columns: 1fr; }
+    }
+    
+    .tableSim {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: radial-gradient(1200px 220px at 50% 55%, rgba(30, 90, 70, .55), rgba(9, 12, 18, 1));
+      overflow: hidden;
+    }
+    .felt {
+      position:absolute; inset: 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: radial-gradient(800px 260px at 50% 60%, rgba(28, 140, 102, .34), rgba(8, 10, 15, .5));
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.04);
+    }
+    .pot {
+      position:absolute; left:50%; top:50%;
+      transform: translate(-50%, -50%);
+      width: 140px; height: 72px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      display:flex; align-items:center; justify-content:center;
+      flex-direction:column;
+      gap: 2px;
+      padding: 6px;
+      text-align:center;
+    }
+    .pot .t1 { font-weight: 900; font-size: 11px; color: rgba(232,236,247,.9); }
+    .pot .t2 { font-size: 11px; color: var(--muted); white-space: nowrap; }
+    .seat {
+      position:absolute;
+      width: 124px;
+      height: 80px;
+      border-radius: 14px;
+      background: rgba(10, 13, 20, .86);
+      border: 1px solid rgba(255,255,255,.12);
+      display:flex; align-items:flex-start; justify-content:space-between;
+      padding: 8px 10px 36px 10px;
+      box-sizing: border-box;
+      backdrop-filter: blur(2px);
+      box-shadow: 0 8px 22px rgba(0,0,0,.35);
+      overflow: hidden;
+      z-index: 3;
+    }
+    .seat .left { display:flex; flex-direction:column; gap: 2px; }
+    .seat .pos { font-weight: 900; font-size: 12px; }
+    .seat .stack { font-size: 11px; color: var(--muted); }
+    .seat .tag {
+      font-size: 10px; font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(232,236,247,.85);
+      white-space: nowrap;
+    }
+    .seat.hero { border-color: rgba(43,213,118,.45); background: rgba(43,213,118,.10); }
+    .seat.hero .tag { border-color: rgba(43,213,118,.45); background: rgba(43,213,118,.10); }
+    .seat.opener { border-color: rgba(255,209,91,.45); background: rgba(255,209,91,.08); }
+    .seat.opener .tag { border-color: rgba(255,209,91,.45); background: rgba(255,209,91,.10); }
+    .seat.limper { border-color: rgba(147,164,199,.35); background: rgba(147,164,199,.08); }
+    .seat.limper .tag { border-color: rgba(147,164,199,.35); background: rgba(147,164,199,.10); }
+
+    /* Seat positions (6-max layout) */
+    .sUTG { left: 50%; top: 18px; transform: translateX(-50%); }
+    .sHJ  { left: 12%; top: 58px; }
+    .sCO  { right: 12%; top: 58px; }
+    .sBTN { right: 6%; bottom: 26px; }
+    .sSB  { left: 50%; bottom: 14px; transform: translateX(-50%); }
+    .sBB  { left: 6%; bottom: 26px; }
+
+    
+/* v38: mobile-friendly seats (avoid overlap + keep actions readable) */
+@media (max-width: 520px){
+  .seat{ width: 108px; height: 74px; padding: 7px 8px 34px 8px; border-radius: 13px; }
+  .seat .pos{ font-size: 11px; }
+  .seat .stack{ font-size: 10px; }
+  .seat .tag{ font-size: 9px; padding: 2px 7px; }
+  .seat .act{ font-size: 10px; left:8px; right:8px; bottom:7px; }
+  .sHJ{ left: 6%; top: 62px; }
+  .sCO{ right: 6%; top: 62px; }
+  .sBB{ left: 3%; bottom: 28px; }
+  .sBTN{ right: 3%; bottom: 28px; }
+}
+@media (max-width: 380px){
+  .seat{ width: 98px; }
+  .seat .act{ font-size: 9.5px; }
+}
+/* Range modal */
+    .modalBack {
+      position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      display:none; align-items:center; justify-content:center; padding: 18px;
+      z-index: 1000;
+    }
+    .modal {
+      width: min(980px, 100%);
+      max-height: 92vh;
+      height: 92vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-overflow-scrolling: touch;
+      background: #0f1522;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.5);
+          --closeInset: 0px;
+    }
+    .modalHeader { display:flex; align-items:flex-start; justify-content:space-between; gap: 12px; position: relative; }
+    .modalHeader > div:first-child{ flex: 1 1 auto; min-width: 0; }
+    .modalHeader .btns{ flex: 0 0 auto; display:flex; align-items:center; gap:8px; margin-left:auto; margin-right: var(--closeInset); }
+    #closeRangeBtn{ white-space: nowrap; }
+
+    .modalTitle { font-weight: 900; font-size: 14px; }
+    .legend { font-size: 12px; color: var(--muted); white-space: pre-wrap; }
+        .matrixWrap { 
+  margin-top: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-sizing: border-box;
+}
+.matrix{
+  --cellW: 18px;
+  --cellH: 18px;
+  display: grid;
+  grid-template-columns: repeat(14, var(--cellW));
+  grid-auto-rows: var(--cellH);
+  gap: 1px;
+  padding: 1px;
+  background: rgba(255,255,255,.06);
+  border-radius: 12px;
+  box-sizing: content-box;
+  touch-action: manipulation;
+}
+.cell {
+      width: var(--cellW); height: var(--cellH);
+      box-sizing: border-box;
+      background: #0b0d12;
+      display:flex; align-items:center; justify-content:center;
+      font-size: clamp(7px, calc(var(--cellW) * 0.28), 11px);
+      font-weight: 900;
+      color: rgba(232,236,247,.92);
+      user-select:none;
+      line-height: 1;
+      padding: 0;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.18);
+    }
+    .hdr { font-size: clamp(7px, calc(var(--cellW) * 0.30), 11px); }
+
+    @media (max-width: 520px){
+  .modalBack{ padding: 12px; }
+  .modal{
+    width: 100%;
+    height: 92vh;
+    max-height: 92vh;
+    border-radius: 14px;
+    padding: 12px;
+    --closeInset: clamp(90px, 14vw, 180px);
+  }
+  .modalHeader{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #0f1522;
+    padding: 8px 0 10px 0;
+    padding-right: 0;
+    border-bottom: 1px solid rgba(255,255,255,.10);
+  }
+  .modalTitle{ font-size: 13px; }
+  .matrixWrap{ overflow: hidden; margin-top: 6px; }
+  .legend{ font-size: 11px; }
+  .legendChips{ gap: 4px; }
+  .chip{ font-size: 10px; padding: 3px 7px; }
+  #closeRangeBtn{ padding: 7px 10px; }
+}
+
+
+
+/* Mobile forcing (některé Android WebView/otevření přes content:// umí ignorovat media queries při "wide viewport" režimu) */
+body.isMobile .modalBack{ padding: 12px; }
+body.isMobile .modal{
+  width: 100%;
+  height: 92vh;
+  max-height: 92vh;
+  border-radius: 14px;
+  padding: 12px;
+  --closeInset: clamp(90px, 14vw, 180px);
+}
+body.isMobile .modalHeader{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #0f1522;
+  padding: 8px 0 10px 0;
+  padding-right: 0;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+body.isMobile .modalTitle{ font-size: 13px; }
+body.isMobile .matrixWrap{ overflow: hidden; margin-top: 6px; }
+body.isMobile .legend{ font-size: 11px; }
+body.isMobile .legendChips{ gap: 4px; }
+body.isMobile .chip{ font-size: 10px; padding: 3px 7px; }
+body.isMobile #closeRangeBtn{ padding: 7px 10px; }
+
+
+.hdr { background: rgba(255,255,255,.06); color: var(--muted); font-weight: 900; }
+    .actValue { background: rgba(43,213,118,.18); border: 1px solid rgba(43,213,118,.35); }
+    .actCall  { background: rgba(147,164,199,.18); border: 1px solid rgba(147,164,199,.30); }
+    .actSemi  { background: rgba(255,209,91,.16); border: 1px solid rgba(255,209,91,.35); }
+    .actFold  { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); color: rgba(232,236,247,.55); }
+
+    /* Solver-style action palette (preferovaná akce + sizing) */
+    .actOpen2x   { background: rgba(0, 230, 118, .62); border: 1px solid rgba(0, 230, 118, .95); color: #06160d; }
+    .actOpen25x  { background: rgba(0, 229, 255, .58); border: 1px solid rgba(0, 229, 255, .95); color: #06121a; }
+    .actIsoIP    { background: rgba(124, 77, 255, .60); border: 1px solid rgba(124, 77, 255, .95); }
+    .actIsoSB    { background: rgba(255, 64, 129, .60); border: 1px solid rgba(255, 64, 129, .95); }
+    .actOverlimp { background: rgba(120, 144, 156, .46); border: 1px solid rgba(120, 144, 156, .85); }
+
+    .act3betValue { background: rgba(156, 39, 176, .66); border: 1px solid rgba(156, 39, 176, .98); color: #ffffff; }
+    .act3betBluff { background: rgba(255, 171, 0, .68); border: 1px solid rgba(255, 171, 0, .98); color: #1b1200; }
+
+    .actCall      { background: rgba(41, 121, 255, .58); border: 1px solid rgba(41, 121, 255, .95); }
+
+    .actJamValue  { background: rgba(244, 67, 54, .66); border: 1px solid rgba(244, 67, 54, .95); }
+    .actJamSemi { background: rgba(0, 191, 165, .66); border: 1px solid rgba(0, 191, 165, .98); color: #03110e; }
+
+    /* Postflop actions (Flopzilla-style) */
+    .actCbet33  { background: rgba(0, 230, 118, .62); border: 1px solid rgba(0, 230, 118, .98); color: #06160d; }
+    .actCheckPF { background: rgba(120, 144, 156, .46); border: 1px solid rgba(120, 144, 156, .85); }
+    .actRaisePF { background: rgba(255, 171, 0, .68); border: 1px solid rgba(255, 171, 0, .98); color: #1b1200; }
+    .actCallPF  { background: rgba(41, 121, 255, .58); border: 1px solid rgba(41, 121, 255, .95); }
+
+    /* Legend chips inside the range modal */
+    .legendChips { display:flex; flex-wrap:wrap; gap:6px; margin-top: 6px; }
+    .chip {
+      display:inline-flex; align-items:center; gap:6px;
+      padding: 4px 8px; border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      font-size: 11px; font-weight: 900;
+      color: rgba(232,236,247,.86);
+      white-space: nowrap;
+    }
+    .swatch { width: 10px; height: 10px; border-radius: 3px; }
+    .mini { font-size: 11px; color: var(--muted); margin-top: 6px; white-space: pre-wrap; }
+  
+/* --- FUF additions: hole cards + stats panel --- */
+.holeRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.holeCards{display:inline-flex;gap:10px;align-items:center;vertical-align:middle}
+.fufCard{
+  width:44px;height:62px;border-radius:10px;
+  background:linear-gradient(180deg,#ffffff,#f1f5f9);
+  border:1px solid rgba(15,23,42,.22);
+  box-shadow:0 6px 16px rgba(0,0,0,.18);
+  position:relative; overflow:hidden;
+}
+.fufCard .r{position:absolute;left:6px;top:5px;font-size:15px;font-weight:900;letter-spacing:.2px}
+.fufCard .s{position:absolute;left:6px;top:23px;font-size:15px;font-weight:900}
+.fufCard .big{position:absolute;right:-6px;bottom:-14px;font-size:44px;opacity:.18;font-weight:900;transform:rotate(-10deg)}
+.fufCard.spade{color:#111827}
+.fufCard.heart{color:#b91c1c}
+.fufCard.diamond{color:#2563eb}
+.fufCard.club{color:#16a34a}
+.fufInlineHand{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fufInlineHand .miniHand{color:var(--muted);font-size:11px}
+.fufPanel{margin-top:12px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.03)}
+.fufPanel .small{margin-bottom:6px}
+.fufPanel textarea{width:100%;min-height:110px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--txt);padding:10px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px;line-height:1.35}
+.fufKpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:8px}
+@media (max-width: 980px){.fufKpi{grid-template-columns:repeat(2,1fr)}}
+.fufKpi .k{padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.18)}
+.fufKpi .k .v{font-size:18px;font-weight:900}
+.fufKpi .k .l{font-size:12px;color:var(--muted)}
+
+    /* v7: HH paste analyzer + JS status */
+    #profilePanel textarea.hhPaste{
+      width:100%;
+      min-height:140px;
+      resize:vertical;
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:12px;
+      color:var(--txt);
+      padding:10px;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      font-size:12px;
+      line-height:1.35;
+      margin-top:8px;
+    }
+    .jsErrorBox{
+      display:none;
+      position:fixed; left:12px; right:12px; bottom:12px;
+      background:rgba(255,91,91,.10);
+      border:1px solid rgba(255,91,91,.35);
+      color:var(--txt);
+      padding:10px 12px;
+      border-radius:12px;
+      z-index:9999;
+      white-space:pre-wrap;
+      font-size:12px;
+    }
+
+
+    /* v16: ultra-compact ring dashboard by streets */
+    #catStats{
+      line-height:1.2;
+      font-size:11.5px;
+      white-space:normal;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      color:var(--txt);
+    }
+    #catStats .dashLegend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-bottom:2px;
+    }
+    #catStats .dashLegendItem,
+    #catStats .dashScale,
+    #catStats .dashSummaryLine{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:10.5px;
+      font-weight:800;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
+      color:var(--muted);
+    }
+    #catStats .legendDot{
+      width:9px;
+      height:9px;
+      border-radius:999px;
+      display:inline-block;
+      flex:0 0 auto;
+    }
+    #catStats .dashGrid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:8px;
+    }
+    #catStats .streetCard{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      background:rgba(0,0,0,.12);
+      padding:10px 8px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      gap:6px;
+      min-width:0;
+      text-align:center;
+    }
+    #catStats .streetRingWrap{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:1px;
+    }
+    #catStats .streetRing{
+      --pct:0;
+      --ringColor: rgba(147,164,199,.45);
+      width:76px;
+      height:76px;
+      border-radius:999px;
+      position:relative;
+      display:grid;
+      place-items:center;
+      background:conic-gradient(var(--ringColor) calc(var(--pct) * 1%), rgba(255,255,255,.08) 0);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 2px 10px rgba(0,0,0,.14);
+    }
+    #catStats .streetRingInner{
+      width:56px;
+      height:56px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(180deg, rgba(19,28,44,.96), rgba(10,15,27,.98));
+      border:1px solid rgba(255,255,255,.06);
+      color:var(--txt);
+      font-size:15px;
+      font-weight:900;
+      line-height:1;
+      letter-spacing:-.02em;
+    }
+    #catStats .streetTitle{ font-size:12px; font-weight:900; color:var(--txt); }
+    #catStats .streetMeta,
+    #catStats .streetSub,
+    #catStats .panelHint,
+    #catStats .chipMeta,
+    #catStats .detailGroupMeta{ font-size:10.5px; color:var(--muted); }
+    #catStats .streetMeta{ font-weight:800; }
+    #catStats .streetSub{ opacity:.95; }
+    #catStats .focusWrap{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:8px;
+    }
+    #catStats .focusPanel{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      background:rgba(255,255,255,.03);
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:0;
+    }
+    #catStats .panelTitle{ font-size:11px; font-weight:900; color:var(--txt); }
+    #catStats .chipList,
+    #catStats .chipGrid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    #catStats .focusRingGrid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:8px;
+    }
+    #catStats .focusRingCard{
+      min-width:0;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      background:rgba(255,255,255,.03);
+      padding:8px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    #catStats .focusRingWrap{
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    #catStats .focusRing{
+      --pct:0;
+      --ringColor: rgba(147,164,199,.45);
+      width:52px;
+      height:52px;
+      border-radius:999px;
+      position:relative;
+      display:grid;
+      place-items:center;
+      background:conic-gradient(var(--ringColor) calc(var(--pct) * 1%), rgba(255,255,255,.08) 0);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 2px 8px rgba(0,0,0,.14);
+    }
+    #catStats .focusRingInner{
+      width:38px;
+      height:38px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(180deg, rgba(19,28,44,.96), rgba(10,15,27,.98));
+      border:1px solid rgba(255,255,255,.06);
+      color:var(--txt);
+      font-size:11px;
+      font-weight:900;
+      line-height:1;
+      letter-spacing:-.02em;
+    }
+    #catStats .focusRingText{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    #catStats .focusRingName{
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      display:-webkit-box;
+      -webkit-line-clamp:2;
+      -webkit-box-orient:vertical;
+      line-clamp:2;
+      font-size:10.5px;
+      font-weight:800;
+      color:var(--txt);
+      line-height:1.2;
+    }
+    #catStats .focusRingMeta{
+      font-size:10px;
+      color:var(--muted);
+      font-weight:700;
+      white-space:nowrap;
+    }
+    #catStats .statChip{
+      min-width:0;
+      max-width:100%;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:10px;
+      background:rgba(255,255,255,.03);
+      padding:6px 8px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    #catStats .chipName{
+      min-width:0;
+      max-width:210px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-size:10.5px;
+      font-weight:800;
+      color:var(--txt);
+    }
+    #catStats .chipScore{
+      font-size:11px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+    #catStats .compactDetailToggle{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      background:rgba(0,0,0,.10);
+      padding:8px 10px;
+    }
+    #catStats .compactDetailToggle > summary{
+      cursor:pointer;
+      color:var(--muted);
+      font-weight:900;
+      list-style:none;
+    }
+    #catStats .compactDetailToggle > summary::-webkit-details-marker{ display:none; }
+    #catStats .detailWrap{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:8px;
+    }
+    #catStats .detailGroup{
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:10px;
+      background:rgba(255,255,255,.03);
+      padding:8px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    #catStats .detailGroupHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    #catStats .detailGroupTitle{ font-size:11px; font-weight:900; color:var(--txt); }
+    #catStats .score-good .streetRing,
+    #catStats .score-good .focusRing{ --ringColor: var(--ok); }
+    #catStats .score-mid .streetRing,
+    #catStats .score-mid .focusRing{ --ringColor: var(--warn); }
+    #catStats .score-bad .streetRing,
+    #catStats .score-bad .focusRing{ --ringColor: var(--bad); }
+    #catStats .score-empty .streetRing,
+    #catStats .score-empty .focusRing{ --ringColor: rgba(147,164,199,.45); }
+    #catStats .score-good .streetRingInner,
+    #catStats .score-good .focusRingInner,
+    #catStats .score-good .chipScore{ color: var(--ok); }
+    #catStats .score-mid .streetRingInner,
+    #catStats .score-mid .focusRingInner,
+    #catStats .score-mid .chipScore{ color: var(--warn); }
+    #catStats .score-bad .streetRingInner,
+    #catStats .score-bad .focusRingInner,
+    #catStats .score-bad .chipScore{ color: var(--bad); }
+    #catStats .score-empty .streetRingInner,
+    #catStats .score-empty .focusRingInner,
+    #catStats .score-empty .chipScore{ color: var(--muted); }
+    #catStats .score-good .miniFill{ background: linear-gradient(90deg, rgba(43,213,118,.62), rgba(43,213,118,.95)); }
+    #catStats .score-mid .miniFill{ background: linear-gradient(90deg, rgba(255,209,91,.50), rgba(255,209,91,.95)); }
+    #catStats .score-bad .miniFill{ background: linear-gradient(90deg, rgba(255,91,91,.50), rgba(255,91,91,.95)); }
+    #catStats .score-empty .miniFill{ background: linear-gradient(90deg, rgba(147,164,199,.22), rgba(147,164,199,.45)); }
+    #catStats .emptyState{
+      padding:12px;
+      border-radius:12px;
+      border:1px dashed rgba(255,255,255,.10);
+      color:var(--muted);
+      text-align:center;
+      background:rgba(255,255,255,.03);
+    }
+    @media (max-width: 960px){
+      #catStats .dashGrid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px){
+      #catStats .focusWrap{ grid-template-columns:1fr; }
+      #catStats .streetRing{ width:72px; height:72px; }
+      #catStats .streetRingInner{ width:54px; height:54px; font-size:12px; }
+      #catStats .chipName{ max-width:170px; }
+    }
+    @media (max-width: 420px){
+      #catStats .dashGrid{ gap:7px; }
+      #catStats .streetCard{ padding:9px 6px; }
+      #catStats .streetRing{ width:68px; height:68px; }
+      #catStats .streetRingInner{ width:50px; height:50px; font-size:13px; }
+      #catStats .focusRing{ width:58px; height:58px; }
+      #catStats .focusRingInner{ width:40px; height:40px; font-size:10px; }
+      #catStats .streetTitle{ font-size:11.5px; }
+      #catStats .streetMeta,
+      #catStats .streetSub{ font-size:10px; }
+    }
+    details.fufDetails{ border:1px solid rgba(255,255,255,.10); border-radius:12px; padding:10px 12px; background: rgba(0,0,0,.10); }
+    details.fufDetails > summary{ cursor:pointer; color: var(--muted); font-weight: 900; }
+
+    /* FUF: custom category dropdown so colors work on mobile (native <option> styling is ignored on many phones) */
+    .fufHiddenNative { position:absolute !important; opacity:0 !important; pointer-events:none !important; width:1px !important; height:1px !important; }
+    .fufCatWrap { position: relative; }
+    .fufCatBtn {
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: #0f1522;
+      color: #e8ecf7;
+      font-weight: 900;
+      text-align: left;
+      cursor: pointer;
+    }
+    .fufCatBtn:after{
+      content:"▾";
+      float:right;
+      opacity:.85;
+      margin-left: 8px;
+    }
+    .fufCatList{
+      position:absolute;
+      left:0; right:0;
+      top: calc(100% + 6px);
+      background:#0c111b;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 12px;
+      max-height: 320px;
+      overflow:auto;
+      z-index: 9999;
+      padding: 6px;
+      display:none;
+      box-shadow: 0 10px 26px rgba(0,0,0,.35);
+    }
+    .fufCatItem{
+      padding: 10px 10px;
+      border-radius: 10px;
+      margin: 4px 0;
+      font-weight: 900;
+      cursor:pointer;
+      user-select:none;
+    }
+    .fufCatItem:active{ transform: translateY(1px); }
+
+
+    .phaseRow{
+      margin: 6px 0 8px 0;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .phaseChk{
+      font-size: 12px;
+      opacity: .92;
+      user-select:none;
+    }
+    .phaseChk input{
+      transform: translateY(1px);
+    }
+    /* Desktop: zmenšit položky v rozbalené nabídce kategorií */
+    .fufCatItem{
+      padding: 6px 8px;
+      border-radius: 8px;
+      margin: 3px 0;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: .2px;
+    }
+    @media (pointer:coarse){
+      .fufCatItem{
+        padding: 10px 10px;
+        border-radius: 10px;
+        margin: 4px 0;
+        font-weight: 900;
+        font-size: 16px;
+      }
+      .phaseChk{ font-size: 14px; }
+    }
+
+
+/* --- FUF additions: table board + seat actions --- */
+.boardCards{
+  position:absolute;
+  left:50%; top:56%;
+  transform:translate(-50%,-50%);
+  display:flex;
+  gap:8px;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  opacity:.98;
+}
+.fufCard.board{
+  width:44px;
+  height:60px;
+  border-radius:12px;
+  padding:0;
+  position:relative;
+  overflow:hidden;
+}
+.fufCard.board .r{font-size:12px}
+.fufCard.board .s{font-size:12px}
+.fufCard.board .big{font-size:22px}
+.seat .act{
+  position:absolute;
+  left:10px;
+  right:10px;
+  bottom:8px;
+  font-weight:900;
+  font-size:11px;
+  letter-spacing:.2px;
+  padding:4px 8px;
+  border-radius:12px;
+  background:rgba(0,0,0,.40);
+  border:1px solid rgba(255,255,255,.14);
+  color:rgba(255,255,255,.92);
+  display:none;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:unset;
+  line-height:1.15;
+}
+.seat.inhand .act{display:block}
+.seat.pending .act{
+  background:rgba(20,170,255,.22);
+  border-color:rgba(20,170,255,.35);
+}
+.seat.folded{opacity:.35; filter:saturate(.5)}
+
+
+/* --- v22 hotfix: answer buttons layout + prevent stretch --- */
+#answerBtns{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:flex-start;
+  justify-content:flex-start;
+}
+#answerBtns > button{
+  flex: 0 0 auto !important;
+  align-self:flex-start;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 9px 14px;
+  min-height: 38px;
+  height: auto;
+  max-height: 46px;
+  font-size: 12px;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
+}
+@media (max-width: 900px){
+  #answerBtns > button{ flex: 1 1 calc(50% - 10px) !important; white-space: normal; }
+}
+@media (max-width: 520px){
+  #answerBtns > button{ flex: 1 1 100% !important; }
+}
+
+
+
+/* keep seat content readable when action badges expand */
+.seat{min-width:150px}
+.seat .pos{opacity:.92}
+.seat .tag{font-weight:800}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="row">
+<div class="card" style="flex:2;">
+<h1 id="headerTitle">JungleStyle1 Drill</h1>
+<div class="topbar">
+<span class="pill" id="modePill">Mode: Mixed</span>
+<span class="pill" id="filterPill">Filter: ALL</span>
+<span class="pill" id="qcatPill">QCat: -</span>
+<span class="pill" id="remainingPill">Remaining: 30</span>
+<span class="pill" id="strictPill">Strict: LENIENT</span>
+<span class="pill" id="streakPill">Streak: 0</span>
+<span class="pill" id="qcountPill">Answered: 0</span>
+<span class="pill" id="accPill">Acc: 0%</span>
+</div>
+<div class="simGrid"><div class="simLeft"><div class="tableSimWrap">
+<div class="tableSim" id="tableSim">
+<div class="felt"></div>
+<div class="pot">
+<div class="t1" id="potLine1">Table sim</div>
+<div class="t2" id="potLine2">Click Start</div>
+</div>
+<div class="boardCards" id="boardCards"></div>
+<div class="seat sUTG" id="seatUTG">
+<div class="left"><div class="ava" id="avaUTG"></div><div class="meta"><div class="pos">UTG</div><div class="stack" id="stackUTG">--</div></div></div>
+<div class="tag" id="tagUTG">--</div>
+<div class="act" id="actUTG"></div>
+</div>
+<div class="seat sHJ" id="seatHJ">
+<div class="left"><div class="ava" id="avaHJ"></div><div class="meta"><div class="pos">HJ</div><div class="stack" id="stackHJ">--</div></div></div>
+<div class="tag" id="tagHJ">--</div>
+<div class="act" id="actHJ"></div>
+</div>
+<div class="seat sCO" id="seatCO">
+<div class="left"><div class="ava" id="avaCO"></div><div class="meta"><div class="pos">CO</div><div class="stack" id="stackCO">--</div></div></div>
+<div class="tag" id="tagCO">--</div>
+<div class="act" id="actCO"></div>
+</div>
+<div class="seat sBTN" id="seatBTN">
+<div class="left"><div class="ava" id="avaBTN"></div><div class="meta"><div class="pos">BTN</div><div class="stack" id="stackBTN">--</div></div></div>
+<div class="tag" id="tagBTN">--</div>
+<div class="act" id="actBTN"></div>
+</div>
+<div class="seat sSB" id="seatSB">
+<div class="left"><div class="ava" id="avaSB"></div><div class="meta"><div class="pos">SB</div><div class="stack" id="stackSB">--</div></div></div>
+<div class="tag" id="tagSB">--</div>
+<div class="act" id="actSB"></div>
+</div>
+<div class="seat sBB" id="seatBB">
+<div class="left"><div class="ava" id="avaBB"></div><div class="meta"><div class="pos">BB</div><div class="stack" id="stackBB">--</div></div></div>
+<div class="tag" id="tagBB">--</div>
+<div class="act" id="actBB"></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="simRight"><div class="simQA"><div class="q" id="questionText">Klikni na Start. Pool je 300 unikátních spotů na kategorii/seed (semínko).</div>
+<div class="btns" id="answerBtns"></div></div></div></div>
+<div class="btns">
+<button class="primary" id="startBtn" type="button">Start / Další</button>
+<button class="ghost" id="newBlockBtn">Nový blok</button>
+<button class="ghost" id="showRuleBtn">Zobrazit pravidla</button>
+<button class="ghost" id="showRangeBtn">Zobrazit rozsah (Flopzilla)</button>
+<button class="ghost" id="onlyMissedBtn">Mód: vše</button>
+<button class="danger" id="resetBtn">Resetovat progres</button>
+</div>
+<div class="feedback" id="feedbackBox" style="display:none;"></div>
+<div class="mini" id="miniNote"></div>
+</div>
+<div class="card" style="flex:1;">
+<h2>Nastavení</h2>
+<div class="grid2">
+<div>
+<div class="small">Kategorie (filtr)</div>
+<div class="phaseRow"><span class="small" style="margin-right:8px;">Fáze</span><select id="phaseSel"><option value="PREFLOP">Preflop</option><option value="FLOP">Flop</option><option value="TURN">Turn</option><option value="RIVER">River</option></select></div>
+<select id="categorySel">
+<option class="optAll" value="ALL">Vše</option>
+<option class="optPre" value="OPEN_HJ_CO_BTN">OPEN_HJ_CO_BTN (15–25 BB)</option>
+<option class="optPre" value="ISO_LIMP">ISO_LIMP (15–25 BB)</option>
+<option class="optPre" value="BB_DEFEND">BB_DEFEND (vs 2x/2.5x/3x)</option>
+<option class="optPre" value="BB_DEFEND_2X">BB_DEFEND_2X (vs CO/BTN steal 2x)</option>
+<option class="optPre" value="REJAM">REJAM (15–20 BB)</option>
+<option class="optPre" value="SB_OPEN">SB_OPEN (15–25 BB)</option>
+<option class="optPre" value="BVB_AFTER_3BET">BVB_AFTER_3BET (SB open proti BB 3betu)</option>
+<option class="optFlop" value="FLOP_CBET_HU_DRY_PFR">FLOP: cbet HU suchý (PFR)</option>
+<option class="optFlop" value="FLOP_CBET_HU_WET_PFR">FLOP: cbet HU mokrý (PFR)</option>
+<option class="optFlop" value="FLOP_CHECKBACK_PFR_IP">FLOP: checkback v pozici (PFR)</option>
+<option class="optFlop" value="FLOP_DEFEND_VS_CBET_IP">FLOP: defend vs cbet IP</option>
+<option class="optFlop" value="FLOP_DEFEND_VS_CBET_OOP_BB">FLOP: defend vs cbet OOP (BB)</option>
+<option class="optFlop" value="FLOP_MULTIWAY_PFR">FLOP: multiway (PFR)</option>
+<option class="optFlop" value="FLOP_ISO_POT_VS_LIMPER">FLOP: iso pot vs limper</option>
+<option class="optFlop" value="FLOP_3BETPOT_AHIGH">FLOP: 3bet pot A-high</option>
+<option class="optFlop" value="FLOP_BVB_SRP">FLOP: BvB SRP</option>
+<option class="optFlop" value="FLOP_RFI_DEFENDER_RANGE_AWARE">FLOP: board s ohledem na range</option>
+
+<option class="optTurn" value="TURN_PFR_BARREL_DRY">TURN: barrel HU suchý (PFR)</option>
+<option class="optTurn" value="TURN_PFR_BARREL_WET">TURN: barrel HU mokrý (PFR)</option>
+<option class="optTurn" value="TURN_PFR_DELAYED_CBET_IP">TURN: delayed cbet IP</option>
+<option class="optTurn" value="TURN_DEFEND_VS_BARREL_IP">TURN: defend vs barrel IP</option>
+<option class="optTurn" value="TURN_DEFEND_VS_BARREL_OOP_BB">TURN: defend vs barrel OOP (BB)</option>
+<option class="optTurn" value="TURN_3BETPOT_AHIGH">TURN: 3bet pot A-high</option>
+<option class="optTurn" value="TURN_BVB_SRP">TURN: BvB SRP</option>
+<option class="optRiver" value="RIVER_PFR_VALUEBET">RIVER: valuebet (PFR)</option>
+<option class="optRiver" value="RIVER_PFR_THIN_VALUE_IP">RIVER: thin value IP (PFR)</option>
+<option class="optRiver" value="RIVER_PFR_CHECKBACK">RIVER: checkback (PFR)</option>
+<option class="optRiver" value="RIVER_DEFEND_BLUFCATCH">RIVER: defend bluffcatch</option>
+<option class="optRiver" value="RIVER_DEFEND_VALUE_RAISE">RIVER: defend value-raise</option>
+<option class="optRiver" value="RIVER_BVB_SRP">RIVER: BvB SRP</option>
+<option class="optRiver" value="RIVER_3BETPOT_AHIGH">RIVER: 3bet pot A-high</option>
+</select>
+<div class="mini" id="catHint">Tip: filtr omezuje, z jaké kategorie se budou losovat další otázky.</div>
+</div>
+<div>
+<div class="small">Počet otázek v bloku (max 300)</div>
+<input id="blockSize" max="300" min="5" type="number" value="100">
+</input></div>
+<div>
+<div class="small">Seed (pro opakovatelnost)</div>
+<input id="seedInp" type="number" value="1"/>
+</div>
+<div>
+<div class="small">Styl odpovědí</div>
+<select id="strictSel">
+<option value="LENIENT">LENIENT (Open 2x i 2.5x uznáno)</option>
+<option value="STRICT">STRICT (vyžaduje přesný sizing)</option>
+</select>
+</div>
+</div>
+<div class="fufPanel" id="profilePanel">
+<div class="small">Profil: <b>JungleStyle1</b> (snapshot z poskytnuté HH, 500 hand)</div>
+<div class="fufKpi">
+<div class="k"><div class="v">19.6%</div><div class="l">VPIP$ (money) (98/500)</div></div>
+<div class="k"><div class="v">16.8%</div><div class="l">PFR (84/500)</div></div>
+<div class="k"><div class="v">1.6%</div><div class="l">Limp (8/500)</div></div>
+<div class="k"><div class="v">1.2%</div><div class="l">3bet (6/500)</div></div>
+</div>
+<div class="small" style="margin-top:8px">
+    Pozn.: Non‑fold PF rate (včetně BB checku, bez walků) = <b>24.4%</b> (122/500).<br/>
+    Doporučený focus: vyplním automaticky, jakmile dodáš HH.
+  
+  <div style="height:12px;"></div><h2 style="margin:0 0 10px 0;">Kompaktní dashboard úspěšnosti</h2><div class="small" id="catStats">Zatím nic.</div><details class="fufDetails" style="margin-top:12px"><summary>Vysvětlivky</summary><div class="small" style="margin-top:8px">
+1) Každá kategorie má pool 100 unikátních spotů (na daný Seed).
+2) Blok si z poolu bere bez opakování.
+3) Show range vždy ukáže grafický range přehled (13x13 matrix, alá Flopzilla).
+      </div></details><details class="fufDetails" style="margin-top:12px"><summary>HH input a přepočet profilu</summary><div class="small" style="margin-top:10px">
+    HH input: otevři .txt s hand history, označ vše (Ctrl+A), zkopíruj (Ctrl+C), vlož sem (Ctrl+V) a klikni <b>Přepočítat profil</b>.
+    (Uloží se lokálně do zařízení.)
+  </div>
+<textarea class="hhPaste" id="hhPaste" placeholder="Vlož hand history (txt) sem…"></textarea>
+<div class="btns" style="margin-top:8px">
+<button class="ghost" id="hhAnalyzeBtn">Přepočítat profil</button>
+<button class="ghost" id="hhClearBtn">Vymazat uložené HH</button>
+<span class="pill" id="jsStatus">JS: loading…</span>
+</div>
+<div class="small" id="hhStatus" style="margin-top:6px; opacity:.85"></div></details>
+</div>
+<details class="fufDetails" style="margin-top:12px"><summary>Statistiky, export a import</summary><div class="fufPanel" style="margin-top:10px">
+<div class="small">Trvalé statistiky (lokálně): ukládám každou odpověď jako událost (append-only log). Pro přenos / reinstalaci použij export/import.</div>
+<div class="btns" style="margin-top:8px">
+<button class="ghost" id="exportStatsBtn">Export stats</button>
+<button class="ghost" id="importStatsBtn">Import stats</button>
+<button class="ghost" id="clearStatsBtn">Clear stats log</button>
+</div>
+<textarea id="statsJsonBox" placeholder="Export/Import JSON statistik"></textarea>
+<div class="small" id="statsSummaryLine">—</div>
+</div></details>
+</div>
+</div>
+</div>
+<div class="card" id="rulesCard" style="display:none; margin-top:12px;">
+<h2>Rule cards (shrnutí + okrajové handy)</h2>
+<div class="small" id="rulesText">
+A) OPEN (15–25 BB) starter
+A1) HJ: 22+, A2s+, AJo+, KTs+, KQo, QTs+, JTs, T9s, 98s, 87s.
+    Okraje: nejnižší suited konektor = 87s; nejnižší offsuit A = AJo; nejnižší offsuit K = KQo.
+A2) CO: 22+, A2s+, ATo+, KTs+, KTo+, QTs+, QTo+, JTs, J9s, T9s, 98s, 87s, 76s, 65s, 54s, + okraje 97s, 86s.
+    Okraje: nejnižší suited konektor = 54s; nejnižší suited A = A2s; nejnižší offsuit A = ATo; nejnižší offsuit Q = QTo.
+A3) BTN: CO range + A2o–A9o + pár suited broadwayů navíc.
+    Okraje: nejnižší offsuit A = A2o.
+
+B) ISO (15–25 BB)
+B1) IP (CO/BTN): default iso 2.5x–3x při 15–20 BB; 3x–3.5x při 21–25 BB. 3.5x jen exploit (loose-passive limper, pasivní blindi, value plán na low SPR).
+B2) ISO range (value-heavy): 22+, A2s+, A9o+, K7s+, Q8s+, J8s+, T9s, 98s, 87s.
+    Pozn.: malé/střední páry 22–66 vs early limper (UTG/HJ) při 15–20 BB často preferuj OVERLIMP; ISO jen menší sizing (2.5x–3x) a spíš exploitově.
+    Okraje: nejnižší suited K = K7s; nejnižší suited Q = Q8s; nejnižší suited J = J8s; nejnižší konektor = 87s.
+B3) Overlimp okraje (volitelně): 22–66, 54s–T9s.
+    Okraje: nejnižší = 54s.
+B4) ISO 3x–3.5x při 15 BB není “o fold equity”, ale o plánu hrát nízký SPR. Pokud hand není happy low‑SPR, preferuj menší ISO nebo OVERLIMP.
+
+C) BB DEFEND podle sizingu
+C1) vs 2x: široce. Okraje: 43s, K2s, Q5s, J7s.
+C2) vs 2.5x: ořezat offsuit junk. Okraje: 54s, A8o, K4s.
+C3) vs 3x: ještě víc ořezat. Okraje: 76s, ATo, K7s.
+C4) 3bet value: TT+ AQ+ (vs HJ tighter). Bluff: A5s–A2s (hlavně vs CO/BTN, menší sizing).
+C5) BB_DEFEND_2X (vs CO/BTN steal 2x): stejný baseline jako C1, ale otázky jsou cíleně na okraje (marginální CALL i close FOLD).
+    Marginální CALL typicky: K2s–K6s, Q5s–Q8s, J7s–J9s, T7s–T9s, 98o, T9o, 43s–76s, 86s/97s.
+    Close FOLD typicky: slabé offsuit Kx/Qx/Jx/Tx (např. K2o–K8o, Q2o–Q8o, J2o–J7o, T2o–T7o).
+
+D) REJAM 15–20 BB vs CO/BTN open
+D1) Value: 77+ AJs+ AQo+ KQs.
+    Okraje: nejnižší pocket = 77; nejnižší suited A = AJs; nejnižší offsuit A = AQo.
+D2) Semi (volitelně): 55–66, ATs–A2s, občas AJo, KJs/QJs selektivně.
+    Okraje: nejnižší suited A = A2s; nejnižší pocket = 55.
+
+E) SB OPEN 15–25 BB
+E1) Default open 2x; 2.5x jen exploit.
+E2) Starter SB open range: 22+, A2s+, A2o+, K2s+, K8o+, Q4s+, Q9o+, J6s+, J9o+, T6s+, T9o+, 96s+, 86s+, 76s+, 65s+, 54s+, 98o+.
+    Okraje: nejnižší suited K = K2s; nejnižší offsuit K = K8o; nejnižší suited Q = Q4s; nejnižší offsuit Q = Q9o; nejnižší suited konektor = 54s.
+
+F) BVB_AFTER_3BET (SB open -&gt; BB 3bet; 15–25 BB)
+F1) Value 4bet jam: 99+ AJs+ AQo+ KQs.
+    Okraje: nejnižší pocket = 99; nejnižší suited A = AJs; nejnižší offsuit A = AQo; nejnižší suited broadway = KQs.
+F2) Call vs 3bet: 55–88, ATs–A6s, AJo, KTs/KJs, QTs/QJs, JTs, T9s, 98s, KQo.
+    Okraje: nejnižší pocket = 55; nejnižší suited A = A6s; nejnižší suited konektor = 98s; nejnižší offsuit broadway = KQo.
+F3) Semi 4bet jam (mix / exploit): A5s–A2s.
+    Okraje: nejnižší = A2s.
+
+H) TURN (nové lekce)
+H1) PFR barrel DRY: pokračuj s value + strong draw + část overs/backdoor (hlavně IP). Cíl: nevyhasnout po flopu.
+H2) PFR barrel WET: selektivněji; méně bluffů bez equity, protože continuing range je silná.
+H3) Delayed cbet IP: po flop checkbacku často betuj turn s value/draw + dobré overkarty.
+H4) DEFENDER vs barrel: neoverfolduj. Call s made hand + draw, raise value-only (a pár draw OOP), fold air.
+
+I) RIVER (nové lekce)
+I1) Valuebet: nevynechávej value (top pair+). Bet často malý/rozumný, ne overjam.
+I2) Thin value IP: betuj top pair a lepší; se 2nd pair jen když runout není scary a soupeř má dost bluffcatchů.
+I3) Checkback: když soupeřova calling range dominuje a value je příliš tenká.
+I4) Bluffcatch: měj minimální call range (typicky top pair+, někdy 2nd pair IP). Jinak tě soupeři přebluffují.
+I5) Value-raise: raise na riveru defaultně jen value-heavy (2pair+/set+).
+    </div>
+</div>
+</div>
+<div class="modalBack" id="rangeBack">
+<div class="modal">
+<div class="modalHeader">
+<div>
+<div class="modalTitle" id="rangeTitle">Rozsah kombinací</div>
+<div class="legend" id="rangeLegend"></div>
+<div class="legendChips" id="rangeLegendChips"></div>
+</div>
+<div class="btns" style="margin-top:0;">
+<button class="ghost" id="closeRangeBtn">Zavřít</button>
+</div>
+</div>
+<div class="matrixWrap">
+<div class="matrix" id="rangeMatrix"></div>
+</div>
+<div class="mini" id="rangeNote"></div>
+</div>
+</div>
+<script>
+(() => {
+  "use strict";
+
+  
+  // --- BOOT & ERROR OVERLAY (v4_20) ---
+  (function(){
+    function ensureBox(){
+      let box = document.getElementById("jsErrorBox");
+      if (!box){
+        box = document.createElement("div");
+        box.id = "jsErrorBox";
+        box.className = "jsErrorBox";
+        document.body.appendChild(box);
+      }
+      return box;
+    }
+    function showErr(err){
+      try{
+        const box = ensureBox();
+        box.style.display = "block";
+        const msg = (err && err.stack) ? err.stack : (err && err.message ? err.message : String(err));
+        box.textContent = "JS ERROR: " + msg;
+      }catch(_){}
+    }
+    window.__PKR_showErr = showErr;
+    window.addEventListener("error", (ev) => showErr(ev.error || ev.message || ev));
+    window.addEventListener("unhandledrejection", (ev) => showErr(ev.reason || ev));
+  })();
+function mulberry32(a) {
+    return function() {
+      let t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hashStr(s){
+    let h = 2166136261 >>> 0;
+    for (let i=0;i<s.length;i++){
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  const RANKS = ["A","K","Q","J","T","9","8","7","6","5","4","3","2"];
+  const R2V = { "A":14,"K":13,"Q":12,"J":11,"T":10,"9":9,"8":8,"7":7,"6":6,"5":5,"4":4,"3":3,"2":2 };
+  const POS6 = ["UTG","HJ","CO","BTN","SB","BB"];
+  const POOL_SIZE = 300;
+
+  const SETS = {
+    HJ_OPEN: new Set([
+      "22","33","44","55","66","77","88","99","TT","JJ","QQ","KK","AA",
+      "A2s","A3s","A4s","A5s","A6s","A7s","A8s","A9s","ATs","AJs","AQs","AKs",
+      "AJo","AQo","AKo",
+      "KTs","KJs","KQs","KQo",
+      "QTs","QJs",
+      "JTs",
+      "T9s","98s","87s"
+    ]),
+    CO_OPEN: new Set([
+      "22","33","44","55","66","77","88","99","TT","JJ","QQ","KK","AA",
+      "A2s","A3s","A4s","A5s","A6s","A7s","A8s","A9s","ATs","AJs","AQs","AKs",
+      "ATo","AJo","AQo","AKo",
+      "KTs","KJs","KQs","KTo","KJo","KQo",
+      "QTs","QJs","QKs","QTo","QJo",
+      "JTs","J9s","T9s",
+      "98s","87s","76s","65s","54s",
+      "97s","86s"
+    ]),
+    BTN_OPEN_EXTRA: new Set([
+      "A2o","A3o","A4o","A5o","A6o","A7o","A8o","A9o",
+      "K9s","K8s","K7s","K6s","K5s",
+      "Q9s","Q8s","Q7s",
+      "J9s","J8s","J7s",
+      "T8s","T7s",
+      "98o","T9o"
+    ]),
+    ISO_VALUE: new Set([
+      "22","33","44","55","66","77","88","99","TT","JJ","QQ","KK","AA",
+      "A2s","A3s","A4s","A5s","A6s","A7s","A8s","A9s","ATs","AJs","AQs","AKs",
+      "A9o","ATo","AJo","AQo","AKo",
+      "K7s","K8s","K9s","KTs","KJs","KQs",
+      "KTo","KJo","KQo",
+      "Q8s","Q9s","QTs","QJs","QKs",
+      "QTo","QJo",
+      "J8s","J9s","JTs","JTo",
+      "T9s","98s","87s"
+    ]),
+    OVERLIMP_OK: new Set(["54s","65s","76s","87s","98s","T9s","22","33","44","55","66"]),
+    BB_3BET_VALUE: new Set(["TT","JJ","QQ","KK","AA","AQo","AKo","AJs","AQs","AKs","KQs"]),
+    BB_3BET_BLUFF: new Set(["A5s","A4s","A3s","A2s"]),
+    BB_CALL_VS2X: new Set([
+      "22","33","44","55","66","77","88","99","TT","JJ","QQ","KK","AA",
+      "A2s","A3s","A4s","A5s","A6s","A7s","A8s","A9s","ATs","AJs","AQs","AKs",
+      "A7o","A8o","A9o","ATo","AJo","AQo","AKo",
+      "K2s","K3s","K4s","K5s","K6s","K7s","K8s","K9s","KTs","KJs","KQs",
+      "KTo","KJo",
+      "Q5s","Q6s","Q7s","Q8s","Q9s","QTs","QJs","QKs",
+      "QTo","QJo",
+      "J7s","J8s","J9s","JTs",
+      "JTo",
+      "T8s","T9s","T7s",
+      "98s","87s","76s","65s","54s","43s",
+      "T9o","98o"
+    ]),
+    BB_CALL_VS25X: new Set([
+      "22","33","44","55","66","77","88","99","TT","JJ","QQ","KK","AA",
+      "A2s","A3s","A4s","A5s","A6s","A7s","A8s","A9s","ATs","AJs","AQs","AKs",
+      "A8o","A9o","ATo","AJo","AQo","AKo",
+      "K4s","K5s","K6s","K7s","K8s","K9s","KTs","KJs","KQs",
+      "KTo","KJo",
+      "Q7s","Q8s","Q9s","QTs","QJs","QKs",
+      "QTo","QJo",
+      "J8s","J9s","JTs",
+      "T8s","T9s",
+      "98s","87s","76s","65s","54s"
+    ]),
+    BB_CALL_VS3X: new Set([
+      "22","33","44","55","66","77","88","99","TT","JJ","QQ","KK","AA",
+      "A2s","A3s","A4s","A5s","A6s","A7s","A8s","A9s","ATs","AJs","AQs","AKs",
+      "ATo","AJo","AQo","AKo",
+      "K7s","K8s","K9s","KTs","KJs","KQs",
+      "Q9s","QTs","QJs","QKs",
+      "J9s","JTs",
+      "T9s","98s","87s","76s"
+    ]),
+    REJAM_VALUE: new Set(["77","88","99","TT","JJ","QQ","KK","AA","AJs","AQs","AKs","AQo","AKo","KQs"]),
+    REJAM_SEMI: new Set(["55","66","ATs","A9s","A8s","A7s","A6s","A5s","A4s","A3s","A2s","AJo","KJs","QJs"]),
+    SB_OPEN: new Set([
+      "22","33","44","55","66","77","88","99","TT","JJ","QQ","KK","AA",
+      "A2s","A3s","A4s","A5s","A6s","A7s","A8s","A9s","ATs","AJs","AQs","AKs",
+      "A2o","A3o","A4o","A5o","A6o","A7o","A8o","A9o","ATo","AJo","AQo","AKo",
+      "K2s","K3s","K4s","K5s","K6s","K7s","K8s","K9s","KTs","KJs","KQs",
+      "K8o","K9o","KTo","KJo","KQo",
+      "Q4s","Q5s","Q6s","Q7s","Q8s","Q9s","QTs","QJs","QKs",
+      "Q9o","QTo","QJo","QKo",
+      "J6s","J7s","J8s","J9s","JTs",
+      "J9o","JTo","JQo",
+      "T6s","T7s","T8s","T9s",
+      "T9o",
+      "96s","97s","98s","86s","87s","76s","65s","54s",
+      "98o"
+    ]),
+    SB_4BET_JAM_VALUE: new Set([
+      "99","TT","JJ","QQ","KK","AA",
+      "AQo","AKo",
+      "AJs","AQs","AKs",
+      "KQs"
+    ]),
+    SB_4BET_JAM_SEMI: new Set([
+      "A5s","A4s","A3s","A2s"
+    ]),
+    SB_CALL_VS3BET: new Set([
+      "55","66","77","88",
+      "ATs","A9s","A8s","A7s","A6s",
+      "AJo",
+      "KTs","KJs","QTs","QJs","JTs","T9s","98s",
+      "KQo"
+    ])
+  };
+
+  function unionSets(a, b){ const out = new Set(a); for (const x of b) out.add(x); return out; }
+  
+  function canonAbsLabel(x){
+    const s = String(x||"").trim();
+    if (!s) return s;
+    // pairs "77"
+    if (/^([2-9TJQKA])\1$/.test(s)) return s;
+    // abstract "A5s", "KQo"
+    const m = s.match(/^([2-9TJQKA])([2-9TJQKA])([so])?$/i);
+    if (!m) return s;
+    let a = m[1].toUpperCase();
+    let b = m[2].toUpperCase();
+    const t = (m[3]||"").toLowerCase();
+    const va = R2V[a], vb = R2V[b];
+    if (va && vb && va < vb){ const tmp=a; a=b; b=tmp; }
+    if (a === b) return a+a;
+    return a+b+t;
+  }
+  function canonSet(s){
+    if (!s || !s.size) return s;
+    const out = new Set();
+    for (const x of s) out.add(canonAbsLabel(x));
+    return out;
+  }
+  function addToSet(s, arr){
+    if (!s || !arr) return;
+    for (const x of arr) s.add(canonAbsLabel(x));
+  }
+
+  // Canonicalize all hand labels in preflop sets (fixes typos like "QKs" -> "KQs")
+  for (const k in SETS){
+    if (SETS[k] && SETS[k].size != null) SETS[k] = canonSet(SETS[k]);
+  }
+
+  // Small GTO-ish expansions for 6-max ~20–40 BB baseline (training default)
+  // (These are still approximations, but remove obvious under-opening vs common baselines.)
+  addToSet(SETS.HJ_OPEN, ["ATo","KJo","QJo","K9s","Q9s","J9s","T8s","76s","65s"]);
+  addToSet(SETS.CO_OPEN, ["A9o","K9s","K9o","Q9s","J8s","T8s","T9o","98o"]);
+  addToSet(SETS.BTN_OPEN_EXTRA, ["K9o","Q9o","J8o","T8o","97o","86o"]);
+
+  const BTN_OPEN = unionSets(SETS.CO_OPEN, SETS.BTN_OPEN_EXTRA);
+
+  const CATS_PREFLOP = ["OPEN_HJ_CO_BTN","ISO_LIMP","BB_DEFEND","BB_DEFEND_2X","REJAM","SB_OPEN","BVB_AFTER_3BET"];
+  const CATS_POSTFLOP = ["FLOP_CBET_HU_DRY_PFR","FLOP_CBET_HU_WET_PFR","FLOP_CHECKBACK_PFR_IP","FLOP_DEFEND_VS_CBET_IP","FLOP_DEFEND_VS_CBET_OOP_BB","FLOP_MULTIWAY_PFR","FLOP_ISO_POT_VS_LIMPER","FLOP_3BETPOT_AHIGH","FLOP_BVB_SRP","FLOP_RFI_DEFENDER_RANGE_AWARE","TURN_PFR_BARREL_DRY","TURN_PFR_BARREL_WET","TURN_PFR_DELAYED_CBET_IP","TURN_DEFEND_VS_BARREL_IP","TURN_DEFEND_VS_BARREL_OOP_BB","TURN_3BETPOT_AHIGH","TURN_BVB_SRP","RIVER_PFR_VALUEBET","RIVER_PFR_THIN_VALUE_IP","RIVER_PFR_CHECKBACK","RIVER_DEFEND_BLUFCATCH","RIVER_DEFEND_VALUE_RAISE","RIVER_BVB_SRP","RIVER_3BETPOT_AHIGH"];
+  const CATS = CATS_PREFLOP.concat(CATS_POSTFLOP);
+
+  function pick(rng, arr){ return arr[Math.floor(rng()*arr.length)]; }
+  function genRandomHandFromSet(rng, set){ const arr = Array.from(set); return pick(rng, arr); }
+  function genRandomHandAny(rng){
+    const pool = [
+      "AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22",
+      "AKs","AQs","AJs","ATs","A9s","A8s","A7s","A6s","A5s","A4s","A3s","A2s",
+      "AKo","AQo","AJo","ATo","A9o","A8o","A7o","A6o","A5o","A4o","A3o","A2o",
+      "KQs","KJs","KTs","K9s","K8s","K7s","K6s","K5s","K4s","K3s","K2s",
+      "KQo","KJo","KTo","K9o","K8o","K7o","K6o","K5o","K4o","K3o","K2o",
+      "QJs","QTs","Q9s","Q8s","Q7s","Q6s","Q5s","Q4s",
+      "QJo","QTo","Q9o","Q8o","Q7o",
+      "JTs","J9s","J8s","J7s","J6s",
+      "JTo","J9o","J8o","J7o",
+      "T9s","T8s","T7s","T6s",
+      "T9o","T8o","T7o",
+      "98s","87s","76s","65s","54s","43s",
+      "98o","87o","76o","65o","54o","43o",
+      "72o","83o","94o","T2o","J3o","Q2o"
+    ];
+    return pick(rng, pool);
+  }
+
+  function getOpenSetForPos(pos){
+    if (pos === "HJ") return SETS.HJ_OPEN;
+    if (pos === "CO") return SETS.CO_OPEN;
+    if (pos === "BTN") return BTN_OPEN;
+    if (pos === "SB") return SETS.SB_OPEN;
+    return BTN_OPEN;
+  }
+  
+  // --- FUF additions: hole cards renderer + event log (persistent stats) ---
+  let EVT_KEY = "__EVT_KEY_UNSET__";
+
+  function escHtml(s){
+    return (""+s)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;");
+  }
+
+  function actionBadgesHtml(arr){
+    if(!arr || !Array.isArray(arr) || arr.length===0) return "";
+    return arr.map(a=>{
+      const t = (""+a).trim();
+      const k = t.toUpperCase();
+      const cls = k.startsWith("R") ? "r" : k.startsWith("C") ? "c" : k.startsWith("F") ? "f" : "";
+      return `<span class="ab ${cls}">${escHtml(t)}</span>`;
+    }).join("");
+  }
+
+
+
+function formatActionLine(actions){
+  const a = Array.isArray(actions) ? actions.map(x => (""+x).trim()).filter(Boolean) : [];
+  if(!a.length) return "";
+  // Compact, but prefer full history when it fits.
+  if(a.length <= 7) return a.join(" · ");
+  // If it ever gets too long (rare), keep beginning + ending and show ellipsis.
+  const head = a.slice(0, 2);
+  const tail = a.slice(-3);
+  return [...head, "…", ...tail].join(" · ");
+}
+
+  // --- v39: per-seat full action history (PF -> postflop) ---
+  const POSTFLOP_ORDER = ["SB","BB","UTG","HJ","CO","BTN"];
+  function posIdx(p){ const i = POSTFLOP_ORDER.indexOf(p); return i>=0 ? i : 0; }
+  function isIP(a,b){ return posIdx(a) > posIdx(b); }
+
+  function fmtBB(x){
+    if (x == null || x === "") return "";
+    const n = Number(x);
+    if (!isFinite(n)) return String(x);
+    const r = Math.round(n*10)/10;
+    return (Math.abs(r - Math.round(r)) < 1e-9) ? String(Math.round(r)) : String(r);
+  }
+
+  function shortActionTxt(kind, size){
+    const k = (kind||"").toString();
+    const up = k.toUpperCase();
+
+    // Preflop
+    if (up === "LIMP" || up === "L") return "limp";
+    if (up === "OPEN") return `open ${fmtBB(size)}`;
+    if (up === "ISO")  return `iso ${fmtBB(size)}`;
+    if (up === "3BET" || up === "3B") return `3bet ${fmtBB(size)}`;
+    if (up === "4BET" || up === "4B") return `4bet ${fmtBB(size)}`;
+    if (up === "CALL" || up === "C") return "call";
+    if (up === "FOLD" || up === "F") return "fold";
+
+    // Postflop
+    if (up === "CHECK" || up === "X") return "check";
+    if (up === "CBET_33" || up === "CBET33" || up === "CBET") return "cbet 33%";
+    if (up === "BET") return size!=null ? `bet ${fmtBB(size)}` : "bet";
+    if (up === "RAISE" || up === "R") return size!=null ? `raise ${fmtBB(size)}` : "raise";
+    if (up === "TO_ACT" || up === "TO ACT") return "NA TAHU";
+
+    // Fallback: show raw
+    return k;
+  }
+
+  function formatSeatHistoryLine(ctx, pos){
+    const log = (ctx && Array.isArray(ctx.actionLog)) ? ctx.actionLog : [];
+    let steps = log.filter(s => s && s.pos === pos);
+
+    // Pending decision marker
+    if (ctx && ctx.toAct && ctx.toAct.pos === pos && !ctx.resolved){
+      steps = steps.concat([{pos, street: ctx.toAct.street || "F", kind:"TO_ACT"}]);
+    }
+
+    if (!steps.length) return "";
+
+    // Group by street: PF | F | T | R (but display as PF/F/T/R blocks)
+    const order = ["PF","F","T","R"];
+    const groups = {};
+    for (const s of steps){
+      const st = (s.street || "PF").toUpperCase();
+      const key = order.includes(st) ? st : (st.startsWith("P") ? "PF" : "F");
+      groups[key] = groups[key] || [];
+      groups[key].push(shortActionTxt(s.kind, s.size));
+    }
+
+    const parts = [];
+    for (const st of order){
+      if (!groups[st] || !groups[st].length) continue;
+      // Remove empty strings, keep compact
+      const items = groups[st].map(x => (x||"").trim()).filter(Boolean);
+      if (!items.length) continue;
+      parts.push(`${st}: ${items.join(" > ")}`);
+    }
+    return parts.join(" | ");
+  }
+
+  function suitSym(s){ return ({s:"♠",h:"♥",d:"♦",c:"♣"}[s] || s); }
+  function isRedSuit(s){ return s === "h" || s === "d"; }
+
+  // Deterministic suits for abstract combos (A5s / A5o / 77).
+  function handToTwoCards(hand){
+    if(!hand) return null;
+    const h = (""+hand).trim();
+
+    // Already explicit: "Ah Kd" or "AhKd" or "[Ah Kd]"
+    const m2 = h.match(/^(\[)?([2-9TJQKA][shdc])\s+([2-9TJQKA][shdc])(\])?$/i);
+    if(m2) return [m2[2], m2[3]].map(x => x[0].toUpperCase() + x[1].toLowerCase());
+
+    const m4 = h.match(/^([2-9TJQKA])([shdc])([2-9TJQKA])([shdc])$/i);
+    if(m4) return [(m4[1].toUpperCase()+m4[2].toLowerCase()), (m4[3].toUpperCase()+m4[4].toLowerCase())];
+
+    // Abstract: "A5s", "KQo", "77"
+    const abs = h.replace(/[^2-9TJQKAso]/gi,"");
+    if(abs.length < 2) return null;
+
+    const r1 = abs[0].toUpperCase();
+    const r2 = abs[1].toUpperCase();
+    const tag = abs.length >= 3 ? abs[2].toLowerCase() : "";
+
+    if(r1 === r2){ // pair
+      return [r1+"s", r2+"h"]; // spade+heart
+    }
+    if(tag === "s"){ // suited
+      return [r1+"h", r2+"h"];
+    }
+    if(tag === "o"){ // offsuit
+      return [r1+"s", r2+"d"];
+    }
+    // unknown: pick offsuit deterministic
+    return [r1+"c", r2+"s"];
+  }
+
+  function cardHtml(code){
+    const r = code[0].toUpperCase();
+    const s = code[1].toLowerCase();
+    const cls =
+      (s==="s") ? "spade" :
+      (s==="h") ? "heart" :
+      (s==="d") ? "diamond" :
+      (s==="c") ? "club" : "spade";
+    return `
+      <span class="fufCard ${cls}">
+        <span class="r">${escHtml(r)}</span>
+        <span class="s">${escHtml(suitSym(s))}</span>
+        <span class="big">${escHtml(suitSym(s))}</span>
+      </span>`;
+  }
+
+  function holeCardsHtml(hand){
+    const cards = handToTwoCards(hand);
+    if(!cards) return `<span class="miniHand">${escHtml(hand||"")}</span>`;
+    return `<span class="holeCards">${cardHtml(cards[0])}${cardHtml(cards[1])}</span>
+            <span class="miniHand">${escHtml(hand)}</span>`;
+  }
+
+  
+  function boardCardsHtml(boardArr){
+    if(!boardArr || !Array.isArray(boardArr) || boardArr.length === 0) return "";
+    const cards = boardArr.slice(0,5).map(c => (""+c).trim()).filter(Boolean);
+    return cards.map(c => cardHtml(c).replace('fufCard ', 'fufCard board ')).join("");
+  }
+  function setSeatAction(pos, txt, {inhand=true, pending=false, folded=false}={}){
+    if(!seatEls[pos]) return;
+    seatEls[pos].classList.toggle("inhand", !!inhand);
+    seatEls[pos].classList.toggle("pending", !!pending);
+    seatEls[pos].classList.toggle("folded", !!folded);
+    if(actEls[pos]){
+      actEls[pos].textContent = txt || "";
+      actEls[pos].style.display = (txt && inhand) ? "block" : "none";
+    }
+  }
+
+function czLine(line){
+    let s = (line==null) ? "" : (""+line);
+
+    // Prefix localizations used in prompts
+    s = s.replace(/^Spot:/i, "Situace:");
+    s = s.replace(/^Eff stack:/i, "Efektivní stack:");
+    s = s.replace(/^Hero position:/i, "Pozice hero:");
+    s = s.replace(/^Role:/i, "Role:");
+    s = s.replace(/^Flop:/i, "Flop:");
+    s = s.replace(/^Hand:/i, "Ruka:");
+
+    return s;
+  }
+
+  function czTextBlock(s){
+    if (s == null) return "";
+    let t = (""+s);
+    // Common English fragments in hints/explanations
+    t = t.replaceAll("Default sizing:", "Defaultní sizing:");
+    t = t.replaceAll("Open starter:", "Starter open:");
+    t = t.replaceAll("Mimo starter open range. Fold OK.", "Mimo starter open range. Fold je OK.");
+    t = t.replaceAll("Fold OK.", "Fold je OK.");
+    t = t.replaceAll("Correct:", "Správně:");
+    t = t.replaceAll("Chosen:", "Zvoleno:");
+    t = t.replaceAll("Hint:", "Nápověda:");
+    t = t.replaceAll("Why:", "Důvod:");
+    return czLine(t);
+  }
+
+  function promptToHtml(q){
+    const raw = (q && q.prompt) ? q.prompt : "";
+    const hand = q && q.ctx ? q.ctx.hand : null;
+    const lines = raw.split("\n");
+    const out = [];
+    for(const rawLine of lines){
+      const line = czLine(rawLine);
+      if(line.trim().toLowerCase().startsWith("ruka:") || line.trim().toLowerCase().startsWith("hand:")){
+        out.push(`<div class="fufInlineHand"><div><b>Ruka:</b></div><div>${holeCardsHtml(hand || line.split(":")[1].trim())}</div></div>`);
+      }else{
+        out.push(`<div>${escHtml(line)}</div>`);
+      }
+    }
+    return out.join("");
+  }
+
+  function loadEvents(){
+    try{
+      const raw = localStorage.getItem(EVT_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(_){ return []; }
+  }
+  function saveEvents(arr){
+    try{ localStorage.setItem(EVT_KEY, JSON.stringify(arr)); }catch(_){}
+  }
+  function appendEvent(e){
+    const arr = loadEvents();
+    arr.push(e);
+    // cap to last 20000 answers to avoid uncontrolled growth
+    if(arr.length > 20000) arr.splice(0, arr.length - 20000);
+    saveEvents(arr);
+  }
+  function summarizeEvents(){
+    const arr = loadEvents();
+    let n=0, ok=0, ms=0;
+    const byDay = new Map();
+    for(const e of arr){
+      if(!e || typeof e.ok !== "boolean") continue;
+      n++; if(e.ok) ok++;
+      if(typeof e.ms === "number") ms += e.ms;
+      const d = new Date(e.ts || Date.now());
+      const day = d.toISOString().slice(0,10);
+      const v = byDay.get(day) || {n:0, ok:0};
+      v.n++; if(e.ok) v.ok++;
+      byDay.set(day, v);
+    }
+    const acc = n ? ok/n : 0;
+    const avgMs = n ? ms/n : 0;
+
+    // last 7 days
+    const today = new Date();
+    let n7=0, ok7=0;
+    for(let i=0;i<7;i++){
+      const d = new Date(today); d.setDate(today.getDate()-i);
+      const day = d.toISOString().slice(0,10);
+      const v = byDay.get(day);
+      if(v){ n7 += v.n; ok7 += v.ok; }
+    }
+    const acc7 = n7 ? ok7/n7 : 0;
+
+    return {n, ok, acc, avgMs, n7, ok7, acc7};
+  }
+
+  function updateStatsUI(){
+    const box = document.getElementById("statsJsonBox");
+    const line = document.getElementById("statsSummaryLine");
+    if(!box || !line) return;
+    const s = summarizeEvents();
+    line.textContent = `Answers logged: ${s.n} | Acc: ${(s.acc*100).toFixed(1)}% | Avg time: ${Math.round(s.avgMs)} ms | Last 7d: ${s.n7} answers, ${(s.acc7*100).toFixed(1)}%`;
+  }
+
+function possibleLimpers(heroPos){
+    if (heroPos === "CO") return ["UTG","HJ"];
+    if (heroPos === "BTN") return ["UTG","HJ","CO"];
+    if (heroPos === "SB") return ["UTG","HJ","CO","BTN"];
+    return ["UTG","HJ","CO"];
+  }
+
+  function makeOpenQuestion(rng){
+    const pos = pick(rng, ["HJ","CO","BTN"]);
+    const eff = pick(rng, [15,16,17,18,19,20,21,22,23,24,25]);
+    const inRangeSet = getOpenSetForPos(pos);
+
+    const hand = (rng() < 0.70) ? genRandomHandFromSet(rng, inRangeSet) : genRandomHandAny(rng);
+    const shouldOpen = inRangeSet.has(hand);
+    const sizing = (rng() < 0.75) ? "2x" : "2.5x";
+
+    const prompt =
+`Spot: Folded to you.
+Eff stack: ${eff} BB
+Position: ${pos}
+Hand: ${hand}
+Akce?`;
+
+    const answers = [
+      { key:"OPEN_2X", label:"OPEN 2x" },
+      { key:"OPEN_25X", label:"OPEN 2.5x" },
+      { key:"FOLD", label:"FOLD" }
+    ];
+
+    const correctKeys = shouldOpen ? ["OPEN_2X","OPEN_25X"] : ["FOLD"];
+    return { cat:"OPEN_HJ_CO_BTN", ctx:{heroPos:pos, pos, eff, hand, sizing}, id:`OPEN_${pos}_${eff}_${hand}`, prompt, answers, correctKeys,
+             strictCorrect: (shouldOpen ? (sizing==="2x"?["OPEN_2X"]:["OPEN_25X"]) : ["FOLD"]),
+             hint:`Defaultní sizing: ${sizing}`, explanation: shouldOpen ? `Starter open: ${pos} při 15–25 BB.` : `Mimo starter open range. Fold je OK.` };
+  }
+
+  function makeIsoQuestion(rng){
+    const pos = pick(rng, ["CO","BTN","SB"]);
+    const limperPos = pick(rng, possibleLimpers(pos));
+    const eff = pick(rng, [15,16,17,18,19,20,21,22,23,24,25]);
+    const hand = genRandomHandAny(rng);
+    const inIso = SETS.ISO_VALUE.has(hand);
+
+    const isIP = (pos === "CO" || pos === "BTN");
+    const lowEff = eff <= 20;
+    const earlyLimper = (limperPos === "UTG" || limperPos === "HJ");
+    const smallPair = (hand === "22" || hand === "33" || hand === "44" || hand === "55" || hand === "66");
+
+    const isoLabel = (pos === "SB")
+      ? "ISO 4x"
+      : (lowEff ? "ISO 2.5x–3x" : "ISO 3x–3.5x");
+
+    const prompt =
+`Spot: 1 limper před tebou.
+Eff stack: ${eff} BB
+Hero position: ${pos}
+Limper: ${limperPos}
+Hand: ${hand}
+Akce?`;
+
+    const answers = [
+      { key:"ISO", label: isoLabel },
+      { key:"OVERLIMP", label:"OVERLIMP (dorovnat)" },
+      { key:"FOLD", label:"FOLD" }
+    ];
+
+    let correctKeys;
+    let explanation;
+
+    if (inIso) {
+      // Úprava dle pravidel: při 15–20 BB a early limperovi nejsou malé páry happy v low-SPR iso potech.
+      if (isIP && lowEff && earlyLimper && smallPair) {
+        correctKeys = ["OVERLIMP","ISO"];
+        explanation = "15–20 BB + early limper (UTG/HJ) + small pair: preferuj OVERLIMP. ISO jen menší sizing (2.5x–3x) a spíš exploitově.";
+      } else {
+        correctKeys = ["ISO"];
+        explanation = "ISO (value) proti limpu.";
+      }
+    } else if (SETS.OVERLIMP_OK.has(hand)) {
+      correctKeys = ["OVERLIMP","FOLD"];
+      explanation = "Mimo ISO value. Overlimp (volitelně) nebo fold.";
+    } else {
+      correctKeys = ["FOLD"];
+      explanation = "Mimo ISO/overlimp okraje. Fold.";
+    }
+
+    const hint = (pos === "SB")
+      ? "Sizing: 4x (OOP)."
+      : (lowEff
+          ? "Sizing: 2.5x–3x default při 15–20 BB. 3.5x jen exploit."
+          : "Sizing: 3x–3.5x (3.5x exploit).");
+
+    return {
+      cat:"ISO_LIMP",
+      ctx:{heroPos:pos, pos, limperPos, eff, hand},
+      id:`ISO_${pos}_${limperPos}_${eff}_${hand}`,
+      prompt,
+      answers,
+      correctKeys,
+      strictCorrect: correctKeys,
+      hint,
+      explanation
+    };
+  }
+
+  function makeBbDefendQuestion(rng){
+    const openerPos = pick(rng, ["HJ","CO","BTN"]);
+    const sizing = pick(rng, ["2x","2.5x","3x"]);
+    const eff = pick(rng, [18,20,22,25,28,30]);
+    const hand = genRandomHandAny(rng);
+
+    let callSet = (sizing==="2x") ? SETS.BB_CALL_VS2X : (sizing==="2.5x") ? SETS.BB_CALL_VS25X : SETS.BB_CALL_VS3X;
+
+    const hjTighten = new Set(["K2s","K3s","K4s","K5s","Q5s","Q6s","Q7s","J7s","T7s","T8o","98o","87o","76o","65o","54o","43o"]);
+    const isValue3b = SETS.BB_3BET_VALUE.has(hand) && (openerPos !== "HJ" || ["JJ","QQ","KK","AA","AKo","AKs","AQs"].includes(hand));
+    const isBluff3b = SETS.BB_3BET_BLUFF.has(hand) && openerPos !== "HJ" && sizing !== "3x";
+    const canCall = callSet.has(hand) && !(openerPos==="HJ" && hjTighten.has(hand));
+
+    const prompt =
+`Spot: BB vs open.
+Opener: ${openerPos}
+Open size: ${sizing}
+Eff stack: ${eff} BB
+Hand: ${hand}
+Akce?`;
+
+    const answers = [
+      { key:"FOLD", label:"FOLD" },
+      { key:"CALL", label:"CALL" },
+      { key:"3BET", label:"3BET (non-all-in)" }
+    ];
+
+    let correctKeys;
+    let explanation;
+
+    if (isValue3b) { correctKeys = ["3BET"]; explanation = `Value 3bet.`; }
+    else if (isBluff3b) { correctKeys = ["3BET","CALL"]; explanation = `A5s–A2s jako 3bet bluff vs CO/BTN (hlavně vs menší sizing).`; }
+    else if (canCall) { correctKeys = ["CALL"]; explanation = `Defend: call.`; }
+    else { correctKeys = ["FOLD"]; explanation = `Fold OK.`; }
+
+    return { cat:"BB_DEFEND", ctx:{heroPos:"BB", openerPos, sizing, eff, hand}, id:`BB_${openerPos}_${sizing}_${eff}_${hand}`, prompt, answers,
+             correctKeys, strictCorrect: correctKeys, hint:`2x: víc defend. 3x: ořezat.`, explanation };
+  }
+
+  
+
+  function makeBbDefend2xStealQuestion(rng){
+    const openerPos = pick(rng, ["CO","BTN"]);
+    const sizing = "2x";
+    const eff = pick(rng, [15,16,17,18,19,20,21,22,23,24,25]);
+
+    // Baseline ranges reuse existing sets (same as BB_DEFEND vs 2x),
+    // but this drill OVER-SAMPLES marginal/cusp hands.
+    const callSet = SETS.BB_CALL_VS2X;
+
+    const marginalIn = new Set([
+      // suited low K/Q/J/T that are often on the border
+      "K2s","K3s","K4s","K5s","K6s",
+      "Q5s","Q6s","Q7s","Q8s",
+      "J7s","J8s","J9s",
+      "T7s","T8s","T9s",
+      // offsuit near-border broadways / connectors
+      "KTo","KJo","QTo","QJo","JTo","T9o","98o",
+      // small suited connectors/gappers
+      "43s","54s","65s","76s","86s","97s"
+    ]);
+
+    const marginalOut = new Set([
+      // offsuit junk that looks tempting but is mostly fold
+      "K2o","K3o","K4o","K5o","K6o","K7o","K8o",
+      "Q2o","Q3o","Q4o","Q5o","Q6o","Q7o","Q8o",
+      "J2o","J3o","J4o","J5o","J6o","J7o",
+      "T2o","T3o","T4o","T5o","T6o","T7o",
+      "97o","86o","75o","64o","53o","42o"
+    ]);
+
+    const hand = (() => {
+      const r = rng();
+      if (r < 0.45) return genRandomHandFromSet(rng, marginalIn);
+      if (r < 0.70) return genRandomHandFromSet(rng, marginalOut);
+      if (r < 0.90) return genRandomHandAny(rng);
+      return genRandomHandFromSet(rng, callSet);
+    })();
+
+    const isValue3b = SETS.BB_3BET_VALUE.has(hand);
+    const isBluff3b = SETS.BB_3BET_BLUFF.has(hand); // A5s–A2s
+    const canCall = callSet.has(hand);
+
+    const prompt =
+`Spot: BB vs steal.
+Opener: ${openerPos}
+Open size: ${sizing}
+Eff stack: ${eff} BB
+Hand: ${hand}
+Akce?`;
+
+    const answers = [
+      { key:"FOLD", label:"FOLD" },
+      { key:"CALL", label:"CALL" },
+      { key:"3BET", label:"3BET (non-all-in)" }
+    ];
+
+    let correctKeys;
+    let strictCorrect;
+    let explanation;
+
+    if (isValue3b) {
+      correctKeys = ["3BET"];
+      strictCorrect = ["3BET"];
+      explanation = `Value 3bet vs steal.`;
+    } else if (isBluff3b) {
+      // allow CALL as OK in LENIENT, but strict prefers 3BET
+      correctKeys = ["3BET","CALL"];
+      strictCorrect = ["3BET"];
+      explanation = `A5s–A2s jako 3bet bluff vs CO/BTN 2x (call může být OK v LENIENT).`;
+    } else if (canCall) {
+      // For marginal-in hands, allow fold in LENIENT (variance/rake/skill), but strict prefers CALL.
+      const isMarginal = marginalIn.has(hand);
+      correctKeys = isMarginal ? ["CALL","FOLD"] : ["CALL"];
+      strictCorrect = ["CALL"];
+      explanation = isMarginal ? `Marginální defend: call je default, fold je OK v LENIENT.` : `Defend: call.`;
+    } else {
+      correctKeys = ["FOLD"];
+      strictCorrect = ["FOLD"];
+      explanation = `Fold OK.`;
+    }
+
+    return {
+      cat:"BB_DEFEND_2X",
+      ctx:{heroPos:"BB", openerPos, sizing, eff, hand},
+      id:`BB2X_${openerPos}_${sizing}_${eff}_${hand}`,
+      prompt,
+      answers,
+      correctKeys,
+      strictCorrect,
+      hint:`Steal 2x: over-sampling okrajů defendů.`,
+      explanation
+    };
+  }
+
+function makeRejamQuestion(rng){
+    const heroPos = pick(rng, ["SB","BB"]);
+    const openerPos = pick(rng, ["CO","BTN"]);
+    const sizing = pick(rng, ["2x","2.5x"]);
+    const eff = pick(rng, [15,16,17,18,19,20]);
+    const hand = genRandomHandAny(rng);
+
+    const isValue = SETS.REJAM_VALUE.has(hand);
+    const isSemi = SETS.REJAM_SEMI.has(hand);
+    const btnBonus = (openerPos==="BTN") && ["A9s","A8s","KJs","QJs"].includes(hand);
+
+    const prompt =
+`Spot: ${heroPos} vs open.
+Opener: ${openerPos}
+Open size: ${sizing}
+Eff stack: ${eff} BB
+Hand: ${hand}
+Akce?`;
+
+    const answers = [
+      { key:"JAM", label:"JAM (all-in)" },
+      { key:"CALL", label:"CALL" },
+      { key:"FOLD", label:"FOLD" }
+    ];
+
+    let correctKeys;
+    let explanation;
+
+    if (eff >= 15 && eff <= 20 && (isValue || isSemi || btnBonus)) {
+      correctKeys = isValue ? ["JAM"] : ["JAM","FOLD"];
+      explanation = isValue ? `Value rejam.` : `Semi rejam (fold povolený).`;
+    } else { correctKeys = ["FOLD"]; explanation = `Fold.`; }
+
+    return { cat:"REJAM", ctx:{heroPos, openerPos, sizing, eff, hand}, id:`REJAM_${heroPos}_${openerPos}_${sizing}_${eff}_${hand}`, prompt, answers,
+             correctKeys, strictCorrect: correctKeys, hint:`Value: 77+ AJs+ AQo+ KQs`, explanation };
+  }
+
+  function makeSbOpenQuestion(rng){
+    const eff = pick(rng, [15,16,17,18,19,20,21,22,23,24,25]);
+    const hand = (rng() < 0.75) ? genRandomHandFromSet(rng, SETS.SB_OPEN) : genRandomHandAny(rng);
+    const shouldOpen = SETS.SB_OPEN.has(hand);
+    const sizing = (rng() < 0.82) ? "2x" : "2.5x";
+
+    const prompt =
+`Spot: Folded to you.
+Eff stack: ${eff} BB
+Position: SB
+Hand: ${hand}
+Akce?`;
+
+    const answers = [
+      { key:"OPEN_2X", label:"OPEN 2x" },
+      { key:"OPEN_25X", label:"OPEN 2.5x" },
+      { key:"FOLD", label:"FOLD" }
+    ];
+
+    const correctKeys = shouldOpen ? ["OPEN_2X","OPEN_25X"] : ["FOLD"];
+    return { cat:"SB_OPEN", ctx:{heroPos:"SB", pos:"SB", eff, hand, sizing}, id:`SBOPEN_${eff}_${hand}`, prompt, answers, correctKeys,
+             strictCorrect: (shouldOpen ? (sizing==="2x"?["OPEN_2X"]:["OPEN_25X"]) : ["FOLD"]),
+             hint:`Default sizing: ${sizing} (limp default OFF)`, explanation: shouldOpen ? `SB open: tlačíš edge HU vs BB.` : `Mimo SB starter. Fold OK.` };
+  }
+
+
+  function makeBvbAfter3betQuestion(rng){
+    const eff = pick(rng, [15,16,17,18,19,20,21,22,23,24,25]);
+    const openSize = (rng() < 0.78) ? "2x" : "2.5x";
+    const threeBetSize = (openSize === "2x")
+      ? pick(rng, ["6.5x","7x"])
+      : pick(rng, ["7.5x","8x"]);
+
+    // hand sampling: ať je mix (in-range i out-of-range)
+    let hand;
+    const r = rng();
+    if (r < 0.36) hand = genRandomHandFromSet(rng, SETS.SB_4BET_JAM_VALUE);
+    else if (r < 0.60) hand = genRandomHandFromSet(rng, SETS.SB_CALL_VS3BET);
+    else if (r < 0.72) hand = genRandomHandFromSet(rng, SETS.SB_4BET_JAM_SEMI);
+    else hand = genRandomHandAny(rng);
+
+    const isJamValue = SETS.SB_4BET_JAM_VALUE.has(hand);
+    const isJamSemi  = SETS.SB_4BET_JAM_SEMI.has(hand);
+    const isCall     = SETS.SB_CALL_VS3BET.has(hand);
+
+    const prompt =
+`Spot: SB open, BB 3bet.
+Eff stack: ${eff} BB
+SB open: ${openSize}
+BB 3bet: ${threeBetSize}
+Hand: ${hand}
+Akce?`;
+
+    const answers = [
+      { key:"JAM", label:"4BET JAM (all-in)" },
+      { key:"CALL", label:"CALL 3BET" },
+      { key:"FOLD", label:"FOLD" }
+    ];
+
+    let correctKeys;
+    let explanation;
+
+    if (isJamValue) { correctKeys = ["JAM"]; explanation = "Value 4bet jam (BvB jde o nejvyšší EV)."; }
+    else if (isCall) { correctKeys = ["CALL"]; explanation = "Call vs 3bet (realizace equity IP/OOP je tricky, ale v BvB to často vychází)."; }
+    else if (isJamSemi) { correctKeys = ["JAM","FOLD"]; explanation = "Semi 4bet jam (fold povolený, podle exploitu / villain 3bet range)."; }
+    else { correctKeys = ["FOLD"]; explanation = "Mimo základní continue range. Fold."; }
+
+    return {
+      cat:"BVB_AFTER_3BET",
+      ctx:{ heroPos:"SB", eff, openSize, threeBetSize, hand },
+      id:`BVB3B_${eff}_${openSize}_${threeBetSize}_${hand}`,
+      prompt,
+      answers,
+      correctKeys,
+      strictCorrect: correctKeys,
+      hint:"BvB: jam value široce, call s částí broadway+suited, A5s–A2s jako semi (mix).",
+      explanation
+    };
+  }
+
+    const FLOP_BOARDS = {
+    DRY: [
+      ["Ad","7c","2s"],["Kc","8d","3s"],["Qs","9c","4d"],["Jd","7s","2c"],["Td","6c","2h"]
+    ],
+    WET: [
+      ["Ts","9h","8d"],["9s","8h","7d"],["Jc","Tc","9d"],["8s","7h","6d"],["Qd","Jh","Ts"]
+    ],
+    PAIRED: [
+      ["Ad","As","7c"],["Kd","Kc","4h"],["Qh","Qs","2d"],["9c","9d","3s"],["7h","7d","2c"]
+    ],
+    LOW: [
+      ["7s","6h","5d"],["6s","5h","4d"],["8c","6d","5s"],["5c","4d","3s"],["9s","7h","6d"]
+    ],
+    AHIGH: [
+      ["As","7d","2c"],["Ah","Kd","4s"],["Ad","Tc","3h"],["Ac","8h","6d"],["As","Qd","2c"]
+    ]
+  };
+
+  function makeFlopQuestion(rng, cat){
+    let tex = "DRY";
+    if (cat.includes("WET")) tex = "WET";
+    if (cat.includes("AHIGH")) tex = "AHIGH";
+    if (cat.includes("RANGE_AWARE")) tex = pick(rng, ["DRY","WET","PAIRED","LOW","AHIGH"]);
+    if (cat.includes("BVB")) tex = pick(rng, ["DRY","WET","PAIRED","LOW"]);
+    const board = pick(rng, FLOP_BOARDS[tex]).slice();
+
+    const street =
+      cat.startsWith("RIVER_") ? "RIVER" :
+      cat.startsWith("TURN_") ? "TURN" :
+      "FLOP";
+
+    // Extend board for TURN/RIVER (avoid collisions)
+    if (street !== "FLOP"){
+      const used = new Set(board.map(c => (""+c).trim()).filter(Boolean)
+        .map(c => c[0].toUpperCase() + c[1].toLowerCase()));
+      const suits = ["s","h","d","c"];
+      function randCard(){
+        let guard = 0;
+        while (guard++ < 2000){
+          const r = pick(rng, RANKS);
+          const s = pick(rng, suits);
+          const card = (r + s);
+          if (!used.has(card)) { used.add(card); return card; }
+        }
+        return "2c";
+      }
+      board.push(randCard());
+      if (street === "RIVER") board.push(randCard());
+    }
+
+
+    const eff = pick(rng, [15,18,20,25,30,35,40]);
+    const potType =
+      cat.includes("3BETPOT") ? "3bet pot" :
+      cat.includes("BVB") ? "BvB SRP" :
+      cat.includes("ISO") ? "ISO pot" :
+      cat.includes("MULTIWAY") ? "Multiway" :
+      "SRP";
+
+    const heroRole = (cat.includes("DEFEND_VS_CBET") || cat.startsWith("TURN_DEFEND") || cat.startsWith("RIVER_DEFEND")) ? "DEFENDER" : "PFR";
+    let position =
+      cat.includes("_IP") ? "IP" :
+      cat.includes("OOP") ? "OOP" :
+      (rng() < 0.55 ? "IP" : "OOP");
+    if (heroRole==="PFR" && /CHECKBACK/.test(cat)) position = "IP";
+    if (heroRole==="PFR" && /DELAYED_CBET/.test(cat)) position = "IP";
+    const holeAbsPool = (heroRole === "PFR")
+      ? ["AA","KK","QQ","JJ","TT","99","88","77","AKs","AKo","AQs","AQo","AJs","AJo","ATs","ATo","KQs","KQo","KJs","KTs","QJs","QTs","JTs","T9s","98s","A5s","KTo","QJo","97s"]
+      : ["TT","99","88","77","66","55","44","AKs","AKo","AQs","AQo","AJs","AJo","ATs","KQs","KJs","QJs","QTs","JTs","T9s","98s","87s","76s","A5s","A4s","A3s","A2s","KTo","QTo","JTo","T8s","97s","K2s"];
+
+    // Turn abstract label into explicit two-card combo that never collides with the board.
+    // (We keep the abstract label only for "Flopzilla-style" matrix; questions use explicit cards.)
+    function toExplicitHand(abs, boardCards){
+      const used = new Set((Array.isArray(boardCards)?boardCards:[])
+        .map(c => (""+c).trim()).filter(Boolean)
+        .map(c => c[0].toUpperCase() + c[1].toLowerCase()));
+      const suits = ["s","h","d","c"];
+      const p = parseHandLabel(abs);
+      if (!p) return abs;
+
+      const r1 = p.r1, r2 = p.r2;
+      const mk = (r,s)=> (r + s);
+
+      if (p.isPair){
+        const taken = new Set();
+        for (const c of used){ if (c[0]===r1) taken.add(c[1]); }
+        const avail = suits.filter(s=>!taken.has(s));
+        if (avail.length >= 2) return `${r1}${avail[0]} ${r2}${avail[1]}`;
+        // fallback: any two distinct suits
+        return `${r1}s ${r2}h`;
+      }
+
+      if (p.isSuited){
+        for (const s of suits){
+          const c1 = mk(r1,s), c2 = mk(r2,s);
+          if (!used.has(c1) && !used.has(c2)) return `${c1} ${c2}`;
+        }
+      }
+
+      // offsuit / fallback
+      for (const s1 of suits){
+        for (const s2 of suits){
+          if (s1===s2) continue;
+          const c1 = mk(r1,s1), c2 = mk(r2,s2);
+          if (!used.has(c1) && !used.has(c2)) return `${c1} ${c2}`;
+        }
+      }
+
+      return abs;
+    }
+
+    const holeAbs = pick(rng, holeAbsPool);
+    const hole = toExplicitHand(holeAbs, board);
+
+    const answers = [
+      { key:"CBET_33", label:"CBET 33%" },
+      { key:"CHECK", label:"CHECK" },
+      { key:"CALL", label:"CALL" },
+      { key:"RAISE", label:"RAISE" },
+      { key:"FOLD", label:"FOLD" }
+    ];
+    const ctxForAct = { board, heroRole, potType, position, eff, _cat: cat };
+
+    function keyFromActCls(cls){
+      if (cls === "actCbet33") return "CBET_33";
+      if (cls === "actCheckPF") return "CHECK";
+      if (cls === "actRaisePF") return "RAISE";
+      if (cls === "actCallPF") return "CALL";
+      return "FOLD";
+    }
+
+    const actCls = classifyPostflopAction(hole, ctxForAct, cat);
+    let strict = [ keyFromActCls(actCls) ];
+    let correct = strict.slice();
+
+    // lightweight hand features (for lenient mixes + explanation)
+    const hi = parseHandLabel(hole);
+    const br = boardRanks(board);
+    const bVals = br.map(r=>R2V[r]).filter(Boolean);
+    const matches = hi ? [hi.r1,hi.r2].filter(r => br.includes(r)) : [];
+    const isSet = !!(hi && hi.isPair && br.includes(hi.r1));
+    const isTwoPair = !!(hi && !hi.isPair && matches.length === 2);
+    const drawScore = hi ? straightDrawScore([hi.v1,hi.v2], bVals) : 0;
+    const hasStrongDraw = (drawScore === 2);
+    const hasBackdoor = (drawScore === 1);
+
+    const isWetNow = /WET|LOW/.test(cat) || (tex === "WET" || tex === "LOW");
+    const isDryNow = !isWetNow;
+
+    // Lenient acceptance for common solver mixes (still heuristic)
+    if (heroRole !== "PFR"){
+      if (isSet || isTwoPair){
+        const s = new Set(correct); s.add("CALL"); s.add("RAISE"); correct = Array.from(s);
+      }
+      if (hasStrongDraw){
+        const s = new Set(correct); s.add("CALL"); s.add("RAISE"); correct = Array.from(s);
+      }
+    } else {
+      // On very wet boards, even very strong hands can sometimes check for protection/traps.
+      if (isWetNow && (isSet || isTwoPair)){
+        const s = new Set(correct); s.add("CHECK"); s.add("CBET_33"); correct = Array.from(s);
+      }
+      if (cat.includes("CHECKBACK") && position === "IP" && strict[0] === "CBET_33" && !(isSet || isTwoPair)){
+        strict = ["CHECK"];
+        correct = ["CHECK","CBET_33"];
+      }
+    }
+
+    let expl = "";
+    const main = strict[0];
+
+    if (heroRole === "PFR"){
+      if (main === "CBET_33"){
+        if (isSet || isTwoPair){
+          expl = isWetNow
+            ? "Velmi silná made hand na wet/connected boardu: bet 33% je ok baseline. Pozn.: v praxi často existuje i bigger sizing nebo trap (mix)."
+            : "Velmi silná made hand: bet pro value a protection.";
+        } else if (hasStrongDraw){
+          expl = "Strong draw: betuješ pro fold equity + realizaci equity (baseline 33%).";
+        } else if (hasBackdoor){
+          expl = isDryNow
+            ? "Dry board: s backdoor potenciálem často můžeš cbetnout malý sizing."
+            : "Wet board: s pouhým backdoorem raději check častěji než na dry.";
+        } else {
+          expl = "Baseline cbet 33% (PFR) – ale pozor, bez solveru je to vždy jen heuristika.";
+        }
+      } else {
+        expl = isWetNow
+          ? "Wet board: s marginaly/air typicky víc checkuješ, ať se neizoluješ proti silné continuing range."
+          : "Check: držíš pot malý a chráníš svou checking range (hlavně s marginaly).";
+      }
+    } else {
+      // DEFENDER vs cbet
+      if (main === "RAISE"){
+        if (isSet || isTwoPair){
+          expl = "Velmi silná made hand vs cbet: raise (často i kvůli stack-off line), ale call může být mix podle sizingu a pozice.";
+        } else if (hasStrongDraw){
+          expl = "Strong draw vs cbet: raise je častý (hlavně OOP) jako semi-bluff; call je také běžná alternativa (mix).";
+        } else {
+          expl = "Raise: tady to vychází jen z heuristiky – pokud ti to přijde divné, ber to jako kandidáta k ověření v solveru.";
+        }
+      } else if (main === "CALL"){
+        expl = "Call: realizace equity a udržení range. Často s top pair / střední made hand / některé draw.";
+      } else {
+        expl = "Fold: málo equity + špatná realizace (hlavně OOP) vs cbet.";
+      }
+    }
+
+    const boardLabel = (street === "FLOP")
+  ? `Flop: [${board.join(" ")}]`
+  : (street === "TURN")
+    ? `Board: [${board.slice(0,3).join(" ")} | ${board[3]}]`
+    : `Board: [${board.slice(0,3).join(" ")} | ${board[3]} | ${board[4]}]`;
+
+    const prompt =
+`Spot: ${potType}
+Role: ${heroRole} (${position})
+Eff stack: ${eff} BB
+${boardLabel}
+Hand: ${hole}
+Akce na ${street === "FLOP" ? "flopu" : (street === "TURN" ? "turnu" : "riveru")}?`;
+
+    const id = `${cat}_${potType}_${heroRole}_${position}_${eff}_${board.join("")}_${hole}`;
+
+
+    // build a simple "poker room"-like seat simulation (preflop + partial flop action)
+    const seats = {};
+    for (const p of POS6) seats[p] = { inHand:false, stack: eff, tag:"--" };
+
+    const actionLog = [];
+    function logAct(pos, street, kind, size){
+      actionLog.push({ pos, street, kind, size });
+    }
+    function resetSeats(){
+      for (const p of POS6){
+        seats[p].inHand = false;
+        seats[p].tag = "--";
+        seats[p].stack = eff;
+      }
+    }
+    function markInHand(p, tag){
+      if(!seats[p]) return;
+      seats[p].inHand = true;
+      seats[p].tag = tag || "--";
+      seats[p].stack = eff;
+    }
+
+    function pickOpenSize(){ return pick(rng, [2.0,2.2,2.5]); }
+    function pickIsoSize(){ return pick(rng, [3.0,3.5,4.0]); }
+    function pick3bSize(){ return pick(rng, [6.5,7.0,7.5,8.0]); }
+
+    let heroPos = "BB";
+    let aggressorPos = null;
+    let inHandPlayers = [];
+
+    // --- Scenario builder by pot type ---
+    resetSeats();
+
+    if (cat.includes("ISO")){
+      const limper = pick(rng, ["UTG","HJ"]);
+      const isoer = pick(rng, ["HJ","CO","BTN","SB"].filter(p=>p!==limper));
+      const defPool = POS6.filter(p=>p!==limper && p!==isoer);
+      const def = pick(rng, defPool);
+      const isoSize = pickIsoSize();
+
+      aggressorPos = isoer;
+      heroPos = (heroRole==="PFR") ? isoer : def;
+
+      markInHand(limper, "LIMP");
+      markInHand(isoer, heroRole==="PFR" ? "HERO" : "ISO");
+      markInHand(def, heroRole==="DEFENDER" ? "HERO" : "CALL");
+
+      logAct(limper, "PF", "LIMP");
+      logAct(isoer, "PF", "ISO", isoSize);
+      logAct(def, "PF", "CALL");
+      logAct(limper, "PF", "CALL");
+
+      inHandPlayers = [limper, isoer, def];
+    }
+    else if (cat.includes("BVB")){
+      const openSize = pick(rng, [2.2,2.5]);
+      aggressorPos = "SB";
+      heroPos = (heroRole==="PFR") ? "SB" : "BB";
+
+      markInHand("SB", heroRole==="PFR" ? "HERO" : "OPEN");
+      markInHand("BB", heroRole==="DEFENDER" ? "HERO" : "CALL");
+
+      logAct("SB", "PF", "OPEN", openSize);
+      logAct("BB", "PF", "CALL");
+
+      inHandPlayers = ["SB","BB"];
+    }
+    else if (cat.includes("3BETPOT")){
+      const mu3 = [
+        {open:"CO", three:"BTN"},
+        {open:"HJ", three:"CO"},
+        {open:"BTN", three:"SB"},
+        {open:"SB", three:"BB"},
+      ];
+      const wantHeroIP = (position === "IP");
+      const heroIsThree = (heroRole === "PFR"); // PFR = preflop aggressor in 3bet pot
+      const opts = mu3.filter(m => {
+        const threeIsIP = isIP(m.three, m.open);
+        const heroIP = heroIsThree ? threeIsIP : !threeIsIP;
+        return heroIP === wantHeroIP;
+      });
+      const mu = (opts.length ? pick(rng, opts) : pick(rng, mu3));
+      const openSize = pickOpenSize();
+      const threeSize = pick3bSize();
+
+      aggressorPos = mu.three;
+      heroPos = heroIsThree ? mu.three : mu.open;
+
+      markInHand(mu.open, heroIsThree ? "CALL" : "HERO");
+      markInHand(mu.three, heroIsThree ? "HERO" : "3BET");
+
+      logAct(mu.open, "PF", "OPEN", openSize);
+      logAct(mu.three, "PF", "3BET", threeSize);
+      logAct(mu.open, "PF", "CALL");
+
+      inHandPlayers = [mu.open, mu.three];
+    }
+    else if (cat.includes("MULTIWAY")){
+      // baseline open/call plus extra callers
+      const matchups = [
+        {open:"HJ", call:"CO", openIsIP:false},
+        {open:"CO", call:"BTN", openIsIP:false},
+        {open:"BTN", call:"SB", openIsIP:true},
+        {open:"SB", call:"BB", openIsIP:false},
+      ];
+      let mu = pick(rng, matchups);
+      if (heroRole==="PFR"){
+        const wantOpenIP = (position==="IP");
+        const o = matchups.filter(x=>x.openIsIP===wantOpenIP);
+        if (o.length) mu = pick(rng, o);
+      } else {
+        const wantCallIP = (position==="IP");
+        const o = matchups.filter(x=>(!x.openIsIP)===wantCallIP);
+        if (o.length) mu = pick(rng, o);
+      }
+      const openPos = mu.open, callPos = mu.call;
+      const openSize = pickOpenSize();
+
+      aggressorPos = openPos;
+      heroPos = (heroRole==="PFR") ? openPos : callPos;
+
+      markInHand(openPos, heroRole==="PFR" ? "HERO" : "OPEN");
+      markInHand(callPos, heroRole==="DEFENDER" ? "HERO" : "CALL");
+      logAct(openPos, "PF", "OPEN", openSize);
+      logAct(callPos, "PF", "CALL");
+
+      // add 1–2 extra callers
+      const extras = POS6.filter(p=>p!==openPos && p!==callPos);
+      const extra1 = pick(rng, extras);
+      markInHand(extra1, "CALL");
+      logAct(extra1, "PF", "CALL");
+
+      if (rng() < 0.35){
+        const extra2Pool = extras.filter(p=>p!==extra1);
+        if (extra2Pool.length){
+          const extra2 = pick(rng, extra2Pool);
+          markInHand(extra2, "CALL");
+          logAct(extra2, "PF", "CALL");
+        }
+      }
+
+      inHandPlayers = POS6.filter(p => seats[p].inHand);
+    }
+    else {
+      // HU SRP
+      const matchups = [
+        {open:"HJ", call:"CO", openIsIP:false},
+        {open:"CO", call:"BTN", openIsIP:false},
+        {open:"BTN", call:"SB", openIsIP:true},
+        {open:"SB", call:"BB", openIsIP:false},
+      ];
+      let mu = pick(rng, matchups);
+
+      // hard constraints for some defend-vs-cbet categories
+      if (cat.includes("DEFEND_VS_CBET") && cat.includes("OOP") && cat.includes("BB")){
+        mu = {open:"BTN", call:"BB", openIsIP:true};
+      } else if (cat.includes("DEFEND_VS_CBET") && cat.includes("_IP")){
+        mu = {open:"CO", call:"BTN", openIsIP:false};
+      } else {
+        if (heroRole==="PFR"){
+          const wantOpenIP = (position==="IP");
+          const o = matchups.filter(x=>x.openIsIP===wantOpenIP);
+          if (o.length) mu = pick(rng, o);
+        } else {
+          const wantCallIP = (position==="IP");
+          const o = matchups.filter(x=>(!x.openIsIP)===wantCallIP);
+          if (o.length) mu = pick(rng, o);
+        }
+      }
+
+      const openPos = mu.open, callPos = mu.call;
+      const openSize = pickOpenSize();
+
+      aggressorPos = openPos;
+      heroPos = (heroRole==="PFR") ? openPos : callPos;
+
+      markInHand(openPos, heroRole==="PFR" ? "HERO" : "OPEN");
+      markInHand(callPos, heroRole==="DEFENDER" ? "HERO" : "CALL");
+
+      logAct(openPos, "PF", "OPEN", openSize);
+      logAct(callPos, "PF", "CALL");
+
+      inHandPlayers = [openPos, callPos];
+    }
+
+    // --- Partial flop line before hero decision ---
+    // Keep it minimal but consistent with role:
+    // DEFENDER vs cbet -> add check (if hero is OOP) + cbet 33% from aggressor.
+    // PFR spots -> when hero is IP, assume opponents check to him.
+    if (aggressorPos){
+      const heroIsIPvsAgg = isIP(heroPos, aggressorPos);
+
+      if (heroRole === "DEFENDER"){
+        if (!heroIsIPvsAgg){
+          logAct(heroPos, "F", "CHECK");
+        }
+        logAct(aggressorPos, "F", "CBET_33");
+      } else {
+        if (heroIsIPvsAgg){
+          const opps = (inHandPlayers && inHandPlayers.length)
+            ? inHandPlayers.filter(p=>p!==heroPos)
+            : POS6.filter(p => seats[p].inHand && p !== heroPos);
+          for (const o of opps){
+            logAct(o, "F", "CHECK");
+          }
+        }
+      }
+    }
+
+    // Provide toAct marker to renderer (so it can append "TO ACT" to hero)
+    const toActStreet = (street === "FLOP") ? "F" : (street === "TURN") ? "T" : "R";
+    const toAct = { pos: heroPos, street: toActStreet };
+    const resolved = false;
+
+return {
+      cat,
+      ctx:{ street, potType, heroRole, position, eff, board, hand: hole, heroPos, seats, actionLog, toAct, resolved },
+      id,
+      prompt,
+      answers,
+      correctKeys: correct,
+      strictCorrect: strict,
+      hint: "Postflop L1: vyhodnoť made hand/draw + textura + role (PFR/DEFENDER) + pozice; na turnu/riveru přidej value a tlak.",
+      explanation: expl || "Cíl: jednoduchá, konzistentní postflop strategie."
+    };
+  }
+
+  function generateQuestion(rng, cat){
+    if (cat === "ALL") {
+      const act = getActiveCats();
+      const c = pick(rng, act);
+      return generateQuestion(rng, c);
+    }
+if (cat === "OPEN_HJ_CO_BTN") return makeOpenQuestion(rng);
+    if (cat === "ISO_LIMP") return makeIsoQuestion(rng);
+    if (cat === "BB_DEFEND_2X") return makeBbDefend2xStealQuestion(rng);
+    if (cat === "BB_DEFEND") return makeBbDefendQuestion(rng);
+    if (cat === "REJAM") return makeRejamQuestion(rng);
+    if (cat === "SB_OPEN") return makeSbOpenQuestion(rng);
+    if (cat === "BVB_AFTER_3BET") return makeBvbAfter3betQuestion(rng);
+    if (cat.startsWith("FLOP_") || cat.startsWith("TURN_") || cat.startsWith("RIVER_")) return makeFlopQuestion(rng, cat);
+    const c = pick(rng, getActiveCats());
+    return generateQuestion(rng, c);
+  }
+
+  function buildPool(seed, cat){
+    const s = (seed >>> 0) ^ hashStr(cat);
+    const rng = mulberry32(s);
+    const out = [];
+    const seen = new Set();
+    let guard = 0;
+    while (out.length < POOL_SIZE && guard < 50000){
+      guard++;
+      const q = generateQuestion(rng, cat);
+      if (seen.has(q.id)) continue;
+      seen.add(q.id);
+      out.push(q);
+    }
+    return out;
+  }
+
+  function shuffleInPlace(arr, rng){
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
+  const PROFILE_ID = "JungleStyle1";
+  const LS_KEY = "fuf_drill_v5_" + PROFILE_ID;
+  EVT_KEY = LS_KEY + "_events_v1";
+  const state = loadState();
+
+  function loadState(){
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return freshState();
+      const obj = JSON.parse(raw);
+      return { ...freshState(), ...obj };
+    } catch { return freshState(); }
+  }
+  function freshState(){
+    return { answered:0, correct:0, streak:0, mode:"MIXED", strict:"LENIENT", phase:"PREFLOP", catFilter:"ALL", seen:{}, missed:{}, byCat:{} };
+  }
+  function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+  const headerTitle = document.getElementById("headerTitle");
+  const questionText = document.getElementById("questionText");
+  const answerBtns = document.getElementById("answerBtns");
+  
+  // v7: basic on-screen JS error capture (helps when "Start" seems dead)
+  let jsErrorBox = document.getElementById("jsErrorBox");
+  if(!jsErrorBox){
+    jsErrorBox = document.createElement("div");
+    jsErrorBox.id = "jsErrorBox";
+    jsErrorBox.className = "jsErrorBox";
+    document.body.appendChild(jsErrorBox);
+  }
+  const jsStatus = document.getElementById("jsStatus");
+  function showJsError(msg){
+    try{
+      if(!jsErrorBox) return;
+      jsErrorBox.style.display = "block";
+      jsErrorBox.textContent = msg;
+    }catch(_){}
+  }
+  window.addEventListener("error", (e) => {
+    const msg = (e && e.message) ? e.message : String(e);
+    showJsError("JS error: " + msg);
+  });
+
+  // v7: HH paste analyzer (PokerStars-like text)
+  const HH_KEY = "fuf_hh_jungle_v1";
+  const hhPaste = document.getElementById("hhPaste");
+  const hhAnalyzeBtn = document.getElementById("hhAnalyzeBtn");
+  const hhClearBtn = document.getElementById("hhClearBtn");
+  const hhStatus = document.getElementById("hhStatus");
+  const profilePanel = document.getElementById("profilePanel");
+
+  function pct(n){ return (n*100).toFixed(1) + "%"; }
+
+  function analyzeHeroHH(raw, hero){
+    raw = (raw || "").replace(/\r/g,"");
+    const hands = ("\n"+raw).split(/\n(?=(?:PokerStars Hand #|GAME #|Hand #))/).filter(x=>x.trim());
+    let total = 0, vpip=0, nonfold=0, pfr=0, limp=0, threebet=0;
+
+    for(const h of hands){
+      if(h.indexOf("Dealt to " + hero + " [") === -1) continue;
+      total++;
+
+      const holeIdx = h.indexOf("*** HOLE CARDS ***");
+      if(holeIdx === -1) continue;
+      const afterHole = h.slice(holeIdx);
+      const endIdx = (() => {
+        const iFlop = afterHole.indexOf("*** FLOP ***");
+        const iSummary = afterHole.indexOf("*** SUMMARY ***");
+        if(iFlop !== -1) return iFlop;
+        if(iSummary !== -1) return iSummary;
+        return afterHole.length;
+      })();
+      const pre = afterHole.slice(0, endIdx).split("\n");
+
+      let priorRaise = 0;
+      let heroVol = false;
+      let heroChecked = false;
+
+      for(const line of pre){
+        if(/: raises /i.test(line) && !line.startsWith(hero + ":")) priorRaise++;
+
+        if(line.startsWith(hero + ":")){
+          if(/: folds/i.test(line)){ /* */ }
+          else if(/: checks/i.test(line)){ heroChecked = true; }
+          else if(/: calls/i.test(line)){
+            heroVol = true;
+            if(priorRaise === 0) limp++;
+          }
+          else if(/: raises /i.test(line)){
+            heroVol = true;
+            pfr++;
+            if(priorRaise >= 1) threebet++;
+          }
+          else if(/: bets/i.test(line) || /: all-in/i.test(line)){
+            heroVol = true;
+          }
+        }
+      }
+
+      if(heroVol) vpip++;
+      if(heroVol || heroChecked) nonfold++;
+    }
+
+    return { hero, total, vpip, nonfold, pfr, limp, threebet };
+  }
+
+  function focusFromStats(s){
+    if(!s || !s.total) return "Není dost dat.";
+    const vp = s.vpip/s.total;
+    const pf = s.pfr/s.total;
+    const gap = vp - pf;
+    const l = s.limp/s.total;
+
+    const parts = [];
+    if(gap > 0.12) parts.push("1) zvedni agresi: méně callů, víc raise-or-fold");
+    if(vp < 0.22) parts.push("2) přidej opens v CO/BTN/SB (nesedět moc tight)");
+    if(s.threebet/s.total < 0.02) parts.push("3) přidat 3bet plán (value + pár blufů)");
+    if(parts.length===0) parts.push("Pokračuj a piluj postflop + ICM podle formátu.");
+    return parts.join(" ");
+  }
+
+  function renderProfileFromHH(stats){
+    const focus = focusFromStats(stats);
+    const vpipPct = stats.total ? stats.vpip/stats.total : 0;
+    const nonfoldPct = stats.total ? stats.nonfold/stats.total : 0;
+    const pfrPct = stats.total ? stats.pfr/stats.total : 0;
+    const limpPct = stats.total ? stats.limp/stats.total : 0;
+    const threebetPct = stats.total ? stats.threebet/stats.total : 0;
+
+    const kpi = profilePanel.querySelector(".fufKpi");
+    if(kpi){
+      kpi.innerHTML =
+        `<div class="k"><div class="v">${pct(vpipPct)}</div><div class="l">VPIP$ (money) (${stats.vpip}/${stats.total})</div></div>` +
+        `<div class="k"><div class="v">${pct(pfrPct)}</div><div class="l">PFR (${stats.pfr}/${stats.total})</div></div>` +
+        `<div class="k"><div class="v">${pct(limpPct)}</div><div class="l">Limp (${stats.limp}/${stats.total})</div></div>` +
+        `<div class="k"><div class="v">${pct(threebetPct)}</div><div class="l">3bet (${stats.threebet}/${stats.total})</div></div>`;
+    }
+    const note = profilePanel.querySelector(".small[style*='Non‑fold PF rate']");
+    if(note){
+      note.innerHTML =
+        `Pozn.: Non‑fold PF rate (včetně BB checku, bez walků) = <b>${pct(nonfoldPct)}</b> (${stats.nonfold}/${stats.total}).<br>` +
+        `Doporučený focus podle stat line: ${focus}`;
+    }
+  }
+
+  function loadSavedHH(){
+    try{
+      const raw = localStorage.getItem(HH_KEY);
+      if(raw && hhPaste) hhPaste.value = raw;
+      return raw || "";
+    }catch(_){ return ""; }
+  }
+  function saveHH(raw){ try{ localStorage.setItem(HH_KEY, raw || ""); }catch(_){} }
+
+const feedbackBox = document.getElementById("feedbackBox");
+
+  const startBtn = document.getElementById("startBtn");
+  const newBlockBtn = document.getElementById("newBlockBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const onlyMissedBtn = document.getElementById("onlyMissedBtn");
+  const showRuleBtn = document.getElementById("showRuleBtn");
+  const rulesCard = document.getElementById("rulesCard");
+  const showRangeBtn = document.getElementById("showRangeBtn");
+  var phaseSel = document.getElementById("phaseSel");
+  const chkPostflop = null; // replaced by phaseSel
+
+  const categorySel = document.getElementById("categorySel");
+    // FUF: custom colored dropdown for category (mobile-safe)
+    (function enableCategoryCombo(){
+      const sel = categorySel;
+      if(!sel) return;
+
+      const colorMap = {
+        optAll:   { bg:"#1b2638", fg:"#e8ecf7" },
+        optPre:   { bg:"#a7862a", fg:"#fff8de" },
+        optFlop:  { bg:"#4d3a0b", fg:"#fff6d6" },
+        optTurn:  { bg:"#7a3d0a", fg:"#fff2e8" },
+        optRiver: { bg:"#6e1414", fg:"#fff2f2" }
+      };
+
+      function optStyle(opt){
+        if(!opt) return { bg:"#0f1522", fg:"#e8ecf7" };
+        const cls = Array.from(opt.classList || []).find(c => c.startsWith("opt"));
+        return colorMap[cls] || { bg:"#0f1522", fg:"#e8ecf7" };
+      }
+
+      // build wrapper
+      const wrap = document.createElement("div");
+      wrap.className = "fufCatWrap";
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "fufCatBtn";
+
+      const list = document.createElement("div");
+      list.className = "fufCatList";
+
+      // insert wrap in place of select
+      sel.parentNode.insertBefore(wrap, sel);
+      wrap.appendChild(btn);
+      wrap.appendChild(list);
+      wrap.appendChild(sel);
+      sel.classList.add("fufHiddenNative");
+
+      function rebuildList(){
+        list.innerHTML = "";
+        for(const opt of Array.from(sel.options)){
+          if (opt.hidden) continue;
+          const item = document.createElement("div");
+          item.className = "fufCatItem";
+          const st = optStyle(opt);
+          item.style.background = st.bg;
+          item.style.color = st.fg;
+          item.textContent = opt.textContent;
+          item.addEventListener("click", () => {
+            sel.value = opt.value;
+            sel.dispatchEvent(new Event("change", { bubbles:true }));
+            hide();
+          });
+          list.appendChild(item);
+        }
+      }
+
+      function updateBtn(){
+        const opt = sel.selectedOptions && sel.selectedOptions[0] ? sel.selectedOptions[0] : sel.options[sel.selectedIndex];
+        const st = optStyle(opt);
+        btn.textContent = opt ? opt.textContent : "";
+        btn.style.background = st.bg;
+        btn.style.color = st.fg;
+      }
+
+      function show(){ rebuildList(); list.style.display = "block"; }
+      function hide(){ list.style.display = "none"; }
+
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        if(list.style.display === "block") hide(); else show();
+      });
+
+      document.addEventListener("click", (e) => {
+        if(!wrap.contains(e.target)) hide();
+      });
+
+      sel.addEventListener("change", updateBtn);
+      updateBtn();
+    })();
+
+  const blockSizeInp = document.getElementById("blockSize");
+  const seedInp = document.getElementById("seedInp");
+  const strictSel = document.getElementById("strictSel");
+
+  const modePill = document.getElementById("modePill");
+  const filterPill = document.getElementById("filterPill");
+  const qcatPill = document.getElementById("qcatPill");
+  const remainingPill = document.getElementById("remainingPill");
+  const strictPill = document.getElementById("strictPill");
+  const streakPill = document.getElementById("streakPill");
+  const qcountPill = document.getElementById("qcountPill");
+  const accPill = document.getElementById("accPill");
+  const catStats = document.getElementById("catStats");
+  const miniNote = document.getElementById("miniNote");
+
+  const potLine1 = document.getElementById("potLine1");
+  const potLine2 = document.getElementById("potLine2");
+
+  const seatEls = {
+    "UTG": document.getElementById("seatUTG"),
+    "HJ": document.getElementById("seatHJ"),
+    "CO": document.getElementById("seatCO"),
+    "BTN": document.getElementById("seatBTN"),
+    "SB": document.getElementById("seatSB"),
+    "BB": document.getElementById("seatBB"),
+  };
+  const tagEls = {
+    "UTG": document.getElementById("tagUTG"),
+    "HJ": document.getElementById("tagHJ"),
+    "CO": document.getElementById("tagCO"),
+    "BTN": document.getElementById("tagBTN"),
+    "SB": document.getElementById("tagSB"),
+    "BB": document.getElementById("tagBB"),
+  };
+  const stackEls = {
+    "UTG": document.getElementById("stackUTG"),
+    "HJ": document.getElementById("stackHJ"),
+    "CO": document.getElementById("stackCO"),
+    "BTN": document.getElementById("stackBTN"),
+    "SB": document.getElementById("stackSB"),
+    "BB": document.getElementById("stackBB"),
+  };
+
+  const actEls = {
+    UTG: document.getElementById('actUTG'),
+    HJ: document.getElementById('actHJ'),
+    CO: document.getElementById('actCO'),
+    BTN: document.getElementById('actBTN'),
+    SB: document.getElementById('actSB'),
+    BB: document.getElementById('actBB'),
+  };
+  const boardCardsEl = document.getElementById('boardCards');
+
+  const rangeBack = document.getElementById("rangeBack");
+  const closeRangeBtn = document.getElementById("closeRangeBtn");
+  const rangeMatrix = document.getElementById("rangeMatrix");
+  const rangeTitle = document.getElementById("rangeTitle");
+  const rangeLegend = document.getElementById("rangeLegend");
+  const rangeLegendChips = document.getElementById("rangeLegendChips");
+  const rangeNote = document.getElementById("rangeNote");
+
+  const rangeMatrixWrap = document.querySelector("#rangeBack .matrixWrap");
+  let rangeOpen = false;
+
+  function isNarrowViewport(){
+  const a = window.innerWidth || 9999;
+  const b = (window.visualViewport && window.visualViewport.width) ? window.visualViewport.width : 9999;
+  const c = (screen && screen.width) ? screen.width : 9999;
+  return Math.min(a,b,c) <= 520;
+}
+function syncMobileClass(){
+  const n = isNarrowViewport();
+  if (document && document.body) document.body.classList.toggle("isMobile", n);
+  return n;
+}
+syncMobileClass();
+
+function fitRangeMatrix(){
+  if (!rangeOpen || !rangeMatrixWrap || !rangeMatrix) return;
+
+  // Robust measurement (Android WebView can report 0 on first paint)
+  let wrapW = rangeMatrixWrap.clientWidth || 0;
+  let wrapH = rangeMatrixWrap.clientHeight || 0;
+
+  if (!wrapW || !wrapH){
+    const rect = rangeMatrixWrap.getBoundingClientRect();
+    wrapW = Math.floor(rect.width) || wrapW;
+    wrapH = Math.floor(rect.height) || wrapH;
+  }
+  if (!wrapW || wrapW < 140) return;
+
+  const cols = 14;
+  const rows = 14;
+  const gap = 1;
+
+  const cs = getComputedStyle(rangeMatrixWrap);
+  const padL = parseFloat(cs.paddingLeft) || 0;
+  const padR = parseFloat(cs.paddingRight) || 0;
+  const padT = parseFloat(cs.paddingTop) || 0;
+  const padB = parseFloat(cs.paddingBottom) || 0;
+
+  const innerW = Math.max(0, wrapW - padL - padR);
+  const innerH = Math.max(0, wrapH - padT - padB);
+
+  // Matrix has 1px padding on each side -> 2px total
+  const matrixPad = 2;
+  // Conservative safety for rounding/border differences across WebViews
+  const safety = 4;
+
+  const budgetW = Math.max(0, innerW - matrixPad - (cols - 1) * gap - safety);
+  const budgetH = Math.max(0, innerH - matrixPad - (rows - 1) * gap - safety);
+
+  let byW = Math.floor(budgetW / cols);
+  let byH = Math.floor(budgetH / rows);
+
+  let size = Math.min(byW, byH);
+
+  const isNarrow = isNarrowViewport();
+  const minSize = isNarrow ? 9 : 14;
+  const maxSize = isNarrow ? 24 : 46;
+
+  size = Math.max(minSize, Math.min(maxSize, size));
+
+  // No transforms (transforms don't affect layout and can cause "wasted" space).
+  rangeMatrix.style.transform = "none";
+  rangeMatrix.style.transformOrigin = "top left";
+
+  // Try to maximize (grow) and then guarantee fit (shrink) in a few tight steps.
+  const apply = (s) => {
+    rangeMatrix.style.setProperty("--cellW", s + "px");
+    rangeMatrix.style.setProperty("--cellH", s + "px");
+  };
+
+  apply(size);
+
+  requestAnimationFrame(() => {
+    // If there is still extra room, gently grow up to 4 steps
+    for (let i=0;i<4;i++){
+      const r = rangeMatrix.getBoundingClientRect();
+      if (!r.width || !r.height) break;
+      const roomW = innerW - r.width;
+      const roomH = innerH - r.height;
+      if (roomW > 6 && roomH > 6 && size < maxSize){
+        size += 1;
+        apply(size);
+      } else break;
+    }
+
+    // Ensure fit (no clipped right columns like 3/2)
+    for (let i=0;i<6;i++){
+      const r = rangeMatrix.getBoundingClientRect();
+      if (!r.width || !r.height) break;
+      if ((r.width > innerW + 0.5 || r.height > innerH + 0.5) && size > minSize){
+        size -= 1;
+        apply(size);
+      } else break;
+    }
+  });
+}
+
+
+
+window.addEventListener("resize", () => { syncMobileClass(); if (rangeOpen) fitRangeMatrix(); });
+
+
+  let current = null;
+  let currentShownAt = performance.now();
+
+  let session = {
+    started: false,
+    seed: 1,
+    blockSize: 100,
+    remaining: 100,
+    total: 100,
+    rng: mulberry32(1),
+    usedInBlock: new Set(),
+    pools: {},
+    orders: {},
+    pointers: {}
+  };
+
+  function readBlockSize(){
+    const v = parseInt(blockSizeInp.value, 10);
+    const clamped = Number.isFinite(v) ? Math.max(5, Math.min(300, v)) : 100;     blockSizeInp.value = clamped;
+    return clamped;
+  }
+  function readSeed(){
+    const v = parseInt(seedInp.value, 10);
+    return Number.isFinite(v) ? v : 1;
+  }
+
+  function rebuildPools(){
+    // Lazy pool build to keep Start snappy (avoid freezing UI)
+    session.pools = {};
+    session.orders = {};
+    session.pointers = {};
+  }
+
+  function ensurePool(cat){
+    if (session.pools && session.pools[cat]) return;
+    const seed = (session.seed >>> 0);
+    const pool = buildPool(seed, cat);
+    session.pools[cat] = pool;
+    const ord = pool.map((_, i) => i);
+    const rrng = mulberry32(seed ^ hashStr(cat + "_order"));
+    shuffleInPlace(ord, rrng);
+    session.orders[cat] = ord;
+    session.pointers[cat] = 0;
+  }
+
+  function startNewBlock(){
+    session.seed = readSeed();
+    session.blockSize = readBlockSize();
+    session.total = session.blockSize;
+    session.remaining = session.total;
+    session.usedInBlock = new Set();
+    session.rng = mulberry32((session.seed >>> 0) ^ 0xA5A5A5A5);
+    rebuildPools();
+    feedbackBox.style.display = "none";
+    current = null;
+    updateAllUI();
+    renderTableSim();
+  window.__PKR_READY = true;
+  }
+
+  function calcAcc(){
+    return state.answered ? Math.round((state.correct / state.answered) * 100) : 0;
+  }
+
+  function updateHeader(){
+    const modeTxt = state.mode === "MISSED" ? "Missed" : "Mixed";
+    const strictTxt = state.strict;
+    const filterTxt = state.catFilter;
+    const qcatTxt = current ? current.cat : "-";
+    const remainTxt = `${session.remaining}/${session.total}`;
+    const title = `JungleStyle1 Drill | Mode ${modeTxt} | Filter ${filterTxt} | QCat ${qcatTxt} | Remaining ${remainTxt} | Strict ${strictTxt} | Seed ${session.seed} | Block ${session.blockSize}`;
+    headerTitle.textContent = title;
+    document.title = title;
+  }
+
+  function updatePills(){
+    modePill.textContent = `Mode: ${state.mode === "MISSED" ? "Missed" : "Mixed"}`;
+    filterPill.textContent = `Filter: ${state.catFilter}`;
+    qcatPill.textContent = `QCat: ${current ? current.cat : "-"}`;
+    remainingPill.textContent = `Remaining: ${session.remaining}/${session.total}`;
+    strictPill.textContent = `Strict: ${state.strict}`;
+    streakPill.textContent = `Streak: ${state.streak}`;
+    qcountPill.textContent = `Answered: ${state.answered}`;
+    accPill.textContent = `Acc: ${calcAcc()}%`;
+  }
+
+  function getAllCatOptions(){
+    if(!ALL_CAT_OPTIONS){
+      ALL_CAT_OPTIONS = Array.from(categorySel.options).map(o => ({
+        value:o.value, text:o.textContent, cls:o.className||""
+      }));
+    }
+    return ALL_CAT_OPTIONS;
+  }
+
+  function getCategoryLabel(cat){
+    const opts = getAllCatOptions();
+    const found = opts.find(o => o.value === cat);
+    return found ? found.text : cat;
+  }
+
+  function getStreetForCat(cat){
+    if ((""+cat).startsWith("FLOP_")) return "FLOP";
+    if ((""+cat).startsWith("TURN_")) return "TURN";
+    if ((""+cat).startsWith("RIVER_")) return "RIVER";
+    return "PREFLOP";
+  }
+
+  function scoreClass(pct, answered){
+    if (!answered) return "score-empty";
+    if (pct >= 80) return "score-good";
+    if (pct >= 60) return "score-mid";
+    return "score-bad";
+  }
+
+  function updateCatStats(){
+    const streetOrder = ["PREFLOP","FLOP","TURN","RIVER"];
+    const streetTitles = {
+      PREFLOP: "Preflop",
+      FLOP: "Flop",
+      TURN: "Turn",
+      RIVER: "River"
+    };
+
+    const grouped = {
+      PREFLOP: [],
+      FLOP: [],
+      TURN: [],
+      RIVER: []
+    };
+
+    for (const c of CATS) {
+      const v = state.byCat[c] || { answered:0, correct:0 };
+      const answered = v.answered || 0;
+      const correct = v.correct || 0;
+      const pct = answered ? Math.round((correct / answered) * 100) : 0;
+      grouped[getStreetForCat(c)].push({
+        cat: c,
+        label: getCategoryLabel(c),
+        answered,
+        correct,
+        pct,
+        cls: scoreClass(pct, answered)
+      });
+    }
+
+    const totalAnswered = CATS.reduce((acc, c) => acc + (((state.byCat[c] || {}).answered) || 0), 0);
+    const totalCorrect = CATS.reduce((acc, c) => acc + (((state.byCat[c] || {}).correct) || 0), 0);
+    const totalPct = totalAnswered ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+    const answeredLessons = CATS.filter(c => (((state.byCat[c] || {}).answered) || 0) > 0).length;
+    const allItems = streetOrder.flatMap(street => grouped[street]);
+    const answeredItems = allItems.filter(x => x.answered > 0);
+
+    const html = [];
+    html.push(`
+      <div class="dashLegend">
+        <span class="dashLegendItem"><span class="legendDot" style="background:var(--ok)"></span>80–100 %</span>
+        <span class="dashLegendItem"><span class="legendDot" style="background:var(--warn)"></span>60–79 %</span>
+        <span class="dashLegendItem"><span class="legendDot" style="background:var(--bad)"></span>0–59 %</span>
+        <span class="dashSummaryLine">Celkem ${totalCorrect}/${totalAnswered} správně · ${answeredLessons}/${CATS.length} lekcí aktivních${totalAnswered ? ` · ${totalPct}%` : ''}</span>
+      </div>
+    `);
+
+    if (!totalAnswered) {
+      html.push('<div class="emptyState">Zatím nemáš odehrané žádné lekce. Po prvních odpovědích se tu začne plnit kompaktní dashboard po streetách.</div>');
+      catStats.innerHTML = html.join('');
+      return;
+    }
+    html.push('<div class="dashGrid">');
+    for (const street of streetOrder) {
+      const items = grouped[street];
+      const answered = items.reduce((acc, x) => acc + x.answered, 0);
+      const correct = items.reduce((acc, x) => acc + x.correct, 0);
+      const pct = answered ? Math.round((correct / answered) * 100) : 0;
+      const activeLessons = items.filter(x => x.answered > 0).length;
+      const cls = scoreClass(pct, answered);
+      const ringLabel = answered ? (pct + '%') : '—';
+
+      html.push(`
+        <section class="streetCard ${cls}">
+          <div class="streetRingWrap">
+            <div class="streetRing" style="--pct:${pct};">
+              <div class="streetRingInner">${ringLabel}</div>
+            </div>
+          </div>
+          <div class="streetTitle">${escHtml(streetTitles[street])}</div>
+          <div class="streetMeta">${correct}/${answered} správně</div>
+          <div class="streetSub">${activeLessons}/${items.length} lekcí s daty</div>
+        </section>
+      `);
+    }
+    html.push('</div>');
+
+    const focusItems = answeredItems
+      .slice()
+      .sort((a,b) => (a.pct - b.pct) || (b.answered - a.answered) || a.label.localeCompare(b.label, 'cs'))
+      .slice(0, 4);
+
+    const focusSet = new Set(focusItems.map(x => x.cat));
+    const strengthItems = answeredItems
+      .filter(x => !focusSet.has(x.cat) || answeredItems.length <= 4)
+      .slice()
+      .sort((a,b) => (b.pct - a.pct) || (b.answered - a.answered) || a.label.localeCompare(b.label, 'cs'))
+      .slice(0, 4);
+
+    function renderChip(item){
+      return `
+        <div class="statChip ${item.cls}" title="${escHtml(item.label)} · ${item.correct}/${item.answered} správně">
+          <span class="chipName">${escHtml(item.label)}</span>
+          <span class="chipScore">${item.pct}%</span>
+        </div>
+      `;
+    }
+    function renderFocusRing(item){
+      return `
+        <div class="focusRingCard ${item.cls}" title="${escHtml(item.label)} · ${item.correct}/${item.answered} správně">
+          <div class="focusRingText">
+            <div class="focusRingName">${escHtml(item.label)}</div>
+            <div class="focusRingMeta">${item.correct}/${item.answered} správně</div>
+          </div>
+          <div class="focusRingWrap">
+            <div class="focusRing" style="--pct:${item.pct};">
+              <div class="focusRingInner">${item.pct}%</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    html.push('<div class="focusWrap">');
+    html.push(`
+      <section class="focusPanel">
+        <div class="panelTitle">Kde tlačí bota</div>
+        <div class="panelHint">Nejslabší odehrané lekce podle úspěšnosti.</div>
+        <div class="focusRingGrid">${focusItems.length ? focusItems.map(renderFocusRing).join('') : '<div class="panelHint">Zatím bez dat.</div>'}</div>
+      </section>
+    `);
+    html.push(`
+      <section class="focusPanel">
+        <div class="panelTitle">Silné stránky</div>
+        <div class="panelHint">Nejlepší odehrané lekce podle úspěšnosti.</div>
+        <div class="focusRingGrid">${strengthItems.length ? strengthItems.map(renderFocusRing).join('') : '<div class="panelHint">Zatím bez dat.</div>'}</div>
+      </section>
+    `);
+    html.push('</div>');
+
+    html.push('<details class="compactDetailToggle"><summary>Detail po lekcích</summary><div class="detailWrap">');
+    for (const street of streetOrder) {
+      const items = grouped[street]
+        .slice()
+        .sort((a,b) => {
+          const aAnswered = a.answered > 0 ? 1 : 0;
+          const bAnswered = b.answered > 0 ? 1 : 0;
+          return (bAnswered - aAnswered) || (b.pct - a.pct) || a.label.localeCompare(b.label, 'cs');
+        });
+      const answered = items.reduce((acc, x) => acc + x.answered, 0);
+      const correct = items.reduce((acc, x) => acc + x.correct, 0);
+      const pct = answered ? Math.round((correct / answered) * 100) : 0;
+      html.push(`
+        <section class="detailGroup">
+          <div class="detailGroupHead">
+            <div class="detailGroupTitle">${escHtml(streetTitles[street])}</div>
+            <div class="detailGroupMeta">${correct}/${answered} správně · ${answered ? pct + '%' : 'bez dat'}</div>
+          </div>
+          <div class="chipGrid">${items.map(item => renderChip(item)).join('')}</div>
+        </section>
+      `);
+    }
+    html.push('</div></details>');
+
+    catStats.innerHTML = html.join('');
+  }
+
+
+  function updateMiniNote(){
+    if (!current) { miniNote.textContent = "Tip: nastav block size = 300 pro celý pool. Bez duplicit v rámci bloku."; return; }
+    const ctx = current.ctx || {};
+    if (current.cat === "OPEN_HJ_CO_BTN") miniNote.textContent = `OPEN | ${ctx.pos} | ${ctx.eff} BB`;
+    else if (current.cat === "ISO_LIMP") miniNote.textContent = `ISO | ${ctx.pos} vs limper ${ctx.limperPos} | ${ctx.eff} BB`;
+    else if (current.cat === "BB_DEFEND_2X") miniNote.textContent = `BB defend 2x steal | vs ${ctx.openerPos} ${ctx.sizing} | ${ctx.eff} BB`;
+    else if (current.cat === "BB_DEFEND") miniNote.textContent = `BB defend | vs ${ctx.openerPos} ${ctx.sizing} | ${ctx.eff} BB`;
+    else if (current.cat === "REJAM") miniNote.textContent = `REJAM | ${ctx.heroPos} vs ${ctx.openerPos} ${ctx.sizing} | ${ctx.eff} BB`;
+    else if (current.cat === "SB_OPEN") miniNote.textContent = `SB open | ${ctx.eff} BB | default 2x`;
+    else if (current.cat === "BVB_AFTER_3BET") miniNote.textContent = `BvB after 3bet | SB open ${ctx.openSize} | BB 3bet ${ctx.threeBetSize} | ${ctx.eff} BB`;
+    else miniNote.textContent = "";
+  }
+
+  function updateAllUI(){ updateHeader(); updatePills(); updateCatStats(); updateMiniNote(); }
+
+  function getPhase(){
+    const v = (phaseSel && phaseSel.value) ? phaseSel.value : (state.phase || "PREFLOP");
+    return (""+v).toUpperCase();
+  }
+
+  function isPostflopMode(){
+    return getPhase() !== "PREFLOP";
+  }
+
+  function getActiveCats(){
+    const ph = getPhase();
+    if (ph === "PREFLOP") return CATS_PREFLOP;
+    const pref = ph + "_";
+    return CATS_POSTFLOP.filter(c => c.startsWith(pref));
+  }
+
+  let ALL_CAT_OPTIONS = null;
+
+  function refreshCategoryOptions(){
+    if(!categorySel) return;
+    if(!ALL_CAT_OPTIONS){
+      ALL_CAT_OPTIONS = Array.from(categorySel.options).map(o => ({
+        value:o.value, text:o.textContent, cls:o.className||""
+      }));
+    }
+
+    const ph = getPhase();
+    const allowed = new Set(["ALL"]);
+    if (ph === "PREFLOP"){
+      for(const c of CATS_PREFLOP) allowed.add(c);
+    } else {
+      const pref = ph + "_";
+      for(const c of CATS_POSTFLOP){
+        if (c.startsWith(pref)) allowed.add(c);
+      }
+    }
+
+    const prev = (state.catFilter || "ALL");
+    categorySel.innerHTML = "";
+    for(const o of ALL_CAT_OPTIONS){
+      if(!allowed.has(o.value)) continue;
+      const opt = document.createElement("option");
+      opt.value = o.value;
+      opt.textContent = o.text;
+      if(o.cls) opt.className = o.cls;
+      categorySel.appendChild(opt);
+    }
+
+    if(!allowed.has(prev)) state.catFilter = "ALL";
+    categorySel.value = state.catFilter;
+    try{ categorySel.dispatchEvent(new Event("change", { bubbles:true })); }catch(_){}
+  }
+
+
+  function setStrict(val){ state.strict = val; saveState(); updateAllUI(); }
+  function setCategory(val){ state.catFilter = val; saveState(); updateAllUI(); }
+
+  function resetProgress(){
+    const fs = { answered:0, correct:0, streak:0, mode:"MIXED", strict:"LENIENT", phase:"PREFLOP", catFilter:"ALL", seen:{}, missed:{}, byCat:{} };
+    Object.keys(state).forEach(k => delete state[k]);
+    Object.assign(state, fs);
+    saveState();
+    startNewBlock();
+    questionText.textContent = "Reset hotový. Klikni Start / Další.";
+    answerBtns.innerHTML = "";
+    updateAllUI();
+    renderTableSim();
+  window.__PKR_READY = true;
+  }
+
+  function shouldAcceptAnswer(q, chosenKey){
+    const strict = state.strict === "STRICT";
+    const correct = strict ? q.strictCorrect : q.correctKeys;
+
+    if (!strict && (q.cat === "OPEN_HJ_CO_BTN" || q.cat === "SB_OPEN")) {
+      if (correct.includes("OPEN_2X") || correct.includes("OPEN_25X")) {
+        if (chosenKey === "OPEN_2X" || chosenKey === "OPEN_25X") return true;
+      }
+    }
+    return correct.includes(chosenKey);
+  }
+
+  function extractHandFromQ(q){
+    if(!q) return "";
+    if(q.hand) return (""+q.hand).trim();
+    const p = q.prompt;
+    const lines = Array.isArray(p) ? p : (""+p).split(/\r?\n/);
+    for(const line of lines){
+      if(typeof line !== "string") continue;
+      const t = line.trim();
+      if(t.toLowerCase().startsWith("hand:")){
+        return t.split(":").slice(1).join(":").trim();
+      }
+    }
+    return "";
+  }
+
+function renderQuestion(q){
+    current = q;
+    feedbackBox.style.display = "none";
+    currentShownAt = performance.now();
+    questionText.innerHTML = promptToHtml(q);
+    // Update persistent hole-cards preview (if present)
+    if (heroCardsPreview){
+      const h = extractHandFromQ(q);
+      heroCardsPreview.innerHTML = h ? holeCardsHtml(h) : `<span class="miniHand">—</span>`;
+    }
+
+    answerBtns.innerHTML = "";
+    q.answers.forEach(a => {
+      const b = document.createElement("button");
+      b.textContent = a.label;
+      b.addEventListener("click", () => answer(a.key));
+      answerBtns.appendChild(b);
+    });
+
+    updateAllUI();
+    renderTableSim();
+  window.__PKR_READY = true;
+  }
+
+  function recordAttempt(q, isCorrect){
+    state.answered += 1;
+    if (isCorrect) state.correct += 1;
+    state.streak = isCorrect ? (state.streak + 1) : 0;
+
+    state.byCat[q.cat] = state.byCat[q.cat] || { answered:0, correct:0 };
+    state.byCat[q.cat].answered += 1;
+    if (isCorrect) state.byCat[q.cat].correct += 1;
+
+    const entry = state.seen[q.id] || { attempts:0, correct:0, lastTs:0, cat:q.cat };
+    entry.attempts += 1;
+    if (isCorrect) entry.correct += 1;
+    entry.lastTs = Date.now();
+    entry.cat = q.cat;
+    state.seen[q.id] = entry;
+
+    if (!isCorrect) state.missed[q.id] = true;
+    else delete state.missed[q.id];
+
+    saveState();
+    updateAllUI();
+  }
+
+  function buildChosenReason(q, chosenKey, correctKeys, ok){
+    const c = (q && q.cat) ? q.cat : "";
+    const ctx = (q && q.ctx) ? q.ctx : {};
+    const eff = (ctx.eff != null) ? `${ctx.eff} BB` : "";
+    const isPost = (""+c).startsWith("FLOP_");
+    const act = (chosenKey||"").toString().toUpperCase();
+    const corr = Array.isArray(correctKeys) ? correctKeys.map(x => (x||"").toString().toUpperCase()) : [];
+    const corr1 = corr[0] || "";
+
+    function base(){
+      if (isPost){
+        if (act === "CBET_33") return "Malý cbet využívá iniciativu a dává levný tlak na širokou část soupeřovy range.";
+        if (act === "CHECK")   return "Check chrání tvoji check range, drží pot menší a občas indukuje bluff.";
+        if (act === "CALL")    return "Call drží soupeřovy bluffy ve hře a realizuješ equity bez nafouknutí potu.";
+        if (act === "RAISE")   return "Raise staví pot s value a vytváří fold equity; pozor na overplay bez value části.";
+        if (act === "FOLD")    return "Fold šetří žetony, když nemáš dost equity/realizace proti soupeřově rangi a sizingu.";
+        return "Postflop logika: tlak vs kontrola potu podle výhody rangí a equity.";
+      }else{
+        if (act === "OPEN_2X" || act === "OPEN_25X") return `Otevíráš, protože hand patří do startovní range a chceš sbírat blindy/ante. (${eff})`;
+        if (act === "ISO")     return "Izoluješ limpera, chceš hrát spíš HU s iniciativou (ideálně v pozici).";
+        if (act === "OVERLIMP")return "Dorovnáváš limp, když nechceš nafukovat pot a radši realizuješ equity levně.";
+        if (act === "3BET")    return "3betuješ pro value/bluff, bereš iniciativu a často izoluješ proti openerovi.";
+        if (act === "CALL")    return "Call je kompromis: realizace equity bez nafouknutí potu (když 3bet není nejlepší).";
+        if (act === "JAM")     return `Shove maximalizuje fold equity a zjednoduší spot při ${eff}.`;
+        if (act === "FOLD")    return "Zahazuješ, když je hand mimo range nebo špatně realizuje equity.";
+        return "Preflop logika: equity + realizace + fold equity + pozice.";
+      }
+    }
+
+    if (ok){
+      const extra = base();
+      const exp = (q && q.explanation) ? (""+q.explanation).trim() : "";
+      return exp ? `${extra}\n${czTextBlock(exp)}` : extra;
+    }
+
+    // Wrong choice: krátké „proč ne“ podle rozdílu
+    const pair = `${act}->${corr1}`;
+    if (pair === "CHECK->CBET_33") return "Check tady často nechá soupeři realizovat equity zadarmo; preferuje se tlak malým cbetem.";
+    if (pair === "CBET_33->CHECK") return "Cbet tady často pálí do části range, která moc nefoldí; check je lepší pro kontrolu potu a ochranu check range.";
+    if (pair === "RAISE->CALL")    return "Raise může izolovat proti silnější části soupeřovy range; call drží bluffy a neeskaluje pot.";
+    if (pair === "CALL->RAISE")    return "Pouhý call může být pasivní: raise tady častěji bere fold equity a staví pot s value/drawy.";
+    if (pair === "CALL->FOLD")     return "Call je příliš loose: málo equity/realizace proti očekávané rangi a sizingu.";
+    if (pair === "FOLD->CALL")     return "Fold je zbytečně tight: typicky máš dost equity a cenu na defend.";
+    if (pair === "FOLD->OPEN_2X" || pair === "FOLD->OPEN_25X") return "Fold je příliš tight: v tomhle spotu je hand v otevírací range.";
+    if ((act === "OPEN_2X" || act === "OPEN_25X") && corr1 === "FOLD") return "Open je moc loose: v tomhle spotu hand typicky nebude dostatečně realizovat proti rangím za tebou.";
+    return `${base()}\nProblém: tahle volba se v tomhle spotu hůř realizuje než preferovaná akce.`;
+  }
+
+function answer(chosenKey){
+    if (!current) return;
+
+    const ok = shouldAcceptAnswer(current, chosenKey);
+    recordAttempt(current, ok);
+
+    // FUF event log (persistent)
+    const ms = Math.max(0, Math.round(performance.now() - currentShownAt));
+    appendEvent({ ts: Date.now(), qid: current.id, cat: current.cat, ok: ok, chosen: chosenKey, ms: ms });
+    updateStatsUI();
+
+    // v39: after answering, append hero action to the on-table history (visual feedback)
+    if (current && current.ctx && Array.isArray(current.ctx.actionLog) && current.ctx.toAct && !current.ctx.resolved){
+      try{
+        const pos = current.ctx.toAct.pos;
+        const street = (current.ctx.toAct.street || "F").toUpperCase();
+        current.ctx.actionLog.push({ pos, street, kind: chosenKey });
+        current.ctx.resolved = true;
+        renderTableSim();
+  window.__PKR_READY = true;
+      }catch(e){}
+    }
+
+    const strict = state.strict === "STRICT";
+    const correct = strict ? current.strictCorrect : current.correctKeys;
+
+    feedbackBox.className = "feedback " + (ok ? "ok" : "bad");
+    feedbackBox.style.display = "block";
+
+    const correctLbls = current.answers
+      .filter(a => correct.includes(a.key))
+      .map(a => a.label)
+      .join(" / ");
+
+    const chosenLbl = (current.answers.find(a => a.key === chosenKey) || {label: chosenKey}).label;
+
+    const status = ok ? "SPRÁVNĚ" : "NESPRÁVNĚ";
+    const hintTxt = (current && current.hint) ? czTextBlock(current.hint) : "—";
+    const whyTxt  = (current && current.explanation) ? czTextBlock(current.explanation) : "—";
+    const chosenReason = buildChosenReason(current, chosenKey, correct, ok);
+
+    feedbackBox.textContent =
+`${status}
+Zvoleno: ${chosenLbl}
+Správně: ${correctLbls}
+Důvod tvé volby: ${chosenReason}
+Nápověda: ${hintTxt}
+Důvod strategie: ${whyTxt}`;
+  }
+
+  function pullFromPool(cat){
+    ensurePool(cat);
+    const pool = session.pools[cat];
+    if (!pool || pool.length === 0) return null;
+    const ord = session.orders[cat];
+    let ptr = session.pointers[cat] || 0;
+    while (ptr < ord.length){
+      const idx = ord[ptr++];
+      const q = pool[idx];
+      if (q && (!session.usedInBlock || !session.usedInBlock.has(q.id))) {
+        session.pointers[cat] = ptr;
+        return q;
+      }
+    }
+    session.pointers[cat] = ptr;
+    return null;
+  }
+
+
+  function chooseCategoryForNext(){
+    if (state.catFilter !== "ALL") return state.catFilter;
+
+    const ph = getPhase();
+
+    if (ph === "PREFLOP"){
+      const r = session.rng();
+      if (r < 0.25) return "OPEN_HJ_CO_BTN";
+      if (r < 0.40) return "BB_DEFEND_2X";
+      if (r < 0.45) return "BB_DEFEND";
+      if (r < 0.61) return "ISO_LIMP";
+      if (r < 0.75) return "SB_OPEN";
+      if (r < 0.87) return "BVB_AFTER_3BET";
+      return "REJAM";
+    }
+
+    if (ph === "FLOP"){
+      const r = session.rng();
+      if (r < 0.18) return "FLOP_CBET_HU_DRY_PFR";
+      if (r < 0.30) return "FLOP_CBET_HU_WET_PFR";
+      if (r < 0.42) return "FLOP_CHECKBACK_PFR_IP";
+      if (r < 0.60) return "FLOP_DEFEND_VS_CBET_IP";
+      if (r < 0.76) return "FLOP_DEFEND_VS_CBET_OOP_BB";
+      if (r < 0.84) return "FLOP_MULTIWAY_PFR";
+      if (r < 0.90) return "FLOP_ISO_POT_VS_LIMPER";
+      if (r < 0.95) return "FLOP_3BETPOT_AHIGH";
+      if (r < 0.98) return "FLOP_BVB_SRP";
+      return "FLOP_RFI_DEFENDER_RANGE_AWARE";
+    }
+
+    if (ph === "TURN"){
+      const r = session.rng();
+      if (r < 0.18) return "TURN_PFR_BARREL_DRY";
+      if (r < 0.30) return "TURN_PFR_BARREL_WET";
+      if (r < 0.44) return "TURN_PFR_DELAYED_CBET_IP";
+      if (r < 0.62) return "TURN_DEFEND_VS_BARREL_IP";
+      if (r < 0.80) return "TURN_DEFEND_VS_BARREL_OOP_BB";
+      if (r < 0.92) return "TURN_3BETPOT_AHIGH";
+      return "TURN_BVB_SRP";
+    }
+
+    // RIVER
+    const r = session.rng();
+    if (r < 0.20) return "RIVER_PFR_VALUEBET";
+    if (r < 0.36) return "RIVER_PFR_THIN_VALUE_IP";
+    if (r < 0.48) return "RIVER_PFR_CHECKBACK";
+    if (r < 0.68) return "RIVER_DEFEND_BLUFCATCH";
+    if (r < 0.82) return "RIVER_DEFEND_VALUE_RAISE";
+    if (r < 0.92) return "RIVER_BVB_SRP";
+    return "RIVER_3BETPOT_AHIGH";
+  }
+
+  function nextQuestion(){
+    if (!session.started) {
+      session.started = true;
+      startNewBlock();
+      session.started = true;
+    }
+
+    if (session.remaining <= 0) {
+      feedbackBox.className = "feedback warn";
+      feedbackBox.style.display = "block";
+      feedbackBox.textContent = "Blok dokončen. Klikni Nový blok (nebo změň seed (semínko)) a pokračuj.";
+      session.started = false;
+      updateAllUI();
+      renderTableSim();
+  window.__PKR_READY = true;
+      return;
+    }
+
+    let cat = chooseCategoryForNext();
+
+    if (state.mode === "MISSED") {
+      const missedIds = Object.keys(state.missed);
+      if (missedIds.length > 0) {
+        const mid = missedIds[Math.floor(session.rng() * missedIds.length)];
+        const mcat = (state.seen[mid] && state.seen[mid].cat) ? state.seen[mid].cat : cat;
+        cat = (state.catFilter === "ALL") ? mcat : state.catFilter;
+      }
+    }
+
+    const q = pullFromPool(cat) || pullFromPool(chooseCategoryForNext()) || pullFromPool(pick(session.rng, CATS));
+    if (!q){
+      feedbackBox.className = "feedback warn";
+      feedbackBox.style.display = "block";
+      feedbackBox.textContent = "Došel unikátní pool pro blok. Zkus snížit block size nebo změnit seed.";
+      return;
+    }
+
+    session.usedInBlock.add(q.id);
+    session.remaining -= 1;
+    renderQuestion(q);
+  }
+
+  /* Table sim */
+  function clearSeats(){
+    for (const p of POS6){
+      seatEls[p].classList.remove("hero","opener","limper","inhand","pending","folded");
+      tagEls[p].textContent = "--";
+      stackEls[p].textContent = "--";
+      if (actEls[p]) { actEls[p].textContent = ""; actEls[p].style.display = "none"; }
+    }
+    if (boardCardsEl) boardCardsEl.innerHTML = "";
+  }
+
+  function scenarioLines(){
+    if (!current) return ["Table sim","Click Start"];
+    const c = current.cat;
+    const ctx = current.ctx || {};
+    if (c === "OPEN_HJ_CO_BTN") return ["Folded to hero", `${ctx.pos} ${ctx.eff} BB ${ctx.hand}`];
+    if (c === "ISO_LIMP") return ["1 limper", `${ctx.pos} vs ${ctx.limperPos} ${ctx.eff} BB`];
+    if (c === "BB_DEFEND") return ["BB vs open", `${ctx.openerPos} ${ctx.sizing} ${ctx.eff} BB`];
+    if (c === "REJAM") return ["Rejam spot", `${ctx.heroPos} vs ${ctx.openerPos} ${ctx.sizing} ${ctx.eff} BB`];
+    if (c === "SB_OPEN") return ["Folded to SB", `${ctx.eff} BB ${ctx.hand}`];
+    if (c === "BVB_AFTER_3BET") return ["BvB after 3bet", `SB open ${ctx.openSize} | BB 3bet ${ctx.threeBetSize} | ${ctx.eff} BB`];
+    return ["Spot","--"];
+  }
+
+  function renderTableSim(){
+    clearSeats();
+    const [l1, l2] = scenarioLines();
+    potLine1.textContent = l1;
+    potLine2.textContent = l2;
+
+    if (!current) return;
+
+    const c = current.cat;
+    const ctx = current.ctx || {};
+    const heroPos = ctx.heroPos || "BB";
+ 
+    // Board cards (postflop): show whenever ctx.board exists (flop/turn/river)
+    if (boardCardsEl) boardCardsEl.innerHTML = boardCardsHtml(ctx.board || []);
+
+
+
+    // Apply rich seat simulation if available (postflop)
+    if (ctx.seats){
+      for (const p of POS6){
+        const st = ctx.seats[p];
+        if (!st) continue;
+        stackEls[p].textContent = (st.stack!=null) ? `${st.stack} BB` : "--";
+        tagEls[p].textContent = st.tag || "--";
+        seatEls[p].classList.toggle("inhand", !!st.inHand);
+        seatEls[p].classList.toggle("folded", !st.inHand);
+        if (actEls[p]){
+          const line = formatSeatHistoryLine(ctx, p) || "";
+          actEls[p].textContent = line;
+          actEls[p].title = line;
+          actEls[p].style.display = line ? "block" : "none";
+        }
+      }
+    }
+
+if (seatEls[heroPos]) {
+      seatEls[heroPos].classList.add("hero");
+      tagEls[heroPos].textContent = (c==="BVB_AFTER_3BET" && heroPos==="SB") ? "TY (OPEN)" : "HERO";
+      if (ctx.eff) stackEls[heroPos].textContent = `${ctx.eff} BB`;
+    }
+
+
+    if (c === "BB_DEFEND" || c === "REJAM") {
+      const op = ctx.openerPos;
+      if (seatEls[op]) {
+        seatEls[op].classList.add("opener");
+        tagEls[op].textContent = "OPEN";
+      }
+    }
+
+    if (c === "ISO_LIMP") {
+      const lp = ctx.limperPos;
+      if (seatEls[lp]) {
+        seatEls[lp].classList.add("limper");
+        tagEls[lp].textContent = "LIMP";
+      }
+    }
+
+    if (c === "BVB_AFTER_3BET") {
+      if (seatEls["BB"]) {
+        seatEls["BB"].classList.add("opener");
+        tagEls["BB"].textContent = "3BET";
+      }
+    }
+
+    // Preflop: show remaining players behind HERO as pending (still to act)
+    if (!ctx.street) {
+      function pendingBehind(pos){
+        const order = ["UTG","HJ","CO","BTN","SB","BB"];
+        const i = order.indexOf(pos);
+        if (i < 0) return [];
+        return order.slice(i + 1);
+      }
+      const pending = pendingBehind(heroPos).filter(p => {
+        if (p === heroPos) return false;
+        if (ctx.limperPos && p === ctx.limperPos) return false;
+        if (ctx.openerPos && p === ctx.openerPos) return false;
+        if (c === "BVB_AFTER_3BET" && p === "BB") return false;
+        const tag = (tagEls[p] && tagEls[p].textContent || "").trim();
+        return !tag || tag === "--";
+      });
+      for (const p of pending){
+        if (seatEls[p]) {
+          seatEls[p].classList.remove("folded");
+          seatEls[p].classList.add("pending");
+          if (ctx.eff) stackEls[p].textContent = `${ctx.eff} BB`;
+          if (!tagEls[p].textContent || tagEls[p].textContent === "--") tagEls[p].textContent = "...";
+          if (actEls[p]) {
+            actEls[p].textContent = "NA TAHU";
+            actEls[p].style.display = "block";
+          }
+        }
+      }
+    }
+
+    // --- POSTFLOP table rendering ---
+    if (ctx.street === "FLOP" && !ctx.seats){
+      // board cards in the middle of the table
+      if (boardCardsEl) boardCardsEl.innerHTML = boardCardsHtml(ctx.board || []);
+      // default players in hand depending on pot type
+      const pot = (ctx.potType || "").toUpperCase();
+      // Make hero always visible as pending decision
+      setSeatAction(heroPos, "TO ACT", {inhand:true, pending:true, folded:false});
+      if (pot === "HU"){
+        const vil = (heroPos === "BB") ? "BTN" : "BB";
+        setSeatAction(vil, (ctx.heroRole === "PFR") ? "CALL" : "CBET", {inhand:true});
+      } else if (pot === "MULTIWAY"){
+        const v1 = "BTN";
+        const v2 = "SB";
+        setSeatAction(v1, "CALL", {inhand:true});
+        setSeatAction(v2, "CALL", {inhand:true});
+      } else if (pot === "ISO"){
+        setSeatAction("UTG", "LIMP/CALL", {inhand:true});
+        setSeatAction("BTN", "FOLD", {inhand:false, folded:true});
+      } else if (pot === "3BET"){
+        setSeatAction("BTN", "3BET", {inhand:true});
+        setSeatAction("SB", "FOLD", {inhand:false, folded:true});
+      } else {
+        // fallback: show one opponent
+        const vil = (heroPos === "BB") ? "BTN" : "BB";
+        setSeatAction(vil, "IN HAND", {inhand:true});
+      }
+    }
+
+    for (const p of POS6){
+      if (stackEls[p].textContent === "--" && ctx.eff) stackEls[p].textContent = `${ctx.eff} BB`;
+    }
+  }
+
+  /* Range modal */
+  function handLabel(i, j){
+    const r1 = RANKS[i];
+    const r2 = RANKS[j];
+    if (i === j) return r1 + r2;
+    if (i < j) return r1 + r2 + "s";
+    return r2 + r1 + "o";
+  }
+
+
+  // --- Postflop: build Flopzilla-style action range (heuristic baseline) ---
+  function parseHandLabel(h){
+  const s = String(h||"").trim();
+  if (!s) return null;
+
+  // Explicit cards: "Ah Kd", "AhKd", "[Ah Kd]"
+  const mSp = s.match(/^\[?\s*([2-9TJQKA])([shdc])\s+([2-9TJQKA])([shdc])\s*\]?$/i);
+  const mNo = s.match(/^([2-9TJQKA])([shdc])([2-9TJQKA])([shdc])$/i);
+  if (mSp || mNo){
+    const r1 = (mSp ? mSp[1] : mNo[1]).toUpperCase();
+    const s1 = (mSp ? mSp[2] : mNo[2]).toLowerCase();
+    const r2 = (mSp ? mSp[3] : mNo[3]).toUpperCase();
+    const s2 = (mSp ? mSp[4] : mNo[4]).toLowerCase();
+    const v1 = R2V[r1], v2 = R2V[r2];
+    if (!v1 || !v2) return null;
+    const isPair = (r1 === r2);
+    const isSuited = (!isPair && s1 === s2);
+    const isOff = (!isPair && s1 !== s2);
+    return { r1, r2, v1, v2, isPair, isSuited, isOff };
+  }
+
+  // Abstract: "A5s", "KQo", "77"
+  const abs = s.replace(/[^2-9TJQKAso]/gi,"");
+  if (abs.length < 2) return null;
+
+  const a = abs[0].toUpperCase(), b = abs[1].toUpperCase();
+  const t = (abs[2] || "").toLowerCase();
+  const v1 = R2V[a], v2 = R2V[b];
+  if (!v1 || !v2) return null;
+
+  return { r1:a, r2:b, v1, v2, isPair:(a===b), isSuited:(t==="s"), isOff:(t==="o") };
+}
+
+  function boardRanks(board){
+    const b = Array.isArray(board) ? board : [];
+    return b.map(x => (""+x).trim()).filter(Boolean).map(c => c[0].toUpperCase());
+  }
+
+  function uniq(arr){ return Array.from(new Set(arr)); }
+  function sortedDesc(vals){ return vals.slice().sort((a,b)=>b-a); }
+
+  function straightDrawScore(handVals, boardVals){
+    // Crude straight-draw detector: 2 = 4-to-straight (OESD/gutshot), 1 = 3-to-straight (backdoor), 0 = none.
+    const raw = uniq([...handVals, ...boardVals]);
+    const vals = [];
+    for (const v of raw){
+      vals.push(v);
+      if (v === 14) vals.push(1); // wheel
+    }
+    const set = new Set(vals);
+    let best = 0;
+    for (let low=1; low<=10; low++){
+      let cnt = 0;
+      for (let x=low; x<low+5; x++){
+        if (set.has(x)) cnt++;
+      }
+      if (cnt >= 4) best = Math.max(best, 2);
+      else if (cnt === 3) best = Math.max(best, 1);
+    }
+    return best;
+  }
+
+  function classifyPostflopAction(hand, ctx, catOverride){
+    const h = parseHandLabel(hand);
+    if (!h || !ctx) return "actFold";
+
+    const br = boardRanks(ctx.board);
+    const bVals = br.map(r=>R2V[r]).filter(Boolean);
+    const bDesc = sortedDesc(bVals);
+    const topB = bDesc[0] || 0;
+    const secondB = bDesc[1] || 0;
+
+    const r1 = h.r1, r2 = h.r2;
+    const matches = [r1,r2].filter(r => br.includes(r));
+    const mCount = matches.length;
+
+    const isSet = h.isPair && br.includes(r1);
+    const isTwoPair = (!h.isPair && mCount === 2);
+    const isTopPair = (mCount===1 && R2V[matches[0]] === topB);
+    const isSecondPair = (mCount===1 && R2V[matches[0]] === secondB);
+    const isOverpair = h.isPair && h.v1 > topB;
+    const isUnderpair = h.isPair && h.v1 < topB && !isSet;
+
+    const drawScore = straightDrawScore([h.v1,h.v2], bVals);
+    const hasStrongDraw = (drawScore === 2);
+    const hasBackdoor = (drawScore === 1);
+
+    const hasBroadwayOvers = (!h.isPair && mCount===0 && (h.v1>=11 || h.v2>=11));
+    const hasAceHigh = (!h.isPair && mCount===0 && (r1==="A" || r2==="A"));
+
+    const heroRole = ctx.heroRole || "PFR";
+    const potType = ctx.potType || "";
+    const cat = (typeof catOverride === "string" && catOverride) ? catOverride : (ctx && ctx._cat) ? ctx._cat : ((current && current.cat) ? current.cat : "");
+
+    const street = (ctx.street || "FLOP").toUpperCase();
+
+    const isWet = /WET|LOW/.test(cat);
+    const isDry = /DRY|PAIRED|AHIGH/.test(cat) || !isWet;
+    const wantsCheckback = /CHECKBACK/.test(cat);
+    const isMultiway = /Multiway/i.test(potType) || /MULTIWAY/.test(cat);
+    const is3betPot = /3bet/i.test(potType) || /3BETPOT/.test(cat);
+
+    const veryStrong = (isSet || isTwoPair);
+    const strongMade = (veryStrong || isOverpair || (isTopPair && (h.v1>=13 || h.v2>=13)));
+    const okMade = (isTopPair || isSecondPair || isOverpair);
+    const medium = (isUnderpair || isSecondPair);
+
+    // --- TURN / RIVER heuristics (lightweight, training-oriented) ---
+    if (street === "TURN"){
+      const isWetT = /WET/.test(cat) || /LOW/.test(cat);
+      const wantsDelayed = /DELAYED_CBET/.test(cat);
+
+      if (heroRole === "PFR"){
+        if (veryStrong || strongMade || hasStrongDraw) return "actCbet33";
+        if (wantsDelayed){
+          if (ctx.position==="IP" && (hasBroadwayOvers || hasAceHigh || hasBackdoor)) return "actCbet33";
+          return "actCheckPF";
+        }
+        if (isWetT){
+          if (ctx.position==="IP" && hasBackdoor && hasBroadwayOvers) return "actCbet33";
+          return "actCheckPF";
+        }
+        // dry-ish turn: keep some pressure
+        if (hasBroadwayOvers || hasAceHigh || hasBackdoor) return "actCbet33";
+        if (medium) return "actCheckPF";
+        return "actCbet33";
+      }
+
+      // DEFENDER vs barrel
+      if (veryStrong) return "actRaisePF";
+      if (hasStrongDraw) return (ctx.position==="OOP") ? "actRaisePF" : "actCallPF";
+      if (okMade) return "actCallPF";
+      if (medium && ctx.position==="IP") return "actCallPF";
+      return "actFold";
+    }
+
+    if (street === "RIVER"){
+      const wantsThin = /THIN_VALUE/.test(cat);
+      const wantsCheckbackR = /CHECKBACK/.test(cat);
+      const isBluffcatch = /BLUFCATCH/.test(cat);
+      const isValueRaise = /VALUE_RAISE/.test(cat);
+
+      if (heroRole === "PFR"){
+        if (veryStrong || strongMade) return "actCbet33";
+        if (wantsCheckbackR) return "actCheckPF";
+        if (wantsThin){
+          if (ctx.position==="IP" && (isTopPair || isOverpair)) return "actCbet33";
+          if (ctx.position==="IP" && isSecondPair && Math.max(h.v1,h.v2) >= 13) return "actCbet33";
+          return "actCheckPF";
+        }
+        // valuebet baseline
+        if (isTopPair || isOverpair) return "actCbet33";
+        if (ctx.position==="IP" && isSecondPair && Math.max(h.v1,h.v2) >= 13) return "actCbet33";
+        return "actCheckPF";
+      }
+
+      // DEFENDER vs bet
+      if (veryStrong) return "actRaisePF";
+      if (isValueRaise) {
+        if (okMade) return "actCallPF";
+        return "actFold";
+      }
+      if (okMade) return "actCallPF";
+      if (isBluffcatch && medium && ctx.position==="IP") return "actCallPF";
+      return "actFold";
+    }
+
+
+    if (heroRole === "PFR"){
+      if (isMultiway){
+        if (veryStrong || isOverpair || isTopPair || hasStrongDraw) return "actCbet33";
+        return "actCheckPF";
+      }
+      if (wantsCheckback){
+        if (strongMade || hasStrongDraw) return "actCbet33";
+        return "actCheckPF";
+      }
+      if (isWet && !is3betPot){
+        if (strongMade || hasStrongDraw) return "actCbet33";
+        if (hasBackdoor && hasBroadwayOvers && ctx.position==="IP") return "actCbet33";
+        return "actCheckPF";
+      }
+
+      if (strongMade || hasStrongDraw) return "actCbet33";
+      if (isDry){
+        if (hasBroadwayOvers || hasBackdoor || hasAceHigh) return "actCbet33";
+        if (isUnderpair) return "actCheckPF";
+        return "actCbet33";
+      } else {
+        if (is3betPot && (hasBroadwayOvers || hasBackdoor)) return "actCbet33";
+        return "actCheckPF";
+      }
+    }
+
+    // DEFENDER vs cbet
+    if (veryStrong) return "actRaisePF";
+    if (hasStrongDraw){
+      return (ctx.position==="OOP") ? "actRaisePF" : "actCallPF";
+    }
+    if (okMade) return "actCallPF";
+    if (medium) return "actCallPF";
+    if (ctx.position==="IP" && hasBackdoor && hasBroadwayOvers) return "actCallPF";
+    return "actFold";
+  }
+
+  function buildPostflopMap(cobj){
+    const ctx = (cobj && cobj.ctx) ? cobj.ctx : {};
+    const b = Array.isArray(ctx.board) ? ctx.board : [];
+    const bTxt = b.length ? ("[" + b.join(" ") + "]") : "";
+    const role = ctx.heroRole || "PFR";
+    const potType = ctx.potType || "";
+    const pos = ctx.position || "";
+    const title = `POSTFLOP range | ${role} ${pos} | ${potType} | ${bTxt}`;
+
+    const setsBy = {
+      actCbet33: new Set(),
+      actCheckPF: new Set(),
+      actRaisePF: new Set(),
+      actCallPF: new Set(),
+    };
+
+    for (let i=0;i<RANKS.length;i++){
+      for (let j=0;j<RANKS.length;j++){
+        const h = handLabel(i,j);
+        const cls = classifyPostflopAction(h, ctx, (cobj && cobj.cat) ? cobj.cat : "");
+        if (setsBy[cls]) setsBy[cls].add(h);
+      }
+    }
+
+    // Optional: mask displayed matrix to plausible HERO preflop range (Flopzilla-style),
+    // when we can infer the opener position (SRP only).
+    let preflopMask = null;
+    try {
+      let hp = (ctx && ctx.heroPos) ? String(ctx.heroPos) : "";
+      if (!hp && ctx && ctx.seats){
+        try {
+          for (const p in ctx.seats){
+            const t = (ctx.seats[p] && ctx.seats[p].tag) ? String(ctx.seats[p].tag) : "";
+            if (t === "HERO"){ hp = String(p); break; }
+          }
+        } catch(e){}
+      }
+      const canMask = (role === "PFR") && /SRP/i.test(potType) && (hp === "HJ" || hp === "CO" || hp === "BTN" || hp === "SB");
+      if (canMask){
+        preflopMask = getOpenSetForPos(hp);
+        for (const k of ["actCbet33","actCheckPF"]){
+          const s = setsBy[k];
+          const ns = new Set();
+          for (const x of s){ if (preflopMask.has(x)) ns.add(x); }
+          setsBy[k] = ns;
+        }
+      }
+    } catch(e){ preflopMask = null; }
+
+    const legendItems = [];
+    if (role === "PFR"){
+      const st = (ctx.street || "FLOP").toUpperCase();
+      const betLbl = (st === "FLOP") ? "CBET 33%" : "BET";
+      legendItems.push({ cls:"actCbet33", label: betLbl });
+      legendItems.push({ cls:"actCheckPF", label:"CHECK" });
+    } else {
+      legendItems.push({ cls:"actRaisePF", label:"RAISE" });
+      legendItems.push({ cls:"actCallPF", label:"CALL" });
+      legendItems.push({ cls:"actFold", label:"FOLD" });
+    }
+
+    const layers = [];
+    if (role === "PFR"){
+      layers.push({ cls:"actCbet33", set: setsBy.actCbet33 });
+      layers.push({ cls:"actCheckPF", set: setsBy.actCheckPF });
+    } else {
+      layers.push({ cls:"actRaisePF", set: setsBy.actRaisePF });
+      layers.push({ cls:"actCallPF", set: setsBy.actCallPF });
+    }
+
+    let note =
+      "Postflop range je heuristický baseline (ne solver). " +
+      "Mapujeme akci podle toho, jak startovní hand typicky hitne board (bez suit‑exact FD), role (PFR/DEFENDER), pot typu a textury.";
+    if (preflopMask){
+      note += ` Zobrazení je ořezané na HERO preflop open range (${ctx.heroPos}).`;
+    }
+
+    const legendText = (role === "PFR")
+      ? (((ctx.street || "FLOP").toUpperCase() === "FLOP")
+          ? "CBET 33%: baseline range-bet | CHECK: checkback/check"
+          : "BET: value/bluff pressure | CHECK: check")
+      : "RAISE: raise/check-raise | CALL: continue | FOLD: fold";
+
+    return { title, legendItems, note, layers, legendText };
+  }
+
+      function classForHand(hand, map){
+      if (map && Array.isArray(map.layers)){
+        for (const layer of map.layers){
+          if (layer && layer.set && layer.set.has(hand)) return layer.cls;
+        }
+      }
+      return "actFold";
+    }
+
+    function buildRangeMapForCurrent(){
+      function makeMap({title, legendItems, note, layers, legendText}){
+        const items = Array.isArray(legendItems) ? legendItems.slice() : [];
+        // Always include FOLD in legend (unless already present)
+        const hasFold = items.some(x => x && x.cls === "actFold");
+        if (!hasFold) items.push({ cls:"actFold", label:"FOLD" });
+
+        return {
+          title: title || "Rozsah kombinací",
+          legendText: legendText || "",
+          legendItems: items,
+          note: note || "Barvy = preferovaná akce pro aktuální spot a sizing (ve stylu solveru).",
+          layers: Array.isArray(layers) ? layers : []
+        };
+      }
+
+      function openClsForSize(size){ return (size === "2.5x") ? "actOpen25x" : "actOpen2x"; }
+      function isoClsForPos(pos){ return (pos === "SB") ? "actIsoSB" : "actIsoIP"; }
+
+      function getFallbackCtxForFilter(){
+        if (state.catFilter === "OPEN_HJ_CO_BTN") return { cat:"OPEN_HJ_CO_BTN", ctx:{ pos:"CO", eff:20, sizing:"2x" } };
+        if (state.catFilter === "SB_OPEN") return { cat:"SB_OPEN", ctx:{ eff:20, sizing:"2x" } };
+        if (state.catFilter === "ISO_LIMP") return { cat:"ISO_LIMP", ctx:{ pos:"BTN", eff:25 } };
+        if (state.catFilter === "BB_DEFEND") return { cat:"BB_DEFEND", ctx:{ openerPos:"CO", sizing:"2x", eff:25 } };
+        if (state.catFilter === "BB_DEFEND_2X") return { cat:"BB_DEFEND_2X", ctx:{ openerPos:"BTN", sizing:"2x", eff:20 } };
+        if (state.catFilter === "REJAM") return { cat:"REJAM", ctx:{ heroPos:"SB", openerPos:"CO", sizing:"2x", eff:18 } };
+        if (state.catFilter === "BVB_AFTER_3BET") return { cat:"BVB_AFTER_3BET", ctx:{ eff:20, openSize:"2x", threeBetSize:"7x" } };
+        return { cat:"OPEN_HJ_CO_BTN", ctx:{ pos:"CO", eff:20, sizing:"2x" } };
+      }
+
+      const cobj = current ? { cat: current.cat, ctx: (current.ctx || {}) } : getFallbackCtxForFilter();
+      const c = cobj.cat;
+      const ctx = cobj.ctx || {};
+
+      if (c && (c.startsWith("FLOP_") || c.startsWith("TURN_") || c.startsWith("RIVER_"))){
+        const pm = buildPostflopMap(cobj);
+        return makeMap(pm);
+      }
+
+      if (c === "OPEN_HJ_CO_BTN"){
+        const pos = ctx.pos || "CO";
+        const eff = (ctx.eff ?? "--");
+        const sizing = ctx.sizing || "2x";
+        const openSet = getOpenSetForPos(pos);
+        const openCls = openClsForSize(sizing);
+
+        return makeMap({
+          title: `Otevírací range | ${pos} | ${eff} BB`,
+          legendItems: [
+            { cls: openCls, label: `OPEN ${sizing}` },
+            { cls: "actFold", label: "FOLD" }
+          ],
+          note: (state.strict === "LENIENT")
+            ? "Barvy = preferovaná akce pro spot+sizing. Pozn.: v LENIENT režimu může být alternativní open sizing uznaný jako OK, ale tady barvíme default pro aktuální kontext."
+            : "Barvy = preferovaná akce pro spot+sizing.",
+          layers: [
+            { cls: openCls, set: openSet }
+          ],
+          legendText: "OPEN = raise | FOLD = fold"
+        });
+      }
+
+      if (c === "SB_OPEN"){
+        const eff = (ctx.eff ?? "--");
+        const sizing = ctx.sizing || "2x";
+        const openCls = openClsForSize(sizing);
+
+        return makeMap({
+          title: `SB_OPEN range | ${eff} BB`,
+          legendItems: [
+            { cls: openCls, label: `OPEN ${sizing}` },
+            { cls: "actFold", label: "FOLD" }
+          ],
+          note: "Barvy = preferovaná akce pro spot+sizing. Limp default OFF (přidej až exploitově).",
+          layers: [
+            { cls: openCls, set: SETS.SB_OPEN }
+          ],
+          legendText: "OPEN = raise | FOLD = fold"
+        });
+      }
+
+      if (c === "ISO_LIMP"){
+        const pos = ctx.pos || "BTN";
+        const effN = (typeof ctx.eff === "number") ? ctx.eff : null;
+        const eff = (effN !== null) ? effN : (ctx.eff ?? "--");
+        const isoCls = isoClsForPos(pos);
+
+        const isIP = (pos === "CO" || pos === "BTN");
+        const earlyLimper = (ctx.limperPos === "UTG" || ctx.limperPos === "HJ");
+        const preferPairs = (effN !== null && effN <= 20 && isIP && earlyLimper)
+          ? new Set(["22","33","44","55","66"])
+          : new Set();
+
+        const isoLabel = (pos === "SB")
+          ? "ISO 4x"
+          : (effN !== null && effN <= 20 ? "ISO 2.5x–3x" : "ISO 3x–3.5x");
+
+        return makeMap({
+          title: `ISO_LIMP range | ${pos} | ${eff} BB`,
+          legendItems: [
+            { cls: isoCls, label: isoLabel },
+            { cls: "actOverlimp", label: "OVERLIMP" },
+            { cls: "actFold", label: "FOLD" }
+          ],
+          note: `Barvy = preferovaná akce pro spot+sizing. 15–20 BB default = menší ISO (2.5x–3x); 3.5x jen exploit. Small pairs 22–66 vs UTG/HJ často OVERLIMP.`,
+          layers: [
+            { cls: "actOverlimp", set: preferPairs },
+            { cls: isoCls, set: SETS.ISO_VALUE },
+            { cls: "actOverlimp", set: SETS.OVERLIMP_OK }
+          ],
+          legendText: "ISO: raise | OVERLIMP: limp/call | FOLD: fold"
+        });
+      }
+
+      
+
+if (c === "BB_DEFEND_2X"){
+  const openerPos = ctx.openerPos || "BTN";
+  const sizing = "2x";
+  const eff = (ctx.eff ?? "--");
+
+  const callSet = new Set(SETS.BB_CALL_VS2X);
+  const value3b = new Set(SETS.BB_3BET_VALUE);
+  const bluff3b = new Set(SETS.BB_3BET_BLUFF); // A5s–A2s
+
+  return makeMap({
+    title: `BB_DEFEND_2X | vs ${openerPos} | ${sizing} | ${eff} BB`,
+    legendItems: [
+      { cls:"act3betValue", label:"3BET (value)" },
+      { cls:"act3betBluff", label:"3BET (bluff)" },
+      { cls:"actCall", label:"CALL" },
+      { cls:"actFold", label:"FOLD" }
+    ],
+    note: "Steal 2x (CO/BTN): tady zobrazujeme baseline akce (solver‑style). Drill samotný víc zkouší okraje call/fold.",
+    layers: [
+      { cls:"act3betValue", set: value3b },
+      { cls:"act3betBluff", set: bluff3b },
+      { cls:"actCall", set: callSet }
+    ],
+    legendText: "3BET: raise | CALL: call | FOLD: fold"
+  });
+}
+
+if (c === "BB_DEFEND"){
+        const openerPos = ctx.openerPos || "CO";
+        const sizing = ctx.sizing || "2x";
+        const eff = (ctx.eff ?? "--");
+
+        const callBase = (sizing==="2x") ? SETS.BB_CALL_VS2X : (sizing==="2.5x") ? SETS.BB_CALL_VS25X : SETS.BB_CALL_VS3X;
+        const callSet = new Set(callBase);
+
+        // HJ tighten (stejně jako quiz logika)
+        const hjTighten = new Set(["A2o","A3o","A4o","A5o","A6o","A7o","A8o","A9o","ATo","K7o","Q8o","J8o","T8o","98o","T7s","97s","86s"]);
+        if (openerPos === "HJ"){
+          for (const h of hjTighten) callSet.delete(h);
+        }
+
+        // value 3bet tightened vs HJ (stejně jako quiz logika)
+        const value3b = new Set();
+        for (const h of SETS.BB_3BET_VALUE){
+          const ok = (openerPos !== "HJ") || ["JJ","QQ","KK","AA","AKo","AKs","AQs"].includes(h);
+          if (ok) value3b.add(h);
+        }
+
+        // bluff 3bet jen vs CO/BTN a ne vs 3x (stejně jako quiz logika)
+        const bluff3b = new Set();
+        if (openerPos !== "HJ" && sizing !== "3x"){
+          for (const h of SETS.BB_3BET_BLUFF) bluff3b.add(h);
+        }
+
+        return makeMap({
+          title: `BB_DEFEND range | vs ${openerPos} | ${sizing} | ${eff} BB`,
+          legendItems: [
+            { cls:"act3betValue", label:"3BET (value)" },
+            { cls:"act3betBluff", label:"3BET (bluff)" },
+            { cls:"actCall", label:"CALL" },
+            { cls:"actFold", label:"FOLD" }
+          ],
+          note: "Barvy = preferovaná akce pro spot+sizing (solver‑style). (Pozn.: defend se mění s openerem i sizingem.)",
+          layers: [
+            { cls:"act3betValue", set: value3b },
+            { cls:"act3betBluff", set: bluff3b },
+            { cls:"actCall", set: callSet }
+          ],
+          legendText: "3BET: raise | CALL: call | FOLD: fold"
+        });
+      }
+
+
+      if (c === "BVB_AFTER_3BET"){
+        const eff = (ctx.eff ?? "--");
+        const openSize = ctx.openSize || "2x";
+        const threeBetSize = ctx.threeBetSize || "7x";
+
+        return makeMap({
+          title: `BVB_AFTER_3BET | SB open ${openSize} | BB 3bet ${threeBetSize} | ${eff} BB`,
+          legendItems: [
+            { cls:"actJamValue", label:"4BET JAM (value)" },
+            { cls:"actJamSemi", label:"4BET JAM (semi)" },
+            { cls:"actCall", label:"CALL 3BET" },
+            { cls:"actFold", label:"FOLD" }
+          ],
+          note: "Barvy = preferovaná akce pro BvB (SB open -> BB 3bet). Value jam vs call vs fold (solver‑style; semi A5s–A2s mix).",
+          layers: [
+            { cls:"actJamValue", set: SETS.SB_4BET_JAM_VALUE },
+            { cls:"actJamSemi", set: SETS.SB_4BET_JAM_SEMI },
+            { cls:"actCall", set: SETS.SB_CALL_VS3BET }
+          ],
+          legendText: "JAM: all-in | CALL: call | FOLD: fold"
+        });
+      }
+
+      if (c === "REJAM"){
+        const heroPos = ctx.heroPos || "SB";
+        const openerPos = ctx.openerPos || "CO";
+        const sizing = ctx.sizing || "2x";
+        const eff = (ctx.eff ?? "--");
+
+        return makeMap({
+          title: `REJAM range | ${heroPos} vs ${openerPos} | ${sizing} | ${eff} BB`,
+          legendItems: [
+            { cls:"actJamValue", label:"JAM (value)" },
+            { cls:"actJamSemi", label:"JAM (semi)" },
+            { cls:"actFold", label:"FOLD" }
+          ],
+          note: "Barvy = preferovaná akce pro spot+sizing (solver‑style). REJAM modul je cílený na 15–20 BB.",
+          layers: [
+            { cls:"actJamValue", set: SETS.REJAM_VALUE },
+            { cls:"actJamSemi", set: SETS.REJAM_SEMI }
+          ],
+          legendText: "JAM: all-in | FOLD: fold"
+        });
+      }
+
+      return makeMap({
+        title: "Range",
+        legendItems: [{ cls:"actFold", label:"FOLD" }],
+        note: "Barvy = preferovaná akce pro aktuální spot a sizing (solver‑style).",
+        layers: [],
+        legendText: ""
+      });
+    }
+
+    function renderRangeModal(){
+      syncMobileClass();
+      const map = buildRangeMapForCurrent();
+      rangeTitle.textContent = map.title;
+      rangeLegend.textContent = map.legendText;
+      rangeNote.textContent = map.note;
+
+      if (rangeLegendChips){
+        rangeLegendChips.innerHTML = "";
+        for (const it of (map.legendItems || [])){
+          if (!it || !it.label) continue;
+          const chip = document.createElement("span");
+          chip.className = "chip";
+
+          const sw = document.createElement("span");
+          sw.className = "swatch " + (it.cls || "actFold");
+          chip.appendChild(sw);
+
+          const tx = document.createElement("span");
+          tx.textContent = it.label;
+          chip.appendChild(tx);
+
+          rangeLegendChips.appendChild(chip);
+        }
+      }
+
+      rangeMatrix.innerHTML = "";
+      const corner = document.createElement("div");
+      corner.className = "cell hdr";
+      corner.textContent = "";
+      rangeMatrix.appendChild(corner);
+
+      for (let j=0;j<13;j++){
+        const h = document.createElement("div");
+        h.className = "cell hdr";
+        h.textContent = RANKS[j];
+        rangeMatrix.appendChild(h);
+      }
+
+      for (let i=0;i<13;i++){
+        const rh = document.createElement("div");
+        rh.className = "cell hdr";
+        rh.textContent = RANKS[i];
+        rangeMatrix.appendChild(rh);
+
+        for (let j=0;j<13;j++){
+          const hand = handLabel(i,j);
+          const cell = document.createElement("div");
+          cell.className = "cell " + classForHand(hand, map);
+          cell.textContent = hand;
+          rangeMatrix.appendChild(cell);
+        }
+      }
+
+      rangeBack.style.display = "flex";
+      rangeOpen = true;
+      try{ if (document && document.body && document.body.style) document.body.style.overflow = "hidden"; }catch(_e){}
+      const modalEl = rangeBack.querySelector(".modal");
+      if (modalEl) modalEl.scrollTop = 0;
+      requestAnimationFrame(() => {
+        fitRangeMatrix();
+        setTimeout(fitRangeMatrix, 50);
+        setTimeout(fitRangeMatrix, 150);
+        setTimeout(fitRangeMatrix, 300);
+      });
+}
+
+  function closeRangeModal(){
+    rangeBack.style.display = "none";
+    rangeOpen = false;
+    try{ if (document && document.body && document.body.style) document.body.style.overflow = ""; }catch(_e){}
+  }
+
+  startBtn.addEventListener("click", nextQuestion);
+
+  // v7: HH analyze controls + JS status
+  if(jsStatus) jsStatus.textContent = "JS: OK";
+  const savedHH = loadSavedHH();
+  if(savedHH){
+    try{
+      const st = analyzeHeroHH(savedHH, "JungleStyle1");
+      if(st.total >= 20){ renderProfileFromHH(st); if(hhStatus) hhStatus.textContent = `HH načtena z úložiště: ${st.total} hand pro ${st.hero}.`; }
+      else { if(hhStatus) hhStatus.textContent = "HH načtena, ale málo hand pro smysluplný profil (doporučeno 200+)."; }
+    }catch(err){ if(hhStatus) hhStatus.textContent = "Chyba při parsování HH: " + err; }
+  }else{
+    if(hhStatus) hhStatus.textContent = "Tip: vlož HH do boxu výše, profil se přepočítá a uloží do zařízení.";
+  }
+
+  if(hhAnalyzeBtn){
+    hhAnalyzeBtn.addEventListener("click", () => {
+      const raw = (hhPaste && hhPaste.value) ? hhPaste.value : "";
+      if(!raw.trim()){ if(hhStatus) hhStatus.textContent = "Vlož nejdřív HH text."; return; }
+      saveHH(raw);
+      try{
+        const st = analyzeHeroHH(raw, "JungleStyle1");
+        renderProfileFromHH(st);
+        if(hhStatus) hhStatus.textContent = `OK: přepočítáno z HH (${st.total} hand pro ${st.hero}).`;
+      }catch(err){ if(hhStatus) hhStatus.textContent = "Chyba při parsování HH: " + err; showJsError("HH parse error: " + err); }
+    });
+  }
+  if(hhClearBtn){
+    hhClearBtn.addEventListener("click", () => {
+      saveHH("");
+      if(hhPaste) hhPaste.value = "";
+      if(hhStatus) hhStatus.textContent = "Uložené HH smazáno.";
+    });
+  }
+
+
+  newBlockBtn.addEventListener("click", () => {
+    startNewBlock();
+    questionText.textContent = "Nový blok připraven. Klikni Start / Další.";
+    answerBtns.innerHTML = "";
+    updateAllUI();
+    renderTableSim();
+  window.__PKR_READY = true;
+  });
+
+  resetBtn.addEventListener("click", resetProgress);
+
+  onlyMissedBtn.addEventListener("click", () => {
+    state.mode = (state.mode === "MISSED") ? "MIXED" : "MISSED";
+    saveState(); updateAllUI();
+    onlyMissedBtn.textContent = state.mode === "MISSED" ? "Mód: jen chybné" : "Mód: vše";
+  });
+
+  showRuleBtn.addEventListener("click", () => { rulesCard.style.display = (rulesCard.style.display === "none") ? "block" : "none"; });
+
+  showRangeBtn.addEventListener("click", renderRangeModal);
+  closeRangeBtn.addEventListener("click", closeRangeModal);
+  rangeBack.addEventListener("click", (e) => { if (e.target === rangeBack) closeRangeModal(); });
+
+  categorySel.addEventListener("change", (e) => { setCategory(e.target.value); });
+  if (phaseSel){
+    phaseSel.value = (state.phase || "PREFLOP");
+    phaseSel.addEventListener("change", (e) => {
+      state.phase = (""+e.target.value).toUpperCase();
+      saveState();
+      refreshCategoryOptions();
+      session.started = false;
+      updateAllUI();
+      renderTableSim();
+  window.__PKR_READY = true;
+    });
+  }
+  refreshCategoryOptions();
+  strictSel.addEventListener("change", (e) => { setStrict(e.target.value); });
+
+  
+  // --- FUF init: hole cards preview + stats export/import ---
+  const heroCardsPreview = document.getElementById("heroCardsPreview");
+  if (heroCardsPreview){
+    heroCardsPreview.innerHTML = `<span class="miniHand">—</span>`;
+  }
+
+
+  const exportBtn = document.getElementById("exportStatsBtn");
+  const importBtn = document.getElementById("importStatsBtn");
+  const clearBtn  = document.getElementById("clearStatsBtn");
+  const statsBox  = document.getElementById("statsJsonBox");
+
+  if (exportBtn && statsBox){
+    exportBtn.addEventListener("click", () => {
+      const payload = { profile: PROFILE_ID, exportedAt: new Date().toISOString(), events: loadEvents() };
+      statsBox.value = JSON.stringify(payload, null, 2);
+      updateStatsUI();
+    });
+  }
+
+  if (importBtn && statsBox){
+    importBtn.addEventListener("click", () => {
+      try{
+        const obj = JSON.parse(statsBox.value || "{}");
+        if (!obj || !Array.isArray(obj.events)) throw new Error("JSON musí obsahovat pole 'events'");
+        saveEvents(obj.events);
+        updateStatsUI();
+        alert("Import OK");
+      }catch(err){
+        alert("Import failed: " + (err && err.message ? err.message : err));
+      }
+    });
+  }
+
+  if (clearBtn){
+    clearBtn.addEventListener("click", () => {
+      const ok = confirm("Opravdu smazat stats log? (neovlivní to běžný progress state)");
+      if(!ok) return;
+      localStorage.removeItem(EVT_KEY);
+      updateStatsUI();
+    });
+  }
+
+  updateStatsUI();
+
+  categorySel.value = state.catFilter;
+  strictSel.value = state.strict;
+  onlyMissedBtn.textContent = state.mode === "MISSED" ? "Mód: jen chybné" : "Mód: vše";
+
+  updateAllUI();
+  renderTableSim();
+  window.__PKR_READY = true;
+})();
+</script>
+<div class="jsErrorBox" id="jsErrorBox"></div>
+</body>
+</html>
