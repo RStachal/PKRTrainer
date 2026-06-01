@@ -371,7 +371,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Umožnit volit formát, speed a efektivní stack; později rozšířit o jednotlivé stacky u všech sedadel
 
 - [ ] 25. MTT preflop jako první produkční vertikála
-  - [ ] 25.1 Převést aktuální MTT 9-max cEV ranges do RangePack v2 adaptéru
+  - [x] 25.1 Převést aktuální MTT 9-max cEV ranges do RangePack v2 adaptéru
     - Dnešní data zůstanou funkční; nový RangePack pouze přidá metadata a dimenze bez změny doporučení
 
   - [ ] 25.2 Doplnit chart sourcing pro MTT 9-max regular/turbo
