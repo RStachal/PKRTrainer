@@ -370,7 +370,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 24.3 Připravit UI filtr pro regular/turbo a stacky hráčů
     - Umožnit volit formát, speed a efektivní stack; později rozšířit o jednotlivé stacky u všech sedadel
 
-- [ ] 25. MTT preflop jako první produkční vertikála
+- [x] 25. MTT preflop jako první produkční vertikála
   - [x] 25.1 Převést aktuální MTT 9-max cEV ranges do RangePack v2 adaptéru
     - Dnešní data zůstanou funkční; nový RangePack pouze přidá metadata a dimenze bez změny doporučení
 
@@ -380,7 +380,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 25.3 Přidat možnost rozšířit MTT na 6-max
     - Po seat modelu přidat 6-max profil, sourcing 6-max chipEV chartů a RangePacky pro regular/turbo
 
-  - [ ] 25.4 Rozšířit relevantní akční nodes
+  - [x] 25.4 Rozšířit relevantní akční nodes
     - Pro preflop držet minimální sadu Fold, Call, Open/Raise, 3bet, 4bet, Jam, Call-jam; u každého node zobrazit skutečně relevantní range
 
 - [ ] 26. SNG nejdřív chipEV, potom ICM
