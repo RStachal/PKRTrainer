@@ -377,7 +377,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 25.2 Doplnit chart sourcing pro MTT 9-max regular/turbo
     - Priorita: chipEV, preflop, 9-max, full ring, regular speed; turbo přidat jako samostatný profil, pokud zdroje potvrzují odlišné assumptions
 
-  - [ ] 25.3 Přidat možnost rozšířit MTT na 6-max
+  - [x] 25.3 Přidat možnost rozšířit MTT na 6-max
     - Po seat modelu přidat 6-max profil, sourcing 6-max chipEV chartů a RangePacky pro regular/turbo
 
   - [ ] 25.4 Rozšířit relevantní akční nodes
