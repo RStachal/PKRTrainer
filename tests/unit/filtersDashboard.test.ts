@@ -54,6 +54,12 @@ describe("filters - DOM start gate", () => {
     expect(root.querySelectorAll(".filter-position")).toHaveLength(9);
     expect(root.querySelectorAll(".filter-bucket")).toHaveLength(13);
     expect(root.querySelectorAll(".filter-context")).toHaveLength(9);
+    expect(root.querySelector(".profile-selector")).not.toBeNull();
+    expect(view.getProfile()).toMatchObject({
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      blindSpeed: "REGULAR",
+    });
     expect(starts).toHaveLength(0);
     expect(view.getSeed()).toBeNull();
 

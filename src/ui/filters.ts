@@ -68,6 +68,8 @@ import {
   type ScoringMode,
   type StackBucket,
 } from "../core/types";
+import type { TrainingProfile } from "../core/trainingProfile";
+import { renderProfileSelector, type ProfileSelectorView } from "./profileSelector";
 
 // ---------------------------------------------------------------------------
 // Uzavřená sada akčních kontextů + české popisky (Req 13.3, 12.3)
@@ -148,6 +150,8 @@ export interface FiltersView {
   clearWarning(): void;
   /** Zpřístupní seed v UI (např. po vygenerování enginem, Req 6.7). */
   setSeed(seed: number): void;
+  /** Vrátí aktuálně zvolený profil tréninku pro budoucí multi-variant režimy. */
+  getProfile(): TrainingProfile;
   /** Odstraní vykreslené DOM a posluchače. */
   destroy(): void;
 }
@@ -272,6 +276,9 @@ export function renderFilters(
   root.innerHTML = "";
 
   const wrap = el(doc, "div", "filters");
+  const profileBox = el(doc, "div", "filters__profile");
+  const profileSelector: ProfileSelectorView = renderProfileSelector(profileBox);
+  wrap.appendChild(profileBox);
 
   // Reference na vstupy pro pozdější čtení stavu.
   const positionInputs = new Map<Position, HTMLInputElement>();
@@ -532,7 +539,11 @@ export function renderFilters(
     setSeed(seed: number): void {
       seedInput.value = String(seed);
     },
+    getProfile(): TrainingProfile {
+      return profileSelector.getProfile();
+    },
     destroy(): void {
+      profileSelector.destroy();
       startBtn.removeEventListener("click", handleStart);
       root.innerHTML = "";
     },

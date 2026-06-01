@@ -422,7 +422,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Filtrovat a seskupovat podle varianty, formátu, speedu, streety, pozice, stacku a akčního node
 
 - [ ] 30. UI pro výběr režimu a range evidence
-  - [ ] 30.1 Přidat profile selector
+  - [x] 30.1 Přidat profile selector
     - Umožnit volit MTT/SNG/CASH, 9-max/6-max, regular/turbo, preflop/flop/turn/river a scoring režim bez rozbití dnešního jednoduchého startu
 
   - [x] 30.2 Rozšířit range modal o zdroj a assumptions

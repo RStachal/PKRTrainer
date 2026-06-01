@@ -784,6 +784,14 @@ body{margin:0;background:#0b1018;color:#e8ecf7;
 .app__panel{outline:none;}
 .training__filters{background:#11151f;border:1px solid rgba(255,255,255,.08);
   border-radius:12px;padding:14px 16px;margin-bottom:16px;}
+.profile-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
+  gap:10px 12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid
+  rgba(255,255,255,.1);}
+.profile-selector__title{grid-column:1/-1;font-size:13px;font-weight:900;color:#e8ecf7;}
+.profile-selector__field{display:grid;gap:4px;font-size:12px;color:#9aa6c2;}
+.profile-selector__field select{min-width:0;background:#0f1624;color:#e8ecf7;
+  border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:7px 8px;}
+.profile-selector__note{grid-column:1/-1;font-size:12px;color:#9aa6c2;line-height:1.35;}
 .training__game{display:flex;flex-direction:column;gap:16px;}
 .training__actions-title{font-weight:700;font-size:14px;margin-bottom:8px;}
 .training__actions-row{display:flex;flex-wrap:wrap;gap:8px;}
