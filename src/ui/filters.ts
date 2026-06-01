@@ -122,8 +122,14 @@ export interface FiltersViewCallbacks {
    * @param seed Uživatelem zadaný platný seed, nebo `null` (prázdné / neplatné
    *   pole) — v takovém případě si engine vygeneruje a zpřístupní vlastní seed
    *   (Req 6.7).
+   * @param profile Aktuálně zvolený tréninkový profil pro navazující multi-format
+   *   režimy (formát stolu, blind speed, street, model).
    */
-  onStart: (filters: Filters, seed: number | null) => void;
+  onStart: (
+    filters: Filters,
+    seed: number | null,
+    profile: TrainingProfile,
+  ) => void;
 }
 
 /** Veřejné rozhraní vykreslené komponenty filtrů. */
@@ -515,7 +521,7 @@ export function renderFilters(
   function handleStart(): void {
     // Před spuštěním skryjeme předchozí upozornění (uživatel zkouší znovu).
     hideWarning();
-    callbacks.onStart(getFilters(), getSeed());
+    callbacks.onStart(getFilters(), getSeed(), profileSelector.getProfile());
   }
   startBtn.addEventListener("click", handleStart);
 

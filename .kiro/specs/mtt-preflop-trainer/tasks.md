@@ -359,7 +359,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 23.3 Přidat testy profilu a seat modelu
     - Ověřit stabilitu `profileId`, unikátní pozice, správný počet hráčů pro 9-max/6-max a zachování dnešního pořadí 9-max
 
-- [ ] 24. Blind speed a stack profil
+- [x] 24. Blind speed a stack profil
   - [x] 24.1 Definovat blind speed jako reálnou dimenzi profilu
     - REGULAR/TURBO nesmí být jen UI label; musí určovat blind schedule, dostupné stack buckets a později tempo změny blindů v tréninku
 
@@ -367,7 +367,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Uložit blindy, ante, level duration, startovní stack a odvozené BB stacky pro regular/turbo režim
     - Zachovat jednoduchý režim "fixed BB" pro dnešní drill, aby existující generování zůstalo stabilní
 
-  - [ ] 24.3 Připravit UI filtr pro regular/turbo a stacky hráčů
+  - [x] 24.3 Připravit UI filtr pro regular/turbo a stacky hráčů
     - Umožnit volit formát, speed a efektivní stack; později rozšířit o jednotlivé stacky u všech sedadel
 
 - [ ] 25. MTT preflop jako první produkční vertikála

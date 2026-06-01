@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
 
+import type { Filters } from "../../src/core/types";
+import type { TrainingProfile } from "../../src/core/trainingProfile";
 import { createStatsStore, type ResultRecord } from "../../src/persistence/statsStore";
 import { renderDashboard } from "../../src/ui/dashboard";
 import { renderFilters } from "../../src/ui/filters";
@@ -46,9 +48,13 @@ const record: ResultRecord = {
 describe("filters - DOM start gate", () => {
   it("onStart se zavola pouze po kliknuti na Start a seed parsing funguje", () => {
     const root = document.createElement("div");
-    const starts: Array<{ seed: number | null }> = [];
+    const starts: Array<{
+      filters: Filters;
+      seed: number | null;
+      profile: TrainingProfile;
+    }> = [];
     const view = renderFilters(root, {
-      onStart: (_filters, seed) => starts.push({ seed }),
+      onStart: (filters, seed, profile) => starts.push({ filters, seed, profile }),
     });
 
     expect(root.querySelectorAll(".filter-position")).toHaveLength(9);
@@ -64,16 +70,28 @@ describe("filters - DOM start gate", () => {
     expect(view.getSeed()).toBeNull();
 
     root.querySelector<HTMLInputElement>(".filter-position")?.click();
+    root.querySelector<HTMLInputElement>('.filter-bucket[data-bucket="25"]')?.click();
+    const speed = root.querySelector<HTMLSelectElement>(".profile-speed");
+    expect(speed).not.toBeNull();
+    speed!.value = "TURBO";
+    speed!.dispatchEvent(new Event("change"));
     expect(starts).toHaveLength(0);
 
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
-    expect(starts).toEqual([{ seed: null }]);
+    expect(starts).toHaveLength(1);
+    expect(starts[0].seed).toBeNull();
+    expect(starts[0].filters.buckets).toEqual([25]);
+    expect(starts[0].profile).toMatchObject({
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      blindSpeed: "TURBO",
+    });
 
     const seedInput = root.querySelector<HTMLInputElement>(".filter-seed");
     expect(seedInput).not.toBeNull();
     seedInput!.value = "123";
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
-    expect(starts.at(-1)).toEqual({ seed: 123 });
+    expect(starts.at(-1)?.seed).toBe(123);
   });
 
   it("showEmptyResult zobrazi varovani a zachova vyber filtru", () => {
