@@ -384,7 +384,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Pro preflop držet minimální sadu Fold, Call, Open/Raise, 3bet, 4bet, Jam, Call-jam; u každého node zobrazit skutečně relevantní range
 
 - [ ] 26. SNG nejdřív chipEV, potom ICM
-  - [ ] 26.1 Přidat SNG profil v chipEV režimu
+  - [x] 26.1 Přidat SNG profil v chipEV režimu
     - Začít bez ICM, aby šel reuse MTT preflop engine, RangePack schema a scoring
 
   - [ ] 26.2 Navrhnout ICM model pro SNG

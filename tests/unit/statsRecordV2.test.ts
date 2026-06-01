@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ResultRecord } from "../../src/persistence/statsStore";
+import { DEFAULT_TRAINING_PROFILE, profileWith } from "../../src/core/trainingProfile";
 import {
   RESULT_RECORD_V2_SCHEMA,
   isResultRecordV2,
@@ -70,5 +71,23 @@ describe("statsRecordV2", () => {
     expect(migrated.map((record) => record.correct)).toEqual([true, true]);
     expect(migrated[0].rangePackId).toContain("ante-off");
     expect(migrated[1].rangePackId).toContain("ante-on");
+  });
+
+  it("umi priradit SNG chipEV candidate RangePack podle profilu", () => {
+    const upgraded = upgradeResultRecordToV2(anteOffRecord, {
+      profile: profileWith(DEFAULT_TRAINING_PROFILE, {
+        gameVariant: "SNG",
+        tableFormat: "SIX_MAX",
+        blindSpeed: "TURBO",
+        evModel: "CHIP_EV",
+      }),
+    });
+
+    expect(upgraded.gameVariant).toBe("SNG");
+    expect(upgraded.tableFormat).toBe("SIX_MAX");
+    expect(upgraded.blindSpeed).toBe("TURBO");
+    expect(upgraded.rangePackId).toBe(
+      "sng-six-max-turbo-preflop-chip-ev-ante-off-candidate-v0",
+    );
   });
 });

@@ -17,6 +17,7 @@ import {
   type TrainingStreet,
 } from "../core/trainingProfile";
 import { currentMttPreflopRangePack } from "../data/ranges/mttPreflopRangePacks";
+import { rangePackForTrainingProfile } from "../data/ranges/trainingRangePacks";
 import type { ResultRecord } from "./statsStore";
 
 export const RESULT_RECORD_V2_SCHEMA = "result_record_v2";
@@ -57,7 +58,7 @@ export function upgradeResultRecordToV2(
     ...options.profile,
     ante,
   };
-  const pack = currentMttPreflopRangePack(profile.ante);
+  const pack = rangePackForTrainingProfile(profile) ?? currentMttPreflopRangePack(profile.ante);
 
   return {
     schema: RESULT_RECORD_V2_SCHEMA,
