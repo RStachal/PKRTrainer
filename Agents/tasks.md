@@ -341,7 +341,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Přidat metadata `sourceEvidence`, `assumptions`, `version`, `createdAt`, `verifiedAt`, `licenseNote` a `confidence`
     - Zachovat kompatibilitu s aktuálním Range_Store přes adaptér, aby dnešní MTT preflop 9-max běžel beze změny
 
-  - [ ] 22.4 Připravit workflow pro import a normalizaci chartů
+  - [x] 22.4 Připravit workflow pro import a normalizaci chartů
     - Vytvořit ruční/skriptovatelný postup: zdrojový chart → normalizace 169 hand tříd → validační report → RangePack v2 → testy integrity
     - Validovat, že každá přítomná ruka má alespoň jednu akci, raise akce mají sizing, ruce bez záznamu znamenají fold a každý RangePack nese zdrojová metadata
     - Přidat snapshot/report porovnání mezi zdroji: shody, rozdíly, finální rozhodnutí a praktické vysvětlení proč
