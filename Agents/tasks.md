@@ -412,10 +412,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Po každé akci zobrazit stručné česky psané vysvětlení: proč je akce preferovaná, jaké ruce tvoří value/bluff/check část a jak se mění plán na další streetě
 
 - [ ] 29. Statistiky, migrace a kompatibilita pro více profilů
-  - [ ] 29.1 Navrhnout `ResultRecord` v2
+  - [x] 29.1 Navrhnout `ResultRecord` v2
     - Přidat profileId, gameVariant, tableFormat, blindSpeed, street, evModel, rangePackId a source version
 
-  - [ ] 29.2 Přidat migraci statistik v1 → v2
+  - [x] 29.2 Přidat migraci statistik v1 → v2
     - Dnešní záznamy označit jako MTT/FULL_RING_9/REGULAR/PREFLOP/CHIP_EV bez změny historických výsledků
 
   - [ ] 29.3 Rozšířit dashboard
