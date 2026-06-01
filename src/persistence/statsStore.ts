@@ -97,6 +97,10 @@ export type BreakdownDim = "context" | "position" | "bucket";
 export interface StatsStore {
   /** Uloží záznam výsledku (Req 9.1); na selhání vrací `ok=false` (Req 9.6). */
   record(r: ResultRecord): SaveOutcome;
+  /** Vrátí kopii append-only event logu pro export / diagnostiku. */
+  events(): ResultRecord[];
+  /** Nahradí event log validovanou sadou záznamů (import JSON statistik). */
+  replaceAll(records: ResultRecord[]): SaveOutcome;
   /** Celkový počet a úspěšnost (Req 9.3). */
   summary(): Summary;
   /** Rozčlenění úspěšnosti podle dimenze (Req 9.4, 9.7). */
@@ -128,6 +132,24 @@ const ACTION_CONTEXTS: ActionContext[] = [
   "BVB",
   "PUSH_FOLD",
   "VS_ALLIN",
+];
+
+const ACTION_KEYS: ActionKey[] = [
+  "FOLD",
+  "CALL",
+  "LIMP",
+  "OVERLIMP",
+  "OPEN_2X",
+  "OPEN_25X",
+  "OPEN_3X",
+  "ISO_2X",
+  "ISO_25X",
+  "ISO_3X",
+  "3BET",
+  "4BET",
+  "SQUEEZE",
+  "JAM",
+  "CALL_JAM",
 ];
 
 // ---------------------------------------------------------------------------
@@ -202,17 +224,23 @@ function canonicalGroups(dim: BreakdownDim): string[] {
 }
 
 /** Type guard pro defenzivní deserializaci jednoho záznamu (Req 9.2). */
-function isValidRecord(x: unknown): x is ResultRecord {
+export function isValidResultRecord(x: unknown): x is ResultRecord {
   if (typeof x !== "object" || x === null) return false;
   const r = x as Record<string, unknown>;
   return (
     typeof r.qid === "string" &&
+    r.qid.length > 0 &&
     typeof r.chosen === "string" &&
+    (ACTION_KEYS as readonly string[]).includes(r.chosen) &&
     typeof r.correct === "boolean" &&
     typeof r.context === "string" &&
+    (ACTION_CONTEXTS as readonly string[]).includes(r.context) &&
     typeof r.position === "string" &&
+    (POSITION_ORDER as readonly string[]).includes(r.position) &&
     typeof r.bucket === "number" &&
-    typeof r.ts === "number"
+    (STACK_BUCKETS as readonly number[]).includes(r.bucket) &&
+    typeof r.ts === "number" &&
+    Number.isFinite(r.ts)
   );
 }
 
@@ -229,18 +257,18 @@ function describeError(err: unknown): string {
 class LocalStatsStore implements StatsStore {
   private readonly storage: Storage;
   /** In-memory zrcadlo `KEY_EVENTS` — jediný zdroj pravdy pro statistiky. */
-  private events: ResultRecord[];
+  private records: ResultRecord[];
 
   constructor(storage: Storage) {
     this.storage = storage;
-    this.events = this.readEvents();
+    this.records = this.readEvents();
   }
 
   record(r: ResultRecord): SaveOutcome {
     // Pořídíme si výchozí hodnotu pro případný rollback (Req 9.6).
     const priorEventsRaw = this.safeGet(KEY_EVENTS);
 
-    const nextEvents = this.events.concat(r);
+    const nextEvents = this.records.concat(r);
 
     // Serializace mimo zápis: případná chyba serializace neovlivní úložiště.
     let eventsJson: string;
@@ -269,13 +297,44 @@ class LocalStatsStore implements StatsStore {
     }
 
     // Úspěch — teprve nyní aktualizujeme in-memory zrcadlo.
-    this.events = nextEvents;
+    this.records = nextEvents;
+    return { ok: true };
+  }
+
+  events(): ResultRecord[] {
+    return this.records.map((event) => ({ ...event }));
+  }
+
+  replaceAll(records: ResultRecord[]): SaveOutcome {
+    const nextEvents = records.map((event) => ({ ...event }));
+    const priorEventsRaw = this.safeGet(KEY_EVENTS);
+    const priorStateRaw = this.safeGet(KEY_STATE);
+
+    let eventsJson: string;
+    let stateJson: string;
+    try {
+      eventsJson = JSON.stringify(nextEvents);
+      stateJson = JSON.stringify(snapshotFromEvents(nextEvents));
+    } catch (err) {
+      return { ok: false, error: describeError(err) };
+    }
+
+    try {
+      this.storage.setItem(KEY_EVENTS, eventsJson);
+      this.storage.setItem(KEY_STATE, stateJson);
+    } catch (err) {
+      this.restore(KEY_EVENTS, priorEventsRaw);
+      this.restore(KEY_STATE, priorStateRaw);
+      return { ok: false, error: describeError(err) };
+    }
+
+    this.records = nextEvents;
     return { ok: true };
   }
 
   summary(): Summary {
-    const total = this.events.length;
-    const correct = countCorrect(this.events);
+    const total = this.records.length;
+    const correct = countCorrect(this.records);
     return { total, correct, rate: successRate(total, correct) };
   }
 
@@ -288,7 +347,7 @@ class LocalStatsStore implements StatsStore {
     }
     // Uchováme pořadí: nejprve kanonické skupiny, poté případné neočekávané.
     const order: string[] = [...groups];
-    for (const e of this.events) {
+    for (const e of this.records) {
       const key = dimKeyOf(e, dim);
       let entry = agg.get(key);
       if (!entry) {
@@ -311,7 +370,7 @@ class LocalStatsStore implements StatsStore {
   }
 
   currentStreak(): number {
-    return trailingCorrect(this.events);
+    return trailingCorrect(this.records);
   }
 
   // -- Defenzivní I/O ------------------------------------------------------
@@ -323,7 +382,7 @@ class LocalStatsStore implements StatsStore {
     try {
       const parsed: unknown = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
-      return parsed.filter(isValidRecord);
+      return parsed.filter(isValidResultRecord);
     } catch {
       return [];
     }

@@ -51,6 +51,7 @@ import { KEY_EVENTS, KEY_STATE, SCHEMA_VERSION } from "./persistence/keys";
 import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
 import { renderMatrix } from "./ui/rangeMatrixView";
+import { renderRangeModalButton } from "./ui/rangeModal";
 import { renderDashboard } from "./ui/dashboard";
 import { renderHHView } from "./ui/hhView";
 import { registerServiceWorker } from "./pwa/registerSw";
@@ -546,8 +547,12 @@ function setupTraining(
     // Zobrazení výsledku, zdůvodnění a doporučení.
     renderResult(spot, result, save.ok);
 
-    // Range matice pro daný spot (Req 10).
-    renderMatrix(spot, rangeStore, matrixContainer);
+    // Range matice pro daný spot (Req 10) + legacy parity modal.
+    matrixContainer.innerHTML = "";
+    renderRangeModalButton(spot, rangeStore, matrixContainer);
+    const inlineMatrix = el("div", "training__matrix-inline");
+    matrixContainer.appendChild(inlineMatrix);
+    renderMatrix(spot, rangeStore, inlineMatrix);
   }
 
   /** Vykreslí indikaci správnosti, zdůvodnění a doporučené Akční_klíče (Req 7.4). */

@@ -61,6 +61,7 @@ import type {
   StatsStore,
   Summary,
 } from "../persistence/statsStore";
+import { buildStatsExportJson, importStatsJson } from "../persistence/statsTransfer";
 
 // ---------------------------------------------------------------------------
 // Veřejné API
@@ -259,6 +260,66 @@ function renderBreakdown(dim: BreakdownDim, breakdown: Breakdown): HTMLElement {
   return box;
 }
 
+function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElement {
+  const box = el("section", "stats-transfer");
+
+  const heading = el("h3", "stats-transfer__title");
+  heading.textContent = "Export / import statistik";
+  box.appendChild(heading);
+
+  const actions = el("div", "stats-transfer__actions");
+  const exportBtn = document.createElement("button");
+  exportBtn.type = "button";
+  exportBtn.className = "stats-export";
+  exportBtn.textContent = "Export JSON";
+
+  const importBtn = document.createElement("button");
+  importBtn.type = "button";
+  importBtn.className = "stats-import";
+  importBtn.textContent = "Import JSON";
+
+  actions.appendChild(exportBtn);
+  actions.appendChild(importBtn);
+  box.appendChild(actions);
+
+  const textarea = document.createElement("textarea");
+  textarea.className = "stats-json-box";
+  textarea.placeholder = "Export / import JSON statistik";
+  textarea.rows = 8;
+  box.appendChild(textarea);
+
+  const status = el("div", "stats-transfer__status");
+  status.setAttribute("role", "status");
+  status.hidden = true;
+  box.appendChild(status);
+
+  exportBtn.addEventListener("click", () => {
+    textarea.value = buildStatsExportJson(data.store);
+    status.hidden = false;
+    status.className = "stats-transfer__status stats-transfer__status--ok";
+    status.textContent = "Export statistik je připravený v poli JSON.";
+  });
+
+  importBtn.addEventListener("click", () => {
+    const result = importStatsJson(textarea.value, data.store);
+    status.hidden = false;
+    if (result.ok) {
+      renderDashboard(data, root);
+      const refreshedStatus = root.querySelector<HTMLElement>(".stats-transfer__status");
+      if (refreshedStatus) {
+        refreshedStatus.hidden = false;
+        refreshedStatus.className = "stats-transfer__status stats-transfer__status--ok";
+        refreshedStatus.textContent = `Importováno ${result.imported} záznamů statistik.`;
+      }
+      return;
+    }
+    status.className = "stats-transfer__status stats-transfer__status--error";
+    status.textContent = result.error ?? "Import statistik se nepodařil.";
+  });
+
+  return box;
+}
+
 // ---------------------------------------------------------------------------
 // Styly (soběstačné, aby dashboard fungoval i bez externího CSS)
 // ---------------------------------------------------------------------------
@@ -269,7 +330,7 @@ function dashboardStyles(): HTMLStyleElement {
 .dashboard{font-family:system-ui,Arial,sans-serif;color:#1b1f2a;display:flex;
   flex-direction:column;gap:16px;max-width:720px;}
 .dashboard h3{margin:0 0 8px;font-size:14px;font-weight:800;color:#2b3550;}
-.dashboard-summary,.dashboard-session,.breakdown{background:#f5f7fb;
+.dashboard-summary,.dashboard-session,.breakdown,.stats-transfer{background:#f5f7fb;
   border:1px solid #e2e7f0;border-radius:10px;padding:12px 14px;}
 .dashboard-summary .summary-total{font-size:13px;color:#48526b;}
 .dashboard-summary .summary-rate-line{margin-top:4px;font-size:18px;font-weight:800;}
@@ -285,6 +346,17 @@ function dashboardStyles(): HTMLStyleElement {
 .breakdown-row__count{color:#6b7488;font-variant-numeric:tabular-nums;}
 .breakdown-row__rate{font-weight:800;text-align:right;font-variant-numeric:tabular-nums;}
 .rate--unavailable{color:#9aa6c2;font-weight:600;}
+.stats-transfer__actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+.stats-export,.stats-import{appearance:none;border:1px solid #c8d1e3;border-radius:8px;
+  background:#fff;color:#1b1f2a;font-weight:800;font-size:13px;padding:8px 12px;
+  cursor:pointer;}
+.stats-export:hover,.stats-import:hover{border-color:#2bd576;}
+.stats-json-box{box-sizing:border-box;width:100%;min-height:140px;resize:vertical;
+  border:1px solid #c8d1e3;border-radius:8px;padding:8px 10px;font-family:ui-monospace,
+  SFMono-Regular,Consolas,monospace;font-size:12px;color:#1b1f2a;background:#fff;}
+.stats-transfer__status{margin-top:8px;font-size:12px;font-weight:700;}
+.stats-transfer__status--ok{color:#1f9d57;}
+.stats-transfer__status--error{color:#c93333;}
 `;
   return style;
 }
@@ -318,6 +390,9 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
 
   // Streak + počet spotů relace (Req 9.5).
   wrapper.appendChild(renderStreakSession(store.currentStreak(), sessionCount));
+
+  // Export/import JSON statistik (legacy parity gap).
+  wrapper.appendChild(renderStatsTransfer(data, root));
 
   // Rozčlenění podle tří dimenzí (Req 9.4, prázdné skupiny Req 9.7).
   const dims: BreakdownDim[] = ["context", "position", "bucket"];
