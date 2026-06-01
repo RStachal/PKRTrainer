@@ -65,4 +65,23 @@ describe("rangeModal - DOM", () => {
     document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
     expect(document.querySelector(".range-modal")).toBeNull();
   });
+
+  it("zamkne scroll pozadi a zavre modal klavesou Escape", () => {
+    const root = document.createElement("div");
+    document.body.appendChild(root);
+    document.body.style.overflow = "auto";
+
+    renderRangeModalButton(spot, loadedStore, root);
+    root.querySelector<HTMLButtonElement>(".range-modal-open")?.click();
+
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(document.querySelector<HTMLElement>(".range-modal__matrix")?.textContent)
+      .toContain("AKs");
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+
+    expect(document.querySelector(".range-modal")).toBeNull();
+    expect(document.body.style.overflow).toBe("auto");
+    document.body.style.overflow = "";
+  });
 });

@@ -226,11 +226,55 @@ function isSuit(ch: string): ch is Suit {
  * Hodnota se normalizuje na velké písmeno, barva na malé.
  */
 function parseCard(token: string): Card | undefined {
-  if (token.length !== 2) return undefined;
-  const rank = token[0].toUpperCase();
-  const suit = token[1].toLowerCase();
+  const normalized = normalizeCardToken(token);
+  if (normalized.length !== 2) return undefined;
+  const rank = normalized[0].toUpperCase();
+  const suit = normalized[1].toLowerCase();
   if (!isRank(rank) || !isSuit(suit)) return undefined;
   return { rank, suit };
+}
+
+function normalizeCardToken(token: string): string {
+  const trimmed = token.trim();
+  if (trimmed.length < 2) return trimmed;
+  const suit = trimmed.slice(-1);
+  const rank = trimmed.slice(0, -1).toUpperCase();
+  const suitMap: Record<string, Suit> = {
+    s: "s",
+    S: "s",
+    "\u2660": "s",
+    h: "h",
+    H: "h",
+    "\u2665": "h",
+    d: "d",
+    D: "d",
+    "\u2666": "d",
+    c: "c",
+    C: "c",
+    "\u2663": "c",
+  };
+  return `${rank}${suitMap[suit] ?? suit}`;
+}
+
+function parseCardsFromBracket(raw: string): [Card, Card] | undefined {
+  const compact = raw.trim().replace(/\s+/g, " ");
+  const spaced = compact.match(
+    /([2-9TJQKA][shdcSHDC\u2660\u2665\u2666\u2663])\s+([2-9TJQKA][shdcSHDC\u2660\u2665\u2666\u2663])/u,
+  );
+  const glued = compact.match(
+    /^([2-9TJQKA][shdcSHDC\u2660\u2665\u2666\u2663])([2-9TJQKA][shdcSHDC\u2660\u2665\u2666\u2663])$/u,
+  );
+  const match = spaced ?? glued;
+  if (!match) return undefined;
+  const c1 = parseCard(match[1]);
+  const c2 = parseCard(match[2]);
+  return c1 && c2 ? [c1, c2] : undefined;
+}
+
+function parseAmount(raw: string): number | undefined {
+  const cleaned = raw.replace(/[$€£,\s]/g, "");
+  const value = Number(cleaned);
+  return Number.isFinite(value) ? value : undefined;
 }
 
 /**
@@ -317,7 +361,9 @@ function extractHand(block: string): ParsedHand {
 
   // Hlavička s buttonem: "... Seat #3 is the button" nebo "Seat 3 is the button".
   for (const line of lines) {
-    const m = line.match(/Seat #?(\d+) is the button/i);
+    const m =
+      line.match(/Seat #?(\d+) is the button/i) ??
+      line.match(/button is in seat #?(\d+)/i);
     if (m) {
       buttonSeat = Number(m[1]);
       break;
@@ -326,12 +372,14 @@ function extractHand(block: string): ParsedHand {
 
   // Sedadla: "Seat N: Jméno (X in chips)".
   for (const line of lines) {
-    const m = line.match(/^Seat (\d+):\s+(.+?)\s+\(([\d.,]+)\s+in chips\)/i);
+    const m = line.match(
+      /^Seat (\d+):\s+(.+?)\s+\((?:\$|€|£)?([\d.,]+)(?:\s+(?:in chips|chips))?\)/i,
+    );
     if (m) {
       const seat = Number(m[1]);
       const name = m[2].trim();
-      const chips = Number(m[3].replace(/,/g, ""));
-      if (Number.isFinite(seat) && name && Number.isFinite(chips)) {
+      const chips = parseAmount(m[3]);
+      if (Number.isFinite(seat) && name && chips !== undefined) {
         seats.push({ seat, name, chips });
       }
     }
@@ -339,12 +387,10 @@ function extractHand(block: string): ParsedHand {
 
   // Karty hrdiny: "Dealt to Jméno [Ah Kd]".
   for (const line of lines) {
-    const m = line.match(/Dealt to (.+?) \[([2-9TJQKA][shdc])\s+([2-9TJQKA][shdc])\]/i);
+    const m = line.match(/Dealt to (.+?) \[(.+?)\]/iu);
     if (m) {
       heroName = m[1].trim();
-      const c1 = parseCard(m[2]);
-      const c2 = parseCard(m[3]);
-      if (c1 && c2) heroCards = [c1, c2];
+      heroCards = parseCardsFromBracket(m[2]);
       break;
     }
   }
@@ -361,20 +407,33 @@ function extractHand(block: string): ParsedHand {
 
   // Blindy a ante.
   for (const line of lines) {
-    let m = line.match(/posts small blind\s+\$?([\d.,]+)/i);
+    let m = line.match(/posts (?:the )?small blind\s+(?:\$|€|£)?([\d.,]+)/i);
     if (m) {
-      const v = Number(m[1].replace(/,/g, ""));
-      if (Number.isFinite(v)) smallBlind = v;
+      const v = parseAmount(m[1]);
+      if (v !== undefined) smallBlind = v;
       continue;
     }
-    m = line.match(/posts big blind\s+\$?([\d.,]+)/i);
+    m = line.match(/posts (?:the )?big blind\s+(?:\$|€|£)?([\d.,]+)/i);
     if (m) {
-      const v = Number(m[1].replace(/,/g, ""));
-      if (Number.isFinite(v)) bigBlind = v;
+      const v = parseAmount(m[1]);
+      if (v !== undefined) bigBlind = v;
       continue;
     }
-    if (/posts (?:the )?ante\s+\$?[\d.,]+/i.test(line)) {
+    if (/posts (?:the )?ante\s+(?:\$|€|£)?[\d.,]+/i.test(line)) {
       anteSeen = true;
+    }
+  }
+
+  if (smallBlind === undefined || bigBlind === undefined) {
+    const header = lines.find((line) =>
+      /(?:PokerStars|GAME|Hand|Tournament|Level|Blinds)/i.test(line),
+    );
+    const blindMatch = header?.match(
+      /(?:^|[,( -])(?:Blinds\s*)?(\d+(?:[.,]\d+)?)\/(\d+(?:[.,]\d+)?)(?:\)|,|\s|$)/i,
+    );
+    if (blindMatch) {
+      smallBlind ??= parseAmount(blindMatch[1]);
+      bigBlind ??= parseAmount(blindMatch[2]);
     }
   }
 
@@ -382,8 +441,10 @@ function extractHand(block: string): ParsedHand {
   const holeIdx = block.indexOf("*** HOLE CARDS ***");
   const heroPreActions: string[] = [];
   const actionsBeforeHero: string[] = [];
-  if (holeIdx !== -1 && heroName) {
-    const afterHole = block.slice(holeIdx);
+  if (heroName) {
+    const dealtIdx = block.indexOf("Dealt to");
+    const startIdx = holeIdx !== -1 ? holeIdx : dealtIdx;
+    const afterHole = startIdx !== -1 ? block.slice(startIdx) : block;
     const iFlop = afterHole.indexOf("*** FLOP ***");
     const iSummary = afterHole.indexOf("*** SUMMARY ***");
     let end = afterHole.length;

@@ -17,6 +17,7 @@ export function renderRangeModalButton(
 }
 
 function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
+  const previousOverflow = doc.body.style.overflow;
   const overlay = doc.createElement("div");
   overlay.className = "range-modal";
   overlay.setAttribute("role", "dialog");
@@ -56,28 +57,39 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   const style = doc.createElement("style");
   style.textContent = `
 .range-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;
-  justify-content:center;padding:18px;font-family:system-ui,Arial,sans-serif;}
+  justify-content:center;padding:clamp(8px,2vw,18px);font-family:system-ui,Arial,sans-serif;}
 .range-modal__backdrop{position:absolute;inset:0;border:0;background:rgba(5,8,14,.78);
   cursor:pointer;}
 .range-modal__dialog{position:relative;z-index:1;box-sizing:border-box;width:min(940px,100%);
-  max-height:92vh;overflow:auto;background:#11151f;color:#e8ecf7;border:1px solid
+  max-height:min(92vh,92dvh);overflow:auto;background:#11151f;color:#e8ecf7;border:1px solid
   rgba(255,255,255,.16);border-radius:10px;padding:14px 16px 18px;box-shadow:
   0 24px 80px rgba(0,0,0,.5);}
 .range-modal__header{display:flex;align-items:center;justify-content:space-between;
-  gap:12px;margin-bottom:12px;}
+  gap:12px;margin-bottom:12px;position:sticky;top:0;z-index:2;background:#11151f;
+  padding-bottom:10px;}
 .range-modal__title{margin:0;font-size:16px;font-weight:900;letter-spacing:0;}
 .range-modal__close,.range-modal-open{appearance:none;border:1px solid rgba(255,255,255,.18);
   border-radius:8px;background:#1b2333;color:#e8ecf7;font-weight:800;font-size:13px;
   padding:8px 12px;cursor:pointer;}
 .range-modal__close:hover,.range-modal-open:hover{border-color:#2bd576;}
+.range-modal__matrix{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
+.range-modal__matrix .matrix{min-width:620px;}
 .range-modal__matrix .matrix-cell{min-height:22px;display:flex;align-items:center;
   justify-content:center;}
 .range-modal-open{margin-bottom:10px;}
+@media (max-width:640px){
+  .range-modal{align-items:stretch;}
+  .range-modal__dialog{width:100%;max-height:min(96vh,96dvh);padding:10px 10px 14px;}
+  .range-modal__title{font-size:14px;}
+  .range-modal__close{padding:8px 10px;}
+  .range-modal__matrix .matrix{min-width:560px;}
+}
 `;
   overlay.appendChild(style);
 
   const closeModal = (): void => {
     doc.removeEventListener("keydown", handleKeydown);
+    doc.body.style.overflow = previousOverflow;
     overlay.remove();
   };
   const handleKeydown = (event: KeyboardEvent): void => {
@@ -87,6 +99,7 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   backdrop.addEventListener("click", closeModal);
   close.addEventListener("click", closeModal);
   doc.addEventListener("keydown", handleKeydown);
+  doc.body.style.overflow = "hidden";
   doc.body.appendChild(overlay);
   close.focus();
 }

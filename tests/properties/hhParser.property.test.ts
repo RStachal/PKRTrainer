@@ -154,4 +154,55 @@ describe("hhParser - total parser properties", () => {
     expect(result.unreadableFields).toEqual(HH_FIELDS);
     expect(result.errors.join(" ")).toContain(String(MAX_INPUT_LENGTH));
   });
+
+  it("podporuje bezne odchylky HH: currency stacks, unicode karty, header blindy a alternativni button", () => {
+    const seats = Array.from({ length: 9 }, (_, i) => {
+      const seat = i + 1;
+      const name = seat === 8 ? "Hero" : `Villain${seat}`;
+      return `Seat ${seat}: ${name} ($1,000)`;
+    }).join("\n");
+    const text = [
+      "PokerStars Hand #2: Tournament #2 - Level II (10/20)",
+      "Table 'Alt' 9-max button is in seat #1",
+      seats,
+      "*** HOLE CARDS ***",
+      "Dealt to Hero [A♠ K♦]",
+      "Hero: folds",
+      "*** SUMMARY ***",
+    ].join("\n");
+
+    const result = parseHandHistory(text);
+
+    expect(result.ok).toBe(true);
+    expect(result.fields.position).toBe("HJ");
+    expect(result.fields.effStackBucket).toBe(50);
+    expect(result.spot?.hand).toBe("AKo");
+  });
+
+  it("podporuje slepene tokeny karet a akce bez HOLE CARDS sekce", () => {
+    const seats = Array.from({ length: 9 }, (_, i) => {
+      const seat = i + 1;
+      const name = seat === 7 ? "Hero" : `Villain${seat}`;
+      return `Seat ${seat}: ${name} (750 chips)`;
+    }).join("\n");
+    const text = [
+      "GAME #3 - Blinds 10/20",
+      "Seat #1 is the button",
+      seats,
+      "Villain2: posts the small blind 10",
+      "Villain3: posts the big blind 20",
+      "Dealt to Hero [AsKs]",
+      "Villain4: raises 40 to 60",
+      "Hero: calls 60",
+      "*** FLOP *** [2c 7d Jh]",
+    ].join("\n");
+
+    const result = parseHandHistory(text);
+
+    expect(result.ok).toBe(true);
+    expect(result.fields.position).toBe("LJ");
+    expect(result.fields.actions).toEqual(["calls 60"]);
+    expect(result.spot?.context).toBe("VS_OPEN");
+    expect(result.spot?.hand).toBe("AKs");
+  });
 });
