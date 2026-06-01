@@ -1,5 +1,7 @@
 import type { Spot } from "../core/types";
 import type { RangeStore } from "../data/rangeStore";
+import { currentMttPreflopRangePack } from "../data/ranges/mttPreflopRangePacks";
+import type { RangePack } from "../data/ranges/rangePack";
 import { renderMatrix } from "./rangeMatrixView";
 
 export function renderRangeModalButton(
@@ -49,6 +51,8 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   close.textContent = "Zavřít";
   header.appendChild(close);
 
+  dialog.appendChild(renderRangePackEvidence(doc, currentMttPreflopRangePack(spot.ante)));
+
   const matrix = doc.createElement("div");
   matrix.className = "range-modal__matrix";
   dialog.appendChild(matrix);
@@ -72,6 +76,13 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   border-radius:8px;background:#1b2333;color:#e8ecf7;font-weight:800;font-size:13px;
   padding:8px 12px;cursor:pointer;}
 .range-modal__close:hover,.range-modal-open:hover{border-color:#2bd576;}
+.range-modal__evidence{display:grid;gap:6px;margin:0 0 12px;padding:10px;border:1px solid
+  rgba(255,255,255,.12);border-radius:8px;background:#151b29;color:#cbd5e1;font-size:12px;}
+.range-modal__evidence-title{font-weight:900;color:#e8ecf7;}
+.range-modal__evidence-meta,.range-modal__evidence-assumptions,
+  .range-modal__evidence-sources{line-height:1.35;}
+.range-modal__evidence a{color:#9ee7c2;text-decoration:none;}
+.range-modal__evidence a:hover{text-decoration:underline;}
 .range-modal__matrix{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
 .range-modal__matrix .matrix{min-width:620px;}
 .range-modal__matrix .matrix-cell{min-height:22px;display:flex;align-items:center;
@@ -102,4 +113,42 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   doc.body.style.overflow = "hidden";
   doc.body.appendChild(overlay);
   close.focus();
+}
+
+function renderRangePackEvidence(doc: Document, pack: RangePack): HTMLElement {
+  const section = doc.createElement("section");
+  section.className = "range-modal__evidence";
+  section.setAttribute("aria-label", "Zdroj range");
+
+  const title = doc.createElement("div");
+  title.className = "range-modal__evidence-title";
+  title.textContent = "RangePack";
+  section.appendChild(title);
+
+  const meta = doc.createElement("div");
+  meta.className = "range-modal__evidence-meta";
+  meta.textContent =
+    `${pack.id} | v${pack.version} | ${pack.dimensions.evModel} | ` +
+    `${pack.dimensions.tableFormat} | ověřeno ${pack.verifiedAt}`;
+  section.appendChild(meta);
+
+  const assumptions = doc.createElement("div");
+  assumptions.className = "range-modal__evidence-assumptions";
+  assumptions.textContent = `Assumptions: ${pack.assumptions.join(" ")}`;
+  section.appendChild(assumptions);
+
+  const sources = doc.createElement("div");
+  sources.className = "range-modal__evidence-sources";
+  sources.textContent = "Zdroje: ";
+  pack.sourceEvidence.forEach((source, index) => {
+    if (index > 0) sources.appendChild(doc.createTextNode(", "));
+    const link = doc.createElement("a");
+    link.href = source.url;
+    link.textContent = source.provider;
+    link.rel = "noreferrer";
+    sources.appendChild(link);
+  });
+  section.appendChild(sources);
+
+  return section;
 }

@@ -61,6 +61,11 @@ describe("rangeModal - DOM", () => {
     expect(document.querySelectorAll(".range-modal .matrix-cell")).toHaveLength(169);
     expect(document.querySelector<HTMLElement>(".range-modal .matrix-cell--hero")?.dataset.hand)
       .toBe("AKs");
+    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
+      .toContain("mtt-full-ring-9-regular-preflop-chip-ev-ante-off-v1");
+    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
+      .toContain("CHIP_EV");
+    expect(document.querySelectorAll(".range-modal__evidence a")).toHaveLength(2);
 
     document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
     expect(document.querySelector(".range-modal")).toBeNull();

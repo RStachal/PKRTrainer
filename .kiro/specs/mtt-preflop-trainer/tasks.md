@@ -425,7 +425,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 30.1 Přidat profile selector
     - Umožnit volit MTT/SNG/CASH, 9-max/6-max, regular/turbo, preflop/flop/turn/river a scoring režim bez rozbití dnešního jednoduchého startu
 
-  - [ ] 30.2 Rozšířit range modal o zdroj a assumptions
+  - [x] 30.2 Rozšířit range modal o zdroj a assumptions
     - U každé zobrazené range ukázat RangePack verzi, datum ověření, zdrojový souhrn a poznámku, zda jde o chipEV nebo ICM
 
   - [ ] 30.3 Zachovat české UX a offline-first provoz
