@@ -73,7 +73,7 @@ describe("rangeModal - DOM", () => {
       .toContain("Předpoklady:");
     expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
       .not.toContain("Assumptions");
-    expect(document.querySelectorAll(".range-modal__evidence a")).toHaveLength(2);
+    expect(document.querySelectorAll(".range-modal__evidence a")).toHaveLength(5);
 
     document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
     expect(document.querySelector(".range-modal")).toBeNull();

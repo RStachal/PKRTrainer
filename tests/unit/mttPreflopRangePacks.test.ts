@@ -29,9 +29,18 @@ describe("mttPreflopRangePacks", () => {
         evModel: "CHIP_EV",
         rakeMode: "NONE",
       });
-      expect(pack.searchQueries).toHaveLength(3);
-      expect(pack.sourceEvidence.length).toBeGreaterThanOrEqual(2);
+      expect(pack.searchQueries).toHaveLength(4);
+      expect(pack.searchQueries.join(" ")).toContain("turbo");
+      expect(pack.sourceEvidence.length).toBeGreaterThanOrEqual(5);
+      expect(pack.sourceEvidence.map((source) => source.provider)).toEqual([
+        "GTO Wizard",
+        "Poker Academy",
+        "GTO Sims",
+        "GTOBase",
+        "PokerCoaching",
+      ]);
       expect(pack.assumptions.join(" ")).toContain("converted without changing recommendations");
+      expect(pack.assumptions.join(" ")).toContain("Turbo currently changes blind schedule");
     }
   });
 
