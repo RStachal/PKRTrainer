@@ -50,6 +50,8 @@ describe("bootstrap - inicializacni tok", () => {
     bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
     expect(root.querySelector(".filters")).not.toBeNull();
+    expect(root.querySelector('[data-tab="postflop"]')).not.toBeNull();
+    expect(root.querySelector(".postflop-view")).not.toBeNull();
     expect(root.querySelector(".filter-start")).not.toBeNull();
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
     expect(root.querySelector(".poker-table")).toBeNull();

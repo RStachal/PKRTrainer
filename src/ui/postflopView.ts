@@ -1,0 +1,245 @@
+import {
+  generatePostflopSpot,
+  type BoardTexture,
+  type PostflopSpot,
+  type PostflopStreet,
+} from "../core/postflopGenerator";
+import type { Card, Suit } from "../core/types";
+
+const SEED_MAX = 0xffffffff;
+
+const STREET_LABEL: Record<PostflopStreet, string> = {
+  FLOP: "Flop",
+  TURN: "Turn",
+  RIVER: "River",
+};
+
+const TEXTURE_LABEL: Record<BoardTexture, string> = {
+  paired: "Spárovaný",
+  monotone: "Monotone",
+  "two-tone": "Two-tone",
+  rainbow: "Rainbow",
+  connected: "Propojený",
+  dry: "Suchý",
+};
+
+const SUIT_SYMBOL: Record<Suit, string> = {
+  s: "\u2660",
+  h: "\u2665",
+  d: "\u2666",
+  c: "\u2663",
+};
+
+const SUIT_CLASS: Record<Suit, string> = {
+  s: "card--spade",
+  h: "card--heart",
+  d: "card--diamond",
+  c: "card--club",
+};
+
+export function renderPostflopView(root: HTMLElement): void {
+  const doc = root.ownerDocument ?? document;
+  root.innerHTML = "";
+
+  const wrap = doc.createElement("div");
+  wrap.className = "postflop-view";
+  wrap.appendChild(styles(doc));
+
+  const controls = doc.createElement("div");
+  controls.className = "postflop-controls";
+
+  const streetLabel = doc.createElement("label");
+  streetLabel.className = "postflop-field";
+  const streetText = doc.createElement("span");
+  streetText.textContent = "Street";
+  const streetSelect = doc.createElement("select");
+  streetSelect.className = "postflop-street";
+  for (const street of ["FLOP", "TURN", "RIVER"] as const) {
+    const opt = doc.createElement("option");
+    opt.value = street;
+    opt.textContent = STREET_LABEL[street];
+    streetSelect.appendChild(opt);
+  }
+  streetSelect.value = "FLOP";
+  streetLabel.appendChild(streetText);
+  streetLabel.appendChild(streetSelect);
+
+  const seedLabel = doc.createElement("label");
+  seedLabel.className = "postflop-field";
+  const seedText = doc.createElement("span");
+  seedText.textContent = "Seed";
+  const seedInput = doc.createElement("input");
+  seedInput.className = "postflop-seed";
+  seedInput.type = "text";
+  seedInput.inputMode = "numeric";
+  seedInput.placeholder = "náhodný";
+  seedLabel.appendChild(seedText);
+  seedLabel.appendChild(seedInput);
+
+  const generate = doc.createElement("button");
+  generate.type = "button";
+  generate.className = "postflop-generate";
+  generate.textContent = "Generovat spot";
+
+  controls.appendChild(streetLabel);
+  controls.appendChild(seedLabel);
+  controls.appendChild(generate);
+  wrap.appendChild(controls);
+
+  const output = doc.createElement("div");
+  output.className = "postflop-output";
+  wrap.appendChild(output);
+
+  const showNewSpot = (): void => {
+    const seed = parseSeed(seedInput.value) ?? randomSeed();
+    seedInput.value = String(seed);
+    const street = parseStreet(streetSelect.value);
+    const spot = generatePostflopSpot({ seed, street });
+    renderSpot(output, spot);
+  };
+
+  generate.addEventListener("click", showNewSpot);
+  root.appendChild(wrap);
+  showNewSpot();
+}
+
+function renderSpot(root: HTMLElement, spot: PostflopSpot): void {
+  const doc = root.ownerDocument ?? document;
+  root.innerHTML = "";
+
+  const meta = doc.createElement("div");
+  meta.className = "postflop-meta";
+  meta.dataset.seed = String(spot.seed);
+  meta.dataset.street = spot.street;
+  meta.textContent =
+    `${STREET_LABEL[spot.street]} · seed ${spot.seed} · pot ${spot.potBB} BB · ` +
+    `eff. stack ${spot.effectiveStackBB} BB`;
+  root.appendChild(meta);
+
+  const cards = doc.createElement("div");
+  cards.className = "postflop-cards";
+  cards.appendChild(cardGroup(doc, "Hero", spot.heroCards));
+  cards.appendChild(cardGroup(doc, "Board", spot.board));
+  root.appendChild(cards);
+
+  const textures = doc.createElement("div");
+  textures.className = "postflop-textures";
+  for (const texture of spot.textures) {
+    const chip = doc.createElement("span");
+    chip.className = "postflop-texture";
+    chip.dataset.texture = texture;
+    chip.textContent = TEXTURE_LABEL[texture];
+    textures.appendChild(chip);
+  }
+  root.appendChild(textures);
+
+  const actions = doc.createElement("div");
+  actions.className = "postflop-actions";
+  for (const action of spot.actions) {
+    const btn = doc.createElement("button");
+    btn.type = "button";
+    btn.className = "postflop-action";
+    btn.dataset.action = action;
+    btn.textContent = actionLabel(action);
+    actions.appendChild(btn);
+  }
+  root.appendChild(actions);
+}
+
+function cardGroup(doc: Document, title: string, cards: readonly Card[]): HTMLElement {
+  const group = doc.createElement("div");
+  group.className = "postflop-card-group";
+  const label = doc.createElement("div");
+  label.className = "postflop-card-group__label";
+  label.textContent = title;
+  group.appendChild(label);
+  const row = doc.createElement("div");
+  row.className = "postflop-card-row";
+  for (const card of cards) row.appendChild(cardElement(doc, card));
+  group.appendChild(row);
+  return group;
+}
+
+function cardElement(doc: Document, card: Card): HTMLElement {
+  const el = doc.createElement("div");
+  el.className = `postflop-card ${SUIT_CLASS[card.suit]}`;
+  el.dataset.card = `${card.rank}${card.suit}`;
+  el.textContent = `${card.rank}${SUIT_SYMBOL[card.suit]}`;
+  return el;
+}
+
+function actionLabel(action: PostflopSpot["actions"][number]): string {
+  switch (action) {
+    case "CHECK":
+      return "Check";
+    case "BET_SMALL":
+      return "Bet malý";
+    case "BET_BIG":
+      return "Bet velký";
+  }
+}
+
+function parseStreet(value: string): PostflopStreet {
+  return value === "TURN" || value === "RIVER" ? value : "FLOP";
+}
+
+function parseSeed(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (trimmed === "") return null;
+  const n = Number(trimmed);
+  if (!Number.isInteger(n) || n < 0 || n > SEED_MAX) return null;
+  return n;
+}
+
+function randomSeed(): number {
+  if (typeof crypto !== "undefined" && "getRandomValues" in crypto) {
+    const buf = new Uint32Array(1);
+    crypto.getRandomValues(buf);
+    return buf[0];
+  }
+  return Math.floor(Math.random() * (SEED_MAX + 1));
+}
+
+function styles(doc: Document): HTMLStyleElement {
+  const style = doc.createElement("style");
+  style.textContent = `
+.postflop-view{font-family:system-ui,Arial,sans-serif;color:#e8ecf7;max-width:860px;
+  margin:0 auto;}
+.postflop-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
+  background:#11151f;border:1px solid rgba(255,255,255,.08);border-radius:10px;
+  padding:12px 14px;margin-bottom:14px;}
+.postflop-field{display:flex;flex-direction:column;gap:4px;font-size:12px;
+  color:#9aa6c2;font-weight:700;}
+.postflop-street,.postflop-seed{box-sizing:border-box;min-width:130px;border:1px solid
+  rgba(255,255,255,.18);border-radius:8px;background:#1b2333;color:#e8ecf7;
+  font-size:14px;padding:8px 10px;}
+.postflop-generate{appearance:none;border:0;border-radius:8px;background:#2bd576;
+  color:#0c3526;font-weight:900;font-size:14px;padding:9px 14px;cursor:pointer;}
+.postflop-output{background:#0f1520;border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;padding:14px;}
+.postflop-meta{font-size:13px;color:#9aa6c2;font-weight:700;margin-bottom:12px;}
+.postflop-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+.postflop-card-group__label{font-size:12px;color:#9aa6c2;font-weight:800;margin-bottom:6px;}
+.postflop-card-row{display:flex;flex-wrap:wrap;gap:6px;}
+.postflop-card{width:42px;height:56px;border-radius:8px;background:#fff;display:flex;
+  align-items:center;justify-content:center;font-weight:900;font-size:18px;
+  box-shadow:0 3px 12px rgba(0,0,0,.22);}
+.card--spade{color:#171b24}.card--heart{color:#d93030}.card--diamond{color:#246bd6}
+.card--club{color:#15814b}
+.postflop-textures{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;}
+.postflop-texture{font-size:12px;font-weight:800;border-radius:999px;padding:5px 8px;
+  background:rgba(123,211,255,.13);border:1px solid rgba(123,211,255,.35);
+  color:#bfe9ff;}
+.postflop-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+.postflop-action{appearance:none;border:1px solid rgba(255,255,255,.18);
+  border-radius:8px;background:#1b2333;color:#e8ecf7;font-size:13px;font-weight:800;
+  padding:8px 12px;}
+@media (max-width:640px){
+  .postflop-controls{align-items:stretch;}
+  .postflop-field,.postflop-generate{width:100%;}
+  .postflop-street,.postflop-seed{width:100%;}
+  .postflop-cards{grid-template-columns:1fr;}
+}
+`;
+  return style;
+}

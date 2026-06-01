@@ -54,6 +54,7 @@ import { renderMatrix } from "./ui/rangeMatrixView";
 import { renderRangeModalButton } from "./ui/rangeModal";
 import { renderDashboard } from "./ui/dashboard";
 import { renderHHView } from "./ui/hhView";
+import { renderPostflopView } from "./ui/postflopView";
 import { registerServiceWorker } from "./pwa/registerSw";
 
 // ---------------------------------------------------------------------------
@@ -233,6 +234,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
     renderStorageError(shell.trainingPanel);
     // HH import nezávisí na úložišti — necháme ho funkční.
     renderHHView(shell.hhPanel);
+    renderPostflopView(shell.postflopPanel);
     return;
   }
 
@@ -241,6 +243,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
     // Req 14.6: nelze získat platný stav pod verzovanými klíči.
     renderStorageError(shell.trainingPanel);
     renderHHView(shell.hhPanel);
+    renderPostflopView(shell.postflopPanel);
     return;
   }
 
@@ -263,6 +266,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   };
   refreshDashboard();
   renderHHView(shell.hhPanel);
+  renderPostflopView(shell.postflopPanel);
 
   // --- Krok 3: načtení Range_Store (Req 4.6) ---
   if (!isRangeDataLoaded()) {
@@ -301,10 +305,11 @@ interface AppShell {
   trainingPanel: HTMLElement;
   statsPanel: HTMLElement;
   hhPanel: HTMLElement;
+  postflopPanel: HTMLElement;
 }
 
 /** Identifikátory záložek. */
-type TabId = "training" | "stats" | "hh";
+type TabId = "training" | "stats" | "hh" | "postflop";
 
 /**
  * Sestaví statickou kostru aplikace: hlavičku s názvem, navigaci záložek,
@@ -339,17 +344,20 @@ function buildAppShell(root: HTMLElement): AppShell {
   const trainingPanel = el("section", "app__panel app__panel--training");
   const statsPanel = el("section", "app__panel app__panel--stats");
   const hhPanel = el("section", "app__panel app__panel--hh");
+  const postflopPanel = el("section", "app__panel app__panel--postflop");
 
   const panels: Record<TabId, HTMLElement> = {
     training: trainingPanel,
     stats: statsPanel,
     hh: hhPanel,
+    postflop: postflopPanel,
   };
 
   const tabDefs: { id: TabId; label: string }[] = [
     { id: "training", label: "Trénink" },
     { id: "stats", label: "Statistiky" },
     { id: "hh", label: "Import HH" },
+    { id: "postflop", label: "Postflop" },
   ];
 
   const tabButtons = new Map<TabId, HTMLButtonElement>();
@@ -380,13 +388,14 @@ function buildAppShell(root: HTMLElement): AppShell {
   app.appendChild(trainingPanel);
   app.appendChild(statsPanel);
   app.appendChild(hhPanel);
+  app.appendChild(postflopPanel);
 
   root.appendChild(app);
 
   // Výchozí záložka: Trénink.
   selectTab("training");
 
-  return { notice, trainingPanel, statsPanel, hhPanel };
+  return { notice, trainingPanel, statsPanel, hhPanel, postflopPanel };
 }
 
 // ---------------------------------------------------------------------------
