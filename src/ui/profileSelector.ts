@@ -85,7 +85,7 @@ export function renderProfileSelector(
   const note = doc.createElement("div");
   note.className = "profile-selector__note";
   note.textContent =
-    "Aktuálně je produkčně zapojený MTT 9-max preflop chipEV; ostatní volby připravují další rozšíření.";
+    "Aktuálně je produkčně zapojený MTT 9-max preflop chipEV; ostatní volby připravují další rozšíření. Data a metadata jsou součástí offline bundlu.";
   wrap.appendChild(note);
 
   root.appendChild(wrap);

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { renderRangeModalButton } from "../../src/ui/rangeModal";
 import type { RangeStore } from "../../src/data/rangeStore";
@@ -49,6 +49,10 @@ const loadedStore: RangeStore = {
   }),
 };
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe("rangeModal - DOM", () => {
   it("otevre Flopzilla-style modal s range matici a zavre jej", () => {
     const root = document.createElement("div");
@@ -65,6 +69,10 @@ describe("rangeModal - DOM", () => {
       .toContain("mtt-full-ring-9-regular-preflop-chip-ev-ante-off-v1");
     expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
       .toContain("CHIP_EV");
+    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
+      .toContain("Předpoklady:");
+    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
+      .not.toContain("Assumptions");
     expect(document.querySelectorAll(".range-modal__evidence a")).toHaveLength(2);
 
     document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
@@ -88,5 +96,22 @@ describe("rangeModal - DOM", () => {
     expect(document.querySelector(".range-modal")).toBeNull();
     expect(document.body.style.overflow).toBe("auto");
     document.body.style.overflow = "";
+  });
+
+  it("vykresli range evidence z bundlu bez runtime fetch", () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const root = document.createElement("div");
+    document.body.appendChild(root);
+
+    renderRangeModalButton(spot, loadedStore, root);
+    root.querySelector<HTMLButtonElement>(".range-modal-open")?.click();
+
+    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
+      .toContain("Zdroje:");
+    expect(fetchSpy).not.toHaveBeenCalled();
+
+    document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
   });
 });

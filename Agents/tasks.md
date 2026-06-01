@@ -411,7 +411,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 28.3 Přidat praktické vysvětlení po odpovědi
     - Po každé akci zobrazit stručné česky psané vysvětlení: proč je akce preferovaná, jaké ruce tvoří value/bluff/check část a jak se mění plán na další streetě
 
-- [ ] 29. Statistiky, migrace a kompatibilita pro více profilů
+- [x] 29. Statistiky, migrace a kompatibilita pro více profilů
   - [x] 29.1 Navrhnout `ResultRecord` v2
     - Přidat profileId, gameVariant, tableFormat, blindSpeed, street, evModel, rangePackId a source version
 
@@ -421,14 +421,14 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 29.3 Rozšířit dashboard
     - Filtrovat a seskupovat podle varianty, formátu, speedu, streety, pozice, stacku a akčního node
 
-- [ ] 30. UI pro výběr režimu a range evidence
+- [x] 30. UI pro výběr režimu a range evidence
   - [x] 30.1 Přidat profile selector
     - Umožnit volit MTT/SNG/CASH, 9-max/6-max, regular/turbo, preflop/flop/turn/river a scoring režim bez rozbití dnešního jednoduchého startu
 
   - [x] 30.2 Rozšířit range modal o zdroj a assumptions
     - U každé zobrazené range ukázat RangePack verzi, datum ověření, zdrojový souhrn a poznámku, zda jde o chipEV nebo ICM
 
-  - [ ] 30.3 Zachovat české UX a offline-first provoz
+  - [x] 30.3 Zachovat české UX a offline-first provoz
     - Všechny nové texty česky; data a metadata součástí bundlu; žádné runtime tahání chartů z internetu v offline aplikaci
 
 - [ ] 31. Ověření a release disciplina pro navazující fáze

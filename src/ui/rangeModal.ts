@@ -134,7 +134,7 @@ function renderRangePackEvidence(doc: Document, pack: RangePack): HTMLElement {
 
   const assumptions = doc.createElement("div");
   assumptions.className = "range-modal__evidence-assumptions";
-  assumptions.textContent = `Assumptions: ${pack.assumptions.join(" ")}`;
+  assumptions.textContent = `Předpoklady: ${pack.assumptions.join(" ")}`;
   section.appendChild(assumptions);
 
   const sources = doc.createElement("div");
@@ -145,7 +145,7 @@ function renderRangePackEvidence(doc: Document, pack: RangePack): HTMLElement {
     const link = doc.createElement("a");
     link.href = source.url;
     link.textContent = source.provider;
-    link.rel = "noreferrer";
+    link.rel = "noreferrer noopener";
     sources.appendChild(link);
   });
   section.appendChild(sources);
