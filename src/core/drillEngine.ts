@@ -644,6 +644,29 @@ const POOL_MAX_CONSECUTIVE_MISSES = 50_000;
 const POOL_MAX_SIZE = 20_000;
 
 /**
+ * Volitelné limity pro sestavení Poolu.
+ *
+ * Ve výchozím běhu se používají produkční konstanty výše, takže existující
+ * chování aplikace zůstává beze změny. Menší hodnoty jsou užitečné pro cílené
+ * testy determinismu, kde nepotřebujeme vyčerpat celý prostor kombinací.
+ */
+export interface PoolBuildOptions {
+  maxConsecutiveMisses?: number;
+  maxSize?: number;
+}
+
+function poolLimitOptions(options: PoolBuildOptions = {}): {
+  maxConsecutiveMisses: number;
+  maxSize: number;
+} {
+  return {
+    maxConsecutiveMisses:
+      options.maxConsecutiveMisses ?? POOL_MAX_CONSECUTIVE_MISSES,
+    maxSize: options.maxSize ?? POOL_MAX_SIZE,
+  };
+}
+
+/**
  * Odvodí 32-bit seed pro `mulberry32` z uživatelského `seed` a kategorie.
  *
  * Bez promíchání s kontextem by stejný `seed` produkoval pro všechny kategorie
@@ -714,16 +737,18 @@ export function buildPool(
   context: ActionContext,
   filters: Filters,
   store: RangeStore = rangeStore,
+  options: PoolBuildOptions = {},
 ): Spot[] {
   const rng = mulberry32(derivePoolSeed(seed, context));
+  const limits = poolLimitOptions(options);
 
   const pool: Spot[] = [];
   const seen = new Set<string>();
   let consecutiveMisses = 0;
 
   while (
-    consecutiveMisses < POOL_MAX_CONSECUTIVE_MISSES &&
-    pool.length < POOL_MAX_SIZE
+    consecutiveMisses < limits.maxConsecutiveMisses &&
+    pool.length < limits.maxSize
   ) {
     const spot = generateSpot(rng, context, filters, store);
 
@@ -799,13 +824,14 @@ function contextsForSequence(filters: Filters): ActionContext[] {
 function buildCombinedPool(
   cfg: SessionConfig,
   store: RangeStore,
+  options: PoolBuildOptions = {},
 ): Spot[] {
   const contexts = contextsForSequence(cfg.filters);
   const combined: Spot[] = [];
   const seen = new Set<string>();
 
   for (const context of contexts) {
-    const pool = buildPool(cfg.seed, context, cfg.filters, store);
+    const pool = buildPool(cfg.seed, context, cfg.filters, store, options);
     for (const spot of pool) {
       // Deduplikace napříč kontexty: každé Question_ID nejvýše jednou v rámci
       // jednoho průchodu (Req 6.5 / Property 17).
@@ -866,10 +892,11 @@ function buildCombinedPool(
 export function spotSequence(
   cfg: SessionConfig,
   store: RangeStore = rangeStore,
+  options: PoolBuildOptions = {},
 ): Iterable<Spot> {
   // Pool sestavíme JEDNOU před cyklením (ne opakovaně), aby cyklení dávalo
   // identické pořadí a bylo levné.
-  const pool = buildCombinedPool(cfg, store);
+  const pool = buildCombinedPool(cfg, store, options);
 
   return (function* cycle(): Generator<Spot, void, unknown> {
     // Edge case: prázdný Pool ⇒ žádný yield, žádná nekonečná smyčka naprázdno.

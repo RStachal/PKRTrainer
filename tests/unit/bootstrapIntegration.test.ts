@@ -1,0 +1,94 @@
+// @vitest-environment jsdom
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+class MemoryStorage implements Storage {
+  protected readonly data = new Map<string, string>();
+
+  get length(): number {
+    return this.data.size;
+  }
+
+  clear(): void {
+    this.data.clear();
+  }
+
+  getItem(key: string): string | null {
+    return this.data.get(key) ?? null;
+  }
+
+  key(index: number): string | null {
+    return Array.from(this.data.keys())[index] ?? null;
+  }
+
+  removeItem(key: string): void {
+    this.data.delete(key);
+  }
+
+  setItem(key: string, value: string): void {
+    this.data.set(key, String(value));
+  }
+}
+
+class BrokenWriteStorage extends MemoryStorage {
+  override setItem(_key: string, _value: string): void {
+    throw new Error("write denied");
+  }
+}
+
+describe("bootstrap - inicializacni tok", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+    vi.doUnmock("../../src/data/ranges");
+    vi.restoreAllMocks();
+    vi.resetModules();
+  });
+
+  it("zobrazi filtry a pred explicitnim startem negeneruje spot", async () => {
+    const { bootstrap } = await importFreshMain();
+    const root = document.createElement("div");
+
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+
+    expect(root.querySelector(".filters")).not.toBeNull();
+    expect(root.querySelector(".filter-start")).not.toBeNull();
+    expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
+    expect(root.querySelector(".poker-table")).toBeNull();
+  });
+
+  it("pri nekonzistentnim ulozisti zobrazi blokujici chybu a relaci nespusti", async () => {
+    const { bootstrap } = await importFreshMain();
+    const root = document.createElement("div");
+
+    bootstrap({ root, storage: new BrokenWriteStorage(), registerSw: false });
+
+    expect(root.querySelector(".fatal")?.textContent).toContain("Nekonzistent");
+    expect(root.querySelector(".filter-start")).toBeNull();
+    expect(root.querySelector(".poker-table")).toBeNull();
+  });
+
+  it("pri nedostupnem Range_Store zobrazi blokujici chybu a relaci nespusti", async () => {
+    vi.doMock("../../src/data/ranges", async (importOriginal) => {
+      const actual = await importOriginal<typeof import("../../src/data/ranges")>();
+      return {
+        ...actual,
+        getRangeDataErrors: () => ["simulated range load failure"],
+        isRangeDataLoaded: () => false,
+      };
+    });
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { bootstrap } = await importFreshMain();
+    const root = document.createElement("div");
+
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+
+    expect(root.querySelector(".fatal")?.textContent).toContain("ranges");
+    expect(root.querySelector(".filter-start")).toBeNull();
+    expect(root.querySelector(".poker-table")).toBeNull();
+  });
+});
+
+async function importFreshMain(): Promise<typeof import("../../src/main")> {
+  document.body.innerHTML = "";
+  vi.resetModules();
+  return import("../../src/main");
+}

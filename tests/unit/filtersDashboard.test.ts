@@ -1,0 +1,109 @@
+// @vitest-environment jsdom
+import { describe, it, expect } from "vitest";
+
+import { createStatsStore, type ResultRecord } from "../../src/persistence/statsStore";
+import { renderDashboard } from "../../src/ui/dashboard";
+import { renderFilters } from "../../src/ui/filters";
+
+class MemoryStorage implements Storage {
+  private readonly data = new Map<string, string>();
+
+  get length(): number {
+    return this.data.size;
+  }
+
+  clear(): void {
+    this.data.clear();
+  }
+
+  getItem(key: string): string | null {
+    return this.data.get(key) ?? null;
+  }
+
+  key(index: number): string | null {
+    return Array.from(this.data.keys())[index] ?? null;
+  }
+
+  removeItem(key: string): void {
+    this.data.delete(key);
+  }
+
+  setItem(key: string, value: string): void {
+    this.data.set(key, String(value));
+  }
+}
+
+const record: ResultRecord = {
+  qid: "RFI|BTN|25|AKs|OFF",
+  chosen: "OPEN_2X",
+  correct: true,
+  context: "RFI",
+  position: "BTN",
+  bucket: 25,
+  ts: 1,
+};
+
+describe("filters - DOM start gate", () => {
+  it("onStart se zavola pouze po kliknuti na Start a seed parsing funguje", () => {
+    const root = document.createElement("div");
+    const starts: Array<{ seed: number | null }> = [];
+    const view = renderFilters(root, {
+      onStart: (_filters, seed) => starts.push({ seed }),
+    });
+
+    expect(root.querySelectorAll(".filter-position")).toHaveLength(9);
+    expect(root.querySelectorAll(".filter-bucket")).toHaveLength(13);
+    expect(root.querySelectorAll(".filter-context")).toHaveLength(9);
+    expect(starts).toHaveLength(0);
+    expect(view.getSeed()).toBeNull();
+
+    root.querySelector<HTMLInputElement>(".filter-position")?.click();
+    expect(starts).toHaveLength(0);
+
+    root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    expect(starts).toEqual([{ seed: null }]);
+
+    const seedInput = root.querySelector<HTMLInputElement>(".filter-seed");
+    expect(seedInput).not.toBeNull();
+    seedInput!.value = "123";
+    root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    expect(starts.at(-1)).toEqual({ seed: 123 });
+  });
+
+  it("showEmptyResult zobrazi varovani a zachova vyber filtru", () => {
+    const root = document.createElement("div");
+    const view = renderFilters(root, { onStart: () => undefined });
+    const firstPosition = root.querySelector<HTMLInputElement>(".filter-position");
+
+    firstPosition!.checked = true;
+    view.showEmptyResult();
+
+    const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
+    expect(warning?.hidden).toBe(false);
+    expect(warning?.textContent).toContain("žádnému spotu");
+    expect(firstPosition!.checked).toBe(true);
+  });
+});
+
+describe("dashboard - DOM statistiky", () => {
+  it("zobrazi summary, streak, session count a prazdne skupiny jako nedostupne", () => {
+    const storage = new MemoryStorage();
+    const store = createStatsStore(storage);
+    expect(store.record(record).ok).toBe(true);
+
+    const root = document.createElement("div");
+    renderDashboard({ store, sessionCount: 1 }, root);
+
+    expect(root.querySelector<HTMLElement>(".summary-total")?.dataset.total).toBe("1");
+    expect(root.querySelector<HTMLElement>(".summary-rate")?.dataset.rate).toBe("100");
+    expect(root.querySelector<HTMLElement>(".dashboard-streak")?.dataset.streak).toBe("1");
+    expect(root.querySelector<HTMLElement>(".dashboard-session-count")?.dataset.sessionCount)
+      .toBe("1");
+
+    const emptyPosition = root.querySelector<HTMLElement>(
+      '.breakdown--position .breakdown-row[data-group="UTG"]',
+    );
+    expect(emptyPosition?.dataset.total).toBe("0");
+    expect(emptyPosition?.querySelector(".rate--unavailable")?.textContent).toBe("—");
+  });
+});

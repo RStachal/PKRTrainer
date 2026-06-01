@@ -74,6 +74,35 @@ const arbNonEmptyKeys: fc.Arbitrary<ActionKey[]> = fc
 const arbChosen: fc.Arbitrary<ActionKey> = fc.constantFrom<ActionKey>(...ALL_ACTION_KEYS);
 
 describe("scoring — členství v sadách správnosti", () => {
+  // Feature: mtt-preflop-trainer, Property 10: Scoring závisí výhradně na záznamu Range_Store pro daný spot
+  // grade čte pouze ze spot.correctKeys / spot.strictCorrect / spot.explanation;
+  // změna libovolných "okolních" dat nemění výsledek pro stejný Spot.
+  // Validates: Requirements 4.3
+  it("Property 10: výsledek grade závisí pouze na datech vyhodnocovaného Spotu", () => {
+    const arbNoise = fc.dictionary(fc.string(), arbNonEmptyKeys);
+
+    fc.assert(
+      fc.property(
+        arbNonEmptyKeys,
+        arbNonEmptyKeys,
+        arbChosen,
+        arbNoise,
+        arbNoise,
+        (strict, lenient, chosen, beforeNoise, afterNoise) => {
+          const spot = makeSpot(strict, lenient);
+
+          const before = grade(spot, chosen, "STRICT");
+          expect(beforeNoise).toBeDefined();
+          expect(afterNoise).toBeDefined();
+          const after = grade(spot, chosen, "STRICT");
+
+          expect(after).toEqual(before);
+        },
+      ),
+      { numRuns: 200 },
+    );
+  });
+
   // Feature: mtt-preflop-trainer, Property 19: STRICT správnost je členství v přesné sadě
   // grade(spot, chosen, "STRICT").correct === spot.strictCorrect.includes(chosen),
   // a recommended je neprázdné.
