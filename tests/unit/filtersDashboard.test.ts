@@ -106,6 +106,53 @@ describe("dashboard - DOM statistiky", () => {
     expect(root.querySelector<HTMLElement>(".dashboard-session-count")?.dataset.sessionCount)
       .toBe("1");
 
+    expect(root.querySelector(".profile-breakdowns")).not.toBeNull();
+    expect(
+      root.querySelector<HTMLElement>(
+        '.profile-breakdown--gameVariant .profile-breakdown-row[data-group="MTT"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.profile-breakdown--tableFormat .profile-breakdown-row[data-group="FULL_RING_9"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.profile-breakdown--blindSpeed .profile-breakdown-row[data-group="REGULAR"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.profile-breakdown--street .profile-breakdown-row[data-group="PREFLOP"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.profile-breakdown--evModel .profile-breakdown-row[data-group="CHIP_EV"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.profile-breakdown--ante .profile-breakdown-row[data-group="OFF"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.profile-breakdown--rangePackId .profile-breakdown-row[data-group="mtt-full-ring-9-regular-preflop-chip-ev-ante-off-v1"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.profile-breakdown--bucket .profile-breakdown-row[data-group="25"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.profile-breakdown--context .profile-breakdown-row[data-group="RFI"]',
+      )?.dataset.total,
+    ).toBe("1");
+
     const emptyPosition = root.querySelector<HTMLElement>(
       '.breakdown--position .breakdown-row[data-group="UTG"]',
     );

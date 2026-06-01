@@ -61,7 +61,14 @@ import type {
   StatsStore,
   Summary,
 } from "../persistence/statsStore";
+import { migrateResultRecordsToV2 } from "../persistence/statsRecordV2";
 import { buildStatsExportJson, importStatsJson } from "../persistence/statsTransfer";
+import {
+  availableStatsV2Dimensions,
+  breakdownStatsV2,
+  type StatsV2BreakdownDim,
+  type StatsV2Group,
+} from "../persistence/statsV2Analytics";
 
 // ---------------------------------------------------------------------------
 // Veřejné API
@@ -115,6 +122,20 @@ const DIM_TITLE: Record<BreakdownDim, string> = {
   bucket: "Podle hloubkového koše",
 };
 
+const PROFILE_DIM_TITLE: Record<StatsV2BreakdownDim, string> = {
+  gameVariant: "Podle varianty hry",
+  tableFormat: "Podle formátu stolu",
+  blindSpeed: "Podle rychlosti blindů",
+  street: "Podle streety",
+  evModel: "Podle modelu",
+  ante: "Podle ante",
+  rakeMode: "Podle rake režimu",
+  rangePackId: "Podle RangePacku",
+  position: "Podle pozice",
+  bucket: "Podle stacku",
+  context: "Podle akčního node",
+};
+
 /** Český popisek akčního kontextu (kategorie). */
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
@@ -140,6 +161,21 @@ function groupLabel(dim: BreakdownDim, key: string): string {
     case "bucket":
       return `${key} BB`;
     case "position":
+      return key;
+  }
+}
+
+function profileGroupLabel(dim: StatsV2BreakdownDim, key: string): string {
+  switch (dim) {
+    case "context":
+      return CONTEXT_LABEL[key as ActionContext] ?? key;
+    case "bucket":
+      return `${key} BB`;
+    case "ante":
+      return key === "ON" ? "Ante zapnuté" : "Ante vypnuté";
+    case "evModel":
+      return key === "CHIP_EV" ? "chipEV" : key;
+    default:
       return key;
   }
 }
@@ -320,6 +356,63 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
   return box;
 }
 
+function renderProfileBreakdownRow(dim: StatsV2BreakdownDim, g: StatsV2Group): HTMLElement {
+  const row = el("div", "profile-breakdown-row");
+  row.dataset.group = g.key;
+  row.dataset.total = String(g.total);
+  row.dataset.rate = g.rate === null ? "" : String(g.rate);
+
+  const name = el("span", "profile-breakdown-row__name");
+  name.textContent = profileGroupLabel(dim, g.key);
+  row.appendChild(name);
+
+  const count = el("span", "profile-breakdown-row__count");
+  count.textContent = `${g.total}\u00d7`;
+  row.appendChild(count);
+
+  row.appendChild(rateElement("span", "profile-breakdown-row__rate", g.rate));
+
+  return row;
+}
+
+function renderProfileBreakdown(dim: StatsV2BreakdownDim, groups: StatsV2Group[]): HTMLElement {
+  const box = el("section", `profile-breakdown profile-breakdown--${dim}`);
+  box.dataset.dim = dim;
+
+  const heading = el("h4", "profile-breakdown__title");
+  heading.textContent = PROFILE_DIM_TITLE[dim];
+  box.appendChild(heading);
+
+  const rows = el("div", "profile-breakdown__rows");
+  if (groups.length === 0) {
+    const empty = el("div", "profile-breakdown__empty");
+    empty.textContent = "Zatím bez záznamů.";
+    rows.appendChild(empty);
+  } else {
+    for (const g of groups) {
+      rows.appendChild(renderProfileBreakdownRow(dim, g));
+    }
+  }
+  box.appendChild(rows);
+
+  return box;
+}
+
+function renderProfileBreakdowns(store: StatsStore): HTMLElement {
+  const box = el("section", "profile-breakdowns");
+
+  const heading = el("h3", "profile-breakdowns__title");
+  heading.textContent = "Profilové rozčlenění";
+  box.appendChild(heading);
+
+  const eventsV2 = migrateResultRecordsToV2(store.events());
+  for (const dim of availableStatsV2Dimensions()) {
+    box.appendChild(renderProfileBreakdown(dim, breakdownStatsV2(eventsV2, dim)));
+  }
+
+  return box;
+}
+
 // ---------------------------------------------------------------------------
 // Styly (soběstačné, aby dashboard fungoval i bez externího CSS)
 // ---------------------------------------------------------------------------
@@ -330,7 +423,8 @@ function dashboardStyles(): HTMLStyleElement {
 .dashboard{font-family:system-ui,Arial,sans-serif;color:#1b1f2a;display:flex;
   flex-direction:column;gap:16px;max-width:720px;}
 .dashboard h3{margin:0 0 8px;font-size:14px;font-weight:800;color:#2b3550;}
-.dashboard-summary,.dashboard-session,.breakdown,.stats-transfer{background:#f5f7fb;
+.dashboard h4{margin:0 0 6px;font-size:12px;font-weight:800;color:#48526b;}
+.dashboard-summary,.dashboard-session,.breakdown,.stats-transfer,.profile-breakdowns{background:#f5f7fb;
   border:1px solid #e2e7f0;border-radius:10px;padding:12px 14px;}
 .dashboard-summary .summary-total{font-size:13px;color:#48526b;}
 .dashboard-summary .summary-rate-line{margin-top:4px;font-size:18px;font-weight:800;}
@@ -338,13 +432,17 @@ function dashboardStyles(): HTMLStyleElement {
 .dashboard-session{display:flex;flex-direction:column;gap:4px;}
 .dashboard-streak{font-size:15px;font-weight:800;color:#1f9d57;}
 .dashboard-session-count{font-size:13px;color:#48526b;}
-.breakdown__rows{display:flex;flex-direction:column;gap:2px;}
-.breakdown-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;
+.profile-breakdowns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.profile-breakdowns__title{grid-column:1/-1;}
+.profile-breakdown{background:#fff;border:1px solid #e7ebf4;border-radius:8px;padding:8px;}
+.breakdown__rows,.profile-breakdown__rows{display:flex;flex-direction:column;gap:2px;}
+.breakdown-row,.profile-breakdown-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;
   align-items:center;padding:4px 6px;border-radius:6px;font-size:13px;}
-.breakdown-row:nth-child(odd){background:rgba(43,53,80,.04);}
-.breakdown-row__name{font-weight:600;}
-.breakdown-row__count{color:#6b7488;font-variant-numeric:tabular-nums;}
-.breakdown-row__rate{font-weight:800;text-align:right;font-variant-numeric:tabular-nums;}
+.breakdown-row:nth-child(odd),.profile-breakdown-row:nth-child(odd){background:rgba(43,53,80,.04);}
+.breakdown-row__name,.profile-breakdown-row__name{font-weight:600;min-width:0;overflow-wrap:anywhere;}
+.breakdown-row__count,.profile-breakdown-row__count{color:#6b7488;font-variant-numeric:tabular-nums;}
+.breakdown-row__rate,.profile-breakdown-row__rate{font-weight:800;text-align:right;font-variant-numeric:tabular-nums;}
+.profile-breakdown__empty{font-size:12px;color:#6b7488;}
 .rate--unavailable{color:#9aa6c2;font-weight:600;}
 .stats-transfer__actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
 .stats-export,.stats-import{appearance:none;border:1px solid #c8d1e3;border-radius:8px;
@@ -357,6 +455,7 @@ function dashboardStyles(): HTMLStyleElement {
 .stats-transfer__status{margin-top:8px;font-size:12px;font-weight:700;}
 .stats-transfer__status--ok{color:#1f9d57;}
 .stats-transfer__status--error{color:#c93333;}
+@media (max-width:640px){.profile-breakdowns{grid-template-columns:1fr;}}
 `;
   return style;
 }
@@ -393,6 +492,9 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
 
   // Export/import JSON statistik (legacy parity gap).
   wrapper.appendChild(renderStatsTransfer(data, root));
+
+  // Profilové rozčlenění nad migrovanými záznamy v2 (multi-format roadmap).
+  wrapper.appendChild(renderProfileBreakdowns(store));
 
   // Rozčlenění podle tří dimenzí (Req 9.4, prázdné skupiny Req 9.7).
   const dims: BreakdownDim[] = ["context", "position", "bucket"];

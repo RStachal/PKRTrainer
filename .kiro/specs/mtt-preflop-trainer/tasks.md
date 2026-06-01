@@ -418,7 +418,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 29.2 Přidat migraci statistik v1 → v2
     - Dnešní záznamy označit jako MTT/FULL_RING_9/REGULAR/PREFLOP/CHIP_EV bez změny historických výsledků
 
-  - [ ] 29.3 Rozšířit dashboard
+  - [x] 29.3 Rozšířit dashboard
     - Filtrovat a seskupovat podle varianty, formátu, speedu, streety, pozice, stacku a akčního node
 
 - [ ] 30. UI pro výběr režimu a range evidence
