@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { classifyBoard, generatePostflopSpot } from "../../src/core/postflopGenerator";
+import {
+  classifyBoard,
+  generatePostflopSpot,
+  recommendPostflopAction,
+} from "../../src/core/postflopGenerator";
 import type { Card } from "../../src/core/types";
 
 const heroCards: [Card, Card] = [
@@ -18,6 +22,8 @@ describe("postflopGenerator", () => {
     const labels = [...a.heroCards, ...a.board].map((card) => `${card.rank}${card.suit}`);
     expect(new Set(labels).size).toBe(labels.length);
     expect(a.actions).toEqual(["CHECK", "BET_SMALL", "BET_BIG"]);
+    expect(a.recommendedAction).toMatch(/^(CHECK|BET_SMALL|BET_BIG)$/);
+    expect(a.explanation.length).toBeGreaterThan(0);
   });
 
   it("klasifikuje zakladni textury boardu", () => {
@@ -38,5 +44,14 @@ describe("postflopGenerator", () => {
       { rank: "7", suit: "h" },
       { rank: "2", suit: "d" },
     ])).toEqual(expect.arrayContaining(["rainbow", "dry"]));
+  });
+
+  it("doporucuje akci podle zakladni textury a streetu", () => {
+    expect(recommendPostflopAction("FLOP", ["monotone", "connected"]).action)
+      .toBe("CHECK");
+    expect(recommendPostflopAction("FLOP", ["dry", "rainbow"]).action)
+      .toBe("BET_SMALL");
+    expect(recommendPostflopAction("RIVER", ["dry", "rainbow"]).action)
+      .toBe("BET_BIG");
   });
 });

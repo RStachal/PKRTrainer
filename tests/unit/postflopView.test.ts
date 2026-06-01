@@ -23,4 +23,18 @@ describe("postflopView - DOM", () => {
     expect(root.querySelectorAll(".postflop-card")).toHaveLength(7);
     expect(root.querySelectorAll(".postflop-texture").length).toBeGreaterThan(0);
   });
+
+  it("po vyberu akce zobrazi doporuceni a uzamkne tlacitka", () => {
+    const root = document.createElement("div");
+    renderPostflopView(root);
+
+    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+
+    const result = root.querySelector<HTMLElement>(".postflop-result");
+    expect(result?.hidden).toBe(false);
+    expect(result?.textContent).toContain("Doporučeno");
+    expect(root.querySelectorAll<HTMLButtonElement>(".postflop-action:disabled"))
+      .toHaveLength(3);
+    expect(root.querySelector(".postflop-action--recommended")).not.toBeNull();
+  });
 });

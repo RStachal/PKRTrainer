@@ -3,6 +3,7 @@ import { RANKS, SUITS, rankValue } from "./poker";
 import { mulberry32 } from "./rng";
 
 export type PostflopStreet = "FLOP" | "TURN" | "RIVER";
+export type PostflopAction = "CHECK" | "BET_SMALL" | "BET_BIG";
 export type BoardTexture =
   | "paired"
   | "monotone"
@@ -19,7 +20,9 @@ export interface PostflopSpot {
   potBB: number;
   effectiveStackBB: number;
   textures: BoardTexture[];
-  actions: readonly ["CHECK", "BET_SMALL", "BET_BIG"];
+  actions: readonly PostflopAction[];
+  recommendedAction: PostflopAction;
+  explanation: string;
 }
 
 export interface PostflopConfig {
@@ -37,6 +40,7 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   const street = config.street ?? randomStreet(rng);
   const board = dealCards(rng, deck, boardLength(street));
   const textures = classifyBoard(board);
+  const recommendation = recommendPostflopAction(street, textures);
 
   return {
     seed: config.seed >>> 0,
@@ -47,6 +51,8 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
     effectiveStackBB: config.effectiveStackBB ?? 40,
     textures,
     actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+    recommendedAction: recommendation.action,
+    explanation: recommendation.explanation,
   };
 }
 
@@ -67,6 +73,43 @@ export function classifyBoard(board: readonly Card[]): BoardTexture[] {
     textures.add("dry");
   }
   return [...textures];
+}
+
+export function recommendPostflopAction(
+  street: PostflopStreet,
+  textures: readonly BoardTexture[],
+): { action: PostflopAction; explanation: string } {
+  const has = (texture: BoardTexture): boolean => textures.includes(texture);
+
+  if (has("monotone") || has("connected")) {
+    return {
+      action: "CHECK",
+      explanation:
+        "Board je dynamický. Bez detailního modelu range je nejlepší kontrolní akce check.",
+    };
+  }
+
+  if (street === "RIVER" && has("dry")) {
+    return {
+      action: "BET_BIG",
+      explanation:
+        "Suchý river má málo nových draw. V prototypu se preferuje větší tlak.",
+    };
+  }
+
+  if (has("dry") || has("paired") || has("rainbow")) {
+    return {
+      action: "BET_SMALL",
+      explanation:
+        "Suchý nebo stabilní board je vhodný pro malý c-bet v prototypové strategii.",
+    };
+  }
+
+  return {
+    action: "CHECK",
+    explanation:
+      "Textura boardu není jednoznačně stabilní. Prototyp doporučuje check.",
+  };
 }
 
 function fullDeck(): Card[] {

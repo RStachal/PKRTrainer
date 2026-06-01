@@ -1,6 +1,7 @@
 import {
   generatePostflopSpot,
   type BoardTexture,
+  type PostflopAction,
   type PostflopSpot,
   type PostflopStreet,
 } from "../core/postflopGenerator";
@@ -141,9 +142,16 @@ function renderSpot(root: HTMLElement, spot: PostflopSpot): void {
     btn.className = "postflop-action";
     btn.dataset.action = action;
     btn.textContent = actionLabel(action);
+    btn.addEventListener("click", () => showResult(root, spot, action));
     actions.appendChild(btn);
   }
   root.appendChild(actions);
+
+  const result = doc.createElement("div");
+  result.className = "postflop-result";
+  result.hidden = true;
+  result.setAttribute("role", "status");
+  root.appendChild(result);
 }
 
 function cardGroup(doc: Document, title: string, cards: readonly Card[]): HTMLElement {
@@ -168,7 +176,28 @@ function cardElement(doc: Document, card: Card): HTMLElement {
   return el;
 }
 
-function actionLabel(action: PostflopSpot["actions"][number]): string {
+function showResult(root: HTMLElement, spot: PostflopSpot, chosen: PostflopAction): void {
+  const buttons = root.querySelectorAll<HTMLButtonElement>(".postflop-action");
+  buttons.forEach((button) => {
+    button.disabled = true;
+    button.classList.toggle("postflop-action--chosen", button.dataset.action === chosen);
+    button.classList.toggle(
+      "postflop-action--recommended",
+      button.dataset.action === spot.recommendedAction,
+    );
+  });
+
+  const result = root.querySelector<HTMLElement>(".postflop-result");
+  if (!result) return;
+  const correct = chosen === spot.recommendedAction;
+  result.hidden = false;
+  result.className = `postflop-result ${correct ? "postflop-result--correct" : "postflop-result--wrong"}`;
+  result.textContent =
+    `${correct ? "Správně." : "Ještě ne."} Doporučeno: ` +
+    `${actionLabel(spot.recommendedAction)}. ${spot.explanation}`;
+}
+
+function actionLabel(action: PostflopAction): string {
   switch (action) {
     case "CHECK":
       return "Check";
@@ -234,6 +263,15 @@ function styles(doc: Document): HTMLStyleElement {
 .postflop-action{appearance:none;border:1px solid rgba(255,255,255,.18);
   border-radius:8px;background:#1b2333;color:#e8ecf7;font-size:13px;font-weight:800;
   padding:8px 12px;}
+.postflop-action:disabled{opacity:.72;cursor:default;}
+.postflop-action--chosen{outline:2px solid #e8ecf7;outline-offset:1px;}
+.postflop-action--recommended{border-color:#2bd576;background:rgba(43,213,118,.16);}
+.postflop-result{margin-top:12px;border-radius:8px;padding:10px 12px;font-size:13px;
+  font-weight:700;line-height:1.45;}
+.postflop-result--correct{background:rgba(43,213,118,.13);border:1px solid rgba(43,213,118,.45);
+  color:#9ff0bd;}
+.postflop-result--wrong{background:rgba(226,59,59,.13);border:1px solid rgba(226,59,59,.45);
+  color:#ffb4b4;}
 @media (max-width:640px){
   .postflop-controls{align-items:stretch;}
   .postflop-field,.postflop-generate{width:100%;}
