@@ -325,6 +325,122 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
 - [x] 21. Final checkpoint - ověření celé aplikace
   - Ensure all tests pass, ask the user if questions arise.
 
+- [ ] 22. Roadmapa rozšiřitelné tréninkové platformy
+  - [x] 22.1 Zmapovat aktuální stav řešení a potvrdit hranici hotové iterace
+    - Aktuální stabilní základ: MTT preflop 9-max full ring, cEV ranges, ante ON/OFF, deterministický drill engine, scoring, statistiky, range modal, HH import, offline/PWA a prototyp postflop záložky
+    - Navazující architektura musí zůstat aditivní: neměnit existující ranges, seed behavior, Question_ID ani localStorage klíče bez explicitní migrace
+
+  - [x] 22.2 Zavést pravidla pro sourcing chartů z internetu
+    - Pro každý nový RangePack dohledat aktuální veřejně dostupné zdroje na internetu, provést alespoň 3 nezávislá vyhledání a porovnat minimálně 2 věrohodné zdroje
+    - U každého zdroje uložit metadata: URL, datum ověření, autor/provozovatel, varianta hry, table format, blind speed, ante/rake, stack depth, cEV/ICM model, solver/metodika, licence nebo povolené použití
+    - Preferovat zdroje s jasnými assumptions a reputací v pokerové komunitě; příklady pro ověřování: GTO Wizard / solverové články a databáze, PokerCoaching / výukové charty, ICMIZER nebo HoldemResources pro pozdější SNG ICM kontrolu
+    - Nepřebírat placené, chráněné nebo licenčně nejasné charty jako data aplikace bez povolení; povolený výstup je náš normalizovaný RangePack s citací zdrojů a poznámkou o interpretaci
+
+  - [x] 22.3 Definovat RangePack v2 jako zdroj pravdy pro všechny budoucí ranges
+    - Přidat dimenze `gameVariant` (MTT/SNG/CASH), `tableFormat` (FULL_RING_9/SIX_MAX), `blindSpeed` (REGULAR/TURBO), `street` (PREFLOP/FLOP/TURN/RIVER), `evModel` (CHIP_EV/ICM), `ante`, pozice, stack profile a akční node
+    - Přidat metadata `sourceEvidence`, `assumptions`, `version`, `createdAt`, `verifiedAt`, `licenseNote` a `confidence`
+    - Zachovat kompatibilitu s aktuálním Range_Store přes adaptér, aby dnešní MTT preflop 9-max běžel beze změny
+
+  - [ ] 22.4 Připravit workflow pro import a normalizaci chartů
+    - Vytvořit ruční/skriptovatelný postup: zdrojový chart → normalizace 169 hand tříd → validační report → RangePack v2 → testy integrity
+    - Validovat, že každá přítomná ruka má alespoň jednu akci, raise akce mají sizing, ruce bez záznamu znamenají fold a každý RangePack nese zdrojová metadata
+    - Přidat snapshot/report porovnání mezi zdroji: shody, rozdíly, finální rozhodnutí a praktické vysvětlení proč
+
+- [x] 23. Obecný model tréninkového profilu
+  - [x] 23.1 Implementovat `src/core/trainingProfile.ts`
+    - Definovat typy `GameVariant = "MTT" | "SNG" | "CASH"`, `TableFormat = "FULL_RING_9" | "SIX_MAX"`, `BlindSpeed = "REGULAR" | "TURBO"`, `TrainingStreet = "PREFLOP" | "FLOP" | "TURN" | "RIVER"`, `EvModel = "CHIP_EV" | "ICM"` a `RakeMode = "NONE" | "RAKE" | "NO_RAKE"`
+    - Přidat `TrainingProfile`, `DEFAULT_TRAINING_PROFILE`, `profileId(profile)` a helpery pro dostupné kombinace
+
+  - [x] 23.2 Implementovat `src/core/seatModel.ts`
+    - Definovat kanonické pozice pro 9-max: UTG, UTG+1, UTG+2, LJ, HJ, CO, BTN, SB, BB
+    - Definovat kanonické pozice pro 6-max: UTG, HJ, CO, BTN, SB, BB
+    - Přidat stacky jednotlivých hráčů, button/blindy a helper pro efektivní stack vůči relevantnímu soupeři
+
+  - [x] 23.3 Přidat testy profilu a seat modelu
+    - Ověřit stabilitu `profileId`, unikátní pozice, správný počet hráčů pro 9-max/6-max a zachování dnešního pořadí 9-max
+
+- [ ] 24. Blind speed a stack profil
+  - [x] 24.1 Definovat blind speed jako reálnou dimenzi profilu
+    - REGULAR/TURBO nesmí být jen UI label; musí určovat blind schedule, dostupné stack buckets a později tempo změny blindů v tréninku
+
+  - [x] 24.2 Přidat model blind levelů pro MTT a SNG
+    - Uložit blindy, ante, level duration, startovní stack a odvozené BB stacky pro regular/turbo režim
+    - Zachovat jednoduchý režim "fixed BB" pro dnešní drill, aby existující generování zůstalo stabilní
+
+  - [ ] 24.3 Připravit UI filtr pro regular/turbo a stacky hráčů
+    - Umožnit volit formát, speed a efektivní stack; později rozšířit o jednotlivé stacky u všech sedadel
+
+- [ ] 25. MTT preflop jako první produkční vertikála
+  - [ ] 25.1 Převést aktuální MTT 9-max cEV ranges do RangePack v2 adaptéru
+    - Dnešní data zůstanou funkční; nový RangePack pouze přidá metadata a dimenze bez změny doporučení
+
+  - [ ] 25.2 Doplnit chart sourcing pro MTT 9-max regular/turbo
+    - Priorita: chipEV, preflop, 9-max, full ring, regular speed; turbo přidat jako samostatný profil, pokud zdroje potvrzují odlišné assumptions
+
+  - [ ] 25.3 Přidat možnost rozšířit MTT na 6-max
+    - Po seat modelu přidat 6-max profil, sourcing 6-max chipEV chartů a RangePacky pro regular/turbo
+
+  - [ ] 25.4 Rozšířit relevantní akční nodes
+    - Pro preflop držet minimální sadu Fold, Call, Open/Raise, 3bet, 4bet, Jam, Call-jam; u každého node zobrazit skutečně relevantní range
+
+- [ ] 26. SNG nejdřív chipEV, potom ICM
+  - [ ] 26.1 Přidat SNG profil v chipEV režimu
+    - Začít bez ICM, aby šel reuse MTT preflop engine, RangePack schema a scoring
+
+  - [ ] 26.2 Navrhnout ICM model pro SNG
+    - Přidat payout structure, počet zbývajících hráčů, stack distribution, bubble faktor a typ spotu (push/fold, call all-in, rejams)
+
+  - [ ] 26.3 Přidat ICM range sourcing a validaci
+    - Ověřovat proti více zdrojům/simulátorům typu ICMIZER/HoldemResources a ukládat assumptions do RangePack metadata
+
+- [ ] 27. Cash game připravit jako budoucí větev
+  - [ ] 27.1 Přidat cash profil bez zapojení do produkčního UI
+    - Definovat table format, stacky, ante typicky OFF, blind speed N/A nebo fixed, a rake mode jako budoucí dimenzi
+
+  - [ ] 27.2 Připravit rake/no-rake dimenzi
+    - Rake a no-rake zatím neřešit v engine; pouze rezervovat metadata a datový model, aby pozdější ranges nebylo nutné migrovat násilně
+
+- [ ] 28. Postflop roadmapa po dokončení preflop základu
+  - [ ] 28.1 Převést dnešní postflop prototyp na typovaný TrainingSpot
+    - Zachovat stávající jednoduchý feedback, ale oddělit board texture, street, akční node, sizing a explanation
+
+  - [ ] 28.2 Zavést postflop RangePack/StrategyPack
+    - Flop jako první: board texture, pozice, pot typ, SPR/effective stack, akce Check, Bet small, Bet big, Raise, Call, Fold
+    - Turn a river navázat až po stabilním flop modelu
+
+  - [ ] 28.3 Přidat praktické vysvětlení po odpovědi
+    - Po každé akci zobrazit stručné česky psané vysvětlení: proč je akce preferovaná, jaké ruce tvoří value/bluff/check část a jak se mění plán na další streetě
+
+- [ ] 29. Statistiky, migrace a kompatibilita pro více profilů
+  - [ ] 29.1 Navrhnout `ResultRecord` v2
+    - Přidat profileId, gameVariant, tableFormat, blindSpeed, street, evModel, rangePackId a source version
+
+  - [ ] 29.2 Přidat migraci statistik v1 → v2
+    - Dnešní záznamy označit jako MTT/FULL_RING_9/REGULAR/PREFLOP/CHIP_EV bez změny historických výsledků
+
+  - [ ] 29.3 Rozšířit dashboard
+    - Filtrovat a seskupovat podle varianty, formátu, speedu, streety, pozice, stacku a akčního node
+
+- [ ] 30. UI pro výběr režimu a range evidence
+  - [ ] 30.1 Přidat profile selector
+    - Umožnit volit MTT/SNG/CASH, 9-max/6-max, regular/turbo, preflop/flop/turn/river a scoring režim bez rozbití dnešního jednoduchého startu
+
+  - [ ] 30.2 Rozšířit range modal o zdroj a assumptions
+    - U každé zobrazené range ukázat RangePack verzi, datum ověření, zdrojový souhrn a poznámku, zda jde o chipEV nebo ICM
+
+  - [ ] 30.3 Zachovat české UX a offline-first provoz
+    - Všechny nové texty česky; data a metadata součástí bundlu; žádné runtime tahání chartů z internetu v offline aplikaci
+
+- [ ] 31. Ověření a release disciplina pro navazující fáze
+  - [ ] 31.1 Pro každou novou dimenzi přidat unit/property testy
+    - Profile/seat/range schema testy musí běžet před začleněním nových chartů
+
+  - [ ] 31.2 Spouštět zelené brány po netriviálních změnách
+    - `npm test` a `npm run build` musí projít po každé implementační vlně
+
+  - [ ] 31.3 Udržovat checklist průběžně
+    - Dokončené položky v tomto souboru okamžitě přepínat na `[x]`; nedokončené ponechat `[ ]`
+
 ## Notes
 
 - Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.
