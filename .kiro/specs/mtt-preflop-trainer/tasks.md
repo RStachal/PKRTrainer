@@ -387,7 +387,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 26.1 Přidat SNG profil v chipEV režimu
     - Začít bez ICM, aby šel reuse MTT preflop engine, RangePack schema a scoring
 
-  - [ ] 26.2 Navrhnout ICM model pro SNG
+  - [x] 26.2 Navrhnout ICM model pro SNG
     - Přidat payout structure, počet zbývajících hráčů, stack distribution, bubble faktor a typ spotu (push/fold, call all-in, rejams)
 
   - [ ] 26.3 Přidat ICM range sourcing a validaci
