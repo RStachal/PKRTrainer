@@ -164,6 +164,15 @@ export interface Spot {
   strictCorrect: ActionKey[]; // STRICT (Req 7.2)
   explanation: string; // české zdůvodnění
   hint?: string;
+  /**
+   * Startovní velikost potu v BB před akcí hrdiny (Req 5.3, 5.4).
+   *
+   * Volitelné pole: při generování Spotu jej `Drill_Engine` vždy vyplní podle
+   * stavu ante — ON ⇒ 2,5 BB (SB 0,5 + BB 1 + ante 1), OFF ⇒ 1,5 BB
+   * (SB 0,5 + BB 1). Spoty sestavené jinde (např. HH_Parser) jej mohou vynechat
+   * a nechat Table_Renderer dopočítat. (Property 13)
+   */
+  startingPot?: number;
 }
 
 // ---------------------------------------------------------------------------

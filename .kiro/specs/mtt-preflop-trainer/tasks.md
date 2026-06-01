@@ -58,20 +58,20 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - **Property 6: Vs-all-in nabízí výhradně Call-jam a Fold**
     - **Validates: Requirements 3.10**
 
-- [ ] 5. Range_Store — referenční ranges jako oddělená data
+- [x] 5. Range_Store — referenční ranges jako oddělená data
   - [x] 5.1 Implementovat `src/data/ranges/schema.ts`
     - Definovat `RangeFile`, `RangeRecord` a validační pravidla integrity (≥ 1 klíč v `lenient`/`strict` u přítomné ruky; raise klíče nesou sizing; ruce bez záznamu = fold)
     - _Requirements: 4.1, 4.2, 4.5, 7.6_
 
-  - [ ] 5.2 Vytvořit referenční data ranges (ante-on a ante-off varianty)
+  - [x] 5.2 Vytvořit referenční data ranges (ante-on a ante-off varianty)
     - Naplnit `src/data/ranges/ante-on/` a `src/data/ranges/ante-off/` daty indexovanými dle Pozice × Hloubkový_koš × akční kontext; data reflektují cEV bez ICM
     - _Requirements: 4.1, 4.2, 4.9, 5.2, 5.3_
 
-  - [ ] 5.3 Implementovat `src/data/ranges/index.ts`
+  - [x] 5.3 Implementovat `src/data/ranges/index.ts`
     - Agregovat data variant, vynutit integritu a poskytnout signál celkové načtenosti pro `isLoaded()`
     - _Requirements: 4.6_
 
-  - [ ] 5.4 Implementovat `src/data/rangeStore.ts`
+  - [x] 5.4 Implementovat `src/data/rangeStore.ts`
     - Lookup API `lookup(key: RangeKey)` a `isLoaded()` nad agregovanými daty; vrací `undefined` pro chybějící kombinaci
     - _Requirements: 4.3, 4.4, 4.7, 4.8_
 
@@ -79,8 +79,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - **Property 11: Existence sizingu pro raise akce**
     - **Validates: Requirements 4.5**
 
-- [ ] 6. Generování spotů (generateSpot)
-  - [ ] 6.1 Implementovat `generateSpot` v `src/core/drillEngine.ts`
+- [x] 6. Generování spotů (generateSpot)
+  - [x] 6.1 Implementovat `generateSpot` v `src/core/drillEngine.ts`
     - Sestavit z RNG a kontextu jeden Spot: přiřadit hrdinovi 1 z 9 pozic, obsadit všech 9 pozic, vybrat eff stack z 13 košů, určit `pushFold` (≤ 12 BB), sestavit `TableState`, vybrat ruku/karty, propojit `offeredActions` + `rangeStore.lookup` + `questionId`, naplnit `answers` (bijekce akce→klíč), `correctKeys`, `strictCorrect`, ante variantu a startovní pot; vynechat kombinace bez klíče (4.8), povolit kombinace bez sizingu (4.7)
     - _Requirements: 1.3, 1.4, 2.1, 2.3, 2.4, 3.12, 4.4, 4.7, 4.8, 5.1, 5.2, 5.3_
 
@@ -120,12 +120,12 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - **Property 13: Ante mód určuje variantu dat i startovní pot**
     - **Validates: Requirements 5.2, 5.3**
 
-- [ ] 7. Pool a deterministická sekvence spotů
-  - [ ] 7.1 Implementovat `buildPool` v `src/core/drillEngine.ts`
+- [x] 7. Pool a deterministická sekvence spotů
+  - [x] 7.1 Implementovat `buildPool` v `src/core/drillEngine.ts`
     - Vygenerovat Pool unikátních spotů pro (kategorie, seed, filtry); deduplikovat podle Question_ID; zachovat deterministické pořadí
     - _Requirements: 6.3_
 
-  - [ ] 7.2 Implementovat `spotSequence` v `src/core/drillEngine.ts`
+  - [x] 7.2 Implementovat `spotSequence` v `src/core/drillEngine.ts`
     - Vrátit deterministickou sekvenci spotů: každé Question_ID nejvýše jednou v rámci průchodu; po vyčerpání cyklit od začátku ve stejném pořadí
     - _Requirements: 6.5, 6.6_
 
@@ -145,8 +145,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - **Property 18: Vyčerpaný Pool se cyklí od začátku ve stejném pořadí**
     - **Validates: Requirements 6.6**
 
-- [ ] 8. Filtry a konfigurace relace
-  - [ ] 8.1 Implementovat filtrování a obsluhu seedu v `src/core/drillEngine.ts`
+- [x] 8. Filtry a konfigurace relace
+  - [x] 8.1 Implementovat filtrování a obsluhu seedu v `src/core/drillEngine.ts`
     - Aplikovat logický průnik dimenzí (Pozice AND Hloubkový_koš AND kontext), prázdná dimenze = neomezená; při chybějícím platném seedu vygenerovat seed v rozsahu 0–4 294 967 295 a zpřístupnit jej
     - _Requirements: 2.5, 2.6, 6.7, 13.5, 13.7, 13.8_
 
@@ -158,11 +158,11 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Ověřit vygenerování a zpřístupnění platného seedu bez vstupu (6.7) a že bez explicitního startu se negenerují spoty (13.4)
     - _Requirements: 6.7, 13.4_
 
-- [ ] 9. Checkpoint - jádro generování spotů
+- [x] 9. Checkpoint - jádro generování spotů
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Scoring_Engine (LENIENT / STRICT)
-  - [ ] 10.1 Implementovat `src/core/scoring.ts`
+- [x] 10. Scoring_Engine (LENIENT / STRICT)
+  - [x] 10.1 Implementovat `src/core/scoring.ts`
     - Čistá funkce `grade(spot, chosen, mode)` vyhodnocující členství v `strictCorrect` (STRICT) resp. `correctKeys` (LENIENT); vrací doporučené klíče a příznak dostupnosti zdůvodnění
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.7_
 
@@ -215,8 +215,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Ověřit ponechání dat při selhání uložení (9.6) a prázdné skupiny bez dělení nulou (9.7)
     - _Requirements: 9.6, 9.7_
 
-- [ ] 12. Migrace lokálního úložiště
-  - [ ] 12.1 Implementovat `src/persistence/migration.ts`
+- [x] 12. Migrace lokálního úložiště
+  - [x] 12.1 Implementovat `src/persistence/migration.ts`
     - Idempotentní migrace strukturně kompatibilních legacy dat do verzovaných klíčů; ponechat legacy beze změny do nastavení příznaku migrace; zápisy výhradně do nových klíčů
     - _Requirements: 14.2, 14.4_
 
@@ -228,11 +228,11 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Ověřit selhání migrace s čistým novým stavem (14.3), pokračování při selhání init po migraci (14.5) a nekonzistentní stav bez spuštění relace (14.6)
     - _Requirements: 14.3, 14.5, 14.6_
 
-- [ ] 13. Checkpoint - jádro, scoring a perzistence
+- [x] 13. Checkpoint - jádro, scoring a perzistence
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 14. Table_Renderer (grafika stolu)
-  - [ ] 14.1 Implementovat `src/ui/tableRenderer.ts`
+- [x] 14. Table_Renderer (grafika stolu)
+  - [x] 14.1 Implementovat `src/ui/tableRenderer.ts`
     - Vykreslit ovál stolu s 9 sedadly, odlišit hrdinu, 2 hole karty, akční odznaky, značky BTN/SB/BB, složená/neaktivní sedadla; čistá funkce formátování potu a stacku v BB na ≤ 1 desetinné místo dle stavu ante
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8_
 
@@ -244,8 +244,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Ověřit 9 sedadel s unikátními labely (8.1), právě 1 hero sedadlo (8.2), 2 hole karty (8.3), akční odznak (8.4), značky BTN/SB/BB (8.7), složená sedadla (8.8)
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.7, 8.8_
 
-- [ ] 15. Range_Matrix_View (mřížka 13×13)
-  - [ ] 15.1 Implementovat `src/ui/rangeMatrixView.ts`
+- [x] 15. Range_Matrix_View (mřížka 13×13)
+  - [x] 15.1 Implementovat `src/ui/rangeMatrixView.ts`
     - Vykreslit mřížku 13×13 (169 tříd) s barvením dle Akčního_klíče, kategorií fold odlišenou od akcí, zvýrazněním ruky spotu, legendou; indikace nedostupnosti dat bez pádu
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
 
@@ -261,12 +261,12 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Ověřit zvýraznění ruky spotu (10.3), legendu (10.5) a indikaci nedostupných dat (10.6)
     - _Requirements: 10.3, 10.5, 10.6_
 
-- [ ] 16. Filtry UI a dashboard statistik
-  - [ ] 16.1 Implementovat `src/ui/filters.ts`
+- [x] 16. Filtry UI a dashboard statistik
+  - [x] 16.1 Implementovat `src/ui/filters.ts`
     - Výběr 1–9 Pozic, 1–13 Hloubkových_košů a akčních kontextů; stráž explicitního startu (negenerovat bez startu); upozornění a zachování výběru při prázdném průniku
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.6_
 
-  - [ ] 16.2 Implementovat `src/ui/dashboard.ts`
+  - [x] 16.2 Implementovat `src/ui/dashboard.ts`
     - Zobrazit souhrnnou úspěšnost, rozčlenění podle kategorie/Pozice/Hloubkového_košu, aktuální streak a počet spotů relace; prázdné skupiny s indikací nedostupné úspěšnosti
     - _Requirements: 9.3, 9.4, 9.5, 9.7_
 
@@ -274,8 +274,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Ověřit gating startu (13.4), prázdný průnik (13.6) a zobrazení statistik vč. prázdných skupin (9.7)
     - _Requirements: 13.4, 13.6, 9.7_
 
-- [ ] 17. HH_Parser (parser hand history)
-  - [ ] 17.1 Implementovat `src/core/hhParser.ts`
+- [x] 17. HH_Parser (parser hand history)
+  - [x] 17.1 Implementovat `src/core/hhParser.ts`
     - Totální parser PokerStars-like textu: vytěžit pole hrdiny (pozice, akce, hloubky v BB, karty), označit nečitelná pole, sestavit Spot pouze pro kompatibilní 9-handed model a koše 5–150 BB; odmítnout vstup > 100 000 znaků
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
 
@@ -295,8 +295,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Ověřit odmítnutí vstupu > 100 000 znaků s chybovou zprávou bez pádu
     - _Requirements: 11.6_
 
-- [ ] 18. HH Import View
-  - [ ] 18.1 Implementovat `src/ui/hhView.ts`
+- [x] 18. HH Import View
+  - [x] 18.1 Implementovat `src/ui/hhView.ts`
     - UI pro vložení HH textu, zobrazení chyb/částečných výsledků a předání sestaveného Spotu do Table_Renderer
     - _Requirements: 11.2, 11.4_
 
@@ -304,8 +304,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Ověřit zobrazení chyb a nečitelných polí bez pádu a vykreslení kompatibilního Spotu
     - _Requirements: 11.2, 11.4_
 
-- [ ] 19. Offline provoz a PWA
-  - [ ] 19.1 Implementovat `src/pwa/sw.ts` a precache app shellu + dat
+- [x] 19. Offline provoz a PWA
+  - [x] 19.1 Implementovat `src/pwa/sw.ts` a precache app shellu + dat
     - Service Worker precachující kód, styly, Range_Store data a charty; zajistit běh bez síťových požadavků po prvním načtení; upozornění při selhání cache
     - _Requirements: 12.1, 12.2, 12.4, 12.5_
 
@@ -313,8 +313,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Ověřit funkce (generování, scoring, statistiky, matice) bez síťových požadavků (12.1, 12.5) a upozornění při selhání cache (12.4)
     - _Requirements: 12.1, 12.4, 12.5_
 
-- [ ] 20. Bootstrap a propojení aplikace
-  - [ ] 20.1 Implementovat `src/main.ts`
+- [x] 20. Bootstrap a propojení aplikace
+  - [x] 20.1 Implementovat `src/main.ts`
     - Inicializační pořadí migrace → ověření stavu → načtení Range_Store → UI; globální error boundary s českými zprávami; propojit filtry, drill engine, table renderer, range matici, scoring, stats, dashboard a HH view do funkčního celku
     - _Requirements: 4.6, 12.3, 13.4, 14.6_
 
@@ -322,7 +322,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Ověřit nespuštění relace při nedostupném Range_Store (4.6) a nekonzistentním úložišti (14.6) a stráž startu (13.4)
     - _Requirements: 4.6, 13.4, 14.6_
 
-- [ ] 21. Final checkpoint - ověření celé aplikace
+- [x] 21. Final checkpoint - ověření celé aplikace
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

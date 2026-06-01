@@ -125,6 +125,46 @@ export function expandToken(tokenRaw: string): HandLabel[] {
     return assertValid(token, out);
   }
 
+  // Rozsah kombinací se shodnou vyšší kartou a shodným suited/offsuit
+  // markerem; nižší karta probíhá inkluzivně mezi oběma krajními body:
+  //   "AJs-A9s" → AJs, ATs, A9s
+  //   "A5s-A2s" → A5s, A4s, A3s, A2s
+  //   "AJo-A9o" → AJo, ATo, A9o
+  m = RE_COMBO_RANGE.exec(token);
+  if (m) {
+    const highA = v(m[1]);
+    const lowA = v(m[2]);
+    const suitA = m[3] as "s" | "o";
+    const highB = v(m[4]);
+    const lowB = v(m[5]);
+    const suitB = m[6] as "s" | "o";
+
+    if (highA !== highB) {
+      throw new Error(
+        `Neplatný token „${token}": oba krajní body musí mít stejnou vyšší kartu.`,
+      );
+    }
+    if (suitA !== suitB) {
+      throw new Error(
+        `Neplatný token „${token}": oba krajní body musí mít stejný suited/offsuit marker.`,
+      );
+    }
+    const high = highA;
+    const suit = suitA;
+    if (high <= lowA || high <= lowB) {
+      throw new Error(
+        `Neplatný token „${token}": vyšší karta musí být v obou krajních bodech první.`,
+      );
+    }
+    // Iterace od prvního krajního bodu ke druhému (zachová zápis high→low),
+    // ale pokrývá inkluzivní rozsah nezávisle na pořadí zápisu.
+    const step = lowA >= lowB ? -1 : 1;
+    for (let low = lowA; step < 0 ? low >= lowB : low <= lowB; low += step) {
+      out.push(combo(high, low, suit));
+    }
+    return assertValid(token, out);
+  }
+
   // Suited/offsuit jednotlivě: "AKs", "T9o"
   m = RE_COMBO.exec(token);
   if (m) {
