@@ -561,6 +561,66 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 43.3 Otestovat úspěšný import i vyčištění analýzy při chybě
     - DOM test musí ověřit summary, range buňky a prázdný stav po nevalidním vstupu
 
+- [ ] 44. Perzistovat postflop výsledky jako samostatný event log
+  - [ ] 44.1 Navrhnout verzovaný localStorage klíč pro postflop eventy
+    - Zachovat stávající preflop `KEY_EVENTS`; nový klíč musí být explicitně verzovaný a nesmí kolidovat s legacy
+
+  - [ ] 44.2 Přidat `PostflopStatsStore` nebo adapter nad `PostflopStatsV2BridgeRecord`
+    - Ukládat, číst, validovat a defenzivně rollbackovat stejně jako `StatsStore`
+
+  - [ ] 44.3 Napojit postflop session, dashboard a JSON transfer na trvalý postflop log
+    - Po reloadu aplikace musí postflop breakdown přežít bez ručního importu
+
+- [ ] 45. Připravit legalní import skutečných MTT 6-max chipEV chartů
+  - [ ] 45.1 Definovat normalizační vstup pro 6-max RangePack import
+    - Pozice UTG/HJ/CO/BTN/SB/BB, ante ON/OFF, regular/turbo assumptions, stack bucket mapping a 169 hand tříd musí být explicitní
+
+  - [ ] 45.2 Přidat validační report pro candidate -> production povýšení
+    - Report musí odmítnout chybějící hand-class hodnoty, špatný `tableFormat`, `evModel` mismatch a nejasnou licenci
+
+  - [ ] 45.3 Připravit UI preview pro 6-max importovaný pack bez produkčního scoringu
+    - Dokud není pack ověřený, profil zůstane candidate/preview a nesmí spustit legacy 9-max drill
+
+- [ ] 46. Rozšířit postflop architekturu za flop single-raised pot
+  - [ ] 46.1 Přidat TURN/RIVER `TrainingSpot` generátory a typed action nodes
+    - Navázat na existující street model bez zavedení solverových frekvencí bez licence
+
+  - [ ] 46.2 Připravit StrategyPack sourcing audit pro turn/river veřejné heuristiky
+    - Oddělit public heuristics, assumptions, confidence a budoucí solver import
+
+  - [ ] 46.3 Rozšířit postflop dashboard breakdown o street progression
+    - Rozlišit flop-only, turn a river výsledky a zachovat export/import kompatibilitu
+
+- [ ] 47. Posunout SNG chipEV obsah před ICM produkční vrstvu
+  - [ ] 47.1 Dohledat a uložit aktuální SNG chipEV sourcing audit
+    - Porovnat více veřejných zdrojů, ale nekopírovat placené chart hodnoty
+
+  - [ ] 47.2 Připravit SNG chipEV import report pro 9-max i 6-max
+    - Oddělit chipEV od ICM, payout assumptions musí zůstat mimo chipEV pack
+
+  - [ ] 47.3 Přidat UI gating pro SNG candidate profily
+    - Uživatel musí jasně vidět, zda jde o chipEV preview nebo ICM preview
+
+- [ ] 48. Připravit cash game roadmap bez zásahu do MTT/SNG scoringu
+  - [ ] 48.1 Zpřesnit rake/no-rake datový model pro cash RangePacky
+    - Rake mode musí být explicitní dimenze, ale bez produkčního cash scoringu
+
+  - [ ] 48.2 Dohledat cash 6-max preflop sourcing audit
+    - Rozlišit cash 6-max od MTT 6-max a nepoužít cash data v turnajovém profilu
+
+  - [ ] 48.3 Přidat validační guard proti cash/MTT/SNG záměně
+    - `gameVariant`, `rakeMode`, `evModel` a `tableFormat` mismatch nikdy nesmí vybrat špatný pack
+
+- [ ] 49. Release hardening pro offline a Android WebView
+  - [ ] 49.1 Ověřit offline build a service worker cache po posledních datových změnách
+    - Zkontrolovat, že nové import/report moduly a range metadata jsou součástí bundlu
+
+  - [ ] 49.2 Doplnit mobilní/Android WebView smoke test scénáře
+    - Trénink, postflop, HH import, export/import JSON a candidate gating musí být použitelné na malém viewportu
+
+  - [ ] 49.3 Zkontrolovat české UI texty, přetékání a dlouhé identifikátory
+    - Zejména StrategyPack/RangePack id, postflop source evidence a HH analysis panel
+
 ## Notes
 
 - Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.
