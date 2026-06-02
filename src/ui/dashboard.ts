@@ -92,6 +92,7 @@ export interface DashboardData {
   */
   sessionCount: number;
   postflopRecords?: readonly PostflopStatsV2BridgeRecord[];
+  onPostflopRecordsImported?: (records: readonly PostflopStatsV2BridgeRecord[]) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -346,7 +347,9 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
   box.appendChild(status);
 
   exportBtn.addEventListener("click", () => {
-    textarea.value = buildStatsExportJson(data.store);
+    textarea.value = buildStatsExportJson(data.store, new Date(), {
+      postflopRecords: data.postflopRecords ?? [],
+    });
     status.hidden = false;
     status.className = "stats-transfer__status stats-transfer__status--ok";
     status.textContent = "Export statistik je připravený v poli JSON.";
@@ -356,7 +359,11 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     const result = importStatsJson(textarea.value, data.store);
     status.hidden = false;
     if (result.ok) {
-      renderDashboard(data, root);
+      data.onPostflopRecordsImported?.(result.postflopRecords);
+      renderDashboard({
+        ...data,
+        postflopRecords: result.postflopRecords,
+      }, root);
       const refreshedStatus = root.querySelector<HTMLElement>(".stats-transfer__status");
       if (refreshedStatus) {
         refreshedStatus.hidden = false;

@@ -183,6 +183,41 @@ export function isPostflopResultRecord(value: unknown): value is PostflopResultR
   );
 }
 
+export function isPostflopStatsV2BridgeRecord(
+  value: unknown,
+): value is PostflopStatsV2BridgeRecord {
+  if (typeof value !== "object" || value === null) return false;
+  const record = value as Partial<PostflopStatsV2BridgeRecord>;
+  return (
+    record.schema === POSTFLOP_STATS_V2_BRIDGE_SCHEMA &&
+    typeof record.qid === "string" &&
+    typeof record.correct === "boolean" &&
+    typeof record.ts === "number" &&
+    Number.isFinite(record.ts) &&
+    typeof record.profileId === "string" &&
+    typeof record.gameVariant === "string" &&
+    typeof record.tableFormat === "string" &&
+    typeof record.blindSpeed === "string" &&
+    isPostflopStreet(record.street) &&
+    typeof record.evModel === "string" &&
+    typeof record.rakeMode === "string" &&
+    typeof record.actionNode === "string" &&
+    record.potType === "SINGLE_RAISED" &&
+    typeof record.boardTextureKey === "string" &&
+    typeof record.heroPosition === "string" &&
+    typeof record.villainPosition === "string" &&
+    isPostflopPositionPattern(record.positionPattern) &&
+    isPostflopAction(record.chosen) &&
+    isPostflopAction(record.recommended) &&
+    (typeof record.strategyPackId === "string" || record.strategyPackId === null) &&
+    typeof record.strategyRuleId === "string" &&
+    (record.confidence === "LOW" ||
+      record.confidence === "MEDIUM" ||
+      record.confidence === "HIGH" ||
+      record.confidence === null)
+  );
+}
+
 export function availablePostflopStatsDimensions(): PostflopStatsBreakdownDim[] {
   return [
     "street",

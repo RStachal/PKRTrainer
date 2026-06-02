@@ -541,6 +541,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 41.3 Přidat validační guard proti použití ICM packu v chipEV profilu
     - Testy musí prokázat, že `evModel` mismatch nikdy nevybere špatný pack
 
+- [x] 42. Rozšířit stats export/import o postflop výsledky
+  - [x] 42.1 Přidat postflopRecords do JSON payloadu statistik
+    - Zachovat zpětnou kompatibilitu starého preflop-only exportu
+
+  - [x] 42.2 Napojit dashboard import/export na postflop breakdown
+    - Po importu obnovit postflop breakdown bez změny localStorage klíčů
+
+  - [x] 42.3 Otestovat kombinovaný preflop/postflop transfer
+    - Unit a DOM testy musí pokrýt export, import a legacy payload bez postflopu
+
 ## Notes
 
 - Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.

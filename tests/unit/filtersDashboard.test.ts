@@ -234,4 +234,45 @@ describe("dashboard - DOM statistiky", () => {
       )?.dataset.total,
     ).toBe("1");
   });
+
+  it("exportuje a importuje postflop breakdown pres JSON transfer", () => {
+    const sourceStore = createStatsStore(new MemoryStorage());
+    expect(sourceStore.record(record).ok).toBe(true);
+    const sourceRoot = document.createElement("div");
+    renderDashboard({
+      store: sourceStore,
+      sessionCount: 1,
+      postflopRecords: [postflopRecord],
+    }, sourceRoot);
+
+    sourceRoot.querySelector<HTMLButtonElement>(".stats-export")?.click();
+    const exported = sourceRoot.querySelector<HTMLTextAreaElement>(".stats-json-box")?.value;
+    expect(exported).toContain("postflopRecords");
+
+    const targetStore = createStatsStore(new MemoryStorage());
+    const targetRoot = document.createElement("div");
+    let importedPostflop: readonly PostflopStatsV2BridgeRecord[] = [];
+    renderDashboard({
+      store: targetStore,
+      sessionCount: 0,
+      postflopRecords: [],
+      onPostflopRecordsImported: (records) => {
+        importedPostflop = records;
+      },
+    }, targetRoot);
+
+    const box = targetRoot.querySelector<HTMLTextAreaElement>(".stats-json-box");
+    box!.value = exported!;
+    targetRoot.querySelector<HTMLButtonElement>(".stats-import")?.click();
+
+    expect(targetStore.events()).toEqual([record]);
+    expect(importedPostflop).toEqual([postflopRecord]);
+    expect(targetRoot.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total)
+      .toBe("1");
+    expect(
+      targetRoot.querySelector<HTMLElement>(
+        '.postflop-breakdown--street .postflop-breakdown-row[data-group="FLOP"]',
+      )?.dataset.total,
+    ).toBe("1");
+  });
 });

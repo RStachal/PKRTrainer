@@ -271,7 +271,14 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   let postflopRecords: PostflopStatsV2BridgeRecord[] = [];
   let currentPostflopProfile: TrainingProfile | undefined;
   const refreshDashboard = (): void => {
-    renderDashboard({ store: statsStore, sessionCount, postflopRecords }, shell.statsPanel);
+    renderDashboard({
+      store: statsStore,
+      sessionCount,
+      postflopRecords,
+      onPostflopRecordsImported: (records) => {
+        postflopRecords = records.map((record) => ({ ...record }));
+      },
+    }, shell.statsPanel);
   };
   const renderPostflopPanel = (
     options: { initialSeed?: number; profile?: TrainingProfile } = {},
