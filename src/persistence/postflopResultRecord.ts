@@ -1,0 +1,205 @@
+import type {
+  BoardTexture,
+  PostflopAction,
+  PostflopPositionPattern,
+  PostflopRecommendationSource,
+  PostflopStreet,
+} from "../core/postflopGenerator";
+import type {
+  PostflopActionNode,
+  PostflopTrainingSpot,
+} from "../core/postflopTrainingSpot";
+import {
+  DEFAULT_TRAINING_PROFILE,
+  profileId,
+  type BlindSpeed,
+  type EvModel,
+  type GameVariant,
+  type RakeMode,
+  type TableFormat,
+  type TrainingProfile,
+} from "../core/trainingProfile";
+import type { Position } from "../core/types";
+
+export const POSTFLOP_RESULT_RECORD_SCHEMA = "postflop_result_record_v1";
+export const POSTFLOP_STATS_V2_BRIDGE_SCHEMA = "postflop_stats_v2_bridge_v1";
+
+export interface PostflopResultRecord {
+  schema: typeof POSTFLOP_RESULT_RECORD_SCHEMA;
+  qid: string;
+  chosen: PostflopAction;
+  recommended: PostflopAction;
+  correct: boolean;
+  street: PostflopStreet;
+  actionNode: PostflopActionNode;
+  potType: "SINGLE_RAISED";
+  spr: number;
+  boardTextures: readonly BoardTexture[];
+  heroPosition: Position;
+  villainPosition: Position;
+  positionPattern: PostflopPositionPattern;
+  sourceKind: PostflopRecommendationSource["kind"];
+  sourcePackId: string | null;
+  sourceRuleId: string;
+  sourceConfidence: "LOW" | "MEDIUM" | "HIGH" | null;
+  ts: number;
+}
+
+export interface PostflopStatsV2BridgeRecord {
+  schema: typeof POSTFLOP_STATS_V2_BRIDGE_SCHEMA;
+  qid: string;
+  correct: boolean;
+  ts: number;
+  profileId: string;
+  gameVariant: GameVariant;
+  tableFormat: TableFormat;
+  blindSpeed: BlindSpeed;
+  street: PostflopStreet;
+  evModel: EvModel;
+  rakeMode: RakeMode;
+  actionNode: PostflopActionNode;
+  potType: "SINGLE_RAISED";
+  boardTextureKey: string;
+  heroPosition: Position;
+  villainPosition: Position;
+  positionPattern: PostflopPositionPattern;
+  chosen: PostflopAction;
+  recommended: PostflopAction;
+  strategyPackId: string | null;
+  strategyRuleId: string;
+  confidence: "LOW" | "MEDIUM" | "HIGH" | null;
+}
+
+export interface PostflopStatsV2BridgeOptions {
+  profile?: Partial<TrainingProfile>;
+}
+
+export function buildPostflopResultRecord(
+  spot: PostflopTrainingSpot,
+  chosen: PostflopAction,
+  ts = Date.now(),
+): PostflopResultRecord {
+  const source = spot.explanation.source;
+  return {
+    schema: POSTFLOP_RESULT_RECORD_SCHEMA,
+    qid: spot.id,
+    chosen,
+    recommended: spot.recommendedAction,
+    correct: chosen === spot.recommendedAction,
+    street: spot.street,
+    actionNode: spot.actionNode,
+    potType: spot.potType,
+    spr: spot.spr,
+    boardTextures: [...spot.boardTextures],
+    heroPosition: spot.heroPosition,
+    villainPosition: spot.villainPosition,
+    positionPattern: spot.positionPattern,
+    sourceKind: source.kind,
+    sourcePackId: source.kind === "STRATEGY_PACK" ? source.packId : null,
+    sourceRuleId: source.ruleId,
+    sourceConfidence: source.kind === "STRATEGY_PACK" ? source.confidence : null,
+    ts,
+  };
+}
+
+export function bridgePostflopResultRecordToStatsV2(
+  record: PostflopResultRecord,
+  options: PostflopStatsV2BridgeOptions = {},
+): PostflopStatsV2BridgeRecord {
+  const profile: TrainingProfile = {
+    ...DEFAULT_TRAINING_PROFILE,
+    ...options.profile,
+    street: record.street,
+  };
+
+  return {
+    schema: POSTFLOP_STATS_V2_BRIDGE_SCHEMA,
+    qid: record.qid,
+    correct: record.correct,
+    ts: record.ts,
+    profileId: profileId(profile),
+    gameVariant: profile.gameVariant,
+    tableFormat: profile.tableFormat,
+    blindSpeed: profile.blindSpeed,
+    street: record.street,
+    evModel: profile.evModel,
+    rakeMode: profile.rakeMode,
+    actionNode: record.actionNode,
+    potType: record.potType,
+    boardTextureKey: record.boardTextures.join("|"),
+    heroPosition: record.heroPosition,
+    villainPosition: record.villainPosition,
+    positionPattern: record.positionPattern,
+    chosen: record.chosen,
+    recommended: record.recommended,
+    strategyPackId: record.sourcePackId,
+    strategyRuleId: record.sourceRuleId,
+    confidence: record.sourceConfidence,
+  };
+}
+
+export function isPostflopResultRecord(value: unknown): value is PostflopResultRecord {
+  if (typeof value !== "object" || value === null) return false;
+  const record = value as Partial<PostflopResultRecord>;
+  return (
+    record.schema === POSTFLOP_RESULT_RECORD_SCHEMA &&
+    typeof record.qid === "string" &&
+    isPostflopAction(record.chosen) &&
+    isPostflopAction(record.recommended) &&
+    typeof record.correct === "boolean" &&
+    isPostflopStreet(record.street) &&
+    typeof record.actionNode === "string" &&
+    record.potType === "SINGLE_RAISED" &&
+    typeof record.spr === "number" &&
+    Number.isFinite(record.spr) &&
+    Array.isArray(record.boardTextures) &&
+    record.boardTextures.every(isBoardTexture) &&
+    typeof record.heroPosition === "string" &&
+    typeof record.villainPosition === "string" &&
+    isPostflopPositionPattern(record.positionPattern) &&
+    (record.sourceKind === "STRATEGY_PACK" || record.sourceKind === "FALLBACK") &&
+    (typeof record.sourcePackId === "string" || record.sourcePackId === null) &&
+    typeof record.sourceRuleId === "string" &&
+    (record.sourceConfidence === "LOW" ||
+      record.sourceConfidence === "MEDIUM" ||
+      record.sourceConfidence === "HIGH" ||
+      record.sourceConfidence === null) &&
+    typeof record.ts === "number" &&
+    Number.isFinite(record.ts)
+  );
+}
+
+function isPostflopAction(value: unknown): value is PostflopAction {
+  return value === "CHECK" || value === "BET_SMALL" || value === "BET_BIG";
+}
+
+function isPostflopStreet(value: unknown): value is PostflopStreet {
+  return value === "FLOP" || value === "TURN" || value === "RIVER";
+}
+
+function isBoardTexture(value: unknown): value is BoardTexture {
+  return (
+    value === "paired" ||
+    value === "monotone" ||
+    value === "two-tone" ||
+    value === "rainbow" ||
+    value === "connected" ||
+    value === "dry" ||
+    value === "ace-high" ||
+    value === "broadway-high" ||
+    value === "low" ||
+    value === "medium" ||
+    value === "straight-possible" ||
+    value === "flush-draw-heavy" ||
+    value === "disconnected"
+  );
+}
+
+function isPostflopPositionPattern(value: unknown): value is PostflopPositionPattern {
+  return (
+    value === "EP_VS_BB" ||
+    value === "BTN_VS_BB" ||
+    value === "SB_VS_BB" ||
+    value === "OOP_RAISER_VS_IP_CALLER"
+  );
+}
