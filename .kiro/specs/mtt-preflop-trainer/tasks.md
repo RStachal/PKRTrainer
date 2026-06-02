@@ -471,6 +471,76 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 34.3 Přidat unit testy pro překryvy pravidel
     - Ověřit low-SPR dry/paired boardy a dynamické multi-texture boardy
 
+- [ ] 35. Napojit postflop na plnohodnotnou tréninkovou relaci
+  - [ ] 35.1 Routovat `TrainingProfile.street = FLOP` do postflop session flow
+    - Profile selector musí umět přepnout z preflop drill panelu na postflop trénink bez ručního tabování
+
+  - [ ] 35.2 Definovat `PostflopResultRecord` a bridge do statistik v2
+    - Ukládat street, actionNode, potType, SPR, boardTextures, chosen action, recommended action, source pack/rule a correct flag
+
+  - [ ] 35.3 Rozšířit dashboard o postflop breakdown
+    - Seskupovat podle street, actionNode, board texture, StrategyPack id a confidence
+
+- [ ] 36. Importní a validační report pro Postflop StrategyPack
+  - [ ] 36.1 Implementovat `postflopStrategyPackImportReport`
+    - Reportovat validitu, počet zdrojů, počet rules, překryvy, unsupported actions a LOW confidence warnings
+
+  - [ ] 36.2 Validovat source evidence a rule overlap
+    - Každý pack musí mít alespoň 2 zdroje; překryvy pravidel musí mít deterministický výběr nebo explicitní priority
+
+  - [ ] 36.3 Přidat textový report pro review
+    - Stejně jako u preflop RangePack importu mít čitelný review výstup pro commit a budoucí audit
+
+- [ ] 37. Pozicně přesnější flop single-raised pot model
+  - [ ] 37.1 Rozšířit `PostflopTrainingSpot` o pozice a IP/OOP kontext
+    - Přidat heroPosition, villainPosition, aggressorPosition, callerPosition, inPosition a callerType
+
+  - [ ] 37.2 Generovat pozicní archetypy pro MTT 9-max
+    - Minimálně EP vs BB, BTN vs BB, SB vs BB a OOP raiser vs IP caller jako oddělené patterny
+
+  - [ ] 37.3 Matcher pravidel musí respektovat `positionPattern`
+    - Resolver má vybírat rule podle pozice i textury, ne pouze podle board texture a SPR
+
+- [ ] 38. Zpřesnit flop board texture taxonomii
+  - [ ] 38.1 Rozšířit klasifikaci boardu
+    - Přidat ace-high, broadway-high, low, medium, straight-possible, flush-draw-heavy a disconnected
+
+  - [ ] 38.2 Aktualizovat public-heuristic flop rules
+    - Nové textury mapovat na existující principy bez přidání placených frekvencí
+
+  - [ ] 38.3 Přidat unit/property testy textur
+    - Ověřit reprezentativní boardy: A72r, K83r, 987tt, JT8tt, 665r, monotone broadway
+
+- [ ] 39. Postflop UI evidence a učební feedback
+  - [ ] 39.1 Přidat detail StrategyPack zdrojů v postflop view
+    - Zobrazit pack id, version, verifiedAt, confidence, source URLs a assumptions pro aktuální spot
+
+  - [ ] 39.2 Zobrazit proč bylo zvoleno konkrétní pravidlo
+    - Ukázat matched textures, SPR interval, positionPattern a tie-break výsledek
+
+  - [ ] 39.3 Zachovat české a mobilně použitelné UX
+    - Praktické vysvětlení nesmí přetékat a musí zůstat offline-first
+
+- [ ] 40. MTT 6-max preflop chipEV jako další obsahová vertikála
+  - [ ] 40.1 Dohledat a uložit sourcing audit pro MTT 6-max chipEV
+    - Porovnat minimálně 2 veřejné zdroje a oddělit regular/turbo assumptions
+
+  - [ ] 40.2 Připravit candidate RangePacky pro 6-max
+    - Bez produkčního zapojení, dokud nejsou ověřené hand-class hodnoty a import report
+
+  - [ ] 40.3 Otestovat profilové vyhledání a UI gating
+    - 6-max profil musí jasně ukázat candidate/preview stav, ne produkční jistotu
+
+- [ ] 41. SNG chipEV -> ICM přechod bez míchání modelů
+  - [ ] 41.1 Zpřesnit SNG chipEV candidate pack workflow
+    - Oddělit chipEV sourcing, ICM sourcing a payout/stack assumptions v reportu
+
+  - [ ] 41.2 Připravit ICM simulation input model pro import
+    - Payout structure, remaining players, stack distribution, bubble factor a spot type musí být explicitní
+
+  - [ ] 41.3 Přidat validační guard proti použití ICM packu v chipEV profilu
+    - Testy musí prokázat, že `evModel` mismatch nikdy nevybere špatný pack
+
 ## Notes
 
 - Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.
