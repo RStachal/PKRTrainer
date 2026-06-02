@@ -7,6 +7,7 @@ import {
   mttPreflopAnteOffRangePack,
   mttPreflopAnteOnRangePack,
   mttPreflopRangePacks,
+  mttSixMaxCandidateImportReports,
   mttSixMaxPreflopRangePackCandidates,
 } from "../../src/data/ranges/mttPreflopRangePacks";
 import { DEFAULT_TRAINING_PROFILE, profileWith } from "../../src/core/trainingProfile";
@@ -71,6 +72,24 @@ describe("mttPreflopRangePacks", () => {
       expect(pack.sourceEvidence.length).toBeGreaterThanOrEqual(5);
       expect(pack.records).toHaveLength(0);
       expect(pack.assumptions.join(" ")).toContain("Candidate RangePack");
+    }
+  });
+
+  it("vytvori import reporty pro 6-max candidate packy pred produkcnim zapojenim", () => {
+    expect(mttSixMaxCandidateImportReports).toHaveLength(4);
+
+    for (const report of mttSixMaxCandidateImportReports) {
+      expect(report.valid).toBe(true);
+      expect(report.errors).toEqual([]);
+      expect(report.sourceCount).toBeGreaterThanOrEqual(5);
+      expect(report.searchQueryCount).toBe(4);
+      expect(report.recordCount).toBe(0);
+      expect(report.totalExplicitHands).toBe(0);
+      expect(report.totalImpliedFolds).toBe(0);
+      expect(report.warnings).toEqual([
+        "RangePack confidence is LOW; review before production use.",
+        "RangePack has no records.",
+      ]);
     }
   });
 

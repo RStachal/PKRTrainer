@@ -2,6 +2,10 @@ import type { AnteMode } from "../../core/types";
 import type { BlindSpeed, TrainingProfile } from "../../core/trainingProfile";
 import type { RangeFile } from "./schema";
 import type { RangePack, RangeSourceEvidence } from "./rangePack";
+import {
+  buildRangePackImportReport,
+  type RangePackImportReport,
+} from "./rangePackImport";
 import { anteOffRanges } from "./ante-off";
 import { anteOnRanges } from "./ante-on";
 
@@ -215,6 +219,9 @@ export const mttSixMaxPreflopRangePackCandidates = [
   mttSixMaxCandidateRangePack("TURBO", "ON"),
   mttSixMaxCandidateRangePack("TURBO", "OFF"),
 ] as const;
+
+export const mttSixMaxCandidateImportReports: readonly RangePackImportReport[] =
+  mttSixMaxPreflopRangePackCandidates.map(buildRangePackImportReport);
 
 export const allMttPreflopRangePacks = [
   ...mttPreflopRangePacks,

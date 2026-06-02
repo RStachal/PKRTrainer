@@ -525,7 +525,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 40.1 Dohledat a uložit sourcing audit pro MTT 6-max chipEV
     - Porovnat minimálně 2 veřejné zdroje a oddělit regular/turbo assumptions
 
-  - [ ] 40.2 Připravit candidate RangePacky pro 6-max
+  - [x] 40.2 Připravit candidate RangePacky pro 6-max
     - Bez produkčního zapojení, dokud nejsou ověřené hand-class hodnoty a import report
 
   - [ ] 40.3 Otestovat profilové vyhledání a UI gating
