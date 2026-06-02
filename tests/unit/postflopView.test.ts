@@ -34,9 +34,16 @@ describe("postflopView - DOM", () => {
     const root = document.createElement("div");
     renderPostflopView(root);
 
-    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    let result: HTMLElement | null = null;
+    for (let seed = 0; seed < 100; seed += 1) {
+      root.querySelector<HTMLInputElement>(".postflop-seed")!.value = String(seed);
+      root.querySelector<HTMLSelectElement>(".postflop-street")!.value = "FLOP";
+      root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+      root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+      result = root.querySelector<HTMLElement>(".postflop-result");
+      if (result?.textContent?.includes("Pack:")) break;
+    }
 
-    const result = root.querySelector<HTMLElement>(".postflop-result");
     expect(result?.hidden).toBe(false);
     expect(result?.textContent).toContain("Doporu\u010deno");
     expect(root.querySelectorAll<HTMLButtonElement>(".postflop-action:disabled"))
