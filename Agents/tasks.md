@@ -451,6 +451,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 32.3 Zobrazit rule/source evidence v praktickém postflop vysvětlení
     - Po odpovědi ukázat, zda rozhodnutí přišlo z packu, nebo z fallback heuristiky
 
+- [x] 33. Veřejně dohledané flop c-bet heuristiky pro MTT
+  - [x] 33.1 Přidat postflop sourcing audit pro flop single-raised pot
+    - Porovnat minimálně 2 veřejné zdroje a uložit závěr, že jde o heuristický pack, ne kopii chartů
+
+  - [x] 33.2 Doplnit source evidence metadata do Postflop StrategyPacku
+    - Každý postflop pack musí nést URL, datum ověření, variantu hry, model a licenční poznámku
+
+  - [x] 33.3 Rozšířit flop StrategyPack o veřejně obhajitelné texturové rule
+    - Přidat jen obecné pravidlo na úrovni textur/SPR/sizingu; žádné placené hand-frequency tabulky
+
 ## Notes
 
 - Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.

@@ -48,8 +48,21 @@ export interface PostflopStrategyPack {
   verifiedAt: string;
   confidence: "LOW" | "MEDIUM" | "HIGH";
   dimensions: PostflopStrategyPackDimensions;
+  sourceEvidence: readonly PostflopStrategySourceEvidence[];
   assumptions: readonly string[];
   rules: readonly PostflopStrategyRule[];
+}
+
+export interface PostflopStrategySourceEvidence {
+  url: string;
+  verifiedAt: string;
+  operator: string;
+  gameVariant: GameVariant;
+  tableFormat: TableFormat | "GENERAL";
+  street: PostflopStreet;
+  evModel: EvModel | "GENERAL";
+  methodology: string;
+  licenseNote: string;
 }
 
 export const POSTFLOP_STRATEGY_ACTIONS = [
@@ -64,8 +77,8 @@ export const POSTFLOP_STRATEGY_ACTIONS = [
 const CREATED_AT = "2026-06-02";
 
 export const flopSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
-  id: "mtt-full-ring-9-flop-single-raised-chip-ev-prototype-v0",
-  version: "prototype-v0",
+  id: "mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1",
+  version: "public-heuristic-v1",
   createdAt: CREATED_AT,
   verifiedAt: CREATED_AT,
   confidence: "LOW",
@@ -76,8 +89,54 @@ export const flopSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
     evModel: "CHIP_EV",
     potType: "SINGLE_RAISED",
   },
+  sourceEvidence: [
+    {
+      url: "https://blog.gtowizard.com/flop-heuristics-ip-c-betting-in-mtts/",
+      verifiedAt: CREATED_AT,
+      operator: "GTO Wizard",
+      gameVariant: "MTT",
+      tableFormat: "GENERAL",
+      street: "FLOP",
+      evModel: "CHIP_EV",
+      methodology: "Public aggregate flop heuristic article; no chart values copied.",
+      licenseNote: "Citation and heuristic interpretation only.",
+    },
+    {
+      url: "https://blog.gtowizard.com/the-mechanics-of-c-bet-sizing/",
+      verifiedAt: CREATED_AT,
+      operator: "GTO Wizard",
+      gameVariant: "MTT",
+      tableFormat: "GENERAL",
+      street: "FLOP",
+      evModel: "GENERAL",
+      methodology: "Public sizing mechanics article; range/nut advantage principles only.",
+      licenseNote: "Citation and heuristic interpretation only.",
+    },
+    {
+      url: "https://blog.gtowizard.com/c-betting-against-icm-preflop-ranges/",
+      verifiedAt: CREATED_AT,
+      operator: "GTO Wizard",
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      street: "FLOP",
+      evModel: "CHIP_EV",
+      methodology: "Public MTT EP vs BB c-bet discussion; ICM marked as future dimension.",
+      licenseNote: "Citation and heuristic interpretation only.",
+    },
+    {
+      url: "https://upswingpoker.com/continuation-bet-c-bet-strategy-position/",
+      verifiedAt: CREATED_AT,
+      operator: "Upswing Poker",
+      gameVariant: "MTT",
+      tableFormat: "GENERAL",
+      street: "FLOP",
+      evModel: "GENERAL",
+      methodology: "Public education article used as cross-check for IP/OOP and texture concepts.",
+      licenseNote: "Citation and heuristic interpretation only.",
+    },
+  ],
   assumptions: [
-    "Prototype strategy pack only; it preserves today's simple postflop feedback.",
+    "Public heuristic StrategyPack only; no paid chart values or exact solver frequencies are copied.",
     "Flop first: board texture, position pattern, pot type, SPR and effective stack are explicit dimensions.",
     "Turn and river packs should be added only after the flop model is stable.",
   ],
@@ -85,7 +144,7 @@ export const flopSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
     {
       id: "flop-srp-dry-small-cbet",
       actionNode: "SINGLE_RAISED_POT_CBET",
-      boardTextures: ["dry", "rainbow"],
+      boardTextures: ["dry"],
       sprMin: 2,
       sprMax: 12,
       positionPattern: "IP_OR_RANGE_ADVANTAGE",
@@ -93,6 +152,18 @@ export const flopSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
       preferredAction: "BET_SMALL",
       explanation:
         "Suchy rainbow flop je vhodny pro maly c-bet, protoze casto drzi range advantage.",
+    },
+    {
+      id: "flop-srp-paired-small-cbet",
+      actionNode: "SINGLE_RAISED_POT_CBET",
+      boardTextures: ["paired"],
+      sprMin: 2,
+      sprMax: 12,
+      positionPattern: "IP_OR_RANGE_ADVANTAGE",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "BET_SMALL",
+      explanation:
+        "Sparovany rainbow flop casto min pomaha callerovi; maly c-bet je jednoduchy zaklad.",
     },
     {
       id: "flop-srp-dynamic-check",
@@ -106,6 +177,30 @@ export const flopSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
       explanation:
         "Dynamicky flop meni equity casteji; bez solveroveho packu je check konzervativni zaklad.",
     },
+    {
+      id: "flop-srp-monotone-check",
+      actionNode: "SINGLE_RAISED_POT_CBET",
+      boardTextures: ["monotone"],
+      sprMin: 2,
+      sprMax: 12,
+      positionPattern: "OOP_OR_DYNAMIC_BOARD",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "CHECK",
+      explanation:
+        "Monotone flop zveda riziko silnych flush kombinaci a check-raise; bez presne range volime check.",
+    },
+    {
+      id: "flop-srp-low-spr-range-advantage-small-cbet",
+      actionNode: "SINGLE_RAISED_POT_CBET",
+      boardTextures: ["dry", "rainbow", "paired"],
+      sprMin: 1,
+      sprMax: 4,
+      positionPattern: "EP_VS_BLINDS_OR_STRONG_RANGE_ADVANTAGE",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "BET_SMALL",
+      explanation:
+        "Pri nizsim SPR staci maly flop bet k tlaku a stacky lze dostat dovnitr pozdeji.",
+    },
   ],
 };
 
@@ -114,6 +209,7 @@ export function validatePostflopStrategyPack(pack: PostflopStrategyPack): string
 
   if (pack.id.trim().length === 0) errors.push("StrategyPack id is required.");
   if (pack.version.trim().length === 0) errors.push("StrategyPack version is required.");
+  if (pack.sourceEvidence.length < 2) errors.push("StrategyPack needs at least two source evidence entries.");
   if (pack.assumptions.length === 0) errors.push("StrategyPack assumptions are required.");
   if (pack.rules.length === 0) errors.push("StrategyPack must contain at least one rule.");
 

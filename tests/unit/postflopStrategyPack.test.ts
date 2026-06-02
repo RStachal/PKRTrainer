@@ -20,6 +20,11 @@ describe("postflopStrategyPack", () => {
     ]);
     expect(validatePostflopStrategyPack(flopSingleRaisedPrototypeStrategyPack))
       .toEqual([]);
+    expect(flopSingleRaisedPrototypeStrategyPack.id)
+      .toBe("mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1");
+    expect(flopSingleRaisedPrototypeStrategyPack.sourceEvidence.length).toBeGreaterThanOrEqual(2);
+    expect(flopSingleRaisedPrototypeStrategyPack.sourceEvidence.map((source) => source.operator))
+      .toEqual(expect.arrayContaining(["GTO Wizard", "Upswing Poker"]));
     expect(flopSingleRaisedPrototypeStrategyPack.dimensions).toEqual({
       gameVariant: "MTT",
       tableFormat: "FULL_RING_9",
@@ -58,8 +63,20 @@ describe("postflopStrategyPack", () => {
       boardTextures: ["connected", "two-tone"],
       spr: 5,
     });
+    const paired = matchingPostflopRules(flopSingleRaisedPrototypeStrategyPack, {
+      actionNode: "SINGLE_RAISED_POT_CBET",
+      boardTextures: ["paired", "rainbow"],
+      spr: 5,
+    });
+    const monotone = matchingPostflopRules(flopSingleRaisedPrototypeStrategyPack, {
+      actionNode: "SINGLE_RAISED_POT_CBET",
+      boardTextures: ["monotone"],
+      spr: 5,
+    });
 
     expect(dry.map((rule) => rule.preferredAction)).toEqual(["BET_SMALL"]);
     expect(dynamic.map((rule) => rule.preferredAction)).toEqual(["CHECK"]);
+    expect(paired.map((rule) => rule.id)).toContain("flop-srp-paired-small-cbet");
+    expect(monotone.map((rule) => rule.id)).toContain("flop-srp-monotone-check");
   });
 });
