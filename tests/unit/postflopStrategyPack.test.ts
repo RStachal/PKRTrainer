@@ -4,6 +4,7 @@ import {
   POSTFLOP_STRATEGY_ACTIONS,
   flopSingleRaisedPrototypeStrategyPack,
   matchingPostflopRules,
+  positionPatternMatches,
   validatePostflopStrategyPack,
   validatePostflopStrategyRule,
 } from "../../src/data/ranges/postflopStrategyPack";
@@ -41,7 +42,7 @@ describe("postflopStrategyPack", () => {
       boardTextures: ["dry"],
       sprMin: 10,
       sprMax: 2,
-      positionPattern: "TEST",
+      positionPattern: "BTN_VS_BB",
       actions: ["CHECK"],
       preferredAction: "BET_BIG",
       explanation: "",
@@ -57,11 +58,13 @@ describe("postflopStrategyPack", () => {
       actionNode: "SINGLE_RAISED_POT_CBET",
       boardTextures: ["dry", "rainbow"],
       spr: 5,
+      positionPattern: "BTN_VS_BB",
     });
     const dynamic = matchingPostflopRules(flopSingleRaisedPrototypeStrategyPack, {
       actionNode: "SINGLE_RAISED_POT_CBET",
       boardTextures: ["connected", "two-tone"],
       spr: 5,
+      positionPattern: "OOP_RAISER_VS_IP_CALLER",
     });
     const paired = matchingPostflopRules(flopSingleRaisedPrototypeStrategyPack, {
       actionNode: "SINGLE_RAISED_POT_CBET",
@@ -92,5 +95,25 @@ describe("postflopStrategyPack", () => {
       .toContain("flop-srp-ace-high-disconnected-small-cbet");
     expect(drawHeavy.map((rule) => rule.id))
       .toContain("flop-srp-straight-flush-draw-heavy-check");
+  });
+
+  it("filtruje pravidla podle postflop pozicniho patternu", () => {
+    expect(positionPatternMatches("IP_OR_RANGE_ADVANTAGE", "BTN_VS_BB"))
+      .toBe(true);
+    expect(positionPatternMatches("IP_OR_RANGE_ADVANTAGE", "SB_VS_BB"))
+      .toBe(false);
+    expect(positionPatternMatches("OOP_OR_DYNAMIC_BOARD", "OOP_RAISER_VS_IP_CALLER"))
+      .toBe(true);
+    expect(positionPatternMatches("EP_VS_BLINDS_OR_STRONG_RANGE_ADVANTAGE", "BTN_VS_BB"))
+      .toBe(false);
+
+    const sbDry = matchingPostflopRules(flopSingleRaisedPrototypeStrategyPack, {
+      actionNode: "SINGLE_RAISED_POT_CBET",
+      boardTextures: ["dry", "rainbow"],
+      spr: 5,
+      positionPattern: "SB_VS_BB",
+    });
+
+    expect(sbDry).toEqual([]);
   });
 });

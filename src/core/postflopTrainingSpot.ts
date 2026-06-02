@@ -1,7 +1,9 @@
-import type { Card } from "./types";
+import type { Card, Position } from "./types";
 import type {
   BoardTexture,
   PostflopAction,
+  PostflopCallerType,
+  PostflopPositionPattern,
   PostflopRecommendationSource,
   PostflopSpot,
   PostflopStreet,
@@ -44,6 +46,13 @@ export interface PostflopTrainingSpot {
   potBB: number;
   effectiveStackBB: number;
   spr: number;
+  heroPosition: Position;
+  villainPosition: Position;
+  aggressorPosition: Position;
+  callerPosition: Position;
+  inPosition: boolean;
+  callerType: PostflopCallerType;
+  positionPattern: PostflopPositionPattern;
   actions: readonly PostflopActionOption[];
   recommendedAction: PostflopAction;
   explanation: PostflopExplanation;
@@ -68,6 +77,13 @@ export function postflopSpotToTrainingSpot(spot: PostflopSpot): PostflopTraining
     potBB: spot.potBB,
     effectiveStackBB: spot.effectiveStackBB,
     spr: roundedSpr(spot.effectiveStackBB, spot.potBB),
+    heroPosition: spot.heroPosition,
+    villainPosition: spot.villainPosition,
+    aggressorPosition: spot.aggressorPosition,
+    callerPosition: spot.callerPosition,
+    inPosition: spot.inPosition,
+    callerType: spot.callerType,
+    positionPattern: spot.positionPattern,
     actions: spot.actions.map((action) => ({
       action,
       sizing: action,

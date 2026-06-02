@@ -1,6 +1,8 @@
 import type {
   BoardTexture,
   PostflopAction,
+  PostflopPositionPattern,
+  PostflopStrategyPositionPattern,
   PostflopStreet,
 } from "../../core/postflopGenerator";
 import type { PostflopActionNode } from "../../core/postflopTrainingSpot";
@@ -35,7 +37,7 @@ export interface PostflopStrategyRule {
   boardTextures: readonly BoardTexture[];
   sprMin: number;
   sprMax: number;
-  positionPattern: string;
+  positionPattern: PostflopStrategyPositionPattern;
   actions: readonly PostflopStrategyAction[];
   preferredAction: PostflopStrategyAction;
   explanation: string;
@@ -270,12 +272,36 @@ export function matchingPostflopRules(
     actionNode: PostflopActionNode;
     boardTextures: readonly BoardTexture[];
     spr: number;
+    positionPattern?: PostflopPositionPattern;
   },
 ): PostflopStrategyRule[] {
   return pack.rules.filter((rule) => (
     rule.actionNode === input.actionNode &&
     input.spr >= rule.sprMin &&
     input.spr <= rule.sprMax &&
-    rule.boardTextures.some((texture) => input.boardTextures.includes(texture))
+    rule.boardTextures.some((texture) => input.boardTextures.includes(texture)) &&
+    positionPatternMatches(rule.positionPattern, input.positionPattern)
   ));
+}
+
+export function positionPatternMatches(
+  rulePattern: PostflopStrategyPositionPattern,
+  spotPattern?: PostflopPositionPattern,
+): boolean {
+  if (spotPattern === undefined) return true;
+  if (rulePattern === spotPattern) return true;
+
+  switch (rulePattern) {
+    case "IP_OR_RANGE_ADVANTAGE":
+      return spotPattern === "EP_VS_BB" || spotPattern === "BTN_VS_BB";
+    case "EP_VS_BLINDS_OR_STRONG_RANGE_ADVANTAGE":
+      return spotPattern === "EP_VS_BB";
+    case "OOP_OR_DYNAMIC_BOARD":
+      return spotPattern === "SB_VS_BB" || spotPattern === "OOP_RAISER_VS_IP_CALLER";
+    case "EP_VS_BB":
+    case "BTN_VS_BB":
+    case "SB_VS_BB":
+    case "OOP_RAISER_VS_IP_CALLER":
+      return false;
+  }
 }

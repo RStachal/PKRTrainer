@@ -24,6 +24,7 @@ export function createPostflopStrategyResolver(
       actionNode: actionNodeForStreet(input.street),
       boardTextures: input.textures,
       spr: roundedSpr(input.effectiveStackBB, input.potBB),
+      positionPattern: input.positionPattern,
     }).filter((candidate) => isSupportedAction(candidate.preferredAction)), input);
 
     if (!rule || !isSupportedAction(rule.preferredAction)) return null;
@@ -91,8 +92,9 @@ function ruleScore(rule: PostflopStrategyRule, input: PostflopStrategyInput): nu
   const textureSpecificity = matchedTextureCount * 100 - rule.boardTextures.length;
   const sprWidth = Math.max(0, rule.sprMax - rule.sprMin);
   const sprSpecificity = Math.max(0, 50 - sprWidth);
+  const positionSpecificity = rule.positionPattern === input.positionPattern ? 25 : 0;
 
-  return textureSpecificity + sprSpecificity;
+  return textureSpecificity + sprSpecificity + positionSpecificity;
 }
 
 function matchedTextures(

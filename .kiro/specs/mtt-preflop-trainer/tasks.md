@@ -491,14 +491,14 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 36.3 Přidat textový report pro review
     - Stejně jako u preflop RangePack importu mít čitelný review výstup pro commit a budoucí audit
 
-- [ ] 37. Pozicně přesnější flop single-raised pot model
-  - [ ] 37.1 Rozšířit `PostflopTrainingSpot` o pozice a IP/OOP kontext
+- [x] 37. Pozicně přesnější flop single-raised pot model
+  - [x] 37.1 Rozšířit `PostflopTrainingSpot` o pozice a IP/OOP kontext
     - Přidat heroPosition, villainPosition, aggressorPosition, callerPosition, inPosition a callerType
 
-  - [ ] 37.2 Generovat pozicní archetypy pro MTT 9-max
+  - [x] 37.2 Generovat pozicní archetypy pro MTT 9-max
     - Minimálně EP vs BB, BTN vs BB, SB vs BB a OOP raiser vs IP caller jako oddělené patterny
 
-  - [ ] 37.3 Matcher pravidel musí respektovat `positionPattern`
+  - [x] 37.3 Matcher pravidel musí respektovat `positionPattern`
     - Resolver má vybírat rule podle pozice i textury, ne pouze podle board texture a SPR
 
 - [x] 38. Zpřesnit flop board texture taxonomii

@@ -57,7 +57,7 @@ describe("postflopStrategyPackImport", () => {
           boardTextures: ["connected"],
           sprMin: 2,
           sprMax: 8,
-          positionPattern: "FUTURE_MULTI_ACTION_NODE",
+          positionPattern: "OOP_RAISER_VS_IP_CALLER",
           actions: ["CHECK", "RAISE"],
           preferredAction: "RAISE",
           explanation: "Future rule.",

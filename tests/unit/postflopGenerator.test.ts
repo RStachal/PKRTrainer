@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  POSTFLOP_POSITION_CONTEXTS,
   classifyBoard,
   generatePostflopSpot,
   recommendPostflopAction,
@@ -24,6 +25,7 @@ describe("postflopGenerator", () => {
     expect(a.actions).toEqual(["CHECK", "BET_SMALL", "BET_BIG"]);
     expect(a.recommendedAction).toMatch(/^(CHECK|BET_SMALL|BET_BIG)$/);
     expect(a.explanation.length).toBeGreaterThan(0);
+    expect(a.positionPattern).toMatch(/^(EP_VS_BB|BTN_VS_BB|SB_VS_BB|OOP_RAISER_VS_IP_CALLER)$/);
   });
 
   it("klasifikuje zakladni textury boardu", () => {
@@ -103,30 +105,35 @@ describe("postflopGenerator", () => {
   });
 
   it("umi pouzit externi strategy resolver a jinak zachova fallback", () => {
+    let resolverPositionPattern = "";
     const fromResolver = generatePostflopSpot({
       seed: 42,
       street: "FLOP",
       heroCards,
-      strategyResolver: () => ({
-        action: "CHECK",
-        explanation: "Resolver rozhodl.",
-        source: {
-          kind: "STRATEGY_PACK",
-          packId: "test-pack",
-          packVersion: "test-v1",
-          packVerifiedAt: "2026-06-02",
-          ruleId: "test-rule",
-          confidence: "LOW",
-          matchedTextures: ["dry"],
-          sprMin: 2,
-          sprMax: 12,
-          positionPattern: "TEST_PATTERN",
-          sourceUrls: ["https://example.test/postflop"],
-          assumptions: ["Test assumption"],
-          selectionScore: 99,
-          tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-        },
-      }),
+      positionContext: POSTFLOP_POSITION_CONTEXTS[1],
+      strategyResolver: (input) => {
+        resolverPositionPattern = input.positionPattern;
+        return {
+          action: "CHECK",
+          explanation: "Resolver rozhodl.",
+          source: {
+            kind: "STRATEGY_PACK",
+            packId: "test-pack",
+            packVersion: "test-v1",
+            packVerifiedAt: "2026-06-02",
+            ruleId: "test-rule",
+            confidence: "LOW",
+            matchedTextures: ["dry"],
+            sprMin: 2,
+            sprMax: 12,
+            positionPattern: "BTN_VS_BB",
+            sourceUrls: ["https://example.test/postflop"],
+            assumptions: ["Test assumption"],
+            selectionScore: 99,
+            tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+          },
+        };
+      },
     });
     const fromFallback = generatePostflopSpot({
       seed: 42,
@@ -137,6 +144,16 @@ describe("postflopGenerator", () => {
 
     expect(fromResolver.recommendedAction).toBe("CHECK");
     expect(fromResolver.explanation).toBe("Resolver rozhodl.");
+    expect(resolverPositionPattern).toBe("BTN_VS_BB");
+    expect(fromResolver).toMatchObject({
+      heroPosition: "BTN",
+      villainPosition: "BB",
+      aggressorPosition: "BTN",
+      callerPosition: "BB",
+      inPosition: true,
+      callerType: "BIG_BLIND",
+      positionPattern: "BTN_VS_BB",
+    });
     expect(fromResolver.strategySource).toEqual({
       kind: "STRATEGY_PACK",
       packId: "test-pack",
@@ -147,7 +164,7 @@ describe("postflopGenerator", () => {
       matchedTextures: ["dry"],
       sprMin: 2,
       sprMax: 12,
-      positionPattern: "TEST_PATTERN",
+      positionPattern: "BTN_VS_BB",
       sourceUrls: ["https://example.test/postflop"],
       assumptions: ["Test assumption"],
       selectionScore: 99,

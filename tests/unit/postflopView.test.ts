@@ -22,7 +22,10 @@ describe("postflopView - DOM", () => {
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("RIVER");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
       .toBe("RIVER_PRESSURE");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.positionPattern)
+      .toMatch(/^(EP_VS_BB|BTN_VS_BB|SB_VS_BB|OOP_RAISER_VS_IP_CALLER)$/);
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent).toContain("SPR");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent).toContain(" vs ");
     expect(root.querySelectorAll(".postflop-card")).toHaveLength(7);
     expect(root.querySelectorAll(".postflop-texture").length).toBeGreaterThan(0);
   });

@@ -20,6 +20,15 @@ describe("postflopTrainingSpot", () => {
       heroCards,
       potBB: 8,
       effectiveStackBB: 40,
+      positionContext: {
+        heroPosition: "HJ",
+        villainPosition: "BTN",
+        aggressorPosition: "HJ",
+        callerPosition: "BTN",
+        inPosition: false,
+        callerType: "IN_POSITION_CALLER",
+        positionPattern: "OOP_RAISER_VS_IP_CALLER",
+      },
     });
     const trainingSpot = postflopSpotToTrainingSpot(spot);
 
@@ -32,6 +41,13 @@ describe("postflopTrainingSpot", () => {
       potBB: 8,
       effectiveStackBB: 40,
       spr: 5,
+      heroPosition: "HJ",
+      villainPosition: "BTN",
+      aggressorPosition: "HJ",
+      callerPosition: "BTN",
+      inPosition: false,
+      callerType: "IN_POSITION_CALLER",
+      positionPattern: "OOP_RAISER_VS_IP_CALLER",
       recommendedAction: spot.recommendedAction,
     });
     expect(trainingSpot.actions.map((action) => action.action)).toEqual([

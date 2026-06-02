@@ -1,4 +1,4 @@
-import type { Card, Rank } from "./types";
+import type { Card, Position, Rank } from "./types";
 import { RANKS, SUITS, rankValue } from "./poker";
 import { mulberry32 } from "./rng";
 import type { PostflopTrainingSpot } from "./postflopTrainingSpot";
@@ -20,6 +20,32 @@ export type BoardTexture =
   | "flush-draw-heavy"
   | "disconnected";
 
+export type PostflopPositionPattern =
+  | "EP_VS_BB"
+  | "BTN_VS_BB"
+  | "SB_VS_BB"
+  | "OOP_RAISER_VS_IP_CALLER";
+
+export type PostflopStrategyPositionPattern =
+  | PostflopPositionPattern
+  | "IP_OR_RANGE_ADVANTAGE"
+  | "OOP_OR_DYNAMIC_BOARD"
+  | "EP_VS_BLINDS_OR_STRONG_RANGE_ADVANTAGE";
+
+export type PostflopCallerType =
+  | "BIG_BLIND"
+  | "IN_POSITION_CALLER";
+
+export interface PostflopPositionContext {
+  heroPosition: Position;
+  villainPosition: Position;
+  aggressorPosition: Position;
+  callerPosition: Position;
+  inPosition: boolean;
+  callerType: PostflopCallerType;
+  positionPattern: PostflopPositionPattern;
+}
+
 export interface PostflopSpot {
   seed: number;
   street: PostflopStreet;
@@ -27,6 +53,13 @@ export interface PostflopSpot {
   board: Card[];
   potBB: number;
   effectiveStackBB: number;
+  heroPosition: Position;
+  villainPosition: Position;
+  aggressorPosition: Position;
+  callerPosition: Position;
+  inPosition: boolean;
+  callerType: PostflopCallerType;
+  positionPattern: PostflopPositionPattern;
   textures: BoardTexture[];
   actions: readonly PostflopAction[];
   recommendedAction: PostflopAction;
@@ -40,6 +73,7 @@ export interface PostflopStrategyInput {
   textures: readonly BoardTexture[];
   potBB: number;
   effectiveStackBB: number;
+  positionPattern: PostflopPositionPattern;
 }
 
 export interface PostflopRecommendation {
@@ -59,7 +93,7 @@ export type PostflopRecommendationSource =
       matchedTextures: readonly BoardTexture[];
       sprMin: number;
       sprMax: number;
-      positionPattern: string;
+      positionPattern: PostflopStrategyPositionPattern;
       sourceUrls: readonly string[];
       assumptions: readonly string[];
       selectionScore: number;
@@ -80,8 +114,48 @@ export interface PostflopConfig {
   heroCards?: [Card, Card];
   potBB?: number;
   effectiveStackBB?: number;
+  positionContext?: PostflopPositionContext;
   strategyResolver?: PostflopStrategyResolver;
 }
+
+export const POSTFLOP_POSITION_CONTEXTS = [
+  {
+    heroPosition: "UTG",
+    villainPosition: "BB",
+    aggressorPosition: "UTG",
+    callerPosition: "BB",
+    inPosition: true,
+    callerType: "BIG_BLIND",
+    positionPattern: "EP_VS_BB",
+  },
+  {
+    heroPosition: "BTN",
+    villainPosition: "BB",
+    aggressorPosition: "BTN",
+    callerPosition: "BB",
+    inPosition: true,
+    callerType: "BIG_BLIND",
+    positionPattern: "BTN_VS_BB",
+  },
+  {
+    heroPosition: "SB",
+    villainPosition: "BB",
+    aggressorPosition: "SB",
+    callerPosition: "BB",
+    inPosition: false,
+    callerType: "BIG_BLIND",
+    positionPattern: "SB_VS_BB",
+  },
+  {
+    heroPosition: "HJ",
+    villainPosition: "BTN",
+    aggressorPosition: "HJ",
+    callerPosition: "BTN",
+    inPosition: false,
+    callerType: "IN_POSITION_CALLER",
+    positionPattern: "OOP_RAISER_VS_IP_CALLER",
+  },
+] as const satisfies readonly PostflopPositionContext[];
 
 export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   const rng = mulberry32(config.seed);
@@ -92,8 +166,15 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   const textures = classifyBoard(board);
   const potBB = config.potBB ?? 6;
   const effectiveStackBB = config.effectiveStackBB ?? 40;
+  const positionContext = config.positionContext ?? randomPositionContext(rng);
   const recommendation =
-    config.strategyResolver?.({ street, textures, potBB, effectiveStackBB }) ??
+    config.strategyResolver?.({
+      street,
+      textures,
+      potBB,
+      effectiveStackBB,
+      positionPattern: positionContext.positionPattern,
+    }) ??
     recommendPostflopAction(street, textures);
 
   return {
@@ -103,12 +184,25 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
     board,
     potBB,
     effectiveStackBB,
+    heroPosition: positionContext.heroPosition,
+    villainPosition: positionContext.villainPosition,
+    aggressorPosition: positionContext.aggressorPosition,
+    callerPosition: positionContext.callerPosition,
+    inPosition: positionContext.inPosition,
+    callerType: positionContext.callerType,
+    positionPattern: positionContext.positionPattern,
     textures,
     actions: ["CHECK", "BET_SMALL", "BET_BIG"],
     recommendedAction: recommendation.action,
     explanation: recommendation.explanation,
     strategySource: recommendation.source ?? fallbackStrategySource(),
   };
+}
+
+function randomPositionContext(rng: () => number): PostflopPositionContext {
+  return POSTFLOP_POSITION_CONTEXTS[
+    Math.floor(rng() * POSTFLOP_POSITION_CONTEXTS.length)
+  ];
 }
 
 function fallbackStrategySource(): PostflopRecommendationSource {

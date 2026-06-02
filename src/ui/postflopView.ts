@@ -134,9 +134,12 @@ function renderSpot(root: HTMLElement, spot: PostflopSpot): void {
   meta.dataset.seed = String(spot.seed);
   meta.dataset.street = spot.street;
   meta.dataset.actionNode = trainingSpot.actionNode;
+  meta.dataset.positionPattern = trainingSpot.positionPattern;
   meta.textContent =
     `${STREET_LABEL[spot.street]} - seed ${spot.seed} - pot ${spot.potBB} BB - ` +
-    `eff. stack ${spot.effectiveStackBB} BB - SPR ${trainingSpot.spr}`;
+    `eff. stack ${spot.effectiveStackBB} BB - SPR ${trainingSpot.spr} - ` +
+    `${trainingSpot.heroPosition} vs ${trainingSpot.villainPosition} ` +
+    `(${trainingSpot.inPosition ? "IP" : "OOP"})`;
   root.appendChild(meta);
 
   const cards = doc.createElement("div");

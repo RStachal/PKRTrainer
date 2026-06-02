@@ -18,6 +18,7 @@ describe("postflopStrategyResolver", () => {
       textures: ["dry", "rainbow"],
       potBB: 6,
       effectiveStackBB: 40,
+      positionPattern: "BTN_VS_BB",
     });
 
     expect(result).toMatchObject({
@@ -53,12 +54,14 @@ describe("postflopStrategyResolver", () => {
       textures: ["dry", "rainbow"],
       potBB: 6,
       effectiveStackBB: 40,
+      positionPattern: "BTN_VS_BB",
     })).toBeNull();
     expect(resolver({
       street: "FLOP",
       textures: ["dry", "rainbow"],
       potBB: 1,
       effectiveStackBB: 40,
+      positionPattern: "BTN_VS_BB",
     })).toBeNull();
   });
 
@@ -70,6 +73,7 @@ describe("postflopStrategyResolver", () => {
       textures: ["dry", "rainbow"],
       potBB: 12,
       effectiveStackBB: 36,
+      positionPattern: "EP_VS_BB",
     });
 
     expect(result?.source?.kind).toBe("STRATEGY_PACK");
@@ -84,11 +88,13 @@ describe("postflopStrategyResolver", () => {
       textures: ["connected", "two-tone"] as const,
       potBB: 6,
       effectiveStackBB: 40,
+      positionPattern: "OOP_RAISER_VS_IP_CALLER" as const,
     };
     const matchingRules = matchingPostflopRules(flopSingleRaisedPrototypeStrategyPack, {
       actionNode: "SINGLE_RAISED_POT_CBET",
       boardTextures: input.textures,
       spr: 6.7,
+      positionPattern: input.positionPattern,
     });
 
     expect(selectBestPostflopRule(matchingRules, input)?.id)
@@ -103,11 +109,26 @@ describe("postflopStrategyResolver", () => {
       textures: ["ace-high", "disconnected", "dry", "rainbow"],
       potBB: 6,
       effectiveStackBB: 40,
+      positionPattern: "BTN_VS_BB",
     });
 
     expect(result?.source?.kind).toBe("STRATEGY_PACK");
     if (result?.source?.kind === "STRATEGY_PACK") {
       expect(result.source.ruleId).toBe("flop-srp-ace-high-disconnected-small-cbet");
     }
+  });
+
+  it("nevybere IP c-bet pravidlo pro SB vs BB dry spot", () => {
+    const resolver = createPostflopStrategyResolver(flopSingleRaisedPrototypeStrategyPack);
+
+    const result = resolver({
+      street: "FLOP",
+      textures: ["dry", "rainbow"],
+      potBB: 6,
+      effectiveStackBB: 40,
+      positionPattern: "SB_VS_BB",
+    });
+
+    expect(result).toBeNull();
   });
 });
