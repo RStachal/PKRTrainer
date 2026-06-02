@@ -133,6 +133,32 @@ describe("sngPreflopRangePacks", () => {
     ]);
   });
 
+  it("nikdy nezamicha chipEV a ICM pack pri profilovem vyhledani", () => {
+    for (const chipEvPack of sngChipEvPreflopRangePackCandidates) {
+      const resolved = sngPreflopRangePackForProfile({
+        ...DEFAULT_TRAINING_PROFILE,
+        ...chipEvPack.dimensions,
+      });
+
+      expect(resolved?.dimensions.evModel).toBe("CHIP_EV");
+      expect(resolved?.id).toContain("chip-ev");
+      expect(resolved?.id).not.toContain("icm");
+      expect(resolved?.icmContext).toBeUndefined();
+    }
+
+    for (const icmPack of sngIcmPreflopRangePackCandidates) {
+      const resolved = sngPreflopRangePackForProfile({
+        ...DEFAULT_TRAINING_PROFILE,
+        ...icmPack.dimensions,
+      });
+
+      expect(resolved?.dimensions.evModel).toBe("ICM");
+      expect(resolved?.id).toContain("icm");
+      expect(resolved?.id).not.toContain("chip-ev");
+      expect(resolved?.icmContext).not.toBeUndefined();
+    }
+  });
+
   it("spolecny katalog obsahuje MTT i SNG profile packy", () => {
     expect(allTrainingRangePacks.length).toBeGreaterThan(
       sngChipEvPreflopRangePackCandidates.length,

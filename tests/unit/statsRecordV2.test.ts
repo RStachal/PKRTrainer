@@ -90,4 +90,16 @@ describe("statsRecordV2", () => {
       "sng-six-max-turbo-preflop-chip-ev-ante-off-candidate-v0",
     );
   });
+
+  it("nepouzije MTT fallback pro nepodporovany SNG ICM profil", () => {
+    expect(() => upgradeResultRecordToV2(anteOffRecord, {
+      profile: profileWith(DEFAULT_TRAINING_PROFILE, {
+        gameVariant: "SNG",
+        tableFormat: "SIX_MAX",
+        blindSpeed: "TURBO",
+        street: "FLOP",
+        evModel: "ICM",
+      }),
+    })).toThrow("No RangePack for training profile SNG|SIX_MAX|TURBO|FLOP|ICM|OFF|NONE");
+  });
 });

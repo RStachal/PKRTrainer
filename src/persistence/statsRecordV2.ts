@@ -58,7 +58,7 @@ export function upgradeResultRecordToV2(
     ...options.profile,
     ante,
   };
-  const pack = rangePackForTrainingProfile(profile) ?? currentMttPreflopRangePack(profile.ante);
+  const pack = rangePackForStatsProfile(profile);
 
   return {
     schema: RESULT_RECORD_V2_SCHEMA,
@@ -81,6 +81,28 @@ export function upgradeResultRecordToV2(
     rangePackVersion: pack.version,
     sourceVerifiedAt: pack.verifiedAt,
   };
+}
+
+function rangePackForStatsProfile(profile: TrainingProfile) {
+  const pack = rangePackForTrainingProfile(profile);
+  if (pack) return pack;
+
+  if (isLegacyMttPreflopProfile(profile)) {
+    return currentMttPreflopRangePack(profile.ante);
+  }
+
+  throw new Error(`No RangePack for training profile ${profileId(profile)}.`);
+}
+
+function isLegacyMttPreflopProfile(profile: TrainingProfile): boolean {
+  return (
+    profile.gameVariant === "MTT" &&
+    profile.tableFormat === "FULL_RING_9" &&
+    profile.blindSpeed === "REGULAR" &&
+    profile.street === "PREFLOP" &&
+    profile.evModel === "CHIP_EV" &&
+    profile.rakeMode === "NONE"
+  );
 }
 
 export function migrateResultRecordsToV2(
