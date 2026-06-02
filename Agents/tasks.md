@@ -393,11 +393,11 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 26.3 Přidat ICM range sourcing a validaci
     - Ověřovat proti více zdrojům/simulátorům typu ICMIZER/HoldemResources a ukládat assumptions do RangePack metadata
 
-- [ ] 27. Cash game připravit jako budoucí větev
-  - [ ] 27.1 Přidat cash profil bez zapojení do produkčního UI
+- [x] 27. Cash game připravit jako budoucí větev
+  - [x] 27.1 Přidat cash profil bez zapojení do produkčního UI
     - Definovat table format, stacky, ante typicky OFF, blind speed N/A nebo fixed, a rake mode jako budoucí dimenzi
 
-  - [ ] 27.2 Připravit rake/no-rake dimenzi
+  - [x] 27.2 Připravit rake/no-rake dimenzi
     - Rake a no-rake zatím neřešit v engine; pouze rezervovat metadata a datový model, aby pozdější ranges nebylo nutné migrovat násilně
 
 - [ ] 28. Postflop roadmapa po dokončení preflop základu
