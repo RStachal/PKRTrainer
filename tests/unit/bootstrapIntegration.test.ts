@@ -57,6 +57,27 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector(".poker-table")).toBeNull();
   });
 
+  it("start s FLOP profilem prepne do postflop flow bez rucniho tabovani", async () => {
+    const { bootstrap } = await importFreshMain();
+    const root = document.createElement("div");
+
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+
+    const street = root.querySelector<HTMLSelectElement>(".profile-street");
+    const seed = root.querySelector<HTMLInputElement>(".filter-seed");
+    street!.value = "FLOP";
+    street!.dispatchEvent(new Event("change"));
+    seed!.value = "123";
+    root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+
+    expect(root.querySelector<HTMLElement>(".app__panel--postflop")?.hidden).toBe(false);
+    expect(root.querySelector<HTMLButtonElement>('[data-tab="postflop"]')
+      ?.classList.contains("app__tab--active")).toBe(true);
+    expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("123");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("FLOP");
+    expect(root.querySelector(".poker-table")).toBeNull();
+  });
+
   it("pri nekonzistentnim ulozisti zobrazi blokujici chybu a relaci nespusti", async () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");

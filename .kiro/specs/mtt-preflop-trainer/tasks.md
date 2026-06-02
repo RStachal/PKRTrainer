@@ -472,7 +472,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Ověřit low-SPR dry/paired boardy a dynamické multi-texture boardy
 
 - [ ] 35. Napojit postflop na plnohodnotnou tréninkovou relaci
-  - [ ] 35.1 Routovat `TrainingProfile.street = FLOP` do postflop session flow
+  - [x] 35.1 Routovat `TrainingProfile.street = FLOP` do postflop session flow
     - Profile selector musí umět přepnout z preflop drill panelu na postflop trénink bez ručního tabování
 
   - [ ] 35.2 Definovat `PostflopResultRecord` a bridge do statistik v2

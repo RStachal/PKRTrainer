@@ -306,6 +306,7 @@ interface AppShell {
   statsPanel: HTMLElement;
   hhPanel: HTMLElement;
   postflopPanel: HTMLElement;
+  selectTab: (id: TabId) => void;
 }
 
 /** Identifikátory záložek. */
@@ -395,7 +396,7 @@ function buildAppShell(root: HTMLElement): AppShell {
   // Výchozí záložka: Trénink.
   selectTab("training");
 
-  return { notice, trainingPanel, statsPanel, hhPanel, postflopPanel };
+  return { notice, trainingPanel, statsPanel, hhPanel, postflopPanel, selectTab };
 }
 
 // ---------------------------------------------------------------------------
@@ -449,10 +450,28 @@ function setupTraining(
   let answered = false; // bylo už na aktuální spot odpovězeno?
 
   const filtersView: FiltersView = renderFilters(filtersBox, {
-    onStart: (filters: Filters, seed: number | null) => {
+    onStart: (filters: Filters, seed: number | null, profile) => {
+      if (profile.street === "FLOP") {
+        startPostflopSession(seed);
+        return;
+      }
       startSession(filters, seed);
     },
   });
+
+  function startPostflopSession(seed: number | null): void {
+    const resolvedSeed = resolveSeed(seed);
+    filtersView.setSeed(resolvedSeed);
+    hooks.resetSession();
+    hooks.refreshDashboard();
+    filtersView.clearWarning();
+    gameBox.hidden = true;
+    renderPostflopView(shell.postflopPanel, {
+      initialStreet: "FLOP",
+      initialSeed: resolvedSeed,
+    });
+    shell.selectTab("postflop");
+  }
 
   /**
    * Spustí relaci pro zvolené filtry a seed (Req 13.4 — pouze přes explicitní

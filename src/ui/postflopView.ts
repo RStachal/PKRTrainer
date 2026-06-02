@@ -18,6 +18,11 @@ const POSTFLOP_STRATEGY_RESOLVER = createPostflopStrategyResolver(
   flopSingleRaisedPrototypeStrategyPack,
 );
 
+export interface PostflopViewOptions {
+  initialStreet?: PostflopStreet;
+  initialSeed?: number | null;
+}
+
 const STREET_LABEL: Record<PostflopStreet, string> = {
   FLOP: "Flop",
   TURN: "Turn",
@@ -54,7 +59,7 @@ const SUIT_CLASS: Record<Suit, string> = {
   c: "card--club",
 };
 
-export function renderPostflopView(root: HTMLElement): void {
+export function renderPostflopView(root: HTMLElement, options: PostflopViewOptions = {}): void {
   const doc = root.ownerDocument ?? document;
   root.innerHTML = "";
 
@@ -77,7 +82,7 @@ export function renderPostflopView(root: HTMLElement): void {
     opt.textContent = STREET_LABEL[street];
     streetSelect.appendChild(opt);
   }
-  streetSelect.value = "FLOP";
+  streetSelect.value = options.initialStreet ?? "FLOP";
   streetLabel.appendChild(streetText);
   streetLabel.appendChild(streetSelect);
 
@@ -90,6 +95,9 @@ export function renderPostflopView(root: HTMLElement): void {
   seedInput.type = "text";
   seedInput.inputMode = "numeric";
   seedInput.placeholder = "n\u00e1hodn\u00fd";
+  if (options.initialSeed !== undefined && options.initialSeed !== null) {
+    seedInput.value = String(options.initialSeed);
+  }
   seedLabel.appendChild(seedText);
   seedLabel.appendChild(seedInput);
 
