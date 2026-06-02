@@ -461,6 +461,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 33.3 Rozšířit flop StrategyPack o veřejně obhajitelné texturové rule
     - Přidat jen obecné pravidlo na úrovni textur/SPR/sizingu; žádné placené hand-frequency tabulky
 
+- [x] 34. Deterministický výběr nejlepšího postflop StrategyPack rule
+  - [x] 34.1 Přidat scoring shodných postflop pravidel
+    - Preferovat konkrétnější texture match, užší SPR interval a stabilní pořadí jako poslední tie-break
+
+  - [x] 34.2 Zapojit výběr nejlepšího rule do resolveru
+    - Resolver nesmí jen vracet první shodu; musí zvolit nejvhodnější pravidlo pro překryvy typu low-SPR dry board
+
+  - [x] 34.3 Přidat unit testy pro překryvy pravidel
+    - Ověřit low-SPR dry/paired boardy a dynamické multi-texture boardy
+
 ## Notes
 
 - Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.
