@@ -408,7 +408,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Flop jako první: board texture, pozice, pot typ, SPR/effective stack, akce Check, Bet small, Bet big, Raise, Call, Fold
     - Turn a river navázat až po stabilním flop modelu
 
-  - [ ] 28.3 Přidat praktické vysvětlení po odpovědi
+  - [x] 28.3 Přidat praktické vysvětlení po odpovědi
     - Po každé akci zobrazit stručné česky psané vysvětlení: proč je akce preferovaná, jaké ruce tvoří value/bluff/check část a jak se mění plán na další streetě
 
 - [x] 29. Statistiky, migrace a kompatibilita pro více profilů

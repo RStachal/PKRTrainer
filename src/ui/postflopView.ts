@@ -5,6 +5,10 @@ import {
   type PostflopSpot,
   type PostflopStreet,
 } from "../core/postflopGenerator";
+import {
+  postflopSpotToTrainingSpot,
+  type PostflopTrainingSpot,
+} from "../core/postflopTrainingSpot";
 import type { Card, Suit } from "../core/types";
 
 const SEED_MAX = 0xffffffff;
@@ -16,12 +20,12 @@ const STREET_LABEL: Record<PostflopStreet, string> = {
 };
 
 const TEXTURE_LABEL: Record<BoardTexture, string> = {
-  paired: "Spárovaný",
+  paired: "Sp\u00e1rovan\u00fd",
   monotone: "Monotone",
   "two-tone": "Two-tone",
   rainbow: "Rainbow",
-  connected: "Propojený",
-  dry: "Suchý",
+  connected: "Propojen\u00fd",
+  dry: "Such\u00fd",
 };
 
 const SUIT_SYMBOL: Record<Suit, string> = {
@@ -73,7 +77,7 @@ export function renderPostflopView(root: HTMLElement): void {
   seedInput.className = "postflop-seed";
   seedInput.type = "text";
   seedInput.inputMode = "numeric";
-  seedInput.placeholder = "náhodný";
+  seedInput.placeholder = "n\u00e1hodn\u00fd";
   seedLabel.appendChild(seedText);
   seedLabel.appendChild(seedInput);
 
@@ -106,15 +110,17 @@ export function renderPostflopView(root: HTMLElement): void {
 
 function renderSpot(root: HTMLElement, spot: PostflopSpot): void {
   const doc = root.ownerDocument ?? document;
+  const trainingSpot = spot.trainingSpot ?? postflopSpotToTrainingSpot(spot);
   root.innerHTML = "";
 
   const meta = doc.createElement("div");
   meta.className = "postflop-meta";
   meta.dataset.seed = String(spot.seed);
   meta.dataset.street = spot.street;
+  meta.dataset.actionNode = trainingSpot.actionNode;
   meta.textContent =
-    `${STREET_LABEL[spot.street]} · seed ${spot.seed} · pot ${spot.potBB} BB · ` +
-    `eff. stack ${spot.effectiveStackBB} BB`;
+    `${STREET_LABEL[spot.street]} - seed ${spot.seed} - pot ${spot.potBB} BB - ` +
+    `eff. stack ${spot.effectiveStackBB} BB - SPR ${trainingSpot.spr}`;
   root.appendChild(meta);
 
   const cards = doc.createElement("div");
@@ -142,7 +148,7 @@ function renderSpot(root: HTMLElement, spot: PostflopSpot): void {
     btn.className = "postflop-action";
     btn.dataset.action = action;
     btn.textContent = actionLabel(action);
-    btn.addEventListener("click", () => showResult(root, spot, action));
+    btn.addEventListener("click", () => showResult(root, trainingSpot, action));
     actions.appendChild(btn);
   }
   root.appendChild(actions);
@@ -176,7 +182,11 @@ function cardElement(doc: Document, card: Card): HTMLElement {
   return el;
 }
 
-function showResult(root: HTMLElement, spot: PostflopSpot, chosen: PostflopAction): void {
+function showResult(
+  root: HTMLElement,
+  spot: PostflopTrainingSpot,
+  chosen: PostflopAction,
+): void {
   const buttons = root.querySelectorAll<HTMLButtonElement>(".postflop-action");
   buttons.forEach((button) => {
     button.disabled = true;
@@ -192,9 +202,69 @@ function showResult(root: HTMLElement, spot: PostflopSpot, chosen: PostflopActio
   const correct = chosen === spot.recommendedAction;
   result.hidden = false;
   result.className = `postflop-result ${correct ? "postflop-result--correct" : "postflop-result--wrong"}`;
-  result.textContent =
-    `${correct ? "Správně." : "Ještě ne."} Doporučeno: ` +
-    `${actionLabel(spot.recommendedAction)}. ${spot.explanation}`;
+  renderPracticalExplanation(result, spot, correct);
+}
+
+function renderPracticalExplanation(
+  root: HTMLElement,
+  spot: PostflopTrainingSpot,
+  correct: boolean,
+): void {
+  const doc = root.ownerDocument ?? document;
+  root.innerHTML = "";
+
+  const summary = doc.createElement("p");
+  summary.className = "postflop-result__summary";
+  summary.textContent =
+    `${correct ? "Spr\u00e1vn\u011b." : "Je\u0161t\u011b ne."} Doporu\u010deno: ` +
+    `${actionLabel(spot.recommendedAction)}. ${spot.explanation.summary}`;
+  root.appendChild(summary);
+
+  const grid = doc.createElement("div");
+  grid.className = "postflop-practical";
+  grid.appendChild(explanationBlock(doc, "Value range", spot.explanation.valueHands));
+  grid.appendChild(explanationBlock(doc, "Bluffy", spot.explanation.bluffHands));
+  grid.appendChild(explanationBlock(doc, "Check range", spot.explanation.checkHands));
+
+  const plan = doc.createElement("div");
+  plan.className = "postflop-practical__block postflop-practical__block--wide";
+  const planTitle = doc.createElement("div");
+  planTitle.className = "postflop-practical__title";
+  planTitle.textContent = "Pl\u00e1n";
+  const planText = doc.createElement("p");
+  planText.className = "postflop-practical__text";
+  planText.textContent = spot.explanation.nextStreetPlan;
+  plan.appendChild(planTitle);
+  plan.appendChild(planText);
+  grid.appendChild(plan);
+
+  root.appendChild(grid);
+}
+
+function explanationBlock(
+  doc: Document,
+  title: string,
+  items: readonly string[],
+): HTMLElement {
+  const block = doc.createElement("div");
+  block.className = "postflop-practical__block";
+
+  const heading = doc.createElement("div");
+  heading.className = "postflop-practical__title";
+  heading.textContent = title;
+  block.appendChild(heading);
+
+  const list = doc.createElement("ul");
+  list.className = "postflop-practical__list";
+  const visibleItems = items.length > 0 ? items : ["Bez prirozenych kandidatu"];
+  for (const item of visibleItems) {
+    const li = doc.createElement("li");
+    li.textContent = item;
+    list.appendChild(li);
+  }
+  block.appendChild(list);
+
+  return block;
 }
 
 function actionLabel(action: PostflopAction): string {
@@ -202,9 +272,9 @@ function actionLabel(action: PostflopAction): string {
     case "CHECK":
       return "Check";
     case "BET_SMALL":
-      return "Bet malý";
+      return "Bet mal\u00fd";
     case "BET_BIG":
-      return "Bet velký";
+      return "Bet velk\u00fd";
   }
 }
 
@@ -268,6 +338,15 @@ function styles(doc: Document): HTMLStyleElement {
 .postflop-action--recommended{border-color:#2bd576;background:rgba(43,213,118,.16);}
 .postflop-result{margin-top:12px;border-radius:8px;padding:10px 12px;font-size:13px;
   font-weight:700;line-height:1.45;}
+.postflop-result__summary{margin:0 0 10px;}
+.postflop-practical{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.postflop-practical__block{border:1px solid rgba(255,255,255,.12);border-radius:8px;
+  background:rgba(255,255,255,.04);padding:8px 10px;}
+.postflop-practical__block--wide{grid-column:1/-1;}
+.postflop-practical__title{font-size:11px;letter-spacing:0;text-transform:uppercase;
+  color:#e8ecf7;margin-bottom:5px;}
+.postflop-practical__list{margin:0;padding-left:17px;color:#dce5f8;}
+.postflop-practical__text{margin:0;color:#dce5f8;}
 .postflop-result--correct{background:rgba(43,213,118,.13);border:1px solid rgba(43,213,118,.45);
   color:#9ff0bd;}
 .postflop-result--wrong{background:rgba(226,59,59,.13);border:1px solid rgba(226,59,59,.45);
@@ -277,6 +356,7 @@ function styles(doc: Document): HTMLStyleElement {
   .postflop-field,.postflop-generate{width:100%;}
   .postflop-street,.postflop-seed{width:100%;}
   .postflop-cards{grid-template-columns:1fr;}
+  .postflop-practical{grid-template-columns:1fr;}
 }
 `;
   return style;

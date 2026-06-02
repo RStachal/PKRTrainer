@@ -20,11 +20,14 @@ describe("postflopView - DOM", () => {
 
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.seed).toBe("42");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("RIVER");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
+      .toBe("RIVER_PRESSURE");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent).toContain("SPR");
     expect(root.querySelectorAll(".postflop-card")).toHaveLength(7);
     expect(root.querySelectorAll(".postflop-texture").length).toBeGreaterThan(0);
   });
 
-  it("po vyberu akce zobrazi doporuceni a uzamkne tlacitka", () => {
+  it("po vyberu akce zobrazi doporuceni a prakticke vysvetleni", () => {
     const root = document.createElement("div");
     renderPostflopView(root);
 
@@ -32,9 +35,12 @@ describe("postflopView - DOM", () => {
 
     const result = root.querySelector<HTMLElement>(".postflop-result");
     expect(result?.hidden).toBe(false);
-    expect(result?.textContent).toContain("Doporučeno");
+    expect(result?.textContent).toContain("Doporu\u010deno");
     expect(root.querySelectorAll<HTMLButtonElement>(".postflop-action:disabled"))
       .toHaveLength(3);
     expect(root.querySelector(".postflop-action--recommended")).not.toBeNull();
+    expect(root.querySelectorAll(".postflop-practical__block")).toHaveLength(4);
+    expect(result?.textContent).toContain("Value range");
+    expect(result?.textContent).toContain("Pl\u00e1n");
   });
 });
