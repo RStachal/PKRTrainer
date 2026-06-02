@@ -24,6 +24,7 @@ export interface PostflopSpot {
   actions: readonly PostflopAction[];
   recommendedAction: PostflopAction;
   explanation: string;
+  strategySource: PostflopRecommendationSource;
   trainingSpot?: PostflopTrainingSpot;
 }
 
@@ -37,7 +38,20 @@ export interface PostflopStrategyInput {
 export interface PostflopRecommendation {
   action: PostflopAction;
   explanation: string;
+  source?: PostflopRecommendationSource;
 }
+
+export type PostflopRecommendationSource =
+  | {
+      kind: "STRATEGY_PACK";
+      packId: string;
+      ruleId: string;
+      confidence: "LOW" | "MEDIUM" | "HIGH";
+    }
+  | {
+      kind: "FALLBACK";
+      ruleId: "postflop-generator-heuristic";
+    };
 
 export type PostflopStrategyResolver = (
   input: PostflopStrategyInput,
@@ -76,6 +90,14 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
     actions: ["CHECK", "BET_SMALL", "BET_BIG"],
     recommendedAction: recommendation.action,
     explanation: recommendation.explanation,
+    strategySource: recommendation.source ?? fallbackStrategySource(),
+  };
+}
+
+function fallbackStrategySource(): PostflopRecommendationSource {
+  return {
+    kind: "FALLBACK",
+    ruleId: "postflop-generator-heuristic",
   };
 }
 
@@ -101,7 +123,7 @@ export function classifyBoard(board: readonly Card[]): BoardTexture[] {
 export function recommendPostflopAction(
   street: PostflopStreet,
   textures: readonly BoardTexture[],
-): { action: PostflopAction; explanation: string } {
+): PostflopRecommendation {
   const has = (texture: BoardTexture): boolean => textures.includes(texture);
 
   if (has("monotone") || has("connected")) {

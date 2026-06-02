@@ -41,6 +41,10 @@ describe("postflopTrainingSpot", () => {
     ]);
     expect(trainingSpot.explanation.summary).toBe(spot.explanation);
     expect(trainingSpot.explanation.nextStreetPlan.length).toBeGreaterThan(0);
+    expect(trainingSpot.explanation.source).toEqual({
+      kind: "FALLBACK",
+      ruleId: "postflop-generator-heuristic",
+    });
   });
 
   it("oddeli street, action node, sizing a explanation pro turn a river", () => {

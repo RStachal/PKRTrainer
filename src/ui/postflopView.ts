@@ -234,6 +234,7 @@ function renderPracticalExplanation(
   grid.appendChild(explanationBlock(doc, "Value range", spot.explanation.valueHands));
   grid.appendChild(explanationBlock(doc, "Bluffy", spot.explanation.bluffHands));
   grid.appendChild(explanationBlock(doc, "Check range", spot.explanation.checkHands));
+  grid.appendChild(explanationBlock(doc, "Zdroj", sourceItems(spot)));
 
   const plan = doc.createElement("div");
   plan.className = "postflop-practical__block postflop-practical__block--wide";
@@ -274,6 +275,18 @@ function explanationBlock(
   block.appendChild(list);
 
   return block;
+}
+
+function sourceItems(spot: PostflopTrainingSpot): readonly string[] {
+  const source = spot.explanation.source;
+  if (source.kind === "STRATEGY_PACK") {
+    return [
+      `Pack: ${source.packId}`,
+      `Rule: ${source.ruleId}`,
+      `Confidence: ${source.confidence}`,
+    ];
+  }
+  return [`Fallback: ${source.ruleId}`];
 }
 
 function actionLabel(action: PostflopAction): string {

@@ -2,6 +2,7 @@ import type { Card } from "./types";
 import type {
   BoardTexture,
   PostflopAction,
+  PostflopRecommendationSource,
   PostflopSpot,
   PostflopStreet,
 } from "./postflopGenerator";
@@ -28,6 +29,7 @@ export interface PostflopExplanation {
   bluffHands: readonly string[];
   checkHands: readonly string[];
   nextStreetPlan: string;
+  source: PostflopRecommendationSource;
 }
 
 export interface PostflopTrainingSpot {
@@ -110,6 +112,7 @@ function buildExplanation(spot: PostflopSpot): PostflopExplanation {
     bluffHands: bluffHandsForAction(spot.recommendedAction, spot.textures),
     checkHands: checkHandsForTextures(spot.textures),
     nextStreetPlan: nextStreetPlanForStreet(spot.street, spot.recommendedAction),
+    source: spot.strategySource,
   };
 }
 

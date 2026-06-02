@@ -39,8 +39,10 @@ describe("postflopView - DOM", () => {
     expect(root.querySelectorAll<HTMLButtonElement>(".postflop-action:disabled"))
       .toHaveLength(3);
     expect(root.querySelector(".postflop-action--recommended")).not.toBeNull();
-    expect(root.querySelectorAll(".postflop-practical__block")).toHaveLength(4);
+    expect(root.querySelectorAll(".postflop-practical__block")).toHaveLength(5);
     expect(result?.textContent).toContain("Value range");
+    expect(result?.textContent).toContain("Zdroj");
+    expect(result?.textContent).toContain("Pack:");
     expect(result?.textContent).toContain("Pl\u00e1n");
   });
 });

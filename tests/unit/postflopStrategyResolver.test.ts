@@ -15,6 +15,12 @@ describe("postflopStrategyResolver", () => {
     })).toEqual({
       action: "BET_SMALL",
       explanation: "Suchy rainbow flop je vhodny pro maly c-bet, protoze casto drzi range advantage.",
+      source: {
+        kind: "STRATEGY_PACK",
+        packId: flopSingleRaisedPrototypeStrategyPack.id,
+        ruleId: "flop-srp-dry-small-cbet",
+        confidence: "LOW",
+      },
     });
   });
 

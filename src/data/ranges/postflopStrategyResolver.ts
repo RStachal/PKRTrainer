@@ -28,6 +28,12 @@ export function createPostflopStrategyResolver(
     return {
       action: rule.preferredAction,
       explanation: rule.explanation,
+      source: {
+        kind: "STRATEGY_PACK",
+        packId: pack.id,
+        ruleId: rule.id,
+        confidence: pack.confidence,
+      },
     };
   };
 }

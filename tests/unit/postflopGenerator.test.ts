@@ -63,6 +63,12 @@ describe("postflopGenerator", () => {
       strategyResolver: () => ({
         action: "CHECK",
         explanation: "Resolver rozhodl.",
+        source: {
+          kind: "STRATEGY_PACK",
+          packId: "test-pack",
+          ruleId: "test-rule",
+          confidence: "LOW",
+        },
       }),
     });
     const fromFallback = generatePostflopSpot({
@@ -74,8 +80,18 @@ describe("postflopGenerator", () => {
 
     expect(fromResolver.recommendedAction).toBe("CHECK");
     expect(fromResolver.explanation).toBe("Resolver rozhodl.");
+    expect(fromResolver.strategySource).toEqual({
+      kind: "STRATEGY_PACK",
+      packId: "test-pack",
+      ruleId: "test-rule",
+      confidence: "LOW",
+    });
     expect(fromFallback.recommendedAction).toBe(
       recommendPostflopAction(fromFallback.street, fromFallback.textures).action,
     );
+    expect(fromFallback.strategySource).toEqual({
+      kind: "FALLBACK",
+      ruleId: "postflop-generator-heuristic",
+    });
   });
 });
