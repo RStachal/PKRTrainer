@@ -31,6 +31,13 @@ const TEXTURE_LABEL: Record<BoardTexture, string> = {
   rainbow: "Rainbow",
   connected: "Propojen\u00fd",
   dry: "Such\u00fd",
+  "ace-high": "A-high",
+  "broadway-high": "Broadway-high",
+  low: "Low",
+  medium: "Medium",
+  "straight-possible": "Straight mo\u017en\u00fd",
+  "flush-draw-heavy": "Flush draw",
+  disconnected: "Disconnected",
 };
 
 const SUIT_SYMBOL: Record<Suit, string> = {

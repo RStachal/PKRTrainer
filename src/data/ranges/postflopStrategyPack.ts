@@ -154,6 +154,18 @@ export const flopSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
         "Suchy rainbow flop je vhodny pro maly c-bet, protoze casto drzi range advantage.",
     },
     {
+      id: "flop-srp-ace-high-disconnected-small-cbet",
+      actionNode: "SINGLE_RAISED_POT_CBET",
+      boardTextures: ["ace-high", "disconnected"],
+      sprMin: 2,
+      sprMax: 12,
+      positionPattern: "IP_OR_RANGE_ADVANTAGE",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "BET_SMALL",
+      explanation:
+        "A-high disconnected flop casteji drzi preflop agresor; maly c-bet je verejne obhajitelny zaklad.",
+    },
+    {
       id: "flop-srp-paired-small-cbet",
       actionNode: "SINGLE_RAISED_POT_CBET",
       boardTextures: ["paired"],
@@ -164,6 +176,18 @@ export const flopSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
       preferredAction: "BET_SMALL",
       explanation:
         "Sparovany rainbow flop casto min pomaha callerovi; maly c-bet je jednoduchy zaklad.",
+    },
+    {
+      id: "flop-srp-straight-flush-draw-heavy-check",
+      actionNode: "SINGLE_RAISED_POT_CBET",
+      boardTextures: ["straight-possible", "flush-draw-heavy"],
+      sprMin: 2,
+      sprMax: 12,
+      positionPattern: "OOP_OR_DYNAMIC_BOARD",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "CHECK",
+      explanation:
+        "Board s rovnou i flush draw meni equity rychle; bez presne range je check disciplinovany zaklad.",
     },
     {
       id: "flop-srp-dynamic-check",

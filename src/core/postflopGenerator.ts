@@ -11,7 +11,14 @@ export type BoardTexture =
   | "two-tone"
   | "rainbow"
   | "connected"
-  | "dry";
+  | "dry"
+  | "ace-high"
+  | "broadway-high"
+  | "low"
+  | "medium"
+  | "straight-possible"
+  | "flush-draw-heavy"
+  | "disconnected";
 
 export interface PostflopSpot {
   seed: number;
@@ -107,14 +114,32 @@ export function classifyBoard(board: readonly Card[]): BoardTexture[] {
   const suits = board.map((card) => card.suit);
   const uniqueRanks = new Set(ranks);
   const uniqueSuits = new Set(suits);
+  const values = [...new Set(ranks.map(rankValue))].sort((a, b) => b - a);
 
   if (uniqueRanks.size < ranks.length) textures.add("paired");
   if (uniqueSuits.size === 1 && suits.length >= 3) textures.add("monotone");
   else if (uniqueSuits.size === 2 && suits.length >= 3) textures.add("two-tone");
   else if (uniqueSuits.size >= 3) textures.add("rainbow");
 
+  if (suits.length >= 3 && uniqueSuits.size <= 2) textures.add("flush-draw-heavy");
+  if (values[0] === 14) textures.add("ace-high");
+  else if (values[0] >= 11) textures.add("broadway-high");
+  else if (values[0] <= 8) textures.add("low");
+  else textures.add("medium");
+
   if (isConnected(ranks)) textures.add("connected");
+  if (isStraightPossible(values)) textures.add("straight-possible");
+  if (!textures.has("connected") && !textures.has("straight-possible")) {
+    textures.add("disconnected");
+  }
   if (textures.size === 0 || (textures.size === 1 && textures.has("rainbow"))) {
+    textures.add("dry");
+  }
+  if (
+    textures.has("rainbow") &&
+    textures.has("disconnected") &&
+    !textures.has("paired")
+  ) {
     textures.add("dry");
   }
   return [...textures];
@@ -206,4 +231,12 @@ function isConnected(ranks: readonly Rank[]): boolean {
   }
   if (values.includes(14) && values.includes(5) && values.includes(4)) return true;
   return false;
+}
+
+function isStraightPossible(values: readonly number[]): boolean {
+  if (values.length < 3) return false;
+  for (let i = 0; i <= values.length - 3; i += 1) {
+    if (values[i] - values[i + 2] <= 4) return true;
+  }
+  return values.includes(14) && values.includes(5) && values.includes(4);
 }

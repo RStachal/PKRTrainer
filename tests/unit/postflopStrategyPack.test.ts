@@ -73,10 +73,24 @@ describe("postflopStrategyPack", () => {
       boardTextures: ["monotone"],
       spr: 5,
     });
+    const aceHigh = matchingPostflopRules(flopSingleRaisedPrototypeStrategyPack, {
+      actionNode: "SINGLE_RAISED_POT_CBET",
+      boardTextures: ["ace-high", "disconnected", "dry", "rainbow"],
+      spr: 5,
+    });
+    const drawHeavy = matchingPostflopRules(flopSingleRaisedPrototypeStrategyPack, {
+      actionNode: "SINGLE_RAISED_POT_CBET",
+      boardTextures: ["straight-possible", "flush-draw-heavy", "connected", "two-tone"],
+      spr: 5,
+    });
 
     expect(dry.map((rule) => rule.preferredAction)).toEqual(["BET_SMALL"]);
     expect(dynamic.map((rule) => rule.preferredAction)).toEqual(["CHECK"]);
     expect(paired.map((rule) => rule.id)).toContain("flop-srp-paired-small-cbet");
     expect(monotone.map((rule) => rule.id)).toContain("flop-srp-monotone-check");
+    expect(aceHigh.map((rule) => rule.id))
+      .toContain("flop-srp-ace-high-disconnected-small-cbet");
+    expect(drawHeavy.map((rule) => rule.id))
+      .toContain("flop-srp-straight-flush-draw-heavy-check");
   });
 });

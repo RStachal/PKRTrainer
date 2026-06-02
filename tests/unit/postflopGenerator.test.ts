@@ -43,7 +43,54 @@ describe("postflopGenerator", () => {
       { rank: "A", suit: "s" },
       { rank: "7", suit: "h" },
       { rank: "2", suit: "d" },
-    ])).toEqual(expect.arrayContaining(["rainbow", "dry"]));
+    ])).toEqual(expect.arrayContaining(["rainbow", "dry", "ace-high", "disconnected"]));
+  });
+
+  it("klasifikuje rozsirene flop textury pro verejne heuristiky", () => {
+    expect(classifyBoard([
+      { rank: "K", suit: "s" },
+      { rank: "8", suit: "h" },
+      { rank: "3", suit: "d" },
+    ])).toEqual(expect.arrayContaining(["broadway-high", "disconnected", "dry"]));
+
+    expect(classifyBoard([
+      { rank: "9", suit: "s" },
+      { rank: "8", suit: "s" },
+      { rank: "7", suit: "h" },
+    ])).toEqual(expect.arrayContaining([
+      "medium",
+      "connected",
+      "straight-possible",
+      "flush-draw-heavy",
+    ]));
+
+    expect(classifyBoard([
+      { rank: "J", suit: "s" },
+      { rank: "T", suit: "s" },
+      { rank: "8", suit: "h" },
+    ])).toEqual(expect.arrayContaining([
+      "broadway-high",
+      "connected",
+      "straight-possible",
+      "flush-draw-heavy",
+    ]));
+
+    expect(classifyBoard([
+      { rank: "6", suit: "s" },
+      { rank: "6", suit: "h" },
+      { rank: "5", suit: "d" },
+    ])).toEqual(expect.arrayContaining(["paired", "low", "disconnected"]));
+
+    expect(classifyBoard([
+      { rank: "A", suit: "s" },
+      { rank: "K", suit: "s" },
+      { rank: "Q", suit: "s" },
+    ])).toEqual(expect.arrayContaining([
+      "monotone",
+      "flush-draw-heavy",
+      "ace-high",
+      "straight-possible",
+    ]));
   });
 
   it("doporucuje akci podle zakladni textury a streetu", () => {

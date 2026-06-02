@@ -20,7 +20,7 @@ describe("postflopStrategyPackImport", () => {
       packId: "mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1",
       valid: true,
       sourceCount: 4,
-      ruleCount: 5,
+      ruleCount: 7,
       unsupportedActionCount: 0,
     });
     expect(report.warnings).toEqual(expect.arrayContaining([
@@ -81,7 +81,7 @@ describe("postflopStrategyPackImport", () => {
     expect(text).toContain(
       "PostflopStrategyPack: mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1",
     );
-    expect(text).toContain("rules: 5");
+    expect(text).toContain("rules: 7");
     expect(text).toContain("overlap details:");
   });
 });

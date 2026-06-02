@@ -79,4 +79,20 @@ describe("postflopStrategyResolver", () => {
     expect(selectBestPostflopRule(matchingRules, input)?.id)
       .toBe("flop-srp-dynamic-check");
   });
+
+  it("preferuje A-high disconnected pravidlo pred obecnym dry pravidlem", () => {
+    const resolver = createPostflopStrategyResolver(flopSingleRaisedPrototypeStrategyPack);
+
+    const result = resolver({
+      street: "FLOP",
+      textures: ["ace-high", "disconnected", "dry", "rainbow"],
+      potBB: 6,
+      effectiveStackBB: 40,
+    });
+
+    expect(result?.source?.kind).toBe("STRATEGY_PACK");
+    if (result?.source?.kind === "STRATEGY_PACK") {
+      expect(result.source.ruleId).toBe("flop-srp-ace-high-disconnected-small-cbet");
+    }
+  });
 });

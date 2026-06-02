@@ -501,14 +501,14 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 37.3 Matcher pravidel musí respektovat `positionPattern`
     - Resolver má vybírat rule podle pozice i textury, ne pouze podle board texture a SPR
 
-- [ ] 38. Zpřesnit flop board texture taxonomii
-  - [ ] 38.1 Rozšířit klasifikaci boardu
+- [x] 38. Zpřesnit flop board texture taxonomii
+  - [x] 38.1 Rozšířit klasifikaci boardu
     - Přidat ace-high, broadway-high, low, medium, straight-possible, flush-draw-heavy a disconnected
 
-  - [ ] 38.2 Aktualizovat public-heuristic flop rules
+  - [x] 38.2 Aktualizovat public-heuristic flop rules
     - Nové textury mapovat na existující principy bez přidání placených frekvencí
 
-  - [ ] 38.3 Přidat unit/property testy textur
+  - [x] 38.3 Přidat unit/property testy textur
     - Ověřit reprezentativní boardy: A72r, K83r, 987tt, JT8tt, 665r, monotone broadway
 
 - [ ] 39. Postflop UI evidence a učební feedback
