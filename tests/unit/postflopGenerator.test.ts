@@ -54,4 +54,28 @@ describe("postflopGenerator", () => {
     expect(recommendPostflopAction("RIVER", ["dry", "rainbow"]).action)
       .toBe("BET_BIG");
   });
+
+  it("umi pouzit externi strategy resolver a jinak zachova fallback", () => {
+    const fromResolver = generatePostflopSpot({
+      seed: 42,
+      street: "FLOP",
+      heroCards,
+      strategyResolver: () => ({
+        action: "CHECK",
+        explanation: "Resolver rozhodl.",
+      }),
+    });
+    const fromFallback = generatePostflopSpot({
+      seed: 42,
+      street: "RIVER",
+      heroCards,
+      strategyResolver: () => null,
+    });
+
+    expect(fromResolver.recommendedAction).toBe("CHECK");
+    expect(fromResolver.explanation).toBe("Resolver rozhodl.");
+    expect(fromFallback.recommendedAction).toBe(
+      recommendPostflopAction(fromFallback.street, fromFallback.textures).action,
+    );
+  });
 });

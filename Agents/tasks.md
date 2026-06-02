@@ -441,6 +441,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 31.3 Udržovat checklist průběžně
     - Dokončené položky v tomto souboru okamžitě přepínat na `[x]`; nedokončené ponechat `[ ]`
 
+- [ ] 32. Postflop StrategyPack resolver jako další rozšiřitelný krok
+  - [x] 32.1 Přidat volitelný resolver hook do postflop generátoru
+    - Generátor musí zachovat současný fallback, ale umět přijmout externí strategické rozhodnutí z datového packu
+
+  - [x] 32.2 Zapojit flop prototype StrategyPack do postflop UI
+    - UI má používat bundleovaný StrategyPack offline; žádné runtime tahání dat z internetu
+
+  - [ ] 32.3 Zobrazit rule/source evidence v praktickém postflop vysvětlení
+    - Po odpovědi ukázat, zda rozhodnutí přišlo z packu, nebo z fallback heuristiky
+
 ## Notes
 
 - Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.

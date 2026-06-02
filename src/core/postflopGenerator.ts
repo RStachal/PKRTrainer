@@ -27,12 +27,29 @@ export interface PostflopSpot {
   trainingSpot?: PostflopTrainingSpot;
 }
 
+export interface PostflopStrategyInput {
+  street: PostflopStreet;
+  textures: readonly BoardTexture[];
+  potBB: number;
+  effectiveStackBB: number;
+}
+
+export interface PostflopRecommendation {
+  action: PostflopAction;
+  explanation: string;
+}
+
+export type PostflopStrategyResolver = (
+  input: PostflopStrategyInput,
+) => PostflopRecommendation | null;
+
 export interface PostflopConfig {
   seed: number;
   street?: PostflopStreet;
   heroCards?: [Card, Card];
   potBB?: number;
   effectiveStackBB?: number;
+  strategyResolver?: PostflopStrategyResolver;
 }
 
 export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
@@ -42,15 +59,19 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   const street = config.street ?? randomStreet(rng);
   const board = dealCards(rng, deck, boardLength(street));
   const textures = classifyBoard(board);
-  const recommendation = recommendPostflopAction(street, textures);
+  const potBB = config.potBB ?? 6;
+  const effectiveStackBB = config.effectiveStackBB ?? 40;
+  const recommendation =
+    config.strategyResolver?.({ street, textures, potBB, effectiveStackBB }) ??
+    recommendPostflopAction(street, textures);
 
   return {
     seed: config.seed >>> 0,
     street,
     heroCards,
     board,
-    potBB: config.potBB ?? 6,
-    effectiveStackBB: config.effectiveStackBB ?? 40,
+    potBB,
+    effectiveStackBB,
     textures,
     actions: ["CHECK", "BET_SMALL", "BET_BIG"],
     recommendedAction: recommendation.action,

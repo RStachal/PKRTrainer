@@ -9,9 +9,14 @@ import {
   postflopSpotToTrainingSpot,
   type PostflopTrainingSpot,
 } from "../core/postflopTrainingSpot";
+import { flopSingleRaisedPrototypeStrategyPack } from "../data/ranges/postflopStrategyPack";
+import { createPostflopStrategyResolver } from "../data/ranges/postflopStrategyResolver";
 import type { Card, Suit } from "../core/types";
 
 const SEED_MAX = 0xffffffff;
+const POSTFLOP_STRATEGY_RESOLVER = createPostflopStrategyResolver(
+  flopSingleRaisedPrototypeStrategyPack,
+);
 
 const STREET_LABEL: Record<PostflopStreet, string> = {
   FLOP: "Flop",
@@ -99,7 +104,11 @@ export function renderPostflopView(root: HTMLElement): void {
     const seed = parseSeed(seedInput.value) ?? randomSeed();
     seedInput.value = String(seed);
     const street = parseStreet(streetSelect.value);
-    const spot = generatePostflopSpot({ seed, street });
+    const spot = generatePostflopSpot({
+      seed,
+      street,
+      strategyResolver: POSTFLOP_STRATEGY_RESOLVER,
+    });
     renderSpot(output, spot);
   };
 
