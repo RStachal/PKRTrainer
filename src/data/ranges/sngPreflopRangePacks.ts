@@ -1,5 +1,11 @@
 import type { AnteMode } from "../../core/types";
 import type { BlindSpeed, TableFormat, TrainingProfile } from "../../core/trainingProfile";
+import {
+  SNG_PAYOUT_PRESETS,
+  buildSngIcmContext,
+  type IcmSpotType,
+  type StackDistribution,
+} from "../../core/icmModel";
 import type { RangePack, RangeSourceEvidence } from "./rangePack";
 
 const VERIFIED_AT = "2026-06-01";
@@ -64,6 +70,72 @@ const SNG_CHIP_EV_PREFLOP_SOURCE_EVIDENCE: RangeSourceEvidence[] = [
   },
 ];
 
+const SNG_ICM_PREFLOP_SEARCH_QUERIES = [
+  "ICMIZER SNG ICM push fold ranges sit and go payout structure bubble factor",
+  "HoldemResources Calculator SNG ICM Nash ranges push fold call all-in",
+  "HRC HoldemResources SNG ICM model payout structure stack distribution ranges",
+  "SNG ICM preflop ranges push fold call all-in rejam simulator",
+];
+
+const SNG_ICM_PREFLOP_SOURCE_EVIDENCE: RangeSourceEvidence[] = [
+  {
+    title: "ICMIZER bubble factor help",
+    url: "https://www.icmpoker.com/icmizer/help/bubble-factor/",
+    provider: "ICMIZER",
+    verifiedAt: VERIFIED_AT,
+    licenseNote:
+      "Used as ICM methodology evidence only; no raw chart content is copied.",
+    methodologyNote:
+      "Public help explains bubble factor, risk premium and payout-aware all-in decisions.",
+  },
+  {
+    title: "ICMIZER overcalling ranges example",
+    url: "https://www.icmpoker.com/icmizer/articles/overcalling-ranges-how-to-calculate/",
+    provider: "ICMIZER",
+    verifiedAt: VERIFIED_AT,
+    licenseNote:
+      "Used as ICM methodology evidence only; no raw chart content is copied.",
+    methodologyNote:
+      "Public article demonstrates 9max SnG payout structure and ICM-sensitive all-in/call decisions.",
+  },
+  {
+    title: "ICMIZER custom tournaments help",
+    url: "https://www.icmpoker.com/icmizer/help/custom-tournaments/",
+    provider: "ICMIZER",
+    verifiedAt: VERIFIED_AT,
+    licenseNote:
+      "Used as tournament setup evidence only; no raw chart content is copied.",
+    methodologyNote:
+      "Public help confirms custom tournament payout, stack and player-count setup for ICM analysis.",
+  },
+  {
+    title: "HoldemResources Nash ICM Calculator",
+    url: "https://www.holdemresources.net/nashicm",
+    provider: "HoldemResources",
+    verifiedAt: VERIFIED_AT,
+    licenseNote:
+      "Used as ICM solver evidence only; no raw chart content is copied.",
+    methodologyNote:
+      "Public page exposes Nash ICM calculation flow with player stacks and payout structure inputs.",
+  },
+  {
+    title: "VIP Grinders SNG ICM strategy primer",
+    url: "https://www.vip-grinders.com/sng-poker-strategy-2/",
+    provider: "VIP Grinders",
+    verifiedAt: VERIFIED_AT,
+    licenseNote:
+      "Used as educational comparison evidence only; no raw chart content is copied.",
+    methodologyNote:
+      "Public article discusses SNG ICM pressure and payout structure considerations.",
+  },
+];
+
+const ICM_SPOT_TYPES = [
+  "PUSH_FOLD",
+  "CALL_ALL_IN",
+  "REJAM",
+] as const satisfies readonly IcmSpotType[];
+
 function sngChipEvCandidateRangePack(
   tableFormat: TableFormat,
   blindSpeed: BlindSpeed,
@@ -104,6 +176,83 @@ function sngChipEvCandidateRangePack(
   };
 }
 
+function defaultIcmStackDistribution(tableFormat: TableFormat): StackDistribution {
+  if (tableFormat === "FULL_RING_9") {
+    return {
+      remainingPlayers: 4,
+      heroIndex: 1,
+      stacks: [
+        { position: "BTN", stackBB: 42 },
+        { position: "SB", stackBB: 18 },
+        { position: "BB", stackBB: 11 },
+        { position: "CO", stackBB: 29 },
+      ],
+    };
+  }
+
+  return {
+    remainingPlayers: 3,
+    heroIndex: 1,
+    stacks: [
+      { position: "BTN", stackBB: 34 },
+      { position: "SB", stackBB: 14 },
+      { position: "BB", stackBB: 21 },
+    ],
+  };
+}
+
+function sngIcmCandidateRangePack(
+  tableFormat: TableFormat,
+  blindSpeed: BlindSpeed,
+  ante: AnteMode,
+): RangePack {
+  const tableSlug = tableFormat === "FULL_RING_9" ? "full-ring-9" : "six-max";
+  const speedSlug = blindSpeed === "REGULAR" ? "regular" : "turbo";
+  const anteSlug = ante === "ON" ? "ante-on" : "ante-off";
+  const payoutStructure = tableFormat === "FULL_RING_9"
+    ? SNG_PAYOUT_PRESETS.SNG_9_MAX_TOP_3
+    : SNG_PAYOUT_PRESETS.SNG_6_MAX_TOP_2;
+  const stackDistribution = defaultIcmStackDistribution(tableFormat);
+  const icmContext = buildSngIcmContext({
+    tableFormat,
+    blindSpeed,
+    payoutStructure,
+    stackDistribution,
+    spotType: "PUSH_FOLD",
+  });
+
+  return {
+    id: `sng-${tableSlug}-${speedSlug}-preflop-icm-${anteSlug}-candidate-v0`,
+    version: "candidate-v0",
+    createdAt: VERIFIED_AT,
+    verifiedAt: VERIFIED_AT,
+    confidence: "LOW",
+    dimensions: {
+      gameVariant: "SNG",
+      tableFormat,
+      blindSpeed,
+      street: "PREFLOP",
+      evModel: "ICM",
+      ante,
+      rakeMode: "NONE",
+    },
+    assumptions: [
+      "Candidate RangePack for future SNG ICM support; not used for production scoring yet.",
+      "ICM metadata includes payout structure, remaining players, stack distribution, bubble factor and spot type.",
+      `Payout preset: ${payoutStructure.id}.`,
+      `Representative bubble factor: ${icmContext.bubbleFactor}.`,
+      "Supported ICM spot types for future import: PUSH_FOLD, CALL_ALL_IN, REJAM.",
+      ante === "ON" ? "Big blind ante is active." : "No ante.",
+      "Records are intentionally empty until ICM ranges are imported and validated against ICMIZER/HoldemResources-style simulators.",
+    ],
+    searchQueries: SNG_ICM_PREFLOP_SEARCH_QUERIES,
+    sourceEvidence: SNG_ICM_PREFLOP_SOURCE_EVIDENCE,
+    icmContext,
+    icmSpotTypes: ICM_SPOT_TYPES,
+    records: [],
+  };
+}
+
 export const sngChipEvPreflopRangePackCandidates = [
   sngChipEvCandidateRangePack("FULL_RING_9", "REGULAR", "ON"),
   sngChipEvCandidateRangePack("FULL_RING_9", "REGULAR", "OFF"),
@@ -115,10 +264,26 @@ export const sngChipEvPreflopRangePackCandidates = [
   sngChipEvCandidateRangePack("SIX_MAX", "TURBO", "OFF"),
 ] as const;
 
+export const sngIcmPreflopRangePackCandidates = [
+  sngIcmCandidateRangePack("FULL_RING_9", "REGULAR", "ON"),
+  sngIcmCandidateRangePack("FULL_RING_9", "REGULAR", "OFF"),
+  sngIcmCandidateRangePack("FULL_RING_9", "TURBO", "ON"),
+  sngIcmCandidateRangePack("FULL_RING_9", "TURBO", "OFF"),
+  sngIcmCandidateRangePack("SIX_MAX", "REGULAR", "ON"),
+  sngIcmCandidateRangePack("SIX_MAX", "REGULAR", "OFF"),
+  sngIcmCandidateRangePack("SIX_MAX", "TURBO", "ON"),
+  sngIcmCandidateRangePack("SIX_MAX", "TURBO", "OFF"),
+] as const;
+
+export const allSngPreflopRangePacks = [
+  ...sngChipEvPreflopRangePackCandidates,
+  ...sngIcmPreflopRangePackCandidates,
+] as const;
+
 export function sngPreflopRangePackForProfile(
   profile: TrainingProfile,
 ): RangePack | undefined {
-  return sngChipEvPreflopRangePackCandidates.find((pack) => (
+  return allSngPreflopRangePacks.find((pack) => (
     pack.dimensions.gameVariant === profile.gameVariant &&
     pack.dimensions.tableFormat === profile.tableFormat &&
     pack.dimensions.blindSpeed === profile.blindSpeed &&

@@ -14,6 +14,7 @@ import type {
   TableFormat,
   TrainingStreet,
 } from "../../core/trainingProfile";
+import type { IcmSpotType, SngIcmContext } from "../../core/icmModel";
 import {
   type RangeFile,
   type RangeRecord,
@@ -57,6 +58,8 @@ export interface RangePack {
   assumptions: string[];
   searchQueries: string[];
   sourceEvidence: RangeSourceEvidence[];
+  icmContext?: SngIcmContext;
+  icmSpotTypes?: readonly IcmSpotType[];
   records: RangePackRecord[];
 }
 

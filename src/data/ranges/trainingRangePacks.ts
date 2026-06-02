@@ -5,13 +5,13 @@ import {
 } from "./mttPreflopRangePacks";
 import type { RangePack } from "./rangePack";
 import {
-  sngChipEvPreflopRangePackCandidates,
+  allSngPreflopRangePacks,
   sngPreflopRangePackForProfile,
 } from "./sngPreflopRangePacks";
 
 export const allTrainingRangePacks = [
   ...allMttPreflopRangePacks,
-  ...sngChipEvPreflopRangePackCandidates,
+  ...allSngPreflopRangePacks,
 ] as const;
 
 export function rangePackForTrainingProfile(
