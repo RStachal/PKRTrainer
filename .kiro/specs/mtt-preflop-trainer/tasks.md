@@ -325,7 +325,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
 - [x] 21. Final checkpoint - ověření celé aplikace
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 22. Roadmapa rozšiřitelné tréninkové platformy
+- [x] 22. Roadmapa rozšiřitelné tréninkové platformy
   - [x] 22.1 Zmapovat aktuální stav řešení a potvrdit hranici hotové iterace
     - Aktuální stabilní základ: MTT preflop 9-max full ring, cEV ranges, ante ON/OFF, deterministický drill engine, scoring, statistiky, range modal, HH import, offline/PWA a prototyp postflop záložky
     - Navazující architektura musí zůstat aditivní: neměnit existující ranges, seed behavior, Question_ID ani localStorage klíče bez explicitní migrace
@@ -400,7 +400,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 27.2 Připravit rake/no-rake dimenzi
     - Rake a no-rake zatím neřešit v engine; pouze rezervovat metadata a datový model, aby pozdější ranges nebylo nutné migrovat násilně
 
-- [ ] 28. Postflop roadmapa po dokončení preflop základu
+- [x] 28. Postflop roadmapa po dokončení preflop základu
   - [x] 28.1 Převést dnešní postflop prototyp na typovaný TrainingSpot
     - Zachovat stávající jednoduchý feedback, ale oddělit board texture, street, akční node, sizing a explanation
 
@@ -431,14 +431,14 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 30.3 Zachovat české UX a offline-first provoz
     - Všechny nové texty česky; data a metadata součástí bundlu; žádné runtime tahání chartů z internetu v offline aplikaci
 
-- [ ] 31. Ověření a release disciplina pro navazující fáze
-  - [ ] 31.1 Pro každou novou dimenzi přidat unit/property testy
+- [x] 31. Ověření a release disciplina pro navazující fáze
+  - [x] 31.1 Pro každou novou dimenzi přidat unit/property testy
     - Profile/seat/range schema testy musí běžet před začleněním nových chartů
 
-  - [ ] 31.2 Spouštět zelené brány po netriviálních změnách
+  - [x] 31.2 Spouštět zelené brány po netriviálních změnách
     - `npm test` a `npm run build` musí projít po každé implementační vlně
 
-  - [ ] 31.3 Udržovat checklist průběžně
+  - [x] 31.3 Udržovat checklist průběžně
     - Dokončené položky v tomto souboru okamžitě přepínat na `[x]`; nedokončené ponechat `[ ]`
 
 ## Notes
