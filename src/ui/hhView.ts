@@ -36,6 +36,8 @@
 
 import type { AnteMode, Spot } from "../core/types";
 import { parseHandHistory, type HHFieldName, type HHResult } from "../core/hhParser";
+import { rangeStore } from "../data/rangeStore";
+import { renderMatrix } from "./rangeMatrixView";
 import { renderTable } from "./tableRenderer";
 
 // ---------------------------------------------------------------------------
@@ -125,6 +127,50 @@ function renderIncompatible(container: HTMLElement, incompatible: boolean): void
   }
 }
 
+function renderAnalysis(doc: Document, container: HTMLElement, spot: Spot): void {
+  container.innerHTML = "";
+  container.className = "hh-analysis";
+  container.dataset.spotId = spot.id;
+
+  const title = el(doc, "h3", "hh-analysis__title");
+  title.textContent = "Analýza rozhodnutí";
+  container.appendChild(title);
+
+  const facts = el(doc, "div", "hh-analysis__facts");
+  facts.dataset.position = spot.heroPos;
+  facts.dataset.hand = spot.hand;
+  facts.dataset.stack = String(spot.effStack);
+  facts.dataset.context = spot.context;
+
+  const items = [
+    ["Pozice", spot.heroPos],
+    ["Ruka", spot.hand],
+    ["Stack", `${spot.effStack} BB`],
+    ["Node", spot.context],
+    ["Doporučeno", spot.correctKeys.join(" / ")],
+  ];
+
+  for (const [label, value] of items) {
+    const item = el(doc, "div", "hh-analysis__fact");
+    const name = el(doc, "span", "hh-analysis__fact-name");
+    name.textContent = label;
+    const text = el(doc, "span", "hh-analysis__fact-value");
+    text.textContent = value;
+    item.appendChild(name);
+    item.appendChild(text);
+    facts.appendChild(item);
+  }
+  container.appendChild(facts);
+
+  const explanation = el(doc, "p", "hh-analysis__explanation");
+  explanation.textContent = spot.explanation;
+  container.appendChild(explanation);
+
+  const matrix = el(doc, "div", "hh-analysis__matrix");
+  renderMatrix(spot, rangeStore, matrix);
+  container.appendChild(matrix);
+}
+
 /**
  * Zpracuje `HHResult` a aktualizuje všechny výstupní oblasti view.
  *
@@ -140,6 +186,7 @@ function applyResult(
     unreadable: HTMLElement;
     incompatible: HTMLElement;
     table: HTMLElement;
+    analysis: HTMLElement;
   },
   callbacks?: HHViewCallbacks,
 ): void {
@@ -151,6 +198,7 @@ function applyResult(
     // Req 11.4 — kompatibilní data: vykresli Spot do vyhrazeného kontejneru.
     const ante: AnteMode = result.fields.ante ?? "OFF";
     renderTable(result.spot, ante, regions.table);
+    renderAnalysis(doc, regions.analysis, result.spot);
     callbacks?.onSpotBuilt?.(result.spot);
   } else {
     // Chyba / nekompatibilita / částečná data: Spot nevykresluj, vyčisti stůl.
@@ -160,6 +208,8 @@ function applyResult(
     placeholder.style.opacity = "0.7";
     placeholder.style.fontStyle = "italic";
     regions.table.appendChild(placeholder);
+    regions.analysis.innerHTML = "";
+    regions.analysis.removeAttribute("data-spot-id");
   }
 }
 
@@ -192,6 +242,19 @@ function viewStyles(doc: Document): HTMLStyleElement {
   background:rgba(155,108,240,.14);border:1px solid rgba(155,108,240,.45);
   font-size:13px;color:#d8c7ff;}
 .hh-view .hh-table{margin-top:16px;min-height:40px;}
+.hh-view .hh-analysis{margin-top:16px;display:grid;gap:10px;}
+.hh-view .hh-analysis__title{margin:0;font-size:16px;font-weight:900;color:#e8ecf7;}
+.hh-view .hh-analysis__facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));
+  gap:8px;}
+.hh-view .hh-analysis__fact{display:grid;gap:2px;padding:8px;border-radius:8px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);}
+.hh-view .hh-analysis__fact-name{font-size:11px;text-transform:uppercase;color:#9aa6c2;
+  font-weight:800;}
+.hh-view .hh-analysis__fact-value{font-size:13px;color:#e8ecf7;font-weight:800;
+  overflow-wrap:anywhere;}
+.hh-view .hh-analysis__explanation{margin:0;font-size:13px;line-height:1.4;color:#d5deef;}
+.hh-view .hh-analysis__matrix{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.hh-view .hh-analysis__matrix .matrix{min-width:560px;}
 `;
   return style;
 }
@@ -274,7 +337,11 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
   table.appendChild(placeholder);
   wrap.appendChild(table);
 
-  const regions = { errors, unreadable, incompatible, table };
+  const analysis = el(doc, "section", "hh-analysis");
+  analysis.setAttribute("aria-label", "Analýza importované hand history");
+  wrap.appendChild(analysis);
+
+  const regions = { errors, unreadable, incompatible, table, analysis };
 
   // Obsluha kliknutí — totální parser + ochrana proti pádu při vykreslování.
   button.addEventListener("click", () => {
@@ -291,6 +358,8 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
       renderUnreadable(doc, regions.unreadable, []);
       renderIncompatible(regions.incompatible, false);
       regions.table.innerHTML = "";
+      regions.analysis.innerHTML = "";
+      regions.analysis.removeAttribute("data-spot-id");
     }
   });
 

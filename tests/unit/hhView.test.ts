@@ -51,7 +51,35 @@ describe("hhView - DOM import", () => {
     expect(root.querySelector(".poker-table")).not.toBeNull();
     expect(root.querySelectorAll(".seat")).toHaveLength(9);
     expect(root.querySelectorAll(".hole-card")).toHaveLength(2);
+    expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.spotId)
+      .toContain("HJ|50|AKo");
+    expect(root.querySelector<HTMLElement>(".hh-analysis__facts")?.dataset.position)
+      .toBe("HJ");
+    expect(root.querySelector<HTMLElement>(".hh-analysis__facts")?.dataset.hand)
+      .toBe("AKo");
+    expect(root.querySelector<HTMLElement>(".hh-analysis__facts")?.dataset.stack)
+      .toBe("50");
+    expect(root.querySelectorAll(".hh-analysis .matrix-cell")).toHaveLength(169);
+    expect(root.querySelector<HTMLElement>(".hh-analysis .matrix-cell--hero")?.dataset.hand)
+      .toBe("AKo");
     expect(importedIds).toHaveLength(1);
     expect(importedIds[0]).toContain("HJ|50|AKo");
+  });
+
+  it("vycisti HH analyzu po nevalidnim vstupu", () => {
+    const root = document.createElement("div");
+    renderHHView(root);
+
+    const textarea = root.querySelector<HTMLTextAreaElement>(".hh-input");
+    textarea!.value = validHh;
+    root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
+    expect(root.querySelectorAll(".hh-analysis .matrix-cell")).toHaveLength(169);
+
+    textarea!.value = "";
+    root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
+
+    expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.spotId).toBeUndefined();
+    expect(root.querySelectorAll(".hh-analysis .matrix-cell")).toHaveLength(0);
+    expect(root.querySelector(".poker-table")).toBeNull();
   });
 });

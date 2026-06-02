@@ -551,6 +551,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 42.3 Otestovat kombinovaný preflop/postflop transfer
     - Unit a DOM testy musí pokrýt export, import a legacy payload bez postflopu
 
+- [x] 43. Rozšířit HH import na praktický range analyzátor
+  - [x] 43.1 Zobrazit decision summary pro importovaný HH spot
+    - Ukázat pozici, hand class, stack, akční kontext a doporučené akce
+
+  - [x] 43.2 Přidat relevantní range matrix k HH výsledku
+    - Použít stejný Range_Store a 13x13 renderer jako tréninkový drill
+
+  - [x] 43.3 Otestovat úspěšný import i vyčištění analýzy při chybě
+    - DOM test musí ověřit summary, range buňky a prázdný stav po nevalidním vstupu
+
 ## Notes
 
 - Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.
