@@ -522,7 +522,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Praktické vysvětlení nesmí přetékat a musí zůstat offline-first
 
 - [ ] 40. MTT 6-max preflop chipEV jako další obsahová vertikála
-  - [ ] 40.1 Dohledat a uložit sourcing audit pro MTT 6-max chipEV
+  - [x] 40.1 Dohledat a uložit sourcing audit pro MTT 6-max chipEV
     - Porovnat minimálně 2 veřejné zdroje a oddělit regular/turbo assumptions
 
   - [ ] 40.2 Připravit candidate RangePacky pro 6-max
