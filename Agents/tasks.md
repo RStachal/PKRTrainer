@@ -404,7 +404,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 28.1 Převést dnešní postflop prototyp na typovaný TrainingSpot
     - Zachovat stávající jednoduchý feedback, ale oddělit board texture, street, akční node, sizing a explanation
 
-  - [ ] 28.2 Zavést postflop RangePack/StrategyPack
+  - [x] 28.2 Zavést postflop RangePack/StrategyPack
     - Flop jako první: board texture, pozice, pot typ, SPR/effective stack, akce Check, Bet small, Bet big, Raise, Call, Fold
     - Turn a river navázat až po stabilním flop modelu
 
