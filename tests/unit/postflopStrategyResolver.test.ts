@@ -13,21 +13,36 @@ describe("postflopStrategyResolver", () => {
   it("prevede matching flop rule na podporovane doporuceni", () => {
     const resolver = createPostflopStrategyResolver(flopSingleRaisedPrototypeStrategyPack);
 
-    expect(resolver({
+    const result = resolver({
       street: "FLOP",
       textures: ["dry", "rainbow"],
       potBB: 6,
       effectiveStackBB: 40,
-    })).toEqual({
+    });
+
+    expect(result).toMatchObject({
       action: "BET_SMALL",
       explanation: "Suchy rainbow flop je vhodny pro maly c-bet, protoze casto drzi range advantage.",
       source: {
         kind: "STRATEGY_PACK",
         packId: flopSingleRaisedPrototypeStrategyPack.id,
+        packVersion: flopSingleRaisedPrototypeStrategyPack.version,
+        packVerifiedAt: flopSingleRaisedPrototypeStrategyPack.verifiedAt,
         ruleId: "flop-srp-dry-small-cbet",
         confidence: "LOW",
+        matchedTextures: ["dry"],
+        sprMin: 2,
+        sprMax: 12,
+        positionPattern: "IP_OR_RANGE_ADVANTAGE",
+        sourceUrls: flopSingleRaisedPrototypeStrategyPack.sourceEvidence.map((evidence) => evidence.url),
+        assumptions: flopSingleRaisedPrototypeStrategyPack.assumptions,
+        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
       },
     });
+    expect(result?.source?.kind).toBe("STRATEGY_PACK");
+    if (result?.source?.kind === "STRATEGY_PACK") {
+      expect(result.source.selectionScore).toBeGreaterThan(0);
+    }
   });
 
   it("vrati null mimo street nebo mimo SPR packu", () => {

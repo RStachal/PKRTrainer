@@ -113,8 +113,18 @@ describe("postflopGenerator", () => {
         source: {
           kind: "STRATEGY_PACK",
           packId: "test-pack",
+          packVersion: "test-v1",
+          packVerifiedAt: "2026-06-02",
           ruleId: "test-rule",
           confidence: "LOW",
+          matchedTextures: ["dry"],
+          sprMin: 2,
+          sprMax: 12,
+          positionPattern: "TEST_PATTERN",
+          sourceUrls: ["https://example.test/postflop"],
+          assumptions: ["Test assumption"],
+          selectionScore: 99,
+          tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
         },
       }),
     });
@@ -130,8 +140,18 @@ describe("postflopGenerator", () => {
     expect(fromResolver.strategySource).toEqual({
       kind: "STRATEGY_PACK",
       packId: "test-pack",
+      packVersion: "test-v1",
+      packVerifiedAt: "2026-06-02",
       ruleId: "test-rule",
       confidence: "LOW",
+      matchedTextures: ["dry"],
+      sprMin: 2,
+      sprMax: 12,
+      positionPattern: "TEST_PATTERN",
+      sourceUrls: ["https://example.test/postflop"],
+      assumptions: ["Test assumption"],
+      selectionScore: 99,
+      tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
     });
     expect(fromFallback.recommendedAction).toBe(
       recommendPostflopAction(fromFallback.street, fromFallback.textures).action,

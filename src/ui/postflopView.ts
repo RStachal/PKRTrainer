@@ -289,11 +289,23 @@ function sourceItems(spot: PostflopTrainingSpot): readonly string[] {
   if (source.kind === "STRATEGY_PACK") {
     return [
       `Pack: ${source.packId}`,
+      `Verze: ${source.packVersion}`,
+      `Overeno: ${source.packVerifiedAt}`,
       `Rule: ${source.ruleId}`,
       `Confidence: ${source.confidence}`,
+      `Shoda textur: ${source.matchedTextures.map(textureLabel).join(", ")}`,
+      `SPR rule: ${source.sprMin}-${source.sprMax}`,
+      `Pozice: ${source.positionPattern}`,
+      `Duvod vyberu: score ${source.selectionScore}, ${source.tieBreak}`,
+      ...source.sourceUrls.map((url, index) => `Zdroj ${index + 1}: ${url}`),
+      ...source.assumptions.map((assumption, index) => `Predpoklad ${index + 1}: ${assumption}`),
     ];
   }
   return [`Fallback: ${source.ruleId}`];
+}
+
+function textureLabel(texture: BoardTexture): string {
+  return TEXTURE_LABEL[texture] ?? texture;
 }
 
 function actionLabel(action: PostflopAction): string {
@@ -374,8 +386,8 @@ function styles(doc: Document): HTMLStyleElement {
 .postflop-practical__block--wide{grid-column:1/-1;}
 .postflop-practical__title{font-size:11px;letter-spacing:0;text-transform:uppercase;
   color:#e8ecf7;margin-bottom:5px;}
-.postflop-practical__list{margin:0;padding-left:17px;color:#dce5f8;}
-.postflop-practical__text{margin:0;color:#dce5f8;}
+.postflop-practical__list{margin:0;padding-left:17px;color:#dce5f8;overflow-wrap:anywhere;}
+.postflop-practical__text{margin:0;color:#dce5f8;overflow-wrap:anywhere;}
 .postflop-result--correct{background:rgba(43,213,118,.13);border:1px solid rgba(43,213,118,.45);
   color:#9ff0bd;}
 .postflop-result--wrong{background:rgba(226,59,59,.13);border:1px solid rgba(226,59,59,.45);

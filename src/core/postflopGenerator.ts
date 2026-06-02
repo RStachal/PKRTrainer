@@ -52,8 +52,18 @@ export type PostflopRecommendationSource =
   | {
       kind: "STRATEGY_PACK";
       packId: string;
+      packVersion: string;
+      packVerifiedAt: string;
       ruleId: string;
       confidence: "LOW" | "MEDIUM" | "HIGH";
+      matchedTextures: readonly BoardTexture[];
+      sprMin: number;
+      sprMax: number;
+      positionPattern: string;
+      sourceUrls: readonly string[];
+      assumptions: readonly string[];
+      selectionScore: number;
+      tieBreak: "RULE_SCORE_THEN_PACK_ORDER";
     }
   | {
       kind: "FALLBACK";

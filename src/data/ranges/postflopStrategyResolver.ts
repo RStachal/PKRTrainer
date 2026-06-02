@@ -1,4 +1,5 @@
 import type {
+  BoardTexture,
   PostflopAction,
   PostflopStrategyInput,
   PostflopStrategyResolver,
@@ -32,8 +33,18 @@ export function createPostflopStrategyResolver(
       source: {
         kind: "STRATEGY_PACK",
         packId: pack.id,
+        packVersion: pack.version,
+        packVerifiedAt: pack.verifiedAt,
         ruleId: rule.id,
         confidence: pack.confidence,
+        matchedTextures: matchedTextures(rule, input),
+        sprMin: rule.sprMin,
+        sprMax: rule.sprMax,
+        positionPattern: rule.positionPattern,
+        sourceUrls: pack.sourceEvidence.map((evidence) => evidence.url),
+        assumptions: pack.assumptions,
+        selectionScore: ruleScore(rule, input),
+        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
       },
     };
   };
@@ -76,14 +87,19 @@ function isSupportedAction(action: string): action is PostflopAction {
 }
 
 function ruleScore(rule: PostflopStrategyRule, input: PostflopStrategyInput): number {
-  const matchedTextures = rule.boardTextures
-    .filter((texture) => input.textures.includes(texture))
-    .length;
-  const textureSpecificity = matchedTextures * 100 - rule.boardTextures.length;
+  const matchedTextureCount = matchedTextures(rule, input).length;
+  const textureSpecificity = matchedTextureCount * 100 - rule.boardTextures.length;
   const sprWidth = Math.max(0, rule.sprMax - rule.sprMin);
   const sprSpecificity = Math.max(0, 50 - sprWidth);
 
   return textureSpecificity + sprSpecificity;
+}
+
+function matchedTextures(
+  rule: PostflopStrategyRule,
+  input: PostflopStrategyInput,
+): readonly BoardTexture[] {
+  return rule.boardTextures.filter((texture) => input.textures.includes(texture));
 }
 
 function roundedSpr(effectiveStackBB: number, potBB: number): number {

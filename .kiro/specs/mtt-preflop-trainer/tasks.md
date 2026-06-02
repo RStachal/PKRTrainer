@@ -511,14 +511,14 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 38.3 Přidat unit/property testy textur
     - Ověřit reprezentativní boardy: A72r, K83r, 987tt, JT8tt, 665r, monotone broadway
 
-- [ ] 39. Postflop UI evidence a učební feedback
-  - [ ] 39.1 Přidat detail StrategyPack zdrojů v postflop view
+- [x] 39. Postflop UI evidence a učební feedback
+  - [x] 39.1 Přidat detail StrategyPack zdrojů v postflop view
     - Zobrazit pack id, version, verifiedAt, confidence, source URLs a assumptions pro aktuální spot
 
-  - [ ] 39.2 Zobrazit proč bylo zvoleno konkrétní pravidlo
+  - [x] 39.2 Zobrazit proč bylo zvoleno konkrétní pravidlo
     - Ukázat matched textures, SPR interval, positionPattern a tie-break výsledek
 
-  - [ ] 39.3 Zachovat české a mobilně použitelné UX
+  - [x] 39.3 Zachovat české a mobilně použitelné UX
     - Praktické vysvětlení nesmí přetékat a musí zůstat offline-first
 
 - [ ] 40. MTT 6-max preflop chipEV jako další obsahová vertikála

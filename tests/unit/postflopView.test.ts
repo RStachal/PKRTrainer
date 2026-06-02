@@ -43,6 +43,13 @@ describe("postflopView - DOM", () => {
     expect(result?.textContent).toContain("Value range");
     expect(result?.textContent).toContain("Zdroj");
     expect(result?.textContent).toContain("Pack:");
+    expect(result?.textContent).toContain("Verze:");
+    expect(result?.textContent).toContain("Overeno:");
+    expect(result?.textContent).toContain("Shoda textur:");
+    expect(result?.textContent).toContain("SPR rule:");
+    expect(result?.textContent).toContain("Duvod vyberu:");
+    expect(result?.textContent).toContain("Zdroj 1:");
+    expect(result?.textContent).toContain("Predpoklad 1:");
     expect(result?.textContent).toContain("Pl\u00e1n");
   });
 });
