@@ -1,6 +1,6 @@
 import { ALL_HAND_CLASSES } from "../../core/poker";
 import type { ActionKey, HandLabel } from "../../core/types";
-import type { RangePack, RangePackRecord } from "./rangePack";
+import type { RangePack, RangePackDimensions, RangePackRecord } from "./rangePack";
 import { validateRangePack } from "./rangePack";
 
 export interface NormalizedRangeCell {
@@ -24,16 +24,29 @@ export interface RangePackRecordSummary {
   strictActionCounts: Record<ActionKey, number>;
 }
 
+export interface RangePackImportIcmSummary {
+  payoutStructureId: string;
+  paidPlaces: number;
+  remainingPlayers: number;
+  heroIndex: number;
+  heroStackBB: number | null;
+  bubbleFactor: number;
+  spotType: string;
+  supportedSpotTypes: readonly string[];
+}
+
 export interface RangePackImportReport {
   packId: string;
   valid: boolean;
   errors: readonly string[];
   warnings: readonly string[];
+  dimensions: RangePackDimensions;
   sourceCount: number;
   searchQueryCount: number;
   recordCount: number;
   totalExplicitHands: number;
   totalImpliedFolds: number;
+  icm?: RangePackImportIcmSummary;
   records: readonly RangePackRecordSummary[];
 }
 
@@ -69,11 +82,13 @@ export function buildRangePackImportReport(pack: RangePack): RangePackImportRepo
     valid: errors.length === 0,
     errors,
     warnings,
+    dimensions: pack.dimensions,
     sourceCount: pack.sourceEvidence.length,
     searchQueryCount: pack.searchQueries.length,
     recordCount: pack.records.length,
     totalExplicitHands,
     totalImpliedFolds,
+    icm: summarizeIcmContext(pack),
     records,
   };
 }
@@ -82,12 +97,21 @@ export function renderRangePackImportReport(report: RangePackImportReport): stri
   const lines = [
     `RangePack: ${report.packId}`,
     `valid: ${report.valid}`,
+    `model: ${report.dimensions.evModel}`,
+    `format: ${report.dimensions.gameVariant}/${report.dimensions.tableFormat}`,
     `sources: ${report.sourceCount}`,
     `searches: ${report.searchQueryCount}`,
     `records: ${report.recordCount}`,
     `explicit hands: ${report.totalExplicitHands}`,
     `implied folds: ${report.totalImpliedFolds}`,
   ];
+
+  if (report.icm) {
+    lines.push(`icm payout: ${report.icm.payoutStructureId}`);
+    lines.push(`icm remaining players: ${report.icm.remainingPlayers}`);
+    lines.push(`icm bubble factor: ${report.icm.bubbleFactor}`);
+    lines.push(`icm spot types: ${report.icm.supportedSpotTypes.join(",")}`);
+  }
 
   if (report.errors.length > 0) {
     lines.push("errors:");
@@ -100,6 +124,24 @@ export function renderRangePackImportReport(report: RangePackImportReport): stri
   }
 
   return lines.join("\n");
+}
+
+function summarizeIcmContext(pack: RangePack): RangePackImportIcmSummary | undefined {
+  if (!pack.icmContext) return undefined;
+  const heroStack = pack.icmContext.stackDistribution.stacks[
+    pack.icmContext.stackDistribution.heroIndex
+  ];
+
+  return {
+    payoutStructureId: pack.icmContext.payoutStructure.id,
+    paidPlaces: pack.icmContext.payoutStructure.paidPlaces,
+    remainingPlayers: pack.icmContext.stackDistribution.remainingPlayers,
+    heroIndex: pack.icmContext.stackDistribution.heroIndex,
+    heroStackBB: heroStack?.stackBB ?? null,
+    bubbleFactor: pack.icmContext.bubbleFactor,
+    spotType: pack.icmContext.spotType,
+    supportedSpotTypes: pack.icmSpotTypes ?? [pack.icmContext.spotType],
+  };
 }
 
 function summarizeRecord(record: RangePackRecord): RangePackRecordSummary {

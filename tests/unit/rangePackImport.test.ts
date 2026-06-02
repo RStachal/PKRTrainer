@@ -86,6 +86,8 @@ describe("rangePackImport", () => {
     expect(report.valid).toBe(true);
     expect(report.errors).toEqual([]);
     expect(report.warnings).toEqual([]);
+    expect(report.dimensions.evModel).toBe("CHIP_EV");
+    expect(report.icm).toBeUndefined();
     expect(report.sourceCount).toBe(2);
     expect(report.searchQueryCount).toBe(3);
     expect(report.totalExplicitHands).toBe(2);
@@ -105,6 +107,7 @@ describe("rangePackImport", () => {
 
     expect(text).toContain("RangePack: mtt-full-ring-regular-preflop-chip-ev-v2");
     expect(text).toContain("valid: true");
+    expect(text).toContain("model: CHIP_EV");
     expect(text).toContain("warnings:");
     expect(text).toContain("RangePack should describe chart assumptions.");
     expect(text).toContain("RangePack confidence is LOW; review before production use.");

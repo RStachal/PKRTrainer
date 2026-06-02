@@ -7,6 +7,10 @@ import {
   type StackDistribution,
 } from "../../core/icmModel";
 import type { RangePack, RangeSourceEvidence } from "./rangePack";
+import {
+  buildRangePackImportReport,
+  type RangePackImportReport,
+} from "./rangePackImport";
 
 const VERIFIED_AT = "2026-06-01";
 
@@ -274,6 +278,12 @@ export const sngIcmPreflopRangePackCandidates = [
   sngIcmCandidateRangePack("SIX_MAX", "TURBO", "ON"),
   sngIcmCandidateRangePack("SIX_MAX", "TURBO", "OFF"),
 ] as const;
+
+export const sngChipEvCandidateImportReports: readonly RangePackImportReport[] =
+  sngChipEvPreflopRangePackCandidates.map(buildRangePackImportReport);
+
+export const sngIcmCandidateImportReports: readonly RangePackImportReport[] =
+  sngIcmPreflopRangePackCandidates.map(buildRangePackImportReport);
 
 export const allSngPreflopRangePacks = [
   ...sngChipEvPreflopRangePackCandidates,

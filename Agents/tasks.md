@@ -532,7 +532,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - 6-max profil musí jasně ukázat candidate/preview stav, ne produkční jistotu
 
 - [ ] 41. SNG chipEV -> ICM přechod bez míchání modelů
-  - [ ] 41.1 Zpřesnit SNG chipEV candidate pack workflow
+  - [x] 41.1 Zpřesnit SNG chipEV candidate pack workflow
     - Oddělit chipEV sourcing, ICM sourcing a payout/stack assumptions v reportu
 
   - [ ] 41.2 Připravit ICM simulation input model pro import

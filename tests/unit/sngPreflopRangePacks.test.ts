@@ -4,10 +4,13 @@ import { DEFAULT_TRAINING_PROFILE, profileWith } from "../../src/core/trainingPr
 import { validateRangePack } from "../../src/data/ranges/rangePack";
 import {
   allSngPreflopRangePacks,
+  sngChipEvCandidateImportReports,
   sngChipEvPreflopRangePackCandidates,
+  sngIcmCandidateImportReports,
   sngIcmPreflopRangePackCandidates,
   sngPreflopRangePackForProfile,
 } from "../../src/data/ranges/sngPreflopRangePacks";
+import { renderRangePackImportReport } from "../../src/data/ranges/rangePackImport";
 import {
   allTrainingRangePacks,
   rangePackForTrainingProfile,
@@ -59,6 +62,39 @@ describe("sngPreflopRangePacks", () => {
       expect(pack.icmSpotTypes).toEqual(["PUSH_FOLD", "CALL_ALL_IN", "REJAM"]);
       expect(pack.records).toHaveLength(0);
     }
+  });
+
+  it("oddeli SNG chipEV a ICM candidate import reporty", () => {
+    expect(sngChipEvCandidateImportReports).toHaveLength(8);
+    expect(sngIcmCandidateImportReports).toHaveLength(8);
+
+    for (const report of sngChipEvCandidateImportReports) {
+      expect(report.valid).toBe(true);
+      expect(report.dimensions.evModel).toBe("CHIP_EV");
+      expect(report.icm).toBeUndefined();
+      expect(report.recordCount).toBe(0);
+      expect(report.warnings).toEqual([
+        "RangePack confidence is LOW; review before production use.",
+        "RangePack has no records.",
+      ]);
+    }
+
+    for (const report of sngIcmCandidateImportReports) {
+      expect(report.valid).toBe(true);
+      expect(report.dimensions.evModel).toBe("ICM");
+      expect(report.icm?.payoutStructureId).toMatch(/^SNG_/);
+      expect(report.icm?.remainingPlayers).toBeGreaterThan(1);
+      expect(report.icm?.heroStackBB).toBeGreaterThan(0);
+      expect(report.icm?.bubbleFactor).toBeGreaterThan(1);
+      expect(report.icm?.supportedSpotTypes).toEqual([
+        "PUSH_FOLD",
+        "CALL_ALL_IN",
+        "REJAM",
+      ]);
+    }
+
+    expect(renderRangePackImportReport(sngIcmCandidateImportReports[0]))
+      .toContain("icm payout: SNG_9_MAX_TOP_3");
   });
 
   it("najde SNG chipEV RangePack podle plneho profilu", () => {
