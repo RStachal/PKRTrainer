@@ -1,6 +1,7 @@
 import type { Card, Rank } from "./types";
 import { RANKS, SUITS, rankValue } from "./poker";
 import { mulberry32 } from "./rng";
+import type { PostflopTrainingSpot } from "./postflopTrainingSpot";
 
 export type PostflopStreet = "FLOP" | "TURN" | "RIVER";
 export type PostflopAction = "CHECK" | "BET_SMALL" | "BET_BIG";
@@ -23,6 +24,7 @@ export interface PostflopSpot {
   actions: readonly PostflopAction[];
   recommendedAction: PostflopAction;
   explanation: string;
+  trainingSpot?: PostflopTrainingSpot;
 }
 
 export interface PostflopConfig {

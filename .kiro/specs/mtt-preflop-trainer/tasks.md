@@ -401,7 +401,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Rake a no-rake zatím neřešit v engine; pouze rezervovat metadata a datový model, aby pozdější ranges nebylo nutné migrovat násilně
 
 - [ ] 28. Postflop roadmapa po dokončení preflop základu
-  - [ ] 28.1 Převést dnešní postflop prototyp na typovaný TrainingSpot
+  - [x] 28.1 Převést dnešní postflop prototyp na typovaný TrainingSpot
     - Zachovat stávající jednoduchý feedback, ale oddělit board texture, street, akční node, sizing a explanation
 
   - [ ] 28.2 Zavést postflop RangePack/StrategyPack
