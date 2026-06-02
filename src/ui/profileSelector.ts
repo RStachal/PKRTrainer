@@ -8,6 +8,7 @@ import {
   type TrainingProfile,
   type TrainingStreet,
 } from "../core/trainingProfile";
+import { rangePackForTrainingProfile } from "../data/ranges/trainingRangePacks";
 
 export interface ProfileSelectorView {
   getProfile(): TrainingProfile;
@@ -18,6 +19,8 @@ export interface ProfileSelectorView {
 export interface ProfileSelectorCallbacks {
   onChange?: (profile: TrainingProfile) => void;
 }
+
+type ProfileStatus = "production" | "candidate" | "preview";
 
 const GAME_VARIANTS: { value: GameVariant; label: string }[] = [
   { value: "MTT", label: "MTT" },
@@ -84,8 +87,6 @@ export function renderProfileSelector(
 
   const note = doc.createElement("div");
   note.className = "profile-selector__note";
-  note.textContent =
-    "Aktuálně je produkčně zapojený MTT 9-max preflop chipEV; ostatní volby připravují další rozšíření. Data a metadata jsou součástí offline bundlu.";
   wrap.appendChild(note);
 
   root.appendChild(wrap);
@@ -110,10 +111,20 @@ export function renderProfileSelector(
     street.select.value = profile.street;
     evModel.select.value = profile.evModel;
     rakeMode.select.value = profile.rakeMode;
+    updateNote(profile);
   }
 
   function handleChange(): void {
-    callbacks.onChange?.(getProfile());
+    const profile = getProfile();
+    updateNote(profile);
+    callbacks.onChange?.(profile);
+  }
+
+  function updateNote(profile: TrainingProfile): void {
+    const status = describeProfileStatus(profile);
+    note.dataset.status = status.status;
+    note.className = `profile-selector__note profile-selector__note--${status.status}`;
+    note.textContent = status.text;
   }
 
   return {
@@ -126,6 +137,54 @@ export function renderProfileSelector(
       root.innerHTML = "";
     },
   };
+}
+
+function describeProfileStatus(profile: TrainingProfile): {
+  status: ProfileStatus;
+  text: string;
+} {
+  if (isProductionPreflopProfile(profile)) {
+    return {
+      status: "production",
+      text:
+        "Produkčně zapojený profil: MTT 9-max regular preflop chipEV. Data a metadata jsou součástí offline bundlu.",
+    };
+  }
+
+  if (profile.street === "FLOP") {
+    return {
+      status: "preview",
+      text:
+        "Preview profil: flop trénink běží nad heuristickým StrategyPackem s LOW confidence a zobrazí zdroje i předpoklady.",
+    };
+  }
+
+  const pack = rangePackForTrainingProfile(profile);
+  if (pack && (pack.confidence === "LOW" || pack.records.length === 0)) {
+    return {
+      status: "candidate",
+      text:
+        `Candidate/preview profil: ${pack.id} má LOW confidence nebo 0 records; ` +
+        "nespouští produkční scoring, dokud neprojde import report a ověření hand-class hodnot.",
+    };
+  }
+
+  return {
+    status: "preview",
+    text:
+      "Preview profil: tato kombinace zatím nemá produkčně ověřený RangePack pro scoring.",
+  };
+}
+
+function isProductionPreflopProfile(profile: TrainingProfile): boolean {
+  return (
+    profile.gameVariant === "MTT" &&
+    profile.tableFormat === "FULL_RING_9" &&
+    profile.blindSpeed === "REGULAR" &&
+    profile.street === "PREFLOP" &&
+    profile.evModel === "CHIP_EV" &&
+    profile.rakeMode === "NONE"
+  );
 }
 
 function selectControl<T extends string>(

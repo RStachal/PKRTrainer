@@ -89,6 +89,26 @@ describe("bootstrap - inicializacni tok", () => {
     ).toBe("1");
   });
 
+  it("candidate 6-max preflop profil nespusti legacy 9-max drill", async () => {
+    const { bootstrap } = await importFreshMain();
+    const root = document.createElement("div");
+
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+
+    const format = root.querySelector<HTMLSelectElement>(".profile-format");
+    format!.value = "SIX_MAX";
+    format!.dispatchEvent(new Event("change"));
+
+    root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+
+    const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
+    expect(warning?.hidden).toBe(false);
+    expect(warning?.textContent).toContain("candidate/preview");
+    expect(warning?.textContent).toContain("Produkční trénink se nespustí");
+    expect(root.querySelector(".poker-table")).toBeNull();
+    expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
+  });
+
   it("pri nekonzistentnim ulozisti zobrazi blokujici chybu a relaci nespusti", async () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");

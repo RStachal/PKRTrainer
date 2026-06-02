@@ -12,13 +12,13 @@ describe("profileSelector", () => {
   it("vykresli vychozi MTT 9-max regular preflop chipEV profil", () => {
     const root = document.createElement("div");
     const view = renderProfileSelector(root);
+    const note = root.querySelector<HTMLElement>(".profile-selector__note");
 
     expect(root.querySelector(".profile-selector")).not.toBeNull();
     expect(view.getProfile()).toEqual(DEFAULT_TRAINING_PROFILE);
-    expect(root.querySelector<HTMLElement>(".profile-selector__note")?.textContent)
-      .toContain("produkčně zapojený MTT 9-max preflop chipEV");
-    expect(root.querySelector<HTMLElement>(".profile-selector__note")?.textContent)
-      .toContain("offline bundlu");
+    expect(note?.dataset.status).toBe("production");
+    expect(note?.textContent).toContain("MTT 9-max regular preflop chipEV");
+    expect(note?.textContent).toContain("offline bundlu");
   });
 
   it("umi zmenit profil a zavola onChange", () => {
@@ -46,6 +46,22 @@ describe("profileSelector", () => {
       tableFormat: "SIX_MAX",
       blindSpeed: "TURBO",
     });
+  });
+
+  it("oznaci 6-max MTT preflop jako candidate preview bez produkcni jistoty", () => {
+    const root = document.createElement("div");
+    renderProfileSelector(root);
+
+    const format = root.querySelector<HTMLSelectElement>(".profile-format");
+    expect(format).not.toBeNull();
+
+    format!.value = "SIX_MAX";
+    format!.dispatchEvent(new Event("change"));
+
+    const note = root.querySelector<HTMLElement>(".profile-selector__note");
+    expect(note?.dataset.status).toBe("candidate");
+    expect(note?.textContent).toContain("Candidate/preview profil");
+    expect(note?.textContent).toContain("nespouští produkční scoring");
   });
 
   it("vykresli profilovy vyber z bundlu bez runtime fetch", () => {

@@ -54,6 +54,7 @@ import {
   buildPostflopResultRecord,
   type PostflopStatsV2BridgeRecord,
 } from "./persistence/postflopResultRecord";
+import { rangePackForTrainingProfile } from "./data/ranges/trainingRangePacks";
 import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
 import { renderMatrix } from "./ui/rangeMatrixView";
@@ -449,6 +450,32 @@ interface TrainingHooks {
   startPostflopFlow: (seed: number, profile: TrainingProfile) => void;
 }
 
+function isProductionPreflopProfile(profile: TrainingProfile): boolean {
+  return (
+    profile.gameVariant === "MTT" &&
+    profile.tableFormat === "FULL_RING_9" &&
+    profile.blindSpeed === "REGULAR" &&
+    profile.street === "PREFLOP" &&
+    profile.evModel === "CHIP_EV" &&
+    profile.rakeMode === "NONE"
+  );
+}
+
+function profileGateMessage(profile: TrainingProfile): string {
+  const pack = rangePackForTrainingProfile(profile);
+  if (pack && (pack.confidence === "LOW" || pack.records.length === 0)) {
+    return (
+      `Profil ${pack.id} je zatím candidate/preview: má LOW confidence nebo 0 records. ` +
+      "Produkční trénink se nespustí, dokud neprojde import report a ověření hand-class hodnot."
+    );
+  }
+
+  return (
+    "Zvolený profil je zatím preview a nemá produkčně ověřený RangePack pro scoring. " +
+    "Použijte MTT 9-max regular preflop chipEV nebo flop preview."
+  );
+}
+
 /**
  * Sestaví tréninkovou sekci: filtry (se stráží explicitního startu, Req 13.4) a
  * herní oblast (stůl + akce + výsledek + range matice). Generování spotů začne
@@ -487,6 +514,11 @@ function setupTraining(
     onStart: (filters: Filters, seed: number | null, profile) => {
       if (profile.street === "FLOP") {
         startPostflopSession(seed, profile);
+        return;
+      }
+      if (!isProductionPreflopProfile(profile)) {
+        gameBox.hidden = true;
+        filtersView.showEmptyResult(profileGateMessage(profile));
         return;
       }
       startSession(filters, seed);

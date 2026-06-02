@@ -521,14 +521,14 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 39.3 Zachovat české a mobilně použitelné UX
     - Praktické vysvětlení nesmí přetékat a musí zůstat offline-first
 
-- [ ] 40. MTT 6-max preflop chipEV jako další obsahová vertikála
+- [x] 40. MTT 6-max preflop chipEV jako další obsahová vertikála
   - [x] 40.1 Dohledat a uložit sourcing audit pro MTT 6-max chipEV
     - Porovnat minimálně 2 veřejné zdroje a oddělit regular/turbo assumptions
 
   - [x] 40.2 Připravit candidate RangePacky pro 6-max
     - Bez produkčního zapojení, dokud nejsou ověřené hand-class hodnoty a import report
 
-  - [ ] 40.3 Otestovat profilové vyhledání a UI gating
+  - [x] 40.3 Otestovat profilové vyhledání a UI gating
     - 6-max profil musí jasně ukázat candidate/preview stav, ne produkční jistotu
 
 - [ ] 41. SNG chipEV -> ICM přechod bez míchání modelů
