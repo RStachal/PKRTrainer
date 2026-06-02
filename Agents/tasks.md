@@ -471,14 +471,14 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 34.3 Přidat unit testy pro překryvy pravidel
     - Ověřit low-SPR dry/paired boardy a dynamické multi-texture boardy
 
-- [ ] 35. Napojit postflop na plnohodnotnou tréninkovou relaci
+- [x] 35. Napojit postflop na plnohodnotnou tréninkovou relaci
   - [x] 35.1 Routovat `TrainingProfile.street = FLOP` do postflop session flow
     - Profile selector musí umět přepnout z preflop drill panelu na postflop trénink bez ručního tabování
 
   - [x] 35.2 Definovat `PostflopResultRecord` a bridge do statistik v2
     - Ukládat street, actionNode, potType, SPR, boardTextures, chosen action, recommended action, source pack/rule a correct flag
 
-  - [ ] 35.3 Rozšířit dashboard o postflop breakdown
+  - [x] 35.3 Rozšířit dashboard o postflop breakdown
     - Seskupovat podle street, actionNode, board texture, StrategyPack id a confidence
 
 - [x] 36. Importní a validační report pro Postflop StrategyPack

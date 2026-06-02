@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 
 import type { Filters } from "../../src/core/types";
 import type { TrainingProfile } from "../../src/core/trainingProfile";
+import type { PostflopStatsV2BridgeRecord } from "../../src/persistence/postflopResultRecord";
 import { createStatsStore, type ResultRecord } from "../../src/persistence/statsStore";
 import { renderDashboard } from "../../src/ui/dashboard";
 import { renderFilters } from "../../src/ui/filters";
@@ -43,6 +44,31 @@ const record: ResultRecord = {
   position: "BTN",
   bucket: 25,
   ts: 1,
+};
+
+const postflopRecord: PostflopStatsV2BridgeRecord = {
+  schema: "postflop_stats_v2_bridge_v1",
+  qid: "POSTFLOP|FLOP|1|As-Kd-Qh",
+  correct: true,
+  ts: 2,
+  profileId: "MTT|FULL_RING_9|REGULAR|FLOP|CHIP_EV|ON|NONE",
+  gameVariant: "MTT",
+  tableFormat: "FULL_RING_9",
+  blindSpeed: "REGULAR",
+  street: "FLOP",
+  evModel: "CHIP_EV",
+  rakeMode: "NONE",
+  actionNode: "SINGLE_RAISED_POT_CBET",
+  potType: "SINGLE_RAISED",
+  boardTextureKey: "dry|ace-high|disconnected",
+  heroPosition: "BTN",
+  villainPosition: "BB",
+  positionPattern: "BTN_VS_BB",
+  chosen: "BET_SMALL",
+  recommended: "BET_SMALL",
+  strategyPackId: "mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1",
+  strategyRuleId: "flop-srp-ace-high-disconnected-small-cbet",
+  confidence: "LOW",
 };
 
 describe("filters - DOM start gate", () => {
@@ -125,6 +151,7 @@ describe("dashboard - DOM statistiky", () => {
       .toBe("1");
 
     expect(root.querySelector(".profile-breakdowns")).not.toBeNull();
+    expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("0");
     expect(
       root.querySelector<HTMLElement>(
         '.profile-breakdown--gameVariant .profile-breakdown-row[data-group="MTT"]',
@@ -176,5 +203,35 @@ describe("dashboard - DOM statistiky", () => {
     );
     expect(emptyPosition?.dataset.total).toBe("0");
     expect(emptyPosition?.querySelector(".rate--unavailable")?.textContent).toBe("—");
+  });
+
+  it("zobrazi postflop breakdown podle street, textury, StrategyPacku a confidence", () => {
+    const storage = new MemoryStorage();
+    const store = createStatsStore(storage);
+
+    const root = document.createElement("div");
+    renderDashboard({ store, sessionCount: 1, postflopRecords: [postflopRecord] }, root);
+
+    expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--street .postflop-breakdown-row[data-group="FLOP"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--boardTextureKey .postflop-breakdown-row[data-group="dry|ace-high|disconnected"]',
+      )?.dataset.rate,
+    ).toBe("100");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--strategyPackId .postflop-breakdown-row[data-group="mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--confidence .postflop-breakdown-row[data-group="LOW"]',
+      )?.dataset.total,
+    ).toBe("1");
   });
 });

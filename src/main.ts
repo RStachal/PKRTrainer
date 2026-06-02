@@ -41,6 +41,7 @@ import type {
   SessionConfig,
   Spot,
 } from "./core/types";
+import type { TrainingProfile } from "./core/trainingProfile";
 import { resolveSeed, spotSequence } from "./core/drillEngine";
 import { grade } from "./core/scoring";
 import { rangeStore } from "./data/rangeStore";
@@ -48,6 +49,11 @@ import { getRangeDataErrors, isRangeDataLoaded } from "./data/ranges";
 import { hasNewState, runMigration, type MigrationResult } from "./persistence/migration";
 import { createStatsStore, type ResultRecord, type StatsStore } from "./persistence/statsStore";
 import { KEY_EVENTS, KEY_STATE, SCHEMA_VERSION } from "./persistence/keys";
+import {
+  bridgePostflopResultRecordToStatsV2,
+  buildPostflopResultRecord,
+  type PostflopStatsV2BridgeRecord,
+} from "./persistence/postflopResultRecord";
 import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
 import { renderMatrix } from "./ui/rangeMatrixView";
@@ -261,12 +267,33 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
 
   // Statistiky (dashboard) a HH import jsou dostupné nezávisle na Range_Store.
   let sessionCount = 0;
+  let postflopRecords: PostflopStatsV2BridgeRecord[] = [];
+  let currentPostflopProfile: TrainingProfile | undefined;
   const refreshDashboard = (): void => {
-    renderDashboard({ store: statsStore, sessionCount }, shell.statsPanel);
+    renderDashboard({ store: statsStore, sessionCount, postflopRecords }, shell.statsPanel);
+  };
+  const renderPostflopPanel = (
+    options: { initialSeed?: number; profile?: TrainingProfile } = {},
+  ): void => {
+    currentPostflopProfile = options.profile ?? currentPostflopProfile;
+    renderPostflopView(shell.postflopPanel, {
+      initialStreet: "FLOP",
+      initialSeed: options.initialSeed,
+      onAnswered: (spot, chosen) => {
+        const record = buildPostflopResultRecord(spot, chosen);
+        postflopRecords = postflopRecords.concat(
+          bridgePostflopResultRecordToStatsV2(record, {
+            profile: currentPostflopProfile,
+          }),
+        );
+        sessionCount += 1;
+        refreshDashboard();
+      },
+    });
   };
   refreshDashboard();
   renderHHView(shell.hhPanel);
-  renderPostflopView(shell.postflopPanel);
+  renderPostflopPanel();
 
   // --- Krok 3: načtení Range_Store (Req 4.6) ---
   if (!isRangeDataLoaded()) {
@@ -289,6 +316,12 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       sessionCount = 0;
     },
     refreshDashboard,
+    startPostflopFlow: (seed, profile) => {
+      postflopRecords = [];
+      renderPostflopPanel({ initialSeed: seed, profile });
+      refreshDashboard();
+      shell.selectTab("postflop");
+    },
   });
 
   // --- Service Worker (Req 12.4) ---
@@ -413,6 +446,7 @@ interface TrainingHooks {
   resetSession: () => void;
   /** Překreslí dashboard statistik. */
   refreshDashboard: () => void;
+  startPostflopFlow: (seed: number, profile: TrainingProfile) => void;
 }
 
 /**
@@ -452,25 +486,20 @@ function setupTraining(
   const filtersView: FiltersView = renderFilters(filtersBox, {
     onStart: (filters: Filters, seed: number | null, profile) => {
       if (profile.street === "FLOP") {
-        startPostflopSession(seed);
+        startPostflopSession(seed, profile);
         return;
       }
       startSession(filters, seed);
     },
   });
 
-  function startPostflopSession(seed: number | null): void {
+  function startPostflopSession(seed: number | null, profile: TrainingProfile): void {
     const resolvedSeed = resolveSeed(seed);
     filtersView.setSeed(resolvedSeed);
     hooks.resetSession();
-    hooks.refreshDashboard();
     filtersView.clearWarning();
     gameBox.hidden = true;
-    renderPostflopView(shell.postflopPanel, {
-      initialStreet: "FLOP",
-      initialSeed: resolvedSeed,
-    });
-    shell.selectTab("postflop");
+    hooks.startPostflopFlow(resolvedSeed, profile);
   }
 
   /**

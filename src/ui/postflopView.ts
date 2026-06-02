@@ -21,6 +21,7 @@ const POSTFLOP_STRATEGY_RESOLVER = createPostflopStrategyResolver(
 export interface PostflopViewOptions {
   initialStreet?: PostflopStreet;
   initialSeed?: number | null;
+  onAnswered?: (spot: PostflopTrainingSpot, chosen: PostflopAction) => void;
 }
 
 const STREET_LABEL: Record<PostflopStreet, string> = {
@@ -124,7 +125,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       street,
       strategyResolver: POSTFLOP_STRATEGY_RESOLVER,
     });
-    renderSpot(output, spot);
+    renderSpot(output, spot, options);
   };
 
   generate.addEventListener("click", showNewSpot);
@@ -132,7 +133,11 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   showNewSpot();
 }
 
-function renderSpot(root: HTMLElement, spot: PostflopSpot): void {
+function renderSpot(
+  root: HTMLElement,
+  spot: PostflopSpot,
+  options: PostflopViewOptions,
+): void {
   const doc = root.ownerDocument ?? document;
   const trainingSpot = spot.trainingSpot ?? postflopSpotToTrainingSpot(spot);
   root.innerHTML = "";
@@ -175,7 +180,7 @@ function renderSpot(root: HTMLElement, spot: PostflopSpot): void {
     btn.className = "postflop-action";
     btn.dataset.action = action;
     btn.textContent = actionLabel(action);
-    btn.addEventListener("click", () => showResult(root, trainingSpot, action));
+    btn.addEventListener("click", () => showResult(root, trainingSpot, action, options));
     actions.appendChild(btn);
   }
   root.appendChild(actions);
@@ -213,6 +218,7 @@ function showResult(
   root: HTMLElement,
   spot: PostflopTrainingSpot,
   chosen: PostflopAction,
+  options: PostflopViewOptions,
 ): void {
   const buttons = root.querySelectorAll<HTMLButtonElement>(".postflop-action");
   buttons.forEach((button) => {
@@ -227,6 +233,7 @@ function showResult(
   const result = root.querySelector<HTMLElement>(".postflop-result");
   if (!result) return;
   const correct = chosen === spot.recommendedAction;
+  options.onAnswered?.(spot, chosen);
   result.hidden = false;
   result.className = `postflop-result ${correct ? "postflop-result--correct" : "postflop-result--wrong"}`;
   renderPracticalExplanation(result, spot, correct);

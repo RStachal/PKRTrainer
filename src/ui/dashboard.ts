@@ -69,6 +69,13 @@ import {
   type StatsV2BreakdownDim,
   type StatsV2Group,
 } from "../persistence/statsV2Analytics";
+import {
+  availablePostflopStatsDimensions,
+  breakdownPostflopStats,
+  type PostflopStatsBreakdownDim,
+  type PostflopStatsGroup,
+  type PostflopStatsV2BridgeRecord,
+} from "../persistence/postflopResultRecord";
 
 // ---------------------------------------------------------------------------
 // Veřejné API
@@ -82,8 +89,9 @@ export interface DashboardData {
    * Počet Spotů zodpovězených v aktuální relaci (Req 9.5).
    * Udržuje volající — viz dokumentační blok modulu. Záporné/nečíselné hodnoty
    * jsou defenzivně normalizovány na 0.
-   */
+  */
   sessionCount: number;
+  postflopRecords?: readonly PostflopStatsV2BridgeRecord[];
 }
 
 // ---------------------------------------------------------------------------
@@ -154,6 +162,14 @@ const CONTEXT_LABEL: Record<ActionContext, string> = {
  * Pro `context` přeloží Akční_kontext, pro `bucket` přidá jednotku BB,
  * pro `position` ponechá název pozice beze změny.
  */
+const POSTFLOP_DIM_TITLE: Record<PostflopStatsBreakdownDim, string> = {
+  street: "Podle streety",
+  actionNode: "Podle action node",
+  boardTextureKey: "Podle textury boardu",
+  strategyPackId: "Podle StrategyPacku",
+  confidence: "Podle confidence",
+};
+
 function groupLabel(dim: BreakdownDim, key: string): string {
   switch (dim) {
     case "context":
@@ -413,6 +429,68 @@ function renderProfileBreakdowns(store: StatsStore): HTMLElement {
   return box;
 }
 
+function renderPostflopBreakdownRow(g: PostflopStatsGroup): HTMLElement {
+  const row = el("div", "postflop-breakdown-row");
+  row.dataset.group = g.key;
+  row.dataset.total = String(g.total);
+  row.dataset.rate = g.rate === null ? "" : String(g.rate);
+
+  const name = el("span", "postflop-breakdown-row__name");
+  name.textContent = g.key;
+  row.appendChild(name);
+
+  const count = el("span", "postflop-breakdown-row__count");
+  count.textContent = `${g.total}\u00d7`;
+  row.appendChild(count);
+
+  row.appendChild(rateElement("span", "postflop-breakdown-row__rate", g.rate));
+
+  return row;
+}
+
+function renderPostflopBreakdown(
+  dim: PostflopStatsBreakdownDim,
+  groups: PostflopStatsGroup[],
+): HTMLElement {
+  const box = el("section", `postflop-breakdown postflop-breakdown--${dim}`);
+  box.dataset.dim = dim;
+
+  const heading = el("h4", "postflop-breakdown__title");
+  heading.textContent = POSTFLOP_DIM_TITLE[dim];
+  box.appendChild(heading);
+
+  const rows = el("div", "postflop-breakdown__rows");
+  if (groups.length === 0) {
+    const empty = el("div", "postflop-breakdown__empty");
+    empty.textContent = "Zat\u00edm bez postflop odpov\u011bd\u00ed.";
+    rows.appendChild(empty);
+  } else {
+    for (const group of groups) {
+      rows.appendChild(renderPostflopBreakdownRow(group));
+    }
+  }
+  box.appendChild(rows);
+
+  return box;
+}
+
+function renderPostflopBreakdowns(
+  records: readonly PostflopStatsV2BridgeRecord[],
+): HTMLElement {
+  const box = el("section", "postflop-breakdowns");
+  box.dataset.total = String(records.length);
+
+  const heading = el("h3", "postflop-breakdowns__title");
+  heading.textContent = "Postflop roz\u010dlen\u011bn\u00ed";
+  box.appendChild(heading);
+
+  for (const dim of availablePostflopStatsDimensions()) {
+    box.appendChild(renderPostflopBreakdown(dim, breakdownPostflopStats(records, dim)));
+  }
+
+  return box;
+}
+
 // ---------------------------------------------------------------------------
 // Styly (soběstačné, aby dashboard fungoval i bez externího CSS)
 // ---------------------------------------------------------------------------
@@ -424,7 +502,7 @@ function dashboardStyles(): HTMLStyleElement {
   flex-direction:column;gap:16px;max-width:720px;}
 .dashboard h3{margin:0 0 8px;font-size:14px;font-weight:800;color:#2b3550;}
 .dashboard h4{margin:0 0 6px;font-size:12px;font-weight:800;color:#48526b;}
-.dashboard-summary,.dashboard-session,.breakdown,.stats-transfer,.profile-breakdowns{background:#f5f7fb;
+.dashboard-summary,.dashboard-session,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns{background:#f5f7fb;
   border:1px solid #e2e7f0;border-radius:10px;padding:12px 14px;}
 .dashboard-summary .summary-total{font-size:13px;color:#48526b;}
 .dashboard-summary .summary-rate-line{margin-top:4px;font-size:18px;font-weight:800;}
@@ -432,17 +510,17 @@ function dashboardStyles(): HTMLStyleElement {
 .dashboard-session{display:flex;flex-direction:column;gap:4px;}
 .dashboard-streak{font-size:15px;font-weight:800;color:#1f9d57;}
 .dashboard-session-count{font-size:13px;color:#48526b;}
-.profile-breakdowns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.profile-breakdowns__title{grid-column:1/-1;}
-.profile-breakdown{background:#fff;border:1px solid #e7ebf4;border-radius:8px;padding:8px;}
-.breakdown__rows,.profile-breakdown__rows{display:flex;flex-direction:column;gap:2px;}
-.breakdown-row,.profile-breakdown-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;
+.profile-breakdowns,.postflop-breakdowns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.profile-breakdowns__title,.postflop-breakdowns__title{grid-column:1/-1;}
+.profile-breakdown,.postflop-breakdown{background:#fff;border:1px solid #e7ebf4;border-radius:8px;padding:8px;}
+.breakdown__rows,.profile-breakdown__rows,.postflop-breakdown__rows{display:flex;flex-direction:column;gap:2px;}
+.breakdown-row,.profile-breakdown-row,.postflop-breakdown-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;
   align-items:center;padding:4px 6px;border-radius:6px;font-size:13px;}
-.breakdown-row:nth-child(odd),.profile-breakdown-row:nth-child(odd){background:rgba(43,53,80,.04);}
-.breakdown-row__name,.profile-breakdown-row__name{font-weight:600;min-width:0;overflow-wrap:anywhere;}
-.breakdown-row__count,.profile-breakdown-row__count{color:#6b7488;font-variant-numeric:tabular-nums;}
-.breakdown-row__rate,.profile-breakdown-row__rate{font-weight:800;text-align:right;font-variant-numeric:tabular-nums;}
-.profile-breakdown__empty{font-size:12px;color:#6b7488;}
+.breakdown-row:nth-child(odd),.profile-breakdown-row:nth-child(odd),.postflop-breakdown-row:nth-child(odd){background:rgba(43,53,80,.04);}
+.breakdown-row__name,.profile-breakdown-row__name,.postflop-breakdown-row__name{font-weight:600;min-width:0;overflow-wrap:anywhere;}
+.breakdown-row__count,.profile-breakdown-row__count,.postflop-breakdown-row__count{color:#6b7488;font-variant-numeric:tabular-nums;}
+.breakdown-row__rate,.profile-breakdown-row__rate,.postflop-breakdown-row__rate{font-weight:800;text-align:right;font-variant-numeric:tabular-nums;}
+.profile-breakdown__empty,.postflop-breakdown__empty{font-size:12px;color:#6b7488;}
 .rate--unavailable{color:#9aa6c2;font-weight:600;}
 .stats-transfer__actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
 .stats-export,.stats-import{appearance:none;border:1px solid #c8d1e3;border-radius:8px;
@@ -455,7 +533,7 @@ function dashboardStyles(): HTMLStyleElement {
 .stats-transfer__status{margin-top:8px;font-size:12px;font-weight:700;}
 .stats-transfer__status--ok{color:#1f9d57;}
 .stats-transfer__status--error{color:#c93333;}
-@media (max-width:640px){.profile-breakdowns{grid-template-columns:1fr;}}
+@media (max-width:640px){.profile-breakdowns,.postflop-breakdowns{grid-template-columns:1fr;}}
 `;
   return style;
 }
@@ -495,6 +573,7 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
 
   // Profilové rozčlenění nad migrovanými záznamy v2 (multi-format roadmap).
   wrapper.appendChild(renderProfileBreakdowns(store));
+  wrapper.appendChild(renderPostflopBreakdowns(data.postflopRecords ?? []));
 
   // Rozčlenění podle tří dimenzí (Req 9.4, prázdné skupiny Req 9.7).
   const dims: BreakdownDim[] = ["context", "position", "bucket"];

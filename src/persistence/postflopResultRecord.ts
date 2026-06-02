@@ -74,6 +74,20 @@ export interface PostflopStatsV2BridgeOptions {
   profile?: Partial<TrainingProfile>;
 }
 
+export type PostflopStatsBreakdownDim =
+  | "street"
+  | "actionNode"
+  | "boardTextureKey"
+  | "strategyPackId"
+  | "confidence";
+
+export interface PostflopStatsGroup {
+  key: string;
+  total: number;
+  correct: number;
+  rate: number | null;
+}
+
 export function buildPostflopResultRecord(
   spot: PostflopTrainingSpot,
   chosen: PostflopAction,
@@ -167,6 +181,60 @@ export function isPostflopResultRecord(value: unknown): value is PostflopResultR
     typeof record.ts === "number" &&
     Number.isFinite(record.ts)
   );
+}
+
+export function availablePostflopStatsDimensions(): PostflopStatsBreakdownDim[] {
+  return [
+    "street",
+    "actionNode",
+    "boardTextureKey",
+    "strategyPackId",
+    "confidence",
+  ];
+}
+
+export function breakdownPostflopStats(
+  records: readonly PostflopStatsV2BridgeRecord[],
+  dim: PostflopStatsBreakdownDim,
+): PostflopStatsGroup[] {
+  const groups = new Map<string, { total: number; correct: number }>();
+  const order: string[] = [];
+
+  for (const record of records) {
+    const key = postflopDimKey(record, dim);
+    let group = groups.get(key);
+    if (group === undefined) {
+      group = { total: 0, correct: 0 };
+      groups.set(key, group);
+      order.push(key);
+    }
+    group.total += 1;
+    if (record.correct) group.correct += 1;
+  }
+
+  return order.map((key) => {
+    const group = groups.get(key)!;
+    return {
+      key,
+      total: group.total,
+      correct: group.correct,
+      rate: successRate(group.total, group.correct),
+    };
+  });
+}
+
+function postflopDimKey(
+  record: PostflopStatsV2BridgeRecord,
+  dim: PostflopStatsBreakdownDim,
+): string {
+  const value = record[dim];
+  if (value === null || value === "") return "N/A";
+  return String(value);
+}
+
+function successRate(total: number, correct: number): number | null {
+  if (total <= 0) return null;
+  return Math.round((correct / total) * 1000) / 10;
 }
 
 function isPostflopAction(value: unknown): value is PostflopAction {

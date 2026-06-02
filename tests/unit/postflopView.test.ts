@@ -62,4 +62,19 @@ describe("postflopView - DOM", () => {
     expect(result?.textContent).toContain("Predpoklad 1:");
     expect(result?.textContent).toContain("Pl\u00e1n");
   });
+
+  it("po odpovedi zavola callback s postflop training spotem", () => {
+    const root = document.createElement("div");
+    const answered: string[] = [];
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: "FLOP",
+      onAnswered: (spot, chosen) => answered.push(`${spot.street}|${spot.actionNode}|${chosen}`),
+    });
+
+    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+
+    expect(answered).toHaveLength(1);
+    expect(answered[0]).toContain("FLOP|SINGLE_RAISED_POT_CBET|");
+  });
 });

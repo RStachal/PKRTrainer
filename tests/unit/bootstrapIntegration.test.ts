@@ -76,6 +76,17 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("123");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("FLOP");
     expect(root.querySelector(".poker-table")).toBeNull();
+
+    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+
+    expect(root.querySelector<HTMLElement>(".dashboard-session-count")?.dataset.sessionCount)
+      .toBe("1");
+    expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--street .postflop-breakdown-row[data-group="FLOP"]',
+      )?.dataset.total,
+    ).toBe("1");
   });
 
   it("pri nekonzistentnim ulozisti zobrazi blokujici chybu a relaci nespusti", async () => {

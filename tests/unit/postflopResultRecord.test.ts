@@ -8,6 +8,7 @@ import {
   POSTFLOP_RESULT_RECORD_SCHEMA,
   POSTFLOP_STATS_V2_BRIDGE_SCHEMA,
   bridgePostflopResultRecordToStatsV2,
+  breakdownPostflopStats,
   buildPostflopResultRecord,
   isPostflopResultRecord,
 } from "../../src/persistence/postflopResultRecord";
@@ -101,5 +102,41 @@ describe("postflopResultRecord", () => {
     });
     expect(bridge.boardTextureKey).toBe(record.boardTextures.join("|"));
     expect(bridge.strategyRuleId).toBe(record.sourceRuleId);
+  });
+
+  it("agreguje postflop bridge recordy podle dashboard dimenzi", () => {
+    const spot = postflopSpotToTrainingSpot(generatePostflopSpot({
+      seed: 42,
+      street: "FLOP",
+      positionContext: {
+        heroPosition: "BTN",
+        villainPosition: "BB",
+        aggressorPosition: "BTN",
+        callerPosition: "BB",
+        inPosition: true,
+        callerType: "BIG_BLIND",
+        positionPattern: "BTN_VS_BB",
+      },
+      strategyResolver: createPostflopStrategyResolver(flopSingleRaisedPrototypeStrategyPack),
+    }));
+    const correct = bridgePostflopResultRecordToStatsV2(
+      buildPostflopResultRecord(spot, spot.recommendedAction, 1),
+    );
+    const wrongAction = spot.recommendedAction === "CHECK" ? "BET_SMALL" : "CHECK";
+    const wrong = bridgePostflopResultRecordToStatsV2(
+      buildPostflopResultRecord(spot, wrongAction, 2),
+    );
+
+    expect(breakdownPostflopStats([correct, wrong], "street")).toEqual([
+      { key: "FLOP", total: 2, correct: 1, rate: 50 },
+    ]);
+    expect(breakdownPostflopStats([correct], "strategyPackId")[0]).toMatchObject({
+      key: flopSingleRaisedPrototypeStrategyPack.id,
+      total: 1,
+    });
+    expect(breakdownPostflopStats([correct], "confidence")[0]).toMatchObject({
+      key: "LOW",
+      total: 1,
+    });
   });
 });
