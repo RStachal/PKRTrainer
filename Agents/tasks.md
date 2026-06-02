@@ -481,14 +481,14 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 35.3 Rozšířit dashboard o postflop breakdown
     - Seskupovat podle street, actionNode, board texture, StrategyPack id a confidence
 
-- [ ] 36. Importní a validační report pro Postflop StrategyPack
-  - [ ] 36.1 Implementovat `postflopStrategyPackImportReport`
+- [x] 36. Importní a validační report pro Postflop StrategyPack
+  - [x] 36.1 Implementovat `postflopStrategyPackImportReport`
     - Reportovat validitu, počet zdrojů, počet rules, překryvy, unsupported actions a LOW confidence warnings
 
-  - [ ] 36.2 Validovat source evidence a rule overlap
+  - [x] 36.2 Validovat source evidence a rule overlap
     - Každý pack musí mít alespoň 2 zdroje; překryvy pravidel musí mít deterministický výběr nebo explicitní priority
 
-  - [ ] 36.3 Přidat textový report pro review
+  - [x] 36.3 Přidat textový report pro review
     - Stejně jako u preflop RangePack importu mít čitelný review výstup pro commit a budoucí audit
 
 - [ ] 37. Pozicně přesnější flop single-raised pot model
