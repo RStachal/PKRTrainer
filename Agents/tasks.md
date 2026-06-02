@@ -535,7 +535,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 41.1 Zpřesnit SNG chipEV candidate pack workflow
     - Oddělit chipEV sourcing, ICM sourcing a payout/stack assumptions v reportu
 
-  - [ ] 41.2 Připravit ICM simulation input model pro import
+  - [x] 41.2 Připravit ICM simulation input model pro import
     - Payout structure, remaining players, stack distribution, bubble factor a spot type musí být explicitní
 
   - [ ] 41.3 Přidat validační guard proti použití ICM packu v chipEV profilu

@@ -11,6 +11,10 @@ import {
   buildRangePackImportReport,
   type RangePackImportReport,
 } from "./rangePackImport";
+import {
+  buildSngIcmSimulationInput,
+  type SngIcmSimulationInput,
+} from "./sngIcmSimulationInput";
 
 const VERIFIED_AT = "2026-06-01";
 
@@ -284,6 +288,9 @@ export const sngChipEvCandidateImportReports: readonly RangePackImportReport[] =
 
 export const sngIcmCandidateImportReports: readonly RangePackImportReport[] =
   sngIcmPreflopRangePackCandidates.map(buildRangePackImportReport);
+
+export const sngIcmCandidateSimulationInputs: readonly SngIcmSimulationInput[] =
+  sngIcmPreflopRangePackCandidates.map(buildSngIcmSimulationInput);
 
 export const allSngPreflopRangePacks = [
   ...sngChipEvPreflopRangePackCandidates,
