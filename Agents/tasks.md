@@ -621,6 +621,61 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 49.3 Zkontrolovat české UI texty, přetékání a dlouhé identifikátory
     - Zejména StrategyPack/RangePack id, postflop source evidence a HH analysis panel
 
+- [x] 50. Opravit postflop start z preflop filtru proti 3-betu
+  - [x] 50.1 Zachovat vybrane pozice pri prechodu do postflop flow
+    - LJ/HJ + VS_3BET musi spustit LJ vs HJ spot, ne nahodny BTN vs BB generator
+
+  - [x] 50.2 Oddelit 3bet pot od single-raised potu
+    - Flop proti 3-betu musi mit `THREE_BET_POT`, `THREE_BET_POT_CBET`, 3bet pot velikost a fallback bez pouziti SRP StrategyPacku
+
+  - [x] 50.3 Overit ulozeni, dashboard bridge a UI bez citaci zdroju
+    - 3bet postflop record musi projit validaci/exportem a UI nesmi zobrazovat URL ani provider citace
+
+- [x] 51. Oddelit vyber situace od konkretni preflop otazky
+  - [x] 51.1 Neschovavat stul do prvniho filtru situace
+    - Pred explicitnim startem neni v DOM `.poker-table` a po startu se filtr skryje
+
+  - [x] 51.2 Zobrazit stul az v obrazovce konkretni otazky
+    - Aktivni preflop drill ukazuje samostatnou otazku se stolem a akcnimi tlacitky
+
+  - [x] 51.3 Umoznit navrat z otazky k vyberu situace
+    - Tlacitko `Zmenit situaci` ukonci aktualni preflop pohled a vrati filtr
+
+  - [x] 51.4 Pri navratu k filtru vycistit starou otazku z DOM
+    - Skryty herni panel uz nedrzi `.poker-table`, akcni tlacitka, vysledek ani range matici
+
+  - [x] 51.5 Zobrazit souhrn situace primo u preflop otazky
+    - Po schovani filtru otazka ukazuje kontext, pozici, handu, stack, ante a seed
+
+  - [x] 51.6 Pouzit hracske popisky kontextu v souhrnu preflop otazky
+    - UI ukazuje napr. `Proti 3-betu` misto internich enumu jako `VS_3BET`
+
+- [x] 52. Oddelit postflop tab od konkretni postflop otazky
+  - [x] 52.1 Zrusit automaticke generovani spotu pri otevreni Postflop tabu
+    - Defaultni postflop view zobrazi jen ovladani; board, karty a akce vzniknou az po `Generovat spot`
+
+  - [x] 52.2 Zachovat automaticky spot pri startu z treninkoveho filtru
+    - Postflop start z profilu FLOP/TURN/RIVER stale rovnou otevre konkretni otazku se seedem a kontextem
+
+  - [x] 52.3 Udrzet policy bez zdroju a mobilni workflow
+    - Source-citation guard i mobile smoke pokryvaji novy explicitni postflop start
+
+  - [x] 52.4 Oddelit zadani postflop situace od konkretni otazky
+    - Po `Generovat spot` se ovladani schova, otazka ma `Novy spot` a `Zmenit situaci`; navrat vycisti board, karty i akce
+
+  - [x] 52.5 Zobrazit konkretni postflop situaci jako pokerovy stul
+    - Postflop otazka ukazuje 9-max oval, hero/villain sedadla, board uprostred, pot, SPR, IP/OOP a role agresor/caller
+
+- [x] 53. Odstranit interni source/pack citace z uzivatelskeho UI
+  - [x] 53.1 Prevest range modal z auditnich RangePack metadat na hracsky model range
+    - Modal uz neukazuje pack id, verzi, URL ani providery; zustava jen format, model a predpoklady
+
+  - [x] 53.2 Zjednodusit profilove preview a blokacni hlasky
+    - Candidate/preview profily uz nezobrazuji interni pack id, import preview pocty ani source audit text
+
+  - [x] 53.3 Schovat StrategyPack detaily v postflop vysvetleni a statistikach
+    - Postflop vysvetleni pouziva hracsky model detail bez rule id; dashboard ukazuje preflop/postflop model misto pack nazvu
+
 ## Notes
 
 - Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.

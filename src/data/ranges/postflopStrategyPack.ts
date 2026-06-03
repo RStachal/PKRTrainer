@@ -1,6 +1,7 @@
 import type {
   BoardTexture,
   PostflopAction,
+  PostflopPotType,
   PostflopPositionPattern,
   PostflopStrategyPositionPattern,
   PostflopStreet,
@@ -11,11 +12,6 @@ import type {
   GameVariant,
   TableFormat,
 } from "../../core/trainingProfile";
-
-export type PostflopPotType =
-  | "SINGLE_RAISED"
-  | "THREE_BET_POT"
-  | "LIMPED_POT";
 
 export type PostflopStrategyAction =
   | PostflopAction
@@ -495,6 +491,7 @@ export function positionPatternMatches(
     case "BTN_VS_BB":
     case "SB_VS_BB":
     case "OOP_RAISER_VS_IP_CALLER":
+    case "OOP_CALLER_VS_IP_3BETTOR":
       return false;
   }
 }

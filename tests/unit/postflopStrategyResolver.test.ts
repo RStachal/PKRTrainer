@@ -20,6 +20,7 @@ describe("postflopStrategyResolver", () => {
     const result = resolver({
       street: "FLOP",
       textures: ["dry", "rainbow"],
+      potType: "SINGLE_RAISED",
       potBB: 6,
       effectiveStackBB: 40,
       positionPattern: "BTN_VS_BB",
@@ -56,6 +57,7 @@ describe("postflopStrategyResolver", () => {
     expect(resolver({
       street: "RIVER",
       textures: ["dry", "rainbow"],
+      potType: "SINGLE_RAISED",
       potBB: 6,
       effectiveStackBB: 40,
       positionPattern: "BTN_VS_BB",
@@ -63,6 +65,7 @@ describe("postflopStrategyResolver", () => {
     expect(resolver({
       street: "FLOP",
       textures: ["dry", "rainbow"],
+      potType: "SINGLE_RAISED",
       potBB: 1,
       effectiveStackBB: 40,
       positionPattern: "BTN_VS_BB",
@@ -75,6 +78,7 @@ describe("postflopStrategyResolver", () => {
     const turn = resolver({
       street: "TURN",
       textures: ["dry", "disconnected", "ace-high", "rainbow"],
+      potType: "SINGLE_RAISED",
       potBB: 8,
       effectiveStackBB: 40,
       positionPattern: "BTN_VS_BB",
@@ -82,6 +86,7 @@ describe("postflopStrategyResolver", () => {
     const river = resolver({
       street: "RIVER",
       textures: ["dry", "disconnected", "rainbow"],
+      potType: "SINGLE_RAISED",
       potBB: 14,
       effectiveStackBB: 45,
       positionPattern: "BTN_VS_BB",
@@ -105,6 +110,7 @@ describe("postflopStrategyResolver", () => {
     const result = resolver({
       street: "FLOP",
       textures: ["dry", "rainbow"],
+      potType: "SINGLE_RAISED",
       potBB: 12,
       effectiveStackBB: 36,
       positionPattern: "EP_VS_BB",
@@ -120,6 +126,7 @@ describe("postflopStrategyResolver", () => {
     const input = {
       street: "FLOP" as const,
       textures: ["connected", "two-tone"] as const,
+      potType: "SINGLE_RAISED" as const,
       potBB: 6,
       effectiveStackBB: 40,
       positionPattern: "OOP_RAISER_VS_IP_CALLER" as const,
@@ -141,6 +148,7 @@ describe("postflopStrategyResolver", () => {
     const result = resolver({
       street: "FLOP",
       textures: ["ace-high", "disconnected", "dry", "rainbow"],
+      potType: "SINGLE_RAISED",
       potBB: 6,
       effectiveStackBB: 40,
       positionPattern: "BTN_VS_BB",
@@ -158,11 +166,25 @@ describe("postflopStrategyResolver", () => {
     const result = resolver({
       street: "FLOP",
       textures: ["dry", "rainbow"],
+      potType: "SINGLE_RAISED",
       potBB: 6,
       effectiveStackBB: 40,
       positionPattern: "SB_VS_BB",
     });
 
     expect(result).toBeNull();
+  });
+
+  it("nepouzije single-raised StrategyPack pro 3bet pot", () => {
+    const resolver = createPostflopStrategyResolverChain(postflopPublicHeuristicStrategyPacks);
+
+    expect(resolver({
+      street: "FLOP",
+      textures: ["dry", "rainbow"],
+      potType: "THREE_BET_POT",
+      potBB: 18,
+      effectiveStackBB: 40,
+      positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+    })).toBeNull();
   });
 });

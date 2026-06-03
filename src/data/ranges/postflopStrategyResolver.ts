@@ -19,9 +19,10 @@ export function createPostflopStrategyResolver(
 ): PostflopStrategyResolver {
   return (input: PostflopStrategyInput) => {
     if (pack.dimensions.street !== input.street) return null;
+    if (pack.dimensions.potType !== input.potType) return null;
 
     const rule = selectBestPostflopRule(matchingPostflopRules(pack, {
-      actionNode: actionNodeForStreet(input.street),
+      actionNode: actionNodeForStreet(input.street, input.potType),
       boardTextures: input.textures,
       spr: roundedSpr(input.effectiveStackBB, input.potBB),
       positionPattern: input.positionPattern,
@@ -85,9 +86,13 @@ export function selectBestPostflopRule(
   return bestRule;
 }
 
-function actionNodeForStreet(street: PostflopStreet): PostflopActionNode {
+function actionNodeForStreet(
+  street: PostflopStreet,
+  potType: PostflopStrategyInput["potType"],
+): PostflopActionNode {
   switch (street) {
     case "FLOP":
+      if (potType === "THREE_BET_POT") return "THREE_BET_POT_CBET";
       return "SINGLE_RAISED_POT_CBET";
     case "TURN":
       return "TURN_BARREL";

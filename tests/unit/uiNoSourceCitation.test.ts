@@ -21,6 +21,12 @@ const FORBIDDEN_SOURCE_TEXT = [
   "GTO Sims",
   "PokerCoaching",
   "GTOBase",
+  "RangePack",
+  "StrategyPack",
+  "mtt-full-ring",
+  "mtt-6max",
+  "cash-6max",
+  "sng-6max",
 ];
 
 const heroCards: [Card, Card] = [
@@ -101,7 +107,7 @@ describe("UI source citation policy", () => {
 
   it("nezobrazuje URL ani provider citace v postflop vysvetleni", () => {
     const root = document.createElement("div");
-    renderPostflopView(root, { initialStreet: "RIVER" });
+    renderPostflopView(root, { initialStreet: "RIVER", autoGenerate: true });
 
     root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
 

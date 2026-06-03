@@ -51,6 +51,8 @@ const loadedStore: RangeStore = {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  document.body.innerHTML = "";
+  document.body.style.overflow = "";
 });
 
 describe("rangeModal - DOM", () => {
@@ -61,20 +63,19 @@ describe("rangeModal - DOM", () => {
     renderRangeModalButton(spot, loadedStore, root);
     root.querySelector<HTMLButtonElement>(".range-modal-open")?.click();
 
+    const model = document.querySelector<HTMLElement>(".range-modal__evidence");
+
     expect(document.querySelector(".range-modal")).not.toBeNull();
     expect(document.querySelectorAll(".range-modal .matrix-cell")).toHaveLength(169);
     expect(document.querySelector<HTMLElement>(".range-modal .matrix-cell--hero")?.dataset.hand)
       .toBe("AKs");
-    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
-      .toContain("mtt-full-ring-9-regular-preflop-chip-ev-ante-off-v1");
-    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
-      .toContain("CHIP_EV");
-    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
-      .toContain("Předpoklady:");
-    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
-      .not.toContain("Assumptions");
-    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
-      .not.toContain("Zdroje:");
+    expect(model?.textContent).toContain("Model range");
+    expect(model?.textContent).toContain("chipEV");
+    expect(model?.textContent).toContain("Predpoklady:");
+    expect(model?.textContent).not.toContain("Assumptions");
+    expect(model?.textContent).not.toContain("Zdroje:");
+    expect(model?.textContent).not.toContain("RangePack");
+    expect(model?.textContent).not.toContain("mtt-full-ring");
     expect(document.querySelectorAll(".range-modal__evidence a")).toHaveLength(0);
 
     document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
@@ -97,10 +98,9 @@ describe("rangeModal - DOM", () => {
 
     expect(document.querySelector(".range-modal")).toBeNull();
     expect(document.body.style.overflow).toBe("auto");
-    document.body.style.overflow = "";
   });
 
-  it("vykresli range metadata z bundlu bez runtime fetch a bez citaci zdroju", () => {
+  it("vykresli hracsky model range z bundlu bez runtime fetch a bez citaci zdroju", () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
 
@@ -110,10 +110,10 @@ describe("rangeModal - DOM", () => {
     renderRangeModalButton(spot, loadedStore, root);
     root.querySelector<HTMLButtonElement>(".range-modal-open")?.click();
 
-    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
-      .toContain("RangePack");
-    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
-      .not.toContain("https://");
+    const modelText = document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent;
+    expect(modelText).toContain("Model range");
+    expect(modelText).not.toContain("https://");
+    expect(modelText).not.toContain("RangePack");
     expect(fetchSpy).not.toHaveBeenCalled();
 
     document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();

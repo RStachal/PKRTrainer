@@ -3,6 +3,7 @@ import type {
   BoardTexture,
   PostflopAction,
   PostflopCallerType,
+  PostflopPotType,
   PostflopPositionPattern,
   PostflopRecommendationSource,
   PostflopSpot,
@@ -11,6 +12,7 @@ import type {
 
 export type PostflopActionNode =
   | "SINGLE_RAISED_POT_CBET"
+  | "THREE_BET_POT_CBET"
   | "TURN_BARREL"
   | "RIVER_PRESSURE";
 
@@ -42,7 +44,7 @@ export interface PostflopTrainingSpot {
   heroCards: [Card, Card];
   board: readonly Card[];
   boardTextures: readonly BoardTexture[];
-  potType: "SINGLE_RAISED";
+  potType: PostflopPotType;
   potBB: number;
   effectiveStackBB: number;
   spr: number;
@@ -69,11 +71,11 @@ export function postflopSpotToTrainingSpot(spot: PostflopSpot): PostflopTraining
     id: postflopTrainingSpotId(spot),
     seed: spot.seed,
     street: spot.street,
-    actionNode: actionNodeForStreet(spot.street),
+    actionNode: actionNodeForSpot(spot),
     heroCards: spot.heroCards,
     board: spot.board,
     boardTextures: spot.textures,
-    potType: "SINGLE_RAISED",
+    potType: spot.potType,
     potBB: spot.potBB,
     effectiveStackBB: spot.effectiveStackBB,
     spr: roundedSpr(spot.effectiveStackBB, spot.potBB),
@@ -103,9 +105,10 @@ export function postflopTrainingSpotId(spot: Pick<PostflopSpot, "seed" | "street
   ].join("|");
 }
 
-function actionNodeForStreet(street: PostflopStreet): PostflopActionNode {
-  switch (street) {
+function actionNodeForSpot(spot: Pick<PostflopSpot, "street" | "potType">): PostflopActionNode {
+  switch (spot.street) {
     case "FLOP":
+      if (spot.potType === "THREE_BET_POT") return "THREE_BET_POT_CBET";
       return "SINGLE_RAISED_POT_CBET";
     case "TURN":
       return "TURN_BARREL";

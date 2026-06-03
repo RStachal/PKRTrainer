@@ -139,7 +139,7 @@ const PROFILE_DIM_TITLE: Record<StatsV2BreakdownDim, string> = {
   evModel: "Podle modelu",
   ante: "Podle ante",
   rakeMode: "Podle rake režimu",
-  rangePackId: "Podle RangePacku",
+  rangePackId: "Podle preflop modelu",
   position: "Podle pozice",
   bucket: "Podle stacku",
   context: "Podle akčního node",
@@ -167,17 +167,25 @@ const POSTFLOP_DIM_TITLE: Record<PostflopStatsBreakdownDim, string> = {
   street: "Podle streety",
   actionNode: "Podle action node",
   boardTextureKey: "Podle textury boardu",
-  strategyPackId: "Podle StrategyPacku",
-  confidence: "Podle confidence",
+  strategyPackId: "Podle postflop modelu",
+  confidence: "Podle jistoty",
 };
 
-function groupLabel(dim: BreakdownDim, key: string): string {
+function groupLabel(dim: BreakdownDim | PostflopStatsBreakdownDim, key: string): string {
   switch (dim) {
     case "context":
       return CONTEXT_LABEL[key as ActionContext] ?? key;
     case "bucket":
       return `${key} BB`;
     case "position":
+      return key;
+    case "strategyPackId":
+      return "Postflop model";
+    case "confidence":
+      return confidenceLabel(key);
+    case "actionNode":
+    case "boardTextureKey":
+    case "street":
       return key;
   }
 }
@@ -192,6 +200,21 @@ function profileGroupLabel(dim: StatsV2BreakdownDim, key: string): string {
       return key === "ON" ? "Ante zapnuté" : "Ante vypnuté";
     case "evModel":
       return key === "CHIP_EV" ? "chipEV" : key;
+    case "rangePackId":
+      return "Preflop model";
+    default:
+      return key;
+  }
+}
+
+function confidenceLabel(key: string): string {
+  switch (key) {
+    case "LOW":
+      return "nizka";
+    case "MEDIUM":
+      return "stredni";
+    case "HIGH":
+      return "vysoka";
     default:
       return key;
   }
@@ -441,14 +464,17 @@ function renderProfileBreakdowns(store: StatsStore): HTMLElement {
   return box;
 }
 
-function renderPostflopBreakdownRow(g: PostflopStatsGroup): HTMLElement {
+function renderPostflopBreakdownRow(
+  dim: PostflopStatsBreakdownDim,
+  g: PostflopStatsGroup,
+): HTMLElement {
   const row = el("div", "postflop-breakdown-row");
   row.dataset.group = g.key;
   row.dataset.total = String(g.total);
   row.dataset.rate = g.rate === null ? "" : String(g.rate);
 
   const name = el("span", "postflop-breakdown-row__name");
-  name.textContent = g.key;
+  name.textContent = groupLabel(dim, g.key);
   row.appendChild(name);
 
   const count = el("span", "postflop-breakdown-row__count");
@@ -478,7 +504,7 @@ function renderPostflopBreakdown(
     rows.appendChild(empty);
   } else {
     for (const group of groups) {
-      rows.appendChild(renderPostflopBreakdownRow(group));
+      rows.appendChild(renderPostflopBreakdownRow(dim, group));
     }
   }
   box.appendChild(rows);

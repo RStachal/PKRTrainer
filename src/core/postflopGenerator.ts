@@ -5,6 +5,10 @@ import type { PostflopTrainingSpot } from "./postflopTrainingSpot";
 
 export type PostflopStreet = "FLOP" | "TURN" | "RIVER";
 export type PostflopAction = "CHECK" | "BET_SMALL" | "BET_BIG";
+export type PostflopPotType =
+  | "SINGLE_RAISED"
+  | "THREE_BET_POT"
+  | "LIMPED_POT";
 export type BoardTexture =
   | "paired"
   | "monotone"
@@ -24,7 +28,8 @@ export type PostflopPositionPattern =
   | "EP_VS_BB"
   | "BTN_VS_BB"
   | "SB_VS_BB"
-  | "OOP_RAISER_VS_IP_CALLER";
+  | "OOP_RAISER_VS_IP_CALLER"
+  | "OOP_CALLER_VS_IP_3BETTOR";
 
 export type PostflopStrategyPositionPattern =
   | PostflopPositionPattern
@@ -34,7 +39,8 @@ export type PostflopStrategyPositionPattern =
 
 export type PostflopCallerType =
   | "BIG_BLIND"
-  | "IN_POSITION_CALLER";
+  | "IN_POSITION_CALLER"
+  | "OUT_OF_POSITION_CALLER";
 
 export interface PostflopPositionContext {
   heroPosition: Position;
@@ -51,6 +57,7 @@ export interface PostflopSpot {
   street: PostflopStreet;
   heroCards: [Card, Card];
   board: Card[];
+  potType: PostflopPotType;
   potBB: number;
   effectiveStackBB: number;
   heroPosition: Position;
@@ -71,6 +78,7 @@ export interface PostflopSpot {
 export interface PostflopStrategyInput {
   street: PostflopStreet;
   textures: readonly BoardTexture[];
+  potType: PostflopPotType;
   potBB: number;
   effectiveStackBB: number;
   positionPattern: PostflopPositionPattern;
@@ -112,6 +120,7 @@ export interface PostflopConfig {
   seed: number;
   street?: PostflopStreet;
   heroCards?: [Card, Card];
+  potType?: PostflopPotType;
   potBB?: number;
   effectiveStackBB?: number;
   positionContext?: PostflopPositionContext;
@@ -164,13 +173,15 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   const street = config.street ?? randomStreet(rng);
   const board = dealCards(rng, deck, boardLength(street));
   const textures = classifyBoard(board);
-  const potBB = config.potBB ?? 6;
+  const potType = config.potType ?? "SINGLE_RAISED";
+  const potBB = config.potBB ?? defaultPotBB(potType);
   const effectiveStackBB = config.effectiveStackBB ?? 40;
   const positionContext = config.positionContext ?? randomPositionContext(rng);
   const recommendation =
     config.strategyResolver?.({
       street,
       textures,
+      potType,
       potBB,
       effectiveStackBB,
       positionPattern: positionContext.positionPattern,
@@ -182,6 +193,7 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
     street,
     heroCards,
     board,
+    potType,
     potBB,
     effectiveStackBB,
     heroPosition: positionContext.heroPosition,
@@ -203,6 +215,17 @@ function randomPositionContext(rng: () => number): PostflopPositionContext {
   return POSTFLOP_POSITION_CONTEXTS[
     Math.floor(rng() * POSTFLOP_POSITION_CONTEXTS.length)
   ];
+}
+
+function defaultPotBB(potType: PostflopPotType): number {
+  switch (potType) {
+    case "THREE_BET_POT":
+      return 18;
+    case "LIMPED_POT":
+      return 4;
+    case "SINGLE_RAISED":
+      return 6;
+  }
 }
 
 function fallbackStrategySource(): PostflopRecommendationSource {

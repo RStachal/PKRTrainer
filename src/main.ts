@@ -1,49 +1,55 @@
-/**
- * Bootstrap a propojení aplikace MTT Preflop Trainer (task 20.1).
+﻿/**
+ * Bootstrap a propojenĂ­ aplikace MTT Preflop Trainer (task 20.1).
  *
- * Tento modul je tenká integrační vrstva (DOM I/O). Spojuje čisté jádro
+ * Tento modul je tenkĂˇ integraÄŤnĂ­ vrstva (DOM I/O). Spojuje ÄŤistĂ© jĂˇdro
  * (Drill_Engine, Scoring_Engine), datovou vrstvu (Range_Store), perzistenci
- * (migrace + Stats_Store) a UI komponenty (filtry, stůl, range matice,
- * dashboard, HH import) do funkčního celku. Veškerý uživatelský text je v
- * češtině (Req 12.3); strojové identifikátory zůstávají v ASCII.
+ * (migrace + Stats_Store) a UI komponenty (filtry, stĹŻl, range matice,
+ * dashboard, HH import) do funkÄŤnĂ­ho celku. VeĹˇkerĂ˝ uĹľivatelskĂ˝ text je v
+ * ÄŤeĹˇtinÄ› (Req 12.3); strojovĂ© identifikĂˇtory zĹŻstĂˇvajĂ­ v ASCII.
  *
- * ## Inicializační pořadí (design „Inicializační pořadí", Req 14)
+ * ## InicializaÄŤnĂ­ poĹ™adĂ­ (design â€žInicializaÄŤnĂ­ poĹ™adĂ­", Req 14)
  *
- *   1. **Migrace** (`runMigration`) — proběhne jen, pokud nový stav dosud
- *      neexistuje (idempotence řeší samotná `runMigration`).
- *   2. **Ověření platného stavu** pod verzovanými klíči. Pokud nelze získat ani
- *      migrovaný, ani čistý nový stav ⇒ **Req 14.6**: zobraz chybu
- *      „nekonzistentní úložiště" a relaci NESPOUŠTĚJ.
- *   3. **Načtení Range_Store** (`isRangeDataLoaded`). Pokud data nejsou načtena
- *      jako celek ⇒ **Req 4.6**: zobraz chybu „ranges nedostupné" a relaci
- *      NESPOUŠTĚJ.
- *   4. Jinak zobraz filtry a čekej na **explicitní start** (**Req 13.4**) —
- *      žádné spoty se negenerují automaticky.
+ *   1. **Migrace** (`runMigration`) â€” probÄ›hne jen, pokud novĂ˝ stav dosud
+ *      neexistuje (idempotence Ĺ™eĹˇĂ­ samotnĂˇ `runMigration`).
+ *   2. **OvÄ›Ĺ™enĂ­ platnĂ©ho stavu** pod verzovanĂ˝mi klĂ­ÄŤi. Pokud nelze zĂ­skat ani
+ *      migrovanĂ˝, ani ÄŤistĂ˝ novĂ˝ stav â‡’ **Req 14.6**: zobraz chybu
+ *      â€žnekonzistentnĂ­ ĂşloĹľiĹˇtÄ›" a relaci NESPOUĹ TÄšJ.
+ *   3. **NaÄŤtenĂ­ Range_Store** (`isRangeDataLoaded`). Pokud data nejsou naÄŤtena
+ *      jako celek â‡’ **Req 4.6**: zobraz chybu â€žranges nedostupnĂ©" a relaci
+ *      NESPOUĹ TÄšJ.
+ *   4. Jinak zobraz filtry a ÄŤekej na **explicitnĂ­ start** (**Req 13.4**) â€”
+ *      ĹľĂˇdnĂ© spoty se negenerujĂ­ automaticky.
  *
- * ## Globální error boundary (Req 12.3)
+ * ## GlobĂˇlnĂ­ error boundary (Req 12.3)
  *
- * Celý bootstrap je obalen `try/catch`; navíc se registrují posluchače
- * `window.error` a `window.unhandledrejection`, které vykreslí českou chybovou
- * zprávu do DOM. Aplikace tak nikdy „tiše nespadne".
+ * CelĂ˝ bootstrap je obalen `try/catch`; navĂ­c se registrujĂ­ posluchaÄŤe
+ * `window.error` a `window.unhandledrejection`, kterĂ© vykreslĂ­ ÄŤeskou chybovou
+ * zprĂˇvu do DOM. Aplikace tak nikdy â€žtiĹˇe nespadne".
  *
  * ## Service Worker (Req 12.4)
  *
- * `registerServiceWorker` se volá defenzivně; při selhání nakešování zobrazí
- * nenásilné české upozornění a neblokuje aplikaci.
+ * `registerServiceWorker` se volĂˇ defenzivnÄ›; pĹ™i selhĂˇnĂ­ nakeĹˇovĂˇnĂ­ zobrazĂ­
+ * nenĂˇsilnĂ© ÄŤeskĂ© upozornÄ›nĂ­ a neblokuje aplikaci.
  *
  * _Requirements: 4.6, 12.3, 12.4, 13.4, 14.6_
  */
 
 import type {
   ActionKey,
+  ActionContext,
   Filters,
   ScoringMode,
   SessionConfig,
   Spot,
 } from "./core/types";
-import type { TrainingProfile } from "./core/trainingProfile";
+import {
+  isPostflopStreet,
+  type TrainingProfile,
+} from "./core/trainingProfile";
 import { resolveSeed, spotSequence } from "./core/drillEngine";
+import { postflopIntentFromFilters } from "./core/postflopIntent";
 import { grade } from "./core/scoring";
+import type { PostflopStreet } from "./core/postflopGenerator";
 import { rangeStore } from "./data/rangeStore";
 import { getRangeDataErrors, isRangeDataLoaded } from "./data/ranges";
 import { hasNewState, runMigration, type MigrationResult } from "./persistence/migration";
@@ -55,9 +61,6 @@ import {
 } from "./persistence/postflopResultRecord";
 import { createPostflopStatsStore } from "./persistence/postflopStatsStore";
 import { rangePackForTrainingProfile } from "./data/ranges/trainingRangePacks";
-import { cashCandidateImportReportForProfile } from "./data/ranges/cashPreflopRangePacks";
-import { mttSixMaxCandidateImportReportForProfile } from "./data/ranges/mttPreflopRangePacks";
-import { sngCandidateImportReportForProfile } from "./data/ranges/sngPreflopRangePacks";
 import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
 import { renderMatrix } from "./ui/rangeMatrixView";
@@ -68,7 +71,7 @@ import { renderPostflopView } from "./ui/postflopView";
 import { registerServiceWorker } from "./pwa/registerSw";
 
 // ---------------------------------------------------------------------------
-// České popisky Akčních_klíčů (zobrazení doporučení po vyhodnocení, Req 12.3)
+// ÄŚeskĂ© popisky AkÄŤnĂ­ch_klĂ­ÄŤĹŻ (zobrazenĂ­ doporuÄŤenĂ­ po vyhodnocenĂ­, Req 12.3)
 // ---------------------------------------------------------------------------
 
 const ACTION_KEY_LABEL: Record<ActionKey, string> = {
@@ -76,12 +79,12 @@ const ACTION_KEY_LABEL: Record<ActionKey, string> = {
   CALL: "Call / Dorovnat",
   LIMP: "Limp / Check",
   OVERLIMP: "Over-limp",
-  OPEN_2X: "Raise 2×",
-  OPEN_25X: "Raise 2,5×",
-  OPEN_3X: "Raise 3×",
-  ISO_2X: "Iso-raise 2×",
-  ISO_25X: "Iso-raise 2,5×",
-  ISO_3X: "Iso-raise 3×",
+  OPEN_2X: "Raise 2Ă—",
+  OPEN_25X: "Raise 2,5Ă—",
+  OPEN_3X: "Raise 3Ă—",
+  ISO_2X: "Iso-raise 2Ă—",
+  ISO_25X: "Iso-raise 2,5Ă—",
+  ISO_3X: "Iso-raise 3Ă—",
   "3BET": "3-bet",
   "4BET": "4-bet",
   SQUEEZE: "Squeeze",
@@ -89,16 +92,32 @@ const ACTION_KEY_LABEL: Record<ActionKey, string> = {
   CALL_JAM: "Call all-in",
 };
 
-/** Přeloží Akční_klíč na český popisek (fallback = samotný klíč). */
+const ACTION_CONTEXT_LABEL: Record<ActionContext, string> = {
+  RFI: "RFI / Open",
+  VS_LIMP: "Proti limpu (Iso-raise)",
+  VS_OPEN: "Proti openu",
+  VS_3BET: "Proti 3-betu",
+  VS_4BET: "Proti 4-betu",
+  SQUEEZE: "Squeeze",
+  BVB: "Blind vs blind",
+  PUSH_FOLD: "Push / Fold",
+  VS_ALLIN: "Proti all-inu (Call-jam)",
+};
+
+/** PĹ™eloĹľĂ­ AkÄŤnĂ­_klĂ­ÄŤ na ÄŤeskĂ˝ popisek (fallback = samotnĂ˝ klĂ­ÄŤ). */
 function actionKeyLabel(key: ActionKey): string {
   return ACTION_KEY_LABEL[key] ?? key;
+}
+
+function actionContextLabel(context: ActionContext): string {
+  return ACTION_CONTEXT_LABEL[context] ?? context;
 }
 
 // ---------------------------------------------------------------------------
 // DOM helpery
 // ---------------------------------------------------------------------------
 
-/** Vytvoří element s volitelnou CSS třídou a textem. */
+/** VytvoĹ™Ă­ element s volitelnou CSS tĹ™Ă­dou a textem. */
 function el(tag: string, className?: string, text?: string): HTMLElement {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -107,25 +126,25 @@ function el(tag: string, className?: string, text?: string): HTMLElement {
 }
 
 // ---------------------------------------------------------------------------
-// Inicializace úložiště (Req 14.2, 14.3, 14.6)
+// Inicializace ĂşloĹľiĹˇtÄ› (Req 14.2, 14.3, 14.6)
 // ---------------------------------------------------------------------------
 
-/** Výsledek inicializace lokálního úložiště. */
+/** VĂ˝sledek inicializace lokĂˇlnĂ­ho ĂşloĹľiĹˇtÄ›. */
 interface StorageInit {
-  /** Je pod verzovanými klíči k dispozici platný (migrovaný / čistý) stav? */
+  /** Je pod verzovanĂ˝mi klĂ­ÄŤi k dispozici platnĂ˝ (migrovanĂ˝ / ÄŤistĂ˝) stav? */
   ok: boolean;
-  /** Výsledek migrace (pro odvození uživatelských upozornění). */
+  /** VĂ˝sledek migrace (pro odvozenĂ­ uĹľivatelskĂ˝ch upozornÄ›nĂ­). */
   migration?: MigrationResult;
-  /** Selhala migrace, takže trénink začíná s prázdnými statistikami (Req 14.3). */
+  /** Selhala migrace, takĹľe trĂ©nink zaÄŤĂ­nĂˇ s prĂˇzdnĂ˝mi statistikami (Req 14.3). */
   startedEmpty: boolean;
 }
 
 /**
- * Zapíše čistý nový stav (prázdný event log + snapshot) pod verzované klíče,
- * pokud tam dosud žádný platný stav není, a ověří jeho dostupnost.
+ * ZapĂ­Ĺˇe ÄŤistĂ˝ novĂ˝ stav (prĂˇzdnĂ˝ event log + snapshot) pod verzovanĂ© klĂ­ÄŤe,
+ * pokud tam dosud ĹľĂˇdnĂ˝ platnĂ˝ stav nenĂ­, a ovÄ›Ĺ™Ă­ jeho dostupnost.
  *
- * Vrací `true`, je-li po dokončení pod verzovanými klíči platný stav; `false`
- * při jakékoli chybě I/O (⇒ nekonzistentní úložiště, Req 14.6).
+ * VracĂ­ `true`, je-li po dokonÄŤenĂ­ pod verzovanĂ˝mi klĂ­ÄŤi platnĂ˝ stav; `false`
+ * pĹ™i jakĂ©koli chybÄ› I/O (â‡’ nekonzistentnĂ­ ĂşloĹľiĹˇtÄ›, Req 14.6).
  */
 function ensureCleanState(storage: Storage): boolean {
   try {
@@ -139,7 +158,7 @@ function ensureCleanState(storage: Storage): boolean {
       storage.setItem(KEY_EVENTS, "[]");
       storage.setItem(KEY_STATE, JSON.stringify(snapshot));
     }
-    // Ověření: stav musí být po zápisu skutečně dostupný (čitelný).
+    // OvÄ›Ĺ™enĂ­: stav musĂ­ bĂ˝t po zĂˇpisu skuteÄŤnÄ› dostupnĂ˝ (ÄŤitelnĂ˝).
     return hasNewState(storage);
   } catch {
     return false;
@@ -147,35 +166,35 @@ function ensureCleanState(storage: Storage): boolean {
 }
 
 /**
- * Provede inicializační krok 1–2 (migrace + ověření stavu) dle designu.
+ * Provede inicializaÄŤnĂ­ krok 1â€“2 (migrace + ovÄ›Ĺ™enĂ­ stavu) dle designu.
  *
- *   - `runMigration` (idempotentní): migruje legacy data nebo nahlásí
+ *   - `runMigration` (idempotentnĂ­): migruje legacy data nebo nahlĂˇsĂ­
  *     `clean`/`failed`.
- *   - Pro `migrated`/`noop` ověří přítomnost nového stavu; chybí-li, inicializuje
- *     čistý stav.
- *   - Pro `clean` inicializuje čistý nový stav.
- *   - Pro `failed` ponechá legacy beze změny a inicializuje čistý nový stav
- *     (Req 14.3); nelze-li to, signalizuje nekonzistentní úložiště (Req 14.6).
+ *   - Pro `migrated`/`noop` ovÄ›Ĺ™Ă­ pĹ™Ă­tomnost novĂ©ho stavu; chybĂ­-li, inicializuje
+ *     ÄŤistĂ˝ stav.
+ *   - Pro `clean` inicializuje ÄŤistĂ˝ novĂ˝ stav.
+ *   - Pro `failed` ponechĂˇ legacy beze zmÄ›ny a inicializuje ÄŤistĂ˝ novĂ˝ stav
+ *     (Req 14.3); nelze-li to, signalizuje nekonzistentnĂ­ ĂşloĹľiĹˇtÄ› (Req 14.6).
  */
 function initializeStorage(storage: Storage): StorageInit {
   const migration = runMigration(storage);
 
   switch (migration.status) {
     case "failed": {
-      // Req 14.3: migrace selhala ⇒ legacy beze změny, čistý nový stav.
+      // Req 14.3: migrace selhala â‡’ legacy beze zmÄ›ny, ÄŤistĂ˝ novĂ˝ stav.
       const ok = ensureCleanState(storage);
       return { ok, migration, startedEmpty: ok };
     }
     case "clean": {
-      // Žádná legacy data ⇒ čistý start.
+      // Ĺ˝ĂˇdnĂˇ legacy data â‡’ ÄŤistĂ˝ start.
       const ok = ensureCleanState(storage);
       return { ok, migration, startedEmpty: false };
     }
     case "migrated":
     case "noop":
     default: {
-      // Po migraci/idempotentním noopu by měl stav existovat; pojistka pro
-      // případ nastaveného příznaku migrace bez stavu.
+      // Po migraci/idempotentnĂ­m noopu by mÄ›l stav existovat; pojistka pro
+      // pĹ™Ă­pad nastavenĂ©ho pĹ™Ă­znaku migrace bez stavu.
       const ok = hasNewState(storage) || ensureCleanState(storage);
       return { ok, migration, startedEmpty: false };
     }
@@ -186,31 +205,31 @@ function initializeStorage(storage: Storage): StorageInit {
 // Bootstrap
 // ---------------------------------------------------------------------------
 
-/** Volitelné parametry bootstrapu (injektovatelné pro testy). */
+/** VolitelnĂ© parametry bootstrapu (injektovatelnĂ© pro testy). */
 export interface BootstrapOptions {
-  /** Kořenový element aplikace (výchozí `#app`). */
+  /** KoĹ™enovĂ˝ element aplikace (vĂ˝chozĂ­ `#app`). */
   root?: HTMLElement | null;
-  /** Lokální úložiště (výchozí `localStorage`, je-li dostupné). */
+  /** LokĂˇlnĂ­ ĂşloĹľiĹˇtÄ› (vĂ˝chozĂ­ `localStorage`, je-li dostupnĂ©). */
   storage?: Storage;
-  /** Zaregistrovat Service Worker? (výchozí: jen v produkčním buildu). */
+  /** Zaregistrovat Service Worker? (vĂ˝chozĂ­: jen v produkÄŤnĂ­m buildu). */
   registerSw?: boolean;
 }
 
 /**
- * Sestaví aplikaci a propojí všechny komponenty.
+ * SestavĂ­ aplikaci a propojĂ­ vĹˇechny komponenty.
  *
- * Idempotentní vůči `root`: před vykreslením kořen vyprázdní. Celé tělo je
- * obaleno `try/catch` (Req 12.3) — neočekávaná chyba vyústí v českou chybovou
- * zprávu v DOM, nikoli v tichý pád.
+ * IdempotentnĂ­ vĹŻÄŤi `root`: pĹ™ed vykreslenĂ­m koĹ™en vyprĂˇzdnĂ­. CelĂ© tÄ›lo je
+ * obaleno `try/catch` (Req 12.3) â€” neoÄŤekĂˇvanĂˇ chyba vyĂşstĂ­ v ÄŤeskou chybovou
+ * zprĂˇvu v DOM, nikoli v tichĂ˝ pĂˇd.
  *
- * @param options Volitelné injektovatelné závislosti (root, storage, SW).
+ * @param options VolitelnĂ© injektovatelnĂ© zĂˇvislosti (root, storage, SW).
  */
 export function bootstrap(options: BootstrapOptions = {}): void {
   const root =
     options.root ?? (typeof document !== "undefined" ? document.getElementById("app") : null);
   if (!root) return;
 
-  // Globální error boundary (Req 12.3) — i mimo synchronní tok bootstrapu.
+  // GlobĂˇlnĂ­ error boundary (Req 12.3) â€” i mimo synchronnĂ­ tok bootstrapu.
   installGlobalErrorBoundary(root);
 
   try {
@@ -218,16 +237,16 @@ export function bootstrap(options: BootstrapOptions = {}): void {
   } catch (err) {
     showFatalError(
       root,
-      "Aplikaci se nepodařilo spustit kvůli neočekávané chybě. Zkuste ji prosím " +
-        "načíst znovu.",
+      "Aplikaci se nepodaĹ™ilo spustit kvĹŻli neoÄŤekĂˇvanĂ© chybÄ›. Zkuste ji prosĂ­m " +
+        "naÄŤĂ­st znovu.",
       err,
     );
   }
 }
 
 /**
- * Hlavní vykreslení aplikace: app shell (záložky), inicializace úložiště,
- * ověření Range_Store a propojení tréninkové smyčky, statistik a HH importu.
+ * HlavnĂ­ vykreslenĂ­ aplikace: app shell (zĂˇloĹľky), inicializace ĂşloĹľiĹˇtÄ›,
+ * ovÄ›Ĺ™enĂ­ Range_Store a propojenĂ­ trĂ©ninkovĂ© smyÄŤky, statistik a HH importu.
  */
 function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   root.innerHTML = "";
@@ -235,14 +254,14 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   const storage: Storage | null =
     options.storage ?? (typeof localStorage !== "undefined" ? localStorage : null);
 
-  // --- App shell: hlavička, záložky, panely, banner upozornění ---
+  // --- App shell: hlaviÄŤka, zĂˇloĹľky, panely, banner upozornÄ›nĂ­ ---
   const shell = buildAppShell(root);
 
-  // --- Krok 1–2: migrace + ověření stavu (Req 14) ---
+  // --- Krok 1â€“2: migrace + ovÄ›Ĺ™enĂ­ stavu (Req 14) ---
   if (!storage) {
-    // Bez úložiště nelze zaručit konzistentní stav ⇒ Req 14.6.
+    // Bez ĂşloĹľiĹˇtÄ› nelze zaruÄŤit konzistentnĂ­ stav â‡’ Req 14.6.
     renderStorageError(shell.trainingPanel);
-    // HH import nezávisí na úložišti — necháme ho funkční.
+    // HH import nezĂˇvisĂ­ na ĂşloĹľiĹˇti â€” nechĂˇme ho funkÄŤnĂ­.
     renderHHView(shell.hhPanel);
     renderPostflopView(shell.postflopPanel);
     return;
@@ -250,27 +269,27 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
 
   const storageInit = initializeStorage(storage);
   if (!storageInit.ok) {
-    // Req 14.6: nelze získat platný stav pod verzovanými klíči.
+    // Req 14.6: nelze zĂ­skat platnĂ˝ stav pod verzovanĂ˝mi klĂ­ÄŤi.
     renderStorageError(shell.trainingPanel);
     renderHHView(shell.hhPanel);
     renderPostflopView(shell.postflopPanel);
     return;
   }
 
-  // Req 14.3: migrace selhala, ale čistý stav je k dispozici ⇒ nenásilné
-  // upozornění, že trénink začíná s prázdnými statistikami.
+  // Req 14.3: migrace selhala, ale ÄŤistĂ˝ stav je k dispozici â‡’ nenĂˇsilnĂ©
+  // upozornÄ›nĂ­, Ĺľe trĂ©nink zaÄŤĂ­nĂˇ s prĂˇzdnĂ˝mi statistikami.
   if (storageInit.startedEmpty) {
     showNotice(
       shell.notice,
-      "Migrace dat z předchozí verze neproběhla. Trénink začíná s prázdnými " +
-        "statistikami; vaše původní data zůstala nedotčená.",
+      "Migrace dat z pĹ™edchozĂ­ verze neprobÄ›hla. TrĂ©nink zaÄŤĂ­nĂˇ s prĂˇzdnĂ˝mi " +
+        "statistikami; vaĹˇe pĹŻvodnĂ­ data zĹŻstala nedotÄŤenĂˇ.",
     );
   }
 
   const statsStore = createStatsStore(storage);
   const postflopStatsStore = createPostflopStatsStore(storage);
 
-  // Statistiky (dashboard) a HH import jsou dostupné nezávisle na Range_Store.
+  // Statistiky (dashboard) a HH import jsou dostupnĂ© nezĂˇvisle na Range_Store.
   let sessionCount = 0;
   let currentPostflopProfile: TrainingProfile | undefined;
   const refreshDashboard = (): void => {
@@ -291,12 +310,24 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
     }, shell.statsPanel);
   };
   const renderPostflopPanel = (
-    options: { initialSeed?: number; profile?: TrainingProfile } = {},
+    options: {
+      initialSeed?: number;
+      initialStreet?: PostflopStreet;
+      profile?: TrainingProfile;
+      filters?: Filters;
+      autoGenerate?: boolean;
+    } = {},
   ): void => {
     currentPostflopProfile = options.profile ?? currentPostflopProfile;
+    const postflopIntent = options.filters ? postflopIntentFromFilters(options.filters) : null;
     renderPostflopView(shell.postflopPanel, {
-      initialStreet: "FLOP",
+      initialStreet: options.initialStreet ?? "FLOP",
       initialSeed: options.initialSeed,
+      initialPositionContext: postflopIntent?.positionContext,
+      initialPotType: postflopIntent?.potType,
+      initialPotBB: postflopIntent?.potBB,
+      initialEffectiveStackBB: postflopIntent?.effectiveStackBB,
+      autoGenerate: options.autoGenerate === true,
       onAnswered: (spot, chosen) => {
         const record = buildPostflopResultRecord(spot, chosen);
         const save = postflopStatsStore.record(bridgePostflopResultRecordToStatsV2(record, {
@@ -317,18 +348,18 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   renderHHView(shell.hhPanel);
   renderPostflopPanel();
 
-  // --- Krok 3: načtení Range_Store (Req 4.6) ---
+  // --- Krok 3: naÄŤtenĂ­ Range_Store (Req 4.6) ---
   if (!isRangeDataLoaded()) {
-    // Diagnostiku zalogujeme (bez pádu); uživateli zobrazíme české upozornění.
+    // Diagnostiku zalogujeme (bez pĂˇdu); uĹľivateli zobrazĂ­me ÄŤeskĂ© upozornÄ›nĂ­.
     const errors = getRangeDataErrors();
     if (errors.length > 0 && typeof console !== "undefined") {
-      console.warn("Range_Store není načten:", errors);
+      console.warn("Range_Store nenĂ­ naÄŤten:", errors);
     }
     renderRangesError(shell.trainingPanel);
     return;
   }
 
-  // --- Krok 4: filtry + tréninková smyčka (Req 13.4) ---
+  // --- Krok 4: filtry + trĂ©ninkovĂˇ smyÄŤka (Req 13.4) ---
   setupTraining(shell, statsStore, {
     onAnswered: () => {
       sessionCount += 1;
@@ -338,8 +369,14 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       sessionCount = 0;
     },
     refreshDashboard,
-    startPostflopFlow: (seed, profile) => {
-      renderPostflopPanel({ initialSeed: seed, profile });
+    startPostflopFlow: (seed, street, profile, filters) => {
+      renderPostflopPanel({
+        initialSeed: seed,
+        initialStreet: street,
+        profile,
+        filters,
+        autoGenerate: true,
+      });
       refreshDashboard();
       shell.selectTab("postflop");
     },
@@ -350,10 +387,10 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
 }
 
 // ---------------------------------------------------------------------------
-// App shell (záložky Trénink / Statistiky / Import HH)
+// App shell (zĂˇloĹľky TrĂ©nink / Statistiky / Import HH)
 // ---------------------------------------------------------------------------
 
-/** Reference na klíčové části app shellu. */
+/** Reference na klĂ­ÄŤovĂ© ÄŤĂˇsti app shellu. */
 interface AppShell {
   notice: HTMLElement;
   trainingPanel: HTMLElement;
@@ -363,38 +400,38 @@ interface AppShell {
   selectTab: (id: TabId) => void;
 }
 
-/** Identifikátory záložek. */
+/** IdentifikĂˇtory zĂˇloĹľek. */
 type TabId = "training" | "stats" | "hh" | "postflop";
 
 /**
- * Sestaví statickou kostru aplikace: hlavičku s názvem, navigaci záložek,
- * tři panely (Trénink / Statistiky / Import HH) a banner pro nenásilná
- * upozornění. Vrátí reference na panely a banner.
+ * SestavĂ­ statickou kostru aplikace: hlaviÄŤku s nĂˇzvem, navigaci zĂˇloĹľek,
+ * tĹ™i panely (TrĂ©nink / Statistiky / Import HH) a banner pro nenĂˇsilnĂˇ
+ * upozornÄ›nĂ­. VrĂˇtĂ­ reference na panely a banner.
  */
 function buildAppShell(root: HTMLElement): AppShell {
   root.appendChild(appStyles());
 
   const app = el("div", "app");
 
-  // Hlavička.
+  // HlaviÄŤka.
   const header = el("header", "app__header");
   header.appendChild(el("h1", "app__title", "MTT Preflop Trainer"));
   header.appendChild(
     el(
       "p",
       "app__subtitle",
-      "Trénink preflop rozhodování — full ring 9-handed, 5–150 BB.",
+      "TrĂ©nink preflop rozhodovĂˇnĂ­ â€” full ring 9-handed, 5â€“150 BB.",
     ),
   );
   app.appendChild(header);
 
-  // Banner upozornění (Req 12.4, 14.3) — nenásilný, skrytý dokud není potřeba.
+  // Banner upozornÄ›nĂ­ (Req 12.4, 14.3) â€” nenĂˇsilnĂ˝, skrytĂ˝ dokud nenĂ­ potĹ™eba.
   const notice = el("div", "app__notice");
   notice.setAttribute("role", "status");
   notice.hidden = true;
   app.appendChild(notice);
 
-  // Navigace záložek.
+  // Navigace zĂˇloĹľek.
   const nav = el("nav", "app__tabs");
   const trainingPanel = el("section", "app__panel app__panel--training");
   const statsPanel = el("section", "app__panel app__panel--stats");
@@ -409,7 +446,7 @@ function buildAppShell(root: HTMLElement): AppShell {
   };
 
   const tabDefs: { id: TabId; label: string }[] = [
-    { id: "training", label: "Trénink" },
+    { id: "training", label: "TrĂ©nink" },
     { id: "stats", label: "Statistiky" },
     { id: "hh", label: "Import HH" },
     { id: "postflop", label: "Postflop" },
@@ -447,27 +484,32 @@ function buildAppShell(root: HTMLElement): AppShell {
 
   root.appendChild(app);
 
-  // Výchozí záložka: Trénink.
+  // VĂ˝chozĂ­ zĂˇloĹľka: TrĂ©nink.
   selectTab("training");
 
   return { notice, trainingPanel, statsPanel, hhPanel, postflopPanel, selectTab };
 }
 
 // ---------------------------------------------------------------------------
-// Tréninková smyčka (Req 13.4, 13.6, 7, 9, 10)
+// TrĂ©ninkovĂˇ smyÄŤka (Req 13.4, 13.6, 7, 9, 10)
 // ---------------------------------------------------------------------------
 
-/** Callbacky propojující tréninkovou smyčku se stavem relace v `main.ts`. */
+/** Callbacky propojujĂ­cĂ­ trĂ©ninkovou smyÄŤku se stavem relace v `main.ts`. */
 interface TrainingHooks {
-  /** Zavolá se po každém vyhodnocení odpovědi (inkrement počtu spotů relace). */
+  /** ZavolĂˇ se po kaĹľdĂ©m vyhodnocenĂ­ odpovÄ›di (inkrement poÄŤtu spotĹŻ relace). */
   onAnswered: () => void;
-  /** Vrátí aktuální počet spotů relace (Req 9.5). */
+  /** VrĂˇtĂ­ aktuĂˇlnĂ­ poÄŤet spotĹŻ relace (Req 9.5). */
   getSessionCount: () => number;
-  /** Vynuluje počet spotů relace (při novém startu). */
+  /** Vynuluje poÄŤet spotĹŻ relace (pĹ™i novĂ©m startu). */
   resetSession: () => void;
-  /** Překreslí dashboard statistik. */
+  /** PĹ™ekreslĂ­ dashboard statistik. */
   refreshDashboard: () => void;
-  startPostflopFlow: (seed: number, profile: TrainingProfile) => void;
+  startPostflopFlow: (
+    seed: number,
+    street: PostflopStreet,
+    profile: TrainingProfile,
+    filters: Filters,
+  ) => void;
 }
 
 function isProductionPreflopProfile(profile: TrainingProfile): boolean {
@@ -481,36 +523,38 @@ function isProductionPreflopProfile(profile: TrainingProfile): boolean {
   );
 }
 
+function candidateProfileLabel(profile: TrainingProfile): string {
+  if (profile.gameVariant === "SNG") {
+    return `SNG ${profile.evModel === "CHIP_EV" ? "chipEV" : "ICM"} preview`;
+  }
+  if (profile.gameVariant === "CASH") {
+    return `Cash ${profile.rakeMode === "RAKE" ? "RAKE" : "NO_RAKE"} preview`;
+  }
+  return `${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} ${profile.gameVariant} preflop preview`;
+}
+
 function profileGateMessage(profile: TrainingProfile): string {
-  const pack = rangePackForTrainingProfile(profile);
-  if (pack && (pack.confidence === "LOW" || pack.records.length === 0)) {
-    const sixMaxReport = mttSixMaxCandidateImportReportForProfile(profile);
-    const sngReport = sngCandidateImportReportForProfile(profile);
-    const cashReport = cashCandidateImportReportForProfile(profile);
-    const importPreview = sixMaxReport
-      ? ` Import preview: ${sixMaxReport.sourceCount} metodickych vstupu, ${sixMaxReport.recordCount} records, ${sixMaxReport.totalExplicitHands} hand hodnot.`
-      : sngReport
-        ? ` SNG ${profile.evModel === "ICM" ? "ICM" : "chipEV"} preview: ${sngReport.recordCount} records, ${sngReport.sourceCount} metodickych vstupu${sngReport.icm ? `, payout ${sngReport.icm.payoutStructureId}` : ""}.`
-        : cashReport
-          ? ` Cash ${profile.rakeMode === "RAKE" ? "RAKE" : "NO_RAKE"} preview: ${cashReport.recordCount} records, ${cashReport.sourceCount} metodickych vstupu, rake mode ${profile.rakeMode}.`
-          : "";
-    return (
-      `Profil ${pack.id} je zatím candidate/preview: má LOW confidence nebo 0 records. ` +
-      "Produkční trénink se nespustí, dokud neprojde import report a ověření hand-class hodnot." +
-      importPreview
-    );
+  {
+    const pack = rangePackForTrainingProfile(profile);
+    if (pack && (pack.confidence === "LOW" || pack.records.length === 0)) {
+      return (
+        `${candidateProfileLabel(profile)}: candidate/preview. Produkcni trening se nespusti, ` +
+        "dokud profil neprojde kontrolou hand-class hodnot."
+      );
+    }
   }
 
   return (
-    "Zvolený profil je zatím preview a nemá produkčně ověřený RangePack pro scoring. " +
-    "Použijte MTT 9-max regular preflop chipEV nebo flop preview."
+    "Zvoleny profil je zatim preview a nema zapnuty produkcni scoring. " +
+    "Pouzijte MTT 9-max regular preflop chipEV nebo postflop preview."
   );
+
 }
 
 /**
- * Sestaví tréninkovou sekci: filtry (se stráží explicitního startu, Req 13.4) a
- * herní oblast (stůl + akce + výsledek + range matice). Generování spotů začne
- * **až** po kliknutí na Start ve filtrech.
+ * SestavĂ­ trĂ©ninkovou sekci: filtry (se strĂˇĹľĂ­ explicitnĂ­ho startu, Req 13.4) a
+ * hernĂ­ oblast (stĹŻl + akce + vĂ˝sledek + range matice). GenerovĂˇnĂ­ spotĹŻ zaÄŤne
+ * **aĹľ** po kliknutĂ­ na Start ve filtrech.
  */
 function setupTraining(
   shell: AppShell,
@@ -520,31 +564,44 @@ function setupTraining(
   const panel = shell.trainingPanel;
   panel.innerHTML = "";
 
-  // Kontejner filtrů + herní oblast.
+  // Kontejner filtrĹŻ + hernĂ­ oblast.
   const filtersBox = el("div", "training__filters");
   const gameBox = el("div", "training__game");
-  gameBox.hidden = true; // dokud uživatel nespustí relaci (Req 13.4).
+  gameBox.hidden = true; // dokud uĹľivatel nespustĂ­ relaci (Req 13.4).
   panel.appendChild(filtersBox);
   panel.appendChild(gameBox);
 
-  // Herní sub-oblasti.
+  // HernĂ­ sub-oblasti.
+  const sessionBar = el("div", "training__session-bar");
+  const sessionInfo = el("div", "training__session-info");
+  const sessionTitle = el("div", "training__session-title", "Otazka");
+  const sessionMeta = el("div", "training__session-meta");
+  const changeSituationBtn = document.createElement("button");
+  changeSituationBtn.type = "button";
+  changeSituationBtn.className = "training__change-situation";
+  changeSituationBtn.textContent = "Zmenit situaci";
+  sessionInfo.appendChild(sessionTitle);
+  sessionInfo.appendChild(sessionMeta);
+  sessionBar.appendChild(sessionInfo);
+  sessionBar.appendChild(changeSituationBtn);
   const tableContainer = el("div", "training__table");
   const actionsContainer = el("div", "training__actions");
   const resultContainer = el("div", "training__result");
   const matrixContainer = el("div", "training__matrix");
+  gameBox.appendChild(sessionBar);
   gameBox.appendChild(tableContainer);
   gameBox.appendChild(actionsContainer);
   gameBox.appendChild(resultContainer);
   gameBox.appendChild(matrixContainer);
 
-  // Stav běžící relace (iterátor sekvence).
+  // Stav bÄ›ĹľĂ­cĂ­ relace (iterĂˇtor sekvence).
   let iterator: Iterator<Spot> | null = null;
-  let answered = false; // bylo už na aktuální spot odpovězeno?
+  let answered = false; // bylo uĹľ na aktuĂˇlnĂ­ spot odpovÄ›zeno?
 
   const filtersView: FiltersView = renderFilters(filtersBox, {
     onStart: (filters: Filters, seed: number | null, profile) => {
-      if (profile.street === "FLOP") {
-        startPostflopSession(seed, profile);
+      if (isPostflopStreet(profile.street)) {
+        startPostflopSession(filters, seed, profile.street, profile);
         return;
       }
       if (!isProductionPreflopProfile(profile)) {
@@ -556,60 +613,90 @@ function setupTraining(
     },
   });
 
-  function startPostflopSession(seed: number | null, profile: TrainingProfile): void {
+  changeSituationBtn.addEventListener("click", () => {
+    iterator = null;
+    answered = false;
+    clearActiveQuestion();
+    gameBox.hidden = true;
+    filtersBox.hidden = false;
+  });
+
+  function startPostflopSession(
+    filters: Filters,
+    seed: number | null,
+    street: PostflopStreet,
+    profile: TrainingProfile,
+  ): void {
     const resolvedSeed = resolveSeed(seed);
     filtersView.setSeed(resolvedSeed);
     hooks.resetSession();
     filtersView.clearWarning();
+    clearActiveQuestion();
     gameBox.hidden = true;
-    hooks.startPostflopFlow(resolvedSeed, profile);
+    filtersBox.hidden = false;
+    hooks.startPostflopFlow(resolvedSeed, street, profile, filters);
   }
 
   /**
-   * Spustí relaci pro zvolené filtry a seed (Req 13.4 — pouze přes explicitní
-   * start). Sestaví deterministickou sekvenci; je-li prázdná (Req 13.6),
-   * zobrazí upozornění a relaci nespustí.
+   * SpustĂ­ relaci pro zvolenĂ© filtry a seed (Req 13.4 â€” pouze pĹ™es explicitnĂ­
+   * start). SestavĂ­ deterministickou sekvenci; je-li prĂˇzdnĂˇ (Req 13.6),
+   * zobrazĂ­ upozornÄ›nĂ­ a relaci nespustĂ­.
    */
   function startSession(filters: Filters, seed: number | null): void {
-    // Req 6.7: vyřeš a zpřístupni platný seed (aby šel zopakovat).
+    // Req 6.7: vyĹ™eĹˇ a zpĹ™Ă­stupni platnĂ˝ seed (aby Ĺˇel zopakovat).
     const resolvedSeed = resolveSeed(seed);
     filtersView.setSeed(resolvedSeed);
 
     const cfg: SessionConfig = { seed: resolvedSeed, filters };
 
-    // Sestav sekvenci a zjisti, zda obsahuje alespoň jeden spot.
+    // Sestav sekvenci a zjisti, zda obsahuje alespoĹ jeden spot.
     const seq = spotSequence(cfg, rangeStore);
     const it = seq[Symbol.iterator]();
     const first = it.next();
 
     if (first.done) {
-      // Req 13.6: prázdný průnik filtrů ⇒ upozornění, relaci nespouštěj.
+      // Req 13.6: prĂˇzdnĂ˝ prĹŻnik filtrĹŻ â‡’ upozornÄ›nĂ­, relaci nespouĹˇtÄ›j.
+      clearActiveQuestion();
       gameBox.hidden = true;
       filtersView.showEmptyResult();
       return;
     }
 
-    // Nová relace: vynuluj počet spotů relace (Req 9.5) a vyčisti výsledek.
+    // NovĂˇ relace: vynuluj poÄŤet spotĹŻ relace (Req 9.5) a vyÄŤisti vĂ˝sledek.
     hooks.resetSession();
     hooks.refreshDashboard();
     filtersView.clearWarning();
 
     iterator = it;
+    filtersBox.hidden = true;
     gameBox.hidden = false;
     showSpot(first.value, filters);
   }
 
-  /** Zobrazí spot: vykreslí stůl a nabídku akcí, vyčistí předchozí výsledek. */
+  /** ZobrazĂ­ spot: vykreslĂ­ stĹŻl a nabĂ­dku akcĂ­, vyÄŤistĂ­ pĹ™edchozĂ­ vĂ˝sledek. */
+  function clearActiveQuestion(): void {
+    sessionTitle.textContent = "Otazka";
+    sessionMeta.textContent = "";
+    tableContainer.innerHTML = "";
+    actionsContainer.innerHTML = "";
+    resultContainer.innerHTML = "";
+    matrixContainer.innerHTML = "";
+  }
+
   function showSpot(spot: Spot, filters: Filters): void {
     answered = false;
 
+    sessionTitle.textContent = `${actionContextLabel(spot.context)} - ${spot.heroPos} - ${spot.hand}`;
+    sessionMeta.textContent =
+      `${spot.effStack} BB - ${filters.ante === "ON" ? "ante ON" : "ante OFF"} - ` +
+      `seed ${filtersView.getSeed() ?? "random"}`;
     renderTable(spot, filters.ante, tableContainer);
     resultContainer.innerHTML = "";
     matrixContainer.innerHTML = "";
     renderActions(spot, filters.scoringMode);
   }
 
-  /** Vykreslí tlačítka nabízených akcí (Req 3.12 — 1 klíč na akci). */
+  /** VykreslĂ­ tlaÄŤĂ­tka nabĂ­zenĂ˝ch akcĂ­ (Req 3.12 â€” 1 klĂ­ÄŤ na akci). */
   function renderActions(spot: Spot, mode: ScoringMode): void {
     actionsContainer.innerHTML = "";
 
@@ -630,25 +717,25 @@ function setupTraining(
   }
 
   /**
-   * Vyhodnotí zvolenou akci (Req 7), zobrazí správnost + zdůvodnění +
-   * doporučené klíče, vykreslí range matici (Req 10), zaznamená výsledek do
-   * Stats_Store PŘED dalším spotem (Req 9.1) a nabídne tlačítko „Další".
+   * VyhodnotĂ­ zvolenou akci (Req 7), zobrazĂ­ sprĂˇvnost + zdĹŻvodnÄ›nĂ­ +
+   * doporuÄŤenĂ© klĂ­ÄŤe, vykreslĂ­ range matici (Req 10), zaznamenĂˇ vĂ˝sledek do
+   * Stats_Store PĹED dalĹˇĂ­m spotem (Req 9.1) a nabĂ­dne tlaÄŤĂ­tko â€žDalĹˇĂ­".
    */
   function handleAnswer(spot: Spot, chosen: ActionKey, mode: ScoringMode): void {
-    if (answered) return; // jedna odpověď na spot.
+    if (answered) return; // jedna odpovÄ›ÄŹ na spot.
     answered = true;
 
-    // Zablokuj tlačítka akcí a zvýrazni zvolené.
+    // Zablokuj tlaÄŤĂ­tka akcĂ­ a zvĂ˝razni zvolenĂ©.
     const buttons = actionsContainer.querySelectorAll<HTMLButtonElement>(".action-btn");
     buttons.forEach((b) => {
       b.disabled = true;
       if (b.dataset.action === chosen) b.classList.add("action-btn--chosen");
     });
 
-    // Vyhodnocení (čisté jádro).
+    // VyhodnocenĂ­ (ÄŤistĂ© jĂˇdro).
     const result = grade(spot, chosen, mode);
 
-    // Záznam výsledku PŘED dalším spotem (Req 9.1); selhání ⇒ upozornění (Req 9.6).
+    // ZĂˇznam vĂ˝sledku PĹED dalĹˇĂ­m spotem (Req 9.1); selhĂˇnĂ­ â‡’ upozornÄ›nĂ­ (Req 9.6).
     const record: ResultRecord = {
       qid: spot.id,
       chosen,
@@ -660,14 +747,14 @@ function setupTraining(
     };
     const save = statsStore.record(record);
 
-    // Inkrement počtu spotů relace + překreslení dashboardu (Req 9.5).
+    // Inkrement poÄŤtu spotĹŻ relace + pĹ™ekreslenĂ­ dashboardu (Req 9.5).
     hooks.onAnswered();
     hooks.refreshDashboard();
 
-    // Zobrazení výsledku, zdůvodnění a doporučení.
+    // ZobrazenĂ­ vĂ˝sledku, zdĹŻvodnÄ›nĂ­ a doporuÄŤenĂ­.
     renderResult(spot, result, save.ok);
 
-    // Range matice pro daný spot (Req 10) + legacy parity modal.
+    // Range matice pro danĂ˝ spot (Req 10) + legacy parity modal.
     matrixContainer.innerHTML = "";
     renderRangeModalButton(spot, rangeStore, matrixContainer);
     const inlineMatrix = el("div", "training__matrix-inline");
@@ -675,7 +762,7 @@ function setupTraining(
     renderMatrix(spot, rangeStore, inlineMatrix);
   }
 
-  /** Vykreslí indikaci správnosti, zdůvodnění a doporučené Akční_klíče (Req 7.4). */
+  /** VykreslĂ­ indikaci sprĂˇvnosti, zdĹŻvodnÄ›nĂ­ a doporuÄŤenĂ© AkÄŤnĂ­_klĂ­ÄŤe (Req 7.4). */
   function renderResult(
     spot: Spot,
     result: ReturnType<typeof grade>,
@@ -689,58 +776,58 @@ function setupTraining(
     const verdict = el(
       "div",
       "result__verdict",
-      result.correct ? "Správně!" : "Špatně.",
+      result.correct ? "SprĂˇvnÄ›!" : "Ĺ patnÄ›.",
     );
     box.appendChild(verdict);
 
-    // Doporučené Akční_klíče z Range_Store (Req 7.4 / 7.7).
+    // DoporuÄŤenĂ© AkÄŤnĂ­_klĂ­ÄŤe z Range_Store (Req 7.4 / 7.7).
     if (result.recommended.length > 0) {
       const rec = el(
         "div",
         "result__recommended",
-        `Doporučeno: ${result.recommended.map(actionKeyLabel).join(" / ")}`,
+        `DoporuÄŤeno: ${result.recommended.map(actionKeyLabel).join(" / ")}`,
       );
       box.appendChild(rec);
     }
 
-    // Zdůvodnění (Req 7.4); při nedostupnosti zobraz náhradní text (Req 7.5).
+    // ZdĹŻvodnÄ›nĂ­ (Req 7.4); pĹ™i nedostupnosti zobraz nĂˇhradnĂ­ text (Req 7.5).
     const explanation = el("div", "result__explanation");
     if (result.explanationAvailable) {
       explanation.textContent = spot.explanation;
     } else {
-      explanation.textContent = "Zdůvodnění není k tomuto spotu k dispozici.";
+      explanation.textContent = "ZdĹŻvodnÄ›nĂ­ nenĂ­ k tomuto spotu k dispozici.";
       explanation.classList.add("result__explanation--unavailable");
     }
     box.appendChild(explanation);
 
-    // Req 9.6: výsledek se nepodařilo uložit ⇒ upozornění, ale pokračujeme.
+    // Req 9.6: vĂ˝sledek se nepodaĹ™ilo uloĹľit â‡’ upozornÄ›nĂ­, ale pokraÄŤujeme.
     if (!saveOk) {
       const warn = el(
         "div",
         "result__save-warning",
-        "Upozornění: výsledek se nepodařilo uložit. Statistiky nemusí být úplné.",
+        "UpozornÄ›nĂ­: vĂ˝sledek se nepodaĹ™ilo uloĹľit. Statistiky nemusĂ­ bĂ˝t ĂşplnĂ©.",
       );
       box.appendChild(warn);
     }
 
-    // Tlačítko „Další" — zobrazí další spot ze sekvence.
+    // TlaÄŤĂ­tko â€žDalĹˇĂ­" â€” zobrazĂ­ dalĹˇĂ­ spot ze sekvence.
     const nextBtn = document.createElement("button");
     nextBtn.type = "button";
     nextBtn.className = "result__next";
-    nextBtn.textContent = "Další spot";
+    nextBtn.textContent = "DalĹˇĂ­ spot";
     nextBtn.addEventListener("click", () => advance());
     box.appendChild(nextBtn);
 
     resultContainer.appendChild(box);
   }
 
-  /** Posune sekvenci na další spot (Req 6.6 — sekvence cyklí deterministicky). */
+  /** Posune sekvenci na dalĹˇĂ­ spot (Req 6.6 â€” sekvence cyklĂ­ deterministicky). */
   function advance(): void {
     if (!iterator) return;
     const next = iterator.next();
     if (next.done) {
-      // Pojistka: neprázdná sekvence cyklí donekonečna, sem bychom se neměli
-      // dostat. Defenzivně relaci ukončíme.
+      // Pojistka: neprĂˇzdnĂˇ sekvence cyklĂ­ donekoneÄŤna, sem bychom se nemÄ›li
+      // dostat. DefenzivnÄ› relaci ukonÄŤĂ­me.
       gameBox.hidden = true;
       return;
     }
@@ -749,10 +836,10 @@ function setupTraining(
 }
 
 // ---------------------------------------------------------------------------
-// Chybové stavy a upozornění (Req 4.6, 12.4, 14.6)
+// ChybovĂ© stavy a upozornÄ›nĂ­ (Req 4.6, 12.4, 14.6)
 // ---------------------------------------------------------------------------
 
-/** Vykreslí blok chyby do panelu (relaci nespouštět). */
+/** VykreslĂ­ blok chyby do panelu (relaci nespouĹˇtÄ›t). */
 function renderBlockingError(panel: HTMLElement, title: string, message: string): void {
   panel.innerHTML = "";
   const box = el("div", "fatal");
@@ -762,29 +849,29 @@ function renderBlockingError(panel: HTMLElement, title: string, message: string)
   panel.appendChild(box);
 }
 
-/** Req 14.6: nekonzistentní lokální úložiště — relaci nespouštět. */
+/** Req 14.6: nekonzistentnĂ­ lokĂˇlnĂ­ ĂşloĹľiĹˇtÄ› â€” relaci nespouĹˇtÄ›t. */
 function renderStorageError(panel: HTMLElement): void {
   renderBlockingError(
     panel,
-    "Nekonzistentní úložiště",
-    "Lokální úložiště je v nekonzistentním stavu a nelze v něm vytvořit ani " +
-      "platný čistý stav. Trénink proto nelze spustit. Zkontrolujte prosím " +
-      "nastavení prohlížeče (povolení úložiště) a načtěte aplikaci znovu.",
+    "NekonzistentnĂ­ ĂşloĹľiĹˇtÄ›",
+    "LokĂˇlnĂ­ ĂşloĹľiĹˇtÄ› je v nekonzistentnĂ­m stavu a nelze v nÄ›m vytvoĹ™it ani " +
+      "platnĂ˝ ÄŤistĂ˝ stav. TrĂ©nink proto nelze spustit. Zkontrolujte prosĂ­m " +
+      "nastavenĂ­ prohlĂ­ĹľeÄŤe (povolenĂ­ ĂşloĹľiĹˇtÄ›) a naÄŤtÄ›te aplikaci znovu.",
   );
 }
 
-/** Req 4.6: referenční ranges nejsou dostupné — relaci nespouštět. */
+/** Req 4.6: referenÄŤnĂ­ ranges nejsou dostupnĂ© â€” relaci nespouĹˇtÄ›t. */
 function renderRangesError(panel: HTMLElement): void {
   renderBlockingError(
     panel,
-    "Referenční ranges nejsou dostupné",
-    "Data referenčních ranges se nepodařilo načíst jako celek, proto nelze " +
-      "generovat tréninkové spoty ani spustit relaci. Zkuste prosím aplikaci " +
-      "načíst znovu.",
+    "ReferenÄŤnĂ­ ranges nejsou dostupnĂ©",
+    "Data referenÄŤnĂ­ch ranges se nepodaĹ™ilo naÄŤĂ­st jako celek, proto nelze " +
+      "generovat trĂ©ninkovĂ© spoty ani spustit relaci. Zkuste prosĂ­m aplikaci " +
+      "naÄŤĂ­st znovu.",
   );
 }
 
-/** Zobrazí nenásilné upozornění v banneru (Req 12.4, 14.3). */
+/** ZobrazĂ­ nenĂˇsilnĂ© upozornÄ›nĂ­ v banneru (Req 12.4, 14.3). */
 function showNotice(notice: HTMLElement, message: string): void {
   notice.hidden = false;
   const line = el("div", "app__notice-line", message);
@@ -792,21 +879,21 @@ function showNotice(notice: HTMLElement, message: string): void {
 }
 
 /**
- * Vykreslí fatální chybu (globální error boundary). Pokud už je v DOM app shell,
- * přidá nenásilné upozornění; jinak nahradí obsah kořene chybovým blokem.
+ * VykreslĂ­ fatĂˇlnĂ­ chybu (globĂˇlnĂ­ error boundary). Pokud uĹľ je v DOM app shell,
+ * pĹ™idĂˇ nenĂˇsilnĂ© upozornÄ›nĂ­; jinak nahradĂ­ obsah koĹ™ene chybovĂ˝m blokem.
  */
 function showFatalError(root: HTMLElement, message: string, err?: unknown): void {
   if (typeof console !== "undefined") {
-    console.error("MTT Preflop Trainer — chyba:", message, err);
+    console.error("MTT Preflop Trainer â€” chyba:", message, err);
   }
-  // Pokud existuje banner upozornění, použij ho (nenásilně); jinak nahraď kořen.
+  // Pokud existuje banner upozornÄ›nĂ­, pouĹľij ho (nenĂˇsilnÄ›); jinak nahraÄŹ koĹ™en.
   const notice = root.querySelector<HTMLElement>(".app__notice");
   if (notice) {
     notice.hidden = false;
     notice.appendChild(el("div", "app__notice-line", message));
     return;
   }
-  renderBlockingError(root, "Došlo k chybě", message);
+  renderBlockingError(root, "DoĹˇlo k chybÄ›", message);
 }
 
 // ---------------------------------------------------------------------------
@@ -814,10 +901,10 @@ function showFatalError(root: HTMLElement, message: string, err?: unknown): void
 // ---------------------------------------------------------------------------
 
 /**
- * Defenzivně zaregistruje Service Worker (pokud je to vhodné). Při selhání
- * nakešování zobrazí nenásilné české upozornění (Req 12.4) a aplikaci
- * neblokuje. Ve výchozím stavu se registruje jen v produkčním buildu
- * (`import.meta.env.PROD`), aby nepřekážel ve vývoji/testech.
+ * DefenzivnÄ› zaregistruje Service Worker (pokud je to vhodnĂ©). PĹ™i selhĂˇnĂ­
+ * nakeĹˇovĂˇnĂ­ zobrazĂ­ nenĂˇsilnĂ© ÄŤeskĂ© upozornÄ›nĂ­ (Req 12.4) a aplikaci
+ * neblokuje. Ve vĂ˝chozĂ­m stavu se registruje jen v produkÄŤnĂ­m buildu
+ * (`import.meta.env.PROD`), aby nepĹ™ekĂˇĹľel ve vĂ˝voji/testech.
  */
 function maybeRegisterServiceWorker(notice: HTMLElement, force?: boolean): void {
   const shouldRegister =
@@ -828,23 +915,23 @@ function maybeRegisterServiceWorker(notice: HTMLElement, force?: boolean): void 
     onCacheFailure: () => {
       showNotice(
         notice,
-        "Aplikaci se nepodařilo plně připravit pro offline použití. Online " +
-          "funguje normálně; offline režim ale nemusí být dostupný.",
+        "Aplikaci se nepodaĹ™ilo plnÄ› pĹ™ipravit pro offline pouĹľitĂ­. Online " +
+          "funguje normĂˇlnÄ›; offline reĹľim ale nemusĂ­ bĂ˝t dostupnĂ˝.",
       );
     },
   });
 }
 
 // ---------------------------------------------------------------------------
-// Globální error boundary (Req 12.3)
+// GlobĂˇlnĂ­ error boundary (Req 12.3)
 // ---------------------------------------------------------------------------
 
-/** Příznak, aby se posluchače registrovaly jen jednou. */
+/** PĹ™Ă­znak, aby se posluchaÄŤe registrovaly jen jednou. */
 let errorBoundaryInstalled = false;
 
 /**
- * Zaregistruje globální posluchače `error` a `unhandledrejection`, které
- * vykreslí českou chybovou zprávu do DOM místo tichého pádu (Req 12.3).
+ * Zaregistruje globĂˇlnĂ­ posluchaÄŤe `error` a `unhandledrejection`, kterĂ©
+ * vykreslĂ­ ÄŤeskou chybovou zprĂˇvu do DOM mĂ­sto tichĂ©ho pĂˇdu (Req 12.3).
  */
 function installGlobalErrorBoundary(root: HTMLElement): void {
   if (errorBoundaryInstalled || typeof window === "undefined") return;
@@ -853,7 +940,7 @@ function installGlobalErrorBoundary(root: HTMLElement): void {
   window.addEventListener("error", (event: ErrorEvent) => {
     showFatalError(
       root,
-      "Došlo k neočekávané chybě aplikace. Část funkcí nemusí fungovat správně.",
+      "DoĹˇlo k neoÄŤekĂˇvanĂ© chybÄ› aplikace. ÄŚĂˇst funkcĂ­ nemusĂ­ fungovat sprĂˇvnÄ›.",
       event.error ?? event.message,
     );
   });
@@ -861,15 +948,15 @@ function installGlobalErrorBoundary(root: HTMLElement): void {
   window.addEventListener("unhandledrejection", (event: PromiseRejectionEvent) => {
     showFatalError(
       root,
-      "Došlo k neočekávané chybě při asynchronní operaci. Část funkcí nemusí " +
-        "fungovat správně.",
+      "DoĹˇlo k neoÄŤekĂˇvanĂ© chybÄ› pĹ™i asynchronnĂ­ operaci. ÄŚĂˇst funkcĂ­ nemusĂ­ " +
+        "fungovat sprĂˇvnÄ›.",
       event.reason,
     );
   });
 }
 
 // ---------------------------------------------------------------------------
-// Styly app shellu (soběstačné, aby aplikace fungovala i bez externího CSS)
+// Styly app shellu (sobÄ›staÄŤnĂ©, aby aplikace fungovala i bez externĂ­ho CSS)
 // ---------------------------------------------------------------------------
 
 function appStyles(): HTMLStyleElement {
@@ -905,6 +992,16 @@ body{margin:0;background:#0b1018;color:#e8ecf7;
 .profile-selector__note{grid-column:1/-1;font-size:12px;color:#9aa6c2;line-height:1.35;
   overflow-wrap:anywhere;}
 .training__game{display:flex;flex-direction:column;gap:16px;}
+.training__session-bar{display:flex;align-items:center;justify-content:space-between;
+  gap:12px;}
+.training__session-info{min-width:0;display:grid;gap:3px;}
+.training__session-title{font-size:15px;font-weight:900;color:#e8ecf7;}
+.training__session-meta{font-size:12px;font-weight:700;color:#9aa6c2;
+  overflow-wrap:anywhere;}
+.training__change-situation{appearance:none;border:1px solid rgba(255,255,255,.18);
+  background:#1b2333;color:#e8ecf7;border-radius:8px;font-size:13px;
+  font-weight:800;padding:8px 12px;cursor:pointer;}
+.training__change-situation:hover{border-color:#2bd576;}
 .training__actions-title{font-weight:700;font-size:14px;margin-bottom:8px;}
 .training__actions-row{display:flex;flex-wrap:wrap;gap:8px;}
 .action-btn{appearance:none;border:1px solid rgba(255,255,255,.18);
@@ -935,12 +1032,12 @@ body{margin:0;background:#0b1018;color:#e8ecf7;
 }
 
 // ---------------------------------------------------------------------------
-// Auto-start (mimo testovací prostředí)
+// Auto-start (mimo testovacĂ­ prostĹ™edĂ­)
 // ---------------------------------------------------------------------------
 
-// V prohlížeči spustíme bootstrap automaticky. V testech (importem modulu)
-// se `bootstrap` volá ručně s injektovanými závislostmi, takže auto-start
-// přeskočíme, pokud není dostupný `document`.
+// V prohlĂ­ĹľeÄŤi spustĂ­me bootstrap automaticky. V testech (importem modulu)
+// se `bootstrap` volĂˇ ruÄŤnÄ› s injektovanĂ˝mi zĂˇvislostmi, takĹľe auto-start
+// pĹ™eskoÄŤĂ­me, pokud nenĂ­ dostupnĂ˝ `document`.
 if (typeof document !== "undefined") {
   bootstrap();
 }

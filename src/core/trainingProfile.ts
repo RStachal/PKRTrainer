@@ -51,7 +51,9 @@ export function isTournamentVariant(variant: GameVariant): boolean {
   return variant === "MTT" || variant === "SNG";
 }
 
-export function isPostflopStreet(street: TrainingStreet): boolean {
+export function isPostflopStreet(
+  street: TrainingStreet,
+): street is Exclude<TrainingStreet, "PREFLOP"> {
   return street === "FLOP" || street === "TURN" || street === "RIVER";
 }
 

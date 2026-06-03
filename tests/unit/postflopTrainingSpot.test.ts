@@ -82,4 +82,27 @@ describe("postflopTrainingSpot", () => {
     expect(river.explanation).toHaveProperty("bluffHands");
     expect(river.explanation).toHaveProperty("checkHands");
   });
+
+  it("oznaci flop proti 3betu samostatnym action nodem a pot typem", () => {
+    const trainingSpot = postflopSpotToTrainingSpot(generatePostflopSpot({
+      seed: 1788246284,
+      street: "FLOP",
+      heroCards,
+      potType: "THREE_BET_POT",
+      positionContext: {
+        heroPosition: "LJ",
+        villainPosition: "HJ",
+        aggressorPosition: "HJ",
+        callerPosition: "LJ",
+        inPosition: false,
+        callerType: "OUT_OF_POSITION_CALLER",
+        positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+      },
+    }));
+
+    expect(trainingSpot.actionNode).toBe("THREE_BET_POT_CBET");
+    expect(trainingSpot.potType).toBe("THREE_BET_POT");
+    expect(trainingSpot.potBB).toBe(18);
+    expect(trainingSpot.spr).toBe(2.2);
+  });
 });

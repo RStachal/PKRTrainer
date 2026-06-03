@@ -104,6 +104,39 @@ describe("postflopResultRecord", () => {
     expect(bridge.strategyRuleId).toBe(record.sourceRuleId);
   });
 
+  it("validuje a bridguje 3bet pot record", () => {
+    const spot = postflopSpotToTrainingSpot(generatePostflopSpot({
+      seed: 1788246284,
+      street: "FLOP",
+      potType: "THREE_BET_POT",
+      positionContext: {
+        heroPosition: "LJ",
+        villainPosition: "HJ",
+        aggressorPosition: "HJ",
+        callerPosition: "LJ",
+        inPosition: false,
+        callerType: "OUT_OF_POSITION_CALLER",
+        positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+      },
+    }));
+
+    const record = buildPostflopResultRecord(spot, spot.recommendedAction, 789);
+    const bridge = bridgePostflopResultRecordToStatsV2(record);
+
+    expect(isPostflopResultRecord(record)).toBe(true);
+    expect(record).toMatchObject({
+      actionNode: "THREE_BET_POT_CBET",
+      potType: "THREE_BET_POT",
+      positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+      sourceKind: "FALLBACK",
+    });
+    expect(bridge).toMatchObject({
+      actionNode: "THREE_BET_POT_CBET",
+      potType: "THREE_BET_POT",
+      positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+    });
+  });
+
   it("agreguje postflop bridge recordy podle dashboard dimenzi", () => {
     const spot = postflopSpotToTrainingSpot(generatePostflopSpot({
       seed: 42,

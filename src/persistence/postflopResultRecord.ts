@@ -1,6 +1,7 @@
 import type {
   BoardTexture,
   PostflopAction,
+  PostflopPotType,
   PostflopPositionPattern,
   PostflopRecommendationSource,
   PostflopStreet,
@@ -32,7 +33,7 @@ export interface PostflopResultRecord {
   correct: boolean;
   street: PostflopStreet;
   actionNode: PostflopActionNode;
-  potType: "SINGLE_RAISED";
+  potType: PostflopPotType;
   spr: number;
   boardTextures: readonly BoardTexture[];
   heroPosition: Position;
@@ -58,7 +59,7 @@ export interface PostflopStatsV2BridgeRecord {
   evModel: EvModel;
   rakeMode: RakeMode;
   actionNode: PostflopActionNode;
-  potType: "SINGLE_RAISED";
+  potType: PostflopPotType;
   boardTextureKey: string;
   heroPosition: Position;
   villainPosition: Position;
@@ -162,8 +163,8 @@ export function isPostflopResultRecord(value: unknown): value is PostflopResultR
     isPostflopAction(record.recommended) &&
     typeof record.correct === "boolean" &&
     isPostflopStreet(record.street) &&
-    typeof record.actionNode === "string" &&
-    record.potType === "SINGLE_RAISED" &&
+    isPostflopActionNode(record.actionNode) &&
+    isPostflopPotType(record.potType) &&
     typeof record.spr === "number" &&
     Number.isFinite(record.spr) &&
     Array.isArray(record.boardTextures) &&
@@ -201,8 +202,8 @@ export function isPostflopStatsV2BridgeRecord(
     isPostflopStreet(record.street) &&
     typeof record.evModel === "string" &&
     typeof record.rakeMode === "string" &&
-    typeof record.actionNode === "string" &&
-    record.potType === "SINGLE_RAISED" &&
+    isPostflopActionNode(record.actionNode) &&
+    isPostflopPotType(record.potType) &&
     typeof record.boardTextureKey === "string" &&
     typeof record.heroPosition === "string" &&
     typeof record.villainPosition === "string" &&
@@ -280,6 +281,23 @@ function isPostflopStreet(value: unknown): value is PostflopStreet {
   return value === "FLOP" || value === "TURN" || value === "RIVER";
 }
 
+function isPostflopActionNode(value: unknown): value is PostflopActionNode {
+  return (
+    value === "SINGLE_RAISED_POT_CBET" ||
+    value === "THREE_BET_POT_CBET" ||
+    value === "TURN_BARREL" ||
+    value === "RIVER_PRESSURE"
+  );
+}
+
+function isPostflopPotType(value: unknown): value is PostflopPotType {
+  return (
+    value === "SINGLE_RAISED" ||
+    value === "THREE_BET_POT" ||
+    value === "LIMPED_POT"
+  );
+}
+
 function isBoardTexture(value: unknown): value is BoardTexture {
   return (
     value === "paired" ||
@@ -303,6 +321,7 @@ function isPostflopPositionPattern(value: unknown): value is PostflopPositionPat
     value === "EP_VS_BB" ||
     value === "BTN_VS_BB" ||
     value === "SB_VS_BB" ||
-    value === "OOP_RAISER_VS_IP_CALLER"
+    value === "OOP_RAISER_VS_IP_CALLER" ||
+    value === "OOP_CALLER_VS_IP_3BETTOR"
   );
 }

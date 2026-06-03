@@ -29,7 +29,7 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   const backdrop = doc.createElement("button");
   backdrop.type = "button";
   backdrop.className = "range-modal__backdrop";
-  backdrop.setAttribute("aria-label", "Zavřít range");
+  backdrop.setAttribute("aria-label", "Zavrit range");
   overlay.appendChild(backdrop);
 
   const dialog = doc.createElement("div");
@@ -48,10 +48,10 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   const close = doc.createElement("button");
   close.type = "button";
   close.className = "range-modal__close";
-  close.textContent = "Zavřít";
+  close.textContent = "Zavrit";
   header.appendChild(close);
 
-  dialog.appendChild(renderRangePackEvidence(doc, currentMttPreflopRangePack(spot.ante)));
+  dialog.appendChild(renderRangeModelSummary(doc, currentMttPreflopRangePack(spot.ante)));
 
   const matrix = doc.createElement("div");
   matrix.className = "range-modal__matrix";
@@ -113,27 +113,41 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   close.focus();
 }
 
-function renderRangePackEvidence(doc: Document, pack: RangePack): HTMLElement {
+function renderRangeModelSummary(doc: Document, pack: RangePack): HTMLElement {
   const section = doc.createElement("section");
   section.className = "range-modal__evidence";
-  section.setAttribute("aria-label", "Metadata range");
+  section.setAttribute("aria-label", "Model range");
 
   const title = doc.createElement("div");
   title.className = "range-modal__evidence-title";
-  title.textContent = "RangePack";
+  title.textContent = "Model range";
   section.appendChild(title);
 
   const meta = doc.createElement("div");
   meta.className = "range-modal__evidence-meta";
   meta.textContent =
-    `${pack.id} | v${pack.version} | ${pack.dimensions.evModel} | ` +
-    `${pack.dimensions.tableFormat} | ověřeno ${pack.verifiedAt}`;
+    `${gameVariantLabel(pack.dimensions.gameVariant)} | ` +
+    `${tableFormatLabel(pack.dimensions.tableFormat)} | ` +
+    `${evModelLabel(pack.dimensions.evModel)} | ante ${pack.dimensions.ante}`;
   section.appendChild(meta);
 
   const assumptions = doc.createElement("div");
   assumptions.className = "range-modal__evidence-assumptions";
-  assumptions.textContent = `Předpoklady: ${pack.assumptions.join(" ")}`;
+  assumptions.textContent = `Predpoklady: ${pack.assumptions.join(" ")}`;
   section.appendChild(assumptions);
 
   return section;
+}
+
+function gameVariantLabel(value: RangePack["dimensions"]["gameVariant"]): string {
+  if (value === "CASH") return "Cash";
+  return value;
+}
+
+function tableFormatLabel(value: RangePack["dimensions"]["tableFormat"]): string {
+  return value === "FULL_RING_9" ? "9-max full ring" : "6-max";
+}
+
+function evModelLabel(value: RangePack["dimensions"]["evModel"]): string {
+  return value === "CHIP_EV" ? "chipEV" : "ICM";
 }

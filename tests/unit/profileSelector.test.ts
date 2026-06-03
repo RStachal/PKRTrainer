@@ -48,7 +48,7 @@ describe("profileSelector", () => {
     });
   });
 
-  it("oznaci 6-max MTT preflop jako candidate preview bez produkcni jistoty", () => {
+  it("oznaci 6-max MTT preflop jako candidate preview bez internich citaci", () => {
     const root = document.createElement("div");
     renderProfileSelector(root);
 
@@ -60,10 +60,30 @@ describe("profileSelector", () => {
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("candidate");
-    expect(note?.textContent).toContain("Candidate/preview profil");
-    expect(note?.textContent).toContain("nespouští produkční scoring");
-    expect(note?.textContent).toContain("Import preview:");
-    expect(note?.textContent).toContain("0 records");
+    expect(note?.textContent).toContain("6-max MTT preflop preview");
+    expect(note?.textContent).toContain("candidate/preview");
+    expect(note?.textContent).toContain("Produkcni scoring je vypnuty");
+    expect(note?.textContent).not.toContain("RangePack");
+    expect(note?.textContent).not.toContain("mtt-");
+  });
+
+  it("po prepnuti na postflop street zobrazi preview status misto preflop produkcniho textu", () => {
+    const root = document.createElement("div");
+    renderProfileSelector(root);
+
+    const street = root.querySelector<HTMLSelectElement>(".profile-street");
+
+    for (const value of ["FLOP", "TURN", "RIVER"]) {
+      street!.value = value;
+      street!.dispatchEvent(new Event("change"));
+
+      const note = root.querySelector<HTMLElement>(".profile-selector__note");
+      expect(note?.dataset.status).toBe("preview");
+      expect(note?.textContent).toContain(`${value.toLowerCase()} postflop`);
+      expect(note?.textContent).toContain("konkretni situaci");
+      expect(note?.textContent).not.toContain("preflop chipEV");
+      expect(note?.textContent).not.toContain("StrategyPack");
+    }
   });
 
   it("rozlisi SNG chipEV preview a SNG ICM preview", () => {
@@ -79,6 +99,7 @@ describe("profileSelector", () => {
     expect(note?.dataset.status).toBe("candidate");
     expect(note?.textContent).toContain("SNG chipEV preview");
     expect(note?.textContent).not.toContain("https://");
+    expect(note?.textContent).not.toContain("RangePack");
 
     evModel!.value = "ICM";
     evModel!.dispatchEvent(new Event("change"));
@@ -86,8 +107,9 @@ describe("profileSelector", () => {
     note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("candidate");
     expect(note?.textContent).toContain("SNG ICM preview");
-    expect(note?.textContent).toContain("payout");
     expect(note?.textContent).not.toContain("https://");
+    expect(note?.textContent).not.toContain("payout");
+    expect(note?.textContent).not.toContain("RangePack");
   });
 
   it("rozlisi Cash rake/no-rake preview bez citaci zdroju v UI", () => {
@@ -107,6 +129,7 @@ describe("profileSelector", () => {
     expect(note?.textContent).toContain("Cash RAKE preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent?.toLowerCase()).not.toContain("zdroj");
+    expect(note?.textContent).not.toContain("RangePack");
 
     rakeMode!.value = "NO_RAKE";
     rakeMode!.dispatchEvent(new Event("change"));
@@ -116,6 +139,7 @@ describe("profileSelector", () => {
     expect(note?.textContent).toContain("Cash NO_RAKE preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent?.toLowerCase()).not.toContain("zdroj");
+    expect(note?.textContent).not.toContain("RangePack");
   });
 
   it("vykresli profilovy vyber z bundlu bez runtime fetch", () => {
@@ -125,7 +149,7 @@ describe("profileSelector", () => {
     const root = document.createElement("div");
     renderProfileSelector(root);
 
-    expect(root.textContent).toContain("Profil tréninku");
+    expect(root.textContent).toContain("Profil treningu");
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });

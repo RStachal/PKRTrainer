@@ -2,6 +2,8 @@ import {
   generatePostflopSpot,
   type BoardTexture,
   type PostflopAction,
+  type PostflopPositionContext,
+  type PostflopPotType,
   type PostflopSpot,
   type PostflopStreet,
 } from "../core/postflopGenerator";
@@ -11,7 +13,7 @@ import {
 } from "../core/postflopTrainingSpot";
 import { postflopPublicHeuristicStrategyPacks } from "../data/ranges/postflopStrategyPack";
 import { createPostflopStrategyResolverChain } from "../data/ranges/postflopStrategyResolver";
-import type { Card, Suit } from "../core/types";
+import { POSITION_ORDER, type Card, type Position, type Suit } from "../core/types";
 
 const SEED_MAX = 0xffffffff;
 const POSTFLOP_STRATEGY_RESOLVER = createPostflopStrategyResolverChain(
@@ -21,6 +23,11 @@ const POSTFLOP_STRATEGY_RESOLVER = createPostflopStrategyResolverChain(
 export interface PostflopViewOptions {
   initialStreet?: PostflopStreet;
   initialSeed?: number | null;
+  initialPositionContext?: PostflopPositionContext | null;
+  initialPotType?: PostflopPotType;
+  initialPotBB?: number;
+  initialEffectiveStackBB?: number;
+  autoGenerate?: boolean;
   onAnswered?: (spot: PostflopTrainingSpot, chosen: PostflopAction) => void;
 }
 
@@ -28,6 +35,12 @@ const STREET_LABEL: Record<PostflopStreet, string> = {
   FLOP: "Flop",
   TURN: "Turn",
   RIVER: "River",
+};
+
+const POT_TYPE_LABEL: Record<PostflopPotType, string> = {
+  SINGLE_RAISED: "SRP",
+  THREE_BET_POT: "3bet pot",
+  LIMPED_POT: "limped pot",
 };
 
 const TEXTURE_LABEL: Record<BoardTexture, string> = {
@@ -114,7 +127,14 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
 
   const output = doc.createElement("div");
   output.className = "postflop-output";
+  output.hidden = true;
   wrap.appendChild(output);
+
+  const showSituationInput = (): void => {
+    output.innerHTML = "";
+    output.hidden = true;
+    controls.hidden = false;
+  };
 
   const showNewSpot = (): void => {
     const seed = parseSeed(seedInput.value) ?? randomSeed();
@@ -123,43 +143,82 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
     const spot = generatePostflopSpot({
       seed,
       street,
+      potType: options.initialPotType,
+      potBB: options.initialPotBB,
+      effectiveStackBB: options.initialEffectiveStackBB,
+      positionContext: options.initialPositionContext ?? undefined,
       strategyResolver: POSTFLOP_STRATEGY_RESOLVER,
     });
-    renderSpot(output, spot, options);
+    controls.hidden = true;
+    output.hidden = false;
+    renderSpot(output, spot, options, {
+      onNewSpot: showNewSpot,
+      onChangeSituation: showSituationInput,
+    });
   };
 
   generate.addEventListener("click", showNewSpot);
   root.appendChild(wrap);
-  showNewSpot();
+  if (options.autoGenerate === true) {
+    showNewSpot();
+  }
 }
 
 function renderSpot(
   root: HTMLElement,
   spot: PostflopSpot,
   options: PostflopViewOptions,
+  controls: {
+    onNewSpot: () => void;
+    onChangeSituation: () => void;
+  },
 ): void {
   const doc = root.ownerDocument ?? document;
   const trainingSpot = spot.trainingSpot ?? postflopSpotToTrainingSpot(spot);
   root.innerHTML = "";
+
+  const questionBar = doc.createElement("div");
+  questionBar.className = "postflop-question-bar";
+  const questionTitle = doc.createElement("div");
+  questionTitle.className = "postflop-question-title";
+  questionTitle.textContent = "Otazka";
+  const questionActions = doc.createElement("div");
+  questionActions.className = "postflop-question-actions";
+
+  const newSpot = doc.createElement("button");
+  newSpot.type = "button";
+  newSpot.className = "postflop-new-spot";
+  newSpot.textContent = "Novy spot";
+  newSpot.addEventListener("click", controls.onNewSpot);
+
+  const changeSituation = doc.createElement("button");
+  changeSituation.type = "button";
+  changeSituation.className = "postflop-change-situation";
+  changeSituation.textContent = "Zmenit situaci";
+  changeSituation.addEventListener("click", controls.onChangeSituation);
+
+  questionActions.appendChild(newSpot);
+  questionActions.appendChild(changeSituation);
+  questionBar.appendChild(questionTitle);
+  questionBar.appendChild(questionActions);
+  root.appendChild(questionBar);
 
   const meta = doc.createElement("div");
   meta.className = "postflop-meta";
   meta.dataset.seed = String(spot.seed);
   meta.dataset.street = spot.street;
   meta.dataset.actionNode = trainingSpot.actionNode;
+  meta.dataset.potType = trainingSpot.potType;
   meta.dataset.positionPattern = trainingSpot.positionPattern;
   meta.textContent =
-    `${STREET_LABEL[spot.street]} - seed ${spot.seed} - pot ${spot.potBB} BB - ` +
+    `${STREET_LABEL[spot.street]} - seed ${spot.seed} - ${POT_TYPE_LABEL[trainingSpot.potType]} - ` +
+    `pot ${spot.potBB} BB - ` +
     `eff. stack ${spot.effectiveStackBB} BB - SPR ${trainingSpot.spr} - ` +
     `${trainingSpot.heroPosition} vs ${trainingSpot.villainPosition} ` +
     `(${trainingSpot.inPosition ? "IP" : "OOP"})`;
   root.appendChild(meta);
 
-  const cards = doc.createElement("div");
-  cards.className = "postflop-cards";
-  cards.appendChild(cardGroup(doc, "Hero", spot.heroCards));
-  cards.appendChild(cardGroup(doc, "Board", spot.board));
-  root.appendChild(cards);
+  root.appendChild(postflopTable(doc, trainingSpot));
 
   const textures = doc.createElement("div");
   textures.className = "postflop-textures";
@@ -192,18 +251,146 @@ function renderSpot(
   root.appendChild(result);
 }
 
-function cardGroup(doc: Document, title: string, cards: readonly Card[]): HTMLElement {
-  const group = doc.createElement("div");
-  group.className = "postflop-card-group";
-  const label = doc.createElement("div");
-  label.className = "postflop-card-group__label";
-  label.textContent = title;
-  group.appendChild(label);
-  const row = doc.createElement("div");
-  row.className = "postflop-card-row";
-  for (const card of cards) row.appendChild(cardElement(doc, card));
-  group.appendChild(row);
-  return group;
+function postflopTable(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
+  const table = doc.createElement("div");
+  table.className = "postflop-table";
+  table.dataset.heroPosition = spot.heroPosition;
+  table.dataset.villainPosition = spot.villainPosition;
+
+  const felt = doc.createElement("div");
+  felt.className = "postflop-table__felt";
+  table.appendChild(felt);
+
+  const center = doc.createElement("div");
+  center.className = "postflop-table__center";
+
+  const pot = doc.createElement("div");
+  pot.className = "postflop-table__pot";
+  pot.textContent = `Pot ${spot.potBB} BB`;
+  center.appendChild(pot);
+
+  const board = doc.createElement("div");
+  board.className = "postflop-table__board";
+  for (const card of spot.board) board.appendChild(cardElement(doc, card));
+  center.appendChild(board);
+
+  const centerMeta = doc.createElement("div");
+  centerMeta.className = "postflop-table__center-meta";
+  centerMeta.textContent = `${POT_TYPE_LABEL[spot.potType]} - SPR ${spot.spr}`;
+  center.appendChild(centerMeta);
+  table.appendChild(center);
+
+  for (const position of POSITION_ORDER) {
+    const seat = postflopSeat(doc, spot, position);
+    const slot = (
+      POSITION_ORDER.indexOf(position) -
+      POSITION_ORDER.indexOf(spot.heroPosition) +
+      POSITION_ORDER.length
+    ) % POSITION_ORDER.length;
+    const pos = seatPosition(slot);
+    seat.style.left = `${pos.left}%`;
+    seat.style.top = `${pos.top}%`;
+    table.appendChild(seat);
+  }
+
+  return table;
+}
+
+function postflopSeat(
+  doc: Document,
+  spot: PostflopTrainingSpot,
+  position: Position,
+): HTMLElement {
+  const isHero = position === spot.heroPosition;
+  const isVillain = position === spot.villainPosition;
+  const active = isHero || isVillain;
+  const seat = doc.createElement("div");
+  seat.className = [
+    "postflop-seat",
+    isHero ? "postflop-seat--hero" : "",
+    isVillain ? "postflop-seat--villain" : "",
+    active ? "postflop-seat--active" : "postflop-seat--folded",
+  ].filter(Boolean).join(" ");
+  seat.dataset.position = position;
+
+  const header = doc.createElement("div");
+  header.className = "postflop-seat__header";
+  const pos = doc.createElement("span");
+  pos.className = "postflop-seat__pos";
+  pos.textContent = position;
+  header.appendChild(pos);
+  const marker = positionMarker(doc, position);
+  if (marker) header.appendChild(marker);
+  seat.appendChild(header);
+
+  if (!active) {
+    const folded = doc.createElement("div");
+    folded.className = "postflop-seat__folded";
+    folded.textContent = "slozil";
+    seat.appendChild(folded);
+    return seat;
+  }
+
+  const role = doc.createElement("div");
+  role.className = "postflop-seat__role";
+  role.textContent = seatRole(spot, position);
+  seat.appendChild(role);
+
+  const stack = doc.createElement("div");
+  stack.className = "postflop-seat__stack";
+  stack.textContent = `${spot.effectiveStackBB} BB`;
+  seat.appendChild(stack);
+
+  if (isHero) {
+    const heroTag = doc.createElement("span");
+    heroTag.className = "postflop-seat__tag";
+    heroTag.textContent = "TY";
+    seat.appendChild(heroTag);
+
+    const cards = doc.createElement("div");
+    cards.className = "postflop-seat__cards";
+    for (const card of spot.heroCards) cards.appendChild(cardElement(doc, card));
+    seat.appendChild(cards);
+  } else {
+    const cards = doc.createElement("div");
+    cards.className = "postflop-seat__cards postflop-seat__cards--hidden";
+    cards.appendChild(cardBack(doc));
+    cards.appendChild(cardBack(doc));
+    seat.appendChild(cards);
+  }
+
+  return seat;
+}
+
+function seatRole(spot: PostflopTrainingSpot, position: Position): string {
+  const parts: string[] = [];
+  if (position === spot.aggressorPosition) parts.push("agresor");
+  if (position === spot.callerPosition) parts.push("caller");
+  if (position === spot.heroPosition) parts.push(spot.inPosition ? "IP" : "OOP");
+  if (position === spot.villainPosition) parts.push(spot.inPosition ? "OOP" : "IP");
+  return parts.join(" / ");
+}
+
+function positionMarker(doc: Document, position: Position): HTMLElement | null {
+  if (position !== "BTN" && position !== "SB" && position !== "BB") return null;
+  const marker = doc.createElement("span");
+  marker.className = `postflop-position-mark postflop-position-mark--${position.toLowerCase()}`;
+  marker.textContent = position;
+  return marker;
+}
+
+function seatPosition(slot: number): { left: number; top: number } {
+  const angle = Math.PI / 2 + slot * ((2 * Math.PI) / POSITION_ORDER.length);
+  return {
+    left: 50 + 44 * Math.cos(angle),
+    top: 50 + 41 * Math.sin(angle),
+  };
+}
+
+function cardBack(doc: Document): HTMLElement {
+  const back = doc.createElement("div");
+  back.className = "postflop-card-back";
+  return back;
 }
 
 function cardElement(doc: Document, card: Card): HTMLElement {
@@ -306,17 +493,40 @@ function modelItems(spot: PostflopTrainingSpot): readonly string[] {
   const source = spot.explanation.source;
   if (source.kind === "STRATEGY_PACK") {
     return [
-      "Heuristicky StrategyPack",
-      `Rule: ${source.ruleId}`,
-      `Jistota: ${source.confidence}`,
+      "Heuristicky model",
+      `Jistota: ${confidenceLabel(source.confidence)}`,
       `Shoda textur: ${source.matchedTextures.map(textureLabel).join(", ")}`,
-      `SPR rule: ${source.sprMin}-${source.sprMax}`,
-      `Pozice: ${source.positionPattern}`,
-      `Duvod vyberu: score ${source.selectionScore}, ${source.tieBreak}`,
-      ...source.assumptions.map((assumption, index) => `Predpoklad ${index + 1}: ${assumption}`),
+      `SPR okno: ${source.sprMin}-${source.sprMax}`,
+      ...source.assumptions.map(
+        (assumption, index) => `Predpoklad ${index + 1}: ${userFacingAssumption(assumption)}`,
+      ),
     ];
   }
-  return [`Fallback heuristika: ${source.ruleId}`];
+  return ["Zakladni heuristika"];
+}
+
+function userFacingAssumption(assumption: string): string {
+  return assumption
+    .replace(
+      /^Public heuristic .* StrategyPack only; no paid chart values or exact solver frequencies are copied\.$/,
+      "Jde o verejnou vyukovou heuristiku bez presnych solverovych frekvenci.",
+    )
+    .replace(/\bStrategyPack\b/g, "model")
+    .replace(/\bRangePack\b/g, "model")
+    .replace(/\bLOW confidence\b/g, "nizka jistota");
+}
+
+function confidenceLabel(confidence: "LOW" | "MEDIUM" | "HIGH"): string {
+  switch (confidence) {
+    case "LOW":
+      return "nizka";
+    case "MEDIUM":
+      return "stredni";
+    case "HIGH":
+      return "vysoka";
+    default:
+      return confidence;
+  }
 }
 
 function textureLabel(texture: BoardTexture): string {
@@ -372,8 +582,54 @@ function styles(doc: Document): HTMLStyleElement {
   color:#0c3526;font-weight:900;font-size:14px;padding:9px 14px;cursor:pointer;}
 .postflop-output{background:#0f1520;border:1px solid rgba(255,255,255,.08);
   border-radius:10px;padding:14px;}
+.postflop-question-bar{display:flex;align-items:center;justify-content:space-between;
+  gap:10px;margin-bottom:12px;}
+.postflop-question-title{font-size:14px;font-weight:900;color:#e8ecf7;}
+.postflop-question-actions{display:flex;flex-wrap:wrap;gap:8px;}
+.postflop-new-spot,.postflop-change-situation{appearance:none;border:1px solid
+  rgba(255,255,255,.18);border-radius:8px;background:#1b2333;color:#e8ecf7;
+  font-size:12px;font-weight:800;padding:7px 10px;cursor:pointer;}
+.postflop-new-spot:hover,.postflop-change-situation:hover{border-color:#2bd576;}
 .postflop-meta{font-size:13px;color:#9aa6c2;font-weight:700;margin-bottom:12px;
   overflow-wrap:anywhere;}
+.postflop-table{position:relative;width:100%;max-width:820px;aspect-ratio:16/9;
+  margin:8px auto 12px;min-height:360px;}
+.postflop-table__felt{position:absolute;inset:9% 6%;border-radius:50%/48%;
+  background:radial-gradient(ellipse at center,#1d7b4d 0%,#17643f 58%,#0d3b2b 100%);
+  box-shadow:inset 0 0 0 10px rgba(7,34,25,.85),inset 0 0 42px rgba(0,0,0,.45),
+    0 18px 40px rgba(0,0,0,.24);}
+.postflop-table__center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  z-index:3;display:grid;gap:8px;justify-items:center;text-align:center;min-width:230px;}
+.postflop-table__pot{font-size:14px;font-weight:900;color:#e8ecf7;
+  text-shadow:0 1px 8px rgba(0,0,0,.45);}
+.postflop-table__board{display:flex;gap:7px;justify-content:center;align-items:center;}
+.postflop-table__center-meta{font-size:12px;font-weight:800;color:#b9c6df;
+  background:rgba(15,21,32,.65);border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;padding:4px 9px;}
+.postflop-seat{position:absolute;transform:translate(-50%,-50%);z-index:4;width:126px;
+  min-height:74px;box-sizing:border-box;padding:7px 8px;border-radius:10px;
+  background:rgba(16,23,35,.96);border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 8px 22px rgba(0,0,0,.26);text-align:center;}
+.postflop-seat--hero{border-color:#2bd576;background:rgba(25,88,59,.96);}
+.postflop-seat--villain{border-color:#7bd3ff;background:rgba(20,42,62,.96);}
+.postflop-seat--folded{opacity:.38;filter:saturate(.45);}
+.postflop-seat__header{display:flex;align-items:center;justify-content:center;gap:5px;}
+.postflop-seat__pos{font-size:12px;font-weight:900;color:#e8ecf7;}
+.postflop-seat__role{font-size:10px;font-weight:900;color:#b9c6df;margin-top:2px;
+  text-transform:uppercase;letter-spacing:0;}
+.postflop-seat__stack{font-size:11px;font-weight:800;color:#d8e5f8;margin-top:2px;}
+.postflop-seat__folded{font-size:10px;font-style:italic;color:#94a0b8;margin-top:5px;}
+.postflop-seat__tag{display:inline-block;margin-top:3px;border-radius:999px;background:#2bd576;
+  color:#0c3526;font-size:9px;font-weight:900;padding:1px 7px;}
+.postflop-seat__cards{display:flex;gap:4px;justify-content:center;margin-top:5px;}
+.postflop-card-back{width:28px;height:38px;border-radius:6px;
+  background:linear-gradient(135deg,#263550,#101827);border:1px solid rgba(255,255,255,.22);
+  box-shadow:inset 0 0 0 2px rgba(123,211,255,.16);}
+.postflop-position-mark{display:inline-grid;place-items:center;min-width:20px;height:20px;
+  border-radius:999px;font-size:8px;font-weight:900;color:#0c1522;padding:0 3px;}
+.postflop-position-mark--btn{background:#f5f5f5;}
+.postflop-position-mark--sb{background:#7bd3ff;}
+.postflop-position-mark--bb{background:#ffd15b;}
 .postflop-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
 .postflop-card-group__label{font-size:12px;color:#9aa6c2;font-weight:800;margin-bottom:6px;}
 .postflop-card-row{display:flex;flex-wrap:wrap;gap:6px;}
@@ -412,6 +668,14 @@ function styles(doc: Document): HTMLStyleElement {
   .postflop-controls{align-items:stretch;}
   .postflop-field,.postflop-generate{width:100%;}
   .postflop-street,.postflop-seed{width:100%;}
+  .postflop-question-bar{align-items:stretch;flex-direction:column;}
+  .postflop-question-actions{display:grid;grid-template-columns:1fr 1fr;}
+  .postflop-table{aspect-ratio:auto;min-height:520px;max-width:360px;}
+  .postflop-table__felt{inset:12% 3%;border-radius:44%;}
+  .postflop-table__center{min-width:190px;}
+  .postflop-seat{width:104px;min-height:66px;padding:6px;}
+  .postflop-seat__cards .postflop-card{width:30px;height:40px;font-size:14px;}
+  .postflop-table__board .postflop-card{width:36px;height:48px;font-size:16px;}
   .postflop-cards{grid-template-columns:1fr;}
   .postflop-practical{grid-template-columns:1fr;}
 }

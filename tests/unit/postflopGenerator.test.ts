@@ -25,7 +25,8 @@ describe("postflopGenerator", () => {
     expect(a.actions).toEqual(["CHECK", "BET_SMALL", "BET_BIG"]);
     expect(a.recommendedAction).toMatch(/^(CHECK|BET_SMALL|BET_BIG)$/);
     expect(a.explanation.length).toBeGreaterThan(0);
-    expect(a.positionPattern).toMatch(/^(EP_VS_BB|BTN_VS_BB|SB_VS_BB|OOP_RAISER_VS_IP_CALLER)$/);
+    expect(a.positionPattern)
+      .toMatch(/^(EP_VS_BB|BTN_VS_BB|SB_VS_BB|OOP_RAISER_VS_IP_CALLER|OOP_CALLER_VS_IP_3BETTOR)$/);
   });
 
   it("klasifikuje zakladni textury boardu", () => {
@@ -113,6 +114,7 @@ describe("postflopGenerator", () => {
       positionContext: POSTFLOP_POSITION_CONTEXTS[1],
       strategyResolver: (input) => {
         resolverPositionPattern = input.positionPattern;
+        expect(input.potType).toBe("SINGLE_RAISED");
         return {
           action: "CHECK",
           explanation: "Resolver rozhodl.",

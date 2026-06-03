@@ -1,5 +1,6 @@
 import {
   DEFAULT_TRAINING_PROFILE,
+  isPostflopStreet,
   type BlindSpeed,
   type EvModel,
   type GameVariant,
@@ -8,9 +9,6 @@ import {
   type TrainingProfile,
   type TrainingStreet,
 } from "../core/trainingProfile";
-import { cashCandidateImportReportForProfile } from "../data/ranges/cashPreflopRangePacks";
-import { mttSixMaxCandidateImportReportForProfile } from "../data/ranges/mttPreflopRangePacks";
-import { sngCandidateImportReportForProfile } from "../data/ranges/sngPreflopRangePacks";
 import { rangePackForTrainingProfile } from "../data/ranges/trainingRangePacks";
 
 export interface ProfileSelectorView {
@@ -69,15 +67,15 @@ export function renderProfileSelector(
 
   const wrap = doc.createElement("section");
   wrap.className = "profile-selector";
-  wrap.setAttribute("aria-label", "Profil tréninku");
+  wrap.setAttribute("aria-label", "Profil treningu");
 
   const title = doc.createElement("div");
   title.className = "profile-selector__title";
-  title.textContent = "Profil tréninku";
+  title.textContent = "Profil treningu";
   wrap.appendChild(title);
 
   const variant = selectControl(doc, "Varianta", "profile-variant", GAME_VARIANTS);
-  const format = selectControl(doc, "Stůl", "profile-format", TABLE_FORMATS);
+  const format = selectControl(doc, "Stul", "profile-format", TABLE_FORMATS);
   const speed = selectControl(doc, "Blindy", "profile-speed", BLIND_SPEEDS);
   const street = selectControl(doc, "Street", "profile-street", STREETS);
   const evModel = selectControl(doc, "Model", "profile-ev-model", EV_MODELS);
@@ -165,45 +163,51 @@ function describeProfileStatus(profile: TrainingProfile): {
   if (isProductionPreflopProfile(profile)) {
     return {
       status: "production",
-      text:
-        "Produkčně zapojený profil: MTT 9-max regular preflop chipEV. Data a metadata jsou součástí offline bundlu.",
+      text: "Produkce: MTT 9-max regular preflop chipEV. Trening bezi z offline bundlu.",
     };
   }
 
-  if (profile.street === "FLOP") {
+  if (isPostflopStreet(profile.street)) {
     return {
       status: "preview",
       text:
-        "Preview profil: flop trénink běží nad heuristickým StrategyPackem s LOW confidence a zobrazí modelová metadata i předpoklady.",
+        `Preview: ${profile.street.toLowerCase()} postflop trening zobrazi konkretni ` +
+        "situaci, stul a prakticke predpoklady.",
     };
   }
 
   const pack = rangePackForTrainingProfile(profile);
   if (pack && (pack.confidence === "LOW" || pack.records.length === 0)) {
-    const sixMaxReport = mttSixMaxCandidateImportReportForProfile(profile);
-    const sngReport = sngCandidateImportReportForProfile(profile);
-    const cashReport = cashCandidateImportReportForProfile(profile);
-    const importPreview = sixMaxReport
-      ? ` Import preview: ${sixMaxReport.sourceCount} metodickych vstupu, ${sixMaxReport.recordCount} records, ${sixMaxReport.totalExplicitHands} hand hodnot.`
-      : sngReport
-        ? ` SNG ${profile.evModel === "ICM" ? "ICM" : "chipEV"} preview: ${sngReport.recordCount} records, ${sngReport.sourceCount} metodickych vstupu${sngReport.icm ? `, payout ${sngReport.icm.payoutStructureId}` : ""}.`
-        : cashReport
-          ? ` Cash ${profile.rakeMode === "RAKE" ? "RAKE" : "NO_RAKE"} preview: ${cashReport.recordCount} records, ${cashReport.sourceCount} metodickych vstupu, rake mode ${profile.rakeMode}.`
-          : "";
     return {
       status: "candidate",
       text:
-        `Candidate/preview profil: ${pack.id} má LOW confidence nebo 0 records; ` +
-        "nespouští produkční scoring, dokud neprojde import report a ověření hand-class hodnot." +
-        importPreview,
+        `${candidateProfileLabel(profile)}: candidate/preview. Produkcni scoring je vypnuty, ` +
+        "dokud profil neprojde kontrolou hand-class hodnot.",
     };
   }
 
   return {
     status: "preview",
-    text:
-      "Preview profil: tato kombinace zatím nemá produkčně ověřený RangePack pro scoring.",
+    text: "Preview: tato kombinace zatim nema zapnuty produkcni scoring.",
   };
+}
+
+function candidateProfileLabel(profile: TrainingProfile): string {
+  if (profile.gameVariant === "SNG") {
+    return `SNG ${evModelLabel(profile.evModel)} preview`;
+  }
+  if (profile.gameVariant === "CASH") {
+    return `Cash ${profile.rakeMode === "RAKE" ? "RAKE" : "NO_RAKE"} preview`;
+  }
+  return `${tableFormatLabel(profile.tableFormat)} ${profile.gameVariant} preflop preview`;
+}
+
+function tableFormatLabel(format: TableFormat): string {
+  return format === "FULL_RING_9" ? "9-max" : "6-max";
+}
+
+function evModelLabel(model: EvModel): string {
+  return model === "CHIP_EV" ? "chipEV" : "ICM";
 }
 
 function isProductionPreflopProfile(profile: TrainingProfile): boolean {
