@@ -5,6 +5,9 @@ import {
   flopSingleRaisedPrototypeStrategyPack,
   matchingPostflopRules,
   positionPatternMatches,
+  postflopPublicHeuristicStrategyPacks,
+  riverSingleRaisedPrototypeStrategyPack,
+  turnSingleRaisedPrototypeStrategyPack,
   validatePostflopStrategyPack,
   validatePostflopStrategyRule,
 } from "../../src/data/ranges/postflopStrategyPack";
@@ -33,6 +36,27 @@ describe("postflopStrategyPack", () => {
       evModel: "CHIP_EV",
       potType: "SINGLE_RAISED",
     });
+  });
+
+  it("definuje LOW-confidence turn a river public heuristic StrategyPacky", () => {
+    expect(postflopPublicHeuristicStrategyPacks.map((pack) => pack.dimensions.street))
+      .toEqual(["FLOP", "TURN", "RIVER"]);
+
+    for (const pack of [
+      turnSingleRaisedPrototypeStrategyPack,
+      riverSingleRaisedPrototypeStrategyPack,
+    ]) {
+      expect(validatePostflopStrategyPack(pack)).toEqual([]);
+      expect(pack.confidence).toBe("LOW");
+      expect(pack.dimensions).toMatchObject({
+        gameVariant: "MTT",
+        tableFormat: "FULL_RING_9",
+        evModel: "CHIP_EV",
+        potType: "SINGLE_RAISED",
+      });
+      expect(pack.sourceEvidence.length).toBeGreaterThanOrEqual(2);
+      expect(pack.assumptions.join(" ")).toContain("no paid chart values");
+    }
   });
 
   it("validuje pravidla vcetne preferredAction a SPR", () => {
@@ -95,6 +119,26 @@ describe("postflopStrategyPack", () => {
       .toContain("flop-srp-ace-high-disconnected-small-cbet");
     expect(drawHeavy.map((rule) => rule.id))
       .toContain("flop-srp-straight-flush-draw-heavy-check");
+  });
+
+  it("najde turn a river pravidla podle typed action node", () => {
+    const turnRules = matchingPostflopRules(turnSingleRaisedPrototypeStrategyPack, {
+      actionNode: "TURN_BARREL",
+      boardTextures: ["dry", "disconnected", "ace-high", "rainbow"],
+      spr: 5,
+      positionPattern: "BTN_VS_BB",
+    });
+    const riverRules = matchingPostflopRules(riverSingleRaisedPrototypeStrategyPack, {
+      actionNode: "RIVER_PRESSURE",
+      boardTextures: ["dry", "disconnected", "rainbow"],
+      spr: 4,
+      positionPattern: "BTN_VS_BB",
+    });
+
+    expect(turnRules.map((rule) => rule.id))
+      .toContain("turn-srp-dry-range-advantage-big-barrel");
+    expect(riverRules.map((rule) => rule.id))
+      .toContain("river-srp-dry-polarized-big-bet");
   });
 
   it("filtruje pravidla podle postflop pozicniho patternu", () => {

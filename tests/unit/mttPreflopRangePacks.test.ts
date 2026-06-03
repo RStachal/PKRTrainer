@@ -8,6 +8,7 @@ import {
   mttPreflopAnteOnRangePack,
   mttPreflopRangePacks,
   mttSixMaxCandidateImportReports,
+  mttSixMaxCandidateImportReportForProfile,
   mttSixMaxPreflopRangePackCandidates,
 } from "../../src/data/ranges/mttPreflopRangePacks";
 import { DEFAULT_TRAINING_PROFILE, profileWith } from "../../src/core/trainingProfile";
@@ -107,5 +108,6 @@ describe("mttPreflopRangePacks", () => {
     expect(mttPreflopRangePackForProfile(sixMaxTurbo)?.id).toBe(
       "mtt-six-max-turbo-preflop-chip-ev-ante-off-candidate-v0",
     );
+    expect(mttSixMaxCandidateImportReportForProfile(sixMaxTurbo)?.recordCount).toBe(0);
   });
 });

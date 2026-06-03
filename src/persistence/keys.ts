@@ -19,6 +19,7 @@ export const NS = "mtt_preflop";
 /** Nové verzované klíče (Req 14.1 — nesmí kolidovat s legacy). */
 export const KEY_STATE = `${NS}_state_${SCHEMA_VERSION}`; // mtt_preflop_state_v1
 export const KEY_EVENTS = `${NS}_events_${SCHEMA_VERSION}`; // mtt_preflop_events_v1
+export const KEY_POSTFLOP_EVENTS = `${NS}_postflop_events_${SCHEMA_VERSION}`; // mtt_preflop_postflop_events_v1
 export const KEY_HH = `${NS}_hh_${SCHEMA_VERSION}`; // mtt_preflop_hh_v1
 export const KEY_MIGRATED = `${NS}_migrated_${SCHEMA_VERSION}`; // příznak dokončené migrace
 
@@ -40,6 +41,7 @@ export type LegacyKeyName = keyof typeof LEGACY_KEYS;
 export const VERSIONED_KEYS = {
   state: KEY_STATE,
   events: KEY_EVENTS,
+  postflopEvents: KEY_POSTFLOP_EVENTS,
   hh: KEY_HH,
   migrated: KEY_MIGRATED,
 } as const;

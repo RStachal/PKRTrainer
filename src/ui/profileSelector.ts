@@ -8,6 +8,9 @@ import {
   type TrainingProfile,
   type TrainingStreet,
 } from "../core/trainingProfile";
+import { cashCandidateImportReportForProfile } from "../data/ranges/cashPreflopRangePacks";
+import { mttSixMaxCandidateImportReportForProfile } from "../data/ranges/mttPreflopRangePacks";
+import { sngCandidateImportReportForProfile } from "../data/ranges/sngPreflopRangePacks";
 import { rangePackForTrainingProfile } from "../data/ranges/trainingRangePacks";
 
 export interface ProfileSelectorView {
@@ -87,6 +90,7 @@ export function renderProfileSelector(
 
   const note = doc.createElement("div");
   note.className = "profile-selector__note";
+  note.style.overflowWrap = "anywhere";
   wrap.appendChild(note);
 
   root.appendChild(wrap);
@@ -99,7 +103,7 @@ export function renderProfileSelector(
       blindSpeed: speed.select.value as BlindSpeed,
       street: street.select.value as TrainingStreet,
       evModel: evModel.select.value as EvModel,
-      ante: initialProfile.ante,
+      ante: variant.select.value === "CASH" ? "OFF" : initialProfile.ante,
       rakeMode: rakeMode.select.value as RakeMode,
     };
   }
@@ -115,9 +119,24 @@ export function renderProfileSelector(
   }
 
   function handleChange(): void {
+    applyVariantDefaults();
     const profile = getProfile();
     updateNote(profile);
     callbacks.onChange?.(profile);
+  }
+
+  function applyVariantDefaults(): void {
+    const selectedVariant = variant.select.value as GameVariant;
+    if (selectedVariant === "CASH") {
+      if (format.select.value !== "SIX_MAX") format.select.value = "SIX_MAX";
+      if (rakeMode.select.value === "NONE") rakeMode.select.value = "RAKE";
+      if (evModel.select.value === "ICM") evModel.select.value = "CHIP_EV";
+      if (speed.select.value === "TURBO") speed.select.value = "REGULAR";
+      if (street.select.value !== "PREFLOP") street.select.value = "PREFLOP";
+      return;
+    }
+
+    if (rakeMode.select.value !== "NONE") rakeMode.select.value = "NONE";
   }
 
   function updateNote(profile: TrainingProfile): void {
@@ -155,17 +174,28 @@ function describeProfileStatus(profile: TrainingProfile): {
     return {
       status: "preview",
       text:
-        "Preview profil: flop trénink běží nad heuristickým StrategyPackem s LOW confidence a zobrazí zdroje i předpoklady.",
+        "Preview profil: flop trénink běží nad heuristickým StrategyPackem s LOW confidence a zobrazí modelová metadata i předpoklady.",
     };
   }
 
   const pack = rangePackForTrainingProfile(profile);
   if (pack && (pack.confidence === "LOW" || pack.records.length === 0)) {
+    const sixMaxReport = mttSixMaxCandidateImportReportForProfile(profile);
+    const sngReport = sngCandidateImportReportForProfile(profile);
+    const cashReport = cashCandidateImportReportForProfile(profile);
+    const importPreview = sixMaxReport
+      ? ` Import preview: ${sixMaxReport.sourceCount} metodickych vstupu, ${sixMaxReport.recordCount} records, ${sixMaxReport.totalExplicitHands} hand hodnot.`
+      : sngReport
+        ? ` SNG ${profile.evModel === "ICM" ? "ICM" : "chipEV"} preview: ${sngReport.recordCount} records, ${sngReport.sourceCount} metodickych vstupu${sngReport.icm ? `, payout ${sngReport.icm.payoutStructureId}` : ""}.`
+        : cashReport
+          ? ` Cash ${profile.rakeMode === "RAKE" ? "RAKE" : "NO_RAKE"} preview: ${cashReport.recordCount} records, ${cashReport.sourceCount} metodickych vstupu, rake mode ${profile.rakeMode}.`
+          : "";
     return {
       status: "candidate",
       text:
         `Candidate/preview profil: ${pack.id} má LOW confidence nebo 0 records; ` +
-        "nespouští produkční scoring, dokud neprojde import report a ověření hand-class hodnot.",
+        "nespouští produkční scoring, dokud neprojde import report a ověření hand-class hodnot." +
+        importPreview,
     };
   }
 

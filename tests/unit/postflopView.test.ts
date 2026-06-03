@@ -41,7 +41,7 @@ describe("postflopView - DOM", () => {
       root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
       root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
       result = root.querySelector<HTMLElement>(".postflop-result");
-      if (result?.textContent?.includes("Pack:")) break;
+      if (result?.textContent?.includes("Heuristicky StrategyPack")) break;
     }
 
     expect(result?.hidden).toBe(false);
@@ -51,14 +51,13 @@ describe("postflopView - DOM", () => {
     expect(root.querySelector(".postflop-action--recommended")).not.toBeNull();
     expect(root.querySelectorAll(".postflop-practical__block")).toHaveLength(5);
     expect(result?.textContent).toContain("Value range");
-    expect(result?.textContent).toContain("Zdroj");
-    expect(result?.textContent).toContain("Pack:");
-    expect(result?.textContent).toContain("Verze:");
-    expect(result?.textContent).toContain("Overeno:");
+    expect(result?.textContent).toContain("Model");
+    expect(result?.textContent).toContain("Heuristicky StrategyPack");
+    expect(result?.textContent).not.toContain("Pack:");
+    expect(result?.textContent).not.toContain("https://");
     expect(result?.textContent).toContain("Shoda textur:");
     expect(result?.textContent).toContain("SPR rule:");
     expect(result?.textContent).toContain("Duvod vyberu:");
-    expect(result?.textContent).toContain("Zdroj 1:");
     expect(result?.textContent).toContain("Predpoklad 1:");
     expect(result?.textContent).toContain("Pl\u00e1n");
   });
@@ -76,5 +75,26 @@ describe("postflopView - DOM", () => {
 
     expect(answered).toHaveLength(1);
     expect(answered[0]).toContain("FLOP|SINGLE_RAISED_POT_CBET|");
+  });
+
+  it("umi zobrazit StrategyPack evidence pro river pressure spot", () => {
+    const root = document.createElement("div");
+    renderPostflopView(root, { initialStreet: "RIVER" });
+
+    let result: HTMLElement | null = null;
+    for (let seed = 0; seed < 200; seed += 1) {
+      root.querySelector<HTMLInputElement>(".postflop-seed")!.value = String(seed);
+      root.querySelector<HTMLSelectElement>(".postflop-street")!.value = "RIVER";
+      root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+      root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+      result = root.querySelector<HTMLElement>(".postflop-result");
+      if (result?.textContent?.includes("Heuristicky StrategyPack")) break;
+    }
+
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
+      .toBe("RIVER_PRESSURE");
+    expect(result?.textContent).toContain("Heuristicky StrategyPack");
+    expect(result?.textContent).toContain("Jistota: LOW");
+    expect(result?.textContent).not.toContain("https://");
   });
 });

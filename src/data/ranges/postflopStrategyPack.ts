@@ -77,6 +77,7 @@ export const POSTFLOP_STRATEGY_ACTIONS = [
 ] as const satisfies readonly PostflopStrategyAction[];
 
 const CREATED_AT = "2026-06-02";
+const TURN_RIVER_VERIFIED_AT = "2026-06-03";
 
 export const flopSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
   id: "mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1",
@@ -229,6 +230,198 @@ export const flopSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
     },
   ],
 };
+
+export const turnSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
+  id: "mtt-full-ring-9-turn-single-raised-chip-ev-public-heuristic-v1",
+  version: "public-heuristic-v1",
+  createdAt: TURN_RIVER_VERIFIED_AT,
+  verifiedAt: TURN_RIVER_VERIFIED_AT,
+  confidence: "LOW",
+  dimensions: {
+    gameVariant: "MTT",
+    tableFormat: "FULL_RING_9",
+    street: "TURN",
+    evModel: "CHIP_EV",
+    potType: "SINGLE_RAISED",
+  },
+  sourceEvidence: [
+    {
+      url: "https://blog.gtowizard.com/turn-barreling-in-3-bet-pots/",
+      verifiedAt: TURN_RIVER_VERIFIED_AT,
+      operator: "GTO Wizard",
+      gameVariant: "MTT",
+      tableFormat: "GENERAL",
+      street: "TURN",
+      evModel: "GENERAL",
+      methodology: "Public turn barreling principles; used for texture and geometric-barrel concepts only.",
+      licenseNote: "Citation and heuristic interpretation only; no solver frequencies copied.",
+    },
+    {
+      url: "https://upswingpoker.com/podcast/ep8-double-barreling/",
+      verifiedAt: TURN_RIVER_VERIFIED_AT,
+      operator: "Upswing Poker",
+      gameVariant: "MTT",
+      tableFormat: "GENERAL",
+      street: "TURN",
+      evModel: "GENERAL",
+      methodology: "Public double-barrel discussion used as cross-check for turn texture simplification.",
+      licenseNote: "Citation and heuristic interpretation only.",
+    },
+    {
+      url: "https://upswingpoker.com/bet-size-strategy-tips-rules/",
+      verifiedAt: TURN_RIVER_VERIFIED_AT,
+      operator: "Upswing Poker",
+      gameVariant: "MTT",
+      tableFormat: "GENERAL",
+      street: "TURN",
+      evModel: "GENERAL",
+      methodology: "Public sizing principles used for simple small/big bucket selection.",
+      licenseNote: "Citation and heuristic interpretation only.",
+    },
+  ],
+  assumptions: [
+    "Public heuristic turn StrategyPack only; no paid chart values or exact solver frequencies are copied.",
+    "Applies only to single-raised pots after a flop c-bet decision; multiway and 3bet-pot turns stay future work.",
+    "Rules are texture-level training prompts, not production equilibrium strategy.",
+  ],
+  rules: [
+    {
+      id: "turn-srp-dry-range-advantage-big-barrel",
+      actionNode: "TURN_BARREL",
+      boardTextures: ["dry", "disconnected", "ace-high"],
+      sprMin: 2,
+      sprMax: 10,
+      positionPattern: "IP_OR_RANGE_ADVANTAGE",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "BET_BIG",
+      explanation:
+        "Na stabilnim dry turnu muze agresor s range advantage pokracovat vetsim barrelem; bez frekvenci jde jen o ucici heuristiku.",
+    },
+    {
+      id: "turn-srp-paired-controlled-small-barrel",
+      actionNode: "TURN_BARREL",
+      boardTextures: ["paired", "rainbow"],
+      sprMin: 2,
+      sprMax: 10,
+      positionPattern: "IP_OR_RANGE_ADVANTAGE",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "BET_SMALL",
+      explanation:
+        "Sparovany stabilni turn casto snizuje pocet silnych kombinaci callera; maly bet drzi tlak bez prestreleni range.",
+    },
+    {
+      id: "turn-srp-dynamic-check",
+      actionNode: "TURN_BARREL",
+      boardTextures: ["connected", "flush-draw-heavy", "straight-possible"],
+      sprMin: 1,
+      sprMax: 12,
+      positionPattern: "OOP_OR_DYNAMIC_BOARD",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "CHECK",
+      explanation:
+        "Dynamicky turn meni equity a zvysuje check-raise riziko; bez licencovaneho solver packu volime disciplinovany check.",
+    },
+  ],
+};
+
+export const riverSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
+  id: "mtt-full-ring-9-river-single-raised-chip-ev-public-heuristic-v1",
+  version: "public-heuristic-v1",
+  createdAt: TURN_RIVER_VERIFIED_AT,
+  verifiedAt: TURN_RIVER_VERIFIED_AT,
+  confidence: "LOW",
+  dimensions: {
+    gameVariant: "MTT",
+    tableFormat: "FULL_RING_9",
+    street: "RIVER",
+    evModel: "CHIP_EV",
+    potType: "SINGLE_RAISED",
+  },
+  sourceEvidence: [
+    {
+      url: "https://upswingpoker.com/river-poker-strategy-tips/",
+      verifiedAt: TURN_RIVER_VERIFIED_AT,
+      operator: "Upswing Poker",
+      gameVariant: "MTT",
+      tableFormat: "GENERAL",
+      street: "RIVER",
+      evModel: "GENERAL",
+      methodology: "Public river strategy article used for polarized pressure and blocker concepts.",
+      licenseNote: "Citation and heuristic interpretation only.",
+    },
+    {
+      url: "https://blog.gtowizard.com/blockers-unblockers-the-secret-to-picking-great-bluffs/",
+      verifiedAt: TURN_RIVER_VERIFIED_AT,
+      operator: "GTO Wizard",
+      gameVariant: "MTT",
+      tableFormat: "GENERAL",
+      street: "RIVER",
+      evModel: "GENERAL",
+      methodology: "Public blocker/unblocker article; used only for warning that river bluffs need blocker discipline.",
+      licenseNote: "Citation and heuristic interpretation only; no hand-frequency output copied.",
+    },
+    {
+      url: "https://upswingpoker.com/bet-size-strategy-tips-rules/",
+      verifiedAt: TURN_RIVER_VERIFIED_AT,
+      operator: "Upswing Poker",
+      gameVariant: "MTT",
+      tableFormat: "GENERAL",
+      street: "RIVER",
+      evModel: "GENERAL",
+      methodology: "Public bet-sizing rules used for broad small/big river sizing buckets.",
+      licenseNote: "Citation and heuristic interpretation only.",
+    },
+  ],
+  assumptions: [
+    "Public heuristic river StrategyPack only; no paid chart values or exact solver frequencies are copied.",
+    "River decisions are simplified to check, small value/block bet, or large polarized pressure.",
+    "Specific blocker/card-removal selection remains future solver/import work.",
+  ],
+  rules: [
+    {
+      id: "river-srp-dry-polarized-big-bet",
+      actionNode: "RIVER_PRESSURE",
+      boardTextures: ["dry", "disconnected"],
+      sprMin: 1,
+      sprMax: 8,
+      positionPattern: "IP_OR_RANGE_ADVANTAGE",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "BET_BIG",
+      explanation:
+        "Na dry riveru bez novych draw muze agresor trenovat polarizovany tlak; realne bluff combo vyzaduje blocker kontrolu.",
+    },
+    {
+      id: "river-srp-low-spr-value-pressure",
+      actionNode: "RIVER_PRESSURE",
+      boardTextures: ["ace-high", "broadway-high"],
+      sprMin: 0.5,
+      sprMax: 3,
+      positionPattern: "EP_VS_BLINDS_OR_STRONG_RANGE_ADVANTAGE",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "BET_BIG",
+      explanation:
+        "Pri nizkem SPR a silnem range advantage dava v prototypu smysl trenovat velky river tlak.",
+    },
+    {
+      id: "river-srp-dynamic-showdown-check",
+      actionNode: "RIVER_PRESSURE",
+      boardTextures: ["monotone", "flush-draw-heavy", "straight-possible"],
+      sprMin: 1,
+      sprMax: 12,
+      positionPattern: "OOP_OR_DYNAMIC_BOARD",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "CHECK",
+      explanation:
+        "Na riveru s dokoncenymi draw bez presnych blockeru a value/bluff pomeru zustava check nejbezpecnejsi vyukova heuristika.",
+    },
+  ],
+};
+
+export const postflopPublicHeuristicStrategyPacks = [
+  flopSingleRaisedPrototypeStrategyPack,
+  turnSingleRaisedPrototypeStrategyPack,
+  riverSingleRaisedPrototypeStrategyPack,
+] as const;
 
 export function validatePostflopStrategyPack(pack: PostflopStrategyPack): string[] {
   const errors: string[] = [];

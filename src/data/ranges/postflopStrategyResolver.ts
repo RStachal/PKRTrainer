@@ -51,6 +51,19 @@ export function createPostflopStrategyResolver(
   };
 }
 
+export function createPostflopStrategyResolverChain(
+  packs: readonly PostflopStrategyPack[],
+): PostflopStrategyResolver {
+  const resolvers = packs.map(createPostflopStrategyResolver);
+  return (input: PostflopStrategyInput) => {
+    for (const resolver of resolvers) {
+      const recommendation = resolver(input);
+      if (recommendation) return recommendation;
+    }
+    return null;
+  };
+}
+
 export function selectBestPostflopRule(
   rules: readonly PostflopStrategyRule[],
   input: PostflopStrategyInput,

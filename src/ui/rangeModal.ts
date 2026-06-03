@@ -79,10 +79,8 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
 .range-modal__evidence{display:grid;gap:6px;margin:0 0 12px;padding:10px;border:1px solid
   rgba(255,255,255,.12);border-radius:8px;background:#151b29;color:#cbd5e1;font-size:12px;}
 .range-modal__evidence-title{font-weight:900;color:#e8ecf7;}
-.range-modal__evidence-meta,.range-modal__evidence-assumptions,
-  .range-modal__evidence-sources{line-height:1.35;}
-.range-modal__evidence a{color:#9ee7c2;text-decoration:none;}
-.range-modal__evidence a:hover{text-decoration:underline;}
+.range-modal__evidence-meta,.range-modal__evidence-assumptions{line-height:1.35;
+  overflow-wrap:anywhere;}
 .range-modal__matrix{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
 .range-modal__matrix .matrix{min-width:620px;}
 .range-modal__matrix .matrix-cell{min-height:22px;display:flex;align-items:center;
@@ -118,7 +116,7 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
 function renderRangePackEvidence(doc: Document, pack: RangePack): HTMLElement {
   const section = doc.createElement("section");
   section.className = "range-modal__evidence";
-  section.setAttribute("aria-label", "Zdroj range");
+  section.setAttribute("aria-label", "Metadata range");
 
   const title = doc.createElement("div");
   title.className = "range-modal__evidence-title";
@@ -136,19 +134,6 @@ function renderRangePackEvidence(doc: Document, pack: RangePack): HTMLElement {
   assumptions.className = "range-modal__evidence-assumptions";
   assumptions.textContent = `Předpoklady: ${pack.assumptions.join(" ")}`;
   section.appendChild(assumptions);
-
-  const sources = doc.createElement("div");
-  sources.className = "range-modal__evidence-sources";
-  sources.textContent = "Zdroje: ";
-  pack.sourceEvidence.forEach((source, index) => {
-    if (index > 0) sources.appendChild(doc.createTextNode(", "));
-    const link = doc.createElement("a");
-    link.href = source.url;
-    link.textContent = source.provider;
-    link.rel = "noreferrer noopener";
-    sources.appendChild(link);
-  });
-  section.appendChild(sources);
 
   return section;
 }

@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   createPostflopStrategyResolver,
+  createPostflopStrategyResolverChain,
   selectBestPostflopRule,
 } from "../../src/data/ranges/postflopStrategyResolver";
 import {
   flopSingleRaisedPrototypeStrategyPack,
   matchingPostflopRules,
+  postflopPublicHeuristicStrategyPacks,
+  riverSingleRaisedPrototypeStrategyPack,
+  turnSingleRaisedPrototypeStrategyPack,
 } from "../../src/data/ranges/postflopStrategyPack";
 
 describe("postflopStrategyResolver", () => {
@@ -63,6 +67,36 @@ describe("postflopStrategyResolver", () => {
       effectiveStackBB: 40,
       positionPattern: "BTN_VS_BB",
     })).toBeNull();
+  });
+
+  it("resolver chain vybere turn a river StrategyPack podle streety", () => {
+    const resolver = createPostflopStrategyResolverChain(postflopPublicHeuristicStrategyPacks);
+
+    const turn = resolver({
+      street: "TURN",
+      textures: ["dry", "disconnected", "ace-high", "rainbow"],
+      potBB: 8,
+      effectiveStackBB: 40,
+      positionPattern: "BTN_VS_BB",
+    });
+    const river = resolver({
+      street: "RIVER",
+      textures: ["dry", "disconnected", "rainbow"],
+      potBB: 14,
+      effectiveStackBB: 45,
+      positionPattern: "BTN_VS_BB",
+    });
+
+    expect(turn?.source?.kind).toBe("STRATEGY_PACK");
+    expect(river?.source?.kind).toBe("STRATEGY_PACK");
+    if (turn?.source?.kind === "STRATEGY_PACK") {
+      expect(turn.source.packId).toBe(turnSingleRaisedPrototypeStrategyPack.id);
+      expect(turn.source.ruleId).toBe("turn-srp-dry-range-advantage-big-barrel");
+    }
+    if (river?.source?.kind === "STRATEGY_PACK") {
+      expect(river.source.packId).toBe(riverSingleRaisedPrototypeStrategyPack.id);
+      expect(river.source.ruleId).toBe("river-srp-dry-polarized-big-bet");
+    }
   });
 
   it("preferuje konkretnejsi low-SPR rule pred obecnym dry pravidlem", () => {

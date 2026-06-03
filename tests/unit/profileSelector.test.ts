@@ -62,6 +62,60 @@ describe("profileSelector", () => {
     expect(note?.dataset.status).toBe("candidate");
     expect(note?.textContent).toContain("Candidate/preview profil");
     expect(note?.textContent).toContain("nespouští produkční scoring");
+    expect(note?.textContent).toContain("Import preview:");
+    expect(note?.textContent).toContain("0 records");
+  });
+
+  it("rozlisi SNG chipEV preview a SNG ICM preview", () => {
+    const root = document.createElement("div");
+    renderProfileSelector(root);
+
+    const variant = root.querySelector<HTMLSelectElement>(".profile-variant");
+    const evModel = root.querySelector<HTMLSelectElement>(".profile-ev-model");
+    variant!.value = "SNG";
+    variant!.dispatchEvent(new Event("change"));
+
+    let note = root.querySelector<HTMLElement>(".profile-selector__note");
+    expect(note?.dataset.status).toBe("candidate");
+    expect(note?.textContent).toContain("SNG chipEV preview");
+    expect(note?.textContent).not.toContain("https://");
+
+    evModel!.value = "ICM";
+    evModel!.dispatchEvent(new Event("change"));
+
+    note = root.querySelector<HTMLElement>(".profile-selector__note");
+    expect(note?.dataset.status).toBe("candidate");
+    expect(note?.textContent).toContain("SNG ICM preview");
+    expect(note?.textContent).toContain("payout");
+    expect(note?.textContent).not.toContain("https://");
+  });
+
+  it("rozlisi Cash rake/no-rake preview bez citaci zdroju v UI", () => {
+    const root = document.createElement("div");
+    renderProfileSelector(root);
+
+    const variant = root.querySelector<HTMLSelectElement>(".profile-variant");
+    const format = root.querySelector<HTMLSelectElement>(".profile-format");
+    const rakeMode = root.querySelector<HTMLSelectElement>(".profile-rake-mode");
+    variant!.value = "CASH";
+    variant!.dispatchEvent(new Event("change"));
+
+    let note = root.querySelector<HTMLElement>(".profile-selector__note");
+    expect(format?.value).toBe("SIX_MAX");
+    expect(rakeMode?.value).toBe("RAKE");
+    expect(note?.dataset.status).toBe("candidate");
+    expect(note?.textContent).toContain("Cash RAKE preview");
+    expect(note?.textContent).not.toContain("https://");
+    expect(note?.textContent?.toLowerCase()).not.toContain("zdroj");
+
+    rakeMode!.value = "NO_RAKE";
+    rakeMode!.dispatchEvent(new Event("change"));
+
+    note = root.querySelector<HTMLElement>(".profile-selector__note");
+    expect(note?.dataset.status).toBe("candidate");
+    expect(note?.textContent).toContain("Cash NO_RAKE preview");
+    expect(note?.textContent).not.toContain("https://");
+    expect(note?.textContent?.toLowerCase()).not.toContain("zdroj");
   });
 
   it("vykresli profilovy vyber z bundlu bez runtime fetch", () => {

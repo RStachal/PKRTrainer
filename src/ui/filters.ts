@@ -471,6 +471,7 @@ export function renderFilters(
   warning.style.border = "1px solid rgba(255,209,91,.45)";
   warning.style.color = "#ffd15b";
   warning.style.fontSize = "13px";
+  warning.style.overflowWrap = "anywhere";
   wrap.appendChild(warning);
 
   // --- Tlačítko Start (Req 13.4 — jediný spouštěč onStart) ---

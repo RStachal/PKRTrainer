@@ -91,6 +91,26 @@ describe("statsRecordV2", () => {
     );
   });
 
+  it("umi priradit cash candidate RangePack bez MTT fallbacku", () => {
+    const upgraded = upgradeResultRecordToV2(anteOffRecord, {
+      profile: profileWith(DEFAULT_TRAINING_PROFILE, {
+        gameVariant: "CASH",
+        tableFormat: "SIX_MAX",
+        blindSpeed: "REGULAR",
+        street: "PREFLOP",
+        evModel: "CHIP_EV",
+        rakeMode: "RAKE",
+      }),
+    });
+
+    expect(upgraded.gameVariant).toBe("CASH");
+    expect(upgraded.ante).toBe("OFF");
+    expect(upgraded.rakeMode).toBe("RAKE");
+    expect(upgraded.rangePackId).toBe(
+      "cash-six-max-regular-preflop-chip-ev-rake-candidate-v0",
+    );
+  });
+
   it("nepouzije MTT fallback pro nepodporovany SNG ICM profil", () => {
     expect(() => upgradeResultRecordToV2(anteOffRecord, {
       profile: profileWith(DEFAULT_TRAINING_PROFILE, {

@@ -15,8 +15,9 @@ import {
   buildSngIcmSimulationInput,
   type SngIcmSimulationInput,
 } from "./sngIcmSimulationInput";
+import { rangePackMatchesTrainingProfile } from "./rangePackProfileGuard";
 
-const VERIFIED_AT = "2026-06-01";
+const VERIFIED_AT = "2026-06-03";
 
 const SNG_CHIP_EV_PREFLOP_SEARCH_QUERIES = [
   "SNG chipEV preflop charts sit and go poker ranges stack depths source",
@@ -301,12 +302,17 @@ export function sngPreflopRangePackForProfile(
   profile: TrainingProfile,
 ): RangePack | undefined {
   return allSngPreflopRangePacks.find((pack) => (
-    pack.dimensions.gameVariant === profile.gameVariant &&
-    pack.dimensions.tableFormat === profile.tableFormat &&
-    pack.dimensions.blindSpeed === profile.blindSpeed &&
-    pack.dimensions.street === profile.street &&
-    pack.dimensions.evModel === profile.evModel &&
-    pack.dimensions.ante === profile.ante &&
-    pack.dimensions.rakeMode === profile.rakeMode
+    rangePackMatchesTrainingProfile(profile, pack)
   ));
+}
+
+export function sngCandidateImportReportForProfile(
+  profile: TrainingProfile,
+): RangePackImportReport | undefined {
+  const pack = sngPreflopRangePackForProfile(profile);
+  if (!pack) return undefined;
+  const reports = pack.dimensions.evModel === "ICM"
+    ? sngIcmCandidateImportReports
+    : sngChipEvCandidateImportReports;
+  return reports.find((report) => report.packId === pack.id);
 }

@@ -101,6 +101,56 @@ describe("service worker - offline provoz", () => {
       restoreGlobal(globals, "fetch", previousFetch);
     }
   });
+
+  it("pri offline navigaci vrati app shell z cache", async () => {
+    const listeners: ListenerMap = {};
+    const cache = new FakeCache();
+    const globals = globalThis as Record<string, unknown>;
+    const previousSelf = globals.self;
+    const previousCaches = globals.caches;
+    const previousFetch = globals.fetch;
+
+    globals.self = {
+      location: { origin: "https://trainer.test" },
+      clients: { claim: () => Promise.resolve() },
+      skipWaiting: () => Promise.resolve(),
+      addEventListener: (type: keyof ListenerMap, listener: ListenerMap[keyof ListenerMap]) => {
+        if (type === "install") {
+          listeners.install = listener as (event: ExtendableEventLike) => void;
+        }
+        if (type === "fetch") {
+          listeners.fetch = listener as (event: FetchEventLike) => void;
+        }
+      },
+    };
+    globals.caches = {
+      open: () => Promise.resolve(cache),
+      keys: () => Promise.resolve(["mtt-preflop-v1"]),
+      delete: () => Promise.resolve(true),
+    };
+    globals.fetch = async () => {
+      throw new Error("offline");
+    };
+
+    try {
+      vi.resetModules();
+      await import("../../src/pwa/sw");
+
+      const installWork: Promise<unknown>[] = [];
+      listeners.install?.({ waitUntil: (promise) => installWork.push(promise) });
+      await Promise.all(installWork);
+
+      const request = new Request("https://trainer.test/deep/link");
+      Object.defineProperty(request, "mode", { value: "navigate" });
+      const response = await dispatchFetch(listeners, request);
+
+      expect(await response.text()).toBe("app-shell:./index.html");
+    } finally {
+      restoreGlobal(globals, "self", previousSelf);
+      restoreGlobal(globals, "caches", previousCaches);
+      restoreGlobal(globals, "fetch", previousFetch);
+    }
+  });
 });
 
 async function dispatchFetch(listeners: ListenerMap, request: Request): Promise<Response> {

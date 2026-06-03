@@ -73,7 +73,9 @@ describe("rangeModal - DOM", () => {
       .toContain("Předpoklady:");
     expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
       .not.toContain("Assumptions");
-    expect(document.querySelectorAll(".range-modal__evidence a")).toHaveLength(5);
+    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
+      .not.toContain("Zdroje:");
+    expect(document.querySelectorAll(".range-modal__evidence a")).toHaveLength(0);
 
     document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
     expect(document.querySelector(".range-modal")).toBeNull();
@@ -98,7 +100,7 @@ describe("rangeModal - DOM", () => {
     document.body.style.overflow = "";
   });
 
-  it("vykresli range evidence z bundlu bez runtime fetch", () => {
+  it("vykresli range metadata z bundlu bez runtime fetch a bez citaci zdroju", () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
 
@@ -109,7 +111,9 @@ describe("rangeModal - DOM", () => {
     root.querySelector<HTMLButtonElement>(".range-modal-open")?.click();
 
     expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
-      .toContain("Zdroje:");
+      .toContain("RangePack");
+    expect(document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent)
+      .not.toContain("https://");
     expect(fetchSpy).not.toHaveBeenCalled();
 
     document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();

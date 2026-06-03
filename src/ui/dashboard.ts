@@ -92,7 +92,7 @@ export interface DashboardData {
   */
   sessionCount: number;
   postflopRecords?: readonly PostflopStatsV2BridgeRecord[];
-  onPostflopRecordsImported?: (records: readonly PostflopStatsV2BridgeRecord[]) => void;
+  onPostflopRecordsImported?: (records: readonly PostflopStatsV2BridgeRecord[]) => boolean | void;
 }
 
 // ---------------------------------------------------------------------------
@@ -359,7 +359,12 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     const result = importStatsJson(textarea.value, data.store);
     status.hidden = false;
     if (result.ok) {
-      data.onPostflopRecordsImported?.(result.postflopRecords);
+      const postflopSaved = data.onPostflopRecordsImported?.(result.postflopRecords) ?? true;
+      if (!postflopSaved) {
+        status.className = "stats-transfer__status stats-transfer__status--error";
+        status.textContent = "Preflop statistiky byly importovany, ale postflop log se nepodarilo ulozit.";
+        return;
+      }
       renderDashboard({
         ...data,
         postflopRecords: result.postflopRecords,

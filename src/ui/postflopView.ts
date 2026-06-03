@@ -9,13 +9,13 @@ import {
   postflopSpotToTrainingSpot,
   type PostflopTrainingSpot,
 } from "../core/postflopTrainingSpot";
-import { flopSingleRaisedPrototypeStrategyPack } from "../data/ranges/postflopStrategyPack";
-import { createPostflopStrategyResolver } from "../data/ranges/postflopStrategyResolver";
+import { postflopPublicHeuristicStrategyPacks } from "../data/ranges/postflopStrategyPack";
+import { createPostflopStrategyResolverChain } from "../data/ranges/postflopStrategyResolver";
 import type { Card, Suit } from "../core/types";
 
 const SEED_MAX = 0xffffffff;
-const POSTFLOP_STRATEGY_RESOLVER = createPostflopStrategyResolver(
-  flopSingleRaisedPrototypeStrategyPack,
+const POSTFLOP_STRATEGY_RESOLVER = createPostflopStrategyResolverChain(
+  postflopPublicHeuristicStrategyPacks,
 );
 
 export interface PostflopViewOptions {
@@ -259,7 +259,7 @@ function renderPracticalExplanation(
   grid.appendChild(explanationBlock(doc, "Value range", spot.explanation.valueHands));
   grid.appendChild(explanationBlock(doc, "Bluffy", spot.explanation.bluffHands));
   grid.appendChild(explanationBlock(doc, "Check range", spot.explanation.checkHands));
-  grid.appendChild(explanationBlock(doc, "Zdroj", sourceItems(spot)));
+  grid.appendChild(explanationBlock(doc, "Model", modelItems(spot)));
 
   const plan = doc.createElement("div");
   plan.className = "postflop-practical__block postflop-practical__block--wide";
@@ -302,24 +302,21 @@ function explanationBlock(
   return block;
 }
 
-function sourceItems(spot: PostflopTrainingSpot): readonly string[] {
+function modelItems(spot: PostflopTrainingSpot): readonly string[] {
   const source = spot.explanation.source;
   if (source.kind === "STRATEGY_PACK") {
     return [
-      `Pack: ${source.packId}`,
-      `Verze: ${source.packVersion}`,
-      `Overeno: ${source.packVerifiedAt}`,
+      "Heuristicky StrategyPack",
       `Rule: ${source.ruleId}`,
-      `Confidence: ${source.confidence}`,
+      `Jistota: ${source.confidence}`,
       `Shoda textur: ${source.matchedTextures.map(textureLabel).join(", ")}`,
       `SPR rule: ${source.sprMin}-${source.sprMax}`,
       `Pozice: ${source.positionPattern}`,
       `Duvod vyberu: score ${source.selectionScore}, ${source.tieBreak}`,
-      ...source.sourceUrls.map((url, index) => `Zdroj ${index + 1}: ${url}`),
       ...source.assumptions.map((assumption, index) => `Predpoklad ${index + 1}: ${assumption}`),
     ];
   }
-  return [`Fallback: ${source.ruleId}`];
+  return [`Fallback heuristika: ${source.ruleId}`];
 }
 
 function textureLabel(texture: BoardTexture): string {
@@ -375,7 +372,8 @@ function styles(doc: Document): HTMLStyleElement {
   color:#0c3526;font-weight:900;font-size:14px;padding:9px 14px;cursor:pointer;}
 .postflop-output{background:#0f1520;border:1px solid rgba(255,255,255,.08);
   border-radius:10px;padding:14px;}
-.postflop-meta{font-size:13px;color:#9aa6c2;font-weight:700;margin-bottom:12px;}
+.postflop-meta{font-size:13px;color:#9aa6c2;font-weight:700;margin-bottom:12px;
+  overflow-wrap:anywhere;}
 .postflop-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
 .postflop-card-group__label{font-size:12px;color:#9aa6c2;font-weight:800;margin-bottom:6px;}
 .postflop-card-row{display:flex;flex-wrap:wrap;gap:6px;}
@@ -397,10 +395,10 @@ function styles(doc: Document): HTMLStyleElement {
 .postflop-action--recommended{border-color:#2bd576;background:rgba(43,213,118,.16);}
 .postflop-result{margin-top:12px;border-radius:8px;padding:10px 12px;font-size:13px;
   font-weight:700;line-height:1.45;}
-.postflop-result__summary{margin:0 0 10px;}
+.postflop-result__summary{margin:0 0 10px;overflow-wrap:anywhere;}
 .postflop-practical{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
 .postflop-practical__block{border:1px solid rgba(255,255,255,.12);border-radius:8px;
-  background:rgba(255,255,255,.04);padding:8px 10px;}
+  background:rgba(255,255,255,.04);padding:8px 10px;min-width:0;}
 .postflop-practical__block--wide{grid-column:1/-1;}
 .postflop-practical__title{font-size:11px;letter-spacing:0;text-transform:uppercase;
   color:#e8ecf7;margin-bottom:5px;}

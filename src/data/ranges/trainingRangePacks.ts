@@ -1,5 +1,9 @@
 import type { TrainingProfile } from "../../core/trainingProfile";
 import {
+  allCashPreflopRangePacks,
+  cashPreflopRangePackForProfile,
+} from "./cashPreflopRangePacks";
+import {
   allMttPreflopRangePacks,
   mttPreflopRangePackForProfile,
 } from "./mttPreflopRangePacks";
@@ -12,6 +16,7 @@ import {
 export const allTrainingRangePacks = [
   ...allMttPreflopRangePacks,
   ...allSngPreflopRangePacks,
+  ...allCashPreflopRangePacks,
 ] as const;
 
 export function rangePackForTrainingProfile(
@@ -23,7 +28,7 @@ export function rangePackForTrainingProfile(
     case "SNG":
       return sngPreflopRangePackForProfile(profile);
     case "CASH":
-      return undefined;
+      return cashPreflopRangePackForProfile(profile);
     default:
       return assertNever(profile.gameVariant);
   }

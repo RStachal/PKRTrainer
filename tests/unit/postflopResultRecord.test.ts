@@ -139,4 +139,21 @@ describe("postflopResultRecord", () => {
       total: 1,
     });
   });
+
+  it("agreguje street progression pro flop, turn a river oddelene", () => {
+    const base = bridgePostflopResultRecordToStatsV2(
+      buildPostflopResultRecord(postflopSpotToTrainingSpot(generatePostflopSpot({
+        seed: 1,
+        street: "FLOP",
+      })), "CHECK", 1),
+    );
+    const turn = { ...base, qid: "turn", street: "TURN" as const, actionNode: "TURN_BARREL" as const };
+    const river = { ...base, qid: "river", street: "RIVER" as const, actionNode: "RIVER_PRESSURE" as const };
+
+    expect(breakdownPostflopStats([base, turn, river], "street")).toEqual([
+      { key: "FLOP", total: 1, correct: base.correct ? 1 : 0, rate: base.correct ? 100 : 0 },
+      { key: "TURN", total: 1, correct: turn.correct ? 1 : 0, rate: turn.correct ? 100 : 0 },
+      { key: "RIVER", total: 1, correct: river.correct ? 1 : 0, rate: river.correct ? 100 : 0 },
+    ]);
+  });
 });

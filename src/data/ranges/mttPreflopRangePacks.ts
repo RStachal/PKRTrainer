@@ -6,6 +6,7 @@ import {
   buildRangePackImportReport,
   type RangePackImportReport,
 } from "./rangePackImport";
+import { rangePackMatchesTrainingProfile } from "./rangePackProfileGuard";
 import { anteOffRanges } from "./ante-off";
 import { anteOnRanges } from "./ante-on";
 
@@ -236,12 +237,14 @@ export function mttPreflopRangePackForProfile(
   profile: TrainingProfile,
 ): RangePack | undefined {
   return allMttPreflopRangePacks.find((pack) => (
-    pack.dimensions.gameVariant === profile.gameVariant &&
-    pack.dimensions.tableFormat === profile.tableFormat &&
-    pack.dimensions.blindSpeed === profile.blindSpeed &&
-    pack.dimensions.street === profile.street &&
-    pack.dimensions.evModel === profile.evModel &&
-    pack.dimensions.ante === profile.ante &&
-    pack.dimensions.rakeMode === profile.rakeMode
+    rangePackMatchesTrainingProfile(profile, pack)
   ));
+}
+
+export function mttSixMaxCandidateImportReportForProfile(
+  profile: TrainingProfile,
+): RangePackImportReport | undefined {
+  const pack = mttPreflopRangePackForProfile(profile);
+  if (!pack || pack.dimensions.tableFormat !== "SIX_MAX") return undefined;
+  return mttSixMaxCandidateImportReports.find((report) => report.packId === pack.id);
 }

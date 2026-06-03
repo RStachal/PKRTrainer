@@ -52,9 +52,12 @@ import { KEY_EVENTS, KEY_STATE, SCHEMA_VERSION } from "./persistence/keys";
 import {
   bridgePostflopResultRecordToStatsV2,
   buildPostflopResultRecord,
-  type PostflopStatsV2BridgeRecord,
 } from "./persistence/postflopResultRecord";
+import { createPostflopStatsStore } from "./persistence/postflopStatsStore";
 import { rangePackForTrainingProfile } from "./data/ranges/trainingRangePacks";
+import { cashCandidateImportReportForProfile } from "./data/ranges/cashPreflopRangePacks";
+import { mttSixMaxCandidateImportReportForProfile } from "./data/ranges/mttPreflopRangePacks";
+import { sngCandidateImportReportForProfile } from "./data/ranges/sngPreflopRangePacks";
 import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
 import { renderMatrix } from "./ui/rangeMatrixView";
@@ -265,18 +268,25 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   }
 
   const statsStore = createStatsStore(storage);
+  const postflopStatsStore = createPostflopStatsStore(storage);
 
   // Statistiky (dashboard) a HH import jsou dostupné nezávisle na Range_Store.
   let sessionCount = 0;
-  let postflopRecords: PostflopStatsV2BridgeRecord[] = [];
   let currentPostflopProfile: TrainingProfile | undefined;
   const refreshDashboard = (): void => {
     renderDashboard({
       store: statsStore,
       sessionCount,
-      postflopRecords,
+      postflopRecords: postflopStatsStore.events(),
       onPostflopRecordsImported: (records) => {
-        postflopRecords = records.map((record) => ({ ...record }));
+        const save = postflopStatsStore.replaceAll(records);
+        if (!save.ok) {
+          showNotice(
+            shell.notice,
+            "Postflop zaznamy se nepodarilo ulozit. Export preflop statistik zustal zachovany.",
+          );
+        }
+        return save.ok;
       },
     }, shell.statsPanel);
   };
@@ -289,11 +299,15 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       initialSeed: options.initialSeed,
       onAnswered: (spot, chosen) => {
         const record = buildPostflopResultRecord(spot, chosen);
-        postflopRecords = postflopRecords.concat(
-          bridgePostflopResultRecordToStatsV2(record, {
-            profile: currentPostflopProfile,
-          }),
-        );
+        const save = postflopStatsStore.record(bridgePostflopResultRecordToStatsV2(record, {
+          profile: currentPostflopProfile,
+        }));
+        if (!save.ok) {
+          showNotice(
+            shell.notice,
+            "Postflop odpoved se nepodarilo ulozit do lokalniho uloziste.",
+          );
+        }
         sessionCount += 1;
         refreshDashboard();
       },
@@ -325,7 +339,6 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
     },
     refreshDashboard,
     startPostflopFlow: (seed, profile) => {
-      postflopRecords = [];
       renderPostflopPanel({ initialSeed: seed, profile });
       refreshDashboard();
       shell.selectTab("postflop");
@@ -471,9 +484,20 @@ function isProductionPreflopProfile(profile: TrainingProfile): boolean {
 function profileGateMessage(profile: TrainingProfile): string {
   const pack = rangePackForTrainingProfile(profile);
   if (pack && (pack.confidence === "LOW" || pack.records.length === 0)) {
+    const sixMaxReport = mttSixMaxCandidateImportReportForProfile(profile);
+    const sngReport = sngCandidateImportReportForProfile(profile);
+    const cashReport = cashCandidateImportReportForProfile(profile);
+    const importPreview = sixMaxReport
+      ? ` Import preview: ${sixMaxReport.sourceCount} metodickych vstupu, ${sixMaxReport.recordCount} records, ${sixMaxReport.totalExplicitHands} hand hodnot.`
+      : sngReport
+        ? ` SNG ${profile.evModel === "ICM" ? "ICM" : "chipEV"} preview: ${sngReport.recordCount} records, ${sngReport.sourceCount} metodickych vstupu${sngReport.icm ? `, payout ${sngReport.icm.payoutStructureId}` : ""}.`
+        : cashReport
+          ? ` Cash ${profile.rakeMode === "RAKE" ? "RAKE" : "NO_RAKE"} preview: ${cashReport.recordCount} records, ${cashReport.sourceCount} metodickych vstupu, rake mode ${profile.rakeMode}.`
+          : "";
     return (
       `Profil ${pack.id} je zatím candidate/preview: má LOW confidence nebo 0 records. ` +
-      "Produkční trénink se nespustí, dokud neprojde import report a ověření hand-class hodnot."
+      "Produkční trénink se nespustí, dokud neprojde import report a ověření hand-class hodnot." +
+      importPreview
     );
   }
 
@@ -878,7 +902,8 @@ body{margin:0;background:#0b1018;color:#e8ecf7;
 .profile-selector__field{display:grid;gap:4px;font-size:12px;color:#9aa6c2;}
 .profile-selector__field select{min-width:0;background:#0f1624;color:#e8ecf7;
   border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:7px 8px;}
-.profile-selector__note{grid-column:1/-1;font-size:12px;color:#9aa6c2;line-height:1.35;}
+.profile-selector__note{grid-column:1/-1;font-size:12px;color:#9aa6c2;line-height:1.35;
+  overflow-wrap:anywhere;}
 .training__game{display:flex;flex-direction:column;gap:16px;}
 .training__actions-title{font-weight:700;font-size:14px;margin-bottom:8px;}
 .training__actions-row{display:flex;flex-wrap:wrap;gap:8px;}

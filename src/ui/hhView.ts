@@ -252,7 +252,8 @@ function viewStyles(doc: Document): HTMLStyleElement {
   font-weight:800;}
 .hh-view .hh-analysis__fact-value{font-size:13px;color:#e8ecf7;font-weight:800;
   overflow-wrap:anywhere;}
-.hh-view .hh-analysis__explanation{margin:0;font-size:13px;line-height:1.4;color:#d5deef;}
+.hh-view .hh-analysis__explanation{margin:0;font-size:13px;line-height:1.4;color:#d5deef;
+  overflow-wrap:anywhere;}
 .hh-view .hh-analysis__matrix{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .hh-view .hh-analysis__matrix .matrix{min-width:560px;}
 `;

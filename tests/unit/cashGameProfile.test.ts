@@ -8,6 +8,7 @@ import {
   cashProfileWith,
   validateCashProfile,
 } from "../../src/core/cashGameProfile";
+import { cashCandidateImportReportForProfile } from "../../src/data/ranges/cashPreflopRangePacks";
 
 describe("cashGameProfile", () => {
   it("definuje cash profil oddeleny od produkcniho MTT/SNG enginu", () => {
@@ -22,7 +23,7 @@ describe("cashGameProfile", () => {
     expect(validateCashProfile(DEFAULT_CASH_PROFILE)).toEqual([]);
   });
 
-  it("rezervuje rake a no-rake dimenzi bez zapojeni cash ranges", () => {
+  it("rezervuje rake a no-rake dimenzi pro budouci cash ranges", () => {
     const noRake = cashProfileWith(DEFAULT_CASH_PROFILE, {
       rakeMode: "NO_RAKE",
       tableFormat: "FULL_RING_9",
@@ -39,6 +40,16 @@ describe("cashGameProfile", () => {
       ante: "OFF",
       rakeMode: "NO_RAKE",
     });
+  });
+
+  it("mapuje vychozi cash profil na candidate import preview", () => {
+    const report = cashCandidateImportReportForProfile(
+      cashProfileToTrainingProfile(DEFAULT_CASH_PROFILE),
+    );
+
+    expect(report?.packId).toBe("cash-six-max-regular-preflop-chip-ev-rake-candidate-v0");
+    expect(report?.recordCount).toBe(0);
+    expect(report?.warnings).toContain("RangePack has no records.");
   });
 
   it("validuje cash assumptions pro budouci ranges", () => {

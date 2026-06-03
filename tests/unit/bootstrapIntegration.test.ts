@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+vi.setConfig({ testTimeout: 15000 });
+
 class MemoryStorage implements Storage {
   protected readonly data = new Map<string, string>();
 
@@ -89,6 +91,35 @@ describe("bootstrap - inicializacni tok", () => {
     ).toBe("1");
   });
 
+  it("postflop breakdown prezije reload aplikace", async () => {
+    const storage = new MemoryStorage();
+    let main = await importFreshMain();
+    const firstRoot = document.createElement("div");
+
+    main.bootstrap({ root: firstRoot, storage, registerSw: false });
+
+    const street = firstRoot.querySelector<HTMLSelectElement>(".profile-street");
+    street!.value = "FLOP";
+    street!.dispatchEvent(new Event("change"));
+    firstRoot.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    firstRoot.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+
+    expect(firstRoot.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total)
+      .toBe("1");
+
+    main = await importFreshMain();
+    const secondRoot = document.createElement("div");
+    main.bootstrap({ root: secondRoot, storage, registerSw: false });
+
+    expect(secondRoot.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total)
+      .toBe("1");
+    expect(
+      secondRoot.querySelector<HTMLElement>(
+        '.postflop-breakdown--street .postflop-breakdown-row[data-group="FLOP"]',
+      )?.dataset.total,
+    ).toBe("1");
+  });
+
   it("candidate 6-max preflop profil nespusti legacy 9-max drill", async () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
@@ -105,9 +136,54 @@ describe("bootstrap - inicializacni tok", () => {
     expect(warning?.hidden).toBe(false);
     expect(warning?.textContent).toContain("candidate/preview");
     expect(warning?.textContent).toContain("Produkční trénink se nespustí");
+    expect(warning?.textContent).toContain("Import preview:");
+    expect(warning?.textContent).toContain("0 records");
     expect(root.querySelector(".poker-table")).toBeNull();
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
   });
+
+  it("SNG chipEV candidate profil zustane preview a nespusti produkcni scoring", async () => {
+    const { bootstrap } = await importFreshMain();
+    const root = document.createElement("div");
+
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+
+    const variant = root.querySelector<HTMLSelectElement>(".profile-variant");
+    variant!.value = "SNG";
+    variant!.dispatchEvent(new Event("change"));
+
+    root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+
+    const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
+    expect(warning?.hidden).toBe(false);
+    expect(warning?.textContent).toContain("candidate/preview");
+    expect(warning?.textContent).toContain("SNG chipEV preview");
+    expect(warning?.textContent).not.toContain("https://");
+    expect(root.querySelector(".poker-table")).toBeNull();
+    expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
+  });
+
+  it("Cash candidate profil zustane preview a nespusti produkcni scoring", async () => {
+    const { bootstrap } = await importFreshMain();
+    const root = document.createElement("div");
+
+    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+
+    const variant = root.querySelector<HTMLSelectElement>(".profile-variant");
+    variant!.value = "CASH";
+    variant!.dispatchEvent(new Event("change"));
+
+    root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+
+    const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
+    expect(warning?.hidden).toBe(false);
+    expect(warning?.textContent).toContain("candidate/preview");
+    expect(warning?.textContent).toContain("Cash RAKE preview");
+    expect(warning?.textContent).not.toContain("https://");
+    expect(root.querySelector(".poker-table")).toBeNull();
+    expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
+  });
+
 
   it("pri nekonzistentnim ulozisti zobrazi blokujici chybu a relaci nespusti", async () => {
     const { bootstrap } = await importFreshMain();

@@ -6,6 +6,7 @@ import {
   allSngPreflopRangePacks,
   sngChipEvCandidateImportReports,
   sngChipEvPreflopRangePackCandidates,
+  sngCandidateImportReportForProfile,
   sngIcmCandidateImportReports,
   sngIcmPreflopRangePackCandidates,
   sngPreflopRangePackForProfile,
@@ -112,6 +113,8 @@ describe("sngPreflopRangePacks", () => {
     expect(rangePackForTrainingProfile(profile)?.id).toBe(
       "sng-full-ring-9-regular-preflop-chip-ev-ante-on-candidate-v0",
     );
+    expect(sngCandidateImportReportForProfile(profile)?.dimensions.evModel).toBe("CHIP_EV");
+    expect(sngCandidateImportReportForProfile(profile)?.icm).toBeUndefined();
   });
 
   it("najde SNG ICM RangePack podle plneho profilu", () => {
@@ -131,6 +134,9 @@ describe("sngPreflopRangePacks", () => {
       "CALL_ALL_IN",
       "REJAM",
     ]);
+    expect(sngCandidateImportReportForProfile(profile)?.dimensions.evModel).toBe("ICM");
+    expect(sngCandidateImportReportForProfile(profile)?.icm?.payoutStructureId)
+      .toBe("SNG_6_MAX_TOP_2");
   });
 
   it("nikdy nezamicha chipEV a ICM pack pri profilovem vyhledani", () => {
