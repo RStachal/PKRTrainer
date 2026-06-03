@@ -159,9 +159,19 @@ describe("dashboard - DOM statistiky", () => {
     ).toBe("1");
     expect(
       root.querySelector<HTMLElement>(
+        '.profile-breakdown--gameVariant .profile-breakdown-row[data-group="MTT"] .profile-breakdown-row__name',
+      )?.textContent,
+    ).toBe("MTT");
+    expect(
+      root.querySelector<HTMLElement>(
         '.profile-breakdown--tableFormat .profile-breakdown-row[data-group="FULL_RING_9"]',
       )?.dataset.total,
     ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.profile-breakdown--tableFormat .profile-breakdown-row[data-group="FULL_RING_9"] .profile-breakdown-row__name',
+      )?.textContent,
+    ).toBe("9-max full ring");
     expect(
       root.querySelector<HTMLElement>(
         '.profile-breakdown--blindSpeed .profile-breakdown-row[data-group="REGULAR"]',
@@ -169,9 +179,19 @@ describe("dashboard - DOM statistiky", () => {
     ).toBe("1");
     expect(
       root.querySelector<HTMLElement>(
+        '.profile-breakdown--blindSpeed .profile-breakdown-row[data-group="REGULAR"] .profile-breakdown-row__name',
+      )?.textContent,
+    ).toBe("Regular");
+    expect(
+      root.querySelector<HTMLElement>(
         '.profile-breakdown--street .profile-breakdown-row[data-group="PREFLOP"]',
       )?.dataset.total,
     ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.profile-breakdown--street .profile-breakdown-row[data-group="PREFLOP"] .profile-breakdown-row__name',
+      )?.textContent,
+    ).toBe("Preflop");
     expect(
       root.querySelector<HTMLElement>(
         '.profile-breakdown--evModel .profile-breakdown-row[data-group="CHIP_EV"]',
@@ -179,9 +199,19 @@ describe("dashboard - DOM statistiky", () => {
     ).toBe("1");
     expect(
       root.querySelector<HTMLElement>(
+        '.profile-breakdown--evModel .profile-breakdown-row[data-group="CHIP_EV"] .profile-breakdown-row__name',
+      )?.textContent,
+    ).toBe("chipEV");
+    expect(
+      root.querySelector<HTMLElement>(
         '.profile-breakdown--ante .profile-breakdown-row[data-group="OFF"]',
       )?.dataset.total,
     ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.profile-breakdown--ante .profile-breakdown-row[data-group="OFF"] .profile-breakdown-row__name',
+      )?.textContent,
+    ).toBe("Ante vypnute");
     expect(
       root.querySelector<HTMLElement>(
         '.profile-breakdown--rangePackId .profile-breakdown-row[data-group="mtt-full-ring-9-regular-preflop-chip-ev-ante-off-v1"]',
@@ -220,9 +250,19 @@ describe("dashboard - DOM statistiky", () => {
     ).toBe("1");
     expect(
       root.querySelector<HTMLElement>(
+        '.postflop-breakdown--street .postflop-breakdown-row[data-group="FLOP"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("Flop");
+    expect(
+      root.querySelector<HTMLElement>(
         '.postflop-breakdown--boardTextureKey .postflop-breakdown-row[data-group="dry|ace-high|disconnected"]',
       )?.dataset.rate,
     ).toBe("100");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--boardTextureKey .postflop-breakdown-row[data-group="dry|ace-high|disconnected"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("dry, A-high, disconnected");
     expect(
       root.querySelector<HTMLElement>(
         '.postflop-breakdown--strategyPackId .postflop-breakdown-row[data-group="mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1"]',
@@ -233,6 +273,15 @@ describe("dashboard - DOM statistiky", () => {
         '.postflop-breakdown--confidence .postflop-breakdown-row[data-group="LOW"]',
       )?.dataset.total,
     ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--confidence .postflop-breakdown-row[data-group="LOW"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("nizka");
+    expect(root.querySelector<HTMLElement>(".postflop-breakdown--actionNode")?.textContent)
+      .toContain("Flop c-bet v SRP");
+    expect(root.querySelector<HTMLElement>(".postflop-breakdown--actionNode")?.textContent)
+      .not.toContain("SINGLE_RAISED_POT_CBET");
   });
 
   it("exportuje a importuje postflop breakdown pres JSON transfer", () => {

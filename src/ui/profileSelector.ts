@@ -197,7 +197,7 @@ function candidateProfileLabel(profile: TrainingProfile): string {
     return `SNG ${evModelLabel(profile.evModel)} preview`;
   }
   if (profile.gameVariant === "CASH") {
-    return `Cash ${profile.rakeMode === "RAKE" ? "RAKE" : "NO_RAKE"} preview`;
+    return `Cash ${profile.rakeMode === "RAKE" ? "s rakem" : "bez raku"} preview`;
   }
   return `${tableFormatLabel(profile.tableFormat)} ${profile.gameVariant} preflop preview`;
 }

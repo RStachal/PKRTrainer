@@ -5,6 +5,9 @@ import { DEFAULT_TRAINING_PROFILE, profileWith } from "../../src/core/trainingPr
 import { renderPostflopView } from "../../src/ui/postflopView";
 import { renderProfileSelector } from "../../src/ui/profileSelector";
 import { renderRangeModalButton } from "../../src/ui/rangeModal";
+import { createStatsStore, type ResultRecord } from "../../src/persistence/statsStore";
+import { renderDashboard } from "../../src/ui/dashboard";
+import type { PostflopStatsV2BridgeRecord } from "../../src/persistence/postflopResultRecord";
 import type { RangeStore } from "../../src/data/rangeStore";
 import type { Card, Spot, TableState } from "../../src/core/types";
 
@@ -27,6 +30,22 @@ const FORBIDDEN_SOURCE_TEXT = [
   "mtt-6max",
   "cash-6max",
   "sng-6max",
+  "SINGLE_RAISED_POT_CBET",
+  "THREE_BET_POT_CBET",
+  "TURN_BARREL",
+  "RIVER_PRESSURE",
+  "dry|ace-high|disconnected",
+  "THREE_BET_POT",
+  "OOP_CALLER_VS_IP_3BETTOR",
+  "OOP_RAISER_VS_IP_CALLER",
+  "BTN_VS_BB",
+  "EP_VS_BB",
+  "SB_VS_BB",
+  "FULL_RING_9",
+  "SIX_MAX",
+  "PREFLOP",
+  "CHIP_EV",
+  "NO_RAKE",
 ];
 
 const heroCards: [Card, Card] = [
@@ -65,6 +84,69 @@ const loadedStore: RangeStore = {
     actions: { AKs: ["OPEN_2X"] },
     strict: { AKs: ["OPEN_2X"] },
   }),
+};
+
+class MemoryStorage implements Storage {
+  private readonly data = new Map<string, string>();
+
+  get length(): number {
+    return this.data.size;
+  }
+
+  clear(): void {
+    this.data.clear();
+  }
+
+  getItem(key: string): string | null {
+    return this.data.get(key) ?? null;
+  }
+
+  key(index: number): string | null {
+    return Array.from(this.data.keys())[index] ?? null;
+  }
+
+  removeItem(key: string): void {
+    this.data.delete(key);
+  }
+
+  setItem(key: string, value: string): void {
+    this.data.set(key, String(value));
+  }
+}
+
+const preflopRecord: ResultRecord = {
+  qid: "RFI|BTN|25|AKs|OFF",
+  chosen: "OPEN_2X",
+  correct: true,
+  context: "RFI",
+  position: "BTN",
+  bucket: 25,
+  ts: 1,
+};
+
+const postflopRecord: PostflopStatsV2BridgeRecord = {
+  schema: "postflop_stats_v2_bridge_v1",
+  qid: "POSTFLOP|FLOP|1|As-Kd-Qh",
+  correct: true,
+  ts: 2,
+  profileId: "MTT|FULL_RING_9|REGULAR|FLOP|CHIP_EV|ON|NONE",
+  gameVariant: "MTT",
+  tableFormat: "FULL_RING_9",
+  blindSpeed: "REGULAR",
+  street: "FLOP",
+  evModel: "CHIP_EV",
+  rakeMode: "NONE",
+  actionNode: "SINGLE_RAISED_POT_CBET",
+  potType: "SINGLE_RAISED",
+  boardTextureKey: "dry|ace-high|disconnected",
+  heroPosition: "BTN",
+  villainPosition: "BB",
+  positionPattern: "BTN_VS_BB",
+  chosen: "BET_SMALL",
+  recommended: "BET_SMALL",
+  strategyPackId: "mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1",
+  strategyRuleId: "flop-srp-ace-high-disconnected-small-cbet",
+  confidence: "LOW",
 };
 
 describe("UI source citation policy", () => {
@@ -112,6 +194,47 @@ describe("UI source citation policy", () => {
     root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
 
     expectNoSourceCitation(root.querySelector<HTMLElement>(".postflop-result")?.textContent ?? "");
+  });
+
+  it("nezobrazuje raw postflop enumy v konkretni otazce", () => {
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 1788246284,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      initialPotType: "THREE_BET_POT",
+      initialPotBB: 18,
+      initialEffectiveStackBB: 40,
+      initialPositionContext: {
+        heroPosition: "LJ",
+        villainPosition: "HJ",
+        aggressorPosition: "HJ",
+        callerPosition: "LJ",
+        inPosition: false,
+        callerType: "OUT_OF_POSITION_CALLER",
+        positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+      },
+    });
+
+    expectNoSourceCitation(root.textContent ?? "");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent)
+      .toContain("3bet pot");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent)
+      .toContain("LJ vs HJ (OOP)");
+  });
+
+  it("nezobrazuje source/pack citace ve viditelnem dashboard textu", () => {
+    const store = createStatsStore(new MemoryStorage());
+    expect(store.record(preflopRecord).ok).toBe(true);
+
+    const root = document.createElement("div");
+    renderDashboard({ store, sessionCount: 1, postflopRecords: [postflopRecord] }, root);
+
+    expectNoSourceCitation(root.textContent ?? "");
+    expect(root.querySelector<HTMLElement>(".profile-breakdown--rangePackId")?.textContent)
+      .toContain("Preflop model");
+    expect(root.querySelector<HTMLElement>(".postflop-breakdown--strategyPackId")?.textContent)
+      .toContain("Postflop model");
   });
 });
 

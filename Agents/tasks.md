@@ -676,6 +676,18 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 53.3 Schovat StrategyPack detaily v postflop vysvetleni a statistikach
     - Postflop vysvetleni pouziva hracsky model detail bez rule id; dashboard ukazuje preflop/postflop model misto pack nazvu
 
+  - [x] 53.4 Zprisnit dashboard source-citation guard
+    - Viditelny dashboard text nesmi zobrazit URL, providery, RangePack/StrategyPack ani interni pack id; raw id smi zustat jen v data-group kontraktu
+
+  - [x] 53.5 Prevest postflop dashboard breakdown z raw enumu na hracske popisky
+    - Action node, street, confidence a board texture key se zobrazuji hracsky; raw hodnoty zustavaji jen v data-group
+
+  - [x] 53.6 Pokryt source-free guardem celou postflop otazku
+    - Konkretni 3bet spot nesmi ve viditelnem textu zobrazit action node, pot type ani position pattern enumy
+
+  - [x] 53.7 Prevest preflop profilovy dashboard z raw enumu na hracske popisky
+    - Viditelne profile breakdown radky zobrazuji napr. 9-max full ring, Preflop, Ante vypnute; raw hodnoty zustavaji jen v data-group
+
 ## Notes
 
 - Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.

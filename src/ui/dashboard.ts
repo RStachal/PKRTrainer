@@ -1,54 +1,54 @@
-/**
- * Dashboard statistik — zobrazení souhrnných a rozčleněných statistik tréninku
+﻿/**
+ * Dashboard statistik â€” zobrazenĂ­ souhrnnĂ˝ch a rozÄŤlenÄ›nĂ˝ch statistik trĂ©ninku
  * (Req 9.3, 9.4, 9.5, 9.7).
  *
- * Tento modul je UI vrstva (DOM I/O). Čte data výhradně z `Stats_Store`
+ * Tento modul je UI vrstva (DOM I/O). ÄŚte data vĂ˝hradnÄ› z `Stats_Store`
  * (`summary`, `breakdownBy`, `currentStreak`) a vykresluje je do `root`.
- * Veškerá výpočetní logika (úspěšnost, agregace, streak) zůstává ve
- * `Stats_Store`; dashboard pouze formátuje a zobrazuje (čeština — Req 12.3).
+ * VeĹˇkerĂˇ vĂ˝poÄŤetnĂ­ logika (ĂşspÄ›Ĺˇnost, agregace, streak) zĹŻstĂˇvĂˇ ve
+ * `Stats_Store`; dashboard pouze formĂˇtuje a zobrazuje (ÄŤeĹˇtina â€” Req 12.3).
  *
- * ## Zodpovědnosti
+ * ## ZodpovÄ›dnosti
  *
- * - **Souhrn (Req 9.3).** Celkový počet zodpovězených Spotů a úspěšnost v %
- *   zaokrouhlená na 1 desetinné místo (z `store.summary()`).
- * - **Rozčlenění (Req 9.4).** Tři samostatné tabulky: podle kategorie akce
- *   (`context`), podle Pozice (`position`) a podle Hloubkového_košu (`bucket`),
- *   každá z `store.breakdownBy(dim)`.
- * - **Streak a počet spotů relace (Req 9.5).** Aktuální série správných
- *   odpovědí z `store.currentStreak()` a počet spotů zodpovězených v aktuální
- *   relaci (viz `sessionCount` níže).
- * - **Prázdné skupiny (Req 9.7).** Skupina bez záznamu (`count = 0`) zobrazí
- *   počet `0` a indikaci NEDOSTUPNÉ úspěšnosti (`rate = null`) jako `"—"`
- *   namísto procentní hodnoty. `breakdownBy` už pro prázdné skupiny vrací
- *   `rate = null`, takže stačí toto promítnout do UI.
+ * - **Souhrn (Req 9.3).** CelkovĂ˝ poÄŤet zodpovÄ›zenĂ˝ch SpotĹŻ a ĂşspÄ›Ĺˇnost v %
+ *   zaokrouhlenĂˇ na 1 desetinnĂ© mĂ­sto (z `store.summary()`).
+ * - **RozÄŤlenÄ›nĂ­ (Req 9.4).** TĹ™i samostatnĂ© tabulky: podle kategorie akce
+ *   (`context`), podle Pozice (`position`) a podle HloubkovĂ©ho_koĹˇu (`bucket`),
+ *   kaĹľdĂˇ z `store.breakdownBy(dim)`.
+ * - **Streak a poÄŤet spotĹŻ relace (Req 9.5).** AktuĂˇlnĂ­ sĂ©rie sprĂˇvnĂ˝ch
+ *   odpovÄ›dĂ­ z `store.currentStreak()` a poÄŤet spotĹŻ zodpovÄ›zenĂ˝ch v aktuĂˇlnĂ­
+ *   relaci (viz `sessionCount` nĂ­Ĺľe).
+ * - **PrĂˇzdnĂ© skupiny (Req 9.7).** Skupina bez zĂˇznamu (`count = 0`) zobrazĂ­
+ *   poÄŤet `0` a indikaci NEDOSTUPNĂ‰ ĂşspÄ›Ĺˇnosti (`rate = null`) jako `"â€”"`
+ *   namĂ­sto procentnĂ­ hodnoty. `breakdownBy` uĹľ pro prĂˇzdnĂ© skupiny vracĂ­
+ *   `rate = null`, takĹľe staÄŤĂ­ toto promĂ­tnout do UI.
  *
  * ## `sessionCount` (Req 9.5)
  *
- * `Stats_Store.summary().total` nese **celkový** počet zodpovězených Spotů
- * napříč všemi relacemi (perzistováno v localStorage). Požadavek 9.5 však mluví
- * o počtu spotů zodpovězených v **aktuální relaci** (běhu). Tuto hodnotu
- * Stats_Store nezná — relace je čistě běhový pojem. Proto ji dashboard přijímá
- * jako **explicitní parametr** `sessionCount`, který udržuje volající (např.
- * `main.ts` / orchestrátor relace) a inkrementuje po každé zodpovězené otázce
- * v rámci jednoho běhu. Při novém startu relace volající `sessionCount`
- * vynuluje. Dashboard zde žádný stav relace neudržuje.
+ * `Stats_Store.summary().total` nese **celkovĂ˝** poÄŤet zodpovÄ›zenĂ˝ch SpotĹŻ
+ * napĹ™Ă­ÄŤ vĹˇemi relacemi (perzistovĂˇno v localStorage). PoĹľadavek 9.5 vĹˇak mluvĂ­
+ * o poÄŤtu spotĹŻ zodpovÄ›zenĂ˝ch v **aktuĂˇlnĂ­ relaci** (bÄ›hu). Tuto hodnotu
+ * Stats_Store neznĂˇ â€” relace je ÄŤistÄ› bÄ›hovĂ˝ pojem. Proto ji dashboard pĹ™ijĂ­mĂˇ
+ * jako **explicitnĂ­ parametr** `sessionCount`, kterĂ˝ udrĹľuje volajĂ­cĂ­ (napĹ™.
+ * `main.ts` / orchestrĂˇtor relace) a inkrementuje po kaĹľdĂ© zodpovÄ›zenĂ© otĂˇzce
+ * v rĂˇmci jednoho bÄ›hu. PĹ™i novĂ©m startu relace volajĂ­cĂ­ `sessionCount`
+ * vynuluje. Dashboard zde ĹľĂˇdnĂ˝ stav relace neudrĹľuje.
  *
  * ## Selektory / data-atributy (kontrakt pro DOM testy 16.3)
  *
- * - `.dashboard` — kořenový wrapper vykreslený do `root`.
- * - `.dashboard-summary` — blok souhrnu (Req 9.3); obsahuje:
- *     - `.summary-total` — celkový počet zodpovězených (`data-total`),
- *     - `.summary-rate` — souhrnná úspěšnost; `data-rate` = hodnota nebo prázdné
- *       při nedostupnosti; třída `.rate--unavailable` s textem `"—"` při `null`.
- * - `.dashboard-streak` — aktuální streak (`data-streak`) — Req 9.5.
- * - `.dashboard-session-count` — počet spotů aktuální relace (`data-session-count`)
- *   — Req 9.5.
- * - `.breakdown` — kontejner jedné rozčleněné tabulky (Req 9.4); varianty:
+ * - `.dashboard` â€” koĹ™enovĂ˝ wrapper vykreslenĂ˝ do `root`.
+ * - `.dashboard-summary` â€” blok souhrnu (Req 9.3); obsahuje:
+ *     - `.summary-total` â€” celkovĂ˝ poÄŤet zodpovÄ›zenĂ˝ch (`data-total`),
+ *     - `.summary-rate` â€” souhrnnĂˇ ĂşspÄ›Ĺˇnost; `data-rate` = hodnota nebo prĂˇzdnĂ©
+ *       pĹ™i nedostupnosti; tĹ™Ă­da `.rate--unavailable` s textem `"â€”"` pĹ™i `null`.
+ * - `.dashboard-streak` â€” aktuĂˇlnĂ­ streak (`data-streak`) â€” Req 9.5.
+ * - `.dashboard-session-count` â€” poÄŤet spotĹŻ aktuĂˇlnĂ­ relace (`data-session-count`)
+ *   â€” Req 9.5.
+ * - `.breakdown` â€” kontejner jednĂ© rozÄŤlenÄ›nĂ© tabulky (Req 9.4); varianty:
  *     - `.breakdown--context`, `.breakdown--position`, `.breakdown--bucket`.
- * - `.breakdown-row` — jeden řádek skupiny; nese `data-group`, `data-total`,
- *   `data-rate` (prázdné při nedostupnosti).
- * - `.rate--unavailable` — indikace nedostupné úspěšnosti s textem `"—"`
- *   (Req 9.7); použita v souhrnu i v řádcích breakdownu.
+ * - `.breakdown-row` â€” jeden Ĺ™Ăˇdek skupiny; nese `data-group`, `data-total`,
+ *   `data-rate` (prĂˇzdnĂ© pĹ™i nedostupnosti).
+ * - `.rate--unavailable` â€” indikace nedostupnĂ© ĂşspÄ›Ĺˇnosti s textem `"â€”"`
+ *   (Req 9.7); pouĹľita v souhrnu i v Ĺ™ĂˇdcĂ­ch breakdownu.
  *
  * _Requirements: 9.3, 9.4, 9.5, 9.7_
  */
@@ -78,17 +78,17 @@ import {
 } from "../persistence/postflopResultRecord";
 
 // ---------------------------------------------------------------------------
-// Veřejné API
+// VeĹ™ejnĂ© API
 // ---------------------------------------------------------------------------
 
-/** Vstupní data pro vykreslení dashboardu. */
+/** VstupnĂ­ data pro vykreslenĂ­ dashboardu. */
 export interface DashboardData {
   /** Zdroj statistik (souhrn, breakdown, streak). */
   store: StatsStore;
   /**
-   * Počet Spotů zodpovězených v aktuální relaci (Req 9.5).
-   * Udržuje volající — viz dokumentační blok modulu. Záporné/nečíselné hodnoty
-   * jsou defenzivně normalizovány na 0.
+   * PoÄŤet SpotĹŻ zodpovÄ›zenĂ˝ch v aktuĂˇlnĂ­ relaci (Req 9.5).
+   * UdrĹľuje volajĂ­cĂ­ â€” viz dokumentaÄŤnĂ­ blok modulu. ZĂˇpornĂ©/neÄŤĂ­selnĂ© hodnoty
+   * jsou defenzivnÄ› normalizovĂˇny na 0.
   */
   sessionCount: number;
   postflopRecords?: readonly PostflopStatsV2BridgeRecord[];
@@ -96,56 +96,56 @@ export interface DashboardData {
 }
 
 // ---------------------------------------------------------------------------
-// Formátování (čeština, Req 9.3 / 9.7 / 12.3)
+// FormĂˇtovĂˇnĂ­ (ÄŤeĹˇtina, Req 9.3 / 9.7 / 12.3)
 // ---------------------------------------------------------------------------
 
-/** Text indikace nedostupné úspěšnosti (Req 9.7). */
-const RATE_UNAVAILABLE = "\u2014"; // —
+/** Text indikace nedostupnĂ© ĂşspÄ›Ĺˇnosti (Req 9.7). */
+const RATE_UNAVAILABLE = "\u2014"; // â€”
 
 /**
- * Naformátuje úspěšnost pro zobrazení.
+ * NaformĂˇtuje ĂşspÄ›Ĺˇnost pro zobrazenĂ­.
  *
- * `Stats_Store` vrací `rate` již zaokrouhlené na 1 desetinné místo (Req 9.3),
- * nebo `null` pro skupinu bez záznamu (Req 9.7). Pro `null` vrací `"—"`,
- * jinak hodnotu na právě 1 desetinné místo s jednotkou `%` (např. `"66.7 %"`).
+ * `Stats_Store` vracĂ­ `rate` jiĹľ zaokrouhlenĂ© na 1 desetinnĂ© mĂ­sto (Req 9.3),
+ * nebo `null` pro skupinu bez zĂˇznamu (Req 9.7). Pro `null` vracĂ­ `"â€”"`,
+ * jinak hodnotu na prĂˇvÄ› 1 desetinnĂ© mĂ­sto s jednotkou `%` (napĹ™. `"66.7 %"`).
  */
 export function formatRate(rate: number | null): string {
   if (rate === null || !Number.isFinite(rate)) return RATE_UNAVAILABLE;
   return `${rate.toFixed(1)} %`;
 }
 
-/** Bezpečné nezáporné celé číslo pro počet spotů relace. */
+/** BezpeÄŤnĂ© nezĂˇpornĂ© celĂ© ÄŤĂ­slo pro poÄŤet spotĹŻ relace. */
 function normalizeCount(n: number): number {
   if (!Number.isFinite(n) || n < 0) return 0;
   return Math.floor(n);
 }
 
 // ---------------------------------------------------------------------------
-// České popisky dimenzí a skupin (Req 12.3)
+// ÄŚeskĂ© popisky dimenzĂ­ a skupin (Req 12.3)
 // ---------------------------------------------------------------------------
 
-/** Český název dimenze breakdownu (nadpis tabulky). */
+/** ÄŚeskĂ˝ nĂˇzev dimenze breakdownu (nadpis tabulky). */
 const DIM_TITLE: Record<BreakdownDim, string> = {
   context: "Podle kategorie akce",
   position: "Podle pozice",
-  bucket: "Podle hloubkového koše",
+  bucket: "Podle hloubkovĂ©ho koĹˇe",
 };
 
 const PROFILE_DIM_TITLE: Record<StatsV2BreakdownDim, string> = {
   gameVariant: "Podle varianty hry",
-  tableFormat: "Podle formátu stolu",
-  blindSpeed: "Podle rychlosti blindů",
+  tableFormat: "Podle formatu stolu",
+  blindSpeed: "Podle rychlosti blindu",
   street: "Podle streety",
   evModel: "Podle modelu",
   ante: "Podle ante",
-  rakeMode: "Podle rake režimu",
+  rakeMode: "Podle rake rezimu",
   rangePackId: "Podle preflop modelu",
   position: "Podle pozice",
   bucket: "Podle stacku",
-  context: "Podle akčního node",
+  context: "Podle akcni situace",
 };
 
-/** Český popisek akčního kontextu (kategorie). */
+/** ÄŚeskĂ˝ popisek akÄŤnĂ­ho kontextu (kategorie). */
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
   VS_LIMP: "Proti limpu (iso-raise)",
@@ -159,13 +159,13 @@ const CONTEXT_LABEL: Record<ActionContext, string> = {
 };
 
 /**
- * Český popisek skupiny pro zobrazení (raw `key` zůstává v `data-group`).
- * Pro `context` přeloží Akční_kontext, pro `bucket` přidá jednotku BB,
- * pro `position` ponechá název pozice beze změny.
+ * ÄŚeskĂ˝ popisek skupiny pro zobrazenĂ­ (raw `key` zĹŻstĂˇvĂˇ v `data-group`).
+ * Pro `context` pĹ™eloĹľĂ­ AkÄŤnĂ­_kontext, pro `bucket` pĹ™idĂˇ jednotku BB,
+ * pro `position` ponechĂˇ nĂˇzev pozice beze zmÄ›ny.
  */
 const POSTFLOP_DIM_TITLE: Record<PostflopStatsBreakdownDim, string> = {
   street: "Podle streety",
-  actionNode: "Podle action node",
+  actionNode: "Podle postflop situace",
   boardTextureKey: "Podle textury boardu",
   strategyPackId: "Podle postflop modelu",
   confidence: "Podle jistoty",
@@ -184,24 +184,87 @@ function groupLabel(dim: BreakdownDim | PostflopStatsBreakdownDim, key: string):
     case "confidence":
       return confidenceLabel(key);
     case "actionNode":
+      return postflopActionNodeLabel(key);
     case "boardTextureKey":
+      return postflopBoardTextureKeyLabel(key);
     case "street":
-      return key;
+      return streetLabel(key);
   }
 }
 
 function profileGroupLabel(dim: StatsV2BreakdownDim, key: string): string {
   switch (dim) {
+    case "gameVariant":
+      return gameVariantLabel(key);
+    case "tableFormat":
+      return tableFormatLabel(key);
+    case "blindSpeed":
+      return blindSpeedLabel(key);
+    case "street":
+      return profileStreetLabel(key);
     case "context":
       return CONTEXT_LABEL[key as ActionContext] ?? key;
     case "bucket":
       return `${key} BB`;
     case "ante":
-      return key === "ON" ? "Ante zapnuté" : "Ante vypnuté";
+      return key === "ON" ? "Ante zapnute" : "Ante vypnute";
     case "evModel":
       return key === "CHIP_EV" ? "chipEV" : key;
+    case "rakeMode":
+      return rakeModeLabel(key);
     case "rangePackId":
       return "Preflop model";
+    case "position":
+      return key;
+    default:
+      return key;
+  }
+}
+
+function gameVariantLabel(key: string): string {
+  if (key === "CASH") return "Cash";
+  return key;
+}
+
+function tableFormatLabel(key: string): string {
+  switch (key) {
+    case "FULL_RING_9":
+      return "9-max full ring";
+    case "SIX_MAX":
+      return "6-max";
+    default:
+      return key;
+  }
+}
+
+function blindSpeedLabel(key: string): string {
+  switch (key) {
+    case "REGULAR":
+      return "Regular";
+    case "TURBO":
+      return "Turbo";
+    default:
+      return key;
+  }
+}
+
+function profileStreetLabel(key: string): string {
+  switch (key) {
+    case "PREFLOP":
+      return "Preflop";
+    default:
+      return streetLabel(key);
+  }
+}
+
+function rakeModeLabel(key: string): string {
+  switch (key) {
+    case "NONE":
+      return "N/A";
+    case "RAKE":
+      return "S rakem";
+    case "NO_RAKE":
+      return "Bez raku";
     default:
       return key;
   }
@@ -220,6 +283,75 @@ function confidenceLabel(key: string): string {
   }
 }
 
+function postflopActionNodeLabel(key: string): string {
+  switch (key) {
+    case "SINGLE_RAISED_POT_CBET":
+      return "Flop c-bet v SRP";
+    case "THREE_BET_POT_CBET":
+      return "Flop c-bet ve 3bet potu";
+    case "TURN_BARREL":
+      return "Turn barrel";
+    case "RIVER_PRESSURE":
+      return "River tlak";
+    default:
+      return key;
+  }
+}
+
+function postflopBoardTextureKeyLabel(key: string): string {
+  return key
+    .split("|")
+    .filter(Boolean)
+    .map(boardTextureLabel)
+    .join(", ");
+}
+
+function boardTextureLabel(key: string): string {
+  switch (key) {
+    case "paired":
+      return "sparovany";
+    case "monotone":
+      return "monotone";
+    case "two-tone":
+      return "two-tone";
+    case "rainbow":
+      return "rainbow";
+    case "connected":
+      return "propojeny";
+    case "dry":
+      return "dry";
+    case "ace-high":
+      return "A-high";
+    case "broadway-high":
+      return "broadway-high";
+    case "low":
+      return "low";
+    case "medium":
+      return "medium";
+    case "straight-possible":
+      return "straight mozny";
+    case "flush-draw-heavy":
+      return "flush draw";
+    case "disconnected":
+      return "disconnected";
+    default:
+      return key;
+  }
+}
+
+function streetLabel(key: string): string {
+  switch (key) {
+    case "FLOP":
+      return "Flop";
+    case "TURN":
+      return "Turn";
+    case "RIVER":
+      return "River";
+    default:
+      return key;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // DOM helpery
 // ---------------------------------------------------------------------------
@@ -231,9 +363,9 @@ function el(tag: string, className?: string): HTMLElement {
 }
 
 /**
- * Vytvoří element zobrazující úspěšnost. Při `null` nastaví třídu
- * `.rate--unavailable` a text `"—"` (Req 9.7), jinak text `"<rate> %"`.
- * Vždy nastaví `data-rate` (prázdné při nedostupnosti) pro testovatelnost.
+ * VytvoĹ™Ă­ element zobrazujĂ­cĂ­ ĂşspÄ›Ĺˇnost. PĹ™i `null` nastavĂ­ tĹ™Ă­du
+ * `.rate--unavailable` a text `"â€”"` (Req 9.7), jinak text `"<rate> %"`.
+ * VĹľdy nastavĂ­ `data-rate` (prĂˇzdnĂ© pĹ™i nedostupnosti) pro testovatelnost.
  */
 function rateElement(tag: string, baseClass: string, rate: number | null): HTMLElement {
   const node = el(tag, baseClass);
@@ -249,10 +381,10 @@ function rateElement(tag: string, baseClass: string, rate: number | null): HTMLE
 }
 
 // ---------------------------------------------------------------------------
-// Dílčí sekce
+// DĂ­lÄŤĂ­ sekce
 // ---------------------------------------------------------------------------
 
-/** Souhrnná úspěšnost a celkový počet zodpovězených (Req 9.3). */
+/** SouhrnnĂˇ ĂşspÄ›Ĺˇnost a celkovĂ˝ poÄŤet zodpovÄ›zenĂ˝ch (Req 9.3). */
 function renderSummary(summary: Summary): HTMLElement {
   const box = el("section", "dashboard-summary");
 
@@ -262,12 +394,12 @@ function renderSummary(summary: Summary): HTMLElement {
 
   const total = el("div", "summary-total");
   total.dataset.total = String(summary.total);
-  total.textContent = `Zodpovězeno celkem: ${summary.total}`;
+  total.textContent = `ZodpovÄ›zeno celkem: ${summary.total}`;
   box.appendChild(total);
 
   const rateLine = el("div", "summary-rate-line");
   const rateLabel = el("span", "summary-rate-label");
-  rateLabel.textContent = "Úspěšnost: ";
+  rateLabel.textContent = "ĂšspÄ›Ĺˇnost: ";
   const rate = rateElement("span", "summary-rate", summary.rate);
   rateLine.appendChild(rateLabel);
   rateLine.appendChild(rate);
@@ -276,28 +408,28 @@ function renderSummary(summary: Summary): HTMLElement {
   return box;
 }
 
-/** Aktuální streak a počet spotů relace (Req 9.5). */
+/** AktuĂˇlnĂ­ streak a poÄŤet spotĹŻ relace (Req 9.5). */
 function renderStreakSession(streak: number, sessionCount: number): HTMLElement {
   const box = el("section", "dashboard-session");
 
   const heading = el("h3", "dashboard-session__title");
-  heading.textContent = "Aktuální relace";
+  heading.textContent = "AktuĂˇlnĂ­ relace";
   box.appendChild(heading);
 
   const streakNode = el("div", "dashboard-streak");
   streakNode.dataset.streak = String(streak);
-  streakNode.textContent = `Série správných odpovědí: ${streak}`;
+  streakNode.textContent = `SĂ©rie sprĂˇvnĂ˝ch odpovÄ›dĂ­: ${streak}`;
   box.appendChild(streakNode);
 
   const sessionNode = el("div", "dashboard-session-count");
   sessionNode.dataset.sessionCount = String(sessionCount);
-  sessionNode.textContent = `Spotů v této relaci: ${sessionCount}`;
+  sessionNode.textContent = `SpotĹŻ v tĂ©to relaci: ${sessionCount}`;
   box.appendChild(sessionNode);
 
   return box;
 }
 
-/** Jeden řádek skupiny breakdownu (Req 9.4, 9.7). */
+/** Jeden Ĺ™Ăˇdek skupiny breakdownu (Req 9.4, 9.7). */
 function renderBreakdownRow(dim: BreakdownDim, g: GroupStat): HTMLElement {
   const row = el("div", "breakdown-row");
   row.dataset.group = g.key;
@@ -309,16 +441,16 @@ function renderBreakdownRow(dim: BreakdownDim, g: GroupStat): HTMLElement {
   row.appendChild(name);
 
   const count = el("span", "breakdown-row__count");
-  count.textContent = `${g.total}\u00d7`; // např. "12×"
+  count.textContent = `${g.total}\u00d7`; // napĹ™. "12Ă—"
   row.appendChild(count);
 
-  // Úspěšnost — prázdná skupina ⇒ "—" (Req 9.7).
+  // ĂšspÄ›Ĺˇnost â€” prĂˇzdnĂˇ skupina â‡’ "â€”" (Req 9.7).
   row.appendChild(rateElement("span", "breakdown-row__rate", g.rate));
 
   return row;
 }
 
-/** Jedna rozčleněná tabulka pro zadanou dimenzi (Req 9.4). */
+/** Jedna rozÄŤlenÄ›nĂˇ tabulka pro zadanou dimenzi (Req 9.4). */
 function renderBreakdown(dim: BreakdownDim, breakdown: Breakdown): HTMLElement {
   const box = el("section", `breakdown breakdown--${dim}`);
   box.dataset.dim = dim;
@@ -375,7 +507,7 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     });
     status.hidden = false;
     status.className = "stats-transfer__status stats-transfer__status--ok";
-    status.textContent = "Export statistik je připravený v poli JSON.";
+    status.textContent = "Export statistik je pĹ™ipravenĂ˝ v poli JSON.";
   });
 
   importBtn.addEventListener("click", () => {
@@ -396,12 +528,12 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
       if (refreshedStatus) {
         refreshedStatus.hidden = false;
         refreshedStatus.className = "stats-transfer__status stats-transfer__status--ok";
-        refreshedStatus.textContent = `Importováno ${result.imported} záznamů statistik.`;
+        refreshedStatus.textContent = `ImportovĂˇno ${result.imported} zĂˇznamĹŻ statistik.`;
       }
       return;
     }
     status.className = "stats-transfer__status stats-transfer__status--error";
-    status.textContent = result.error ?? "Import statistik se nepodařil.";
+    status.textContent = result.error ?? "Import statistik se nepodaĹ™il.";
   });
 
   return box;
@@ -437,7 +569,7 @@ function renderProfileBreakdown(dim: StatsV2BreakdownDim, groups: StatsV2Group[]
   const rows = el("div", "profile-breakdown__rows");
   if (groups.length === 0) {
     const empty = el("div", "profile-breakdown__empty");
-    empty.textContent = "Zatím bez záznamů.";
+    empty.textContent = "ZatĂ­m bez zĂˇznamĹŻ.";
     rows.appendChild(empty);
   } else {
     for (const g of groups) {
@@ -453,7 +585,7 @@ function renderProfileBreakdowns(store: StatsStore): HTMLElement {
   const box = el("section", "profile-breakdowns");
 
   const heading = el("h3", "profile-breakdowns__title");
-  heading.textContent = "Profilové rozčlenění";
+  heading.textContent = "ProfilovĂ© rozÄŤlenÄ›nĂ­";
   box.appendChild(heading);
 
   const eventsV2 = migrateResultRecordsToV2(store.events());
@@ -530,7 +662,7 @@ function renderPostflopBreakdowns(
 }
 
 // ---------------------------------------------------------------------------
-// Styly (soběstačné, aby dashboard fungoval i bez externího CSS)
+// Styly (sobÄ›staÄŤnĂ©, aby dashboard fungoval i bez externĂ­ho CSS)
 // ---------------------------------------------------------------------------
 
 function dashboardStyles(): HTMLStyleElement {
@@ -577,19 +709,19 @@ function dashboardStyles(): HTMLStyleElement {
 }
 
 // ---------------------------------------------------------------------------
-// Hlavní vykreslovací funkce (Req 9.3, 9.4, 9.5, 9.7)
+// HlavnĂ­ vykreslovacĂ­ funkce (Req 9.3, 9.4, 9.5, 9.7)
 // ---------------------------------------------------------------------------
 
 /**
- * Vykreslí dashboard statistik do `root`.
+ * VykreslĂ­ dashboard statistik do `root`.
  *
- * Idempotentní: před vykreslením vyprázdní `root`. Čte z `data.store`
- * (`summary`, `breakdownBy`, `currentStreak`) a zobrazí počet spotů relace
- * z `data.sessionCount`. Generuje DOM elementy se sémantickými třídami pro
- * testovatelnost (viz dokumentační blok modulu).
+ * IdempotentnĂ­: pĹ™ed vykreslenĂ­m vyprĂˇzdnĂ­ `root`. ÄŚte z `data.store`
+ * (`summary`, `breakdownBy`, `currentStreak`) a zobrazĂ­ poÄŤet spotĹŻ relace
+ * z `data.sessionCount`. Generuje DOM elementy se sĂ©mantickĂ˝mi tĹ™Ă­dami pro
+ * testovatelnost (viz dokumentaÄŤnĂ­ blok modulu).
  *
- * @param data Zdroj statistik + počet spotů aktuální relace.
- * @param root Cílový kontejner.
+ * @param data Zdroj statistik + poÄŤet spotĹŻ aktuĂˇlnĂ­ relace.
+ * @param root CĂ­lovĂ˝ kontejner.
  */
 export function renderDashboard(data: DashboardData, root: HTMLElement): void {
   root.innerHTML = "";
@@ -603,17 +735,17 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
   // Souhrn (Req 9.3).
   wrapper.appendChild(renderSummary(store.summary()));
 
-  // Streak + počet spotů relace (Req 9.5).
+  // Streak + poÄŤet spotĹŻ relace (Req 9.5).
   wrapper.appendChild(renderStreakSession(store.currentStreak(), sessionCount));
 
   // Export/import JSON statistik (legacy parity gap).
   wrapper.appendChild(renderStatsTransfer(data, root));
 
-  // Profilové rozčlenění nad migrovanými záznamy v2 (multi-format roadmap).
+  // ProfilovĂ© rozÄŤlenÄ›nĂ­ nad migrovanĂ˝mi zĂˇznamy v2 (multi-format roadmap).
   wrapper.appendChild(renderProfileBreakdowns(store));
   wrapper.appendChild(renderPostflopBreakdowns(data.postflopRecords ?? []));
 
-  // Rozčlenění podle tří dimenzí (Req 9.4, prázdné skupiny Req 9.7).
+  // RozÄŤlenÄ›nĂ­ podle tĹ™Ă­ dimenzĂ­ (Req 9.4, prĂˇzdnĂ© skupiny Req 9.7).
   const dims: BreakdownDim[] = ["context", "position", "bucket"];
   for (const dim of dims) {
     wrapper.appendChild(renderBreakdown(dim, store.breakdownBy(dim)));

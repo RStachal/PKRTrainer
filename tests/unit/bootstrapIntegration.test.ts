@@ -276,7 +276,7 @@ describe("bootstrap - inicializacni tok", () => {
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
     expect(warning?.textContent).toContain("candidate/preview");
-    expect(warning?.textContent).toContain("Cash RAKE preview");
+    expect(warning?.textContent).toContain("Cash s rakem preview");
     expect(warning?.textContent).not.toContain("https://");
     expect(warning?.textContent).not.toContain("RangePack");
     expect(root.querySelector(".poker-table")).toBeNull();

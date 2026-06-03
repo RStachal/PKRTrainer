@@ -126,7 +126,7 @@ describe("profileSelector", () => {
     expect(format?.value).toBe("SIX_MAX");
     expect(rakeMode?.value).toBe("RAKE");
     expect(note?.dataset.status).toBe("candidate");
-    expect(note?.textContent).toContain("Cash RAKE preview");
+    expect(note?.textContent).toContain("Cash s rakem preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent?.toLowerCase()).not.toContain("zdroj");
     expect(note?.textContent).not.toContain("RangePack");
@@ -136,7 +136,7 @@ describe("profileSelector", () => {
 
     note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("candidate");
-    expect(note?.textContent).toContain("Cash NO_RAKE preview");
+    expect(note?.textContent).toContain("Cash bez raku preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent?.toLowerCase()).not.toContain("zdroj");
     expect(note?.textContent).not.toContain("RangePack");

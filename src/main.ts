@@ -528,7 +528,7 @@ function candidateProfileLabel(profile: TrainingProfile): string {
     return `SNG ${profile.evModel === "CHIP_EV" ? "chipEV" : "ICM"} preview`;
   }
   if (profile.gameVariant === "CASH") {
-    return `Cash ${profile.rakeMode === "RAKE" ? "RAKE" : "NO_RAKE"} preview`;
+    return `Cash ${profile.rakeMode === "RAKE" ? "s rakem" : "bez raku"} preview`;
   }
   return `${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} ${profile.gameVariant} preflop preview`;
 }
