@@ -104,5 +104,9 @@ describe("postflopTrainingSpot", () => {
     expect(trainingSpot.potType).toBe("THREE_BET_POT");
     expect(trainingSpot.potBB).toBe(18);
     expect(trainingSpot.spr).toBe(2.2);
+    expect(trainingSpot.explanation.valueHands).toContain("overpairs with pot-control");
+    expect(trainingSpot.explanation.bluffHands).toContain("A-high backdoor blockers");
+    expect(trainingSpot.explanation.checkHands).toContain("underpairs without backdoors");
+    expect(trainingSpot.explanation.valueHands).not.toContain("range advantage hands");
   });
 });

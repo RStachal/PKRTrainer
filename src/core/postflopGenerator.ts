@@ -282,7 +282,7 @@ export function recommendPostflopAction(
     return {
       action: "CHECK",
       explanation:
-        "Board je dynamický. Bez detailního modelu range je nejlepší kontrolní akce check.",
+        "The board is dynamic. Without a detailed range model, check is the best control action.",
     };
   }
 
@@ -290,7 +290,7 @@ export function recommendPostflopAction(
     return {
       action: "BET_BIG",
       explanation:
-        "Suchý river má málo nových draw. V prototypu se preferuje větší tlak.",
+        "Dry rivers create few new draws. The prototype prefers higher pressure.",
     };
   }
 
@@ -298,14 +298,14 @@ export function recommendPostflopAction(
     return {
       action: "BET_SMALL",
       explanation:
-        "Suchý nebo stabilní board je vhodný pro malý c-bet v prototypové strategii.",
+        "Dry or stable boards are suitable for a small c-bet in the prototype strategy.",
     };
   }
 
   return {
     action: "CHECK",
     explanation:
-      "Textura boardu není jednoznačně stabilní. Prototyp doporučuje check.",
+      "The board texture is not clearly stable. The prototype recommends check.",
   };
 }
 

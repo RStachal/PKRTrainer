@@ -62,8 +62,8 @@ export interface PostflopTrainingSpot {
 
 const ACTION_LABEL: Record<PostflopAction, string> = {
   CHECK: "Check",
-  BET_SMALL: "Bet maly",
-  BET_BIG: "Bet velky",
+  BET_SMALL: "Bet small",
+  BET_BIG: "Bet big",
 };
 
 export function postflopSpotToTrainingSpot(spot: PostflopSpot): PostflopTrainingSpot {
@@ -127,18 +127,40 @@ function roundedSpr(effectiveStackBB: number, potBB: number): number {
 function buildExplanation(spot: PostflopSpot): PostflopExplanation {
   return {
     summary: spot.explanation,
-    valueHands: valueHandsForAction(spot.recommendedAction),
-    bluffHands: bluffHandsForAction(spot.recommendedAction, spot.textures),
-    checkHands: checkHandsForTextures(spot.textures),
+    valueHands: valueHandsForSpot(spot),
+    bluffHands: bluffHandsForSpot(spot),
+    checkHands: checkHandsForSpot(spot),
     nextStreetPlan: nextStreetPlanForStreet(spot.street, spot.recommendedAction),
     source: spot.strategySource,
   };
 }
 
-function valueHandsForAction(action: PostflopAction): readonly string[] {
-  switch (action) {
+function valueHandsForSpot(spot: PostflopSpot): readonly string[] {
+  if (spot.street === "FLOP") {
+    if (spot.potType === "THREE_BET_POT") {
+      return spot.recommendedAction === "CHECK"
+        ? ["overpairs with pot-control", "top pair good kicker", "middle pairs with backdoors"]
+        : ["overpairs", "top pair top kicker", "strong combo draws"];
+    }
+    if (spot.positionPattern === "BTN_VS_BB" || spot.positionPattern === "EP_VS_BB") {
+      if (spot.textures.includes("ace-high") || spot.textures.includes("dry")) {
+        return ["top pair", "second pair", "overpairs from preflop range"];
+      }
+      return ["top pair good kicker", "overpairs", "strong pair+draw"];
+    }
+    if (spot.positionPattern === "OOP_RAISER_VS_IP_CALLER") {
+      return spot.recommendedAction === "CHECK"
+        ? ["top pair weak kicker", "second pair", "overpair check-call portion"]
+        : ["top pair+", "overpairs", "strong made hands"];
+    }
+    if (spot.positionPattern === "SB_VS_BB") {
+      return ["top pair+", "good second pairs", "strong equity draws"];
+    }
+  }
+
+  switch (spot.recommendedAction) {
     case "BET_BIG":
-      return ["top pair+", "overpair", "silne made hands"];
+      return ["top pair+", "overpair", "strong made hands"];
     case "BET_SMALL":
       return ["top pair", "middle pair", "range advantage hands"];
     case "CHECK":
@@ -146,22 +168,51 @@ function valueHandsForAction(action: PostflopAction): readonly string[] {
   }
 }
 
-function bluffHandsForAction(
-  action: PostflopAction,
-  textures: readonly BoardTexture[],
-): readonly string[] {
-  if (action === "CHECK") return [];
-  if (textures.includes("connected") || textures.includes("two-tone")) {
+function bluffHandsForSpot(spot: PostflopSpot): readonly string[] {
+  if (spot.recommendedAction === "CHECK") {
+    if (spot.street === "FLOP" && spot.potType === "THREE_BET_POT") {
+      return ["A-high backdoor blockers", "gutshot with overcards"];
+    }
+    return [];
+  }
+
+  if (spot.street === "FLOP") {
+    if (spot.potType === "THREE_BET_POT") {
+      return ["nut flush draw", "A-high blocker hands", "gutshot + overcards"];
+    }
+    if (spot.positionPattern === "BTN_VS_BB") {
+      return spot.textures.includes("connected") || spot.textures.includes("two-tone")
+        ? ["open-ended draws", "flush draws", "overcards with backdoor equity"]
+        : ["backdoor flush draw", "BDFD + overcard", "blocker hands"];
+    }
+    if (spot.positionPattern === "OOP_RAISER_VS_IP_CALLER") {
+      return ["strong draw without showdown value", "overcards with backdoor equity", "top-pair blockers"];
+    }
+  }
+
+  if (spot.textures.includes("connected") || spot.textures.includes("two-tone")) {
     return ["open-ended draws", "flush draws", "overcards"];
   }
   return ["backdoor draws", "blocker hands"];
 }
 
-function checkHandsForTextures(textures: readonly BoardTexture[]): readonly string[] {
-  if (textures.includes("monotone") || textures.includes("connected")) {
-    return ["slabe pary", "air bez blockeru", "stredni showdown value"];
+function checkHandsForSpot(spot: PostflopSpot): readonly string[] {
+  if (spot.street === "FLOP") {
+    if (spot.potType === "THREE_BET_POT") {
+      return ["underpairs without backdoors", "A-high showdown", "air without blockers"];
+    }
+    if (!spot.inPosition || spot.textures.includes("connected") || spot.textures.includes("monotone")) {
+      return ["weaker pairs", "medium showdown value", "air without good backdoors"];
+    }
+    if (spot.textures.includes("ace-high") || spot.textures.includes("dry")) {
+      return ["worst air", "slowplay portion", "weak backdoor combos"];
+    }
   }
-  return ["nejhorsi air", "cast slowplay ruk"];
+
+  if (spot.textures.includes("monotone") || spot.textures.includes("connected")) {
+    return ["weak pairs", "air without blockers", "medium showdown value"];
+  }
+  return ["worst air", "slowplay portion"];
 }
 
 function nextStreetPlanForStreet(
@@ -169,10 +220,10 @@ function nextStreetPlanForStreet(
   action: PostflopAction,
 ): string {
   if (street === "RIVER") {
-    return "Na riveru uz dalsi street neni; vyhodnot showdown value a sizing.";
+    return "River is the final street; evaluate showdown value and sizing.";
   }
   if (action === "CHECK") {
-    return "Na dalsi streete znovu vyhodnot texturu, range advantage a SPR.";
+    return "On the next street, re-check texture, range advantage and SPR.";
   }
-  return "Na blank dalsi streete muzes pokracovat tlakem, na dynamicke karte zpomal.";
+  return "On blank runouts you can keep pressure; slow down on dynamic cards.";
 }

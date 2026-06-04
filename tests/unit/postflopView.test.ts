@@ -31,8 +31,12 @@ describe("postflopView - DOM", () => {
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent).toContain("SPR");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent).toContain(" vs ");
     expect(root.querySelector(".postflop-table")).not.toBeNull();
+    expect(root.querySelector(".postflop-table__rail")).not.toBeNull();
+    expect(root.querySelector(".postflop-table__center-label")).not.toBeNull();
     expect(root.querySelectorAll(".postflop-seat")).toHaveLength(9);
     expect(root.querySelectorAll(".postflop-seat--active")).toHaveLength(2);
+    expect(root.querySelectorAll(".postflop-seat__badge")).toHaveLength(2);
+    expect(root.querySelectorAll(".postflop-seat__stack-bar")).toHaveLength(2);
     expect(root.querySelectorAll(".postflop-table__board .postflop-card")).toHaveLength(5);
     expect(root.querySelectorAll(".postflop-card")).toHaveLength(7);
     expect(root.querySelectorAll(".postflop-texture").length).toBeGreaterThan(0);
@@ -83,6 +87,18 @@ describe("postflopView - DOM", () => {
       .toHaveLength(3);
     expect(root.querySelector(".postflop-action--recommended")).not.toBeNull();
     expect(root.querySelectorAll(".postflop-practical__block")).toHaveLength(5);
+    const rangeSummary = root.querySelector<HTMLElement>(".postflop-range-summary");
+    expect(rangeSummary).not.toBeNull();
+    expect(rangeSummary?.dataset.street).toBe("FLOP");
+    expect(rangeSummary?.textContent).toContain("Flop range");
+    expect(rangeSummary?.textContent).toContain("Recommended:");
+    expect(rangeSummary?.textContent).toContain("Your action:");
+    expect(rangeSummary?.textContent).toContain("Value");
+    expect(rangeSummary?.textContent).toContain("Bluffs");
+    expect(rangeSummary?.textContent).toContain("Check");
+    expect(root.querySelectorAll(".postflop-flopzilla__cell")).toHaveLength(169);
+    expect(root.querySelector(".postflop-flopzilla__cell--hero")).not.toBeNull();
+    expect(root.querySelector(".postflop-flopzilla__legend")).not.toBeNull();
     expect(result?.textContent).toContain("Value range");
     expect(result?.textContent).toContain("Model");
     expect(result?.textContent).toContain("Heuristicky model");
@@ -94,7 +110,7 @@ describe("postflopView - DOM", () => {
     expect(result?.textContent).toContain("SPR okno:");
     expect(result?.textContent).not.toContain("Duvod vyberu:");
     expect(result?.textContent).toContain("Predpoklad 1:");
-    expect(result?.textContent).toContain("Pl\u00e1n");
+    expect(result?.textContent).toContain("Plan");
   });
 
   it("po odpovedi zavola callback s postflop training spotem", () => {
@@ -201,5 +217,6 @@ describe("postflopView - DOM", () => {
     expect(result?.textContent).not.toContain("StrategyPack");
     expect(result?.textContent).not.toContain("Rule:");
     expect(result?.textContent).not.toContain("https://");
+    expect(root.querySelector(".postflop-range-summary")).toBeNull();
   });
 });

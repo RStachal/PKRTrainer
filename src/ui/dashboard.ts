@@ -128,7 +128,7 @@ function normalizeCount(n: number): number {
 const DIM_TITLE: Record<BreakdownDim, string> = {
   context: "Podle kategorie akce",
   position: "Podle pozice",
-  bucket: "Podle hloubkovĂ©ho koĹˇe",
+  bucket: "Podle hloubkov\u00e9ho ko\u0161e",
 };
 
 const PROFILE_DIM_TITLE: Record<StatsV2BreakdownDim, string> = {
@@ -394,12 +394,12 @@ function renderSummary(summary: Summary): HTMLElement {
 
   const total = el("div", "summary-total");
   total.dataset.total = String(summary.total);
-  total.textContent = `ZodpovÄ›zeno celkem: ${summary.total}`;
+  total.textContent = `Zodpov\u011bzeno celkem: ${summary.total}`;
   box.appendChild(total);
 
   const rateLine = el("div", "summary-rate-line");
   const rateLabel = el("span", "summary-rate-label");
-  rateLabel.textContent = "ĂšspÄ›Ĺˇnost: ";
+  rateLabel.textContent = "\u00dasp\u011b\u0161nost: ";
   const rate = rateElement("span", "summary-rate", summary.rate);
   rateLine.appendChild(rateLabel);
   rateLine.appendChild(rate);
@@ -413,17 +413,17 @@ function renderStreakSession(streak: number, sessionCount: number): HTMLElement 
   const box = el("section", "dashboard-session");
 
   const heading = el("h3", "dashboard-session__title");
-  heading.textContent = "AktuĂˇlnĂ­ relace";
+  heading.textContent = "Aktu\u00e1ln\u00ed relace";
   box.appendChild(heading);
 
   const streakNode = el("div", "dashboard-streak");
   streakNode.dataset.streak = String(streak);
-  streakNode.textContent = `SĂ©rie sprĂˇvnĂ˝ch odpovÄ›dĂ­: ${streak}`;
+  streakNode.textContent = `S\u00e9rie spr\u00e1vn\u00fdch odpov\u011bd\u00ed: ${streak}`;
   box.appendChild(streakNode);
 
   const sessionNode = el("div", "dashboard-session-count");
   sessionNode.dataset.sessionCount = String(sessionCount);
-  sessionNode.textContent = `SpotĹŻ v tĂ©to relaci: ${sessionCount}`;
+  sessionNode.textContent = `Spot\u016f v t\u00e9to relaci: ${sessionCount}`;
   box.appendChild(sessionNode);
 
   return box;
@@ -507,7 +507,7 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     });
     status.hidden = false;
     status.className = "stats-transfer__status stats-transfer__status--ok";
-    status.textContent = "Export statistik je pĹ™ipravenĂ˝ v poli JSON.";
+    status.textContent = "Export statistik je p\u0159ipraven\u00fd v poli JSON.";
   });
 
   importBtn.addEventListener("click", () => {
@@ -528,12 +528,12 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
       if (refreshedStatus) {
         refreshedStatus.hidden = false;
         refreshedStatus.className = "stats-transfer__status stats-transfer__status--ok";
-        refreshedStatus.textContent = `ImportovĂˇno ${result.imported} zĂˇznamĹŻ statistik.`;
+        refreshedStatus.textContent = `Importov\u00e1no ${result.imported} z\u00e1znam\u016f statistik.`;
       }
       return;
     }
     status.className = "stats-transfer__status stats-transfer__status--error";
-    status.textContent = result.error ?? "Import statistik se nepodaĹ™il.";
+    status.textContent = result.error ?? "Import statistik se nepoda\u0159il.";
   });
 
   return box;
@@ -569,7 +569,7 @@ function renderProfileBreakdown(dim: StatsV2BreakdownDim, groups: StatsV2Group[]
   const rows = el("div", "profile-breakdown__rows");
   if (groups.length === 0) {
     const empty = el("div", "profile-breakdown__empty");
-    empty.textContent = "ZatĂ­m bez zĂˇznamĹŻ.";
+    empty.textContent = "Zat\u00edm bez z\u00e1znam\u016f.";
     rows.appendChild(empty);
   } else {
     for (const g of groups) {
@@ -585,7 +585,7 @@ function renderProfileBreakdowns(store: StatsStore): HTMLElement {
   const box = el("section", "profile-breakdowns");
 
   const heading = el("h3", "profile-breakdowns__title");
-  heading.textContent = "ProfilovĂ© rozÄŤlenÄ›nĂ­";
+  heading.textContent = "Profilov\u00e9 roz\u010dlen\u011bn\u00ed";
   box.appendChild(heading);
 
   const eventsV2 = migrateResultRecordsToV2(store.events());

@@ -688,6 +688,37 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 53.7 Prevest preflop profilovy dashboard z raw enumu na hracske popisky
     - Viditelne profile breakdown radky zobrazuji napr. 9-max full ring, Preflop, Ante vypnute; raw hodnoty zustavaji jen v data-group
 
+  - [x] 53.8 Sjednotit rake labely v profilovem vyberu
+    - Select zobrazuje S rakem / Bez raku misto anglickych Rake / No rake; hodnoty zustavaji RAKE / NO_RAKE
+
+- [x] 54. Zapracovat flop range do vysledku po odpovedi
+  - [x] 54.1 Zobrazit source-free range prehled u flop vysledku
+    - Po odpovedi na flopu vysledek ukazuje Value / Bluffy / Check kandidaty, doporucenou akci a hracsky fokus bez URL, provideru nebo internich pack citaci
+
+- [x] 55. Skryt postflop zalozku a napojit flop ranges na situace
+  - [x] 55.1 Schovat Postflop z hlavni navigace
+    - Interni postflop panel se otevre jen pres Start treninku z filtru pri vyberu FLOP/TURN/RIVER
+  - [x] 55.2 Opravit hlavni viditelne texty rozbite kodovanim
+    - Header, hlavni zalozky, profilovy selector, vysledek a chybove hlasky pouzivaji stabilni Unicode texty
+  - [x] 55.3 Rozlisit flop range kandidaty podle konkretni situace
+    - Value / Bluffy / Check kandidati se skladaji podle pot typu, pozicniho patternu a board textury
+
+- [x] 56. Pridat Flopzilla-style matrix pro flop ranges
+  - [x] 56.1 Vykreslit 13x13 postflop matrix ve vysledku flopu
+    - Flop vysledek obsahuje 169 hand-class bunek, hero hand outline a legendu kategorii
+  - [x] 56.2 Barevne odlisit postflop kategorie proti boardu
+    - Matrix rozlisuje Set+, Made straight, Two pair, Overpair, Top pair, Pair, Underpair, Flush draw, OESD, Gutshot, Backdoor draw, Overcards a Air
+  - [x] 56.3 Ponechat pokerovy jazyk v anglictine
+    - Range kandidati, action labels a flop explanation pouzivaji anglicke poker terminy
+
+- [x] 57. Premium postflop UI a mobilni ergonomie
+  - [x] 57.1 Vylepsit vizual stolu a hracu
+    - Postflop stul ma rail, center label, detailni hero/villain badge a stack bary
+  - [x] 57.2 Vylepsit akce, karty a vysledek
+    - Tlacitka maji stabilni rozmery, premium gradienty, hover stav a vyraznejsi recommended/chosen stav
+  - [x] 57.3 Zlepsit mobilni Flopzilla matrix
+    - Matrix ma horizontalni scroll hint a mensi mobilni grid s pevnou vyskou bunek
+
 ## Notes
 
 - Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.

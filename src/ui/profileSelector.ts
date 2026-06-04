@@ -53,8 +53,8 @@ const EV_MODELS: { value: EvModel; label: string }[] = [
 
 const RAKE_MODES: { value: RakeMode; label: string }[] = [
   { value: "NONE", label: "N/A" },
-  { value: "RAKE", label: "Rake" },
-  { value: "NO_RAKE", label: "No rake" },
+  { value: "RAKE", label: "S rakem" },
+  { value: "NO_RAKE", label: "Bez raku" },
 ];
 
 export function renderProfileSelector(
@@ -67,15 +67,15 @@ export function renderProfileSelector(
 
   const wrap = doc.createElement("section");
   wrap.className = "profile-selector";
-  wrap.setAttribute("aria-label", "Profil treningu");
+  wrap.setAttribute("aria-label", "Profil tr\u00e9ninku");
 
   const title = doc.createElement("div");
   title.className = "profile-selector__title";
-  title.textContent = "Profil treningu";
+  title.textContent = "Profil tr\u00e9ninku";
   wrap.appendChild(title);
 
   const variant = selectControl(doc, "Varianta", "profile-variant", GAME_VARIANTS);
-  const format = selectControl(doc, "Stul", "profile-format", TABLE_FORMATS);
+  const format = selectControl(doc, "St\u016fl", "profile-format", TABLE_FORMATS);
   const speed = selectControl(doc, "Blindy", "profile-speed", BLIND_SPEEDS);
   const street = selectControl(doc, "Street", "profile-street", STREETS);
   const evModel = selectControl(doc, "Model", "profile-ev-model", EV_MODELS);
@@ -163,7 +163,7 @@ function describeProfileStatus(profile: TrainingProfile): {
   if (isProductionPreflopProfile(profile)) {
     return {
       status: "production",
-      text: "Produkce: MTT 9-max regular preflop chipEV. Trening bezi z offline bundlu.",
+      text: "Produkce: MTT 9-max regular preflop chipEV. Tr\u00e9nink b\u011b\u017e\u00ed z offline bundlu.",
     };
   }
 
@@ -171,8 +171,8 @@ function describeProfileStatus(profile: TrainingProfile): {
     return {
       status: "preview",
       text:
-        `Preview: ${profile.street.toLowerCase()} postflop trening zobrazi konkretni ` +
-        "situaci, stul a prakticke predpoklady.",
+        `Preview: ${profile.street.toLowerCase()} postflop tr\u00e9nink zobraz\u00ed konkr\u00e9tn\u00ed ` +
+        "situaci, st\u016fl a praktick\u00e9 p\u0159edpoklady.",
     };
   }
 
@@ -181,14 +181,14 @@ function describeProfileStatus(profile: TrainingProfile): {
     return {
       status: "candidate",
       text:
-        `${candidateProfileLabel(profile)}: candidate/preview. Produkcni scoring je vypnuty, ` +
+        `${candidateProfileLabel(profile)}: candidate/preview. Produk\u010dn\u00ed scoring je vypnut\u00fd, ` +
         "dokud profil neprojde kontrolou hand-class hodnot.",
     };
   }
 
   return {
     status: "preview",
-    text: "Preview: tato kombinace zatim nema zapnuty produkcni scoring.",
+    text: "Preview: tato kombinace zat\u00edm nem\u00e1 zapnut\u00fd produk\u010dn\u00ed scoring.",
   };
 }
 

@@ -14,6 +14,7 @@ import {
 import { postflopPublicHeuristicStrategyPacks } from "../data/ranges/postflopStrategyPack";
 import { createPostflopStrategyResolverChain } from "../data/ranges/postflopStrategyResolver";
 import { POSITION_ORDER, type Card, type Position, type Suit } from "../core/types";
+import { renderPostflopRangeMatrix } from "./postflopRangeMatrixView";
 
 const SEED_MAX = 0xffffffff;
 const POSTFLOP_STRATEGY_RESOLVER = createPostflopStrategyResolverChain(
@@ -261,8 +262,17 @@ function postflopTable(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
   felt.className = "postflop-table__felt";
   table.appendChild(felt);
 
+  const rail = doc.createElement("div");
+  rail.className = "postflop-table__rail";
+  table.appendChild(rail);
+
   const center = doc.createElement("div");
   center.className = "postflop-table__center";
+
+  const centerLabel = doc.createElement("div");
+  centerLabel.className = "postflop-table__center-label";
+  centerLabel.textContent = `${spot.heroPosition} vs ${spot.villainPosition}`;
+  center.appendChild(centerLabel);
 
   const pot = doc.createElement("div");
   pot.className = "postflop-table__pot";
@@ -326,25 +336,39 @@ function postflopSeat(
   if (!active) {
     const folded = doc.createElement("div");
     folded.className = "postflop-seat__folded";
-    folded.textContent = "slozil";
+    folded.textContent = "folded";
     seat.appendChild(folded);
     return seat;
   }
+
+  const badge = doc.createElement("div");
+  badge.className = "postflop-seat__badge";
+  badge.textContent = isHero ? "Hero" : "Villain";
+  seat.appendChild(badge);
 
   const role = doc.createElement("div");
   role.className = "postflop-seat__role";
   role.textContent = seatRole(spot, position);
   seat.appendChild(role);
 
+  const stackWrap = doc.createElement("div");
+  stackWrap.className = "postflop-seat__stack-wrap";
   const stack = doc.createElement("div");
   stack.className = "postflop-seat__stack";
   stack.textContent = `${spot.effectiveStackBB} BB`;
-  seat.appendChild(stack);
+  const stackBar = doc.createElement("div");
+  stackBar.className = "postflop-seat__stack-bar";
+  const stackFill = doc.createElement("span");
+  stackFill.style.width = `${Math.max(18, Math.min(100, (spot.effectiveStackBB / 150) * 100))}%`;
+  stackBar.appendChild(stackFill);
+  stackWrap.appendChild(stack);
+  stackWrap.appendChild(stackBar);
+  seat.appendChild(stackWrap);
 
   if (isHero) {
     const heroTag = doc.createElement("span");
     heroTag.className = "postflop-seat__tag";
-    heroTag.textContent = "TY";
+    heroTag.textContent = "You";
     seat.appendChild(heroTag);
 
     const cards = doc.createElement("div");
@@ -364,7 +388,7 @@ function postflopSeat(
 
 function seatRole(spot: PostflopTrainingSpot, position: Position): string {
   const parts: string[] = [];
-  if (position === spot.aggressorPosition) parts.push("agresor");
+  if (position === spot.aggressorPosition) parts.push("aggressor");
   if (position === spot.callerPosition) parts.push("caller");
   if (position === spot.heroPosition) parts.push(spot.inPosition ? "IP" : "OOP");
   if (position === spot.villainPosition) parts.push(spot.inPosition ? "OOP" : "IP");
@@ -423,13 +447,14 @@ function showResult(
   options.onAnswered?.(spot, chosen);
   result.hidden = false;
   result.className = `postflop-result ${correct ? "postflop-result--correct" : "postflop-result--wrong"}`;
-  renderPracticalExplanation(result, spot, correct);
+  renderPracticalExplanation(result, spot, correct, chosen);
 }
 
 function renderPracticalExplanation(
   root: HTMLElement,
   spot: PostflopTrainingSpot,
   correct: boolean,
+  chosen: PostflopAction,
 ): void {
   const doc = root.ownerDocument ?? document;
   root.innerHTML = "";
@@ -444,7 +469,7 @@ function renderPracticalExplanation(
   const grid = doc.createElement("div");
   grid.className = "postflop-practical";
   grid.appendChild(explanationBlock(doc, "Value range", spot.explanation.valueHands));
-  grid.appendChild(explanationBlock(doc, "Bluffy", spot.explanation.bluffHands));
+  grid.appendChild(explanationBlock(doc, "Bluffs", spot.explanation.bluffHands));
   grid.appendChild(explanationBlock(doc, "Check range", spot.explanation.checkHands));
   grid.appendChild(explanationBlock(doc, "Model", modelItems(spot)));
 
@@ -452,7 +477,7 @@ function renderPracticalExplanation(
   plan.className = "postflop-practical__block postflop-practical__block--wide";
   const planTitle = doc.createElement("div");
   planTitle.className = "postflop-practical__title";
-  planTitle.textContent = "Pl\u00e1n";
+  planTitle.textContent = "Plan";
   const planText = doc.createElement("p");
   planText.className = "postflop-practical__text";
   planText.textContent = spot.explanation.nextStreetPlan;
@@ -461,6 +486,9 @@ function renderPracticalExplanation(
   grid.appendChild(plan);
 
   root.appendChild(grid);
+  if (spot.street === "FLOP") {
+    root.appendChild(renderFlopRangeSummary(doc, spot, chosen));
+  }
 }
 
 function explanationBlock(
@@ -478,7 +506,7 @@ function explanationBlock(
 
   const list = doc.createElement("ul");
   list.className = "postflop-practical__list";
-  const visibleItems = items.length > 0 ? items : ["Bez prirozenych kandidatu"];
+  const visibleItems = items.length > 0 ? items : ["No natural candidates"];
   for (const item of visibleItems) {
     const li = doc.createElement("li");
     li.textContent = item;
@@ -487,6 +515,101 @@ function explanationBlock(
   block.appendChild(list);
 
   return block;
+}
+
+function renderFlopRangeSummary(
+  doc: Document,
+  spot: PostflopTrainingSpot,
+  chosen: PostflopAction,
+): HTMLElement {
+  const section = doc.createElement("section");
+  section.className = "postflop-range-summary";
+  section.dataset.street = "FLOP";
+  section.dataset.recommendedAction = spot.recommendedAction;
+  section.dataset.chosenAction = chosen;
+
+  const header = doc.createElement("div");
+  header.className = "postflop-range-summary__header";
+  const title = doc.createElement("div");
+  title.className = "postflop-range-summary__title";
+  title.textContent = "Flop range";
+  const meta = doc.createElement("div");
+  meta.className = "postflop-range-summary__meta";
+  meta.textContent =
+    `Recommended: ${actionLabel(spot.recommendedAction)} | ` +
+    `Your action: ${actionLabel(chosen)}`;
+  header.appendChild(title);
+  header.appendChild(meta);
+  section.appendChild(header);
+
+  const note = doc.createElement("p");
+  note.className = "postflop-range-summary__note";
+  note.textContent = rangeFocusText(spot);
+  section.appendChild(note);
+
+  const lanes = doc.createElement("div");
+  lanes.className = "postflop-range-summary__lanes";
+  lanes.appendChild(rangeLane(doc, "Value", spot.explanation.valueHands, "BET", spot, chosen));
+  lanes.appendChild(rangeLane(doc, "Bluffs", spot.explanation.bluffHands, "BET", spot, chosen));
+  lanes.appendChild(rangeLane(doc, "Check", spot.explanation.checkHands, "CHECK", spot, chosen));
+  section.appendChild(lanes);
+
+  const matrixMount = doc.createElement("div");
+  matrixMount.className = "postflop-range-summary__matrix";
+  renderPostflopRangeMatrix(spot, matrixMount);
+  section.appendChild(matrixMount);
+
+  return section;
+}
+
+function rangeLane(
+  doc: Document,
+  title: string,
+  items: readonly string[],
+  laneAction: "BET" | "CHECK",
+  spot: PostflopTrainingSpot,
+  chosen: PostflopAction,
+): HTMLElement {
+  const lane = doc.createElement("div");
+  lane.className = "postflop-range-summary__lane";
+  const recommendedLane = actionBelongsToLane(spot.recommendedAction, laneAction);
+  const chosenLane = actionBelongsToLane(chosen, laneAction);
+  lane.classList.toggle("postflop-range-summary__lane--recommended", recommendedLane);
+  lane.classList.toggle("postflop-range-summary__lane--chosen", chosenLane);
+
+  const heading = doc.createElement("div");
+  heading.className = "postflop-range-summary__lane-title";
+  heading.textContent = title;
+  lane.appendChild(heading);
+
+  const chips = doc.createElement("div");
+  chips.className = "postflop-range-summary__chips";
+  const visibleItems = items.length > 0 ? items : ["No natural candidates"];
+  for (const item of visibleItems) {
+    const chip = doc.createElement("span");
+    chip.className = "postflop-range-summary__chip";
+    chip.textContent = item;
+    chips.appendChild(chip);
+  }
+  lane.appendChild(chips);
+
+  return lane;
+}
+
+function actionBelongsToLane(action: PostflopAction, laneAction: "BET" | "CHECK"): boolean {
+  if (laneAction === "CHECK") return action === "CHECK";
+  return action === "BET_SMALL" || action === "BET_BIG";
+}
+
+function rangeFocusText(spot: PostflopTrainingSpot): string {
+  switch (spot.recommendedAction) {
+    case "BET_SMALL":
+      return "Small c-bet range mixes value with natural bluffs; check range keeps weaker showdown and traps.";
+    case "BET_BIG":
+      return "Large bet range is more polarized: strong value plus the best draws or blockers.";
+    case "CHECK":
+      return "Check protects equity realization: weaker showdown, pot-control and hands for check-call or check-back plans.";
+  }
 }
 
 function modelItems(spot: PostflopTrainingSpot): readonly string[] {
@@ -538,9 +661,9 @@ function actionLabel(action: PostflopAction): string {
     case "CHECK":
       return "Check";
     case "BET_SMALL":
-      return "Bet mal\u00fd";
+      return "Bet small";
     case "BET_BIG":
-      return "Bet velk\u00fd";
+      return "Bet big";
   }
 }
 
@@ -568,56 +691,80 @@ function randomSeed(): number {
 function styles(doc: Document): HTMLStyleElement {
   const style = doc.createElement("style");
   style.textContent = `
-.postflop-view{font-family:system-ui,Arial,sans-serif;color:#e8ecf7;max-width:860px;
+.postflop-view{font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;color:#e8ecf7;max-width:960px;
   margin:0 auto;}
 .postflop-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
-  background:#11151f;border:1px solid rgba(255,255,255,.08);border-radius:10px;
-  padding:12px 14px;margin-bottom:14px;}
+  background:linear-gradient(180deg,rgba(20,28,43,.96),rgba(12,17,27,.98));
+  border:1px solid rgba(148,163,184,.18);border-radius:12px;
+  padding:14px 16px;margin-bottom:16px;box-shadow:0 18px 44px rgba(0,0,0,.2);}
 .postflop-field{display:flex;flex-direction:column;gap:4px;font-size:12px;
   color:#9aa6c2;font-weight:700;}
 .postflop-street,.postflop-seed{box-sizing:border-box;min-width:130px;border:1px solid
-  rgba(255,255,255,.18);border-radius:8px;background:#1b2333;color:#e8ecf7;
-  font-size:14px;padding:8px 10px;}
-.postflop-generate{appearance:none;border:0;border-radius:8px;background:#2bd576;
-  color:#0c3526;font-weight:900;font-size:14px;padding:9px 14px;cursor:pointer;}
-.postflop-output{background:#0f1520;border:1px solid rgba(255,255,255,.08);
-  border-radius:10px;padding:14px;}
+  rgba(148,163,184,.28);border-radius:9px;background:#172033;color:#e8ecf7;
+  font-size:14px;padding:9px 11px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
+.postflop-generate{appearance:none;border:0;border-radius:9px;
+  background:linear-gradient(180deg,#45e58c,#20bd65);color:#082817;
+  font-weight:950;font-size:14px;padding:10px 16px;cursor:pointer;
+  box-shadow:0 12px 24px rgba(43,213,118,.22),inset 0 1px 0 rgba(255,255,255,.35);}
+.postflop-generate:hover{filter:brightness(1.04);}
+.postflop-output{background:linear-gradient(180deg,rgba(15,21,32,.98),rgba(8,13,22,.98));
+  border:1px solid rgba(148,163,184,.16);border-radius:14px;padding:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,.24);}
 .postflop-question-bar{display:flex;align-items:center;justify-content:space-between;
   gap:10px;margin-bottom:12px;}
 .postflop-question-title{font-size:14px;font-weight:900;color:#e8ecf7;}
 .postflop-question-actions{display:flex;flex-wrap:wrap;gap:8px;}
 .postflop-new-spot,.postflop-change-situation{appearance:none;border:1px solid
-  rgba(255,255,255,.18);border-radius:8px;background:#1b2333;color:#e8ecf7;
-  font-size:12px;font-weight:800;padding:7px 10px;cursor:pointer;}
+  rgba(148,163,184,.28);border-radius:9px;background:linear-gradient(180deg,#202a3e,#151d2d);
+  color:#e8ecf7;font-size:12px;font-weight:900;padding:8px 12px;cursor:pointer;
+  box-shadow:0 8px 18px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.06);}
 .postflop-new-spot:hover,.postflop-change-situation:hover{border-color:#2bd576;}
 .postflop-meta{font-size:13px;color:#9aa6c2;font-weight:700;margin-bottom:12px;
   overflow-wrap:anywhere;}
-.postflop-table{position:relative;width:100%;max-width:820px;aspect-ratio:16/9;
-  margin:8px auto 12px;min-height:360px;}
+.postflop-table{position:relative;width:100%;max-width:900px;aspect-ratio:16/9;
+  margin:10px auto 14px;min-height:390px;}
 .postflop-table__felt{position:absolute;inset:9% 6%;border-radius:50%/48%;
-  background:radial-gradient(ellipse at center,#1d7b4d 0%,#17643f 58%,#0d3b2b 100%);
-  box-shadow:inset 0 0 0 10px rgba(7,34,25,.85),inset 0 0 42px rgba(0,0,0,.45),
-    0 18px 40px rgba(0,0,0,.24);}
+  background:
+    radial-gradient(ellipse at 50% 38%,rgba(61,220,132,.28),rgba(61,220,132,0) 42%),
+    radial-gradient(ellipse at center,#197c4c 0%,#12633d 60%,#092f24 100%);
+  box-shadow:inset 0 0 0 10px rgba(8,37,28,.92),inset 0 0 0 18px rgba(255,255,255,.035),
+    inset 0 0 56px rgba(0,0,0,.46),0 24px 54px rgba(0,0,0,.32);}
+.postflop-table__rail{position:absolute;inset:5% 2.5%;border-radius:50%/48%;z-index:1;
+  background:linear-gradient(145deg,rgba(66,74,92,.72),rgba(10,15,24,.92));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 0 28px rgba(0,0,0,.55),
+    0 14px 34px rgba(0,0,0,.26);}
 .postflop-table__center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  z-index:3;display:grid;gap:8px;justify-items:center;text-align:center;min-width:230px;}
-.postflop-table__pot{font-size:14px;font-weight:900;color:#e8ecf7;
+  z-index:3;display:grid;gap:8px;justify-items:center;text-align:center;min-width:250px;
+  padding:12px 14px;border-radius:16px;background:rgba(7,13,22,.28);
+  border:1px solid rgba(255,255,255,.06);}
+.postflop-table__center-label{font-size:11px;font-weight:950;color:#bfe9ff;text-transform:uppercase;}
+.postflop-table__pot{font-size:16px;font-weight:950;color:#f2f7ff;
   text-shadow:0 1px 8px rgba(0,0,0,.45);}
 .postflop-table__board{display:flex;gap:7px;justify-content:center;align-items:center;}
 .postflop-table__center-meta{font-size:12px;font-weight:800;color:#b9c6df;
   background:rgba(15,21,32,.65);border:1px solid rgba(255,255,255,.12);
   border-radius:999px;padding:4px 9px;}
-.postflop-seat{position:absolute;transform:translate(-50%,-50%);z-index:4;width:126px;
-  min-height:74px;box-sizing:border-box;padding:7px 8px;border-radius:10px;
-  background:rgba(16,23,35,.96);border:1px solid rgba(255,255,255,.13);
-  box-shadow:0 8px 22px rgba(0,0,0,.26);text-align:center;}
-.postflop-seat--hero{border-color:#2bd576;background:rgba(25,88,59,.96);}
-.postflop-seat--villain{border-color:#7bd3ff;background:rgba(20,42,62,.96);}
+.postflop-seat{position:absolute;transform:translate(-50%,-50%);z-index:4;width:134px;
+  min-height:88px;box-sizing:border-box;padding:8px 9px;border-radius:12px;
+  background:linear-gradient(180deg,rgba(22,31,47,.98),rgba(10,16,27,.98));
+  border:1px solid rgba(148,163,184,.22);box-shadow:0 14px 28px rgba(0,0,0,.32),
+    inset 0 1px 0 rgba(255,255,255,.06);text-align:center;overflow:hidden;}
+.postflop-seat--hero{border-color:#2bd576;background:linear-gradient(180deg,rgba(31,111,74,.98),rgba(11,55,38,.98));
+  box-shadow:0 16px 34px rgba(43,213,118,.16),0 12px 28px rgba(0,0,0,.32);}
+.postflop-seat--villain{border-color:#7bd3ff;background:linear-gradient(180deg,rgba(25,56,82,.98),rgba(12,31,50,.98));}
 .postflop-seat--folded{opacity:.38;filter:saturate(.45);}
 .postflop-seat__header{display:flex;align-items:center;justify-content:center;gap:5px;}
-.postflop-seat__pos{font-size:12px;font-weight:900;color:#e8ecf7;}
+.postflop-seat__pos{font-size:13px;font-weight:950;color:#f8fbff;}
+.postflop-seat__badge{display:inline-flex;align-items:center;justify-content:center;
+  min-height:17px;margin-top:4px;border-radius:999px;padding:1px 7px;font-size:9px;
+  font-weight:950;text-transform:uppercase;color:#081421;background:rgba(255,255,255,.84);}
 .postflop-seat__role{font-size:10px;font-weight:900;color:#b9c6df;margin-top:2px;
   text-transform:uppercase;letter-spacing:0;}
-.postflop-seat__stack{font-size:11px;font-weight:800;color:#d8e5f8;margin-top:2px;}
+.postflop-seat__stack-wrap{display:grid;gap:3px;margin-top:4px;}
+.postflop-seat__stack{font-size:11px;font-weight:900;color:#d8e5f8;}
+.postflop-seat__stack-bar{height:4px;border-radius:999px;background:rgba(255,255,255,.13);overflow:hidden;}
+.postflop-seat__stack-bar span{display:block;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,#7bd3ff,#2bd576);}
 .postflop-seat__folded{font-size:10px;font-style:italic;color:#94a0b8;margin-top:5px;}
 .postflop-seat__tag{display:inline-block;margin-top:3px;border-radius:999px;background:#2bd576;
   color:#0c3526;font-size:9px;font-weight:900;padding:1px 7px;}
@@ -633,9 +780,10 @@ function styles(doc: Document): HTMLStyleElement {
 .postflop-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
 .postflop-card-group__label{font-size:12px;color:#9aa6c2;font-weight:800;margin-bottom:6px;}
 .postflop-card-row{display:flex;flex-wrap:wrap;gap:6px;}
-.postflop-card{width:42px;height:56px;border-radius:8px;background:#fff;display:flex;
+.postflop-card{width:42px;height:56px;border-radius:9px;background:linear-gradient(180deg,#fff,#eef2f8);display:flex;
   align-items:center;justify-content:center;font-weight:900;font-size:18px;
-  box-shadow:0 3px 12px rgba(0,0,0,.22);}
+  box-shadow:0 8px 18px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.7);
+  border:1px solid rgba(0,0,0,.06);}
 .card--spade{color:#171b24}.card--heart{color:#d93030}.card--diamond{color:#246bd6}
 .card--club{color:#15814b}
 .postflop-textures{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;}
@@ -643,13 +791,15 @@ function styles(doc: Document): HTMLStyleElement {
   background:rgba(123,211,255,.13);border:1px solid rgba(123,211,255,.35);
   color:#bfe9ff;}
 .postflop-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
-.postflop-action{appearance:none;border:1px solid rgba(255,255,255,.18);
-  border-radius:8px;background:#1b2333;color:#e8ecf7;font-size:13px;font-weight:800;
-  padding:8px 12px;}
+.postflop-action{appearance:none;border:1px solid rgba(148,163,184,.26);
+  border-radius:10px;background:linear-gradient(180deg,#202a3f,#141d2f);
+  color:#e8ecf7;font-size:14px;font-weight:950;padding:10px 16px;min-width:96px;
+  box-shadow:0 10px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.06);}
+.postflop-action:hover{border-color:#7bd3ff;transform:translateY(-1px);}
 .postflop-action:disabled{opacity:.72;cursor:default;}
-.postflop-action--chosen{outline:2px solid #e8ecf7;outline-offset:1px;}
-.postflop-action--recommended{border-color:#2bd576;background:rgba(43,213,118,.16);}
-.postflop-result{margin-top:12px;border-radius:8px;padding:10px 12px;font-size:13px;
+.postflop-action--chosen{outline:2px solid #e8ecf7;outline-offset:2px;}
+.postflop-action--recommended{border-color:#2bd576;background:linear-gradient(180deg,rgba(43,213,118,.28),rgba(43,213,118,.14));}
+.postflop-result{margin-top:12px;border-radius:12px;padding:12px 14px;font-size:13px;
   font-weight:700;line-height:1.45;}
 .postflop-result__summary{margin:0 0 10px;overflow-wrap:anywhere;}
 .postflop-practical{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
@@ -660,24 +810,74 @@ function styles(doc: Document): HTMLStyleElement {
   color:#e8ecf7;margin-bottom:5px;}
 .postflop-practical__list{margin:0;padding-left:17px;color:#dce5f8;overflow-wrap:anywhere;}
 .postflop-practical__text{margin:0;color:#dce5f8;overflow-wrap:anywhere;}
+.postflop-range-summary{margin-top:10px;border:1px solid rgba(123,211,255,.22);
+  border-radius:8px;background:rgba(10,22,32,.34);padding:10px;min-width:0;}
+.postflop-range-summary__header{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:10px;margin-bottom:6px;}
+.postflop-range-summary__title{font-size:12px;font-weight:900;text-transform:uppercase;
+  color:#e8ecf7;}
+.postflop-range-summary__meta{font-size:12px;color:#b9cff4;text-align:right;overflow-wrap:anywhere;}
+.postflop-range-summary__note{margin:0 0 8px;color:#dce5f8;overflow-wrap:anywhere;}
+.postflop-range-summary__lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.postflop-range-summary__lane{border:1px solid rgba(255,255,255,.12);border-radius:8px;
+  background:rgba(255,255,255,.035);padding:8px;min-width:0;}
+.postflop-range-summary__lane--recommended{border-color:rgba(43,213,118,.65);
+  background:rgba(43,213,118,.1);}
+.postflop-range-summary__lane--chosen{box-shadow:inset 0 0 0 1px rgba(232,236,247,.42);}
+.postflop-range-summary__lane-title{font-size:11px;font-weight:900;text-transform:uppercase;
+  color:#e8ecf7;margin-bottom:6px;}
+.postflop-range-summary__chips{display:flex;flex-wrap:wrap;gap:5px;}
+.postflop-range-summary__chip{border:1px solid rgba(123,211,255,.22);border-radius:999px;
+  background:rgba(123,211,255,.08);color:#dce5f8;font-size:12px;font-weight:800;
+  line-height:1.2;padding:4px 7px;overflow-wrap:anywhere;}
+.postflop-range-summary__matrix{margin-top:10px;}
+.postflop-flopzilla{border:1px solid rgba(255,255,255,.12);border-radius:8px;
+  background:rgba(6,12,22,.42);padding:10px;overflow-x:auto;overscroll-behavior-x:contain;
+  scrollbar-color:#7bd3ff rgba(255,255,255,.08);}
+.postflop-flopzilla__title{font-size:11px;font-weight:900;text-transform:uppercase;
+  color:#e8ecf7;margin-bottom:8px;}
+.postflop-flopzilla__matrix{display:grid;gap:2px;min-width:640px;}
+.postflop-flopzilla__header-cell{min-height:22px;display:flex;align-items:center;
+  justify-content:center;color:#9fb2d5;font-size:11px;font-weight:900;}
+.postflop-flopzilla__cell{min-height:28px;border-radius:3px;display:flex;align-items:center;
+  justify-content:center;color:#fff;font-size:10px;font-weight:900;text-shadow:0 1px 1px rgba(0,0,0,.45);
+  border:1px solid rgba(255,255,255,.12);box-sizing:border-box;}
+.postflop-flopzilla__cell--hero{outline:3px solid #fff;outline-offset:-2px;
+  box-shadow:0 0 0 2px rgba(43,213,118,.7);}
+.postflop-flopzilla__legend{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
+.postflop-flopzilla__legend-item{display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:800;color:#dce5f8;}
+.postflop-flopzilla__legend-swatch{width:13px;height:13px;border-radius:3px;
+  border:1px solid rgba(255,255,255,.24);}
 .postflop-result--correct{background:rgba(43,213,118,.13);border:1px solid rgba(43,213,118,.45);
   color:#9ff0bd;}
 .postflop-result--wrong{background:rgba(226,59,59,.13);border:1px solid rgba(226,59,59,.45);
   color:#ffb4b4;}
 @media (max-width:640px){
+  .postflop-view{max-width:100%;}
   .postflop-controls{align-items:stretch;}
   .postflop-field,.postflop-generate{width:100%;}
   .postflop-street,.postflop-seed{width:100%;}
   .postflop-question-bar{align-items:stretch;flex-direction:column;}
   .postflop-question-actions{display:grid;grid-template-columns:1fr 1fr;}
-  .postflop-table{aspect-ratio:auto;min-height:520px;max-width:360px;}
+  .postflop-table{aspect-ratio:auto;min-height:560px;max-width:390px;}
+  .postflop-table__rail{inset:8% 0;border-radius:44%;}
   .postflop-table__felt{inset:12% 3%;border-radius:44%;}
-  .postflop-table__center{min-width:190px;}
-  .postflop-seat{width:104px;min-height:66px;padding:6px;}
+  .postflop-table__center{min-width:194px;padding:10px;top:49%;}
+  .postflop-seat{width:112px;min-height:82px;padding:6px;}
+  .postflop-seat__badge{font-size:8px;}
   .postflop-seat__cards .postflop-card{width:30px;height:40px;font-size:14px;}
   .postflop-table__board .postflop-card{width:36px;height:48px;font-size:16px;}
+  .postflop-actions{display:grid;grid-template-columns:1fr;gap:10px;}
+  .postflop-action{width:100%;min-height:44px;}
   .postflop-cards{grid-template-columns:1fr;}
   .postflop-practical{grid-template-columns:1fr;}
+  .postflop-range-summary__header{flex-direction:column;}
+  .postflop-range-summary__meta{text-align:left;}
+  .postflop-range-summary__lanes{grid-template-columns:1fr;}
+  .postflop-flopzilla{padding:8px;margin-left:-2px;margin-right:-2px;}
+  .postflop-flopzilla__matrix{min-width:560px;}
+  .postflop-flopzilla__cell{min-height:25px;font-size:9px;}
 }
 `;
   return style;

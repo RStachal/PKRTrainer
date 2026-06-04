@@ -79,12 +79,12 @@ const ACTION_KEY_LABEL: Record<ActionKey, string> = {
   CALL: "Call / Dorovnat",
   LIMP: "Limp / Check",
   OVERLIMP: "Over-limp",
-  OPEN_2X: "Raise 2Ă—",
-  OPEN_25X: "Raise 2,5Ă—",
-  OPEN_3X: "Raise 3Ă—",
-  ISO_2X: "Iso-raise 2Ă—",
-  ISO_25X: "Iso-raise 2,5Ă—",
-  ISO_3X: "Iso-raise 3Ă—",
+  OPEN_2X: "Raise 2\u00d7",
+  OPEN_25X: "Raise 2,5\u00d7",
+  OPEN_3X: "Raise 3\u00d7",
+  ISO_2X: "Iso-raise 2\u00d7",
+  ISO_25X: "Iso-raise 2,5\u00d7",
+  ISO_3X: "Iso-raise 3\u00d7",
   "3BET": "3-bet",
   "4BET": "4-bet",
   SQUEEZE: "Squeeze",
@@ -237,8 +237,8 @@ export function bootstrap(options: BootstrapOptions = {}): void {
   } catch (err) {
     showFatalError(
       root,
-      "Aplikaci se nepodaĹ™ilo spustit kvĹŻli neoÄŤekĂˇvanĂ© chybÄ›. Zkuste ji prosĂ­m " +
-        "naÄŤĂ­st znovu.",
+      "Aplikaci se nepoda\u0159ilo spustit kv\u016fli neo\u010dek\u00e1van\u00e9 chyb\u011b. Zkuste ji pros\u00edm " +
+        "na\u010d\u00edst znovu.",
       err,
     );
   }
@@ -281,8 +281,8 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   if (storageInit.startedEmpty) {
     showNotice(
       shell.notice,
-      "Migrace dat z pĹ™edchozĂ­ verze neprobÄ›hla. TrĂ©nink zaÄŤĂ­nĂˇ s prĂˇzdnĂ˝mi " +
-        "statistikami; vaĹˇe pĹŻvodnĂ­ data zĹŻstala nedotÄŤenĂˇ.",
+      "Migrace dat z p\u0159edchoz\u00ed verze neprob\u011bhla. Tr\u00e9nink za\u010d\u00edn\u00e1 s pr\u00e1zdn\u00fdmi " +
+        "statistikami; va\u0161e p\u016fvodn\u00ed data z\u016fstala nedot\u010den\u00e1.",
     );
   }
 
@@ -420,7 +420,7 @@ function buildAppShell(root: HTMLElement): AppShell {
     el(
       "p",
       "app__subtitle",
-      "TrĂ©nink preflop rozhodovĂˇnĂ­ â€” full ring 9-handed, 5â€“150 BB.",
+      "Tr\u00e9nink preflop rozhodov\u00e1n\u00ed - full ring 9-handed, 5-150 BB.",
     ),
   );
   app.appendChild(header);
@@ -445,19 +445,19 @@ function buildAppShell(root: HTMLElement): AppShell {
     postflop: postflopPanel,
   };
 
-  const tabDefs: { id: TabId; label: string }[] = [
-    { id: "training", label: "TrĂ©nink" },
+  const allTabIds: readonly TabId[] = ["training", "stats", "hh", "postflop"];
+  const tabDefs: { id: Exclude<TabId, "postflop">; label: string }[] = [
+    { id: "training", label: "Tr\u00e9nink" },
     { id: "stats", label: "Statistiky" },
     { id: "hh", label: "Import HH" },
-    { id: "postflop", label: "Postflop" },
   ];
 
   const tabButtons = new Map<TabId, HTMLButtonElement>();
   const selectTab = (id: TabId): void => {
-    for (const def of tabDefs) {
-      const isActive = def.id === id;
-      panels[def.id].hidden = !isActive;
-      const btn = tabButtons.get(def.id);
+    for (const tabId of allTabIds) {
+      const isActive = tabId === id;
+      panels[tabId].hidden = !isActive;
+      const btn = tabButtons.get(tabId);
       if (btn) {
         btn.classList.toggle("app__tab--active", isActive);
         btn.setAttribute("aria-selected", String(isActive));
@@ -574,7 +574,7 @@ function setupTraining(
   // HernĂ­ sub-oblasti.
   const sessionBar = el("div", "training__session-bar");
   const sessionInfo = el("div", "training__session-info");
-  const sessionTitle = el("div", "training__session-title", "Otazka");
+  const sessionTitle = el("div", "training__session-title", "Ot\u00e1zka");
   const sessionMeta = el("div", "training__session-meta");
   const changeSituationBtn = document.createElement("button");
   changeSituationBtn.type = "button";
@@ -675,7 +675,7 @@ function setupTraining(
 
   /** ZobrazĂ­ spot: vykreslĂ­ stĹŻl a nabĂ­dku akcĂ­, vyÄŤistĂ­ pĹ™edchozĂ­ vĂ˝sledek. */
   function clearActiveQuestion(): void {
-    sessionTitle.textContent = "Otazka";
+    sessionTitle.textContent = "Ot\u00e1zka";
     sessionMeta.textContent = "";
     tableContainer.innerHTML = "";
     actionsContainer.innerHTML = "";
@@ -776,7 +776,7 @@ function setupTraining(
     const verdict = el(
       "div",
       "result__verdict",
-      result.correct ? "SprĂˇvnÄ›!" : "Ĺ patnÄ›.",
+      result.correct ? "Spr\u00e1vn\u011b!" : "\u0160patn\u011b.",
     );
     box.appendChild(verdict);
 
@@ -785,7 +785,7 @@ function setupTraining(
       const rec = el(
         "div",
         "result__recommended",
-        `DoporuÄŤeno: ${result.recommended.map(actionKeyLabel).join(" / ")}`,
+        `Doporu\u010deno: ${result.recommended.map(actionKeyLabel).join(" / ")}`,
       );
       box.appendChild(rec);
     }
@@ -795,7 +795,7 @@ function setupTraining(
     if (result.explanationAvailable) {
       explanation.textContent = spot.explanation;
     } else {
-      explanation.textContent = "ZdĹŻvodnÄ›nĂ­ nenĂ­ k tomuto spotu k dispozici.";
+      explanation.textContent = "Zd\u016fvodn\u011bn\u00ed nen\u00ed k tomuto spotu k dispozici.";
       explanation.classList.add("result__explanation--unavailable");
     }
     box.appendChild(explanation);
@@ -805,7 +805,7 @@ function setupTraining(
       const warn = el(
         "div",
         "result__save-warning",
-        "UpozornÄ›nĂ­: vĂ˝sledek se nepodaĹ™ilo uloĹľit. Statistiky nemusĂ­ bĂ˝t ĂşplnĂ©.",
+        "Upozorn\u011bn\u00ed: v\u00fdsledek se nepoda\u0159ilo ulo\u017eit. Statistiky nemus\u00ed b\u00fdt \u00fapln\u00e9.",
       );
       box.appendChild(warn);
     }
@@ -814,7 +814,7 @@ function setupTraining(
     const nextBtn = document.createElement("button");
     nextBtn.type = "button";
     nextBtn.className = "result__next";
-    nextBtn.textContent = "DalĹˇĂ­ spot";
+    nextBtn.textContent = "Dal\u0161\u00ed spot";
     nextBtn.addEventListener("click", () => advance());
     box.appendChild(nextBtn);
 
@@ -853,10 +853,10 @@ function renderBlockingError(panel: HTMLElement, title: string, message: string)
 function renderStorageError(panel: HTMLElement): void {
   renderBlockingError(
     panel,
-    "NekonzistentnĂ­ ĂşloĹľiĹˇtÄ›",
-    "LokĂˇlnĂ­ ĂşloĹľiĹˇtÄ› je v nekonzistentnĂ­m stavu a nelze v nÄ›m vytvoĹ™it ani " +
-      "platnĂ˝ ÄŤistĂ˝ stav. TrĂ©nink proto nelze spustit. Zkontrolujte prosĂ­m " +
-      "nastavenĂ­ prohlĂ­ĹľeÄŤe (povolenĂ­ ĂşloĹľiĹˇtÄ›) a naÄŤtÄ›te aplikaci znovu.",
+    "Nekonzistentn\u00ed \u00falo\u017ei\u0161t\u011b",
+    "Lok\u00e1ln\u00ed \u00falo\u017ei\u0161t\u011b je v nekonzistentn\u00edm stavu a nelze v n\u011bm vytvo\u0159it ani " +
+      "platn\u00fd \u010dist\u00fd stav. Tr\u00e9nink proto nelze spustit. Zkontrolujte pros\u00edm " +
+      "nastaven\u00ed prohl\u00ed\u017ee\u010de (povolen\u00ed \u00falo\u017ei\u0161t\u011b) a na\u010dt\u011bte aplikaci znovu.",
   );
 }
 
@@ -864,10 +864,10 @@ function renderStorageError(panel: HTMLElement): void {
 function renderRangesError(panel: HTMLElement): void {
   renderBlockingError(
     panel,
-    "ReferenÄŤnĂ­ ranges nejsou dostupnĂ©",
-    "Data referenÄŤnĂ­ch ranges se nepodaĹ™ilo naÄŤĂ­st jako celek, proto nelze " +
-      "generovat trĂ©ninkovĂ© spoty ani spustit relaci. Zkuste prosĂ­m aplikaci " +
-      "naÄŤĂ­st znovu.",
+    "Referen\u010dn\u00ed ranges nejsou dostupn\u00e9",
+    "Data referen\u010dn\u00edch ranges se nepoda\u0159ilo na\u010d\u00edst jako celek, proto nelze " +
+      "generovat tr\u00e9ninkov\u00e9 spoty ani spustit relaci. Zkuste pros\u00edm aplikaci " +
+      "na\u010d\u00edst znovu.",
   );
 }
 
@@ -884,7 +884,7 @@ function showNotice(notice: HTMLElement, message: string): void {
  */
 function showFatalError(root: HTMLElement, message: string, err?: unknown): void {
   if (typeof console !== "undefined") {
-    console.error("MTT Preflop Trainer â€” chyba:", message, err);
+    console.error("MTT Preflop Trainer - chyba:", message, err);
   }
   // Pokud existuje banner upozornÄ›nĂ­, pouĹľij ho (nenĂˇsilnÄ›); jinak nahraÄŹ koĹ™en.
   const notice = root.querySelector<HTMLElement>(".app__notice");
@@ -893,7 +893,7 @@ function showFatalError(root: HTMLElement, message: string, err?: unknown): void
     notice.appendChild(el("div", "app__notice-line", message));
     return;
   }
-  renderBlockingError(root, "DoĹˇlo k chybÄ›", message);
+  renderBlockingError(root, "Do\u0161lo k chyb\u011b", message);
 }
 
 // ---------------------------------------------------------------------------
@@ -915,8 +915,8 @@ function maybeRegisterServiceWorker(notice: HTMLElement, force?: boolean): void 
     onCacheFailure: () => {
       showNotice(
         notice,
-        "Aplikaci se nepodaĹ™ilo plnÄ› pĹ™ipravit pro offline pouĹľitĂ­. Online " +
-          "funguje normĂˇlnÄ›; offline reĹľim ale nemusĂ­ bĂ˝t dostupnĂ˝.",
+        "Aplikaci se nepoda\u0159ilo pln\u011b p\u0159ipravit pro offline pou\u017eit\u00ed. Online " +
+          "funguje norm\u00e1ln\u011b; offline re\u017eim ale nemus\u00ed b\u00fdt dostupn\u00fd.",
       );
     },
   });
@@ -940,7 +940,7 @@ function installGlobalErrorBoundary(root: HTMLElement): void {
   window.addEventListener("error", (event: ErrorEvent) => {
     showFatalError(
       root,
-      "DoĹˇlo k neoÄŤekĂˇvanĂ© chybÄ› aplikace. ÄŚĂˇst funkcĂ­ nemusĂ­ fungovat sprĂˇvnÄ›.",
+      "Do\u0161lo k neo\u010dek\u00e1van\u00e9 chyb\u011b aplikace. \u010c\u00e1st funkc\u00ed nemus\u00ed fungovat spr\u00e1vn\u011b.",
       event.error ?? event.message,
     );
   });
@@ -948,8 +948,8 @@ function installGlobalErrorBoundary(root: HTMLElement): void {
   window.addEventListener("unhandledrejection", (event: PromiseRejectionEvent) => {
     showFatalError(
       root,
-      "DoĹˇlo k neoÄŤekĂˇvanĂ© chybÄ› pĹ™i asynchronnĂ­ operaci. ÄŚĂˇst funkcĂ­ nemusĂ­ " +
-        "fungovat sprĂˇvnÄ›.",
+      "Do\u0161lo k neo\u010dek\u00e1van\u00e9 chyb\u011b p\u0159i asynchronn\u00ed operaci. \u010c\u00e1st funkc\u00ed nemus\u00ed " +
+        "fungovat spr\u00e1vn\u011b.",
       event.reason,
     );
   });

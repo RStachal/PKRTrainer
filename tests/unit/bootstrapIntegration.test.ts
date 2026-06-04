@@ -52,7 +52,9 @@ describe("bootstrap - inicializacni tok", () => {
     bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
     expect(root.querySelector(".filters")).not.toBeNull();
-    expect(root.querySelector('[data-tab="postflop"]')).not.toBeNull();
+    expect(root.querySelector('[data-tab="postflop"]')).toBeNull();
+    expect(Array.from(root.querySelectorAll<HTMLElement>(".app__tab")).map((tab) => tab.textContent))
+      .toEqual(["Tr\u00e9nink", "Statistiky", "Import HH"]);
     expect(root.querySelector(".postflop-view")).not.toBeNull();
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(true);
     expect(root.querySelector(".postflop-meta")).toBeNull();
@@ -111,8 +113,9 @@ describe("bootstrap - inicializacni tok", () => {
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
 
     expect(root.querySelector<HTMLElement>(".app__panel--postflop")?.hidden).toBe(false);
-    expect(root.querySelector<HTMLButtonElement>('[data-tab="postflop"]')
-      ?.classList.contains("app__tab--active")).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>('[data-tab="postflop"]')).toBeNull();
+    expect(root.querySelector<HTMLButtonElement>('[data-tab="training"]')
+      ?.classList.contains("app__tab--active")).toBe(false);
     expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("123");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("FLOP");
     expect(root.querySelector(".poker-table")).toBeNull();

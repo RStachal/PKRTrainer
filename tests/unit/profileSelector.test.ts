@@ -62,7 +62,7 @@ describe("profileSelector", () => {
     expect(note?.dataset.status).toBe("candidate");
     expect(note?.textContent).toContain("6-max MTT preflop preview");
     expect(note?.textContent).toContain("candidate/preview");
-    expect(note?.textContent).toContain("Produkcni scoring je vypnuty");
+    expect(note?.textContent).toContain("Produk\u010dn\u00ed scoring je vypnut\u00fd");
     expect(note?.textContent).not.toContain("RangePack");
     expect(note?.textContent).not.toContain("mtt-");
   });
@@ -80,7 +80,7 @@ describe("profileSelector", () => {
       const note = root.querySelector<HTMLElement>(".profile-selector__note");
       expect(note?.dataset.status).toBe("preview");
       expect(note?.textContent).toContain(`${value.toLowerCase()} postflop`);
-      expect(note?.textContent).toContain("konkretni situaci");
+      expect(note?.textContent).toContain("konkr\u00e9tn\u00ed situaci");
       expect(note?.textContent).not.toContain("preflop chipEV");
       expect(note?.textContent).not.toContain("StrategyPack");
     }
@@ -125,6 +125,11 @@ describe("profileSelector", () => {
     let note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(format?.value).toBe("SIX_MAX");
     expect(rakeMode?.value).toBe("RAKE");
+    expect(Array.from(rakeMode?.options ?? []).map((option) => option.textContent)).toEqual([
+      "N/A",
+      "S rakem",
+      "Bez raku",
+    ]);
     expect(note?.dataset.status).toBe("candidate");
     expect(note?.textContent).toContain("Cash s rakem preview");
     expect(note?.textContent).not.toContain("https://");
@@ -149,7 +154,7 @@ describe("profileSelector", () => {
     const root = document.createElement("div");
     renderProfileSelector(root);
 
-    expect(root.textContent).toContain("Profil treningu");
+    expect(root.textContent).toContain("Profil tr\u00e9ninku");
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
