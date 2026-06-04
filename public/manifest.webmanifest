@@ -1,8 +1,8 @@
 {
   "name": "MTT Preflop Trainer",
   "short_name": "MTT Preflop",
-  "description": "Trénink preflop rozhodování pro full ring 9-handed MTT (offline).",
-  "lang": "cs",
+  "description": "Offline full-ring 9-handed poker decision trainer.",
+  "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -5,6 +5,7 @@ import { migrateResultRecordsToV2 } from "../../src/persistence/statsRecordV2";
 import {
   availableStatsV2Dimensions,
   breakdownStatsV2,
+  buildStatsV2KpiModel,
   summarizeStatsV2,
 } from "../../src/persistence/statsV2Analytics";
 
@@ -70,6 +71,102 @@ describe("statsV2Analytics", () => {
       "position",
       "bucket",
       "context",
+    ]);
+  });
+
+  it("spocita relevantni KPI: recent window, best streak a leak candidates", () => {
+    const kpiRecords = migrateResultRecordsToV2([
+      {
+        qid: "RFI|BTN|25|AKs|OFF|1",
+        chosen: "OPEN_2X",
+        correct: true,
+        context: "RFI",
+        position: "BTN",
+        bucket: 25,
+        ts: 1,
+      },
+      {
+        qid: "RFI|BTN|25|AQs|OFF|2",
+        chosen: "OPEN_2X",
+        correct: true,
+        context: "RFI",
+        position: "BTN",
+        bucket: 25,
+        ts: 2,
+      },
+      {
+        qid: "VS_OPEN|BB|15|A5s|ON|3",
+        chosen: "FOLD",
+        correct: false,
+        context: "VS_OPEN",
+        position: "BB",
+        bucket: 15,
+        ts: 3,
+      },
+      {
+        qid: "VS_OPEN|BB|15|KQo|ON|4",
+        chosen: "CALL",
+        correct: true,
+        context: "VS_OPEN",
+        position: "BB",
+        bucket: 15,
+        ts: 4,
+      },
+      {
+        qid: "VS_OPEN|BB|15|QJo|ON|5",
+        chosen: "FOLD",
+        correct: false,
+        context: "VS_OPEN",
+        position: "BB",
+        bucket: 15,
+        ts: 5,
+      },
+      {
+        qid: "VS_OPEN|BB|15|T9s|ON|6",
+        chosen: "CALL",
+        correct: false,
+        context: "VS_OPEN",
+        position: "BB",
+        bucket: 15,
+        ts: 6,
+      },
+      {
+        qid: "BVB|SB|25|A2s|ON|7",
+        chosen: "OPEN_2X",
+        correct: true,
+        context: "BVB",
+        position: "SB",
+        bucket: 25,
+        ts: 7,
+      },
+    ]);
+
+    const model = buildStatsV2KpiModel(kpiRecords, {
+      recentWindowSize: 3,
+      minLeakSample: 3,
+      leakRateThreshold: 60,
+      leakDimensions: ["context", "position", "bucket"],
+    });
+
+    expect(model).toMatchObject({
+      total: 7,
+      correct: 4,
+      lifetimeRate: 57.1,
+      currentStreak: 1,
+      bestStreak: 2,
+      recentWindowSize: 3,
+      recentTotal: 3,
+      recentCorrect: 1,
+      recentRate: 33.3,
+      minLeakSample: 3,
+      leakRateThreshold: 60,
+    });
+    expect(model.leakCandidates.map((candidate) => (
+      `${candidate.dim}:${candidate.key}:${candidate.total}:${candidate.rate}`
+    ))).toEqual([
+      "bucket:15:4:25",
+      "context:VS_OPEN:4:25",
+      "position:BB:4:25",
     ]);
   });
 });

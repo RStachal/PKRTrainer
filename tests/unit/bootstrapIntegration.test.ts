@@ -52,9 +52,12 @@ describe("bootstrap - inicializacni tok", () => {
     bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
     expect(root.querySelector(".filters")).not.toBeNull();
+    expect(root.querySelector("style")?.textContent).toContain("@media (max-width:720px)");
+    expect(root.querySelector("style")?.textContent).toContain("profile-selector__note--production");
+    expect(root.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
     expect(root.querySelector('[data-tab="postflop"]')).toBeNull();
     expect(Array.from(root.querySelectorAll<HTMLElement>(".app__tab")).map((tab) => tab.textContent))
-      .toEqual(["Tr\u00e9nink", "Statistiky", "Import HH"]);
+      .toEqual(["Training", "Statistics", "Import HH"]);
     expect(root.querySelector(".postflop-view")).not.toBeNull();
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(true);
     expect(root.querySelector(".postflop-meta")).toBeNull();
@@ -83,12 +86,27 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
     expect(root.querySelector(".poker-table")).not.toBeNull();
     expect(root.querySelector(".training__change-situation")).not.toBeNull();
+    expect(root.querySelector<HTMLButtonElement>(".training__change-situation")?.textContent)
+      .toBe("Change situation");
     expect(root.querySelector<HTMLElement>(".training__session-title")?.textContent)
-      .toMatch(/^Proti 3-betu - (UTG|UTG\+1|UTG\+2|LJ|HJ|CO|BTN|SB|BB) - /);
+      .toMatch(/^Vs 3-bet - (UTG|UTG\+1|UTG\+2|LJ|HJ|CO|BTN|SB|BB) - /);
     expect(root.querySelector<HTMLElement>(".training__session-title")?.textContent)
       .not.toContain("VS_3BET");
     expect(root.querySelector<HTMLElement>(".training__session-meta")?.textContent)
       .toContain("BB - ante ON - seed");
+    expect(root.querySelector<HTMLElement>(".training__actions-title")?.textContent)
+      .toBe("Your action:");
+    const actionLabels = Array.from(root.querySelectorAll<HTMLButtonElement>(".action-btn"))
+      .map((button) => button.textContent ?? "");
+    expect(actionLabels.join(" ")).not.toMatch(/[×Ă—]|2,5/);
+
+    root.querySelector<HTMLButtonElement>(".action-btn")?.click();
+    expect(root.querySelector<HTMLElement>(".result__recommended")?.textContent)
+      .toContain("Recommended:");
+    expect(root.querySelector<HTMLButtonElement>(".result__next")?.textContent)
+      .toBe("Next spot");
+    expect(root.querySelector<HTMLElement>(".training__result")?.textContent)
+      .not.toMatch(/Doporu|Spr\u00e1vn|Špatn|Dal\u0161\u00ed/);
 
     root.querySelector<HTMLButtonElement>(".training__change-situation")?.click();
 
@@ -233,13 +251,103 @@ describe("bootstrap - inicializacni tok", () => {
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
     expect(warning?.textContent).toContain("candidate/preview");
-    expect(warning?.textContent).toContain("Produkcni trening se nespusti");
-    expect(warning?.textContent).toContain("6-max MTT preflop preview");
+    expect(warning?.textContent).toContain("Production training is disabled");
+    expect(warning?.textContent).toContain("MTT 6-max regular preflop chipEV");
+    expect(warning?.textContent).toContain("hand-class coverage is complete");
     expect(warning?.textContent).not.toContain("Import preview:");
     expect(warning?.textContent).not.toContain("RangePack");
     expect(warning?.textContent).not.toContain("mtt-");
     expect(root.querySelector(".poker-table")).toBeNull();
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
+  });
+
+  it("MTT preflop gate respektuje readiness pro vsechny format/speed/ante kombinace", async () => {
+    const { bootstrap } = await importFreshMain();
+    const cases = [
+      {
+        format: "FULL_RING_9",
+        speed: "REGULAR",
+        ante: "ON",
+        production: true,
+      },
+      {
+        format: "FULL_RING_9",
+        speed: "REGULAR",
+        ante: "OFF",
+        production: true,
+      },
+      {
+        format: "FULL_RING_9",
+        speed: "TURBO",
+        ante: "ON",
+        production: false,
+        warning: "missing production range",
+      },
+      {
+        format: "FULL_RING_9",
+        speed: "TURBO",
+        ante: "OFF",
+        production: false,
+        warning: "missing production range",
+      },
+      {
+        format: "SIX_MAX",
+        speed: "REGULAR",
+        ante: "ON",
+        production: false,
+        warning: "candidate/preview",
+      },
+      {
+        format: "SIX_MAX",
+        speed: "REGULAR",
+        ante: "OFF",
+        production: false,
+        warning: "candidate/preview",
+      },
+      {
+        format: "SIX_MAX",
+        speed: "TURBO",
+        ante: "ON",
+        production: false,
+        warning: "candidate/preview",
+      },
+      {
+        format: "SIX_MAX",
+        speed: "TURBO",
+        ante: "OFF",
+        production: false,
+        warning: "candidate/preview",
+      },
+    ] as const;
+
+    for (const scenario of cases) {
+      const root = document.createElement("div");
+      bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+
+      const format = root.querySelector<HTMLSelectElement>(".profile-format");
+      const speed = root.querySelector<HTMLSelectElement>(".profile-speed");
+      const ante = root.querySelector<HTMLInputElement>(".filter-ante");
+      format!.value = scenario.format;
+      format!.dispatchEvent(new Event("change"));
+      speed!.value = scenario.speed;
+      speed!.dispatchEvent(new Event("change"));
+      ante!.checked = scenario.ante === "ON";
+      ante!.dispatchEvent(new Event("change"));
+
+      root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+
+      if (scenario.production) {
+        expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
+        expect(root.querySelector(".poker-table")).not.toBeNull();
+        expect(root.querySelector<HTMLElement>(".filter-empty-warning")?.hidden).toBe(true);
+      } else {
+        const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
+        expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
+        expect(root.querySelector(".poker-table")).toBeNull();
+        expect(warning?.hidden).toBe(false);
+        expect(warning?.textContent).toContain(scenario.warning);
+      }
+    }
   });
 
   it("SNG chipEV candidate profil zustane preview a nespusti produkcni scoring", async () => {
@@ -279,7 +387,7 @@ describe("bootstrap - inicializacni tok", () => {
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
     expect(warning?.textContent).toContain("candidate/preview");
-    expect(warning?.textContent).toContain("Cash s rakem preview");
+    expect(warning?.textContent).toContain("Cash rake preview");
     expect(warning?.textContent).not.toContain("https://");
     expect(warning?.textContent).not.toContain("RangePack");
     expect(root.querySelector(".poker-table")).toBeNull();
@@ -293,7 +401,7 @@ describe("bootstrap - inicializacni tok", () => {
 
     bootstrap({ root, storage: new BrokenWriteStorage(), registerSw: false });
 
-    expect(root.querySelector(".fatal")?.textContent).toContain("Nekonzistent");
+    expect(root.querySelector(".fatal")?.textContent).toContain("Storage is inconsistent");
     expect(root.querySelector(".filter-start")).toBeNull();
     expect(root.querySelector(".poker-table")).toBeNull();
   });
@@ -313,7 +421,7 @@ describe("bootstrap - inicializacni tok", () => {
 
     bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
-    expect(root.querySelector(".fatal")?.textContent).toContain("ranges");
+    expect(root.querySelector(".fatal")?.textContent).toContain("Reference ranges are not available");
     expect(root.querySelector(".filter-start")).toBeNull();
     expect(root.querySelector(".poker-table")).toBeNull();
   });

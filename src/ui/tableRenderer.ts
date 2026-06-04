@@ -126,7 +126,7 @@ const EVENT_KEY: Record<ActionEvent, ActionKey> = {
 
 /** Český / poker-standardní text odznaku pro daný Akční_klíč. */
 const BADGE_LABEL: Record<ActionKey, string> = {
-  FOLD: "SLOŽIL",
+  FOLD: "FOLD",
   CALL: "CALL",
   LIMP: "LIMP",
   OVERLIMP: "OVERLIMP",
@@ -273,6 +273,14 @@ function seatPosition(slot: number): { left: number; top: number } {
   return { left, top };
 }
 
+function seatPositionMobile(slot: number): { left: number; top: number } {
+  const angle = Math.PI / 2 + slot * ((2 * Math.PI) / POSITION_ORDER.length);
+  return {
+    left: 50 + 34 * Math.cos(angle),
+    top: 50 + 40 * Math.sin(angle),
+  };
+}
+
 /** Vykreslí jednu hole kartu hrdiny (Req 8.3). */
 function renderHoleCard(card: Card): HTMLElement {
   const node = el("div", `hole-card hole-card--${card.suit}`);
@@ -320,8 +328,11 @@ function renderSeat(seat: SeatRender, spot: Spot, slot: number): HTMLElement {
   node.dataset.position = seat.position;
   node.dataset.active = String(seat.active);
   const pos = seatPosition(slot);
-  node.style.left = `${pos.left}%`;
-  node.style.top = `${pos.top}%`;
+  const mobilePos = seatPositionMobile(slot);
+  node.style.setProperty("--seat-left", `${pos.left}%`);
+  node.style.setProperty("--seat-top", `${pos.top}%`);
+  node.style.setProperty("--seat-mobile-left", `${mobilePos.left}%`);
+  node.style.setProperty("--seat-mobile-top", `${mobilePos.top}%`);
 
   // Hlavička sedadla: název pozice + případná značka BTN/SB/BB.
   const header = el("div", "seat__header");
@@ -332,10 +343,10 @@ function renderSeat(seat: SeatRender, spot: Spot, slot: number): HTMLElement {
   if (mark) header.appendChild(mark);
   node.appendChild(header);
 
-  // Hrdinův štítek "TY" (Req 8.2).
+  // Hrdinův štítek (Req 8.2).
   if (seat.isHero) {
     const tag = el("span", "seat__tag");
-    tag.textContent = "TY";
+    tag.textContent = "YOU";
     node.appendChild(tag);
   }
 
@@ -344,9 +355,14 @@ function renderSeat(seat: SeatRender, spot: Spot, slot: number): HTMLElement {
     const stack = el("div", "seat__stack");
     stack.textContent = `${formatBB(spot.effStack)} BB`;
     node.appendChild(stack);
+    const stackBar = el("div", "seat__stack-bar");
+    const stackFill = el("span");
+    stackFill.style.width = `${Math.max(18, Math.min(100, (spot.effStack / 150) * 100))}%`;
+    stackBar.appendChild(stackFill);
+    node.appendChild(stackBar);
   } else {
     const folded = el("div", "seat__folded-label");
-    folded.textContent = "složil";
+    folded.textContent = "folded";
     node.appendChild(folded);
   }
 
@@ -374,35 +390,73 @@ function renderSeat(seat: SeatRender, spot: Spot, slot: number): HTMLElement {
 function tableStyles(): HTMLStyleElement {
   const style = document.createElement("style");
   style.textContent = `
-.poker-table{position:relative;width:100%;max-width:720px;aspect-ratio:16/10;margin:0 auto;}
-.poker-table__felt{position:absolute;inset:6%;border-radius:50%/50%;
-  background:radial-gradient(ellipse at center,#1f7a4d,#14533a);
-  box-shadow:inset 0 0 0 10px #0c3526,inset 0 0 40px rgba(0,0,0,.45);}
-.poker-table .pot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  color:#eaf2ee;font-weight:800;font-size:14px;text-align:center;z-index:2;}
-.poker-table .seat{position:absolute;transform:translate(-50%,-50%);
-  width:104px;min-height:56px;padding:6px 8px;border-radius:12px;z-index:3;
-  background:rgba(20,26,38,.92);color:#e8ecf7;border:2px solid rgba(255,255,255,.10);
-  font-family:system-ui,Arial,sans-serif;font-size:12px;text-align:center;}
+.poker-table{position:relative;width:100%;max-width:860px;aspect-ratio:16/10;margin:2px auto 0;
+  min-height:390px;font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;}
+.poker-table__felt{position:absolute;inset:9% 6%;border-radius:50%/48%;
+  background:
+    radial-gradient(ellipse at 50% 36%,rgba(61,220,132,.25),rgba(61,220,132,0) 42%),
+    radial-gradient(ellipse at center,#197c4c 0%,#12633d 60%,#092f24 100%);
+  box-shadow:inset 0 0 0 10px rgba(8,37,28,.92),inset 0 0 0 18px rgba(255,255,255,.035),
+    inset 0 0 56px rgba(0,0,0,.46),0 24px 54px rgba(0,0,0,.32);}
+.poker-table__rail{position:absolute;inset:5% 2.5%;border-radius:50%/48%;z-index:1;
+  background:linear-gradient(145deg,rgba(66,74,92,.72),rgba(10,15,24,.92));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 0 28px rgba(0,0,0,.55),
+    0 14px 34px rgba(0,0,0,.26);}
+.poker-table__center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  z-index:3;display:grid;gap:6px;justify-items:center;text-align:center;min-width:170px;
+  padding:11px 13px;border-radius:16px;background:rgba(7,13,22,.28);
+  border:1px solid rgba(255,255,255,.06);}
+.poker-table .pot{color:#f2f7ff;font-weight:950;font-size:16px;text-align:center;
+  text-shadow:0 1px 8px rgba(0,0,0,.45);}
+.poker-table__chip-stack{display:flex;align-items:flex-end;justify-content:center;gap:4px;height:21px;}
+.poker-table__chip-stack span{display:block;width:23px;height:10px;border-radius:999px;
+  background:linear-gradient(180deg,#f8fbff,#9fb2d5 48%,#53617a);
+  border:1px solid rgba(255,255,255,.45);box-shadow:0 5px 10px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,.8);}
+.poker-table__chip-stack span:nth-child(2){height:15px;background:linear-gradient(180deg,#7bd3ff,#2f87d8 52%,#174170);}
+.poker-table__chip-stack span:nth-child(3){height:12px;background:linear-gradient(180deg,#ffd15b,#da8b25 52%,#7d4117);}
+.poker-table .seat{position:absolute;left:var(--seat-left);top:var(--seat-top);
+  transform:translate(-50%,-50%);width:128px;min-height:76px;padding:8px 9px;border-radius:12px;z-index:4;
+  background:linear-gradient(180deg,rgba(22,31,47,.98),rgba(10,16,27,.98));
+  color:#e8ecf7;border:1px solid rgba(148,163,184,.22);box-shadow:0 14px 28px rgba(0,0,0,.32),
+  inset 0 1px 0 rgba(255,255,255,.06);font-size:12px;text-align:center;box-sizing:border-box;overflow:hidden;}
 .poker-table .seat__header{display:flex;align-items:center;justify-content:center;gap:6px;}
-.poker-table .seat__pos{font-weight:900;}
-.poker-table .seat__stack{color:#9aa6c2;font-size:11px;margin-top:2px;}
-.poker-table .seat__folded-label{color:#6b7488;font-size:10px;font-style:italic;margin-top:2px;}
-.poker-table .seat__tag{display:inline-block;font-size:9px;font-weight:900;color:#0c3526;
-  background:#2bd576;border-radius:6px;padding:1px 6px;margin-top:2px;}
-.poker-table .seat--hero{border-color:#2bd576;background:rgba(43,213,118,.14);}
-.poker-table .seat--folded{opacity:.4;filter:saturate(.4);}
+.poker-table .seat__pos{font-weight:950;color:#f8fbff;}
+.poker-table .seat__stack{color:#d8e5f8;font-size:11px;font-weight:900;margin-top:4px;}
+.poker-table .seat__stack-bar{height:4px;border-radius:999px;background:rgba(255,255,255,.13);overflow:hidden;margin-top:3px;}
+.poker-table .seat__stack-bar span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7bd3ff,#2bd576);}
+.poker-table .seat__folded-label{color:#94a0b8;font-size:10px;font-style:italic;margin-top:5px;}
+.poker-table .seat__tag{display:inline-block;font-size:9px;font-weight:950;color:#0c3526;
+  background:#2bd576;border-radius:999px;padding:1px 7px;margin-top:4px;}
+.poker-table .seat--hero{border-color:#2bd576;background:linear-gradient(180deg,rgba(31,111,74,.98),rgba(11,55,38,.98));
+  box-shadow:0 16px 34px rgba(43,213,118,.16),0 12px 28px rgba(0,0,0,.32);}
+.poker-table .seat--folded{opacity:.38;filter:saturate(.45);}
 .poker-table .position-mark{font-size:9px;font-weight:900;border-radius:50%;
   width:20px;height:20px;line-height:20px;display:inline-block;}
 .poker-table .badge-btn{background:#f5f5f5;color:#1b1f2a;}
 .poker-table .badge-sb{background:#7bd3ff;color:#08263a;}
 .poker-table .badge-bb{background:#ffd15b;color:#3a2c08;}
-.poker-table .action-badge{margin-top:4px;font-size:10px;font-weight:800;
-  background:rgba(255,209,91,.18);border:1px solid rgba(255,209,91,.4);
-  border-radius:8px;padding:2px 6px;display:inline-block;}
+.poker-table .action-badge{margin-top:5px;font-size:10px;font-weight:900;
+  background:rgba(255,209,91,.18);border:1px solid rgba(255,209,91,.45);
+  border-radius:999px;padding:2px 7px;display:inline-block;color:#ffe39a;}
 .poker-table .hero-cards{display:flex;gap:4px;justify-content:center;margin-top:4px;}
-.poker-table .hole-card{background:#fff;border-radius:5px;min-width:24px;padding:2px 4px;
-  font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;gap:1px;}
+.poker-table .hole-card{background:linear-gradient(180deg,#fff,#eef2f8);border-radius:6px;min-width:26px;height:34px;
+  padding:1px 4px;font-weight:950;font-size:14px;display:flex;align-items:center;justify-content:center;gap:1px;
+  box-shadow:0 7px 14px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.7);
+  border:1px solid rgba(0,0,0,.06);}
+@media (max-width:640px){
+  .poker-table{aspect-ratio:auto;min-height:540px;max-width:390px;}
+  .poker-table__rail{inset:8% 0;border-radius:44%;}
+  .poker-table__felt{inset:12% 3%;border-radius:44%;}
+  .poker-table__center{min-width:150px;padding:9px 10px;top:49%;}
+  .poker-table__chip-stack{height:18px;}
+  .poker-table__chip-stack span{width:20px;height:8px;}
+  .poker-table__chip-stack span:nth-child(2){height:13px;}
+  .poker-table__chip-stack span:nth-child(3){height:11px;}
+  .poker-table .seat{left:var(--seat-mobile-left);top:var(--seat-mobile-top);
+    width:104px;min-height:78px;padding:6px;}
+  .poker-table .hole-card{min-width:24px;height:31px;font-size:13px;}
+}
 `;
   return style;
 }
@@ -432,12 +486,24 @@ export function renderTable(spot: Spot, ante: AnteMode, root: HTMLElement): void
   const felt = el("div", "poker-table__felt");
   table.appendChild(felt);
 
+  const rail = el("div", "poker-table__rail");
+  table.appendChild(rail);
+
+  const center = el("div", "poker-table__center");
+
   // Pot uprostřed stolu (Req 8.5).
   const potBB = startingPotBB(spot, ante);
   const pot = el("div", "pot");
   pot.dataset.potBb = String(potBB);
   pot.textContent = `Pot: ${formatBB(potBB)} BB`;
-  table.appendChild(pot);
+  center.appendChild(pot);
+
+  const chipStack = el("div", "poker-table__chip-stack");
+  for (let i = 0; i < 3; i += 1) {
+    chipStack.appendChild(document.createElement("span"));
+  }
+  center.appendChild(chipStack);
+  table.appendChild(center);
 
   // 9 sedadel (Req 8.1, bijektivně přes POSITION_ORDER).
   const seats = deriveSeats(spot);

@@ -228,15 +228,15 @@ function facingFor(context: ActionContext, heroPos: Position): TableState["facin
 /** Český popisek pro každý Akční_klíč (label v `Answer`). */
 const ACTION_KEY_LABEL: Record<ActionKey, string> = {
   FOLD: "Fold",
-  CALL: "Call / Dorovnat",
+  CALL: "Call",
   LIMP: "Limp / Check",
   OVERLIMP: "Over-limp",
-  OPEN_2X: "Raise 2×",
-  OPEN_25X: "Raise 2,5×",
-  OPEN_3X: "Raise 3×",
-  ISO_2X: "Iso-raise 2×",
-  ISO_25X: "Iso-raise 2,5×",
-  ISO_3X: "Iso-raise 3×",
+  OPEN_2X: "Raise 2x",
+  OPEN_25X: "Raise 2.5x",
+  OPEN_3X: "Raise 3x",
+  ISO_2X: "Iso-raise 2x",
+  ISO_25X: "Iso-raise 2.5x",
+  ISO_3X: "Iso-raise 3x",
   "3BET": "3-bet",
   "4BET": "4-bet",
   SQUEEZE: "Squeeze",
@@ -247,14 +247,14 @@ const ACTION_KEY_LABEL: Record<ActionKey, string> = {
 /** Český popisek akčního kontextu (pro zdůvodnění). */
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI/Open",
-  VS_LIMP: "Iso-raise proti limpu",
-  VS_OPEN: "Obrana proti openu",
-  VS_3BET: "Proti 3-betu",
-  VS_4BET: "Proti 4-betu",
+  VS_LIMP: "Iso-raise vs limp",
+  VS_OPEN: "Defense vs open",
+  VS_3BET: "Vs 3-bet",
+  VS_4BET: "Vs 4-bet",
   SQUEEZE: "Squeeze",
   BVB: "Blind vs blind",
   PUSH_FOLD: "Push/Fold",
-  VS_ALLIN: "Proti all-inu",
+  VS_ALLIN: "Vs all-in",
 };
 
 // ---------------------------------------------------------------------------
@@ -550,8 +550,8 @@ export function generateSpot(
   const startingPot = startingPotFor(ante);
   const recommended = strictCorrect.map((k) => ACTION_KEY_LABEL[k]).join(" / ");
   const explanation =
-    `${CONTEXT_LABEL[context]} — hrdina na pozici ${heroPos}, efektivní stack ` +
-    `${effStack} BB, ruka ${hand}. Doporučená akce: ${recommended}.`;
+    `${CONTEXT_LABEL[context]} - hero ${heroPos}, effective stack ` +
+    `${effStack} BB, hand ${hand}. Recommended action: ${recommended}.`;
 
   return {
     id,
@@ -917,9 +917,9 @@ export function spotSequence(
 // ---------------------------------------------------------------------------
 
 function assertNever(x: never): never {
-  throw new Error(`Neočekávaný akční kontext: ${String(x)}`);
+  throw new Error(`Unexpected action context: ${String(x)}`);
 }
 
 function assertNeverKind(x: never): never {
-  throw new Error(`Neočekávaný druh akce: ${String(x)}`);
+  throw new Error(`Unexpected action kind: ${String(x)}`);
 }

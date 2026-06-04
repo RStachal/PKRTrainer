@@ -87,7 +87,7 @@ function watchForInstallFailure(
       // `redundant` před dosažením `activated`/`installed` ⇒ install selhal.
       if (installing.state === "redundant") {
         onCacheFailure?.(
-          new Error("Service Worker se nepodařilo nainstalovat (selhalo nakešování)."),
+          new Error("Service Worker could not be installed (cache setup failed)."),
         );
       }
     });

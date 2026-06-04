@@ -30,7 +30,7 @@ const spot: Spot = {
   tableState,
   answers: [
     { key: "FOLD", label: "Fold" },
-    { key: "CALL", label: "Call / Dorovnat" },
+    { key: "CALL", label: "Call" },
     { key: "3BET", label: "3-bet" },
   ],
   correctKeys: ["CALL"],
@@ -52,10 +52,21 @@ describe("tableRenderer - DOM vykresleni stolu", () => {
     expect(root.querySelectorAll(".seat--hero")).toHaveLength(1);
     expect(root.querySelectorAll(".hero-cards .hole-card")).toHaveLength(2);
     expect(root.querySelectorAll(".action-badge").length).toBeGreaterThan(0);
+    expect(root.querySelector(".poker-table__rail")).not.toBeNull();
+    expect(root.querySelector(".poker-table__center")).not.toBeNull();
+    expect(root.querySelectorAll(".poker-table__chip-stack span")).toHaveLength(3);
+    expect(root.querySelectorAll(".seat__stack-bar").length).toBeGreaterThan(0);
     expect(root.querySelectorAll(".badge-btn")).toHaveLength(1);
     expect(root.querySelectorAll(".badge-sb")).toHaveLength(1);
     expect(root.querySelectorAll(".badge-bb")).toHaveLength(1);
     expect(root.querySelectorAll(".seat--folded").length).toBeGreaterThan(0);
+    expect(root.querySelector<HTMLElement>(".seat--hero")?.textContent).toContain("YOU");
+    expect(root.querySelector<HTMLElement>(".seat--folded")?.textContent).toContain("folded");
+    expect(root.querySelector<HTMLElement>(".seat--hero")?.style.getPropertyValue("--seat-left"))
+      .toMatch(/%$/);
+    expect(root.querySelector<HTMLElement>(".seat--hero")?.style.getPropertyValue("--seat-mobile-left"))
+      .toMatch(/%$/);
+    expect(root.querySelector("style")?.textContent).toContain("@media (max-width:640px)");
 
     const pot = root.querySelector<HTMLElement>(".pot");
     expect(pot?.textContent).toBe("Pot: 2.5 BB");

@@ -81,7 +81,7 @@ import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
 // ---------------------------------------------------------------------------
 
 /** Názvy polí hrdiny tak, jak je hlásíme v `unreadableFields` (Req 11.2). */
-export type HHFieldName = "pozice" | "akce" | "hloubky" | "karty";
+export type HHFieldName = "position" | "actions" | "stack" | "cards";
 
 /** Částečně vytěžená pole hrdiny. Každé pole je volitelné (Req 11.3). */
 export interface HHFields {
@@ -148,15 +148,15 @@ const FULL_RING = 9;
 /** Český popisek pro každý Akční_klíč (label v `Answer`). */
 const ACTION_KEY_LABEL: Record<ActionKey, string> = {
   FOLD: "Fold",
-  CALL: "Call / Dorovnat",
+  CALL: "Call",
   LIMP: "Limp / Check",
   OVERLIMP: "Over-limp",
-  OPEN_2X: "Raise 2×",
-  OPEN_25X: "Raise 2,5×",
-  OPEN_3X: "Raise 3×",
-  ISO_2X: "Iso-raise 2×",
-  ISO_25X: "Iso-raise 2,5×",
-  ISO_3X: "Iso-raise 3×",
+  OPEN_2X: "Raise 2x",
+  OPEN_25X: "Raise 2.5x",
+  OPEN_3X: "Raise 3x",
+  ISO_2X: "Iso-raise 2x",
+  ISO_25X: "Iso-raise 2.5x",
+  ISO_3X: "Iso-raise 3x",
   "3BET": "3-bet",
   "4BET": "4-bet",
   SQUEEZE: "Squeeze",
@@ -167,14 +167,14 @@ const ACTION_KEY_LABEL: Record<ActionKey, string> = {
 /** Český popisek akčního kontextu (pro zdůvodnění). */
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI/Open",
-  VS_LIMP: "Iso-raise proti limpu",
-  VS_OPEN: "Obrana proti openu",
-  VS_3BET: "Proti 3-betu",
-  VS_4BET: "Proti 4-betu",
+  VS_LIMP: "Iso-raise vs limp",
+  VS_OPEN: "Defense vs open",
+  VS_3BET: "Vs 3-bet",
+  VS_4BET: "Vs 4-bet",
   SQUEEZE: "Squeeze",
   BVB: "Blind vs blind",
   PUSH_FOLD: "Push/Fold",
-  VS_ALLIN: "Proti all-inu",
+  VS_ALLIN: "Vs all-in",
 };
 
 // ---------------------------------------------------------------------------
@@ -715,8 +715,8 @@ function buildSpot(
   const id = questionId({ context: ctx.context, heroPos, effStack: bucket, hand, ante });
   const recommended = strictCorrect.map((k) => ACTION_KEY_LABEL[k]).join(" / ");
   const explanation =
-    `${CONTEXT_LABEL[ctx.context]} (import HH) — hrdina na pozici ${heroPos}, ` +
-    `efektivní stack ${bucket} BB, ruka ${hand}. Doporučená akce: ${recommended}.`;
+    `${CONTEXT_LABEL[ctx.context]} (HH import) - hero ${heroPos}, ` +
+    `effective stack ${bucket} BB, hand ${hand}. Recommended action: ${recommended}.`;
 
   return {
     id,
@@ -767,10 +767,10 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
     return {
       ok: false,
       fields: {},
-      unreadableFields: ["pozice", "akce", "hloubky", "karty"],
+      unreadableFields: ["position", "actions", "stack", "cards"],
       errors: [
-        `Vstup překračuje maximální povolenou délku ${MAX_INPUT_LENGTH} znaků ` +
-          `(zadáno ${text.length}). Zpracování bylo odmítnuto.`,
+        `Input exceeds the maximum allowed length of ${MAX_INPUT_LENGTH} characters ` +
+          `(received ${text.length}). Processing was rejected.`,
       ],
     };
   }
@@ -781,8 +781,8 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
       return {
         ok: false,
         fields: {},
-        unreadableFields: ["pozice", "akce", "hloubky", "karty"],
-        errors: ["Vstup je prázdný nebo obsahuje pouze bílé znaky."],
+        unreadableFields: ["position", "actions", "stack", "cards"],
+        errors: ["Input is empty or contains only whitespace."],
       };
     }
 
@@ -802,14 +802,14 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
     if (hand.heroCards) {
       fields.heroCards = hand.heroCards;
     } else {
-      unreadable.push("karty");
+      unreadable.push("cards");
     }
 
     // --- Akce hrdiny ---
     if (hand.heroPreActions.length > 0) {
       fields.actions = [...hand.heroPreActions];
     } else {
-      unreadable.push("akce");
+      unreadable.push("actions");
     }
 
     // --- Pozice hrdiny (jen kompatibilní 9-handed) ---
@@ -817,7 +817,7 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
     if (heroPos) {
       fields.position = heroPos;
     } else {
-      unreadable.push("pozice");
+      unreadable.push("position");
     }
 
     // --- Hloubky ---
@@ -828,12 +828,12 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
         fields.effStackBucket = nearestBucket(effBB);
       }
     } else {
-      unreadable.push("hloubky");
+      unreadable.push("stack");
     }
 
     if (unreadable.length > 0) {
       errors.push(
-        `Vstup je neúplný nebo v nepodporovaném formátu. Nepodařilo se přečíst: ` +
+        `Input is incomplete or in an unsupported format. Could not read: ` +
           `${unreadable.join(", ")}.`,
       );
     }
@@ -875,18 +875,18 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
       const reasons: string[] = [];
       if (!tableOk) {
         reasons.push(
-          `stůl není 9-handed (nalezeno ${hand.seats.length} sedadel)`,
+          `table is not 9-handed (found ${hand.seats.length} seats)`,
         );
       }
       if (effBB !== undefined && !depthInRange) {
         reasons.push(
-          `efektivní hloubka ${effBB} BB je mimo rozsah ${MIN_BB}–${MAX_BB} BB`,
+          `effective depth ${effBB} BB is outside ${MIN_BB}-${MAX_BB} BB`,
         );
       }
       if (reasons.length > 0) {
         errors.push(
-          `Data nejsou kompatibilní s modelem trenažéru: ${reasons.join("; ")}. ` +
-            `Spot nebyl sestaven.`,
+          `Data is not compatible with the trainer model: ${reasons.join("; ")}. ` +
+            `No spot was built.`,
         );
         return {
           ok: false,
@@ -911,8 +911,8 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
     return {
       ok: false,
       fields: {},
-      unreadableFields: ["pozice", "akce", "hloubky", "karty"],
-      errors: [`Při zpracování hand history došlo k chybě: ${msg}`],
+      unreadableFields: ["position", "actions", "stack", "cards"],
+      errors: [`Error while processing hand history: ${msg}`],
     };
   }
 }

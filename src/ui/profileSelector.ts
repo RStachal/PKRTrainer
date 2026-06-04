@@ -9,6 +9,7 @@ import {
   type TrainingProfile,
   type TrainingStreet,
 } from "../core/trainingProfile";
+import { mttPreflopReadinessRowForTrainingProfile } from "../data/ranges/mttProductionReadiness";
 import { rangePackForTrainingProfile } from "../data/ranges/trainingRangePacks";
 
 export interface ProfileSelectorView {
@@ -21,7 +22,7 @@ export interface ProfileSelectorCallbacks {
   onChange?: (profile: TrainingProfile) => void;
 }
 
-type ProfileStatus = "production" | "candidate" | "preview";
+type ProfileStatus = "production" | "candidate" | "missing" | "preview";
 
 const GAME_VARIANTS: { value: GameVariant; label: string }[] = [
   { value: "MTT", label: "MTT" },
@@ -53,8 +54,8 @@ const EV_MODELS: { value: EvModel; label: string }[] = [
 
 const RAKE_MODES: { value: RakeMode; label: string }[] = [
   { value: "NONE", label: "N/A" },
-  { value: "RAKE", label: "S rakem" },
-  { value: "NO_RAKE", label: "Bez raku" },
+  { value: "RAKE", label: "Rake" },
+  { value: "NO_RAKE", label: "No rake" },
 ];
 
 export function renderProfileSelector(
@@ -67,16 +68,16 @@ export function renderProfileSelector(
 
   const wrap = doc.createElement("section");
   wrap.className = "profile-selector";
-  wrap.setAttribute("aria-label", "Profil tr\u00e9ninku");
+  wrap.setAttribute("aria-label", "Training profile");
 
   const title = doc.createElement("div");
   title.className = "profile-selector__title";
-  title.textContent = "Profil tr\u00e9ninku";
+  title.textContent = "Training profile";
   wrap.appendChild(title);
 
-  const variant = selectControl(doc, "Varianta", "profile-variant", GAME_VARIANTS);
-  const format = selectControl(doc, "St\u016fl", "profile-format", TABLE_FORMATS);
-  const speed = selectControl(doc, "Blindy", "profile-speed", BLIND_SPEEDS);
+  const variant = selectControl(doc, "Variant", "profile-variant", GAME_VARIANTS);
+  const format = selectControl(doc, "Table", "profile-format", TABLE_FORMATS);
+  const speed = selectControl(doc, "Blind speed", "profile-speed", BLIND_SPEEDS);
   const street = selectControl(doc, "Street", "profile-street", STREETS);
   const evModel = selectControl(doc, "Model", "profile-ev-model", EV_MODELS);
   const rakeMode = selectControl(doc, "Rake", "profile-rake-mode", RAKE_MODES);
@@ -160,19 +161,37 @@ function describeProfileStatus(profile: TrainingProfile): {
   status: ProfileStatus;
   text: string;
 } {
-  if (isProductionPreflopProfile(profile)) {
-    return {
-      status: "production",
-      text: "Produkce: MTT 9-max regular preflop chipEV. Tr\u00e9nink b\u011b\u017e\u00ed z offline bundlu.",
-    };
-  }
-
   if (isPostflopStreet(profile.street)) {
     return {
       status: "preview",
       text:
-        `Preview: ${profile.street.toLowerCase()} postflop tr\u00e9nink zobraz\u00ed konkr\u00e9tn\u00ed ` +
-        "situaci, st\u016fl a praktick\u00e9 p\u0159edpoklady.",
+        `Preview: ${profile.street.toLowerCase()} postflop training opens a concrete ` +
+        "spot, table and practical assumptions.",
+    };
+  }
+
+  const mttReadiness = mttPreflopReadinessRowForTrainingProfile(profile);
+  if (mttReadiness) {
+    const label = mttPreflopProfileLabel(profile);
+    if (mttReadiness.status === "PRODUCTION") {
+      return {
+        status: "production",
+        text: `Production: ${label}. Training runs from the offline bundle.`,
+      };
+    }
+
+    if (mttReadiness.status === "CANDIDATE") {
+      return {
+        status: "candidate",
+        text:
+          `${label}: candidate/preview. Production scoring is disabled until reviewed ` +
+          "hand-class coverage is complete.",
+      };
+    }
+
+    return {
+      status: "missing",
+      text: `${label}: missing production range. Production scoring is disabled.`,
     };
   }
 
@@ -181,14 +200,14 @@ function describeProfileStatus(profile: TrainingProfile): {
     return {
       status: "candidate",
       text:
-        `${candidateProfileLabel(profile)}: candidate/preview. Produk\u010dn\u00ed scoring je vypnut\u00fd, ` +
-        "dokud profil neprojde kontrolou hand-class hodnot.",
+        `${candidateProfileLabel(profile)}: candidate/preview. Production scoring is disabled ` +
+        "until hand-class values are reviewed.",
     };
   }
 
   return {
     status: "preview",
-    text: "Preview: tato kombinace zat\u00edm nem\u00e1 zapnut\u00fd produk\u010dn\u00ed scoring.",
+    text: "Preview: this combination does not have production scoring enabled yet.",
   };
 }
 
@@ -197,7 +216,7 @@ function candidateProfileLabel(profile: TrainingProfile): string {
     return `SNG ${evModelLabel(profile.evModel)} preview`;
   }
   if (profile.gameVariant === "CASH") {
-    return `Cash ${profile.rakeMode === "RAKE" ? "s rakem" : "bez raku"} preview`;
+    return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "no rake"} preview`;
   }
   return `${tableFormatLabel(profile.tableFormat)} ${profile.gameVariant} preflop preview`;
 }
@@ -210,15 +229,12 @@ function evModelLabel(model: EvModel): string {
   return model === "CHIP_EV" ? "chipEV" : "ICM";
 }
 
-function isProductionPreflopProfile(profile: TrainingProfile): boolean {
-  return (
-    profile.gameVariant === "MTT" &&
-    profile.tableFormat === "FULL_RING_9" &&
-    profile.blindSpeed === "REGULAR" &&
-    profile.street === "PREFLOP" &&
-    profile.evModel === "CHIP_EV" &&
-    profile.rakeMode === "NONE"
-  );
+function mttPreflopProfileLabel(profile: TrainingProfile): string {
+  return `MTT ${tableFormatLabel(profile.tableFormat)} ${blindSpeedLabel(profile.blindSpeed)} preflop chipEV`;
+}
+
+function blindSpeedLabel(speed: BlindSpeed): string {
+  return speed === "REGULAR" ? "regular" : "turbo";
 }
 
 function selectControl<T extends string>(

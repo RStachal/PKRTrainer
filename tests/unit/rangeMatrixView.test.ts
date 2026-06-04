@@ -29,7 +29,7 @@ const spot: Spot = {
   hand: "AKs",
   heroCards,
   tableState,
-  answers: [{ key: "OPEN_2X", label: "Raise 2×" }],
+  answers: [{ key: "OPEN_2X", label: "Raise 2x" }],
   correctKeys: ["OPEN_2X"],
   strictCorrect: ["OPEN_2X"],
   explanation: "Testovací spot.",
@@ -65,18 +65,36 @@ describe("rangeMatrixView - DOM", () => {
     const hero = root.querySelector<HTMLElement>(".matrix-cell--hero");
     expect(hero?.dataset.hand).toBe("AKs");
     expect(hero?.dataset.action).toBe("OPEN");
+    expect(root.querySelector<HTMLElement>(".range-matrix-title")?.textContent)
+      .toBe("Preflop range matrix");
+    expect(root.querySelector<HTMLElement>(".range-matrix-meta")?.textContent)
+      .toContain("Hero AKs");
+    expect(root.querySelector<HTMLElement>(".range-matrix-view")?.style.background)
+      .toContain("linear-gradient");
     expect(root.querySelector<HTMLElement>('.matrix-cell[data-hand="AA"]')?.dataset.action)
       .toBe("3BET");
     expect(root.querySelector(".matrix-legend")).not.toBeNull();
     expect(root.querySelector('.legend-item[data-action="FOLD"]')).not.toBeNull();
     expect(root.querySelector('.legend-item[data-action="OPEN"]')).not.toBeNull();
+    expect(root.querySelector('.legend-item[data-action="OPEN"]')?.textContent)
+      .toContain("Open / RFI");
+    expect(root.querySelector<HTMLElement>('.legend-item[data-action="OPEN"]')
+      ?.dataset.count).toMatch(/^\d+$/);
+    expect(root.querySelector<HTMLElement>('.legend-item[data-action="OPEN"]')
+      ?.dataset.share).toMatch(/^\d+%$/);
+    expect(root.querySelectorAll(".legend-count").length).toBeGreaterThan(1);
+    expect([...root.querySelectorAll<HTMLElement>(".legend-count")]
+      .some((node) => /\d+\/169 \(\d+%\)/.test(node.textContent ?? ""))).toBe(true);
   });
 
   it("pri nedostupnych datech zobrazi indikaci bez mrizky", () => {
     const root = document.createElement("div");
     renderMatrix(spot, missingStore, root);
 
-    expect(root.querySelector(".matrix-unavailable")).not.toBeNull();
+    const unavailable = root.querySelector<HTMLElement>(".matrix-unavailable");
+    expect(unavailable).not.toBeNull();
+    expect(unavailable?.textContent).toBe("Range data is not available for this spot.");
+    expect(unavailable?.textContent).not.toContain("k dispozici");
     expect(root.querySelectorAll(".matrix-cell")).toHaveLength(0);
   });
 });

@@ -94,14 +94,14 @@ const CONTEXT_ORDER: ActionContext[] = [
 /** Český popisek akčního kontextu pro UI (Req 13.3, 12.3). */
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
-  VS_LIMP: "Proti limpu (Iso-raise)",
-  VS_OPEN: "Proti openu",
-  VS_3BET: "Proti 3-betu",
-  VS_4BET: "Proti 4-betu",
+  VS_LIMP: "Vs limp (Iso-raise)",
+  VS_OPEN: "Vs open",
+  VS_3BET: "Vs 3-bet",
+  VS_4BET: "Vs 4-bet",
   SQUEEZE: "Squeeze",
   BVB: "Blind vs blind",
   PUSH_FOLD: "Push / Fold",
-  VS_ALLIN: "Proti all-inu (Call-jam)",
+  VS_ALLIN: "Vs all-in (Call-jam)",
 };
 
 /** Mez 32-bit unsigned seedu (4 294 967 295), tj. 2^32 − 1 (Req 6.1). */
@@ -227,14 +227,14 @@ function makeBulkToggles(
   const all = doc.createElement("button");
   all.type = "button";
   all.className = "filter-bulk-all";
-  all.textContent = "Vše";
+  all.textContent = "All";
   all.style.marginRight = "4px";
   all.addEventListener("click", onAll);
 
   const none = doc.createElement("button");
   none.type = "button";
   none.className = "filter-bulk-none";
-  none.textContent = "Žádné";
+  none.textContent = "None";
   none.addEventListener("click", onNone);
 
   wrap.appendChild(all);
@@ -298,7 +298,7 @@ export function renderFilters(
 
   // --- Sekce: Pozice (Req 13.1) ---
   const posTitleRow = el(doc, "div", "filter-row");
-  const posTitle = sectionTitle(doc, "Pozice");
+  const posTitle = sectionTitle(doc, "Positions");
   posTitleRow.appendChild(posTitle);
   posTitleRow.appendChild(
     makeBulkToggles(
@@ -329,7 +329,7 @@ export function renderFilters(
 
   // --- Sekce: Hloubkové koše (Req 13.2) ---
   const bucketTitleRow = el(doc, "div", "filter-row");
-  const bucketTitle = sectionTitle(doc, "Hloubkové koše (BB)");
+  const bucketTitle = sectionTitle(doc, "Stack depths (BB)");
   bucketTitleRow.appendChild(bucketTitle);
   bucketTitleRow.appendChild(
     makeBulkToggles(
@@ -360,7 +360,7 @@ export function renderFilters(
 
   // --- Sekce: Akční kontexty (Req 13.3) ---
   const ctxTitleRow = el(doc, "div", "filter-row");
-  const ctxTitle = sectionTitle(doc, "Akční kontext");
+  const ctxTitle = sectionTitle(doc, "Action context");
   ctxTitleRow.appendChild(ctxTitle);
   ctxTitleRow.appendChild(
     makeBulkToggles(
@@ -390,7 +390,7 @@ export function renderFilters(
   wrap.appendChild(ctxBox);
 
   // --- Sekce: Konfigurace (ante, scoring, seed) ---
-  wrap.appendChild(sectionTitle(doc, "Konfigurace"));
+  wrap.appendChild(sectionTitle(doc, "Configuration"));
   const configBox = el(doc, "div", "filter-group filter-group--config");
   configBox.style.display = "flex";
   configBox.style.flexWrap = "wrap";
@@ -423,15 +423,15 @@ export function renderFilters(
   scoringLabel.style.gap = "4px";
   scoringLabel.style.fontSize = "13px";
   const scoringText = doc.createElement("span");
-  scoringText.textContent = "Hodnocení:";
+  scoringText.textContent = "Scoring:";
   const scoringSelect = doc.createElement("select");
   scoringSelect.className = "filter-scoring";
   const optLenient = doc.createElement("option");
   optLenient.value = "LENIENT";
-  optLenient.textContent = "Mírné (LENIENT)";
+  optLenient.textContent = "Lenient";
   const optStrict = doc.createElement("option");
   optStrict.value = "STRICT";
-  optStrict.textContent = "Přísné (STRICT)";
+  optStrict.textContent = "Strict";
   scoringSelect.appendChild(optLenient);
   scoringSelect.appendChild(optStrict);
   scoringSelect.value = "LENIENT"; // výchozí režim.
@@ -451,7 +451,7 @@ export function renderFilters(
   const seedInput = doc.createElement("input");
   seedInput.type = "text";
   seedInput.className = "filter-seed";
-  seedInput.placeholder = "náhodný";
+  seedInput.placeholder = "random";
   seedInput.inputMode = "numeric";
   seedInput.style.width = "120px";
   seedLabel.appendChild(seedText);
@@ -478,7 +478,7 @@ export function renderFilters(
   const startBtn = doc.createElement("button");
   startBtn.type = "button";
   startBtn.className = "filter-start";
-  startBtn.textContent = "Start tréninku";
+  startBtn.textContent = "Start training";
   startBtn.style.marginTop = "8px";
   startBtn.style.padding = "8px 18px";
   startBtn.style.fontWeight = "700";
@@ -537,8 +537,7 @@ export function renderFilters(
       warning.hidden = false;
       warning.textContent =
         message ??
-        "Zvolená kombinace filtrů neodpovídá žádnému spotu. Upravte prosím výběr " +
-          "(pozice, hloubkové koše nebo akční kontext).";
+        "The selected filters do not match any spot. Adjust positions, stack depths or action context.";
     },
     clearWarning(): void {
       hideWarning();

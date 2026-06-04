@@ -8,7 +8,7 @@ import {
 } from "../../src/core/hhParser";
 import { POSITION_ORDER, type Card, type Position, type Rank, type Suit } from "../../src/core/types";
 
-const HH_FIELDS: HHFieldName[] = ["pozice", "akce", "hloubky", "karty"];
+const HH_FIELDS: HHFieldName[] = ["position", "actions", "stack", "cards"];
 const RANKS: Rank[] = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
 const SUITS: Suit[] = ["s", "h", "d", "c"];
 

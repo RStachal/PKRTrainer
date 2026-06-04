@@ -17,6 +17,8 @@ export type FlopzillaCategory =
   | "OVERCARDS"
   | "AIR";
 
+export type FlopzillaLane = "VALUE" | "BLUFF" | "CHECK";
+
 interface CategoryDef {
   label: string;
   color: string;
@@ -54,6 +56,8 @@ const LEGEND_ORDER: readonly FlopzillaCategory[] = [
   "AIR",
 ];
 
+type CategoryCounts = Partial<Record<FlopzillaCategory, number>>;
+
 interface ParsedHand {
   high: Rank;
   low: Rank;
@@ -71,12 +75,29 @@ export function renderPostflopRangeMatrix(
   const wrap = doc.createElement("div");
   wrap.className = "postflop-flopzilla";
   wrap.dataset.board = spot.board.map(cardLabel).join("-");
-  wrap.dataset.heroHand = handClassFromCards(spot.heroCards);
+  wrap.dataset.heroHand = postflopHandClassFromCards(spot.heroCards);
+
+  const boardText = spot.board.map(cardLabel).join(" ");
+  const heroHand = postflopHandClassFromCards(spot.heroCards);
+  const heroCategory = classifyFlopHand(heroHand, spot.board);
+  const heroCategoryLabel = flopzillaCategoryLabel(heroCategory);
+  wrap.dataset.heroCategory = heroCategory;
+  wrap.dataset.heroCategoryLabel = heroCategoryLabel;
+
+  const header = doc.createElement("div");
+  header.className = "postflop-flopzilla__header";
 
   const title = doc.createElement("div");
   title.className = "postflop-flopzilla__title";
-  title.textContent = "Flopzilla matrix";
-  wrap.appendChild(title);
+  title.textContent = "Flopzilla range matrix";
+  header.appendChild(title);
+
+  const meta = doc.createElement("div");
+  meta.className = "postflop-flopzilla__meta";
+  meta.textContent = `Board ${boardText} | Hero ${heroHand}: ${heroCategoryLabel}`;
+  header.appendChild(meta);
+
+  wrap.appendChild(header);
 
   const hint = doc.createElement("div");
   hint.className = "postflop-flopzilla__hint";
@@ -85,6 +106,8 @@ export function renderPostflopRangeMatrix(
 
   const matrix = doc.createElement("div");
   matrix.className = "postflop-flopzilla__matrix";
+  matrix.setAttribute("role", "grid");
+  matrix.setAttribute("aria-label", `Flopzilla range matrix for board ${boardText}`);
   matrix.style.gridTemplateColumns = `repeat(${GRID_SIZE + 1}, minmax(0, 1fr))`;
   matrix.appendChild(headerCell(doc, ""));
 
@@ -92,8 +115,8 @@ export function renderPostflopRangeMatrix(
     matrix.appendChild(headerCell(doc, RANKS[j]));
   }
 
-  const heroHand = handClassFromCards(spot.heroCards);
   const used = new Set<FlopzillaCategory>();
+  const counts: CategoryCounts = {};
 
   for (let i = 0; i < GRID_SIZE; i += 1) {
     matrix.appendChild(headerCell(doc, RANKS[i]));
@@ -101,12 +124,13 @@ export function renderPostflopRangeMatrix(
       const hand = handLabel(i, j);
       const category = classifyFlopHand(hand, spot.board);
       used.add(category);
+      counts[category] = (counts[category] ?? 0) + 1;
       matrix.appendChild(matrixCell(doc, hand, category, hand === heroHand));
     }
   }
 
   wrap.appendChild(matrix);
-  wrap.appendChild(legend(doc, used));
+  wrap.appendChild(legend(doc, used, counts, matrix));
   root.appendChild(wrap);
 }
 
@@ -204,9 +228,14 @@ function matrixCell(
   const cell = doc.createElement("div");
   cell.className = `postflop-flopzilla__cell postflop-flopzilla__cell--${category}`;
   if (hero) cell.classList.add("postflop-flopzilla__cell--hero");
+  cell.setAttribute("role", "gridcell");
+  cell.setAttribute("aria-label", `${hand}: ${flopzillaCategoryLabel(category)}${hero ? " hero hand" : ""}`);
   cell.dataset.hand = hand;
   cell.dataset.category = category;
-  cell.title = `${hand}: ${CATEGORY_DEFS[category].label}`;
+  cell.dataset.categoryLabel = flopzillaCategoryLabel(category);
+  cell.dataset.lane = flopzillaLaneForCategory(category);
+  cell.dataset.laneLabel = flopzillaLaneLabel(flopzillaLaneForCategory(category));
+  cell.title = `${hand}: ${flopzillaCategoryLabel(category)}`;
   cell.textContent = hand;
   cell.style.background = CATEGORY_DEFS[category].color;
   return cell;
@@ -219,32 +248,117 @@ function headerCell(doc: Document, text: string): HTMLElement {
   return cell;
 }
 
-function legend(doc: Document, used: ReadonlySet<FlopzillaCategory>): HTMLElement {
+function legend(
+  doc: Document,
+  used: ReadonlySet<FlopzillaCategory>,
+  counts: CategoryCounts,
+  matrix: HTMLElement,
+): HTMLElement {
   const legendRoot = doc.createElement("div");
   legendRoot.className = "postflop-flopzilla__legend";
+  let activeCategory: FlopzillaCategory | null = null;
 
   for (const category of LEGEND_ORDER) {
     if (!used.has(category)) continue;
     const item = doc.createElement("div");
     item.className = "postflop-flopzilla__legend-item";
+    item.setAttribute("role", "button");
+    item.setAttribute("tabindex", "0");
+    item.setAttribute("aria-pressed", "false");
+    item.setAttribute("aria-label", `Highlight ${flopzillaCategoryLabel(category)} hands`);
     item.dataset.category = category;
+    item.dataset.count = String(counts[category] ?? 0);
+    item.dataset.share = categoryShare(counts[category] ?? 0);
 
     const swatch = doc.createElement("span");
     swatch.className = "postflop-flopzilla__legend-swatch";
     swatch.style.background = CATEGORY_DEFS[category].color;
 
     const label = doc.createElement("span");
-    label.textContent = CATEGORY_DEFS[category].label;
+    label.textContent = flopzillaCategoryLabel(category);
+
+    const count = doc.createElement("span");
+    count.className = "postflop-flopzilla__legend-count";
+    count.textContent = `${counts[category] ?? 0}/169 (${categoryShare(counts[category] ?? 0)})`;
 
     item.appendChild(swatch);
     item.appendChild(label);
+    item.appendChild(count);
+    item.addEventListener("click", () => {
+      activeCategory = activeCategory === category ? null : category;
+      applyLegendHighlight(legendRoot, matrix, activeCategory);
+    });
+    item.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      item.click();
+    });
     legendRoot.appendChild(item);
   }
 
   return legendRoot;
 }
 
-function handClassFromCards(cards: readonly [Card, Card]): HandLabel {
+function applyLegendHighlight(
+  legendRoot: HTMLElement,
+  matrix: HTMLElement,
+  activeCategory: FlopzillaCategory | null,
+): void {
+  legendRoot.querySelectorAll<HTMLElement>(".postflop-flopzilla__legend-item")
+    .forEach((item) => {
+      const active = item.dataset.category === activeCategory;
+      item.classList.toggle("postflop-flopzilla__legend-item--active", active);
+      item.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+
+  matrix.querySelectorAll<HTMLElement>(".postflop-flopzilla__cell")
+    .forEach((cell) => {
+      const muted = activeCategory !== null && cell.dataset.category !== activeCategory;
+      cell.classList.toggle("postflop-flopzilla__cell--muted", muted);
+    });
+}
+
+function categoryShare(count: number): string {
+  return `${Math.round((count / (GRID_SIZE * GRID_SIZE)) * 100)}%`;
+}
+
+export function flopzillaCategoryLabel(category: FlopzillaCategory): string {
+  return CATEGORY_DEFS[category].label;
+}
+
+export function flopzillaLaneForCategory(category: FlopzillaCategory): FlopzillaLane {
+  switch (category) {
+    case "SET_PLUS":
+    case "MADE_STRAIGHT":
+    case "TWO_PAIR":
+    case "OVERPAIR":
+    case "TOP_PAIR":
+      return "VALUE";
+    case "FLUSH_DRAW":
+    case "OESD":
+    case "GUTSHOT":
+    case "BACKDOOR_DRAW":
+    case "OVERCARDS":
+      return "BLUFF";
+    case "PAIR":
+    case "UNDERPAIR":
+    case "AIR":
+      return "CHECK";
+  }
+}
+
+export function flopzillaLaneLabel(lane: FlopzillaLane): string {
+  switch (lane) {
+    case "VALUE":
+      return "Value";
+    case "BLUFF":
+      return "Bluffs";
+    case "CHECK":
+      return "Check";
+  }
+}
+
+export function postflopHandClassFromCards(cards: readonly [Card, Card]): HandLabel {
   const [a, b] = cards;
   const ai = RANKS.indexOf(a.rank);
   const bi = RANKS.indexOf(b.rank);

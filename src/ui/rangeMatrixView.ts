@@ -85,11 +85,11 @@ interface CategoryDef {
  * vizuálně odlišený od všech akčních kategorií (Req 10.2).
  */
 const CATEGORIES: Record<ActionCategory, CategoryDef> = {
-  FOLD: { label: "Fold (složit)", color: "#3a3f4b" },
-  CALL: { label: "Call (dorovnat)", color: "#3d7eb8" },
+  FOLD: { label: "Fold", color: "#3a3f4b" },
+  CALL: { label: "Call", color: "#3d7eb8" },
   LIMP: { label: "Limp", color: "#2bb1a8" },
   OVERLIMP: { label: "Over-limp", color: "#1c7d77" },
-  OPEN: { label: "Open / RFI (navýšení)", color: "#2bd576" },
+  OPEN: { label: "Open / RFI", color: "#2bd576" },
   ISO: { label: "Iso-raise", color: "#7bd86a" },
   "3BET": { label: "3bet", color: "#f0922b" },
   SQUEEZE: { label: "Squeeze", color: "#9b6cf0" },
@@ -130,6 +130,8 @@ const LEGEND_ORDER: ActionCategory[] = [
   "JAM",
   "CALL_JAM",
 ];
+
+type CategoryCounts = Partial<Record<ActionCategory, number>>;
 
 // ---------------------------------------------------------------------------
 // Kategorizace Akčních_klíčů
@@ -199,6 +201,10 @@ function makeHeaderCell(doc: Document, text: string): HTMLElement {
   el.style.textAlign = "center";
   el.style.opacity = "0.7";
   el.style.fontSize = "11px";
+  el.style.minHeight = "22px";
+  el.style.display = "flex";
+  el.style.alignItems = "center";
+  el.style.justifyContent = "center";
   return el;
 }
 
@@ -221,7 +227,11 @@ function renderUnavailable(doc: Document, root: HTMLElement, message: string): v
 }
 
 /** Vykreslí legendu pro množinu použitých kategorií (fold vždy zahrnut). */
-function renderLegend(doc: Document, used: Set<ActionCategory>): HTMLElement {
+function renderLegend(
+  doc: Document,
+  used: Set<ActionCategory>,
+  counts: CategoryCounts,
+): HTMLElement {
   // Fold je vždy přítomen (Req 10.5).
   used.add("FOLD");
 
@@ -239,10 +249,18 @@ function renderLegend(doc: Document, used: Set<ActionCategory>): HTMLElement {
     const item = doc.createElement("div");
     item.className = "legend-item";
     item.dataset.action = cat;
+    item.dataset.count = String(counts[cat] ?? 0);
+    item.dataset.share = categoryShare(counts[cat] ?? 0);
     item.style.display = "inline-flex";
     item.style.alignItems = "center";
     item.style.gap = "6px";
-    item.style.fontSize = "12px";
+    item.style.fontSize = "11px";
+    item.style.fontWeight = "850";
+    item.style.color = "#dce5f8";
+    item.style.border = "1px solid rgba(255,255,255,.1)";
+    item.style.borderRadius = "999px";
+    item.style.background = "rgba(255,255,255,.045)";
+    item.style.padding = "5px 7px";
 
     const swatch = doc.createElement("span");
     swatch.className = "legend-swatch";
@@ -255,12 +273,24 @@ function renderLegend(doc: Document, used: Set<ActionCategory>): HTMLElement {
     const text = doc.createElement("span");
     text.textContent = def.label;
 
+    const count = doc.createElement("span");
+    count.className = "legend-count";
+    count.textContent = `${counts[cat] ?? 0}/169 (${categoryShare(counts[cat] ?? 0)})`;
+    count.style.color = "#9fb2d5";
+    count.style.fontSize = "10px";
+    count.style.fontWeight = "900";
+
     item.appendChild(swatch);
     item.appendChild(text);
+    item.appendChild(count);
     legend.appendChild(item);
   }
 
   return legend;
+}
+
+function categoryShare(count: number): string {
+  return `${Math.round((count / (GRID_SIZE * GRID_SIZE)) * 100)}%`;
 }
 
 // ---------------------------------------------------------------------------
@@ -290,7 +320,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
   try {
     // Req 10.6: data nejsou konzistentně načtena jako celek.
     if (!store.isLoaded()) {
-      renderUnavailable(doc, root, "Data ranges nejsou k dispozici.");
+      renderUnavailable(doc, root, "Range data is not available.");
       return;
     }
 
@@ -308,7 +338,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
       renderUnavailable(
         doc,
         root,
-        "Pro tento spot nejsou k dispozici data ranges.",
+        "Range data is not available for this spot.",
       );
       return;
     }
@@ -317,13 +347,52 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
 
     const wrap = doc.createElement("div");
     wrap.className = "range-matrix-view";
+    wrap.dataset.heroHand = spot.hand;
+    wrap.style.border = "1px solid rgba(123,211,255,.18)";
+    wrap.style.borderRadius = "12px";
+    wrap.style.background = "linear-gradient(180deg,rgba(12,20,32,.94),rgba(8,13,22,.96))";
+    wrap.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,.06),0 18px 40px rgba(0,0,0,.22)";
+    wrap.style.padding = "12px";
+    wrap.style.color = "#e8ecf7";
+
+    const header = doc.createElement("div");
+    header.className = "range-matrix-header";
+    header.style.display = "flex";
+    header.style.alignItems = "flex-start";
+    header.style.justifyContent = "space-between";
+    header.style.gap = "12px";
+    header.style.marginBottom = "8px";
+
+    const title = doc.createElement("div");
+    title.className = "range-matrix-title";
+    title.textContent = "Preflop range matrix";
+    title.style.fontSize = "12px";
+    title.style.fontWeight = "950";
+    title.style.textTransform = "uppercase";
+    title.style.color = "#f4f7ff";
+
+    const meta = doc.createElement("div");
+    meta.className = "range-matrix-meta";
+    meta.textContent = `${spot.context} | ${spot.heroPos} | ${spot.effStack} BB | Hero ${spot.hand}`;
+    meta.style.fontSize = "11px";
+    meta.style.fontWeight = "850";
+    meta.style.color = "#b9cff4";
+    meta.style.textAlign = "right";
+
+    header.appendChild(title);
+    header.appendChild(meta);
+    wrap.appendChild(header);
 
     // --- Mřížka 13×13 + záhlaví (Req 10.1, 10.4) ---
     const matrix = doc.createElement("div");
     matrix.className = "matrix";
     matrix.style.display = "grid";
     matrix.style.gridTemplateColumns = `repeat(${GRID_SIZE + 1}, 1fr)`;
-    matrix.style.gap = "1px";
+    matrix.style.gap = "2px";
+    matrix.style.padding = "5px";
+    matrix.style.borderRadius = "10px";
+    matrix.style.background = "rgba(2,7,13,.42)";
+    matrix.style.border = "1px solid rgba(255,255,255,.08)";
 
     // Rohová buňka záhlaví.
     matrix.appendChild(makeHeaderCell(doc, ""));
@@ -333,6 +402,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     }
 
     const usedCategories = new Set<ActionCategory>();
+    const counts: CategoryCounts = {};
 
     for (let i = 0; i < GRID_SIZE; i++) {
       // Řádkové záhlaví.
@@ -343,6 +413,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
         const keys = entry.actions[hand];
         const category = categoryForHand(keys); // Req 10.2
         usedCategories.add(category);
+        counts[category] = (counts[category] ?? 0) + 1;
 
         const cell = doc.createElement("div");
         cell.className = `matrix-cell matrix-cell--${category}`;
@@ -352,17 +423,25 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
         cell.style.background = CATEGORIES[category].color;
         cell.style.textAlign = "center";
         cell.style.fontSize = "10px";
+        cell.style.minHeight = "28px";
         cell.style.padding = "2px 0";
         cell.style.color = "#fff";
-        cell.style.borderRadius = "2px";
+        cell.style.borderRadius = "5px";
+        cell.style.border = "1px solid rgba(255,255,255,.16)";
+        cell.style.boxSizing = "border-box";
+        cell.style.textShadow = "0 1px 1px rgba(0,0,0,.55)";
+        cell.style.boxShadow =
+          "inset 0 1px 0 rgba(255,255,255,.18),inset 0 -10px 18px rgba(0,0,0,.16)";
+        cell.style.fontWeight = "900";
 
         // Req 10.3: zvýraznění ruky aktuálního spotu — rámeček/outline,
         // odlišitelný od barvení akcí (nikoli pouze barva).
         if (hand === spot.hand) {
           cell.classList.add("matrix-cell--hero");
           cell.style.outline = "3px solid #ffffff";
-          cell.style.outlineOffset = "-1px";
-          cell.style.fontWeight = "900";
+          cell.style.outlineOffset = "-2px";
+          cell.style.boxShadow =
+            "0 0 0 2px rgba(43,213,118,.7),0 0 18px rgba(43,213,118,.42)";
           cell.style.zIndex = "1";
         }
 
@@ -373,11 +452,11 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     wrap.appendChild(matrix);
 
     // --- Legenda (Req 10.5) ---
-    wrap.appendChild(renderLegend(doc, usedCategories));
+    wrap.appendChild(renderLegend(doc, usedCategories, counts));
 
     root.appendChild(wrap);
   } catch {
     // Req 10.6: za žádných okolností neprovést pád aplikace.
-    renderUnavailable(doc, root, "Range matici se nepodařilo zobrazit.");
+    renderUnavailable(doc, root, "Range matrix could not be displayed.");
   }
 }

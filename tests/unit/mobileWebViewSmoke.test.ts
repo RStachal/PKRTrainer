@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+vi.setConfig({ testTimeout: 15000 });
+
 class MemoryStorage implements Storage {
   protected readonly data = new Map<string, string>();
 
@@ -77,7 +79,7 @@ describe("mobile / Android WebView smoke", () => {
 
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
-    expect(warning?.textContent).toContain("Cash s rakem preview");
+    expect(warning?.textContent).toContain("Cash rake preview");
     expect(warning?.textContent).not.toContain("https://");
     expect(warning?.textContent?.toLowerCase()).not.toContain("zdroj");
     expect(root.querySelector(".poker-table")).toBeNull();

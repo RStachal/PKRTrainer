@@ -117,7 +117,7 @@ export function expandToken(tokenRaw: string): HandLabel[] {
     const lowFrom = v(m[2]);
     const suit = m[3] as "s" | "o";
     if (highV <= lowFrom) {
-      throw new Error(`Neplatný token „${token}": vyšší karta musí být první.`);
+      throw new Error(`Invalid token "${token}": the higher card must come first.`);
     }
     for (let low = lowFrom; low <= highV - 1; low++) {
       out.push(combo(highV, low, suit));
@@ -141,19 +141,19 @@ export function expandToken(tokenRaw: string): HandLabel[] {
 
     if (highA !== highB) {
       throw new Error(
-        `Neplatný token „${token}": oba krajní body musí mít stejnou vyšší kartu.`,
+        `Invalid token "${token}": both range endpoints must use the same higher card.`,
       );
     }
     if (suitA !== suitB) {
       throw new Error(
-        `Neplatný token „${token}": oba krajní body musí mít stejný suited/offsuit marker.`,
+        `Invalid token "${token}": both range endpoints must use the same suited/offsuit marker.`,
       );
     }
     const high = highA;
     const suit = suitA;
     if (high <= lowA || high <= lowB) {
       throw new Error(
-        `Neplatný token „${token}": vyšší karta musí být v obou krajních bodech první.`,
+        `Invalid token "${token}": the higher card must come first in both range endpoints.`,
       );
     }
     // Iterace od prvního krajního bodu ke druhému (zachová zápis high→low),
@@ -172,20 +172,20 @@ export function expandToken(tokenRaw: string): HandLabel[] {
     const b = v(m[2]);
     const suit = m[3] as "s" | "o";
     if (a === b) {
-      throw new Error(`Neplatný token „${token}": suited/offsuit vyžaduje různé hodnoty.`);
+      throw new Error(`Invalid token "${token}": suited/offsuit hands require different ranks.`);
     }
     out.push(combo(Math.max(a, b), Math.min(a, b), suit));
     return assertValid(token, out);
   }
 
-  throw new Error(`Neznámý token range-notace: „${token}".`);
+  throw new Error(`Unknown range-notation token: "${token}".`);
 }
 
 /** Ověří, že všechny vyprodukované labely jsou platné třídy rukou. */
 function assertValid(token: string, hands: HandLabel[]): HandLabel[] {
   for (const h of hands) {
     if (!VALID_HANDS.has(h)) {
-      throw new Error(`Token „${token}" vytvořil neplatnou třídu ruky „${h}".`);
+      throw new Error(`Token "${token}" produced invalid hand class "${h}".`);
     }
   }
   return hands;

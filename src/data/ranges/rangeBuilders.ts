@@ -59,7 +59,7 @@ export function buildHandMaps(segments: readonly RangeSegment[]): {
 
   for (const seg of segments) {
     if (seg.strict.length === 0) {
-      throw new Error("RangeSegment.strict musí obsahovat alespoň jeden Akční_klíč.");
+      throw new Error("RangeSegment.strict must contain at least one action key.");
     }
     const lenientKeys = seg.lenient ?? seg.strict;
     for (const hand of expandTokens(seg.spec)) {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 
 import { DEFAULT_TRAINING_PROFILE, profileWith } from "../../src/core/trainingProfile";
 import { postflopPublicHeuristicStrategyPacks } from "../../src/data/ranges/postflopStrategyPack";
@@ -51,5 +52,23 @@ describe("release bundle metadata", () => {
       ante: "OFF",
       rakeMode: "RAKE",
     }))).toBeUndefined();
+  });
+
+  it("publikovana app metadata pouzivaji anglictinu a ciste ASCII popisy", () => {
+    const html = readFileSync("index.html", "utf8");
+    const manifest = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8")) as {
+      description: string;
+      lang: string;
+    };
+    const pkg = JSON.parse(readFileSync("package.json", "utf8")) as {
+      description: string;
+    };
+
+    expect(html).toContain('<html lang="en">');
+    expect(html).toContain("This app requires JavaScript to be enabled.");
+    expect(manifest.lang).toBe("en");
+    expect(manifest.description).toBe("Offline full-ring 9-handed poker decision trainer.");
+    expect(pkg.description).toContain("offline full-ring 9-handed poker decision trainer");
+    expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
 });

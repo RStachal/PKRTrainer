@@ -34,7 +34,7 @@ function spotWith(
     tableState,
     answers: [
       { key: "FOLD", label: "Fold" },
-      { key: "CALL", label: "Call / Dorovnat" },
+      { key: "CALL", label: "Call" },
       { key: "3BET", label: "3-bet" },
     ],
     correctKeys,

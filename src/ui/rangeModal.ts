@@ -13,7 +13,7 @@ export function renderRangeModalButton(
   const button = doc.createElement("button");
   button.type = "button";
   button.className = "range-modal-open";
-  button.textContent = "Zobrazit rozsah (Flopzilla)";
+  button.textContent = "Show range (Flopzilla)";
   button.addEventListener("click", () => openRangeModal(doc, spot, store));
   root.appendChild(button);
 }
@@ -24,12 +24,12 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   overlay.className = "range-modal";
   overlay.setAttribute("role", "dialog");
   overlay.setAttribute("aria-modal", "true");
-  overlay.setAttribute("aria-label", "Range matice");
+  overlay.setAttribute("aria-label", "Range matrix");
 
   const backdrop = doc.createElement("button");
   backdrop.type = "button";
   backdrop.className = "range-modal__backdrop";
-  backdrop.setAttribute("aria-label", "Zavrit range");
+  backdrop.setAttribute("aria-label", "Close range");
   overlay.appendChild(backdrop);
 
   const dialog = doc.createElement("div");
@@ -48,7 +48,7 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   const close = doc.createElement("button");
   close.type = "button";
   close.className = "range-modal__close";
-  close.textContent = "Zavrit";
+  close.textContent = "Close";
   header.appendChild(close);
 
   dialog.appendChild(renderRangeModelSummary(doc, currentMttPreflopRangePack(spot.ante)));
@@ -61,37 +61,50 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   const style = doc.createElement("style");
   style.textContent = `
 .range-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;
-  justify-content:center;padding:clamp(8px,2vw,18px);font-family:system-ui,Arial,sans-serif;}
-.range-modal__backdrop{position:absolute;inset:0;border:0;background:rgba(5,8,14,.78);
+  justify-content:center;padding:clamp(8px,2vw,18px);font-family:Inter,system-ui,Arial,sans-serif;}
+.range-modal__backdrop{position:absolute;inset:0;border:0;background:rgba(3,7,13,.82);
+  backdrop-filter:blur(5px);
   cursor:pointer;}
 .range-modal__dialog{position:relative;z-index:1;box-sizing:border-box;width:min(940px,100%);
-  max-height:min(92vh,92dvh);overflow:auto;background:#11151f;color:#e8ecf7;border:1px solid
-  rgba(255,255,255,.16);border-radius:10px;padding:14px 16px 18px;box-shadow:
-  0 24px 80px rgba(0,0,0,.5);}
+  max-height:min(92vh,92dvh);overflow:auto;background:linear-gradient(180deg,#121928,#08101d);
+  color:#e8ecf7;border:1px solid rgba(123,211,255,.2);border-radius:16px;
+  padding:16px 18px 20px;box-shadow:0 34px 110px rgba(0,0,0,.58),
+  inset 0 1px 0 rgba(255,255,255,.06);}
 .range-modal__header{display:flex;align-items:center;justify-content:space-between;
-  gap:12px;margin-bottom:12px;position:sticky;top:0;z-index:2;background:#11151f;
+  gap:12px;margin:-2px -2px 12px;position:sticky;top:0;z-index:2;
+  background:linear-gradient(180deg,rgba(18,25,40,.98),rgba(18,25,40,.9));
+  border-bottom:1px solid rgba(255,255,255,.08);
   padding-bottom:10px;}
-.range-modal__title{margin:0;font-size:16px;font-weight:900;letter-spacing:0;}
+.range-modal__title{margin:0;font-size:16px;font-weight:950;letter-spacing:0;color:#f4f7ff;}
 .range-modal__close,.range-modal-open{appearance:none;border:1px solid rgba(255,255,255,.18);
-  border-radius:8px;background:#1b2333;color:#e8ecf7;font-weight:800;font-size:13px;
-  padding:8px 12px;cursor:pointer;}
-.range-modal__close:hover,.range-modal-open:hover{border-color:#2bd576;}
+  border-radius:10px;background:linear-gradient(180deg,#202a3d,#151d2d);color:#e8ecf7;
+  font-weight:900;font-size:13px;padding:9px 13px;cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 22px rgba(0,0,0,.18);}
+.range-modal__close:hover,.range-modal-open:hover{border-color:#2bd576;transform:translateY(-1px);}
 .range-modal__evidence{display:grid;gap:6px;margin:0 0 12px;padding:10px;border:1px solid
-  rgba(255,255,255,.12);border-radius:8px;background:#151b29;color:#cbd5e1;font-size:12px;}
+  rgba(123,211,255,.16);border-radius:10px;background:rgba(255,255,255,.045);
+  color:#cbd5e1;font-size:12px;}
 .range-modal__evidence-title{font-weight:900;color:#e8ecf7;}
 .range-modal__evidence-meta,.range-modal__evidence-assumptions{line-height:1.35;
   overflow-wrap:anywhere;}
-.range-modal__matrix{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
+.range-modal__matrix{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;
+  scrollbar-color:#7bd3ff rgba(255,255,255,.08);}
 .range-modal__matrix .matrix{min-width:620px;}
 .range-modal__matrix .matrix-cell{min-height:22px;display:flex;align-items:center;
   justify-content:center;}
 .range-modal-open{margin-bottom:10px;}
 @media (max-width:640px){
   .range-modal{align-items:stretch;}
-  .range-modal__dialog{width:100%;max-height:min(96vh,96dvh);padding:10px 10px 14px;}
+  .range-modal__dialog{width:100%;max-height:min(96vh,96dvh);padding:10px 10px 14px;
+    border-radius:14px;}
+  .range-modal__header{align-items:flex-start;}
   .range-modal__title{font-size:14px;}
   .range-modal__close{padding:8px 10px;}
+  .range-modal-open{width:100%;}
   .range-modal__matrix .matrix{min-width:560px;}
+  .range-modal__matrix .range-matrix-view{min-width:560px;padding:9px;}
+  .range-modal__matrix .range-matrix-header{gap:8px;}
+  .range-modal__matrix .range-matrix-meta{font-size:10px;}
 }
 `;
   overlay.appendChild(style);
@@ -133,7 +146,7 @@ function renderRangeModelSummary(doc: Document, pack: RangePack): HTMLElement {
 
   const assumptions = doc.createElement("div");
   assumptions.className = "range-modal__evidence-assumptions";
-  assumptions.textContent = `Predpoklady: ${pack.assumptions.join(" ")}`;
+  assumptions.textContent = `Assumptions: ${pack.assumptions.join(" ")}`;
   section.appendChild(assumptions);
 
   return section;

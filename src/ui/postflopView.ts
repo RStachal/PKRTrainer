@@ -11,15 +11,20 @@ import {
   postflopSpotToTrainingSpot,
   type PostflopTrainingSpot,
 } from "../core/postflopTrainingSpot";
-import { postflopPublicHeuristicStrategyPacks } from "../data/ranges/postflopStrategyPack";
-import { createPostflopStrategyResolverChain } from "../data/ranges/postflopStrategyResolver";
+import { createDefaultPostflopStrategyResolver } from "../data/ranges/postflopStrategyRegistry";
 import { POSITION_ORDER, type Card, type Position, type Suit } from "../core/types";
-import { renderPostflopRangeMatrix } from "./postflopRangeMatrixView";
+import {
+  classifyFlopHand,
+  flopzillaLaneForCategory,
+  flopzillaLaneLabel,
+  flopzillaCategoryLabel,
+  postflopHandClassFromCards,
+  renderPostflopRangeMatrix,
+  type FlopzillaLane,
+} from "./postflopRangeMatrixView";
 
 const SEED_MAX = 0xffffffff;
-const POSTFLOP_STRATEGY_RESOLVER = createPostflopStrategyResolverChain(
-  postflopPublicHeuristicStrategyPacks,
-);
+const POSTFLOP_STRATEGY_RESOLVER = createDefaultPostflopStrategyResolver();
 
 export interface PostflopViewOptions {
   initialStreet?: PostflopStreet;
@@ -45,17 +50,17 @@ const POT_TYPE_LABEL: Record<PostflopPotType, string> = {
 };
 
 const TEXTURE_LABEL: Record<BoardTexture, string> = {
-  paired: "Sp\u00e1rovan\u00fd",
+  paired: "Paired",
   monotone: "Monotone",
   "two-tone": "Two-tone",
   rainbow: "Rainbow",
-  connected: "Propojen\u00fd",
-  dry: "Such\u00fd",
+  connected: "Connected",
+  dry: "Dry",
   "ace-high": "A-high",
   "broadway-high": "Broadway-high",
   low: "Low",
   medium: "Medium",
-  "straight-possible": "Straight mo\u017en\u00fd",
+  "straight-possible": "Straight possible",
   "flush-draw-heavy": "Flush draw",
   disconnected: "Disconnected",
 };
@@ -109,7 +114,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   seedInput.className = "postflop-seed";
   seedInput.type = "text";
   seedInput.inputMode = "numeric";
-  seedInput.placeholder = "n\u00e1hodn\u00fd";
+  seedInput.placeholder = "random";
   if (options.initialSeed !== undefined && options.initialSeed !== null) {
     seedInput.value = String(options.initialSeed);
   }
@@ -119,7 +124,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   const generate = doc.createElement("button");
   generate.type = "button";
   generate.className = "postflop-generate";
-  generate.textContent = "Generovat spot";
+  generate.textContent = "Generate spot";
 
   controls.appendChild(streetLabel);
   controls.appendChild(seedLabel);
@@ -182,20 +187,20 @@ function renderSpot(
   questionBar.className = "postflop-question-bar";
   const questionTitle = doc.createElement("div");
   questionTitle.className = "postflop-question-title";
-  questionTitle.textContent = "Otazka";
+  questionTitle.textContent = "Question";
   const questionActions = doc.createElement("div");
   questionActions.className = "postflop-question-actions";
 
   const newSpot = doc.createElement("button");
   newSpot.type = "button";
   newSpot.className = "postflop-new-spot";
-  newSpot.textContent = "Novy spot";
+  newSpot.textContent = "New spot";
   newSpot.addEventListener("click", controls.onNewSpot);
 
   const changeSituation = doc.createElement("button");
   changeSituation.type = "button";
   changeSituation.className = "postflop-change-situation";
-  changeSituation.textContent = "Zmenit situaci";
+  changeSituation.textContent = "Change situation";
   changeSituation.addEventListener("click", controls.onChangeSituation);
 
   questionActions.appendChild(newSpot);
@@ -279,6 +284,13 @@ function postflopTable(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
   pot.textContent = `Pot ${spot.potBB} BB`;
   center.appendChild(pot);
 
+  const chipStack = doc.createElement("div");
+  chipStack.className = "postflop-table__chip-stack";
+  for (let i = 0; i < 3; i += 1) {
+    chipStack.appendChild(doc.createElement("span"));
+  }
+  center.appendChild(chipStack);
+
   const board = doc.createElement("div");
   board.className = "postflop-table__board";
   for (const card of spot.board) board.appendChild(cardElement(doc, card));
@@ -298,8 +310,11 @@ function postflopTable(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
       POSITION_ORDER.length
     ) % POSITION_ORDER.length;
     const pos = seatPosition(slot);
-    seat.style.left = `${pos.left}%`;
-    seat.style.top = `${pos.top}%`;
+    const mobilePos = seatPositionMobile(slot);
+    seat.style.setProperty("--seat-left", `${pos.left}%`);
+    seat.style.setProperty("--seat-top", `${pos.top}%`);
+    seat.style.setProperty("--seat-mobile-left", `${mobilePos.left}%`);
+    seat.style.setProperty("--seat-mobile-top", `${mobilePos.top}%`);
     table.appendChild(seat);
   }
 
@@ -411,6 +426,14 @@ function seatPosition(slot: number): { left: number; top: number } {
   };
 }
 
+function seatPositionMobile(slot: number): { left: number; top: number } {
+  const angle = Math.PI / 2 + slot * ((2 * Math.PI) / POSITION_ORDER.length);
+  return {
+    left: 50 + 34 * Math.cos(angle),
+    top: 50 + 40 * Math.sin(angle),
+  };
+}
+
 function cardBack(doc: Document): HTMLElement {
   const back = doc.createElement("div");
   back.className = "postflop-card-back";
@@ -462,7 +485,7 @@ function renderPracticalExplanation(
   const summary = doc.createElement("p");
   summary.className = "postflop-result__summary";
   summary.textContent =
-    `${correct ? "Spr\u00e1vn\u011b." : "Je\u0161t\u011b ne."} Doporu\u010deno: ` +
+    `${correct ? "Correct." : "Not yet."} Recommended: ` +
     `${actionLabel(spot.recommendedAction)}. ${spot.explanation.summary}`;
   root.appendChild(summary);
 
@@ -547,24 +570,57 @@ function renderFlopRangeSummary(
   note.textContent = rangeFocusText(spot);
   section.appendChild(note);
 
+  section.appendChild(heroBucketInsight(doc, spot));
+
   const lanes = doc.createElement("div");
   lanes.className = "postflop-range-summary__lanes";
-  lanes.appendChild(rangeLane(doc, "Value", spot.explanation.valueHands, "BET", spot, chosen));
-  lanes.appendChild(rangeLane(doc, "Bluffs", spot.explanation.bluffHands, "BET", spot, chosen));
-  lanes.appendChild(rangeLane(doc, "Check", spot.explanation.checkHands, "CHECK", spot, chosen));
+  lanes.appendChild(rangeLane(doc, "Value", "VALUE", spot.explanation.valueHands, "BET", spot, chosen));
+  lanes.appendChild(rangeLane(doc, "Bluffs", "BLUFF", spot.explanation.bluffHands, "BET", spot, chosen));
+  lanes.appendChild(rangeLane(doc, "Check", "CHECK", spot.explanation.checkHands, "CHECK", spot, chosen));
   section.appendChild(lanes);
 
   const matrixMount = doc.createElement("div");
   matrixMount.className = "postflop-range-summary__matrix";
   renderPostflopRangeMatrix(spot, matrixMount);
   section.appendChild(matrixMount);
+  wireRangeLaneFilters(section, matrixMount);
 
   return section;
+}
+
+function heroBucketInsight(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
+  const heroHand = postflopHandClassFromCards(spot.heroCards);
+  const heroCategory = classifyFlopHand(heroHand, spot.board);
+  const heroCategoryLabel = flopzillaCategoryLabel(heroCategory);
+  const heroLane = flopzillaLaneForCategory(heroCategory);
+
+  const insight = doc.createElement("div");
+  insight.className = "postflop-range-summary__hero-bucket";
+  insight.dataset.heroHand = heroHand;
+  insight.dataset.heroCategory = heroCategory;
+  insight.dataset.heroCategoryLabel = heroCategoryLabel;
+  insight.dataset.heroLane = heroLane;
+  insight.dataset.heroLaneLabel = flopzillaLaneLabel(heroLane);
+
+  const label = doc.createElement("span");
+  label.className = "postflop-range-summary__hero-bucket-label";
+  label.textContent = "Hero bucket";
+  insight.appendChild(label);
+
+  const text = doc.createElement("span");
+  text.className = "postflop-range-summary__hero-bucket-text";
+  text.textContent =
+    `${heroHand} is ${heroCategoryLabel} on this flop, usually sitting in the ` +
+    `${flopzillaLaneLabel(heroLane).toLowerCase()} lane. Compare it against the value, bluff and check lanes.`;
+  insight.appendChild(text);
+
+  return insight;
 }
 
 function rangeLane(
   doc: Document,
   title: string,
+  laneName: FlopzillaLane,
   items: readonly string[],
   laneAction: "BET" | "CHECK",
   spot: PostflopTrainingSpot,
@@ -572,6 +628,11 @@ function rangeLane(
 ): HTMLElement {
   const lane = doc.createElement("div");
   lane.className = "postflop-range-summary__lane";
+  lane.dataset.lane = laneName;
+  lane.setAttribute("role", "button");
+  lane.setAttribute("tabindex", "0");
+  lane.setAttribute("aria-pressed", "false");
+  lane.setAttribute("aria-label", `Highlight ${title.toLowerCase()} lane in the matrix`);
   const recommendedLane = actionBelongsToLane(spot.recommendedAction, laneAction);
   const chosenLane = actionBelongsToLane(chosen, laneAction);
   lane.classList.toggle("postflop-range-summary__lane--recommended", recommendedLane);
@@ -596,6 +657,37 @@ function rangeLane(
   return lane;
 }
 
+function wireRangeLaneFilters(section: HTMLElement, matrixMount: HTMLElement): void {
+  let activeLane: FlopzillaLane | null = null;
+  const lanes = [...section.querySelectorAll<HTMLElement>(".postflop-range-summary__lane")];
+  const apply = (): void => {
+    section.dataset.activeLane = activeLane ?? "";
+    for (const lane of lanes) {
+      const active = lane.dataset.lane === activeLane;
+      lane.classList.toggle("postflop-range-summary__lane--active", active);
+      lane.setAttribute("aria-pressed", active ? "true" : "false");
+    }
+    matrixMount.querySelectorAll<HTMLElement>(".postflop-flopzilla__cell")
+      .forEach((cell) => {
+        const muted = activeLane !== null && cell.dataset.lane !== activeLane;
+        cell.classList.toggle("postflop-flopzilla__cell--muted", muted);
+      });
+  };
+
+  for (const lane of lanes) {
+    lane.addEventListener("click", () => {
+      const laneName = lane.dataset.lane as FlopzillaLane;
+      activeLane = activeLane === laneName ? null : laneName;
+      apply();
+    });
+    lane.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      lane.click();
+    });
+  }
+}
+
 function actionBelongsToLane(action: PostflopAction, laneAction: "BET" | "CHECK"): boolean {
   if (laneAction === "CHECK") return action === "CHECK";
   return action === "BET_SMALL" || action === "BET_BIG";
@@ -616,37 +708,37 @@ function modelItems(spot: PostflopTrainingSpot): readonly string[] {
   const source = spot.explanation.source;
   if (source.kind === "STRATEGY_PACK") {
     return [
-      "Heuristicky model",
-      `Jistota: ${confidenceLabel(source.confidence)}`,
-      `Shoda textur: ${source.matchedTextures.map(textureLabel).join(", ")}`,
-      `SPR okno: ${source.sprMin}-${source.sprMax}`,
+      "Heuristic model",
+      `Confidence: ${confidenceLabel(source.confidence)}`,
+      `Texture match: ${source.matchedTextures.map(textureLabel).join(", ")}`,
+      `SPR window: ${source.sprMin}-${source.sprMax}`,
       ...source.assumptions.map(
-        (assumption, index) => `Predpoklad ${index + 1}: ${userFacingAssumption(assumption)}`,
+        (assumption, index) => `Assumption ${index + 1}: ${userFacingAssumption(assumption)}`,
       ),
     ];
   }
-  return ["Zakladni heuristika"];
+  return ["Baseline heuristic"];
 }
 
 function userFacingAssumption(assumption: string): string {
   return assumption
     .replace(
       /^Public heuristic .* StrategyPack only; no paid chart values or exact solver frequencies are copied\.$/,
-      "Jde o verejnou vyukovou heuristiku bez presnych solverovych frekvenci.",
+      "Public training heuristic without exact solver frequencies.",
     )
     .replace(/\bStrategyPack\b/g, "model")
     .replace(/\bRangePack\b/g, "model")
-    .replace(/\bLOW confidence\b/g, "nizka jistota");
+    .replace(/\bLOW confidence\b/g, "low confidence");
 }
 
 function confidenceLabel(confidence: "LOW" | "MEDIUM" | "HIGH"): string {
   switch (confidence) {
     case "LOW":
-      return "nizka";
+      return "low";
     case "MEDIUM":
-      return "stredni";
+      return "medium";
     case "HIGH":
-      return "vysoka";
+      return "high";
     default:
       return confidence;
   }
@@ -740,11 +832,22 @@ function styles(doc: Document): HTMLStyleElement {
 .postflop-table__center-label{font-size:11px;font-weight:950;color:#bfe9ff;text-transform:uppercase;}
 .postflop-table__pot{font-size:16px;font-weight:950;color:#f2f7ff;
   text-shadow:0 1px 8px rgba(0,0,0,.45);}
+.postflop-table__chip-stack{display:flex;align-items:flex-end;justify-content:center;gap:4px;
+  height:22px;margin-top:-2px;}
+.postflop-table__chip-stack span{display:block;width:24px;height:10px;border-radius:999px;
+  background:linear-gradient(180deg,#f8fbff,#9fb2d5 48%,#53617a);
+  border:1px solid rgba(255,255,255,.45);box-shadow:0 5px 10px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,.8);}
+.postflop-table__chip-stack span:nth-child(2){height:16px;
+  background:linear-gradient(180deg,#7bd3ff,#2f87d8 52%,#174170);}
+.postflop-table__chip-stack span:nth-child(3){height:13px;
+  background:linear-gradient(180deg,#ffd15b,#da8b25 52%,#7d4117);}
 .postflop-table__board{display:flex;gap:7px;justify-content:center;align-items:center;}
 .postflop-table__center-meta{font-size:12px;font-weight:800;color:#b9c6df;
   background:rgba(15,21,32,.65);border:1px solid rgba(255,255,255,.12);
   border-radius:999px;padding:4px 9px;}
-.postflop-seat{position:absolute;transform:translate(-50%,-50%);z-index:4;width:134px;
+.postflop-seat{position:absolute;left:var(--seat-left);top:var(--seat-top);
+  transform:translate(-50%,-50%);z-index:4;width:134px;
   min-height:88px;box-sizing:border-box;padding:8px 9px;border-radius:12px;
   background:linear-gradient(180deg,rgba(22,31,47,.98),rgba(10,16,27,.98));
   border:1px solid rgba(148,163,184,.22);box-shadow:0 14px 28px rgba(0,0,0,.32),
@@ -818,12 +921,22 @@ function styles(doc: Document): HTMLStyleElement {
   color:#e8ecf7;}
 .postflop-range-summary__meta{font-size:12px;color:#b9cff4;text-align:right;overflow-wrap:anywhere;}
 .postflop-range-summary__note{margin:0 0 8px;color:#dce5f8;overflow-wrap:anywhere;}
+.postflop-range-summary__hero-bucket{display:flex;align-items:center;gap:8px;
+  border:1px solid rgba(123,211,255,.24);border-radius:8px;
+  background:linear-gradient(180deg,rgba(123,211,255,.1),rgba(43,213,118,.06));
+  color:#dce5f8;padding:8px 9px;margin-bottom:8px;overflow-wrap:anywhere;}
+.postflop-range-summary__hero-bucket-label{flex:0 0 auto;border-radius:999px;
+  background:rgba(43,213,118,.16);border:1px solid rgba(43,213,118,.38);
+  color:#9ff0bd;font-size:10px;font-weight:950;text-transform:uppercase;padding:4px 7px;}
+.postflop-range-summary__hero-bucket-text{font-size:12px;font-weight:850;color:#e8ecf7;}
 .postflop-range-summary__lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
 .postflop-range-summary__lane{border:1px solid rgba(255,255,255,.12);border-radius:8px;
   background:rgba(255,255,255,.035);padding:8px;min-width:0;}
 .postflop-range-summary__lane--recommended{border-color:rgba(43,213,118,.65);
   background:rgba(43,213,118,.1);}
 .postflop-range-summary__lane--chosen{box-shadow:inset 0 0 0 1px rgba(232,236,247,.42);}
+.postflop-range-summary__lane--active{border-color:rgba(123,211,255,.75);
+  background:rgba(123,211,255,.12);}
 .postflop-range-summary__lane-title{font-size:11px;font-weight:900;text-transform:uppercase;
   color:#e8ecf7;margin-bottom:6px;}
 .postflop-range-summary__chips{display:flex;flex-wrap:wrap;gap:5px;}
@@ -831,24 +944,42 @@ function styles(doc: Document): HTMLStyleElement {
   background:rgba(123,211,255,.08);color:#dce5f8;font-size:12px;font-weight:800;
   line-height:1.2;padding:4px 7px;overflow-wrap:anywhere;}
 .postflop-range-summary__matrix{margin-top:10px;}
-.postflop-flopzilla{border:1px solid rgba(255,255,255,.12);border-radius:8px;
-  background:rgba(6,12,22,.42);padding:10px;overflow-x:auto;overscroll-behavior-x:contain;
+.postflop-flopzilla{border:1px solid rgba(123,211,255,.18);border-radius:12px;
+  background:linear-gradient(180deg,rgba(12,20,32,.94),rgba(8,13,22,.96));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 18px 40px rgba(0,0,0,.22);
+  padding:12px;overflow-x:auto;overscroll-behavior-x:contain;
   scrollbar-color:#7bd3ff rgba(255,255,255,.08);}
-.postflop-flopzilla__title{font-size:11px;font-weight:900;text-transform:uppercase;
-  color:#e8ecf7;margin-bottom:8px;}
-.postflop-flopzilla__matrix{display:grid;gap:2px;min-width:640px;}
+.postflop-flopzilla__header{min-width:640px;display:flex;align-items:flex-start;
+  justify-content:space-between;gap:12px;margin-bottom:8px;}
+.postflop-flopzilla__title{font-size:12px;font-weight:950;text-transform:uppercase;
+  color:#f4f7ff;}
+.postflop-flopzilla__meta{font-size:11px;font-weight:850;color:#b9cff4;text-align:right;}
+.postflop-flopzilla__hint{min-width:640px;margin:-2px 0 8px;color:#83a2d1;
+  font-size:11px;font-weight:800;}
+.postflop-flopzilla__matrix{display:grid;gap:2px;min-width:640px;
+  padding:5px;border-radius:10px;background:rgba(2,7,13,.42);
+  border:1px solid rgba(255,255,255,.08);}
 .postflop-flopzilla__header-cell{min-height:22px;display:flex;align-items:center;
-  justify-content:center;color:#9fb2d5;font-size:11px;font-weight:900;}
-.postflop-flopzilla__cell{min-height:28px;border-radius:3px;display:flex;align-items:center;
-  justify-content:center;color:#fff;font-size:10px;font-weight:900;text-shadow:0 1px 1px rgba(0,0,0,.45);
-  border:1px solid rgba(255,255,255,.12);box-sizing:border-box;}
+  justify-content:center;color:#aac0e5;font-size:11px;font-weight:950;}
+.postflop-flopzilla__cell{min-height:28px;border-radius:5px;display:flex;align-items:center;
+  justify-content:center;color:#fff;font-size:10px;font-weight:950;text-shadow:0 1px 1px rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.16);box-sizing:border-box;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -10px 18px rgba(0,0,0,.16);}
 .postflop-flopzilla__cell--hero{outline:3px solid #fff;outline-offset:-2px;
-  box-shadow:0 0 0 2px rgba(43,213,118,.7);}
-.postflop-flopzilla__legend{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
+  box-shadow:0 0 0 2px rgba(43,213,118,.7),0 0 18px rgba(43,213,118,.42);}
+.postflop-flopzilla__cell--muted{opacity:.28;filter:saturate(.55) contrast(.82);}
+.postflop-flopzilla__legend{min-width:640px;display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
 .postflop-flopzilla__legend-item{display:inline-flex;align-items:center;gap:5px;
-  font-size:11px;font-weight:800;color:#dce5f8;}
+  font-size:11px;font-weight:850;color:#dce5f8;border:1px solid rgba(255,255,255,.1);
+  border-radius:999px;background:rgba(255,255,255,.045);padding:5px 7px;cursor:pointer;
+  transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;}
+.postflop-flopzilla__legend-item:focus-visible{outline:2px solid #7bd3ff;outline-offset:2px;}
+.postflop-flopzilla__legend-item--active{border-color:rgba(43,213,118,.75);
+  background:rgba(43,213,118,.14);box-shadow:0 0 0 1px rgba(43,213,118,.24),
+    0 8px 20px rgba(43,213,118,.12);}
 .postflop-flopzilla__legend-swatch{width:13px;height:13px;border-radius:3px;
   border:1px solid rgba(255,255,255,.24);}
+.postflop-flopzilla__legend-count{color:#9fb2d5;font-size:10px;font-weight:900;}
 .postflop-result--correct{background:rgba(43,213,118,.13);border:1px solid rgba(43,213,118,.45);
   color:#9ff0bd;}
 .postflop-result--wrong{background:rgba(226,59,59,.13);border:1px solid rgba(226,59,59,.45);
@@ -864,7 +995,12 @@ function styles(doc: Document): HTMLStyleElement {
   .postflop-table__rail{inset:8% 0;border-radius:44%;}
   .postflop-table__felt{inset:12% 3%;border-radius:44%;}
   .postflop-table__center{min-width:194px;padding:10px;top:49%;}
-  .postflop-seat{width:112px;min-height:82px;padding:6px;}
+  .postflop-table__chip-stack{height:18px;}
+  .postflop-table__chip-stack span{width:20px;height:8px;}
+  .postflop-table__chip-stack span:nth-child(2){height:13px;}
+  .postflop-table__chip-stack span:nth-child(3){height:11px;}
+  .postflop-seat{left:var(--seat-mobile-left);top:var(--seat-mobile-top);
+    width:108px;min-height:82px;padding:6px;}
   .postflop-seat__badge{font-size:8px;}
   .postflop-seat__cards .postflop-card{width:30px;height:40px;font-size:14px;}
   .postflop-table__board .postflop-card{width:36px;height:48px;font-size:16px;}
@@ -874,9 +1010,13 @@ function styles(doc: Document): HTMLStyleElement {
   .postflop-practical{grid-template-columns:1fr;}
   .postflop-range-summary__header{flex-direction:column;}
   .postflop-range-summary__meta{text-align:left;}
+  .postflop-range-summary__hero-bucket{align-items:flex-start;flex-direction:column;}
   .postflop-range-summary__lanes{grid-template-columns:1fr;}
-  .postflop-flopzilla{padding:8px;margin-left:-2px;margin-right:-2px;}
-  .postflop-flopzilla__matrix{min-width:560px;}
+  .postflop-flopzilla{padding:9px;margin-left:-2px;margin-right:-2px;border-radius:10px;}
+  .postflop-flopzilla__header,.postflop-flopzilla__hint,
+  .postflop-flopzilla__matrix,.postflop-flopzilla__legend{min-width:560px;}
+  .postflop-flopzilla__header{gap:8px;}
+  .postflop-flopzilla__meta{font-size:10px;}
   .postflop-flopzilla__cell{min-height:25px;font-size:9px;}
 }
 `;

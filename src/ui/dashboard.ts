@@ -1,54 +1,29 @@
 ﻿/**
- * Dashboard statistik â€” zobrazenĂ­ souhrnnĂ˝ch a rozÄŤlenÄ›nĂ˝ch statistik trĂ©ninku
- * (Req 9.3, 9.4, 9.5, 9.7).
+ * Training statistics dashboard (Req 9.3, 9.4, 9.5, 9.7).
  *
- * Tento modul je UI vrstva (DOM I/O). ÄŚte data vĂ˝hradnÄ› z `Stats_Store`
- * (`summary`, `breakdownBy`, `currentStreak`) a vykresluje je do `root`.
- * VeĹˇkerĂˇ vĂ˝poÄŤetnĂ­ logika (ĂşspÄ›Ĺˇnost, agregace, streak) zĹŻstĂˇvĂˇ ve
- * `Stats_Store`; dashboard pouze formĂˇtuje a zobrazuje (ÄŤeĹˇtina â€” Req 12.3).
+ * This module is the DOM rendering layer. It reads aggregate data from
+ * `StatsStore` and keeps the data attributes used by DOM tests stable.
  *
- * ## ZodpovÄ›dnosti
+ * ## Responsibilities
  *
- * - **Souhrn (Req 9.3).** CelkovĂ˝ poÄŤet zodpovÄ›zenĂ˝ch SpotĹŻ a ĂşspÄ›Ĺˇnost v %
- *   zaokrouhlenĂˇ na 1 desetinnĂ© mĂ­sto (z `store.summary()`).
- * - **RozÄŤlenÄ›nĂ­ (Req 9.4).** TĹ™i samostatnĂ© tabulky: podle kategorie akce
- *   (`context`), podle Pozice (`position`) a podle HloubkovĂ©ho_koĹˇu (`bucket`),
- *   kaĹľdĂˇ z `store.breakdownBy(dim)`.
- * - **Streak a poÄŤet spotĹŻ relace (Req 9.5).** AktuĂˇlnĂ­ sĂ©rie sprĂˇvnĂ˝ch
- *   odpovÄ›dĂ­ z `store.currentStreak()` a poÄŤet spotĹŻ zodpovÄ›zenĂ˝ch v aktuĂˇlnĂ­
- *   relaci (viz `sessionCount` nĂ­Ĺľe).
- * - **PrĂˇzdnĂ© skupiny (Req 9.7).** Skupina bez zĂˇznamu (`count = 0`) zobrazĂ­
- *   poÄŤet `0` a indikaci NEDOSTUPNĂ‰ ĂşspÄ›Ĺˇnosti (`rate = null`) jako `"â€”"`
- *   namĂ­sto procentnĂ­ hodnoty. `breakdownBy` uĹľ pro prĂˇzdnĂ© skupiny vracĂ­
- *   `rate = null`, takĹľe staÄŤĂ­ toto promĂ­tnout do UI.
+ * - Summary (Req 9.3): total answered spots and success rate.
+ * - Breakdowns (Req 9.4): action category, position and stack depth.
+ * - Current session (Req 9.5): active streak and current-session spot count.
+ * - Empty groups (Req 9.7): render a 0 count and unavailable rate marker.
  *
  * ## `sessionCount` (Req 9.5)
  *
- * `Stats_Store.summary().total` nese **celkovĂ˝** poÄŤet zodpovÄ›zenĂ˝ch SpotĹŻ
- * napĹ™Ă­ÄŤ vĹˇemi relacemi (perzistovĂˇno v localStorage). PoĹľadavek 9.5 vĹˇak mluvĂ­
- * o poÄŤtu spotĹŻ zodpovÄ›zenĂ˝ch v **aktuĂˇlnĂ­ relaci** (bÄ›hu). Tuto hodnotu
- * Stats_Store neznĂˇ â€” relace je ÄŤistÄ› bÄ›hovĂ˝ pojem. Proto ji dashboard pĹ™ijĂ­mĂˇ
- * jako **explicitnĂ­ parametr** `sessionCount`, kterĂ˝ udrĹľuje volajĂ­cĂ­ (napĹ™.
- * `main.ts` / orchestrĂˇtor relace) a inkrementuje po kaĹľdĂ© zodpovÄ›zenĂ© otĂˇzce
- * v rĂˇmci jednoho bÄ›hu. PĹ™i novĂ©m startu relace volajĂ­cĂ­ `sessionCount`
- * vynuluje. Dashboard zde ĹľĂˇdnĂ˝ stav relace neudrĹľuje.
+ * `StatsStore.summary().total` is the persisted lifetime total. The current
+ * session count is a runtime concept, so the caller passes it explicitly.
  *
- * ## Selektory / data-atributy (kontrakt pro DOM testy 16.3)
+ * ## Selectors / data attributes
  *
- * - `.dashboard` â€” koĹ™enovĂ˝ wrapper vykreslenĂ˝ do `root`.
- * - `.dashboard-summary` â€” blok souhrnu (Req 9.3); obsahuje:
- *     - `.summary-total` â€” celkovĂ˝ poÄŤet zodpovÄ›zenĂ˝ch (`data-total`),
- *     - `.summary-rate` â€” souhrnnĂˇ ĂşspÄ›Ĺˇnost; `data-rate` = hodnota nebo prĂˇzdnĂ©
- *       pĹ™i nedostupnosti; tĹ™Ă­da `.rate--unavailable` s textem `"â€”"` pĹ™i `null`.
- * - `.dashboard-streak` â€” aktuĂˇlnĂ­ streak (`data-streak`) â€” Req 9.5.
- * - `.dashboard-session-count` â€” poÄŤet spotĹŻ aktuĂˇlnĂ­ relace (`data-session-count`)
- *   â€” Req 9.5.
- * - `.breakdown` â€” kontejner jednĂ© rozÄŤlenÄ›nĂ© tabulky (Req 9.4); varianty:
- *     - `.breakdown--context`, `.breakdown--position`, `.breakdown--bucket`.
- * - `.breakdown-row` â€” jeden Ĺ™Ăˇdek skupiny; nese `data-group`, `data-total`,
- *   `data-rate` (prĂˇzdnĂ© pĹ™i nedostupnosti).
- * - `.rate--unavailable` â€” indikace nedostupnĂ© ĂşspÄ›Ĺˇnosti s textem `"â€”"`
- *   (Req 9.7); pouĹľita v souhrnu i v Ĺ™ĂˇdcĂ­ch breakdownu.
+ * - `.dashboard`: root wrapper rendered into `root`.
+ * - `.dashboard-summary`: summary block.
+ * - `.dashboard-streak`: current streak.
+ * - `.dashboard-session-count`: current-session spot count.
+ * - `.breakdown`: one grouped breakdown table.
+ * - `.breakdown-row`: one grouped row with group, total and rate data.
  *
  * _Requirements: 9.3, 9.4, 9.5, 9.7_
  */
@@ -66,8 +41,11 @@ import { buildStatsExportJson, importStatsJson } from "../persistence/statsTrans
 import {
   availableStatsV2Dimensions,
   breakdownStatsV2,
+  buildStatsV2KpiModel,
   type StatsV2BreakdownDim,
   type StatsV2Group,
+  type StatsV2KpiModel,
+  type StatsV2LeakCandidate,
 } from "../persistence/statsV2Analytics";
 import {
   availablePostflopStatsDimensions,
@@ -78,17 +56,14 @@ import {
 } from "../persistence/postflopResultRecord";
 
 // ---------------------------------------------------------------------------
-// VeĹ™ejnĂ© API
+// Public API
 // ---------------------------------------------------------------------------
 
-/** VstupnĂ­ data pro vykreslenĂ­ dashboardu. */
 export interface DashboardData {
-  /** Zdroj statistik (souhrn, breakdown, streak). */
   store: StatsStore;
   /**
-   * PoÄŤet SpotĹŻ zodpovÄ›zenĂ˝ch v aktuĂˇlnĂ­ relaci (Req 9.5).
-   * UdrĹľuje volajĂ­cĂ­ â€” viz dokumentaÄŤnĂ­ blok modulu. ZĂˇpornĂ©/neÄŤĂ­selnĂ© hodnoty
-   * jsou defenzivnÄ› normalizovĂˇny na 0.
+   * Spots answered in the current runtime session. The caller owns this value;
+   * negative or invalid values are normalized to 0.
   */
   sessionCount: number;
   postflopRecords?: readonly PostflopStatsV2BridgeRecord[];
@@ -96,79 +71,66 @@ export interface DashboardData {
 }
 
 // ---------------------------------------------------------------------------
-// FormĂˇtovĂˇnĂ­ (ÄŤeĹˇtina, Req 9.3 / 9.7 / 12.3)
+// Formatting
 // ---------------------------------------------------------------------------
 
-/** Text indikace nedostupnĂ© ĂşspÄ›Ĺˇnosti (Req 9.7). */
-const RATE_UNAVAILABLE = "\u2014"; // â€”
+const RATE_UNAVAILABLE = "\u2014";
 
 /**
- * NaformĂˇtuje ĂşspÄ›Ĺˇnost pro zobrazenĂ­.
- *
- * `Stats_Store` vracĂ­ `rate` jiĹľ zaokrouhlenĂ© na 1 desetinnĂ© mĂ­sto (Req 9.3),
- * nebo `null` pro skupinu bez zĂˇznamu (Req 9.7). Pro `null` vracĂ­ `"â€”"`,
- * jinak hodnotu na prĂˇvÄ› 1 desetinnĂ© mĂ­sto s jednotkou `%` (napĹ™. `"66.7 %"`).
+ * Formats a success rate for display. Null means unavailable.
  */
 export function formatRate(rate: number | null): string {
   if (rate === null || !Number.isFinite(rate)) return RATE_UNAVAILABLE;
   return `${rate.toFixed(1)} %`;
 }
 
-/** BezpeÄŤnĂ© nezĂˇpornĂ© celĂ© ÄŤĂ­slo pro poÄŤet spotĹŻ relace. */
 function normalizeCount(n: number): number {
   if (!Number.isFinite(n) || n < 0) return 0;
   return Math.floor(n);
 }
 
 // ---------------------------------------------------------------------------
-// ÄŚeskĂ© popisky dimenzĂ­ a skupin (Req 12.3)
+// Display labels
 // ---------------------------------------------------------------------------
 
-/** ÄŚeskĂ˝ nĂˇzev dimenze breakdownu (nadpis tabulky). */
 const DIM_TITLE: Record<BreakdownDim, string> = {
-  context: "Podle kategorie akce",
-  position: "Podle pozice",
-  bucket: "Podle hloubkov\u00e9ho ko\u0161e",
+  context: "By action category",
+  position: "By position",
+  bucket: "By stack depth",
 };
 
 const PROFILE_DIM_TITLE: Record<StatsV2BreakdownDim, string> = {
-  gameVariant: "Podle varianty hry",
-  tableFormat: "Podle formatu stolu",
-  blindSpeed: "Podle rychlosti blindu",
-  street: "Podle streety",
-  evModel: "Podle modelu",
-  ante: "Podle ante",
-  rakeMode: "Podle rake rezimu",
-  rangePackId: "Podle preflop modelu",
-  position: "Podle pozice",
-  bucket: "Podle stacku",
-  context: "Podle akcni situace",
+  gameVariant: "By game variant",
+  tableFormat: "By table format",
+  blindSpeed: "By blind speed",
+  street: "By street",
+  evModel: "By model",
+  ante: "By ante",
+  rakeMode: "By rake mode",
+  rangePackId: "By preflop model",
+  position: "By position",
+  bucket: "By stack",
+  context: "By action spot",
 };
 
-/** ÄŚeskĂ˝ popisek akÄŤnĂ­ho kontextu (kategorie). */
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
-  VS_LIMP: "Proti limpu (iso-raise)",
-  VS_OPEN: "Proti openu",
-  VS_3BET: "Proti 3betu",
-  VS_4BET: "Proti 4betu",
+  VS_LIMP: "Vs limp (iso-raise)",
+  VS_OPEN: "Vs open",
+  VS_3BET: "Vs 3-bet",
+  VS_4BET: "Vs 4-bet",
   SQUEEZE: "Squeeze",
   BVB: "Blind vs blind",
   PUSH_FOLD: "Push / Fold",
-  VS_ALLIN: "Proti all-inu",
+  VS_ALLIN: "Vs all-in",
 };
 
-/**
- * ÄŚeskĂ˝ popisek skupiny pro zobrazenĂ­ (raw `key` zĹŻstĂˇvĂˇ v `data-group`).
- * Pro `context` pĹ™eloĹľĂ­ AkÄŤnĂ­_kontext, pro `bucket` pĹ™idĂˇ jednotku BB,
- * pro `position` ponechĂˇ nĂˇzev pozice beze zmÄ›ny.
- */
 const POSTFLOP_DIM_TITLE: Record<PostflopStatsBreakdownDim, string> = {
-  street: "Podle streety",
-  actionNode: "Podle postflop situace",
-  boardTextureKey: "Podle textury boardu",
-  strategyPackId: "Podle postflop modelu",
-  confidence: "Podle jistoty",
+  street: "By street",
+  actionNode: "By postflop spot",
+  boardTextureKey: "By board texture",
+  strategyPackId: "By postflop model",
+  confidence: "By confidence",
 };
 
 function groupLabel(dim: BreakdownDim | PostflopStatsBreakdownDim, key: string): string {
@@ -207,7 +169,7 @@ function profileGroupLabel(dim: StatsV2BreakdownDim, key: string): string {
     case "bucket":
       return `${key} BB`;
     case "ante":
-      return key === "ON" ? "Ante zapnute" : "Ante vypnute";
+      return key === "ON" ? "Ante on" : "Ante off";
     case "evModel":
       return key === "CHIP_EV" ? "chipEV" : key;
     case "rakeMode":
@@ -262,9 +224,9 @@ function rakeModeLabel(key: string): string {
     case "NONE":
       return "N/A";
     case "RAKE":
-      return "S rakem";
+      return "Rake";
     case "NO_RAKE":
-      return "Bez raku";
+      return "No rake";
     default:
       return key;
   }
@@ -273,11 +235,11 @@ function rakeModeLabel(key: string): string {
 function confidenceLabel(key: string): string {
   switch (key) {
     case "LOW":
-      return "nizka";
+      return "low";
     case "MEDIUM":
-      return "stredni";
+      return "medium";
     case "HIGH":
-      return "vysoka";
+      return "high";
     default:
       return key;
   }
@@ -286,13 +248,13 @@ function confidenceLabel(key: string): string {
 function postflopActionNodeLabel(key: string): string {
   switch (key) {
     case "SINGLE_RAISED_POT_CBET":
-      return "Flop c-bet v SRP";
+      return "Flop c-bet in SRP";
     case "THREE_BET_POT_CBET":
-      return "Flop c-bet ve 3bet potu";
+      return "Flop c-bet in 3bet pot";
     case "TURN_BARREL":
       return "Turn barrel";
     case "RIVER_PRESSURE":
-      return "River tlak";
+      return "River pressure";
     default:
       return key;
   }
@@ -309,7 +271,7 @@ function postflopBoardTextureKeyLabel(key: string): string {
 function boardTextureLabel(key: string): string {
   switch (key) {
     case "paired":
-      return "sparovany";
+      return "paired";
     case "monotone":
       return "monotone";
     case "two-tone":
@@ -317,7 +279,7 @@ function boardTextureLabel(key: string): string {
     case "rainbow":
       return "rainbow";
     case "connected":
-      return "propojeny";
+      return "connected";
     case "dry":
       return "dry";
     case "ace-high":
@@ -329,7 +291,7 @@ function boardTextureLabel(key: string): string {
     case "medium":
       return "medium";
     case "straight-possible":
-      return "straight mozny";
+      return "straight possible";
     case "flush-draw-heavy":
       return "flush draw";
     case "disconnected":
@@ -362,11 +324,7 @@ function el(tag: string, className?: string): HTMLElement {
   return node;
 }
 
-/**
- * VytvoĹ™Ă­ element zobrazujĂ­cĂ­ ĂşspÄ›Ĺˇnost. PĹ™i `null` nastavĂ­ tĹ™Ă­du
- * `.rate--unavailable` a text `"â€”"` (Req 9.7), jinak text `"<rate> %"`.
- * VĹľdy nastavĂ­ `data-rate` (prĂˇzdnĂ© pĹ™i nedostupnosti) pro testovatelnost.
- */
+/** Creates a rate element and keeps its `data-rate` test hook stable. */
 function rateElement(tag: string, baseClass: string, rate: number | null): HTMLElement {
   const node = el(tag, baseClass);
   if (rate === null || !Number.isFinite(rate)) {
@@ -381,25 +339,24 @@ function rateElement(tag: string, baseClass: string, rate: number | null): HTMLE
 }
 
 // ---------------------------------------------------------------------------
-// DĂ­lÄŤĂ­ sekce
+// Sections
 // ---------------------------------------------------------------------------
 
-/** SouhrnnĂˇ ĂşspÄ›Ĺˇnost a celkovĂ˝ poÄŤet zodpovÄ›zenĂ˝ch (Req 9.3). */
 function renderSummary(summary: Summary): HTMLElement {
   const box = el("section", "dashboard-summary");
 
   const heading = el("h3", "dashboard-summary__title");
-  heading.textContent = "Souhrn";
+  heading.textContent = "Summary";
   box.appendChild(heading);
 
   const total = el("div", "summary-total");
   total.dataset.total = String(summary.total);
-  total.textContent = `Zodpov\u011bzeno celkem: ${summary.total}`;
+  total.textContent = `Answered total: ${summary.total}`;
   box.appendChild(total);
 
   const rateLine = el("div", "summary-rate-line");
   const rateLabel = el("span", "summary-rate-label");
-  rateLabel.textContent = "\u00dasp\u011b\u0161nost: ";
+  rateLabel.textContent = "Success rate: ";
   const rate = rateElement("span", "summary-rate", summary.rate);
   rateLine.appendChild(rateLabel);
   rateLine.appendChild(rate);
@@ -408,28 +365,129 @@ function renderSummary(summary: Summary): HTMLElement {
   return box;
 }
 
-/** AktuĂˇlnĂ­ streak a poÄŤet spotĹŻ relace (Req 9.5). */
+function renderKpiPanel(store: StatsStore): HTMLElement {
+  const model = buildStatsV2KpiModel(migrateResultRecordsToV2(store.events()));
+  const box = el("section", "dashboard-kpi");
+  box.dataset.total = String(model.total);
+  box.dataset.recentWindowSize = String(model.recentWindowSize);
+  box.dataset.minLeakSample = String(model.minLeakSample);
+
+  const heading = el("h3", "dashboard-kpi__title");
+  heading.textContent = "KPI";
+  box.appendChild(heading);
+
+  const cards = el("div", "dashboard-kpi__cards");
+  cards.appendChild(kpiCard("Lifetime accuracy", "lifetimeRate", formatRate(model.lifetimeRate)));
+  cards.appendChild(kpiCard(
+    `Recent ${model.recentWindowSize}`,
+    "recentRate",
+    `${formatRate(model.recentRate)} (${model.recentTotal})`,
+  ));
+  cards.appendChild(kpiCard("Best streak", "bestStreak", String(model.bestStreak)));
+  cards.appendChild(kpiCard("Leak focus", "leakFocus", leakFocusText(model)));
+  box.appendChild(cards);
+
+  box.appendChild(renderKpiChart(model));
+  box.appendChild(renderLeakChart(model.leakCandidates));
+
+  return box;
+}
+
+function kpiCard(labelText: string, key: string, valueText: string): HTMLElement {
+  const card = el("div", "dashboard-kpi-card");
+  card.dataset.kpi = key;
+  const label = el("div", "dashboard-kpi-card__label");
+  label.textContent = labelText;
+  const value = el("div", "dashboard-kpi-card__value");
+  value.textContent = valueText;
+  card.appendChild(label);
+  card.appendChild(value);
+  return card;
+}
+
+function leakFocusText(model: StatsV2KpiModel): string {
+  const first = model.leakCandidates[0];
+  if (!first) return `No leak over ${model.minLeakSample}+ samples`;
+  return `${profileGroupLabel(first.dim, first.key)} (${formatRate(first.rate)})`;
+}
+
+function renderKpiChart(model: StatsV2KpiModel): HTMLElement {
+  const chart = el("div", "dashboard-kpi-chart");
+  chart.appendChild(rateBar("Lifetime", "lifetime", model.lifetimeRate, model.total));
+  chart.appendChild(rateBar("Recent", "recent", model.recentRate, model.recentTotal));
+  return chart;
+}
+
+function renderLeakChart(candidates: readonly StatsV2LeakCandidate[]): HTMLElement {
+  const chart = el("div", "dashboard-leak-chart");
+  chart.dataset.count = String(candidates.length);
+  const title = el("div", "dashboard-leak-chart__title");
+  title.textContent = "Lowest-sample-qualified spots";
+  chart.appendChild(title);
+
+  if (candidates.length === 0) {
+    const empty = el("div", "dashboard-leak-chart__empty");
+    empty.textContent = "No qualified leaks yet.";
+    chart.appendChild(empty);
+    return chart;
+  }
+
+  for (const candidate of candidates.slice(0, 4)) {
+    const row = rateBar(
+      `${profileGroupLabel(candidate.dim, candidate.key)} (${candidate.total})`,
+      candidate.dim,
+      candidate.rate,
+      candidate.total,
+    );
+    row.classList.add("dashboard-leak-row");
+    row.dataset.dim = candidate.dim;
+    row.dataset.group = candidate.key;
+    chart.appendChild(row);
+  }
+
+  return chart;
+}
+
+function rateBar(labelText: string, key: string, rate: number | null, total: number): HTMLElement {
+  const row = el("div", "dashboard-kpi-chart-row");
+  row.dataset.key = key;
+  row.dataset.total = String(total);
+  row.dataset.rate = rate === null ? "" : String(rate);
+
+  const label = el("div", "dashboard-kpi-chart-row__label");
+  label.textContent = labelText;
+  row.appendChild(label);
+
+  const track = el("div", "dashboard-kpi-chart-row__track");
+  const bar = el("div", "dashboard-kpi-chart-row__bar");
+  bar.style.width = `${rate === null ? 0 : Math.max(0, Math.min(100, rate))}%`;
+  track.appendChild(bar);
+  row.appendChild(track);
+
+  row.appendChild(rateElement("div", "dashboard-kpi-chart-row__rate", rate));
+  return row;
+}
+
 function renderStreakSession(streak: number, sessionCount: number): HTMLElement {
   const box = el("section", "dashboard-session");
 
   const heading = el("h3", "dashboard-session__title");
-  heading.textContent = "Aktu\u00e1ln\u00ed relace";
+  heading.textContent = "Current session";
   box.appendChild(heading);
 
   const streakNode = el("div", "dashboard-streak");
   streakNode.dataset.streak = String(streak);
-  streakNode.textContent = `S\u00e9rie spr\u00e1vn\u00fdch odpov\u011bd\u00ed: ${streak}`;
+  streakNode.textContent = `Correct streak: ${streak}`;
   box.appendChild(streakNode);
 
   const sessionNode = el("div", "dashboard-session-count");
   sessionNode.dataset.sessionCount = String(sessionCount);
-  sessionNode.textContent = `Spot\u016f v t\u00e9to relaci: ${sessionCount}`;
+  sessionNode.textContent = `Spots this session: ${sessionCount}`;
   box.appendChild(sessionNode);
 
   return box;
 }
 
-/** Jeden Ĺ™Ăˇdek skupiny breakdownu (Req 9.4, 9.7). */
 function renderBreakdownRow(dim: BreakdownDim, g: GroupStat): HTMLElement {
   const row = el("div", "breakdown-row");
   row.dataset.group = g.key;
@@ -441,16 +499,14 @@ function renderBreakdownRow(dim: BreakdownDim, g: GroupStat): HTMLElement {
   row.appendChild(name);
 
   const count = el("span", "breakdown-row__count");
-  count.textContent = `${g.total}\u00d7`; // napĹ™. "12Ă—"
+  count.textContent = `${g.total}\u00d7`;
   row.appendChild(count);
 
-  // ĂšspÄ›Ĺˇnost â€” prĂˇzdnĂˇ skupina â‡’ "â€”" (Req 9.7).
   row.appendChild(rateElement("span", "breakdown-row__rate", g.rate));
 
   return row;
 }
 
-/** Jedna rozÄŤlenÄ›nĂˇ tabulka pro zadanou dimenzi (Req 9.4). */
 function renderBreakdown(dim: BreakdownDim, breakdown: Breakdown): HTMLElement {
   const box = el("section", `breakdown breakdown--${dim}`);
   box.dataset.dim = dim;
@@ -468,11 +524,44 @@ function renderBreakdown(dim: BreakdownDim, breakdown: Breakdown): HTMLElement {
   return box;
 }
 
+function renderPreflopLeakCharts(store: StatsStore): HTMLElement {
+  const box = el("section", "preflop-leak-charts");
+  const heading = el("h3", "preflop-leak-charts__title");
+  heading.textContent = "Preflop leak charts";
+  box.appendChild(heading);
+
+  const dims: BreakdownDim[] = ["context", "position", "bucket"];
+  for (const dim of dims) {
+    box.appendChild(renderPreflopLeakChart(dim, store.breakdownBy(dim)));
+  }
+
+  return box;
+}
+
+function renderPreflopLeakChart(dim: BreakdownDim, breakdown: Breakdown): HTMLElement {
+  const chart = el("div", `preflop-leak-chart preflop-leak-chart--${dim}`);
+  chart.dataset.dim = dim;
+  const heading = el("h4", "preflop-leak-chart__title");
+  heading.textContent = DIM_TITLE[dim];
+  chart.appendChild(heading);
+
+  const rows = el("div", "preflop-leak-chart__rows");
+  for (const group of breakdown) {
+    const row = rateBar(groupLabel(dim, group.key), group.key, group.rate, group.total);
+    row.classList.add("preflop-leak-chart-row");
+    row.dataset.dim = dim;
+    row.dataset.group = group.key;
+    rows.appendChild(row);
+  }
+  chart.appendChild(rows);
+  return chart;
+}
+
 function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElement {
   const box = el("section", "stats-transfer");
 
   const heading = el("h3", "stats-transfer__title");
-  heading.textContent = "Export / import statistik";
+  heading.textContent = "Stats export / import";
   box.appendChild(heading);
 
   const actions = el("div", "stats-transfer__actions");
@@ -492,7 +581,7 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
 
   const textarea = document.createElement("textarea");
   textarea.className = "stats-json-box";
-  textarea.placeholder = "Export / import JSON statistik";
+  textarea.placeholder = "Export / import stats JSON";
   textarea.rows = 8;
   box.appendChild(textarea);
 
@@ -507,7 +596,7 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     });
     status.hidden = false;
     status.className = "stats-transfer__status stats-transfer__status--ok";
-    status.textContent = "Export statistik je p\u0159ipraven\u00fd v poli JSON.";
+    status.textContent = "Stats export is ready in the JSON field.";
   });
 
   importBtn.addEventListener("click", () => {
@@ -517,7 +606,7 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
       const postflopSaved = data.onPostflopRecordsImported?.(result.postflopRecords) ?? true;
       if (!postflopSaved) {
         status.className = "stats-transfer__status stats-transfer__status--error";
-        status.textContent = "Preflop statistiky byly importovany, ale postflop log se nepodarilo ulozit.";
+        status.textContent = "Preflop stats were imported, but the postflop log could not be saved.";
         return;
       }
       renderDashboard({
@@ -528,12 +617,12 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
       if (refreshedStatus) {
         refreshedStatus.hidden = false;
         refreshedStatus.className = "stats-transfer__status stats-transfer__status--ok";
-        refreshedStatus.textContent = `Importov\u00e1no ${result.imported} z\u00e1znam\u016f statistik.`;
+        refreshedStatus.textContent = `Imported ${result.imported} stats records.`;
       }
       return;
     }
     status.className = "stats-transfer__status stats-transfer__status--error";
-    status.textContent = result.error ?? "Import statistik se nepoda\u0159il.";
+    status.textContent = result.error ?? "Stats import failed.";
   });
 
   return box;
@@ -569,7 +658,7 @@ function renderProfileBreakdown(dim: StatsV2BreakdownDim, groups: StatsV2Group[]
   const rows = el("div", "profile-breakdown__rows");
   if (groups.length === 0) {
     const empty = el("div", "profile-breakdown__empty");
-    empty.textContent = "Zat\u00edm bez z\u00e1znam\u016f.";
+    empty.textContent = "No records yet.";
     rows.appendChild(empty);
   } else {
     for (const g of groups) {
@@ -585,7 +674,7 @@ function renderProfileBreakdowns(store: StatsStore): HTMLElement {
   const box = el("section", "profile-breakdowns");
 
   const heading = el("h3", "profile-breakdowns__title");
-  heading.textContent = "Profilov\u00e9 roz\u010dlen\u011bn\u00ed";
+  heading.textContent = "Profile breakdowns";
   box.appendChild(heading);
 
   const eventsV2 = migrateResultRecordsToV2(store.events());
@@ -632,7 +721,7 @@ function renderPostflopBreakdown(
   const rows = el("div", "postflop-breakdown__rows");
   if (groups.length === 0) {
     const empty = el("div", "postflop-breakdown__empty");
-    empty.textContent = "Zat\u00edm bez postflop odpov\u011bd\u00ed.";
+    empty.textContent = "No postflop answers yet.";
     rows.appendChild(empty);
   } else {
     for (const group of groups) {
@@ -651,7 +740,7 @@ function renderPostflopBreakdowns(
   box.dataset.total = String(records.length);
 
   const heading = el("h3", "postflop-breakdowns__title");
-  heading.textContent = "Postflop roz\u010dlen\u011bn\u00ed";
+  heading.textContent = "Postflop breakdowns";
   box.appendChild(heading);
 
   for (const dim of availablePostflopStatsDimensions()) {
@@ -662,66 +751,93 @@ function renderPostflopBreakdowns(
 }
 
 // ---------------------------------------------------------------------------
-// Styly (sobÄ›staÄŤnĂ©, aby dashboard fungoval i bez externĂ­ho CSS)
+// Styles
 // ---------------------------------------------------------------------------
 
 function dashboardStyles(): HTMLStyleElement {
   const style = document.createElement("style");
   style.textContent = `
-.dashboard{font-family:system-ui,Arial,sans-serif;color:#1b1f2a;display:flex;
-  flex-direction:column;gap:16px;max-width:720px;}
-.dashboard h3{margin:0 0 8px;font-size:14px;font-weight:800;color:#2b3550;}
-.dashboard h4{margin:0 0 6px;font-size:12px;font-weight:800;color:#48526b;}
-.dashboard-summary,.dashboard-session,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns{background:#f5f7fb;
-  border:1px solid #e2e7f0;border-radius:10px;padding:12px 14px;}
-.dashboard-summary .summary-total{font-size:13px;color:#48526b;}
-.dashboard-summary .summary-rate-line{margin-top:4px;font-size:18px;font-weight:800;}
-.dashboard-summary .summary-rate-label{font-size:13px;font-weight:600;color:#48526b;}
-.dashboard-session{display:flex;flex-direction:column;gap:4px;}
-.dashboard-streak{font-size:15px;font-weight:800;color:#1f9d57;}
-.dashboard-session-count{font-size:13px;color:#48526b;}
-.profile-breakdowns,.postflop-breakdowns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.profile-breakdowns__title,.postflop-breakdowns__title{grid-column:1/-1;}
-.profile-breakdown,.postflop-breakdown{background:#fff;border:1px solid #e7ebf4;border-radius:8px;padding:8px;}
+.dashboard{font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;color:#e8ecf7;display:flex;
+  flex-direction:column;gap:16px;max-width:960px;margin:0 auto;}
+.dashboard h3{margin:0 0 10px;font-size:14px;font-weight:950;color:#f8fbff;}
+.dashboard h4{margin:0 0 8px;font-size:12px;font-weight:950;color:#dce7fb;}
+.dashboard-summary,.dashboard-kpi,.dashboard-session,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts{
+  background:linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));
+  border:1px solid rgba(148,163,184,.16);border-radius:14px;padding:14px 16px;
+  box-shadow:0 18px 48px rgba(0,0,0,.23),inset 0 1px 0 rgba(255,255,255,.05);}
+.dashboard-summary{display:grid;gap:6px;background:
+  radial-gradient(circle at 16% 0%,rgba(43,213,118,.13),rgba(43,213,118,0) 35%),
+  linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));}
+.dashboard-summary .summary-total{font-size:13px;color:#a8b7d5;font-weight:750;}
+.dashboard-summary .summary-rate-line{margin-top:2px;font-size:22px;font-weight:950;color:#9ff0bd;}
+.dashboard-summary .summary-rate-label{font-size:13px;font-weight:750;color:#a8b7d5;}
+.dashboard-kpi{display:grid;gap:12px;}
+.dashboard-kpi__cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+.dashboard-kpi-card{border:1px solid rgba(123,211,255,.14);border-radius:10px;padding:10px;
+  background:rgba(255,255,255,.045);min-width:0;}
+.dashboard-kpi-card__label{font-size:11px;font-weight:900;text-transform:uppercase;color:#9fb0cf;}
+.dashboard-kpi-card__value{margin-top:4px;font-size:16px;font-weight:950;color:#f8fbff;overflow-wrap:anywhere;}
+.dashboard-kpi-chart,.dashboard-leak-chart{display:grid;gap:7px;}
+.dashboard-leak-chart{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
+.dashboard-leak-chart__title{font-size:12px;font-weight:950;color:#dce7fb;}
+.dashboard-leak-chart__empty{font-size:12px;color:#9fb0cf;}
+.dashboard-kpi-chart-row{display:grid;grid-template-columns:minmax(92px,1fr) minmax(120px,2fr) auto;
+  align-items:center;gap:9px;font-size:12px;}
+.dashboard-kpi-chart-row__label{font-weight:850;color:#dce7fb;min-width:0;overflow-wrap:anywhere;}
+.dashboard-kpi-chart-row__track{height:9px;border-radius:999px;background:rgba(148,163,184,.14);overflow:hidden;}
+.dashboard-kpi-chart-row__bar{height:100%;border-radius:inherit;background:linear-gradient(90deg,#2bd576,#7bd3ff);}
+.dashboard-kpi-chart-row__rate{font-weight:950;color:#9ff0bd;font-variant-numeric:tabular-nums;}
+.dashboard-session{display:flex;flex-direction:column;gap:5px;}
+.dashboard-streak{font-size:15px;font-weight:950;color:#9ff0bd;}
+.dashboard-session-count{font-size:13px;color:#a8b7d5;font-weight:750;}
+.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.profile-breakdowns__title,.postflop-breakdowns__title,.preflop-leak-charts__title{grid-column:1/-1;}
+.preflop-leak-chart--bucket{grid-column:1/-1;}
+.profile-breakdown,.postflop-breakdown,.preflop-leak-chart{background:rgba(255,255,255,.04);
+  border:1px solid rgba(148,163,184,.13);border-radius:10px;padding:9px;min-width:0;}
+.preflop-leak-chart__rows{display:grid;gap:6px;}
 .breakdown__rows,.profile-breakdown__rows,.postflop-breakdown__rows{display:flex;flex-direction:column;gap:2px;}
 .breakdown-row,.profile-breakdown-row,.postflop-breakdown-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;
-  align-items:center;padding:4px 6px;border-radius:6px;font-size:13px;}
-.breakdown-row:nth-child(odd),.profile-breakdown-row:nth-child(odd),.postflop-breakdown-row:nth-child(odd){background:rgba(43,53,80,.04);}
-.breakdown-row__name,.profile-breakdown-row__name,.postflop-breakdown-row__name{font-weight:600;min-width:0;overflow-wrap:anywhere;}
-.breakdown-row__count,.profile-breakdown-row__count,.postflop-breakdown-row__count{color:#6b7488;font-variant-numeric:tabular-nums;}
-.breakdown-row__rate,.profile-breakdown-row__rate,.postflop-breakdown-row__rate{font-weight:800;text-align:right;font-variant-numeric:tabular-nums;}
-.profile-breakdown__empty,.postflop-breakdown__empty{font-size:12px;color:#6b7488;}
-.rate--unavailable{color:#9aa6c2;font-weight:600;}
+  align-items:center;padding:5px 7px;border-radius:8px;font-size:13px;}
+.breakdown-row:nth-child(odd),.profile-breakdown-row:nth-child(odd),.postflop-breakdown-row:nth-child(odd){background:rgba(255,255,255,.035);}
+.breakdown-row__name,.profile-breakdown-row__name,.postflop-breakdown-row__name{font-weight:750;min-width:0;overflow-wrap:anywhere;color:#e8ecf7;}
+.breakdown-row__count,.profile-breakdown-row__count,.postflop-breakdown-row__count{color:#9fb0cf;font-variant-numeric:tabular-nums;}
+.breakdown-row__rate,.profile-breakdown-row__rate,.postflop-breakdown-row__rate{font-weight:950;text-align:right;font-variant-numeric:tabular-nums;color:#9ff0bd;}
+.profile-breakdown__empty,.postflop-breakdown__empty{font-size:12px;color:#9fb0cf;}
+.rate--unavailable{color:#9fb0cf;font-weight:700;}
 .stats-transfer__actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
-.stats-export,.stats-import{appearance:none;border:1px solid #c8d1e3;border-radius:8px;
-  background:#fff;color:#1b1f2a;font-weight:800;font-size:13px;padding:8px 12px;
-  cursor:pointer;}
+.stats-export,.stats-import{appearance:none;border:1px solid rgba(148,163,184,.24);border-radius:10px;
+  background:linear-gradient(180deg,#202a3f,#141d2f);color:#e8ecf7;font-weight:900;font-size:13px;padding:9px 13px;
+  cursor:pointer;box-shadow:0 10px 20px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.06);}
 .stats-export:hover,.stats-import:hover{border-color:#2bd576;}
 .stats-json-box{box-sizing:border-box;width:100%;min-height:140px;resize:vertical;
-  border:1px solid #c8d1e3;border-radius:8px;padding:8px 10px;font-family:ui-monospace,
-  SFMono-Regular,Consolas,monospace;font-size:12px;color:#1b1f2a;background:#fff;}
+  border:1px solid rgba(148,163,184,.24);border-radius:10px;padding:10px 11px;font-family:ui-monospace,
+  SFMono-Regular,Consolas,monospace;font-size:12px;color:#e8ecf7;background:#101827;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
 .stats-transfer__status{margin-top:8px;font-size:12px;font-weight:700;}
-.stats-transfer__status--ok{color:#1f9d57;}
-.stats-transfer__status--error{color:#c93333;}
-@media (max-width:640px){.profile-breakdowns,.postflop-breakdowns{grid-template-columns:1fr;}}
+.stats-transfer__status--ok{color:#9ff0bd;}
+.stats-transfer__status--error{color:#ffb4b4;}
+@media (max-width:640px){
+  .dashboard{max-width:100%;}
+  .profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts{grid-template-columns:1fr;}
+  .preflop-leak-chart--bucket{grid-column:auto;}
+  .dashboard-kpi__cards{grid-template-columns:1fr 1fr;}
+  .dashboard-kpi-chart-row{grid-template-columns:1fr;gap:5px;}
+  .dashboard-summary,.dashboard-kpi,.dashboard-session,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts{
+    border-radius:12px;padding:12px;}
+  .stats-transfer__actions{display:grid;grid-template-columns:1fr;}
+  .stats-export,.stats-import{width:100%;min-height:42px;}
+}
 `;
   return style;
 }
 
 // ---------------------------------------------------------------------------
-// HlavnĂ­ vykreslovacĂ­ funkce (Req 9.3, 9.4, 9.5, 9.7)
+// Main render function
 // ---------------------------------------------------------------------------
 
 /**
- * VykreslĂ­ dashboard statistik do `root`.
- *
- * IdempotentnĂ­: pĹ™ed vykreslenĂ­m vyprĂˇzdnĂ­ `root`. ÄŚte z `data.store`
- * (`summary`, `breakdownBy`, `currentStreak`) a zobrazĂ­ poÄŤet spotĹŻ relace
- * z `data.sessionCount`. Generuje DOM elementy se sĂ©mantickĂ˝mi tĹ™Ă­dami pro
- * testovatelnost (viz dokumentaÄŤnĂ­ blok modulu).
- *
- * @param data Zdroj statistik + poÄŤet spotĹŻ aktuĂˇlnĂ­ relace.
- * @param root CĂ­lovĂ˝ kontejner.
+ * Renders the statistics dashboard into `root`.
  */
 export function renderDashboard(data: DashboardData, root: HTMLElement): void {
   root.innerHTML = "";
@@ -732,20 +848,22 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
   const wrapper = el("div", "dashboard");
   wrapper.appendChild(dashboardStyles());
 
-  // Souhrn (Req 9.3).
+  // Summary (Req 9.3).
   wrapper.appendChild(renderSummary(store.summary()));
+  wrapper.appendChild(renderKpiPanel(store));
 
-  // Streak + poÄŤet spotĹŻ relace (Req 9.5).
+  // Streak and current-session count (Req 9.5).
   wrapper.appendChild(renderStreakSession(store.currentStreak(), sessionCount));
 
-  // Export/import JSON statistik (legacy parity gap).
+  // Stats JSON export/import.
   wrapper.appendChild(renderStatsTransfer(data, root));
 
-  // ProfilovĂ© rozÄŤlenÄ›nĂ­ nad migrovanĂ˝mi zĂˇznamy v2 (multi-format roadmap).
+  // Profile breakdowns over migrated v2 records.
   wrapper.appendChild(renderProfileBreakdowns(store));
   wrapper.appendChild(renderPostflopBreakdowns(data.postflopRecords ?? []));
+  wrapper.appendChild(renderPreflopLeakCharts(store));
 
-  // RozÄŤlenÄ›nĂ­ podle tĹ™Ă­ dimenzĂ­ (Req 9.4, prĂˇzdnĂ© skupiny Req 9.7).
+  // Legacy breakdown dimensions.
   const dims: BreakdownDim[] = ["context", "position", "bucket"];
   for (const dim of dims) {
     wrapper.appendChild(renderBreakdown(dim, store.breakdownBy(dim)));

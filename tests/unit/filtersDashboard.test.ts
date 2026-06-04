@@ -83,6 +83,12 @@ describe("filters - DOM start gate", () => {
       onStart: (filters, seed, profile) => starts.push({ filters, seed, profile }),
     });
 
+    expect(root.querySelector(".filters")?.textContent).toContain("Training profile");
+    expect(root.querySelector(".filters")?.textContent).toContain("Positions");
+    expect(root.querySelector(".filters")?.textContent).toContain("Stack depths (BB)");
+    expect(root.querySelector(".filters")?.textContent).toContain("Action context");
+    expect(root.querySelector(".filters")?.textContent).toContain("Start training");
+    expect(root.querySelector(".filters")?.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
     expect(root.querySelectorAll(".filter-position")).toHaveLength(9);
     expect(root.querySelectorAll(".filter-bucket")).toHaveLength(13);
     expect(root.querySelectorAll(".filter-context")).toHaveLength(9);
@@ -130,7 +136,7 @@ describe("filters - DOM start gate", () => {
 
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
-    expect(warning?.textContent).toContain("žádnému spotu");
+    expect(warning?.textContent).toContain("do not match any spot");
     expect(firstPosition!.checked).toBe(true);
   });
 });
@@ -144,13 +150,51 @@ describe("dashboard - DOM statistiky", () => {
     const root = document.createElement("div");
     renderDashboard({ store, sessionCount: 1 }, root);
 
+    const css = root.querySelector("style")?.textContent ?? "";
+    expect(css).toContain("linear-gradient(180deg,rgba(18,25,38,.98)");
+    expect(css).toContain("@media (max-width:640px)");
+    expect(css).toContain(".stats-json-box");
+    expect(css).toContain(".dashboard-kpi__cards");
+    expect(css).toContain(".dashboard-kpi-chart-row");
+    expect(css).toContain(".preflop-leak-charts");
+    expect(css).not.toContain("background:#fff");
+    expect(root.textContent ?? "").toContain("Summary");
+    expect(root.textContent ?? "").toContain("KPI");
+    expect(root.textContent ?? "").toContain("Current session");
+    expect(root.textContent ?? "").toContain("Stats export / import");
+    expect(root.textContent ?? "").not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
+
     expect(root.querySelector<HTMLElement>(".summary-total")?.dataset.total).toBe("1");
     expect(root.querySelector<HTMLElement>(".summary-rate")?.dataset.rate).toBe("100");
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi")?.dataset.total).toBe("1");
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='lifetimeRate']")
+      ?.textContent).toContain("100.0 %");
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='bestStreak']")
+      ?.textContent).toContain("1");
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi-chart-row[data-key='lifetime']")
+      ?.dataset.rate).toBe("100");
+    expect(root.querySelector<HTMLElement>(".dashboard-leak-chart")?.dataset.count).toBe("0");
     expect(root.querySelector<HTMLElement>(".dashboard-streak")?.dataset.streak).toBe("1");
     expect(root.querySelector<HTMLElement>(".dashboard-session-count")?.dataset.sessionCount)
       .toBe("1");
 
     expect(root.querySelector(".profile-breakdowns")).not.toBeNull();
+    expect(root.querySelector(".preflop-leak-charts")).not.toBeNull();
+    expect(
+      root.querySelector<HTMLElement>(
+        '.preflop-leak-chart--context .preflop-leak-chart-row[data-group="RFI"]',
+      )?.dataset.rate,
+    ).toBe("100");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.preflop-leak-chart--position .preflop-leak-chart-row[data-group="BTN"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.preflop-leak-chart--bucket .preflop-leak-chart-row[data-group="25"]',
+      )?.dataset.total,
+    ).toBe("1");
     expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("0");
     expect(
       root.querySelector<HTMLElement>(
@@ -211,7 +255,7 @@ describe("dashboard - DOM statistiky", () => {
       root.querySelector<HTMLElement>(
         '.profile-breakdown--ante .profile-breakdown-row[data-group="OFF"] .profile-breakdown-row__name',
       )?.textContent,
-    ).toBe("Ante vypnute");
+    ).toBe("Ante off");
     expect(
       root.querySelector<HTMLElement>(
         '.profile-breakdown--rangePackId .profile-breakdown-row[data-group="mtt-full-ring-9-regular-preflop-chip-ev-ante-off-v1"]',
@@ -233,6 +277,41 @@ describe("dashboard - DOM statistiky", () => {
     );
     expect(emptyPosition?.dataset.total).toBe("0");
     expect(emptyPosition?.querySelector(".rate--unavailable")?.textContent).toBe("—");
+  });
+
+  it("zobrazi KPI leak graf jen pro skupiny s dostatecnym samplem", () => {
+    const storage = new MemoryStorage();
+    const store = createStatsStore(storage);
+    const leakRecords: ResultRecord[] = [
+      { ...record, qid: "VS_OPEN|BB|15|A5s|ON|1", context: "VS_OPEN", position: "BB", bucket: 15, correct: false, ts: 1 },
+      { ...record, qid: "VS_OPEN|BB|15|KQo|ON|2", context: "VS_OPEN", position: "BB", bucket: 15, correct: false, ts: 2 },
+      { ...record, qid: "VS_OPEN|BB|15|QJo|ON|3", context: "VS_OPEN", position: "BB", bucket: 15, correct: true, ts: 3 },
+      { ...record, qid: "VS_OPEN|BB|15|T9s|ON|4", context: "VS_OPEN", position: "BB", bucket: 15, correct: false, ts: 4 },
+      { ...record, qid: "VS_OPEN|BB|15|98s|ON|5", context: "VS_OPEN", position: "BB", bucket: 15, correct: false, ts: 5 },
+      { ...record, qid: "RFI|BTN|25|AKs|OFF|6", context: "RFI", position: "BTN", bucket: 25, correct: false, ts: 6 },
+    ];
+    for (const item of leakRecords) expect(store.record(item).ok).toBe(true);
+
+    const root = document.createElement("div");
+    renderDashboard({ store, sessionCount: 6 }, root);
+
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi")?.dataset.total).toBe("6");
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='recentRate']")
+      ?.textContent).toContain("16.7 %");
+    expect(root.querySelector<HTMLElement>(".dashboard-leak-chart")?.dataset.count).toBe("3");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.dashboard-leak-row[data-dim="context"][data-group="VS_OPEN"]',
+      )?.dataset.rate,
+    ).toBe("20");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.dashboard-leak-row[data-dim="position"][data-group="BB"]',
+      )?.dataset.rate,
+    ).toBe("20");
+    expect(root.querySelector<HTMLElement>(
+      '.dashboard-leak-row[data-dim="context"][data-group="RFI"]',
+    )).toBeNull();
   });
 
   it("zobrazi postflop breakdown podle street, textury, StrategyPacku a confidence", () => {
@@ -277,9 +356,9 @@ describe("dashboard - DOM statistiky", () => {
       root.querySelector<HTMLElement>(
         '.postflop-breakdown--confidence .postflop-breakdown-row[data-group="LOW"] .postflop-breakdown-row__name',
       )?.textContent,
-    ).toBe("nizka");
+    ).toBe("low");
     expect(root.querySelector<HTMLElement>(".postflop-breakdown--actionNode")?.textContent)
-      .toContain("Flop c-bet v SRP");
+      .toContain("Flop c-bet in SRP");
     expect(root.querySelector<HTMLElement>(".postflop-breakdown--actionNode")?.textContent)
       .not.toContain("SINGLE_RAISED_POT_CBET");
   });

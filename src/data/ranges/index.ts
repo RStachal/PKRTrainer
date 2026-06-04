@@ -102,7 +102,7 @@ function aggregate(variants: readonly RangeFile[]): AggregationResult {
       // Varianta musí nést alespoň jeden záznam, jinak je „nenačtená".
       if (file.entries.length === 0) {
         errors.push(
-          `[${file.ante}] varianta ranges neobsahuje žádné záznamy (entries je prázdné).`,
+          `[${file.ante}] range variant does not contain any records (entries is empty).`,
         );
       }
 
@@ -115,7 +115,7 @@ function aggregate(variants: readonly RangeFile[]): AggregationResult {
           record.context,
         );
         if (index.has(key)) {
-          errors.push(`duplicitní index klíč při agregaci: ${key}.`);
+          errors.push(`duplicate index key during aggregation: ${key}.`);
           continue;
         }
         index.set(key, record);
@@ -126,11 +126,11 @@ function aggregate(variants: readonly RangeFile[]): AggregationResult {
     // dostupnost obou sad; pro Req 4.6 je chybějící varianta = nenačteno).
     for (const ante of REQUIRED_ANTE_MODES) {
       if (!seenAnte.has(ante)) {
-        errors.push(`chybí varianta ranges pro ante = ${ante}.`);
+        errors.push(`missing range variant for ante = ${ante}.`);
       }
     }
   } catch (err) {
-    errors.push(`neočekávaná chyba při agregaci ranges: ${String(err)}.`);
+    errors.push(`unexpected error while aggregating ranges: ${String(err)}.`);
   }
 
   const loaded = errors.length === 0 && index.size > 0;

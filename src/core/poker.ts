@@ -114,7 +114,7 @@ export function cellType(i: number, j: number): HandClassType {
  */
 export function handLabel(i: number, j: number): HandLabel {
   if (i < 0 || i >= GRID_SIZE || j < 0 || j >= GRID_SIZE) {
-    throw new RangeError(`Index mřížky mimo rozsah 0–${GRID_SIZE - 1}: (${i}, ${j})`);
+  throw new RangeError(`Grid index outside 0-${GRID_SIZE - 1}: (${i}, ${j})`);
   }
   const r1 = RANKS[i];
   const r2 = RANKS[j];

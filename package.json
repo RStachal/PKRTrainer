@@ -1,7 +1,7 @@
 {
   "name": "mtt-preflop-trainer",
   "version": "0.1.0",
-  "description": "MTT Preflop Trainer — trénink preflop rozhodování pro full ring 9-handed MTT (offline, Vanilla TypeScript + Vite).",
+  "description": "MTT Preflop Trainer - offline full-ring 9-handed poker decision trainer built with Vanilla TypeScript and Vite.",
   "private": true,
   "type": "module",
   "scripts": {

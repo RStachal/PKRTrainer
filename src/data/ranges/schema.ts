@@ -149,7 +149,7 @@ function validateHandMap(
     // Req 7.6: přítomná ruka musí nést ≥ 1 Akční_klíč.
     if (!Array.isArray(keys) || keys.length === 0) {
       errors.push(
-        `[${tag}] ${setName}[${hand}]: přítomná ruka musí mít ≥ 1 Akční_klíč (Req 7.6).`,
+        `[${tag}] ${setName}[${hand}]: present hand must have at least one action key (Req 7.6).`,
       );
       continue;
     }
@@ -159,7 +159,7 @@ function validateHandMap(
       for (const key of keys) {
         if (isRaiseActionKey(key) && !raiseKeyCarriesSizing(key)) {
           errors.push(
-            `[${tag}] strict[${hand}]: raise akce „${key}" postrádá konkrétní sizing (Req 4.5).`,
+            `[${tag}] strict[${hand}]: raise action "${key}" is missing a concrete sizing (Req 4.5).`,
           );
         }
       }
@@ -198,7 +198,7 @@ export function validateRangeFile(f: RangeFile): string[] {
     const combo = `${r.position}/${r.bucket}/${r.context}`;
     if (seen.has(combo)) {
       errors.push(
-        `[${f.ante}] duplicitní kombinace Pozice × Hloubkový_koš × kontext: ${combo}.`,
+        `[${f.ante}] duplicate position x stack bucket x context combination: ${combo}.`,
       );
     }
     seen.add(combo);

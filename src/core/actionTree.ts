@@ -124,5 +124,5 @@ function offeredWhenUnopened(heroIsBB: boolean, limpsBefore: number): ActionKind
 
 /** Vyčerpávající kontrola variant `FacingAction` (kompilační záruka totality). */
 function assertNeverFacing(facing: never): never {
-  throw new Error(`Neočekávaná hodnota FacingAction: ${facing as FacingAction}`);
+  throw new Error(`Unexpected FacingAction value: ${facing as FacingAction}`);
 }

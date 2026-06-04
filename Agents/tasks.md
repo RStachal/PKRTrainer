@@ -719,6 +719,345 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 57.3 Zlepsit mobilni Flopzilla matrix
     - Matrix ma horizontalni scroll hint a mensi mobilni grid s pevnou vyskou bunek
 
+- [x] 58. Postflop luxury polish a mobilni seat fit
+  - [x] 58.1 Doplnit detail pot chipu ve stredu stolu
+    - Center stolu ma vizualni chip stack mezi potem a boardem
+  - [x] 58.2 Oddelit desktop a mobile seat pozice
+    - Seaty pouzivaji CSS promenne pro desktop a uzsi mobilni radius, aby nepretekaly mimo viewport
+  - [x] 58.3 Sjednotit postflop pokerovy jazyk do anglictiny
+    - Texture chips, model detail, confidence, assumptions a result summary pouzivaji anglicke pokerove labely
+
+- [x] 59. Premium shell a filter mobile polish
+  - [x] 59.1 Sjednotit shell s premiovym postflop stylem
+    - Body, header, tabs a hlavni training karta maji bohatsi dark theme, stiny a aktivni/hover stavy
+  - [x] 59.2 Vylepsit prvni filtr pro mobilni web
+    - Profil selector, filter groups, config radek a Start button maji jasny mobilni layout bez horizontalniho tlaceni
+  - [x] 59.3 Pridat DOM guard proti navratu rozbiteho viditelneho kodovani
+    - Bootstrap test hlida mobile media pravidla i absenci typickych mojibake sekvenci ve vykreslenem UI
+
+- [x] 60. Premium preflop table polish
+  - [x] 60.1 Sjednotit preflop stul s postflop felt/rail vizualem
+    - Preflop table ma rail, bohatsi felt, center plate a pot chip stack
+  - [x] 60.2 Doplnit detail hracu a stacku
+    - Seaty maji premium gradienty, hero highlight, stack bary, action badge a anglicke folded/YOU labely
+  - [x] 60.3 Zlepsit mobilni fit preflop stolu
+    - Seaty maji separatni mobile pozice pres CSS promenne a mobile media pravidla pro uzky viewport
+
+- [x] 61. Premium dashboard dark polish
+  - [x] 61.1 Prevest stats tab z light karet do premium dark UI
+    - Summary, session, breakdowny a postflop/profilove rozcleneni pouzivaji dark gradienty, stiny a sjednocene typograficke vahy
+  - [x] 61.2 Vylepsit export/import JSON kontrolky
+    - Tlacitka a textarea maji tmavy premium styl, focus-friendly kontrast a mobile full-width layout
+  - [x] 61.3 Pridat CSS guard pro dashboard
+    - Dashboard test hlida dark gradient, mobile media pravidla a absenci navratu svetleho `background:#fff`
+
+- [x] 62. Premium HH import polish
+  - [x] 62.1 Sjednotit HH import s premium dark UI
+    - Textarea, analyze button, result boxes and analysis facts use dark gradient card style
+  - [x] 62.2 Zlepsit HH import mobilni ergonomii
+    - Analyze button is full-width on mobile, textarea is taller and matrix scroll container is stable
+  - [x] 62.3 Posilit HH/mobile test guard
+    - HH view test hlida premium CSS a mobile smoke ma vyssi timeout pro tezsi DOM render
+
+- [x] 63. Premium Flopzilla matrix polish
+  - [x] 63.1 Pridat board/hero meta do flop range matrixu
+    - Matrix header ukazuje board a hero hand, aby byl vysledek citelny i mimo stul
+  - [x] 63.2 Pridat category counts do legendy
+    - Flopzilla legend ukazuje pocet hand classes v kazde pouzite kategorii
+  - [x] 63.3 Zlepsit premium a mobile styling matrixu
+    - Matrix ma dark gradient panel, polished cells, pill legendu a mobile min-width scroll guard
+
+- [x] 64. Premium preflop range matrix and modal polish
+  - [x] 64.1 Sjednotit preflop matrix s premium range UI
+    - Matrix ma header, hero/context meta, dark gradient shell, polished cells and hero glow
+  - [x] 64.2 Pridat preflop category counts do legendy
+    - Legend ukazuje pocet 169 hand classes pro pouzite action categories
+  - [x] 64.3 Vylepsit range modal a poker labels
+    - Modal uses English poker-facing labels, premium backdrop/dialog/buttons and mobile full-width controls
+
+- [x] 65. Postflop control copy cleanup
+  - [x] 65.1 Sjednotit postflop controls do anglictiny
+    - Generate, question, new spot and change situation controls use clean English labels
+  - [x] 65.2 Omezit riziko visible encoding driftu
+    - Postflop view test hlida labels and absence of visible mojibake sequences
+
+- [x] 66. Preflop poker copy cleanup
+  - [x] 66.1 Sjednotit preflop action/context labels do anglictiny
+    - Main flow, DrillEngine and HH parser use Call, Vs open, Vs 3-bet and related English poker labels
+  - [x] 66.2 Sjednotit preflop result copy
+    - Result panel uses Correct/Not yet, Recommended, Next spot and English unavailable/save messages
+  - [x] 66.3 Sjednotit HH analysis facts
+    - Imported HH analysis uses Decision analysis, Position, Hand and Recommended labels
+
+- [x] 67. Training shell and filter copy cleanup
+  - [x] 67.1 Prevest app shell tab labels do anglictiny
+    - Training, Statistics and app subtitle avoid visible encoding-sensitive Czech text
+  - [x] 67.2 Prevest profile selector copy do anglictiny
+    - Training profile fields, production/preview notes and rake labels use English copy
+  - [x] 67.3 Prevest filter controls do anglictiny
+    - Positions, stack depths, action context, scoring, random seed and start controls use English labels
+
+- [x] 68. Dashboard statistics copy cleanup
+  - [x] 68.1 Prevest summary/session/transfer copy do anglictiny
+    - Summary, current session and JSON transfer controls use clean English labels
+  - [x] 68.2 Prevest breakdown headings/group labels do anglictiny
+    - Profile, preflop and postflop breakdowns use English poker-facing labels
+  - [x] 68.3 Udrzet source-free stats UI guard
+    - Dashboard tests guard source-free stats UI and visible mojibake regressions
+
+- [x] 69. HH import copy and parser message cleanup
+  - [x] 69.1 Prevest HH import visible controls do anglictiny
+    - Import hint, placeholder, analyze button and table placeholder use clean English copy
+  - [x] 69.2 Prevest HH parser user-facing errors do anglictiny
+    - Empty input, length, incomplete input and incompatibility messages use English runtime strings
+  - [x] 69.3 Sjednotit HH unreadable field names
+    - HH unreadable fields use position/actions/stack/cards and tests guard the English UI path
+
+- [x] 70. Main runtime warning copy cleanup
+  - [x] 70.1 Prevest storage/range fatal errors do anglictiny
+    - Blocking storage and range load errors use English UI copy
+  - [x] 70.2 Prevest postflop save/offline/migration warnings do anglictiny
+    - Notice banner messages use English copy for postflop save, migration and offline readiness
+  - [x] 70.3 Sjednotit candidate cash preview label
+    - Cash preview gate uses Cash rake / Cash no rake labels consistently
+
+- [x] 71. Range matrix unavailable copy cleanup
+  - [x] 71.1 Prevest unavailable fallbacky do anglictiny
+    - Missing range data, missing spot range and render-failure fallbacks use English copy
+  - [x] 71.2 Pridat DOM guard pro missing range fallback
+    - Range matrix test asserts the English unavailable message and blocks the old Czech phrase
+
+- [x] 72. Preflop sizing label cleanup
+  - [x] 72.1 Sjednotit raise sizing labely na pokerovy x format
+    - Main UI, DrillEngine and HH parser use 2x / 2.5x / 3x instead of multiplication/comma labels
+  - [x] 72.2 Pridat integration guard pro action button labels
+    - Bootstrap test blocks old multiplication-sign and comma sizing labels in action buttons
+
+- [x] 73. Runtime diagnostics copy cleanup
+  - [x] 73.1 Prevest core error strings do anglictiny
+    - Action tree, poker grid, drill engine, hand expansion and range validation diagnostics use English strings
+  - [x] 73.2 Prevest PWA install diagnostic do anglictiny
+    - Service Worker cache setup failure error uses English diagnostic copy
+  - [x] 73.3 Overit non-ASCII runtime string scan
+    - Scan confirms remaining non-ASCII hits are comments, not runtime string literals
+
+- [x] 74. App metadata copy cleanup
+  - [x] 74.1 Prevest package description do anglictiny
+    - package.json description is clean ASCII English metadata
+  - [x] 74.2 Prevest HTML language and noscript fallback do anglictiny
+    - index.html uses lang=en and an English noscript fallback
+
+- [x] 75. PWA manifest metadata cleanup
+  - [x] 75.1 Prevest manifest description do anglictiny
+    - Web app manifest description is clean English metadata
+  - [x] 75.2 Prepnout manifest language na en
+    - Installed-app metadata now matches the English UI direction
+
+- [x] 76. Published metadata regression guard
+  - [x] 76.1 Pridat test pro index/package/manifest metadata
+    - Release metadata test guards lang=en, English noscript, manifest lang and ASCII descriptions
+  - [x] 76.2 Zachovat buildovou kompatibilitu bez browser dependency
+    - Guard reads static files directly and does not require adding Playwright
+
+- [x] 77. Flop result language regression guard
+  - [x] 77.1 Uzamknout anglicky pokerovy jazyk ve flop vysledku
+    - Postflop result test guards English Flopzilla legend labels and ASCII-only result copy
+  - [x] 77.2 Blokovat navrat mojibake a ceskych poker labelu
+    - Result assertions reject mojibake fragments and old Czech value/bluff/check terms
+
+- [x] 78. Flopzilla matrix analysis metadata
+  - [x] 78.1 Pridat procenta a datove atributy do legendy
+    - Legend items expose count/share metadata and show count plus percentage
+  - [x] 78.2 Zlepsit pristupnost matrixu
+    - Matrix and cells expose grid/gridcell roles, aria labels and category labels
+  - [x] 78.3 Zobrazit hero hand kategorii v matrix headeru
+    - Matrix header and dataset now expose the hero category on the current board
+
+- [x] 79. Flop hero bucket feedback
+  - [x] 79.1 Vystavit sdilenou hero hand a Flopzilla category logiku
+    - Postflop matrix module exports hero hand class and category label helpers for reuse
+  - [x] 79.2 Zobrazit Hero bucket ve flop vysledku
+    - Flop result shows the hero hand class, category and a player-facing comparison hint
+  - [x] 79.3 Pridat DOM a mobile CSS guard
+    - Postflop view test guards hero bucket data attributes, English copy and mobile stacking
+
+- [x] 80. Preflop matrix legend analysis metadata
+  - [x] 80.1 Sjednotit legend count format s postflop matrixem
+    - Preflop legend shows count plus percentage for each visible action category
+  - [x] 80.2 Pridat count/share data atributy pro legend items
+    - Legend items expose stable count and share metadata for future interactions
+  - [x] 80.3 Pokryt preflop matrix i modal testy
+    - Range matrix and modal tests guard percentage text and metadata attributes
+
+- [x] 81. Regression checkpoint after range metadata work
+  - [x] 81.1 Spustit full Vitest suite
+    - Full test suite verifies preflop/postflop range metadata changes across the app
+  - [x] 81.2 Spustit typecheck a production build
+    - Typecheck and Vite production build confirm release compatibility after tasks 79-80
+  - [x] 81.3 Overit ze backlog nema otevrene checkboxy
+    - Task scan confirms no remaining unchecked implementation items
+
+- [x] 82. Interactive Flopzilla legend focus
+  - [x] 82.1 Pridat click a keyboard toggle na legend items
+    - Flopzilla legend items behave as accessible buttons with aria-pressed state
+  - [x] 82.2 Zvyraznit vybranou kategorii v matrixu
+    - Selecting a legend category keeps matching hands visible and mutes the rest
+  - [x] 82.3 Pokryt interakci a premium CSS guardem
+    - Matrix tests guard click/keyboard toggles and postflop view test guards active/muted styling
+
+- [x] 83. MTT production readiness matrix
+  - [x] 83.1 Definovat production readiness typy pro MTT preflop packy
+    - Readiness musi rozlisit production/candidate, format, speed, ante, confidence, records, source count and missing coverage
+  - [x] 83.2 Vypocitat coverage pro 9-max/6-max regular/turbo
+    - Report musi ukazat plneni pro FULL_RING_9/SIX_MAX x REGULAR/TURBO x ante ON/OFF
+  - [x] 83.3 Pridat testy pro soucasny stav
+    - Test musi potvrdit, ze 9-max regular je production a 6-max/turbo nejsou hotove production ranges
+
+- [x] 84. MTT preflop production definition
+  - [x] 84.1 Definovat minimalni production coverage pravidla
+    - Production pack potrebuje legalni source evidence, confidence MEDIUM/HIGH, records > 0, vsechny required positions, stack buckets and action contexts
+  - [x] 84.2 Oddelit metadata speed od skutecne odlisnych hand recommendations
+    - Turbo nesmi byt povyseno do production jen zmenou blind schedule bez overeneho range rozdilu nebo explicitniho reuse rationale
+  - [x] 84.3 Zobrazit readiness status v profilovem selectoru
+    - UI ma ukazat, ktere MTT kombinace jsou production a ktere cekaji na verified ranges
+
+- [x] 85. MTT 9-max regular range audit hardening
+  - [x] 85.1 Overit soucasne 9-max regular records coverage
+    - Audit musi spocitat pozice, stack buckets, contexts, hand-class map completeness and strict/lenient non-empty values
+  - [x] 85.2 Zprisit confidence pro stavajici baseline pack
+    - Pokud jde o heuristic baseline, ponechat MEDIUM; HIGH az po legalnim solver/export review
+  - [x] 85.3 Pridat regression test proti nechtenemu zuzeni 9-max ranges
+    - Test musi hlidat record count, representative contexts and source metadata
+
+- [ ] 86. MTT 9-max turbo production path
+  - [x] 86.1 Rozhodnout turbo strategy policy
+    - Bud importovat turbo-specific ranges, nebo explicitne zdokumentovat legalni reuse regular chipEV ranges pro stejny stack/ante node
+  - [ ] 86.2 Pripravit 9-max turbo RangePack records
+    - Turbo pack musi mit records, source evidence, assumptions and validation bez candidate gate
+  - [ ] 86.3 Zapojit 9-max turbo do production preflop gate
+    - Po overeni ma MTT/FULL_RING_9/TURBO/PREFLOP/chipEV spoustet drill
+
+- [ ] 87. MTT 6-max regular verified range import
+  - [ ] 87.1 Ziskat legalni 6-max regular source/export vstup
+    - Povolen je owned solver export, public chart with permission, or explicit written permission
+  - [ ] 87.2 Normalizovat 6-max regular records
+    - Každý record musi mit 169 hand classes ve strict i lenient mape
+  - [ ] 87.3 Povysit 6-max regular z candidate na production
+    - Po validaci se SIX_MAX/REGULAR/PREFLOP/chipEV smi spoustet v drill enginu
+
+- [ ] 88. MTT 6-max turbo verified range import
+  - [ ] 88.1 Ziskat legalni 6-max turbo source/export vstup
+    - Turbo assumptions a stack mapping musi byt explicitni
+  - [ ] 88.2 Normalizovat 6-max turbo records
+    - Records musi pokryt required positions, buckets, contexts and 169 hand classes
+  - [ ] 88.3 Povysit 6-max turbo z candidate na production
+    - Po validaci se SIX_MAX/TURBO/PREFLOP/chipEV smi spoustet v drill enginu
+
+- [x] 89. Production range import UX and audit artifacts
+  - [x] 89.1 Pridat import-readiness report pro vsechny MTT packy
+    - Report musi byt citelny pro commit review a nesmi zobrazovat source URLs v hernim UI
+  - [x] 89.2 Pridat summary audit soubor pro production MTT coverage
+    - Agents audit ma jasne oddelit hotove production ranges od candidate placeholders
+  - [x] 89.3 Pridat CI-friendly tests pro production coverage
+    - Testy musi selhat, pokud production pack nema records nebo legalni metadata
+
+- [x] 90. MTT preflop production UI gate cleanup
+  - [x] 90.1 Nahradit hardcoded production gate readiness reportem
+    - main.ts a profileSelector nemaji duplikovat podminky; maji cist z jednoho readiness modelu
+  - [x] 90.2 Zachovat candidate safety
+    - Candidate pack nikdy nesmi spustit legacy 9-max drill nebo scoring
+  - [x] 90.3 Otestovat gate pro vsechny MTT kombinace
+    - 9-max regular/turbo a 6-max regular/turbo maji explicitni test podle readiness stavu
+
+- [x] 91. Flop production data model
+  - [x] 91.1 Definovat flop RangePack/StrategyPack production schema
+    - Schema musi umet position pattern, pot type, SPR window, texture, action node, hand-class strategy bucket and confidence
+  - [x] 91.2 Oddelit heuristic training prompt od production strategy
+    - Public heuristic pack zustava preview, production pack vyzaduje legalni source/export nebo explicitni permission
+  - [x] 91.3 Pridat validator flop production coverage
+    - Validator musi ukazat missing positions, textures, pot types and action nodes
+
+- [ ] 92. Flop SRP production coverage
+  - [x] 92.1 Pokryt hlavni SRP pozicni patterny
+    - EP vs BB, BTN vs BB, SB vs BB, OOP raiser vs IP caller
+  - [x] 92.2 Pokryt board texture taxonomy
+    - A-high, broadway, low, paired, monotone, two-tone, connected, disconnected, dry, draw-heavy
+  - [ ] 92.3 Napojit production SRP flop pack do treninku
+    - UI ma pouzivat production data tam, kde existuji, jinak jasne preview/fallback
+    - Resolver infrastructure hotova; skutecny production SRP pack ceka na legalni source/export vstup
+
+- [x] 93. Flop 3bet pot production coverage
+  - [x] 93.1 Definovat 3bet pot action nodes a position patterns
+    - OOP caller vs IP 3bettor and IP/OOP c-bet situations musi byt explicitni
+  - [x] 93.2 Pripravit 3bet pot range buckets
+    - Value/bluff/check lanes a matrix musi vychazet z production coverage, ne jen obecne heuristiky
+  - [x] 93.3 Otestovat 3bet pot fallback safety
+    - SRP rules se nesmi pouzit pro 3bet pot bez explicitniho mappingu
+
+- [x] 94. Flop result learning depth
+  - [x] 94.1 Rozsirit hero bucket feedback podle production range lane
+    - Feedback ma rict, zda hero hand patri do value, bluff, check, mix/frequency bucket podle production dat
+  - [x] 94.2 Pridat matrix filtering podle lane
+    - Vedle Flopzilla kategorií ma jit filtrovat Value/Bluff/Check lane
+  - [x] 94.3 Zachovat source-free user UI
+    - Hrac vidi pokerovy model, ne URLs, provider names, pack ids or internal rule ids
+
+- [x] 95. KPI analytics model
+  - [x] 95.1 Definovat relevantni KPI jen z dostupnych dat
+    - Overall accuracy, recent accuracy, volume, streak, best streak, leak groups, preflop/postflop breakdowns
+  - [x] 95.2 Pridat best streak a recent window analytics
+    - Pocitat z event logu bez noveho storage schema, pokud to jde
+  - [x] 95.3 Pridat minimum-sample filter pro leak detection
+    - Weakest spots ukazovat az od rozumneho poctu odpovedi
+
+- [x] 96. Statistics dashboard graph layer
+  - [x] 96.1 Pridat KPI cards
+    - Dashboard ma ukazat answered total, overall accuracy, recent accuracy, current streak, best streak and volume this session
+  - [x] 96.2 Pridat jednoduche grafy bez nove runtime dependency
+    - Pouzit HTML/CSS bars nebo inline SVG pro trend/volume/leak mapy
+  - [x] 96.3 Otestovat mobile layout grafu
+    - Grafy nesmi pretekat v mobilnim web browseru
+
+- [ ] 97. Preflop leak visualizations
+  - [ ] 97.1 Graf podle action contextu
+    - Ukazat accuracy/volume pro RFI, vs open, vs 3-bet, squeeze, BvB, push/fold etc.
+  - [ ] 97.2 Graf podle pozice
+    - Ukazat leak mapu pozic s minimum sample filtrem
+  - [ ] 97.3 Graf podle stack bucketu
+    - Ukazat kratke/stredni/hluboke stacky a identify weakest buckets
+
+- [ ] 98. Postflop KPI visualizations
+  - [ ] 98.1 Graf podle street a action node
+    - Flop/turn/river a c-bet/barrel/pressure skupiny podle accuracy/volume
+  - [ ] 98.2 Graf podle board texture
+    - Ukazat, na jakych texturech hrac chybuje, az od minimum sample
+  - [ ] 98.3 Confidence-aware labels
+    - Preview/low confidence postflop model nesmi pusobit jako solver-grade pravda
+
+- [ ] 99. Decision-time instrumentation
+  - [ ] 99.1 Navrhnout response time field pro preflop a postflop records
+    - Cas mereny od zobrazeni otazky po klik odpovedi
+  - [ ] 99.2 Migrovat/exportovat cas bez rozbiti starych stats
+    - Starší záznamy musi zustat validni s null/unavailable decision time
+  - [ ] 99.3 Pridat timing KPI az po sberu dat
+    - Speed/hesitation grafy nezobrazovat, dokud nejsou realna data
+
+- [ ] 100. MTT production release checkpoint
+  - [ ] 100.1 Spustit full test suite a build
+    - Release checkpoint musi projit po kazdem production range povyseni
+  - [ ] 100.2 Zkontrolovat source-free UI policy
+    - Herni UI a dashboard nesmi citovat zdroje ani ukazovat pack internals
+  - [ ] 100.3 Zkontrolovat offline bundle
+    - Production ranges a stats UI musi fungovat bez runtime fetch
+
+- [ ] 101. Autonomous backlog discipline
+  - [ ] 101.1 Po kazdem hotovem kroku aktualizovat checkboxy
+    - Dokoncene polozky okamzite prepnout na [x]
+  - [ ] 101.2 Po kazde netrivialni zmene spustit cilene testy
+    - Scope testu volit podle zmenenych modulu
+  - [ ] 101.3 Pokud nejsou otevrene tasky, zalozit dalsi pouze z produktoveho gapu
+    - Nepridavat kosmeticke tasky, pokud existuje obsahovy production gap
+
 ## Notes
 
 - Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.

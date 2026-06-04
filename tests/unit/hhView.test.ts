@@ -32,10 +32,19 @@ describe("hhView - DOM import", () => {
 
     const errors = root.querySelector<HTMLElement>(".hh-errors");
     const unreadable = root.querySelector<HTMLElement>(".hh-unreadable");
+    const css = root.querySelector("style")?.textContent ?? "";
+    expect(css).toContain("linear-gradient(180deg,rgba(18,25,38,.98)");
+    expect(css).toContain("@media (max-width:640px)");
+    expect(css).toContain(".hh-analysis__matrix");
+    expect(root.querySelector<HTMLTextAreaElement>(".hh-input")?.placeholder)
+      .toBe("Paste hand history here...");
+    expect(root.querySelector<HTMLButtonElement>(".hh-analyze")?.textContent).toBe("Analyze");
     expect(errors?.hidden).toBe(false);
-    expect(errors?.textContent).toContain("prázdný");
+    expect(errors?.textContent).toContain("Input is empty");
     expect(unreadable?.hidden).toBe(false);
-    expect(unreadable?.textContent).toContain("pozice");
+    expect(unreadable?.textContent).toContain("position");
+    expect(root.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
+    expect(root.textContent).not.toContain("Analyzovat");
     expect(root.querySelector(".poker-table")).toBeNull();
   });
 

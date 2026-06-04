@@ -82,7 +82,7 @@ function renderUnreadable(doc: Document, container: HTMLElement, fields: HHField
   }
 
   const title = el(doc, "div", "hh-unreadable__title");
-  title.textContent = "Nepodařilo se přečíst pole:";
+  title.textContent = "Could not read fields:";
   container.appendChild(title);
 
   const list = el(doc, "ul", "hh-unreadable__list");
@@ -118,8 +118,8 @@ function renderErrors(doc: Document, container: HTMLElement, errors: string[]): 
 function renderIncompatible(container: HTMLElement, incompatible: boolean): void {
   if (incompatible) {
     container.textContent =
-      "Data byla přečtena, ale nejsou kompatibilní s modelem trenažéru " +
-      "(vyžaduje se 9-handed stůl a efektivní hloubka 5–150 BB). Spot nebyl sestaven.";
+      "The hand history was readable, but it is not compatible with the trainer model " +
+      "(requires a 9-handed table and 5-150 BB effective depth). No spot was built.";
     setVisible(container, true);
   } else {
     container.textContent = "";
@@ -133,7 +133,7 @@ function renderAnalysis(doc: Document, container: HTMLElement, spot: Spot): void
   container.dataset.spotId = spot.id;
 
   const title = el(doc, "h3", "hh-analysis__title");
-  title.textContent = "Analýza rozhodnutí";
+  title.textContent = "Decision analysis";
   container.appendChild(title);
 
   const facts = el(doc, "div", "hh-analysis__facts");
@@ -143,11 +143,11 @@ function renderAnalysis(doc: Document, container: HTMLElement, spot: Spot): void
   facts.dataset.context = spot.context;
 
   const items = [
-    ["Pozice", spot.heroPos],
-    ["Ruka", spot.hand],
+    ["Position", spot.heroPos],
+    ["Hand", spot.hand],
     ["Stack", `${spot.effStack} BB`],
     ["Node", spot.context],
-    ["Doporučeno", spot.correctKeys.join(" / ")],
+    ["Recommended", spot.correctKeys.join(" / ")],
   ];
 
   for (const [label, value] of items) {
@@ -204,7 +204,7 @@ function applyResult(
     // Chyba / nekompatibilita / částečná data: Spot nevykresluj, vyčisti stůl.
     regions.table.innerHTML = "";
     const placeholder = el(doc, "p", "hh-table__placeholder");
-    placeholder.textContent = "Stůl se zobrazí po úspěšném importu kompatibilní hand history.";
+    placeholder.textContent = "The table appears after importing a compatible hand history.";
     placeholder.style.opacity = "0.7";
     placeholder.style.fontStyle = "italic";
     regions.table.appendChild(placeholder);
@@ -220,42 +220,57 @@ function applyResult(
 function viewStyles(doc: Document): HTMLStyleElement {
   const style = doc.createElement("style");
   style.textContent = `
-.hh-view{font-family:system-ui,Arial,sans-serif;color:#e8ecf7;max-width:760px;margin:0 auto;}
-.hh-view__title{font-weight:800;font-size:18px;margin:0 0 6px;}
-.hh-view__hint{font-size:13px;color:#9aa6c2;margin:0 0 10px;}
+.hh-view{font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;color:#e8ecf7;max-width:960px;margin:0 auto;
+  background:linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));
+  border:1px solid rgba(148,163,184,.16);border-radius:16px;padding:16px 18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.05);}
+.hh-view__title{font-weight:950;font-size:20px;margin:0 0 6px;color:#f8fbff;}
+.hh-view__hint{font-size:13px;color:#a8b7d5;margin:0 0 12px;line-height:1.45;}
 .hh-view .hh-input{width:100%;min-height:180px;box-sizing:border-box;resize:vertical;
   font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.4;
-  padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.18);
-  background:#11151f;color:#e8ecf7;}
-.hh-view .hh-analyze{margin-top:10px;padding:8px 18px;border-radius:8px;border:0;
-  font-weight:800;font-size:14px;cursor:pointer;background:#2bd576;color:#0c3526;}
-.hh-view .hh-analyze:hover{filter:brightness(1.05);}
-.hh-view .hh-errors{margin-top:12px;padding:10px 12px;border-radius:8px;
+  padding:11px;border-radius:12px;border:1px solid rgba(148,163,184,.24);
+  background:#101827;color:#e8ecf7;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+.hh-view .hh-input:focus{outline:2px solid rgba(43,213,118,.42);outline-offset:1px;border-color:#2bd576;}
+.hh-view .hh-analyze{margin-top:11px;padding:10px 18px;border-radius:12px;border:0;
+  font-weight:950;font-size:14px;cursor:pointer;background:linear-gradient(180deg,#45e58c,#20bd65);
+  color:#082817;box-shadow:0 14px 28px rgba(43,213,118,.22),inset 0 1px 0 rgba(255,255,255,.35);}
+.hh-view .hh-analyze:hover{filter:brightness(1.05);transform:translateY(-1px);}
+.hh-view .hh-errors{margin-top:12px;padding:10px 12px;border-radius:10px;
   background:rgba(226,59,59,.12);border:1px solid rgba(226,59,59,.4);}
 .hh-view .hh-error{margin:0 0 6px;font-size:13px;color:#ffb4b4;}
 .hh-view .hh-error:last-child{margin-bottom:0;}
-.hh-view .hh-unreadable{margin-top:10px;padding:10px 12px;border-radius:8px;
+.hh-view .hh-unreadable{margin-top:10px;padding:10px 12px;border-radius:10px;
   background:rgba(255,209,91,.12);border:1px solid rgba(255,209,91,.4);font-size:13px;}
 .hh-view .hh-unreadable__title{font-weight:700;margin-bottom:4px;}
 .hh-view .hh-unreadable__list{margin:0;padding-left:18px;}
-.hh-view .hh-incompatible{margin-top:10px;padding:10px 12px;border-radius:8px;
+.hh-view .hh-incompatible{margin-top:10px;padding:10px 12px;border-radius:10px;
   background:rgba(155,108,240,.14);border:1px solid rgba(155,108,240,.45);
   font-size:13px;color:#d8c7ff;}
 .hh-view .hh-table{margin-top:16px;min-height:40px;}
+.hh-view .hh-table__placeholder{color:#a8b7d5;}
 .hh-view .hh-analysis{margin-top:16px;display:grid;gap:10px;}
 .hh-view .hh-analysis__title{margin:0;font-size:16px;font-weight:900;color:#e8ecf7;}
 .hh-view .hh-analysis__facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));
   gap:8px;}
-.hh-view .hh-analysis__fact{display:grid;gap:2px;padding:8px;border-radius:8px;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);}
+.hh-view .hh-analysis__fact{display:grid;gap:2px;padding:9px;border-radius:10px;
+  background:rgba(255,255,255,.045);border:1px solid rgba(148,163,184,.14);}
 .hh-view .hh-analysis__fact-name{font-size:11px;text-transform:uppercase;color:#9aa6c2;
-  font-weight:800;}
+  font-weight:900;}
 .hh-view .hh-analysis__fact-value{font-size:13px;color:#e8ecf7;font-weight:800;
   overflow-wrap:anywhere;}
 .hh-view .hh-analysis__explanation{margin:0;font-size:13px;line-height:1.4;color:#d5deef;
   overflow-wrap:anywhere;}
-.hh-view .hh-analysis__matrix{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.hh-view .hh-analysis__matrix{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;
+  border:1px solid rgba(148,163,184,.14);background:rgba(6,12,22,.34);padding:8px;}
 .hh-view .hh-analysis__matrix .matrix{min-width:560px;}
+@media (max-width:640px){
+  .hh-view{max-width:100%;padding:13px 12px;border-radius:14px;}
+  .hh-view__title{font-size:18px;}
+  .hh-view .hh-input{min-height:220px;}
+  .hh-view .hh-analyze{width:100%;min-height:44px;}
+  .hh-view .hh-analysis__facts{grid-template-columns:1fr;}
+  .hh-view .hh-analysis__matrix{margin-left:-2px;margin-right:-2px;}
+}
 `;
   return style;
 }
@@ -295,22 +310,22 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
 
   const hint = el(doc, "p", "hh-view__hint");
   hint.textContent =
-    "Vložte text rozdání (formát PokerStars) a klikněte na Analyzovat. " +
-    "Podporován je 9-handed stůl s efektivní hloubkou 5–150 BB.";
+    "Paste a PokerStars hand history and run analysis. " +
+    "Supported model: 9-handed table, 5-150 BB effective depth.";
   wrap.appendChild(hint);
 
   // Textarea pro vstup (Req 11.2).
   const textarea = doc.createElement("textarea");
   textarea.className = "hh-input";
   textarea.setAttribute("aria-label", "Text hand history");
-  textarea.placeholder = "Sem vložte hand history…";
+  textarea.placeholder = "Paste hand history here...";
   wrap.appendChild(textarea);
 
   // Tlačítko "Analyzovat" (Req 11.2).
   const button = doc.createElement("button");
   button.className = "hh-analyze";
   button.type = "button";
-  button.textContent = "Analyzovat";
+  button.textContent = "Analyze";
   wrap.appendChild(button);
 
   // Výstupní oblasti.
@@ -332,14 +347,14 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
   // Kontejner stolu (Req 11.4) + výchozí placeholder.
   const table = el(doc, "div", "hh-table");
   const placeholder = el(doc, "p", "hh-table__placeholder");
-  placeholder.textContent = "Stůl se zobrazí po úspěšném importu kompatibilní hand history.";
+  placeholder.textContent = "The table appears after importing a compatible hand history.";
   placeholder.style.opacity = "0.7";
   placeholder.style.fontStyle = "italic";
   table.appendChild(placeholder);
   wrap.appendChild(table);
 
   const analysis = el(doc, "section", "hh-analysis");
-  analysis.setAttribute("aria-label", "Analýza importované hand history");
+  analysis.setAttribute("aria-label", "Imported hand history analysis");
   wrap.appendChild(analysis);
 
   const regions = { errors, unreadable, incompatible, table, analysis };
@@ -354,7 +369,7 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
       // nesmí shodit view (Req 11.2 — bez pádu aplikace).
       const msg = err instanceof Error ? err.message : String(err);
       renderErrors(doc, regions.errors, [
-        `Při zpracování hand history došlo k neočekávané chybě: ${msg}`,
+        `Unexpected error while processing hand history: ${msg}`,
       ]);
       renderUnreadable(doc, regions.unreadable, []);
       renderIncompatible(regions.incompatible, false);

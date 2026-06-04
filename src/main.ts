@@ -60,6 +60,10 @@ import {
   buildPostflopResultRecord,
 } from "./persistence/postflopResultRecord";
 import { createPostflopStatsStore } from "./persistence/postflopStatsStore";
+import {
+  mttPreflopProductionReadyForTrainingProfile,
+  mttPreflopReadinessRowForTrainingProfile,
+} from "./data/ranges/mttProductionReadiness";
 import { rangePackForTrainingProfile } from "./data/ranges/trainingRangePacks";
 import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
@@ -76,15 +80,15 @@ import { registerServiceWorker } from "./pwa/registerSw";
 
 const ACTION_KEY_LABEL: Record<ActionKey, string> = {
   FOLD: "Fold",
-  CALL: "Call / Dorovnat",
+  CALL: "Call",
   LIMP: "Limp / Check",
   OVERLIMP: "Over-limp",
-  OPEN_2X: "Raise 2\u00d7",
-  OPEN_25X: "Raise 2,5\u00d7",
-  OPEN_3X: "Raise 3\u00d7",
-  ISO_2X: "Iso-raise 2\u00d7",
-  ISO_25X: "Iso-raise 2,5\u00d7",
-  ISO_3X: "Iso-raise 3\u00d7",
+  OPEN_2X: "Raise 2x",
+  OPEN_25X: "Raise 2.5x",
+  OPEN_3X: "Raise 3x",
+  ISO_2X: "Iso-raise 2x",
+  ISO_25X: "Iso-raise 2.5x",
+  ISO_3X: "Iso-raise 3x",
   "3BET": "3-bet",
   "4BET": "4-bet",
   SQUEEZE: "Squeeze",
@@ -94,14 +98,14 @@ const ACTION_KEY_LABEL: Record<ActionKey, string> = {
 
 const ACTION_CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
-  VS_LIMP: "Proti limpu (Iso-raise)",
-  VS_OPEN: "Proti openu",
-  VS_3BET: "Proti 3-betu",
-  VS_4BET: "Proti 4-betu",
+  VS_LIMP: "Vs limp (Iso-raise)",
+  VS_OPEN: "Vs open",
+  VS_3BET: "Vs 3-bet",
+  VS_4BET: "Vs 4-bet",
   SQUEEZE: "Squeeze",
   BVB: "Blind vs blind",
   PUSH_FOLD: "Push / Fold",
-  VS_ALLIN: "Proti all-inu (Call-jam)",
+  VS_ALLIN: "Vs all-in (Call-jam)",
 };
 
 /** PĹ™eloĹľĂ­ AkÄŤnĂ­_klĂ­ÄŤ na ÄŤeskĂ˝ popisek (fallback = samotnĂ˝ klĂ­ÄŤ). */
@@ -235,12 +239,11 @@ export function bootstrap(options: BootstrapOptions = {}): void {
   try {
     renderApp(root, options);
   } catch (err) {
-    showFatalError(
-      root,
-      "Aplikaci se nepoda\u0159ilo spustit kv\u016fli neo\u010dek\u00e1van\u00e9 chyb\u011b. Zkuste ji pros\u00edm " +
-        "na\u010d\u00edst znovu.",
-      err,
-    );
+      showFatalError(
+        root,
+        "The app could not start because of an unexpected error. Please reload it.",
+        err,
+      );
   }
 }
 
@@ -281,8 +284,8 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   if (storageInit.startedEmpty) {
     showNotice(
       shell.notice,
-      "Migrace dat z p\u0159edchoz\u00ed verze neprob\u011bhla. Tr\u00e9nink za\u010d\u00edn\u00e1 s pr\u00e1zdn\u00fdmi " +
-        "statistikami; va\u0161e p\u016fvodn\u00ed data z\u016fstala nedot\u010den\u00e1.",
+      "Data migration from the previous version did not complete. Training starts with empty " +
+        "statistics; your original data was left untouched.",
     );
   }
 
@@ -302,7 +305,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
         if (!save.ok) {
           showNotice(
             shell.notice,
-            "Postflop zaznamy se nepodarilo ulozit. Export preflop statistik zustal zachovany.",
+            "Postflop records could not be saved. The preflop stats export remains intact.",
           );
         }
         return save.ok;
@@ -336,7 +339,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
         if (!save.ok) {
           showNotice(
             shell.notice,
-            "Postflop odpoved se nepodarilo ulozit do lokalniho uloziste.",
+            "The postflop answer could not be saved to local storage.",
           );
         }
         sessionCount += 1;
@@ -353,7 +356,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
     // Diagnostiku zalogujeme (bez pĂˇdu); uĹľivateli zobrazĂ­me ÄŤeskĂ© upozornÄ›nĂ­.
     const errors = getRangeDataErrors();
     if (errors.length > 0 && typeof console !== "undefined") {
-      console.warn("Range_Store nenĂ­ naÄŤten:", errors);
+      console.warn("Range_Store is not loaded:", errors);
     }
     renderRangesError(shell.trainingPanel);
     return;
@@ -420,7 +423,7 @@ function buildAppShell(root: HTMLElement): AppShell {
     el(
       "p",
       "app__subtitle",
-      "Tr\u00e9nink preflop rozhodov\u00e1n\u00ed - full ring 9-handed, 5-150 BB.",
+      "Preflop decision trainer - full ring 9-handed, 5-150 BB.",
     ),
   );
   app.appendChild(header);
@@ -447,8 +450,8 @@ function buildAppShell(root: HTMLElement): AppShell {
 
   const allTabIds: readonly TabId[] = ["training", "stats", "hh", "postflop"];
   const tabDefs: { id: Exclude<TabId, "postflop">; label: string }[] = [
-    { id: "training", label: "Tr\u00e9nink" },
-    { id: "stats", label: "Statistiky" },
+    { id: "training", label: "Training" },
+    { id: "stats", label: "Statistics" },
     { id: "hh", label: "Import HH" },
   ];
 
@@ -512,15 +515,8 @@ interface TrainingHooks {
   ) => void;
 }
 
-function isProductionPreflopProfile(profile: TrainingProfile): boolean {
-  return (
-    profile.gameVariant === "MTT" &&
-    profile.tableFormat === "FULL_RING_9" &&
-    profile.blindSpeed === "REGULAR" &&
-    profile.street === "PREFLOP" &&
-    profile.evModel === "CHIP_EV" &&
-    profile.rakeMode === "NONE"
-  );
+function isProductionPreflopProfile(profile: TrainingProfile, filters: Filters): boolean {
+  return mttPreflopProductionReadyForTrainingProfile(profile, filters.ante);
 }
 
 function candidateProfileLabel(profile: TrainingProfile): string {
@@ -528,27 +524,44 @@ function candidateProfileLabel(profile: TrainingProfile): string {
     return `SNG ${profile.evModel === "CHIP_EV" ? "chipEV" : "ICM"} preview`;
   }
   if (profile.gameVariant === "CASH") {
-    return `Cash ${profile.rakeMode === "RAKE" ? "s rakem" : "bez raku"} preview`;
+    return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "no rake"} preview`;
   }
   return `${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} ${profile.gameVariant} preflop preview`;
 }
 
-function profileGateMessage(profile: TrainingProfile): string {
+function profileGateMessage(profile: TrainingProfile, filters: Filters): string {
+  const mttReadiness = mttPreflopReadinessRowForTrainingProfile(profile, filters.ante);
+  if (mttReadiness) {
+    const label = mttPreflopProfileLabel(profile);
+    if (mttReadiness.status === "CANDIDATE") {
+      return (
+        `${label}: candidate/preview. Production training is disabled until reviewed ` +
+        "hand-class coverage is complete."
+      );
+    }
+    return `${label}: missing production range. Production training is disabled.`;
+  }
+
   {
     const pack = rangePackForTrainingProfile(profile);
     if (pack && (pack.confidence === "LOW" || pack.records.length === 0)) {
       return (
-        `${candidateProfileLabel(profile)}: candidate/preview. Produkcni trening se nespusti, ` +
-        "dokud profil neprojde kontrolou hand-class hodnot."
+        `${candidateProfileLabel(profile)}: candidate/preview. Production training is disabled ` +
+        "until hand-class values are reviewed."
       );
     }
   }
 
   return (
-    "Zvoleny profil je zatim preview a nema zapnuty produkcni scoring. " +
-    "Pouzijte MTT 9-max regular preflop chipEV nebo postflop preview."
+    "The selected profile is still a preview and does not have production scoring enabled. " +
+    "Use a production-ready MTT preflop profile or postflop preview."
   );
 
+}
+
+function mttPreflopProfileLabel(profile: TrainingProfile): string {
+  return `MTT ${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} ` +
+    `${profile.blindSpeed === "REGULAR" ? "regular" : "turbo"} preflop chipEV`;
 }
 
 /**
@@ -574,12 +587,12 @@ function setupTraining(
   // HernĂ­ sub-oblasti.
   const sessionBar = el("div", "training__session-bar");
   const sessionInfo = el("div", "training__session-info");
-  const sessionTitle = el("div", "training__session-title", "Ot\u00e1zka");
+  const sessionTitle = el("div", "training__session-title", "Question");
   const sessionMeta = el("div", "training__session-meta");
   const changeSituationBtn = document.createElement("button");
   changeSituationBtn.type = "button";
   changeSituationBtn.className = "training__change-situation";
-  changeSituationBtn.textContent = "Zmenit situaci";
+  changeSituationBtn.textContent = "Change situation";
   sessionInfo.appendChild(sessionTitle);
   sessionInfo.appendChild(sessionMeta);
   sessionBar.appendChild(sessionInfo);
@@ -604,9 +617,9 @@ function setupTraining(
         startPostflopSession(filters, seed, profile.street, profile);
         return;
       }
-      if (!isProductionPreflopProfile(profile)) {
+      if (!isProductionPreflopProfile(profile, filters)) {
         gameBox.hidden = true;
-        filtersView.showEmptyResult(profileGateMessage(profile));
+        filtersView.showEmptyResult(profileGateMessage(profile, filters));
         return;
       }
       startSession(filters, seed);
@@ -675,7 +688,7 @@ function setupTraining(
 
   /** ZobrazĂ­ spot: vykreslĂ­ stĹŻl a nabĂ­dku akcĂ­, vyÄŤistĂ­ pĹ™edchozĂ­ vĂ˝sledek. */
   function clearActiveQuestion(): void {
-    sessionTitle.textContent = "Ot\u00e1zka";
+    sessionTitle.textContent = "Question";
     sessionMeta.textContent = "";
     tableContainer.innerHTML = "";
     actionsContainer.innerHTML = "";
@@ -700,7 +713,7 @@ function setupTraining(
   function renderActions(spot: Spot, mode: ScoringMode): void {
     actionsContainer.innerHTML = "";
 
-    const heading = el("div", "training__actions-title", "Tvoje akce:");
+    const heading = el("div", "training__actions-title", "Your action:");
     actionsContainer.appendChild(heading);
 
     const row = el("div", "training__actions-row");
@@ -776,7 +789,7 @@ function setupTraining(
     const verdict = el(
       "div",
       "result__verdict",
-      result.correct ? "Spr\u00e1vn\u011b!" : "\u0160patn\u011b.",
+      result.correct ? "Correct." : "Not yet.",
     );
     box.appendChild(verdict);
 
@@ -785,7 +798,7 @@ function setupTraining(
       const rec = el(
         "div",
         "result__recommended",
-        `Doporu\u010deno: ${result.recommended.map(actionKeyLabel).join(" / ")}`,
+        `Recommended: ${result.recommended.map(actionKeyLabel).join(" / ")}`,
       );
       box.appendChild(rec);
     }
@@ -795,7 +808,7 @@ function setupTraining(
     if (result.explanationAvailable) {
       explanation.textContent = spot.explanation;
     } else {
-      explanation.textContent = "Zd\u016fvodn\u011bn\u00ed nen\u00ed k tomuto spotu k dispozici.";
+      explanation.textContent = "Explanation is not available for this spot.";
       explanation.classList.add("result__explanation--unavailable");
     }
     box.appendChild(explanation);
@@ -805,7 +818,7 @@ function setupTraining(
       const warn = el(
         "div",
         "result__save-warning",
-        "Upozorn\u011bn\u00ed: v\u00fdsledek se nepoda\u0159ilo ulo\u017eit. Statistiky nemus\u00ed b\u00fdt \u00fapln\u00e9.",
+        "Warning: the result could not be saved. Statistics may be incomplete.",
       );
       box.appendChild(warn);
     }
@@ -814,7 +827,7 @@ function setupTraining(
     const nextBtn = document.createElement("button");
     nextBtn.type = "button";
     nextBtn.className = "result__next";
-    nextBtn.textContent = "Dal\u0161\u00ed spot";
+    nextBtn.textContent = "Next spot";
     nextBtn.addEventListener("click", () => advance());
     box.appendChild(nextBtn);
 
@@ -853,10 +866,9 @@ function renderBlockingError(panel: HTMLElement, title: string, message: string)
 function renderStorageError(panel: HTMLElement): void {
   renderBlockingError(
     panel,
-    "Nekonzistentn\u00ed \u00falo\u017ei\u0161t\u011b",
-    "Lok\u00e1ln\u00ed \u00falo\u017ei\u0161t\u011b je v nekonzistentn\u00edm stavu a nelze v n\u011bm vytvo\u0159it ani " +
-      "platn\u00fd \u010dist\u00fd stav. Tr\u00e9nink proto nelze spustit. Zkontrolujte pros\u00edm " +
-      "nastaven\u00ed prohl\u00ed\u017ee\u010de (povolen\u00ed \u00falo\u017ei\u0161t\u011b) a na\u010dt\u011bte aplikaci znovu.",
+    "Storage is inconsistent",
+    "Local storage is inconsistent and a clean valid state could not be created. Training cannot " +
+      "start. Check your browser storage permissions and reload the app.",
   );
 }
 
@@ -864,10 +876,9 @@ function renderStorageError(panel: HTMLElement): void {
 function renderRangesError(panel: HTMLElement): void {
   renderBlockingError(
     panel,
-    "Referen\u010dn\u00ed ranges nejsou dostupn\u00e9",
-    "Data referen\u010dn\u00edch ranges se nepoda\u0159ilo na\u010d\u00edst jako celek, proto nelze " +
-      "generovat tr\u00e9ninkov\u00e9 spoty ani spustit relaci. Zkuste pros\u00edm aplikaci " +
-      "na\u010d\u00edst znovu.",
+    "Reference ranges are not available",
+    "Reference range data could not be loaded completely, so training spots cannot be generated. " +
+      "Please reload the app.",
   );
 }
 
@@ -884,7 +895,7 @@ function showNotice(notice: HTMLElement, message: string): void {
  */
 function showFatalError(root: HTMLElement, message: string, err?: unknown): void {
   if (typeof console !== "undefined") {
-    console.error("MTT Preflop Trainer - chyba:", message, err);
+    console.error("MTT Preflop Trainer - error:", message, err);
   }
   // Pokud existuje banner upozornÄ›nĂ­, pouĹľij ho (nenĂˇsilnÄ›); jinak nahraÄŹ koĹ™en.
   const notice = root.querySelector<HTMLElement>(".app__notice");
@@ -893,7 +904,7 @@ function showFatalError(root: HTMLElement, message: string, err?: unknown): void
     notice.appendChild(el("div", "app__notice-line", message));
     return;
   }
-  renderBlockingError(root, "Do\u0161lo k chyb\u011b", message);
+  renderBlockingError(root, "An error occurred", message);
 }
 
 // ---------------------------------------------------------------------------
@@ -915,8 +926,8 @@ function maybeRegisterServiceWorker(notice: HTMLElement, force?: boolean): void 
     onCacheFailure: () => {
       showNotice(
         notice,
-        "Aplikaci se nepoda\u0159ilo pln\u011b p\u0159ipravit pro offline pou\u017eit\u00ed. Online " +
-          "funguje norm\u00e1ln\u011b; offline re\u017eim ale nemus\u00ed b\u00fdt dostupn\u00fd.",
+        "The app could not be fully prepared for offline use. Online mode works normally, but " +
+          "offline mode may not be available.",
       );
     },
   });
@@ -963,34 +974,63 @@ function appStyles(): HTMLStyleElement {
   const style = document.createElement("style");
   style.textContent = `
 :root{color-scheme:dark;}
-body{margin:0;background:#0b1018;color:#e8ecf7;
-  font-family:system-ui,Arial,sans-serif;}
-.app{max-width:980px;margin:0 auto;padding:18px 16px 48px;}
-.app__header{margin-bottom:14px;}
-.app__title{margin:0;font-size:24px;font-weight:900;letter-spacing:.3px;}
-.app__subtitle{margin:4px 0 0;font-size:13px;color:#9aa6c2;}
-.app__notice{margin:10px 0;padding:10px 12px;border-radius:8px;
+body{margin:0;background:
+  radial-gradient(circle at 18% -8%,rgba(43,213,118,.14),rgba(43,213,118,0) 28%),
+  radial-gradient(circle at 88% 4%,rgba(123,211,255,.11),rgba(123,211,255,0) 30%),
+  linear-gradient(180deg,#090f18,#060a11 58%,#05080e);
+  color:#e8ecf7;font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;}
+.app{width:min(100% - 32px,1120px);margin:0 auto;padding:28px 0 56px;}
+.app__header{margin-bottom:18px;padding:4px 0 2px;}
+.app__title{margin:0;font-size:28px;font-weight:950;letter-spacing:0;color:#f8fbff;
+  text-shadow:0 10px 30px rgba(0,0,0,.35);}
+.app__subtitle{margin:6px 0 0;font-size:14px;color:#a8b7d5;}
+.app__notice{margin:10px 0;padding:10px 12px;border-radius:10px;
   background:rgba(255,209,91,.14);border:1px solid rgba(255,209,91,.45);
   color:#ffd15b;font-size:13px;}
 .app__notice-line+.app__notice-line{margin-top:6px;}
-.app__tabs{display:flex;gap:6px;border-bottom:1px solid rgba(255,255,255,.12);
-  margin-bottom:16px;}
-.app__tab{appearance:none;border:0;background:transparent;color:#9aa6c2;
-  font-size:14px;font-weight:700;padding:10px 16px;cursor:pointer;
-  border-bottom:3px solid transparent;}
-.app__tab--active{color:#e8ecf7;border-bottom-color:#2bd576;}
+.app__tabs{display:flex;gap:8px;border-bottom:1px solid rgba(148,163,184,.16);
+  margin-bottom:18px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#7bd3ff transparent;}
+.app__tab{appearance:none;border:1px solid transparent;background:transparent;color:#9fb0cf;
+  font-size:14px;font-weight:850;padding:11px 18px;cursor:pointer;border-radius:10px 10px 0 0;
+  border-bottom:3px solid transparent;white-space:nowrap;}
+.app__tab:hover{color:#e8ecf7;background:rgba(255,255,255,.035);}
+.app__tab--active{color:#f8fbff;border-color:rgba(148,163,184,.16);
+  border-bottom-color:#2bd576;background:linear-gradient(180deg,rgba(21,30,45,.92),rgba(13,19,30,.72));
+  box-shadow:0 10px 24px rgba(0,0,0,.18);}
 .app__panel{outline:none;}
-.training__filters{background:#11151f;border:1px solid rgba(255,255,255,.08);
-  border-radius:12px;padding:14px 16px;margin-bottom:16px;}
+.training__filters{background:linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));
+  border:1px solid rgba(148,163,184,.16);border-radius:16px;padding:18px 20px;margin-bottom:18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.05);}
 .profile-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
-  gap:10px 12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid
-  rgba(255,255,255,.1);}
-.profile-selector__title{grid-column:1/-1;font-size:13px;font-weight:900;color:#e8ecf7;}
-.profile-selector__field{display:grid;gap:4px;font-size:12px;color:#9aa6c2;}
-.profile-selector__field select{min-width:0;background:#0f1624;color:#e8ecf7;
-  border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:7px 8px;}
-.profile-selector__note{grid-column:1/-1;font-size:12px;color:#9aa6c2;line-height:1.35;
-  overflow-wrap:anywhere;}
+  gap:12px 14px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid
+  rgba(148,163,184,.14);}
+.profile-selector__title{grid-column:1/-1;font-size:14px;font-weight:950;color:#f8fbff;}
+.profile-selector__field{display:grid;gap:6px;font-size:12px;color:#a8b7d5;font-weight:750;}
+.profile-selector__field select,.filter-scoring,.filter-seed{box-sizing:border-box;min-width:0;background:#151f31;color:#f8fbff;
+  border:1px solid rgba(148,163,184,.24);border-radius:10px;padding:9px 11px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
+.profile-selector__field select:focus,.filter-scoring:focus,.filter-seed:focus{outline:2px solid rgba(43,213,118,.42);
+  outline-offset:1px;border-color:#2bd576;}
+.profile-selector__note{grid-column:1/-1;font-size:12px;color:#b5c3df;line-height:1.4;
+  overflow-wrap:anywhere;border-radius:10px;padding:9px 11px;background:rgba(123,211,255,.06);
+  border:1px solid rgba(123,211,255,.14);}
+.profile-selector__note--production{background:rgba(43,213,118,.08);border-color:rgba(43,213,118,.2);}
+.profile-selector__note--candidate{background:rgba(255,209,91,.08);border-color:rgba(255,209,91,.2);}
+.profile-selector__note--missing{background:rgba(226,59,59,.08);border-color:rgba(226,59,59,.28);}
+.filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.filter-section-title{color:#f8fbff;}
+.filter-bulk{display:inline-flex;gap:5px;margin-left:0!important;}
+.filter-bulk-all,.filter-bulk-none{appearance:none;border:1px solid rgba(148,163,184,.22);
+  border-radius:8px;background:linear-gradient(180deg,#2a3448,#182235);color:#e8ecf7;
+  font-size:12px;font-weight:850;padding:5px 9px;cursor:pointer;}
+.filter-bulk-all:hover,.filter-bulk-none:hover{border-color:#2bd576;}
+.filter-group{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;}
+.filter-position-item,.filter-bucket-item,.filter-context-item,.filter-ante-item,
+.filter-scoring-item,.filter-seed-item{border-radius:999px;background:rgba(255,255,255,.035);
+  border:1px solid rgba(148,163,184,.13);padding:5px 8px;margin-right:0!important;
+  color:#edf3ff;}
+.filter-group--config .filter-scoring-item,.filter-group--config .filter-seed-item{border-radius:10px;}
+.filter-position,.filter-bucket,.filter-context,.filter-ante{accent-color:#2bd576;}
 .training__game{display:flex;flex-direction:column;gap:16px;}
 .training__session-bar{display:flex;align-items:center;justify-content:space-between;
   gap:12px;}
@@ -998,15 +1038,16 @@ body{margin:0;background:#0b1018;color:#e8ecf7;
 .training__session-title{font-size:15px;font-weight:900;color:#e8ecf7;}
 .training__session-meta{font-size:12px;font-weight:700;color:#9aa6c2;
   overflow-wrap:anywhere;}
-.training__change-situation{appearance:none;border:1px solid rgba(255,255,255,.18);
-  background:#1b2333;color:#e8ecf7;border-radius:8px;font-size:13px;
-  font-weight:800;padding:8px 12px;cursor:pointer;}
+.training__change-situation{appearance:none;border:1px solid rgba(148,163,184,.24);
+  background:linear-gradient(180deg,#202a3e,#151d2d);color:#e8ecf7;border-radius:10px;font-size:13px;
+  font-weight:850;padding:9px 13px;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.18);}
 .training__change-situation:hover{border-color:#2bd576;}
 .training__actions-title{font-weight:700;font-size:14px;margin-bottom:8px;}
 .training__actions-row{display:flex;flex-wrap:wrap;gap:8px;}
-.action-btn{appearance:none;border:1px solid rgba(255,255,255,.18);
-  background:#1b2333;color:#e8ecf7;font-size:14px;font-weight:700;
-  padding:10px 16px;border-radius:10px;cursor:pointer;}
+.action-btn{appearance:none;border:1px solid rgba(148,163,184,.24);
+  background:linear-gradient(180deg,#202a3f,#141d2f);color:#e8ecf7;font-size:14px;font-weight:900;
+  padding:10px 16px;border-radius:10px;cursor:pointer;box-shadow:0 10px 20px rgba(0,0,0,.18),
+  inset 0 1px 0 rgba(255,255,255,.06);}
 .action-btn:hover:not(:disabled){border-color:#2bd576;}
 .action-btn:disabled{opacity:.55;cursor:default;}
 .action-btn--chosen{outline:2px solid #2bd576;outline-offset:1px;}
@@ -1025,8 +1066,30 @@ body{margin:0;background:#0b1018;color:#e8ecf7;
   border-radius:12px;padding:16px 18px;}
 .fatal__title{font-size:16px;font-weight:900;margin-bottom:6px;color:#ffb4b4;}
 .fatal__message{font-size:13px;color:#e8ecf7;line-height:1.5;}
-.filter-start{appearance:none;border:0;border-radius:10px;background:#2bd576;
-  color:#0c3526;}
+.filter-start{appearance:none;border:0;border-radius:12px;background:linear-gradient(180deg,#45e58c,#20bd65);
+  color:#082817;min-height:42px;box-shadow:0 14px 28px rgba(43,213,118,.22),
+  inset 0 1px 0 rgba(255,255,255,.35);}
+.filter-start:hover{filter:brightness(1.04);transform:translateY(-1px);}
+@media (max-width:720px){
+  .app{width:min(100% - 20px,1120px);padding:18px 0 40px;}
+  .app__title{font-size:25px;}
+  .app__subtitle{font-size:13px;}
+  .app__tabs{gap:4px;margin-left:-2px;margin-right:-2px;}
+  .app__tab{padding:10px 13px;font-size:13px;}
+  .training__filters{padding:14px 12px;border-radius:14px;}
+  .profile-selector{grid-template-columns:1fr;gap:10px;}
+  .filter-row{align-items:flex-start;justify-content:space-between;}
+  .filter-group{gap:7px;}
+  .filter-position-item,.filter-bucket-item,.filter-context-item{min-height:32px;}
+  .filter-group--config{align-items:stretch!important;gap:10px!important;}
+  .filter-ante-item,.filter-scoring-item,.filter-seed-item{width:100%;box-sizing:border-box;
+    justify-content:space-between;}
+  .filter-scoring,.filter-seed{width:min(56%,220px);}
+  .filter-start{width:100%;font-size:15px!important;}
+  .training__session-bar{flex-direction:column;align-items:stretch;}
+  .training__change-situation,.action-btn,.result__next{width:100%;}
+  .training__actions-row{display:grid;grid-template-columns:1fr;}
+}
 `;
   return style;
 }
