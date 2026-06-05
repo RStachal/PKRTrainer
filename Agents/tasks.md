@@ -1307,8 +1307,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Production packy nesmi zhorsit first render bez potreby
 
 - [ ] 130. Release automation and CI gates
-  - [ ] 130.1 Sjednotit release command
+  - [x] 130.1 Sjednotit release command
     - Jednim prikazem spustit typecheck, tests, verify:ranges and build
+    - Hotovo: `npm run release:check` spousti typecheck, tests, verify:ranges and build
   - [ ] 130.2 Pridat CI gate pro source-free visible UI
     - Test ma failnout pri URL/provider/pack id ve viditelnem UI
   - [ ] 130.3 Pridat CI gate pro production readiness
