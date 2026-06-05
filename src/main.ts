@@ -370,18 +370,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   renderHHView(shell.hhPanel);
   renderPostflopPanel();
 
-  // --- Krok 3: naÄŤtenĂ­ Range_Store (Req 4.6) ---
-  if (!isRangeDataLoaded()) {
-    // Diagnostiku zalogujeme (bez pĂˇdu); uĹľivateli zobrazĂ­me ÄŤeskĂ© upozornÄ›nĂ­.
-    const errors = getRangeDataErrors();
-    if (errors.length > 0 && typeof console !== "undefined") {
-      console.warn("Range_Store is not loaded:", errors);
-    }
-    renderRangesError(shell.trainingPanel);
-    return;
-  }
-
-  // --- Krok 4: filtry + trĂ©ninkovĂˇ smyÄŤka (Req 13.4) ---
+  // --- Krok 3: filtry + trĂ©ninkovĂˇ smyÄŤka (Req 13.4) ---
   const trainingController = setupTraining(shell, statsStore, {
     onAnswered: () => {
       sessionCount += 1;
@@ -583,6 +572,13 @@ function profileGateMessage(profile: TrainingProfile, filters: Filters): string 
 
 }
 
+function logRangeLoadFailure(): void {
+  const errors = getRangeDataErrors();
+  if (errors.length > 0 && typeof console !== "undefined") {
+    console.warn("Range_Store is not loaded:", errors);
+  }
+}
+
 function mttPreflopProfileLabel(profile: TrainingProfile): string {
   return `MTT ${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} ` +
     `${profile.blindSpeed === "REGULAR" ? "regular" : "turbo"} preflop chipEV`;
@@ -645,6 +641,14 @@ function setupTraining(
       if (!isProductionPreflopProfile(profile, filters)) {
         gameBox.hidden = true;
         filtersView.showEmptyResult(profileGateMessage(profile, filters));
+        return;
+      }
+      if (!isRangeDataLoaded()) {
+        logRangeLoadFailure();
+        gameBox.hidden = true;
+        filtersView.showEmptyResult(
+          "Reference ranges are not available. Reload the app or run release checks before training.",
+        );
         return;
       }
       startSession(filters, seed);
@@ -913,16 +917,6 @@ function renderStorageError(panel: HTMLElement): void {
     "Storage is inconsistent",
     "Local storage is inconsistent and a clean valid state could not be created. Training cannot " +
       "start. Check your browser storage permissions and reload the app.",
-  );
-}
-
-/** Req 4.6: referenÄŤnĂ­ ranges nejsou dostupnĂ© â€” relaci nespouĹˇtÄ›t. */
-function renderRangesError(panel: HTMLElement): void {
-  renderBlockingError(
-    panel,
-    "Reference ranges are not available",
-    "Reference range data could not be loaded completely, so training spots cannot be generated. " +
-      "Please reload the app.",
   );
 }
 

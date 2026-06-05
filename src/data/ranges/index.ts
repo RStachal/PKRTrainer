@@ -138,7 +138,50 @@ function aggregate(variants: readonly RangeFile[]): AggregationResult {
 }
 
 // Agregace proběhne jednou při načtení modulu (data jsou statická a neměnná).
-const AGGREGATION: AggregationResult = aggregate(RANGE_VARIANTS);
+let cachedAggregation: AggregationResult | null = null;
+
+function aggregation(): AggregationResult {
+  if (cachedAggregation === null) {
+    cachedAggregation = aggregate(RANGE_VARIANTS);
+  }
+  return cachedAggregation;
+}
+
+const LAZY_RANGE_INDEX: ReadonlyMap<string, RangeRecord> = {
+  get size(): number {
+    return aggregation().index.size;
+  },
+  get(key: string): RangeRecord | undefined {
+    return aggregation().index.get(key);
+  },
+  has(key: string): boolean {
+    return aggregation().index.has(key);
+  },
+  forEach(
+    callbackfn: (
+      value: RangeRecord,
+      key: string,
+      map: ReadonlyMap<string, RangeRecord>,
+    ) => void,
+    thisArg?: unknown,
+  ): void {
+    aggregation().index.forEach((value, key) => {
+      callbackfn.call(thisArg, value, key, LAZY_RANGE_INDEX);
+    });
+  },
+  entries(): IterableIterator<[string, RangeRecord]> {
+    return aggregation().index.entries();
+  },
+  keys(): IterableIterator<string> {
+    return aggregation().index.keys();
+  },
+  values(): IterableIterator<RangeRecord> {
+    return aggregation().index.values();
+  },
+  [Symbol.iterator](): IterableIterator<[string, RangeRecord]> {
+    return aggregation().index[Symbol.iterator]();
+  },
+};
 
 // ---------------------------------------------------------------------------
 // Veřejné API
@@ -148,7 +191,7 @@ const AGGREGATION: AggregationResult = aggregate(RANGE_VARIANTS);
  * Agregovaný index všech variant ranges, klíčovaný přes `rangeIndexKey`.
  * Slouží jako podklad pro lookup API v `data/rangeStore.ts` (task 5.4).
  */
-export const RANGE_INDEX: ReadonlyMap<string, RangeRecord> = AGGREGATION.index;
+export const RANGE_INDEX: ReadonlyMap<string, RangeRecord> = LAZY_RANGE_INDEX;
 
 /**
  * Vrátí `RangeRecord` pro kombinaci
@@ -172,7 +215,7 @@ export function getRangeRecord(
  * nesmí `Drill_Engine` generovat žádné Spoty.
  */
 export function isRangeDataLoaded(): boolean {
-  return AGGREGATION.loaded;
+  return aggregation().loaded;
 }
 
 /**
@@ -180,5 +223,5 @@ export function isRangeDataLoaded(): boolean {
  * diagnostiku). Prázdné pole znamená, že data jsou konzistentně načtena.
  */
 export function getRangeDataErrors(): readonly string[] {
-  return AGGREGATION.errors;
+  return aggregation().errors;
 }

@@ -1298,15 +1298,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 128.3 Otestovat localStorage persistence na mobile viewportu
     - Stats, postflop records and seed replay musi prezit reload
 
-- [ ] 129. Performance and bundle budget
+- [x] 129. Performance and bundle budget
   - [x] 129.1 Zavest bundle size budget
     - Build ma failnout nebo varovat pri necekane velkem narustu JS bundle
     - Hotovo: `npm run bundle:budget` kontroluje raw/gzip JS asset limit po buildu a je soucasti `npm run release:check`
   - [x] 129.2 Profilovat render 13x13 matic a postflop table
     - Matrix hover/filter nesmi byt pomaly na mobilu
     - Hotovo: `npm run profile:render` meri preflop matrix, preflop table and postflop Flopzilla matrix jsdom render baseline
-  - [ ] 129.3 Optimalizovat large range pack loading
+  - [x] 129.3 Optimalizovat large range pack loading
     - Production packy nesmi zhorsit first render bez potreby
+    - Hotovo: RangeFile entries, MTT RangePack records and RANGE_INDEX aggregation jsou lazy/cached; bootstrap renderuje filtry pred production preflop range availability checkem
 
 - [x] 130. Release automation and CI gates
   - [x] 130.1 Sjednotit release command

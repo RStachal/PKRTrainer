@@ -134,6 +134,7 @@ const MTT_SIX_MAX_PREFLOP_SOURCE_EVIDENCE: RangeSourceEvidence[] = [
 
 export function rangeFileToMttPreflopRangePack(file: RangeFile): RangePack {
   const anteSlug = file.ante === "ON" ? "ante-on" : "ante-off";
+  let records: RangePack["records"] | null = null;
 
   return {
     id: `mtt-full-ring-9-regular-preflop-chip-ev-${anteSlug}-v1`,
@@ -160,13 +161,18 @@ export function rangeFileToMttPreflopRangePack(file: RangeFile): RangePack {
     ],
     searchQueries: CURRENT_MTT_PREFLOP_SEARCH_QUERIES,
     sourceEvidence: CURRENT_MTT_PREFLOP_SOURCE_EVIDENCE,
-    records: file.entries.map((record) => ({
-      position: record.position,
-      bucket: record.bucket,
-      context: record.context,
-      lenient: record.lenient,
-      strict: record.strict,
-    })),
+    get records(): RangePack["records"] {
+      if (records === null) {
+        records = file.entries.map((record) => ({
+          position: record.position,
+          bucket: record.bucket,
+          context: record.context,
+          lenient: record.lenient,
+          strict: record.strict,
+        }));
+      }
+      return records;
+    },
   };
 }
 

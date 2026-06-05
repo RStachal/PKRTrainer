@@ -420,7 +420,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector(".poker-table")).toBeNull();
   });
 
-  it("pri nedostupnem Range_Store zobrazi blokujici chybu a relaci nespusti", async () => {
+  it("pri nedostupnem Range_Store zobrazi filtry a zablokuje az production preflop start", async () => {
     vi.doMock("../../src/data/ranges", async (importOriginal) => {
       const actual = await importOriginal<typeof import("../../src/data/ranges")>();
       return {
@@ -435,8 +435,14 @@ describe("bootstrap - inicializacni tok", () => {
 
     bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
-    expect(root.querySelector(".fatal")?.textContent).toContain("Reference ranges are not available");
-    expect(root.querySelector(".filter-start")).toBeNull();
+    expect(root.querySelector(".fatal")).toBeNull();
+    expect(root.querySelector(".filter-start")).not.toBeNull();
+    root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+
+    const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
+    expect(warning?.hidden).toBe(false);
+    expect(warning?.textContent).toContain("Reference ranges are not available");
+    expect(warning?.textContent).not.toContain("https://");
     expect(root.querySelector(".poker-table")).toBeNull();
   });
 });
