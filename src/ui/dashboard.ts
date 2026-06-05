@@ -29,6 +29,7 @@
  */
 
 import type { ActionContext } from "../core/types";
+import type { Filters } from "../core/types";
 import type {
   Breakdown,
   BreakdownDim,
@@ -55,6 +56,7 @@ import {
   type PostflopStatsV2BridgeRecord,
 } from "../persistence/postflopResultRecord";
 import type { ProductionPermissionManifestReport } from "../data/ranges/productionPermissionManifest";
+import { buildPreflopCurriculumPlan } from "../persistence/preflopCurriculum";
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -69,6 +71,7 @@ export interface DashboardData {
   sessionCount: number;
   postflopRecords?: readonly PostflopStatsV2BridgeRecord[];
   permissionReports?: readonly ProductionPermissionManifestReport[];
+  onStartPreflopFocus?: (filters: Filters) => void;
   onPostflopRecordsImported?: (records: readonly PostflopStatsV2BridgeRecord[]) => boolean | void;
 }
 
@@ -407,6 +410,51 @@ function renderKpiPanel(
 
   box.appendChild(renderKpiChart(model));
   box.appendChild(renderLeakChart(model.leakCandidates));
+
+  return box;
+}
+
+function renderPreflopCurriculumPanel(
+  store: StatsStore,
+  onStartPreflopFocus?: (filters: Filters) => void,
+): HTMLElement {
+  const records = migrateResultRecordsToV2(store.events());
+  const plan = buildPreflopCurriculumPlan(records);
+  const box = el("section", "preflop-curriculum");
+  box.dataset.available = String(plan.available);
+
+  const heading = el("h3", "preflop-curriculum__title");
+  heading.textContent = "Training focus";
+  box.appendChild(heading);
+
+  const summary = el("div", "preflop-curriculum__summary");
+  summary.textContent = plan.focus
+    ? `${plan.focus.label} - ${formatRate(plan.focus.rate)} over ${plan.focus.total} spots`
+    : plan.reason;
+  box.appendChild(summary);
+
+  const goals = el("div", "preflop-curriculum__goals");
+  goals.textContent =
+    `${plan.sessionGoal.targetSpots} spots | ` +
+    `${plan.sessionGoal.targetAccuracy}% target | ` +
+    `${plan.sessionGoal.streakTarget} streak`;
+  box.appendChild(goals);
+
+  const due = el("div", "preflop-curriculum__due");
+  due.textContent = `${plan.repetitionQueue.length} due review spots`;
+  box.appendChild(due);
+
+  if (plan.focus) {
+    const actions = el("div", "preflop-curriculum__actions");
+    const start = document.createElement("button");
+    start.type = "button";
+    start.className = "preflop-curriculum__start";
+    start.textContent = "Train focus";
+    start.disabled = onStartPreflopFocus === undefined;
+    start.addEventListener("click", () => onStartPreflopFocus?.(plan.focus!.filters));
+    actions.appendChild(start);
+    box.appendChild(actions);
+  }
 
   return box;
 }
@@ -921,7 +969,7 @@ function dashboardStyles(): HTMLStyleElement {
   flex-direction:column;gap:16px;max-width:960px;margin:0 auto;}
 .dashboard h3{margin:0 0 10px;font-size:14px;font-weight:950;color:#f8fbff;}
 .dashboard h4{margin:0 0 8px;font-size:12px;font-weight:950;color:#dce7fb;}
-.dashboard-summary,.dashboard-kpi,.dashboard-session,.permission-audit,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{
+.dashboard-summary,.dashboard-kpi,.preflop-curriculum,.dashboard-session,.permission-audit,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{
   background:linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));
   border:1px solid rgba(148,163,184,.16);border-radius:14px;padding:14px 16px;
   box-shadow:0 18px 48px rgba(0,0,0,.23),inset 0 1px 0 rgba(255,255,255,.05);}
@@ -947,6 +995,19 @@ function dashboardStyles(): HTMLStyleElement {
 .dashboard-kpi-chart-row__track{height:9px;border-radius:999px;background:rgba(148,163,184,.14);overflow:hidden;}
 .dashboard-kpi-chart-row__bar{height:100%;border-radius:inherit;background:linear-gradient(90deg,#2bd576,#7bd3ff);}
 .dashboard-kpi-chart-row__rate{font-weight:950;color:#9ff0bd;font-variant-numeric:tabular-nums;}
+.preflop-curriculum{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;
+  background:
+  radial-gradient(circle at 85% 0%,rgba(123,211,255,.12),rgba(123,211,255,0) 34%),
+  linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));}
+.preflop-curriculum__title{grid-column:1/-1;}
+.preflop-curriculum__summary{font-size:14px;font-weight:950;color:#f8fbff;overflow-wrap:anywhere;}
+.preflop-curriculum__goals,.preflop-curriculum__due{font-size:12px;font-weight:800;color:#9fb0cf;}
+.preflop-curriculum__due{grid-column:1/2;}
+.preflop-curriculum__actions{grid-column:2;grid-row:2/5;align-self:center;}
+.preflop-curriculum__start{appearance:none;border:1px solid rgba(43,213,118,.55);border-radius:10px;
+  background:linear-gradient(180deg,#32df83,#20c96f);color:#06120b;font-weight:950;font-size:13px;
+  padding:10px 14px;cursor:pointer;box-shadow:0 12px 26px rgba(43,213,118,.2),inset 0 1px 0 rgba(255,255,255,.28);}
+.preflop-curriculum__start:disabled{opacity:.45;cursor:not-allowed;}
 .dashboard-session{display:flex;flex-direction:column;gap:5px;}
 .dashboard-streak{font-size:15px;font-weight:950;color:#9ff0bd;}
 .dashboard-session-count{font-size:13px;color:#a8b7d5;font-weight:750;}
@@ -997,8 +1058,11 @@ function dashboardStyles(): HTMLStyleElement {
   .postflop-kpi-chart--boardTextureKey{grid-column:auto;}
   .dashboard-kpi__cards{grid-template-columns:1fr 1fr;}
   .dashboard-kpi-chart-row{grid-template-columns:1fr;gap:5px;}
-  .dashboard-summary,.dashboard-kpi,.dashboard-session,.permission-audit,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{
+  .dashboard-summary,.dashboard-kpi,.preflop-curriculum,.dashboard-session,.permission-audit,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{
     border-radius:12px;padding:12px;}
+  .preflop-curriculum{grid-template-columns:1fr;}
+  .preflop-curriculum__actions,.preflop-curriculum__due{grid-column:auto;grid-row:auto;}
+  .preflop-curriculum__start{width:100%;min-height:42px;}
   .permission-audit-row{grid-template-columns:1fr;gap:5px;}
   .stats-transfer__actions{display:grid;grid-template-columns:1fr;}
   .stats-export,.stats-import{width:100%;min-height:42px;}
@@ -1026,6 +1090,7 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
   // Summary (Req 9.3).
   wrapper.appendChild(renderSummary(store.summary()));
   wrapper.appendChild(renderKpiPanel(store, data.postflopRecords ?? []));
+  wrapper.appendChild(renderPreflopCurriculumPanel(store, data.onStartPreflopFocus));
 
   // Streak and current-session count (Req 9.5).
   wrapper.appendChild(renderStreakSession(store.currentStreak(), sessionCount));

@@ -43,6 +43,7 @@ import type {
   Spot,
 } from "./core/types";
 import {
+  DEFAULT_TRAINING_PROFILE,
   isPostflopStreet,
   type TrainingProfile,
 } from "./core/trainingProfile";
@@ -308,11 +309,16 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   // Statistiky (dashboard) a HH import jsou dostupnĂ© nezĂˇvisle na Range_Store.
   let sessionCount = 0;
   let currentPostflopProfile: TrainingProfile | undefined;
+  let startPreflopFocusSession: ((filters: Filters) => void) | null = null;
   const refreshDashboard = (): void => {
     renderDashboard({
       store: statsStore,
       sessionCount,
       postflopRecords: postflopStatsStore.events(),
+      onStartPreflopFocus: (filters) => {
+        shell.selectTab("training");
+        startPreflopFocusSession?.(filters);
+      },
       onPostflopRecordsImported: (records) => {
         const save = postflopStatsStore.replaceAll(records);
         if (!save.ok) {
@@ -376,7 +382,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   }
 
   // --- Krok 4: filtry + trĂ©ninkovĂˇ smyÄŤka (Req 13.4) ---
-  setupTraining(shell, statsStore, {
+  const trainingController = setupTraining(shell, statsStore, {
     onAnswered: () => {
       sessionCount += 1;
     },
@@ -397,6 +403,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       shell.selectTab("postflop");
     },
   });
+  startPreflopFocusSession = trainingController.startPreflopFocusSession;
 
   // --- Service Worker (Req 12.4) ---
   maybeRegisterServiceWorker(shell.notice, options.registerSw);
@@ -528,6 +535,10 @@ interface TrainingHooks {
   ) => void;
 }
 
+interface TrainingController {
+  startPreflopFocusSession: (filters: Filters) => void;
+}
+
 function isProductionPreflopProfile(profile: TrainingProfile, filters: Filters): boolean {
   return mttPreflopProductionReadyForTrainingProfile(profile, filters.ante);
 }
@@ -586,7 +597,7 @@ function setupTraining(
   shell: AppShell,
   statsStore: StatsStore,
   hooks: TrainingHooks,
-): void {
+): TrainingController {
   const panel = shell.trainingPanel;
   panel.innerHTML = "";
 
@@ -698,6 +709,17 @@ function setupTraining(
     filtersBox.hidden = true;
     gameBox.hidden = false;
     showSpot(first.value, filters);
+  }
+
+  function startPreflopFocusSession(filters: Filters): void {
+    const profile: TrainingProfile = {
+      ...DEFAULT_TRAINING_PROFILE,
+      ante: filters.ante,
+      street: "PREFLOP",
+    };
+    filtersView.setProfile(profile);
+    filtersView.setFilters(filters);
+    startSession(filters, null);
   }
 
   /** ZobrazĂ­ spot: vykreslĂ­ stĹŻl a nabĂ­dku akcĂ­, vyÄŤistĂ­ pĹ™edchozĂ­ vĂ˝sledek. */
@@ -864,6 +886,10 @@ function setupTraining(
     }
     showSpot(next.value, filtersView.getFilters());
   }
+
+  return {
+    startPreflopFocusSession,
+  };
 }
 
 // ---------------------------------------------------------------------------

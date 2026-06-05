@@ -1167,13 +1167,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Zadny provider, URL, pack id ani internal rule id ve viditelnem UI
     - Hotovo: unit coverage for source-free explanation text
 
-- [ ] 113. Preflop curriculum and session design
-  - [ ] 113.1 Pridat targeted training podle nejslabsich KPI
+- [x] 113. Preflop curriculum and session design
+  - [x] 113.1 Pridat targeted training podle nejslabsich KPI
     - Hrac muze spustit session pouze pro nejhorsi position/context/bucket
-  - [ ] 113.2 Pridat spaced repetition prioritizaci
+    - Hotovo: dashboard Training focus panel umi spustit targeted preflop session podle nejslabsi KPI dimenze
+  - [x] 113.2 Pridat spaced repetition prioritizaci
     - Casto spatne spoty se maji vracet casteji, ale deterministicky podle seedu
-  - [ ] 113.3 Pridat session goal metriky
+    - Hotovo: `buildPreflopSpacedRepetitionQueue` radi due spoty deterministicky podle seed + chybovost
+  - [x] 113.3 Pridat session goal metriky
     - Napr. 20 spotu, 80% recent accuracy, streak target, leak cleanup
+    - Hotovo: curriculum plan obsahuje target spots, target accuracy, streak target and leak cleanup target
 
 - [ ] 114. Flop SRP production import execution
   - [ ] 114.1 Zpracovat legalni SRP flop production StrategyPack

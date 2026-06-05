@@ -156,8 +156,10 @@ export interface FiltersView {
   clearWarning(): void;
   /** Zpřístupní seed v UI (např. po vygenerování enginem, Req 6.7). */
   setSeed(seed: number): void;
+  setFilters(filters: Filters): void;
   /** Vrátí aktuálně zvolený profil tréninku pro budoucí multi-variant režimy. */
   getProfile(): TrainingProfile;
+  setProfile(profile: TrainingProfile): void;
   /** Odstraní vykreslené DOM a posluchače. */
   destroy(): void;
 }
@@ -518,6 +520,16 @@ export function renderFilters(
     return parseSeed(seedInput.value);
   }
 
+  function setCheckedValues<T>(
+    inputs: Map<T, HTMLInputElement>,
+    values: readonly T[],
+  ): void {
+    const selected = new Set(values);
+    for (const [value, input] of inputs.entries()) {
+      input.checked = selected.has(value);
+    }
+  }
+
   // ----- Start gate (Req 13.4) -----
   function handleStart(): void {
     // Před spuštěním skryjeme předchozí upozornění (uživatel zkouší znovu).
@@ -545,8 +557,19 @@ export function renderFilters(
     setSeed(seed: number): void {
       seedInput.value = String(seed);
     },
+    setFilters(filters: Filters): void {
+      setCheckedValues(positionInputs, filters.positions);
+      setCheckedValues(bucketInputs, filters.buckets);
+      setCheckedValues(contextInputs, filters.contexts);
+      anteInput.checked = filters.ante === "ON";
+      scoringSelect.value = filters.scoringMode;
+      hideWarning();
+    },
     getProfile(): TrainingProfile {
       return profileSelector.getProfile();
+    },
+    setProfile(profile: TrainingProfile): void {
+      profileSelector.setProfile(profile);
     },
     destroy(): void {
       profileSelector.destroy();

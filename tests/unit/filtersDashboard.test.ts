@@ -139,6 +139,28 @@ describe("filters - DOM start gate", () => {
     expect(warning?.textContent).toContain("do not match any spot");
     expect(firstPosition!.checked).toBe(true);
   });
+
+  it("umi programove nastavit targeted filtry", () => {
+    const root = document.createElement("div");
+    const view = renderFilters(root, { onStart: () => undefined });
+
+    view.setFilters({
+      positions: ["BB"],
+      buckets: [15],
+      contexts: ["VS_OPEN"],
+      ante: "OFF",
+      scoringMode: "STRICT",
+    });
+
+    expect(root.querySelector<HTMLInputElement>('.filter-position[data-position="BB"]')?.checked)
+      .toBe(true);
+    expect(root.querySelector<HTMLInputElement>('.filter-bucket[data-bucket="15"]')?.checked)
+      .toBe(true);
+    expect(root.querySelector<HTMLInputElement>('.filter-context[data-context="VS_OPEN"]')?.checked)
+      .toBe(true);
+    expect(root.querySelector<HTMLInputElement>(".filter-ante")?.checked).toBe(false);
+    expect(root.querySelector<HTMLSelectElement>(".filter-scoring")?.value).toBe("STRICT");
+  });
 });
 
 describe("dashboard - DOM statistiky", () => {
@@ -156,10 +178,12 @@ describe("dashboard - DOM statistiky", () => {
     expect(css).toContain(".stats-json-box");
     expect(css).toContain(".dashboard-kpi__cards");
     expect(css).toContain(".dashboard-kpi-chart-row");
+    expect(css).toContain(".preflop-curriculum");
     expect(css).toContain(".preflop-leak-charts");
     expect(css).not.toContain("background:#fff");
     expect(root.textContent ?? "").toContain("Summary");
     expect(root.textContent ?? "").toContain("KPI");
+    expect(root.textContent ?? "").toContain("Training focus");
     expect(root.textContent ?? "").toContain("Current session");
     expect(root.textContent ?? "").toContain("Stats export / import");
     expect(root.textContent ?? "").not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
@@ -176,6 +200,9 @@ describe("dashboard - DOM statistiky", () => {
     expect(root.querySelector<HTMLElement>(".dashboard-kpi-chart-row[data-key='lifetime']")
       ?.dataset.rate).toBe("100");
     expect(root.querySelector<HTMLElement>(".dashboard-leak-chart")?.dataset.count).toBe("0");
+    expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.dataset.available).toBe("false");
+    expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.textContent)
+      .toContain("No leak");
     expect(root.querySelector<HTMLElement>(".dashboard-streak")?.dataset.streak).toBe("1");
     expect(root.querySelector<HTMLElement>(".dashboard-session-count")?.dataset.sessionCount)
       .toBe("1");
@@ -315,7 +342,12 @@ describe("dashboard - DOM statistiky", () => {
     for (const item of leakRecords) expect(store.record(item).ok).toBe(true);
 
     const root = document.createElement("div");
-    renderDashboard({ store, sessionCount: 6 }, root);
+    const focusedFilters: Filters[] = [];
+    renderDashboard({
+      store,
+      sessionCount: 6,
+      onStartPreflopFocus: (filters) => focusedFilters.push(filters),
+    }, root);
 
     expect(root.querySelector<HTMLElement>(".dashboard-kpi")?.dataset.total).toBe("6");
     expect(root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='recentRate']")
@@ -334,6 +366,19 @@ describe("dashboard - DOM statistiky", () => {
     expect(root.querySelector<HTMLElement>(
       '.dashboard-leak-row[data-dim="context"][data-group="RFI"]',
     )).toBeNull();
+    expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.dataset.available).toBe("true");
+    expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.textContent)
+      .toContain("Stack: 15 BB");
+    root.querySelector<HTMLButtonElement>(".preflop-curriculum__start")?.click();
+    expect(focusedFilters).toEqual([
+      {
+        positions: [],
+        buckets: [15],
+        contexts: [],
+        ante: "ON",
+        scoringMode: "LENIENT",
+      },
+    ]);
   });
 
   it("zobrazi postflop breakdown podle street, textury, StrategyPacku a confidence", () => {
