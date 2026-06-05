@@ -271,6 +271,12 @@ function viewStyles(doc: Document): HTMLStyleElement {
   .hh-view .hh-analysis__facts{grid-template-columns:1fr;}
   .hh-view .hh-analysis__matrix{margin-left:-2px;margin-right:-2px;}
 }
+@media (prefers-reduced-motion:reduce){
+  .hh-view *,.hh-view *::before,.hh-view *::after{
+    transition-duration:.01ms!important;animation-duration:.01ms!important;
+    animation-iteration-count:1!important;scroll-behavior:auto!important;}
+  .hh-view .hh-analyze:hover{filter:none;transform:none;}
+}
 `;
   return style;
 }

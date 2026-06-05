@@ -88,6 +88,10 @@ describe("rangeModal - DOM", () => {
     expect(model?.textContent).not.toContain("RangePack");
     expect(model?.textContent).not.toContain("mtt-full-ring");
     expect(document.querySelectorAll(".range-modal__evidence a")).toHaveLength(0);
+    expect(document.querySelector(".range-modal style")?.textContent)
+      .toContain("prefers-reduced-motion");
+    expect(document.querySelector(".range-modal style")?.textContent)
+      .toContain("transform:none");
 
     document.querySelector<HTMLButtonElement>(".range-modal__close")?.click();
     expect(document.querySelector(".range-modal")).toBeNull();

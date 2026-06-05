@@ -1040,6 +1040,13 @@ function styles(doc: Document): HTMLStyleElement {
   .postflop-flopzilla__meta{font-size:10px;}
   .postflop-flopzilla__cell{min-height:25px;font-size:9px;}
 }
+@media (prefers-reduced-motion:reduce){
+  .postflop-view *,.postflop-view *::before,.postflop-view *::after{
+    transition-duration:.01ms!important;animation-duration:.01ms!important;
+    animation-iteration-count:1!important;scroll-behavior:auto!important;}
+  .postflop-action:hover{transform:none;}
+  .postflop-flopzilla__legend-item{transition:none;}
+}
 `;
   return style;
 }

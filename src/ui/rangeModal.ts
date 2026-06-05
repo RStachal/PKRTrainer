@@ -106,6 +106,12 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   .range-modal__matrix .range-matrix-header{gap:8px;}
   .range-modal__matrix .range-matrix-meta{font-size:10px;}
 }
+@media (prefers-reduced-motion:reduce){
+  .range-modal *,.range-modal *::before,.range-modal *::after{
+    transition-duration:.01ms!important;animation-duration:.01ms!important;
+    animation-iteration-count:1!important;scroll-behavior:auto!important;}
+  .range-modal__close:hover,.range-modal-open:hover{transform:none;}
+}
 `;
   overlay.appendChild(style);
 

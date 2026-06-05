@@ -1287,8 +1287,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Focus order musi sledovat skutecny workflow
   - [ ] 127.2 Pridat ARIA labels pro icon/action controls
     - Tlacitka bez popisu musi byt citelna screen readerem
-  - [ ] 127.3 Pridat reduced-motion safe mode
+  - [x] 127.3 Pridat reduced-motion safe mode
     - Animace a hover efekty nesmi byt nutne pro pouziti
+    - Hotovo: app shell, postflop, HH import and range modal maji `prefers-reduced-motion` CSS guard; tests hlidaji jeho pritomnost
 
 - [ ] 128. Mobile and Android WebView release QA
   - [ ] 128.1 Spustit screenshot QA pro 360x800, 390x844, 412x915

@@ -1128,6 +1128,11 @@ body{margin:0;background:
   .training__change-situation,.action-btn,.result__next{width:100%;}
   .training__actions-row{display:grid;grid-template-columns:1fr;}
 }
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;
+    animation-duration:.01ms!important;animation-iteration-count:1!important;}
+  .filter-start:hover{filter:none;transform:none;}
+}
 `;
   return style;
 }

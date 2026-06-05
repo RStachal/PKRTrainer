@@ -112,6 +112,12 @@ describe("mobile / Android WebView smoke", () => {
     const exported = root.querySelector<HTMLTextAreaElement>(".stats-json-box")?.value;
     expect(exported).toContain("postflopRecords");
     expect(exported).not.toContain("https://");
+
+    const cssText = Array.from(document.querySelectorAll("style"))
+      .map((style) => style.textContent ?? "")
+      .join("\n");
+    expect(cssText.match(/prefers-reduced-motion/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+    expect(cssText).toContain("transform:none");
   });
 
   it("projde release mobile viewporty 360x800, 390x844 a 412x915", async () => {
