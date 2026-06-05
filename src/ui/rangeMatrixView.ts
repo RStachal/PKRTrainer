@@ -249,6 +249,7 @@ function renderLegend(
   doc: Document,
   used: Set<ActionCategory>,
   counts: CategoryCounts,
+  matrix: HTMLElement,
 ): HTMLElement {
   // Fold je vždy přítomen (Req 10.5).
   used.add("FOLD");
@@ -259,6 +260,7 @@ function renderLegend(
   legend.style.flexWrap = "wrap";
   legend.style.gap = "8px";
   legend.style.marginTop = "10px";
+  let activeCategory: ActionCategory | null = null;
 
   for (const cat of LEGEND_ORDER) {
     if (!used.has(cat)) continue;
@@ -266,6 +268,10 @@ function renderLegend(
 
     const item = doc.createElement("div");
     item.className = "legend-item";
+    item.setAttribute("role", "button");
+    item.setAttribute("tabindex", "0");
+    item.setAttribute("aria-pressed", "false");
+    item.setAttribute("aria-label", `Show only ${def.label} hands`);
     item.dataset.action = cat;
     item.dataset.count = String(counts[cat] ?? 0);
     item.dataset.share = categoryShare(counts[cat] ?? 0);
@@ -279,6 +285,7 @@ function renderLegend(
     item.style.borderRadius = "999px";
     item.style.background = "rgba(255,255,255,.045)";
     item.style.padding = "5px 7px";
+    item.style.cursor = "pointer";
 
     const swatch = doc.createElement("span");
     swatch.className = "legend-swatch";
@@ -301,10 +308,42 @@ function renderLegend(
     item.appendChild(swatch);
     item.appendChild(text);
     item.appendChild(count);
+    item.addEventListener("click", () => {
+      activeCategory = activeCategory === cat ? null : cat;
+      applyLegendFilter(legend, matrix, activeCategory);
+    });
+    item.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      item.click();
+    });
     legend.appendChild(item);
   }
 
   return legend;
+}
+
+function applyLegendFilter(
+  legend: HTMLElement,
+  matrix: HTMLElement,
+  activeCategory: ActionCategory | null,
+): void {
+  legend.querySelectorAll<HTMLElement>(".legend-item").forEach((item) => {
+    const active = item.dataset.action === activeCategory;
+    item.classList.toggle("legend-item--active", active);
+    item.setAttribute("aria-pressed", active ? "true" : "false");
+    item.style.borderColor = active ? "rgba(43,213,118,.75)" : "rgba(255,255,255,.1)";
+    item.style.background = active ? "rgba(43,213,118,.14)" : "rgba(255,255,255,.045)";
+  });
+
+  matrix.querySelectorAll<HTMLElement>(".matrix-cell").forEach((cell) => {
+    const muted = activeCategory !== null && cell.dataset.action !== activeCategory;
+    cell.classList.toggle("matrix-cell--muted", muted);
+    cell.style.opacity = muted ? ".24" : "";
+    cell.style.filter = cell.classList.contains("matrix-cell--selected")
+      ? "brightness(1.12)"
+      : (muted ? "saturate(.55) contrast(.82)" : "");
+  });
 }
 
 function categoryShare(count: number): string {
@@ -578,7 +617,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     wrap.appendChild(matrix);
 
     // --- Legenda (Req 10.5) ---
-    wrap.appendChild(renderLegend(doc, usedCategories, counts));
+    wrap.appendChild(renderLegend(doc, usedCategories, counts, matrix));
     wrap.appendChild(cellDetail);
 
     root.appendChild(wrap);
