@@ -211,9 +211,14 @@ export function categoryForHand(keys: ActionKey[] | undefined): ActionCategory {
 // ---------------------------------------------------------------------------
 
 /** Vytvoří buňku záhlaví (rohová nebo s hodnotou karty). */
-function makeHeaderCell(doc: Document, text: string): HTMLElement {
+function makeHeaderCell(
+  doc: Document,
+  text: string,
+  axis: "corner" | "column" | "row" = "column",
+): HTMLElement {
   const el = doc.createElement("div");
-  el.className = "matrix-header";
+  el.className = `matrix-header matrix-header--${axis}`;
+  el.dataset.axis = axis;
   el.textContent = text;
   el.style.fontWeight = "700";
   el.style.textAlign = "center";
@@ -223,6 +228,18 @@ function makeHeaderCell(doc: Document, text: string): HTMLElement {
   el.style.display = "flex";
   el.style.alignItems = "center";
   el.style.justifyContent = "center";
+  if (axis === "row" || axis === "corner") {
+    el.style.position = "sticky";
+    el.style.left = "0";
+    el.style.zIndex = axis === "corner" ? "3" : "2";
+    el.style.background = "rgba(11,18,29,.96)";
+  }
+  if (axis === "column" || axis === "corner") {
+    el.style.position = "sticky";
+    el.style.top = "0";
+    el.style.zIndex = axis === "corner" ? "3" : "1";
+    el.style.background = "rgba(11,18,29,.96)";
+  }
   return el;
 }
 
@@ -502,6 +519,8 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     wrap.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,.06),0 18px 40px rgba(0,0,0,.22)";
     wrap.style.padding = "12px";
     wrap.style.color = "#e8ecf7";
+    wrap.style.overflowX = "auto";
+    wrap.style.overscrollBehaviorX = "contain";
 
     const header = doc.createElement("div");
     header.className = "range-matrix-header";
@@ -536,6 +555,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     matrix.className = "matrix";
     matrix.style.display = "grid";
     matrix.style.gridTemplateColumns = `repeat(${GRID_SIZE + 1}, 1fr)`;
+    matrix.style.minWidth = "640px";
     matrix.style.gap = "2px";
     matrix.style.padding = "5px";
     matrix.style.borderRadius = "10px";
@@ -543,10 +563,10 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     matrix.style.border = "1px solid rgba(255,255,255,.08)";
 
     // Rohová buňka záhlaví.
-    matrix.appendChild(makeHeaderCell(doc, ""));
+    matrix.appendChild(makeHeaderCell(doc, "", "corner"));
     // Sloupcová záhlaví (hodnoty karet).
     for (let j = 0; j < GRID_SIZE; j++) {
-      matrix.appendChild(makeHeaderCell(doc, RANKS[j]));
+      matrix.appendChild(makeHeaderCell(doc, RANKS[j], "column"));
     }
 
     const usedCategories = new Set<ActionCategory>();
@@ -555,7 +575,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
 
     for (let i = 0; i < GRID_SIZE; i++) {
       // Řádkové záhlaví.
-      matrix.appendChild(makeHeaderCell(doc, RANKS[i]));
+      matrix.appendChild(makeHeaderCell(doc, RANKS[i], "row"));
 
       for (let j = 0; j < GRID_SIZE; j++) {
         const hand = handLabel(i, j); // Req 10.4: pár/suited/offsuit dle (i,j)

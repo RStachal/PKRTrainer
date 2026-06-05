@@ -198,6 +198,8 @@ describe("postflopView - DOM", () => {
     expect(css).toContain(".postflop-flopzilla__cell--muted");
     expect(css).toContain(".postflop-flopzilla__legend-item--active");
     expect(css).toContain(".postflop-range-summary__lane--active");
+    expect(css).toContain(".postflop-flopzilla__header-cell--row{position:sticky");
+    expect(css).toContain(".postflop-flopzilla__header-cell--corner{top:0;z-index:3;}");
     expect(css).toContain(".postflop-flopzilla__header,.postflop-flopzilla__hint");
     expect(css).toContain(".postflop-range-summary__hero-bucket{align-items:flex-start;flex-direction:column;}");
   });

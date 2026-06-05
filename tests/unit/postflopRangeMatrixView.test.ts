@@ -71,6 +71,12 @@ describe("postflopRangeMatrixView", () => {
       .toBe("grid");
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__matrix")?.getAttribute("aria-label"))
       .toContain("Flopzilla range matrix for board");
+    expect(root.querySelectorAll<HTMLElement>(".postflop-flopzilla__header-cell--row"))
+      .toHaveLength(13);
+    expect(root.querySelector<HTMLElement>(".postflop-flopzilla__header-cell--row")?.dataset.axis)
+      .toBe("row");
+    expect(root.querySelector<HTMLElement>(".postflop-flopzilla__header-cell--corner")?.dataset.axis)
+      .toBe("corner");
     expect(root.querySelectorAll(".postflop-flopzilla__cell")).toHaveLength(169);
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__cell--hero")?.dataset.hand)
       .toBe("AKs");

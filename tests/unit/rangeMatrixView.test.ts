@@ -71,6 +71,17 @@ describe("rangeMatrixView - DOM", () => {
       .toContain("Hero AKs");
     expect(root.querySelector<HTMLElement>(".range-matrix-view")?.style.background)
       .toContain("linear-gradient");
+    expect(root.querySelector<HTMLElement>(".range-matrix-view")?.style.overflowX)
+      .toBe("auto");
+    expect(root.querySelector<HTMLElement>(".matrix")?.style.minWidth).toBe("640px");
+    expect(root.querySelectorAll<HTMLElement>(".matrix-header--row")).toHaveLength(13);
+    expect(root.querySelector<HTMLElement>(".matrix-header--row")?.dataset.axis).toBe("row");
+    expect(root.querySelector<HTMLElement>(".matrix-header--row")?.style.position)
+      .toBe("sticky");
+    expect(root.querySelector<HTMLElement>(".matrix-header--row")?.style.left)
+      .toMatch(/^0(px)?$/);
+    expect(root.querySelector<HTMLElement>(".matrix-header--corner")?.dataset.axis)
+      .toBe("corner");
     expect(root.querySelector<HTMLElement>('.matrix-cell[data-hand="AA"]')?.dataset.action)
       .toBe("3BET");
     expect(root.querySelector(".matrix-legend")).not.toBeNull();

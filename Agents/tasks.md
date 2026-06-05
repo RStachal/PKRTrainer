@@ -1274,15 +1274,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 125.3 Ulozit HH review vysledek oddelene od drill statistiky
     - Review mode nema kontaminovat trening accuracy bez explicitni volby
 
-- [ ] 126. Range matrix and Flopzilla UX v2
+- [x] 126. Range matrix and Flopzilla UX v2
   - [x] 126.1 Pridat combo-level detail po kliknuti na hand cell
     - Cell detail muze ukazat strict/lenient actions and lane explanation
     - Hotovo: preflop matrix cell click/Enter ukazuje strict vs lenient actions; postflop Flopzilla cell ukazuje category, lane and practical plan
   - [x] 126.2 Pridat filters pro action/lane/category
     - Preflop matrix i flop matrix musi umet rychle izolovat relevantni subset
     - Hotovo: preflop legend izoluje action category; postflop Flopzilla ma category legend highlight a range summary lane filters
-  - [ ] 126.3 Otestovat mobile horizontal scroll and sticky labels
+  - [x] 126.3 Otestovat mobile horizontal scroll and sticky labels
     - 13x13 matrix musi zustat pouzitelna na Android WebView
+    - Hotovo: preflop i postflop matrix maji horizontal scroll/sticky row labels; DOM/CSS testy plus mobile smoke kryji 360x800, 390x844 and 412x915
 
 - [x] 127. Accessibility and keyboard QA
   - [x] 127.1 Projit tab order pro training, dashboard, HH import and postflop

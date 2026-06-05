@@ -109,18 +109,18 @@ export function renderPostflopRangeMatrix(
   matrix.setAttribute("role", "grid");
   matrix.setAttribute("aria-label", `Flopzilla range matrix for board ${boardText}`);
   matrix.style.gridTemplateColumns = `repeat(${GRID_SIZE + 1}, minmax(0, 1fr))`;
-  matrix.appendChild(headerCell(doc, ""));
+  matrix.appendChild(headerCell(doc, "", "corner"));
   const detail = detailPanel(doc);
 
   for (let j = 0; j < GRID_SIZE; j += 1) {
-    matrix.appendChild(headerCell(doc, RANKS[j]));
+    matrix.appendChild(headerCell(doc, RANKS[j], "column"));
   }
 
   const used = new Set<FlopzillaCategory>();
   const counts: CategoryCounts = {};
 
   for (let i = 0; i < GRID_SIZE; i += 1) {
-    matrix.appendChild(headerCell(doc, RANKS[i]));
+    matrix.appendChild(headerCell(doc, RANKS[i], "row"));
     for (let j = 0; j < GRID_SIZE; j += 1) {
       const hand = handLabel(i, j);
       const category = classifyFlopHand(hand, spot.board);
@@ -333,9 +333,14 @@ function laneExplanation(lane: FlopzillaLane): string {
   }
 }
 
-function headerCell(doc: Document, text: string): HTMLElement {
+function headerCell(
+  doc: Document,
+  text: string,
+  axis: "corner" | "column" | "row" = "column",
+): HTMLElement {
   const cell = doc.createElement("div");
-  cell.className = "postflop-flopzilla__header-cell";
+  cell.className = `postflop-flopzilla__header-cell postflop-flopzilla__header-cell--${axis}`;
+  cell.dataset.axis = axis;
   cell.textContent = text;
   return cell;
 }

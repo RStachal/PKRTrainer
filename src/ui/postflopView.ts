@@ -991,6 +991,12 @@ function styles(doc: Document): HTMLStyleElement {
   border:1px solid rgba(255,255,255,.08);}
 .postflop-flopzilla__header-cell{min-height:22px;display:flex;align-items:center;
   justify-content:center;color:#aac0e5;font-size:11px;font-weight:950;}
+.postflop-flopzilla__header-cell--corner,
+.postflop-flopzilla__header-cell--row{position:sticky;left:0;z-index:2;
+  background:rgba(11,18,29,.96);box-shadow:2px 0 0 rgba(255,255,255,.06);}
+.postflop-flopzilla__header-cell--column{position:sticky;top:0;z-index:1;
+  background:rgba(11,18,29,.96);}
+.postflop-flopzilla__header-cell--corner{top:0;z-index:3;}
 .postflop-flopzilla__cell{min-height:28px;border-radius:5px;display:flex;align-items:center;
   justify-content:center;color:#fff;font-size:10px;font-weight:950;text-shadow:0 1px 1px rgba(0,0,0,.55);
   border:1px solid rgba(255,255,255,.16);box-sizing:border-box;
