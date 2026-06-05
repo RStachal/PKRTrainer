@@ -1310,8 +1310,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 130.1 Sjednotit release command
     - Jednim prikazem spustit typecheck, tests, verify:ranges and build
     - Hotovo: `npm run release:check` spousti typecheck, tests, verify:ranges and build
-  - [ ] 130.2 Pridat CI gate pro source-free visible UI
+  - [x] 130.2 Pridat CI gate pro source-free visible UI
     - Test ma failnout pri URL/provider/pack id ve viditelnem UI
+    - Hotovo: source-free UI test ma release-gate surface coverage a regex blokaci URL, provideru, pack id and rule id
   - [ ] 130.3 Pridat CI gate pro production readiness
     - Production pack nesmi byt LOW, empty or missing legal metadata
 

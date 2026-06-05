@@ -49,6 +49,13 @@ const FORBIDDEN_SOURCE_TEXT = [
   "NO_RAKE",
 ];
 
+const FORBIDDEN_SOURCE_PATTERNS: RegExp[] = [
+  /\bhttps?:\/\/\S+/i,
+  /\b(?:mtt|sng|cash)-(?:full-ring|six-max|6max)[a-z0-9-]*(?:candidate|heuristic|production|private|v\d)[a-z0-9-]*/i,
+  /\b(?:flop|turn|river)-(?:srp|three-bet|production|public|range)[a-z0-9-]*/i,
+  /\b(?:RangePack|StrategyPack)\b/,
+];
+
 const heroCards: [Card, Card] = [
   { rank: "A", suit: "s" },
   { rank: "K", suit: "s" },
@@ -279,11 +286,36 @@ describe("UI source citation policy", () => {
     expect(text).not.toContain("Private Solver Owner");
     expect(text).not.toContain("Internal Review");
   });
+
+  it("release gate blokuje source/provider/pack id ve vsech hlavnich UI surfacech", () => {
+    const root = document.createElement("div");
+    const store = createStatsStore(new MemoryStorage());
+    expect(store.record(preflopRecord).ok).toBe(true);
+
+    const profileRoot = root.appendChild(document.createElement("section"));
+    const dashboardRoot = root.appendChild(document.createElement("section"));
+    const postflopRoot = root.appendChild(document.createElement("section"));
+    const rangeRoot = root.appendChild(document.createElement("section"));
+
+    const profileView = renderProfileSelector(profileRoot);
+    profileView.setProfile(profileWith(DEFAULT_TRAINING_PROFILE, { tableFormat: "SIX_MAX" }));
+    renderDashboard({ store, sessionCount: 1, postflopRecords: [postflopRecord] }, dashboardRoot);
+    renderPostflopView(postflopRoot, { initialStreet: "FLOP", autoGenerate: true });
+    postflopRoot.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    renderRangeModalButton(spot, loadedStore, rangeRoot);
+    rangeRoot.querySelector<HTMLButtonElement>(".range-modal-open")?.click();
+
+    expectNoSourceCitation(root.textContent ?? "");
+    expectNoSourceCitation(document.querySelector<HTMLElement>(".range-modal")?.textContent ?? "");
+  });
 });
 
 function expectNoSourceCitation(text: string): void {
   for (const forbidden of FORBIDDEN_SOURCE_TEXT) {
     expect(text).not.toContain(forbidden);
+  }
+  for (const forbidden of FORBIDDEN_SOURCE_PATTERNS) {
+    expect(text).not.toMatch(forbidden);
   }
   expect(text.toLowerCase()).not.toContain("zdroj");
 }
