@@ -1306,15 +1306,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 129.3 Optimalizovat large range pack loading
     - Production packy nesmi zhorsit first render bez potreby
 
-- [ ] 130. Release automation and CI gates
+- [x] 130. Release automation and CI gates
   - [x] 130.1 Sjednotit release command
     - Jednim prikazem spustit typecheck, tests, verify:ranges and build
     - Hotovo: `npm run release:check` spousti typecheck, tests, verify:ranges and build
   - [x] 130.2 Pridat CI gate pro source-free visible UI
     - Test ma failnout pri URL/provider/pack id ve viditelnem UI
     - Hotovo: source-free UI test ma release-gate surface coverage a regex blokaci URL, provideru, pack id and rule id
-  - [ ] 130.3 Pridat CI gate pro production readiness
+  - [x] 130.3 Pridat CI gate pro production readiness
     - Production pack nesmi byt LOW, empty or missing legal metadata
+    - Hotovo: readiness test blokuje LOW, empty records, missing source/search metadata, warnings and invalid flop production packs
 
 - [ ] 131. Documentation for users and operators
   - [ ] 131.1 Napsat user-facing quick start bez zdrojovych citaci

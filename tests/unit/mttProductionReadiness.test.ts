@@ -19,6 +19,8 @@ import {
   mttPreflopReadinessRowForProfile,
   mttPreflopReadinessRowForTrainingProfile,
 } from "../../src/data/ranges/mttProductionReadiness";
+import { flopProductionStrategyPacks } from "../../src/data/ranges/flopProductionStrategyResolver";
+import { buildFlopProductionCoverageReport } from "../../src/data/ranges/flopProductionStrategyPack";
 
 const REQUIRED_CONTEXTS: ActionContext[] = [
   "RFI",
@@ -168,5 +170,42 @@ describe("mttProductionReadiness", () => {
       warning.includes("no normalized hand-class records")
     )))).toBe(true);
     expect(report.rows.flatMap((row) => row.warnings).join(" ")).not.toContain("https://");
+  });
+
+  it("release gate nedovoli production pack s LOW confidence, empty records nebo chybejicimi legal metadaty", () => {
+    const mttReport = buildMttPreflopPackImportReadinessReport();
+    const productionRows = mttReport.rows.filter((row) => row.status === "PRODUCTION");
+
+    expect(productionRows.length).toBeGreaterThan(0);
+    for (const row of productionRows) {
+      expect(row.productionReady).toBe(true);
+      expect(row.confidence).not.toBe("LOW");
+      expect(row.recordCount).toBeGreaterThan(0);
+      expect(row.sourceCount).toBeGreaterThanOrEqual(2);
+      expect(row.searchQueryCount).toBeGreaterThanOrEqual(3);
+      expect(row.warnings).toEqual([]);
+    }
+
+    const unsafeRows = mttReport.rows.filter((row) => (
+      row.status !== "PRODUCTION" ||
+      row.confidence === "LOW" ||
+      row.recordCount === 0 ||
+      row.sourceCount < 2 ||
+      row.searchQueryCount < 3 ||
+      row.warnings.length > 0
+    ));
+    expect(unsafeRows.every((row) => !row.productionReady)).toBe(true);
+
+    const invalidFlopProductionPacks = flopProductionStrategyPacks
+      .map((pack) => ({ pack, report: buildFlopProductionCoverageReport(pack) }))
+      .filter(({ pack, report }) => (
+        !report.productionReady ||
+        pack.confidence === "LOW" ||
+        pack.rules.length === 0 ||
+        pack.sourceEvidence.length < 2 ||
+        pack.licenseKind === "PUBLIC_METADATA_ONLY" ||
+        pack.licenseKind === "UNKNOWN"
+      ));
+    expect(invalidFlopProductionPacks).toEqual([]);
   });
 });
