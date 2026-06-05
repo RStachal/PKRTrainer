@@ -14,12 +14,17 @@
  */
 
 import type { RangeFile } from "../schema";
+import { createLazyRangeFile } from "../lazyRangeFile";
 import { buildAnteRangeFile } from "../strategy";
 
 /** Verze datové sady ante-on (pro budoucí migrace dat). */
 export const ANTE_ON_VERSION = "1.0.0";
 
 /** Kompletní `RangeFile` pro hru s ante (ante-on). */
-export const anteOnRanges: RangeFile = buildAnteRangeFile("ON", ANTE_ON_VERSION);
+export const anteOnRanges: RangeFile = createLazyRangeFile(
+  "ON",
+  ANTE_ON_VERSION,
+  () => buildAnteRangeFile("ON", ANTE_ON_VERSION).entries,
+);
 
 export default anteOnRanges;
