@@ -77,4 +77,26 @@ describe("release bundle metadata", () => {
       .toBe("npm run typecheck && npm test && npm run verify:ranges && npm run build");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
+
+  it("release dokumentace obsahuje workflow a user quick start zustava bez citaci", () => {
+    const quickStart = readFileSync("Agents/user-quick-start.md", "utf8");
+    const operatorGuide = readFileSync("Agents/range-import-operator-guide.md", "utf8");
+    const releaseTemplate = readFileSync("Agents/release-notes-template.md", "utf8");
+
+    expect(quickStart).toContain("Training");
+    expect(quickStart).toContain("Statistics");
+    expect(quickStart).toContain("HH Import");
+    expect(quickStart).toContain("Postflop");
+    expect(quickStart).not.toMatch(/\bhttps?:\/\//i);
+    expect(quickStart).not.toMatch(/\b(?:RangePack|StrategyPack)\b/);
+    expect(quickStart).not.toMatch(/\b(?:mtt|sng|cash)-(?:full-ring|six-max|6max)[a-z0-9-]*/i);
+
+    expect(operatorGuide).toContain("npm run validate:range-import");
+    expect(operatorGuide).toContain("npm run verify:ranges");
+    expect(operatorGuide).toContain("npm run release:check");
+    expect(releaseTemplate).toContain("Gameplay changes");
+    expect(releaseTemplate).toContain("Range data changes");
+    expect(releaseTemplate).toContain("Statistics changes");
+    expect(releaseTemplate).toContain("Known limitations");
+  });
 });

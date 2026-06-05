@@ -1317,13 +1317,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Production pack nesmi byt LOW, empty or missing legal metadata
     - Hotovo: readiness test blokuje LOW, empty records, missing source/search metadata, warnings and invalid flop production packs
 
-- [ ] 131. Documentation for users and operators
-  - [ ] 131.1 Napsat user-facing quick start bez zdrojovych citaci
+- [x] 131. Documentation for users and operators
+  - [x] 131.1 Napsat user-facing quick start bez zdrojovych citaci
     - Vysvetlit Training, Statistics, HH Import and postflop flow
-  - [ ] 131.2 Napsat operator guide pro range import
+    - Hotovo: `Agents/user-quick-start.md` popisuje Training, Statistics, HH Import and postflop flow bez URL/provider/pack id citaci
+  - [x] 131.2 Napsat operator guide pro range import
     - Jak pouzit validate:range-import, verify:ranges, audit manifest and promotion checklist
-  - [ ] 131.3 Napsat release notes template
+    - Hotovo: `Agents/range-import-operator-guide.md` popisuje validate, build, verify, release gate and promotion checklist
+  - [x] 131.3 Napsat release notes template
     - Oddelit gameplay changes, range data changes, stats schema and known limitations
+    - Hotovo: `Agents/release-notes-template.md` oddeluje gameplay, range data, stats, gates and limitations
 
 ## Notes
 
