@@ -1278,8 +1278,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 126.1 Pridat combo-level detail po kliknuti na hand cell
     - Cell detail muze ukazat strict/lenient actions and lane explanation
     - Hotovo: preflop matrix cell click/Enter ukazuje strict vs lenient actions; postflop Flopzilla cell ukazuje category, lane and practical plan
-  - [ ] 126.2 Pridat filters pro action/lane/category
+  - [x] 126.2 Pridat filters pro action/lane/category
     - Preflop matrix i flop matrix musi umet rychle izolovat relevantni subset
+    - Hotovo: preflop legend izoluje action category; postflop Flopzilla ma category legend highlight a range summary lane filters
   - [ ] 126.3 Otestovat mobile horizontal scroll and sticky labels
     - 13x13 matrix musi zustat pouzitelna na Android WebView
 

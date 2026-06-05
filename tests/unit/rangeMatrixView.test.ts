@@ -86,6 +86,22 @@ describe("rangeMatrixView - DOM", () => {
     expect([...root.querySelectorAll<HTMLElement>(".legend-count")]
       .some((node) => /\d+\/169 \(\d+%\)/.test(node.textContent ?? ""))).toBe(true);
 
+    const openLegend = root.querySelector<HTMLElement>('.legend-item[data-action="OPEN"]');
+    expect(openLegend?.getAttribute("role")).toBe("button");
+    expect(openLegend?.getAttribute("tabindex")).toBe("0");
+    expect(openLegend?.getAttribute("aria-pressed")).toBe("false");
+    openLegend?.click();
+    expect(openLegend?.classList.contains("legend-item--active")).toBe(true);
+    expect(openLegend?.getAttribute("aria-pressed")).toBe("true");
+    expect([...root.querySelectorAll<HTMLElement>(".matrix-cell")]
+      .some((cell) => cell.dataset.action !== "OPEN" &&
+        cell.classList.contains("matrix-cell--muted"))).toBe(true);
+    openLegend?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(openLegend?.classList.contains("legend-item--active")).toBe(false);
+    expect(openLegend?.getAttribute("aria-pressed")).toBe("false");
+    expect([...root.querySelectorAll<HTMLElement>(".matrix-cell")]
+      .some((cell) => cell.classList.contains("matrix-cell--muted"))).toBe(false);
+
     hero?.click();
     const detail = root.querySelector<HTMLElement>(".matrix-cell-detail");
     expect(detail).not.toBeNull();
