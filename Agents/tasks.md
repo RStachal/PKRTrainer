@@ -1299,8 +1299,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Stats, postflop records and seed replay musi prezit reload
 
 - [ ] 129. Performance and bundle budget
-  - [ ] 129.1 Zavest bundle size budget
+  - [x] 129.1 Zavest bundle size budget
     - Build ma failnout nebo varovat pri necekane velkem narustu JS bundle
+    - Hotovo: `npm run bundle:budget` kontroluje raw/gzip JS asset limit po buildu a je soucasti `npm run release:check`
   - [ ] 129.2 Profilovat render 13x13 matic a postflop table
     - Matrix hover/filter nesmi byt pomaly na mobilu
   - [ ] 129.3 Optimalizovat large range pack loading

@@ -73,8 +73,9 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["verify:ranges"]).toBe("vite-node scripts/verifyRanges.mts");
     expect(pkg.scripts["validate:range-import"]).toBe("vite-node scripts/validateRangeImport.mts");
     expect(pkg.scripts["build:range-module"]).toBe("vite-node scripts/buildRangeModule.mts");
+    expect(pkg.scripts["bundle:budget"]).toBe("vite-node scripts/checkBundleBudget.mts");
     expect(pkg.scripts["release:check"])
-      .toBe("npm run typecheck && npm test && npm run verify:ranges && npm run build");
+      .toBe("npm run typecheck && npm test && npm run verify:ranges && npm run build && npm run bundle:budget");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
 

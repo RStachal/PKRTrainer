@@ -12,7 +12,8 @@
     "verify:ranges": "vite-node scripts/verifyRanges.mts",
     "validate:range-import": "vite-node scripts/validateRangeImport.mts",
     "build:range-module": "vite-node scripts/buildRangeModule.mts",
-    "release:check": "npm run typecheck && npm test && npm run verify:ranges && npm run build",
+    "bundle:budget": "vite-node scripts/checkBundleBudget.mts",
+    "release:check": "npm run typecheck && npm test && npm run verify:ranges && npm run build && npm run bundle:budget",
     "test": "vitest run",
     "test:watch": "vitest"
   },
