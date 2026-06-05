@@ -1237,8 +1237,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
 - [ ] 121. Postflop table and action UX polish v2
   - [ ] 121.1 Pridat vizualni pot geometry pro bet sizing
     - Small/big bet ma byt jasne videt bez textove instruktaze
-  - [ ] 121.2 Zobrazit aktivniho agresora, callera a IP/OOP role na stole
+  - [x] 121.2 Zobrazit aktivniho agresora, callera a IP/OOP role na stole
     - Postflop table musi byt citelny i bez meta radku
+    - Hotovo: seats maji actionRole/positionRole data, aggressor/caller/IP/OOP role chips and visual role outlines
   - [x] 121.3 Pridat keyboard flow pro postflop odpovedi
     - 1/2/3 nebo arrow navigation, focus state and mobile safe behavior
     - Hotovo: postflop action buttons podporuji 1/2/3 selection and arrow-key focus navigation; test drzi result focus po odpovedi

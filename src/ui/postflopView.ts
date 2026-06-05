@@ -392,14 +392,20 @@ function postflopSeat(
   const isHero = position === spot.heroPosition;
   const isVillain = position === spot.villainPosition;
   const active = isHero || isVillain;
+  const actionRole = seatActionRole(spot, position);
+  const positionRole = seatPositionRole(spot, position);
   const seat = doc.createElement("div");
   seat.className = [
     "postflop-seat",
     isHero ? "postflop-seat--hero" : "",
     isVillain ? "postflop-seat--villain" : "",
     active ? "postflop-seat--active" : "postflop-seat--folded",
+    actionRole ? `postflop-seat--${actionRole}` : "",
+    positionRole ? `postflop-seat--${positionRole.toLowerCase()}` : "",
   ].filter(Boolean).join(" ");
   seat.dataset.position = position;
+  seat.dataset.actionRole = actionRole ?? "none";
+  seat.dataset.positionRole = positionRole ?? "none";
 
   const header = doc.createElement("div");
   header.className = "postflop-seat__header";
@@ -426,7 +432,12 @@ function postflopSeat(
 
   const role = doc.createElement("div");
   role.className = "postflop-seat__role";
-  role.textContent = seatRole(spot, position);
+  for (const badge of seatRoleBadges(spot, position)) {
+    const chip = doc.createElement("span");
+    chip.className = `postflop-seat__role-chip postflop-seat__role-chip--${badge.kind}`;
+    chip.textContent = badge.label;
+    role.appendChild(chip);
+  }
   seat.appendChild(role);
 
   const stackWrap = doc.createElement("div");
@@ -464,13 +475,36 @@ function postflopSeat(
   return seat;
 }
 
-function seatRole(spot: PostflopTrainingSpot, position: Position): string {
-  const parts: string[] = [];
-  if (position === spot.aggressorPosition) parts.push("aggressor");
-  if (position === spot.callerPosition) parts.push("caller");
-  if (position === spot.heroPosition) parts.push(spot.inPosition ? "IP" : "OOP");
-  if (position === spot.villainPosition) parts.push(spot.inPosition ? "OOP" : "IP");
-  return parts.join(" / ");
+function seatActionRole(
+  spot: PostflopTrainingSpot,
+  position: Position,
+): "aggressor" | "caller" | null {
+  if (position === spot.aggressorPosition) return "aggressor";
+  if (position === spot.callerPosition) return "caller";
+  return null;
+}
+
+function seatPositionRole(spot: PostflopTrainingSpot, position: Position): "IP" | "OOP" | null {
+  if (position === spot.heroPosition) return spot.inPosition ? "IP" : "OOP";
+  if (position === spot.villainPosition) return spot.inPosition ? "OOP" : "IP";
+  return null;
+}
+
+function seatRoleBadges(
+  spot: PostflopTrainingSpot,
+  position: Position,
+): Array<{ kind: string; label: string }> {
+  const badges: Array<{ kind: string; label: string }> = [];
+  const actionRole = seatActionRole(spot, position);
+  const positionRole = seatPositionRole(spot, position);
+  if (actionRole) {
+    badges.push({
+      kind: actionRole,
+      label: actionRole === "aggressor" ? "Aggressor" : "Caller",
+    });
+  }
+  if (positionRole) badges.push({ kind: positionRole.toLowerCase(), label: positionRole });
+  return badges;
 }
 
 function positionMarker(doc: Document, position: Position): HTMLElement | null {
@@ -920,14 +954,26 @@ function styles(doc: Document): HTMLStyleElement {
 .postflop-seat--hero{border-color:#2bd576;background:linear-gradient(180deg,rgba(31,111,74,.98),rgba(11,55,38,.98));
   box-shadow:0 16px 34px rgba(43,213,118,.16),0 12px 28px rgba(0,0,0,.32);}
 .postflop-seat--villain{border-color:#7bd3ff;background:linear-gradient(180deg,rgba(25,56,82,.98),rgba(12,31,50,.98));}
+.postflop-seat--aggressor{outline:1px solid rgba(255,209,91,.42);outline-offset:2px;}
+.postflop-seat--caller{outline:1px solid rgba(123,211,255,.38);outline-offset:2px;}
 .postflop-seat--folded{opacity:.38;filter:saturate(.45);}
 .postflop-seat__header{display:flex;align-items:center;justify-content:center;gap:5px;}
 .postflop-seat__pos{font-size:13px;font-weight:950;color:#f8fbff;}
 .postflop-seat__badge{display:inline-flex;align-items:center;justify-content:center;
   min-height:17px;margin-top:4px;border-radius:999px;padding:1px 7px;font-size:9px;
   font-weight:950;text-transform:uppercase;color:#081421;background:rgba(255,255,255,.84);}
-.postflop-seat__role{font-size:10px;font-weight:900;color:#b9c6df;margin-top:2px;
-  text-transform:uppercase;letter-spacing:0;}
+.postflop-seat__role{display:flex;justify-content:center;flex-wrap:wrap;gap:4px;margin-top:4px;}
+.postflop-seat__role-chip{display:inline-flex;align-items:center;justify-content:center;
+  min-height:16px;border-radius:999px;padding:1px 6px;font-size:9px;font-weight:950;
+  text-transform:uppercase;letter-spacing:0;border:1px solid rgba(255,255,255,.16);}
+.postflop-seat__role-chip--aggressor{background:rgba(255,209,91,.18);color:#ffe39a;
+  border-color:rgba(255,209,91,.34);}
+.postflop-seat__role-chip--caller{background:rgba(123,211,255,.16);color:#bfe9ff;
+  border-color:rgba(123,211,255,.34);}
+.postflop-seat__role-chip--ip{background:rgba(43,213,118,.16);color:#9ff0bd;
+  border-color:rgba(43,213,118,.34);}
+.postflop-seat__role-chip--oop{background:rgba(155,108,240,.16);color:#d7c7ff;
+  border-color:rgba(155,108,240,.34);}
 .postflop-seat__stack-wrap{display:grid;gap:3px;margin-top:4px;}
 .postflop-seat__stack{font-size:11px;font-weight:900;color:#d8e5f8;}
 .postflop-seat__stack-bar{height:4px;border-radius:999px;background:rgba(255,255,255,.13);overflow:hidden;}

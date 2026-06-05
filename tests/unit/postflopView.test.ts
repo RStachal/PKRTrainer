@@ -50,6 +50,19 @@ describe("postflopView - DOM", () => {
     expect(root.querySelectorAll(".postflop-seat")).toHaveLength(9);
     expect(root.querySelectorAll(".postflop-seat--active")).toHaveLength(2);
     expect(root.querySelectorAll(".postflop-seat__badge")).toHaveLength(2);
+    expect(root.querySelectorAll(".postflop-seat__role-chip")).toHaveLength(4);
+    expect(root.querySelector<HTMLElement>(".postflop-seat--aggressor")?.dataset.actionRole)
+      .toBe("aggressor");
+    expect(root.querySelector<HTMLElement>(".postflop-seat--caller")?.dataset.actionRole)
+      .toBe("caller");
+    expect(root.querySelector<HTMLElement>(".postflop-seat--ip")?.dataset.positionRole)
+      .toBe("IP");
+    expect(root.querySelector<HTMLElement>(".postflop-seat--oop")?.dataset.positionRole)
+      .toBe("OOP");
+    expect(root.querySelector(".postflop-seat__role-chip--aggressor")?.textContent)
+      .toBe("Aggressor");
+    expect(root.querySelector(".postflop-seat__role-chip--caller")?.textContent)
+      .toBe("Caller");
     expect(root.querySelectorAll(".postflop-seat__stack-bar")).toHaveLength(2);
     const heroSeat = root.querySelector<HTMLElement>(".postflop-seat--hero");
     expect(heroSeat?.style.getPropertyValue("--seat-left")).toMatch(/%$/);
@@ -220,6 +233,8 @@ describe("postflopView - DOM", () => {
     expect(css).toContain(".postflop-flopzilla__cell--muted");
     expect(css).toContain(".postflop-flopzilla__legend-item--active");
     expect(css).toContain(".postflop-range-summary__lane--active");
+    expect(css).toContain(".postflop-seat__role-chip--aggressor");
+    expect(css).toContain(".postflop-seat__role-chip--oop");
     expect(css).toContain(".postflop-flopzilla__header-cell--row{position:sticky");
     expect(css).toContain(".postflop-flopzilla__header-cell--corner{top:0;z-index:3;}");
     expect(css).toContain(".postflop-flopzilla__header,.postflop-flopzilla__hint");
@@ -277,6 +292,18 @@ describe("postflopView - DOM", () => {
       ?.classList.contains("postflop-seat--hero")).toBe(true);
     expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="HJ"]')
       ?.classList.contains("postflop-seat--villain")).toBe(true);
+    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="LJ"]')
+      ?.dataset.actionRole).toBe("aggressor");
+    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="LJ"]')
+      ?.dataset.positionRole).toBe("OOP");
+    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="LJ"]')
+      ?.textContent).toContain("Aggressor");
+    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="HJ"]')
+      ?.dataset.actionRole).toBe("caller");
+    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="HJ"]')
+      ?.dataset.positionRole).toBe("IP");
+    expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="HJ"]')
+      ?.textContent).toContain("Caller");
   });
 
   it("respektuje vstupni 3bet pot kontext", () => {
