@@ -60,6 +60,21 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector('[data-tab="postflop"]')).toBeNull();
     expect(Array.from(root.querySelectorAll<HTMLElement>(".app__tab")).map((tab) => tab.textContent))
       .toEqual(["Training", "Statistics", "Import HH"]);
+    expect(root.querySelector<HTMLElement>(".app__tabs")?.getAttribute("role")).toBe("tablist");
+    expect(root.querySelector<HTMLElement>(".app__tabs")?.getAttribute("aria-label"))
+      .toBe("Primary sections");
+    expect(root.querySelector<HTMLButtonElement>('[data-tab="training"]')?.getAttribute("role"))
+      .toBe("tab");
+    expect(root.querySelector<HTMLButtonElement>('[data-tab="training"]')?.getAttribute("aria-controls"))
+      .toBe("app-panel-training");
+    expect(root.querySelector<HTMLButtonElement>('[data-tab="training"]')?.getAttribute("aria-selected"))
+      .toBe("true");
+    expect(root.querySelector<HTMLElement>("#app-panel-training")?.getAttribute("role"))
+      .toBe("tabpanel");
+    expect(root.querySelector<HTMLElement>("#app-panel-training")?.getAttribute("aria-labelledby"))
+      .toBe("app-tab-training");
+    expect(root.querySelector<HTMLElement>("#app-panel-postflop")?.getAttribute("aria-label"))
+      .toBe("Postflop training");
     expect(root.querySelector(".postflop-view")).not.toBeNull();
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(true);
     expect(root.querySelector(".postflop-meta")).toBeNull();

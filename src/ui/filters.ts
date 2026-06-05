@@ -219,6 +219,7 @@ function sectionTitle(doc: Document, text: string): HTMLElement {
 /** Vykreslí dvojici přepínačů „Vše" / „Žádné" pro hromadnou (de)selekci. */
 function makeBulkToggles(
   doc: Document,
+  sectionName: string,
   onAll: () => void,
   onNone: () => void,
 ): HTMLElement {
@@ -230,6 +231,7 @@ function makeBulkToggles(
   all.type = "button";
   all.className = "filter-bulk-all";
   all.textContent = "All";
+  all.setAttribute("aria-label", `Select all ${sectionName}`);
   all.style.marginRight = "4px";
   all.addEventListener("click", onAll);
 
@@ -237,6 +239,7 @@ function makeBulkToggles(
   none.type = "button";
   none.className = "filter-bulk-none";
   none.textContent = "None";
+  none.setAttribute("aria-label", `Clear ${sectionName}`);
   none.addEventListener("click", onNone);
 
   wrap.appendChild(all);
@@ -305,6 +308,7 @@ export function renderFilters(
   posTitleRow.appendChild(
     makeBulkToggles(
       doc,
+      "positions",
       () => {
         for (const inp of positionInputs.values()) inp.checked = true;
         hideWarning();
@@ -336,6 +340,7 @@ export function renderFilters(
   bucketTitleRow.appendChild(
     makeBulkToggles(
       doc,
+      "stack depths",
       () => {
         for (const inp of bucketInputs.values()) inp.checked = true;
         hideWarning();
@@ -367,6 +372,7 @@ export function renderFilters(
   ctxTitleRow.appendChild(
     makeBulkToggles(
       doc,
+      "action contexts",
       () => {
         for (const inp of contextInputs.values()) inp.checked = true;
         hideWarning();

@@ -1285,8 +1285,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
 - [ ] 127. Accessibility and keyboard QA
   - [ ] 127.1 Projit tab order pro training, dashboard, HH import and postflop
     - Focus order musi sledovat skutecny workflow
-  - [ ] 127.2 Pridat ARIA labels pro icon/action controls
+  - [x] 127.2 Pridat ARIA labels pro icon/action controls
     - Tlacitka bez popisu musi byt citelna screen readerem
+    - Hotovo: app shell ma tablist/tab/tabpanel semantiku; opakovane All/None filter controls maji kontextove accessible names
   - [x] 127.3 Pridat reduced-motion safe mode
     - Animace a hover efekty nesmi byt nutne pro pouziti
     - Hotovo: app shell, postflop, HH import and range modal maji `prefers-reduced-motion` CSS guard; tests hlidaji jeho pritomnost

@@ -445,6 +445,8 @@ function buildAppShell(root: HTMLElement): AppShell {
 
   // Navigace zĂˇloĹľek.
   const nav = el("nav", "app__tabs");
+  nav.setAttribute("aria-label", "Primary sections");
+  nav.setAttribute("role", "tablist");
   const trainingPanel = el("section", "app__panel app__panel--training");
   const statsPanel = el("section", "app__panel app__panel--stats");
   const hhPanel = el("section", "app__panel app__panel--hh");
@@ -464,11 +466,24 @@ function buildAppShell(root: HTMLElement): AppShell {
     { id: "hh", label: "Import HH" },
   ];
 
+  for (const tabId of allTabIds) {
+    const panel = panels[tabId];
+    panel.id = `app-panel-${tabId}`;
+    panel.setAttribute("role", "tabpanel");
+    panel.setAttribute("tabindex", "-1");
+    if (tabId === "postflop") {
+      panel.setAttribute("aria-label", "Postflop training");
+    } else {
+      panel.setAttribute("aria-labelledby", `app-tab-${tabId}`);
+    }
+  }
+
   const tabButtons = new Map<TabId, HTMLButtonElement>();
   const selectTab = (id: TabId): void => {
     for (const tabId of allTabIds) {
       const isActive = tabId === id;
       panels[tabId].hidden = !isActive;
+      panels[tabId].setAttribute("aria-hidden", String(!isActive));
       const btn = tabButtons.get(tabId);
       if (btn) {
         btn.classList.toggle("app__tab--active", isActive);
@@ -480,8 +495,11 @@ function buildAppShell(root: HTMLElement): AppShell {
   for (const def of tabDefs) {
     const btn = document.createElement("button");
     btn.type = "button";
+    btn.id = `app-tab-${def.id}`;
     btn.className = "app__tab";
     btn.dataset.tab = def.id;
+    btn.setAttribute("role", "tab");
+    btn.setAttribute("aria-controls", `app-panel-${def.id}`);
     btn.textContent = def.label;
     btn.addEventListener("click", () => selectTab(def.id));
     tabButtons.set(def.id, btn);
