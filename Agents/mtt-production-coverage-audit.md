@@ -40,10 +40,18 @@ Updated: 2026-06-04
 ## Verification hooks
 
 - `tests/unit/mttProductionReadiness.test.ts`
+- `tests/unit/mttPreflopRangePackImport.test.ts`
 - `tests/unit/mttPreflopRangeAudit.test.ts`
 - `tests/unit/profileSelector.test.ts`
 - `tests/unit/bootstrapIntegration.test.ts`
 - `tests/unit/uiNoSourceCitation.test.ts`
+
+## Import intake now prepared
+
+- Generic MTT preflop production import validator supports FULL_RING_9 and SIX_MAX.
+- The same intake covers REGULAR and TURBO blind speeds, ante ON/OFF, legal license kind, source evidence, stack mapping, positions, action contexts, stack buckets and 169 hand-class completeness.
+- It does not bundle or infer any chart values. Production promotion still requires legally usable records.
+- Required legal input fields are tracked in `Agents/production-range-intake-manifest.md`.
 
 ## Open data blockers
 

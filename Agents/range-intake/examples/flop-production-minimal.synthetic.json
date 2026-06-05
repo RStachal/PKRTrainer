@@ -1,0 +1,80 @@
+{
+  "id": "example-flop-production-synthetic-v1",
+  "version": "synthetic-example-v1",
+  "createdAt": "2026-06-05",
+  "verifiedAt": "2026-06-05",
+  "confidence": "MEDIUM",
+  "licenseKind": "OWNED_SOLVER_EXPORT",
+  "licenseNote": "Synthetic shape example only; no third-party chart values copied.",
+  "dimensions": {
+    "gameVariant": "MTT",
+    "tableFormat": "FULL_RING_9",
+    "street": "FLOP",
+    "evModel": "CHIP_EV"
+  },
+  "sourceEvidence": [
+    {
+      "url": "https://example.test/synthetic-flop-owned-export",
+      "verifiedAt": "2026-06-05",
+      "operator": "PKRTrainer synthetic fixture",
+      "gameVariant": "MTT",
+      "tableFormat": "FULL_RING_9",
+      "street": "FLOP",
+      "evModel": "CHIP_EV",
+      "methodology": "Synthetic shape example only.",
+      "licenseNote": "Synthetic fixture; no real solver values."
+    },
+    {
+      "url": "https://example.test/synthetic-flop-review",
+      "verifiedAt": "2026-06-05",
+      "operator": "PKRTrainer synthetic review",
+      "gameVariant": "MTT",
+      "tableFormat": "FULL_RING_9",
+      "street": "FLOP",
+      "evModel": "CHIP_EV",
+      "methodology": "Synthetic independent review example.",
+      "licenseNote": "Synthetic fixture review."
+    }
+  ],
+  "assumptions": [
+    "MTT FULL_RING_9 flop chipEV synthetic example.",
+    "Single rule shows schema shape only and is not production coverage."
+  ],
+  "rules": [
+    {
+      "id": "synthetic-srp-btn-vs-bb-dry",
+      "actionNode": "SINGLE_RAISED_POT_CBET",
+      "potType": "SINGLE_RAISED",
+      "positionPattern": "BTN_VS_BB",
+      "boardTextures": ["dry", "rainbow"],
+      "sprMin": 2,
+      "sprMax": 12,
+      "actions": ["CHECK", "BET_SMALL", "BET_BIG"],
+      "recommendedAction": "BET_SMALL",
+      "rangeBuckets": [
+        {
+          "lane": "VALUE",
+          "label": "top pair+",
+          "action": "BET_SMALL",
+          "handClasses": ["AA", "AKs"],
+          "features": ["top pair+", "overpair"]
+        },
+        {
+          "lane": "BLUFF",
+          "label": "backdoor equity",
+          "action": "BET_SMALL",
+          "handClasses": ["QJs", "JTs"],
+          "features": ["backdoor draw", "overcards"]
+        },
+        {
+          "lane": "CHECK",
+          "label": "weak showdown",
+          "action": "CHECK",
+          "handClasses": ["72o", "83o"],
+          "features": ["air", "weak showdown"]
+        }
+      ],
+      "explanation": "Synthetic example rule with explicit value, bluff and check lanes."
+    }
+  ]
+}

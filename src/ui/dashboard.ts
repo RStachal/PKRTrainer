@@ -54,6 +54,7 @@ import {
   type PostflopStatsGroup,
   type PostflopStatsV2BridgeRecord,
 } from "../persistence/postflopResultRecord";
+import type { ProductionPermissionManifestReport } from "../data/ranges/productionPermissionManifest";
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -67,6 +68,7 @@ export interface DashboardData {
   */
   sessionCount: number;
   postflopRecords?: readonly PostflopStatsV2BridgeRecord[];
+  permissionReports?: readonly ProductionPermissionManifestReport[];
   onPostflopRecordsImported?: (records: readonly PostflopStatsV2BridgeRecord[]) => boolean | void;
 }
 
@@ -82,6 +84,13 @@ const RATE_UNAVAILABLE = "\u2014";
 export function formatRate(rate: number | null): string {
   if (rate === null || !Number.isFinite(rate)) return RATE_UNAVAILABLE;
   return `${rate.toFixed(1)} %`;
+}
+
+export function formatDurationMs(ms: number | null): string {
+  if (ms === null || !Number.isFinite(ms) || ms < 0) return RATE_UNAVAILABLE;
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  const seconds = ms / 1000;
+  return `${seconds < 10 ? seconds.toFixed(1) : Math.round(seconds).toFixed(0)} s`;
 }
 
 function normalizeCount(n: number): number {
@@ -365,12 +374,18 @@ function renderSummary(summary: Summary): HTMLElement {
   return box;
 }
 
-function renderKpiPanel(store: StatsStore): HTMLElement {
-  const model = buildStatsV2KpiModel(migrateResultRecordsToV2(store.events()));
+function renderKpiPanel(
+  store: StatsStore,
+  postflopRecords: readonly PostflopStatsV2BridgeRecord[] = [],
+): HTMLElement {
+  const preflopRecords = migrateResultRecordsToV2(store.events());
+  const model = buildStatsV2KpiModel(preflopRecords);
+  const avgDecisionMs = averageDecisionMs(preflopRecords, postflopRecords);
   const box = el("section", "dashboard-kpi");
   box.dataset.total = String(model.total);
   box.dataset.recentWindowSize = String(model.recentWindowSize);
   box.dataset.minLeakSample = String(model.minLeakSample);
+  if (avgDecisionMs !== null) box.dataset.avgResponseMs = String(avgDecisionMs);
 
   const heading = el("h3", "dashboard-kpi__title");
   heading.textContent = "KPI";
@@ -385,12 +400,113 @@ function renderKpiPanel(store: StatsStore): HTMLElement {
   ));
   cards.appendChild(kpiCard("Best streak", "bestStreak", String(model.bestStreak)));
   cards.appendChild(kpiCard("Leak focus", "leakFocus", leakFocusText(model)));
+  if (avgDecisionMs !== null) {
+    cards.appendChild(kpiCard("Avg decision", "avgResponseMs", formatDurationMs(avgDecisionMs)));
+  }
   box.appendChild(cards);
 
   box.appendChild(renderKpiChart(model));
   box.appendChild(renderLeakChart(model.leakCandidates));
 
   return box;
+}
+
+function renderPermissionAuditPanel(
+  reports: readonly ProductionPermissionManifestReport[],
+): HTMLElement {
+  const box = el("section", "permission-audit");
+  box.dataset.count = String(reports.length);
+  box.dataset.ready = String(reports.filter((report) => report.valid).length);
+
+  const heading = el("h3", "permission-audit__title");
+  heading.textContent = "Range audit";
+  box.appendChild(heading);
+
+  if (reports.length === 0) {
+    const empty = el("div", "permission-audit__empty");
+    empty.textContent = "No audit reports loaded.";
+    box.appendChild(empty);
+    return box;
+  }
+
+  const rows = el("div", "permission-audit__rows");
+  reports.forEach((report, index) => {
+    rows.appendChild(renderPermissionAuditRow(report, index));
+  });
+  box.appendChild(rows);
+  return box;
+}
+
+function renderPermissionAuditRow(
+  report: ProductionPermissionManifestReport,
+  index: number,
+): HTMLElement {
+  const row = el("div", "permission-audit-row");
+  row.dataset.ready = report.valid ? "true" : "false";
+
+  const title = el("div", "permission-audit-row__title");
+  title.textContent = `Audit ${index + 1}`;
+  row.appendChild(title);
+
+  const status = el("div", "permission-audit-row__status");
+  status.textContent = report.valid ? "Ready" : `Blocked (${report.errors.length})`;
+  row.appendChild(status);
+
+  const license = el("div", "permission-audit-row__license");
+  license.textContent = permissionLicenseLabel(report.licenseKind);
+  row.appendChild(license);
+
+  const scope = el("div", "permission-audit-row__scope");
+  scope.textContent = permissionScopeLabel(report.allowedRedistributionScope);
+  row.appendChild(scope);
+
+  const evidence = el("div", "permission-audit-row__evidence");
+  evidence.textContent = `${report.evidenceCount} evidence`;
+  row.appendChild(evidence);
+
+  return row;
+}
+
+function permissionLicenseLabel(kind: string): string {
+  switch (kind) {
+    case "OWNED_SOLVER_EXPORT":
+      return "Owned solver export";
+    case "PUBLIC_CHART_WITH_PERMISSION":
+      return "Public chart with permission";
+    case "EXPLICIT_WRITTEN_PERMISSION":
+      return "Written permission";
+    default:
+      return "Permission missing";
+  }
+}
+
+function permissionScopeLabel(scope: string): string {
+  switch (scope) {
+    case "PKRTRAINER_RUNTIME_BUNDLE":
+      return "Runtime bundle allowed";
+    case "PKRTRAINER_INTERNAL_REVIEW_ONLY":
+      return "Review only";
+    case "NO_REDISTRIBUTION":
+      return "No redistribution";
+    default:
+      return "Scope missing";
+  }
+}
+
+function averageDecisionMs(
+  preflopRecords: readonly { responseMs?: number }[],
+  postflopRecords: readonly { responseMs?: number }[],
+): number | null {
+  let count = 0;
+  let total = 0;
+  for (const record of [...preflopRecords, ...postflopRecords]) {
+    if (typeof record.responseMs !== "number" || !Number.isFinite(record.responseMs)) continue;
+    if (record.responseMs < 0) continue;
+    count += 1;
+    total += record.responseMs;
+  }
+  if (count === 0) return null;
+  return Math.round(total / count);
 }
 
 function kpiCard(labelText: string, key: string, valueText: string): HTMLElement {
@@ -750,6 +866,50 @@ function renderPostflopBreakdowns(
   return box;
 }
 
+function renderPostflopKpiCharts(
+  records: readonly PostflopStatsV2BridgeRecord[],
+): HTMLElement {
+  const box = el("section", "postflop-kpi-charts");
+  box.dataset.total = String(records.length);
+  const heading = el("h3", "postflop-kpi-charts__title");
+  heading.textContent = "Postflop KPI charts";
+  box.appendChild(heading);
+
+  for (const dim of ["street", "actionNode", "boardTextureKey", "confidence"] as const) {
+    box.appendChild(renderPostflopKpiChart(dim, breakdownPostflopStats(records, dim)));
+  }
+
+  return box;
+}
+
+function renderPostflopKpiChart(
+  dim: PostflopStatsBreakdownDim,
+  groups: PostflopStatsGroup[],
+): HTMLElement {
+  const chart = el("div", `postflop-kpi-chart postflop-kpi-chart--${dim}`);
+  chart.dataset.dim = dim;
+  const heading = el("h4", "postflop-kpi-chart__title");
+  heading.textContent = POSTFLOP_DIM_TITLE[dim];
+  chart.appendChild(heading);
+
+  const rows = el("div", "postflop-kpi-chart__rows");
+  if (groups.length === 0) {
+    const empty = el("div", "postflop-kpi-chart__empty");
+    empty.textContent = "No postflop answers yet.";
+    rows.appendChild(empty);
+  } else {
+    for (const group of groups) {
+      const row = rateBar(groupLabel(dim, group.key), group.key, group.rate, group.total);
+      row.classList.add("postflop-kpi-chart-row");
+      row.dataset.dim = dim;
+      row.dataset.group = group.key;
+      rows.appendChild(row);
+    }
+  }
+  chart.appendChild(rows);
+  return chart;
+}
+
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
@@ -761,7 +921,7 @@ function dashboardStyles(): HTMLStyleElement {
   flex-direction:column;gap:16px;max-width:960px;margin:0 auto;}
 .dashboard h3{margin:0 0 10px;font-size:14px;font-weight:950;color:#f8fbff;}
 .dashboard h4{margin:0 0 8px;font-size:12px;font-weight:950;color:#dce7fb;}
-.dashboard-summary,.dashboard-kpi,.dashboard-session,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts{
+.dashboard-summary,.dashboard-kpi,.dashboard-session,.permission-audit,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{
   background:linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));
   border:1px solid rgba(148,163,184,.16);border-radius:14px;padding:14px 16px;
   box-shadow:0 18px 48px rgba(0,0,0,.23),inset 0 1px 0 rgba(255,255,255,.05);}
@@ -790,12 +950,25 @@ function dashboardStyles(): HTMLStyleElement {
 .dashboard-session{display:flex;flex-direction:column;gap:5px;}
 .dashboard-streak{font-size:15px;font-weight:950;color:#9ff0bd;}
 .dashboard-session-count{font-size:13px;color:#a8b7d5;font-weight:750;}
-.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.profile-breakdowns__title,.postflop-breakdowns__title,.preflop-leak-charts__title{grid-column:1/-1;}
+.permission-audit{display:grid;gap:10px;}
+.permission-audit__rows{display:grid;gap:8px;}
+.permission-audit__empty{font-size:12px;color:#9fb0cf;}
+.permission-audit-row{display:grid;grid-template-columns:minmax(72px,1fr) auto auto auto auto;
+  gap:8px;align-items:center;border:1px solid rgba(148,163,184,.14);border-radius:10px;
+  padding:9px;background:rgba(255,255,255,.035);font-size:12px;color:#dce7fb;}
+.permission-audit-row__title{font-weight:950;color:#f8fbff;}
+.permission-audit-row__status{font-weight:950;color:#9ff0bd;}
+.permission-audit-row[data-ready="false"] .permission-audit-row__status{color:#ffb4b4;}
+.permission-audit-row__license,.permission-audit-row__scope,.permission-audit-row__evidence{
+  color:#9fb0cf;font-weight:800;overflow-wrap:anywhere;}
+.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.profile-breakdowns__title,.postflop-breakdowns__title,.preflop-leak-charts__title,.postflop-kpi-charts__title{grid-column:1/-1;}
 .preflop-leak-chart--bucket{grid-column:1/-1;}
-.profile-breakdown,.postflop-breakdown,.preflop-leak-chart{background:rgba(255,255,255,.04);
+.postflop-kpi-chart--boardTextureKey{grid-column:1/-1;}
+.profile-breakdown,.postflop-breakdown,.preflop-leak-chart,.postflop-kpi-chart{background:rgba(255,255,255,.04);
   border:1px solid rgba(148,163,184,.13);border-radius:10px;padding:9px;min-width:0;}
-.preflop-leak-chart__rows{display:grid;gap:6px;}
+.preflop-leak-chart__rows,.postflop-kpi-chart__rows{display:grid;gap:6px;}
+.postflop-kpi-chart__empty{font-size:12px;color:#9fb0cf;}
 .breakdown__rows,.profile-breakdown__rows,.postflop-breakdown__rows{display:flex;flex-direction:column;gap:2px;}
 .breakdown-row,.profile-breakdown-row,.postflop-breakdown-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;
   align-items:center;padding:5px 7px;border-radius:8px;font-size:13px;}
@@ -819,12 +992,14 @@ function dashboardStyles(): HTMLStyleElement {
 .stats-transfer__status--error{color:#ffb4b4;}
 @media (max-width:640px){
   .dashboard{max-width:100%;}
-  .profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts{grid-template-columns:1fr;}
+  .profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{grid-template-columns:1fr;}
   .preflop-leak-chart--bucket{grid-column:auto;}
+  .postflop-kpi-chart--boardTextureKey{grid-column:auto;}
   .dashboard-kpi__cards{grid-template-columns:1fr 1fr;}
   .dashboard-kpi-chart-row{grid-template-columns:1fr;gap:5px;}
-  .dashboard-summary,.dashboard-kpi,.dashboard-session,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts{
+  .dashboard-summary,.dashboard-kpi,.dashboard-session,.permission-audit,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{
     border-radius:12px;padding:12px;}
+  .permission-audit-row{grid-template-columns:1fr;gap:5px;}
   .stats-transfer__actions{display:grid;grid-template-columns:1fr;}
   .stats-export,.stats-import{width:100%;min-height:42px;}
 }
@@ -850,10 +1025,14 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
 
   // Summary (Req 9.3).
   wrapper.appendChild(renderSummary(store.summary()));
-  wrapper.appendChild(renderKpiPanel(store));
+  wrapper.appendChild(renderKpiPanel(store, data.postflopRecords ?? []));
 
   // Streak and current-session count (Req 9.5).
   wrapper.appendChild(renderStreakSession(store.currentStreak(), sessionCount));
+
+  if (data.permissionReports !== undefined) {
+    wrapper.appendChild(renderPermissionAuditPanel(data.permissionReports));
+  }
 
   // Stats JSON export/import.
   wrapper.appendChild(renderStatsTransfer(data, root));
@@ -862,6 +1041,7 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
   wrapper.appendChild(renderProfileBreakdowns(store));
   wrapper.appendChild(renderPostflopBreakdowns(data.postflopRecords ?? []));
   wrapper.appendChild(renderPreflopLeakCharts(store));
+  wrapper.appendChild(renderPostflopKpiCharts(data.postflopRecords ?? []));
 
   // Legacy breakdown dimensions.
   const dims: BreakdownDim[] = ["context", "position", "bucket"];

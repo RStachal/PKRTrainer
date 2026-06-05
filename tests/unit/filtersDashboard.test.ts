@@ -171,6 +171,8 @@ describe("dashboard - DOM statistiky", () => {
       ?.textContent).toContain("100.0 %");
     expect(root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='bestStreak']")
       ?.textContent).toContain("1");
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='avgResponseMs']"))
+      .toBeNull();
     expect(root.querySelector<HTMLElement>(".dashboard-kpi-chart-row[data-key='lifetime']")
       ?.dataset.rate).toBe("100");
     expect(root.querySelector<HTMLElement>(".dashboard-leak-chart")?.dataset.count).toBe("0");
@@ -196,6 +198,7 @@ describe("dashboard - DOM statistiky", () => {
       )?.dataset.total,
     ).toBe("1");
     expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("0");
+    expect(root.querySelector<HTMLElement>(".postflop-kpi-charts")?.dataset.total).toBe("0");
     expect(
       root.querySelector<HTMLElement>(
         '.profile-breakdown--gameVariant .profile-breakdown-row[data-group="MTT"]',
@@ -279,6 +282,25 @@ describe("dashboard - DOM statistiky", () => {
     expect(emptyPosition?.querySelector(".rate--unavailable")?.textContent).toBe("—");
   });
 
+  it("zobrazi decision-time KPI az po nasbirani preflop nebo postflop casu", () => {
+    const storage = new MemoryStorage();
+    const store = createStatsStore(storage);
+    expect(store.record({ ...record, responseMs: 1000 }).ok).toBe(true);
+
+    const root = document.createElement("div");
+    renderDashboard({
+      store,
+      sessionCount: 2,
+      postflopRecords: [{ ...postflopRecord, responseMs: 2000 }],
+    }, root);
+
+    const kpi = root.querySelector<HTMLElement>(".dashboard-kpi");
+    const card = root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='avgResponseMs']");
+    expect(kpi?.dataset.avgResponseMs).toBe("1500");
+    expect(card?.textContent).toContain("Avg decision");
+    expect(card?.textContent).toContain("1.5 s");
+  });
+
   it("zobrazi KPI leak graf jen pro skupiny s dostatecnym samplem", () => {
     const storage = new MemoryStorage();
     const store = createStatsStore(storage);
@@ -322,6 +344,7 @@ describe("dashboard - DOM statistiky", () => {
     renderDashboard({ store, sessionCount: 1, postflopRecords: [postflopRecord] }, root);
 
     expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("1");
+    expect(root.querySelector<HTMLElement>(".postflop-kpi-charts")?.dataset.total).toBe("1");
     expect(
       root.querySelector<HTMLElement>(
         '.postflop-breakdown--street .postflop-breakdown-row[data-group="FLOP"]',
@@ -361,6 +384,26 @@ describe("dashboard - DOM statistiky", () => {
       .toContain("Flop c-bet in SRP");
     expect(root.querySelector<HTMLElement>(".postflop-breakdown--actionNode")?.textContent)
       .not.toContain("SINGLE_RAISED_POT_CBET");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-kpi-chart--street .postflop-kpi-chart-row[data-group="FLOP"]',
+      )?.dataset.rate,
+    ).toBe("100");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-kpi-chart--actionNode .postflop-kpi-chart-row[data-group="SINGLE_RAISED_POT_CBET"] .dashboard-kpi-chart-row__label',
+      )?.textContent,
+    ).toBe("Flop c-bet in SRP");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-kpi-chart--boardTextureKey .postflop-kpi-chart-row[data-group="dry|ace-high|disconnected"] .dashboard-kpi-chart-row__label',
+      )?.textContent,
+    ).toBe("dry, A-high, disconnected");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-kpi-chart--confidence .postflop-kpi-chart-row[data-group="LOW"] .dashboard-kpi-chart-row__label',
+      )?.textContent,
+    ).toBe("low");
   });
 
   it("exportuje a importuje postflop breakdown pres JSON transfer", () => {

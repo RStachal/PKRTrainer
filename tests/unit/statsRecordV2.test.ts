@@ -73,6 +73,22 @@ describe("statsRecordV2", () => {
     expect(migrated[1].rangePackId).toContain("ante-on");
   });
 
+  it("zachova volitelny decision time a stare zaznamy bez casu zustanou validni", () => {
+    const timedRecord: ResultRecord = {
+      ...anteOffRecord,
+      responseMs: 1450,
+    };
+
+    const timed = upgradeResultRecordToV2(timedRecord);
+    const legacy = upgradeResultRecordToV2(anteOnRecord);
+
+    expect(timed.responseMs).toBe(1450);
+    expect(legacy.responseMs).toBeUndefined();
+    expect(isResultRecordV2(timed)).toBe(true);
+    expect(isResultRecordV2(legacy)).toBe(true);
+    expect(isResultRecordV2({ ...timed, responseMs: -1 })).toBe(false);
+  });
+
   it("umi priradit SNG chipEV candidate RangePack podle profilu", () => {
     const upgraded = upgradeResultRecordToV2(anteOffRecord, {
       profile: profileWith(DEFAULT_TRAINING_PROFILE, {

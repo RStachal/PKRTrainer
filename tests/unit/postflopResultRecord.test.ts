@@ -11,6 +11,7 @@ import {
   breakdownPostflopStats,
   buildPostflopResultRecord,
   isPostflopResultRecord,
+  isPostflopStatsV2BridgeRecord,
 } from "../../src/persistence/postflopResultRecord";
 
 describe("postflopResultRecord", () => {
@@ -102,6 +103,23 @@ describe("postflopResultRecord", () => {
     });
     expect(bridge.boardTextureKey).toBe(record.boardTextures.join("|"));
     expect(bridge.strategyRuleId).toBe(record.sourceRuleId);
+  });
+
+  it("zachova volitelny decision time v postflop recordu i bridge zaznamu", () => {
+    const spot = postflopSpotToTrainingSpot(generatePostflopSpot({
+      seed: 12,
+      street: "FLOP",
+    }));
+
+    const record = buildPostflopResultRecord(spot, spot.recommendedAction, 111, 987);
+    const bridge = bridgePostflopResultRecordToStatsV2(record);
+
+    expect(record.responseMs).toBe(987);
+    expect(bridge.responseMs).toBe(987);
+    expect(isPostflopResultRecord(record)).toBe(true);
+    expect(isPostflopStatsV2BridgeRecord(bridge)).toBe(true);
+    expect(isPostflopResultRecord({ ...record, responseMs: -10 })).toBe(false);
+    expect(isPostflopStatsV2BridgeRecord({ ...bridge, responseMs: -10 })).toBe(false);
   });
 
   it("validuje a bridguje 3bet pot record", () => {

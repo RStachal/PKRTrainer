@@ -62,6 +62,7 @@ describe("release bundle metadata", () => {
     };
     const pkg = JSON.parse(readFileSync("package.json", "utf8")) as {
       description: string;
+      scripts: Record<string, string>;
     };
 
     expect(html).toContain('<html lang="en">');
@@ -69,6 +70,8 @@ describe("release bundle metadata", () => {
     expect(manifest.lang).toBe("en");
     expect(manifest.description).toBe("Offline full-ring 9-handed poker decision trainer.");
     expect(pkg.description).toContain("offline full-ring 9-handed poker decision trainer");
+    expect(pkg.scripts["verify:ranges"]).toBe("vite-node scripts/verifyRanges.mts");
+    expect(pkg.scripts["validate:range-import"]).toBe("vite-node scripts/validateRangeImport.mts");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
 });

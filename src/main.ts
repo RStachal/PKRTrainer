@@ -129,6 +129,19 @@ function el(tag: string, className?: string, text?: string): HTMLElement {
   return node;
 }
 
+function nowMs(): number {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+  return Date.now();
+}
+
+function elapsedMs(startMs: number): number | undefined {
+  if (!Number.isFinite(startMs) || startMs <= 0) return undefined;
+  const value = Math.max(0, Math.round(nowMs() - startMs));
+  return Number.isFinite(value) ? value : undefined;
+}
+
 // ---------------------------------------------------------------------------
 // Inicializace ĂşloĹľiĹˇtÄ› (Req 14.2, 14.3, 14.6)
 // ---------------------------------------------------------------------------
@@ -331,8 +344,8 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       initialPotBB: postflopIntent?.potBB,
       initialEffectiveStackBB: postflopIntent?.effectiveStackBB,
       autoGenerate: options.autoGenerate === true,
-      onAnswered: (spot, chosen) => {
-        const record = buildPostflopResultRecord(spot, chosen);
+      onAnswered: (spot, chosen, responseMs) => {
+        const record = buildPostflopResultRecord(spot, chosen, Date.now(), responseMs);
         const save = postflopStatsStore.record(bridgePostflopResultRecordToStatsV2(record, {
           profile: currentPostflopProfile,
         }));
@@ -610,6 +623,7 @@ function setupTraining(
   // Stav bÄ›ĹľĂ­cĂ­ relace (iterĂˇtor sekvence).
   let iterator: Iterator<Spot> | null = null;
   let answered = false; // bylo uĹľ na aktuĂˇlnĂ­ spot odpovÄ›zeno?
+  let activeQuestionStartedAt = 0;
 
   const filtersView: FiltersView = renderFilters(filtersBox, {
     onStart: (filters: Filters, seed: number | null, profile) => {
@@ -694,10 +708,12 @@ function setupTraining(
     actionsContainer.innerHTML = "";
     resultContainer.innerHTML = "";
     matrixContainer.innerHTML = "";
+    activeQuestionStartedAt = 0;
   }
 
   function showSpot(spot: Spot, filters: Filters): void {
     answered = false;
+    activeQuestionStartedAt = nowMs();
 
     sessionTitle.textContent = `${actionContextLabel(spot.context)} - ${spot.heroPos} - ${spot.hand}`;
     sessionMeta.textContent =
@@ -747,6 +763,7 @@ function setupTraining(
 
     // VyhodnocenĂ­ (ÄŤistĂ© jĂˇdro).
     const result = grade(spot, chosen, mode);
+    const responseMs = elapsedMs(activeQuestionStartedAt);
 
     // ZĂˇznam vĂ˝sledku PĹED dalĹˇĂ­m spotem (Req 9.1); selhĂˇnĂ­ â‡’ upozornÄ›nĂ­ (Req 9.6).
     const record: ResultRecord = {
@@ -757,6 +774,7 @@ function setupTraining(
       position: spot.heroPos,
       bucket: spot.effStack,
       ts: Date.now(),
+      ...(responseMs !== undefined ? { responseMs } : {}),
     };
     const save = statsStore.record(record);
 

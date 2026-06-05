@@ -44,6 +44,7 @@ export interface PostflopResultRecord {
   sourceRuleId: string;
   sourceConfidence: "LOW" | "MEDIUM" | "HIGH" | null;
   ts: number;
+  responseMs?: number;
 }
 
 export interface PostflopStatsV2BridgeRecord {
@@ -69,6 +70,7 @@ export interface PostflopStatsV2BridgeRecord {
   strategyPackId: string | null;
   strategyRuleId: string;
   confidence: "LOW" | "MEDIUM" | "HIGH" | null;
+  responseMs?: number;
 }
 
 export interface PostflopStatsV2BridgeOptions {
@@ -93,6 +95,7 @@ export function buildPostflopResultRecord(
   spot: PostflopTrainingSpot,
   chosen: PostflopAction,
   ts = Date.now(),
+  responseMs?: number,
 ): PostflopResultRecord {
   const source = spot.explanation.source;
   return {
@@ -114,6 +117,7 @@ export function buildPostflopResultRecord(
     sourceRuleId: source.ruleId,
     sourceConfidence: source.kind === "STRATEGY_PACK" ? source.confidence : null,
     ts,
+    ...(isValidResponseMs(responseMs) ? { responseMs } : {}),
   };
 }
 
@@ -150,6 +154,7 @@ export function bridgePostflopResultRecordToStatsV2(
     strategyPackId: record.sourcePackId,
     strategyRuleId: record.sourceRuleId,
     confidence: record.sourceConfidence,
+    ...(isValidResponseMs(record.responseMs) ? { responseMs: record.responseMs } : {}),
   };
 }
 
@@ -180,7 +185,8 @@ export function isPostflopResultRecord(value: unknown): value is PostflopResultR
       record.sourceConfidence === "HIGH" ||
       record.sourceConfidence === null) &&
     typeof record.ts === "number" &&
-    Number.isFinite(record.ts)
+    Number.isFinite(record.ts) &&
+    isOptionalResponseMs(record.responseMs)
   );
 }
 
@@ -215,7 +221,8 @@ export function isPostflopStatsV2BridgeRecord(
     (record.confidence === "LOW" ||
       record.confidence === "MEDIUM" ||
       record.confidence === "HIGH" ||
-      record.confidence === null)
+      record.confidence === null) &&
+    isOptionalResponseMs(record.responseMs)
   );
 }
 
@@ -271,6 +278,14 @@ function postflopDimKey(
 function successRate(total: number, correct: number): number | null {
   if (total <= 0) return null;
   return Math.round((correct / total) * 1000) / 10;
+}
+
+function isValidResponseMs(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
+function isOptionalResponseMs(value: unknown): boolean {
+  return value === undefined || isValidResponseMs(value);
 }
 
 function isPostflopAction(value: unknown): value is PostflopAction {

@@ -1,0 +1,62 @@
+{
+  "id": "example-mtt-preflop-synthetic-v1",
+  "version": "synthetic-example-v1",
+  "createdAt": "2026-06-05",
+  "verifiedAt": "2026-06-05",
+  "dimensions": {
+    "gameVariant": "MTT",
+    "tableFormat": "FULL_RING_9",
+    "blindSpeed": "REGULAR",
+    "street": "PREFLOP",
+    "evModel": "CHIP_EV",
+    "ante": "ON",
+    "rakeMode": "NONE"
+  },
+  "confidence": "LOW",
+  "licenseKind": "OWNED_SOLVER_EXPORT",
+  "licenseNote": "Synthetic shape example only; no third-party chart values copied.",
+  "assumptions": [
+    "MTT FULL_RING_9 chipEV regular synthetic example.",
+    "Ante ON big blind ante structure.",
+    "Source stacks map directly to PKRTrainer stack buckets."
+  ],
+  "searchQueries": [
+    "synthetic MTT preflop import validation",
+    "synthetic full ring stack mapping",
+    "synthetic legal solver export workflow"
+  ],
+  "sourceEvidence": [
+    {
+      "title": "Synthetic owned export manifest",
+      "url": "https://example.test/synthetic-owned-export",
+      "provider": "PKRTrainer synthetic fixture",
+      "verifiedAt": "2026-06-05",
+      "licenseNote": "Synthetic fixture; no real chart values."
+    },
+    {
+      "title": "Synthetic review notes",
+      "url": "https://example.test/synthetic-review",
+      "provider": "PKRTrainer synthetic review",
+      "verifiedAt": "2026-06-05",
+      "licenseNote": "Synthetic fixture review."
+    }
+  ],
+  "records": [
+    {
+      "position": "BTN",
+      "sourceStackBB": 40,
+      "bucket": 40,
+      "context": "RFI",
+      "lenient": {
+        "AA": ["OPEN_2X"],
+        "AKs": ["OPEN_2X"],
+        "72o": ["FOLD"]
+      },
+      "strict": {
+        "AA": ["OPEN_2X"],
+        "AKs": ["OPEN_2X"],
+        "72o": ["FOLD"]
+      }
+    }
+  ]
+}

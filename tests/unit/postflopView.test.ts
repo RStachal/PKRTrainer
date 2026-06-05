@@ -197,18 +197,25 @@ describe("postflopView - DOM", () => {
 
   it("po odpovedi zavola callback s postflop training spotem", () => {
     const root = document.createElement("div");
-    const answered: string[] = [];
+    const answered: Array<{ summary: string; responseMs?: number }> = [];
     renderPostflopView(root, {
       initialSeed: 42,
       initialStreet: "FLOP",
       autoGenerate: true,
-      onAnswered: (spot, chosen) => answered.push(`${spot.street}|${spot.actionNode}|${chosen}`),
+      onAnswered: (spot, chosen, responseMs) => {
+        answered.push({
+          summary: `${spot.street}|${spot.actionNode}|${chosen}`,
+          responseMs,
+        });
+      },
     });
 
     root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
 
     expect(answered).toHaveLength(1);
-    expect(answered[0]).toContain("FLOP|SINGLE_RAISED_POT_CBET|");
+    expect(answered[0].summary).toContain("FLOP|SINGLE_RAISED_POT_CBET|");
+    expect(answered[0].responseMs).toEqual(expect.any(Number));
+    expect(answered[0].responseMs).toBeGreaterThanOrEqual(0);
   });
 
   it("respektuje vstupni postflop pozicni kontext", () => {

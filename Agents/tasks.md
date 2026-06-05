@@ -934,6 +934,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Bud importovat turbo-specific ranges, nebo explicitne zdokumentovat legalni reuse regular chipEV ranges pro stejny stack/ante node
   - [ ] 86.2 Pripravit 9-max turbo RangePack records
     - Turbo pack musi mit records, source evidence, assumptions and validation bez candidate gate
+    - Generic MTT preflop import validator is ready; actual 9-max turbo records still require legal source/export input
   - [ ] 86.3 Zapojit 9-max turbo do production preflop gate
     - Po overeni ma MTT/FULL_RING_9/TURBO/PREFLOP/chipEV spoustet drill
 
@@ -941,6 +942,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 87.1 Ziskat legalni 6-max regular source/export vstup
     - Povolen je owned solver export, public chart with permission, or explicit written permission
   - [ ] 87.2 Normalizovat 6-max regular records
+    - Generic MTT preflop import validator now checks 6-max regular source/export completeness
     - Každý record musi mit 169 hand classes ve strict i lenient mape
   - [ ] 87.3 Povysit 6-max regular z candidate na production
     - Po validaci se SIX_MAX/REGULAR/PREFLOP/chipEV smi spoustet v drill enginu
@@ -950,6 +952,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Turbo assumptions a stack mapping musi byt explicitni
   - [ ] 88.2 Normalizovat 6-max turbo records
     - Records musi pokryt required positions, buckets, contexts and 169 hand classes
+    - Generic MTT preflop import validator now checks 6-max turbo source/export completeness
   - [ ] 88.3 Povysit 6-max turbo z candidate na production
     - Po validaci se SIX_MAX/TURBO/PREFLOP/chipEV smi spoustet v drill enginu
 
@@ -985,6 +988,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 92.3 Napojit production SRP flop pack do treninku
     - UI ma pouzivat production data tam, kde existuji, jinak jasne preview/fallback
     - Resolver infrastructure hotova; skutecny production SRP pack ceka na legalni source/export vstup
+    - Flop production coverage report now renders review text for missing pot types, position patterns, textures, action nodes and lanes
 
 - [x] 93. Flop 3bet pot production coverage
   - [x] 93.1 Definovat 3bet pot action nodes a position patterns
@@ -1018,53 +1022,310 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 96.3 Otestovat mobile layout grafu
     - Grafy nesmi pretekat v mobilnim web browseru
 
-- [ ] 97. Preflop leak visualizations
-  - [ ] 97.1 Graf podle action contextu
+- [x] 97. Preflop leak visualizations
+  - [x] 97.1 Graf podle action contextu
     - Ukazat accuracy/volume pro RFI, vs open, vs 3-bet, squeeze, BvB, push/fold etc.
-  - [ ] 97.2 Graf podle pozice
+  - [x] 97.2 Graf podle pozice
     - Ukazat leak mapu pozic s minimum sample filtrem
-  - [ ] 97.3 Graf podle stack bucketu
+  - [x] 97.3 Graf podle stack bucketu
     - Ukazat kratke/stredni/hluboke stacky a identify weakest buckets
 
-- [ ] 98. Postflop KPI visualizations
-  - [ ] 98.1 Graf podle street a action node
+- [x] 98. Postflop KPI visualizations
+  - [x] 98.1 Graf podle street a action node
     - Flop/turn/river a c-bet/barrel/pressure skupiny podle accuracy/volume
-  - [ ] 98.2 Graf podle board texture
+  - [x] 98.2 Graf podle board texture
     - Ukazat, na jakych texturech hrac chybuje, az od minimum sample
-  - [ ] 98.3 Confidence-aware labels
+  - [x] 98.3 Confidence-aware labels
     - Preview/low confidence postflop model nesmi pusobit jako solver-grade pravda
 
-- [ ] 99. Decision-time instrumentation
-  - [ ] 99.1 Navrhnout response time field pro preflop a postflop records
+- [x] 99. Decision-time instrumentation
+  - [x] 99.1 Navrhnout response time field pro preflop a postflop records
     - Cas mereny od zobrazeni otazky po klik odpovedi
-  - [ ] 99.2 Migrovat/exportovat cas bez rozbiti starych stats
+  - [x] 99.2 Migrovat/exportovat cas bez rozbiti starych stats
     - Starší záznamy musi zustat validni s null/unavailable decision time
-  - [ ] 99.3 Pridat timing KPI az po sberu dat
+  - [x] 99.3 Pridat timing KPI az po sberu dat
     - Speed/hesitation grafy nezobrazovat, dokud nejsou realna data
 
-- [ ] 100. MTT production release checkpoint
-  - [ ] 100.1 Spustit full test suite a build
+- [x] 100. MTT production release checkpoint
+  - [x] 100.1 Spustit full test suite a build
     - Release checkpoint musi projit po kazdem production range povyseni
-  - [ ] 100.2 Zkontrolovat source-free UI policy
+  - [x] 100.2 Zkontrolovat source-free UI policy
     - Herni UI a dashboard nesmi citovat zdroje ani ukazovat pack internals
-  - [ ] 100.3 Zkontrolovat offline bundle
+  - [x] 100.3 Zkontrolovat offline bundle
     - Production ranges a stats UI musi fungovat bez runtime fetch
+    - `npm run verify:ranges` now reports legacy range validation, MTT readiness blockers and flop production registry status through vite-node
+    - `npm run validate:range-import -- --kind=mtt-preflop|flop-production <input.json>` validates future legal export files before production promotion
 
 - [ ] 101. Autonomous backlog discipline
-  - [ ] 101.1 Po kazdem hotovem kroku aktualizovat checkboxy
+  - [x] 101.1 Po kazdem hotovem kroku aktualizovat checkboxy
     - Dokoncene polozky okamzite prepnout na [x]
-  - [ ] 101.2 Po kazde netrivialni zmene spustit cilene testy
+  - [x] 101.2 Po kazde netrivialni zmene spustit cilene testy
     - Scope testu volit podle zmenenych modulu
   - [ ] 101.3 Pokud nejsou otevrene tasky, zalozit dalsi pouze z produktoveho gapu
     - Nepridavat kosmeticke tasky, pokud existuje obsahovy production gap
 
+- [x] 102. Production range intake operations
+  - [x] 102.1 Definovat adresar pro dodane legalni exporty mimo runtime bundle
+    - Raw solver/chart exporty nesmi byt omylem zobrazeny v UI ani importovany bez validace
+    - Hotovo: `Agents/range-intake/raw/` je ignorovany Git workspace pro lokalni legalni vstupy
+  - [x] 102.2 Pridat priklady minimalnich JSON importu pro MTT preflop a flop production
+    - Fixtures musi byt synthetic/test-only, bez skutecnych third-party chart hodnot
+    - Hotovo: synteticke MTT preflop, flop production and permission manifest examples
+  - [x] 102.3 Popsat operator workflow od exportu po production promotion
+    - Kroky: ulozit raw export, spustit validator, review report, commit normalized pack, release checkpoint
+    - Hotovo: `Agents/range-intake/README.md` and intake manifest workflow
+
+- [x] 103. Legal source and permission audit workflow
+  - [x] 103.1 Pridat permission manifest pro kazdy budouci production pack
+    - Manifest musi obsahovat licenseKind, owner, review date, allowed redistribution scope and reviewer
+    - Hotovo: `ProductionPermissionManifest` schema and source-free report
+  - [x] 103.2 Zablokovat production promotion bez explicitniho permission manifestu
+    - Validace musi odlisit legalni blocker od technicke coverage chyby
+    - Hotovo: `validate:range-import` requires `--permission-manifest` for exit 0
+  - [x] 103.3 Pridat audit report bez URL do app UI
+    - Interni audit muze mit zdroje, uzivatelske UI zustava source-free
+    - Hotovo: dashboard umi volitelny source-free permission audit panel bez URL, provideru a pack id
+
+- [ ] 104. MTT 9-max turbo import execution
+  - [ ] 104.1 Zpracovat legalni 9-max turbo ante ON export
+    - Import musi projit `validate:range-import --kind=mtt-preflop`
+  - [ ] 104.2 Zpracovat legalni 9-max turbo ante OFF export
+    - Stack mapping a ante assumptions musi byt explicitni
+  - [ ] 104.3 Vytvorit production RangePacky pro 9-max turbo
+    - Packy musi mit MEDIUM/HIGH confidence, records > 0 and full hand-class maps
+
+- [ ] 105. MTT 9-max turbo promotion QA
+  - [ ] 105.1 Zapojit turbo packy do MTT preflop registry
+    - Readiness report musi prejit z MISSING na PRODUCTION
+  - [ ] 105.2 Otestovat turbo gate v UI a drill engine
+    - MTT/FULL_RING_9/TURBO/PREFLOP/chipEV ma spustit drill jen po validaci
+  - [ ] 105.3 Porovnat regular vs turbo coverage diff
+    - Diff musi ukazat, zda jde o dedicated ranges nebo schvaleny reuse policy
+
+- [ ] 106. MTT 6-max regular import execution
+  - [ ] 106.1 Zpracovat legalni 6-max regular ante ON export
+    - Pokryt UTG,HJ,CO,BTN,SB,BB, vsechny buckets a contexts
+  - [ ] 106.2 Zpracovat legalni 6-max regular ante OFF export
+    - Strict i lenient mapy musi mit 169 hand classes na record
+  - [ ] 106.3 Vytvorit production 6-max regular RangePacky
+    - Candidate LOW/empty packy nahradit nebo doplnit produkcnimi packy bez legacy fallbacku
+
+- [ ] 107. MTT 6-max regular promotion QA
+  - [ ] 107.1 Zapojit 6-max regular do production gate
+    - SIX_MAX/REGULAR/PREFLOP/chipEV ma spustit spravny 6-max drill
+  - [ ] 107.2 Otestovat seat model a pozicni filtr pro 6-max
+    - UI nesmi ukazovat full-ring mrtve pozice v konkretni otazce 6-max profilu
+  - [ ] 107.3 Otestovat statistiky podle tableFormat
+    - 6-max vysledky se nesmi michat s 9-max profilem bez explicitniho breakdownu
+
+- [ ] 108. MTT 6-max turbo import execution
+  - [ ] 108.1 Zpracovat legalni 6-max turbo ante ON export
+    - Turbo assumptions musi byt oddelene od regular metadata
+  - [ ] 108.2 Zpracovat legalni 6-max turbo ante OFF export
+    - Source stack to bucket mapping musi byt soucasti review reportu
+  - [ ] 108.3 Vytvorit production 6-max turbo RangePacky
+    - Readiness musi projit bez SPEED_METADATA_ONLY shortcutu
+
+- [ ] 109. MTT 6-max turbo promotion QA
+  - [ ] 109.1 Zapojit 6-max turbo do production gate
+    - SIX_MAX/TURBO/PREFLOP/chipEV ma spustit drill az po production readiness
+  - [ ] 109.2 Porovnat 6-max regular vs turbo action distributions
+    - Audit ma upozornit na podezrele identicke ranges bez reuse policy
+  - [ ] 109.3 Spustit release checkpoint pro vsechny MTT preflop profily
+    - Full suite, build, verify:ranges and source-free UI policy
+
+- [x] 110. Preflop production promotion pipeline
+  - [x] 110.1 Vytvorit jednotny normalized pack builder pro import JSON
+    - Builder musi vyrobit TypeScript RangePack modul z validovaneho JSON vstupu
+    - Hotovo: `buildRangeModule` supports MTT preflop and flop production module text
+  - [x] 110.2 Pridat dry-run report bez zapisu souboru
+    - Operator musi videt diff a blockers pred generovanim packu
+    - Hotovo: `npm run build:range-module -- --dry-run ...` prints writeReady and blockers without writing
+  - [x] 110.3 Pridat promotion checklist do Agents auditu
+    - Kazdy promoted pack musi mit legal, coverage, UI gate and tests checked
+    - Hotovo: intake manifest and range-intake README include builder/promotion workflow
+
+- [x] 111. Preflop range semantic QA
+  - [x] 111.1 Detekovat prazdne nebo trivialni hand maps
+    - Pack s all-fold nebo all-open mapou nesmi projit bez explicitni review warningu
+    - Hotovo: MTT import warning pro all-FOLD/all-open mapy
+  - [x] 111.2 Detekovat neobvykle action mixy podle contextu
+    - Napr. RFI bez open akcniho klice nebo VS_3BET bez call/4bet/fold signalu
+    - Hotovo: context-specific non-fold action warningy pro MTT import
+  - [x] 111.3 Pridat histogram action distribution do import reportu
+    - Reviewer musi videt action mix per position/bucket/context
+    - Hotovo: import report renders strict/lenient action distribution per record
+
+- [x] 112. Preflop answer explanation upgrade
+  - [x] 112.1 Navazat explanation text na production range metadata
+    - Vysvetleni nesmi citovat zdroje, ale ma ukazat pokerovy duvod: position, stack, blockers, pressure
+    - Hotovo: trainer and HH import use source-free explanation from context, position, stack, hand class and action
+  - [x] 112.2 Odstupnovat explanation pro beginner/standard/advanced mod
+    - Pokrocily mod muze ukazat vice range reasoning bez solver frequencies
+    - Hotovo: `buildPreflopExplanation` supports BEGINNER/STANDARD/ADVANCED
+  - [x] 112.3 Pridat regression test na source-free explanation
+    - Zadny provider, URL, pack id ani internal rule id ve viditelnem UI
+    - Hotovo: unit coverage for source-free explanation text
+
+- [ ] 113. Preflop curriculum and session design
+  - [ ] 113.1 Pridat targeted training podle nejslabsich KPI
+    - Hrac muze spustit session pouze pro nejhorsi position/context/bucket
+  - [ ] 113.2 Pridat spaced repetition prioritizaci
+    - Casto spatne spoty se maji vracet casteji, ale deterministicky podle seedu
+  - [ ] 113.3 Pridat session goal metriky
+    - Napr. 20 spotu, 80% recent accuracy, streak target, leak cleanup
+
+- [ ] 114. Flop SRP production import execution
+  - [ ] 114.1 Zpracovat legalni SRP flop production StrategyPack
+    - Pokryt EP vs BB, BTN vs BB, SB vs BB, OOP raiser vs IP caller
+  - [ ] 114.2 Pokryt vsechny required board textures v SRP
+    - A-high, broadway, low, paired, monotone, two-tone, connected, dry, draw-heavy
+  - [ ] 114.3 Zapojit SRP production pack do resolver chain
+    - Production data ma mit prioritu pred public heuristic fallbackem
+
+- [ ] 115. Flop SRP production UI QA
+  - [ ] 115.1 Otestovat UI labely pro production vs fallback
+    - Hrac vidi model confidence source-free, ne provider/source detail
+  - [ ] 115.2 Otestovat Flopzilla matrix lanes z production dat
+    - Value/bluff/check lanes maji odpovidat production rangeBuckets
+  - [ ] 115.3 Otestovat mobile layout pro SRP table + matrix
+    - Matrix scroll, seat labels and board cards nesmi pretekat
+
+- [ ] 116. Flop 3bet pot production import execution
+  - [ ] 116.1 Zpracovat legalni 3bet pot flop StrategyPack
+    - OOP caller vs IP 3bettor a IP/OOP c-bet situace musi byt pokryte
+  - [ ] 116.2 Rozlisit SPR windows pro 3bet poty
+    - Low/mid SPR pravidla nesmi pouzivat SRP sizing heuristiku bez mappingu
+  - [ ] 116.3 Zapojit 3bet production pack do resolver chain
+    - 3bet pot fallback se pouzije jen tam, kde production rule chybi
+
+- [ ] 117. Flop production range frequencies and mixes
+  - [ ] 117.1 Rozsirit range bucket schema o frequency/mix metadata
+    - Frequencies lze zobrazit az po legalnim solver exportu a source-free interpretaci
+  - [ ] 117.2 Pridat mixed-action hero feedback
+    - Hero hand muze byt pure value, pure bluff, pure check or mixed
+  - [ ] 117.3 Otestovat, ze exact frequencies nejsou v UI bez povoleni
+    - Pokud licence nepovoluje exact frequencies, UI ukaze pouze kvalitativni bucket
+
+- [ ] 118. Turn production model roadmap
+  - [ ] 118.1 Definovat turn production schema
+    - Turn musi umet prior flop action, turn card class, SPR, position pattern and range lane
+  - [ ] 118.2 Pripravit turn import validator
+    - Legal input, coverage and source-free report jako u flopu
+  - [ ] 118.3 Napojit turn production resolver
+    - Public heuristic zustava fallback, production ma prioritu
+
+- [ ] 119. River production model roadmap
+  - [ ] 119.1 Definovat river production schema
+    - River musi umet runout, blocker relevance, value/bluff/check lanes and sizing
+  - [ ] 119.2 Pripravit river import validator
+    - Legal input, coverage and source-free report jako u flopu
+  - [ ] 119.3 Napojit river production resolver
+    - River pressure spoty maji pouzit production data tam, kde existuji
+
+- [ ] 120. Postflop multi-street training flow
+  - [ ] 120.1 Pridat navaznost flop -> turn -> river v jedne hande
+    - Board runout a predchozi akce musi zustat konzistentni
+  - [ ] 120.2 Ukladat street sequence do postflop stats
+    - KPI musi umet odlisit single-street quiz od multi-street hand line
+  - [ ] 120.3 Otestovat deterministic seed replay pro multi-street flow
+    - Stejny seed musi vratit stejnou sekvenci karet a spotu
+
+- [ ] 121. Postflop table and action UX polish v2
+  - [ ] 121.1 Pridat vizualni pot geometry pro bet sizing
+    - Small/big bet ma byt jasne videt bez textove instruktaze
+  - [ ] 121.2 Zobrazit aktivniho agresora, callera a IP/OOP role na stole
+    - Postflop table musi byt citelny i bez meta radku
+  - [ ] 121.3 Pridat keyboard flow pro postflop odpovedi
+    - 1/2/3 nebo arrow navigation, focus state and mobile safe behavior
+
+- [ ] 122. Statistics dashboard v2
+  - [ ] 122.1 Pridat trend recent accuracy v case
+    - Graf ma ukazat posledni sessions/windows, ne jen agregat
+  - [ ] 122.2 Pridat confidence-weighted KPI
+    - Preview/fallback spoty nemaji mit stejnou vahu jako production spoty
+  - [ ] 122.3 Pridat decision-time trend
+    - Ukazat zrychleni/zpomaleni jen po dostatecnem sample
+
+- [ ] 123. Leak recommendation engine
+  - [ ] 123.1 Vypocitat top 3 next study focus oblasti
+    - Minimum sample, low accuracy and recent mistakes maji urcit prioritu
+  - [ ] 123.2 Nabidnout one-click focused session
+    - Dashboard leak row muze spustit trening s odpovidajicimi filtry
+  - [ ] 123.3 Otestovat, ze recommendations nejsou genericke pri malem sample
+    - Pri nizkem objemu zobrazit volume goal misto leak soudil
+
+- [ ] 124. Stats storage and privacy hardening
+  - [ ] 124.1 Pridat schema version pro postflop responseMs a future dimensions
+    - Import musi zustat backward compatible
+  - [ ] 124.2 Pridat selective reset/export per profile
+    - Hrac muze exportovat nebo smazat jen vybrany profil
+  - [ ] 124.3 Pridat storage quota handling testy
+    - Pri selhani localStorage se UI nesmi rozbit a stats warning ma byt source-free
+
+- [ ] 125. HH import to trainer bridge
+  - [ ] 125.1 Mapovat importovanou HH na preflop training spot
+    - Pokud HH odpovida podporovanemu contextu, ukazat correct range a action feedback
+  - [ ] 125.2 Mapovat importovanou HH na flop spot
+    - Board, positions, pot type and SPR musi krmit postflop resolver
+  - [ ] 125.3 Ulozit HH review vysledek oddelene od drill statistiky
+    - Review mode nema kontaminovat trening accuracy bez explicitni volby
+
+- [ ] 126. Range matrix and Flopzilla UX v2
+  - [ ] 126.1 Pridat combo-level detail po kliknuti na hand cell
+    - Cell detail muze ukazat strict/lenient actions and lane explanation
+  - [ ] 126.2 Pridat filters pro action/lane/category
+    - Preflop matrix i flop matrix musi umet rychle izolovat relevantni subset
+  - [ ] 126.3 Otestovat mobile horizontal scroll and sticky labels
+    - 13x13 matrix musi zustat pouzitelna na Android WebView
+
+- [ ] 127. Accessibility and keyboard QA
+  - [ ] 127.1 Projit tab order pro training, dashboard, HH import and postflop
+    - Focus order musi sledovat skutecny workflow
+  - [ ] 127.2 Pridat ARIA labels pro icon/action controls
+    - Tlacitka bez popisu musi byt citelna screen readerem
+  - [ ] 127.3 Pridat reduced-motion safe mode
+    - Animace a hover efekty nesmi byt nutne pro pouziti
+
+- [ ] 128. Mobile and Android WebView release QA
+  - [ ] 128.1 Spustit screenshot QA pro 360x800, 390x844, 412x915
+    - Table, filters, postflop matrix and dashboard nesmi pretekat
+  - [ ] 128.2 Otestovat offline reload po service worker cache
+    - App musi fungovat bez runtime fetch
+  - [ ] 128.3 Otestovat localStorage persistence na mobile viewportu
+    - Stats, postflop records and seed replay musi prezit reload
+
+- [ ] 129. Performance and bundle budget
+  - [ ] 129.1 Zavest bundle size budget
+    - Build ma failnout nebo varovat pri necekane velkem narustu JS bundle
+  - [ ] 129.2 Profilovat render 13x13 matic a postflop table
+    - Matrix hover/filter nesmi byt pomaly na mobilu
+  - [ ] 129.3 Optimalizovat large range pack loading
+    - Production packy nesmi zhorsit first render bez potreby
+
+- [ ] 130. Release automation and CI gates
+  - [ ] 130.1 Sjednotit release command
+    - Jednim prikazem spustit typecheck, tests, verify:ranges and build
+  - [ ] 130.2 Pridat CI gate pro source-free visible UI
+    - Test ma failnout pri URL/provider/pack id ve viditelnem UI
+  - [ ] 130.3 Pridat CI gate pro production readiness
+    - Production pack nesmi byt LOW, empty or missing legal metadata
+
+- [ ] 131. Documentation for users and operators
+  - [ ] 131.1 Napsat user-facing quick start bez zdrojovych citaci
+    - Vysvetlit Training, Statistics, HH Import and postflop flow
+  - [ ] 131.2 Napsat operator guide pro range import
+    - Jak pouzit validate:range-import, verify:ranges, audit manifest and promotion checklist
+  - [ ] 131.3 Napsat release notes template
+    - Oddelit gameplay changes, range data changes, stats schema and known limitations
+
 ## Notes
 
-- Tasky označené `*` jsou volitelné (testy) a lze je přeskočit pro rychlejší MVP; nebudou implementovány automaticky.
-- Každý task odkazuje na konkrétní (granulární) klauzule požadavků kvůli sledovatelnosti.
-- Property testy realizují univerzální vlastnosti 1–33 z designu (fast-check, ≥ 100 iterací), každá vlastnost jedním testem; značka ve formátu `// Feature: mtt-preflop-trainer, Property {číslo}: {text}`.
-- Unit/DOM/integrační testy pokrývají specifické chování, edge cases a chybové toky mimo property sadu.
-- Checkpointy zajišťují inkrementální validaci jádra před stavbou UI a před finálním propojením.
+- Tasky oznacene `*` jsou volitelne (testy) a lze je preskocit pro rychlejsi MVP; nebudou implementovany automaticky.
+- Kazdy task odkazuje na konkretni granularni klauzule pozadavku kvuli sledovatelnosti.
+- Property testy realizuji univerzalni vlastnosti 1-33 z designu (fast-check, >= 100 iteraci), kazda vlastnost jednim testem; znacka ve formatu `// Feature: mtt-preflop-trainer, Property {cislo}: {text}`.
+- Unit/DOM/integracni testy pokryvaji specificke chovani, edge cases a chybove toky mimo property sadu.
+- Checkpointy zajistuji inkrementalni validaci jadra pred stavbou UI a pred finalnim propojenim.
 
 ## Task Dependency Graph
 

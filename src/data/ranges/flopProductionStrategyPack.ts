@@ -281,6 +281,38 @@ export function buildFlopProductionCoverageReport(
   };
 }
 
+export function renderFlopProductionCoverageReport(
+  pack: FlopProductionStrategyPack,
+  report: FlopProductionCoverageReport = buildFlopProductionCoverageReport(pack),
+): string {
+  const lines = [
+    `Flop production StrategyPack: ${pack.id}`,
+    `productionReady: ${report.productionReady}`,
+    `model: ${pack.dimensions.gameVariant}/${pack.dimensions.tableFormat}/${pack.dimensions.evModel}`,
+    `license: ${pack.licenseKind}`,
+    `confidence: ${pack.confidence}`,
+    `sources: ${pack.sourceEvidence.length}`,
+    `rules: ${pack.rules.length}`,
+    `pot types: ${report.potTypes.join(",") || "none"}`,
+    `position patterns: ${report.positionPatterns.join(",") || "none"}`,
+    `board textures: ${report.boardTextures.join(",") || "none"}`,
+    `action nodes: ${report.actionNodes.join(",") || "none"}`,
+    `range lanes: ${report.rangeLanes.join(",") || "none"}`,
+    `missing pot types: ${report.missingPotTypes.join(",") || "none"}`,
+    `missing position patterns: ${report.missingPositionPatterns.join(",") || "none"}`,
+    `missing board textures: ${report.missingBoardTextures.join(",") || "none"}`,
+    `missing action nodes: ${report.missingActionNodes.join(",") || "none"}`,
+    `missing range lanes: ${report.missingRangeLanes.join(",") || "none"}`,
+  ];
+
+  if (report.errors.length > 0) {
+    lines.push("errors:");
+    for (const error of report.errors) lines.push(`- ${error}`);
+  }
+
+  return lines.join("\n");
+}
+
 function uniqueInOrder<T extends string>(
   values: readonly T[],
   order: readonly T[],

@@ -34,7 +34,11 @@ export interface PostflopViewOptions {
   initialPotBB?: number;
   initialEffectiveStackBB?: number;
   autoGenerate?: boolean;
-  onAnswered?: (spot: PostflopTrainingSpot, chosen: PostflopAction) => void;
+  onAnswered?: (
+    spot: PostflopTrainingSpot,
+    chosen: PostflopAction,
+    responseMs?: number,
+  ) => void;
 }
 
 const STREET_LABEL: Record<PostflopStreet, string> = {
@@ -78,6 +82,19 @@ const SUIT_CLASS: Record<Suit, string> = {
   d: "card--diamond",
   c: "card--club",
 };
+
+function nowMs(): number {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+  return Date.now();
+}
+
+function elapsedMs(startMs: number): number | undefined {
+  if (!Number.isFinite(startMs) || startMs <= 0) return undefined;
+  const value = Math.max(0, Math.round(nowMs() - startMs));
+  return Number.isFinite(value) ? value : undefined;
+}
 
 export function renderPostflopView(root: HTMLElement, options: PostflopViewOptions = {}): void {
   const doc = root.ownerDocument ?? document;
@@ -237,6 +254,7 @@ function renderSpot(
   }
   root.appendChild(textures);
 
+  const questionStartedAt = nowMs();
   const actions = doc.createElement("div");
   actions.className = "postflop-actions";
   for (const action of spot.actions) {
@@ -245,7 +263,9 @@ function renderSpot(
     btn.className = "postflop-action";
     btn.dataset.action = action;
     btn.textContent = actionLabel(action);
-    btn.addEventListener("click", () => showResult(root, trainingSpot, action, options));
+    btn.addEventListener("click", () => (
+      showResult(root, trainingSpot, action, questionStartedAt, options)
+    ));
     actions.appendChild(btn);
   }
   root.appendChild(actions);
@@ -452,6 +472,7 @@ function showResult(
   root: HTMLElement,
   spot: PostflopTrainingSpot,
   chosen: PostflopAction,
+  questionStartedAt: number,
   options: PostflopViewOptions,
 ): void {
   const buttons = root.querySelectorAll<HTMLButtonElement>(".postflop-action");
@@ -467,7 +488,7 @@ function showResult(
   const result = root.querySelector<HTMLElement>(".postflop-result");
   if (!result) return;
   const correct = chosen === spot.recommendedAction;
-  options.onAnswered?.(spot, chosen);
+  options.onAnswered?.(spot, chosen, elapsedMs(questionStartedAt));
   result.hidden = false;
   result.className = `postflop-result ${correct ? "postflop-result--correct" : "postflop-result--wrong"}`;
   renderPracticalExplanation(result, spot, correct, chosen);

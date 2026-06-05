@@ -169,4 +169,20 @@ describe("statsV2Analytics", () => {
       "position:BB:4:25",
     ]);
   });
+
+  it("spocita decision-time KPI jen z validnich namerenych zaznamu", () => {
+    const timed = migrateResultRecordsToV2([
+      { ...records[0], responseMs: 1000, ts: 1 },
+      { ...records[1], responseMs: 2000, ts: 2 },
+      { ...records[0], qid: "RFI|CO|25|AQs|OFF|3", responseMs: undefined, ts: 3 },
+    ]);
+
+    const model = buildStatsV2KpiModel(timed, { recentWindowSize: 2 });
+    const emptyModel = buildStatsV2KpiModel(migrateResultRecordsToV2(records));
+
+    expect(model.avgResponseMs).toBe(1500);
+    expect(model.recentAvgResponseMs).toBe(2000);
+    expect(emptyModel.avgResponseMs).toBeNull();
+    expect(emptyModel.recentAvgResponseMs).toBeNull();
+  });
 });

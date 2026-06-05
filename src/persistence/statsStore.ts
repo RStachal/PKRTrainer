@@ -54,6 +54,7 @@ export interface ResultRecord {
   position: Position;
   bucket: StackBucket;
   ts: number;
+  responseMs?: number;
 }
 
 /**
@@ -240,7 +241,16 @@ export function isValidResultRecord(x: unknown): x is ResultRecord {
     typeof r.bucket === "number" &&
     (STACK_BUCKETS as readonly number[]).includes(r.bucket) &&
     typeof r.ts === "number" &&
-    Number.isFinite(r.ts)
+    Number.isFinite(r.ts) &&
+    isOptionalNonNegativeFiniteNumber(r.responseMs)
+  );
+}
+
+function isOptionalNonNegativeFiniteNumber(value: unknown): boolean {
+  return value === undefined || (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    value >= 0
   );
 }
 

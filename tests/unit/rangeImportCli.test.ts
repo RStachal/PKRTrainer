@@ -1,0 +1,356 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { describe, expect, it } from "vitest";
+
+import { ALL_HAND_CLASSES } from "../../src/core/poker";
+import {
+  STACK_BUCKETS,
+  type ActionContext,
+  type ActionKey,
+  type HandLabel,
+  type Position,
+} from "../../src/core/types";
+import type {
+  BoardTexture,
+  PostflopPositionPattern,
+  PostflopPotType,
+} from "../../src/core/postflopGenerator";
+import {
+  FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS,
+  FLOP_PRODUCTION_REQUIRED_POT_TYPES,
+  FLOP_PRODUCTION_REQUIRED_TEXTURES,
+  type FlopProductionStrategyPack,
+  type FlopProductionStrategyRule,
+} from "../../src/data/ranges/flopProductionStrategyPack";
+import type { MttPreflopRangePackImportInput } from "../../src/data/ranges/mttPreflopRangePackImport";
+import type { ProductionPermissionManifest } from "../../src/data/ranges/productionPermissionManifest";
+
+const ACTION_CONTEXTS: readonly ActionContext[] = [
+  "RFI",
+  "VS_LIMP",
+  "VS_OPEN",
+  "VS_3BET",
+  "VS_4BET",
+  "SQUEEZE",
+  "BVB",
+  "PUSH_FOLD",
+  "VS_ALLIN",
+];
+
+const FULL_RING_POSITIONS: readonly Position[] = [
+  "UTG",
+  "UTG+1",
+  "UTG+2",
+  "LJ",
+  "HJ",
+  "CO",
+  "BTN",
+  "SB",
+  "BB",
+];
+
+const PRIMARY_ACTION_BY_CONTEXT: Record<ActionContext, ActionKey> = {
+  RFI: "OPEN_2X",
+  VS_LIMP: "ISO_3X",
+  VS_OPEN: "3BET",
+  VS_3BET: "4BET",
+  VS_4BET: "CALL_JAM",
+  SQUEEZE: "SQUEEZE",
+  BVB: "OPEN_2X",
+  PUSH_FOLD: "JAM",
+  VS_ALLIN: "CALL_JAM",
+};
+
+function handMap(action: ActionKey): Record<HandLabel, ActionKey[]> {
+  const out = {} as Record<HandLabel, ActionKey[]>;
+  for (const hand of ALL_HAND_CLASSES) out[hand] = [hand === "AA" ? action : "FOLD"];
+  return out;
+}
+
+function validMttImport(): MttPreflopRangePackImportInput {
+  return {
+    id: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-cli-fixture-v1",
+    version: "cli-fixture-v1",
+    createdAt: "2026-06-05",
+    verifiedAt: "2026-06-05",
+    dimensions: {
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      blindSpeed: "TURBO",
+      street: "PREFLOP",
+      evModel: "CHIP_EV",
+      ante: "ON",
+      rakeMode: "NONE",
+    },
+    confidence: "MEDIUM",
+    licenseKind: "OWNED_SOLVER_EXPORT",
+    licenseNote: "Owned solver export fixture; no third-party chart values copied.",
+    assumptions: [
+      "MTT full-ring chipEV turbo fixture.",
+      "Ante ON big blind ante structure.",
+      "Source stacks map directly to PKRTrainer stack buckets.",
+    ],
+    searchQueries: [
+      "MTT 9max turbo chipEV import validation",
+      "full ring turbo ante stack mapping",
+      "legal owned solver export poker ranges",
+    ],
+    sourceEvidence: [
+      {
+        title: "Owned solver export manifest",
+        url: "https://example.test/owned-export",
+        provider: "PKRTrainer",
+        verifiedAt: "2026-06-05",
+        licenseNote: "Owned export fixture.",
+      },
+      {
+        title: "Independent review notes",
+        url: "https://example.test/review",
+        provider: "PKRTrainer Review",
+        verifiedAt: "2026-06-05",
+        licenseNote: "Review fixture.",
+      },
+    ],
+    records: STACK_BUCKETS.map((bucket, index) => {
+      const context = ACTION_CONTEXTS[index % ACTION_CONTEXTS.length];
+      return {
+        position: FULL_RING_POSITIONS[index % FULL_RING_POSITIONS.length],
+        sourceStackBB: bucket,
+        bucket,
+        context,
+        strict: handMap(PRIMARY_ACTION_BY_CONTEXT[context]),
+        lenient: handMap(PRIMARY_ACTION_BY_CONTEXT[context]),
+      };
+    }),
+  };
+}
+
+function flopRule(
+  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
+  positionPattern: PostflopPositionPattern,
+  texture: BoardTexture,
+): FlopProductionStrategyRule {
+  const actionNode = potType === "SINGLE_RAISED"
+    ? "SINGLE_RAISED_POT_CBET"
+    : "THREE_BET_POT_CBET";
+  return {
+    id: `cli-${potType.toLowerCase()}-${positionPattern.toLowerCase()}-${texture}`,
+    actionNode,
+    potType,
+    positionPattern,
+    boardTextures: [texture],
+    sprMin: 1,
+    sprMax: 12,
+    actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+    recommendedAction: "BET_SMALL",
+    rangeBuckets: [
+      {
+        lane: "VALUE",
+        label: "value",
+        action: "BET_SMALL",
+        handClasses: ["AA", "AKs"],
+        features: ["top pair+"],
+      },
+      {
+        lane: "BLUFF",
+        label: "bluff",
+        action: "BET_SMALL",
+        handClasses: ["QJs", "JTs"],
+        features: ["draw"],
+      },
+      {
+        lane: "CHECK",
+        label: "check",
+        action: "CHECK",
+        handClasses: ["72o", "83o"],
+        features: ["air"],
+      },
+    ],
+    explanation: "CLI production fixture rule.",
+  };
+}
+
+function validFlopProductionPack(): FlopProductionStrategyPack {
+  const rules: FlopProductionStrategyRule[] = [];
+  for (const potType of FLOP_PRODUCTION_REQUIRED_POT_TYPES) {
+    for (const positionPattern of FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS) {
+      for (const texture of FLOP_PRODUCTION_REQUIRED_TEXTURES) {
+        rules.push(flopRule(potType, positionPattern, texture));
+      }
+    }
+  }
+
+  return {
+    id: "mtt-full-ring-9-flop-production-cli-fixture-v1",
+    version: "cli-fixture-v1",
+    createdAt: "2026-06-05",
+    verifiedAt: "2026-06-05",
+    confidence: "MEDIUM",
+    licenseKind: "OWNED_SOLVER_EXPORT",
+    licenseNote: "Owned solver export fixture; no third-party chart values copied.",
+    dimensions: {
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      street: "FLOP",
+      evModel: "CHIP_EV",
+    },
+    sourceEvidence: [
+      {
+        url: "https://example.test/flop-owned-export",
+        verifiedAt: "2026-06-05",
+        operator: "PKRTrainer",
+        gameVariant: "MTT",
+        tableFormat: "FULL_RING_9",
+        street: "FLOP",
+        evModel: "CHIP_EV",
+        methodology: "Owned solver export fixture.",
+        licenseNote: "Owned export fixture.",
+      },
+      {
+        url: "https://example.test/flop-review",
+        verifiedAt: "2026-06-05",
+        operator: "PKRTrainer Review",
+        gameVariant: "MTT",
+        tableFormat: "FULL_RING_9",
+        street: "FLOP",
+        evModel: "CHIP_EV",
+        methodology: "Independent review fixture.",
+        licenseNote: "Review fixture.",
+      },
+    ],
+    assumptions: [
+      "MTT full-ring flop chipEV CLI fixture.",
+      "SRP and 3bet pot coverage are intentionally complete for CLI smoke testing.",
+    ],
+    rules,
+  };
+}
+
+function validPermissionManifest(packId: string): ProductionPermissionManifest {
+  return {
+    packId,
+    version: "permission-fixture-v1",
+    reviewedAt: "2026-06-05",
+    reviewer: "PKRTrainer QA",
+    rightsOwner: "PKRTrainer synthetic fixture",
+    licenseKind: "OWNED_SOLVER_EXPORT",
+    allowedRedistributionScope: "PKRTRAINER_RUNTIME_BUNDLE",
+    sourceMaterialLocation: "Agents/range-intake/raw/synthetic-fixture/",
+    evidence: [
+      {
+        referenceId: "owned-export-manifest",
+        storedAt: "Agents/range-intake/raw/synthetic-fixture/manifest.txt",
+        reviewer: "PKRTrainer QA",
+        description: "Synthetic owned export fixture.",
+        containsRangeValues: true,
+      },
+    ],
+    notes: [
+      "No third-party chart values copied.",
+    ],
+  };
+}
+
+function runImportCli(
+  kind: "mtt-preflop" | "flop-production",
+  file: string,
+  permissionManifest?: string,
+) {
+  const command = process.platform === "win32" ? "cmd.exe" : "npm";
+  const cliArgs = permissionManifest
+    ? [`--kind=${kind}`, "--permission-manifest", permissionManifest, file]
+    : [`--kind=${kind}`, file];
+  const args = process.platform === "win32"
+    ? ["/c", "npm", "run", "validate:range-import", "--", ...cliArgs]
+    : ["run", "validate:range-import", "--", ...cliArgs];
+
+  return spawnSync(
+    command,
+    args,
+    {
+      cwd: process.cwd(),
+      encoding: "utf8",
+      timeout: 60000,
+    },
+  );
+}
+
+describe("range import CLI", () => {
+  it("vrati exit 0 pro production-ready MTT preflop import fixture", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkr-range-import-"));
+    try {
+      const file = join(dir, "valid.json");
+      const input = validMttImport();
+      const manifestFile = join(dir, "permission.json");
+      writeFileSync(file, JSON.stringify(input), "utf8");
+      writeFileSync(manifestFile, JSON.stringify(validPermissionManifest(input.id)), "utf8");
+
+      const result = runImportCli("mtt-preflop", file, manifestFile);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("productionReady: true");
+      expect(result.stdout).toContain("permissionReady: true");
+      expect(result.stdout).toContain("missing positions: none");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("blokuje production-ready MTT preflop import bez permission manifestu", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkr-range-import-"));
+    try {
+      const file = join(dir, "valid.json");
+      writeFileSync(file, JSON.stringify(validMttImport()), "utf8");
+
+      const result = runImportCli("mtt-preflop", file);
+
+      expect(result.status).toBe(1);
+      expect(result.stdout).toContain("productionReady: true");
+      expect(result.stdout).toContain("permissionManifest: missing");
+      expect(result.stdout).toContain("Production permission manifest is required for range promotion.");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("vrati nenulovy exit pro nekompletni MTT preflop import", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkr-range-import-"));
+    try {
+      const file = join(dir, "invalid.json");
+      writeFileSync(file, JSON.stringify({
+        ...validMttImport(),
+        records: [],
+      }), "utf8");
+
+      const result = runImportCli("mtt-preflop", file);
+
+      expect(result.status).toBe(1);
+      expect(result.stdout).toContain("productionReady: false");
+      expect(result.stdout).toContain("MTT preflop import must contain at least one normalized record.");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("vrati exit 0 pro production-ready flop StrategyPack fixture", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkr-range-import-"));
+    try {
+      const file = join(dir, "flop.json");
+      const pack = validFlopProductionPack();
+      const manifestFile = join(dir, "permission.json");
+      writeFileSync(file, JSON.stringify(pack), "utf8");
+      writeFileSync(manifestFile, JSON.stringify(validPermissionManifest(pack.id)), "utf8");
+
+      const result = runImportCli("flop-production", file, manifestFile);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("productionReady: true");
+      expect(result.stdout).toContain("permissionReady: true");
+      expect(result.stdout).toContain("missing pot types: none");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});

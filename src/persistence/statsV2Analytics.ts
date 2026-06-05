@@ -47,6 +47,8 @@ export interface StatsV2KpiModel {
   recentTotal: number;
   recentCorrect: number;
   recentRate: number | null;
+  avgResponseMs: number | null;
+  recentAvgResponseMs: number | null;
   minLeakSample: number;
   leakRateThreshold: number;
   leakCandidates: readonly StatsV2LeakCandidate[];
@@ -114,6 +116,8 @@ export function buildStatsV2KpiModel(
     recentTotal: recent.total,
     recentCorrect: recent.correct,
     recentRate: recent.rate,
+    avgResponseMs: averageResponseMs(records),
+    recentAvgResponseMs: averageResponseMs(recentRecords),
     minLeakSample,
     leakRateThreshold,
     leakCandidates: findLeakCandidates(records, {
@@ -166,6 +170,19 @@ function bestCorrectStreak(records: readonly ResultRecordV2[]): number {
     }
   }
   return best;
+}
+
+function averageResponseMs(records: readonly ResultRecordV2[]): number | null {
+  let count = 0;
+  let total = 0;
+  for (const record of records) {
+    if (typeof record.responseMs !== "number" || !Number.isFinite(record.responseMs)) continue;
+    if (record.responseMs < 0) continue;
+    count += 1;
+    total += record.responseMs;
+  }
+  if (count === 0) return null;
+  return Math.round(total / count);
 }
 
 function findLeakCandidates(

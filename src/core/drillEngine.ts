@@ -87,6 +87,7 @@ import { ALL_HAND_CLASSES, SUITS, isPair, isSuited } from "./poker";
 import { offeredActions } from "./actionTree";
 import { questionId } from "./questionId";
 import { mulberry32, hashStr } from "./rng";
+import { buildPreflopExplanation } from "./preflopExplanation";
 import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
 
 // ---------------------------------------------------------------------------
@@ -245,18 +246,6 @@ const ACTION_KEY_LABEL: Record<ActionKey, string> = {
 };
 
 /** Český popisek akčního kontextu (pro zdůvodnění). */
-const CONTEXT_LABEL: Record<ActionContext, string> = {
-  RFI: "RFI/Open",
-  VS_LIMP: "Iso-raise vs limp",
-  VS_OPEN: "Defense vs open",
-  VS_3BET: "Vs 3-bet",
-  VS_4BET: "Vs 4-bet",
-  SQUEEZE: "Squeeze",
-  BVB: "Blind vs blind",
-  PUSH_FOLD: "Push/Fold",
-  VS_ALLIN: "Vs all-in",
-};
-
 // ---------------------------------------------------------------------------
 // Deterministické výběry z polí přes rng()
 // ---------------------------------------------------------------------------
@@ -548,10 +537,14 @@ export function generateSpot(
 
   const id = questionId({ context, heroPos, effStack, hand, ante });
   const startingPot = startingPotFor(ante);
-  const recommended = strictCorrect.map((k) => ACTION_KEY_LABEL[k]).join(" / ");
-  const explanation =
-    `${CONTEXT_LABEL[context]} - hero ${heroPos}, effective stack ` +
-    `${effStack} BB, hand ${hand}. Recommended action: ${recommended}.`;
+  const explanation = buildPreflopExplanation({
+    context,
+    heroPos,
+    effStack,
+    hand,
+    recommended: strictCorrect,
+    tableState,
+  });
 
   return {
     id,

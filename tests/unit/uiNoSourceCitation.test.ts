@@ -10,6 +10,7 @@ import { renderDashboard } from "../../src/ui/dashboard";
 import type { PostflopStatsV2BridgeRecord } from "../../src/persistence/postflopResultRecord";
 import type { RangeStore } from "../../src/data/rangeStore";
 import type { Card, Spot, TableState } from "../../src/core/types";
+import { buildProductionPermissionManifestReport } from "../../src/data/ranges/productionPermissionManifest";
 
 const FORBIDDEN_SOURCE_TEXT = [
   "https://",
@@ -235,6 +236,48 @@ describe("UI source citation policy", () => {
       .toContain("Preflop model");
     expect(root.querySelector<HTMLElement>(".postflop-breakdown--strategyPackId")?.textContent)
       .toContain("Postflop model");
+  });
+
+  it("nezobrazuje URL ani pack id v permission audit panelu", () => {
+    const store = createStatsStore(new MemoryStorage());
+    const report = buildProductionPermissionManifestReport({
+      packId: "mtt-full-ring-9-flop-production-private-v1",
+      version: "permission-v1",
+      reviewedAt: "2026-06-05",
+      reviewer: "Internal Review",
+      rightsOwner: "Private Solver Owner",
+      licenseKind: "OWNED_SOLVER_EXPORT",
+      allowedRedistributionScope: "PKRTRAINER_RUNTIME_BUNDLE",
+      sourceMaterialLocation: "Agents/range-intake/raw/mtt-full-ring-9-flop-production-private-v1/",
+      evidence: [
+        {
+          referenceId: "private-solver-export",
+          storedAt: "Agents/range-intake/raw/mtt-full-ring-9-flop-production-private-v1/export.txt",
+          reviewer: "Internal Review",
+          description: "Private solver export permission record.",
+          containsRangeValues: true,
+        },
+      ],
+      notes: ["Internal permission report fixture."],
+    }, {
+      packId: "mtt-full-ring-9-flop-production-private-v1",
+      licenseKind: "OWNED_SOLVER_EXPORT",
+    });
+
+    const root = document.createElement("div");
+    renderDashboard({
+      store,
+      sessionCount: 0,
+      permissionReports: [report],
+    }, root);
+
+    const text = root.querySelector<HTMLElement>(".permission-audit")?.textContent ?? "";
+    expect(text).toContain("Range audit");
+    expect(text).toContain("Owned solver export");
+    expectNoSourceCitation(root.textContent ?? "");
+    expect(text).not.toContain("mtt-full-ring-9-flop-production-private-v1");
+    expect(text).not.toContain("Private Solver Owner");
+    expect(text).not.toContain("Internal Review");
   });
 });
 

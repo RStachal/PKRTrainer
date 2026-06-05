@@ -42,6 +42,7 @@ export interface ResultRecordV2 {
   rangePackId: string;
   rangePackVersion: string;
   sourceVerifiedAt: string;
+  responseMs?: number;
 }
 
 export interface UpgradeResultRecordOptions {
@@ -80,6 +81,7 @@ export function upgradeResultRecordToV2(
     rangePackId: pack.id,
     rangePackVersion: pack.version,
     sourceVerifiedAt: pack.verifiedAt,
+    ...(isValidResponseMs(record.responseMs) ? { responseMs: record.responseMs } : {}),
   };
 }
 
@@ -140,6 +142,15 @@ export function isResultRecordV2(value: unknown): value is ResultRecordV2 {
     typeof record.rakeMode === "string" &&
     typeof record.rangePackId === "string" &&
     typeof record.rangePackVersion === "string" &&
-    typeof record.sourceVerifiedAt === "string"
+    typeof record.sourceVerifiedAt === "string" &&
+    isOptionalResponseMs(record.responseMs)
   );
+}
+
+function isValidResponseMs(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
+function isOptionalResponseMs(value: unknown): boolean {
+  return value === undefined || isValidResponseMs(value);
 }

@@ -1,6 +1,8 @@
 ﻿// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { KEY_EVENTS, KEY_POSTFLOP_EVENTS } from "../../src/persistence/keys";
+
 vi.setConfig({ testTimeout: 15000 });
 
 class MemoryStorage implements Storage {
@@ -70,8 +72,9 @@ describe("bootstrap - inicializacni tok", () => {
   it("preflop stul zobrazi az v samostatne otazce po startu", async () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
+    const storage = new MemoryStorage();
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+    bootstrap({ root, storage, registerSw: false });
 
     expect(root.querySelector<HTMLElement>(".training__filters")?.hidden).toBe(false);
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
@@ -105,6 +108,11 @@ describe("bootstrap - inicializacni tok", () => {
       .toContain("Recommended:");
     expect(root.querySelector<HTMLButtonElement>(".result__next")?.textContent)
       .toBe("Next spot");
+    const preflopEvents = JSON.parse(storage.getItem(KEY_EVENTS) ?? "[]") as Array<{
+      responseMs?: number;
+    }>;
+    expect(preflopEvents[0].responseMs).toEqual(expect.any(Number));
+    expect(preflopEvents[0].responseMs).toBeGreaterThanOrEqual(0);
     expect(root.querySelector<HTMLElement>(".training__result")?.textContent)
       .not.toMatch(/Doporu|Spr\u00e1vn|Špatn|Dal\u0161\u00ed/);
 
@@ -120,8 +128,9 @@ describe("bootstrap - inicializacni tok", () => {
   it("start s FLOP profilem prepne do postflop flow bez rucniho tabovani", async () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
+    const storage = new MemoryStorage();
 
-    bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+    bootstrap({ root, storage, registerSw: false });
 
     const street = root.querySelector<HTMLSelectElement>(".profile-street");
     const seed = root.querySelector<HTMLInputElement>(".filter-seed");
@@ -143,6 +152,11 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector<HTMLElement>(".dashboard-session-count")?.dataset.sessionCount)
       .toBe("1");
     expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("1");
+    const postflopEvents = JSON.parse(storage.getItem(KEY_POSTFLOP_EVENTS) ?? "[]") as Array<{
+      responseMs?: number;
+    }>;
+    expect(postflopEvents[0].responseMs).toEqual(expect.any(Number));
+    expect(postflopEvents[0].responseMs).toBeGreaterThanOrEqual(0);
     expect(
       root.querySelector<HTMLElement>(
         '.postflop-breakdown--street .postflop-breakdown-row[data-group="FLOP"]',

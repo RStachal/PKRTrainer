@@ -9,6 +9,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "verify:ranges": "vite-node scripts/verifyRanges.mts",
+    "validate:range-import": "vite-node scripts/validateRangeImport.mts",
+    "build:range-module": "vite-node scripts/buildRangeModule.mts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

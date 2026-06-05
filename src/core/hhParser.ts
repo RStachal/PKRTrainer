@@ -74,6 +74,7 @@ import {
 import { RANKS } from "./poker";
 import { offeredActions } from "./actionTree";
 import { questionId } from "./questionId";
+import { buildPreflopExplanation } from "./preflopExplanation";
 import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
 
 // ---------------------------------------------------------------------------
@@ -165,18 +166,6 @@ const ACTION_KEY_LABEL: Record<ActionKey, string> = {
 };
 
 /** Český popisek akčního kontextu (pro zdůvodnění). */
-const CONTEXT_LABEL: Record<ActionContext, string> = {
-  RFI: "RFI/Open",
-  VS_LIMP: "Iso-raise vs limp",
-  VS_OPEN: "Defense vs open",
-  VS_3BET: "Vs 3-bet",
-  VS_4BET: "Vs 4-bet",
-  SQUEEZE: "Squeeze",
-  BVB: "Blind vs blind",
-  PUSH_FOLD: "Push/Fold",
-  VS_ALLIN: "Vs all-in",
-};
-
 // ---------------------------------------------------------------------------
 // Interní mezistruktury
 // ---------------------------------------------------------------------------
@@ -713,10 +702,15 @@ function buildSpot(
   });
 
   const id = questionId({ context: ctx.context, heroPos, effStack: bucket, hand, ante });
-  const recommended = strictCorrect.map((k) => ACTION_KEY_LABEL[k]).join(" / ");
-  const explanation =
-    `${CONTEXT_LABEL[ctx.context]} (HH import) - hero ${heroPos}, ` +
-    `effective stack ${bucket} BB, hand ${hand}. Recommended action: ${recommended}.`;
+  const explanation = buildPreflopExplanation({
+    context: ctx.context,
+    heroPos,
+    effStack: bucket,
+    hand,
+    recommended: strictCorrect,
+    tableState,
+    importedFromHandHistory: true,
+  });
 
   return {
     id,

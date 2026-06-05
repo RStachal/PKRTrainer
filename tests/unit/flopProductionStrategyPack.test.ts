@@ -11,6 +11,7 @@ import {
   FLOP_PRODUCTION_REQUIRED_RANGE_LANES,
   FLOP_PRODUCTION_REQUIRED_TEXTURES,
   buildFlopProductionCoverageReport,
+  renderFlopProductionCoverageReport,
   validateFlopProductionStrategyPack,
   type FlopProductionStrategyPack,
   type FlopProductionStrategyRule,
@@ -139,6 +140,12 @@ describe("flopProductionStrategyPack", () => {
     expect(coverage.missingBoardTextures).toEqual([]);
     expect(coverage.missingActionNodes).toEqual([]);
     expect(coverage.missingRangeLanes).toEqual([]);
+    expect(renderFlopProductionCoverageReport(pack, coverage)).toContain(
+      "productionReady: true",
+    );
+    expect(renderFlopProductionCoverageReport(pack, coverage)).toContain(
+      "missing pot types: none",
+    );
   });
 
   it("odmita metadata-only heuristic vstup jako production strategii", () => {
@@ -191,5 +198,9 @@ describe("flopProductionStrategyPack", () => {
       "OOP_RAISER_VS_IP_CALLER",
       "OOP_CALLER_VS_IP_3BETTOR",
     ]);
+    expect(renderFlopProductionCoverageReport(pack, coverage)).toContain(
+      "missing pot types: THREE_BET_POT",
+    );
+    expect(renderFlopProductionCoverageReport(pack, coverage)).toContain("errors:");
   });
 });
