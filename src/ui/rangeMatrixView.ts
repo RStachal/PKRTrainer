@@ -50,9 +50,9 @@
  * _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
  */
 
-import type { ActionKey, Spot } from "../core/types";
+import type { ActionKey, HandLabel, Spot } from "../core/types";
 import { GRID_SIZE, RANKS, handLabel } from "../core/poker";
-import type { RangeKey, RangeStore } from "../data/rangeStore";
+import type { RangeEntry, RangeKey, RangeStore } from "../data/rangeStore";
 
 // ---------------------------------------------------------------------------
 // Vizuální kategorie
@@ -132,6 +132,24 @@ const LEGEND_ORDER: ActionCategory[] = [
 ];
 
 type CategoryCounts = Partial<Record<ActionCategory, number>>;
+
+const ACTION_LABEL: Record<ActionKey, string> = {
+  FOLD: "Fold",
+  CALL: "Call",
+  LIMP: "Limp / Check",
+  OVERLIMP: "Over-limp",
+  OPEN_2X: "Raise 2x",
+  OPEN_25X: "Raise 2.5x",
+  OPEN_3X: "Raise 3x",
+  ISO_2X: "Iso-raise 2x",
+  ISO_25X: "Iso-raise 2.5x",
+  ISO_3X: "Iso-raise 3x",
+  "3BET": "3-bet",
+  "4BET": "4-bet",
+  SQUEEZE: "Squeeze",
+  JAM: "All-in",
+  CALL_JAM: "Call all-in",
+};
 
 // ---------------------------------------------------------------------------
 // Kategorizace Akčních_klíčů
@@ -293,6 +311,97 @@ function categoryShare(count: number): string {
   return `${Math.round((count / (GRID_SIZE * GRID_SIZE)) * 100)}%`;
 }
 
+function actionListLabel(keys: readonly ActionKey[] | undefined): string {
+  if (!keys || keys.length === 0) return "Fold";
+  return keys.map((key) => ACTION_LABEL[key] ?? key).join(" / ");
+}
+
+function detailPanel(doc: Document): HTMLElement {
+  const detail = doc.createElement("div");
+  detail.className = "matrix-cell-detail";
+  detail.hidden = true;
+  detail.setAttribute("role", "status");
+  detail.setAttribute("tabindex", "-1");
+  detail.style.marginTop = "10px";
+  detail.style.border = "1px solid rgba(123,211,255,.24)";
+  detail.style.borderRadius = "10px";
+  detail.style.background = "linear-gradient(180deg,rgba(123,211,255,.08),rgba(43,213,118,.05))";
+  detail.style.padding = "10px 12px";
+  detail.style.fontSize = "12px";
+  detail.style.fontWeight = "850";
+  detail.style.lineHeight = "1.4";
+  detail.style.overflowWrap = "anywhere";
+  return detail;
+}
+
+function renderDetailLine(doc: Document, label: string, value: string): HTMLElement {
+  const line = doc.createElement("div");
+  line.className = "matrix-cell-detail__line";
+  line.style.display = "flex";
+  line.style.gap = "8px";
+  line.style.justifyContent = "space-between";
+  line.style.borderTop = "1px solid rgba(255,255,255,.08)";
+  line.style.paddingTop = "6px";
+  line.style.marginTop = "6px";
+
+  const labelEl = doc.createElement("span");
+  labelEl.className = "matrix-cell-detail__label";
+  labelEl.textContent = label;
+  labelEl.style.color = "#9fb2d5";
+  labelEl.style.textTransform = "uppercase";
+  labelEl.style.fontSize = "10px";
+  labelEl.style.fontWeight = "950";
+
+  const valueEl = doc.createElement("span");
+  valueEl.className = "matrix-cell-detail__value";
+  valueEl.textContent = value;
+  valueEl.style.color = "#f4f7ff";
+  valueEl.style.textAlign = "right";
+
+  line.appendChild(labelEl);
+  line.appendChild(valueEl);
+  return line;
+}
+
+function showCellDetail(
+  matrix: HTMLElement,
+  detail: HTMLElement,
+  entry: RangeEntry,
+  hand: HandLabel,
+  category: ActionCategory,
+  hero: boolean,
+): void {
+  matrix.querySelectorAll<HTMLElement>(".matrix-cell--selected").forEach((cell) => {
+    cell.classList.remove("matrix-cell--selected");
+    cell.style.filter = "";
+  });
+
+  const selected = matrix.querySelector<HTMLElement>(`.matrix-cell[data-hand="${hand}"]`);
+  if (selected) {
+    selected.classList.add("matrix-cell--selected");
+    selected.style.filter = "brightness(1.12)";
+  }
+
+  const doc = detail.ownerDocument ?? document;
+  detail.hidden = false;
+  detail.dataset.hand = hand;
+  detail.dataset.action = category;
+  detail.innerHTML = "";
+
+  const title = doc.createElement("div");
+  title.className = "matrix-cell-detail__title";
+  title.textContent = `${hand}${hero ? " - hero hand" : ""}`;
+  title.style.fontSize = "13px";
+  title.style.fontWeight = "950";
+  title.style.color = "#f8fbff";
+  detail.appendChild(title);
+
+  detail.appendChild(renderDetailLine(doc, "Range class", CATEGORIES[category].label));
+  detail.appendChild(renderDetailLine(doc, "Strict action", actionListLabel(entry.strict[hand])));
+  detail.appendChild(renderDetailLine(doc, "Lenient actions", actionListLabel(entry.actions[hand])));
+  detail.focus();
+}
+
 // ---------------------------------------------------------------------------
 // Hlavní vykreslení (Req 10)
 // ---------------------------------------------------------------------------
@@ -403,6 +512,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
 
     const usedCategories = new Set<ActionCategory>();
     const counts: CategoryCounts = {};
+    const cellDetail = detailPanel(doc);
 
     for (let i = 0; i < GRID_SIZE; i++) {
       // Řádkové záhlaví.
@@ -419,6 +529,12 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
         cell.className = `matrix-cell matrix-cell--${category}`;
         cell.dataset.hand = hand;
         cell.dataset.action = category;
+        cell.setAttribute("role", "button");
+        cell.setAttribute("tabindex", "0");
+        cell.setAttribute(
+          "aria-label",
+          `${hand}: ${CATEGORIES[category].label}; show strict and lenient actions`,
+        );
         cell.textContent = hand;
         cell.style.background = CATEGORIES[category].color;
         cell.style.textAlign = "center";
@@ -433,6 +549,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
         cell.style.boxShadow =
           "inset 0 1px 0 rgba(255,255,255,.18),inset 0 -10px 18px rgba(0,0,0,.16)";
         cell.style.fontWeight = "900";
+        cell.style.cursor = "pointer";
 
         // Req 10.3: zvýraznění ruky aktuálního spotu — rámeček/outline,
         // odlišitelný od barvení akcí (nikoli pouze barva).
@@ -445,6 +562,15 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
           cell.style.zIndex = "1";
         }
 
+        cell.addEventListener("click", () => {
+          showCellDetail(matrix, cellDetail, entry, hand, category, hand === spot.hand);
+        });
+        cell.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          cell.click();
+        });
+
         matrix.appendChild(cell);
       }
     }
@@ -453,6 +579,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
 
     // --- Legenda (Req 10.5) ---
     wrap.appendChild(renderLegend(doc, usedCategories, counts));
+    wrap.appendChild(cellDetail);
 
     root.appendChild(wrap);
   } catch {

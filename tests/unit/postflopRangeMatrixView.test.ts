@@ -94,6 +94,20 @@ describe("postflopRangeMatrixView", () => {
       .toBeGreaterThan(3);
     expect([...root.querySelectorAll<HTMLElement>(".postflop-flopzilla__legend-count")]
       .some((node) => /\d+\/169 \(\d+%\)/.test(node.textContent ?? ""))).toBe(true);
+
+    const heroCell = root.querySelector<HTMLElement>(".postflop-flopzilla__cell--hero");
+    heroCell?.click();
+    const detail = root.querySelector<HTMLElement>(".postflop-flopzilla__detail");
+    expect(detail).not.toBeNull();
+    expect(detail?.hidden).toBe(false);
+    expect(detail?.dataset.hand).toBe("AKs");
+    expect(detail?.dataset.category).toBeTruthy();
+    expect(detail?.dataset.lane).toMatch(/^(VALUE|BLUFF|CHECK)$/);
+    expect(detail?.textContent).toContain("hero hand");
+    expect(detail?.textContent).toContain("Category");
+    expect(detail?.textContent).toContain("Lane");
+    expect(detail?.textContent).toContain("Plan");
+    expect(heroCell?.classList.contains("postflop-flopzilla__cell--selected")).toBe(true);
   });
 
   it("umi legendou zvyraznit kategorii a ztlumit ostatni bunky", () => {

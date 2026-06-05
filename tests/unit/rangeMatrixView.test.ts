@@ -85,6 +85,24 @@ describe("rangeMatrixView - DOM", () => {
     expect(root.querySelectorAll(".legend-count").length).toBeGreaterThan(1);
     expect([...root.querySelectorAll<HTMLElement>(".legend-count")]
       .some((node) => /\d+\/169 \(\d+%\)/.test(node.textContent ?? ""))).toBe(true);
+
+    hero?.click();
+    const detail = root.querySelector<HTMLElement>(".matrix-cell-detail");
+    expect(detail).not.toBeNull();
+    expect(detail?.hidden).toBe(false);
+    expect(detail?.dataset.hand).toBe("AKs");
+    expect(detail?.dataset.action).toBe("OPEN");
+    expect(detail?.textContent).toContain("hero hand");
+    expect(detail?.textContent).toContain("Strict action");
+    expect(detail?.textContent).toContain("Raise 2x");
+    expect(detail?.textContent).toContain("Lenient actions");
+    expect(hero?.classList.contains("matrix-cell--selected")).toBe(true);
+
+    const aces = root.querySelector<HTMLElement>('.matrix-cell[data-hand="AA"]');
+    aces?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(detail?.dataset.hand).toBe("AA");
+    expect(detail?.textContent).toContain("3-bet");
+    expect(aces?.classList.contains("matrix-cell--selected")).toBe(true);
   });
 
   it("pri nedostupnych datech zobrazi indikaci bez mrizky", () => {

@@ -110,6 +110,7 @@ export function renderPostflopRangeMatrix(
   matrix.setAttribute("aria-label", `Flopzilla range matrix for board ${boardText}`);
   matrix.style.gridTemplateColumns = `repeat(${GRID_SIZE + 1}, minmax(0, 1fr))`;
   matrix.appendChild(headerCell(doc, ""));
+  const detail = detailPanel(doc);
 
   for (let j = 0; j < GRID_SIZE; j += 1) {
     matrix.appendChild(headerCell(doc, RANKS[j]));
@@ -125,12 +126,20 @@ export function renderPostflopRangeMatrix(
       const category = classifyFlopHand(hand, spot.board);
       used.add(category);
       counts[category] = (counts[category] ?? 0) + 1;
-      matrix.appendChild(matrixCell(doc, hand, category, hand === heroHand));
+      const cell = matrixCell(doc, hand, category, hand === heroHand);
+      cell.addEventListener("click", () => showCellDetail(matrix, detail, cell));
+      cell.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        cell.click();
+      });
+      matrix.appendChild(cell);
     }
   }
 
   wrap.appendChild(matrix);
   wrap.appendChild(legend(doc, used, counts, matrix));
+  wrap.appendChild(detail);
   root.appendChild(wrap);
 }
 
@@ -229,6 +238,8 @@ function matrixCell(
   cell.className = `postflop-flopzilla__cell postflop-flopzilla__cell--${category}`;
   if (hero) cell.classList.add("postflop-flopzilla__cell--hero");
   cell.setAttribute("role", "gridcell");
+  cell.setAttribute("tabindex", "0");
+  cell.setAttribute("aria-selected", "false");
   cell.setAttribute("aria-label", `${hand}: ${flopzillaCategoryLabel(category)}${hero ? " hero hand" : ""}`);
   cell.dataset.hand = hand;
   cell.dataset.category = category;
@@ -239,6 +250,87 @@ function matrixCell(
   cell.textContent = hand;
   cell.style.background = CATEGORY_DEFS[category].color;
   return cell;
+}
+
+function detailPanel(doc: Document): HTMLElement {
+  const detail = doc.createElement("div");
+  detail.className = "postflop-flopzilla__detail";
+  detail.hidden = true;
+  detail.setAttribute("role", "status");
+  detail.setAttribute("tabindex", "-1");
+  return detail;
+}
+
+function showCellDetail(
+  matrix: HTMLElement,
+  detail: HTMLElement,
+  cell: HTMLElement,
+): void {
+  matrix.querySelectorAll<HTMLElement>(".postflop-flopzilla__cell--selected")
+    .forEach((selected) => {
+      selected.classList.remove("postflop-flopzilla__cell--selected");
+      selected.setAttribute("aria-selected", "false");
+    });
+
+  cell.classList.add("postflop-flopzilla__cell--selected");
+  cell.setAttribute("aria-selected", "true");
+
+  const doc = detail.ownerDocument ?? document;
+  const hand = cell.dataset.hand ?? "";
+  const category = cell.dataset.category as FlopzillaCategory;
+  const lane = cell.dataset.lane as FlopzillaLane;
+  const categoryLabel = cell.dataset.categoryLabel ?? flopzillaCategoryLabel(category);
+  const laneLabel = cell.dataset.laneLabel ?? flopzillaLaneLabel(lane);
+  const hero = cell.classList.contains("postflop-flopzilla__cell--hero");
+
+  detail.hidden = false;
+  detail.dataset.hand = hand;
+  detail.dataset.category = category;
+  detail.dataset.categoryLabel = categoryLabel;
+  detail.dataset.lane = lane;
+  detail.dataset.laneLabel = laneLabel;
+  detail.innerHTML = "";
+
+  const title = doc.createElement("div");
+  title.className = "postflop-flopzilla__detail-title";
+  title.textContent = `${hand}${hero ? " - hero hand" : ""}`;
+  detail.appendChild(title);
+
+  const grid = doc.createElement("div");
+  grid.className = "postflop-flopzilla__detail-grid";
+  grid.appendChild(detailLine(doc, "Category", categoryLabel));
+  grid.appendChild(detailLine(doc, "Lane", laneLabel));
+  grid.appendChild(detailLine(doc, "Plan", laneExplanation(lane)));
+  detail.appendChild(grid);
+  detail.focus();
+}
+
+function detailLine(doc: Document, label: string, value: string): HTMLElement {
+  const line = doc.createElement("div");
+  line.className = "postflop-flopzilla__detail-line";
+
+  const labelEl = doc.createElement("span");
+  labelEl.className = "postflop-flopzilla__detail-label";
+  labelEl.textContent = label;
+
+  const valueEl = doc.createElement("span");
+  valueEl.className = "postflop-flopzilla__detail-value";
+  valueEl.textContent = value;
+
+  line.appendChild(labelEl);
+  line.appendChild(valueEl);
+  return line;
+}
+
+function laneExplanation(lane: FlopzillaLane): string {
+  switch (lane) {
+    case "VALUE":
+      return "Prioritize betting for value and protection; these hands can build the pot.";
+    case "BLUFF":
+      return "Use as natural bluffs with equity, blockers or backdoors when the line wants pressure.";
+    case "CHECK":
+      return "Keep in the check range for showdown value, traps or give-ups without enough equity.";
+  }
 }
 
 function headerCell(doc: Document, text: string): HTMLElement {

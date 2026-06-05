@@ -1275,8 +1275,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Review mode nema kontaminovat trening accuracy bez explicitni volby
 
 - [ ] 126. Range matrix and Flopzilla UX v2
-  - [ ] 126.1 Pridat combo-level detail po kliknuti na hand cell
+  - [x] 126.1 Pridat combo-level detail po kliknuti na hand cell
     - Cell detail muze ukazat strict/lenient actions and lane explanation
+    - Hotovo: preflop matrix cell click/Enter ukazuje strict vs lenient actions; postflop Flopzilla cell ukazuje category, lane and practical plan
   - [ ] 126.2 Pridat filters pro action/lane/category
     - Preflop matrix i flop matrix musi umet rychle izolovat relevantni subset
   - [ ] 126.3 Otestovat mobile horizontal scroll and sticky labels
@@ -1297,6 +1298,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 128.1 Spustit screenshot QA pro 360x800, 390x844, 412x915
     - Table, filters, postflop matrix and dashboard nesmi pretekat
     - Poznamka: Browser `iab` backend nebyl v teto relaci dostupny; doplnen automatizovany viewport smoke pro 360x800, 390x844 and 412x915
+    - Retry 2026-06-05: node_repl tool je dostupny, ale Browser stale hlasi `Browser is not available: iab`; real screenshot QA zustava otevrena
   - [x] 128.2 Otestovat offline reload po service worker cache
     - App musi fungovat bez runtime fetch
     - Hotovo: service worker test pokryva offline navigation reload z cache
