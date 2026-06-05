@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.setConfig({ testTimeout: 15000 });
+vi.setConfig({ testTimeout: 30000 });
 
 class MemoryStorage implements Storage {
   protected readonly data = new Map<string, string>();
@@ -112,6 +112,78 @@ describe("mobile / Android WebView smoke", () => {
     const exported = root.querySelector<HTMLTextAreaElement>(".stats-json-box")?.value;
     expect(exported).toContain("postflopRecords");
     expect(exported).not.toContain("https://");
+  });
+
+  it("projde release mobile viewporty 360x800, 390x844 a 412x915", async () => {
+    const viewports = [
+      { width: 360, height: 800 },
+      { width: 390, height: 844 },
+      { width: 412, height: 915 },
+    ];
+
+    for (const viewport of viewports) {
+      document.body.innerHTML = "";
+      vi.resetModules();
+      Object.defineProperty(window, "innerWidth", { value: viewport.width, configurable: true });
+      Object.defineProperty(window, "innerHeight", { value: viewport.height, configurable: true });
+
+      const { bootstrap } = await importFreshMain();
+      const root = document.createElement("div");
+      document.body.appendChild(root);
+
+      bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
+
+      expect(root.querySelector(".filters")).not.toBeNull();
+      expect(root.querySelector<HTMLSelectElement>(".profile-street")).not.toBeNull();
+      const street = root.querySelector<HTMLSelectElement>(".profile-street");
+      street!.value = "FLOP";
+      street!.dispatchEvent(new Event("change"));
+      root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+
+      expect(root.querySelector(".postflop-table")).not.toBeNull();
+      expect(root.querySelectorAll(".postflop-seat").length).toBeGreaterThanOrEqual(2);
+      const boardCards = root.querySelectorAll(".postflop-table__board .postflop-card").length;
+      expect(boardCards).toBeGreaterThanOrEqual(3);
+      expect(boardCards).toBeLessThanOrEqual(5);
+      root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+      expect(root.querySelector(".postflop-flopzilla__matrix")).not.toBeNull();
+      expect(root.querySelectorAll(".postflop-flopzilla__cell")).toHaveLength(169);
+      expect(root.textContent).not.toContain("https://");
+    }
+  });
+
+  it("udrzi postflop stats po mobile reloadu se stejnym localStorage", async () => {
+    Object.defineProperty(window, "innerWidth", { value: 390, configurable: true });
+    Object.defineProperty(window, "innerHeight", { value: 844, configurable: true });
+    const storage = new MemoryStorage();
+
+    {
+      const { bootstrap } = await importFreshMain();
+      const root = document.createElement("div");
+      document.body.appendChild(root);
+      bootstrap({ root, storage, registerSw: false });
+
+      const street = root.querySelector<HTMLSelectElement>(".profile-street");
+      street!.value = "FLOP";
+      street!.dispatchEvent(new Event("change"));
+      root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+      root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+      expect(root.querySelector<HTMLElement>(".postflop-result")?.hidden).toBe(false);
+    }
+
+    {
+      const { bootstrap } = await importFreshMain();
+      const root = document.createElement("div");
+      document.body.appendChild(root);
+      bootstrap({ root, storage, registerSw: false });
+
+      root.querySelector<HTMLButtonElement>('[data-tab="stats"]')?.click();
+      root.querySelector<HTMLButtonElement>(".stats-export")?.click();
+      const exported = root.querySelector<HTMLTextAreaElement>(".stats-json-box")?.value ?? "";
+      expect(exported).toContain("postflopRecords");
+      expect(exported).toContain("POSTFLOP|FLOP");
+      expect(exported).not.toContain("https://");
+    }
   });
 });
 

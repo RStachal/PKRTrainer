@@ -1293,10 +1293,13 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
 - [ ] 128. Mobile and Android WebView release QA
   - [ ] 128.1 Spustit screenshot QA pro 360x800, 390x844, 412x915
     - Table, filters, postflop matrix and dashboard nesmi pretekat
-  - [ ] 128.2 Otestovat offline reload po service worker cache
+    - Poznamka: Browser `iab` backend nebyl v teto relaci dostupny; doplnen automatizovany viewport smoke pro 360x800, 390x844 and 412x915
+  - [x] 128.2 Otestovat offline reload po service worker cache
     - App musi fungovat bez runtime fetch
-  - [ ] 128.3 Otestovat localStorage persistence na mobile viewportu
+    - Hotovo: service worker test pokryva offline navigation reload z cache
+  - [x] 128.3 Otestovat localStorage persistence na mobile viewportu
     - Stats, postflop records and seed replay musi prezit reload
+    - Hotovo: mobile WebView smoke overuje postflop stats po reloadu se stejnym localStorage
 
 - [x] 129. Performance and bundle budget
   - [x] 129.1 Zavest bundle size budget
