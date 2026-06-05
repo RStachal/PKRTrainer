@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { renderPostflopView } from "../../src/ui/postflopView";
 
 describe("postflopView - DOM", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
   it("vykresli postflop prototyp a respektuje seed i street", () => {
     const root = document.createElement("div");
     renderPostflopView(root);
@@ -57,12 +61,14 @@ describe("postflopView - DOM", () => {
 
   it("oddeli zadani situace od postflop otazky a umi se vratit", () => {
     const root = document.createElement("div");
+    document.body.appendChild(root);
     renderPostflopView(root, { initialSeed: 42, initialStreet: "FLOP" });
 
     root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
     expect(root.querySelector<HTMLElement>(".postflop-controls")?.hidden).toBe(true);
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(false);
     expect(root.querySelectorAll(".postflop-action")).toHaveLength(3);
+    expect(document.activeElement).toBe(root.querySelector<HTMLButtonElement>(".postflop-action"));
     expect(root.querySelector(".postflop-table")).not.toBeNull();
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.seed).toBe("42");
 
@@ -75,6 +81,7 @@ describe("postflopView - DOM", () => {
     root.querySelector<HTMLButtonElement>(".postflop-change-situation")?.click();
     expect(root.querySelector<HTMLElement>(".postflop-controls")?.hidden).toBe(false);
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(true);
+    expect(document.activeElement).toBe(root.querySelector<HTMLSelectElement>(".postflop-street"));
     expect(root.querySelector(".postflop-card")).toBeNull();
     expect(root.querySelector(".postflop-table")).toBeNull();
     expect(root.querySelector(".postflop-action")).toBeNull();

@@ -143,6 +143,11 @@ function elapsedMs(startMs: number): number | undefined {
   return Number.isFinite(value) ? value : undefined;
 }
 
+function focusElement(element: HTMLElement | null): void {
+  if (!element || typeof element.focus !== "function") return;
+  element.focus();
+}
+
 // ---------------------------------------------------------------------------
 // Inicializace ĂşloĹľiĹˇtÄ› (Req 14.2, 14.3, 14.6)
 // ---------------------------------------------------------------------------
@@ -679,6 +684,7 @@ function setupTraining(
     clearActiveQuestion();
     gameBox.hidden = true;
     filtersBox.hidden = false;
+    focusElement(filtersBox.querySelector<HTMLElement>(".profile-variant"));
   });
 
   function startPostflopSession(
@@ -767,6 +773,7 @@ function setupTraining(
     resultContainer.innerHTML = "";
     matrixContainer.innerHTML = "";
     renderActions(spot, filters.scoringMode);
+    focusElement(actionsContainer.querySelector<HTMLButtonElement>(".action-btn"));
   }
 
   /** VykreslĂ­ tlaÄŤĂ­tka nabĂ­zenĂ˝ch akcĂ­ (Req 3.12 â€” 1 klĂ­ÄŤ na akci). */
@@ -894,6 +901,7 @@ function setupTraining(
     box.appendChild(nextBtn);
 
     resultContainer.appendChild(box);
+    focusElement(nextBtn);
   }
 
   /** Posune sekvenci na dalĹˇĂ­ spot (Req 6.6 â€” sekvence cyklĂ­ deterministicky). */

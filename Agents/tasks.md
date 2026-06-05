@@ -1282,9 +1282,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 126.3 Otestovat mobile horizontal scroll and sticky labels
     - 13x13 matrix musi zustat pouzitelna na Android WebView
 
-- [ ] 127. Accessibility and keyboard QA
-  - [ ] 127.1 Projit tab order pro training, dashboard, HH import and postflop
+- [x] 127. Accessibility and keyboard QA
+  - [x] 127.1 Projit tab order pro training, dashboard, HH import and postflop
     - Focus order musi sledovat skutecny workflow
+    - Hotovo: preflop Start presouva focus na action buttons, odpoved na Next spot, Change situation zpet na profile selector; postflop spot presouva focus na actions, odpoved na vysledek a navrat na street selector
   - [x] 127.2 Pridat ARIA labels pro icon/action controls
     - Tlacitka bez popisu musi byt citelna screen readerem
     - Hotovo: app shell ma tablist/tab/tabpanel semantiku; opakovane All/None filter controls maji kontextove accessible names

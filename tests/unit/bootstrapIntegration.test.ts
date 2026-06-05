@@ -88,6 +88,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
     const storage = new MemoryStorage();
+    document.body.appendChild(root);
 
     bootstrap({ root, storage, registerSw: false });
 
@@ -117,8 +118,11 @@ describe("bootstrap - inicializacni tok", () => {
     const actionLabels = Array.from(root.querySelectorAll<HTMLButtonElement>(".action-btn"))
       .map((button) => button.textContent ?? "");
     expect(actionLabels.join(" ")).not.toMatch(/[×Ă—]|2,5/);
+    const firstAction = root.querySelector<HTMLButtonElement>(".action-btn");
+    expect(document.activeElement).toBe(firstAction);
 
-    root.querySelector<HTMLButtonElement>(".action-btn")?.click();
+    firstAction?.click();
+    expect(document.activeElement).toBe(root.querySelector<HTMLButtonElement>(".result__next"));
     expect(root.querySelector<HTMLElement>(".result__recommended")?.textContent)
       .toContain("Recommended:");
     expect(root.querySelector<HTMLButtonElement>(".result__next")?.textContent)
@@ -135,6 +139,7 @@ describe("bootstrap - inicializacni tok", () => {
 
     expect(root.querySelector<HTMLElement>(".training__filters")?.hidden).toBe(false);
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
+    expect(document.activeElement).toBe(root.querySelector<HTMLSelectElement>(".profile-variant"));
     expect(root.querySelector(".poker-table")).toBeNull();
     expect(root.querySelector(".action-btn")).toBeNull();
     expect(root.querySelector<HTMLElement>(".training__session-meta")?.textContent).toBe("");
@@ -144,6 +149,7 @@ describe("bootstrap - inicializacni tok", () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
     const storage = new MemoryStorage();
+    document.body.appendChild(root);
 
     bootstrap({ root, storage, registerSw: false });
 
@@ -161,8 +167,10 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("123");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("FLOP");
     expect(root.querySelector(".poker-table")).toBeNull();
+    expect(document.activeElement).toBe(root.querySelector<HTMLButtonElement>(".postflop-action"));
 
     root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    expect(document.activeElement).toBe(root.querySelector<HTMLElement>(".postflop-result"));
 
     expect(root.querySelector<HTMLElement>(".dashboard-session-count")?.dataset.sessionCount)
       .toBe("1");

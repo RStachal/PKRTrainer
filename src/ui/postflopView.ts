@@ -96,6 +96,11 @@ function elapsedMs(startMs: number): number | undefined {
   return Number.isFinite(value) ? value : undefined;
 }
 
+function focusElement(element: HTMLElement | null): void {
+  if (!element || typeof element.focus !== "function") return;
+  element.focus();
+}
+
 export function renderPostflopView(root: HTMLElement, options: PostflopViewOptions = {}): void {
   const doc = root.ownerDocument ?? document;
   root.innerHTML = "";
@@ -157,6 +162,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
     output.innerHTML = "";
     output.hidden = true;
     controls.hidden = false;
+    focusElement(streetSelect);
   };
 
   const showNewSpot = (): void => {
@@ -269,11 +275,13 @@ function renderSpot(
     actions.appendChild(btn);
   }
   root.appendChild(actions);
+  focusElement(actions.querySelector<HTMLButtonElement>(".postflop-action"));
 
   const result = doc.createElement("div");
   result.className = "postflop-result";
   result.hidden = true;
   result.setAttribute("role", "status");
+  result.setAttribute("tabindex", "-1");
   root.appendChild(result);
 }
 
@@ -492,6 +500,7 @@ function showResult(
   result.hidden = false;
   result.className = `postflop-result ${correct ? "postflop-result--correct" : "postflop-result--wrong"}`;
   renderPracticalExplanation(result, spot, correct, chosen);
+  focusElement(result);
 }
 
 function renderPracticalExplanation(
