@@ -1239,8 +1239,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Small/big bet ma byt jasne videt bez textove instruktaze
   - [ ] 121.2 Zobrazit aktivniho agresora, callera a IP/OOP role na stole
     - Postflop table musi byt citelny i bez meta radku
-  - [ ] 121.3 Pridat keyboard flow pro postflop odpovedi
+  - [x] 121.3 Pridat keyboard flow pro postflop odpovedi
     - 1/2/3 nebo arrow navigation, focus state and mobile safe behavior
+    - Hotovo: postflop action buttons podporuji 1/2/3 selection and arrow-key focus navigation; test drzi result focus po odpovedi
 
 - [ ] 122. Statistics dashboard v2
   - [ ] 122.1 Pridat trend recent accuracy v case

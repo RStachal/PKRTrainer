@@ -274,6 +274,7 @@ function renderSpot(
     ));
     actions.appendChild(btn);
   }
+  wireActionKeyboard(actions);
   root.appendChild(actions);
   focusElement(actions.querySelector<HTMLButtonElement>(".postflop-action"));
 
@@ -283,6 +284,40 @@ function renderSpot(
   result.setAttribute("role", "status");
   result.setAttribute("tabindex", "-1");
   root.appendChild(result);
+}
+
+function wireActionKeyboard(actions: HTMLElement): void {
+  actions.addEventListener("keydown", (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const buttons = [...actions.querySelectorAll<HTMLButtonElement>(".postflop-action")]
+      .filter((button) => !button.disabled);
+    if (buttons.length === 0) return;
+
+    if (/^[1-9]$/.test(event.key)) {
+      const index = Number(event.key) - 1;
+      const button = buttons[index];
+      if (!button) return;
+      event.preventDefault();
+      button.focus();
+      button.click();
+      return;
+    }
+
+    const direction = actionNavigationDirection(event.key);
+    if (direction === 0) return;
+    event.preventDefault();
+    const active = actions.ownerDocument.activeElement;
+    const currentIndex = buttons.findIndex((button) => button === active);
+    const startIndex = currentIndex >= 0 ? currentIndex : 0;
+    const nextIndex = (startIndex + direction + buttons.length) % buttons.length;
+    buttons[nextIndex].focus();
+  });
+}
+
+function actionNavigationDirection(key: string): -1 | 0 | 1 {
+  if (key === "ArrowRight" || key === "ArrowDown") return 1;
+  if (key === "ArrowLeft" || key === "ArrowUp") return -1;
+  return 0;
 }
 
 function postflopTable(doc: Document, spot: PostflopTrainingSpot): HTMLElement {

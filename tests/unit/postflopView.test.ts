@@ -87,6 +87,28 @@ describe("postflopView - DOM", () => {
     expect(root.querySelector(".postflop-action")).toBeNull();
   });
 
+  it("podporuje keyboard flow pro postflop action buttons", () => {
+    const root = document.createElement("div");
+    document.body.appendChild(root);
+    renderPostflopView(root, { initialSeed: 42, initialStreet: "FLOP" });
+
+    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>(".postflop-action")];
+    expect(buttons).toHaveLength(3);
+    expect(document.activeElement).toBe(buttons[0]);
+
+    buttons[0].dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    expect(document.activeElement).toBe(buttons[1]);
+
+    buttons[1].dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    expect(document.activeElement).toBe(buttons[0]);
+
+    buttons[0].dispatchEvent(new KeyboardEvent("keydown", { key: "3", bubbles: true }));
+    expect(buttons[2].classList.contains("postflop-action--chosen")).toBe(true);
+    expect(root.querySelector<HTMLElement>(".postflop-result")?.hidden).toBe(false);
+    expect(document.activeElement).toBe(root.querySelector<HTMLElement>(".postflop-result"));
+  });
+
   it("po vyberu akce zobrazi doporuceni a prakticke vysvetleni", () => {
     const root = document.createElement("div");
     renderPostflopView(root);
