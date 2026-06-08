@@ -192,6 +192,7 @@ describe("dashboard - DOM statistiky", () => {
     expect(css).toContain(".dashboard-kpi-chart-row");
     expect(css).toContain(".dashboard-confidence-kpi-row");
     expect(css).toContain(".dashboard-decision-trend");
+    expect(css).toContain(".dashboard-leak-row__train");
     expect(css).toContain(".dashboard-accuracy-trend");
     expect(css).toContain(".dashboard-accuracy-trend__bar");
     expect(css).toContain(".preflop-curriculum");
@@ -553,10 +554,29 @@ describe("dashboard - DOM statistiky", () => {
     expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.textContent)
       .toContain("Next study focus");
     expect(root.querySelectorAll(".preflop-curriculum__recommendation")).toHaveLength(3);
+    expect(root.querySelectorAll(".preflop-curriculum__recommendation-train")).toHaveLength(3);
     expect(root.querySelector<HTMLElement>(".preflop-curriculum__recommendation")
       ?.dataset.recentMistakes).toBe("4");
+    root.querySelector<HTMLButtonElement>(
+      '.dashboard-leak-row[data-dim="context"][data-group="VS_OPEN"] .dashboard-leak-row__train',
+    )?.click();
+    root.querySelector<HTMLButtonElement>(".preflop-curriculum__recommendation-train")?.click();
     root.querySelector<HTMLButtonElement>(".preflop-curriculum__start")?.click();
     expect(focusedFilters).toEqual([
+      {
+        positions: [],
+        buckets: [],
+        contexts: ["VS_OPEN"],
+        ante: "ON",
+        scoringMode: "LENIENT",
+      },
+      {
+        positions: [],
+        buckets: [15],
+        contexts: [],
+        ante: "ON",
+        scoringMode: "LENIENT",
+      },
       {
         positions: [],
         buckets: [15],

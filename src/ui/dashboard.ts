@@ -28,8 +28,13 @@
  * _Requirements: 9.3, 9.4, 9.5, 9.7_
  */
 
-import type { ActionContext } from "../core/types";
-import type { Filters } from "../core/types";
+import type {
+  ActionContext,
+  AnteMode,
+  Filters,
+  Position,
+  StackBucket,
+} from "../core/types";
 import type {
   Breakdown,
   BreakdownDim,
@@ -448,6 +453,7 @@ function renderSummary(summary: Summary): HTMLElement {
 function renderKpiPanel(
   store: StatsStore,
   postflopRecords: readonly PostflopStatsV2BridgeRecord[] = [],
+  onStartPreflopFocus?: (filters: Filters) => void,
 ): HTMLElement {
   const preflopRecords = migrateResultRecordsToV2(store.events());
   const model = buildStatsV2KpiModel(preflopRecords);
@@ -503,7 +509,7 @@ function renderKpiPanel(
   box.appendChild(renderConfidenceWeightedKpi(confidenceWeightedKpi));
   box.appendChild(renderDecisionTimeTrend(decisionTrend));
   box.appendChild(renderAccuracyTrend(accuracyTrend));
-  box.appendChild(renderLeakChart(model.leakCandidates));
+  box.appendChild(renderLeakChart(model.leakCandidates, preflopRecords, onStartPreflopFocus));
 
   return box;
 }
@@ -558,6 +564,13 @@ function renderPreflopCurriculumPanel(
       meta.textContent = recommendation.reason;
       row.appendChild(label);
       row.appendChild(meta);
+      const train = document.createElement("button");
+      train.type = "button";
+      train.className = "preflop-curriculum__recommendation-train";
+      train.textContent = "Train";
+      train.disabled = onStartPreflopFocus === undefined;
+      train.addEventListener("click", () => onStartPreflopFocus?.(recommendation.filters));
+      row.appendChild(train);
       recommendations.appendChild(row);
     }
 
@@ -1148,7 +1161,11 @@ function renderAccuracyTrendBar(point: AccuracyTrendPoint): HTMLElement {
   return bar;
 }
 
-function renderLeakChart(candidates: readonly StatsV2LeakCandidate[]): HTMLElement {
+function renderLeakChart(
+  candidates: readonly StatsV2LeakCandidate[],
+  records: readonly ResultRecordV2[],
+  onStartPreflopFocus?: (filters: Filters) => void,
+): HTMLElement {
   const chart = el("div", "dashboard-leak-chart");
   chart.dataset.count = String(candidates.length);
   const title = el("div", "dashboard-leak-chart__title");
@@ -1172,10 +1189,47 @@ function renderLeakChart(candidates: readonly StatsV2LeakCandidate[]): HTMLEleme
     row.classList.add("dashboard-leak-row");
     row.dataset.dim = candidate.dim;
     row.dataset.group = candidate.key;
+    const filters = filtersForLeakCandidate(candidate, records);
+    row.dataset.actionable = String(filters !== null);
+    const train = document.createElement("button");
+    train.type = "button";
+    train.className = "dashboard-leak-row__train";
+    train.textContent = "Train";
+    train.disabled = filters === null || onStartPreflopFocus === undefined;
+    train.addEventListener("click", () => {
+      if (filters !== null) onStartPreflopFocus?.(filters);
+    });
+    row.appendChild(train);
     chart.appendChild(row);
   }
 
   return chart;
+}
+
+function filtersForLeakCandidate(
+  candidate: StatsV2LeakCandidate,
+  records: readonly ResultRecordV2[],
+): Filters | null {
+  if (!isPreflopFocusDim(candidate.dim)) return null;
+  const matchingRecords = records.filter((record) => String(record[candidate.dim]) === candidate.key);
+  const ante = dominantPreflopAnte(matchingRecords);
+  return {
+    positions: candidate.dim === "position" ? [candidate.key as Position] : [],
+    buckets: candidate.dim === "bucket" ? [Number(candidate.key) as StackBucket] : [],
+    contexts: candidate.dim === "context" ? [candidate.key as ActionContext] : [],
+    ante,
+    scoringMode: "LENIENT",
+  };
+}
+
+function isPreflopFocusDim(dim: StatsV2BreakdownDim): dim is "context" | "position" | "bucket" {
+  return dim === "context" || dim === "position" || dim === "bucket";
+}
+
+function dominantPreflopAnte(records: readonly ResultRecordV2[]): AnteMode {
+  const on = records.filter((record) => record.ante === "ON").length;
+  const off = records.length - on;
+  return on >= off ? "ON" : "OFF";
 }
 
 function rateBar(labelText: string, key: string, rate: number | null, total: number): HTMLElement {
@@ -1607,12 +1661,20 @@ function dashboardStyles(): HTMLStyleElement {
 .dashboard-leak-chart{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
 .dashboard-leak-chart__title{font-size:12px;font-weight:950;color:#dce7fb;}
 .dashboard-leak-chart__empty{font-size:12px;color:#9fb0cf;}
+.dashboard-leak-row{grid-template-columns:minmax(92px,1fr) minmax(120px,2fr) auto auto;}
+.dashboard-leak-row__train,.preflop-curriculum__recommendation-train{appearance:none;border:1px solid rgba(43,213,118,.45);
+  border-radius:9px;background:linear-gradient(180deg,#2bd576,#20bf69);color:#06120b;font-weight:950;
+  font-size:12px;padding:7px 10px;cursor:pointer;box-shadow:0 10px 20px rgba(43,213,118,.14),
+  inset 0 1px 0 rgba(255,255,255,.22);}
+.dashboard-leak-row__train:disabled,.preflop-curriculum__recommendation-train:disabled{
+  opacity:.45;cursor:not-allowed;}
 .dashboard-kpi-chart-row{display:grid;grid-template-columns:minmax(92px,1fr) minmax(120px,2fr) auto;
   align-items:center;gap:9px;font-size:12px;}
 .dashboard-kpi-chart-row__label{font-weight:850;color:#dce7fb;min-width:0;overflow-wrap:anywhere;}
 .dashboard-kpi-chart-row__track{height:9px;border-radius:999px;background:rgba(148,163,184,.14);overflow:hidden;}
 .dashboard-kpi-chart-row__bar{height:100%;border-radius:inherit;background:linear-gradient(90deg,#2bd576,#7bd3ff);}
 .dashboard-kpi-chart-row__rate{font-weight:950;color:#9ff0bd;font-variant-numeric:tabular-nums;}
+.dashboard-kpi-chart-row.dashboard-leak-row{grid-template-columns:minmax(92px,1fr) minmax(120px,2fr) auto auto;}
 .preflop-curriculum{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;
   background:
   radial-gradient(circle at 85% 0%,rgba(123,211,255,.12),rgba(123,211,255,0) 34%),
@@ -1623,7 +1685,7 @@ function dashboardStyles(): HTMLStyleElement {
 .preflop-curriculum__due{grid-column:1/2;}
 .preflop-curriculum__recommendations{grid-column:1/-1;display:grid;gap:7px;margin-top:4px;}
 .preflop-curriculum__recommendations-title{font-size:12px;font-weight:950;color:#dce7fb;}
-.preflop-curriculum__recommendation{display:grid;grid-template-columns:minmax(110px,1fr) minmax(160px,2fr);
+.preflop-curriculum__recommendation{display:grid;grid-template-columns:minmax(110px,1fr) minmax(160px,2fr) auto;
   gap:8px;align-items:center;border:1px solid rgba(148,163,184,.13);border-radius:9px;
   padding:8px;background:rgba(255,255,255,.035);font-size:12px;}
 .preflop-curriculum__recommendation-label{font-weight:950;color:#f8fbff;min-width:0;overflow-wrap:anywhere;}
@@ -1683,6 +1745,8 @@ function dashboardStyles(): HTMLStyleElement {
   .postflop-kpi-chart--boardTextureKey{grid-column:auto;}
   .dashboard-kpi__cards{grid-template-columns:1fr 1fr;}
   .dashboard-kpi-chart-row{grid-template-columns:1fr;gap:5px;}
+  .dashboard-leak-row{grid-template-columns:1fr;}
+  .dashboard-leak-row__train,.preflop-curriculum__recommendation-train{width:100%;min-height:38px;}
   .dashboard-confidence-kpi-row{grid-template-columns:1fr;gap:5px;}
   .dashboard-confidence-kpi-row__sample{white-space:normal;}
   .dashboard-decision-trend__bars{grid-template-columns:repeat(auto-fit,minmax(48px,1fr));gap:7px;min-height:108px;}
@@ -1724,7 +1788,11 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
 
   // Summary (Req 9.3).
   wrapper.appendChild(renderSummary(store.summary()));
-  wrapper.appendChild(renderKpiPanel(store, data.postflopRecords ?? []));
+  wrapper.appendChild(renderKpiPanel(
+    store,
+    data.postflopRecords ?? [],
+    data.onStartPreflopFocus,
+  ));
   wrapper.appendChild(renderPreflopCurriculumPanel(store, data.onStartPreflopFocus));
 
   // Streak and current-session count (Req 9.5).
