@@ -1,6 +1,7 @@
 import type { ResultRecord, StatsStore } from "./statsStore";
 import { isValidResultRecord } from "./statsStore";
 import { SCHEMA_VERSION } from "./keys";
+import { migrateResultRecordsToV2 } from "./statsRecordV2";
 import {
   isPostflopStatsV2BridgeRecord,
   normalizePostflopStatsV2BridgeRecord,
@@ -34,6 +35,19 @@ type StatsImportFailure = Extract<StatsImportOutcome, { ok: false }>;
 
 export interface BuildStatsExportOptions {
   postflopRecords?: readonly PostflopStatsV2BridgeRecord[];
+  profileId?: string;
+}
+
+export interface StatsProfileOption {
+  profileId: string;
+  total: number;
+  preflopTotal: number;
+  postflopTotal: number;
+}
+
+export interface StatsProfileSelection {
+  events: ResultRecord[];
+  postflopRecords: PostflopStatsV2BridgeRecord[];
 }
 
 export function buildStatsExportJson(
@@ -41,14 +55,77 @@ export function buildStatsExportJson(
   now: Date = new Date(),
   options: BuildStatsExportOptions = {},
 ): string {
+  const events = store.events();
+  const selected = options.profileId
+    ? selectStatsProfileRecords(events, options.postflopRecords ?? [], options.profileId)
+    : {
+        events,
+        postflopRecords: [...(options.postflopRecords ?? [])],
+      };
   const payload: StatsExportPayload = {
     profile: STATS_EXPORT_PROFILE,
     schemaVersion: SCHEMA_VERSION,
     exportedAt: now.toISOString(),
-    events: store.events(),
-    postflopRecords: [...(options.postflopRecords ?? [])],
+    events: selected.events,
+    postflopRecords: selected.postflopRecords,
   };
   return JSON.stringify(payload, null, 2);
+}
+
+export function listStatsProfiles(
+  events: readonly ResultRecord[],
+  postflopRecords: readonly PostflopStatsV2BridgeRecord[] = [],
+): StatsProfileOption[] {
+  const profiles = new Map<string, StatsProfileOption>();
+  const preflopProfiles = migrateResultRecordsToV2(events);
+  preflopProfiles.forEach((record) => {
+    addProfileCount(profiles, record.profileId, "preflop");
+  });
+  postflopRecords.forEach((record) => {
+    addProfileCount(profiles, record.profileId, "postflop");
+  });
+  return [...profiles.values()].sort((a, b) => a.profileId.localeCompare(b.profileId));
+}
+
+export function selectStatsProfileRecords(
+  events: readonly ResultRecord[],
+  postflopRecords: readonly PostflopStatsV2BridgeRecord[],
+  profileId: string,
+): StatsProfileSelection {
+  const preflopProfiles = migrateResultRecordsToV2(events);
+  return {
+    events: events.filter((_, index) => preflopProfiles[index]?.profileId === profileId),
+    postflopRecords: postflopRecords.filter((record) => record.profileId === profileId).map((record) => ({ ...record })),
+  };
+}
+
+export function removeStatsProfileRecords(
+  events: readonly ResultRecord[],
+  postflopRecords: readonly PostflopStatsV2BridgeRecord[],
+  profileId: string,
+): StatsProfileSelection {
+  const preflopProfiles = migrateResultRecordsToV2(events);
+  return {
+    events: events.filter((_, index) => preflopProfiles[index]?.profileId !== profileId),
+    postflopRecords: postflopRecords.filter((record) => record.profileId !== profileId).map((record) => ({ ...record })),
+  };
+}
+
+function addProfileCount(
+  profiles: Map<string, StatsProfileOption>,
+  profileId: string,
+  source: "preflop" | "postflop",
+): void {
+  const current = profiles.get(profileId) ?? {
+    profileId,
+    total: 0,
+    preflopTotal: 0,
+    postflopTotal: 0,
+  };
+  current.total += 1;
+  if (source === "preflop") current.preflopTotal += 1;
+  else current.postflopTotal += 1;
+  profiles.set(profileId, current);
 }
 
 export function importStatsJson(raw: string, store: StatsStore): StatsImportOutcome {

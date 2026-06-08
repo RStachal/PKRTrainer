@@ -5,8 +5,12 @@ import type { PostflopStatsV2BridgeRecord } from "../../src/persistence/postflop
 import {
   buildStatsExportJson,
   importStatsJson,
+  listStatsProfiles,
+  removeStatsProfileRecords,
+  selectStatsProfileRecords,
   STATS_EXPORT_PROFILE,
 } from "../../src/persistence/statsTransfer";
+import { migrateResultRecordsToV2 } from "../../src/persistence/statsRecordV2";
 
 class MemoryStorage implements Storage {
   private readonly data = new Map<string, string>();
@@ -113,6 +117,37 @@ describe("statsTransfer - export/import JSON", () => {
       postflopRecords: [postflopRecord],
     });
     expect(target.events()).toEqual([record]);
+  });
+
+  it("umi vybrat, exportovat a odebrat statistiky jen pro jeden profil", () => {
+    const source = createStatsStore(new MemoryStorage());
+    const offRecord = { ...record, qid: "RFI|BTN|25|AKs|OFF", ts: 1 };
+    const onRecord = { ...record, qid: "RFI|BTN|25|AQs|ON", ts: 2 };
+    expect(source.record(offRecord).ok).toBe(true);
+    expect(source.record(onRecord).ok).toBe(true);
+    const offProfileId = migrateResultRecordsToV2([offRecord])[0].profileId;
+    const onProfileId = migrateResultRecordsToV2([onRecord])[0].profileId;
+
+    expect(listStatsProfiles(source.events(), [postflopRecord])).toEqual([
+      { profileId: offProfileId, total: 1, preflopTotal: 1, postflopTotal: 0 },
+      { profileId: postflopRecord.profileId, total: 1, preflopTotal: 0, postflopTotal: 1 },
+      { profileId: onProfileId, total: 1, preflopTotal: 1, postflopTotal: 0 },
+    ].sort((a, b) => a.profileId.localeCompare(b.profileId)));
+
+    const selected = selectStatsProfileRecords(source.events(), [postflopRecord], offProfileId);
+    expect(selected).toEqual({ events: [offRecord], postflopRecords: [] });
+
+    const exported = JSON.parse(buildStatsExportJson(
+      source,
+      new Date("2026-06-01T12:00:00.000Z"),
+      { postflopRecords: [postflopRecord], profileId: postflopRecord.profileId },
+    )) as { events: ResultRecord[]; postflopRecords: PostflopStatsV2BridgeRecord[] };
+    expect(exported.events).toEqual([]);
+    expect(exported.postflopRecords).toEqual([postflopRecord]);
+
+    const removed = removeStatsProfileRecords(source.events(), [postflopRecord], offProfileId);
+    expect(removed.events).toEqual([onRecord]);
+    expect(removed.postflopRecords).toEqual([postflopRecord]);
   });
 
   it("zachova kompatibilitu s legacy polem udalosti bez postflopu", () => {

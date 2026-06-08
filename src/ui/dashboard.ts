@@ -43,7 +43,13 @@ import type {
   Summary,
 } from "../persistence/statsStore";
 import { migrateResultRecordsToV2, type ResultRecordV2 } from "../persistence/statsRecordV2";
-import { buildStatsExportJson, importStatsJson } from "../persistence/statsTransfer";
+import {
+  buildStatsExportJson,
+  importStatsJson,
+  listStatsProfiles,
+  removeStatsProfileRecords,
+  type StatsProfileOption,
+} from "../persistence/statsTransfer";
 import {
   availableStatsV2Dimensions,
   breakdownStatsV2,
@@ -1341,12 +1347,52 @@ function renderPreflopLeakChart(dim: BreakdownDim, breakdown: Breakdown): HTMLEl
   return chart;
 }
 
+function renderStatsProfileSelector(
+  profiles: readonly StatsProfileOption[],
+): { wrap: HTMLElement; select: HTMLSelectElement } {
+  const wrap = el("div", "stats-profile-filter");
+  const label = document.createElement("label");
+  label.className = "stats-profile-filter__label";
+  label.textContent = "Profile";
+  const select = document.createElement("select");
+  select.className = "stats-profile-select";
+  select.appendChild(statsProfileOption("", "All profiles"));
+  for (const profile of profiles) {
+    select.appendChild(statsProfileOption(
+      profile.profileId,
+      `${statsProfileLabel(profile.profileId)} (${profile.total})`,
+    ));
+  }
+  label.appendChild(select);
+  wrap.appendChild(label);
+  return { wrap, select };
+}
+
+function statsProfileOption(value: string, label: string): HTMLOptionElement {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = label;
+  return option;
+}
+
+function statsProfileLabel(profileId: string): string {
+  const [variant, table, speed, street, model, ante] = profileId.split("|");
+  if (!variant || !table || !speed || !street) return profileId;
+  return [variant, tableFormatLabel(table), blindSpeedLabel(speed), profileStreetLabel(street), model, ante]
+    .filter(Boolean)
+    .join(" ");
+}
+
 function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElement {
   const box = el("section", "stats-transfer");
 
   const heading = el("h3", "stats-transfer__title");
   heading.textContent = "Stats export / import";
   box.appendChild(heading);
+
+  const profileOptions = listStatsProfiles(data.store.events(), data.postflopRecords ?? []);
+  const profileSelector = renderStatsProfileSelector(profileOptions);
+  box.appendChild(profileSelector.wrap);
 
   const actions = el("div", "stats-transfer__actions");
   const exportBtn = document.createElement("button");
@@ -1359,8 +1405,18 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
   importBtn.className = "stats-import";
   importBtn.textContent = "Import JSON";
 
+  const resetProfileBtn = document.createElement("button");
+  resetProfileBtn.type = "button";
+  resetProfileBtn.className = "stats-reset-profile";
+  resetProfileBtn.textContent = "Reset selected profile";
+  resetProfileBtn.disabled = profileSelector.select.value === "";
+  profileSelector.select.addEventListener("change", () => {
+    resetProfileBtn.disabled = profileSelector.select.value === "";
+  });
+
   actions.appendChild(exportBtn);
   actions.appendChild(importBtn);
+  actions.appendChild(resetProfileBtn);
   box.appendChild(actions);
 
   const textarea = document.createElement("textarea");
@@ -1375,12 +1431,16 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
   box.appendChild(status);
 
   exportBtn.addEventListener("click", () => {
+    const selectedProfileId = profileSelector.select.value || undefined;
     textarea.value = buildStatsExportJson(data.store, new Date(), {
       postflopRecords: data.postflopRecords ?? [],
+      profileId: selectedProfileId,
     });
     status.hidden = false;
     status.className = "stats-transfer__status stats-transfer__status--ok";
-    status.textContent = "Stats export is ready in the JSON field.";
+    status.textContent = selectedProfileId
+      ? "Selected profile export is ready in the JSON field."
+      : "Stats export is ready in the JSON field.";
   });
 
   importBtn.addEventListener("click", () => {
@@ -1407,6 +1467,39 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     }
     status.className = "stats-transfer__status stats-transfer__status--error";
     status.textContent = result.error ?? "Stats import failed.";
+  });
+
+  resetProfileBtn.addEventListener("click", () => {
+    const selectedProfileId = profileSelector.select.value;
+    if (selectedProfileId === "") return;
+    const selected = removeStatsProfileRecords(
+      data.store.events(),
+      data.postflopRecords ?? [],
+      selectedProfileId,
+    );
+    const save = data.store.replaceAll(selected.events);
+    status.hidden = false;
+    if (!save.ok) {
+      status.className = "stats-transfer__status stats-transfer__status--error";
+      status.textContent = save.error ?? "Selected profile reset failed.";
+      return;
+    }
+    const postflopSaved = data.onPostflopRecordsImported?.(selected.postflopRecords) ?? true;
+    if (!postflopSaved) {
+      status.className = "stats-transfer__status stats-transfer__status--error";
+      status.textContent = "Preflop stats were reset, but the postflop log could not be saved.";
+      return;
+    }
+    renderDashboard({
+      ...data,
+      postflopRecords: selected.postflopRecords,
+    }, root);
+    const refreshedStatus = root.querySelector<HTMLElement>(".stats-transfer__status");
+    if (refreshedStatus) {
+      refreshedStatus.hidden = false;
+      refreshedStatus.className = "stats-transfer__status stats-transfer__status--ok";
+      refreshedStatus.textContent = "Selected profile stats were reset.";
+    }
   });
 
   return box;
@@ -1726,11 +1819,18 @@ function dashboardStyles(): HTMLStyleElement {
 .breakdown-row__rate,.profile-breakdown-row__rate,.postflop-breakdown-row__rate{font-weight:950;text-align:right;font-variant-numeric:tabular-nums;color:#9ff0bd;}
 .profile-breakdown__empty,.postflop-breakdown__empty{font-size:12px;color:#9fb0cf;}
 .rate--unavailable{color:#9fb0cf;font-weight:700;}
+.stats-profile-filter{display:grid;gap:5px;margin-bottom:8px;}
+.stats-profile-filter__label{display:grid;gap:5px;font-size:12px;font-weight:900;color:#9fb0cf;}
+.stats-profile-select{appearance:none;border:1px solid rgba(148,163,184,.24);border-radius:10px;
+  background:#101827;color:#e8ecf7;font-weight:850;font-size:13px;padding:9px 11px;min-height:40px;}
 .stats-transfer__actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
-.stats-export,.stats-import{appearance:none;border:1px solid rgba(148,163,184,.24);border-radius:10px;
+.stats-export,.stats-import,.stats-reset-profile{appearance:none;border:1px solid rgba(148,163,184,.24);border-radius:10px;
   background:linear-gradient(180deg,#202a3f,#141d2f);color:#e8ecf7;font-weight:900;font-size:13px;padding:9px 13px;
   cursor:pointer;box-shadow:0 10px 20px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.06);}
+.stats-reset-profile{border-color:rgba(255,180,180,.28);}
 .stats-export:hover,.stats-import:hover{border-color:#2bd576;}
+.stats-reset-profile:hover{border-color:#ffb4b4;}
+.stats-reset-profile:disabled{opacity:.45;cursor:not-allowed;}
 .stats-json-box{box-sizing:border-box;width:100%;min-height:140px;resize:vertical;
   border:1px solid rgba(148,163,184,.24);border-radius:10px;padding:10px 11px;font-family:ui-monospace,
   SFMono-Regular,Consolas,monospace;font-size:12px;color:#e8ecf7;background:#101827;
@@ -1764,7 +1864,7 @@ function dashboardStyles(): HTMLStyleElement {
   .preflop-curriculum__start{width:100%;min-height:42px;}
   .permission-audit-row{grid-template-columns:1fr;gap:5px;}
   .stats-transfer__actions{display:grid;grid-template-columns:1fr;}
-  .stats-export,.stats-import{width:100%;min-height:42px;}
+  .stats-export,.stats-import,.stats-reset-profile,.stats-profile-select{width:100%;min-height:42px;}
 }
 `;
   return style;

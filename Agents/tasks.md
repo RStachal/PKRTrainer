@@ -1271,8 +1271,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 124.1 Pridat schema version pro postflop responseMs a future dimensions
     - Import musi zustat backward compatible
     - Hotovo: PostflopStatsV2BridgeRecord ma record schemaVersion, import/store normalizuji legacy zaznamy bez verze na aktualni schema
-  - [ ] 124.2 Pridat selective reset/export per profile
+  - [x] 124.2 Pridat selective reset/export per profile
     - Hrac muze exportovat nebo smazat jen vybrany profil
+    - Hotovo: stats transfer ma profile selector, profile-only export and Reset selected profile pro preflop/postflop records
   - [ ] 124.3 Pridat storage quota handling testy
     - Pri selhani localStorage se UI nesmi rozbit a stats warning ma byt source-free
 

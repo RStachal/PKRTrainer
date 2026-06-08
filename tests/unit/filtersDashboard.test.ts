@@ -189,6 +189,8 @@ describe("dashboard - DOM statistiky", () => {
     expect(css).toContain("linear-gradient(180deg,rgba(18,25,38,.98)");
     expect(css).toContain("@media (max-width:640px)");
     expect(css).toContain(".stats-json-box");
+    expect(css).toContain(".stats-profile-select");
+    expect(css).toContain(".stats-reset-profile");
     expect(css).toContain(".dashboard-kpi__cards");
     expect(css).toContain(".dashboard-kpi-chart-row");
     expect(css).toContain(".dashboard-confidence-kpi-row");
@@ -697,5 +699,52 @@ describe("dashboard - DOM statistiky", () => {
         '.postflop-breakdown--street .postflop-breakdown-row[data-group="FLOP"]',
       )?.dataset.total,
     ).toBe("1");
+  });
+
+  it("umi exportovat a resetovat vybrany stats profil", () => {
+    const store = createStatsStore(new MemoryStorage());
+    const offRecord = { ...record, qid: "RFI|BTN|25|AKs|OFF", ts: 1 };
+    const onRecord = { ...record, qid: "RFI|BTN|25|AQs|ON", ts: 2 };
+    expect(store.record(offRecord).ok).toBe(true);
+    expect(store.record(onRecord).ok).toBe(true);
+    let savedPostflop: readonly PostflopStatsV2BridgeRecord[] = [postflopRecord];
+
+    const root = document.createElement("div");
+    renderDashboard({
+      store,
+      sessionCount: 2,
+      postflopRecords: savedPostflop,
+      onPostflopRecordsImported: (records) => {
+        savedPostflop = records;
+        return true;
+      },
+    }, root);
+
+    const select = root.querySelector<HTMLSelectElement>(".stats-profile-select");
+    const reset = root.querySelector<HTMLButtonElement>(".stats-reset-profile");
+    const exportBtn = root.querySelector<HTMLButtonElement>(".stats-export");
+    const box = root.querySelector<HTMLTextAreaElement>(".stats-json-box");
+    expect(select).not.toBeNull();
+    expect(reset?.disabled).toBe(true);
+    const postflopOption = Array.from(select!.options)
+      .find((option) => option.value === postflopRecord.profileId);
+    expect(postflopOption).not.toBeUndefined();
+    select!.value = postflopRecord.profileId;
+    select!.dispatchEvent(new Event("change"));
+    expect(reset?.disabled).toBe(false);
+
+    exportBtn?.click();
+    const exported = JSON.parse(box!.value) as {
+      events: ResultRecord[];
+      postflopRecords: PostflopStatsV2BridgeRecord[];
+    };
+    expect(exported.events).toEqual([]);
+    expect(exported.postflopRecords).toEqual([postflopRecord]);
+
+    reset?.click();
+    expect(store.events()).toEqual([offRecord, onRecord]);
+    expect(savedPostflop).toEqual([]);
+    expect(root.querySelector<HTMLElement>(".stats-transfer__status")?.textContent)
+      .toContain("Selected profile stats were reset.");
   });
 });
