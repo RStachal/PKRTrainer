@@ -23,6 +23,7 @@ export interface PreflopCurriculumOptions {
   scoringMode?: ScoringMode;
   seed?: number;
   repetitionLimit?: number;
+  recentWindowSize?: number;
 }
 
 export interface PreflopCurriculumFocus {
@@ -50,11 +51,19 @@ export interface PreflopSpacedRepetitionItem {
   priority: number;
 }
 
+export interface PreflopStudyRecommendation extends PreflopCurriculumFocus {
+  priority: number;
+  recentTotal: number;
+  recentMistakes: number;
+  reason: string;
+}
+
 export interface PreflopCurriculumPlan {
   available: boolean;
   reason: string;
   focus: PreflopCurriculumFocus | null;
   alternates: readonly PreflopCurriculumFocus[];
+  recommendations: readonly PreflopStudyRecommendation[];
   sessionGoal: PreflopSessionGoal;
   repetitionQueue: readonly PreflopSpacedRepetitionItem[];
 }
@@ -73,6 +82,7 @@ export function buildPreflopCurriculumPlan(
       reason: "No preflop answers yet.",
       focus: null,
       alternates: [],
+      recommendations: [],
       sessionGoal,
       repetitionQueue: [],
     };
@@ -86,6 +96,9 @@ export function buildPreflopCurriculumPlan(
   const focuses = kpi.leakCandidates
     .filter(isCurriculumLeakCandidate)
     .map((candidate) => focusFromLeakCandidate(candidate, preflopRecords, options.scoringMode ?? "LENIENT"));
+  const recommendations = buildPreflopStudyRecommendations(focuses, preflopRecords, {
+    recentWindowSize: options.recentWindowSize ?? 20,
+  });
   const repetitionQueue = buildPreflopSpacedRepetitionQueue(preflopRecords, {
     seed: options.seed ?? 0,
     limit: options.repetitionLimit ?? 8,
@@ -97,19 +110,22 @@ export function buildPreflopCurriculumPlan(
       reason: `No leak with ${kpi.minLeakSample}+ samples below ${kpi.leakRateThreshold}%.`,
       focus: null,
       alternates: [],
+      recommendations: [],
       sessionGoal,
       repetitionQueue,
     };
   }
 
+  const focus = recommendations[0] ?? focuses[0];
   return {
     available: true,
-    reason: "Target the weakest sample-qualified preflop bucket.",
-    focus: focuses[0],
-    alternates: focuses.slice(1, 4),
+    reason: "Target the highest-priority sample-qualified preflop leak.",
+    focus,
+    alternates: recommendations.slice(1, 4),
+    recommendations,
     sessionGoal: {
       ...sessionGoal,
-      leakCleanupTarget: Math.max(sessionGoal.leakCleanupTarget, Math.min(90, (focuses[0].rate ?? 0) + 20)),
+      leakCleanupTarget: Math.max(sessionGoal.leakCleanupTarget, Math.min(90, (focus.rate ?? 0) + 20)),
     },
     repetitionQueue,
   };
@@ -157,6 +173,74 @@ export function buildPreflopSpacedRepetitionQueue(
     .sort((a, b) => b.priority - a.priority || a.qid.localeCompare(b.qid));
 
   return queue.slice(0, options.limit ?? 8);
+}
+
+function buildPreflopStudyRecommendations(
+  focuses: readonly PreflopCurriculumFocus[],
+  records: readonly ResultRecordV2[],
+  options: { recentWindowSize: number },
+): PreflopStudyRecommendation[] {
+  const recentWindowSize = normalizePositiveInt(options.recentWindowSize, 20);
+  const recentRecords = [...records]
+    .filter((record) => record.street === "PREFLOP")
+    .sort((a, b) => a.ts - b.ts)
+    .slice(-recentWindowSize);
+
+  return focuses
+    .map((focus, order) => {
+      const recentMatches = recentRecords.filter((record) => focusMatchesRecord(focus, record));
+      const recentMistakes = recentMatches.filter((record) => !record.correct).length;
+      return {
+        ...focus,
+        priority: recommendationPriority(focus, recentMatches.length, recentMistakes),
+        recentTotal: recentMatches.length,
+        recentMistakes,
+        reason: recommendationReason(focus, recentMatches.length, recentMistakes),
+        order,
+      };
+    })
+    .sort((a, b) => (
+      b.priority - a.priority ||
+      (a.rate ?? 101) - (b.rate ?? 101) ||
+      b.total - a.total ||
+      a.order - b.order
+    ))
+    .slice(0, 3)
+    .map(({ order, ...recommendation }) => recommendation);
+}
+
+function recommendationPriority(
+  focus: PreflopCurriculumFocus,
+  recentTotal: number,
+  recentMistakes: number,
+): number {
+  const errorRate = focus.rate === null ? 0 : 100 - focus.rate;
+  const sampleScore = Math.min(28, Math.log2(focus.total + 1) * 7);
+  const recentMistakeRate = recentTotal <= 0 ? 0 : recentMistakes / recentTotal;
+  return roundOne(errorRate * 0.8 + sampleScore + recentMistakes * 22 + recentMistakeRate * 35);
+}
+
+function recommendationReason(
+  focus: PreflopCurriculumFocus,
+  recentTotal: number,
+  recentMistakes: number,
+): string {
+  if (recentTotal > 0 && recentMistakes > 0) {
+    return `${recentMistakes}/${recentTotal} recent mistakes, ${formatRateForReason(focus.rate)} overall`;
+  }
+  if (recentTotal > 0) {
+    return `No recent miss, ${formatRateForReason(focus.rate)} overall over ${focus.total} spots`;
+  }
+  return `${formatRateForReason(focus.rate)} overall over ${focus.total} spots`;
+}
+
+function focusMatchesRecord(focus: PreflopCurriculumFocus, record: ResultRecordV2): boolean {
+  return String(record[focus.dim]) === focus.key;
+}
+
+function formatRateForReason(rate: number | null): string {
+  if (rate === null) return "no rate";
+  return `${rate.toFixed(1)}%`;
 }
 
 function buildSessionGoal(options: PreflopCurriculumOptions): PreflopSessionGoal {
@@ -258,4 +342,8 @@ function normalizePositiveInt(value: number | undefined, fallback: number): numb
 function normalizeRate(value: number | undefined, fallback: number): number {
   if (value === undefined || !Number.isFinite(value)) return fallback;
   return Math.max(0, Math.min(100, value));
+}
+
+function roundOne(value: number): number {
+  return Math.round(value * 10) / 10;
 }

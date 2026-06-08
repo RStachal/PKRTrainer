@@ -516,6 +516,7 @@ function renderPreflopCurriculumPanel(
   const plan = buildPreflopCurriculumPlan(records);
   const box = el("section", "preflop-curriculum");
   box.dataset.available = String(plan.available);
+  box.dataset.recommendations = String(plan.recommendations.length);
 
   const heading = el("h3", "preflop-curriculum__title");
   heading.textContent = "Training focus";
@@ -537,6 +538,31 @@ function renderPreflopCurriculumPanel(
   const due = el("div", "preflop-curriculum__due");
   due.textContent = `${plan.repetitionQueue.length} due review spots`;
   box.appendChild(due);
+
+  if (plan.recommendations.length > 0) {
+    const recommendations = el("div", "preflop-curriculum__recommendations");
+    const recommendationTitle = el("div", "preflop-curriculum__recommendations-title");
+    recommendationTitle.textContent = "Next study focus";
+    recommendations.appendChild(recommendationTitle);
+
+    for (const recommendation of plan.recommendations) {
+      const row = el("div", "preflop-curriculum__recommendation");
+      row.dataset.dim = recommendation.dim;
+      row.dataset.group = recommendation.key;
+      row.dataset.priority = String(recommendation.priority);
+      row.dataset.recentMistakes = String(recommendation.recentMistakes);
+      row.dataset.recentTotal = String(recommendation.recentTotal);
+      const label = el("div", "preflop-curriculum__recommendation-label");
+      label.textContent = recommendation.label;
+      const meta = el("div", "preflop-curriculum__recommendation-meta");
+      meta.textContent = recommendation.reason;
+      row.appendChild(label);
+      row.appendChild(meta);
+      recommendations.appendChild(row);
+    }
+
+    box.appendChild(recommendations);
+  }
 
   if (plan.focus) {
     const actions = el("div", "preflop-curriculum__actions");
@@ -1595,6 +1621,13 @@ function dashboardStyles(): HTMLStyleElement {
 .preflop-curriculum__summary{font-size:14px;font-weight:950;color:#f8fbff;overflow-wrap:anywhere;}
 .preflop-curriculum__goals,.preflop-curriculum__due{font-size:12px;font-weight:800;color:#9fb0cf;}
 .preflop-curriculum__due{grid-column:1/2;}
+.preflop-curriculum__recommendations{grid-column:1/-1;display:grid;gap:7px;margin-top:4px;}
+.preflop-curriculum__recommendations-title{font-size:12px;font-weight:950;color:#dce7fb;}
+.preflop-curriculum__recommendation{display:grid;grid-template-columns:minmax(110px,1fr) minmax(160px,2fr);
+  gap:8px;align-items:center;border:1px solid rgba(148,163,184,.13);border-radius:9px;
+  padding:8px;background:rgba(255,255,255,.035);font-size:12px;}
+.preflop-curriculum__recommendation-label{font-weight:950;color:#f8fbff;min-width:0;overflow-wrap:anywhere;}
+.preflop-curriculum__recommendation-meta{font-weight:800;color:#9fb0cf;min-width:0;overflow-wrap:anywhere;}
 .preflop-curriculum__actions{grid-column:2;grid-row:2/5;align-self:center;}
 .preflop-curriculum__start{appearance:none;border:1px solid rgba(43,213,118,.55);border-radius:10px;
   background:linear-gradient(180deg,#32df83,#20c96f);color:#06120b;font-weight:950;font-size:13px;
@@ -1662,6 +1695,8 @@ function dashboardStyles(): HTMLStyleElement {
     border-radius:12px;padding:12px;}
   .preflop-curriculum{grid-template-columns:1fr;}
   .preflop-curriculum__actions,.preflop-curriculum__due{grid-column:auto;grid-row:auto;}
+  .preflop-curriculum__recommendations{grid-column:auto;}
+  .preflop-curriculum__recommendation{grid-template-columns:1fr;}
   .preflop-curriculum__start{width:100%;min-height:42px;}
   .permission-audit-row{grid-template-columns:1fr;gap:5px;}
   .stats-transfer__actions{display:grid;grid-template-columns:1fr;}

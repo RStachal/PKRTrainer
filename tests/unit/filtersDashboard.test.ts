@@ -195,6 +195,7 @@ describe("dashboard - DOM statistiky", () => {
     expect(css).toContain(".dashboard-accuracy-trend");
     expect(css).toContain(".dashboard-accuracy-trend__bar");
     expect(css).toContain(".preflop-curriculum");
+    expect(css).toContain(".preflop-curriculum__recommendation");
     expect(css).toContain(".preflop-leak-charts");
     expect(css).not.toContain("background:#fff");
     expect(root.textContent ?? "").toContain("Summary");
@@ -545,8 +546,15 @@ describe("dashboard - DOM statistiky", () => {
       '.dashboard-leak-row[data-dim="context"][data-group="RFI"]',
     )).toBeNull();
     expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.dataset.available).toBe("true");
+    expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.dataset.recommendations)
+      .toBe("3");
     expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.textContent)
       .toContain("Stack: 15 BB");
+    expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.textContent)
+      .toContain("Next study focus");
+    expect(root.querySelectorAll(".preflop-curriculum__recommendation")).toHaveLength(3);
+    expect(root.querySelector<HTMLElement>(".preflop-curriculum__recommendation")
+      ?.dataset.recentMistakes).toBe("4");
     root.querySelector<HTMLButtonElement>(".preflop-curriculum__start")?.click();
     expect(focusedFilters).toEqual([
       {
