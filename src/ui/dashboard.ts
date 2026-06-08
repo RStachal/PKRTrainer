@@ -83,6 +83,10 @@ const RATE_UNAVAILABLE = "\u2014";
 
 const ACCURACY_TREND_WINDOW_SIZE = 5;
 const ACCURACY_TREND_MAX_WINDOWS = 6;
+const DECISION_TREND_WINDOW_SIZE = 3;
+const DECISION_TREND_MAX_WINDOWS = 6;
+const DECISION_TREND_MIN_SAMPLES = 6;
+const DECISION_TREND_DELTA_THRESHOLD_MS = 250;
 
 type AccuracyTrendSource = "preflop" | "postflop" | "mixed";
 
@@ -119,6 +123,30 @@ interface ConfidenceWeightedKpiModel {
   weightedCorrect: number;
   rate: number | null;
   groups: readonly ConfidenceWeightedGroup[];
+}
+
+interface DecisionTrendRecord {
+  responseMs: number;
+  ts: number;
+  source: Exclude<AccuracyTrendSource, "mixed">;
+}
+
+interface DecisionTrendPoint {
+  index: number;
+  startTs: number;
+  endTs: number;
+  total: number;
+  averageMs: number;
+  source: AccuracyTrendSource;
+}
+
+interface DecisionTimeTrendModel {
+  available: boolean;
+  sample: number;
+  minSample: number;
+  direction: "faster" | "slower" | "stable" | null;
+  deltaMs: number | null;
+  points: readonly DecisionTrendPoint[];
 }
 
 /**
@@ -426,6 +454,7 @@ function renderKpiPanel(
   const avgDecisionMs = averageDecisionMs(preflopRecords, postflopRecords);
   const accuracyTrend = buildAccuracyTrend(preflopRecords, postflopRecords);
   const confidenceWeightedKpi = buildConfidenceWeightedKpi(preflopRecords, postflopRecords);
+  const decisionTrend = buildDecisionTimeTrend(preflopRecords, postflopRecords);
   const box = el("section", "dashboard-kpi");
   box.dataset.total = String(model.total);
   box.dataset.recentWindowSize = String(model.recentWindowSize);
@@ -435,6 +464,9 @@ function renderKpiPanel(
     ? ""
     : String(confidenceWeightedKpi.rate);
   box.dataset.confidenceWeightedTotal = formatWeightedNumber(confidenceWeightedKpi.weightedTotal);
+  box.dataset.decisionTrendAvailable = String(decisionTrend.available);
+  box.dataset.decisionTrendSamples = String(decisionTrend.sample);
+  if (decisionTrend.deltaMs !== null) box.dataset.decisionTrendDeltaMs = String(decisionTrend.deltaMs);
   if (avgDecisionMs !== null) box.dataset.avgResponseMs = String(avgDecisionMs);
 
   const heading = el("h3", "dashboard-kpi__title");
@@ -458,10 +490,18 @@ function renderKpiPanel(
   if (avgDecisionMs !== null) {
     cards.appendChild(kpiCard("Avg decision", "avgResponseMs", formatDurationMs(avgDecisionMs)));
   }
+  if (decisionTrend.available) {
+    cards.appendChild(kpiCard(
+      "Decision trend",
+      "decisionTrend",
+      formatDecisionTrendSummary(decisionTrend),
+    ));
+  }
   box.appendChild(cards);
 
   box.appendChild(renderKpiChart(model));
   box.appendChild(renderConfidenceWeightedKpi(confidenceWeightedKpi));
+  box.appendChild(renderDecisionTimeTrend(decisionTrend));
   box.appendChild(renderAccuracyTrend(accuracyTrend));
   box.appendChild(renderLeakChart(model.leakCandidates));
 
@@ -796,6 +836,94 @@ function confidenceWeightedGroupOrder(key: string): number {
   }
 }
 
+function buildDecisionTimeTrend(
+  preflopRecords: readonly ResultRecordV2[],
+  postflopRecords: readonly PostflopStatsV2BridgeRecord[],
+  windowSize = DECISION_TREND_WINDOW_SIZE,
+  maxWindows = DECISION_TREND_MAX_WINDOWS,
+  minSample = DECISION_TREND_MIN_SAMPLES,
+): DecisionTimeTrendModel {
+  const records: DecisionTrendRecord[] = [
+    ...preflopRecords.map((record) => ({
+      responseMs: record.responseMs,
+      ts: record.ts,
+      source: "preflop" as const,
+    })),
+    ...postflopRecords.map((record) => ({
+      responseMs: record.responseMs,
+      ts: record.ts,
+      source: "postflop" as const,
+    })),
+  ].filter((record): record is DecisionTrendRecord => (
+    typeof record.responseMs === "number" &&
+    Number.isFinite(record.responseMs) &&
+    record.responseMs >= 0 &&
+    Number.isFinite(record.ts)
+  )).sort((a, b) => a.ts - b.ts);
+
+  if (records.length < minSample) {
+    return {
+      available: false,
+      sample: records.length,
+      minSample,
+      direction: null,
+      deltaMs: null,
+      points: [],
+    };
+  }
+
+  const normalizedWindowSize = Math.max(1, Math.floor(windowSize));
+  const normalizedMaxWindows = Math.max(1, Math.floor(maxWindows));
+  const minWindowSample = Math.min(2, normalizedWindowSize);
+  const points: DecisionTrendPoint[] = [];
+
+  for (let offset = 0; offset < records.length; offset += normalizedWindowSize) {
+    const chunk = records.slice(offset, offset + normalizedWindowSize);
+    if (chunk.length < minWindowSample) continue;
+    const totalMs = chunk.reduce((total, record) => total + record.responseMs, 0);
+    const hasPreflop = chunk.some((record) => record.source === "preflop");
+    const hasPostflop = chunk.some((record) => record.source === "postflop");
+    points.push({
+      index: points.length + 1,
+      startTs: chunk[0].ts,
+      endTs: chunk[chunk.length - 1].ts,
+      total: chunk.length,
+      averageMs: Math.round(totalMs / chunk.length),
+      source: hasPreflop && hasPostflop ? "mixed" : hasPreflop ? "preflop" : "postflop",
+    });
+  }
+
+  const recentPoints = points.slice(-normalizedMaxWindows).map((point, index) => ({
+    ...point,
+    index: index + 1,
+  }));
+  const first = recentPoints[0];
+  const last = recentPoints.at(-1);
+  const deltaMs = first && last && recentPoints.length >= 2 ? last.averageMs - first.averageMs : null;
+
+  return {
+    available: recentPoints.length >= 2,
+    sample: records.length,
+    minSample,
+    direction: decisionTrendDirection(deltaMs),
+    deltaMs,
+    points: recentPoints.length >= 2 ? recentPoints : [],
+  };
+}
+
+function decisionTrendDirection(deltaMs: number | null): DecisionTimeTrendModel["direction"] {
+  if (deltaMs === null) return null;
+  if (deltaMs <= -DECISION_TREND_DELTA_THRESHOLD_MS) return "faster";
+  if (deltaMs >= DECISION_TREND_DELTA_THRESHOLD_MS) return "slower";
+  return "stable";
+}
+
+function formatDecisionTrendSummary(model: DecisionTimeTrendModel): string {
+  if (!model.available || model.deltaMs === null || model.direction === null) return "Pending sample";
+  if (model.direction === "stable") return "Stable";
+  return `${model.direction === "faster" ? "Faster" : "Slower"} by ${formatDurationMs(Math.abs(model.deltaMs))}`;
+}
+
 function kpiCard(labelText: string, key: string, valueText: string): HTMLElement {
   const card = el("div", "dashboard-kpi-card");
   card.dataset.kpi = key;
@@ -875,6 +1003,69 @@ function renderConfidenceWeightedKpiRow(group: ConfidenceWeightedGroup): HTMLEle
   row.appendChild(sample);
 
   return row;
+}
+
+function renderDecisionTimeTrend(model: DecisionTimeTrendModel): HTMLElement {
+  const chart = el("div", "dashboard-decision-trend");
+  chart.dataset.available = String(model.available);
+  chart.dataset.samples = String(model.sample);
+  chart.dataset.minSample = String(model.minSample);
+  chart.dataset.direction = model.direction ?? "";
+  chart.dataset.deltaMs = model.deltaMs === null ? "" : String(model.deltaMs);
+  chart.dataset.windows = String(model.points.length);
+
+  const title = el("div", "dashboard-decision-trend__title");
+  title.textContent = "Decision-time trend";
+  chart.appendChild(title);
+
+  if (!model.available) {
+    const empty = el("div", "dashboard-decision-trend__empty");
+    empty.textContent = `Needs ${model.minSample} timed decisions. Current sample: ${model.sample}.`;
+    chart.appendChild(empty);
+    return chart;
+  }
+
+  const summary = el("div", "dashboard-decision-trend__summary");
+  summary.textContent = formatDecisionTrendSummary(model);
+  chart.appendChild(summary);
+
+  const bars = el("div", "dashboard-decision-trend__bars");
+  const maxAverageMs = Math.max(...model.points.map((point) => point.averageMs), 1);
+  for (const point of model.points) {
+    bars.appendChild(renderDecisionTrendBar(point, maxAverageMs));
+  }
+  chart.appendChild(bars);
+  return chart;
+}
+
+function renderDecisionTrendBar(point: DecisionTrendPoint, maxAverageMs: number): HTMLElement {
+  const bar = el("div", "dashboard-decision-trend__bar");
+  bar.dataset.index = String(point.index);
+  bar.dataset.total = String(point.total);
+  bar.dataset.averageMs = String(point.averageMs);
+  bar.dataset.source = point.source;
+  bar.dataset.startTs = String(point.startTs);
+  bar.dataset.endTs = String(point.endTs);
+
+  const value = el("div", "dashboard-decision-trend__value");
+  value.textContent = formatDurationMs(point.averageMs);
+  bar.appendChild(value);
+
+  const track = el("div", "dashboard-decision-trend__track");
+  const fill = el("div", "dashboard-decision-trend__fill");
+  fill.style.height = `${Math.max(3, Math.min(100, (point.averageMs / maxAverageMs) * 100))}%`;
+  track.appendChild(fill);
+  bar.appendChild(track);
+
+  const label = el("div", "dashboard-decision-trend__label");
+  label.textContent = `W${point.index}`;
+  bar.appendChild(label);
+
+  const sample = el("div", "dashboard-decision-trend__sample");
+  sample.textContent = `${point.total} decisions`;
+  bar.appendChild(sample);
+
+  return bar;
 }
 
 function renderAccuracyTrend(points: readonly AccuracyTrendPoint[]): HTMLElement {
@@ -1334,7 +1525,7 @@ function dashboardStyles(): HTMLStyleElement {
   background:rgba(255,255,255,.045);min-width:0;}
 .dashboard-kpi-card__label{font-size:11px;font-weight:900;text-transform:uppercase;color:#9fb0cf;}
 .dashboard-kpi-card__value{margin-top:4px;font-size:16px;font-weight:950;color:#f8fbff;overflow-wrap:anywhere;}
-.dashboard-kpi-chart,.dashboard-confidence-kpi,.dashboard-accuracy-trend,.dashboard-leak-chart{display:grid;gap:7px;}
+.dashboard-kpi-chart,.dashboard-confidence-kpi,.dashboard-decision-trend,.dashboard-accuracy-trend,.dashboard-leak-chart{display:grid;gap:7px;}
 .dashboard-confidence-kpi{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
 .dashboard-confidence-kpi__title{font-size:12px;font-weight:950;color:#dce7fb;}
 .dashboard-confidence-kpi__empty{font-size:12px;color:#9fb0cf;}
@@ -1350,6 +1541,24 @@ function dashboardStyles(): HTMLStyleElement {
 .dashboard-confidence-kpi-row[data-group="postflop-low"] .dashboard-confidence-kpi-row__bar,
 .dashboard-confidence-kpi-row[data-group="postflop-fallback"] .dashboard-confidence-kpi-row__bar{
   background:linear-gradient(90deg,#facc15,#7bd3ff);}
+.dashboard-decision-trend{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
+.dashboard-decision-trend__title{font-size:12px;font-weight:950;color:#dce7fb;}
+.dashboard-decision-trend__summary{font-size:13px;font-weight:950;color:#f8fbff;}
+.dashboard-decision-trend__empty{font-size:12px;color:#9fb0cf;}
+.dashboard-decision-trend__bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));
+  gap:8px;align-items:end;min-height:122px;}
+.dashboard-decision-trend__bar{display:grid;grid-template-rows:auto 82px auto auto;gap:5px;min-width:0;
+  align-items:end;justify-items:center;font-size:11px;color:#9fb0cf;}
+.dashboard-decision-trend__value{font-weight:950;color:#f8fbff;font-variant-numeric:tabular-nums;}
+.dashboard-decision-trend__track{width:100%;max-width:42px;height:82px;border-radius:999px;
+  display:flex;align-items:flex-end;overflow:hidden;background:linear-gradient(180deg,rgba(148,163,184,.16),rgba(148,163,184,.08));
+  border:1px solid rgba(148,163,184,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+.dashboard-decision-trend__fill{width:100%;border-radius:999px 999px 0 0;
+  background:linear-gradient(180deg,#facc15,#7bd3ff);min-height:2px;}
+.dashboard-decision-trend__label{font-weight:950;color:#dce7fb;}
+.dashboard-decision-trend__sample{font-weight:800;font-variant-numeric:tabular-nums;text-align:center;}
+.dashboard-decision-trend[data-direction="faster"] .dashboard-decision-trend__summary{color:#9ff0bd;}
+.dashboard-decision-trend[data-direction="slower"] .dashboard-decision-trend__summary{color:#ffb4b4;}
 .dashboard-accuracy-trend{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
 .dashboard-accuracy-trend__title{font-size:12px;font-weight:950;color:#dce7fb;}
 .dashboard-accuracy-trend__empty{font-size:12px;color:#9fb0cf;}
@@ -1443,6 +1652,9 @@ function dashboardStyles(): HTMLStyleElement {
   .dashboard-kpi-chart-row{grid-template-columns:1fr;gap:5px;}
   .dashboard-confidence-kpi-row{grid-template-columns:1fr;gap:5px;}
   .dashboard-confidence-kpi-row__sample{white-space:normal;}
+  .dashboard-decision-trend__bars{grid-template-columns:repeat(auto-fit,minmax(48px,1fr));gap:7px;min-height:108px;}
+  .dashboard-decision-trend__bar{grid-template-rows:auto 70px auto auto;font-size:10px;}
+  .dashboard-decision-trend__track{height:70px;max-width:36px;}
   .dashboard-accuracy-trend__bars{grid-template-columns:repeat(auto-fit,minmax(48px,1fr));gap:7px;min-height:112px;}
   .dashboard-accuracy-trend__bar{grid-template-rows:auto 72px auto auto;font-size:10px;}
   .dashboard-accuracy-trend__track{height:72px;max-width:36px;}

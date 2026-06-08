@@ -191,6 +191,7 @@ describe("dashboard - DOM statistiky", () => {
     expect(css).toContain(".dashboard-kpi__cards");
     expect(css).toContain(".dashboard-kpi-chart-row");
     expect(css).toContain(".dashboard-confidence-kpi-row");
+    expect(css).toContain(".dashboard-decision-trend");
     expect(css).toContain(".dashboard-accuracy-trend");
     expect(css).toContain(".dashboard-accuracy-trend__bar");
     expect(css).toContain(".preflop-curriculum");
@@ -355,8 +356,16 @@ describe("dashboard - DOM statistiky", () => {
     const kpi = root.querySelector<HTMLElement>(".dashboard-kpi");
     const card = root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='avgResponseMs']");
     expect(kpi?.dataset.avgResponseMs).toBe("1500");
+    expect(kpi?.dataset.decisionTrendAvailable).toBe("false");
+    expect(kpi?.dataset.decisionTrendSamples).toBe("2");
     expect(card?.textContent).toContain("Avg decision");
     expect(card?.textContent).toContain("1.5 s");
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='decisionTrend']"))
+      .toBeNull();
+    expect(root.querySelector<HTMLElement>(".dashboard-decision-trend")?.dataset.available)
+      .toBe("false");
+    expect(root.querySelector<HTMLElement>(".dashboard-decision-trend")?.textContent)
+      .toContain("Needs 6 timed decisions");
   });
 
   it("zobrazi recent accuracy trend po oknech vcetne postflop vysledku", () => {
@@ -451,6 +460,50 @@ describe("dashboard - DOM statistiky", () => {
     expect(root.querySelector<HTMLElement>(
       '.dashboard-confidence-kpi-row[data-group="postflop-fallback"]',
     )?.dataset.weightedTotal).toBe("0.3");
+  });
+
+  it("zobrazi decision-time trend az po dostatecnem timed samplu", () => {
+    const storage = new MemoryStorage();
+    const store = createStatsStore(storage);
+    const preflopTimes = [2000, 1800, 2200];
+    preflopTimes.forEach((responseMs, index) => {
+      expect(store.record({
+        ...record,
+        qid: `RFI|BTN|25|AKs|OFF|speed-${index}`,
+        correct: true,
+        responseMs,
+        ts: index + 1,
+      }).ok).toBe(true);
+    });
+
+    const root = document.createElement("div");
+    renderDashboard({
+      store,
+      sessionCount: 6,
+      postflopRecords: [
+        { ...postflopRecord, qid: "POSTFLOP|FLOP|speed-4", correct: true, responseMs: 1000, ts: 4 },
+        { ...postflopRecord, qid: "POSTFLOP|FLOP|speed-5", correct: true, responseMs: 900, ts: 5 },
+        { ...postflopRecord, qid: "POSTFLOP|FLOP|speed-6", correct: true, responseMs: 1100, ts: 6 },
+      ],
+    }, root);
+
+    const kpi = root.querySelector<HTMLElement>(".dashboard-kpi");
+    const trend = root.querySelector<HTMLElement>(".dashboard-decision-trend");
+    const bars = Array.from(root.querySelectorAll<HTMLElement>(".dashboard-decision-trend__bar"));
+    const card = root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='decisionTrend']");
+    expect(kpi?.dataset.decisionTrendAvailable).toBe("true");
+    expect(kpi?.dataset.decisionTrendSamples).toBe("6");
+    expect(kpi?.dataset.decisionTrendDeltaMs).toBe("-1000");
+    expect(card?.textContent).toContain("Faster by 1.0 s");
+    expect(trend?.dataset.available).toBe("true");
+    expect(trend?.dataset.direction).toBe("faster");
+    expect(trend?.dataset.deltaMs).toBe("-1000");
+    expect(trend?.dataset.windows).toBe("2");
+    expect(bars).toHaveLength(2);
+    expect(bars[0].dataset.averageMs).toBe("2000");
+    expect(bars[0].dataset.source).toBe("preflop");
+    expect(bars[1].dataset.averageMs).toBe("1000");
+    expect(bars[1].dataset.source).toBe("postflop");
   });
 
   it("zobrazi KPI leak graf jen pro skupiny s dostatecnym samplem", () => {

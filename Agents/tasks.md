@@ -1245,15 +1245,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - 1/2/3 nebo arrow navigation, focus state and mobile safe behavior
     - Hotovo: postflop action buttons podporuji 1/2/3 selection and arrow-key focus navigation; test drzi result focus po odpovedi
 
-- [ ] 122. Statistics dashboard v2
+- [x] 122. Statistics dashboard v2
   - [x] 122.1 Pridat trend recent accuracy v case
     - Graf ma ukazat posledni sessions/windows, ne jen agregat
     - Hotovo: KPI panel zobrazuje combined preflop/postflop Recent accuracy trend po oknech, vcetne source datasetu a responzivniho mini grafu
   - [x] 122.2 Pridat confidence-weighted KPI
     - Preview/fallback spoty nemaji mit stejnou vahu jako production spoty
     - Hotovo: KPI panel pocita confidence-weighted accuracy pres preflop verified a postflop HIGH/MEDIUM/LOW/fallback vahy, vcetne rozpadoveho grafu
-  - [ ] 122.3 Pridat decision-time trend
+  - [x] 122.3 Pridat decision-time trend
     - Ukazat zrychleni/zpomaleni jen po dostatecnem sample
+    - Hotovo: dashboard decision-time trend ma min-sample gate, okna po timed decisions, faster/slower/stable summary and mobile-safe bars
 
 - [ ] 123. Leak recommendation engine
   - [ ] 123.1 Vypocitat top 3 next study focus oblasti
