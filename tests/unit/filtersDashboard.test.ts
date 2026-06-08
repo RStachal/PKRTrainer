@@ -190,6 +190,7 @@ describe("dashboard - DOM statistiky", () => {
     expect(css).toContain(".stats-json-box");
     expect(css).toContain(".dashboard-kpi__cards");
     expect(css).toContain(".dashboard-kpi-chart-row");
+    expect(css).toContain(".dashboard-confidence-kpi-row");
     expect(css).toContain(".dashboard-accuracy-trend");
     expect(css).toContain(".dashboard-accuracy-trend__bar");
     expect(css).toContain(".preflop-curriculum");
@@ -209,10 +210,19 @@ describe("dashboard - DOM statistiky", () => {
       ?.textContent).toContain("100.0 %");
     expect(root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='bestStreak']")
       ?.textContent).toContain("1");
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='confidenceWeightedRate']")
+      ?.textContent).toContain("100.0 %");
     expect(root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='avgResponseMs']"))
       .toBeNull();
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi")?.dataset.confidenceWeightedRate)
+      .toBe("100");
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi")?.dataset.confidenceWeightedTotal)
+      .toBe("1");
     expect(root.querySelector<HTMLElement>(".dashboard-kpi-chart-row[data-key='lifetime']")
       ?.dataset.rate).toBe("100");
+    expect(root.querySelector<HTMLElement>(
+      '.dashboard-confidence-kpi-row[data-group="preflop-verified"]',
+    )?.dataset.weightedTotal).toBe("1");
     expect(root.querySelector<HTMLElement>(".dashboard-kpi")?.dataset.trendWindows).toBe("1");
     expect(root.querySelector<HTMLElement>(".dashboard-accuracy-trend")?.dataset.windows)
       .toBe("1");
@@ -390,6 +400,57 @@ describe("dashboard - DOM statistiky", () => {
     expect(bars[1].dataset.rate).toBe("60");
     expect(bars[1].dataset.source).toBe("mixed");
     expect(bars[1].textContent).toContain("3/5");
+  });
+
+  it("vazi KPI podle confidence a fallback postflop spoty nezapocita plnou vahou", () => {
+    const storage = new MemoryStorage();
+    const store = createStatsStore(storage);
+    expect(store.record({ ...record, qid: "RFI|BTN|25|AKs|OFF|weighted", correct: true, ts: 1 })
+      .ok).toBe(true);
+
+    const root = document.createElement("div");
+    renderDashboard({
+      store,
+      sessionCount: 4,
+      postflopRecords: [
+        { ...postflopRecord, qid: "POSTFLOP|FLOP|weighted-low", correct: false, confidence: "LOW", ts: 2 },
+        { ...postflopRecord, qid: "POSTFLOP|FLOP|weighted-high", correct: true, confidence: "HIGH", ts: 3 },
+        {
+          ...postflopRecord,
+          qid: "POSTFLOP|FLOP|weighted-fallback",
+          correct: false,
+          confidence: null,
+          strategyPackId: null,
+          ts: 4,
+        },
+      ],
+    }, root);
+
+    const kpi = root.querySelector<HTMLElement>(".dashboard-kpi");
+    const weighted = root.querySelector<HTMLElement>(".dashboard-confidence-kpi");
+    const card = root.querySelector<HTMLElement>(
+      ".dashboard-kpi-card[data-kpi='confidenceWeightedRate']",
+    );
+    expect(kpi?.dataset.confidenceWeightedRate).toBe("72.7");
+    expect(kpi?.dataset.confidenceWeightedTotal).toBe("2.8");
+    expect(card?.textContent).toContain("72.7 %");
+    expect(card?.textContent).toContain("2.8w");
+    expect(weighted?.dataset.total).toBe("4");
+    expect(weighted?.dataset.weightedTotal).toBe("2.8");
+    expect(weighted?.dataset.weightedCorrect).toBe("2");
+    expect(weighted?.dataset.rate).toBe("72.7");
+    expect(root.querySelector<HTMLElement>(
+      '.dashboard-confidence-kpi-row[data-group="preflop-verified"]',
+    )?.dataset.averageWeight).toBe("1");
+    expect(root.querySelector<HTMLElement>(
+      '.dashboard-confidence-kpi-row[data-group="postflop-high"]',
+    )?.dataset.weightedTotal).toBe("1");
+    expect(root.querySelector<HTMLElement>(
+      '.dashboard-confidence-kpi-row[data-group="postflop-low"]',
+    )?.dataset.weightedTotal).toBe("0.5");
+    expect(root.querySelector<HTMLElement>(
+      '.dashboard-confidence-kpi-row[data-group="postflop-fallback"]',
+    )?.dataset.weightedTotal).toBe("0.3");
   });
 
   it("zobrazi KPI leak graf jen pro skupiny s dostatecnym samplem", () => {

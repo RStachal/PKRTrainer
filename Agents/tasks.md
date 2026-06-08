@@ -1249,8 +1249,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 122.1 Pridat trend recent accuracy v case
     - Graf ma ukazat posledni sessions/windows, ne jen agregat
     - Hotovo: KPI panel zobrazuje combined preflop/postflop Recent accuracy trend po oknech, vcetne source datasetu a responzivniho mini grafu
-  - [ ] 122.2 Pridat confidence-weighted KPI
+  - [x] 122.2 Pridat confidence-weighted KPI
     - Preview/fallback spoty nemaji mit stejnou vahu jako production spoty
+    - Hotovo: KPI panel pocita confidence-weighted accuracy pres preflop verified a postflop HIGH/MEDIUM/LOW/fallback vahy, vcetne rozpadoveho grafu
   - [ ] 122.3 Pridat decision-time trend
     - Ukazat zrychleni/zpomaleni jen po dostatecnem sample
 

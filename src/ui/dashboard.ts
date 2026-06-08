@@ -102,6 +102,25 @@ interface AccuracyTrendPoint {
   source: AccuracyTrendSource;
 }
 
+interface ConfidenceWeightedGroup {
+  key: string;
+  label: string;
+  total: number;
+  correct: number;
+  weightedTotal: number;
+  weightedCorrect: number;
+  rate: number | null;
+  averageWeight: number;
+}
+
+interface ConfidenceWeightedKpiModel {
+  total: number;
+  weightedTotal: number;
+  weightedCorrect: number;
+  rate: number | null;
+  groups: readonly ConfidenceWeightedGroup[];
+}
+
 /**
  * Formats a success rate for display. Null means unavailable.
  */
@@ -406,11 +425,16 @@ function renderKpiPanel(
   const model = buildStatsV2KpiModel(preflopRecords);
   const avgDecisionMs = averageDecisionMs(preflopRecords, postflopRecords);
   const accuracyTrend = buildAccuracyTrend(preflopRecords, postflopRecords);
+  const confidenceWeightedKpi = buildConfidenceWeightedKpi(preflopRecords, postflopRecords);
   const box = el("section", "dashboard-kpi");
   box.dataset.total = String(model.total);
   box.dataset.recentWindowSize = String(model.recentWindowSize);
   box.dataset.minLeakSample = String(model.minLeakSample);
   box.dataset.trendWindows = String(accuracyTrend.length);
+  box.dataset.confidenceWeightedRate = confidenceWeightedKpi.rate === null
+    ? ""
+    : String(confidenceWeightedKpi.rate);
+  box.dataset.confidenceWeightedTotal = formatWeightedNumber(confidenceWeightedKpi.weightedTotal);
   if (avgDecisionMs !== null) box.dataset.avgResponseMs = String(avgDecisionMs);
 
   const heading = el("h3", "dashboard-kpi__title");
@@ -426,12 +450,18 @@ function renderKpiPanel(
   ));
   cards.appendChild(kpiCard("Best streak", "bestStreak", String(model.bestStreak)));
   cards.appendChild(kpiCard("Leak focus", "leakFocus", leakFocusText(model)));
+  cards.appendChild(kpiCard(
+    "Weighted accuracy",
+    "confidenceWeightedRate",
+    `${formatRate(confidenceWeightedKpi.rate)} (${formatWeightedNumber(confidenceWeightedKpi.weightedTotal)}w)`,
+  ));
   if (avgDecisionMs !== null) {
     cards.appendChild(kpiCard("Avg decision", "avgResponseMs", formatDurationMs(avgDecisionMs)));
   }
   box.appendChild(cards);
 
   box.appendChild(renderKpiChart(model));
+  box.appendChild(renderConfidenceWeightedKpi(confidenceWeightedKpi));
   box.appendChild(renderAccuracyTrend(accuracyTrend));
   box.appendChild(renderLeakChart(model.leakCandidates));
 
@@ -635,6 +665,137 @@ function successRate(total: number, correct: number): number | null {
   return Math.round((correct / total) * 1000) / 10;
 }
 
+function buildConfidenceWeightedKpi(
+  preflopRecords: readonly ResultRecordV2[],
+  postflopRecords: readonly PostflopStatsV2BridgeRecord[],
+): ConfidenceWeightedKpiModel {
+  const groups = new Map<string, Omit<ConfidenceWeightedGroup, "rate" | "averageWeight">>();
+
+  const add = (
+    key: string,
+    label: string,
+    correct: boolean,
+    weight: number,
+  ): void => {
+    const safeWeight = normalizeConfidenceWeight(weight);
+    let group = groups.get(key);
+    if (group === undefined) {
+      group = {
+        key,
+        label,
+        total: 0,
+        correct: 0,
+        weightedTotal: 0,
+        weightedCorrect: 0,
+      };
+      groups.set(key, group);
+    }
+
+    group.total += 1;
+    group.weightedTotal += safeWeight;
+    if (correct) {
+      group.correct += 1;
+      group.weightedCorrect += safeWeight;
+    }
+  };
+
+  for (const record of preflopRecords) {
+    const verified = record.rangePackId.length > 0 && record.sourceVerifiedAt.length > 0;
+    add(
+      verified ? "preflop-verified" : "preflop-fallback",
+      verified ? "Preflop verified" : "Preflop fallback",
+      record.correct,
+      verified ? 1 : 0.6,
+    );
+  }
+
+  for (const record of postflopRecords) {
+    const group = postflopConfidenceWeightGroup(record);
+    add(group.key, group.label, record.correct, group.weight);
+  }
+
+  const rawGroups = Array.from(groups.values());
+  const weightedTotal = rawGroups.reduce((total, group) => total + group.weightedTotal, 0);
+  const weightedCorrect = rawGroups.reduce((total, group) => total + group.weightedCorrect, 0);
+
+  const normalizedGroups: ConfidenceWeightedGroup[] = rawGroups.map((group) => ({
+    ...group,
+    weightedTotal: roundOne(group.weightedTotal),
+    weightedCorrect: roundOne(group.weightedCorrect),
+    rate: weightedRate(group.weightedTotal, group.weightedCorrect),
+    averageWeight: roundOne(group.weightedTotal / Math.max(1, group.total)),
+  }));
+
+  return {
+    total: preflopRecords.length + postflopRecords.length,
+    weightedTotal: roundOne(weightedTotal),
+    weightedCorrect: roundOne(weightedCorrect),
+    rate: weightedRate(weightedTotal, weightedCorrect),
+    groups: normalizedGroups.sort((a, b) => (
+      confidenceWeightedGroupOrder(a.key) - confidenceWeightedGroupOrder(b.key) ||
+      a.label.localeCompare(b.label)
+    )),
+  };
+}
+
+function postflopConfidenceWeightGroup(record: PostflopStatsV2BridgeRecord): {
+  key: string;
+  label: string;
+  weight: number;
+} {
+  if (!record.strategyPackId || record.confidence === null) {
+    return { key: "postflop-fallback", label: "Postflop fallback", weight: 0.25 };
+  }
+
+  switch (record.confidence) {
+    case "HIGH":
+      return { key: "postflop-high", label: "Postflop high confidence", weight: 1 };
+    case "MEDIUM":
+      return { key: "postflop-medium", label: "Postflop medium confidence", weight: 0.75 };
+    case "LOW":
+    default:
+      return { key: "postflop-low", label: "Postflop low confidence", weight: 0.5 };
+  }
+}
+
+function normalizeConfidenceWeight(weight: number): number {
+  if (!Number.isFinite(weight) || weight <= 0) return 0;
+  return Math.min(1, weight);
+}
+
+function weightedRate(weightedTotal: number, weightedCorrect: number): number | null {
+  if (!Number.isFinite(weightedTotal) || weightedTotal <= 0) return null;
+  return Math.round((weightedCorrect / weightedTotal) * 1000) / 10;
+}
+
+function roundOne(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+function formatWeightedNumber(value: number): string {
+  const rounded = roundOne(value);
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
+function confidenceWeightedGroupOrder(key: string): number {
+  switch (key) {
+    case "preflop-verified":
+      return 0;
+    case "preflop-fallback":
+      return 1;
+    case "postflop-high":
+      return 2;
+    case "postflop-medium":
+      return 3;
+    case "postflop-low":
+      return 4;
+    case "postflop-fallback":
+      return 5;
+    default:
+      return 99;
+  }
+}
+
 function kpiCard(labelText: string, key: string, valueText: string): HTMLElement {
   const card = el("div", "dashboard-kpi-card");
   card.dataset.kpi = key;
@@ -658,6 +819,62 @@ function renderKpiChart(model: StatsV2KpiModel): HTMLElement {
   chart.appendChild(rateBar("Lifetime", "lifetime", model.lifetimeRate, model.total));
   chart.appendChild(rateBar("Recent", "recent", model.recentRate, model.recentTotal));
   return chart;
+}
+
+function renderConfidenceWeightedKpi(model: ConfidenceWeightedKpiModel): HTMLElement {
+  const chart = el("div", "dashboard-confidence-kpi");
+  chart.dataset.total = String(model.total);
+  chart.dataset.weightedTotal = formatWeightedNumber(model.weightedTotal);
+  chart.dataset.weightedCorrect = formatWeightedNumber(model.weightedCorrect);
+  chart.dataset.rate = model.rate === null ? "" : String(model.rate);
+
+  const title = el("div", "dashboard-confidence-kpi__title");
+  title.textContent = "Confidence-weighted KPI";
+  chart.appendChild(title);
+
+  if (model.groups.length === 0) {
+    const empty = el("div", "dashboard-confidence-kpi__empty");
+    empty.textContent = "No weighted sample yet.";
+    chart.appendChild(empty);
+    return chart;
+  }
+
+  const rows = el("div", "dashboard-confidence-kpi__rows");
+  for (const group of model.groups) {
+    rows.appendChild(renderConfidenceWeightedKpiRow(group));
+  }
+  chart.appendChild(rows);
+  return chart;
+}
+
+function renderConfidenceWeightedKpiRow(group: ConfidenceWeightedGroup): HTMLElement {
+  const row = el("div", "dashboard-confidence-kpi-row");
+  row.dataset.group = group.key;
+  row.dataset.total = String(group.total);
+  row.dataset.correct = String(group.correct);
+  row.dataset.weightedTotal = formatWeightedNumber(group.weightedTotal);
+  row.dataset.weightedCorrect = formatWeightedNumber(group.weightedCorrect);
+  row.dataset.averageWeight = formatWeightedNumber(group.averageWeight);
+  row.dataset.rate = group.rate === null ? "" : String(group.rate);
+
+  const label = el("div", "dashboard-confidence-kpi-row__label");
+  label.textContent = group.label;
+  row.appendChild(label);
+
+  const track = el("div", "dashboard-confidence-kpi-row__track");
+  const bar = el("div", "dashboard-confidence-kpi-row__bar");
+  bar.style.width = `${group.rate === null ? 0 : Math.max(0, Math.min(100, group.rate))}%`;
+  track.appendChild(bar);
+  row.appendChild(track);
+
+  row.appendChild(rateElement("div", "dashboard-confidence-kpi-row__rate", group.rate));
+
+  const sample = el("div", "dashboard-confidence-kpi-row__sample");
+  sample.textContent =
+    `${group.correct}/${group.total} | ${formatWeightedNumber(group.weightedTotal)}w`;
+  row.appendChild(sample);
+
+  return row;
 }
 
 function renderAccuracyTrend(points: readonly AccuracyTrendPoint[]): HTMLElement {
@@ -1117,7 +1334,22 @@ function dashboardStyles(): HTMLStyleElement {
   background:rgba(255,255,255,.045);min-width:0;}
 .dashboard-kpi-card__label{font-size:11px;font-weight:900;text-transform:uppercase;color:#9fb0cf;}
 .dashboard-kpi-card__value{margin-top:4px;font-size:16px;font-weight:950;color:#f8fbff;overflow-wrap:anywhere;}
-.dashboard-kpi-chart,.dashboard-accuracy-trend,.dashboard-leak-chart{display:grid;gap:7px;}
+.dashboard-kpi-chart,.dashboard-confidence-kpi,.dashboard-accuracy-trend,.dashboard-leak-chart{display:grid;gap:7px;}
+.dashboard-confidence-kpi{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
+.dashboard-confidence-kpi__title{font-size:12px;font-weight:950;color:#dce7fb;}
+.dashboard-confidence-kpi__empty{font-size:12px;color:#9fb0cf;}
+.dashboard-confidence-kpi__rows{display:grid;gap:6px;}
+.dashboard-confidence-kpi-row{display:grid;grid-template-columns:minmax(130px,1.3fr) minmax(120px,2fr) auto auto;
+  align-items:center;gap:9px;font-size:12px;border:1px solid rgba(148,163,184,.12);border-radius:9px;
+  background:rgba(255,255,255,.035);padding:7px 8px;}
+.dashboard-confidence-kpi-row__label{font-weight:850;color:#dce7fb;min-width:0;overflow-wrap:anywhere;}
+.dashboard-confidence-kpi-row__track{height:8px;border-radius:999px;background:rgba(148,163,184,.14);overflow:hidden;}
+.dashboard-confidence-kpi-row__bar{height:100%;border-radius:inherit;background:linear-gradient(90deg,#7bd3ff,#2bd576);}
+.dashboard-confidence-kpi-row__rate{font-weight:950;color:#9ff0bd;font-variant-numeric:tabular-nums;}
+.dashboard-confidence-kpi-row__sample{font-weight:800;color:#9fb0cf;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.dashboard-confidence-kpi-row[data-group="postflop-low"] .dashboard-confidence-kpi-row__bar,
+.dashboard-confidence-kpi-row[data-group="postflop-fallback"] .dashboard-confidence-kpi-row__bar{
+  background:linear-gradient(90deg,#facc15,#7bd3ff);}
 .dashboard-accuracy-trend{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
 .dashboard-accuracy-trend__title{font-size:12px;font-weight:950;color:#dce7fb;}
 .dashboard-accuracy-trend__empty{font-size:12px;color:#9fb0cf;}
@@ -1209,6 +1441,8 @@ function dashboardStyles(): HTMLStyleElement {
   .postflop-kpi-chart--boardTextureKey{grid-column:auto;}
   .dashboard-kpi__cards{grid-template-columns:1fr 1fr;}
   .dashboard-kpi-chart-row{grid-template-columns:1fr;gap:5px;}
+  .dashboard-confidence-kpi-row{grid-template-columns:1fr;gap:5px;}
+  .dashboard-confidence-kpi-row__sample{white-space:normal;}
   .dashboard-accuracy-trend__bars{grid-template-columns:repeat(auto-fit,minmax(48px,1fr));gap:7px;min-height:112px;}
   .dashboard-accuracy-trend__bar{grid-template-rows:auto 72px auto auto;font-size:10px;}
   .dashboard-accuracy-trend__track{height:72px;max-width:36px;}
