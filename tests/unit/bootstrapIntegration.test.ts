@@ -39,6 +39,15 @@ class BrokenWriteStorage extends MemoryStorage {
   }
 }
 
+class QuotaAfterBootstrapStorage extends MemoryStorage {
+  failWrites = false;
+
+  override setItem(key: string, value: string): void {
+    if (this.failWrites) throw new Error("quota exceeded");
+    super.setItem(key, value);
+  }
+}
+
 describe("bootstrap - inicializacni tok", () => {
   afterEach(() => {
     document.body.innerHTML = "";
@@ -206,6 +215,24 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
       .toBe("RIVER_PRESSURE");
     expect(root.querySelector(".poker-table")).toBeNull();
+  });
+
+  it("pri quota selhani preflop ulozeni pokracuje ve flow a zobrazi source-free warning", async () => {
+    const { bootstrap } = await importFreshMain();
+    const root = document.createElement("div");
+    const storage = new QuotaAfterBootstrapStorage();
+    document.body.appendChild(root);
+
+    bootstrap({ root, storage, registerSw: false });
+    root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    storage.failWrites = true;
+    root.querySelector<HTMLButtonElement>(".action-btn")?.click();
+
+    const warning = root.querySelector<HTMLElement>(".result__save-warning");
+    expect(root.querySelector<HTMLButtonElement>(".result__next")).not.toBeNull();
+    expect(warning?.textContent).toContain("could not be saved");
+    expect(warning?.textContent).not.toMatch(/https?:|www\.|source|zdroj/i);
+    expect(root.querySelector<HTMLElement>(".summary-total")?.dataset.total).toBe("0");
   });
 
   it("postflop start respektuje vybrane pozice a kontext z filtru", async () => {
