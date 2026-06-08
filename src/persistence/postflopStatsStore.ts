@@ -1,6 +1,7 @@
 import { KEY_POSTFLOP_EVENTS } from "./keys";
 import {
   isPostflopStatsV2BridgeRecord,
+  normalizePostflopStatsV2BridgeRecord,
   type PostflopStatsV2BridgeRecord,
 } from "./postflopResultRecord";
 import type { SaveOutcome } from "./statsStore";
@@ -38,11 +39,12 @@ class LocalPostflopStatsStore implements PostflopStatsStore {
     if (!nextEvents.every(isPostflopStatsV2BridgeRecord)) {
       return { ok: false, error: "Invalid postflop stats record." };
     }
+    const normalizedEvents = nextEvents.map(normalizePostflopStatsV2BridgeRecord);
     const priorRaw = this.safeGet(KEY_POSTFLOP_EVENTS);
 
     let eventsJson: string;
     try {
-      eventsJson = JSON.stringify(nextEvents);
+      eventsJson = JSON.stringify(normalizedEvents);
     } catch (err) {
       return { ok: false, error: describeError(err) };
     }
@@ -54,7 +56,7 @@ class LocalPostflopStatsStore implements PostflopStatsStore {
       return { ok: false, error: describeError(err) };
     }
 
-    this.records = nextEvents;
+    this.records = normalizedEvents;
     return { ok: true };
   }
 
@@ -64,7 +66,9 @@ class LocalPostflopStatsStore implements PostflopStatsStore {
     try {
       const parsed: unknown = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
-      return parsed.filter(isPostflopStatsV2BridgeRecord).map((record) => ({ ...record }));
+      return parsed
+        .filter(isPostflopStatsV2BridgeRecord)
+        .map(normalizePostflopStatsV2BridgeRecord);
     } catch {
       return [];
     }

@@ -40,6 +40,7 @@ class ThrowingSetStorage extends MemoryStorage {
 
 const postflopRecord: PostflopStatsV2BridgeRecord = {
   schema: "postflop_stats_v2_bridge_v1",
+  schemaVersion: 2,
   qid: "POSTFLOP|FLOP|1|As-Kd-Qh",
   correct: true,
   ts: 2,
@@ -74,6 +75,17 @@ describe("postflopStatsStore", () => {
     ]);
 
     const reader = createPostflopStatsStore(storage);
+    expect(reader.events()).toEqual([postflopRecord]);
+  });
+
+  it("pri reloadu normalizuje legacy postflop record bez schemaVersion", () => {
+    const storage = new MemoryStorage();
+    const legacyPostflop = { ...postflopRecord } as Partial<PostflopStatsV2BridgeRecord>;
+    delete legacyPostflop.schemaVersion;
+    storage.setItem(KEY_POSTFLOP_EVENTS, JSON.stringify([legacyPostflop]));
+
+    const reader = createPostflopStatsStore(storage);
+
     expect(reader.events()).toEqual([postflopRecord]);
   });
 

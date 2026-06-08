@@ -24,6 +24,7 @@ import type { Position } from "../core/types";
 
 export const POSTFLOP_RESULT_RECORD_SCHEMA = "postflop_result_record_v1";
 export const POSTFLOP_STATS_V2_BRIDGE_SCHEMA = "postflop_stats_v2_bridge_v1";
+export const POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION = 2;
 
 export interface PostflopResultRecord {
   schema: typeof POSTFLOP_RESULT_RECORD_SCHEMA;
@@ -49,6 +50,7 @@ export interface PostflopResultRecord {
 
 export interface PostflopStatsV2BridgeRecord {
   schema: typeof POSTFLOP_STATS_V2_BRIDGE_SCHEMA;
+  schemaVersion: number;
   qid: string;
   correct: boolean;
   ts: number;
@@ -72,6 +74,11 @@ export interface PostflopStatsV2BridgeRecord {
   confidence: "LOW" | "MEDIUM" | "HIGH" | null;
   responseMs?: number;
 }
+
+export type PostflopStatsV2BridgeRecordLike =
+  Omit<PostflopStatsV2BridgeRecord, "schemaVersion"> & {
+    schemaVersion?: number;
+  };
 
 export interface PostflopStatsV2BridgeOptions {
   profile?: Partial<TrainingProfile>;
@@ -133,6 +140,7 @@ export function bridgePostflopResultRecordToStatsV2(
 
   return {
     schema: POSTFLOP_STATS_V2_BRIDGE_SCHEMA,
+    schemaVersion: POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION,
     qid: record.qid,
     correct: record.correct,
     ts: record.ts,
@@ -192,11 +200,12 @@ export function isPostflopResultRecord(value: unknown): value is PostflopResultR
 
 export function isPostflopStatsV2BridgeRecord(
   value: unknown,
-): value is PostflopStatsV2BridgeRecord {
+): value is PostflopStatsV2BridgeRecordLike {
   if (typeof value !== "object" || value === null) return false;
-  const record = value as Partial<PostflopStatsV2BridgeRecord>;
+  const record = value as Partial<PostflopStatsV2BridgeRecordLike>;
   return (
     record.schema === POSTFLOP_STATS_V2_BRIDGE_SCHEMA &&
+    isOptionalSchemaVersion(record.schemaVersion) &&
     typeof record.qid === "string" &&
     typeof record.correct === "boolean" &&
     typeof record.ts === "number" &&
@@ -224,6 +233,17 @@ export function isPostflopStatsV2BridgeRecord(
       record.confidence === null) &&
     isOptionalResponseMs(record.responseMs)
   );
+}
+
+export function normalizePostflopStatsV2BridgeRecord(
+  record: PostflopStatsV2BridgeRecordLike,
+): PostflopStatsV2BridgeRecord {
+  return {
+    ...record,
+    schemaVersion: isValidSchemaVersion(record.schemaVersion)
+      ? Math.floor(record.schemaVersion)
+      : POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION,
+  };
 }
 
 export function availablePostflopStatsDimensions(): PostflopStatsBreakdownDim[] {
@@ -286,6 +306,14 @@ function isValidResponseMs(value: unknown): value is number {
 
 function isOptionalResponseMs(value: unknown): boolean {
   return value === undefined || isValidResponseMs(value);
+}
+
+function isValidSchemaVersion(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1;
+}
+
+function isOptionalSchemaVersion(value: unknown): boolean {
+  return value === undefined || isValidSchemaVersion(value);
 }
 
 function isPostflopAction(value: unknown): value is PostflopAction {

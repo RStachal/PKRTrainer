@@ -6,12 +6,14 @@ import { flopSingleRaisedPrototypeStrategyPack } from "../../src/data/ranges/pos
 import { createPostflopStrategyResolver } from "../../src/data/ranges/postflopStrategyResolver";
 import {
   POSTFLOP_RESULT_RECORD_SCHEMA,
+  POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION,
   POSTFLOP_STATS_V2_BRIDGE_SCHEMA,
   bridgePostflopResultRecordToStatsV2,
   breakdownPostflopStats,
   buildPostflopResultRecord,
   isPostflopResultRecord,
   isPostflopStatsV2BridgeRecord,
+  normalizePostflopStatsV2BridgeRecord,
 } from "../../src/persistence/postflopResultRecord";
 
 describe("postflopResultRecord", () => {
@@ -85,6 +87,7 @@ describe("postflopResultRecord", () => {
 
     expect(bridge).toMatchObject({
       schema: POSTFLOP_STATS_V2_BRIDGE_SCHEMA,
+      schemaVersion: POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION,
       qid: record.qid,
       correct: record.correct,
       ts: 456,
@@ -103,6 +106,23 @@ describe("postflopResultRecord", () => {
     });
     expect(bridge.boardTextureKey).toBe(record.boardTextures.join("|"));
     expect(bridge.strategyRuleId).toBe(record.sourceRuleId);
+  });
+
+  it("normalizuje legacy postflop bridge record bez schemaVersion", () => {
+    const spot = postflopSpotToTrainingSpot(generatePostflopSpot({
+      seed: 19,
+      street: "FLOP",
+    }));
+    const bridge = bridgePostflopResultRecordToStatsV2(
+      buildPostflopResultRecord(spot, spot.recommendedAction, 321, 654),
+    );
+    const legacy = { ...bridge };
+    delete (legacy as Partial<typeof bridge>).schemaVersion;
+
+    expect(isPostflopStatsV2BridgeRecord(legacy)).toBe(true);
+    expect(normalizePostflopStatsV2BridgeRecord(legacy).schemaVersion)
+      .toBe(POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION);
+    expect(isPostflopStatsV2BridgeRecord({ ...bridge, schemaVersion: 0 })).toBe(false);
   });
 
   it("zachova volitelny decision time v postflop recordu i bridge zaznamu", () => {

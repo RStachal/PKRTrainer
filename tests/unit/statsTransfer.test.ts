@@ -48,6 +48,7 @@ const record: ResultRecord = {
 
 const postflopRecord: PostflopStatsV2BridgeRecord = {
   schema: "postflop_stats_v2_bridge_v1",
+  schemaVersion: 2,
   qid: "POSTFLOP|FLOP|1|As-Kd-Qh",
   correct: true,
   ts: 2,
@@ -121,6 +122,24 @@ describe("statsTransfer - export/import JSON", () => {
 
     expect(result).toEqual({ ok: true, imported: 1, postflopRecords: [] });
     expect(target.events()).toEqual([record]);
+  });
+
+  it("normalizuje legacy postflop import bez record schemaVersion", () => {
+    const target = createStatsStore(new MemoryStorage());
+    const legacyPostflop = { ...postflopRecord } as Partial<PostflopStatsV2BridgeRecord>;
+    delete legacyPostflop.schemaVersion;
+
+    const result = importStatsJson(JSON.stringify({
+      profile: STATS_EXPORT_PROFILE,
+      schemaVersion: "1",
+      exportedAt: "2026-06-01T12:00:00.000Z",
+      events: [record],
+      postflopRecords: [legacyPostflop],
+    }), target);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.postflopRecords[0]).toEqual(postflopRecord);
   });
 
   it("odmitne neplatny JSON a nepremeni existujici data", () => {

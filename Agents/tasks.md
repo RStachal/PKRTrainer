@@ -1268,8 +1268,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: low-volume preflop sample vraci Build sample volume goal, bez generickych leak recommendations
 
 - [ ] 124. Stats storage and privacy hardening
-  - [ ] 124.1 Pridat schema version pro postflop responseMs a future dimensions
+  - [x] 124.1 Pridat schema version pro postflop responseMs a future dimensions
     - Import musi zustat backward compatible
+    - Hotovo: PostflopStatsV2BridgeRecord ma record schemaVersion, import/store normalizuji legacy zaznamy bez verze na aktualni schema
   - [ ] 124.2 Pridat selective reset/export per profile
     - Hrac muze exportovat nebo smazat jen vybrany profil
   - [ ] 124.3 Pridat storage quota handling testy

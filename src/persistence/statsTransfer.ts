@@ -3,6 +3,7 @@ import { isValidResultRecord } from "./statsStore";
 import { SCHEMA_VERSION } from "./keys";
 import {
   isPostflopStatsV2BridgeRecord,
+  normalizePostflopStatsV2BridgeRecord,
   type PostflopStatsV2BridgeRecord,
 } from "./postflopResultRecord";
 
@@ -77,7 +78,7 @@ export function importStatsJson(raw: string, store: StatsStore): StatsImportOutc
     if (!isPostflopStatsV2BridgeRecord(item)) {
       return failed("Import obsahuje postflop zaznam v nepodporovanem formatu.");
     }
-    postflopRecords.push({ ...item });
+    postflopRecords.push(normalizePostflopStatsV2BridgeRecord(item));
   }
 
   const save = store.replaceAll(nextEvents);
