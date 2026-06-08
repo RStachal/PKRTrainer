@@ -325,6 +325,7 @@ function postflopTable(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
   table.className = "postflop-table";
   table.dataset.heroPosition = spot.heroPosition;
   table.dataset.villainPosition = spot.villainPosition;
+  table.dataset.recommendedAction = spot.recommendedAction;
 
   const felt = doc.createElement("div");
   felt.className = "postflop-table__felt";
@@ -346,6 +347,7 @@ function postflopTable(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
   pot.className = "postflop-table__pot";
   pot.textContent = `Pot ${spot.potBB} BB`;
   center.appendChild(pot);
+  center.appendChild(betGeometry(doc, spot));
 
   const chipStack = doc.createElement("div");
   chipStack.className = "postflop-table__chip-stack";
@@ -382,6 +384,87 @@ function postflopTable(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
   }
 
   return table;
+}
+
+function betGeometry(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
+  const geometry = doc.createElement("div");
+  const sizing = betSizingVisual(spot);
+  geometry.className = `postflop-table__bet-geometry postflop-table__bet-geometry--${sizing.kind}`;
+  geometry.dataset.recommendedAction = spot.recommendedAction;
+  geometry.dataset.betSizing = sizing.kind;
+  geometry.dataset.betBB = String(sizing.betBB);
+  geometry.style.setProperty("--bet-size", `${Math.round(sizing.ratio * 100)}%`);
+  geometry.setAttribute("aria-label", sizing.ariaLabel);
+
+  const track = doc.createElement("div");
+  track.className = "postflop-table__bet-track";
+  const fill = doc.createElement("span");
+  fill.className = "postflop-table__bet-fill";
+  track.appendChild(fill);
+  geometry.appendChild(track);
+
+  const chips = doc.createElement("div");
+  chips.className = "postflop-table__bet-chips";
+  for (let i = 0; i < sizing.chips; i += 1) {
+    const chip = doc.createElement("span");
+    chip.className = "postflop-table__bet-chip";
+    chips.appendChild(chip);
+  }
+  geometry.appendChild(chips);
+
+  const label = doc.createElement("div");
+  label.className = "postflop-table__bet-label";
+  label.textContent = sizing.label;
+  geometry.appendChild(label);
+  return geometry;
+}
+
+function betSizingVisual(spot: PostflopTrainingSpot): {
+  ariaLabel: string;
+  betBB: number;
+  chips: number;
+  kind: "check" | "small" | "big";
+  label: string;
+  ratio: number;
+} {
+  switch (spot.recommendedAction) {
+    case "BET_SMALL": {
+      const betBB = roundedBetBB(spot.potBB * 0.33);
+      return {
+        ariaLabel: `Recommended small bet around ${betBB} BB`,
+        betBB,
+        chips: 2,
+        kind: "small",
+        label: `Small ${betBB} BB`,
+        ratio: 0.33,
+      };
+    }
+    case "BET_BIG": {
+      const betBB = roundedBetBB(spot.potBB * 0.75);
+      return {
+        ariaLabel: `Recommended big bet around ${betBB} BB`,
+        betBB,
+        chips: 4,
+        kind: "big",
+        label: `Big ${betBB} BB`,
+        ratio: 0.75,
+      };
+    }
+    case "CHECK":
+    default:
+      return {
+        ariaLabel: "Recommended check",
+        betBB: 0,
+        chips: 0,
+        kind: "check",
+        label: "Check",
+        ratio: 0,
+      };
+  }
+}
+
+function roundedBetBB(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 function postflopSeat(
@@ -931,6 +1014,25 @@ function styles(doc: Document): HTMLStyleElement {
 .postflop-table__center-label{font-size:11px;font-weight:950;color:#bfe9ff;text-transform:uppercase;}
 .postflop-table__pot{font-size:16px;font-weight:950;color:#f2f7ff;
   text-shadow:0 1px 8px rgba(0,0,0,.45);}
+.postflop-table__bet-geometry{width:min(210px,72vw);display:grid;gap:5px;justify-items:center;
+  padding:7px 9px;border-radius:12px;background:rgba(15,21,32,.68);
+  border:1px solid rgba(255,255,255,.1);}
+.postflop-table__bet-track{position:relative;width:100%;height:7px;border-radius:999px;
+  overflow:hidden;background:rgba(255,255,255,.13);}
+.postflop-table__bet-fill{display:block;width:var(--bet-size);height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,#2bd576,#ffd15b);}
+.postflop-table__bet-chips{display:flex;align-items:flex-end;justify-content:center;gap:3px;
+  min-height:14px;}
+.postflop-table__bet-chip{width:16px;height:7px;border-radius:999px;background:linear-gradient(180deg,#ffd15b,#da8b25);
+  border:1px solid rgba(255,255,255,.42);box-shadow:0 4px 8px rgba(0,0,0,.22);}
+.postflop-table__bet-chip:nth-child(2n){height:11px;background:linear-gradient(180deg,#7bd3ff,#2f87d8);}
+.postflop-table__bet-chip:nth-child(3n){height:14px;background:linear-gradient(180deg,#f8fbff,#9fb2d5);}
+.postflop-table__bet-label{font-size:11px;font-weight:950;color:#e8ecf7;text-transform:uppercase;}
+.postflop-table__bet-geometry--check{opacity:.76;}
+.postflop-table__bet-geometry--check .postflop-table__bet-fill{background:transparent;}
+.postflop-table__bet-geometry--big{border-color:rgba(255,209,91,.32);
+  box-shadow:0 0 0 1px rgba(255,209,91,.12),0 10px 24px rgba(255,209,91,.1);}
+.postflop-table__bet-geometry--small{border-color:rgba(43,213,118,.28);}
 .postflop-table__chip-stack{display:flex;align-items:flex-end;justify-content:center;gap:4px;
   height:22px;margin-top:-2px;}
 .postflop-table__chip-stack span{display:block;width:24px;height:10px;border-radius:999px;

@@ -1234,9 +1234,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 120.3 Otestovat deterministic seed replay pro multi-street flow
     - Stejny seed musi vratit stejnou sekvenci karet a spotu
 
-- [ ] 121. Postflop table and action UX polish v2
-  - [ ] 121.1 Pridat vizualni pot geometry pro bet sizing
+- [x] 121. Postflop table and action UX polish v2
+  - [x] 121.1 Pridat vizualni pot geometry pro bet sizing
     - Small/big bet ma byt jasne videt bez textove instruktaze
+    - Hotovo: table center ukazuje check/small/big bet geometry s trackem, chip markers, sizing data and tests for stable seeds
   - [x] 121.2 Zobrazit aktivniho agresora, callera a IP/OOP role na stole
     - Postflop table musi byt citelny i bez meta radku
     - Hotovo: seats maji actionRole/positionRole data, aggressor/caller/IP/OOP role chips and visual role outlines

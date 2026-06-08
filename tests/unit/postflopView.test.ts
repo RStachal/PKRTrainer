@@ -8,6 +8,13 @@ describe("postflopView - DOM", () => {
     document.body.innerHTML = "";
   });
 
+  function renderGeneratedSpot(seed: number, street: "FLOP" | "TURN" | "RIVER" = "FLOP"): HTMLElement {
+    const root = document.createElement("div");
+    renderPostflopView(root, { initialSeed: seed, initialStreet: street });
+    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+    return root;
+  }
+
   it("vykresli postflop prototyp a respektuje seed i street", () => {
     const root = document.createElement("div");
     renderPostflopView(root);
@@ -44,8 +51,11 @@ describe("postflopView - DOM", () => {
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent).toContain("SPR");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent).toContain(" vs ");
     expect(root.querySelector(".postflop-table")).not.toBeNull();
+    expect(root.querySelector<HTMLElement>(".postflop-table")?.dataset.recommendedAction)
+      .toMatch(/^(CHECK|BET_SMALL|BET_BIG)$/);
     expect(root.querySelector(".postflop-table__rail")).not.toBeNull();
     expect(root.querySelector(".postflop-table__center-label")).not.toBeNull();
+    expect(root.querySelector(".postflop-table__bet-geometry")).not.toBeNull();
     expect(root.querySelectorAll(".postflop-table__chip-stack span")).toHaveLength(3);
     expect(root.querySelectorAll(".postflop-seat")).toHaveLength(9);
     expect(root.querySelectorAll(".postflop-seat--active")).toHaveLength(2);
@@ -70,6 +80,35 @@ describe("postflopView - DOM", () => {
     expect(root.querySelectorAll(".postflop-table__board .postflop-card")).toHaveLength(5);
     expect(root.querySelectorAll(".postflop-card")).toHaveLength(7);
     expect(root.querySelectorAll(".postflop-texture").length).toBeGreaterThan(0);
+  });
+
+  it("zobrazi pot geometry pro check, small bet a big bet sizing", () => {
+    const checkRoot = renderGeneratedSpot(0, "FLOP");
+    const checkGeometry = checkRoot.querySelector<HTMLElement>(".postflop-table__bet-geometry");
+    expect(checkGeometry?.dataset.recommendedAction).toBe("CHECK");
+    expect(checkGeometry?.dataset.betSizing).toBe("check");
+    expect(checkGeometry?.dataset.betBB).toBe("0");
+    expect(checkGeometry?.style.getPropertyValue("--bet-size")).toBe("0%");
+    expect(checkGeometry?.textContent).toContain("Check");
+    expect(checkGeometry?.querySelectorAll(".postflop-table__bet-chip")).toHaveLength(0);
+
+    const smallRoot = renderGeneratedSpot(1, "FLOP");
+    const smallGeometry = smallRoot.querySelector<HTMLElement>(".postflop-table__bet-geometry");
+    expect(smallGeometry?.dataset.recommendedAction).toBe("BET_SMALL");
+    expect(smallGeometry?.dataset.betSizing).toBe("small");
+    expect(smallGeometry?.dataset.betBB).toBe("2");
+    expect(smallGeometry?.style.getPropertyValue("--bet-size")).toBe("33%");
+    expect(smallGeometry?.textContent).toContain("Small 2 BB");
+    expect(smallGeometry?.querySelectorAll(".postflop-table__bet-chip")).toHaveLength(2);
+
+    const bigRoot = renderGeneratedSpot(12, "RIVER");
+    const bigGeometry = bigRoot.querySelector<HTMLElement>(".postflop-table__bet-geometry");
+    expect(bigGeometry?.dataset.recommendedAction).toBe("BET_BIG");
+    expect(bigGeometry?.dataset.betSizing).toBe("big");
+    expect(bigGeometry?.dataset.betBB).toBe("4.5");
+    expect(bigGeometry?.style.getPropertyValue("--bet-size")).toBe("75%");
+    expect(bigGeometry?.textContent).toContain("Big 4.5 BB");
+    expect(bigGeometry?.querySelectorAll(".postflop-table__bet-chip")).toHaveLength(4);
   });
 
   it("oddeli zadani situace od postflop otazky a umi se vratit", () => {
@@ -233,6 +272,9 @@ describe("postflopView - DOM", () => {
     expect(css).toContain(".postflop-flopzilla__cell--muted");
     expect(css).toContain(".postflop-flopzilla__legend-item--active");
     expect(css).toContain(".postflop-range-summary__lane--active");
+    expect(css).toContain(".postflop-table__bet-geometry");
+    expect(css).toContain(".postflop-table__bet-fill");
+    expect(css).toContain(".postflop-table__bet-geometry--big");
     expect(css).toContain(".postflop-seat__role-chip--aggressor");
     expect(css).toContain(".postflop-seat__role-chip--oop");
     expect(css).toContain(".postflop-flopzilla__header-cell--row{position:sticky");
