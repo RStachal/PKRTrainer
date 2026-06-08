@@ -37,7 +37,7 @@ import type {
   StatsStore,
   Summary,
 } from "../persistence/statsStore";
-import { migrateResultRecordsToV2 } from "../persistence/statsRecordV2";
+import { migrateResultRecordsToV2, type ResultRecordV2 } from "../persistence/statsRecordV2";
 import { buildStatsExportJson, importStatsJson } from "../persistence/statsTransfer";
 import {
   availableStatsV2Dimensions,
@@ -80,6 +80,27 @@ export interface DashboardData {
 // ---------------------------------------------------------------------------
 
 const RATE_UNAVAILABLE = "\u2014";
+
+const ACCURACY_TREND_WINDOW_SIZE = 5;
+const ACCURACY_TREND_MAX_WINDOWS = 6;
+
+type AccuracyTrendSource = "preflop" | "postflop" | "mixed";
+
+interface AccuracyTrendRecord {
+  correct: boolean;
+  ts: number;
+  source: Exclude<AccuracyTrendSource, "mixed">;
+}
+
+interface AccuracyTrendPoint {
+  index: number;
+  startTs: number;
+  endTs: number;
+  total: number;
+  correct: number;
+  rate: number | null;
+  source: AccuracyTrendSource;
+}
 
 /**
  * Formats a success rate for display. Null means unavailable.
@@ -384,10 +405,12 @@ function renderKpiPanel(
   const preflopRecords = migrateResultRecordsToV2(store.events());
   const model = buildStatsV2KpiModel(preflopRecords);
   const avgDecisionMs = averageDecisionMs(preflopRecords, postflopRecords);
+  const accuracyTrend = buildAccuracyTrend(preflopRecords, postflopRecords);
   const box = el("section", "dashboard-kpi");
   box.dataset.total = String(model.total);
   box.dataset.recentWindowSize = String(model.recentWindowSize);
   box.dataset.minLeakSample = String(model.minLeakSample);
+  box.dataset.trendWindows = String(accuracyTrend.length);
   if (avgDecisionMs !== null) box.dataset.avgResponseMs = String(avgDecisionMs);
 
   const heading = el("h3", "dashboard-kpi__title");
@@ -409,6 +432,7 @@ function renderKpiPanel(
   box.appendChild(cards);
 
   box.appendChild(renderKpiChart(model));
+  box.appendChild(renderAccuracyTrend(accuracyTrend));
   box.appendChild(renderLeakChart(model.leakCandidates));
 
   return box;
@@ -557,6 +581,60 @@ function averageDecisionMs(
   return Math.round(total / count);
 }
 
+function buildAccuracyTrend(
+  preflopRecords: readonly ResultRecordV2[],
+  postflopRecords: readonly PostflopStatsV2BridgeRecord[],
+  windowSize = ACCURACY_TREND_WINDOW_SIZE,
+  maxWindows = ACCURACY_TREND_MAX_WINDOWS,
+): AccuracyTrendPoint[] {
+  const records: AccuracyTrendRecord[] = [
+    ...preflopRecords.map((record) => ({
+      correct: record.correct,
+      ts: record.ts,
+      source: "preflop" as const,
+    })),
+    ...postflopRecords.map((record) => ({
+      correct: record.correct,
+      ts: record.ts,
+      source: "postflop" as const,
+    })),
+  ]
+    .filter((record) => Number.isFinite(record.ts))
+    .sort((a, b) => a.ts - b.ts);
+
+  const normalizedWindowSize = Math.max(1, Math.floor(windowSize));
+  const normalizedMaxWindows = Math.max(1, Math.floor(maxWindows));
+  const windows: AccuracyTrendPoint[] = [];
+
+  for (let offset = 0; offset < records.length; offset += normalizedWindowSize) {
+    const chunk = records.slice(offset, offset + normalizedWindowSize);
+    if (chunk.length === 0) continue;
+    const correct = chunk.filter((record) => record.correct).length;
+    const hasPreflop = chunk.some((record) => record.source === "preflop");
+    const hasPostflop = chunk.some((record) => record.source === "postflop");
+
+    windows.push({
+      index: windows.length + 1,
+      startTs: chunk[0].ts,
+      endTs: chunk[chunk.length - 1].ts,
+      total: chunk.length,
+      correct,
+      rate: successRate(chunk.length, correct),
+      source: hasPreflop && hasPostflop ? "mixed" : hasPreflop ? "preflop" : "postflop",
+    });
+  }
+
+  return windows.slice(-normalizedMaxWindows).map((point, index) => ({
+    ...point,
+    index: index + 1,
+  }));
+}
+
+function successRate(total: number, correct: number): number | null {
+  if (total <= 0) return null;
+  return Math.round((correct / total) * 1000) / 10;
+}
+
 function kpiCard(labelText: string, key: string, valueText: string): HTMLElement {
   const card = el("div", "dashboard-kpi-card");
   card.dataset.kpi = key;
@@ -580,6 +658,60 @@ function renderKpiChart(model: StatsV2KpiModel): HTMLElement {
   chart.appendChild(rateBar("Lifetime", "lifetime", model.lifetimeRate, model.total));
   chart.appendChild(rateBar("Recent", "recent", model.recentRate, model.recentTotal));
   return chart;
+}
+
+function renderAccuracyTrend(points: readonly AccuracyTrendPoint[]): HTMLElement {
+  const chart = el("div", "dashboard-accuracy-trend");
+  chart.dataset.windows = String(points.length);
+
+  const title = el("div", "dashboard-accuracy-trend__title");
+  title.textContent = "Recent accuracy trend";
+  chart.appendChild(title);
+
+  if (points.length === 0) {
+    const empty = el("div", "dashboard-accuracy-trend__empty");
+    empty.textContent = "No recent trend yet.";
+    chart.appendChild(empty);
+    return chart;
+  }
+
+  const bars = el("div", "dashboard-accuracy-trend__bars");
+  for (const point of points) {
+    bars.appendChild(renderAccuracyTrendBar(point));
+  }
+  chart.appendChild(bars);
+  return chart;
+}
+
+function renderAccuracyTrendBar(point: AccuracyTrendPoint): HTMLElement {
+  const bar = el("div", "dashboard-accuracy-trend__bar");
+  bar.dataset.index = String(point.index);
+  bar.dataset.total = String(point.total);
+  bar.dataset.correct = String(point.correct);
+  bar.dataset.rate = point.rate === null ? "" : String(point.rate);
+  bar.dataset.source = point.source;
+  bar.dataset.startTs = String(point.startTs);
+  bar.dataset.endTs = String(point.endTs);
+
+  const value = el("div", "dashboard-accuracy-trend__value");
+  value.textContent = formatRate(point.rate);
+  bar.appendChild(value);
+
+  const track = el("div", "dashboard-accuracy-trend__track");
+  const fill = el("div", "dashboard-accuracy-trend__fill");
+  fill.style.height = `${point.rate === null ? 0 : Math.max(0, Math.min(100, point.rate))}%`;
+  track.appendChild(fill);
+  bar.appendChild(track);
+
+  const label = el("div", "dashboard-accuracy-trend__label");
+  label.textContent = `W${point.index}`;
+  bar.appendChild(label);
+
+  const sample = el("div", "dashboard-accuracy-trend__sample");
+  sample.textContent = `${point.correct}/${point.total}`;
+  bar.appendChild(sample);
+
+  return bar;
 }
 
 function renderLeakChart(candidates: readonly StatsV2LeakCandidate[]): HTMLElement {
@@ -985,7 +1117,26 @@ function dashboardStyles(): HTMLStyleElement {
   background:rgba(255,255,255,.045);min-width:0;}
 .dashboard-kpi-card__label{font-size:11px;font-weight:900;text-transform:uppercase;color:#9fb0cf;}
 .dashboard-kpi-card__value{margin-top:4px;font-size:16px;font-weight:950;color:#f8fbff;overflow-wrap:anywhere;}
-.dashboard-kpi-chart,.dashboard-leak-chart{display:grid;gap:7px;}
+.dashboard-kpi-chart,.dashboard-accuracy-trend,.dashboard-leak-chart{display:grid;gap:7px;}
+.dashboard-accuracy-trend{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
+.dashboard-accuracy-trend__title{font-size:12px;font-weight:950;color:#dce7fb;}
+.dashboard-accuracy-trend__empty{font-size:12px;color:#9fb0cf;}
+.dashboard-accuracy-trend__bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));
+  gap:8px;align-items:end;min-height:126px;}
+.dashboard-accuracy-trend__bar{display:grid;grid-template-rows:auto 86px auto auto;gap:5px;min-width:0;
+  align-items:end;justify-items:center;font-size:11px;color:#9fb0cf;}
+.dashboard-accuracy-trend__value{font-weight:950;color:#9ff0bd;font-variant-numeric:tabular-nums;}
+.dashboard-accuracy-trend__track{width:100%;max-width:42px;height:86px;border-radius:999px;
+  display:flex;align-items:flex-end;overflow:hidden;background:linear-gradient(180deg,rgba(148,163,184,.16),rgba(148,163,184,.08));
+  border:1px solid rgba(148,163,184,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+.dashboard-accuracy-trend__fill{width:100%;border-radius:999px 999px 0 0;
+  background:linear-gradient(180deg,#7bd3ff,#2bd576);min-height:2px;}
+.dashboard-accuracy-trend__label{font-weight:950;color:#dce7fb;}
+.dashboard-accuracy-trend__sample{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.dashboard-accuracy-trend__bar[data-source="postflop"] .dashboard-accuracy-trend__fill{
+  background:linear-gradient(180deg,#facc15,#2bd576);}
+.dashboard-accuracy-trend__bar[data-source="mixed"] .dashboard-accuracy-trend__fill{
+  background:linear-gradient(180deg,#c084fc,#7bd3ff 52%,#2bd576);}
 .dashboard-leak-chart{border-top:1px solid rgba(148,163,184,.12);padding-top:10px;}
 .dashboard-leak-chart__title{font-size:12px;font-weight:950;color:#dce7fb;}
 .dashboard-leak-chart__empty{font-size:12px;color:#9fb0cf;}
@@ -1058,6 +1209,9 @@ function dashboardStyles(): HTMLStyleElement {
   .postflop-kpi-chart--boardTextureKey{grid-column:auto;}
   .dashboard-kpi__cards{grid-template-columns:1fr 1fr;}
   .dashboard-kpi-chart-row{grid-template-columns:1fr;gap:5px;}
+  .dashboard-accuracy-trend__bars{grid-template-columns:repeat(auto-fit,minmax(48px,1fr));gap:7px;min-height:112px;}
+  .dashboard-accuracy-trend__bar{grid-template-rows:auto 72px auto auto;font-size:10px;}
+  .dashboard-accuracy-trend__track{height:72px;max-width:36px;}
   .dashboard-summary,.dashboard-kpi,.preflop-curriculum,.dashboard-session,.permission-audit,.breakdown,.stats-transfer,.profile-breakdowns,.postflop-breakdowns,.preflop-leak-charts,.postflop-kpi-charts{
     border-radius:12px;padding:12px;}
   .preflop-curriculum{grid-template-columns:1fr;}

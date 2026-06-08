@@ -190,6 +190,8 @@ describe("dashboard - DOM statistiky", () => {
     expect(css).toContain(".stats-json-box");
     expect(css).toContain(".dashboard-kpi__cards");
     expect(css).toContain(".dashboard-kpi-chart-row");
+    expect(css).toContain(".dashboard-accuracy-trend");
+    expect(css).toContain(".dashboard-accuracy-trend__bar");
     expect(css).toContain(".preflop-curriculum");
     expect(css).toContain(".preflop-leak-charts");
     expect(css).not.toContain("background:#fff");
@@ -211,6 +213,13 @@ describe("dashboard - DOM statistiky", () => {
       .toBeNull();
     expect(root.querySelector<HTMLElement>(".dashboard-kpi-chart-row[data-key='lifetime']")
       ?.dataset.rate).toBe("100");
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi")?.dataset.trendWindows).toBe("1");
+    expect(root.querySelector<HTMLElement>(".dashboard-accuracy-trend")?.dataset.windows)
+      .toBe("1");
+    expect(root.querySelector<HTMLElement>(".dashboard-accuracy-trend__bar")?.dataset.rate)
+      .toBe("100");
+    expect(root.querySelector<HTMLElement>(".dashboard-accuracy-trend__bar")?.dataset.source)
+      .toBe("preflop");
     expect(root.querySelector<HTMLElement>(".dashboard-leak-chart")?.dataset.count).toBe("0");
     expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.dataset.available).toBe("false");
     expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.textContent)
@@ -338,6 +347,49 @@ describe("dashboard - DOM statistiky", () => {
     expect(kpi?.dataset.avgResponseMs).toBe("1500");
     expect(card?.textContent).toContain("Avg decision");
     expect(card?.textContent).toContain("1.5 s");
+  });
+
+  it("zobrazi recent accuracy trend po oknech vcetne postflop vysledku", () => {
+    const storage = new MemoryStorage();
+    const store = createStatsStore(storage);
+    for (let index = 1; index <= 7; index += 1) {
+      expect(store.record({
+        ...record,
+        qid: `RFI|BTN|25|AKs|OFF|trend-${index}`,
+        correct: index % 2 === 0,
+        ts: index,
+      }).ok).toBe(true);
+    }
+
+    const root = document.createElement("div");
+    renderDashboard({
+      store,
+      sessionCount: 10,
+      postflopRecords: [
+        { ...postflopRecord, qid: "POSTFLOP|FLOP|trend-8", correct: true, ts: 8 },
+        { ...postflopRecord, qid: "POSTFLOP|FLOP|trend-9", correct: false, ts: 9 },
+        { ...postflopRecord, qid: "POSTFLOP|FLOP|trend-10", correct: true, ts: 10 },
+      ],
+    }, root);
+
+    const bars = Array.from(
+      root.querySelectorAll<HTMLElement>(".dashboard-accuracy-trend__bar"),
+    );
+    expect(root.querySelector<HTMLElement>(".dashboard-kpi")?.dataset.trendWindows).toBe("2");
+    expect(root.querySelector<HTMLElement>(".dashboard-accuracy-trend")?.dataset.windows)
+      .toBe("2");
+    expect(root.textContent).toContain("Recent accuracy trend");
+    expect(bars).toHaveLength(2);
+    expect(bars[0].dataset.total).toBe("5");
+    expect(bars[0].dataset.correct).toBe("2");
+    expect(bars[0].dataset.rate).toBe("40");
+    expect(bars[0].dataset.source).toBe("preflop");
+    expect(bars[0].textContent).toContain("2/5");
+    expect(bars[1].dataset.total).toBe("5");
+    expect(bars[1].dataset.correct).toBe("3");
+    expect(bars[1].dataset.rate).toBe("60");
+    expect(bars[1].dataset.source).toBe("mixed");
+    expect(bars[1].textContent).toContain("3/5");
   });
 
   it("zobrazi KPI leak graf jen pro skupiny s dostatecnym samplem", () => {
