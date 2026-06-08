@@ -236,7 +236,7 @@ describe("dashboard - DOM statistiky", () => {
     expect(root.querySelector<HTMLElement>(".dashboard-leak-chart")?.dataset.count).toBe("0");
     expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.dataset.available).toBe("false");
     expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.textContent)
-      .toContain("No leak");
+      .toContain("Build sample");
     expect(root.querySelector<HTMLElement>(".dashboard-streak")?.dataset.streak).toBe("1");
     expect(root.querySelector<HTMLElement>(".dashboard-session-count")?.dataset.sessionCount)
       .toBe("1");

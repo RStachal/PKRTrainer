@@ -1256,15 +1256,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Ukazat zrychleni/zpomaleni jen po dostatecnem sample
     - Hotovo: dashboard decision-time trend ma min-sample gate, okna po timed decisions, faster/slower/stable summary and mobile-safe bars
 
-- [ ] 123. Leak recommendation engine
+- [x] 123. Leak recommendation engine
   - [x] 123.1 Vypocitat top 3 next study focus oblasti
     - Minimum sample, low accuracy and recent mistakes maji urcit prioritu
     - Hotovo: curriculum plan pocita top-3 recommendations se score podle sample, lifetime accuracy and recent mistakes; dashboard je zobrazuje jako Next study focus
   - [x] 123.2 Nabidnout one-click focused session
     - Dashboard leak row muze spustit trening s odpovidajicimi filtry
     - Hotovo: dashboard leak rows i Next study focus recommendations maji Train action napojenou na targeted filters
-  - [ ] 123.3 Otestovat, ze recommendations nejsou genericke pri malem sample
+  - [x] 123.3 Otestovat, ze recommendations nejsou genericke pri malem sample
     - Pri nizkem objemu zobrazit volume goal misto leak soudil
+    - Hotovo: low-volume preflop sample vraci Build sample volume goal, bez generickych leak recommendations
 
 - [ ] 124. Stats storage and privacy hardening
   - [ ] 124.1 Pridat schema version pro postflop responseMs a future dimensions

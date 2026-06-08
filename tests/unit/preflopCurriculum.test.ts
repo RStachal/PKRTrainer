@@ -172,4 +172,24 @@ describe("preflopCurriculum", () => {
     expect(plan.recommendations).toEqual([]);
     expect(plan.sessionGoal.targetSpots).toBe(10);
   });
+
+  it("pri malem samplu vrati volume goal misto generickeho leak doporuceni", () => {
+    const records = migrateResultRecordsToV2([
+      record("VS_OPEN|BB|15|A5s|ON|low-1", false, { ts: 1 }),
+      record("VS_OPEN|BB|15|KQo|ON|low-2", true, { chosen: "CALL", ts: 2 }),
+      record("RFI|BTN|25|AKs|OFF|low-3", false, {
+        context: "RFI",
+        position: "BTN",
+        bucket: 25,
+        ts: 3,
+      }),
+    ]);
+
+    const plan = buildPreflopCurriculumPlan(records, { minLeakSample: 5 });
+
+    expect(plan.available).toBe(false);
+    expect(plan.focus).toBeNull();
+    expect(plan.recommendations).toEqual([]);
+    expect(plan.reason).toBe("Build sample: 2 more preflop spots before leak recommendations.");
+  });
 });

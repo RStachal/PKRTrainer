@@ -93,15 +93,27 @@ export function buildPreflopCurriculumPlan(
     leakRateThreshold: options.leakRateThreshold ?? 70,
     leakDimensions: CURRICULUM_DIMS,
   });
+  const repetitionQueue = buildPreflopSpacedRepetitionQueue(preflopRecords, {
+    seed: options.seed ?? 0,
+    limit: options.repetitionLimit ?? 8,
+  });
+  if (preflopRecords.length < kpi.minLeakSample) {
+    return {
+      available: false,
+      reason: volumeGoalReason(preflopRecords.length, kpi.minLeakSample),
+      focus: null,
+      alternates: [],
+      recommendations: [],
+      sessionGoal,
+      repetitionQueue,
+    };
+  }
+
   const focuses = kpi.leakCandidates
     .filter(isCurriculumLeakCandidate)
     .map((candidate) => focusFromLeakCandidate(candidate, preflopRecords, options.scoringMode ?? "LENIENT"));
   const recommendations = buildPreflopStudyRecommendations(focuses, preflopRecords, {
     recentWindowSize: options.recentWindowSize ?? 20,
-  });
-  const repetitionQueue = buildPreflopSpacedRepetitionQueue(preflopRecords, {
-    seed: options.seed ?? 0,
-    limit: options.repetitionLimit ?? 8,
   });
 
   if (focuses.length === 0) {
@@ -250,6 +262,12 @@ function buildSessionGoal(options: PreflopCurriculumOptions): PreflopSessionGoal
     streakTarget: normalizePositiveInt(options.streakTarget, 5),
     leakCleanupTarget: normalizeRate(options.targetAccuracy, 80),
   };
+}
+
+function volumeGoalReason(currentSample: number, minSample: number): string {
+  const remaining = Math.max(0, minSample - currentSample);
+  if (remaining === 0) return `Build sample: ${minSample}+ preflop spots before leak recommendations.`;
+  return `Build sample: ${remaining} more preflop spots before leak recommendations.`;
 }
 
 function focusFromLeakCandidate(
