@@ -76,6 +76,35 @@ describe("mtt:completion CLI", () => {
     );
   });
 
+  it("drzi JSON import sloty konzistentni s mtt:slots CLI", () => {
+    const args = [
+      "--format=SIX_MAX",
+      "--ev=DOLAR_EV",
+      "--street=RIVER",
+      "--status=candidate",
+      "--json",
+    ];
+    const completionResult = runCompletion(...args);
+    const slotsResult = runSlots("--kind=postflop", ...args);
+
+    expect(completionResult.status).toBe(0);
+    expect(slotsResult.status).toBe(0);
+
+    const completion = parseJson(completionResult.stdout) as {
+      readiness: { rows: { importSlot: { packId: string } | null }[] };
+    };
+    const slots = parseJson(slotsResult.stdout) as {
+      postflopSlots: { packId: string }[];
+    };
+    const completionPackIds = completion.readiness.rows
+      .map((row) => row.importSlot?.packId)
+      .filter((packId): packId is string => typeof packId === "string")
+      .sort();
+    const slotPackIds = slots.postflopSlots.map((slot) => slot.packId).sort();
+
+    expect(completionPackIds).toEqual(slotPackIds);
+  });
+
   it("vrati chybu pro neznamy filtr", () => {
     const result = runCompletion("--details", "--street=SHOWDOWN");
 
@@ -102,11 +131,29 @@ function runCompletion(...args: string[]) {
   });
 }
 
+function runSlots(...args: string[]) {
+  return spawnSync(command(), slotsCommandArgs(args), {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    maxBuffer: 2 * 1024 * 1024,
+    shell: false,
+  });
+}
+
+function parseJson(stdout: string): unknown {
+  return JSON.parse(stdout.slice(stdout.indexOf("{")));
+}
+
 function command(): string {
   return process.platform === "win32" ? "cmd" : "npm";
 }
 
 function commandArgs(args: string[]): string[] {
   const npmArgs = ["run", "mtt:completion", "--", ...args];
+  return process.platform === "win32" ? ["/c", "npm", ...npmArgs] : npmArgs;
+}
+
+function slotsCommandArgs(args: string[]): string[] {
+  const npmArgs = ["run", "mtt:slots", "--", ...args];
   return process.platform === "win32" ? ["/c", "npm", ...npmArgs] : npmArgs;
 }

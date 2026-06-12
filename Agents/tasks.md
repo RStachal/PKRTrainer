@@ -1213,7 +1213,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Pokud licence nepovoluje exact frequencies, UI ukaze pouze kvalitativni bucket
     - Hotovo: kvalitativni actionMix v postflop resultu ukazuje mixed actions bez procent a s hlaskou, ze exact frequencies jsou skryte
 
-- [ ] 118. Turn production model roadmap
+- [x] 118. Turn production model roadmap
   - [x] 118.1 Definovat turn production schema
     - Turn musi umet prior flop action, turn card class, SPR, position pattern and range lane
     - Hotovo: `TurnProductionStrategyPack` schema a coverage report kontroluji prior flop action, turn card class, SPR, position pattern, TURN_BARREL node, range lanes a exact-frequency permission gate
@@ -1224,7 +1224,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Public heuristic zustava fallback, production ma prioritu
     - Hotovo: `turnProductionStrategyResolver` matchuje TURN_BARREL podle prior flop action, turn card class, SPR a position pattern; registry dava turn production pred public heuristic fallback
 
-- [ ] 119. River production model roadmap
+- [x] 119. River production model roadmap
   - [x] 119.1 Definovat river production schema
     - River musi umet runout, blocker relevance, value/bluff/check lanes and sizing
     - Hotovo: `RiverProductionStrategyPack` schema a coverage report kontroluji river runout class, blocker relevance, prior turn action, SPR, position pattern, RIVER_PRESSURE node, range lanes a exact-frequency permission gate
@@ -1325,6 +1325,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: `npm run mtt:completion -- --json` vraci release gate, pouzite filtry a filtrovanou readiness matici pro operator tooling
   - [x] 131.24 Sjednotit parser MTT CLI filtru
     - Hotovo: `mttCliFilterParsing` sdili `--format`, `--speed`, `--ev`, `--street`, `--ante` a `--status` parser mezi `mtt:completion` a `mtt:slots`
+  - [x] 131.25 Otestovat konzistenci JSON completion a slot tooling vystupu
+    - Hotovo: regresni CLI test porovnava `importSlot.packId` z `npm run mtt:completion -- --json` s `packId` ze stejne filtrovaneho `npm run mtt:slots -- --json`, aby operator tooling nedostal rozdilne import sloty
 
 - [x] 132. MTT cross-position and multi-street simulation
   - [x] 132.1 Generovat heads-up postflop kontexty pro vsechny podporovane dvojice pozic
