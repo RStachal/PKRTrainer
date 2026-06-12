@@ -456,6 +456,11 @@ describe("postflopView - DOM", () => {
     expect(css).toContain(".postflop-flopzilla__header-cell--corner{top:0;z-index:3;}");
     expect(css).toContain(".postflop-flopzilla__header,.postflop-flopzilla__hint");
     expect(css).toContain(".postflop-range-summary__hero-bucket{align-items:flex-start;flex-direction:column;}");
+    expect(css).toContain("@media (max-width:640px)");
+    expect(css).toContain(".postflop-table{aspect-ratio:auto;min-height:560px;max-width:390px;}");
+    expect(css).toContain(".postflop-seat{left:var(--seat-mobile-left);top:var(--seat-mobile-top)");
+    expect(css).toContain(".postflop-table__board .postflop-card{width:36px;height:48px;font-size:16px;}");
+    expect(css).toContain(".postflop-flopzilla__matrix,.postflop-flopzilla__legend,.postflop-flopzilla__detail{min-width:560px;}");
   });
 
   it("po odpovedi zavola callback s postflop training spotem", () => {

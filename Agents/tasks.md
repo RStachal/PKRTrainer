@@ -1186,15 +1186,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 114.3 Zapojit SRP production pack do resolver chain
     - Production data ma mit prioritu pred public heuristic fallbackem
 
-- [ ] 115. Flop SRP production UI QA
+- [x] 115. Flop SRP production UI QA
   - [x] 115.1 Otestovat UI labely pro production vs fallback
     - Hrac vidi model confidence source-free, ne provider/source detail
     - Hotovo: postflop UI rozlisuje `Production model` pro non-public StrategyPack resolver a `Heuristic model` pro public fallback; DOM test hlida source-free vystup bez pack/rule/source URL
   - [x] 115.2 Otestovat Flopzilla matrix lanes z production dat
     - Value/bluff/check lanes maji odpovidat production rangeBuckets
     - Hotovo: production resolvery predavaji source-free `rangeBuckets` do runtime source payloadu a Flopzilla matrix pouziva production lane mapu pro odpovidajici handClasses; DOM test hlida hero bunku s `data-lane-source="production"`
-  - [ ] 115.3 Otestovat mobile layout pro SRP table + matrix
+  - [x] 115.3 Otestovat mobile layout pro SRP table + matrix
     - Matrix scroll, seat labels and board cards nesmi pretekat
+    - Hotovo: postflop DOM/CSS test hlida mobile SRP table rozmery, seat mobile pozice, board card sizing a matrix min-width scroll guard; `mobileWebViewSmoke` pokryva 360x800, 390x844 and 412x915 bez source URL v UI
 
 - [ ] 116. Flop 3bet pot production import execution
   - [ ] 116.1 Zpracovat legalni 3bet pot flop StrategyPack
