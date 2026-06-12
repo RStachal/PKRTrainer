@@ -340,6 +340,67 @@ describe("postflopView - DOM", () => {
     expect(heroBucket?.textContent).not.toContain("internal-qual-rule");
   });
 
+  it("pouzije production range bucket lane pro Flopzilla hero bunku", () => {
+    const resolver: PostflopStrategyResolver = (input) => {
+      const heroHand = input.heroHand ?? "AKo";
+      return {
+        action: "CHECK",
+        explanation: "Production lane fixture.",
+        source: {
+          kind: "STRATEGY_PACK",
+          packId: "internal-lane-pack",
+          packVersion: "v1",
+          packVerifiedAt: "2026-06-12",
+          ruleId: "internal-lane-rule",
+          confidence: "HIGH",
+          matchedTextures: input.textures,
+          sprMin: 2,
+          sprMax: 12,
+          positionPattern: input.positionPattern,
+          sourceUrls: ["https://example.test/lane-source"],
+          assumptions: ["Production lane fixture."],
+          selectionScore: 160,
+          tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+          rangeBuckets: [
+            {
+              lane: "CHECK",
+              label: "protected check",
+              action: "CHECK",
+              handClasses: [heroHand],
+              features: ["showdown value"],
+            },
+          ],
+          heroRangeBucket: {
+            lane: "CHECK",
+            label: "protected check",
+            action: "CHECK",
+            handClass: heroHand,
+            features: ["showdown value"],
+          },
+        },
+      };
+    };
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: resolver,
+    });
+
+    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
+
+    const heroBucket = root.querySelector<HTMLElement>(".postflop-range-summary__hero-bucket");
+    const heroCell = root.querySelector<HTMLElement>(".postflop-flopzilla__cell--hero");
+    expect(heroBucket?.dataset.rangeBucketLane).toBe("CHECK");
+    expect(heroCell?.dataset.lane).toBe("CHECK");
+    expect(heroCell?.dataset.laneSource).toBe("production");
+    expect(heroCell?.classList.contains("postflop-flopzilla__cell--production-lane")).toBe(true);
+    expect(root.textContent).not.toContain("internal-lane-pack");
+    expect(root.textContent).not.toContain("internal-lane-rule");
+    expect(root.textContent).not.toContain("https://");
+  });
+
   it("umi filtrovat Flopzilla matrix podle value/bluff/check lane", () => {
     const root = document.createElement("div");
     renderPostflopView(root, { initialSeed: 42, initialStreet: "FLOP", autoGenerate: true });
@@ -383,6 +444,7 @@ describe("postflopView - DOM", () => {
     expect(css).toContain(".postflop-flopzilla__legend-count");
     expect(css).toContain(".postflop-range-summary__hero-bucket");
     expect(css).toContain(".postflop-flopzilla__cell--muted");
+    expect(css).toContain(".postflop-flopzilla__cell--production-lane");
     expect(css).toContain(".postflop-flopzilla__legend-item--active");
     expect(css).toContain(".postflop-range-summary__lane--active");
     expect(css).toContain(".postflop-table__bet-geometry");

@@ -1190,8 +1190,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 115.1 Otestovat UI labely pro production vs fallback
     - Hrac vidi model confidence source-free, ne provider/source detail
     - Hotovo: postflop UI rozlisuje `Production model` pro non-public StrategyPack resolver a `Heuristic model` pro public fallback; DOM test hlida source-free vystup bez pack/rule/source URL
-  - [ ] 115.2 Otestovat Flopzilla matrix lanes z production dat
+  - [x] 115.2 Otestovat Flopzilla matrix lanes z production dat
     - Value/bluff/check lanes maji odpovidat production rangeBuckets
+    - Hotovo: production resolvery predavaji source-free `rangeBuckets` do runtime source payloadu a Flopzilla matrix pouziva production lane mapu pro odpovidajici handClasses; DOM test hlida hero bunku s `data-lane-source="production"`
   - [ ] 115.3 Otestovat mobile layout pro SRP table + matrix
     - Matrix scroll, seat labels and board cards nesmi pretekat
 

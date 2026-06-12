@@ -111,6 +111,7 @@ export function renderPostflopRangeMatrix(
   matrix.style.gridTemplateColumns = `repeat(${GRID_SIZE + 1}, minmax(0, 1fr))`;
   matrix.appendChild(headerCell(doc, "", "corner"));
   const detail = detailPanel(doc);
+  const productionLaneByHand = productionLaneMap(spot);
 
   for (let j = 0; j < GRID_SIZE; j += 1) {
     matrix.appendChild(headerCell(doc, RANKS[j], "column"));
@@ -126,7 +127,7 @@ export function renderPostflopRangeMatrix(
       const category = classifyFlopHand(hand, spot.board);
       used.add(category);
       counts[category] = (counts[category] ?? 0) + 1;
-      const cell = matrixCell(doc, hand, category, hand === heroHand);
+      const cell = matrixCell(doc, hand, category, hand === heroHand, productionLaneByHand.get(hand));
       cell.addEventListener("click", () => showCellDetail(matrix, detail, cell));
       cell.addEventListener("keydown", (event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
@@ -233,10 +234,13 @@ function matrixCell(
   hand: HandLabel,
   category: FlopzillaCategory,
   hero: boolean,
+  productionLane?: FlopzillaLane,
 ): HTMLElement {
   const cell = doc.createElement("div");
   cell.className = `postflop-flopzilla__cell postflop-flopzilla__cell--${category}`;
+  if (productionLane) cell.classList.add("postflop-flopzilla__cell--production-lane");
   if (hero) cell.classList.add("postflop-flopzilla__cell--hero");
+  const lane = productionLane ?? flopzillaLaneForCategory(category);
   cell.setAttribute("role", "gridcell");
   cell.setAttribute("tabindex", "0");
   cell.setAttribute("aria-selected", "false");
@@ -244,12 +248,25 @@ function matrixCell(
   cell.dataset.hand = hand;
   cell.dataset.category = category;
   cell.dataset.categoryLabel = flopzillaCategoryLabel(category);
-  cell.dataset.lane = flopzillaLaneForCategory(category);
-  cell.dataset.laneLabel = flopzillaLaneLabel(flopzillaLaneForCategory(category));
+  cell.dataset.lane = lane;
+  cell.dataset.laneLabel = flopzillaLaneLabel(lane);
+  cell.dataset.laneSource = productionLane ? "production" : "taxonomy";
   cell.title = `${hand}: ${flopzillaCategoryLabel(category)}`;
   cell.textContent = hand;
   cell.style.background = CATEGORY_DEFS[category].color;
   return cell;
+}
+
+function productionLaneMap(spot: PostflopTrainingSpot): Map<HandLabel, FlopzillaLane> {
+  const source = spot.explanation.source;
+  const buckets = source.kind === "STRATEGY_PACK" ? source.rangeBuckets : undefined;
+  const map = new Map<HandLabel, FlopzillaLane>();
+  for (const bucket of buckets ?? []) {
+    for (const hand of bucket.handClasses) {
+      if (!map.has(hand)) map.set(hand, bucket.lane);
+    }
+  }
+  return map;
 }
 
 function detailPanel(doc: Document): HTMLElement {

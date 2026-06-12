@@ -143,6 +143,7 @@ export type PostflopRecommendationSource =
       assumptions: readonly string[];
       selectionScore: number;
       tieBreak: "RULE_SCORE_THEN_PACK_ORDER";
+      rangeBuckets?: readonly PostflopRangeBucket[];
       heroRangeBucket?: PostflopHeroRangeBucket;
     }
   | {
@@ -161,6 +162,15 @@ export interface PostflopActionFrequency {
   action: PostflopAction;
   frequencyPct: number;
   visibility: PostflopFrequencyVisibility;
+}
+
+export interface PostflopRangeBucket {
+  lane: PostflopRangeLane;
+  label: string;
+  action: PostflopAction;
+  handClasses: readonly HandLabel[];
+  features: readonly string[];
+  actionMix?: readonly PostflopActionFrequency[];
 }
 
 export interface PostflopHeroRangeBucket {

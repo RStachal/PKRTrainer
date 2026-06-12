@@ -2,6 +2,7 @@ import type {
   BoardTexture,
   PostflopHeroRangeBucket,
   PostflopRecommendation,
+  PostflopRangeBucket,
   PostflopStrategyInput,
   PostflopStrategyResolver,
 } from "../../core/postflopGenerator";
@@ -42,6 +43,7 @@ export function createFlopProductionStrategyResolver(
         assumptions: pack.assumptions,
         selectionScore: ruleScore(rule, input),
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        rangeBuckets: rangeBuckets(rule),
         heroRangeBucket: heroRangeBucket(rule, input),
       },
     };
@@ -147,6 +149,17 @@ function heroRangeBucket(
     features: [...bucket.features],
     actionMix: bucket.actionMix?.map((item) => ({ ...item })),
   };
+}
+
+function rangeBuckets(rule: FlopProductionStrategyRule): PostflopRangeBucket[] {
+  return rule.rangeBuckets.map((bucket) => ({
+    lane: bucket.lane,
+    label: bucket.label,
+    action: bucket.action,
+    handClasses: [...bucket.handClasses],
+    features: [...bucket.features],
+    actionMix: bucket.actionMix?.map((item) => ({ ...item })),
+  }));
 }
 
 function roundedSpr(effectiveStackBB: number, potBB: number): number {

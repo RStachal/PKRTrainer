@@ -1431,6 +1431,8 @@ function styles(doc: Document): HTMLStyleElement {
   box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -10px 18px rgba(0,0,0,.16);
   cursor:pointer;}
 .postflop-flopzilla__cell:focus-visible{outline:2px solid #7bd3ff;outline-offset:1px;}
+.postflop-flopzilla__cell--production-lane{box-shadow:inset 0 0 0 2px rgba(232,236,247,.58),
+  inset 0 -10px 18px rgba(0,0,0,.16);}
 .postflop-flopzilla__cell--hero{outline:3px solid #fff;outline-offset:-2px;
   box-shadow:0 0 0 2px rgba(43,213,118,.7),0 0 18px rgba(43,213,118,.42);}
 .postflop-flopzilla__cell--selected{filter:brightness(1.16);
