@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_TRAINING_PROFILE, profileWith } from "../../src/core/trainingProfile";
 import type { ResultRecord } from "../../src/persistence/statsStore";
 import { migrateResultRecordsToV2 } from "../../src/persistence/statsRecordV2";
 import {
@@ -56,6 +57,19 @@ describe("statsV2Analytics", () => {
       { key: "BTN", total: 1, correct: 1, rate: 100 },
       { key: "BB", total: 1, correct: 0, rate: 0 },
     ]);
+  });
+
+  it("drzi 6-max a 9-max vysledky oddelene pres tableFormat breakdown", () => {
+    const fullRing = migrateResultRecordsToV2([records[0]]);
+    const sixMax = migrateResultRecordsToV2([{ ...records[1], ts: 3 }], {
+      profile: profileWith(DEFAULT_TRAINING_PROFILE, { tableFormat: "SIX_MAX" }),
+    });
+
+    expect(breakdownStatsV2([...fullRing, ...sixMax], "tableFormat")).toEqual([
+      { key: "FULL_RING_9", total: 1, correct: 1, rate: 100 },
+      { key: "SIX_MAX", total: 1, correct: 0, rate: 0 },
+    ]);
+    expect(fullRing[0].profileId).not.toBe(sixMax[0].profileId);
   });
 
   it("vystavuje vsechny dimenze potrebne pro budouci dashboard", () => {

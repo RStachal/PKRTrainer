@@ -59,7 +59,6 @@
  */
 
 import {
-  POSITION_ORDER,
   STACK_BUCKETS,
   type ActionContext,
   type AnteMode,
@@ -68,7 +67,11 @@ import {
   type ScoringMode,
   type StackBucket,
 } from "../core/types";
-import type { TrainingProfile } from "../core/trainingProfile";
+import {
+  positionsForFormat,
+  type TableFormat,
+  type TrainingProfile,
+} from "../core/trainingProfile";
 import { renderProfileSelector, type ProfileSelectorView } from "./profileSelector";
 
 // ---------------------------------------------------------------------------
@@ -288,7 +291,12 @@ export function renderFilters(
 
   const wrap = el(doc, "div", "filters");
   const profileBox = el(doc, "div", "filters__profile");
-  const profileSelector: ProfileSelectorView = renderProfileSelector(profileBox);
+  const profileSelector: ProfileSelectorView = renderProfileSelector(profileBox, {
+    onChange: (profile) => {
+      renderPositionControls(profile.tableFormat);
+      hideWarning();
+    },
+  });
   wrap.appendChild(profileBox);
 
   // Reference na vstupy pro pozdější čtení stavu.
@@ -322,15 +330,7 @@ export function renderFilters(
   wrap.appendChild(posTitleRow);
 
   const posBox = el(doc, "div", "filter-group filter-group--positions");
-  for (const pos of POSITION_ORDER) {
-    const { label, input } = makeCheckbox(doc, "filter-position", pos, {
-      name: "position",
-      value: pos,
-    });
-    input.addEventListener("change", hideWarning);
-    positionInputs.set(pos, input);
-    posBox.appendChild(label);
-  }
+  renderPositionControls(profileSelector.getProfile().tableFormat);
   wrap.appendChild(posBox);
 
   // --- Sekce: Hloubkové koše (Req 13.2) ---
@@ -509,12 +509,33 @@ export function renderFilters(
     return out;
   }
 
+  function renderPositionControls(format: TableFormat): void {
+    const selected = new Set<Position>();
+    for (const [position, input] of positionInputs.entries()) {
+      if (input.checked) selected.add(position);
+    }
+
+    positionInputs.clear();
+    posBox.replaceChildren();
+    for (const pos of positionsForFormat(format)) {
+      const { label, input } = makeCheckbox(doc, "filter-position", pos, {
+        name: "position",
+        value: pos,
+      });
+      input.checked = selected.has(pos);
+      input.addEventListener("change", hideWarning);
+      positionInputs.set(pos, input);
+      posBox.appendChild(label);
+    }
+  }
+
   function getFilters(): Filters {
     const ante: AnteMode = anteInput.checked ? "ON" : "OFF";
     const scoringMode: ScoringMode =
       scoringSelect.value === "STRICT" ? "STRICT" : "LENIENT";
+    const positionOrder = positionsForFormat(profileSelector.getProfile().tableFormat);
     return {
-      positions: collect(POSITION_ORDER, positionInputs),
+      positions: collect(positionOrder, positionInputs),
       buckets: collect(STACK_BUCKETS, bucketInputs),
       contexts: collect(CONTEXT_ORDER, contextInputs),
       ante,
@@ -576,6 +597,8 @@ export function renderFilters(
     },
     setProfile(profile: TrainingProfile): void {
       profileSelector.setProfile(profile);
+      renderPositionControls(profile.tableFormat);
+      hideWarning();
     },
     destroy(): void {
       profileSelector.destroy();

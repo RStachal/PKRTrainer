@@ -1111,13 +1111,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 106.3 Vytvorit production 6-max regular RangePacky
     - Candidate LOW/empty packy nahradit nebo doplnit produkcnimi packy bez legacy fallbacku
 
-- [ ] 107. MTT 6-max regular promotion QA
-  - [ ] 107.1 Zapojit 6-max regular do production gate
+- [x] 107. MTT 6-max regular promotion QA
+  - [x] 107.1 Zapojit 6-max regular do production gate
     - SIX_MAX/REGULAR/PREFLOP/chipEV ma spustit spravny 6-max drill
-  - [ ] 107.2 Otestovat seat model a pozicni filtr pro 6-max
+    - Hotovo: readiness/bootstrapping drzi 6-max regular chipEV jako SIX_MAX candidate bez legacy 9-max drillu a completion row ukazuje legalni production import slot
+  - [x] 107.2 Otestovat seat model a pozicni filtr pro 6-max
     - UI nesmi ukazovat full-ring mrtve pozice v konkretni otazce 6-max profilu
-  - [ ] 107.3 Otestovat statistiky podle tableFormat
+    - Hotovo: seat model odmita pozice mimo SIX_MAX a DOM regresni test overuje, ze prepnuti profilu na 6-max skryje UTG+1/UTG+2/LJ z pozicniho filtru i z `getFilters()`
+  - [x] 107.3 Otestovat statistiky podle tableFormat
     - 6-max vysledky se nesmi michat s 9-max profilem bez explicitniho breakdownu
+    - Hotovo: `statsV2Analytics` regresni test micha FULL_RING_9 a SIX_MAX V2 zaznamy a overuje oddeleny `tableFormat` breakdown i rozdilny `profileId`
 
 - [ ] 108. MTT 6-max turbo import execution
   - [ ] 108.1 Zpracovat legalni 6-max turbo ante ON export

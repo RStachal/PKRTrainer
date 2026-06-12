@@ -400,6 +400,22 @@ describe("mttProductionReadiness", () => {
     expect(dolarCompletion?.status).toBe("MISSING");
     expect(dolarCompletion?.productionReady).toBe(false);
     expect(dolarCompletion?.missingReasons.join(" ")).toContain("DOLAR_EV");
+
+    const sixMaxRegular = profileWith(DEFAULT_TRAINING_PROFILE, { tableFormat: "SIX_MAX" });
+    const sixMaxCompletion = mttCompletionReadinessRowForTrainingProfile(sixMaxRegular, "ON");
+    expect(sixMaxCompletion).toMatchObject({
+      tableFormat: "SIX_MAX",
+      blindSpeed: "REGULAR",
+      evModel: "CHIP_EV",
+      street: "PREFLOP",
+      ante: "ON",
+      status: "CANDIDATE",
+      productionReady: false,
+      coverageKind: "PREFLOP_RANGE_PACK",
+      packId: "mtt-six-max-regular-preflop-chip-ev-ante-on-candidate-v0",
+    });
+    expect(sixMaxCompletion?.importSlot?.packId)
+      .toBe("mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1");
   });
 
   it("definuje turbo policy bez povyseni metadata-only speedu do production", () => {

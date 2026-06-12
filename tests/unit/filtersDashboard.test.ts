@@ -174,6 +174,35 @@ describe("filters - DOM start gate", () => {
     expect(root.querySelector<HTMLInputElement>(".filter-ante")?.checked).toBe(false);
     expect(root.querySelector<HTMLSelectElement>(".filter-scoring")?.value).toBe("STRICT");
   });
+
+  it("pri 6-max profilu skryje full-ring pozice z pozicniho filtru", () => {
+    const root = document.createElement("div");
+    const view = renderFilters(root, { onStart: () => undefined });
+    root.querySelector<HTMLInputElement>('.filter-position[data-position="UTG+1"]')!.checked =
+      true;
+
+    const format = root.querySelector<HTMLSelectElement>(".profile-format");
+    expect(format).not.toBeNull();
+    format!.value = "SIX_MAX";
+    format!.dispatchEvent(new Event("change"));
+
+    expect(Array.from(root.querySelectorAll<HTMLInputElement>(".filter-position"))
+      .map((input) => input.dataset.position)).toEqual([
+        "UTG",
+        "HJ",
+        "CO",
+        "BTN",
+        "SB",
+        "BB",
+      ]);
+    expect(root.querySelector('.filter-position[data-position="UTG+1"]')).toBeNull();
+    expect(root.querySelector('.filter-position[data-position="UTG+2"]')).toBeNull();
+    expect(root.querySelector('.filter-position[data-position="LJ"]')).toBeNull();
+    expect(view.getFilters().positions).toEqual([]);
+
+    root.querySelector<HTMLInputElement>('.filter-position[data-position="CO"]')!.checked = true;
+    expect(view.getFilters().positions).toEqual(["CO"]);
+  });
 });
 
 describe("dashboard - DOM statistiky", () => {
