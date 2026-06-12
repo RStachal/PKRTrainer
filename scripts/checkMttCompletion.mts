@@ -11,6 +11,7 @@ import type { BlindSpeed, EvModel, TableFormat, TrainingStreet } from "../src/co
 
 interface CliArgs {
   details: boolean;
+  json: boolean;
   filters: MttCompletionReadinessFilters;
 }
 
@@ -20,6 +21,11 @@ function usage(): string {
     "  npm run mtt:completion",
     "  npm run mtt:completion -- --details",
     "  npm run mtt:completion -- --details --format=SIX_MAX --speed=TURBO --ev=DOLAR_EV --street=RIVER --ante=OFF --status=candidate",
+    "  npm run mtt:completion -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json",
+    "",
+    "Output:",
+    "  --details",
+    "  --json",
     "",
     "Filters:",
     "  --format=FULL_RING_9|SIX_MAX",
@@ -34,10 +40,15 @@ function usage(): string {
 function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let details = false;
+  let json = false;
 
   for (const item of argv) {
     if (item === "--details") {
       details = true;
+      continue;
+    }
+    if (item === "--json") {
+      json = true;
       continue;
     }
     if (item === "--help" || item === "-h") {
@@ -70,7 +81,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { details, filters };
+  return { details, json, filters };
 }
 
 function parseTableFormat(value: string): TableFormat {
@@ -117,9 +128,17 @@ try {
   const readiness = filterMttCompletionReadinessReport(fullReadiness, args.filters);
   const gateReadiness = hasFilters(args.filters) ? fullReadiness : readiness;
   const report = buildMttCompletionReleaseGateReport(gateReadiness);
-  console.log(args.details
-    ? `${renderMttCompletionReleaseGateReport(report)}\n\n${renderMttCompletionReadinessReport(readiness)}`
-    : renderMttCompletionReleaseGateReport(report));
+  if (args.json) {
+    console.log(JSON.stringify({
+      filters: args.filters,
+      gate: report,
+      readiness,
+    }, null, 2));
+  } else {
+    console.log(args.details
+      ? `${renderMttCompletionReleaseGateReport(report)}\n\n${renderMttCompletionReadinessReport(readiness)}`
+      : renderMttCompletionReleaseGateReport(report));
+  }
   process.exitCode = report.valid ? 0 : 1;
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));

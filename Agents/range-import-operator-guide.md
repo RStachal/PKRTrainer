@@ -118,9 +118,11 @@ To narrow the MTT matrix to the next import batch:
 
 ```powershell
 npm run mtt:completion -- --details --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --status=candidate
+npm run mtt:completion -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 ```
 
 Available filters are `--format`, `--speed`, `--ev`, `--street`, `--ante` and `--status`.
+Use `--json` when another script needs the release gate and filtered readiness rows.
 
 ## Promotion checklist
 

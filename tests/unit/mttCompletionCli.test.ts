@@ -31,6 +31,51 @@ describe("mtt:completion CLI", () => {
     expect(result.stdout).not.toContain("FULL_RING_9|");
   });
 
+  it("umi vypsat filtrovany readiness report jako JSON pro tooling", () => {
+    const result = runCompletion(
+      "--format=SIX_MAX",
+      "--ev=DOLAR_EV",
+      "--street=RIVER",
+      "--status=candidate",
+      "--json",
+    );
+
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
+      filters: { tableFormat: string; evModel: string; street: string; status: string };
+      gate: { valid: boolean; totalRows: number; productionReadyRows: number };
+      readiness: {
+        rows: { slotId?: string; tableFormat: string; evModel: string; street: string; importSlot: { packId: string } | null }[];
+        productionRows: number;
+        candidateRows: number;
+        missingRows: number;
+      };
+    };
+    expect(parsed.filters).toEqual({
+      tableFormat: "SIX_MAX",
+      evModel: "DOLAR_EV",
+      street: "RIVER",
+      status: "CANDIDATE",
+    });
+    expect(parsed.gate).toMatchObject({
+      valid: true,
+      totalRows: 64,
+      productionReadyRows: 2,
+    });
+    expect(parsed.readiness.rows).toHaveLength(4);
+    expect(parsed.readiness.productionRows).toBe(0);
+    expect(parsed.readiness.candidateRows).toBe(4);
+    expect(parsed.readiness.missingRows).toBe(0);
+    expect(parsed.readiness.rows.every((row) => (
+      row.tableFormat === "SIX_MAX" &&
+      row.evModel === "DOLAR_EV" &&
+      row.street === "RIVER"
+    ))).toBe(true);
+    expect(parsed.readiness.rows.map((row) => row.importSlot?.packId)).toContain(
+      "mtt-six-max-turbo-river-dolar-ev-ante-off-production-v1",
+    );
+  });
+
   it("vrati chybu pro neznamy filtr", () => {
     const result = runCompletion("--details", "--street=SHOWDOWN");
 

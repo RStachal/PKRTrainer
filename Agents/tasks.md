@@ -1321,6 +1321,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: `npm run mtt:slots` podporuje stejne dimenzni filtry jako completion CLI, takze legalni `normalized.json`/`permission.json` cesty lze vypsat jen pro konkretni import batch
   - [x] 131.22 Pridat JSON vystup pro MTT import slot CLI
     - Hotovo: `npm run mtt:slots -- --json` vraci source-free strukturovany vystup s pocty, filtry a preflop/postflop sloty pro operator tooling
+  - [x] 131.23 Pridat JSON vystup pro MTT completion CLI
+    - Hotovo: `npm run mtt:completion -- --json` vraci release gate, pouzite filtry a filtrovanou readiness matici pro operator tooling
 
 - [x] 132. MTT cross-position and multi-street simulation
   - [x] 132.1 Generovat heads-up postflop kontexty pro vsechny podporovane dvojice pozic
