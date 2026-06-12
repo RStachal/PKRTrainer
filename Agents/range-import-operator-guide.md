@@ -25,10 +25,12 @@ npm run mtt:slots
 npm run mtt:slots -- --kind=preflop
 npm run mtt:slots -- --kind=postflop
 npm run mtt:slots -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --status=candidate
+npm run mtt:slots -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 ```
 
 The output is source-free and includes each legal pack id, normalized input path and permission manifest path.
 Available filters are `--format`, `--speed`, `--ev`, `--street`, `--ante` and `--status`.
+Use `--json` when another script needs stable slot ids and paths.
 
 ## Validate an MTT preflop import
 

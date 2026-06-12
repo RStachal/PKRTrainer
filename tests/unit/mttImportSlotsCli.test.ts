@@ -41,6 +41,31 @@ describe("mtt:slots CLI", () => {
     expect(result.stdout).not.toContain("FULL_RING_9|");
   });
 
+  it("umi vypsat filtrovane sloty jako JSON pro operator tooling", () => {
+    const result = runSlots(
+      "--kind=postflop",
+      "--format=SIX_MAX",
+      "--ev=DOLAR_EV",
+      "--street=RIVER",
+      "--status=candidate",
+      "--json",
+    );
+
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
+      kind: string;
+      counts: { preflop: number; postflop: number; total: number };
+      postflopSlots: { slotId: string; packId: string; normalizedInputPath: string }[];
+    };
+    expect(parsed.kind).toBe("postflop");
+    expect(parsed.counts).toEqual({ preflop: 0, postflop: 4, total: 4 });
+    expect(parsed.postflopSlots).toHaveLength(4);
+    expect(parsed.postflopSlots.map((slot) => slot.slotId)).toContain(
+      "SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF",
+    );
+    expect(parsed.postflopSlots[0].normalizedInputPath).toContain("Agents/range-intake/raw/");
+  });
+
   it("vrati chybu pro neznamy kind", () => {
     const result = runSlots("--kind=unknown");
 

@@ -26,6 +26,7 @@ interface SlotFilters {
 interface CliArgs {
   kind: SlotKind;
   filters: SlotFilters;
+  json: boolean;
 }
 
 function usage(): string {
@@ -35,6 +36,10 @@ function usage(): string {
     "  npm run mtt:slots -- --kind=preflop",
     "  npm run mtt:slots -- --kind=postflop",
     "  npm run mtt:slots -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --status=candidate",
+    "  npm run mtt:slots -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json",
+    "",
+    "Output:",
+    "  --json",
     "",
     "Filters:",
     "  --format=FULL_RING_9|SIX_MAX",
@@ -48,18 +53,35 @@ function usage(): string {
 
 try {
   const args = parseArgs(process.argv.slice(2));
-  const sections: string[] = [];
+  const preflopSlots = args.kind === "all" || args.kind === "preflop"
+    ? filterMttPreflopImportSlots(buildMttPreflopImportSlots(), args.filters)
+    : [];
+  const postflopSlots = args.kind === "all" || args.kind === "postflop"
+    ? filterMttPostflopImportSlots(buildMttPostflopImportSlots(), args.filters)
+    : [];
+
+  if (args.json) {
+    console.log(JSON.stringify({
+      kind: args.kind,
+      filters: args.filters,
+      counts: {
+        preflop: preflopSlots.length,
+        postflop: postflopSlots.length,
+        total: preflopSlots.length + postflopSlots.length,
+      },
+      preflopSlots,
+      postflopSlots,
+    }, null, 2));
+  } else {
+    const sections: string[] = [];
   if (args.kind === "all" || args.kind === "preflop") {
-    sections.push(renderMttPreflopImportSlots(
-      filterMttPreflopImportSlots(buildMttPreflopImportSlots(), args.filters),
-    ));
+      sections.push(renderMttPreflopImportSlots(preflopSlots));
   }
   if (args.kind === "all" || args.kind === "postflop") {
-    sections.push(renderMttPostflopImportSlots(
-      filterMttPostflopImportSlots(buildMttPostflopImportSlots(), args.filters),
-    ));
+      sections.push(renderMttPostflopImportSlots(postflopSlots));
   }
   console.log(sections.join("\n\n"));
+  }
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
@@ -68,11 +90,16 @@ try {
 function parseArgs(argv: readonly string[]): CliArgs {
   const filters: SlotFilters = {};
   let kind: SlotKind = "all";
+  let json = false;
 
   for (let index = 0; index < argv.length; index += 1) {
     const item = argv[index];
     if (item === "--help" || item === "-h") {
       throw new Error(usage());
+    }
+    if (item === "--json") {
+      json = true;
+      continue;
     }
     if (item === "--kind") {
       kind = parseKind(argv[index + 1] ?? "");
@@ -110,7 +137,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { kind, filters };
+  return { kind, filters, json };
 }
 
 function parseKind(value: string): SlotKind {
