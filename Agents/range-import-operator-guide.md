@@ -40,6 +40,8 @@ Use the synthetic example as the command shape:
 npm run validate:range-import -- --kind=mtt-preflop Agents/range-intake/examples/mtt-preflop-minimal.synthetic.json --permission-manifest Agents/range-intake/examples/permission-manifest.synthetic.json
 ```
 
+For automation, add `--json` to receive the same readiness, legal-slot and permission checks as structured output.
+
 Expected production promotion properties:
 
 - `productionReady: true`

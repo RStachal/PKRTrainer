@@ -494,11 +494,12 @@ function runImportCli(
   kind: "mtt-preflop" | "flop-production" | "turn-production" | "river-production",
   file: string,
   permissionManifest?: string,
+  extraArgs: readonly string[] = [],
 ) {
   const command = process.platform === "win32" ? "cmd.exe" : "npm";
   const cliArgs = permissionManifest
-    ? [`--kind=${kind}`, "--permission-manifest", permissionManifest, file]
-    : [`--kind=${kind}`, file];
+    ? [`--kind=${kind}`, "--permission-manifest", permissionManifest, ...extraArgs, file]
+    : [`--kind=${kind}`, ...extraArgs, file];
   const args = process.platform === "win32"
     ? ["/c", "npm", "run", "validate:range-import", "--", ...cliArgs]
     : ["run", "validate:range-import", "--", ...cliArgs];
@@ -532,6 +533,46 @@ describe("range import CLI", () => {
       expect(result.stdout).toContain("FULL_RING_9|TURBO|CHIP_EV|PREFLOP|ON");
       expect(result.stdout).toContain("permissionReady: true");
       expect(result.stdout).toContain("missing positions: none");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("umi vypsat production-ready MTT preflop import jako JSON pro tooling", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkr-range-import-"));
+    try {
+      const file = join(dir, "valid.json");
+      const input = validMttImport();
+      const manifestFile = join(dir, "permission.json");
+      writeFileSync(file, JSON.stringify(input), "utf8");
+      writeFileSync(manifestFile, JSON.stringify(validPermissionManifest(input.id)), "utf8");
+
+      const result = runImportCli("mtt-preflop", file, manifestFile, ["--json"]);
+
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
+        kind: string;
+        packId: string;
+        valid: boolean;
+        productionReady: boolean;
+        legalImportSlot: boolean;
+        permissionReady: boolean;
+        slotReport: { matchedSlots: { slotId: string; packId: string }[] };
+        permissionReport: { targetPackId: string };
+      };
+      expect(parsed).toMatchObject({
+        kind: "mtt-preflop",
+        packId: input.id,
+        valid: true,
+        productionReady: true,
+        legalImportSlot: true,
+        permissionReady: true,
+      });
+      expect(parsed.slotReport.matchedSlots).toContainEqual(expect.objectContaining({
+        slotId: "FULL_RING_9|TURBO|CHIP_EV|PREFLOP|ON",
+        packId: input.id,
+      }));
+      expect(parsed.permissionReport.targetPackId).toBe(input.id);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

@@ -38,6 +38,7 @@ npm run validate:range-import -- --kind=river-production --permission-manifest A
 ```
 
 5. Review the CLI report. Promotion is blocked unless both `productionReady: true` and `permissionReady: true`.
+   Add `--json` to the validation command when batch tooling needs structured readiness, legal-slot and permission results.
 6. Dry-run the TypeScript module generation:
 
 ```bash

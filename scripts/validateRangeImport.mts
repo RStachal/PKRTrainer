@@ -37,6 +37,7 @@ interface CliArgs {
   kind: ImportKind;
   file: string;
   permissionManifest: string | null;
+  json: boolean;
 }
 
 function usage(): string {
@@ -47,6 +48,7 @@ function usage(): string {
     "  npm run validate:range-import -- --kind=turn-production <input.json>",
     "  npm run validate:range-import -- --kind=river-production <input.json>",
     "  npm run validate:range-import -- --kind=mtt-preflop --permission-manifest <manifest.json> <input.json>",
+    "  npm run validate:range-import -- --kind=mtt-preflop --permission-manifest <manifest.json> --json <input.json>",
   ].join("\n");
 }
 
@@ -54,9 +56,14 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let kind: ImportKind | null = null;
   let file: string | null = null;
   let permissionManifest: string | null = null;
+  let json = false;
 
   for (let index = 0; index < argv.length; index += 1) {
     const item = argv[index];
+    if (item === "--json") {
+      json = true;
+      continue;
+    }
     if (item.startsWith("--kind=")) {
       kind = parseKind(item.slice("--kind=".length));
       continue;
@@ -83,7 +90,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   if (!kind || !file) {
     throw new Error(usage());
   }
-  return { kind, file, permissionManifest };
+  return { kind, file, permissionManifest, json };
 }
 
 function parseKind(value: string | undefined): ImportKind {
@@ -120,12 +127,18 @@ function run(): void {
       },
     );
     const slotReport = buildMttPreflopImportSlotValidationReport(typedInput);
-    console.log(renderMttPreflopImportReadinessReport(report));
-    console.log("");
-    console.log(renderMttImportSlotValidationReport(slotReport));
-    console.log("");
-    console.log(renderProductionPermissionManifestReport(permissionReport));
-    process.exitCode = report.productionReady && slotReport.valid && permissionReport.valid ? 0 : 1;
+    emitValidationResult(args, {
+      packId: typedInput.id,
+      report,
+      productionReady: report.productionReady,
+      slotReport,
+      permissionReport,
+      renderText: () => [
+        renderMttPreflopImportReadinessReport(report),
+        renderMttImportSlotValidationReport(slotReport),
+        renderProductionPermissionManifestReport(permissionReport),
+      ].join("\n\n"),
+    });
     return;
   }
 
@@ -140,12 +153,18 @@ function run(): void {
         licenseKind: pack.licenseKind,
       },
     );
-    console.log(renderFlopProductionCoverageReport(pack, report));
-    console.log("");
-    console.log(renderMttImportSlotValidationReport(slotReport));
-    console.log("");
-    console.log(renderProductionPermissionManifestReport(permissionReport));
-    process.exitCode = report.productionReady && slotReport.valid && permissionReport.valid ? 0 : 1;
+    emitValidationResult(args, {
+      packId: pack.id,
+      report,
+      productionReady: report.productionReady,
+      slotReport,
+      permissionReport,
+      renderText: () => [
+        renderFlopProductionCoverageReport(pack, report),
+        renderMttImportSlotValidationReport(slotReport),
+        renderProductionPermissionManifestReport(permissionReport),
+      ].join("\n\n"),
+    });
     return;
   }
 
@@ -160,12 +179,18 @@ function run(): void {
         licenseKind: pack.licenseKind,
       },
     );
-    console.log(renderTurnProductionCoverageReport(pack, report));
-    console.log("");
-    console.log(renderMttImportSlotValidationReport(slotReport));
-    console.log("");
-    console.log(renderProductionPermissionManifestReport(permissionReport));
-    process.exitCode = report.productionReady && slotReport.valid && permissionReport.valid ? 0 : 1;
+    emitValidationResult(args, {
+      packId: pack.id,
+      report,
+      productionReady: report.productionReady,
+      slotReport,
+      permissionReport,
+      renderText: () => [
+        renderTurnProductionCoverageReport(pack, report),
+        renderMttImportSlotValidationReport(slotReport),
+        renderProductionPermissionManifestReport(permissionReport),
+      ].join("\n\n"),
+    });
     return;
   }
 
@@ -179,16 +204,52 @@ function run(): void {
       licenseKind: pack.licenseKind,
     },
   );
-  console.log(renderRiverProductionCoverageReport(pack, report));
-  console.log("");
-  console.log(renderMttImportSlotValidationReport(slotReport));
-  console.log("");
-  console.log(renderProductionPermissionManifestReport(permissionReport));
-  process.exitCode = report.productionReady && slotReport.valid && permissionReport.valid ? 0 : 1;
+  emitValidationResult(args, {
+    packId: pack.id,
+    report,
+    productionReady: report.productionReady,
+    slotReport,
+    permissionReport,
+    renderText: () => [
+      renderRiverProductionCoverageReport(pack, report),
+      renderMttImportSlotValidationReport(slotReport),
+      renderProductionPermissionManifestReport(permissionReport),
+    ].join("\n\n"),
+  });
 }
 
 function buildPostflopLegalSlotReport(pack: MttPostflopProductionPack) {
   return buildMttPostflopImportSlotValidationReport(pack);
+}
+
+function emitValidationResult(
+  args: CliArgs,
+  result: {
+    packId: string;
+    productionReady: boolean;
+    report: unknown;
+    slotReport: ReturnType<typeof buildMttPreflopImportSlotValidationReport>;
+    permissionReport: ReturnType<typeof buildProductionPermissionManifestReport>;
+    renderText: () => string;
+  },
+): void {
+  const valid = result.productionReady && result.slotReport.valid && result.permissionReport.valid;
+  if (args.json) {
+    console.log(JSON.stringify({
+      kind: args.kind,
+      packId: result.packId,
+      valid,
+      productionReady: result.productionReady,
+      legalImportSlot: result.slotReport.valid,
+      permissionReady: result.permissionReport.valid,
+      report: result.report,
+      slotReport: result.slotReport,
+      permissionReport: result.permissionReport,
+    }, null, 2));
+  } else {
+    console.log(result.renderText());
+  }
+  process.exitCode = valid ? 0 : 1;
 }
 
 try {

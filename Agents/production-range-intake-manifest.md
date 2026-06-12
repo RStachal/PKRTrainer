@@ -57,6 +57,7 @@ Validator:
 - `buildMttPreflopImportSlots` for the concrete non-production MTT preflop import slot list
 - `npm run verify:ranges`
 - `npm run validate:range-import -- --kind=mtt-preflop --permission-manifest <manifest.json> <input.json>`
+- `npm run validate:range-import -- --kind=mtt-preflop --permission-manifest <manifest.json> --json <input.json>` for batch tooling
 
 Current legal import slots are generated from the MTT completion matrix for every non-production preflop profile. Each slot uses:
 
