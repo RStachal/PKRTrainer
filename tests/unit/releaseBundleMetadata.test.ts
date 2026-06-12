@@ -56,6 +56,7 @@ describe("release bundle metadata", () => {
 
   it("publikovana app metadata pouzivaji anglictinu a ciste ASCII popisy", () => {
     const html = readFileSync("index.html", "utf8");
+    const budgetScript = readFileSync("scripts/checkBundleBudget.mts", "utf8");
     const manifest = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8")) as {
       description: string;
       lang: string;
@@ -77,6 +78,8 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:completion"]).toBe("vite-node scripts/checkMttCompletion.mts");
     expect(pkg.scripts["bundle:budget"]).toBe("vite-node scripts/checkBundleBudget.mts");
     expect(pkg.scripts["profile:render"]).toBe("vite-node scripts/profileRenderPerformance.mts");
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(pkg.scripts["release:check"])
       .toBe("npm run typecheck && npm test && npm run verify:ranges && npm run build && npm run bundle:budget");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);

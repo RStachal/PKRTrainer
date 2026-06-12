@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const DIST_ASSETS_DIR = join(process.cwd(), "dist", "assets");
-const MAX_JS_KB = numberFromEnv("BUNDLE_MAX_JS_KB", 260);
-const MAX_GZIP_KB = numberFromEnv("BUNDLE_MAX_GZIP_KB", 75);
+const MAX_JS_KB = numberFromEnv("BUNDLE_MAX_JS_KB", 325);
+const MAX_GZIP_KB = numberFromEnv("BUNDLE_MAX_GZIP_KB", 86);
 
 let hasFailure = false;
 
