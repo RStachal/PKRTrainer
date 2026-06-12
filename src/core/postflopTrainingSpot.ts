@@ -13,13 +13,19 @@ import type {
 export type PostflopActionNode =
   | "SINGLE_RAISED_POT_CBET"
   | "THREE_BET_POT_CBET"
+  | "FLOP_FACING_BET"
   | "TURN_BARREL"
-  | "RIVER_PRESSURE";
+  | "TURN_FACING_BET"
+  | "RIVER_PRESSURE"
+  | "RIVER_FACING_BET";
 
 export type PostflopSizing =
   | "CHECK"
   | "BET_SMALL"
-  | "BET_BIG";
+  | "BET_BIG"
+  | "CALL"
+  | "RAISE"
+  | "FOLD";
 
 export interface PostflopActionOption {
   action: PostflopAction;
@@ -64,6 +70,9 @@ const ACTION_LABEL: Record<PostflopAction, string> = {
   CHECK: "Check",
   BET_SMALL: "Bet small",
   BET_BIG: "Bet big",
+  CALL: "Call",
+  RAISE: "Raise",
+  FOLD: "Fold",
 };
 
 export function postflopSpotToTrainingSpot(spot: PostflopSpot): PostflopTrainingSpot {
@@ -105,7 +114,10 @@ export function postflopTrainingSpotId(spot: Pick<PostflopSpot, "seed" | "street
   ].join("|");
 }
 
-function actionNodeForSpot(spot: Pick<PostflopSpot, "street" | "potType">): PostflopActionNode {
+function actionNodeForSpot(
+  spot: Pick<PostflopSpot, "street" | "potType" | "actionNode">,
+): PostflopActionNode {
+  if (spot.actionNode) return spot.actionNode;
   switch (spot.street) {
     case "FLOP":
       if (spot.potType === "THREE_BET_POT") return "THREE_BET_POT_CBET";
@@ -163,6 +175,12 @@ function valueHandsForSpot(spot: PostflopSpot): readonly string[] {
       return ["top pair+", "overpair", "strong made hands"];
     case "BET_SMALL":
       return ["top pair", "middle pair", "range advantage hands"];
+    case "CALL":
+      return ["showdown value", "pairs with blocker support", "draws getting price"];
+    case "RAISE":
+      return ["strong value", "nut advantage hands", "premium blockers"];
+    case "FOLD":
+      return ["hands without enough equity or blockers"];
     case "CHECK":
       return ["marginal showdown value", "pot-control hands"];
   }
@@ -174,6 +192,12 @@ function bluffHandsForSpot(spot: PostflopSpot): readonly string[] {
       return ["A-high backdoor blockers", "gutshot with overcards"];
     }
     return [];
+  }
+  if (spot.recommendedAction === "CALL" || spot.recommendedAction === "FOLD") {
+    return [];
+  }
+  if (spot.recommendedAction === "RAISE") {
+    return ["nut blockers", "combo draws", "low showdown bluffs with removal"];
   }
 
   if (spot.street === "FLOP") {
@@ -224,6 +248,15 @@ function nextStreetPlanForStreet(
   }
   if (action === "CHECK") {
     return "On the next street, re-check texture, range advantage and SPR.";
+  }
+  if (action === "CALL") {
+    return "Continue by re-evaluating pot odds, blockers and showdown value on the next card.";
+  }
+  if (action === "RAISE") {
+    return "After raising, plan turn or river barrels around nut advantage and blocker quality.";
+  }
+  if (action === "FOLD") {
+    return "Folding ends this branch; review whether equity, blockers or pot odds justified continuing.";
   }
   return "On blank runouts you can keep pressure; slow down on dynamic cards.";
 }

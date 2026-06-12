@@ -9,8 +9,10 @@
   "dimensions": {
     "gameVariant": "MTT",
     "tableFormat": "FULL_RING_9",
+    "blindSpeeds": ["REGULAR", "TURBO"],
     "street": "FLOP",
-    "evModel": "CHIP_EV"
+    "evModel": "CHIP_EV",
+    "antes": ["ON", "OFF"]
   },
   "sourceEvidence": [
     {
@@ -57,7 +59,11 @@
           "label": "top pair+",
           "action": "BET_SMALL",
           "handClasses": ["AA", "AKs"],
-          "features": ["top pair+", "overpair"]
+          "features": ["top pair+", "overpair"],
+          "actionMix": [
+            { "action": "BET_SMALL", "frequencyPct": 70, "visibility": "EXACT" },
+            { "action": "CHECK", "frequencyPct": 30, "visibility": "EXACT" }
+          ]
         },
         {
           "lane": "BLUFF",

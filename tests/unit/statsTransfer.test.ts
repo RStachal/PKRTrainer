@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { generatePostflopLine } from "../../src/core/postflopLineSimulator";
+import type { Card } from "../../src/core/types";
 import { createStatsStore, type ResultRecord } from "../../src/persistence/statsStore";
 import type { PostflopStatsV2BridgeRecord } from "../../src/persistence/postflopResultRecord";
+import {
+  buildPostflopLineResultRecord,
+  type PostflopLineResultRecord,
+} from "../../src/persistence/postflopLineResultRecord";
 import {
   buildStatsExportJson,
   importStatsJson,
@@ -76,6 +82,33 @@ const postflopRecord: PostflopStatsV2BridgeRecord = {
   confidence: "LOW",
 };
 
+const heroCards: [Card, Card] = [
+  { rank: "A", suit: "s" },
+  { rank: "K", suit: "d" },
+];
+
+const board: [Card, Card, Card, Card, Card] = [
+  { rank: "A", suit: "h" },
+  { rank: "7", suit: "d" },
+  { rank: "2", suit: "c" },
+  { rank: "4", suit: "s" },
+  { rank: "Q", suit: "h" },
+];
+
+const postflopLineRecord: PostflopLineResultRecord = buildPostflopLineResultRecord(
+  generatePostflopLine({ seed: 42, heroCards, board }),
+  {
+    profile: {
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      blindSpeed: "REGULAR",
+      evModel: "CHIP_EV",
+    },
+    startedAt: 100,
+    completedAt: 200,
+  },
+);
+
 describe("statsTransfer - export/import JSON", () => {
   it("exportuje payload s event logem a import jej nahradi ve Stats_Store", () => {
     const source = createStatsStore(new MemoryStorage());
@@ -86,27 +119,29 @@ describe("statsTransfer - export/import JSON", () => {
       profile: string;
       events: ResultRecord[];
       postflopRecords: PostflopStatsV2BridgeRecord[];
+      postflopLineRecords: PostflopLineResultRecord[];
     };
     expect(parsed.profile).toBe(STATS_EXPORT_PROFILE);
     expect(parsed.events).toEqual([record]);
     expect(parsed.postflopRecords).toEqual([]);
+    expect(parsed.postflopLineRecords).toEqual([]);
 
     const target = createStatsStore(new MemoryStorage());
     const result = importStatsJson(exported, target);
 
-    expect(result).toEqual({ ok: true, imported: 1, postflopRecords: [] });
+    expect(result).toEqual({ ok: true, imported: 1, postflopRecords: [], postflopLineRecords: [] });
     expect(target.events()).toEqual([record]);
     expect(target.summary()).toEqual({ total: 1, correct: 1, rate: 100 });
   });
 
-  it("exportuje a importuje kombinovany preflop/postflop payload", () => {
+  it("exportuje a importuje kombinovany preflop/postflop/postflop-line payload", () => {
     const source = createStatsStore(new MemoryStorage());
     expect(source.record(record).ok).toBe(true);
 
     const exported = buildStatsExportJson(
       source,
       new Date("2026-06-01T12:00:00.000Z"),
-      { postflopRecords: [postflopRecord] },
+      { postflopRecords: [postflopRecord], postflopLineRecords: [postflopLineRecord] },
     );
     const target = createStatsStore(new MemoryStorage());
     const result = importStatsJson(exported, target);
@@ -115,6 +150,7 @@ describe("statsTransfer - export/import JSON", () => {
       ok: true,
       imported: 1,
       postflopRecords: [postflopRecord],
+      postflopLineRecords: [postflopLineRecord],
     });
     expect(target.events()).toEqual([record]);
   });
@@ -128,26 +164,36 @@ describe("statsTransfer - export/import JSON", () => {
     const offProfileId = migrateResultRecordsToV2([offRecord])[0].profileId;
     const onProfileId = migrateResultRecordsToV2([onRecord])[0].profileId;
 
-    expect(listStatsProfiles(source.events(), [postflopRecord])).toEqual([
-      { profileId: offProfileId, total: 1, preflopTotal: 1, postflopTotal: 0 },
-      { profileId: postflopRecord.profileId, total: 1, preflopTotal: 0, postflopTotal: 1 },
-      { profileId: onProfileId, total: 1, preflopTotal: 1, postflopTotal: 0 },
+    expect(listStatsProfiles(source.events(), [postflopRecord], [postflopLineRecord])).toEqual([
+      { profileId: offProfileId, total: 1, preflopTotal: 1, postflopTotal: 0, postflopLineTotal: 0 },
+      { profileId: postflopRecord.profileId, total: 2, preflopTotal: 0, postflopTotal: 1, postflopLineTotal: 1 },
+      { profileId: onProfileId, total: 1, preflopTotal: 1, postflopTotal: 0, postflopLineTotal: 0 },
     ].sort((a, b) => a.profileId.localeCompare(b.profileId)));
 
-    const selected = selectStatsProfileRecords(source.events(), [postflopRecord], offProfileId);
-    expect(selected).toEqual({ events: [offRecord], postflopRecords: [] });
+    const selected = selectStatsProfileRecords(source.events(), [postflopRecord], [postflopLineRecord], offProfileId);
+    expect(selected).toEqual({ events: [offRecord], postflopRecords: [], postflopLineRecords: [] });
 
     const exported = JSON.parse(buildStatsExportJson(
       source,
       new Date("2026-06-01T12:00:00.000Z"),
-      { postflopRecords: [postflopRecord], profileId: postflopRecord.profileId },
-    )) as { events: ResultRecord[]; postflopRecords: PostflopStatsV2BridgeRecord[] };
+      {
+        postflopRecords: [postflopRecord],
+        postflopLineRecords: [postflopLineRecord],
+        profileId: postflopRecord.profileId,
+      },
+    )) as {
+      events: ResultRecord[];
+      postflopRecords: PostflopStatsV2BridgeRecord[];
+      postflopLineRecords: PostflopLineResultRecord[];
+    };
     expect(exported.events).toEqual([]);
     expect(exported.postflopRecords).toEqual([postflopRecord]);
+    expect(exported.postflopLineRecords).toEqual([postflopLineRecord]);
 
-    const removed = removeStatsProfileRecords(source.events(), [postflopRecord], offProfileId);
+    const removed = removeStatsProfileRecords(source.events(), [postflopRecord], [postflopLineRecord], offProfileId);
     expect(removed.events).toEqual([onRecord]);
     expect(removed.postflopRecords).toEqual([postflopRecord]);
+    expect(removed.postflopLineRecords).toEqual([postflopLineRecord]);
   });
 
   it("zachova kompatibilitu s legacy polem udalosti bez postflopu", () => {
@@ -155,7 +201,7 @@ describe("statsTransfer - export/import JSON", () => {
 
     const result = importStatsJson(JSON.stringify([record]), target);
 
-    expect(result).toEqual({ ok: true, imported: 1, postflopRecords: [] });
+    expect(result).toEqual({ ok: true, imported: 1, postflopRecords: [], postflopLineRecords: [] });
     expect(target.events()).toEqual([record]);
   });
 
@@ -175,6 +221,7 @@ describe("statsTransfer - export/import JSON", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.postflopRecords[0]).toEqual(postflopRecord);
+    expect(result.postflopLineRecords).toEqual([]);
   });
 
   it("odmitne neplatny JSON a nepremeni existujici data", () => {

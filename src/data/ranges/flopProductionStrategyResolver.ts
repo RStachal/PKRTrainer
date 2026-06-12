@@ -1,5 +1,6 @@
 import type {
   BoardTexture,
+  PostflopHeroRangeBucket,
   PostflopRecommendation,
   PostflopStrategyInput,
   PostflopStrategyResolver,
@@ -41,6 +42,7 @@ export function createFlopProductionStrategyResolver(
         assumptions: pack.assumptions,
         selectionScore: ruleScore(rule, input),
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        heroRangeBucket: heroRangeBucket(rule, input),
       },
     };
   };
@@ -119,6 +121,23 @@ function matchedTextures(
   input: PostflopStrategyInput,
 ): readonly BoardTexture[] {
   return rule.boardTextures.filter((texture) => input.textures.includes(texture));
+}
+
+function heroRangeBucket(
+  rule: FlopProductionStrategyRule,
+  input: PostflopStrategyInput,
+): PostflopHeroRangeBucket | undefined {
+  if (!input.heroHand) return undefined;
+  const bucket = rule.rangeBuckets.find((item) => item.handClasses.includes(input.heroHand!));
+  if (!bucket) return undefined;
+  return {
+    lane: bucket.lane,
+    label: bucket.label,
+    action: bucket.action,
+    handClass: input.heroHand,
+    features: [...bucket.features],
+    actionMix: bucket.actionMix?.map((item) => ({ ...item })),
+  };
 }
 
 function roundedSpr(effectiveStackBB: number, potBB: number): number {

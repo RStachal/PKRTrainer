@@ -151,6 +151,21 @@ describe("mttPreflopRangePackImport", () => {
     expect(renderMttPreflopImportReadinessReport(report)).toContain("action distribution:");
   });
 
+  it("povoli DOLAR_EV jako samostatny MTT preflop importni model", () => {
+    const input = fullRingTurboInput();
+    const report = buildMttPreflopImportReadinessReport({
+      ...input,
+      id: "mtt-full-ring-9-turbo-preflop-dolar-ev-ante-on-import-v1",
+      dimensions: {
+        ...input.dimensions,
+        evModel: "DOLAR_EV",
+      },
+    });
+
+    expect(report.valid).toBe(true);
+    expect(report.dimensions.evModel).toBe("DOLAR_EV");
+  });
+
   it("reportuje trivialni all-fold mapy a chybejici kontextovou akci", () => {
     const input = fullRingTurboInput();
     const report = buildMttPreflopImportReadinessReport({

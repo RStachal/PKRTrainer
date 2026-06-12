@@ -10,9 +10,10 @@ This folder is the internal staging area for future legal range inputs. Nothing 
 
 ## Operator Workflow
 
-1. Place the raw legal export under `Agents/range-intake/raw/<pack-id>/`.
-2. Add a permission manifest for the same `packId`.
-3. Validate the normalized import:
+1. Choose a concrete missing MTT preflop slot from `buildMttPreflopImportSlots` when importing preflop data.
+2. Place the raw legal export under `Agents/range-intake/raw/<pack-id>/`.
+3. Add a permission manifest for the same `packId`.
+4. Validate the normalized import:
 
 ```bash
 npm run validate:range-import -- --kind=mtt-preflop --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
@@ -24,8 +25,20 @@ or:
 npm run validate:range-import -- --kind=flop-production --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
 ```
 
-4. Review the CLI report. Promotion is blocked unless both `productionReady: true` and `permissionReady: true`.
-5. Dry-run the TypeScript module generation:
+or:
+
+```bash
+npm run validate:range-import -- --kind=turn-production --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
+```
+
+or:
+
+```bash
+npm run validate:range-import -- --kind=river-production --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
+```
+
+5. Review the CLI report. Promotion is blocked unless both `productionReady: true` and `permissionReady: true`.
+6. Dry-run the TypeScript module generation:
 
 ```bash
 npm run build:range-module -- --kind=mtt-preflop --dry-run --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
@@ -37,10 +50,36 @@ or:
 npm run build:range-module -- --kind=flop-production --dry-run --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
 ```
 
-6. Generate the production TypeScript pack only after the dry-run says `writeReady: true`.
-7. Hand-review the generated module before wiring it into a registry.
-8. Run `npm run verify:ranges`, targeted tests, `npm run typecheck` and `npm run build`.
-9. Keep the app UI source-free: no URLs, providers, pack IDs or internal rule IDs in visible gameplay output.
+or:
+
+```bash
+npm run build:range-module -- --kind=turn-production --dry-run --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
+```
+
+or:
+
+```bash
+npm run build:range-module -- --kind=river-production --dry-run --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
+```
+
+7. Generate the production TypeScript pack only after the dry-run says `writeReady: true`.
+8. Hand-review the generated module before wiring it into a registry.
+9. Run `npm run verify:ranges`, targeted tests, `npm run typecheck` and `npm run build`.
+10. Keep the app UI source-free: no URLs, providers, pack IDs or internal rule IDs in visible gameplay output.
+
+MTT preflop slot paths use:
+
+- `packId`: `mtt-<full-ring-9|six-max>-<regular|turbo>-preflop-<chip-ev|dolar-ev>-ante-<on|off>-production-v1`
+- normalized input: `Agents/range-intake/raw/<packId>/normalized.json`
+- permission manifest: `Agents/range-intake/raw/<packId>/permission.json`
+
+MTT postflop slot paths use:
+
+- `packId`: `mtt-<full-ring-9|six-max>-<regular|turbo>-<flop|turn|river>-<chip-ev|dolar-ev>-ante-<on|off>-production-v1`
+- normalized input: `Agents/range-intake/raw/<packId>/normalized.json`
+- permission manifest: `Agents/range-intake/raw/<packId>/permission.json`
+
+Postflop production inputs (`flop-production`, `turn-production`, `river-production`) must declare profile coverage in `dimensions.blindSpeeds` and `dimensions.antes`. The MTT completion gate only treats a pack as covering rows whose `tableFormat`, `evModel`, `street`, `blindSpeed` and `ante` are all explicitly declared.
 
 ## Required Permission Manifest Fields
 

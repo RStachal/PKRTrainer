@@ -4,7 +4,7 @@ export type GameVariant = "MTT" | "SNG" | "CASH";
 export type TableFormat = "FULL_RING_9" | "SIX_MAX";
 export type BlindSpeed = "REGULAR" | "TURBO";
 export type TrainingStreet = "PREFLOP" | "FLOP" | "TURN" | "RIVER";
-export type EvModel = "CHIP_EV" | "ICM";
+export type EvModel = "CHIP_EV" | "DOLAR_EV" | "ICM";
 export type RakeMode = "NONE" | "RAKE" | "NO_RAKE";
 
 export interface TrainingProfile {
@@ -61,6 +61,19 @@ export function defaultEvModelForVariant(variant: GameVariant): EvModel {
   return variant === "SNG" ? "CHIP_EV" : "CHIP_EV";
 }
 
+export function evModelLabel(model: EvModel | string): string {
+  switch (model) {
+    case "CHIP_EV":
+      return "chipEV";
+    case "DOLAR_EV":
+      return "$EV";
+    case "ICM":
+      return "ICM";
+    default:
+      return model;
+  }
+}
+
 export function defaultRakeModeForVariant(variant: GameVariant): RakeMode {
   return variant === "CASH" ? "NO_RAKE" : "NONE";
 }
@@ -90,7 +103,11 @@ export function isProfileSupported(profile: TrainingProfile): boolean {
   }
 
   if (profile.gameVariant === "SNG") {
-    return profile.evModel === "CHIP_EV" || profile.evModel === "ICM";
+    return (
+      profile.evModel === "CHIP_EV" ||
+      profile.evModel === "DOLAR_EV" ||
+      profile.evModel === "ICM"
+    );
   }
 
   return profile.gameVariant === "MTT";

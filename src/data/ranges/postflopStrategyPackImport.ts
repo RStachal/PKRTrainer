@@ -28,11 +28,7 @@ export interface PostflopStrategyPackImportReport {
   overlaps: readonly PostflopStrategyRuleOverlap[];
 }
 
-const SUPPORTED_RESOLVER_ACTIONS = new Set<PostflopStrategyAction>([
-  "CHECK",
-  "BET_SMALL",
-  "BET_BIG",
-]);
+const SUPPORTED_RESOLVER_ACTIONS = new Set<PostflopStrategyAction>(POSTFLOP_STRATEGY_ACTIONS);
 
 export function buildPostflopStrategyPackImportReport(
   pack: PostflopStrategyPack,

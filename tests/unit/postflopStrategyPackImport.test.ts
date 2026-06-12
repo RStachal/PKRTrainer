@@ -46,7 +46,7 @@ describe("postflopStrategyPackImport", () => {
     ]));
   });
 
-  it("reportuje unsupported preferred action pro budouci raise/call/fold rules", () => {
+  it("povoluje raise/call/fold preferred actions v rozsirene postflop taxonomy", () => {
     const pack: PostflopStrategyPack = {
       ...flopSingleRaisedPrototypeStrategyPack,
       rules: [
@@ -67,8 +67,9 @@ describe("postflopStrategyPackImport", () => {
 
     const report = buildPostflopStrategyPackImportReport(pack);
 
-    expect(report.unsupportedActions).toEqual(["RAISE"]);
-    expect(report.warnings).toContain(
+    expect(report.unsupportedActions).toEqual([]);
+    expect(report.unsupportedActionCount).toBe(0);
+    expect(report.warnings).not.toContain(
       "Postflop StrategyPack contains preferred actions unsupported by current resolver.",
     );
   });

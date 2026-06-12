@@ -16,6 +16,18 @@ This guide is for maintainers who prepare legal range data for production promot
 - `Agents/range-intake/raw/` is ignored by git and is the place for private source exports or review material.
 - `Agents/production-range-intake-manifest.md` records the required checklist.
 
+## List legal MTT import slots
+
+Use the slot list before creating a new `Agents/range-intake/raw/<pack-id>/` folder:
+
+```powershell
+npm run mtt:slots
+npm run mtt:slots -- --kind=preflop
+npm run mtt:slots -- --kind=postflop
+```
+
+The output is source-free and includes each legal pack id, normalized input path and permission manifest path.
+
 ## Validate an MTT preflop import
 
 Use the synthetic example as the command shape:
@@ -27,10 +39,12 @@ npm run validate:range-import -- --kind=mtt-preflop Agents/range-intake/examples
 Expected production promotion properties:
 
 - `productionReady: true`
+- `legal import slot: true`
 - no errors
 - no warnings
 - confidence is `MEDIUM` or `HIGH`
 - records cover required positions, stack buckets and action contexts
+- input `id` matches the exact legal slot `packId`
 - permission manifest is valid for the exact pack id
 
 ## Validate a flop production import
@@ -43,6 +57,8 @@ Expected properties:
 
 - legal license kind
 - confidence is not `LOW`
+- `legal import slot: true`
+- at least one matched MTT postflop import slot
 - rules are present
 - all required pot types, position patterns, board textures, action nodes and range lanes are covered
 - range buckets use valid hand classes and poker feature labels
@@ -60,6 +76,7 @@ Only write a module when:
 - `writeReady: true`
 - permission report is valid
 - import readiness has no blockers
+- matched import slots are the intended MTT production target
 - output path is reviewed
 
 ## Verify the bundled app
@@ -86,6 +103,20 @@ npm run release:check
 ```
 
 This runs typecheck, tests, range verification and production build.
+
+For the full MTT matrix with blocker details and import slot paths:
+
+```powershell
+npm run mtt:completion -- --details
+```
+
+To narrow the MTT matrix to the next import batch:
+
+```powershell
+npm run mtt:completion -- --details --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --status=candidate
+```
+
+Available filters are `--format`, `--speed`, `--ev`, `--street`, `--ante` and `--status`.
 
 ## Promotion checklist
 

@@ -701,6 +701,62 @@ describe("dashboard - DOM statistiky", () => {
     ).toBe("1");
   });
 
+  it("labeluje DOLAR_EV v dashboard profilech jako $EV bez raw enumu", () => {
+    const store = createStatsStore(new MemoryStorage());
+    const dolarRecord: PostflopStatsV2BridgeRecord = {
+      ...postflopRecord,
+      profileId: "MTT|FULL_RING_9|REGULAR|FLOP|DOLAR_EV|ON|NONE",
+      evModel: "DOLAR_EV",
+    };
+    const root = document.createElement("div");
+
+    renderDashboard({
+      store,
+      sessionCount: 0,
+      postflopRecords: [dolarRecord],
+    }, root);
+
+    const profileOptions = Array.from(root.querySelectorAll<HTMLOptionElement>(
+      ".stats-profile-select option",
+    )).map((option) => option.textContent).join(" ");
+
+    expect(profileOptions).toContain("MTT 9-max full ring Regular Flop $EV ON");
+    expect(profileOptions).not.toContain("DOLAR_EV");
+    expect(root.textContent).not.toContain("DOLAR_EV");
+  });
+
+  it("pri selhani ulozeni postflop importu zobrazi source-free status a UI nespadne", () => {
+    const sourceStore = createStatsStore(new MemoryStorage());
+    expect(sourceStore.record(record).ok).toBe(true);
+    const sourceRoot = document.createElement("div");
+    renderDashboard({
+      store: sourceStore,
+      sessionCount: 1,
+      postflopRecords: [postflopRecord],
+    }, sourceRoot);
+    sourceRoot.querySelector<HTMLButtonElement>(".stats-export")?.click();
+
+    const targetStore = createStatsStore(new MemoryStorage());
+    const targetRoot = document.createElement("div");
+    renderDashboard({
+      store: targetStore,
+      sessionCount: 0,
+      postflopRecords: [],
+      onPostflopRecordsImported: () => false,
+    }, targetRoot);
+
+    targetRoot.querySelector<HTMLTextAreaElement>(".stats-json-box")!.value =
+      sourceRoot.querySelector<HTMLTextAreaElement>(".stats-json-box")!.value;
+    targetRoot.querySelector<HTMLButtonElement>(".stats-import")?.click();
+
+    const status = targetRoot.querySelector<HTMLElement>(".stats-transfer__status");
+    expect(targetStore.events()).toEqual([record]);
+    expect(status?.hidden).toBe(false);
+    expect(status?.textContent).toContain("postflop log could not be saved");
+    expect(status?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|mtt-|flop-/i);
+    expect(targetRoot.querySelector<HTMLElement>(".dashboard")).not.toBeNull();
+  });
+
   it("umi exportovat a resetovat vybrany stats profil", () => {
     const store = createStatsStore(new MemoryStorage());
     const offRecord = { ...record, qid: "RFI|BTN|25|AKs|OFF", ts: 1 };
@@ -746,5 +802,31 @@ describe("dashboard - DOM statistiky", () => {
     expect(savedPostflop).toEqual([]);
     expect(root.querySelector<HTMLElement>(".stats-transfer__status")?.textContent)
       .toContain("Selected profile stats were reset.");
+  });
+
+  it("pri selhani ulozeni postflop resetu zobrazi source-free status a zachova dashboard", () => {
+    const store = createStatsStore(new MemoryStorage());
+    const offRecord = { ...record, qid: "RFI|BTN|25|AKs|OFF", ts: 1 };
+    expect(store.record(offRecord).ok).toBe(true);
+
+    const root = document.createElement("div");
+    renderDashboard({
+      store,
+      sessionCount: 1,
+      postflopRecords: [postflopRecord],
+      onPostflopRecordsImported: () => false,
+    }, root);
+
+    const select = root.querySelector<HTMLSelectElement>(".stats-profile-select");
+    select!.value = postflopRecord.profileId;
+    select!.dispatchEvent(new Event("change"));
+    root.querySelector<HTMLButtonElement>(".stats-reset-profile")?.click();
+
+    const status = root.querySelector<HTMLElement>(".stats-transfer__status");
+    expect(store.events()).toEqual([offRecord]);
+    expect(status?.hidden).toBe(false);
+    expect(status?.textContent).toContain("postflop log could not be saved");
+    expect(status?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|mtt-|flop-/i);
+    expect(root.querySelector<HTMLElement>(".dashboard")).not.toBeNull();
   });
 });

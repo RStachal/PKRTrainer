@@ -24,6 +24,26 @@ import {
   type FlopProductionStrategyPack,
   type FlopProductionStrategyRule,
 } from "../../src/data/ranges/flopProductionStrategyPack";
+import {
+  TURN_PRODUCTION_REQUIRED_CARD_CLASSES,
+  TURN_PRODUCTION_REQUIRED_POSITION_PATTERNS,
+  TURN_PRODUCTION_REQUIRED_POT_TYPES,
+  TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS,
+  type TurnProductionStrategyPack,
+  type TurnProductionStrategyRule,
+  type TurnProductionTurnCardClass,
+} from "../../src/data/ranges/turnProductionStrategyPack";
+import {
+  RIVER_PRODUCTION_REQUIRED_BLOCKER_RELEVANCE,
+  RIVER_PRODUCTION_REQUIRED_POSITION_PATTERNS,
+  RIVER_PRODUCTION_REQUIRED_POT_TYPES,
+  RIVER_PRODUCTION_REQUIRED_PRIOR_TURN_ACTIONS,
+  RIVER_PRODUCTION_REQUIRED_RUNOUT_CLASSES,
+  type RiverProductionBlockerRelevance,
+  type RiverProductionRunoutClass,
+  type RiverProductionStrategyPack,
+  type RiverProductionStrategyRule,
+} from "../../src/data/ranges/riverProductionStrategyPack";
 import type { MttPreflopRangePackImportInput } from "../../src/data/ranges/mttPreflopRangePackImport";
 import type { ProductionPermissionManifest } from "../../src/data/ranges/productionPermissionManifest";
 
@@ -71,7 +91,7 @@ function handMap(action: ActionKey): Record<HandLabel, ActionKey[]> {
 
 function validMttImport(): MttPreflopRangePackImportInput {
   return {
-    id: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-cli-fixture-v1",
+    id: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1",
     version: "cli-fixture-v1",
     createdAt: "2026-06-05",
     verifiedAt: "2026-06-05",
@@ -193,8 +213,10 @@ function validFlopProductionPack(): FlopProductionStrategyPack {
     dimensions: {
       gameVariant: "MTT",
       tableFormat: "FULL_RING_9",
+      blindSpeeds: ["REGULAR", "TURBO"],
       street: "FLOP",
       evModel: "CHIP_EV",
+      antes: ["ON", "OFF"],
     },
     sourceEvidence: [
       {
@@ -228,6 +250,221 @@ function validFlopProductionPack(): FlopProductionStrategyPack {
   };
 }
 
+function turnRule(
+  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
+  positionPattern: PostflopPositionPattern,
+  priorFlopAction: "CHECK" | "BET_SMALL" | "BET_BIG",
+  turnCardClass: TurnProductionTurnCardClass,
+): TurnProductionStrategyRule {
+  return {
+    id: `cli-turn-${potType.toLowerCase()}-${positionPattern.toLowerCase()}-${priorFlopAction.toLowerCase()}-${turnCardClass.toLowerCase()}`,
+    actionNode: "TURN_BARREL",
+    potType,
+    positionPattern,
+    priorFlopAction,
+    turnCardClasses: [turnCardClass],
+    sprMin: 1,
+    sprMax: 10,
+    actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+    recommendedAction: turnCardClass === "DYNAMIC" ? "CHECK" : "BET_SMALL",
+    rangeBuckets: [
+      {
+        lane: "VALUE",
+        label: "value",
+        action: "BET_SMALL",
+        handClasses: ["AA", "AKs"],
+        features: ["top pair+"],
+      },
+      {
+        lane: "BLUFF",
+        label: "bluff",
+        action: "BET_SMALL",
+        handClasses: ["QJs", "JTs"],
+        features: ["draw"],
+      },
+      {
+        lane: "CHECK",
+        label: "check",
+        action: "CHECK",
+        handClasses: ["72o", "83o"],
+        features: ["air"],
+      },
+    ],
+    explanation: "CLI turn production fixture rule.",
+  };
+}
+
+function validTurnProductionPack(): TurnProductionStrategyPack {
+  const rules: TurnProductionStrategyRule[] = [];
+  for (const potType of TURN_PRODUCTION_REQUIRED_POT_TYPES) {
+    for (const positionPattern of TURN_PRODUCTION_REQUIRED_POSITION_PATTERNS) {
+      for (const priorFlopAction of TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS) {
+        for (const turnCardClass of TURN_PRODUCTION_REQUIRED_CARD_CLASSES) {
+          rules.push(turnRule(potType, positionPattern, priorFlopAction, turnCardClass));
+        }
+      }
+    }
+  }
+
+  return {
+    id: "mtt-full-ring-9-turn-production-cli-fixture-v1",
+    version: "cli-fixture-v1",
+    createdAt: "2026-06-11",
+    verifiedAt: "2026-06-11",
+    confidence: "MEDIUM",
+    licenseKind: "OWNED_SOLVER_EXPORT",
+    licenseNote: "Owned solver export fixture; no third-party chart values copied.",
+    dimensions: {
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      blindSpeeds: ["REGULAR", "TURBO"],
+      street: "TURN",
+      evModel: "CHIP_EV",
+      antes: ["ON", "OFF"],
+    },
+    sourceEvidence: [
+      {
+        url: "https://example.test/turn-owned-export",
+        verifiedAt: "2026-06-11",
+        operator: "PKRTrainer",
+        gameVariant: "MTT",
+        tableFormat: "FULL_RING_9",
+        street: "TURN",
+        evModel: "CHIP_EV",
+        methodology: "Owned solver export fixture.",
+        licenseNote: "Owned export fixture.",
+      },
+      {
+        url: "https://example.test/turn-review",
+        verifiedAt: "2026-06-11",
+        operator: "PKRTrainer Review",
+        gameVariant: "MTT",
+        tableFormat: "FULL_RING_9",
+        street: "TURN",
+        evModel: "CHIP_EV",
+        methodology: "Independent review fixture.",
+        licenseNote: "Review fixture.",
+      },
+    ],
+    assumptions: [
+      "MTT full-ring turn chipEV CLI fixture.",
+      "Turn fixture covers pot types, positions, prior flop actions and turn card classes.",
+    ],
+    rules,
+  };
+}
+
+function riverRule(
+  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
+  positionPattern: PostflopPositionPattern,
+  priorTurnAction: "CHECK" | "BET_SMALL" | "BET_BIG",
+  runoutClass: RiverProductionRunoutClass,
+  blockerRelevance: RiverProductionBlockerRelevance,
+): RiverProductionStrategyRule {
+  return {
+    id: `cli-river-${potType.toLowerCase()}-${positionPattern.toLowerCase()}-${priorTurnAction.toLowerCase()}-${runoutClass.toLowerCase()}-${blockerRelevance.toLowerCase()}`,
+    actionNode: "RIVER_PRESSURE",
+    potType,
+    positionPattern,
+    priorTurnAction,
+    riverRunoutClasses: [runoutClass],
+    blockerRelevance,
+    sprMin: 0.5,
+    sprMax: 8,
+    actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+    recommendedAction: blockerRelevance === "HIGH" ? "BET_BIG" : "BET_SMALL",
+    rangeBuckets: [
+      {
+        lane: "VALUE",
+        label: "value",
+        action: blockerRelevance === "HIGH" ? "BET_BIG" : "BET_SMALL",
+        handClasses: ["AA", "AKs"],
+        features: ["top value"],
+        blockerRelevance: "LOW",
+      },
+      {
+        lane: "BLUFF",
+        label: "bluff",
+        action: blockerRelevance === "HIGH" ? "BET_BIG" : "BET_SMALL",
+        handClasses: ["QJs", "JTs"],
+        features: ["blocker candidate"],
+        blockerRelevance,
+      },
+      {
+        lane: "CHECK",
+        label: "check",
+        action: "CHECK",
+        handClasses: ["72o", "83o"],
+        features: ["showdown or give up"],
+        blockerRelevance: "LOW",
+      },
+    ],
+    explanation: "CLI river production fixture rule.",
+  };
+}
+
+function validRiverProductionPack(): RiverProductionStrategyPack {
+  const rules: RiverProductionStrategyRule[] = [];
+  for (const potType of RIVER_PRODUCTION_REQUIRED_POT_TYPES) {
+    for (const positionPattern of RIVER_PRODUCTION_REQUIRED_POSITION_PATTERNS) {
+      for (const priorTurnAction of RIVER_PRODUCTION_REQUIRED_PRIOR_TURN_ACTIONS) {
+        for (const runoutClass of RIVER_PRODUCTION_REQUIRED_RUNOUT_CLASSES) {
+          for (const blockerRelevance of RIVER_PRODUCTION_REQUIRED_BLOCKER_RELEVANCE) {
+            rules.push(riverRule(potType, positionPattern, priorTurnAction, runoutClass, blockerRelevance));
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    id: "mtt-full-ring-9-river-production-cli-fixture-v1",
+    version: "cli-fixture-v1",
+    createdAt: "2026-06-11",
+    verifiedAt: "2026-06-11",
+    confidence: "MEDIUM",
+    licenseKind: "OWNED_SOLVER_EXPORT",
+    licenseNote: "Owned solver export fixture; no third-party chart values copied.",
+    dimensions: {
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      blindSpeeds: ["REGULAR", "TURBO"],
+      street: "RIVER",
+      evModel: "CHIP_EV",
+      antes: ["ON", "OFF"],
+    },
+    sourceEvidence: [
+      {
+        url: "https://example.test/river-owned-export",
+        verifiedAt: "2026-06-11",
+        operator: "PKRTrainer",
+        gameVariant: "MTT",
+        tableFormat: "FULL_RING_9",
+        street: "RIVER",
+        evModel: "CHIP_EV",
+        methodology: "Owned solver export fixture.",
+        licenseNote: "Owned export fixture.",
+      },
+      {
+        url: "https://example.test/river-review",
+        verifiedAt: "2026-06-11",
+        operator: "PKRTrainer Review",
+        gameVariant: "MTT",
+        tableFormat: "FULL_RING_9",
+        street: "RIVER",
+        evModel: "CHIP_EV",
+        methodology: "Independent review fixture.",
+        licenseNote: "Review fixture.",
+      },
+    ],
+    assumptions: [
+      "MTT full-ring river chipEV CLI fixture.",
+      "River fixture covers pot types, positions, prior turn actions, runout classes and blocker relevance.",
+    ],
+    rules,
+  };
+}
+
 function validPermissionManifest(packId: string): ProductionPermissionManifest {
   return {
     packId,
@@ -254,7 +491,7 @@ function validPermissionManifest(packId: string): ProductionPermissionManifest {
 }
 
 function runImportCli(
-  kind: "mtt-preflop" | "flop-production",
+  kind: "mtt-preflop" | "flop-production" | "turn-production" | "river-production",
   file: string,
   permissionManifest?: string,
 ) {
@@ -291,8 +528,36 @@ describe("range import CLI", () => {
 
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("productionReady: true");
+      expect(result.stdout).toContain("legal import slot: true");
+      expect(result.stdout).toContain("FULL_RING_9|TURBO|CHIP_EV|PREFLOP|ON");
       expect(result.stdout).toContain("permissionReady: true");
       expect(result.stdout).toContain("missing positions: none");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("blokuje production-ready MTT preflop import mimo legal slot packId", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkr-range-import-"));
+    try {
+      const file = join(dir, "wrong-id.json");
+      const input = {
+        ...validMttImport(),
+        id: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-cli-fixture-v1",
+      };
+      const manifestFile = join(dir, "permission.json");
+      writeFileSync(file, JSON.stringify(input), "utf8");
+      writeFileSync(manifestFile, JSON.stringify(validPermissionManifest(input.id)), "utf8");
+
+      const result = runImportCli("mtt-preflop", file, manifestFile);
+
+      expect(result.status).toBe(1);
+      expect(result.stdout).toContain("productionReady: true");
+      expect(result.stdout).toContain("legal import slot: false");
+      expect(result.stdout).toContain(
+        "MTT preflop import id must match legal slot packId mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1.",
+      );
+      expect(result.stdout).toContain("permissionReady: true");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -308,6 +573,7 @@ describe("range import CLI", () => {
 
       expect(result.status).toBe(1);
       expect(result.stdout).toContain("productionReady: true");
+      expect(result.stdout).toContain("legal import slot: true");
       expect(result.stdout).toContain("permissionManifest: missing");
       expect(result.stdout).toContain("Production permission manifest is required for range promotion.");
     } finally {
@@ -347,8 +613,57 @@ describe("range import CLI", () => {
 
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("productionReady: true");
+      expect(result.stdout).toContain("legal import slot: true");
+      expect(result.stdout).toContain("matched slots: 4");
       expect(result.stdout).toContain("permissionReady: true");
       expect(result.stdout).toContain("missing pot types: none");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("vrati exit 0 pro production-ready turn StrategyPack fixture", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkr-range-import-"));
+    try {
+      const file = join(dir, "turn.json");
+      const pack = validTurnProductionPack();
+      const manifestFile = join(dir, "permission.json");
+      writeFileSync(file, JSON.stringify(pack), "utf8");
+      writeFileSync(manifestFile, JSON.stringify(validPermissionManifest(pack.id)), "utf8");
+
+      const result = runImportCli("turn-production", file, manifestFile);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("productionReady: true");
+      expect(result.stdout).toContain("legal import slot: true");
+      expect(result.stdout).toContain("matched slots: 4");
+      expect(result.stdout).toContain("permissionReady: true");
+      expect(result.stdout).toContain("missing prior flop actions: none");
+      expect(result.stdout).toContain("missing turn card classes: none");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("vrati exit 0 pro production-ready river StrategyPack fixture", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkr-range-import-"));
+    try {
+      const file = join(dir, "river.json");
+      const pack = validRiverProductionPack();
+      const manifestFile = join(dir, "permission.json");
+      writeFileSync(file, JSON.stringify(pack), "utf8");
+      writeFileSync(manifestFile, JSON.stringify(validPermissionManifest(pack.id)), "utf8");
+
+      const result = runImportCli("river-production", file, manifestFile);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("productionReady: true");
+      expect(result.stdout).toContain("legal import slot: true");
+      expect(result.stdout).toContain("matched slots: 4");
+      expect(result.stdout).toContain("permissionReady: true");
+      expect(result.stdout).toContain("missing prior turn actions: none");
+      expect(result.stdout).toContain("missing river runout classes: none");
+      expect(result.stdout).toContain("missing blocker relevance: none");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

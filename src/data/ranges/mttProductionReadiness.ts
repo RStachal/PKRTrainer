@@ -9,17 +9,49 @@ import {
 import {
   SIX_MAX_POSITION_ORDER,
   type BlindSpeed,
+  type EvModel,
   type TableFormat,
+  type TrainingStreet,
   type TrainingProfile,
 } from "../../core/trainingProfile";
 import {
   allMttPreflopRangePacks,
   mttPreflopRangePackForProfile,
 } from "./mttPreflopRangePacks";
+import {
+  buildFlopProductionCoverageReport,
+  type FlopProductionCoverageReport,
+  type FlopProductionStrategyPack,
+} from "./flopProductionStrategyPack";
+import { flopProductionStrategyPacks } from "./flopProductionStrategyResolver";
 import { buildRangePackImportReport } from "./rangePackImport";
 import type { RangePack } from "./rangePack";
+import {
+  buildRiverProductionCoverageReport,
+  type RiverProductionCoverageReport,
+  type RiverProductionStrategyPack,
+} from "./riverProductionStrategyPack";
+import { riverProductionStrategyPacks } from "./riverProductionStrategyResolver";
+import {
+  buildTurnProductionCoverageReport,
+  type TurnProductionCoverageReport,
+  type TurnProductionStrategyPack,
+} from "./turnProductionStrategyPack";
+import {
+  mttProductionImportPackId,
+  mttProductionImportSlotId,
+  mttProductionImportSlotKind,
+  mttProductionImportSlotPaths,
+} from "./mttImportSlotNaming";
+import { turnProductionStrategyPacks } from "./turnProductionStrategyResolver";
 
 export type MttPreflopReadinessStatus = "PRODUCTION" | "CANDIDATE" | "MISSING";
+export type MttCompletionReadinessStatus = MttPreflopReadinessStatus;
+export type MttCompletionCoverageKind =
+  | "PREFLOP_RANGE_PACK"
+  | "POSTFLOP_PUBLIC_HEURISTIC"
+  | "POSTFLOP_PRODUCTION_PACK"
+  | "MISSING";
 export type MttPreflopRecommendationPolicy =
   | "DEDICATED_HAND_RECOMMENDATIONS"
   | "SPEED_METADATA_ONLY"
@@ -35,6 +67,14 @@ export interface MttPreflopTurboStrategyPolicy {
 export interface MttPreflopReadinessProfile {
   tableFormat: TableFormat;
   blindSpeed: BlindSpeed;
+  ante: AnteMode;
+}
+
+export interface MttCompletionReadinessProfile {
+  tableFormat: TableFormat;
+  blindSpeed: BlindSpeed;
+  evModel: Extract<EvModel, "CHIP_EV" | "DOLAR_EV">;
+  street: TrainingStreet;
   ante: AnteMode;
 }
 
@@ -55,6 +95,55 @@ export interface MttPreflopReadinessReport {
   productionRows: number;
   candidateRows: number;
   missingRows: number;
+}
+
+export interface MttCompletionReadinessRow extends MttCompletionReadinessProfile {
+  status: MttCompletionReadinessStatus;
+  productionReady: boolean;
+  coverageKind: MttCompletionCoverageKind;
+  packId: string | null;
+  importSlot: MttCompletionImportSlotHint | null;
+  missingReasons: string[];
+}
+
+export interface MttCompletionReadinessReport {
+  rows: MttCompletionReadinessRow[];
+  productionRows: number;
+  candidateRows: number;
+  missingRows: number;
+}
+
+export interface MttCompletionReadinessFilters {
+  tableFormat?: TableFormat;
+  blindSpeed?: BlindSpeed;
+  evModel?: Extract<EvModel, "CHIP_EV" | "DOLAR_EV">;
+  street?: TrainingStreet;
+  ante?: AnteMode;
+  status?: MttCompletionReadinessStatus | "NON_PRODUCTION";
+}
+
+export interface MttCompletionImportSlotHint {
+  slotId: string;
+  packId: string;
+  kind: "mtt-preflop" | "flop-production" | "turn-production" | "river-production";
+  rawInputFolder: string;
+  normalizedInputPath: string;
+  permissionManifestPath: string;
+}
+
+export interface MttCompletionReadinessOptions {
+  flopProductionPacks?: readonly FlopProductionStrategyPack[];
+  turnProductionPacks?: readonly TurnProductionStrategyPack[];
+  riverProductionPacks?: readonly RiverProductionStrategyPack[];
+}
+
+export interface MttCompletionReleaseGateReport {
+  valid: boolean;
+  totalRows: number;
+  productionReadyRows: number;
+  previewRows: number;
+  blockedRows: number;
+  errors: readonly string[];
 }
 
 export interface MttPreflopPackImportReadinessRow {
@@ -105,6 +194,11 @@ export const MTT_PREFLOP_TURBO_STRATEGY_POLICY: MttPreflopTurboStrategyPolicy = 
 const TABLE_FORMATS: readonly TableFormat[] = ["FULL_RING_9", "SIX_MAX"];
 const BLIND_SPEEDS: readonly BlindSpeed[] = ["REGULAR", "TURBO"];
 const ANTE_MODES: readonly AnteMode[] = ["ON", "OFF"];
+const MTT_EV_MODELS = ["CHIP_EV", "DOLAR_EV"] as const satisfies readonly Extract<
+  EvModel,
+  "CHIP_EV" | "DOLAR_EV"
+>[];
+const MTT_STREETS = ["PREFLOP", "FLOP", "TURN", "RIVER"] as const satisfies readonly TrainingStreet[];
 const REQUIRED_CONTEXTS: readonly ActionContext[] = [
   "RFI",
   "VS_LIMP",
@@ -125,6 +219,140 @@ export function buildMttPreflopReadinessReport(): MttPreflopReadinessReport {
     candidateRows: rows.filter((row) => row.status === "CANDIDATE").length,
     missingRows: rows.filter((row) => row.status === "MISSING").length,
   };
+}
+
+export function buildMttCompletionReadinessReport(
+  options: MttCompletionReadinessOptions = {},
+): MttCompletionReadinessReport {
+  const rows = expectedCompletionProfiles().map((profile) => (
+    completionReadinessRowForProfile(profile, options)
+  ));
+  return {
+    rows,
+    productionRows: rows.filter((row) => row.status === "PRODUCTION").length,
+    candidateRows: rows.filter((row) => row.status === "CANDIDATE").length,
+    missingRows: rows.filter((row) => row.status === "MISSING").length,
+  };
+}
+
+export function buildMttCompletionReleaseGateReport(
+  report: MttCompletionReadinessReport = buildMttCompletionReadinessReport(),
+): MttCompletionReleaseGateReport {
+  const errors: string[] = [];
+  for (const row of report.rows) {
+    const label = completionRowLabel(row);
+    if (row.status === "PRODUCTION" && !row.productionReady) {
+      errors.push(`${label}: production row is not productionReady.`);
+    }
+    if (row.status !== "PRODUCTION" && row.missingReasons.length === 0) {
+      errors.push(`${label}: non-production row is missing an explicit blocker reason.`);
+    }
+    if (row.status === "PRODUCTION" && row.coverageKind === "MISSING") {
+      errors.push(`${label}: production row cannot use missing coverage.`);
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    totalRows: report.rows.length,
+    productionReadyRows: report.rows.filter((row) => row.productionReady).length,
+    previewRows: report.rows.filter((row) => row.status === "CANDIDATE").length,
+    blockedRows: report.rows.filter((row) => row.status === "MISSING").length,
+    errors,
+  };
+}
+
+export function renderMttCompletionReleaseGateReport(
+  report: MttCompletionReleaseGateReport = buildMttCompletionReleaseGateReport(),
+): string {
+  const lines = [
+    "MTT completion release gate",
+    `valid: ${report.valid}`,
+    `total rows: ${report.totalRows}`,
+    `productionReady rows: ${report.productionReadyRows}`,
+    `preview rows: ${report.previewRows}`,
+    `blocked rows: ${report.blockedRows}`,
+  ];
+
+  if (report.errors.length > 0) {
+    lines.push("errors:");
+    for (const error of report.errors) lines.push(`- ${error}`);
+  }
+
+  return lines.join("\n");
+}
+
+export function filterMttCompletionReadinessReport(
+  report: MttCompletionReadinessReport,
+  filters: MttCompletionReadinessFilters,
+): MttCompletionReadinessReport {
+  const rows = report.rows.filter((row) => (
+    matchesOptionalFilter(row.tableFormat, filters.tableFormat) &&
+    matchesOptionalFilter(row.blindSpeed, filters.blindSpeed) &&
+    matchesOptionalFilter(row.evModel, filters.evModel) &&
+    matchesOptionalFilter(row.street, filters.street) &&
+    matchesOptionalFilter(row.ante, filters.ante) &&
+    matchesStatusFilter(row.status, filters.status)
+  ));
+
+  return completionReadinessReportFromRows(rows);
+}
+
+export function renderMttCompletionReadinessReport(
+  report: MttCompletionReadinessReport = buildMttCompletionReadinessReport(),
+): string {
+  const lines = [
+    "MTT completion readiness",
+    `total rows: ${report.rows.length}`,
+    `production rows: ${report.productionRows}`,
+    `candidate rows: ${report.candidateRows}`,
+    `missing rows: ${report.missingRows}`,
+  ];
+  const nonProductionRows = report.rows.filter((row) => row.status !== "PRODUCTION");
+  lines.push(`non-production rows: ${nonProductionRows.length}`);
+
+  for (const row of nonProductionRows) {
+    lines.push(
+      `- ${completionRowLabel(row)} status=${row.status} coverage=${row.coverageKind}`,
+    );
+    if (row.packId !== null) lines.push(`  current pack: ${row.packId}`);
+    if (row.importSlot !== null) {
+      lines.push(`  import kind: ${row.importSlot.kind}`);
+      lines.push(`  import pack: ${row.importSlot.packId}`);
+      lines.push(`  input: ${row.importSlot.normalizedInputPath}`);
+      lines.push(`  permission: ${row.importSlot.permissionManifestPath}`);
+    }
+    for (const reason of row.missingReasons) lines.push(`  blocker: ${reason}`);
+  }
+
+  return lines.join("\n");
+}
+
+function completionReadinessReportFromRows(
+  rows: MttCompletionReadinessRow[],
+): MttCompletionReadinessReport {
+  return {
+    rows,
+    productionRows: rows.filter((row) => row.status === "PRODUCTION").length,
+    candidateRows: rows.filter((row) => row.status === "CANDIDATE").length,
+    missingRows: rows.filter((row) => row.status === "MISSING").length,
+  };
+}
+
+function matchesOptionalFilter<T extends string>(
+  value: T,
+  filter: T | undefined,
+): boolean {
+  return filter === undefined || value === filter;
+}
+
+function matchesStatusFilter(
+  status: MttCompletionReadinessStatus,
+  filter: MttCompletionReadinessFilters["status"],
+): boolean {
+  if (filter === undefined) return true;
+  if (filter === "NON_PRODUCTION") return status !== "PRODUCTION";
+  return status === filter;
 }
 
 export function buildMttPreflopPackImportReadinessReport():
@@ -195,6 +423,27 @@ export function mttPreflopReadinessRowForTrainingProfile(
   });
 }
 
+export function mttCompletionReadinessRowForTrainingProfile(
+  profile: TrainingProfile,
+  ante: AnteMode = profile.ante,
+): MttCompletionReadinessRow | null {
+  if (
+    profile.gameVariant !== "MTT" ||
+    profile.rakeMode !== "NONE" ||
+    (profile.evModel !== "CHIP_EV" && profile.evModel !== "DOLAR_EV")
+  ) {
+    return null;
+  }
+
+  return completionReadinessRowForProfile({
+    tableFormat: profile.tableFormat,
+    blindSpeed: profile.blindSpeed,
+    evModel: profile.evModel,
+    street: profile.street,
+    ante,
+  });
+}
+
 function readinessRowForProfile(
   profile: MttPreflopReadinessProfile,
 ): MttPreflopReadinessRow {
@@ -246,6 +495,272 @@ function readinessRowForProfile(
     coverage,
     missingReasons,
   };
+}
+
+function completionReadinessRowForProfile(
+  profile: MttCompletionReadinessProfile,
+  options: MttCompletionReadinessOptions = {},
+): MttCompletionReadinessRow {
+  if (profile.street === "PREFLOP") {
+    return preflopCompletionReadinessRow(profile);
+  }
+
+  return postflopCompletionReadinessRow(profile, options);
+}
+
+function preflopCompletionReadinessRow(
+  profile: MttCompletionReadinessProfile,
+): MttCompletionReadinessRow {
+  if (profile.evModel === "CHIP_EV") {
+    const row = readinessRowForProfile(profile);
+    return {
+      ...profile,
+      status: row.status,
+      productionReady: row.status === "PRODUCTION",
+      coverageKind: row.packId === null ? "MISSING" : "PREFLOP_RANGE_PACK",
+      packId: row.packId,
+      importSlot: row.status === "PRODUCTION" ? null : completionImportSlotHint(profile),
+      missingReasons: row.missingReasons,
+    };
+  }
+
+  const pack = mttPreflopRangePackForProfile({
+    gameVariant: "MTT",
+    tableFormat: profile.tableFormat,
+    blindSpeed: profile.blindSpeed,
+    street: "PREFLOP",
+    evModel: profile.evModel,
+    ante: profile.ante,
+    rakeMode: "NONE",
+  });
+
+  return {
+    ...profile,
+    status: "MISSING",
+    productionReady: false,
+    coverageKind: pack ? "PREFLOP_RANGE_PACK" : "MISSING",
+    packId: pack?.id ?? null,
+    importSlot: completionImportSlotHint(profile),
+    missingReasons: [
+      "No dedicated DOLAR_EV MTT preflop RangePack is registered for this profile.",
+      "Do not reuse chipEV ranges for $EV production scoring without an explicit reviewed reuse policy.",
+    ],
+  };
+}
+
+function postflopCompletionReadinessRow(
+  profile: MttCompletionReadinessProfile,
+  options: MttCompletionReadinessOptions,
+): MttCompletionReadinessRow {
+  const packReadiness = postflopProductionPackReadiness(profile, options);
+  if (!packReadiness) {
+    return {
+      ...profile,
+      status: "CANDIDATE",
+      productionReady: false,
+      coverageKind: "POSTFLOP_PUBLIC_HEURISTIC",
+      packId: null,
+      importSlot: completionImportSlotHint(profile),
+      missingReasons: [
+        `No production ${profile.street} StrategyPack is registered for ${profile.tableFormat}/${profile.evModel}.`,
+        "Postflop training currently uses public heuristic or generator fallback for this MTT profile.",
+        "Dedicated production StrategyPack coverage is required before production scoring.",
+      ],
+    };
+  }
+
+  return {
+    ...profile,
+    status: packReadiness.productionReady ? "PRODUCTION" : "CANDIDATE",
+    productionReady: packReadiness.productionReady,
+    coverageKind: "POSTFLOP_PRODUCTION_PACK",
+    packId: packReadiness.packId,
+    importSlot: packReadiness.productionReady ? null : completionImportSlotHint(profile),
+    missingReasons: packReadiness.productionReady ? [] : packReadiness.missingReasons,
+  };
+}
+
+function postflopProductionPackReadiness(
+  profile: MttCompletionReadinessProfile,
+  options: MttCompletionReadinessOptions,
+): {
+  packId: string;
+  productionReady: boolean;
+  missingReasons: string[];
+} | null {
+  switch (profile.street) {
+    case "FLOP":
+      return bestPostflopPackReadiness(
+        matchingFlopProductionPacks(profile, options),
+        (pack) => ({
+          packId: pack.id,
+          report: buildFlopProductionCoverageReport(pack),
+          missingReasons: flopCoverageMissingReasons(buildFlopProductionCoverageReport(pack)),
+        }),
+      );
+    case "TURN":
+      return bestPostflopPackReadiness(
+        matchingTurnProductionPacks(profile, options),
+        (pack) => ({
+          packId: pack.id,
+          report: buildTurnProductionCoverageReport(pack),
+          missingReasons: turnCoverageMissingReasons(buildTurnProductionCoverageReport(pack)),
+        }),
+      );
+    case "RIVER":
+      return bestPostflopPackReadiness(
+        matchingRiverProductionPacks(profile, options),
+        (pack) => ({
+          packId: pack.id,
+          report: buildRiverProductionCoverageReport(pack),
+          missingReasons: riverCoverageMissingReasons(buildRiverProductionCoverageReport(pack)),
+        }),
+      );
+    case "PREFLOP":
+      return null;
+  }
+}
+
+function bestPostflopPackReadiness<TPack>(
+  packs: readonly TPack[],
+  build: (pack: TPack) => {
+    packId: string;
+    report: { productionReady: boolean };
+    missingReasons: string[];
+  },
+): {
+  packId: string;
+  productionReady: boolean;
+  missingReasons: string[];
+} | null {
+  let firstCandidate: {
+    packId: string;
+    productionReady: boolean;
+    missingReasons: string[];
+  } | null = null;
+
+  for (const pack of packs) {
+    const row = build(pack);
+    const readiness = {
+      packId: row.packId,
+      productionReady: row.report.productionReady,
+      missingReasons: row.missingReasons,
+    };
+    if (readiness.productionReady) return readiness;
+    firstCandidate ??= readiness;
+  }
+
+  return firstCandidate;
+}
+
+function matchingFlopProductionPacks(
+  profile: MttCompletionReadinessProfile,
+  options: MttCompletionReadinessOptions,
+): readonly FlopProductionStrategyPack[] {
+  const packs = options.flopProductionPacks ?? flopProductionStrategyPacks;
+  return packs.filter((pack) => (
+    pack.dimensions.gameVariant === "MTT" &&
+    pack.dimensions.tableFormat === profile.tableFormat &&
+    pack.dimensions.street === "FLOP" &&
+    pack.dimensions.evModel === profile.evModel &&
+    pack.dimensions.blindSpeeds.includes(profile.blindSpeed) &&
+    pack.dimensions.antes.includes(profile.ante)
+  ));
+}
+
+function matchingTurnProductionPacks(
+  profile: MttCompletionReadinessProfile,
+  options: MttCompletionReadinessOptions,
+): readonly TurnProductionStrategyPack[] {
+  const packs = options.turnProductionPacks ?? turnProductionStrategyPacks;
+  return packs.filter((pack) => (
+    pack.dimensions.gameVariant === "MTT" &&
+    pack.dimensions.tableFormat === profile.tableFormat &&
+    pack.dimensions.street === "TURN" &&
+    pack.dimensions.evModel === profile.evModel &&
+    pack.dimensions.blindSpeeds.includes(profile.blindSpeed) &&
+    pack.dimensions.antes.includes(profile.ante)
+  ));
+}
+
+function matchingRiverProductionPacks(
+  profile: MttCompletionReadinessProfile,
+  options: MttCompletionReadinessOptions,
+): readonly RiverProductionStrategyPack[] {
+  const packs = options.riverProductionPacks ?? riverProductionStrategyPacks;
+  return packs.filter((pack) => (
+    pack.dimensions.gameVariant === "MTT" &&
+    pack.dimensions.tableFormat === profile.tableFormat &&
+    pack.dimensions.street === "RIVER" &&
+    pack.dimensions.evModel === profile.evModel &&
+    pack.dimensions.blindSpeeds.includes(profile.blindSpeed) &&
+    pack.dimensions.antes.includes(profile.ante)
+  ));
+}
+
+function flopCoverageMissingReasons(report: FlopProductionCoverageReport): string[] {
+  return [
+    ...report.errors,
+    ...missingListReason("Flop production pack is missing pot types", report.missingPotTypes),
+    ...missingListReason(
+      "Flop production pack is missing position patterns",
+      report.missingPositionPatterns,
+    ),
+    ...missingListReason("Flop production pack is missing board textures", report.missingBoardTextures),
+    ...missingListReason("Flop production pack is missing SPR bands", report.missingSprBands),
+    ...missingListReason("Flop production pack is missing action nodes", report.missingActionNodes),
+    ...missingListReason("Flop production pack is missing range lanes", report.missingRangeLanes),
+  ];
+}
+
+function turnCoverageMissingReasons(report: TurnProductionCoverageReport): string[] {
+  return [
+    ...report.errors,
+    ...missingListReason("Turn production pack is missing pot types", report.missingPotTypes),
+    ...missingListReason(
+      "Turn production pack is missing position patterns",
+      report.missingPositionPatterns,
+    ),
+    ...missingListReason(
+      "Turn production pack is missing prior flop actions",
+      report.missingPriorFlopActions,
+    ),
+    ...missingListReason(
+      "Turn production pack is missing turn card classes",
+      report.missingTurnCardClasses,
+    ),
+    ...missingListReason("Turn production pack is missing action nodes", report.missingActionNodes),
+    ...missingListReason("Turn production pack is missing range lanes", report.missingRangeLanes),
+  ];
+}
+
+function riverCoverageMissingReasons(report: RiverProductionCoverageReport): string[] {
+  return [
+    ...report.errors,
+    ...missingListReason("River production pack is missing pot types", report.missingPotTypes),
+    ...missingListReason(
+      "River production pack is missing position patterns",
+      report.missingPositionPatterns,
+    ),
+    ...missingListReason(
+      "River production pack is missing prior turn actions",
+      report.missingPriorTurnActions,
+    ),
+    ...missingListReason(
+      "River production pack is missing runout classes",
+      report.missingRiverRunoutClasses,
+    ),
+    ...missingListReason(
+      "River production pack is missing blocker relevance bands",
+      report.missingBlockerRelevance,
+    ),
+    ...missingListReason("River production pack is missing action nodes", report.missingActionNodes),
+    ...missingListReason("River production pack is missing range lanes", report.missingRangeLanes),
+  ];
+}
+
+function missingListReason(label: string, values: readonly string[]): string[] {
+  return values.length === 0 ? [] : [`${label}: ${values.join(", ")}.`];
 }
 
 function productionMissingReasons(
@@ -361,4 +876,45 @@ function expectedProfiles(): MttPreflopReadinessProfile[] {
     }
   }
   return profiles;
+}
+
+function expectedCompletionProfiles(): MttCompletionReadinessProfile[] {
+  const profiles: MttCompletionReadinessProfile[] = [];
+  for (const tableFormat of TABLE_FORMATS) {
+    for (const blindSpeed of BLIND_SPEEDS) {
+      for (const evModel of MTT_EV_MODELS) {
+        for (const street of MTT_STREETS) {
+          for (const ante of ANTE_MODES) {
+            profiles.push({ tableFormat, blindSpeed, evModel, street, ante });
+          }
+        }
+      }
+    }
+  }
+  return profiles;
+}
+
+function completionRowLabel(row: MttCompletionReadinessRow): string {
+  return [
+    row.tableFormat,
+    row.blindSpeed,
+    row.evModel,
+    row.street,
+    row.ante,
+  ].join("|");
+}
+
+function completionImportSlotHint(
+  profile: MttCompletionReadinessProfile,
+): MttCompletionImportSlotHint {
+  const packId = mttProductionImportPackId(profile);
+  const paths = mttProductionImportSlotPaths(packId);
+  return {
+    slotId: mttProductionImportSlotId(profile),
+    packId,
+    kind: mttProductionImportSlotKind(profile.street),
+    rawInputFolder: paths.rawInputFolder,
+    normalizedInputPath: paths.normalizedInputPath,
+    permissionManifestPath: paths.permissionManifestPath,
+  };
 }

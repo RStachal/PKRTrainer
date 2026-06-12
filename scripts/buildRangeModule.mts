@@ -13,6 +13,8 @@ import {
 import type { ProductionPermissionManifest } from "../src/data/ranges/productionPermissionManifest.ts";
 import type { MttPreflopRangePackImportInput } from "../src/data/ranges/mttPreflopRangePackImport.ts";
 import type { FlopProductionStrategyPack } from "../src/data/ranges/flopProductionStrategyPack.ts";
+import type { TurnProductionStrategyPack } from "../src/data/ranges/turnProductionStrategyPack.ts";
+import type { RiverProductionStrategyPack } from "../src/data/ranges/riverProductionStrategyPack.ts";
 
 interface CliArgs {
   kind: RangeModuleBuildKind;
@@ -29,6 +31,8 @@ function usage(): string {
     "Usage:",
     "  npm run build:range-module -- --kind=mtt-preflop --dry-run --permission-manifest <manifest.json> <input.json>",
     "  npm run build:range-module -- --kind=flop-production --dry-run --permission-manifest <manifest.json> <input.json>",
+    "  npm run build:range-module -- --kind=turn-production --dry-run --permission-manifest <manifest.json> <input.json>",
+    "  npm run build:range-module -- --kind=river-production --dry-run --permission-manifest <manifest.json> <input.json>",
     "  npm run build:range-module -- --kind=mtt-preflop --permission-manifest <manifest.json> --out <module.ts> <input.json>",
   ].join("\n");
 }
@@ -106,7 +110,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
 }
 
 function parseKind(value: string | undefined): RangeModuleBuildKind {
-  if (value === "mtt-preflop" || value === "flop-production") return value;
+  if (
+    value === "mtt-preflop" ||
+    value === "flop-production" ||
+    value === "turn-production" ||
+    value === "river-production"
+  ) return value;
   throw new Error(`Unsupported --kind value: ${value ?? ""}\n\n${usage()}`);
 }
 
@@ -123,9 +132,7 @@ function readJson<T>(file: string): T {
 
 function run(): void {
   const args = parseArgs(process.argv.slice(2));
-  const input = args.kind === "mtt-preflop"
-    ? readJson<MttPreflopRangePackImportInput>(args.inputFile)
-    : readJson<FlopProductionStrategyPack>(args.inputFile);
+  const input = readInput(args.kind, args.inputFile);
   const permissionManifest = args.permissionManifest
     ? readJson<ProductionPermissionManifest>(args.permissionManifest)
     : null;
@@ -151,6 +158,22 @@ function run(): void {
 
   mkdirSync(dirname(args.outFile), { recursive: true });
   writeFileSync(args.outFile, result.moduleText, "utf8");
+}
+
+function readInput(
+  kind: RangeModuleBuildKind,
+  file: string,
+): MttPreflopRangePackImportInput | FlopProductionStrategyPack | TurnProductionStrategyPack | RiverProductionStrategyPack {
+  switch (kind) {
+    case "mtt-preflop":
+      return readJson<MttPreflopRangePackImportInput>(file);
+    case "flop-production":
+      return readJson<FlopProductionStrategyPack>(file);
+    case "turn-production":
+      return readJson<TurnProductionStrategyPack>(file);
+    case "river-production":
+      return readJson<RiverProductionStrategyPack>(file);
+  }
 }
 
 try {

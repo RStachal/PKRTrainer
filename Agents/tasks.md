@@ -337,7 +337,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Nepřebírat placené, chráněné nebo licenčně nejasné charty jako data aplikace bez povolení; povolený výstup je náš normalizovaný RangePack s citací zdrojů a poznámkou o interpretaci
 
   - [x] 22.3 Definovat RangePack v2 jako zdroj pravdy pro všechny budoucí ranges
-    - Přidat dimenze `gameVariant` (MTT/SNG/CASH), `tableFormat` (FULL_RING_9/SIX_MAX), `blindSpeed` (REGULAR/TURBO), `street` (PREFLOP/FLOP/TURN/RIVER), `evModel` (CHIP_EV/ICM), `ante`, pozice, stack profile a akční node
+    - Přidat dimenze `gameVariant` (MTT/SNG/CASH), `tableFormat` (FULL_RING_9/SIX_MAX), `blindSpeed` (REGULAR/TURBO), `street` (PREFLOP/FLOP/TURN/RIVER), `evModel` (CHIP_EV/DOLAR_EV/ICM), `ante`, pozice, stack profile a akční node
     - Přidat metadata `sourceEvidence`, `assumptions`, `version`, `createdAt`, `verifiedAt`, `licenseNote` a `confidence`
     - Zachovat kompatibilitu s aktuálním Range_Store přes adaptér, aby dnešní MTT preflop 9-max běžel beze změny
 
@@ -348,7 +348,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
 
 - [x] 23. Obecný model tréninkového profilu
   - [x] 23.1 Implementovat `src/core/trainingProfile.ts`
-    - Definovat typy `GameVariant = "MTT" | "SNG" | "CASH"`, `TableFormat = "FULL_RING_9" | "SIX_MAX"`, `BlindSpeed = "REGULAR" | "TURBO"`, `TrainingStreet = "PREFLOP" | "FLOP" | "TURN" | "RIVER"`, `EvModel = "CHIP_EV" | "ICM"` a `RakeMode = "NONE" | "RAKE" | "NO_RAKE"`
+    - Definovat typy `GameVariant = "MTT" | "SNG" | "CASH"`, `TableFormat = "FULL_RING_9" | "SIX_MAX"`, `BlindSpeed = "REGULAR" | "TURBO"`, `TrainingStreet = "PREFLOP" | "FLOP" | "TURN" | "RIVER"`, `EvModel = "CHIP_EV" | "DOLAR_EV" | "ICM"` a `RakeMode = "NONE" | "RAKE" | "NO_RAKE"`
     - Přidat `TrainingProfile`, `DEFAULT_TRAINING_PROFILE`, `profileId(profile)` a helpery pro dostupné kombinace
 
   - [x] 23.2 Implementovat `src/core/seatModel.ts`
@@ -1202,37 +1202,134 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 116.3 Zapojit 3bet production pack do resolver chain
     - 3bet pot fallback se pouzije jen tam, kde production rule chybi
 
-- [ ] 117. Flop production range frequencies and mixes
-  - [ ] 117.1 Rozsirit range bucket schema o frequency/mix metadata
+- [x] 117. Flop production range frequencies and mixes
+  - [x] 117.1 Rozsirit range bucket schema o frequency/mix metadata
     - Frequencies lze zobrazit az po legalnim solver exportu a source-free interpretaci
-  - [ ] 117.2 Pridat mixed-action hero feedback
+    - Hotovo: `FlopProductionRangeBucket` ma volitelne `actionMix` metadata s validaci akci, souctu 100 %, duplicit a exact-frequency permission gate
+  - [x] 117.2 Pridat mixed-action hero feedback
     - Hero hand muze byt pure value, pure bluff, pure check or mixed
-  - [ ] 117.3 Otestovat, ze exact frequencies nejsou v UI bez povoleni
+    - Hotovo: flop resolver predava source-free hero range bucket vcetne actionMix a postflop result ukazuje mixed-action feedback bez pack/rule/source citaci
+  - [x] 117.3 Otestovat, ze exact frequencies nejsou v UI bez povoleni
     - Pokud licence nepovoluje exact frequencies, UI ukaze pouze kvalitativni bucket
+    - Hotovo: kvalitativni actionMix v postflop resultu ukazuje mixed actions bez procent a s hlaskou, ze exact frequencies jsou skryte
 
 - [ ] 118. Turn production model roadmap
-  - [ ] 118.1 Definovat turn production schema
+  - [x] 118.1 Definovat turn production schema
     - Turn musi umet prior flop action, turn card class, SPR, position pattern and range lane
-  - [ ] 118.2 Pripravit turn import validator
+    - Hotovo: `TurnProductionStrategyPack` schema a coverage report kontroluji prior flop action, turn card class, SPR, position pattern, TURN_BARREL node, range lanes a exact-frequency permission gate
+  - [x] 118.2 Pripravit turn import validator
     - Legal input, coverage and source-free report jako u flopu
-  - [ ] 118.3 Napojit turn production resolver
+    - Hotovo: `turn-production` je podporovany ve validate/build CLI, coverage reportu, module builderu, intake dokumentaci a syntetickem shape-only prikladu
+  - [x] 118.3 Napojit turn production resolver
     - Public heuristic zustava fallback, production ma prioritu
+    - Hotovo: `turnProductionStrategyResolver` matchuje TURN_BARREL podle prior flop action, turn card class, SPR a position pattern; registry dava turn production pred public heuristic fallback
 
 - [ ] 119. River production model roadmap
-  - [ ] 119.1 Definovat river production schema
+  - [x] 119.1 Definovat river production schema
     - River musi umet runout, blocker relevance, value/bluff/check lanes and sizing
-  - [ ] 119.2 Pripravit river import validator
+    - Hotovo: `RiverProductionStrategyPack` schema a coverage report kontroluji river runout class, blocker relevance, prior turn action, SPR, position pattern, RIVER_PRESSURE node, range lanes a exact-frequency permission gate
+  - [x] 119.2 Pripravit river import validator
     - Legal input, coverage and source-free report jako u flopu
-  - [ ] 119.3 Napojit river production resolver
+    - Hotovo: `river-production` je podporovany ve validate/build CLI, coverage reportu, module builderu, intake dokumentaci a syntetickem shape-only prikladu
+  - [x] 119.3 Napojit river production resolver
     - River pressure spoty maji pouzit production data tam, kde existuji
+    - Hotovo: `riverProductionStrategyResolver` matchuje RIVER_PRESSURE podle prior turn action, river runout class, SPR a position pattern; registry dava river production pred public heuristic fallback
 
-- [ ] 120. Postflop multi-street training flow
-  - [ ] 120.1 Pridat navaznost flop -> turn -> river v jedne hande
+- [x] 120. Postflop multi-street training flow
+  - [x] 120.1 Pridat navaznost flop -> turn -> river v jedne hande
     - Board runout a predchozi akce musi zustat konzistentni
-  - [ ] 120.2 Ukladat street sequence do postflop stats
+    - Hotovo: `generatePostflopLine` vytvari deterministickou FLOP/TURN/RIVER line se sdilenymi hero kartami, runoutem, pot/stack progresi a prior flop/turn action pro navazujici resolvery
+  - [x] 120.2 Ukladat street sequence do postflop stats
     - KPI musi umet odlisit single-street quiz od multi-street hand line
-  - [ ] 120.3 Otestovat deterministic seed replay pro multi-street flow
+    - Hotovo: multi-street line replay se uklada do samostatneho `mtt_preflop_postflop_line_events_v1` logu a export/import/reset jej drzi oddelene od single-street `postflop_events`
+  - [x] 120.3 Otestovat deterministic seed replay pro multi-street flow
     - Stejny seed musi vratit stejnou sekvenci karet a spotu
+    - Hotovo: `postflopLineSimulator.test.ts` overuje deterministicky FLOP/TURN/RIVER runout a action history pro stejny seed
+  - [x] 120.4 Zapojit hand line do postflop UI
+    - Trener musi umet projit jednu handu postupne FLOP -> TURN -> RIVER a ulozit ji jako jednu sequence
+    - Hotovo: postflop UI ma `Hand line` mode, navazujici Next Turn/River flow, finalni souhrn a `onLineCompleted` save do line event logu
+
+- [ ] 129. MTT completion matrix
+  - [x] 129.1 Definovat canonical MTT profile matrix
+    - Pokryt `FULL_RING_9`/`SIX_MAX` x `REGULAR`/`TURBO` x `CHIP_EV`/`DOLAR_EV` x `PREFLOP`/`FLOP`/`TURN`/`RIVER` x ante ON/OFF tam, kde dava smysl
+    - Hotovo: `buildMttCompletionReadinessReport` generuje canonical 64radkovou MTT matici pro format, speed, EV model, street a ante
+  - [x] 129.2 Rozsirit MTT readiness report o DOLAR_EV a street coverage
+    - Missing/candidate/production stav musi byt explicitni, ne implicitni null
+    - Hotovo: completion readiness explicitne oznacuje DOLAR_EV preflop jako missing dedicated pack a postflop streety jako candidate preview bez production scoringu
+  - [x] 129.3 Pridat release gate pro kompletni MTT matici
+    - Build nesmi tise pustit profil bez production dat mimo povoleny preview/fallback rezim
+    - Hotovo: `buildMttCompletionReleaseGateReport` a `npm run mtt:completion` overuji, ze production rows jsou productionReady a vsechny non-production rows maji explicitni blocker
+
+- [ ] 130. MTT preflop production completion
+  - [x] 130.1 Sloucit 9-max a 6-max import validatory do jednoho MTT preflop validatoru
+    - Jeden validator ma podporovat oba tableFormaty, regular/turbo, CHIP_EV/DOLAR_EV a ante ON/OFF
+    - Hotovo: `mttPreflopRangePackImport` je jednotny validator pro `FULL_RING_9` i `SIX_MAX`; legacy `mttSixMaxRangePackImport` zustava jen kompatibilni wrapper nad stejnym kontraktem
+  - [x] 130.2 Pripravit legal import slots pro chybejici MTT preflop profily
+    - 9-max turbo, 6-max regular, 6-max turbo, CHIP_EV i DOLAR_EV musi mit samostatne pack id a permission manifest
+    - Hotovo: `buildMttPreflopImportSlots` generuje 14 neprodukcnych MTT preflop slotu s pack id, raw folderem, `normalized.json`, `permission.json` a povolenymi licenseKind hodnotami; intake docs popisuji slot naming a workflow
+  - [x] 130.3 Zapojit vsechny promoted preflop packy do production gate
+    - Drill engine smi spustit production scoring jen pro profily s dedicated hand recommendations
+    - Hotovo: `buildRangeModule` pro `mtt-preflop` vyzaduje production-ready import, validni permission manifest a shodu `packId` s legal import slotem; mimo-slot pack nedostane `writeReady`
+
+- [ ] 131. MTT postflop production completion
+  - [ ] 131.1 Dokoncit flop SRP/3bet production resolver chain
+    - SRP i 3bet poty musi pokryt pozicni patterny, board textures, SPR windows a range lanes
+  - [x] 131.2 Pridat turn production resolver
+    - Navazat na `TurnProductionStrategyPack`, prior flop action, turn card class, SPR a position pattern
+    - Hotovo: `generatePostflopSpot` predava board, default prior flop action a klasifikovanou turn kartu do production resolveru
+  - [x] 131.3 Pridat river production schema, validator a resolver
+    - River musi umet runout class, blocker relevance, value/bluff/check lanes, sizing a final action node
+    - Hotovo: river runtime schema, validator a resolver jsou zapojene do default postflop production fallback chainu; CLI import podpora zustava v `119.2`
+  - [x] 131.4 Rozsirit postflop action taxonomy
+    - Street/action nodes musi pokryt check, bet small/big, call, raise, fold tam, kde treningovy node dava smysl
+    - Hotovo: `PostflopAction` ma centralni taxonomy `CHECK/BET_SMALL/BET_BIG/CALL/RAISE/FOLD`; training spot, UI labely, HH review, StrategyPack import report, turn/river production validatory a line simulator nove akce typove podporuji bez toho, aby existujici c-bet/barrel generatory predstiraly facing-bet data
+  - [x] 131.5 Pridat facing-bet postflop action nody
+    - Call/raise/fold nesmi byt prilepene na c-bet/barrel node, ale musi mit vlastni streetove nody
+    - Hotovo: `FLOP_FACING_BET`, `TURN_FACING_BET` a `RIVER_FACING_BET` prochazeji generator, training spot, generic StrategyPack resolver, persistence guardy a dashboard labely; defaultni c-bet/barrel flow zustava check/bet-only
+  - [x] 131.6 Doplnit SPR window coverage do flop production reportu
+    - Hotovo: `FlopProductionCoverageReport` sleduje `LOW/MID/HIGH` SPR bandy, production gate vyzaduje vsechny bandy a textovy report ukazuje chybejici SPR okna
+  - [x] 131.7 Napojit MTT completion matrix na postflop production coverage reporty
+    - Hotovo: completion readiness uz neoznacuje postflop pouze pauslane jako heuristic preview; pokud je registrovany flop/turn/river production pack pro tableFormat/EV/street, radek pouzije jeho coverage report, pack id a konkretni missing coverage blokery
+  - [x] 131.8 Pridat explicitni blindSpeed/ante coverage do postflop production packu
+    - Hotovo: flop/turn/river production schema vyzaduji `dimensions.blindSpeeds` a `dimensions.antes`; completion matrix matchuje postflop production pack jen na radky s explicitne deklarovanym speed/ante profilem
+  - [x] 131.9 Vynutit kompatibilitu production akci s postflop action nodem
+    - Hotovo: flop/turn/river production validatory blokují `CALL/RAISE/FOLD` v c-bet/barrel/river-pressure nodech, prior street akce omezuji na bet/check production flow a module builder reportuje i chybejici SPR bandy
+  - [x] 131.10 Pripravit legal import sloty pro MTT postflop production profily
+    - Hotovo: `buildMttPostflopImportSlots` generuje 48 source-free FLOP/TURN/RIVER slotu pro tableFormat, speed, EV model a ante; sloty maji stabilni pack id, raw folder, `normalized.json`, `permission.json` a helper pro mapovani production packu podle deklarovane coverage
+  - [x] 131.11 Zapojit postflop import sloty do production module builderu
+    - Hotovo: `buildRangeModule` pro flop/turn/river production vyzaduje MTT gameVariant a shodu deklarovane coverage alespon s jednim legalnim MTT postflop slotem; mimo-slot pack nedostane `writeReady`
+  - [x] 131.12 Vynutit MTT gameVariant v postflop production validatorech
+    - Hotovo: flop/turn/river production validatory odmitaji non-MTT `gameVariant`, takze coverage reporty i module builder maji stejny MTT-only kontrakt
+  - [x] 131.13 Pridat operator CLI pro legalni MTT import sloty
+    - Hotovo: `npm run mtt:slots` vypisuje source-free preflop i postflop sloty vcetne pack id, `normalized.json` a `permission.json` cest; podporuje `--kind=preflop|postflop`
+  - [x] 131.14 Propagovat legalni import slot do MTT completion readiness radku
+    - Hotovo: kazdy non-production radek v `buildMttCompletionReadinessReport` nese `importSlot` s kind, pack id, `normalized.json` a `permission.json`; production radky maji `importSlot: null`
+  - [x] 131.15 Pridat detailni MTT completion CLI vystup s import sloty
+    - Hotovo: `npm run mtt:completion -- --details` vypise non-production radky vcetne blockeru, import kind, legalniho pack id, `normalized.json` a `permission.json` cest
+  - [x] 131.16 Sjednotit naming MTT import slotu
+    - Hotovo: preflop sloty, postflop sloty i completion readiness pouzivaji sdileny `mttImportSlotNaming`; canonical `slotId` obsahuje format, speed, EV, street a ante
+  - [x] 131.17 Vynutit legalni MTT slot uz ve validate:range-import
+    - Hotovo: `validate:range-import` pro preflop vyzaduje presny legalni slot `packId`; postflop import musi matchovat alespon jeden legalni MTT postflop slot a CLI vypisuje matched sloty
+  - [x] 131.18 Zobrazit matched import sloty v build:range-module dry-run
+    - Hotovo: `buildRangeModule` vraci `matchedImportSlots` a report vypisuje slot id, pack id, `normalized.json` a `permission.json` cesty pro preflop i postflop production moduly
+  - [x] 131.19 Sjednotit validaci legalnich MTT import slotu
+    - Hotovo: `mttImportSlotValidation` centralizuje preflop/postflop legal-slot reporty, sdili render vystup pro CLI a pouziva ho i `buildRangeModule`, takze `validate:range-import` a `build:range-module` hlidaji stejne slot kontrakty
+  - [x] 131.20 Pridat filtry do detailniho MTT completion CLI
+    - Hotovo: `npm run mtt:completion -- --details` podporuje `--format`, `--speed`, `--ev`, `--street`, `--ante` a `--status`, takze operator muze vypsat jen konkretni import slice misto cele 64radkove matice
+
+- [x] 132. MTT cross-position and multi-street simulation
+  - [x] 132.1 Generovat heads-up postflop kontexty pro vsechny podporovane dvojice pozic
+    - Full ring i 6-max musi umet legalni IP/OOP, aggressor/caller a pot type mapping
+    - Hotovo: `postflopPositionContextsForFormat` generuje supported SRP a 3bet heads-up kontexty pro `FULL_RING_9` i `SIX_MAX`; random full-ring pool uz nepada jen na puvodni 4 fixture spoty
+  - [x] 132.2 Pridat deterministic hand line replay flop -> turn -> river
+    - Jedna simulovana handa musi zachovat board runout, pot, SPR, predchozi akce a action history
+    - Hotovo: `postflopLineSimulator` vraci street snapshoty a action history s pot/effective stack pred a po akci
+  - [x] 132.3 Ukladat multi-street sequence do statistik oddelene od single-street quizu
+    - KPI musi umet filtrovat podle single-street vs sequence training
+    - Hotovo: `PostflopLineResultRecord` a `postflopLineStatsStore` ukladaji streetResults/actionHistory oddelene; stats transfer podporuje `postflopLineRecords` bez michani do single-street KPI
+  - [x] 132.4 Otevrit multi-street replay z postflop treneru
+    - UI musi projit FLOP/TURN/RIVER jako jednu hand line a zachovat single-street quiz flow
+    - Hotovo: `postflopView` umi prepnout mezi `Single spot` a `Hand line`; DOM test overuje vsechny tri streety, callback cele line a izolaci od single-street callbacku
 
 - [x] 121. Postflop table and action UX polish v2
   - [x] 121.1 Pridat vizualni pot geometry pro bet sizing
@@ -1267,23 +1364,27 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Pri nizkem objemu zobrazit volume goal misto leak soudil
     - Hotovo: low-volume preflop sample vraci Build sample volume goal, bez generickych leak recommendations
 
-- [ ] 124. Stats storage and privacy hardening
+- [x] 124. Stats storage and privacy hardening
   - [x] 124.1 Pridat schema version pro postflop responseMs a future dimensions
     - Import musi zustat backward compatible
     - Hotovo: PostflopStatsV2BridgeRecord ma record schemaVersion, import/store normalizuji legacy zaznamy bez verze na aktualni schema
   - [x] 124.2 Pridat selective reset/export per profile
     - Hrac muze exportovat nebo smazat jen vybrany profil
     - Hotovo: stats transfer ma profile selector, profile-only export and Reset selected profile pro preflop/postflop records
-  - [ ] 124.3 Pridat storage quota handling testy
+  - [x] 124.3 Pridat storage quota handling testy
     - Pri selhani localStorage se UI nesmi rozbit a stats warning ma byt source-free
+    - Hotovo: preflop/postflop answer save, dashboard import and selected-profile reset quota/failure paths maji source-free UI regression coverage
 
-- [ ] 125. HH import to trainer bridge
-  - [ ] 125.1 Mapovat importovanou HH na preflop training spot
+- [x] 125. HH import to trainer bridge
+  - [x] 125.1 Mapovat importovanou HH na preflop training spot
     - Pokud HH odpovida podporovanemu contextu, ukazat correct range a action feedback
-  - [ ] 125.2 Mapovat importovanou HH na flop spot
+    - Hotovo: HH analysis mapuje prvni importovanou preflop akci na ActionKey, ukazuje Your action/Result/Recommended a explicitne ji neuklada do drill statistik
+  - [x] 125.2 Mapovat importovanou HH na flop spot
     - Board, positions, pot type and SPR musi krmit postflop resolver
-  - [ ] 125.3 Ulozit HH review vysledek oddelene od drill statistiky
+    - Hotovo: parser cte FLOP board, HH bridge stavi SRP flop training spot pro jasne preflop agresorske HH a UI zobrazuje source-free Flop review bez ulozeni do drill statistik
+  - [x] 125.3 Ulozit HH review vysledek oddelene od drill statistiky
     - Review mode nema kontaminovat trening accuracy bez explicitni volby
+    - Hotovo: HH review se uklada do samostatneho `mtt_preflop_hh_reviews_v1` event logu jako odvozene preflop/flop review zaznamy; drill `events` a `postflop_events` zustavaji nedotcene
 
 - [x] 126. Range matrix and Flopzilla UX v2
   - [x] 126.1 Pridat combo-level detail po kliknuti na hand cell
@@ -1312,6 +1413,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Table, filters, postflop matrix and dashboard nesmi pretekat
     - Poznamka: Browser `iab` backend nebyl v teto relaci dostupny; doplnen automatizovany viewport smoke pro 360x800, 390x844 and 412x915
     - Retry 2026-06-05: node_repl tool je dostupny, ale Browser stale hlasi `Browser is not available: iab`; real screenshot QA zustava otevrena
+    - Retry 2026-06-11: Browser tool discovery neposkytlo ovladac pro screenshoty a `playwright` neni dostupny jako Node modul; real screenshot QA zustava otevrena, automatizovane mobile smoke testy pro 360x800, 390x844 and 412x915 prosly v `npm test`
   - [x] 128.2 Otestovat offline reload po service worker cache
     - App musi fungovat bez runtime fetch
     - Hotovo: service worker test pokryva offline navigation reload z cache

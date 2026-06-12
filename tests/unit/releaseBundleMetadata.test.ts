@@ -73,6 +73,8 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["verify:ranges"]).toBe("vite-node scripts/verifyRanges.mts");
     expect(pkg.scripts["validate:range-import"]).toBe("vite-node scripts/validateRangeImport.mts");
     expect(pkg.scripts["build:range-module"]).toBe("vite-node scripts/buildRangeModule.mts");
+    expect(pkg.scripts["mtt:slots"]).toBe("vite-node scripts/listMttImportSlots.mts");
+    expect(pkg.scripts["mtt:completion"]).toBe("vite-node scripts/checkMttCompletion.mts");
     expect(pkg.scripts["bundle:budget"]).toBe("vite-node scripts/checkBundleBudget.mts");
     expect(pkg.scripts["profile:render"]).toBe("vite-node scripts/profileRenderPerformance.mts");
     expect(pkg.scripts["release:check"])
@@ -94,6 +96,9 @@ describe("release bundle metadata", () => {
     expect(quickStart).not.toMatch(/\b(?:mtt|sng|cash)-(?:full-ring|six-max|6max)[a-z0-9-]*/i);
 
     expect(operatorGuide).toContain("npm run validate:range-import");
+    expect(operatorGuide).toContain("npm run mtt:slots");
+    expect(operatorGuide).toContain("legal import slot: true");
+    expect(operatorGuide).toContain("matched import slots");
     expect(operatorGuide).toContain("npm run verify:ranges");
     expect(operatorGuide).toContain("npm run release:check");
     expect(releaseTemplate).toContain("Gameplay changes");

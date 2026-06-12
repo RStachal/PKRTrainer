@@ -1,0 +1,87 @@
+{
+  "id": "example-turn-production-synthetic-v1",
+  "version": "synthetic-example-v1",
+  "createdAt": "2026-06-11",
+  "verifiedAt": "2026-06-11",
+  "confidence": "MEDIUM",
+  "licenseKind": "OWNED_SOLVER_EXPORT",
+  "licenseNote": "Synthetic shape example only; no third-party chart values copied.",
+  "dimensions": {
+    "gameVariant": "MTT",
+    "tableFormat": "FULL_RING_9",
+    "blindSpeeds": ["REGULAR", "TURBO"],
+    "street": "TURN",
+    "evModel": "CHIP_EV",
+    "antes": ["ON", "OFF"]
+  },
+  "sourceEvidence": [
+    {
+      "url": "https://example.test/synthetic-turn-owned-export",
+      "verifiedAt": "2026-06-11",
+      "operator": "PKRTrainer synthetic fixture",
+      "gameVariant": "MTT",
+      "tableFormat": "FULL_RING_9",
+      "street": "TURN",
+      "evModel": "CHIP_EV",
+      "methodology": "Synthetic shape example only.",
+      "licenseNote": "Synthetic fixture; no real solver values."
+    },
+    {
+      "url": "https://example.test/synthetic-turn-review",
+      "verifiedAt": "2026-06-11",
+      "operator": "PKRTrainer synthetic review",
+      "gameVariant": "MTT",
+      "tableFormat": "FULL_RING_9",
+      "street": "TURN",
+      "evModel": "CHIP_EV",
+      "methodology": "Synthetic independent review example.",
+      "licenseNote": "Synthetic fixture review."
+    }
+  ],
+  "assumptions": [
+    "MTT FULL_RING_9 turn chipEV synthetic example.",
+    "Single rule shows schema shape only and is not production coverage."
+  ],
+  "rules": [
+    {
+      "id": "synthetic-turn-srp-btn-vs-bb-small-blank",
+      "actionNode": "TURN_BARREL",
+      "potType": "SINGLE_RAISED",
+      "positionPattern": "BTN_VS_BB",
+      "priorFlopAction": "BET_SMALL",
+      "turnCardClasses": ["BLANK", "LOW_BRICK"],
+      "sprMin": 2,
+      "sprMax": 10,
+      "actions": ["CHECK", "BET_SMALL", "BET_BIG"],
+      "recommendedAction": "BET_SMALL",
+      "rangeBuckets": [
+        {
+          "lane": "VALUE",
+          "label": "top pair+",
+          "action": "BET_SMALL",
+          "handClasses": ["AA", "AKs"],
+          "features": ["top pair+", "overpair"],
+          "actionMix": [
+            { "action": "BET_SMALL", "frequencyPct": 65, "visibility": "EXACT" },
+            { "action": "CHECK", "frequencyPct": 35, "visibility": "EXACT" }
+          ]
+        },
+        {
+          "lane": "BLUFF",
+          "label": "equity barrel",
+          "action": "BET_SMALL",
+          "handClasses": ["QJs", "JTs"],
+          "features": ["draw", "blocker"]
+        },
+        {
+          "lane": "CHECK",
+          "label": "showdown value",
+          "action": "CHECK",
+          "handClasses": ["72o", "83o"],
+          "features": ["weak showdown", "give-up"]
+        }
+      ],
+      "explanation": "Synthetic example rule with prior flop action, turn card class and range lanes."
+    }
+  ]
+}

@@ -9,9 +9,11 @@ import {
   FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS,
   FLOP_PRODUCTION_REQUIRED_POT_TYPES,
   FLOP_PRODUCTION_REQUIRED_RANGE_LANES,
+  FLOP_PRODUCTION_REQUIRED_SPR_BANDS,
   FLOP_PRODUCTION_REQUIRED_TEXTURES,
   buildFlopProductionCoverageReport,
   renderFlopProductionCoverageReport,
+  validateFlopProductionRule,
   validateFlopProductionStrategyPack,
   type FlopProductionStrategyPack,
   type FlopProductionStrategyRule,
@@ -69,6 +71,10 @@ function productionRule(
         handClasses: ["AA", "AKs"],
         features: ["top pair+", "overpair"],
         weightPct: 45,
+        actionMix: [
+          { action: "BET_SMALL", frequencyPct: 70, visibility: "EXACT" },
+          { action: "CHECK", frequencyPct: 30, visibility: "EXACT" },
+        ],
       },
       {
         lane: "BLUFF",
@@ -112,8 +118,10 @@ function productionPack(): FlopProductionStrategyPack {
     dimensions: {
       gameVariant: "MTT",
       tableFormat: "FULL_RING_9",
+      blindSpeeds: ["REGULAR", "TURBO"],
       street: "FLOP",
       evModel: "CHIP_EV",
+      antes: ["ON", "OFF"],
     },
     sourceEvidence,
     assumptions: [
@@ -134,17 +142,28 @@ describe("flopProductionStrategyPack", () => {
     expect(coverage.potTypes).toEqual(FLOP_PRODUCTION_REQUIRED_POT_TYPES);
     expect(coverage.positionPatterns).toEqual(FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS);
     expect(coverage.boardTextures).toEqual(FLOP_PRODUCTION_REQUIRED_TEXTURES);
+    expect(coverage.sprBands).toEqual(FLOP_PRODUCTION_REQUIRED_SPR_BANDS);
     expect(coverage.rangeLanes).toEqual(FLOP_PRODUCTION_REQUIRED_RANGE_LANES);
     expect(coverage.missingPotTypes).toEqual([]);
     expect(coverage.missingPositionPatterns).toEqual([]);
     expect(coverage.missingBoardTextures).toEqual([]);
+    expect(coverage.missingSprBands).toEqual([]);
     expect(coverage.missingActionNodes).toEqual([]);
     expect(coverage.missingRangeLanes).toEqual([]);
     expect(renderFlopProductionCoverageReport(pack, coverage)).toContain(
       "productionReady: true",
     );
     expect(renderFlopProductionCoverageReport(pack, coverage)).toContain(
+      "SPR bands: LOW,MID,HIGH",
+    );
+    expect(renderFlopProductionCoverageReport(pack, coverage)).toContain(
       "missing pot types: none",
+    );
+    expect(renderFlopProductionCoverageReport(pack, coverage)).toContain(
+      "missing SPR bands: none",
+    );
+    expect(renderFlopProductionCoverageReport(pack, coverage)).toContain(
+      "range mix buckets:",
     );
   });
 
@@ -157,6 +176,8 @@ describe("flopProductionStrategyPack", () => {
       rules: [
         {
           ...productionRule("SINGLE_RAISED", "BTN_VS_BB", "dry"),
+          sprMin: 4,
+          sprMax: 7,
           actions: ["CHECK"],
           recommendedAction: "BET_SMALL",
           rangeBuckets: [
@@ -166,6 +187,10 @@ describe("flopProductionStrategyPack", () => {
               action: "BET_SMALL",
               handClasses: ["not-a-hand"],
               features: [],
+              actionMix: [
+                { action: "BET_BIG", frequencyPct: 80, visibility: "EXACT" },
+                { action: "BET_BIG", frequencyPct: 40, visibility: "EXACT" },
+              ],
             },
           ],
         },
@@ -186,6 +211,21 @@ describe("flopProductionStrategyPack", () => {
       "flop-single_raised-btn_vs_bb-dry: range bucket value uses an unavailable action.",
     );
     expect(errors).toContain(
+      "flop-single_raised-btn_vs_bb-dry: range bucket value actionMix duplicates BET_BIG.",
+    );
+    expect(errors).toContain(
+      "flop-single_raised-btn_vs_bb-dry: range bucket value actionMix uses an unavailable action.",
+    );
+    expect(errors).toContain(
+      "flop-single_raised-btn_vs_bb-dry: range bucket value actionMix must include the bucket action.",
+    );
+    expect(errors).toContain(
+      "flop-single_raised-btn_vs_bb-dry: range bucket value actionMix frequencies must sum to 100.",
+    );
+    expect(errors).toContain(
+      "flop-single_raised-btn_vs_bb-dry: range bucket value exact actionMix frequencies require owned export or explicit written permission.",
+    );
+    expect(errors).toContain(
       "flop-single_raised-btn_vs_bb-dry: range bucket value contains invalid hand not-a-hand.",
     );
     expect(errors).toContain("flop-single_raised-btn_vs_bb-dry: missing BLUFF range lane.");
@@ -198,9 +238,61 @@ describe("flopProductionStrategyPack", () => {
       "OOP_RAISER_VS_IP_CALLER",
       "OOP_CALLER_VS_IP_3BETTOR",
     ]);
+    expect(coverage.sprBands).toEqual(["MID"]);
+    expect(coverage.missingSprBands).toEqual(["LOW", "HIGH"]);
     expect(renderFlopProductionCoverageReport(pack, coverage)).toContain(
       "missing pot types: THREE_BET_POT",
     );
+    expect(renderFlopProductionCoverageReport(pack, coverage)).toContain(
+      "missing SPR bands: LOW,HIGH",
+    );
     expect(renderFlopProductionCoverageReport(pack, coverage)).toContain("errors:");
+  });
+
+  it("blokuje facing-bet akce v flop c-bet production nodu", () => {
+    const rule = {
+      ...productionRule("SINGLE_RAISED", "BTN_VS_BB", "dry"),
+      actions: ["CHECK", "BET_SMALL", "BET_BIG", "CALL"],
+      recommendedAction: "CALL",
+      rangeBuckets: [
+        {
+          ...productionRule("SINGLE_RAISED", "BTN_VS_BB", "dry").rangeBuckets[0],
+          action: "CALL",
+          actionMix: [
+            { action: "CALL", frequencyPct: 100, visibility: "EXACT" },
+          ],
+        },
+        ...productionRule("SINGLE_RAISED", "BTN_VS_BB", "dry").rangeBuckets.slice(1),
+      ],
+    } satisfies FlopProductionStrategyRule;
+
+    const errors = validateFlopProductionRule(rule, { exactFrequencyAllowed: true });
+
+    expect(errors).toContain(
+      "flop-single_raised-btn_vs_bb-dry: action CALL is not valid for SINGLE_RAISED_POT_CBET.",
+    );
+    expect(errors).toContain(
+      "flop-single_raised-btn_vs_bb-dry: recommendedAction CALL is not valid for SINGLE_RAISED_POT_CBET.",
+    );
+    expect(errors).toContain(
+      "flop-single_raised-btn_vs_bb-dry: range bucket value action CALL is not valid for SINGLE_RAISED_POT_CBET.",
+    );
+    expect(errors).toContain(
+      "flop-single_raised-btn_vs_bb-dry: range bucket value actionMix uses action CALL outside SINGLE_RAISED_POT_CBET.",
+    );
+  });
+
+  it("vyzaduje MTT gameVariant pro flop production pack", () => {
+    const pack = {
+      ...productionPack(),
+      dimensions: {
+        ...productionPack().dimensions,
+        gameVariant: "CASH",
+      },
+    } satisfies FlopProductionStrategyPack;
+
+    expect(validateFlopProductionStrategyPack(pack)).toContain(
+      "Flop production pack must use gameVariant MTT.",
+    );
   });
 });

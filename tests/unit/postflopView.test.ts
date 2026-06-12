@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { renderPostflopView } from "../../src/ui/postflopView";
+import type { PostflopStrategyResolver } from "../../src/core/postflopGenerator";
 
 describe("postflopView - DOM", () => {
   afterEach(() => {
@@ -227,6 +228,112 @@ describe("postflopView - DOM", () => {
     expect(result?.textContent ?? "").not.toMatch(/[ĂĹÄŤĹˇĹľ]|mal[yý]|velk[yý]|stredni|slabsi|silne/i);
   });
 
+  it("zobrazi mixed-action feedback pro hero production bucket bez source citaci", () => {
+    const resolver: PostflopStrategyResolver = (input) => ({
+      action: "BET_SMALL",
+      explanation: "Range bucket fixture prefers a small bet with a protected check mix.",
+      source: {
+        kind: "STRATEGY_PACK",
+        packId: "internal-test-pack",
+        packVersion: "v1",
+        packVerifiedAt: "2026-06-11",
+        ruleId: "internal-test-rule",
+        confidence: "HIGH",
+        matchedTextures: input.textures,
+        sprMin: 2,
+        sprMax: 12,
+        positionPattern: input.positionPattern,
+        sourceUrls: ["https://example.test/source"],
+        assumptions: ["Mixed action fixture."],
+        selectionScore: 150,
+        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        heroRangeBucket: {
+          lane: "VALUE",
+          label: "top pair value",
+          action: "BET_SMALL",
+          handClass: input.heroHand ?? "AKo",
+          features: ["top pair", "range advantage"],
+          actionMix: [
+            { action: "BET_SMALL", frequencyPct: 70, visibility: "EXACT" },
+            { action: "CHECK", frequencyPct: 30, visibility: "EXACT" },
+          ],
+        },
+      },
+    });
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: resolver,
+    });
+
+    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
+
+    const heroBucket = root.querySelector<HTMLElement>(".postflop-range-summary__hero-bucket");
+    expect(heroBucket).not.toBeNull();
+    expect(heroBucket?.dataset.rangeBucketLane).toBe("VALUE");
+    expect(heroBucket?.dataset.rangeBucketAction).toBe("BET_SMALL");
+    expect(heroBucket?.dataset.rangeBucketMixed).toBe("true");
+    expect(heroBucket?.textContent).toContain("Mixed action: Bet small 70% / Check 30%.");
+    expect(heroBucket?.textContent).toContain("Your action is part of this bucket mix.");
+    expect(heroBucket?.textContent).toContain("Key features: top pair, range advantage.");
+    expect(heroBucket?.textContent).not.toContain("internal-test-pack");
+    expect(heroBucket?.textContent).not.toContain("internal-test-rule");
+    expect(heroBucket?.textContent).not.toContain("https://");
+  });
+
+  it("skryje exact frequency hodnoty pro kvalitativni mixed-action bucket", () => {
+    const resolver: PostflopStrategyResolver = (input) => ({
+      action: "BET_SMALL",
+      explanation: "Qualitative mix fixture.",
+      source: {
+        kind: "STRATEGY_PACK",
+        packId: "internal-qual-pack",
+        packVersion: "v1",
+        packVerifiedAt: "2026-06-11",
+        ruleId: "internal-qual-rule",
+        confidence: "MEDIUM",
+        matchedTextures: input.textures,
+        sprMin: 2,
+        sprMax: 12,
+        positionPattern: input.positionPattern,
+        sourceUrls: [],
+        assumptions: ["Qualitative mixed action fixture."],
+        selectionScore: 120,
+        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        heroRangeBucket: {
+          lane: "BLUFF",
+          label: "backdoor bluff",
+          action: "BET_SMALL",
+          handClass: input.heroHand ?? "QJs",
+          features: ["backdoor equity"],
+          actionMix: [
+            { action: "BET_SMALL", frequencyPct: 70, visibility: "QUALITATIVE" },
+            { action: "CHECK", frequencyPct: 30, visibility: "QUALITATIVE" },
+          ],
+        },
+      },
+    });
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 9,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: resolver,
+    });
+
+    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="BET_SMALL"]')?.click();
+
+    const heroBucket = root.querySelector<HTMLElement>(".postflop-range-summary__hero-bucket");
+    expect(heroBucket?.textContent).toContain("Mixed action: Bet small / Check.");
+    expect(heroBucket?.textContent).toContain("Exact frequencies are hidden for this bucket.");
+    expect(heroBucket?.textContent).not.toContain("70%");
+    expect(heroBucket?.textContent).not.toContain("30%");
+    expect(heroBucket?.textContent).not.toContain("internal-qual-pack");
+    expect(heroBucket?.textContent).not.toContain("internal-qual-rule");
+  });
+
   it("umi filtrovat Flopzilla matrix podle value/bluff/check lane", () => {
     const root = document.createElement("div");
     renderPostflopView(root, { initialSeed: 42, initialStreet: "FLOP", autoGenerate: true });
@@ -383,6 +490,70 @@ describe("postflopView - DOM", () => {
       .toContain("Baseline heuristic");
     expect(root.querySelector<HTMLElement>(".postflop-result")?.textContent)
       .not.toContain("https://");
+  });
+
+  it("umi projit celou postflop hand line flop-turn-river", () => {
+    const root = document.createElement("div");
+    const singleStreetAnswers: string[] = [];
+    const completedLines: Array<{
+      streets: string[];
+      chosenStreets: string[];
+      startedAt: number;
+      completedAt: number;
+    }> = [];
+
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: "FLOP",
+      onAnswered: (spot, chosen) => singleStreetAnswers.push(`${spot.street}:${chosen}`),
+      onLineCompleted: (line, chosenByStreet, startedAt, completedAt) => {
+        completedLines.push({
+          streets: line.streets.map((street) => street.street),
+          chosenStreets: Object.keys(chosenByStreet).sort(),
+          startedAt,
+          completedAt,
+        });
+      },
+    });
+
+    root.querySelector<HTMLSelectElement>(".postflop-mode")!.value = "line";
+    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+
+    expect(root.querySelector<HTMLElement>(".postflop-question-title")?.textContent)
+      .toBe("Hand line 1/3");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.mode).toBe("line");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("FLOP");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.streetIndex).toBe("0");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.streetTotal).toBe("3");
+
+    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    expect(singleStreetAnswers).toHaveLength(0);
+    expect(root.querySelector<HTMLButtonElement>(".postflop-line-next")?.textContent)
+      .toBe("Next Turn");
+
+    root.querySelector<HTMLButtonElement>(".postflop-line-next")?.click();
+    expect(root.querySelector<HTMLElement>(".postflop-question-title")?.textContent)
+      .toBe("Hand line 2/3");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("TURN");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.streetIndex).toBe("1");
+    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    expect(root.querySelector<HTMLButtonElement>(".postflop-line-next")?.textContent)
+      .toBe("Next River");
+
+    root.querySelector<HTMLButtonElement>(".postflop-line-next")?.click();
+    expect(root.querySelector<HTMLElement>(".postflop-question-title")?.textContent)
+      .toBe("Hand line 3/3");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("RIVER");
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.streetIndex).toBe("2");
+    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+
+    const complete = root.querySelector<HTMLElement>(".postflop-line-complete");
+    expect(complete?.textContent).toMatch(/^Hand line complete: \d\/3 streets\.$/);
+    expect(complete?.dataset.totalStreets).toBe("3");
+    expect(completedLines).toHaveLength(1);
+    expect(completedLines[0].streets).toEqual(["FLOP", "TURN", "RIVER"]);
+    expect(completedLines[0].chosenStreets).toEqual(["FLOP", "RIVER", "TURN"]);
+    expect(completedLines[0].completedAt).toBeGreaterThanOrEqual(completedLines[0].startedAt);
   });
 
   it("umi zobrazit source-free model detail pro river pressure spot", () => {

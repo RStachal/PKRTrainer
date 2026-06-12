@@ -5,17 +5,33 @@ import {
   type FlopProductionStrategyPack,
 } from "../src/data/ranges/flopProductionStrategyPack.ts";
 import {
+  buildTurnProductionCoverageReport,
+  renderTurnProductionCoverageReport,
+  type TurnProductionStrategyPack,
+} from "../src/data/ranges/turnProductionStrategyPack.ts";
+import {
+  buildRiverProductionCoverageReport,
+  renderRiverProductionCoverageReport,
+  type RiverProductionStrategyPack,
+} from "../src/data/ranges/riverProductionStrategyPack.ts";
+import {
   buildMttPreflopImportReadinessReport,
   renderMttPreflopImportReadinessReport,
   type MttPreflopRangePackImportInput,
 } from "../src/data/ranges/mttPreflopRangePackImport.ts";
+import {
+  buildMttPostflopImportSlotValidationReport,
+  buildMttPreflopImportSlotValidationReport,
+  renderMttImportSlotValidationReport,
+} from "../src/data/ranges/mttImportSlotValidation.ts";
+import type { MttPostflopProductionPack } from "../src/data/ranges/mttPostflopImportSlots.ts";
 import {
   buildProductionPermissionManifestReport,
   renderProductionPermissionManifestReport,
   type ProductionPermissionManifest,
 } from "../src/data/ranges/productionPermissionManifest.ts";
 
-type ImportKind = "mtt-preflop" | "flop-production";
+type ImportKind = "mtt-preflop" | "flop-production" | "turn-production" | "river-production";
 
 interface CliArgs {
   kind: ImportKind;
@@ -28,6 +44,8 @@ function usage(): string {
     "Usage:",
     "  npm run validate:range-import -- --kind=mtt-preflop <input.json>",
     "  npm run validate:range-import -- --kind=flop-production <input.json>",
+    "  npm run validate:range-import -- --kind=turn-production <input.json>",
+    "  npm run validate:range-import -- --kind=river-production <input.json>",
     "  npm run validate:range-import -- --kind=mtt-preflop --permission-manifest <manifest.json> <input.json>",
   ].join("\n");
 }
@@ -69,7 +87,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
 }
 
 function parseKind(value: string | undefined): ImportKind {
-  if (value === "mtt-preflop" || value === "flop-production") return value;
+  if (
+    value === "mtt-preflop" ||
+    value === "flop-production" ||
+    value === "turn-production" ||
+    value === "river-production"
+  ) return value;
   throw new Error(`Unsupported --kind value: ${value ?? ""}\n\n${usage()}`);
 }
 
@@ -96,15 +119,59 @@ function run(): void {
         licenseKind: typedInput.licenseKind,
       },
     );
+    const slotReport = buildMttPreflopImportSlotValidationReport(typedInput);
     console.log(renderMttPreflopImportReadinessReport(report));
     console.log("");
+    console.log(renderMttImportSlotValidationReport(slotReport));
+    console.log("");
     console.log(renderProductionPermissionManifestReport(permissionReport));
-    process.exitCode = report.productionReady && permissionReport.valid ? 0 : 1;
+    process.exitCode = report.productionReady && slotReport.valid && permissionReport.valid ? 0 : 1;
     return;
   }
 
-  const pack = input as FlopProductionStrategyPack;
-  const report = buildFlopProductionCoverageReport(pack);
+  if (args.kind === "flop-production") {
+    const pack = input as FlopProductionStrategyPack;
+    const report = buildFlopProductionCoverageReport(pack);
+    const slotReport = buildPostflopLegalSlotReport(pack);
+    const permissionReport = buildProductionPermissionManifestReport(
+      permissionManifest,
+      {
+        packId: pack.id,
+        licenseKind: pack.licenseKind,
+      },
+    );
+    console.log(renderFlopProductionCoverageReport(pack, report));
+    console.log("");
+    console.log(renderMttImportSlotValidationReport(slotReport));
+    console.log("");
+    console.log(renderProductionPermissionManifestReport(permissionReport));
+    process.exitCode = report.productionReady && slotReport.valid && permissionReport.valid ? 0 : 1;
+    return;
+  }
+
+  if (args.kind === "turn-production") {
+    const pack = input as TurnProductionStrategyPack;
+    const report = buildTurnProductionCoverageReport(pack);
+    const slotReport = buildPostflopLegalSlotReport(pack);
+    const permissionReport = buildProductionPermissionManifestReport(
+      permissionManifest,
+      {
+        packId: pack.id,
+        licenseKind: pack.licenseKind,
+      },
+    );
+    console.log(renderTurnProductionCoverageReport(pack, report));
+    console.log("");
+    console.log(renderMttImportSlotValidationReport(slotReport));
+    console.log("");
+    console.log(renderProductionPermissionManifestReport(permissionReport));
+    process.exitCode = report.productionReady && slotReport.valid && permissionReport.valid ? 0 : 1;
+    return;
+  }
+
+  const pack = input as RiverProductionStrategyPack;
+  const report = buildRiverProductionCoverageReport(pack);
+  const slotReport = buildPostflopLegalSlotReport(pack);
   const permissionReport = buildProductionPermissionManifestReport(
     permissionManifest,
     {
@@ -112,10 +179,16 @@ function run(): void {
       licenseKind: pack.licenseKind,
     },
   );
-  console.log(renderFlopProductionCoverageReport(pack, report));
+  console.log(renderRiverProductionCoverageReport(pack, report));
+  console.log("");
+  console.log(renderMttImportSlotValidationReport(slotReport));
   console.log("");
   console.log(renderProductionPermissionManifestReport(permissionReport));
-  process.exitCode = report.productionReady && permissionReport.valid ? 0 : 1;
+  process.exitCode = report.productionReady && slotReport.valid && permissionReport.valid ? 0 : 1;
+}
+
+function buildPostflopLegalSlotReport(pack: MttPostflopProductionPack) {
+  return buildMttPostflopImportSlotValidationReport(pack);
 }
 
 try {

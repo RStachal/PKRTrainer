@@ -6,6 +6,7 @@ import type {
   PostflopRecommendationSource,
   PostflopStreet,
 } from "../core/postflopGenerator";
+import { POSTFLOP_ACTIONS } from "../core/postflopGenerator";
 import type {
   PostflopActionNode,
   PostflopTrainingSpot,
@@ -174,6 +175,7 @@ export function isPostflopResultRecord(value: unknown): value is PostflopResultR
     typeof record.qid === "string" &&
     isPostflopAction(record.chosen) &&
     isPostflopAction(record.recommended) &&
+    areActionsCompatibleWithNode(record.actionNode, record.chosen, record.recommended) &&
     typeof record.correct === "boolean" &&
     isPostflopStreet(record.street) &&
     isPostflopActionNode(record.actionNode) &&
@@ -225,6 +227,7 @@ export function isPostflopStatsV2BridgeRecord(
     isPostflopPositionPattern(record.positionPattern) &&
     isPostflopAction(record.chosen) &&
     isPostflopAction(record.recommended) &&
+    areActionsCompatibleWithNode(record.actionNode, record.chosen, record.recommended) &&
     (typeof record.strategyPackId === "string" || record.strategyPackId === null) &&
     typeof record.strategyRuleId === "string" &&
     (record.confidence === "LOW" ||
@@ -317,7 +320,31 @@ function isOptionalSchemaVersion(value: unknown): boolean {
 }
 
 function isPostflopAction(value: unknown): value is PostflopAction {
-  return value === "CHECK" || value === "BET_SMALL" || value === "BET_BIG";
+  return typeof value === "string" && POSTFLOP_ACTIONS.includes(value as PostflopAction);
+}
+
+function areActionsCompatibleWithNode(
+  node: PostflopActionNode | undefined,
+  ...actions: readonly (PostflopAction | undefined)[]
+): boolean {
+  if (!isPostflopActionNode(node)) return false;
+  return actions.every((action) => (
+    action !== undefined && actionsForNode(node).includes(action)
+  ));
+}
+
+function actionsForNode(node: PostflopActionNode): readonly PostflopAction[] {
+  switch (node) {
+    case "FLOP_FACING_BET":
+    case "TURN_FACING_BET":
+    case "RIVER_FACING_BET":
+      return ["FOLD", "CALL", "RAISE"];
+    case "SINGLE_RAISED_POT_CBET":
+    case "THREE_BET_POT_CBET":
+    case "TURN_BARREL":
+    case "RIVER_PRESSURE":
+      return ["CHECK", "BET_SMALL", "BET_BIG"];
+  }
 }
 
 function isPostflopStreet(value: unknown): value is PostflopStreet {
@@ -328,8 +355,11 @@ function isPostflopActionNode(value: unknown): value is PostflopActionNode {
   return (
     value === "SINGLE_RAISED_POT_CBET" ||
     value === "THREE_BET_POT_CBET" ||
+    value === "FLOP_FACING_BET" ||
     value === "TURN_BARREL" ||
-    value === "RIVER_PRESSURE"
+    value === "TURN_FACING_BET" ||
+    value === "RIVER_PRESSURE" ||
+    value === "RIVER_FACING_BET"
   );
 }
 

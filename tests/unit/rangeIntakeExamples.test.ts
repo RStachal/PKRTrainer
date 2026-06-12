@@ -11,6 +11,14 @@ import {
   type MttPreflopRangePackImportInput,
 } from "../../src/data/ranges/mttPreflopRangePackImport";
 import {
+  buildTurnProductionCoverageReport,
+  type TurnProductionStrategyPack,
+} from "../../src/data/ranges/turnProductionStrategyPack";
+import {
+  buildRiverProductionCoverageReport,
+  type RiverProductionStrategyPack,
+} from "../../src/data/ranges/riverProductionStrategyPack";
+import {
   buildProductionPermissionManifestReport,
   renderProductionPermissionManifestReport,
   type ProductionPermissionManifest,
@@ -44,6 +52,37 @@ describe("range intake examples", () => {
     expect(report.productionReady).toBe(false);
     expect(report.missingPotTypes).toEqual(["THREE_BET_POT"]);
     expect(report.missingPositionPatterns).toContain("EP_VS_BB");
+    expect(report.missingRangeLanes).toEqual([]);
+  });
+
+  it("drzi turn priklad jako validni shape-only import bez production coverage", () => {
+    const pack = readExample<TurnProductionStrategyPack>(
+      "Agents/range-intake/examples/turn-production-minimal.synthetic.json",
+    );
+    const report = buildTurnProductionCoverageReport(pack);
+
+    expect(pack.licenseNote).toContain("Synthetic shape example only");
+    expect(report.errors).toEqual([]);
+    expect(report.productionReady).toBe(false);
+    expect(report.missingPotTypes).toEqual(["THREE_BET_POT"]);
+    expect(report.missingPriorFlopActions).toEqual(["CHECK", "BET_BIG"]);
+    expect(report.missingTurnCardClasses).toContain("DYNAMIC");
+    expect(report.missingRangeLanes).toEqual([]);
+  });
+
+  it("drzi river priklad jako validni shape-only import bez production coverage", () => {
+    const pack = readExample<RiverProductionStrategyPack>(
+      "Agents/range-intake/examples/river-production-minimal.synthetic.json",
+    );
+    const report = buildRiverProductionCoverageReport(pack);
+
+    expect(pack.licenseNote).toContain("Synthetic shape example only");
+    expect(report.errors).toEqual([]);
+    expect(report.productionReady).toBe(false);
+    expect(report.missingPotTypes).toEqual(["THREE_BET_POT"]);
+    expect(report.missingPriorTurnActions).toEqual(["CHECK", "BET_BIG"]);
+    expect(report.missingRiverRunoutClasses).toContain("DYNAMIC");
+    expect(report.missingBlockerRelevance).toEqual(["MEDIUM"]);
     expect(report.missingRangeLanes).toEqual([]);
   });
 

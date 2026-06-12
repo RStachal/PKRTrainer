@@ -1,0 +1,87 @@
+{
+  "id": "example-river-production-synthetic-v1",
+  "version": "synthetic-shape-v1",
+  "createdAt": "2026-06-11",
+  "verifiedAt": "2026-06-11",
+  "confidence": "MEDIUM",
+  "licenseKind": "OWNED_SOLVER_EXPORT",
+  "licenseNote": "Synthetic shape example only; not poker advice and not a production range.",
+  "dimensions": {
+    "gameVariant": "MTT",
+    "tableFormat": "FULL_RING_9",
+    "blindSpeeds": ["REGULAR", "TURBO"],
+    "street": "RIVER",
+    "evModel": "CHIP_EV",
+    "antes": ["ON", "OFF"]
+  },
+  "sourceEvidence": [
+    {
+      "url": "https://example.test/synthetic-river-owned-export",
+      "verifiedAt": "2026-06-11",
+      "operator": "PKRTrainer Synthetic",
+      "gameVariant": "MTT",
+      "tableFormat": "FULL_RING_9",
+      "street": "RIVER",
+      "evModel": "CHIP_EV",
+      "methodology": "Synthetic shape-only fixture.",
+      "licenseNote": "Synthetic example; no third-party chart values copied."
+    },
+    {
+      "url": "https://example.test/synthetic-river-review",
+      "verifiedAt": "2026-06-11",
+      "operator": "PKRTrainer Review",
+      "gameVariant": "MTT",
+      "tableFormat": "FULL_RING_9",
+      "street": "RIVER",
+      "evModel": "CHIP_EV",
+      "methodology": "Independent synthetic shape review.",
+      "licenseNote": "Synthetic example only."
+    }
+  ],
+  "assumptions": [
+    "Synthetic shape example only.",
+    "Covers one river pressure node and intentionally misses production coverage."
+  ],
+  "rules": [
+    {
+      "id": "example-river-srp-btn-bb-blank",
+      "actionNode": "RIVER_PRESSURE",
+      "potType": "SINGLE_RAISED",
+      "positionPattern": "BTN_VS_BB",
+      "priorTurnAction": "BET_SMALL",
+      "riverRunoutClasses": ["BLANK"],
+      "blockerRelevance": "HIGH",
+      "sprMin": 1,
+      "sprMax": 8,
+      "actions": ["CHECK", "BET_SMALL", "BET_BIG"],
+      "recommendedAction": "BET_BIG",
+      "rangeBuckets": [
+        {
+          "lane": "VALUE",
+          "label": "value",
+          "action": "BET_BIG",
+          "handClasses": ["AA"],
+          "features": ["top value"],
+          "blockerRelevance": "LOW"
+        },
+        {
+          "lane": "BLUFF",
+          "label": "blocker bluff",
+          "action": "BET_BIG",
+          "handClasses": ["QJs"],
+          "features": ["blocker candidate"],
+          "blockerRelevance": "HIGH"
+        },
+        {
+          "lane": "CHECK",
+          "label": "showdown",
+          "action": "CHECK",
+          "handClasses": ["72o"],
+          "features": ["give up"],
+          "blockerRelevance": "LOW"
+        }
+      ],
+      "explanation": "Synthetic river shape-only fixture."
+    }
+  ]
+}

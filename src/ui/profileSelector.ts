@@ -1,5 +1,6 @@
 import {
   DEFAULT_TRAINING_PROFILE,
+  evModelLabel,
   isPostflopStreet,
   type BlindSpeed,
   type EvModel,
@@ -9,7 +10,7 @@ import {
   type TrainingProfile,
   type TrainingStreet,
 } from "../core/trainingProfile";
-import { mttPreflopReadinessRowForTrainingProfile } from "../data/ranges/mttProductionReadiness";
+import { mttCompletionReadinessRowForTrainingProfile } from "../data/ranges/mttProductionReadiness";
 import { rangePackForTrainingProfile } from "../data/ranges/trainingRangePacks";
 
 export interface ProfileSelectorView {
@@ -49,6 +50,7 @@ const STREETS: { value: TrainingStreet; label: string }[] = [
 
 const EV_MODELS: { value: EvModel; label: string }[] = [
   { value: "CHIP_EV", label: "chipEV" },
+  { value: "DOLAR_EV", label: "$EV" },
   { value: "ICM", label: "ICM" },
 ];
 
@@ -170,7 +172,7 @@ function describeProfileStatus(profile: TrainingProfile): {
     };
   }
 
-  const mttReadiness = mttPreflopReadinessRowForTrainingProfile(profile);
+  const mttReadiness = mttCompletionReadinessRowForTrainingProfile(profile);
   if (mttReadiness) {
     const label = mttPreflopProfileLabel(profile);
     if (mttReadiness.status === "PRODUCTION") {
@@ -207,7 +209,7 @@ function describeProfileStatus(profile: TrainingProfile): {
 
   return {
     status: "preview",
-    text: "Preview: this combination does not have production scoring enabled yet.",
+    text: `${candidateProfileLabel(profile)}. Production scoring is disabled.`,
   };
 }
 
@@ -218,19 +220,15 @@ function candidateProfileLabel(profile: TrainingProfile): string {
   if (profile.gameVariant === "CASH") {
     return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "no rake"} preview`;
   }
-  return `${tableFormatLabel(profile.tableFormat)} ${profile.gameVariant} preflop preview`;
+  return `${profile.gameVariant} ${tableFormatLabel(profile.tableFormat)} preflop ${evModelLabel(profile.evModel)} preview`;
 }
 
 function tableFormatLabel(format: TableFormat): string {
   return format === "FULL_RING_9" ? "9-max" : "6-max";
 }
 
-function evModelLabel(model: EvModel): string {
-  return model === "CHIP_EV" ? "chipEV" : "ICM";
-}
-
 function mttPreflopProfileLabel(profile: TrainingProfile): string {
-  return `MTT ${tableFormatLabel(profile.tableFormat)} ${blindSpeedLabel(profile.blindSpeed)} preflop chipEV`;
+  return `MTT ${tableFormatLabel(profile.tableFormat)} ${blindSpeedLabel(profile.blindSpeed)} preflop ${evModelLabel(profile.evModel)}`;
 }
 
 function blindSpeedLabel(speed: BlindSpeed): string {

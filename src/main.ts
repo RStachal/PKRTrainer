@@ -44,6 +44,7 @@ import type {
 } from "./core/types";
 import {
   DEFAULT_TRAINING_PROFILE,
+  evModelLabel,
   isPostflopStreet,
   type TrainingProfile,
 } from "./core/trainingProfile";
@@ -56,11 +57,14 @@ import { getRangeDataErrors, isRangeDataLoaded } from "./data/ranges";
 import { hasNewState, runMigration, type MigrationResult } from "./persistence/migration";
 import { createStatsStore, type ResultRecord, type StatsStore } from "./persistence/statsStore";
 import { KEY_EVENTS, KEY_STATE, SCHEMA_VERSION } from "./persistence/keys";
+import { createHHReviewStore } from "./persistence/hhReviewStore";
 import {
   bridgePostflopResultRecordToStatsV2,
   buildPostflopResultRecord,
 } from "./persistence/postflopResultRecord";
 import { createPostflopStatsStore } from "./persistence/postflopStatsStore";
+import { createPostflopLineStatsStore } from "./persistence/postflopLineStatsStore";
+import { buildPostflopLineResultRecord } from "./persistence/postflopLineResultRecord";
 import {
   mttPreflopProductionReadyForTrainingProfile,
   mttPreflopReadinessRowForTrainingProfile,
@@ -310,6 +314,8 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
 
   const statsStore = createStatsStore(storage);
   const postflopStatsStore = createPostflopStatsStore(storage);
+  const postflopLineStatsStore = createPostflopLineStatsStore(storage);
+  const hhReviewStore = createHHReviewStore(storage);
 
   // Statistiky (dashboard) a HH import jsou dostupnĂ© nezĂˇvisle na Range_Store.
   let sessionCount = 0;
@@ -320,6 +326,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       store: statsStore,
       sessionCount,
       postflopRecords: postflopStatsStore.events(),
+      postflopLineRecords: postflopLineStatsStore.events(),
       onStartPreflopFocus: (filters) => {
         shell.selectTab("training");
         startPreflopFocusSession?.(filters);
@@ -330,6 +337,16 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
           showNotice(
             shell.notice,
             "Postflop records could not be saved. The preflop stats export remains intact.",
+          );
+        }
+        return save.ok;
+      },
+      onPostflopLineRecordsImported: (records) => {
+        const save = postflopLineStatsStore.replaceAll(records);
+        if (!save.ok) {
+          showNotice(
+            shell.notice,
+            "Postflop line records could not be saved. The preflop stats export remains intact.",
           );
         }
         return save.ok;
@@ -369,10 +386,38 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
         sessionCount += 1;
         refreshDashboard();
       },
+      onLineCompleted: (line, chosenByStreet, startedAt, completedAt) => {
+        const record = buildPostflopLineResultRecord(line, {
+          profile: currentPostflopProfile,
+          chosenByStreet,
+          startedAt,
+          completedAt,
+        });
+        const save = postflopLineStatsStore.record(record);
+        if (!save.ok) {
+          showNotice(
+            shell.notice,
+            "The postflop hand line could not be saved to local storage.",
+          );
+        }
+        sessionCount += 1;
+        refreshDashboard();
+      },
     });
   };
   refreshDashboard();
-  renderHHView(shell.hhPanel);
+  renderHHView(shell.hhPanel, {
+    onReviewBuilt: (records) => {
+      const save = hhReviewStore.replaceAll(hhReviewStore.events().concat(records));
+      if (!save.ok) {
+        showNotice(
+          shell.notice,
+          "The HH review could not be saved. Drill statistics were not changed.",
+        );
+      }
+      return save.ok;
+    },
+  });
   renderPostflopPanel();
 
   // --- Krok 3: filtry + trĂ©ninkovĂˇ smyÄŤka (Req 13.4) ---
@@ -557,12 +602,12 @@ function isProductionPreflopProfile(profile: TrainingProfile, filters: Filters):
 
 function candidateProfileLabel(profile: TrainingProfile): string {
   if (profile.gameVariant === "SNG") {
-    return `SNG ${profile.evModel === "CHIP_EV" ? "chipEV" : "ICM"} preview`;
+    return `SNG ${evModelLabel(profile.evModel)} preview`;
   }
   if (profile.gameVariant === "CASH") {
     return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "no rake"} preview`;
   }
-  return `${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} ${profile.gameVariant} preflop preview`;
+  return `${profile.gameVariant} ${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} preflop ${evModelLabel(profile.evModel)} preview`;
 }
 
 function profileGateMessage(profile: TrainingProfile, filters: Filters): string {
@@ -604,7 +649,7 @@ function logRangeLoadFailure(): void {
 
 function mttPreflopProfileLabel(profile: TrainingProfile): string {
   return `MTT ${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} ` +
-    `${profile.blindSpeed === "REGULAR" ? "regular" : "turbo"} preflop chipEV`;
+    `${profile.blindSpeed === "REGULAR" ? "regular" : "turbo"} preflop ${evModelLabel(profile.evModel)}`;
 }
 
 /**

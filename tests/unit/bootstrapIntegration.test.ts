@@ -1,7 +1,7 @@
 ﻿// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { KEY_EVENTS, KEY_POSTFLOP_EVENTS } from "../../src/persistence/keys";
+import { KEY_EVENTS, KEY_HH_REVIEWS, KEY_POSTFLOP_EVENTS } from "../../src/persistence/keys";
 
 vi.setConfig({ testTimeout: 15000 });
 
@@ -47,6 +47,30 @@ class QuotaAfterBootstrapStorage extends MemoryStorage {
     super.setItem(key, value);
   }
 }
+
+const validFlopHh = [
+  "PokerStars Hand #2: Tournament #1, 10/20",
+  "Table 'Test' 9-max Seat #8 is the button",
+  "Seat 1: Villain1 (1000 in chips)",
+  "Seat 2: Villain2 (1000 in chips)",
+  "Seat 3: Villain3 (1000 in chips)",
+  "Seat 4: Villain4 (1000 in chips)",
+  "Seat 5: Villain5 (1000 in chips)",
+  "Seat 6: Villain6 (1000 in chips)",
+  "Seat 7: Villain7 (1000 in chips)",
+  "Seat 8: Hero (1000 in chips)",
+  "Seat 9: Villain9 (1000 in chips)",
+  "Villain9: posts small blind 10",
+  "Villain1: posts big blind 20",
+  "*** HOLE CARDS ***",
+  "Dealt to Hero [Ks Qs]",
+  "Hero: raises 40 to 60",
+  "Villain1: calls 40",
+  "*** FLOP *** [Ah 7d 2c]",
+  "Villain1: checks",
+  "Hero: bets 40",
+  "*** SUMMARY ***",
+].join("\n");
 
 describe("bootstrap - inicializacni tok", () => {
   afterEach(() => {
@@ -233,6 +257,67 @@ describe("bootstrap - inicializacni tok", () => {
     expect(warning?.textContent).toContain("could not be saved");
     expect(warning?.textContent).not.toMatch(/https?:|www\.|source|zdroj/i);
     expect(root.querySelector<HTMLElement>(".summary-total")?.dataset.total).toBe("0");
+  });
+
+  it("pri quota selhani postflop ulozeni pokracuje ve flow a zobrazi source-free notice", async () => {
+    const { bootstrap } = await importFreshMain();
+    const root = document.createElement("div");
+    const storage = new QuotaAfterBootstrapStorage();
+    document.body.appendChild(root);
+
+    bootstrap({ root, storage, registerSw: false });
+    const street = root.querySelector<HTMLSelectElement>(".profile-street");
+    street!.value = "FLOP";
+    street!.dispatchEvent(new Event("change"));
+    root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+
+    storage.failWrites = true;
+    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+
+    const notice = root.querySelector<HTMLElement>(".app__notice");
+    expect(root.querySelector<HTMLElement>(".postflop-result")).not.toBeNull();
+    expect(notice?.hidden).toBe(false);
+    expect(notice?.textContent).toContain("postflop answer could not be saved");
+    expect(notice?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|mtt-/i);
+    expect(root.querySelector<HTMLElement>(".dashboard-session-count")?.dataset.sessionCount)
+      .toBe("1");
+    expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("0");
+  });
+
+  it("uklada HH review oddelene od drill statistik", async () => {
+    const { bootstrap } = await importFreshMain();
+    const root = document.createElement("div");
+    const storage = new MemoryStorage();
+    document.body.appendChild(root);
+
+    bootstrap({ root, storage, registerSw: false });
+
+    const textarea = root.querySelector<HTMLTextAreaElement>(".hh-input");
+    textarea!.value = validFlopHh;
+    root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
+
+    const reviewRecords = JSON.parse(storage.getItem(KEY_HH_REVIEWS) ?? "[]") as Array<{
+      street: string;
+      savedToDrillStats: boolean;
+      board?: string[];
+    }>;
+    const preflopEvents = JSON.parse(storage.getItem(KEY_EVENTS) ?? "[]") as unknown[];
+    const postflopEvents = JSON.parse(storage.getItem(KEY_POSTFLOP_EVENTS) ?? "[]") as unknown[];
+
+    expect(reviewRecords).toHaveLength(2);
+    expect(reviewRecords[0]).toMatchObject({
+      street: "PREFLOP",
+      savedToDrillStats: false,
+    });
+    expect(reviewRecords[1]).toMatchObject({
+      street: "FLOP",
+      savedToDrillStats: false,
+      board: ["Ah", "7d", "2c"],
+    });
+    expect(preflopEvents).toEqual([]);
+    expect(postflopEvents).toEqual([]);
+    expect(root.querySelector<HTMLElement>(".summary-total")?.dataset.total).toBe("0");
+    expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("0");
   });
 
   it("postflop start respektuje vybrane pozice a kontext z filtru", async () => {

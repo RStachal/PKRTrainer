@@ -2,11 +2,17 @@ import {
   generatePostflopSpot,
   type BoardTexture,
   type PostflopAction,
+  type PostflopHeroRangeBucket,
   type PostflopPositionContext,
   type PostflopPotType,
   type PostflopSpot,
   type PostflopStreet,
+  type PostflopStrategyResolver,
 } from "../core/postflopGenerator";
+import {
+  generatePostflopLine,
+  type PostflopLine,
+} from "../core/postflopLineSimulator";
 import {
   postflopSpotToTrainingSpot,
   type PostflopTrainingSpot,
@@ -34,6 +40,13 @@ export interface PostflopViewOptions {
   initialPotBB?: number;
   initialEffectiveStackBB?: number;
   autoGenerate?: boolean;
+  strategyResolver?: PostflopStrategyResolver;
+  onLineCompleted?: (
+    line: PostflopLine,
+    chosenByStreet: Partial<Record<PostflopStreet, PostflopAction>>,
+    startedAt: number,
+    completedAt: number,
+  ) => void;
   onAnswered?: (
     spot: PostflopTrainingSpot,
     chosen: PostflopAction,
@@ -143,6 +156,23 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   seedLabel.appendChild(seedText);
   seedLabel.appendChild(seedInput);
 
+  const modeLabel = doc.createElement("label");
+  modeLabel.className = "postflop-field";
+  const modeText = doc.createElement("span");
+  modeText.textContent = "Mode";
+  const modeSelect = doc.createElement("select");
+  modeSelect.className = "postflop-mode";
+  const singleOption = doc.createElement("option");
+  singleOption.value = "single";
+  singleOption.textContent = "Single spot";
+  const lineOption = doc.createElement("option");
+  lineOption.value = "line";
+  lineOption.textContent = "Hand line";
+  modeSelect.appendChild(singleOption);
+  modeSelect.appendChild(lineOption);
+  modeLabel.appendChild(modeText);
+  modeLabel.appendChild(modeSelect);
+
   const generate = doc.createElement("button");
   generate.type = "button";
   generate.className = "postflop-generate";
@@ -150,6 +180,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
 
   controls.appendChild(streetLabel);
   controls.appendChild(seedLabel);
+  controls.appendChild(modeLabel);
   controls.appendChild(generate);
   wrap.appendChild(controls);
 
@@ -168,6 +199,24 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   const showNewSpot = (): void => {
     const seed = parseSeed(seedInput.value) ?? randomSeed();
     seedInput.value = String(seed);
+    if (modeSelect.value === "line") {
+      const line = generatePostflopLine({
+        seed,
+        potType: options.initialPotType,
+        potBB: options.initialPotBB,
+        effectiveStackBB: options.initialEffectiveStackBB,
+        positionContext: options.initialPositionContext ?? undefined,
+        strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
+      });
+      controls.hidden = true;
+      output.hidden = false;
+      renderLineSpot(output, line, 0, {}, Date.now(), options, {
+        onNewSpot: showNewSpot,
+        onChangeSituation: showSituationInput,
+      });
+      return;
+    }
+
     const street = parseStreet(streetSelect.value);
     const spot = generatePostflopSpot({
       seed,
@@ -176,7 +225,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       potBB: options.initialPotBB,
       effectiveStackBB: options.initialEffectiveStackBB,
       positionContext: options.initialPositionContext ?? undefined,
-      strategyResolver: POSTFLOP_STRATEGY_RESOLVER,
+      strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
     });
     controls.hidden = true;
     output.hidden = false;
@@ -193,6 +242,32 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   }
 }
 
+function renderLineSpot(
+  root: HTMLElement,
+  line: PostflopLine,
+  streetIndex: number,
+  chosenByStreet: Partial<Record<PostflopStreet, PostflopAction>>,
+  lineStartedAt: number,
+  options: PostflopViewOptions,
+  controls: {
+    onNewSpot: () => void;
+    onChangeSituation: () => void;
+  },
+): void {
+  const street = line.streets[streetIndex];
+  renderSpot(root, street.spot, {
+    ...options,
+    onAnswered: (spot, chosen) => {
+      chosenByStreet[spot.street] = chosen;
+      appendLineControls(root, line, streetIndex, chosenByStreet, lineStartedAt, options, controls);
+    },
+  }, controls, {
+    mode: "line",
+    streetIndex,
+    streetTotal: line.streets.length,
+  });
+}
+
 function renderSpot(
   root: HTMLElement,
   spot: PostflopSpot,
@@ -200,6 +275,11 @@ function renderSpot(
   controls: {
     onNewSpot: () => void;
     onChangeSituation: () => void;
+  },
+  lineMeta?: {
+    mode: "line";
+    streetIndex: number;
+    streetTotal: number;
   },
 ): void {
   const doc = root.ownerDocument ?? document;
@@ -210,7 +290,9 @@ function renderSpot(
   questionBar.className = "postflop-question-bar";
   const questionTitle = doc.createElement("div");
   questionTitle.className = "postflop-question-title";
-  questionTitle.textContent = "Question";
+  questionTitle.textContent = lineMeta
+    ? `Hand line ${lineMeta.streetIndex + 1}/${lineMeta.streetTotal}`
+    : "Question";
   const questionActions = doc.createElement("div");
   questionActions.className = "postflop-question-actions";
 
@@ -239,6 +321,11 @@ function renderSpot(
   meta.dataset.actionNode = trainingSpot.actionNode;
   meta.dataset.potType = trainingSpot.potType;
   meta.dataset.positionPattern = trainingSpot.positionPattern;
+  if (lineMeta) {
+    meta.dataset.mode = "line";
+    meta.dataset.streetIndex = String(lineMeta.streetIndex);
+    meta.dataset.streetTotal = String(lineMeta.streetTotal);
+  }
   meta.textContent =
     `${STREET_LABEL[spot.street]} - seed ${spot.seed} - ${POT_TYPE_LABEL[trainingSpot.potType]} - ` +
     `pot ${spot.potBB} BB - ` +
@@ -450,6 +537,35 @@ function betSizingVisual(spot: PostflopTrainingSpot): {
         ratio: 0.75,
       };
     }
+    case "RAISE": {
+      const betBB = roundedBetBB(spot.potBB * 0.75);
+      return {
+        ariaLabel: `Recommended raise pressure around ${betBB} BB`,
+        betBB,
+        chips: 4,
+        kind: "big",
+        label: `Raise ${betBB} BB`,
+        ratio: 0.75,
+      };
+    }
+    case "CALL":
+      return {
+        ariaLabel: "Recommended call",
+        betBB: 0,
+        chips: 1,
+        kind: "check",
+        label: "Call",
+        ratio: 0,
+      };
+    case "FOLD":
+      return {
+        ariaLabel: "Recommended fold",
+        betBB: 0,
+        chips: 0,
+        kind: "check",
+        label: "Fold",
+        ratio: 0,
+      };
     case "CHECK":
     default:
       return {
@@ -648,11 +764,64 @@ function showResult(
   const result = root.querySelector<HTMLElement>(".postflop-result");
   if (!result) return;
   const correct = chosen === spot.recommendedAction;
-  options.onAnswered?.(spot, chosen, elapsedMs(questionStartedAt));
   result.hidden = false;
   result.className = `postflop-result ${correct ? "postflop-result--correct" : "postflop-result--wrong"}`;
   renderPracticalExplanation(result, spot, correct, chosen);
+  options.onAnswered?.(spot, chosen, elapsedMs(questionStartedAt));
   focusElement(result);
+}
+
+function appendLineControls(
+  root: HTMLElement,
+  line: PostflopLine,
+  streetIndex: number,
+  chosenByStreet: Partial<Record<PostflopStreet, PostflopAction>>,
+  lineStartedAt: number,
+  options: PostflopViewOptions,
+  controls: {
+    onNewSpot: () => void;
+    onChangeSituation: () => void;
+  },
+): void {
+  const doc = root.ownerDocument ?? document;
+  const result = root.querySelector<HTMLElement>(".postflop-result");
+  if (!result) return;
+
+  const actions = doc.createElement("div");
+  actions.className = "postflop-line-actions";
+
+  if (streetIndex < line.streets.length - 1) {
+    const next = doc.createElement("button");
+    next.type = "button";
+    next.className = "postflop-line-next";
+    next.textContent = `Next ${STREET_LABEL[line.streets[streetIndex + 1].street]}`;
+    next.addEventListener("click", () => {
+      renderLineSpot(
+        root,
+        line,
+        streetIndex + 1,
+        { ...chosenByStreet },
+        lineStartedAt,
+        options,
+        controls,
+      );
+    });
+    actions.appendChild(next);
+  } else {
+    const completedAt = Date.now();
+    options.onLineCompleted?.(line, { ...chosenByStreet }, lineStartedAt, completedAt);
+    const done = doc.createElement("div");
+    done.className = "postflop-line-complete";
+    const correct = line.streets.filter((street) => (
+      chosenByStreet[street.street] === postflopSpotToTrainingSpot(street.spot).recommendedAction
+    )).length;
+    done.dataset.correctStreets = String(correct);
+    done.dataset.totalStreets = String(line.streets.length);
+    done.textContent = `Hand line complete: ${correct}/${line.streets.length} streets.`;
+    actions.appendChild(done);
+  }
+
+  result.appendChild(actions);
 }
 
 function renderPracticalExplanation(
@@ -752,7 +921,7 @@ function renderFlopRangeSummary(
   note.textContent = rangeFocusText(spot);
   section.appendChild(note);
 
-  section.appendChild(heroBucketInsight(doc, spot));
+  section.appendChild(heroBucketInsight(doc, spot, chosen));
 
   const lanes = doc.createElement("div");
   lanes.className = "postflop-range-summary__lanes";
@@ -770,11 +939,18 @@ function renderFlopRangeSummary(
   return section;
 }
 
-function heroBucketInsight(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
+function heroBucketInsight(
+  doc: Document,
+  spot: PostflopTrainingSpot,
+  chosen: PostflopAction,
+): HTMLElement {
   const heroHand = postflopHandClassFromCards(spot.heroCards);
   const heroCategory = classifyFlopHand(heroHand, spot.board);
   const heroCategoryLabel = flopzillaCategoryLabel(heroCategory);
   const heroLane = flopzillaLaneForCategory(heroCategory);
+  const sourceBucket = spot.explanation.source.kind === "STRATEGY_PACK"
+    ? spot.explanation.source.heroRangeBucket
+    : undefined;
 
   const insight = doc.createElement("div");
   insight.className = "postflop-range-summary__hero-bucket";
@@ -783,6 +959,12 @@ function heroBucketInsight(doc: Document, spot: PostflopTrainingSpot): HTMLEleme
   insight.dataset.heroCategoryLabel = heroCategoryLabel;
   insight.dataset.heroLane = heroLane;
   insight.dataset.heroLaneLabel = flopzillaLaneLabel(heroLane);
+  if (sourceBucket) {
+    insight.dataset.rangeBucketLane = sourceBucket.lane;
+    insight.dataset.rangeBucketAction = sourceBucket.action;
+    insight.dataset.rangeBucketLabel = sourceBucket.label;
+    insight.dataset.rangeBucketMixed = sourceBucket.actionMix ? "true" : "false";
+  }
 
   const label = doc.createElement("span");
   label.className = "postflop-range-summary__hero-bucket-label";
@@ -791,12 +973,49 @@ function heroBucketInsight(doc: Document, spot: PostflopTrainingSpot): HTMLEleme
 
   const text = doc.createElement("span");
   text.className = "postflop-range-summary__hero-bucket-text";
-  text.textContent =
-    `${heroHand} is ${heroCategoryLabel} on this flop, usually sitting in the ` +
-    `${flopzillaLaneLabel(heroLane).toLowerCase()} lane. Compare it against the value, bluff and check lanes.`;
+  text.textContent = sourceBucket
+    ? sourceBucketFeedback(heroHand, heroCategoryLabel, sourceBucket, chosen)
+    : `${heroHand} is ${heroCategoryLabel} on this flop, usually sitting in the ` +
+      `${flopzillaLaneLabel(heroLane).toLowerCase()} lane. Compare it against the value, bluff and check lanes.`;
   insight.appendChild(text);
 
   return insight;
+}
+
+function sourceBucketFeedback(
+  heroHand: string,
+  heroCategoryLabel: string,
+  bucket: PostflopHeroRangeBucket,
+  chosen: PostflopAction,
+): string {
+  const mix = bucket.actionMix;
+  const choiceText = mix?.some((item) => item.action === chosen)
+    ? "Your action is part of this bucket mix."
+    : chosen === bucket.action
+      ? "Your action matches the primary bucket action."
+      : `Your action is outside the primary ${actionLabel(bucket.action).toLowerCase()} bucket line.`;
+  const featureText = bucket.features.length > 0
+    ? ` Key features: ${bucket.features.join(", ")}.`
+    : "";
+  return `${heroHand} is ${heroCategoryLabel} in the ${bucket.label} range bucket. ` +
+    `Bucket lane: ${bucket.lane.toLowerCase()}. Primary action: ${actionLabel(bucket.action)}. ` +
+    `${actionMixText(bucket)} ${choiceText}${featureText}`;
+}
+
+function actionMixText(bucket: PostflopHeroRangeBucket): string {
+  const mix = bucket.actionMix;
+  if (!mix || mix.length === 0) return "No explicit mixed-action split is attached.";
+  const exact = mix.every((item) => item.visibility === "EXACT");
+  const items = mix.map((item) => (
+    exact ? `${actionLabel(item.action)} ${formatPct(item.frequencyPct)}` : actionLabel(item.action)
+  ));
+  return exact
+    ? `Mixed action: ${items.join(" / ")}.`
+    : `Mixed action: ${items.join(" / ")}. Exact frequencies are hidden for this bucket.`;
+}
+
+function formatPct(value: number): string {
+  return `${Math.round(value * 10) / 10}%`;
 }
 
 function rangeLane(
@@ -872,7 +1091,7 @@ function wireRangeLaneFilters(section: HTMLElement, matrixMount: HTMLElement): v
 
 function actionBelongsToLane(action: PostflopAction, laneAction: "BET" | "CHECK"): boolean {
   if (laneAction === "CHECK") return action === "CHECK";
-  return action === "BET_SMALL" || action === "BET_BIG";
+  return action === "BET_SMALL" || action === "BET_BIG" || action === "RAISE";
 }
 
 function rangeFocusText(spot: PostflopTrainingSpot): string {
@@ -881,6 +1100,12 @@ function rangeFocusText(spot: PostflopTrainingSpot): string {
       return "Small c-bet range mixes value with natural bluffs; check range keeps weaker showdown and traps.";
     case "BET_BIG":
       return "Large bet range is more polarized: strong value plus the best draws or blockers.";
+    case "CALL":
+      return "Call range keeps hands with enough equity, blockers or showdown value to continue.";
+    case "RAISE":
+      return "Raise range is polarized: strong value and blocker-heavy bluffs apply maximum pressure.";
+    case "FOLD":
+      return "Fold range drops hands without enough equity, blockers or pot odds to continue.";
     case "CHECK":
       return "Check protects equity realization: weaker showdown, pot-control and hands for check-call or check-back plans.";
   }
@@ -938,6 +1163,12 @@ function actionLabel(action: PostflopAction): string {
       return "Bet small";
     case "BET_BIG":
       return "Bet big";
+    case "CALL":
+      return "Call";
+    case "RAISE":
+      return "Raise";
+    case "FOLD":
+      return "Fold";
   }
 }
 
@@ -973,7 +1204,7 @@ function styles(doc: Document): HTMLStyleElement {
   padding:14px 16px;margin-bottom:16px;box-shadow:0 18px 44px rgba(0,0,0,.2);}
 .postflop-field{display:flex;flex-direction:column;gap:4px;font-size:12px;
   color:#9aa6c2;font-weight:700;}
-.postflop-street,.postflop-seed{box-sizing:border-box;min-width:130px;border:1px solid
+.postflop-street,.postflop-seed,.postflop-mode{box-sizing:border-box;min-width:130px;border:1px solid
   rgba(148,163,184,.28);border-radius:9px;background:#172033;color:#e8ecf7;
   font-size:14px;padding:9px 11px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
 .postflop-generate{appearance:none;border:0;border-radius:9px;
@@ -1118,6 +1349,14 @@ function styles(doc: Document): HTMLStyleElement {
 .postflop-result{margin-top:12px;border-radius:12px;padding:12px 14px;font-size:13px;
   font-weight:700;line-height:1.45;}
 .postflop-result__summary{margin:0 0 10px;overflow-wrap:anywhere;}
+.postflop-line-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;
+  border-top:1px solid rgba(255,255,255,.12);padding-top:10px;}
+.postflop-line-next{appearance:none;border:1px solid rgba(43,213,118,.48);border-radius:10px;
+  background:linear-gradient(180deg,#2bd576,#20bf69);color:#06120b;font-size:13px;
+  font-weight:950;padding:9px 13px;cursor:pointer;box-shadow:0 10px 20px rgba(43,213,118,.16),
+  inset 0 1px 0 rgba(255,255,255,.22);}
+.postflop-line-next:hover{filter:brightness(1.04);}
+.postflop-line-complete{font-size:13px;font-weight:950;color:#e8ecf7;}
 .postflop-practical{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
 .postflop-practical__block{border:1px solid rgba(255,255,255,.12);border-radius:8px;
   background:rgba(255,255,255,.04);padding:8px 10px;min-width:0;}
@@ -1222,7 +1461,7 @@ function styles(doc: Document): HTMLStyleElement {
   .postflop-view{max-width:100%;}
   .postflop-controls{align-items:stretch;}
   .postflop-field,.postflop-generate{width:100%;}
-  .postflop-street,.postflop-seed{width:100%;}
+  .postflop-street,.postflop-seed,.postflop-mode{width:100%;}
   .postflop-question-bar{align-items:stretch;flex-direction:column;}
   .postflop-question-actions{display:grid;grid-template-columns:1fr 1fr;}
   .postflop-table{aspect-ratio:auto;min-height:560px;max-width:390px;}
@@ -1240,6 +1479,8 @@ function styles(doc: Document): HTMLStyleElement {
   .postflop-table__board .postflop-card{width:36px;height:48px;font-size:16px;}
   .postflop-actions{display:grid;grid-template-columns:1fr;gap:10px;}
   .postflop-action{width:100%;min-height:44px;}
+  .postflop-line-actions{display:grid;grid-template-columns:1fr;}
+  .postflop-line-next{width:100%;min-height:42px;}
   .postflop-cards{grid-template-columns:1fr;}
   .postflop-practical{grid-template-columns:1fr;}
   .postflop-range-summary__header{flex-direction:column;}

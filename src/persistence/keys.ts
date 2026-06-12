@@ -20,7 +20,9 @@ export const NS = "mtt_preflop";
 export const KEY_STATE = `${NS}_state_${SCHEMA_VERSION}`; // mtt_preflop_state_v1
 export const KEY_EVENTS = `${NS}_events_${SCHEMA_VERSION}`; // mtt_preflop_events_v1
 export const KEY_POSTFLOP_EVENTS = `${NS}_postflop_events_${SCHEMA_VERSION}`; // mtt_preflop_postflop_events_v1
+export const KEY_POSTFLOP_LINE_EVENTS = `${NS}_postflop_line_events_${SCHEMA_VERSION}`; // mtt_preflop_postflop_line_events_v1
 export const KEY_HH = `${NS}_hh_${SCHEMA_VERSION}`; // mtt_preflop_hh_v1
+export const KEY_HH_REVIEWS = `${NS}_hh_reviews_${SCHEMA_VERSION}`; // mtt_preflop_hh_reviews_v1
 export const KEY_MIGRATED = `${NS}_migrated_${SCHEMA_VERSION}`; // příznak dokončené migrace
 
 /**
@@ -42,7 +44,9 @@ export const VERSIONED_KEYS = {
   state: KEY_STATE,
   events: KEY_EVENTS,
   postflopEvents: KEY_POSTFLOP_EVENTS,
+  postflopLineEvents: KEY_POSTFLOP_LINE_EVENTS,
   hh: KEY_HH,
+  hhReviews: KEY_HH_REVIEWS,
   migrated: KEY_MIGRATED,
 } as const;
 

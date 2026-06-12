@@ -51,8 +51,10 @@ function productionPack(confidence: "LOW" | "MEDIUM" = "MEDIUM"): FlopProduction
     dimensions: {
       gameVariant: "MTT",
       tableFormat: "FULL_RING_9",
+      blindSpeeds: ["REGULAR", "TURBO"],
       street: "FLOP",
       evModel: "CHIP_EV",
+      antes: ["ON", "OFF"],
     },
     sourceEvidence,
     assumptions: ["Production resolver fixture."],
@@ -74,6 +76,10 @@ function productionPack(confidence: "LOW" | "MEDIUM" = "MEDIUM"): FlopProduction
             action: "BET_BIG",
             handClasses: ["AA"],
             features: ["overpair"],
+            actionMix: [
+              { action: "BET_BIG", frequencyPct: 65, visibility: "EXACT" },
+              { action: "CHECK", frequencyPct: 35, visibility: "EXACT" },
+            ],
           },
           {
             lane: "BLUFF",
@@ -108,7 +114,7 @@ const input = {
 describe("flopProductionStrategyResolver", () => {
   it("prevede validni production flop rule na postflop doporuceni", () => {
     const resolver = createFlopProductionStrategyResolver(productionPack());
-    const result = resolver(input);
+    const result = resolver({ ...input, heroHand: "AA" });
 
     expect(result?.action).toBe("BET_BIG");
     expect(result?.source?.kind).toBe("STRATEGY_PACK");
@@ -117,6 +123,16 @@ describe("flopProductionStrategyResolver", () => {
       expect(result.source.ruleId).toBe("flop-production-btn-bb-dry-big");
       expect(result.source.confidence).toBe("MEDIUM");
       expect(result.source.matchedTextures).toEqual(["dry", "rainbow"]);
+      expect(result.source.heroRangeBucket).toMatchObject({
+        lane: "VALUE",
+        label: "value",
+        action: "BET_BIG",
+        handClass: "AA",
+      });
+      expect(result.source.heroRangeBucket?.actionMix).toEqual([
+        { action: "BET_BIG", frequencyPct: 65, visibility: "EXACT" },
+        { action: "CHECK", frequencyPct: 35, visibility: "EXACT" },
+      ]);
     }
   });
 

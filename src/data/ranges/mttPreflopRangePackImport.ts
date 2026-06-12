@@ -285,8 +285,8 @@ function validateMttPreflopInput(input: MttPreflopRangePackImportInput): string[
   if (input.dimensions.street !== "PREFLOP") {
     errors.push("MTT preflop import must use street PREFLOP.");
   }
-  if (input.dimensions.evModel !== "CHIP_EV") {
-    errors.push("MTT preflop import must use evModel CHIP_EV.");
+  if (input.dimensions.evModel !== "CHIP_EV" && input.dimensions.evModel !== "DOLAR_EV") {
+    errors.push("MTT preflop import must use evModel CHIP_EV or DOLAR_EV.");
   }
   if (input.dimensions.rakeMode !== "NONE") {
     errors.push("MTT preflop tournament import must use rakeMode NONE.");

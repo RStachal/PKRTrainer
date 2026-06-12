@@ -5,6 +5,7 @@ import type {
   PostflopStrategyResolver,
   PostflopStreet,
 } from "../../core/postflopGenerator";
+import { POSTFLOP_ACTIONS } from "../../core/postflopGenerator";
 import type { PostflopActionNode } from "../../core/postflopTrainingSpot";
 import {
   matchingPostflopRules,
@@ -12,7 +13,7 @@ import {
   type PostflopStrategyRule,
 } from "./postflopStrategyPack";
 
-const SUPPORTED_ACTIONS = new Set<PostflopAction>(["CHECK", "BET_SMALL", "BET_BIG"]);
+const SUPPORTED_ACTIONS = new Set<PostflopAction>(POSTFLOP_ACTIONS);
 
 export function createPostflopStrategyResolver(
   pack: PostflopStrategyPack,
@@ -22,7 +23,7 @@ export function createPostflopStrategyResolver(
     if (pack.dimensions.potType !== input.potType) return null;
 
     const rule = selectBestPostflopRule(matchingPostflopRules(pack, {
-      actionNode: actionNodeForStreet(input.street, input.potType),
+      actionNode: input.actionNode ?? actionNodeForStreet(input.street, input.potType),
       boardTextures: input.textures,
       spr: roundedSpr(input.effectiveStackBB, input.potBB),
       positionPattern: input.positionPattern,

@@ -35,6 +35,7 @@ import type {
   Position,
   StackBucket,
 } from "../core/types";
+import { evModelLabel } from "../core/trainingProfile";
 import type {
   Breakdown,
   BreakdownDim,
@@ -50,6 +51,7 @@ import {
   removeStatsProfileRecords,
   type StatsProfileOption,
 } from "../persistence/statsTransfer";
+import type { PostflopLineResultRecord } from "../persistence/postflopLineResultRecord";
 import {
   availableStatsV2Dimensions,
   breakdownStatsV2,
@@ -81,9 +83,11 @@ export interface DashboardData {
   */
   sessionCount: number;
   postflopRecords?: readonly PostflopStatsV2BridgeRecord[];
+  postflopLineRecords?: readonly PostflopLineResultRecord[];
   permissionReports?: readonly ProductionPermissionManifestReport[];
   onStartPreflopFocus?: (filters: Filters) => void;
   onPostflopRecordsImported?: (records: readonly PostflopStatsV2BridgeRecord[]) => boolean | void;
+  onPostflopLineRecordsImported?: (records: readonly PostflopLineResultRecord[]) => boolean | void;
 }
 
 // ---------------------------------------------------------------------------
@@ -262,7 +266,7 @@ function profileGroupLabel(dim: StatsV2BreakdownDim, key: string): string {
     case "ante":
       return key === "ON" ? "Ante on" : "Ante off";
     case "evModel":
-      return key === "CHIP_EV" ? "chipEV" : key;
+      return evModelLabel(key);
     case "rakeMode":
       return rakeModeLabel(key);
     case "rangePackId":
@@ -342,10 +346,16 @@ function postflopActionNodeLabel(key: string): string {
       return "Flop c-bet in SRP";
     case "THREE_BET_POT_CBET":
       return "Flop c-bet in 3bet pot";
+    case "FLOP_FACING_BET":
+      return "Flop facing bet";
     case "TURN_BARREL":
       return "Turn barrel";
+    case "TURN_FACING_BET":
+      return "Turn facing bet";
     case "RIVER_PRESSURE":
       return "River pressure";
+    case "RIVER_FACING_BET":
+      return "River facing bet";
     default:
       return key;
   }
@@ -1378,7 +1388,7 @@ function statsProfileOption(value: string, label: string): HTMLOptionElement {
 function statsProfileLabel(profileId: string): string {
   const [variant, table, speed, street, model, ante] = profileId.split("|");
   if (!variant || !table || !speed || !street) return profileId;
-  return [variant, tableFormatLabel(table), blindSpeedLabel(speed), profileStreetLabel(street), model, ante]
+  return [variant, tableFormatLabel(table), blindSpeedLabel(speed), profileStreetLabel(street), evModelLabel(model ?? ""), ante]
     .filter(Boolean)
     .join(" ");
 }
@@ -1390,7 +1400,11 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
   heading.textContent = "Stats export / import";
   box.appendChild(heading);
 
-  const profileOptions = listStatsProfiles(data.store.events(), data.postflopRecords ?? []);
+  const profileOptions = listStatsProfiles(
+    data.store.events(),
+    data.postflopRecords ?? [],
+    data.postflopLineRecords ?? [],
+  );
   const profileSelector = renderStatsProfileSelector(profileOptions);
   box.appendChild(profileSelector.wrap);
 
@@ -1434,6 +1448,7 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     const selectedProfileId = profileSelector.select.value || undefined;
     textarea.value = buildStatsExportJson(data.store, new Date(), {
       postflopRecords: data.postflopRecords ?? [],
+      postflopLineRecords: data.postflopLineRecords ?? [],
       profileId: selectedProfileId,
     });
     status.hidden = false;
@@ -1453,9 +1468,16 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
         status.textContent = "Preflop stats were imported, but the postflop log could not be saved.";
         return;
       }
+      const postflopLinesSaved = data.onPostflopLineRecordsImported?.(result.postflopLineRecords) ?? true;
+      if (!postflopLinesSaved) {
+        status.className = "stats-transfer__status stats-transfer__status--error";
+        status.textContent = "Preflop and postflop stats were imported, but the postflop line log could not be saved.";
+        return;
+      }
       renderDashboard({
         ...data,
         postflopRecords: result.postflopRecords,
+        postflopLineRecords: result.postflopLineRecords,
       }, root);
       const refreshedStatus = root.querySelector<HTMLElement>(".stats-transfer__status");
       if (refreshedStatus) {
@@ -1475,6 +1497,7 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     const selected = removeStatsProfileRecords(
       data.store.events(),
       data.postflopRecords ?? [],
+      data.postflopLineRecords ?? [],
       selectedProfileId,
     );
     const save = data.store.replaceAll(selected.events);
@@ -1490,9 +1513,16 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
       status.textContent = "Preflop stats were reset, but the postflop log could not be saved.";
       return;
     }
+    const postflopLinesSaved = data.onPostflopLineRecordsImported?.(selected.postflopLineRecords) ?? true;
+    if (!postflopLinesSaved) {
+      status.className = "stats-transfer__status stats-transfer__status--error";
+      status.textContent = "Preflop and postflop stats were reset, but the postflop line log could not be saved.";
+      return;
+    }
     renderDashboard({
       ...data,
       postflopRecords: selected.postflopRecords,
+      postflopLineRecords: selected.postflopLineRecords,
     }, root);
     const refreshedStatus = root.querySelector<HTMLElement>(".stats-transfer__status");
     if (refreshedStatus) {

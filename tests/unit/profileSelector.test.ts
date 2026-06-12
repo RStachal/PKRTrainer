@@ -130,6 +130,33 @@ describe("profileSelector", () => {
     expect(note?.textContent).not.toContain("RangePack");
   });
 
+  it("nabidne DOLAR_EV jako samostatny $EV model bez spusteni chipEV produkce", () => {
+    const root = document.createElement("div");
+    const view = renderProfileSelector(root);
+
+    const evModel = root.querySelector<HTMLSelectElement>(".profile-ev-model");
+    expect(Array.from(evModel?.options ?? []).map((option) => ({
+      value: option.value,
+      label: option.textContent,
+    }))).toEqual([
+      { value: "CHIP_EV", label: "chipEV" },
+      { value: "DOLAR_EV", label: "$EV" },
+      { value: "ICM", label: "ICM" },
+    ]);
+
+    evModel!.value = "DOLAR_EV";
+    evModel!.dispatchEvent(new Event("change"));
+
+    const note = root.querySelector<HTMLElement>(".profile-selector__note");
+    expect(view.getProfile().evModel).toBe("DOLAR_EV");
+    expect(note?.dataset.status).toBe("missing");
+    expect(note?.textContent).toContain("MTT 9-max regular preflop $EV");
+    expect(note?.textContent).toContain("missing production range");
+    expect(note?.textContent).not.toContain("CHIP_EV");
+    expect(note?.textContent).not.toContain("DOLAR_EV");
+    expect(note?.textContent).not.toContain("RangePack");
+  });
+
   it("rozlisi Cash rake/no-rake preview bez citaci zdroju v UI", () => {
     const root = document.createElement("div");
     renderProfileSelector(root);

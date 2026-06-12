@@ -8,6 +8,7 @@ import {
   isPostflopStreet,
   isProfileSupported,
   isTournamentVariant,
+  evModelLabel,
   positionsForFormat,
   profileId,
   profileWith,
@@ -44,6 +45,10 @@ describe("trainingProfile", () => {
     expect(profileId(turboSixMax)).toBe(
       "MTT|SIX_MAX|TURBO|PREFLOP|CHIP_EV|ON|NONE",
     );
+
+    expect(profileId(profileWith(DEFAULT_TRAINING_PROFILE, {
+      evModel: "DOLAR_EV",
+    }))).toBe("MTT|FULL_RING_9|REGULAR|PREFLOP|DOLAR_EV|ON|NONE");
   });
 
   it("rozlisuje turnajove/cash a preflop/postflop profily", () => {
@@ -54,7 +59,7 @@ describe("trainingProfile", () => {
     expect(isPostflopStreet("FLOP")).toBe(true);
   });
 
-  it("rezervuje rake/no-rake pro cash a chipEV/ICM pro SNG", () => {
+  it("rezervuje rake/no-rake pro cash a chipEV/dolarEV/ICM pro SNG", () => {
     expect(defaultRakeModeForVariant("MTT")).toBe("NONE");
     expect(defaultRakeModeForVariant("CASH")).toBe("NO_RAKE");
     expect(isProfileSupported(profileWith(DEFAULT_TRAINING_PROFILE, {
@@ -62,8 +67,18 @@ describe("trainingProfile", () => {
       evModel: "ICM",
     }))).toBe(true);
     expect(isProfileSupported(profileWith(DEFAULT_TRAINING_PROFILE, {
+      gameVariant: "SNG",
+      evModel: "DOLAR_EV",
+    }))).toBe(true);
+    expect(isProfileSupported(profileWith(DEFAULT_TRAINING_PROFILE, {
       gameVariant: "CASH",
       rakeMode: "NONE",
     }))).toBe(false);
+  });
+
+  it("labeluje ev modely bez raw enumu pro UI", () => {
+    expect(evModelLabel("CHIP_EV")).toBe("chipEV");
+    expect(evModelLabel("DOLAR_EV")).toBe("$EV");
+    expect(evModelLabel("ICM")).toBe("ICM");
   });
 });

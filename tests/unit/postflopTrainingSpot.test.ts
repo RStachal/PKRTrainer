@@ -109,4 +109,25 @@ describe("postflopTrainingSpot", () => {
     expect(trainingSpot.explanation.checkHands).toContain("underpairs without backdoors");
     expect(trainingSpot.explanation.valueHands).not.toContain("range advantage hands");
   });
+
+  it("zachova facing-bet action node a fold/call/raise moznosti", () => {
+    const trainingSpot = postflopSpotToTrainingSpot(generatePostflopSpot({
+      seed: 42,
+      street: "RIVER",
+      heroCards,
+      actionNode: "RIVER_FACING_BET",
+      board: [
+        { rank: "A", suit: "s" },
+        { rank: "7", suit: "d" },
+        { rank: "2", suit: "c" },
+        { rank: "4", suit: "h" },
+        { rank: "Q", suit: "s" },
+      ],
+    }));
+
+    expect(trainingSpot.actionNode).toBe("RIVER_FACING_BET");
+    expect(trainingSpot.actions.map((action) => action.action)).toEqual(["FOLD", "CALL", "RAISE"]);
+    expect(trainingSpot.actions.map((action) => action.label)).toEqual(["Fold", "Call", "Raise"]);
+    expect(trainingSpot.explanation.nextStreetPlan).toContain("River is the final street");
+  });
 });

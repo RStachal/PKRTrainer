@@ -34,11 +34,23 @@
  * _Requirements: 11.2, 11.4_
  */
 
-import type { AnteMode, Spot } from "../core/types";
+import type { ActionKey, AnteMode, Card, Spot } from "../core/types";
+import { buildImportedFlopTrainingSpot } from "../core/hhPostflopBridge";
 import { parseHandHistory, type HHFieldName, type HHResult } from "../core/hhParser";
+import type { BoardTexture, PostflopAction, PostflopPotType, PostflopPositionPattern } from "../core/postflopGenerator";
+import type { PostflopTrainingSpot } from "../core/postflopTrainingSpot";
+import { grade } from "../core/scoring";
 import { rangeStore } from "../data/rangeStore";
+import { createDefaultPostflopStrategyResolver } from "../data/ranges/postflopStrategyRegistry";
+import {
+  buildHHPostflopReviewRecord,
+  buildHHPreflopReviewRecord,
+  type HHReviewRecord,
+} from "../persistence/hhReviewStore";
 import { renderMatrix } from "./rangeMatrixView";
 import { renderTable } from "./tableRenderer";
+
+const POSTFLOP_STRATEGY_RESOLVER = createDefaultPostflopStrategyResolver();
 
 // ---------------------------------------------------------------------------
 // Veřejné API
@@ -51,6 +63,7 @@ export interface HHViewCallbacks {
    * sestavený Spot dále využít (např. spustit trénink z importované situace).
    */
   onSpotBuilt?: (spot: Spot) => void;
+  onReviewBuilt?: (records: readonly HHReviewRecord[]) => boolean | void;
 }
 
 // ---------------------------------------------------------------------------
@@ -127,10 +140,134 @@ function renderIncompatible(container: HTMLElement, incompatible: boolean): void
   }
 }
 
-function renderAnalysis(doc: Document, container: HTMLElement, spot: Spot): void {
+const ACTION_LABEL: Record<ActionKey, string> = {
+  FOLD: "Fold",
+  CALL: "Call",
+  LIMP: "Limp / Check",
+  OVERLIMP: "Over-limp",
+  OPEN_2X: "Raise 2x",
+  OPEN_25X: "Raise 2.5x",
+  OPEN_3X: "Raise 3x",
+  ISO_2X: "Iso-raise 2x",
+  ISO_25X: "Iso-raise 2.5x",
+  ISO_3X: "Iso-raise 3x",
+  "3BET": "3-bet",
+  "4BET": "4-bet",
+  SQUEEZE: "Squeeze",
+  JAM: "All-in",
+  CALL_JAM: "Call all-in",
+};
+
+function actionLabel(key: ActionKey | undefined): string {
+  return key ? ACTION_LABEL[key] : "Not mapped";
+}
+
+const POSTFLOP_ACTION_LABEL: Record<PostflopAction, string> = {
+  CHECK: "Check",
+  BET_SMALL: "Bet small",
+  BET_BIG: "Bet big",
+  CALL: "Call",
+  RAISE: "Raise",
+  FOLD: "Fold",
+};
+
+function postflopActionLabel(action: PostflopAction): string {
+  return POSTFLOP_ACTION_LABEL[action];
+}
+
+function cardLabel(card: Card): string {
+  return `${card.rank}${card.suit}`;
+}
+
+function potTypeLabel(potType: PostflopPotType): string {
+  switch (potType) {
+    case "SINGLE_RAISED":
+      return "Single-raised pot";
+    case "THREE_BET_POT":
+      return "3bet pot";
+    case "LIMPED_POT":
+      return "Limped pot";
+  }
+}
+
+function positionPatternLabel(pattern: PostflopPositionPattern): string {
+  switch (pattern) {
+    case "EP_VS_BB":
+      return "Early position vs BB (IP)";
+    case "BTN_VS_BB":
+      return "Button vs BB (IP)";
+    case "SB_VS_BB":
+      return "Small blind vs BB (OOP)";
+    case "OOP_RAISER_VS_IP_CALLER":
+      return "OOP raiser vs IP caller";
+    case "OOP_CALLER_VS_IP_3BETTOR":
+      return "OOP caller vs IP 3bettor";
+  }
+}
+
+function textureLabel(texture: BoardTexture): string {
+  return texture.replace(/-/g, " ");
+}
+
+function answerKey(spot: Spot, key: ActionKey): ActionKey | undefined {
+  return spot.answers.some((answer) => answer.key === key) ? key : undefined;
+}
+
+function firstAnswerKey(spot: Spot, predicate: (key: ActionKey) => boolean): ActionKey | undefined {
+  return spot.answers.find((answer) => predicate(answer.key))?.key;
+}
+
+function importedActionKey(actions: readonly string[] | undefined, spot: Spot): ActionKey | undefined {
+  const raw = actions?.[0]?.toLowerCase() ?? "";
+  if (raw.length === 0) return undefined;
+  if (raw.startsWith("fold")) return answerKey(spot, "FOLD");
+  if (raw.startsWith("check")) return answerKey(spot, "LIMP") ?? answerKey(spot, "CALL");
+  if (raw.startsWith("call")) {
+    return /all-in/.test(raw)
+      ? answerKey(spot, "CALL_JAM") ?? answerKey(spot, "CALL")
+      : answerKey(spot, "CALL") ?? answerKey(spot, "CALL_JAM");
+  }
+  if (!raw.startsWith("raise") && !raw.startsWith("bet")) return undefined;
+  if (/all-in/.test(raw)) return answerKey(spot, "JAM") ?? answerKey(spot, "CALL_JAM");
+
+  switch (spot.context) {
+    case "RFI":
+    case "BVB":
+      return firstAnswerKey(spot, (key) => key.startsWith("OPEN_"));
+    case "VS_LIMP":
+      return firstAnswerKey(spot, (key) => key.startsWith("ISO_"));
+    case "VS_OPEN":
+      return answerKey(spot, "3BET");
+    case "VS_3BET":
+      return answerKey(spot, "4BET");
+    case "VS_4BET":
+    case "PUSH_FOLD":
+      return answerKey(spot, "JAM");
+    case "SQUEEZE":
+      return answerKey(spot, "SQUEEZE");
+    case "VS_ALLIN":
+      return answerKey(spot, "CALL_JAM");
+  }
+}
+
+function renderAnalysis(
+  doc: Document,
+  container: HTMLElement,
+  result: HHResult,
+  spot: Spot,
+): readonly HHReviewRecord[] {
   container.innerHTML = "";
   container.className = "hh-analysis";
   container.dataset.spotId = spot.id;
+  const chosen = importedActionKey(result.fields.actions, spot);
+  const feedback = chosen ? grade(spot, chosen, "LENIENT") : undefined;
+  const importedAt = Date.now();
+  const reviewRecords: HHReviewRecord[] = [
+    buildHHPreflopReviewRecord(spot, chosen, feedback?.correct, importedAt),
+  ];
+  container.dataset.reviewSavedToDrillStats = "false";
+  if (chosen) container.dataset.chosen = chosen;
+  if (feedback) container.dataset.correct = String(feedback.correct);
 
   const title = el(doc, "h3", "hh-analysis__title");
   title.textContent = "Decision analysis";
@@ -147,6 +284,8 @@ function renderAnalysis(doc: Document, container: HTMLElement, spot: Spot): void
     ["Hand", spot.hand],
     ["Stack", `${spot.effStack} BB`],
     ["Node", spot.context],
+    ["Your action", actionLabel(chosen)],
+    ["Result", feedback ? (feedback.correct ? "Accepted" : "Review") : "Not scored"],
     ["Recommended", spot.correctKeys.join(" / ")],
   ];
 
@@ -169,6 +308,55 @@ function renderAnalysis(doc: Document, container: HTMLElement, spot: Spot): void
   const matrix = el(doc, "div", "hh-analysis__matrix");
   renderMatrix(spot, rangeStore, matrix);
   container.appendChild(matrix);
+
+  const flopSpot = buildImportedFlopTrainingSpot(result, POSTFLOP_STRATEGY_RESOLVER);
+  if (flopSpot) {
+    container.appendChild(renderImportedFlopAnalysis(doc, flopSpot));
+    reviewRecords.push(buildHHPostflopReviewRecord(flopSpot, importedAt));
+  }
+  container.dataset.reviewRecordCount = String(reviewRecords.length);
+  return reviewRecords;
+}
+
+function renderImportedFlopAnalysis(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
+  const section = el(doc, "section", "hh-postflop-analysis");
+  section.dataset.reviewSavedToDrillStats = "false";
+  section.dataset.street = spot.street;
+  section.dataset.potType = spot.potType;
+  section.dataset.positionPattern = spot.positionPattern;
+  section.dataset.recommended = spot.recommendedAction;
+  section.dataset.board = spot.board.map(cardLabel).join("-");
+
+  const title = el(doc, "h3", "hh-postflop-analysis__title");
+  title.textContent = "Flop review";
+  section.appendChild(title);
+
+  const facts = el(doc, "div", "hh-postflop-analysis__facts");
+  const items = [
+    ["Board", spot.board.map(cardLabel).join(" ")],
+    ["Pot", `${potTypeLabel(spot.potType)} | SPR ${spot.spr}`],
+    ["Position", positionPatternLabel(spot.positionPattern)],
+    ["Texture", spot.boardTextures.map(textureLabel).join(", ")],
+    ["Recommended", postflopActionLabel(spot.recommendedAction)],
+  ];
+
+  for (const [label, value] of items) {
+    const item = el(doc, "div", "hh-postflop-analysis__fact");
+    const name = el(doc, "span", "hh-postflop-analysis__fact-name");
+    name.textContent = label;
+    const text = el(doc, "span", "hh-postflop-analysis__fact-value");
+    text.textContent = value;
+    item.appendChild(name);
+    item.appendChild(text);
+    facts.appendChild(item);
+  }
+  section.appendChild(facts);
+
+  const explanation = el(doc, "p", "hh-postflop-analysis__explanation");
+  explanation.textContent = spot.explanation.summary;
+  section.appendChild(explanation);
+
+  return section;
 }
 
 /**
@@ -198,7 +386,8 @@ function applyResult(
     // Req 11.4 — kompatibilní data: vykresli Spot do vyhrazeného kontejneru.
     const ante: AnteMode = result.fields.ante ?? "OFF";
     renderTable(result.spot, ante, regions.table);
-    renderAnalysis(doc, regions.analysis, result.spot);
+    const reviewRecords = renderAnalysis(doc, regions.analysis, result, result.spot);
+    callbacks?.onReviewBuilt?.(reviewRecords);
     callbacks?.onSpotBuilt?.(result.spot);
   } else {
     // Chyba / nekompatibilita / částečná data: Spot nevykresluj, vyčisti stůl.
@@ -263,12 +452,26 @@ function viewStyles(doc: Document): HTMLStyleElement {
 .hh-view .hh-analysis__matrix{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;
   border:1px solid rgba(148,163,184,.14);background:rgba(6,12,22,.34);padding:8px;}
 .hh-view .hh-analysis__matrix .matrix{min-width:560px;}
+.hh-view .hh-postflop-analysis{display:grid;gap:10px;padding:11px;border-radius:12px;
+  border:1px solid rgba(123,211,255,.18);background:rgba(123,211,255,.06);}
+.hh-view .hh-postflop-analysis__title{margin:0;font-size:15px;font-weight:900;color:#e8ecf7;}
+.hh-view .hh-postflop-analysis__facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));
+  gap:8px;}
+.hh-view .hh-postflop-analysis__fact{display:grid;gap:2px;padding:8px;border-radius:9px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(148,163,184,.12);}
+.hh-view .hh-postflop-analysis__fact-name{font-size:11px;text-transform:uppercase;color:#9aa6c2;
+  font-weight:900;}
+.hh-view .hh-postflop-analysis__fact-value{font-size:13px;color:#e8ecf7;font-weight:800;
+  overflow-wrap:anywhere;}
+.hh-view .hh-postflop-analysis__explanation{margin:0;font-size:13px;line-height:1.4;color:#d5deef;
+  overflow-wrap:anywhere;}
 @media (max-width:640px){
   .hh-view{max-width:100%;padding:13px 12px;border-radius:14px;}
   .hh-view__title{font-size:18px;}
   .hh-view .hh-input{min-height:220px;}
   .hh-view .hh-analyze{width:100%;min-height:44px;}
   .hh-view .hh-analysis__facts{grid-template-columns:1fr;}
+  .hh-view .hh-postflop-analysis__facts{grid-template-columns:1fr;}
   .hh-view .hh-analysis__matrix{margin-left:-2px;margin-right:-2px;}
 }
 @media (prefers-reduced-motion:reduce){

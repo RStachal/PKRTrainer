@@ -15,6 +15,8 @@ import {
 import type { FlopProductionStrategyPack } from "../../src/data/ranges/flopProductionStrategyPack";
 import type { MttPreflopRangePackImportInput } from "../../src/data/ranges/mttPreflopRangePackImport";
 import type { ProductionPermissionManifest } from "../../src/data/ranges/productionPermissionManifest";
+import type { RiverProductionStrategyPack } from "../../src/data/ranges/riverProductionStrategyPack";
+import type { TurnProductionStrategyPack } from "../../src/data/ranges/turnProductionStrategyPack";
 import {
   buildRangeModule,
   renderRangeModuleBuildReport,
@@ -64,7 +66,7 @@ function handMap(action: ActionKey): Record<HandLabel, ActionKey[]> {
 
 function validMttImport(): MttPreflopRangePackImportInput {
   return {
-    id: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-builder-fixture-v1",
+    id: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1",
     version: "builder-fixture-v1",
     createdAt: "2026-06-05",
     verifiedAt: "2026-06-05",
@@ -155,8 +157,10 @@ function syntheticFlopPack(): FlopProductionStrategyPack {
     dimensions: {
       gameVariant: "MTT",
       tableFormat: "FULL_RING_9",
+      blindSpeeds: ["REGULAR", "TURBO"],
       street: "FLOP",
       evModel: "CHIP_EV",
+      antes: ["ON", "OFF"],
     },
     sourceEvidence: [
       {
@@ -223,7 +227,181 @@ function syntheticFlopPack(): FlopProductionStrategyPack {
   };
 }
 
-function runBuilderCli(kind: "mtt-preflop" | "flop-production", inputFile: string, manifestFile: string) {
+function syntheticTurnPack(): TurnProductionStrategyPack {
+  return {
+    id: "builder-turn-synthetic-v1",
+    version: "builder-fixture-v1",
+    createdAt: "2026-06-11",
+    verifiedAt: "2026-06-11",
+    confidence: "MEDIUM",
+    licenseKind: "OWNED_SOLVER_EXPORT",
+    licenseNote: "Synthetic fixture.",
+    dimensions: {
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      blindSpeeds: ["REGULAR", "TURBO"],
+      street: "TURN",
+      evModel: "CHIP_EV",
+      antes: ["ON", "OFF"],
+    },
+    sourceEvidence: [
+      {
+        url: "https://example.test/turn-owned-export",
+        verifiedAt: "2026-06-11",
+        operator: "PKRTrainer",
+        gameVariant: "MTT",
+        tableFormat: "FULL_RING_9",
+        street: "TURN",
+        evModel: "CHIP_EV",
+        methodology: "Synthetic fixture.",
+        licenseNote: "Owned export fixture.",
+      },
+      {
+        url: "https://example.test/turn-review",
+        verifiedAt: "2026-06-11",
+        operator: "PKRTrainer Review",
+        gameVariant: "MTT",
+        tableFormat: "FULL_RING_9",
+        street: "TURN",
+        evModel: "CHIP_EV",
+        methodology: "Independent review fixture.",
+        licenseNote: "Review fixture.",
+      },
+    ],
+    assumptions: ["Synthetic turn fixture."],
+    rules: [
+      {
+        id: "builder-turn-srp-btn-bb-bet-small-blank",
+        actionNode: "TURN_BARREL",
+        potType: "SINGLE_RAISED",
+        positionPattern: "BTN_VS_BB",
+        priorFlopAction: "BET_SMALL",
+        turnCardClasses: ["BLANK"],
+        sprMin: 2,
+        sprMax: 10,
+        actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+        recommendedAction: "BET_SMALL",
+        rangeBuckets: [
+          {
+            lane: "VALUE",
+            label: "value",
+            action: "BET_SMALL",
+            handClasses: ["AA"],
+            features: ["top pair+"],
+          },
+          {
+            lane: "BLUFF",
+            label: "bluff",
+            action: "BET_SMALL",
+            handClasses: ["QJs"],
+            features: ["draw"],
+          },
+          {
+            lane: "CHECK",
+            label: "check",
+            action: "CHECK",
+            handClasses: ["72o"],
+            features: ["air"],
+          },
+        ],
+        explanation: "Synthetic turn builder fixture.",
+      },
+    ],
+  };
+}
+
+function syntheticRiverPack(): RiverProductionStrategyPack {
+  return {
+    id: "builder-river-synthetic-v1",
+    version: "builder-fixture-v1",
+    createdAt: "2026-06-11",
+    verifiedAt: "2026-06-11",
+    confidence: "MEDIUM",
+    licenseKind: "OWNED_SOLVER_EXPORT",
+    licenseNote: "Synthetic fixture.",
+    dimensions: {
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      blindSpeeds: ["REGULAR", "TURBO"],
+      street: "RIVER",
+      evModel: "CHIP_EV",
+      antes: ["ON", "OFF"],
+    },
+    sourceEvidence: [
+      {
+        url: "https://example.test/river-owned-export",
+        verifiedAt: "2026-06-11",
+        operator: "PKRTrainer",
+        gameVariant: "MTT",
+        tableFormat: "FULL_RING_9",
+        street: "RIVER",
+        evModel: "CHIP_EV",
+        methodology: "Synthetic fixture.",
+        licenseNote: "Owned export fixture.",
+      },
+      {
+        url: "https://example.test/river-review",
+        verifiedAt: "2026-06-11",
+        operator: "PKRTrainer Review",
+        gameVariant: "MTT",
+        tableFormat: "FULL_RING_9",
+        street: "RIVER",
+        evModel: "CHIP_EV",
+        methodology: "Independent review fixture.",
+        licenseNote: "Review fixture.",
+      },
+    ],
+    assumptions: ["Synthetic river fixture."],
+    rules: [
+      {
+        id: "builder-river-srp-btn-bb-bet-small-blank",
+        actionNode: "RIVER_PRESSURE",
+        potType: "SINGLE_RAISED",
+        positionPattern: "BTN_VS_BB",
+        priorTurnAction: "BET_SMALL",
+        riverRunoutClasses: ["BLANK"],
+        blockerRelevance: "HIGH",
+        sprMin: 1,
+        sprMax: 8,
+        actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+        recommendedAction: "BET_BIG",
+        rangeBuckets: [
+          {
+            lane: "VALUE",
+            label: "value",
+            action: "BET_BIG",
+            handClasses: ["AA"],
+            features: ["top value"],
+            blockerRelevance: "LOW",
+          },
+          {
+            lane: "BLUFF",
+            label: "bluff",
+            action: "BET_BIG",
+            handClasses: ["QJs"],
+            features: ["blocker bluff"],
+            blockerRelevance: "HIGH",
+          },
+          {
+            lane: "CHECK",
+            label: "check",
+            action: "CHECK",
+            handClasses: ["72o"],
+            features: ["air"],
+            blockerRelevance: "LOW",
+          },
+        ],
+        explanation: "Synthetic river builder fixture.",
+      },
+    ],
+  };
+}
+
+function runBuilderCli(
+  kind: "mtt-preflop" | "flop-production" | "turn-production" | "river-production",
+  inputFile: string,
+  manifestFile: string,
+) {
   const command = process.platform === "win32" ? "cmd.exe" : "npm";
   const args = process.platform === "win32"
     ? [
@@ -267,9 +445,35 @@ describe("rangeModuleBuilder", () => {
 
     expect(result.writeReady).toBe(true);
     expect(result.blockers).toEqual([]);
+    expect(result.matchedImportSlots).toHaveLength(1);
+    expect(result.matchedImportSlots[0]).toMatchObject({
+      slotId: "FULL_RING_9|TURBO|CHIP_EV|PREFLOP|ON",
+      packId: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1",
+    });
     expect(result.moduleText).toContain("satisfies RangePack");
     expect(result.moduleText).toContain("export const builderFixtureRangePack");
     expect(result.moduleText).toContain('"records"');
+  });
+
+  it("blokuje production module pro MTT preflop import mimo legal slot packId", () => {
+    const input = {
+      ...validMttImport(),
+      id: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-builder-fixture-v1",
+    };
+    const result = buildRangeModule({
+      kind: "mtt-preflop",
+      input,
+      permissionManifest: permissionManifest(input.id),
+    });
+
+    expect(result.productionReady).toBe(true);
+    expect(result.permissionReady).toBe(true);
+    expect(result.writeReady).toBe(false);
+    expect(result.matchedImportSlots).toHaveLength(1);
+    expect(result.moduleText).toBeNull();
+    expect(result.blockers).toContain(
+      "MTT preflop import id must match legal slot packId mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1.",
+    );
   });
 
   it("blokuje module text bez permission manifestu", () => {
@@ -289,7 +493,17 @@ describe("rangeModuleBuilder", () => {
   });
 
   it("reportuje flop coverage blockery v dry-run stylu", () => {
-    const pack = syntheticFlopPack();
+    const base = syntheticFlopPack();
+    const pack = {
+      ...base,
+      rules: [
+        {
+          ...base.rules[0],
+          sprMin: 4,
+          sprMax: 7,
+        },
+      ],
+    };
     const result = buildRangeModule({
       kind: "flop-production",
       input: pack,
@@ -298,8 +512,75 @@ describe("rangeModuleBuilder", () => {
 
     expect(result.permissionReady).toBe(true);
     expect(result.productionReady).toBe(false);
+    expect(result.matchedImportSlots).toHaveLength(4);
+    expect(result.matchedImportSlots.map((slot) => slot.slotId)).toContain(
+      "FULL_RING_9|REGULAR|CHIP_EV|FLOP|ON",
+    );
     expect(result.moduleText).toBeNull();
     expect(result.blockers).toContain("missing pot types: THREE_BET_POT");
+    expect(result.blockers).toContain("missing SPR bands: LOW,HIGH");
+    expect(result.blockers).not.toContain("Flop production pack must match at least one legal MTT postflop import slot.");
+  });
+
+  it("blokuje postflop production module mimo MTT slot registry", () => {
+    const pack = {
+      ...syntheticFlopPack(),
+      dimensions: {
+        ...syntheticFlopPack().dimensions,
+        gameVariant: "CASH",
+      },
+    } satisfies FlopProductionStrategyPack;
+    const result = buildRangeModule({
+      kind: "flop-production",
+      input: pack,
+      permissionManifest: permissionManifest(pack.id),
+    });
+
+    expect(result.writeReady).toBe(false);
+    expect(result.matchedImportSlots).toEqual([]);
+    expect(result.moduleText).toBeNull();
+    expect(result.blockers).toContain("Flop production module must target MTT gameVariant.");
+  });
+
+  it("reportuje turn coverage blockery v dry-run stylu", () => {
+    const pack = syntheticTurnPack();
+    const result = buildRangeModule({
+      kind: "turn-production",
+      input: pack,
+      permissionManifest: permissionManifest(pack.id),
+    });
+
+    expect(result.kind).toBe("turn-production");
+    expect(result.permissionReady).toBe(true);
+    expect(result.productionReady).toBe(false);
+    expect(result.matchedImportSlots).toHaveLength(4);
+    expect(result.moduleText).toBeNull();
+    expect(result.blockers).toContain("missing pot types: THREE_BET_POT");
+    expect(result.blockers).toContain("missing prior flop actions: CHECK,BET_BIG");
+    expect(result.blockers).toContain(
+      "missing turn card classes: LOW_BRICK,OVER_CARD,BROADWAY,BOARD_PAIRING,FLUSH_COMPLETING,STRAIGHT_COMPLETING,DYNAMIC",
+    );
+  });
+
+  it("reportuje river coverage blockery v dry-run stylu", () => {
+    const pack = syntheticRiverPack();
+    const result = buildRangeModule({
+      kind: "river-production",
+      input: pack,
+      permissionManifest: permissionManifest(pack.id),
+    });
+
+    expect(result.kind).toBe("river-production");
+    expect(result.permissionReady).toBe(true);
+    expect(result.productionReady).toBe(false);
+    expect(result.matchedImportSlots).toHaveLength(4);
+    expect(result.moduleText).toBeNull();
+    expect(result.blockers).toContain("missing pot types: THREE_BET_POT");
+    expect(result.blockers).toContain("missing prior turn actions: CHECK,BET_BIG");
+    expect(result.blockers).toContain(
+      "missing river runout classes: OVER_CARD,BOARD_PAIRING,FLUSH_COMPLETING,STRAIGHT_COMPLETING,FOUR_FLUSH,FOUR_STRAIGHT,DYNAMIC",
+    );
+    expect(result.blockers).toContain("missing blocker relevance: MEDIUM");
   });
 
   it("spusti build:range-module CLI dry-run bez zapisu souboru", () => {
@@ -316,6 +597,8 @@ describe("rangeModuleBuilder", () => {
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("writeReady: true");
       expect(result.stdout).toContain("kind: mtt-preflop");
+      expect(result.stdout).toContain("matched import slots: 1");
+      expect(result.stdout).toContain("FULL_RING_9|TURBO|CHIP_EV|PREFLOP|ON");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

@@ -96,6 +96,7 @@ export interface HHFields {
   effStackBucket?: StackBucket;
   /** Akce hrdiny v preflopu (textové tokeny, např. "raises 120 to 180"). */
   actions?: string[];
+  flop?: [Card, Card, Card];
   /** Počet obsazených sedadel u stolu (pro diagnostiku kompatibility). */
   tableSize?: number;
   /** Detekovaný režim ante (ON, pokud se objevil post ante). */
@@ -189,6 +190,7 @@ interface ParsedHand {
   heroPreActions: string[]; // raw preflop akce hrdiny
   /** Akce před první akcí hrdiny (pro odvození facing). */
   actionsBeforeHero: string[];
+  flop?: [Card, Card, Card];
 }
 
 // ---------------------------------------------------------------------------
@@ -258,6 +260,17 @@ function parseCardsFromBracket(raw: string): [Card, Card] | undefined {
   const c1 = parseCard(match[1]);
   const c2 = parseCard(match[2]);
   return c1 && c2 ? [c1, c2] : undefined;
+}
+
+function parseBoardFromBracket(raw: string): Card[] | undefined {
+  const tokens = raw.match(/[2-9TJQKA][shdcSHDC\u2660\u2665\u2666\u2663]/gu) ?? [];
+  if (tokens.length < 3 || tokens.length > 5) return undefined;
+  const cards = tokens.map(parseCard);
+  if (cards.some((card) => card === undefined)) return undefined;
+  const parsed = cards as Card[];
+  const labels = parsed.map((card) => `${card.rank}${card.suit}`);
+  if (new Set(labels).size !== labels.length) return undefined;
+  return parsed;
 }
 
 function parseAmount(raw: string): number | undefined {
@@ -347,6 +360,7 @@ function extractHand(block: string): ParsedHand {
   let smallBlind: number | undefined;
   let bigBlind: number | undefined;
   let anteSeen = false;
+  let flop: [Card, Card, Card] | undefined;
 
   // Hlavička s buttonem: "... Seat #3 is the button" nebo "Seat 3 is the button".
   for (const line of lines) {
@@ -426,6 +440,16 @@ function extractHand(block: string): ParsedHand {
     }
   }
 
+  for (const line of lines) {
+    const m = line.match(/^\*\*\* FLOP \*\*\* \[(.+?)\]/iu);
+    if (!m) continue;
+    const board = parseBoardFromBracket(m[1]);
+    if (board?.length === 3) {
+      flop = [board[0], board[1], board[2]];
+      break;
+    }
+  }
+
   // Preflop akce mezi HOLE CARDS a FLOP/SUMMARY.
   const holeIdx = block.indexOf("*** HOLE CARDS ***");
   const heroPreActions: string[] = [];
@@ -467,6 +491,7 @@ function extractHand(block: string): ParsedHand {
     anteSeen,
     heroPreActions,
     actionsBeforeHero,
+    flop,
   };
 }
 
@@ -804,6 +829,10 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
       fields.actions = [...hand.heroPreActions];
     } else {
       unreadable.push("actions");
+    }
+
+    if (hand.flop) {
+      fields.flop = hand.flop;
     }
 
     // --- Pozice hrdiny (jen kompatibilní 9-handed) ---

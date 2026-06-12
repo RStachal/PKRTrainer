@@ -1,4 +1,5 @@
 import type { Spot } from "../core/types";
+import { evModelLabel } from "../core/trainingProfile";
 import type { RangeStore } from "../data/rangeStore";
 import { currentMttPreflopRangePack } from "../data/ranges/mttPreflopRangePacks";
 import type { RangePack } from "../data/ranges/rangePack";
@@ -165,8 +166,4 @@ function gameVariantLabel(value: RangePack["dimensions"]["gameVariant"]): string
 
 function tableFormatLabel(value: RangePack["dimensions"]["tableFormat"]): string {
   return value === "FULL_RING_9" ? "9-max full ring" : "6-max";
-}
-
-function evModelLabel(value: RangePack["dimensions"]["evModel"]): string {
-  return value === "CHIP_EV" ? "chipEV" : "ICM";
 }

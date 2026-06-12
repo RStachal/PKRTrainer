@@ -100,8 +100,31 @@ describe("mttSixMaxRangePackImport", () => {
       bucket: 25,
       explicitHands: 169,
     });
-    expect(report.warnings).toContain("MTT 6-max import has no record for position UTG.");
+    expect(report.missingPositions).toEqual(["UTG", "HJ", "CO", "SB", "BB"]);
+    expect(report.missingContexts).toContain("VS_3BET");
+    expect(report.missingBuckets).toContain(150);
+    expect(report.warnings).toContain("MTT preflop import has no record for position UTG.");
+    expect(report.warnings).toContain("MTT preflop import has no record for action context VS_3BET.");
+    expect(report.warnings).toContain("MTT preflop import has no record for stack bucket 150.");
     expect(renderMttSixMaxImportReadinessReport(report)).toContain("stack mapping: 25->25");
+    expect(renderMttSixMaxImportReadinessReport(report)).toContain(
+      "MTT preflop RangePack import: mtt-six-max-regular-preflop-chip-ev-ante-on-import-candidate-v1",
+    );
+  });
+
+  it("povoli DOLAR_EV jako samostatny 6-max importni model", () => {
+    const input = validInput();
+    const report = buildMttSixMaxImportReadinessReport({
+      ...input,
+      id: "mtt-six-max-regular-preflop-dolar-ev-ante-on-import-candidate-v1",
+      dimensions: {
+        ...input.dimensions,
+        evModel: "DOLAR_EV",
+      },
+    });
+
+    expect(report.valid).toBe(true);
+    expect(report.dimensions.evModel).toBe("DOLAR_EV");
   });
 
   it("odmitne chybejici hand-class hodnoty", () => {
@@ -118,7 +141,7 @@ describe("mttSixMaxRangePackImport", () => {
     expect(report.records[0].missingHands).toEqual(["AA"]);
   });
 
-  it("odmitne spatny tableFormat, evModel a nejasnou licenci", () => {
+  it("pouziva obecny MTT preflop validator i pro legacy six-max wrapper", () => {
     const report = buildMttSixMaxImportReadinessReport({
       ...validInput(),
       dimensions: {
@@ -131,10 +154,10 @@ describe("mttSixMaxRangePackImport", () => {
 
     expect(report.valid).toBe(false);
     expect(report.legalLicense).toBe(false);
-    expect(report.errors).toContain("MTT 6-max import must use tableFormat SIX_MAX.");
-    expect(report.errors).toContain("MTT 6-max import must use evModel CHIP_EV.");
+    expect(report.errors).not.toContain("MTT 6-max import must use tableFormat SIX_MAX.");
+    expect(report.errors).toContain("MTT preflop import must use evModel CHIP_EV or DOLAR_EV.");
     expect(report.errors).toContain(
-      "MTT 6-max import needs owned export, public permission, or explicit written permission.",
+      "MTT preflop import needs owned export, public permission, or explicit written permission.",
     );
   });
 });

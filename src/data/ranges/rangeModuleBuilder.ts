@@ -9,16 +9,38 @@ import {
   type FlopProductionStrategyPack,
 } from "./flopProductionStrategyPack";
 import {
+  buildTurnProductionCoverageReport,
+  type TurnProductionStrategyPack,
+} from "./turnProductionStrategyPack";
+import {
+  buildRiverProductionCoverageReport,
+  type RiverProductionStrategyPack,
+} from "./riverProductionStrategyPack";
+import {
   buildProductionPermissionManifestReport,
   type ProductionPermissionManifest,
   type ProductionPermissionManifestReport,
 } from "./productionPermissionManifest";
+import {
+  buildMttPostflopImportSlotValidationReport,
+  buildMttPreflopImportSlotValidationReport,
+  type MttImportSlotSummary,
+} from "./mttImportSlotValidation";
+import {
+  type MttPostflopProductionPack,
+} from "./mttPostflopImportSlots";
 
-export type RangeModuleBuildKind = "mtt-preflop" | "flop-production";
+export type RangeModuleBuildKind = "mtt-preflop" | "flop-production" | "turn-production" | "river-production";
+
+export type RangeModuleMatchedImportSlot = MttImportSlotSummary;
 
 export interface RangeModuleBuildInput {
   kind: RangeModuleBuildKind;
-  input: MttPreflopRangePackImportInput | FlopProductionStrategyPack;
+  input:
+    | MttPreflopRangePackImportInput
+    | FlopProductionStrategyPack
+    | TurnProductionStrategyPack
+    | RiverProductionStrategyPack;
   permissionManifest: ProductionPermissionManifest | null;
   exportName?: string;
 }
@@ -30,6 +52,7 @@ export interface RangeModuleBuildResult {
   productionReady: boolean;
   permissionReady: boolean;
   writeReady: boolean;
+  matchedImportSlots: readonly RangeModuleMatchedImportSlot[];
   blockers: readonly string[];
   permissionReport: ProductionPermissionManifestReport;
   moduleText: string | null;
@@ -44,8 +67,24 @@ export function buildRangeModule(input: RangeModuleBuildInput): RangeModuleBuild
     );
   }
 
-  return buildFlopProductionRangeModule(
-    input.input as FlopProductionStrategyPack,
+  if (input.kind === "flop-production") {
+    return buildFlopProductionRangeModule(
+      input.input as FlopProductionStrategyPack,
+      input.permissionManifest,
+      input.exportName,
+    );
+  }
+
+  if (input.kind === "turn-production") {
+    return buildTurnProductionRangeModule(
+      input.input as TurnProductionStrategyPack,
+      input.permissionManifest,
+      input.exportName,
+    );
+  }
+
+  return buildRiverProductionRangeModule(
+    input.input as RiverProductionStrategyPack,
     input.permissionManifest,
     input.exportName,
   );
@@ -59,7 +98,15 @@ export function renderRangeModuleBuildReport(result: RangeModuleBuildResult): st
     `productionReady: ${result.productionReady}`,
     `permissionReady: ${result.permissionReady}`,
     `writeReady: ${result.writeReady}`,
+    `matched import slots: ${result.matchedImportSlots.length}`,
   ];
+
+  for (const slot of result.matchedImportSlots) {
+    lines.push(
+      `- ${slot.slotId}: ${slot.packId} ` +
+      `input=${slot.normalizedInputPath} permission=${slot.permissionManifestPath}`,
+    );
+  }
 
   if (result.blockers.length > 0) {
     lines.push("blockers:");
@@ -79,12 +126,14 @@ function buildMttPreflopRangeModule(
     packId: input.id,
     licenseKind: input.licenseKind,
   });
+  const slotReport = buildMttPreflopImportSlotValidationReport(input);
   const blockers = [
     ...readiness.errors,
     ...readiness.warnings,
+    ...slotReport.errors,
     ...permissionReport.errors,
   ];
-  const writeReady = readiness.productionReady && permissionReport.valid;
+  const writeReady = readiness.productionReady && slotReport.valid && permissionReport.valid;
   const pack = normalizeMttPreflopRangePackImport(input);
 
   return {
@@ -94,6 +143,7 @@ function buildMttPreflopRangeModule(
     productionReady: readiness.productionReady,
     permissionReady: permissionReport.valid,
     writeReady,
+    matchedImportSlots: slotReport.matchedSlots,
     blockers,
     permissionReport,
     moduleText: writeReady ? renderMttPreflopRangePackModule(pack, exportName) : null,
@@ -110,16 +160,19 @@ function buildFlopProductionRangeModule(
     packId: pack.id,
     licenseKind: pack.licenseKind,
   });
+  const slotReport = buildPostflopSlotReport(pack, "Flop");
   const blockers = [
     ...coverage.errors,
     ...coverageBlockers("missing pot types", coverage.missingPotTypes),
     ...coverageBlockers("missing position patterns", coverage.missingPositionPatterns),
     ...coverageBlockers("missing board textures", coverage.missingBoardTextures),
+    ...coverageBlockers("missing SPR bands", coverage.missingSprBands),
     ...coverageBlockers("missing action nodes", coverage.missingActionNodes),
     ...coverageBlockers("missing range lanes", coverage.missingRangeLanes),
+    ...slotReport.errors,
     ...permissionReport.errors,
   ];
-  const writeReady = coverage.productionReady && permissionReport.valid;
+  const writeReady = coverage.productionReady && slotReport.valid && permissionReport.valid;
 
   return {
     kind: "flop-production",
@@ -128,14 +181,103 @@ function buildFlopProductionRangeModule(
     productionReady: coverage.productionReady,
     permissionReady: permissionReport.valid,
     writeReady,
+    matchedImportSlots: slotReport.matchedSlots,
     blockers,
     permissionReport,
     moduleText: writeReady ? renderFlopProductionStrategyPackModule(pack, exportName) : null,
   };
 }
 
+function buildTurnProductionRangeModule(
+  pack: TurnProductionStrategyPack,
+  permissionManifest: ProductionPermissionManifest | null,
+  exportName = defaultExportName(pack.id, "StrategyPack"),
+): RangeModuleBuildResult {
+  const coverage = buildTurnProductionCoverageReport(pack);
+  const permissionReport = buildProductionPermissionManifestReport(permissionManifest, {
+    packId: pack.id,
+    licenseKind: pack.licenseKind,
+  });
+  const slotReport = buildPostflopSlotReport(pack, "Turn");
+  const blockers = [
+    ...coverage.errors,
+    ...coverageBlockers("missing pot types", coverage.missingPotTypes),
+    ...coverageBlockers("missing position patterns", coverage.missingPositionPatterns),
+    ...coverageBlockers("missing prior flop actions", coverage.missingPriorFlopActions),
+    ...coverageBlockers("missing turn card classes", coverage.missingTurnCardClasses),
+    ...coverageBlockers("missing action nodes", coverage.missingActionNodes),
+    ...coverageBlockers("missing range lanes", coverage.missingRangeLanes),
+    ...slotReport.errors,
+    ...permissionReport.errors,
+  ];
+  const writeReady = coverage.productionReady && slotReport.valid && permissionReport.valid;
+
+  return {
+    kind: "turn-production",
+    packId: pack.id,
+    exportName,
+    productionReady: coverage.productionReady,
+    permissionReady: permissionReport.valid,
+    writeReady,
+    matchedImportSlots: slotReport.matchedSlots,
+    blockers,
+    permissionReport,
+    moduleText: writeReady ? renderTurnProductionStrategyPackModule(pack, exportName) : null,
+  };
+}
+
+function buildRiverProductionRangeModule(
+  pack: RiverProductionStrategyPack,
+  permissionManifest: ProductionPermissionManifest | null,
+  exportName = defaultExportName(pack.id, "StrategyPack"),
+): RangeModuleBuildResult {
+  const coverage = buildRiverProductionCoverageReport(pack);
+  const permissionReport = buildProductionPermissionManifestReport(permissionManifest, {
+    packId: pack.id,
+    licenseKind: pack.licenseKind,
+  });
+  const slotReport = buildPostflopSlotReport(pack, "River");
+  const blockers = [
+    ...coverage.errors,
+    ...coverageBlockers("missing pot types", coverage.missingPotTypes),
+    ...coverageBlockers("missing position patterns", coverage.missingPositionPatterns),
+    ...coverageBlockers("missing prior turn actions", coverage.missingPriorTurnActions),
+    ...coverageBlockers("missing river runout classes", coverage.missingRiverRunoutClasses),
+    ...coverageBlockers("missing blocker relevance", coverage.missingBlockerRelevance),
+    ...coverageBlockers("missing action nodes", coverage.missingActionNodes),
+    ...coverageBlockers("missing range lanes", coverage.missingRangeLanes),
+    ...slotReport.errors,
+    ...permissionReport.errors,
+  ];
+  const writeReady = coverage.productionReady && slotReport.valid && permissionReport.valid;
+
+  return {
+    kind: "river-production",
+    packId: pack.id,
+    exportName,
+    productionReady: coverage.productionReady,
+    permissionReady: permissionReport.valid,
+    writeReady,
+    matchedImportSlots: slotReport.matchedSlots,
+    blockers,
+    permissionReport,
+    moduleText: writeReady ? renderRiverProductionStrategyPackModule(pack, exportName) : null,
+  };
+}
+
 function coverageBlockers(label: string, values: readonly string[]): string[] {
   return values.length === 0 ? [] : [`${label}: ${values.join(",")}`];
+}
+
+function buildPostflopSlotReport(
+  pack: MttPostflopProductionPack,
+  streetLabel: "Flop" | "Turn" | "River",
+): ReturnType<typeof buildMttPostflopImportSlotValidationReport> {
+  return buildMttPostflopImportSlotValidationReport(pack, {
+    gameVariantError: `${streetLabel} production module must target MTT gameVariant.`,
+    noSlotError: `${streetLabel} production pack must match at least one legal MTT postflop import slot.`,
+    stopAfterGameVariantError: true,
+  });
 }
 
 function renderMttPreflopRangePackModule(pack: RangePack, exportName: string): string {
@@ -155,6 +297,30 @@ function renderFlopProductionStrategyPackModule(
     'import type { FlopProductionStrategyPack } from "./flopProductionStrategyPack";',
     "",
     `export const ${exportName} = ${jsonForModule(pack)} satisfies FlopProductionStrategyPack;`,
+    "",
+  ].join("\n");
+}
+
+function renderTurnProductionStrategyPackModule(
+  pack: TurnProductionStrategyPack,
+  exportName: string,
+): string {
+  return [
+    'import type { TurnProductionStrategyPack } from "./turnProductionStrategyPack";',
+    "",
+    `export const ${exportName} = ${jsonForModule(pack)} satisfies TurnProductionStrategyPack;`,
+    "",
+  ].join("\n");
+}
+
+function renderRiverProductionStrategyPackModule(
+  pack: RiverProductionStrategyPack,
+  exportName: string,
+): string {
+  return [
+    'import type { RiverProductionStrategyPack } from "./riverProductionStrategyPack";',
+    "",
+    `export const ${exportName} = ${jsonForModule(pack)} satisfies RiverProductionStrategyPack;`,
     "",
   ].join("\n");
 }

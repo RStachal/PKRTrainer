@@ -27,7 +27,7 @@ Required for each target profile:
 - `tableFormat`: `FULL_RING_9` or `SIX_MAX`
 - `blindSpeed`: `REGULAR` or `TURBO`
 - `street`: `PREFLOP`
-- `evModel`: `CHIP_EV`
+- `evModel`: `CHIP_EV` or `DOLAR_EV`
 - `ante`: `ON` or `OFF`
 - `rakeMode`: `NONE`
 - `confidence`: `MEDIUM` or `HIGH`
@@ -54,16 +54,26 @@ Production readiness requires coverage of:
 Validator:
 
 - `buildMttPreflopImportReadinessReport`
+- `buildMttPreflopImportSlots` for the concrete non-production MTT preflop import slot list
 - `npm run verify:ranges`
 - `npm run validate:range-import -- --kind=mtt-preflop --permission-manifest <manifest.json> <input.json>`
+
+Current legal import slots are generated from the MTT completion matrix for every non-production preflop profile. Each slot uses:
+
+- `packId`: `mtt-<full-ring-9|six-max>-<regular|turbo>-preflop-<chip-ev|dolar-ev>-ante-<on|off>-production-v1`
+- normalized input: `Agents/range-intake/raw/<packId>/normalized.json`
+- permission manifest: `Agents/range-intake/raw/<packId>/permission.json`
 
 ## Flop Production Input
 
 Required for each production StrategyPack:
 
 - `gameVariant`: `MTT`
+- `tableFormat`: `FULL_RING_9` or `SIX_MAX`
+- `blindSpeeds`: one or more of `REGULAR`, `TURBO`
 - `street`: `FLOP`
-- `evModel`: `CHIP_EV`
+- `evModel`: `CHIP_EV` or `DOLAR_EV`
+- `antes`: one or more of `ON`, `OFF`
 - `confidence`: `MEDIUM` or `HIGH`
 - Legal `licenseKind`
 - At least two source evidence records
@@ -78,7 +88,7 @@ Each rule must include:
 - `sprMin` / `sprMax`
 - Available `actions`
 - `recommendedAction`
-- `rangeBuckets`
+- `rangeBuckets` with optional `actionMix` metadata; exact frequencies require owned export or explicit written permission
 - Explanation text
 
 Production readiness requires coverage of:
@@ -93,8 +103,77 @@ Validator:
 
 - `buildFlopProductionCoverageReport`
 - `renderFlopProductionCoverageReport`
+- `buildMttPostflopImportSlots` for concrete MTT postflop import slot paths
 - `npm run verify:ranges`
 - `npm run validate:range-import -- --kind=flop-production --permission-manifest <manifest.json> <input.json>`
+
+## Turn Production Input
+
+Required for each production StrategyPack:
+
+- `gameVariant`: `MTT`
+- `tableFormat`: `FULL_RING_9` or `SIX_MAX`
+- `blindSpeeds`: one or more of `REGULAR`, `TURBO`
+- `street`: `TURN`
+- `evModel`: `CHIP_EV` or `DOLAR_EV`
+- `antes`: one or more of `ON`, `OFF`
+- `confidence`: `MEDIUM` or `HIGH`
+- Legal `licenseKind`
+- At least two source evidence records
+- Explicit assumptions
+
+Each rule must include:
+
+- `actionNode`: `TURN_BARREL`
+- `potType`
+- `positionPattern`
+- `priorFlopAction`
+- `turnCardClasses`
+- `sprMin` / `sprMax`
+- Available `actions`
+- `recommendedAction`
+- `rangeBuckets` with optional `actionMix` metadata; exact frequencies require owned export or explicit written permission
+- Explanation text
+
+Production readiness requires coverage of:
+
+- Pot types: `SINGLE_RAISED`, `THREE_BET_POT`
+- Position patterns: `EP_VS_BB`, `BTN_VS_BB`, `SB_VS_BB`, `OOP_RAISER_VS_IP_CALLER`, `OOP_CALLER_VS_IP_3BETTOR`
+- Prior flop actions: `CHECK`, `BET_SMALL`, `BET_BIG`
+- Turn card classes: `BLANK`, `LOW_BRICK`, `OVER_CARD`, `BROADWAY`, `BOARD_PAIRING`, `FLUSH_COMPLETING`, `STRAIGHT_COMPLETING`, `DYNAMIC`
+- Action nodes: `TURN_BARREL`
+- Range lanes: `VALUE`, `BLUFF`, `CHECK`
+
+Validator:
+
+- `buildTurnProductionCoverageReport`
+- `renderTurnProductionCoverageReport`
+- `buildMttPostflopImportSlots` for concrete MTT postflop import slot paths
+- `npm run verify:ranges`
+- `npm run validate:range-import -- --kind=turn-production --permission-manifest <manifest.json> <input.json>`
+
+## River Production StrategyPack Input
+
+River production packs use the same permission gate as flop and turn and add river-specific dimensions:
+
+- `gameVariant`: `MTT`
+- `tableFormat`: `FULL_RING_9` or `SIX_MAX`
+- `blindSpeeds`: one or more of `REGULAR`, `TURBO`
+- `street`: `RIVER`
+- `evModel`: `CHIP_EV` or `DOLAR_EV`
+- `antes`: one or more of `ON`, `OFF`
+- `priorTurnAction`
+- `riverRunoutClasses`
+- `blockerRelevance`
+- `rangeBuckets` with `VALUE`, `BLUFF` and `CHECK` lanes
+- Optional `actionMix` metadata; exact frequencies require owned export or explicit written permission
+
+Validator:
+
+- `buildRiverProductionCoverageReport`
+- `renderRiverProductionCoverageReport`
+- `buildMttPostflopImportSlots` for concrete MTT postflop import slot paths
+- `npm run validate:range-import -- --kind=river-production --permission-manifest <manifest.json> <input.json>`
 
 ## Permission Manifest
 
@@ -128,6 +207,8 @@ Example files:
 
 - `Agents/range-intake/examples/mtt-preflop-minimal.synthetic.json`
 - `Agents/range-intake/examples/flop-production-minimal.synthetic.json`
+- `Agents/range-intake/examples/turn-production-minimal.synthetic.json`
+- `Agents/range-intake/examples/river-production-minimal.synthetic.json`
 - `Agents/range-intake/examples/permission-manifest.synthetic.json`
 
 Raw legal inputs belong under `Agents/range-intake/raw/<pack-id>/`; that folder is ignored by Git.
@@ -148,6 +229,7 @@ Raw legal inputs belong under `Agents/range-intake/raw/<pack-id>/`; that folder 
 The normalized module builder is intentionally a two-stage workflow:
 
 - `buildRangeModule` creates TypeScript module text only when the import is production-ready and the permission manifest is valid.
+- For postflop production, `buildRangeModule` also requires `MTT` gameVariant and at least one legal MTT postflop import slot match from `buildMttPostflopImportSlots`.
 - `renderRangeModuleBuildReport` gives a dry-run report with blockers before any file write.
 - `npm run build:range-module -- --dry-run ...` prints the report and writes nothing.
 - `npm run build:range-module -- --out <module.ts> ...` refuses to overwrite existing files unless `--force` is passed.
@@ -156,3 +238,5 @@ Supported build kinds:
 
 - `mtt-preflop`
 - `flop-production`
+- `turn-production`
+- `river-production`

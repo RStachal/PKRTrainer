@@ -11,6 +11,7 @@ import {
   postflopPublicHeuristicStrategyPacks,
   riverSingleRaisedPrototypeStrategyPack,
   turnSingleRaisedPrototypeStrategyPack,
+  type PostflopStrategyPack,
 } from "../../src/data/ranges/postflopStrategyPack";
 
 describe("postflopStrategyResolver", () => {
@@ -186,5 +187,50 @@ describe("postflopStrategyResolver", () => {
       effectiveStackBB: 40,
       positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
     })).toBeNull();
+  });
+
+  it("matchuje explicitni facing-bet action node pro call/raise/fold rules", () => {
+    const pack: PostflopStrategyPack = {
+      ...flopSingleRaisedPrototypeStrategyPack,
+      rules: [
+        {
+          id: "flop-facing-bet-dynamic-call",
+          actionNode: "FLOP_FACING_BET",
+          boardTextures: ["connected"],
+          sprMin: 2,
+          sprMax: 12,
+          positionPattern: "OOP_RAISER_VS_IP_CALLER",
+          actions: ["FOLD", "CALL", "RAISE"],
+          preferredAction: "CALL",
+          explanation: "Continue against pressure on dynamic boards.",
+        },
+      ],
+    };
+    const resolver = createPostflopStrategyResolver(pack);
+
+    const facing = resolver({
+      street: "FLOP",
+      actionNode: "FLOP_FACING_BET",
+      textures: ["connected", "two-tone"],
+      potType: "SINGLE_RAISED",
+      potBB: 8,
+      effectiveStackBB: 40,
+      positionPattern: "OOP_RAISER_VS_IP_CALLER",
+    });
+    const defaultNode = resolver({
+      street: "FLOP",
+      textures: ["connected", "two-tone"],
+      potType: "SINGLE_RAISED",
+      potBB: 8,
+      effectiveStackBB: 40,
+      positionPattern: "OOP_RAISER_VS_IP_CALLER",
+    });
+
+    expect(facing?.action).toBe("CALL");
+    expect(facing?.source?.kind).toBe("STRATEGY_PACK");
+    if (facing?.source?.kind === "STRATEGY_PACK") {
+      expect(facing.source.ruleId).toBe("flop-facing-bet-dynamic-call");
+    }
+    expect(defaultNode).toBeNull();
   });
 });

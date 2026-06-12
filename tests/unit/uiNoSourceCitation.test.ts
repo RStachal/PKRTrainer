@@ -33,8 +33,11 @@ const FORBIDDEN_SOURCE_TEXT = [
   "sng-6max",
   "SINGLE_RAISED_POT_CBET",
   "THREE_BET_POT_CBET",
+  "FLOP_FACING_BET",
   "TURN_BARREL",
+  "TURN_FACING_BET",
   "RIVER_PRESSURE",
+  "RIVER_FACING_BET",
   "dry|ace-high|disconnected",
   "THREE_BET_POT",
   "OOP_CALLER_VS_IP_3BETTOR",
@@ -46,6 +49,7 @@ const FORBIDDEN_SOURCE_TEXT = [
   "SIX_MAX",
   "PREFLOP",
   "CHIP_EV",
+  "DOLAR_EV",
   "NO_RAKE",
 ];
 
