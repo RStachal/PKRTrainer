@@ -24,6 +24,7 @@ interface CliArgs {
   outFile: string | null;
   dryRun: boolean;
   force: boolean;
+  json: boolean;
 }
 
 function usage(): string {
@@ -34,6 +35,7 @@ function usage(): string {
     "  npm run build:range-module -- --kind=turn-production --dry-run --permission-manifest <manifest.json> <input.json>",
     "  npm run build:range-module -- --kind=river-production --dry-run --permission-manifest <manifest.json> <input.json>",
     "  npm run build:range-module -- --kind=mtt-preflop --permission-manifest <manifest.json> --out <module.ts> <input.json>",
+    "  npm run build:range-module -- --kind=mtt-preflop --dry-run --permission-manifest <manifest.json> --json <input.json>",
   ].join("\n");
 }
 
@@ -45,9 +47,14 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let outFile: string | null = null;
   let dryRun = false;
   let force = false;
+  let json = false;
 
   for (let index = 0; index < argv.length; index += 1) {
     const item = argv[index];
+    if (item === "--json") {
+      json = true;
+      continue;
+    }
     if (item.startsWith("--kind=")) {
       kind = parseKind(item.slice("--kind=".length));
       continue;
@@ -106,6 +113,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     outFile,
     dryRun,
     force,
+    json,
   };
 }
 
@@ -143,7 +151,23 @@ function run(): void {
     exportName: args.exportName,
   });
 
-  console.log(renderRangeModuleBuildReport(result));
+  if (args.json) {
+    console.log(JSON.stringify({
+      kind: result.kind,
+      packId: result.packId,
+      exportName: result.exportName,
+      productionReady: result.productionReady,
+      permissionReady: result.permissionReady,
+      writeReady: result.writeReady,
+      matchedImportSlots: result.matchedImportSlots,
+      blockers: result.blockers,
+      permissionReport: result.permissionReport,
+      dryRun: args.dryRun,
+      outFile: args.outFile,
+    }, null, 2));
+  } else {
+    console.log(renderRangeModuleBuildReport(result));
+  }
 
   if (args.dryRun || !args.outFile) {
     process.exitCode = result.writeReady ? 0 : 1;

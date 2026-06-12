@@ -401,8 +401,17 @@ function runBuilderCli(
   kind: "mtt-preflop" | "flop-production" | "turn-production" | "river-production",
   inputFile: string,
   manifestFile: string,
+  extraArgs: readonly string[] = [],
 ) {
   const command = process.platform === "win32" ? "cmd.exe" : "npm";
+  const cliArgs = [
+    `--kind=${kind}`,
+    "--dry-run",
+    "--permission-manifest",
+    manifestFile,
+    ...extraArgs,
+    inputFile,
+  ];
   const args = process.platform === "win32"
     ? [
       "/c",
@@ -410,21 +419,13 @@ function runBuilderCli(
       "run",
       "build:range-module",
       "--",
-      `--kind=${kind}`,
-      "--dry-run",
-      "--permission-manifest",
-      manifestFile,
-      inputFile,
+      ...cliArgs,
     ]
     : [
       "run",
       "build:range-module",
       "--",
-      `--kind=${kind}`,
-      "--dry-run",
-      "--permission-manifest",
-      manifestFile,
-      inputFile,
+      ...cliArgs,
     ];
   return spawnSync(command, args, {
     cwd: process.cwd(),
@@ -599,6 +600,40 @@ describe("rangeModuleBuilder", () => {
       expect(result.stdout).toContain("kind: mtt-preflop");
       expect(result.stdout).toContain("matched import slots: 1");
       expect(result.stdout).toContain("FULL_RING_9|TURBO|CHIP_EV|PREFLOP|ON");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("spusti build:range-module CLI dry-run jako JSON bez moduleText", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkr-range-builder-"));
+    try {
+      const input = validMttImport();
+      const inputFile = join(dir, "input.json");
+      const manifestFile = join(dir, "permission.json");
+      writeFileSync(inputFile, JSON.stringify(input), "utf8");
+      writeFileSync(manifestFile, JSON.stringify(permissionManifest(input.id)), "utf8");
+
+      const result = runBuilderCli("mtt-preflop", inputFile, manifestFile, ["--json"]);
+
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
+        kind: string;
+        packId: string;
+        writeReady: boolean;
+        matchedImportSlots: { slotId: string; packId: string }[];
+        moduleText?: string;
+      };
+      expect(parsed).toMatchObject({
+        kind: "mtt-preflop",
+        packId: input.id,
+        writeReady: true,
+      });
+      expect(parsed.matchedImportSlots).toContainEqual(expect.objectContaining({
+        slotId: "FULL_RING_9|TURBO|CHIP_EV|PREFLOP|ON",
+        packId: input.id,
+      }));
+      expect(parsed.moduleText).toBeUndefined();
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

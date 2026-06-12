@@ -41,6 +41,7 @@ npm run validate:range-import -- --kind=mtt-preflop Agents/range-intake/examples
 ```
 
 For automation, add `--json` to receive the same readiness, legal-slot and permission checks as structured output.
+The module builder also supports `--json` in dry-run mode for `writeReady`, matched slots and blockers without printing generated module text.
 
 Expected production promotion properties:
 

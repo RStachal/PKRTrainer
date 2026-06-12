@@ -1329,6 +1329,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: regresni CLI test porovnava `importSlot.packId` z `npm run mtt:completion -- --json` s `packId` ze stejne filtrovaneho `npm run mtt:slots -- --json`, aby operator tooling nedostal rozdilne import sloty
   - [x] 131.26 Pridat JSON vystup do range import validatoru
     - Hotovo: `npm run validate:range-import -- --json` vraci strukturovany `valid`, `productionReady`, `legalImportSlot`, `permissionReady`, slot report a permission report pro batch import tooling; textovy vystup zustava default
+  - [x] 131.27 Pridat JSON vystup do range module builder dry-runu
+    - Hotovo: `npm run build:range-module -- --dry-run --json` vraci `writeReady`, matched import sloty, blockery a permission report bez vypisu generovaneho `moduleText`, aby batch tooling mohl bezpecne vyhodnotit promotion gate
 
 - [x] 132. MTT cross-position and multi-street simulation
   - [x] 132.1 Generovat heads-up postflop kontexty pro vsechny podporovane dvojice pozic

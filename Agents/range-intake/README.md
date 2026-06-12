@@ -45,6 +45,8 @@ npm run validate:range-import -- --kind=river-production --permission-manifest A
 npm run build:range-module -- --kind=mtt-preflop --dry-run --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
 ```
 
+Add `--json` to any dry-run command when automation needs `writeReady`, matched import slots and blockers as structured output.
+
 or:
 
 ```bash

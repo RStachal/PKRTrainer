@@ -58,6 +58,7 @@ Validator:
 - `npm run verify:ranges`
 - `npm run validate:range-import -- --kind=mtt-preflop --permission-manifest <manifest.json> <input.json>`
 - `npm run validate:range-import -- --kind=mtt-preflop --permission-manifest <manifest.json> --json <input.json>` for batch tooling
+- `npm run build:range-module -- --kind=mtt-preflop --dry-run --permission-manifest <manifest.json> --json <input.json>` for structured write-readiness checks
 
 Current legal import slots are generated from the MTT completion matrix for every non-production preflop profile. Each slot uses:
 
