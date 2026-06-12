@@ -281,6 +281,12 @@ describe("postflopView - DOM", () => {
     expect(heroBucket?.textContent).not.toContain("internal-test-pack");
     expect(heroBucket?.textContent).not.toContain("internal-test-rule");
     expect(heroBucket?.textContent).not.toContain("https://");
+    const result = root.querySelector<HTMLElement>(".postflop-result");
+    expect(result?.textContent).toContain("Production model");
+    expect(result?.textContent).not.toContain("Heuristic model");
+    expect(result?.textContent).not.toContain("internal-test-pack");
+    expect(result?.textContent).not.toContain("internal-test-rule");
+    expect(result?.textContent).not.toContain("https://");
   });
 
   it("skryje exact frequency hodnoty pro kvalitativni mixed-action bucket", () => {

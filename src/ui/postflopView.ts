@@ -1115,7 +1115,7 @@ function modelItems(spot: PostflopTrainingSpot): readonly string[] {
   const source = spot.explanation.source;
   if (source.kind === "STRATEGY_PACK") {
     return [
-      "Heuristic model",
+      isPublicHeuristicStrategySource(source) ? "Heuristic model" : "Production model",
       `Confidence: ${confidenceLabel(source.confidence)}`,
       `Texture match: ${source.matchedTextures.map(textureLabel).join(", ")}`,
       `SPR window: ${source.sprMin}-${source.sprMax}`,
@@ -1125,6 +1125,12 @@ function modelItems(spot: PostflopTrainingSpot): readonly string[] {
     ];
   }
   return ["Baseline heuristic"];
+}
+
+function isPublicHeuristicStrategySource(
+  source: Extract<PostflopTrainingSpot["explanation"]["source"], { kind: "STRATEGY_PACK" }>,
+): boolean {
+  return source.assumptions.some((assumption) => /^Public heuristic /i.test(assumption));
 }
 
 function userFacingAssumption(assumption: string): string {
