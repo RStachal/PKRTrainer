@@ -194,6 +194,51 @@ describe("flopProductionStrategyResolver", () => {
     }
   });
 
+  it("postflop treningovy generator pouzije SRP production resolver, kdyz existuje", () => {
+    const resolver = createPostflopStrategyResolverWithProductionFallback(
+      [productionPack()],
+      [flopSingleRaisedPrototypeStrategyPack],
+    );
+
+    const spot = generatePostflopSpot({
+      seed: 7,
+      street: "FLOP",
+      board: [
+        { rank: "A", suit: "s" },
+        { rank: "7", suit: "d" },
+        { rank: "2", suit: "c" },
+      ],
+      heroCards: [
+        { rank: "A", suit: "h" },
+        { rank: "A", suit: "c" },
+      ],
+      potType: "SINGLE_RAISED",
+      potBB: 6,
+      effectiveStackBB: 40,
+      positionContext: {
+        heroPosition: "BTN",
+        villainPosition: "BB",
+        aggressorPosition: "BTN",
+        callerPosition: "BB",
+        inPosition: true,
+        callerType: "BIG_BLIND",
+        positionPattern: "BTN_VS_BB",
+      },
+      strategyResolver: resolver,
+    });
+
+    expect(spot.recommendedAction).toBe("BET_BIG");
+    expect(spot.strategySource.kind).toBe("STRATEGY_PACK");
+    if (spot.strategySource.kind === "STRATEGY_PACK") {
+      expect(spot.strategySource.packId).toBe("mtt-full-ring-9-flop-srp-production-test-v1");
+      expect(spot.strategySource.heroRangeBucket).toMatchObject({
+        lane: "VALUE",
+        action: "BET_BIG",
+        handClass: "AA",
+      });
+    }
+  });
+
   it("production fallback registry umi pouzit 3bet flop production pack", () => {
     const resolver = createPostflopStrategyResolverWithProductionFallback(
       [threeBetProductionPack()],

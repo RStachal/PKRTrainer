@@ -980,15 +980,16 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 91.3 Pridat validator flop production coverage
     - Validator musi ukazat missing positions, textures, pot types and action nodes
 
-- [ ] 92. Flop SRP production coverage
+- [x] 92. Flop SRP production coverage
   - [x] 92.1 Pokryt hlavni SRP pozicni patterny
     - EP vs BB, BTN vs BB, SB vs BB, OOP raiser vs IP caller
   - [x] 92.2 Pokryt board texture taxonomy
     - A-high, broadway, low, paired, monotone, two-tone, connected, disconnected, dry, draw-heavy
-  - [ ] 92.3 Napojit production SRP flop pack do treninku
+  - [x] 92.3 Napojit production SRP flop pack do treninku
     - UI ma pouzivat production data tam, kde existuji, jinak jasne preview/fallback
     - Resolver infrastructure hotova; skutecny production SRP pack ceka na legalni source/export vstup
     - Flop production coverage report now renders review text for missing pot types, position patterns, textures, action nodes and lanes
+    - Hotovo: `generatePostflopSpot` s production fallback registry pouzije SRP production StrategyPack pro matching spot a jinak zustane u public heuristic/generator fallbacku; realny legalni SRP import zustava v 114
 
 - [x] 93. Flop 3bet pot production coverage
   - [x] 93.1 Definovat 3bet pot action nodes a position patterns
