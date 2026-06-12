@@ -1098,8 +1098,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
 - [ ] 105. MTT 9-max turbo promotion QA
   - [ ] 105.1 Zapojit turbo packy do MTT preflop registry
     - Readiness report musi prejit z MISSING na PRODUCTION
-  - [ ] 105.2 Otestovat turbo gate v UI a drill engine
+  - [x] 105.2 Otestovat turbo gate v UI a drill engine
     - MTT/FULL_RING_9/TURBO/PREFLOP/chipEV ma spustit drill jen po validaci
+    - Hotovo: bootstrap gate test pro vsechny format/speed/ante kombinace overuje, ze FULL_RING_9/TURBO zustane zablokovany jako missing production range a nespusti poker table
   - [ ] 105.3 Porovnat regular vs turbo coverage diff
     - Diff musi ukazat, zda jde o dedicated ranges nebo schvaleny reuse policy
 
@@ -1131,12 +1132,14 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Readiness musi projit bez SPEED_METADATA_ONLY shortcutu
 
 - [ ] 109. MTT 6-max turbo promotion QA
-  - [ ] 109.1 Zapojit 6-max turbo do production gate
+  - [x] 109.1 Zapojit 6-max turbo do production gate
     - SIX_MAX/TURBO/PREFLOP/chipEV ma spustit drill az po production readiness
+    - Hotovo: readiness report drzi SIX_MAX/TURBO jako SPEED_METADATA_ONLY candidate a bootstrap gate test overuje, ze drill se pred production readiness nespusti
   - [ ] 109.2 Porovnat 6-max regular vs turbo action distributions
     - Audit ma upozornit na podezrele identicke ranges bez reuse policy
-  - [ ] 109.3 Spustit release checkpoint pro vsechny MTT preflop profily
+  - [x] 109.3 Spustit release checkpoint pro vsechny MTT preflop profily
     - Full suite, build, verify:ranges and source-free UI policy
+    - Hotovo 2026-06-12: `npm run release:check` proslo po 6-max/turbo gate QA; 82 test files, 373 tests, verify:ranges, build and bundle budget jsou zelene
 
 - [x] 110. Preflop production promotion pipeline
   - [x] 110.1 Vytvorit jednotny normalized pack builder pro import JSON
