@@ -6,8 +6,7 @@ import {
   renderMttCompletionReadinessReport,
   renderMttCompletionReleaseGateReport,
 } from "../src/data/ranges/mttProductionReadiness.ts";
-import type { AnteMode } from "../src/core/types.ts";
-import type { BlindSpeed, EvModel, TableFormat, TrainingStreet } from "../src/core/trainingProfile.ts";
+import { parseMttFilterArg } from "../src/data/ranges/mttCliFilterParsing.ts";
 
 interface CliArgs {
   details: boolean;
@@ -54,72 +53,11 @@ function parseArgs(argv: readonly string[]): CliArgs {
     if (item === "--help" || item === "-h") {
       throw new Error(usage());
     }
-    if (item.startsWith("--format=")) {
-      filters.tableFormat = parseTableFormat(item.slice("--format=".length));
-      continue;
-    }
-    if (item.startsWith("--speed=")) {
-      filters.blindSpeed = parseBlindSpeed(item.slice("--speed=".length));
-      continue;
-    }
-    if (item.startsWith("--ev=")) {
-      filters.evModel = parseEvModel(item.slice("--ev=".length));
-      continue;
-    }
-    if (item.startsWith("--street=")) {
-      filters.street = parseStreet(item.slice("--street=".length));
-      continue;
-    }
-    if (item.startsWith("--ante=")) {
-      filters.ante = parseAnte(item.slice("--ante=".length));
-      continue;
-    }
-    if (item.startsWith("--status=")) {
-      filters.status = parseStatus(item.slice("--status=".length));
-      continue;
-    }
+    if (parseMttFilterArg(item, filters, usage)) continue;
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
   return { details, json, filters };
-}
-
-function parseTableFormat(value: string): TableFormat {
-  if (value === "FULL_RING_9" || value === "SIX_MAX") return value;
-  throw new Error(`Unsupported --format value: ${value}\n\n${usage()}`);
-}
-
-function parseBlindSpeed(value: string): BlindSpeed {
-  if (value === "REGULAR" || value === "TURBO") return value;
-  throw new Error(`Unsupported --speed value: ${value}\n\n${usage()}`);
-}
-
-function parseEvModel(value: string): Extract<EvModel, "CHIP_EV" | "DOLAR_EV"> {
-  if (value === "CHIP_EV" || value === "DOLAR_EV") return value;
-  throw new Error(`Unsupported --ev value: ${value}\n\n${usage()}`);
-}
-
-function parseStreet(value: string): TrainingStreet {
-  if (value === "PREFLOP" || value === "FLOP" || value === "TURN" || value === "RIVER") {
-    return value;
-  }
-  throw new Error(`Unsupported --street value: ${value}\n\n${usage()}`);
-}
-
-function parseAnte(value: string): AnteMode {
-  if (value === "ON" || value === "OFF") return value;
-  throw new Error(`Unsupported --ante value: ${value}\n\n${usage()}`);
-}
-
-function parseStatus(value: string): MttCompletionReadinessFilters["status"] {
-  const normalized = value.toUpperCase().replace("-", "_");
-  if (normalized === "PRODUCTION" || normalized === "CANDIDATE" || normalized === "MISSING") {
-    return normalized;
-  }
-  if (normalized === "NON_PRODUCTION") return "NON_PRODUCTION";
-  if (normalized === "PREVIEW") return "CANDIDATE";
-  if (normalized === "BLOCKED") return "MISSING";
-  throw new Error(`Unsupported --status value: ${value}\n\n${usage()}`);
 }
 
 try {

@@ -81,6 +81,14 @@ describe("mtt:slots CLI", () => {
     expect(result.stderr).toContain("Unsupported --street value: SHOWDOWN");
     expect(result.stderr).toContain("Usage:");
   });
+
+  it("vrati chybu pro neznamy status alias ze sdileneho parseru", () => {
+    const result = runSlots("--status=later");
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Unsupported --status value: later");
+    expect(result.stderr).toContain("Usage:");
+  });
 });
 
 function runSlots(...args: string[]) {

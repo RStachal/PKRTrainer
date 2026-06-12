@@ -1,5 +1,3 @@
-import type { AnteMode } from "../src/core/types.ts";
-import type { BlindSpeed, EvModel, TableFormat, TrainingStreet } from "../src/core/trainingProfile.ts";
 import {
   buildMttPostflopImportSlots,
   renderMttPostflopImportSlots,
@@ -10,22 +8,17 @@ import {
   renderMttPreflopImportSlots,
   type MttPreflopImportSlot,
 } from "../src/data/ranges/mttPreflopImportSlots.ts";
-import type { MttCompletionReadinessStatus } from "../src/data/ranges/mttProductionReadiness.ts";
+import { parseMttFilterArg } from "../src/data/ranges/mttCliFilterParsing.ts";
+import type {
+  MttCompletionReadinessFilters,
+  MttCompletionReadinessStatus,
+} from "../src/data/ranges/mttProductionReadiness.ts";
 
 type SlotKind = "all" | "preflop" | "postflop";
 
-interface SlotFilters {
-  tableFormat?: TableFormat;
-  blindSpeed?: BlindSpeed;
-  evModel?: Extract<EvModel, "CHIP_EV" | "DOLAR_EV">;
-  street?: TrainingStreet;
-  ante?: AnteMode;
-  status?: MttCompletionReadinessStatus | "NON_PRODUCTION";
-}
-
 interface CliArgs {
   kind: SlotKind;
-  filters: SlotFilters;
+  filters: MttCompletionReadinessFilters;
   json: boolean;
 }
 
@@ -74,13 +67,13 @@ try {
     }, null, 2));
   } else {
     const sections: string[] = [];
-  if (args.kind === "all" || args.kind === "preflop") {
+    if (args.kind === "all" || args.kind === "preflop") {
       sections.push(renderMttPreflopImportSlots(preflopSlots));
-  }
-  if (args.kind === "all" || args.kind === "postflop") {
+    }
+    if (args.kind === "all" || args.kind === "postflop") {
       sections.push(renderMttPostflopImportSlots(postflopSlots));
-  }
-  console.log(sections.join("\n\n"));
+    }
+    console.log(sections.join("\n\n"));
   }
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
@@ -88,7 +81,7 @@ try {
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
-  const filters: SlotFilters = {};
+  const filters: MttCompletionReadinessFilters = {};
   let kind: SlotKind = "all";
   let json = false;
 
@@ -110,30 +103,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
       kind = parseKind(item.slice("--kind=".length));
       continue;
     }
-    if (item.startsWith("--format=")) {
-      filters.tableFormat = parseTableFormat(item.slice("--format=".length));
-      continue;
-    }
-    if (item.startsWith("--speed=")) {
-      filters.blindSpeed = parseBlindSpeed(item.slice("--speed=".length));
-      continue;
-    }
-    if (item.startsWith("--ev=")) {
-      filters.evModel = parseEvModel(item.slice("--ev=".length));
-      continue;
-    }
-    if (item.startsWith("--street=")) {
-      filters.street = parseStreet(item.slice("--street=".length));
-      continue;
-    }
-    if (item.startsWith("--ante=")) {
-      filters.ante = parseAnte(item.slice("--ante=".length));
-      continue;
-    }
-    if (item.startsWith("--status=")) {
-      filters.status = parseStatus(item.slice("--status=".length));
-      continue;
-    }
+    if (parseMttFilterArg(item, filters, usage)) continue;
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
@@ -145,45 +115,9 @@ function parseKind(value: string): SlotKind {
   throw new Error(`Unsupported --kind value: ${value}\n\n${usage()}`);
 }
 
-function parseTableFormat(value: string): TableFormat {
-  if (value === "FULL_RING_9" || value === "SIX_MAX") return value;
-  throw new Error(`Unsupported --format value: ${value}\n\n${usage()}`);
-}
-
-function parseBlindSpeed(value: string): BlindSpeed {
-  if (value === "REGULAR" || value === "TURBO") return value;
-  throw new Error(`Unsupported --speed value: ${value}\n\n${usage()}`);
-}
-
-function parseEvModel(value: string): Extract<EvModel, "CHIP_EV" | "DOLAR_EV"> {
-  if (value === "CHIP_EV" || value === "DOLAR_EV") return value;
-  throw new Error(`Unsupported --ev value: ${value}\n\n${usage()}`);
-}
-
-function parseStreet(value: string): TrainingStreet {
-  if (value === "PREFLOP" || value === "FLOP" || value === "TURN" || value === "RIVER") {
-    return value;
-  }
-  throw new Error(`Unsupported --street value: ${value}\n\n${usage()}`);
-}
-
-function parseAnte(value: string): AnteMode {
-  if (value === "ON" || value === "OFF") return value;
-  throw new Error(`Unsupported --ante value: ${value}\n\n${usage()}`);
-}
-
-function parseStatus(value: string): SlotFilters["status"] {
-  const normalized = value.toUpperCase().replace("-", "_");
-  if (normalized === "CANDIDATE" || normalized === "MISSING") return normalized;
-  if (normalized === "NON_PRODUCTION") return "NON_PRODUCTION";
-  if (normalized === "PREVIEW") return "CANDIDATE";
-  if (normalized === "BLOCKED") return "MISSING";
-  throw new Error(`Unsupported --status value: ${value}\n\n${usage()}`);
-}
-
 function filterMttPreflopImportSlots(
   slots: readonly MttPreflopImportSlot[],
-  filters: SlotFilters,
+  filters: MttCompletionReadinessFilters,
 ): MttPreflopImportSlot[] {
   return slots.filter((slot) => (
     matchesOptionalFilter(slot.tableFormat, filters.tableFormat) &&
@@ -197,7 +131,7 @@ function filterMttPreflopImportSlots(
 
 function filterMttPostflopImportSlots(
   slots: readonly MttPostflopImportSlot[],
-  filters: SlotFilters,
+  filters: MttCompletionReadinessFilters,
 ): MttPostflopImportSlot[] {
   return slots.filter((slot) => (
     matchesOptionalFilter(slot.tableFormat, filters.tableFormat) &&
@@ -218,7 +152,7 @@ function matchesOptionalFilter<T extends string>(
 
 function matchesStatusFilter(
   status: MttCompletionReadinessStatus,
-  filter: SlotFilters["status"],
+  filter: MttCompletionReadinessFilters["status"],
 ): boolean {
   if (filter === undefined || filter === "NON_PRODUCTION") return true;
   return status === filter;
