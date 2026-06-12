@@ -68,6 +68,7 @@ export function matchingFlopProductionRules(
   if (input.street !== "FLOP") return [];
   return pack.rules.filter((rule) => (
     rule.potType === input.potType &&
+    actionNodeMatchesInput(rule, input) &&
     rule.positionPattern === input.positionPattern &&
     rule.boardTextures.some((texture) => input.textures.includes(texture))
   ));
@@ -102,11 +103,19 @@ function ruleMatchesInput(
   const spr = roundedSpr(input.effectiveStackBB, input.potBB);
   return (
     rule.potType === input.potType &&
+    actionNodeMatchesInput(rule, input) &&
     rule.positionPattern === input.positionPattern &&
     spr >= rule.sprMin &&
     spr <= rule.sprMax &&
     rule.boardTextures.some((texture) => input.textures.includes(texture))
   );
+}
+
+function actionNodeMatchesInput(
+  rule: FlopProductionStrategyRule,
+  input: PostflopStrategyInput,
+): boolean {
+  return input.actionNode === undefined || rule.actionNode === input.actionNode;
 }
 
 function ruleScore(rule: FlopProductionStrategyRule, input: PostflopStrategyInput): number {

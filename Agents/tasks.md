@@ -1272,8 +1272,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: `buildRangeModule` pro `mtt-preflop` vyzaduje production-ready import, validni permission manifest a shodu `packId` s legal import slotem; mimo-slot pack nedostane `writeReady`
 
 - [ ] 131. MTT postflop production completion
-  - [ ] 131.1 Dokoncit flop SRP/3bet production resolver chain
+  - [x] 131.1 Dokoncit flop SRP/3bet production resolver chain
     - SRP i 3bet poty musi pokryt pozicni patterny, board textures, SPR windows a range lanes
+    - Hotovo: flop production resolver chain matchuje action node, pot type, position pattern, board texture a SPR; testy overuji SRP prioritizaci, 3bet production pack a fallback pri nevalidnim production packu
   - [x] 131.2 Pridat turn production resolver
     - Navazat na `TurnProductionStrategyPack`, prior flop action, turn card class, SPR a position pattern
     - Hotovo: `generatePostflopSpot` predava board, default prior flop action a klasifikovanou turn kartu do production resolveru

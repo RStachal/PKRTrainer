@@ -102,6 +102,50 @@ function productionPack(confidence: "LOW" | "MEDIUM" = "MEDIUM"): FlopProduction
   };
 }
 
+function threeBetProductionPack(): FlopProductionStrategyPack {
+  return {
+    ...productionPack(),
+    id: "mtt-full-ring-9-flop-3bet-production-test-v1",
+    rules: [
+      {
+        id: "flop-production-oop-caller-ip-3bettor-dry-small",
+        actionNode: "THREE_BET_POT_CBET",
+        potType: "THREE_BET_POT",
+        positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+        boardTextures: ["dry", "rainbow"],
+        sprMin: 1,
+        sprMax: 5,
+        actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+        recommendedAction: "BET_SMALL",
+        rangeBuckets: [
+          {
+            lane: "VALUE",
+            label: "value",
+            action: "BET_SMALL",
+            handClasses: ["AA"],
+            features: ["overpair"],
+          },
+          {
+            lane: "BLUFF",
+            label: "bluff",
+            action: "BET_SMALL",
+            handClasses: ["QJs"],
+            features: ["backdoor equity"],
+          },
+          {
+            lane: "CHECK",
+            label: "check",
+            action: "CHECK",
+            handClasses: ["72o"],
+            features: ["air"],
+          },
+        ],
+        explanation: "Production fixture covers dry OOP caller versus in-position 3bettor.",
+      },
+    ],
+  };
+}
+
 const input = {
   street: "FLOP" as const,
   textures: ["dry", "rainbow"] as const,
@@ -148,6 +192,51 @@ describe("flopProductionStrategyResolver", () => {
     if (result?.source?.kind === "STRATEGY_PACK") {
       expect(result.source.packId).toBe("mtt-full-ring-9-flop-srp-production-test-v1");
     }
+  });
+
+  it("production fallback registry umi pouzit 3bet flop production pack", () => {
+    const resolver = createPostflopStrategyResolverWithProductionFallback(
+      [threeBetProductionPack()],
+      [flopSingleRaisedPrototypeStrategyPack],
+    );
+    const result = resolver({
+      street: "FLOP",
+      textures: ["dry", "rainbow"],
+      potType: "THREE_BET_POT",
+      potBB: 18,
+      effectiveStackBB: 40,
+      positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+      actionNode: "THREE_BET_POT_CBET",
+      heroHand: "AA",
+    });
+
+    expect(result?.action).toBe("BET_SMALL");
+    expect(result?.source?.kind).toBe("STRATEGY_PACK");
+    if (result?.source?.kind === "STRATEGY_PACK") {
+      expect(result.source.packId).toBe("mtt-full-ring-9-flop-3bet-production-test-v1");
+      expect(result.source.ruleId).toBe("flop-production-oop-caller-ip-3bettor-dry-small");
+      expect(result.source.positionPattern).toBe("OOP_CALLER_VS_IP_3BETTOR");
+      expect(result.source.heroRangeBucket).toMatchObject({
+        lane: "VALUE",
+        action: "BET_SMALL",
+        handClass: "AA",
+      });
+    }
+  });
+
+  it("nematchuje flop production rule proti jinemu action nodu", () => {
+    const resolver = createFlopProductionStrategyResolver(threeBetProductionPack());
+    const result = resolver({
+      street: "FLOP",
+      textures: ["dry", "rainbow"],
+      potType: "THREE_BET_POT",
+      potBB: 18,
+      effectiveStackBB: 40,
+      positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+      actionNode: "SINGLE_RAISED_POT_CBET",
+    });
+
+    expect(result).toBeNull();
   });
 
   it("bez validniho production packu zustane public heuristic fallback", () => {
