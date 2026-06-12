@@ -1249,7 +1249,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Trener musi umet projit jednu handu postupne FLOP -> TURN -> RIVER a ulozit ji jako jednu sequence
     - Hotovo: postflop UI ma `Hand line` mode, navazujici Next Turn/River flow, finalni souhrn a `onLineCompleted` save do line event logu
 
-- [ ] 129. MTT completion matrix
+- [x] 129. MTT completion matrix
   - [x] 129.1 Definovat canonical MTT profile matrix
     - Pokryt `FULL_RING_9`/`SIX_MAX` x `REGULAR`/`TURBO` x `CHIP_EV`/`DOLAR_EV` x `PREFLOP`/`FLOP`/`TURN`/`RIVER` x ante ON/OFF tam, kde dava smysl
     - Hotovo: `buildMttCompletionReadinessReport` generuje canonical 64radkovou MTT matici pro format, speed, EV model, street a ante
@@ -1259,6 +1259,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 129.3 Pridat release gate pro kompletni MTT matici
     - Build nesmi tise pustit profil bez production dat mimo povoleny preview/fallback rezim
     - Hotovo: `buildMttCompletionReleaseGateReport` a `npm run mtt:completion` overuji, ze production rows jsou productionReady a vsechny non-production rows maji explicitni blocker
+    - Parent uzavren: completion matrix/gate tooling je hotove; realne production importy zustavaji samostatne sledovane v import execution/promote QA tascech
 
 - [ ] 130. MTT preflop production completion
   - [x] 130.1 Sloucit 9-max a 6-max import validatory do jednoho MTT preflop validatoru
@@ -1429,6 +1430,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Poznamka: Browser `iab` backend nebyl v teto relaci dostupny; doplnen automatizovany viewport smoke pro 360x800, 390x844 and 412x915
     - Retry 2026-06-05: node_repl tool je dostupny, ale Browser stale hlasi `Browser is not available: iab`; real screenshot QA zustava otevrena
     - Retry 2026-06-11: Browser tool discovery neposkytlo ovladac pro screenshoty a `playwright` neni dostupny jako Node modul; real screenshot QA zustava otevrena, automatizovane mobile smoke testy pro 360x800, 390x844 and 412x915 prosly v `npm test`
+    - Retry 2026-06-12: Browser skill bootstrap opet skoncil na `Browser is not available: iab`; `npx vitest run tests/unit/mobileWebViewSmoke.test.ts` prosel vcetne 360x800, 390x844 and 412x915, ale real screenshot QA zustava otevrena
   - [x] 128.2 Otestovat offline reload po service worker cache
     - App musi fungovat bez runtime fetch
     - Hotovo: service worker test pokryva offline navigation reload z cache
