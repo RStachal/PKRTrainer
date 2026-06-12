@@ -23,10 +23,37 @@ describe("mtt:slots CLI", () => {
     expect(result.stdout).toContain("slots: 48");
   });
 
+  it("umi filtrovat postflop sloty podle MTT dimenzi", () => {
+    const result = runSlots(
+      "--kind=postflop",
+      "--format=SIX_MAX",
+      "--ev=DOLAR_EV",
+      "--street=RIVER",
+      "--status=candidate",
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).not.toContain("MTT preflop legal import slots");
+    expect(result.stdout).toContain("MTT postflop legal import slots");
+    expect(result.stdout).toContain("slots: 4");
+    expect(result.stdout).toContain("SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF");
+    expect(result.stdout).toContain("mtt-six-max-turbo-river-dolar-ev-ante-off-production-v1");
+    expect(result.stdout).not.toContain("FULL_RING_9|");
+  });
+
   it("vrati chybu pro neznamy kind", () => {
     const result = runSlots("--kind=unknown");
 
     expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Unsupported --kind value: unknown");
+    expect(result.stderr).toContain("Usage:");
+  });
+
+  it("vrati chybu pro neznamy filtr", () => {
+    const result = runSlots("--street=SHOWDOWN");
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Unsupported --street value: SHOWDOWN");
     expect(result.stderr).toContain("Usage:");
   });
 });

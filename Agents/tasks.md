@@ -1316,6 +1316,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: `mttImportSlotValidation` centralizuje preflop/postflop legal-slot reporty, sdili render vystup pro CLI a pouziva ho i `buildRangeModule`, takze `validate:range-import` a `build:range-module` hlidaji stejne slot kontrakty
   - [x] 131.20 Pridat filtry do detailniho MTT completion CLI
     - Hotovo: `npm run mtt:completion -- --details` podporuje `--format`, `--speed`, `--ev`, `--street`, `--ante` a `--status`, takze operator muze vypsat jen konkretni import slice misto cele 64radkove matice
+  - [x] 131.21 Pridat filtry do MTT import slot CLI
+    - Hotovo: `npm run mtt:slots` podporuje stejne dimenzni filtry jako completion CLI, takze legalni `normalized.json`/`permission.json` cesty lze vypsat jen pro konkretni import batch
 
 - [x] 132. MTT cross-position and multi-street simulation
   - [x] 132.1 Generovat heads-up postflop kontexty pro vsechny podporovane dvojice pozic

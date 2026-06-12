@@ -24,9 +24,11 @@ Use the slot list before creating a new `Agents/range-intake/raw/<pack-id>/` fol
 npm run mtt:slots
 npm run mtt:slots -- --kind=preflop
 npm run mtt:slots -- --kind=postflop
+npm run mtt:slots -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --status=candidate
 ```
 
 The output is source-free and includes each legal pack id, normalized input path and permission manifest path.
+Available filters are `--format`, `--speed`, `--ev`, `--street`, `--ante` and `--status`.
 
 ## Validate an MTT preflop import
 
