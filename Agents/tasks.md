@@ -1261,7 +1261,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: `buildMttCompletionReleaseGateReport` a `npm run mtt:completion` overuji, ze production rows jsou productionReady a vsechny non-production rows maji explicitni blocker
     - Parent uzavren: completion matrix/gate tooling je hotove; realne production importy zustavaji samostatne sledovane v import execution/promote QA tascech
 
-- [ ] 130. MTT preflop production completion
+- [x] 130. MTT preflop production completion
   - [x] 130.1 Sloucit 9-max a 6-max import validatory do jednoho MTT preflop validatoru
     - Jeden validator ma podporovat oba tableFormaty, regular/turbo, CHIP_EV/DOLAR_EV a ante ON/OFF
     - Hotovo: `mttPreflopRangePackImport` je jednotny validator pro `FULL_RING_9` i `SIX_MAX`; legacy `mttSixMaxRangePackImport` zustava jen kompatibilni wrapper nad stejnym kontraktem
@@ -1271,8 +1271,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 130.3 Zapojit vsechny promoted preflop packy do production gate
     - Drill engine smi spustit production scoring jen pro profily s dedicated hand recommendations
     - Hotovo: `buildRangeModule` pro `mtt-preflop` vyzaduje production-ready import, validni permission manifest a shodu `packId` s legal import slotem; mimo-slot pack nedostane `writeReady`
+    - Parent uzavren: preflop import/gate framework je hotovy; legalni export zpracovani a promotion QA zustavaji v 104-109
 
-- [ ] 131. MTT postflop production completion
+- [x] 131. MTT postflop production completion
   - [x] 131.1 Dokoncit flop SRP/3bet production resolver chain
     - SRP i 3bet poty musi pokryt pozicni patterny, board textures, SPR windows a range lanes
     - Hotovo: flop production resolver chain matchuje action node, pot type, position pattern, board texture a SPR; testy overuji SRP prioritizaci, 3bet production pack a fallback pri nevalidnim production packu
@@ -1332,6 +1333,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: `npm run validate:range-import -- --json` vraci strukturovany `valid`, `productionReady`, `legalImportSlot`, `permissionReady`, slot report a permission report pro batch import tooling; textovy vystup zustava default
   - [x] 131.27 Pridat JSON vystup do range module builder dry-runu
     - Hotovo: `npm run build:range-module -- --dry-run --json` vraci `writeReady`, matched import sloty, blockery a permission report bez vypisu generovaneho `moduleText`, aby batch tooling mohl bezpecne vyhodnotit promotion gate
+    - Parent uzavren: postflop schema/resolver/import-slot/tooling framework je hotovy; realne SRP/3bet production importy a UI QA zustavaji v 114-116
 
 - [x] 132. MTT cross-position and multi-street simulation
   - [x] 132.1 Generovat heads-up postflop kontexty pro vsechny podporovane dvojice pozic
