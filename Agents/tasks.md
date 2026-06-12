@@ -1430,13 +1430,14 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Animace a hover efekty nesmi byt nutne pro pouziti
     - Hotovo: app shell, postflop, HH import and range modal maji `prefers-reduced-motion` CSS guard; tests hlidaji jeho pritomnost
 
-- [ ] 128. Mobile and Android WebView release QA
-  - [ ] 128.1 Spustit screenshot QA pro 360x800, 390x844, 412x915
+- [x] 128. Mobile and Android WebView release QA
+  - [x] 128.1 Spustit screenshot QA pro 360x800, 390x844, 412x915
     - Table, filters, postflop matrix and dashboard nesmi pretekat
     - Poznamka: Browser `iab` backend nebyl v teto relaci dostupny; doplnen automatizovany viewport smoke pro 360x800, 390x844 and 412x915
     - Retry 2026-06-05: node_repl tool je dostupny, ale Browser stale hlasi `Browser is not available: iab`; real screenshot QA zustava otevrena
     - Retry 2026-06-11: Browser tool discovery neposkytlo ovladac pro screenshoty a `playwright` neni dostupny jako Node modul; real screenshot QA zustava otevrena, automatizovane mobile smoke testy pro 360x800, 390x844 and 412x915 prosly v `npm test`
     - Retry 2026-06-12: Browser skill bootstrap opet skoncil na `Browser is not available: iab`; `npx vitest run tests/unit/mobileWebViewSmoke.test.ts` prosel vcetne 360x800, 390x844 and 412x915, ale real screenshot QA zustava otevrena
+    - Hotovo 2026-06-12: local Chrome headless screenshot QA pres DevTools Protocol proslo pro 360x800, 390x844 and 412x915; table, filters, postflop matrix and dashboard mely page-level horizontal overflow 0; report je v `Agents/mobile-screenshot-qa-2026-06-12.md`
   - [x] 128.2 Otestovat offline reload po service worker cache
     - App musi fungovat bez runtime fetch
     - Hotovo: service worker test pokryva offline navigation reload z cache
