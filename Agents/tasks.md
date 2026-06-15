@@ -1531,6 +1531,13 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: `mtt:validate-ready-intake` vraci `buildCommand` v JSON i textovem reportu a sdili command builder s intake planem.
   - [ ] 133.12 Po dodani legalnich dat postupovat podle intake planu
     - Nejdriv validovat ready sloty, potom generovat production moduly, zapojit registry/resolvery a spustit `npm run release:check`.
+    - Navazne fronty:
+      - `npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all`
+      - `npm run mtt:intake-plan -- --priority=P2_PREFLOP_DOLAR_EV --all`
+      - `npm run mtt:intake-plan -- --priority=P3_FLOP_PRODUCTION --all`
+      - `npm run mtt:intake-plan -- --priority=P4_TURN_PRODUCTION --all`
+      - `npm run mtt:intake-plan -- --priority=P5_RIVER_PRODUCTION --all`
+      - `npm run mtt:validate-ready-intake -- --fail-on-empty`
 
 ## Notes
 
