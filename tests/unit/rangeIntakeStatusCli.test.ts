@@ -75,6 +75,27 @@ describe("range:intake CLI", () => {
     expect(result.stderr).toContain("Unsupported --format value: HU");
     expect(result.stderr).toContain("Usage:");
   });
+
+  it("umi vypsat jen sloty pripravene k validaci", () => {
+    const result = runIntake("--ready-only", "--json");
+
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
+      counts: { total: number; readyForValidation: number };
+      rows: unknown[];
+    };
+    expect(parsed.counts.total).toBe(0);
+    expect(parsed.counts.readyForValidation).toBe(0);
+    expect(parsed.rows).toEqual([]);
+  });
+
+  it("odmitne konflikt ready-only a waiting-only filtru", () => {
+    const result = runIntake("--ready-only", "--waiting-only");
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Use only one of --ready-only or --waiting-only.");
+    expect(result.stderr).toContain("Usage:");
+  });
 });
 
 function runIntake(...args: string[]) {

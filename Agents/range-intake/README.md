@@ -19,10 +19,13 @@ This folder is the internal staging area for future legal range inputs. Nothing 
 npm run range:intake
 npm run range:intake -- --kind=preflop --format=SIX_MAX --speed=TURBO
 npm run range:intake -- --kind=postflop --format=SIX_MAX --street=RIVER --json
+npm run range:intake -- --ready-only --json
+npm run range:intake -- --waiting-only
 ```
 
 The status command is source-free and only checks whether each legal slot has its expected
-`normalized.json` and `permission.json` files.
+`normalized.json` and `permission.json` files. Use `--ready-only` for slots that can go straight to
+`validate:range-import`, or `--waiting-only` for slots still missing local files.
 5. Validate the normalized import:
 
 ```bash

@@ -19,6 +19,7 @@ interface CliArgs {
   kind: SlotKind;
   filters: MttCompletionReadinessFilters;
   json: boolean;
+  visibility: "all" | "ready-only" | "waiting-only";
 }
 
 interface IntakeStatusRow {
@@ -50,9 +51,13 @@ function usage(): string {
     "  npm run range:intake",
     "  npm run range:intake -- --kind=preflop",
     "  npm run range:intake -- --kind=postflop --format=SIX_MAX --street=RIVER --json",
+    "  npm run range:intake -- --ready-only --json",
+    "  npm run range:intake -- --waiting-only",
     "",
     "Output:",
     "  --json",
+    "  --ready-only",
+    "  --waiting-only",
     "",
     "Filters:",
     "  --format=FULL_RING_9|SIX_MAX",
@@ -81,6 +86,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let kind: SlotKind = "all";
   let json = false;
+  let visibility: CliArgs["visibility"] = "all";
 
   for (let index = 0; index < argv.length; index += 1) {
     const item = argv[index];
@@ -89,6 +95,14 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (item === "--json") {
       json = true;
+      continue;
+    }
+    if (item === "--ready-only") {
+      visibility = setVisibility(visibility, "ready-only");
+      continue;
+    }
+    if (item === "--waiting-only") {
+      visibility = setVisibility(visibility, "waiting-only");
       continue;
     }
     if (item === "--kind") {
@@ -104,7 +118,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { kind, filters, json };
+  return { kind, filters, json, visibility };
 }
 
 function parseKind(value: string): SlotKind {
@@ -113,7 +127,7 @@ function parseKind(value: string): SlotKind {
 }
 
 function buildIntakeStatusReport(args: CliArgs): IntakeStatusReport {
-  const rows = [
+  const allRows = [
     ...(args.kind === "all" || args.kind === "preflop"
       ? filterMttPreflopImportSlots(buildMttPreflopImportSlots(), args.filters).map((slot) => (
         rowFromSlot("preflop", slot)
@@ -125,6 +139,7 @@ function buildIntakeStatusReport(args: CliArgs): IntakeStatusReport {
       ))
       : []),
   ];
+  const rows = filterRowsByVisibility(allRows, args.visibility);
 
   return {
     filters: args.filters,
@@ -136,6 +151,29 @@ function buildIntakeStatusReport(args: CliArgs): IntakeStatusReport {
     },
     rows,
   };
+}
+
+function setVisibility(
+  current: CliArgs["visibility"],
+  next: Exclude<CliArgs["visibility"], "all">,
+): CliArgs["visibility"] {
+  if (current !== "all" && current !== next) {
+    throw new Error(`Use only one of --ready-only or --waiting-only.\n\n${usage()}`);
+  }
+  return next;
+}
+
+function filterRowsByVisibility(
+  rows: readonly IntakeStatusRow[],
+  visibility: CliArgs["visibility"],
+): IntakeStatusRow[] {
+  if (visibility === "ready-only") {
+    return rows.filter((row) => row.readyForValidation);
+  }
+  if (visibility === "waiting-only") {
+    return rows.filter((row) => !row.readyForValidation);
+  }
+  return [...rows];
 }
 
 function rowFromSlot(
