@@ -15,6 +15,7 @@ import type {
   TableFormat,
 } from "../../core/trainingProfile";
 import type { PostflopStrategySourceEvidence } from "./postflopStrategyPack";
+import { findPlaceholderStringPaths } from "./placeholderText";
 
 export type RiverProductionLicenseKind =
   | "OWNED_SOLVER_EXPORT"
@@ -195,6 +196,10 @@ export function validateRiverProductionStrategyPack(pack: RiverProductionStrateg
   if (pack.sourceEvidence.length < 2) errors.push("River production pack needs at least two source evidence entries.");
   if (pack.assumptions.length === 0) errors.push("River production assumptions are required.");
   if (pack.rules.length === 0) errors.push("River production pack must contain at least one rule.");
+  const placeholderPaths = findPlaceholderStringPaths(pack);
+  if (placeholderPaths.length > 0) {
+    errors.push(`River production pack must replace placeholder text before promotion: ${placeholderPaths.join(",")}.`);
+  }
 
   for (const rule of pack.rules) {
     errors.push(...validateRiverProductionRule(rule, {

@@ -16,6 +16,7 @@ import type {
   RangeSourceEvidence,
 } from "./rangePack";
 import { validateRangePack } from "./rangePack";
+import { findPlaceholderStringPaths } from "./placeholderText";
 
 export type MttPreflopImportLicenseKind =
   | "OWNED_SOLVER_EXPORT"
@@ -302,6 +303,10 @@ function validateMttPreflopInput(input: MttPreflopRangePackImportInput): string[
   }
   if (input.records.length === 0) {
     errors.push("MTT preflop import must contain at least one normalized record.");
+  }
+  const placeholderPaths = findPlaceholderStringPaths(input);
+  if (placeholderPaths.length > 0) {
+    errors.push(`MTT preflop import must replace placeholder text before promotion: ${placeholderPaths.join(",")}.`);
   }
 
   for (const duplicate of duplicateKeys(input.records.map(recordKey))) {

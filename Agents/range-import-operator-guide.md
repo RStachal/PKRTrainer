@@ -9,6 +9,7 @@ This guide is for maintainers who prepare legal range data for production promot
 - Store permission evidence as internal references, not URL fields, in the permission manifest.
 - Production promotion requires non-LOW confidence, real records, source evidence and a valid permission manifest.
 - Permission manifests must not contain placeholder text such as `TODO`, `TBD`, `FIXME` or `REPLACE_ME`.
+- Normalized production imports must not contain placeholder text in metadata, assumptions, explanations or source evidence.
 - Candidate packs may exist as metadata placeholders, but must not be used for production scoring.
 
 ## Intake folders

@@ -41,6 +41,20 @@ describe("range intake examples", () => {
     expect(report.errors).toContain("records[0] is missing 166 hand classes.");
   });
 
+  it("odmitne placeholder text v MTT preflop importu", () => {
+    const input = readExample<MttPreflopRangePackImportInput>(
+      "Agents/range-intake/examples/mtt-preflop-minimal.synthetic.json",
+    );
+    const report = buildMttPreflopImportReadinessReport({
+      ...input,
+      licenseNote: "TODO replace with real license review.",
+    });
+
+    expect(report.valid).toBe(false);
+    expect(report.errors.join("\n")).toContain("MTT preflop import must replace placeholder text");
+    expect(report.errors.join("\n")).toContain("$.licenseNote");
+  });
+
   it("drzi flop priklad jako validni shape-only import bez production coverage", () => {
     const pack = readExample<FlopProductionStrategyPack>(
       "Agents/range-intake/examples/flop-production-minimal.synthetic.json",
@@ -53,6 +67,25 @@ describe("range intake examples", () => {
     expect(report.missingPotTypes).toEqual(["THREE_BET_POT"]);
     expect(report.missingPositionPatterns).toContain("EP_VS_BB");
     expect(report.missingRangeLanes).toEqual([]);
+  });
+
+  it("odmitne placeholder text ve flop production importu", () => {
+    const pack = readExample<FlopProductionStrategyPack>(
+      "Agents/range-intake/examples/flop-production-minimal.synthetic.json",
+    );
+    const report = buildFlopProductionCoverageReport({
+      ...pack,
+      rules: [
+        {
+          ...pack.rules[0],
+          explanation: "REPLACE_ME with reviewed flop explanation.",
+        },
+      ],
+    });
+
+    expect(report.productionReady).toBe(false);
+    expect(report.errors.join("\n")).toContain("Flop production pack must replace placeholder text");
+    expect(report.errors.join("\n")).toContain("$.rules[0].explanation");
   });
 
   it("drzi turn priklad jako validni shape-only import bez production coverage", () => {
@@ -70,6 +103,20 @@ describe("range intake examples", () => {
     expect(report.missingRangeLanes).toEqual([]);
   });
 
+  it("odmitne placeholder text v turn production importu", () => {
+    const pack = readExample<TurnProductionStrategyPack>(
+      "Agents/range-intake/examples/turn-production-minimal.synthetic.json",
+    );
+    const report = buildTurnProductionCoverageReport({
+      ...pack,
+      assumptions: [...pack.assumptions, "TBD by reviewer."],
+    });
+
+    expect(report.productionReady).toBe(false);
+    expect(report.errors.join("\n")).toContain("Turn production pack must replace placeholder text");
+    expect(report.errors.join("\n")).toContain("$.assumptions");
+  });
+
   it("drzi river priklad jako validni shape-only import bez production coverage", () => {
     const pack = readExample<RiverProductionStrategyPack>(
       "Agents/range-intake/examples/river-production-minimal.synthetic.json",
@@ -84,6 +131,20 @@ describe("range intake examples", () => {
     expect(report.missingRiverRunoutClasses).toContain("DYNAMIC");
     expect(report.missingBlockerRelevance).toEqual(["MEDIUM"]);
     expect(report.missingRangeLanes).toEqual([]);
+  });
+
+  it("odmitne placeholder text v river production importu", () => {
+    const pack = readExample<RiverProductionStrategyPack>(
+      "Agents/range-intake/examples/river-production-minimal.synthetic.json",
+    );
+    const report = buildRiverProductionCoverageReport({
+      ...pack,
+      licenseNote: "FIXME after permission review.",
+    });
+
+    expect(report.productionReady).toBe(false);
+    expect(report.errors.join("\n")).toContain("River production pack must replace placeholder text");
+    expect(report.errors.join("\n")).toContain("$.licenseNote");
   });
 
   it("validuje source-free permission manifest priklad", () => {

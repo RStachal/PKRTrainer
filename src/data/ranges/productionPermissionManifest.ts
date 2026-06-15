@@ -1,3 +1,5 @@
+import { findPlaceholderStringPaths } from "./placeholderText";
+
 export type ProductionPermissionLicenseKind =
   | "OWNED_SOLVER_EXPORT"
   | "PUBLIC_CHART_WITH_PERMISSION"
@@ -66,7 +68,6 @@ const KNOWN_SCOPES: readonly ProductionPermissionRedistributionScope[] = [
 ];
 
 const FORBIDDEN_SOURCE_KEYS = new Set(["url", "href", "sourceUrl", "providerUrl"]);
-const PLACEHOLDER_TEXT_PATTERN = /\b(?:TODO|TBD|FIXME|FILL_ME|REPLACE_ME|CHANGEME|PLACEHOLDER)\b/i;
 
 export function buildProductionPermissionManifestReport(
   manifest: ProductionPermissionManifest | null,
@@ -229,12 +230,6 @@ function findForbiddenSourceKeyPaths(value: unknown): string[] {
   return out;
 }
 
-function findPlaceholderStringPaths(value: unknown): string[] {
-  const out: string[] = [];
-  visitPlaceholderStrings(value, "$", out);
-  return out;
-}
-
 function visitForbiddenSourceKeys(value: unknown, path: string, out: string[]): void {
   if (value === null || typeof value !== "object") return;
   if (Array.isArray(value)) {
@@ -246,21 +241,5 @@ function visitForbiddenSourceKeys(value: unknown, path: string, out: string[]): 
     const childPath = `${path}.${key}`;
     if (FORBIDDEN_SOURCE_KEYS.has(key)) out.push(childPath);
     visitForbiddenSourceKeys(child, childPath, out);
-  }
-}
-
-function visitPlaceholderStrings(value: unknown, path: string, out: string[]): void {
-  if (typeof value === "string") {
-    if (PLACEHOLDER_TEXT_PATTERN.test(value)) out.push(path);
-    return;
-  }
-  if (value === null || typeof value !== "object") return;
-  if (Array.isArray(value)) {
-    value.forEach((item, index) => visitPlaceholderStrings(item, `${path}[${index}]`, out));
-    return;
-  }
-
-  for (const [key, child] of Object.entries(value)) {
-    visitPlaceholderStrings(child, `${path}.${key}`, out);
   }
 }

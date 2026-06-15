@@ -1520,7 +1520,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.8 Zprisnit permission manifest proti placeholder textu
     - Permission manifest nesmi projit jen proto, ze jsou povinna pole vyplnena retezcem typu TODO.
     - Hotovo: permission validator odmita `TODO`, `TBD`, `FIXME`, `REPLACE_ME`, `FILL_ME`, `CHANGEME` a `PLACEHOLDER` kdekoliv v manifest string polich.
-  - [ ] 133.9 Po dodani legalnich dat postupovat podle intake planu
+  - [x] 133.9 Zprisnit normalized production importy proti placeholder textu
+    - Stejna placeholder ochrana musi platit i pro normalized range/strategy JSON, aby se TODO text nedostal do production modulu.
+    - Hotovo: MTT preflop a flop/turn/river production validatory sdili placeholder guard pro metadata, assumptions, explanations a source evidence.
+  - [ ] 133.10 Po dodani legalnich dat postupovat podle intake planu
     - Nejdriv validovat ready sloty, potom generovat production moduly, zapojit registry/resolvery a spustit `npm run release:check`.
 
 ## Notes

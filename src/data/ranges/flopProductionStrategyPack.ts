@@ -16,6 +16,7 @@ import type {
 } from "../../core/trainingProfile";
 import type { AnteMode } from "../../core/types";
 import type { PostflopStrategySourceEvidence } from "./postflopStrategyPack";
+import { findPlaceholderStringPaths } from "./placeholderText";
 
 export type FlopProductionLicenseKind =
   | "OWNED_SOLVER_EXPORT"
@@ -188,6 +189,10 @@ export function validateFlopProductionStrategyPack(
   }
   if (pack.assumptions.length === 0) errors.push("Flop production assumptions are required.");
   if (pack.rules.length === 0) errors.push("Flop production pack must contain at least one rule.");
+  const placeholderPaths = findPlaceholderStringPaths(pack);
+  if (placeholderPaths.length > 0) {
+    errors.push(`Flop production pack must replace placeholder text before promotion: ${placeholderPaths.join(",")}.`);
+  }
 
   for (const rule of pack.rules) {
     errors.push(...validateFlopProductionRule(rule, {
