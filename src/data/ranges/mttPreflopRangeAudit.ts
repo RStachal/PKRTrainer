@@ -10,12 +10,23 @@ import {
   type StackBucket,
 } from "../../core/types";
 import {
+  SIX_MAX_POSITION_ORDER,
+  type TableFormat,
+  type TrainingProfile,
+  profileWith,
+  DEFAULT_TRAINING_PROFILE,
+} from "../../core/trainingProfile";
+import {
   buildRangePackImportReport,
   normalizeRangeRecord,
 } from "./rangePackImport";
-import { mttPreflopRangePacks } from "./mttPreflopRangePacks";
+import {
+  mttPreflopRangePackForProfile,
+  mttPreflopRangePacks,
+} from "./mttPreflopRangePacks";
 import type { RangePack } from "./rangePack";
 import { validateRangePack } from "./rangePack";
+import { mttPreflopReadinessRowForProfile } from "./mttProductionReadiness";
 
 export interface MttPreflopRangeAuditReport {
   packId: string;
@@ -50,6 +61,34 @@ export interface MttPreflopRangeAuditCoverage {
   missingContexts: ActionContext[];
 }
 
+export interface MttPreflopSpeedDiffReport {
+  rows: readonly MttPreflopSpeedDiffRow[];
+  comparableRows: number;
+  blockedRows: number;
+}
+
+export interface MttPreflopSpeedDiffRow {
+  tableFormat: TableFormat;
+  ante: AnteMode;
+  status: "COMPARABLE" | "BLOCKED";
+  regularPackId: string | null;
+  turboPackId: string | null;
+  regularRecordCount: number;
+  turboRecordCount: number;
+  regularCoverage: MttPreflopRangeAuditCoverage | null;
+  turboCoverage: MttPreflopRangeAuditCoverage | null;
+  actionDiffs: readonly MttPreflopActionDiff[];
+  suspiciousIdenticalActions: boolean;
+  blockers: readonly string[];
+}
+
+export interface MttPreflopActionDiff {
+  action: ActionKey;
+  regular: number;
+  turbo: number;
+  delta: number;
+}
+
 const REQUIRED_CONTEXTS: readonly ActionContext[] = [
   "RFI",
   "VS_LIMP",
@@ -80,6 +119,46 @@ const EXPECTED_NORMALIZED_CELL_COUNT = EXPECTED_RECORD_COUNT * ALL_HAND_CLASSES.
 
 export function auditCurrentMttPreflopProductionPacks(): MttPreflopRangeAuditReport[] {
   return mttPreflopRangePacks.map(auditMttPreflopRangePack);
+}
+
+export function buildMttPreflopSpeedDiffReport(): MttPreflopSpeedDiffReport {
+  const rows: MttPreflopSpeedDiffRow[] = [];
+  for (const tableFormat of ["FULL_RING_9", "SIX_MAX"] as const satisfies readonly TableFormat[]) {
+    for (const ante of ["ON", "OFF"] as const satisfies readonly AnteMode[]) {
+      rows.push(buildSpeedDiffRow(tableFormat, ante));
+    }
+  }
+
+  return {
+    rows,
+    comparableRows: rows.filter((row) => row.status === "COMPARABLE").length,
+    blockedRows: rows.filter((row) => row.status === "BLOCKED").length,
+  };
+}
+
+export function renderMttPreflopSpeedDiffReport(
+  report: MttPreflopSpeedDiffReport = buildMttPreflopSpeedDiffReport(),
+): string {
+  const lines = [
+    "MTT preflop regular-vs-turbo diff",
+    `comparable rows: ${report.comparableRows}`,
+    `blocked rows: ${report.blockedRows}`,
+  ];
+
+  for (const row of report.rows) {
+    lines.push(
+      [
+        `${row.tableFormat}/ante-${row.ante}`,
+        row.status,
+        `regularRecords=${row.regularRecordCount}`,
+        `turboRecords=${row.turboRecordCount}`,
+        `diffActions=${row.actionDiffs.length}`,
+      ].join(" :: "),
+    );
+    for (const blocker of row.blockers) lines.push(`  blocker: ${blocker}`);
+  }
+
+  return lines.join("\n");
 }
 
 export function auditMttPreflopRangePack(pack: RangePack): MttPreflopRangeAuditReport {
@@ -221,10 +300,151 @@ function auditErrors(
   return errors;
 }
 
+function buildSpeedDiffRow(tableFormat: TableFormat, ante: AnteMode): MttPreflopSpeedDiffRow {
+  const regularProfile = mttProfile(tableFormat, "REGULAR", ante);
+  const turboProfile = mttProfile(tableFormat, "TURBO", ante);
+  const regularPack = mttPreflopRangePackForProfile(regularProfile);
+  const turboPack = mttPreflopRangePackForProfile(turboProfile);
+  const regularCoverage = regularPack ? coverageForPack(regularPack) : null;
+  const turboCoverage = turboPack ? coverageForPack(turboPack) : null;
+  const actionDiffs = regularPack && turboPack
+    ? actionDiffsForPacks(regularPack, turboPack)
+    : [];
+  const blockers = speedDiffBlockers({
+    tableFormat,
+    ante,
+    regularPack,
+    turboPack,
+    actionDiffs,
+  });
+
+  return {
+    tableFormat,
+    ante,
+    status: blockers.length === 0 ? "COMPARABLE" : "BLOCKED",
+    regularPackId: regularPack?.id ?? null,
+    turboPackId: turboPack?.id ?? null,
+    regularRecordCount: regularPack?.records.length ?? 0,
+    turboRecordCount: turboPack?.records.length ?? 0,
+    regularCoverage,
+    turboCoverage,
+    actionDiffs,
+    suspiciousIdenticalActions:
+      regularPack !== undefined &&
+      turboPack !== undefined &&
+      regularPack.records.length > 0 &&
+      turboPack.records.length > 0 &&
+      actionDiffs.every((diff) => diff.delta === 0) &&
+      !hasExplicitReusePolicy(turboPack),
+    blockers,
+  };
+}
+
+function speedDiffBlockers(input: {
+  tableFormat: TableFormat;
+  ante: AnteMode;
+  regularPack: RangePack | undefined;
+  turboPack: RangePack | undefined;
+  actionDiffs: readonly MttPreflopActionDiff[];
+}): string[] {
+  const blockers: string[] = [];
+  const turboReadiness = mttPreflopReadinessRowForProfile({
+    tableFormat: input.tableFormat,
+    blindSpeed: "TURBO",
+    ante: input.ante,
+  });
+
+  if (!input.regularPack) blockers.push("Regular RangePack is missing.");
+  if (!input.turboPack) blockers.push("Turbo RangePack is missing.");
+  if (input.regularPack && input.regularPack.records.length === 0) {
+    blockers.push("Regular RangePack has no records to compare.");
+  }
+  if (input.turboPack && input.turboPack.records.length === 0) {
+    blockers.push("Turbo RangePack has no records to compare.");
+  }
+  if (input.regularPack && input.turboPack && input.actionDiffs.length === 0) {
+    blockers.push("No comparable strict action distribution is available.");
+  }
+  if (turboReadiness.recommendationPolicy === "SPEED_METADATA_ONLY") {
+    blockers.push("Turbo profile is metadata-only; dedicated hand recommendations are not normalized yet.");
+  }
+  if (turboReadiness.status === "MISSING") {
+    blockers.push("Turbo profile has no dedicated production RangePack.");
+  }
+  if (
+    input.regularPack &&
+    input.turboPack &&
+    input.regularPack.records.length > 0 &&
+    input.turboPack.records.length > 0 &&
+    input.actionDiffs.every((diff) => diff.delta === 0) &&
+    !hasExplicitReusePolicy(input.turboPack)
+  ) {
+    blockers.push(
+      "Regular and turbo strict action distributions are identical without an explicit reviewed reuse policy.",
+    );
+  }
+
+  return blockers;
+}
+
+function actionDiffsForPacks(
+  regularPack: RangePack,
+  turboPack: RangePack,
+): MttPreflopActionDiff[] {
+  const regularCounts = aggregateStrictActionCounts(regularPack);
+  const turboCounts = aggregateStrictActionCounts(turboPack);
+  const actions = [...new Set<ActionKey>([
+    ...Object.keys(regularCounts) as ActionKey[],
+    ...Object.keys(turboCounts) as ActionKey[],
+  ])].sort();
+
+  return actions.map((action) => {
+    const regular = regularCounts[action] ?? 0;
+    const turbo = turboCounts[action] ?? 0;
+    return {
+      action,
+      regular,
+      turbo,
+      delta: turbo - regular,
+    };
+  });
+}
+
+function aggregateStrictActionCounts(pack: RangePack): Partial<Record<ActionKey, number>> {
+  const counts: Partial<Record<ActionKey, number>> = {};
+  for (const record of pack.records) {
+    for (const actions of Object.values(record.strict)) {
+      for (const action of actions) counts[action] = (counts[action] ?? 0) + 1;
+    }
+  }
+  return counts;
+}
+
+function hasExplicitReusePolicy(pack: RangePack): boolean {
+  return pack.assumptions.some((assumption) => (
+    /explicit/i.test(assumption) &&
+    /review/i.test(assumption) &&
+    /reuse/i.test(assumption)
+  ));
+}
+
+function mttProfile(
+  tableFormat: TableFormat,
+  blindSpeed: TrainingProfile["blindSpeed"],
+  ante: AnteMode,
+): TrainingProfile {
+  return profileWith(DEFAULT_TRAINING_PROFILE, {
+    tableFormat,
+    blindSpeed,
+    ante,
+  });
+}
+
 function coverageForPack(pack: RangePack): MttPreflopRangeAuditCoverage {
+  const requiredPositions = requiredPositionsForFormat(pack.dimensions.tableFormat);
   const positions = uniqueInOrder(
     pack.records.map((record) => record.position),
-    POSITION_ORDER,
+    requiredPositions,
   );
   const stackBuckets = uniqueInOrder(
     pack.records.map((record) => record.bucket),
@@ -239,10 +459,14 @@ function coverageForPack(pack: RangePack): MttPreflopRangeAuditCoverage {
     positions,
     stackBuckets,
     contexts,
-    missingPositions: POSITION_ORDER.filter((position) => !positions.includes(position)),
+    missingPositions: requiredPositions.filter((position) => !positions.includes(position)),
     missingStackBuckets: STACK_BUCKETS.filter((bucket) => !stackBuckets.includes(bucket)),
     missingContexts: REQUIRED_CONTEXTS.filter((context) => !contexts.includes(context)),
   };
+}
+
+function requiredPositionsForFormat(format: TableFormat): readonly Position[] {
+  return format === "SIX_MAX" ? SIX_MAX_POSITION_ORDER : POSITION_ORDER;
 }
 
 function duplicateKeys(pack: RangePack): string[] {

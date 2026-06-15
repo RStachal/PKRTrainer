@@ -1101,8 +1101,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 105.2 Otestovat turbo gate v UI a drill engine
     - MTT/FULL_RING_9/TURBO/PREFLOP/chipEV ma spustit drill jen po validaci
     - Hotovo: bootstrap gate test pro vsechny format/speed/ante kombinace overuje, ze FULL_RING_9/TURBO zustane zablokovany jako missing production range a nespusti poker table
-  - [ ] 105.3 Porovnat regular vs turbo coverage diff
+  - [x] 105.3 Porovnat regular vs turbo coverage diff
     - Diff musi ukazat, zda jde o dedicated ranges nebo schvaleny reuse policy
+    - Hotovo: `buildMttPreflopSpeedDiffReport` a `verify:ranges` vypisuji FULL_RING_9 regular-vs-turbo diff jako BLOCKED, protoze turbo pack chybi a neni schvaleny reuse policy
 
 - [ ] 106. MTT 6-max regular import execution
   - [ ] 106.1 Zpracovat legalni 6-max regular ante ON export
@@ -1131,12 +1132,13 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 108.3 Vytvorit production 6-max turbo RangePacky
     - Readiness musi projit bez SPEED_METADATA_ONLY shortcutu
 
-- [ ] 109. MTT 6-max turbo promotion QA
+- [x] 109. MTT 6-max turbo promotion QA
   - [x] 109.1 Zapojit 6-max turbo do production gate
     - SIX_MAX/TURBO/PREFLOP/chipEV ma spustit drill az po production readiness
     - Hotovo: readiness report drzi SIX_MAX/TURBO jako SPEED_METADATA_ONLY candidate a bootstrap gate test overuje, ze drill se pred production readiness nespusti
-  - [ ] 109.2 Porovnat 6-max regular vs turbo action distributions
+  - [x] 109.2 Porovnat 6-max regular vs turbo action distributions
     - Audit ma upozornit na podezrele identicke ranges bez reuse policy
+    - Hotovo: speed diff audit hlasi SIX_MAX regular/turbo jako BLOCKED, protoze oba candidate packy nemaji records a turbo je metadata-only bez dedikovanych hand recommendations
   - [x] 109.3 Spustit release checkpoint pro vsechny MTT preflop profily
     - Full suite, build, verify:ranges and source-free UI policy
     - Hotovo 2026-06-12: `npm run release:check` proslo po 6-max/turbo gate QA; 82 test files, 373 tests, verify:ranges, build and bundle budget jsou zelene

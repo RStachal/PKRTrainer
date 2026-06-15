@@ -8,6 +8,8 @@ import {
 } from "../../src/core/types";
 import {
   auditCurrentMttPreflopProductionPacks,
+  buildMttPreflopSpeedDiffReport,
+  renderMttPreflopSpeedDiffReport,
 } from "../../src/data/ranges/mttPreflopRangeAudit";
 
 const REQUIRED_CONTEXTS: ActionContext[] = [
@@ -71,5 +73,54 @@ describe("mttPreflopRangeAudit", () => {
       expect(report.actionCountsByContext.PUSH_FOLD.JAM).toBeGreaterThan(0);
       expect(report.actionCountsByContext.VS_ALLIN.CALL_JAM).toBeGreaterThan(0);
     }
+  });
+
+  it("audituje regular-vs-turbo diff bez ticheho metadata-only reuse", () => {
+    const report = buildMttPreflopSpeedDiffReport();
+
+    expect(report.rows).toHaveLength(4);
+    expect(report.comparableRows).toBe(0);
+    expect(report.blockedRows).toBe(4);
+
+    const fullRingOn = report.rows.find((row) => (
+      row.tableFormat === "FULL_RING_9" && row.ante === "ON"
+    ));
+    expect(fullRingOn).toMatchObject({
+      status: "BLOCKED",
+      regularRecordCount: 487,
+      turboRecordCount: 0,
+      turboPackId: null,
+    });
+    expect(fullRingOn?.blockers).toContain("Turbo RangePack is missing.");
+    expect(fullRingOn?.blockers).toContain("Turbo profile has no dedicated production RangePack.");
+
+    const sixMaxOn = report.rows.find((row) => (
+      row.tableFormat === "SIX_MAX" && row.ante === "ON"
+    ));
+    expect(sixMaxOn).toMatchObject({
+      status: "BLOCKED",
+      regularRecordCount: 0,
+      turboRecordCount: 0,
+      regularPackId: "mtt-six-max-regular-preflop-chip-ev-ante-on-candidate-v0",
+      turboPackId: "mtt-six-max-turbo-preflop-chip-ev-ante-on-candidate-v0",
+    });
+    expect(sixMaxOn?.blockers).toContain("Regular RangePack has no records to compare.");
+    expect(sixMaxOn?.blockers).toContain("Turbo RangePack has no records to compare.");
+    expect(sixMaxOn?.blockers).toContain(
+      "Turbo profile is metadata-only; dedicated hand recommendations are not normalized yet.",
+    );
+    expect(sixMaxOn?.actionDiffs).toEqual([]);
+  });
+
+  it("renderuje speed diff audit jako source-free operator report", () => {
+    const text = renderMttPreflopSpeedDiffReport(buildMttPreflopSpeedDiffReport());
+
+    expect(text).toContain("MTT preflop regular-vs-turbo diff");
+    expect(text).toContain("FULL_RING_9/ante-ON :: BLOCKED");
+    expect(text).toContain("SIX_MAX/ante-ON :: BLOCKED");
+    expect(text).toContain("Turbo RangePack is missing.");
+    expect(text).toContain("metadata-only");
+    expect(text).not.toContain("https://");
+    expect(text).not.toContain("www.");
   });
 });

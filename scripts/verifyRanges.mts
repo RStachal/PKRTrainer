@@ -8,6 +8,10 @@ import {
   buildMttPreflopPackImportReadinessReport,
   buildMttPreflopReadinessReport,
 } from "../src/data/ranges/mttProductionReadiness.ts";
+import {
+  buildMttPreflopSpeedDiffReport,
+  renderMttPreflopSpeedDiffReport,
+} from "../src/data/ranges/mttPreflopRangeAudit.ts";
 import { validateRangeFile } from "../src/data/ranges/schema.ts";
 
 let hasHardFailure = false;
@@ -55,6 +59,10 @@ console.log(`candidate packs: ${importReadiness.candidateRows}`);
 console.log(`low-confidence packs: ${importReadiness.lowConfidenceRows}`);
 console.log(`empty-record packs: ${importReadiness.emptyRecordRows}`);
 console.log(`missing expected profiles: ${importReadiness.missingExpectedProfiles.length}`);
+
+const speedDiff = buildMttPreflopSpeedDiffReport();
+console.log("\n=== MTT preflop speed diff audit ===");
+console.log(renderMttPreflopSpeedDiffReport(speedDiff));
 
 console.log("\n=== Flop production strategy readiness ===");
 console.log(`registered production packs: ${flopProductionStrategyPacks.length}`);
