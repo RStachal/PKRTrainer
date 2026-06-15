@@ -13,6 +13,7 @@
     "validate:range-import": "vite-node scripts/validateRangeImport.mts",
     "build:range-module": "vite-node scripts/buildRangeModule.mts",
     "mtt:completion": "vite-node scripts/checkMttCompletion.mts",
+    "mtt:blockers": "vite-node scripts/checkMttBlockers.mts",
     "mtt:slots": "vite-node scripts/listMttImportSlots.mts",
     "range:intake": "vite-node scripts/checkRangeIntakeStatus.mts",
     "bundle:budget": "vite-node scripts/checkBundleBudget.mts",

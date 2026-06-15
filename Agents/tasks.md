@@ -1076,6 +1076,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Kroky: ulozit raw export, spustit validator, review report, commit normalized pack, release checkpoint
     - Hotovo: `Agents/range-intake/README.md` and intake manifest workflow
     - Hotovo: `npm run range:intake` kontroluje pritomnost `normalized.json` a `permission.json` pro legalni MTT sloty pred validaci obsahu
+    - Hotovo: `npm run mtt:blockers` vypisuje source-free frontu neprodukcnich MTT blockeru vcetne lokalniho intake file statusu
 
 - [x] 103. Legal source and permission audit workflow
   - [x] 103.1 Pridat permission manifest pro kazdy budouci production pack
@@ -1487,6 +1488,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 131.3 Napsat release notes template
     - Oddelit gameplay changes, range data changes, stats schema and known limitations
     - Hotovo: `Agents/release-notes-template.md` oddeluje gameplay, range data, stats, gates and limitations
+    - Hotovo: `Agents/mtt-production-coverage-audit.md` shrnuje aktualni MTT completion, DOLAR_EV, postflop production blockery, range intake a regular-vs-turbo diff audit
 
 ## Notes
 

@@ -26,6 +26,13 @@ npm run range:intake -- --waiting-only
 The status command is source-free and only checks whether each legal slot has its expected
 `normalized.json` and `permission.json` files. Use `--ready-only` for slots that can go straight to
 `validate:range-import`, or `--waiting-only` for slots still missing local files.
+
+For a blocker-only queue that combines completion readiness with the same local file presence checks:
+
+```bash
+npm run mtt:blockers
+npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
+```
 5. Validate the normalized import:
 
 ```bash

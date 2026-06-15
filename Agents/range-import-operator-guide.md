@@ -129,6 +129,13 @@ For the full MTT matrix with blocker details and import slot paths:
 npm run mtt:completion -- --details
 ```
 
+For a shorter blocker-only queue with local intake file status:
+
+```powershell
+npm run mtt:blockers
+npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
+```
+
 To narrow the MTT matrix to the next import batch:
 
 ```powershell

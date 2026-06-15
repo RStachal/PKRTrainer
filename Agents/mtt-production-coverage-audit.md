@@ -44,6 +44,7 @@ Useful filters:
 - `npm run range:intake -- --kind=postflop --format=SIX_MAX --street=RIVER`
 - `npm run range:intake -- --ready-only --json`
 - `npm run range:intake -- --waiting-only`
+- `npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json`
 
 The preflop intake subset currently has 14 rows and 0 rows ready for validation. All 14 are waiting for both normalized data and permission manifests.
 
@@ -78,6 +79,7 @@ The preflop intake subset currently has 14 rows and 0 rows ready for validation.
 ## Verification hooks
 
 - `npm run mtt:completion`
+- `npm run mtt:blockers`
 - `npm run mtt:slots`
 - `npm run range:intake`
 - `npm run validate:range-import`

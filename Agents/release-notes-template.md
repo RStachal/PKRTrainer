@@ -34,6 +34,7 @@
 - `npm run typecheck`:
 - `npm test`:
 - `npm run mtt:completion`:
+- `npm run mtt:blockers`:
 - `npm run range:intake -- --ready-only`:
 - `npm run verify:ranges`:
 - `npm run build`:
