@@ -33,6 +33,8 @@
 
 - `npm run typecheck`:
 - `npm test`:
+- `npm run mtt:completion`:
+- `npm run range:intake -- --ready-only`:
 - `npm run verify:ranges`:
 - `npm run build`:
 - `npm run release:check`:
@@ -47,5 +49,6 @@
 ## Operator notes
 
 - Range import notes:
+- Range intake status:
 - Permission manifest notes:
 - Rollback notes:

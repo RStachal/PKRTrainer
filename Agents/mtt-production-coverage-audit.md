@@ -1,61 +1,100 @@
 # MTT Production Coverage Audit
 
-Updated: 2026-06-04
+Updated: 2026-06-15
 
 ## Current production surface
 
 - Game: MTT
-- Street: Preflop
-- Model: chipEV
-- Rake: none
-- Production-ready profiles:
-  - FULL_RING_9 / REGULAR / ante ON
-  - FULL_RING_9 / REGULAR / ante OFF
+- Formats tracked: FULL_RING_9 and SIX_MAX
+- Blind speeds tracked: REGULAR and TURBO
+- EV models tracked: CHIP_EV and DOLAR_EV
+- Streets tracked: PREFLOP, FLOP, TURN and RIVER
+- Ante states tracked: ON and OFF
+- Current production-ready profiles:
+  - FULL_RING_9 / REGULAR / CHIP_EV / PREFLOP / ante ON
+  - FULL_RING_9 / REGULAR / CHIP_EV / PREFLOP / ante OFF
 - Current production baseline:
   - 2 production RangePacks
   - 487 records per pack
   - 169 normalized hand classes per record
   - MEDIUM confidence
-  - Source metadata present, but no source citations are shown in app UI
+  - source metadata present, but no source citations are shown in app UI
 
-## Candidate or missing profiles
+## Completion matrix
 
-- FULL_RING_9 / TURBO / ante ON: missing dedicated production hand recommendations
-- FULL_RING_9 / TURBO / ante OFF: missing dedicated production hand recommendations
-- SIX_MAX / REGULAR / ante ON: candidate metadata only, no records
-- SIX_MAX / REGULAR / ante OFF: candidate metadata only, no records
-- SIX_MAX / TURBO / ante ON: candidate metadata only, no records
-- SIX_MAX / TURBO / ante OFF: candidate metadata only, no records
+`npm run mtt:completion -- --json` currently reports:
 
-## Production rules now enforced
+- total MTT rows: 64
+- production-ready rows: 2
+- candidate/preview rows: 52
+- blocked/missing rows: 10
+
+Coverage is intentionally broader than the current production data. The matrix includes 6-max and 9-max, regular and turbo, CHIP_EV and DOLAR_EV, preflop and postflop streets, and both ante states. Rows without legal production data remain candidate or missing.
+
+## Range intake state
+
+`npm run range:intake` currently tracks 62 import rows that are waiting for both files:
+
+- `normalized.json`
+- `permission.json`
+
+Useful filters:
+
+- `npm run range:intake -- --kind=preflop`
+- `npm run range:intake -- --kind=postflop --format=SIX_MAX --street=RIVER`
+- `npm run range:intake -- --ready-only --json`
+- `npm run range:intake -- --waiting-only`
+
+The preflop intake subset currently has 14 rows and 0 rows ready for validation. All 14 are waiting for both normalized data and permission manifests.
+
+## Known blocked profiles
+
+- FULL_RING_9 / TURBO / CHIP_EV / PREFLOP / ante ON and OFF are missing dedicated turbo records.
+- FULL_RING_9 / REGULAR and TURBO / DOLAR_EV / PREFLOP / ante ON and OFF are missing dedicated DOLAR_EV records or an explicitly reviewed reuse policy.
+- SIX_MAX / REGULAR and TURBO / CHIP_EV / PREFLOP / ante ON and OFF are candidate metadata only; normalized hand-class records are not present.
+- SIX_MAX / REGULAR and TURBO / DOLAR_EV / PREFLOP / ante ON and OFF are missing dedicated DOLAR_EV records or an explicitly reviewed reuse policy.
+- FLOP, TURN and RIVER production StrategyPacks are not registered for any tracked MTT profile yet.
+
+## Regular-vs-turbo audit
+
+`npm run verify:ranges` includes the MTT preflop regular-vs-turbo diff audit:
+
+- comparable rows: 0
+- blocked rows: 4
+- FULL_RING_9 ante ON/OFF are blocked because turbo RangePacks are missing.
+- SIX_MAX ante ON/OFF are blocked because regular and turbo candidate packs have no records to compare.
+- Turbo cannot become production by changing blind speed metadata only.
+
+## Production rules enforced
 
 - Production requires MEDIUM or HIGH confidence.
 - Production requires non-empty normalized records.
 - Production requires at least two source evidence entries and at least three recorded searches.
 - Production coverage must include every required position, stack bucket and action context for the profile.
-- Turbo cannot become production by changing blind speed metadata only.
-- Turbo needs dedicated turbo hand recommendations or an explicit reviewed reuse policy.
+- Turbo production requires dedicated turbo hand recommendations or an explicit reviewed reuse policy.
+- DOLAR_EV production requires dedicated DOLAR_EV recommendations or an explicit reviewed reuse policy.
 - Candidate packs must not start legacy 9-max scoring.
 
 ## Verification hooks
 
+- `npm run mtt:completion`
+- `npm run mtt:slots`
+- `npm run range:intake`
+- `npm run validate:range-import`
+- `npm run build:range-module`
+- `npm run verify:ranges`
+- `npm run release:check`
 - `tests/unit/mttProductionReadiness.test.ts`
 - `tests/unit/mttPreflopRangePackImport.test.ts`
 - `tests/unit/mttPreflopRangeAudit.test.ts`
+- `tests/unit/mttCompletionCli.test.ts`
+- `tests/unit/rangeIntakeStatusCli.test.ts`
 - `tests/unit/profileSelector.test.ts`
 - `tests/unit/bootstrapIntegration.test.ts`
 - `tests/unit/uiNoSourceCitation.test.ts`
 
-## Import intake now prepared
+## Legal data policy
 
-- Generic MTT preflop production import validator supports FULL_RING_9 and SIX_MAX.
-- The same intake covers REGULAR and TURBO blind speeds, ante ON/OFF, legal license kind, source evidence, stack mapping, positions, action contexts, stack buckets and 169 hand-class completeness.
-- It does not bundle or infer any chart values. Production promotion still requires legally usable records.
-- Required legal input fields are tracked in `Agents/production-range-intake-manifest.md`.
-
-## Open data blockers
-
-- 9-max turbo records require a legal source/export input before production.
-- 6-max regular records require a legal source/export input before production.
-- 6-max turbo records require a legal source/export input before production.
-- Public metadata and marketing pages are useful for assumptions, but are not sufficient permission to copy full chart values.
+- This audit is source-free and does not bundle, infer or reconstruct chart values.
+- Public metadata and marketing pages may support assumptions, but they are not sufficient permission to copy full chart values.
+- Production promotion still requires legally usable normalized records plus an explicit permission manifest.

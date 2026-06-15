@@ -89,6 +89,7 @@ describe("release bundle metadata", () => {
   it("release dokumentace obsahuje workflow a user quick start zustava bez citaci", () => {
     const quickStart = readFileSync("Agents/user-quick-start.md", "utf8");
     const operatorGuide = readFileSync("Agents/range-import-operator-guide.md", "utf8");
+    const mttCoverageAudit = readFileSync("Agents/mtt-production-coverage-audit.md", "utf8");
     const releaseTemplate = readFileSync("Agents/release-notes-template.md", "utf8");
 
     expect(quickStart).toContain("Training");
@@ -106,9 +107,21 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("matched import slots");
     expect(operatorGuide).toContain("npm run verify:ranges");
     expect(operatorGuide).toContain("npm run release:check");
+    expect(mttCoverageAudit).toContain("Updated: 2026-06-15");
+    expect(mttCoverageAudit).toContain("DOLAR_EV");
+    expect(mttCoverageAudit).toContain("Completion matrix");
+    expect(mttCoverageAudit).toContain("total MTT rows: 64");
+    expect(mttCoverageAudit).toContain("production-ready rows: 2");
+    expect(mttCoverageAudit).toContain("candidate/preview rows: 52");
+    expect(mttCoverageAudit).toContain("blocked/missing rows: 10");
+    expect(mttCoverageAudit).toContain("npm run range:intake -- --ready-only --json");
+    expect(mttCoverageAudit).toContain("regular-vs-turbo diff audit");
+    expect(mttCoverageAudit).toContain("FLOP, TURN and RIVER production StrategyPacks are not registered");
     expect(releaseTemplate).toContain("Gameplay changes");
     expect(releaseTemplate).toContain("Range data changes");
     expect(releaseTemplate).toContain("Statistics changes");
+    expect(releaseTemplate).toContain("npm run mtt:completion");
+    expect(releaseTemplate).toContain("npm run range:intake -- --ready-only");
     expect(releaseTemplate).toContain("Known limitations");
   });
 });
