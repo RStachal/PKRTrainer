@@ -1526,7 +1526,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.10 Doplnit build dry-run prikazy primo do MTT intake planu
     - Operator nema po validaci rucne skladat navazujici module-builder command.
     - Hotovo: `mtt:intake-plan` u kazdeho slotu vypisuje `validate:range-import` i odpovidajici `build:range-module --dry-run`.
-  - [ ] 133.11 Po dodani legalnich dat postupovat podle intake planu
+  - [x] 133.11 Sjednotit reprodukovatelne build dry-run prikazy pro ready validaci
+    - Ready validator ma ukazat stejny navazujici build command jako intake plan, aby sel kazdy validovany slot rucne reprodukovat.
+    - Hotovo: `mtt:validate-ready-intake` vraci `buildCommand` v JSON i textovem reportu a sdili command builder s intake planem.
+  - [ ] 133.12 Po dodani legalnich dat postupovat podle intake planu
     - Nejdriv validovat ready sloty, potom generovat production moduly, zapojit registry/resolvery a spustit `npm run release:check`.
 
 ## Notes

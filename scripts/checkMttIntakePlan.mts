@@ -15,6 +15,10 @@ import {
   parseMttIntakePriority,
   type MttIntakePriorityKey,
 } from "../src/data/ranges/mttIntakePriority.ts";
+import {
+  buildRangeModuleDryRunCommand,
+  validateRangeImportCommand,
+} from "../src/data/ranges/rangeImportCommands.ts";
 
 interface CliArgs {
   filters: MttCompletionReadinessFilters;
@@ -201,8 +205,8 @@ function planRowFromReadinessRow(
     blockers: row.missingReasons,
     importSlot,
     intake,
-    nextCommand: validateCommandFor(importSlot),
-    buildCommand: buildCommandFor(importSlot),
+    nextCommand: validateRangeImportCommand(importSlot),
+    buildCommand: buildRangeModuleDryRunCommand(importSlot),
   };
 }
 
@@ -218,25 +222,6 @@ function intakeState(importSlot: MttCompletionImportSlotHint): IntakePlanRow["in
 
 function priorityFor(row: MttCompletionReadinessRow, readyForValidation: boolean): MttIntakePriorityKey {
   return mttIntakePriorityForProfile(row, readyForValidation);
-}
-
-function validateCommandFor(importSlot: MttCompletionImportSlotHint): string {
-  return [
-    "npm run validate:range-import --",
-    `--kind=${importSlot.kind}`,
-    `--permission-manifest ${importSlot.permissionManifestPath}`,
-    importSlot.normalizedInputPath,
-  ].join(" ");
-}
-
-function buildCommandFor(importSlot: MttCompletionImportSlotHint): string {
-  return [
-    "npm run build:range-module --",
-    `--kind=${importSlot.kind}`,
-    "--dry-run",
-    `--permission-manifest ${importSlot.permissionManifestPath}`,
-    importSlot.normalizedInputPath,
-  ].join(" ");
 }
 
 function comparePlanRows(a: IntakePlanRow, b: IntakePlanRow): number {

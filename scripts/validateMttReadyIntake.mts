@@ -19,6 +19,7 @@ import {
   parseMttIntakePriority,
   type MttIntakePriorityKey,
 } from "../src/data/ranges/mttIntakePriority.ts";
+import { buildRangeModuleDryRunCommand } from "../src/data/ranges/rangeImportCommands.ts";
 
 interface CliArgs {
   filters: MttCompletionReadinessFilters;
@@ -34,6 +35,7 @@ interface ReadyValidationRow {
   kind: RangeModuleBuildKind;
   normalizedInputPath: string;
   permissionManifestPath: string;
+  buildCommand: string;
   valid: boolean;
   productionReady: boolean;
   permissionReady: boolean;
@@ -174,6 +176,7 @@ function validateReadyRow(row: MttCompletionReadinessRow): ReadyValidationRow {
       kind: importSlot.kind,
       normalizedInputPath: importSlot.normalizedInputPath,
       permissionManifestPath: importSlot.permissionManifestPath,
+      buildCommand: buildRangeModuleDryRunCommand(importSlot),
       valid: result.writeReady,
       productionReady: result.productionReady,
       permissionReady: result.permissionReady,
@@ -190,6 +193,7 @@ function validateReadyRow(row: MttCompletionReadinessRow): ReadyValidationRow {
       kind: importSlot.kind,
       normalizedInputPath: importSlot.normalizedInputPath,
       permissionManifestPath: importSlot.permissionManifestPath,
+      buildCommand: buildRangeModuleDryRunCommand(importSlot),
       valid: false,
       productionReady: false,
       permissionReady: false,
@@ -220,6 +224,7 @@ function renderReadyValidationReport(report: ReadyValidationReport): string {
     lines.push(`  pack: ${row.packId}`);
     lines.push(`  input: ${row.normalizedInputPath}`);
     lines.push(`  permission: ${row.permissionManifestPath}`);
+    lines.push(`  build dry-run: ${row.buildCommand}`);
     lines.push(`  productionReady: ${row.productionReady}`);
     lines.push(`  permissionReady: ${row.permissionReady}`);
     lines.push(`  matched import slots: ${row.matchedImportSlots}`);
