@@ -1523,7 +1523,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.9 Zprisnit normalized production importy proti placeholder textu
     - Stejna placeholder ochrana musi platit i pro normalized range/strategy JSON, aby se TODO text nedostal do production modulu.
     - Hotovo: MTT preflop a flop/turn/river production validatory sdili placeholder guard pro metadata, assumptions, explanations a source evidence.
-  - [ ] 133.10 Po dodani legalnich dat postupovat podle intake planu
+  - [x] 133.10 Doplnit build dry-run prikazy primo do MTT intake planu
+    - Operator nema po validaci rucne skladat navazujici module-builder command.
+    - Hotovo: `mtt:intake-plan` u kazdeho slotu vypisuje `validate:range-import` i odpovidajici `build:range-module --dry-run`.
+  - [ ] 133.11 Po dodani legalnich dat postupovat podle intake planu
     - Nejdriv validovat ready sloty, potom generovat production moduly, zapojit registry/resolvery a spustit `npm run release:check`.
 
 ## Notes

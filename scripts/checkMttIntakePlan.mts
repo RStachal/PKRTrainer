@@ -37,6 +37,7 @@ interface IntakePlanRow {
     readyForValidation: boolean;
   };
   nextCommand: string;
+  buildCommand: string;
 }
 
 interface IntakePlanReport {
@@ -47,7 +48,7 @@ interface IntakePlanReport {
     readyForValidation: number;
     missingNormalized: number;
     missingPermission: number;
-    byPriority: Record<PriorityKey, number>;
+    byPriority: Record<MttIntakePriorityKey, number>;
   };
   rows: readonly IntakePlanRow[];
 }
@@ -201,6 +202,7 @@ function planRowFromReadinessRow(
     importSlot,
     intake,
     nextCommand: validateCommandFor(importSlot),
+    buildCommand: buildCommandFor(importSlot),
   };
 }
 
@@ -222,6 +224,16 @@ function validateCommandFor(importSlot: MttCompletionImportSlotHint): string {
   return [
     "npm run validate:range-import --",
     `--kind=${importSlot.kind}`,
+    `--permission-manifest ${importSlot.permissionManifestPath}`,
+    importSlot.normalizedInputPath,
+  ].join(" ");
+}
+
+function buildCommandFor(importSlot: MttCompletionImportSlotHint): string {
+  return [
+    "npm run build:range-module --",
+    `--kind=${importSlot.kind}`,
+    "--dry-run",
     `--permission-manifest ${importSlot.permissionManifestPath}`,
     importSlot.normalizedInputPath,
   ].join(" ");
@@ -267,6 +279,7 @@ function renderMttIntakePlanReport(report: IntakePlanReport, limit: number | nul
     if (!row.intake.normalizedPresent) lines.push(`   missing input: ${row.importSlot.normalizedInputPath}`);
     if (!row.intake.permissionPresent) lines.push(`   missing permission: ${row.importSlot.permissionManifestPath}`);
     lines.push(`   next: ${row.nextCommand}`);
+    lines.push(`   build dry-run: ${row.buildCommand}`);
     for (const blocker of row.blockers) lines.push(`   blocker: ${blocker}`);
   });
 

@@ -114,6 +114,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json");
     expect(operatorGuide).toContain("Permission manifests must not contain placeholder text");
     expect(operatorGuide).toContain("Normalized production imports must not contain placeholder text");
+    expect(operatorGuide).toContain("build:range-module --dry-run");
     expect(operatorGuide).toContain("npm run range:intake");
     expect(operatorGuide).toContain("npm run range:intake:guard");
     expect(operatorGuide).toContain("legal import slot: true");

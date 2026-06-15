@@ -27,7 +27,8 @@ npm run range:intake -- --waiting-only
 The guard checks that `raw/` still ignores private local inputs and has no tracked raw files beyond
 `.gitignore` and `README.md`. The status command is source-free and only checks whether each legal slot has its expected
 `normalized.json` and `permission.json` files. Use `--ready-only` for slots that can go straight to
-`validate:range-import`, or `--waiting-only` for slots still missing local files.
+`validate:range-import`, or `--waiting-only` for slots still missing local files. The MTT intake plan prints both the
+validation command and the matching `build:range-module --dry-run` command for each slot.
 
 For a blocker-only queue that combines completion readiness with the same local file presence checks:
 

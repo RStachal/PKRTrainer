@@ -18,6 +18,7 @@ describe("mtt:intake-plan CLI", () => {
       "1. P1_PREFLOP_CHIP_EV | FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF | MISSING | WAITING",
     );
     expect(result.stdout).toContain("--kind=mtt-preflop");
+    expect(result.stdout).toContain("build dry-run: npm run build:range-module -- --kind=mtt-preflop --dry-run");
     expect(result.stdout).toContain("mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1");
     expect(result.stdout).not.toContain("https://");
   });
@@ -52,6 +53,7 @@ describe("mtt:intake-plan CLI", () => {
         slotId: string;
         status: string;
         nextCommand: string;
+        buildCommand: string;
         intake: { readyForValidation: boolean };
       }>;
     };
@@ -92,6 +94,9 @@ describe("mtt:intake-plan CLI", () => {
       }),
     ]);
     expect(parsed.rows[0].nextCommand).toContain("--kind=river-production");
+    expect(parsed.rows[0].buildCommand).toContain("build:range-module");
+    expect(parsed.rows[0].buildCommand).toContain("--kind=river-production");
+    expect(parsed.rows[0].buildCommand).toContain("--dry-run");
   });
 
   it("umi omezit pocet radku pro lidsky vystup", () => {
