@@ -13,7 +13,17 @@ This folder is the internal staging area for future legal range inputs. Nothing 
 1. Choose a concrete missing MTT preflop slot from `buildMttPreflopImportSlots` when importing preflop data.
 2. Place the raw legal export under `Agents/range-intake/raw/<pack-id>/`.
 3. Add a permission manifest for the same `packId`.
-4. Validate the normalized import:
+4. Check local intake file presence when staging one or more slots:
+
+```bash
+npm run range:intake
+npm run range:intake -- --kind=preflop --format=SIX_MAX --speed=TURBO
+npm run range:intake -- --kind=postflop --format=SIX_MAX --street=RIVER --json
+```
+
+The status command is source-free and only checks whether each legal slot has its expected
+`normalized.json` and `permission.json` files.
+5. Validate the normalized import:
 
 ```bash
 npm run validate:range-import -- --kind=mtt-preflop --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
@@ -37,9 +47,9 @@ or:
 npm run validate:range-import -- --kind=river-production --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
 ```
 
-5. Review the CLI report. Promotion is blocked unless both `productionReady: true` and `permissionReady: true`.
+6. Review the CLI report. Promotion is blocked unless both `productionReady: true` and `permissionReady: true`.
    Add `--json` to the validation command when batch tooling needs structured readiness, legal-slot and permission results.
-6. Dry-run the TypeScript module generation:
+7. Dry-run the TypeScript module generation:
 
 ```bash
 npm run build:range-module -- --kind=mtt-preflop --dry-run --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
@@ -65,10 +75,10 @@ or:
 npm run build:range-module -- --kind=river-production --dry-run --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
 ```
 
-7. Generate the production TypeScript pack only after the dry-run says `writeReady: true`.
-8. Hand-review the generated module before wiring it into a registry.
-9. Run `npm run verify:ranges`, targeted tests, `npm run typecheck` and `npm run build`.
-10. Keep the app UI source-free: no URLs, providers, pack IDs or internal rule IDs in visible gameplay output.
+8. Generate the production TypeScript pack only after the dry-run says `writeReady: true`.
+9. Hand-review the generated module before wiring it into a registry.
+10. Run `npm run verify:ranges`, targeted tests, `npm run typecheck` and `npm run build`.
+11. Keep the app UI source-free: no URLs, providers, pack IDs or internal rule IDs in visible gameplay output.
 
 MTT preflop slot paths use:
 

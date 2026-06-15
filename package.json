@@ -14,6 +14,7 @@
     "build:range-module": "vite-node scripts/buildRangeModule.mts",
     "mtt:completion": "vite-node scripts/checkMttCompletion.mts",
     "mtt:slots": "vite-node scripts/listMttImportSlots.mts",
+    "range:intake": "vite-node scripts/checkRangeIntakeStatus.mts",
     "bundle:budget": "vite-node scripts/checkBundleBudget.mts",
     "profile:render": "vite-node scripts/profileRenderPerformance.mts",
     "release:check": "npm run typecheck && npm test && npm run verify:ranges && npm run build && npm run bundle:budget",

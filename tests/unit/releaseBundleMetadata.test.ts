@@ -76,6 +76,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["build:range-module"]).toBe("vite-node scripts/buildRangeModule.mts");
     expect(pkg.scripts["mtt:slots"]).toBe("vite-node scripts/listMttImportSlots.mts");
     expect(pkg.scripts["mtt:completion"]).toBe("vite-node scripts/checkMttCompletion.mts");
+    expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
     expect(pkg.scripts["bundle:budget"]).toBe("vite-node scripts/checkBundleBudget.mts");
     expect(pkg.scripts["profile:render"]).toBe("vite-node scripts/profileRenderPerformance.mts");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
@@ -100,6 +101,7 @@ describe("release bundle metadata", () => {
 
     expect(operatorGuide).toContain("npm run validate:range-import");
     expect(operatorGuide).toContain("npm run mtt:slots");
+    expect(operatorGuide).toContain("npm run range:intake");
     expect(operatorGuide).toContain("legal import slot: true");
     expect(operatorGuide).toContain("matched import slots");
     expect(operatorGuide).toContain("npm run verify:ranges");

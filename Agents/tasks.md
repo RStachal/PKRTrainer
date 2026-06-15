@@ -1075,6 +1075,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 102.3 Popsat operator workflow od exportu po production promotion
     - Kroky: ulozit raw export, spustit validator, review report, commit normalized pack, release checkpoint
     - Hotovo: `Agents/range-intake/README.md` and intake manifest workflow
+    - Hotovo: `npm run range:intake` kontroluje pritomnost `normalized.json` a `permission.json` pro legalni MTT sloty pred validaci obsahu
 
 - [x] 103. Legal source and permission audit workflow
   - [x] 103.1 Pridat permission manifest pro kazdy budouci production pack

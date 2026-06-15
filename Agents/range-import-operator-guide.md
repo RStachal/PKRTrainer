@@ -32,6 +32,18 @@ The output is source-free and includes each legal pack id, normalized input path
 Available filters are `--format`, `--speed`, `--ev`, `--street`, `--ante` and `--status`.
 Use `--json` when another script needs stable slot ids and paths.
 
+## Check local intake status
+
+After staging raw files, check which legal slots have both expected local files:
+
+```powershell
+npm run range:intake
+npm run range:intake -- --kind=preflop --format=SIX_MAX --speed=TURBO
+npm run range:intake -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
+```
+
+This command is source-free. It checks file presence for `normalized.json` and `permission.json`; it does not validate poker content.
+
 ## Validate an MTT preflop import
 
 Use the synthetic example as the command shape:
