@@ -133,6 +133,7 @@ For a shorter blocker-only queue with local intake file status:
 
 ```powershell
 npm run mtt:blockers
+npm run mtt:blockers -- --summary
 npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 ```
 

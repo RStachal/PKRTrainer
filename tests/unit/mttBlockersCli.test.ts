@@ -107,6 +107,18 @@ describe("mtt:blockers CLI", () => {
     );
   });
 
+  it("umi vypsat jen souhrn pro release check bez detailnich slot radku", () => {
+    const result = runBlockers("--summary");
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("MTT production blockers");
+    expect(result.stdout).toContain("total rows in filter: 64");
+    expect(result.stdout).toContain("blocker rows: 62");
+    expect(result.stdout).toContain("missing permission.json: 62");
+    expect(result.stdout).not.toContain("SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF");
+    expect(result.stdout).not.toContain("blocker:");
+  });
+
   it("vrati chybu pro neznamy filtr", () => {
     const result = runBlockers("--ev=ICM");
 

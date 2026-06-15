@@ -18,7 +18,7 @@
     "range:intake": "vite-node scripts/checkRangeIntakeStatus.mts",
     "bundle:budget": "vite-node scripts/checkBundleBudget.mts",
     "profile:render": "vite-node scripts/profileRenderPerformance.mts",
-    "release:check": "npm run typecheck && npm test && npm run verify:ranges && npm run build && npm run bundle:budget",
+    "release:check": "npm run typecheck && npm test && npm run mtt:completion && npm run mtt:blockers -- --summary && npm run range:intake -- --ready-only && npm run verify:ranges && npm run build && npm run bundle:budget",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -83,7 +83,7 @@ describe("release bundle metadata", () => {
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(pkg.scripts["release:check"])
-      .toBe("npm run typecheck && npm test && npm run verify:ranges && npm run build && npm run bundle:budget");
+      .toBe("npm run typecheck && npm test && npm run mtt:completion && npm run mtt:blockers -- --summary && npm run range:intake -- --ready-only && npm run verify:ranges && npm run build && npm run bundle:budget");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
 
@@ -118,6 +118,7 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("blocked/missing rows: 10");
     expect(mttCoverageAudit).toContain("npm run range:intake -- --ready-only --json");
     expect(mttCoverageAudit).toContain("npm run mtt:blockers");
+    expect(mttCoverageAudit).toContain("npm run mtt:blockers -- --summary");
     expect(mttCoverageAudit).toContain("regular-vs-turbo diff audit");
     expect(mttCoverageAudit).toContain("FLOP, TURN and RIVER production StrategyPacks are not registered");
     expect(releaseTemplate).toContain("Gameplay changes");

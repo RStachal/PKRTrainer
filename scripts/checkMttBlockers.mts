@@ -11,6 +11,7 @@ import { parseMttFilterArg } from "../src/data/ranges/mttCliFilterParsing.ts";
 interface CliArgs {
   filters: MttCompletionReadinessFilters;
   json: boolean;
+  summary: boolean;
 }
 
 interface MttBlockerRow {
@@ -50,6 +51,7 @@ function usage(): string {
     "",
     "Output:",
     "  --json",
+    "  --summary",
     "",
     "Filters:",
     "  --format=FULL_RING_9|SIX_MAX",
@@ -64,7 +66,7 @@ function usage(): string {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildMttBlockerReport(args);
-  console.log(args.json ? JSON.stringify(report, null, 2) : renderMttBlockerReport(report));
+  console.log(args.json ? JSON.stringify(report, null, 2) : renderMttBlockerReport(report, args.summary));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
@@ -73,6 +75,7 @@ try {
 function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let json = false;
+  let summary = false;
 
   for (const item of argv) {
     if (item === "--help" || item === "-h") {
@@ -82,11 +85,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
       json = true;
       continue;
     }
+    if (item === "--summary") {
+      summary = true;
+      continue;
+    }
     if (parseMttFilterArg(item, filters, usage)) continue;
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, json };
+  return { filters, json, summary };
 }
 
 function buildMttBlockerReport(args: CliArgs): MttBlockerReport {
@@ -142,7 +149,7 @@ function intakeState(importSlot: MttCompletionImportSlotHint | null): MttBlocker
   };
 }
 
-function renderMttBlockerReport(report: MttBlockerReport): string {
+function renderMttBlockerReport(report: MttBlockerReport, summaryOnly = false): string {
   const lines = [
     "MTT production blockers",
     `total rows in filter: ${report.counts.totalRows}`,
@@ -153,6 +160,8 @@ function renderMttBlockerReport(report: MttBlockerReport): string {
     `missing normalized.json: ${report.counts.missingNormalized}`,
     `missing permission.json: ${report.counts.missingPermission}`,
   ];
+
+  if (summaryOnly) return lines.join("\n");
 
   for (const row of report.rows) {
     lines.push(
