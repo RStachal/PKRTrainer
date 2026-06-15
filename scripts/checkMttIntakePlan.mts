@@ -30,6 +30,7 @@ interface CliArgs {
   json: boolean;
   limit: number | null;
   priority: PriorityKey | null;
+  visibility: "all" | "ready-only" | "waiting-only";
 }
 
 interface IntakePlanRow {
@@ -74,6 +75,8 @@ function usage(): string {
     "  --all",
     "  --limit=<positive integer>",
     `  --priority=${PRIORITY_KEYS.join("|")}`,
+    "  --ready-only",
+    "  --waiting-only",
     "",
     "Filters:",
     "  --format=FULL_RING_9|SIX_MAX",
@@ -99,6 +102,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
   let limit: number | null = 12;
   let priority: PriorityKey | null = null;
+  let visibility: CliArgs["visibility"] = "all";
 
   for (const item of argv) {
     if (item === "--help" || item === "-h") {
@@ -120,11 +124,19 @@ function parseArgs(argv: readonly string[]): CliArgs {
       priority = parsePriority(item.slice("--priority=".length));
       continue;
     }
+    if (item === "--ready-only") {
+      visibility = setVisibility(visibility, "ready-only");
+      continue;
+    }
+    if (item === "--waiting-only") {
+      visibility = setVisibility(visibility, "waiting-only");
+      continue;
+    }
     if (parseMttFilterArg(item, filters, usage)) continue;
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, json, limit, priority };
+  return { filters, json, limit, priority, visibility };
 }
 
 function parseLimit(value: string): number {
@@ -140,6 +152,16 @@ function parsePriority(value: string): PriorityKey {
   throw new Error(`Unsupported --priority value: ${value}\n\n${usage()}`);
 }
 
+function setVisibility(
+  current: CliArgs["visibility"],
+  next: Exclude<CliArgs["visibility"], "all">,
+): CliArgs["visibility"] {
+  if (current !== "all" && current !== next) {
+    throw new Error(`Use only one of --ready-only or --waiting-only.\n\n${usage()}`);
+  }
+  return next;
+}
+
 function buildMttIntakePlanReport(args: CliArgs): IntakePlanReport {
   const filtered = filterMttCompletionReadinessReport(
     buildMttCompletionReadinessReport(),
@@ -149,6 +171,7 @@ function buildMttIntakePlanReport(args: CliArgs): IntakePlanReport {
     .filter((row) => !row.productionReady && row.importSlot !== null)
     .map((row) => planRowFromReadinessRow(row, row.importSlot as MttCompletionImportSlotHint))
     .filter((row) => args.priority === null || row.priority === args.priority)
+    .filter((row) => matchesVisibility(row, args.visibility))
     .sort(comparePlanRows);
   const rows = args.limit === null ? allRows : allRows.slice(0, args.limit);
 
@@ -164,6 +187,12 @@ function buildMttIntakePlanReport(args: CliArgs): IntakePlanReport {
     },
     rows,
   };
+}
+
+function matchesVisibility(row: IntakePlanRow, visibility: CliArgs["visibility"]): boolean {
+  if (visibility === "ready-only") return row.intake.readyForValidation;
+  if (visibility === "waiting-only") return !row.intake.readyForValidation;
+  return true;
 }
 
 function countByPriority(rows: readonly IntakePlanRow[]): Record<PriorityKey, number> {

@@ -1508,7 +1508,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.4 Pridat priority bucket filtr pro batch zpracovani
     - Operator musi umet vypsat jen konkretni prioritni skupinu, napr. preflop CHIP_EV nebo river production, bez skladani vice dimenznich filtru.
     - Hotovo: `npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all` filtruje konkretni priority bucket a reportuje `byPriority` pocty v textu i JSON.
-  - [ ] 133.5 Po dodani legalnich dat postupovat podle intake planu
+  - [x] 133.5 Pridat ready/waiting filtr do prioritniho MTT intake planu
+    - Po dodani prvnich legalnich souboru musi jit vypsat jen sloty pripravene k validaci bez rucniho parsovani cele fronty.
+    - Hotovo: `npm run mtt:intake-plan -- --ready-only --json` a `--waiting-only` sdili stejny ready/waiting workflow jako obecny `range:intake` report.
+  - [ ] 133.6 Po dodani legalnich dat postupovat podle intake planu
     - Nejdriv validovat ready sloty, potom generovat production moduly, zapojit registry/resolvery a spustit `npm run release:check`.
 
 ## Notes

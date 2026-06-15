@@ -143,6 +143,7 @@ For the prioritized import queue aligned to the current MTT completion goal:
 ```powershell
 npm run mtt:intake-plan
 npm run mtt:intake-plan -- --all
+npm run mtt:intake-plan -- --ready-only --json
 npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all
 npm run mtt:intake-plan -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 ```

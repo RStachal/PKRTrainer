@@ -36,6 +36,7 @@ npm run mtt:blockers
 npm run mtt:blockers -- --summary
 npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 npm run mtt:intake-plan
+npm run mtt:intake-plan -- --ready-only --json
 npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all
 npm run mtt:intake-plan -- --all
 ```

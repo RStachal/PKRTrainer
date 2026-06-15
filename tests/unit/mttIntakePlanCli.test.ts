@@ -124,6 +124,35 @@ describe("mtt:intake-plan CLI", () => {
     expect(result.stderr).toContain("Usage:");
   });
 
+  it("umi vypsat jen prioritni MTT sloty pripravene k validaci", () => {
+    const result = runPlan("--ready-only", "--json");
+
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
+      counts: {
+        totalQueueRows: number;
+        shownRows: number;
+        readyForValidation: number;
+        byPriority: Record<string, number>;
+      };
+      rows: unknown[];
+    };
+
+    expect(parsed.counts.totalQueueRows).toBe(0);
+    expect(parsed.counts.shownRows).toBe(0);
+    expect(parsed.counts.readyForValidation).toBe(0);
+    expect(parsed.counts.byPriority.P0_READY_FOR_VALIDATION).toBe(0);
+    expect(parsed.rows).toEqual([]);
+  });
+
+  it("odmitne konflikt ready-only a waiting-only filtru", () => {
+    const result = runPlan("--ready-only", "--waiting-only");
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Use only one of --ready-only or --waiting-only.");
+    expect(result.stderr).toContain("Usage:");
+  });
+
   it("vrati chybu pro neplatny limit", () => {
     const result = runPlan("--limit=0");
 
