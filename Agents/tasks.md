@@ -1505,7 +1505,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.3 Napojit intake plan do dokumentace a regression testu
     - Plan musi byt dostupny pres npm script, podporovat JSON pro batch tooling a byt uvedeny v operator guide/release metadatech.
     - Hotovo: operator guide, range-intake README, coverage audit, release notes template a metadata/CLI testy drzi `mtt:intake-plan` workflow.
-  - [ ] 133.4 Po dodani legalnich dat postupovat podle intake planu
+  - [x] 133.4 Pridat priority bucket filtr pro batch zpracovani
+    - Operator musi umet vypsat jen konkretni prioritni skupinu, napr. preflop CHIP_EV nebo river production, bez skladani vice dimenznich filtru.
+    - Hotovo: `npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all` filtruje konkretni priority bucket a reportuje `byPriority` pocty v textu i JSON.
+  - [ ] 133.5 Po dodani legalnich dat postupovat podle intake planu
     - Nejdriv validovat ready sloty, potom generovat production moduly, zapojit registry/resolvery a spustit `npm run release:check`.
 
 ## Notes

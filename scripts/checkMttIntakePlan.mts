@@ -16,10 +16,20 @@ type PriorityKey =
   | "P4_TURN_PRODUCTION"
   | "P5_RIVER_PRODUCTION";
 
+const PRIORITY_KEYS: readonly PriorityKey[] = [
+  "P0_READY_FOR_VALIDATION",
+  "P1_PREFLOP_CHIP_EV",
+  "P2_PREFLOP_DOLAR_EV",
+  "P3_FLOP_PRODUCTION",
+  "P4_TURN_PRODUCTION",
+  "P5_RIVER_PRODUCTION",
+];
+
 interface CliArgs {
   filters: MttCompletionReadinessFilters;
   json: boolean;
   limit: number | null;
+  priority: PriorityKey | null;
 }
 
 interface IntakePlanRow {
@@ -45,6 +55,7 @@ interface IntakePlanReport {
     readyForValidation: number;
     missingNormalized: number;
     missingPermission: number;
+    byPriority: Record<PriorityKey, number>;
   };
   rows: readonly IntakePlanRow[];
 }
@@ -55,12 +66,14 @@ function usage(): string {
     "  npm run mtt:intake-plan",
     "  npm run mtt:intake-plan -- --limit=20",
     "  npm run mtt:intake-plan -- --all",
+    "  npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all",
     "  npm run mtt:intake-plan -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json",
     "",
     "Output:",
     "  --json",
     "  --all",
     "  --limit=<positive integer>",
+    `  --priority=${PRIORITY_KEYS.join("|")}`,
     "",
     "Filters:",
     "  --format=FULL_RING_9|SIX_MAX",
@@ -85,6 +98,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let json = false;
   let limit: number | null = 12;
+  let priority: PriorityKey | null = null;
 
   for (const item of argv) {
     if (item === "--help" || item === "-h") {
@@ -102,11 +116,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
       limit = parseLimit(item.slice("--limit=".length));
       continue;
     }
+    if (item.startsWith("--priority=")) {
+      priority = parsePriority(item.slice("--priority=".length));
+      continue;
+    }
     if (parseMttFilterArg(item, filters, usage)) continue;
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, json, limit };
+  return { filters, json, limit, priority };
 }
 
 function parseLimit(value: string): number {
@@ -117,6 +135,11 @@ function parseLimit(value: string): number {
   return parsed;
 }
 
+function parsePriority(value: string): PriorityKey {
+  if (PRIORITY_KEYS.includes(value as PriorityKey)) return value as PriorityKey;
+  throw new Error(`Unsupported --priority value: ${value}\n\n${usage()}`);
+}
+
 function buildMttIntakePlanReport(args: CliArgs): IntakePlanReport {
   const filtered = filterMttCompletionReadinessReport(
     buildMttCompletionReadinessReport(),
@@ -125,6 +148,7 @@ function buildMttIntakePlanReport(args: CliArgs): IntakePlanReport {
   const allRows = filtered.rows
     .filter((row) => !row.productionReady && row.importSlot !== null)
     .map((row) => planRowFromReadinessRow(row, row.importSlot as MttCompletionImportSlotHint))
+    .filter((row) => args.priority === null || row.priority === args.priority)
     .sort(comparePlanRows);
   const rows = args.limit === null ? allRows : allRows.slice(0, args.limit);
 
@@ -136,9 +160,16 @@ function buildMttIntakePlanReport(args: CliArgs): IntakePlanReport {
       readyForValidation: allRows.filter((row) => row.intake.readyForValidation).length,
       missingNormalized: allRows.filter((row) => !row.intake.normalizedPresent).length,
       missingPermission: allRows.filter((row) => !row.intake.permissionPresent).length,
+      byPriority: countByPriority(allRows),
     },
     rows,
   };
+}
+
+function countByPriority(rows: readonly IntakePlanRow[]): Record<PriorityKey, number> {
+  const counts = Object.fromEntries(PRIORITY_KEYS.map((priority) => [priority, 0])) as Record<PriorityKey, number>;
+  for (const row of rows) counts[row.priority] += 1;
+  return counts;
 }
 
 function planRowFromReadinessRow(
@@ -224,6 +255,7 @@ function renderMttIntakePlanReport(report: IntakePlanReport, limit: number | nul
     `ready for validation: ${report.counts.readyForValidation}`,
     `missing normalized.json: ${report.counts.missingNormalized}`,
     `missing permission.json: ${report.counts.missingPermission}`,
+    `priority counts: ${PRIORITY_KEYS.map((priority) => `${priority}=${report.counts.byPriority[priority]}`).join(", ")}`,
   ];
   if (limit !== null && report.counts.totalQueueRows > report.counts.shownRows) {
     lines.push(`showing first ${limit} rows; use --all to show the full queue`);

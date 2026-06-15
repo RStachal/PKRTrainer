@@ -47,6 +47,7 @@ Useful filters:
 - `npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json`
 - `npm run mtt:blockers -- --summary`
 - `npm run mtt:intake-plan`
+- `npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all`
 - `npm run range:intake:guard`
 
 The preflop intake subset currently has 14 rows and 0 rows ready for validation. All 14 are waiting for both normalized data and permission manifests.
