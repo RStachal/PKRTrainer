@@ -7,34 +7,25 @@ import {
   type MttCompletionReadinessRow,
 } from "../src/data/ranges/mttProductionReadiness.ts";
 import { parseMttFilterArg } from "../src/data/ranges/mttCliFilterParsing.ts";
-
-type PriorityKey =
-  | "P0_READY_FOR_VALIDATION"
-  | "P1_PREFLOP_CHIP_EV"
-  | "P2_PREFLOP_DOLAR_EV"
-  | "P3_FLOP_PRODUCTION"
-  | "P4_TURN_PRODUCTION"
-  | "P5_RIVER_PRODUCTION";
-
-const PRIORITY_KEYS: readonly PriorityKey[] = [
-  "P0_READY_FOR_VALIDATION",
-  "P1_PREFLOP_CHIP_EV",
-  "P2_PREFLOP_DOLAR_EV",
-  "P3_FLOP_PRODUCTION",
-  "P4_TURN_PRODUCTION",
-  "P5_RIVER_PRODUCTION",
-];
+import {
+  emptyMttIntakePriorityCounts,
+  MTT_INTAKE_PRIORITY_KEYS,
+  mttIntakePriorityForProfile,
+  mttIntakePriorityRank,
+  parseMttIntakePriority,
+  type MttIntakePriorityKey,
+} from "../src/data/ranges/mttIntakePriority.ts";
 
 interface CliArgs {
   filters: MttCompletionReadinessFilters;
   json: boolean;
   limit: number | null;
-  priority: PriorityKey | null;
+  priority: MttIntakePriorityKey | null;
   visibility: "all" | "ready-only" | "waiting-only";
 }
 
 interface IntakePlanRow {
-  priority: PriorityKey;
+  priority: MttIntakePriorityKey;
   slotId: string;
   status: MttCompletionReadinessRow["status"];
   coverageKind: MttCompletionReadinessRow["coverageKind"];
@@ -74,7 +65,7 @@ function usage(): string {
     "  --json",
     "  --all",
     "  --limit=<positive integer>",
-    `  --priority=${PRIORITY_KEYS.join("|")}`,
+    `  --priority=${MTT_INTAKE_PRIORITY_KEYS.join("|")}`,
     "  --ready-only",
     "  --waiting-only",
     "",
@@ -101,7 +92,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let json = false;
   let limit: number | null = 12;
-  let priority: PriorityKey | null = null;
+  let priority: MttIntakePriorityKey | null = null;
   let visibility: CliArgs["visibility"] = "all";
 
   for (const item of argv) {
@@ -121,7 +112,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
       continue;
     }
     if (item.startsWith("--priority=")) {
-      priority = parsePriority(item.slice("--priority=".length));
+      priority = parseMttIntakePriority(item.slice("--priority=".length), usage);
       continue;
     }
     if (item === "--ready-only") {
@@ -145,11 +136,6 @@ function parseLimit(value: string): number {
     throw new Error(`Unsupported --limit value: ${value}\n\n${usage()}`);
   }
   return parsed;
-}
-
-function parsePriority(value: string): PriorityKey {
-  if (PRIORITY_KEYS.includes(value as PriorityKey)) return value as PriorityKey;
-  throw new Error(`Unsupported --priority value: ${value}\n\n${usage()}`);
 }
 
 function setVisibility(
@@ -195,8 +181,8 @@ function matchesVisibility(row: IntakePlanRow, visibility: CliArgs["visibility"]
   return true;
 }
 
-function countByPriority(rows: readonly IntakePlanRow[]): Record<PriorityKey, number> {
-  const counts = Object.fromEntries(PRIORITY_KEYS.map((priority) => [priority, 0])) as Record<PriorityKey, number>;
+function countByPriority(rows: readonly IntakePlanRow[]): Record<MttIntakePriorityKey, number> {
+  const counts = emptyMttIntakePriorityCounts();
   for (const row of rows) counts[row.priority] += 1;
   return counts;
 }
@@ -228,13 +214,8 @@ function intakeState(importSlot: MttCompletionImportSlotHint): IntakePlanRow["in
   };
 }
 
-function priorityFor(row: MttCompletionReadinessRow, readyForValidation: boolean): PriorityKey {
-  if (readyForValidation) return "P0_READY_FOR_VALIDATION";
-  if (row.street === "PREFLOP" && row.evModel === "CHIP_EV") return "P1_PREFLOP_CHIP_EV";
-  if (row.street === "PREFLOP" && row.evModel === "DOLAR_EV") return "P2_PREFLOP_DOLAR_EV";
-  if (row.street === "FLOP") return "P3_FLOP_PRODUCTION";
-  if (row.street === "TURN") return "P4_TURN_PRODUCTION";
-  return "P5_RIVER_PRODUCTION";
+function priorityFor(row: MttCompletionReadinessRow, readyForValidation: boolean): MttIntakePriorityKey {
+  return mttIntakePriorityForProfile(row, readyForValidation);
 }
 
 function validateCommandFor(importSlot: MttCompletionImportSlotHint): string {
@@ -248,22 +229,10 @@ function validateCommandFor(importSlot: MttCompletionImportSlotHint): string {
 
 function comparePlanRows(a: IntakePlanRow, b: IntakePlanRow): number {
   return (
-    priorityRank(a.priority) - priorityRank(b.priority) ||
+    mttIntakePriorityRank(a.priority) - mttIntakePriorityRank(b.priority) ||
     statusRank(a.status) - statusRank(b.status) ||
     stringRank(a.slotId, b.slotId)
   );
-}
-
-function priorityRank(priority: PriorityKey): number {
-  const order: Record<PriorityKey, number> = {
-    P0_READY_FOR_VALIDATION: 0,
-    P1_PREFLOP_CHIP_EV: 1,
-    P2_PREFLOP_DOLAR_EV: 2,
-    P3_FLOP_PRODUCTION: 3,
-    P4_TURN_PRODUCTION: 4,
-    P5_RIVER_PRODUCTION: 5,
-  };
-  return order[priority];
 }
 
 function statusRank(status: MttCompletionReadinessRow["status"]): number {
@@ -284,7 +253,7 @@ function renderMttIntakePlanReport(report: IntakePlanReport, limit: number | nul
     `ready for validation: ${report.counts.readyForValidation}`,
     `missing normalized.json: ${report.counts.missingNormalized}`,
     `missing permission.json: ${report.counts.missingPermission}`,
-    `priority counts: ${PRIORITY_KEYS.map((priority) => `${priority}=${report.counts.byPriority[priority]}`).join(", ")}`,
+    `priority counts: ${MTT_INTAKE_PRIORITY_KEYS.map((priority) => `${priority}=${report.counts.byPriority[priority]}`).join(", ")}`,
   ];
   if (limit !== null && report.counts.totalQueueRows > report.counts.shownRows) {
     lines.push(`showing first ${limit} rows; use --all to show the full queue`);

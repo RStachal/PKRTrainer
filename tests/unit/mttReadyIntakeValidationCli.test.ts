@@ -7,6 +7,7 @@ describe("mtt:validate-ready-intake CLI", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("MTT ready intake validation");
+    expect(result.stdout).toContain("priority: all");
     expect(result.stdout).toContain("valid: true");
     expect(result.stdout).toContain("ready rows: 0");
     expect(result.stdout).toContain("valid rows: 0");
@@ -20,6 +21,7 @@ describe("mtt:validate-ready-intake CLI", () => {
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
       filters: { tableFormat: string; evModel: string; street: string };
+      priority: string | null;
       valid: boolean;
       counts: {
         readyRows: number;
@@ -34,6 +36,7 @@ describe("mtt:validate-ready-intake CLI", () => {
       evModel: "DOLAR_EV",
       street: "RIVER",
     });
+    expect(parsed.priority).toBe(null);
     expect(parsed.valid).toBe(true);
     expect(parsed.counts).toEqual({
       readyRows: 0,
@@ -49,6 +52,29 @@ describe("mtt:validate-ready-intake CLI", () => {
     expect(result.status).toBe(1);
     expect(result.stdout).toContain("valid: false");
     expect(result.stdout).toContain("ready rows: 0");
+  });
+
+  it("umi omezit validaci na konkretni prioritu", () => {
+    const result = runValidateReady("--priority=P1_PREFLOP_CHIP_EV", "--json");
+
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
+      priority: string;
+      counts: { readyRows: number };
+      rows: unknown[];
+    };
+
+    expect(parsed.priority).toBe("P1_PREFLOP_CHIP_EV");
+    expect(parsed.counts.readyRows).toBe(0);
+    expect(parsed.rows).toEqual([]);
+  });
+
+  it("vrati chybu pro neznamou prioritu", () => {
+    const result = runValidateReady("--priority=P9");
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Unsupported --priority value: P9");
+    expect(result.stderr).toContain("Usage:");
   });
 
   it("vrati chybu pro neznamy filtr", () => {

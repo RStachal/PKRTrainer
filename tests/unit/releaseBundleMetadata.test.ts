@@ -111,6 +111,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");
     expect(operatorGuide).toContain("npm run mtt:validate-ready-intake");
+    expect(operatorGuide).toContain("npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json");
     expect(operatorGuide).toContain("npm run range:intake");
     expect(operatorGuide).toContain("npm run range:intake:guard");
     expect(operatorGuide).toContain("legal import slot: true");
@@ -131,6 +132,7 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");
     expect(mttCoverageAudit).toContain("npm run mtt:validate-ready-intake");
+    expect(mttCoverageAudit).toContain("npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json");
     expect(mttCoverageAudit).toContain("regular-vs-turbo diff audit");
     expect(mttCoverageAudit).toContain("FLOP, TURN and RIVER production StrategyPacks are not registered");
     expect(releaseTemplate).toContain("Gameplay changes");

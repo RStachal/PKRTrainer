@@ -39,6 +39,7 @@ npm run mtt:intake-plan
 npm run mtt:intake-plan -- --ready-only --json
 npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all
 npm run mtt:validate-ready-intake
+npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json
 npm run mtt:intake-plan -- --all
 ```
 5. Validate the normalized import:

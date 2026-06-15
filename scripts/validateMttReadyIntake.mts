@@ -13,14 +13,22 @@ import {
   type RangeModuleBuildKind,
 } from "../src/data/ranges/rangeModuleBuilder.ts";
 import type { ProductionPermissionManifest } from "../src/data/ranges/productionPermissionManifest.ts";
+import {
+  MTT_INTAKE_PRIORITY_KEYS,
+  mttIntakePriorityForProfile,
+  parseMttIntakePriority,
+  type MttIntakePriorityKey,
+} from "../src/data/ranges/mttIntakePriority.ts";
 
 interface CliArgs {
   filters: MttCompletionReadinessFilters;
   failOnEmpty: boolean;
   json: boolean;
+  priority: MttIntakePriorityKey | null;
 }
 
 interface ReadyValidationRow {
+  priority: MttIntakePriorityKey;
   slotId: string;
   packId: string;
   kind: RangeModuleBuildKind;
@@ -37,6 +45,7 @@ interface ReadyValidationRow {
 
 interface ReadyValidationReport {
   filters: MttCompletionReadinessFilters;
+  priority: MttIntakePriorityKey | null;
   valid: boolean;
   counts: {
     readyRows: number;
@@ -52,11 +61,13 @@ function usage(): string {
     "  npm run mtt:validate-ready-intake",
     "  npm run mtt:validate-ready-intake -- --json",
     "  npm run mtt:validate-ready-intake -- --fail-on-empty",
+    "  npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json",
     "  npm run mtt:validate-ready-intake -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json",
     "",
     "Output:",
     "  --json",
     "  --fail-on-empty",
+    `  --priority=${MTT_INTAKE_PRIORITY_KEYS.join("|")}`,
     "",
     "Filters:",
     "  --format=FULL_RING_9|SIX_MAX",
@@ -82,6 +93,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let failOnEmpty = false;
   let json = false;
+  let priority: MttIntakePriorityKey | null = null;
 
   for (const item of argv) {
     if (item === "--help" || item === "-h") {
@@ -95,11 +107,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
       failOnEmpty = true;
       continue;
     }
+    if (item.startsWith("--priority=")) {
+      priority = parseMttIntakePriority(item.slice("--priority=".length), usage);
+      continue;
+    }
     if (parseMttFilterArg(item, filters, usage)) continue;
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, failOnEmpty, json };
+  return { filters, failOnEmpty, json, priority };
 }
 
 function buildReadyValidationReport(args: CliArgs): ReadyValidationReport {
@@ -110,12 +126,14 @@ function buildReadyValidationReport(args: CliArgs): ReadyValidationReport {
   const rows = readiness.rows
     .filter((row) => !row.productionReady && row.importSlot !== null)
     .filter((row) => isReady(row.importSlot as MttCompletionImportSlotHint))
+    .filter((row) => matchesPriority(row, args.priority))
     .map(validateReadyRow);
   const failedRows = rows.filter((row) => !row.valid).length;
   const valid = failedRows === 0 && (!args.failOnEmpty || rows.length > 0);
 
   return {
     filters: args.filters,
+    priority: args.priority,
     valid,
     counts: {
       readyRows: rows.length,
@@ -124,6 +142,14 @@ function buildReadyValidationReport(args: CliArgs): ReadyValidationReport {
     },
     rows,
   };
+}
+
+function matchesPriority(
+  row: MttCompletionReadinessRow,
+  priority: MttIntakePriorityKey | null,
+): boolean {
+  if (priority === null || priority === "P0_READY_FOR_VALIDATION") return true;
+  return mttIntakePriorityForProfile(row, false) === priority;
 }
 
 function isReady(importSlot: MttCompletionImportSlotHint): boolean {
@@ -142,6 +168,7 @@ function validateReadyRow(row: MttCompletionReadinessRow): ReadyValidationRow {
     });
 
     return {
+      priority: mttIntakePriorityForProfile(row, false),
       slotId: importSlot.slotId,
       packId: importSlot.packId,
       kind: importSlot.kind,
@@ -157,6 +184,7 @@ function validateReadyRow(row: MttCompletionReadinessRow): ReadyValidationRow {
     };
   } catch (error) {
     return {
+      priority: mttIntakePriorityForProfile(row, false),
       slotId: importSlot.slotId,
       packId: importSlot.packId,
       kind: importSlot.kind,
@@ -180,6 +208,7 @@ function readJson(file: string): unknown {
 function renderReadyValidationReport(report: ReadyValidationReport): string {
   const lines = [
     "MTT ready intake validation",
+    `priority: ${report.priority ?? "all"}`,
     `valid: ${report.valid}`,
     `ready rows: ${report.counts.readyRows}`,
     `valid rows: ${report.counts.validRows}`,
@@ -187,7 +216,7 @@ function renderReadyValidationReport(report: ReadyValidationReport): string {
   ];
 
   for (const row of report.rows) {
-    lines.push(`${row.slotId} | ${row.kind} | ${row.writeReady ? "WRITE_READY" : "BLOCKED"}`);
+    lines.push(`${row.priority} | ${row.slotId} | ${row.kind} | ${row.writeReady ? "WRITE_READY" : "BLOCKED"}`);
     lines.push(`  pack: ${row.packId}`);
     lines.push(`  input: ${row.normalizedInputPath}`);
     lines.push(`  permission: ${row.permissionManifestPath}`);
