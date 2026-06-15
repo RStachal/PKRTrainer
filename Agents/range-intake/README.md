@@ -126,4 +126,5 @@ Postflop production inputs (`flop-production`, `turn-production`, `river-product
 - `evidence`
 - `notes`
 
-The manifest must use internal `referenceId` values instead of URL fields.
+The manifest must use internal `referenceId` values instead of URL fields and must not contain
+placeholder text such as `TODO`, `TBD`, `FIXME` or `REPLACE_ME`.

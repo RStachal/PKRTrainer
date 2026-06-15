@@ -125,4 +125,31 @@ describe("range intake examples", () => {
     expect(report.valid).toBe(false);
     expect(report.errors.join("\n")).toContain("internal reference IDs instead of URL fields");
   });
+
+  it("odmitne placeholder text v permission manifestu", () => {
+    const manifest = readExample<ProductionPermissionManifest>(
+      "Agents/range-intake/examples/permission-manifest.synthetic.json",
+    );
+    const report = buildProductionPermissionManifestReport(
+      {
+        ...manifest,
+        reviewer: "TODO reviewer",
+        evidence: [
+          {
+            ...manifest.evidence[0],
+            description: "REPLACE_ME with real evidence description.",
+          },
+        ],
+      },
+      {
+        packId: manifest.packId,
+        licenseKind: manifest.licenseKind,
+      },
+    );
+
+    expect(report.valid).toBe(false);
+    expect(report.errors.join("\n")).toContain("replace placeholder text before promotion");
+    expect(report.errors.join("\n")).toContain("$.reviewer");
+    expect(report.errors.join("\n")).toContain("$.evidence[0].description");
+  });
 });

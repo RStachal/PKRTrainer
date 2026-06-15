@@ -1517,7 +1517,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.7 Sjednotit MTT intake priority mezi planem a ready validaci
     - Priority bucket logika musi byt sdilena, aby `mtt:intake-plan` a `mtt:validate-ready-intake` nemohly driftovat.
     - Hotovo: priority jsou ve sdilenem modulu a ready validace podporuje `--priority=P1_PREFLOP_CHIP_EV` pro cilene batch kontroly.
-  - [ ] 133.8 Po dodani legalnich dat postupovat podle intake planu
+  - [x] 133.8 Zprisnit permission manifest proti placeholder textu
+    - Permission manifest nesmi projit jen proto, ze jsou povinna pole vyplnena retezcem typu TODO.
+    - Hotovo: permission validator odmita `TODO`, `TBD`, `FIXME`, `REPLACE_ME`, `FILL_ME`, `CHANGEME` a `PLACEHOLDER` kdekoliv v manifest string polich.
+  - [ ] 133.9 Po dodani legalnich dat postupovat podle intake planu
     - Nejdriv validovat ready sloty, potom generovat production moduly, zapojit registry/resolvery a spustit `npm run release:check`.
 
 ## Notes
