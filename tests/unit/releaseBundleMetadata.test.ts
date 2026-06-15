@@ -78,12 +78,13 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:completion"]).toBe("vite-node scripts/checkMttCompletion.mts");
     expect(pkg.scripts["mtt:blockers"]).toBe("vite-node scripts/checkMttBlockers.mts");
     expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
+    expect(pkg.scripts["range:intake:guard"]).toBe("vite-node scripts/checkRangeIntakeWorkspace.mts");
     expect(pkg.scripts["bundle:budget"]).toBe("vite-node scripts/checkBundleBudget.mts");
     expect(pkg.scripts["profile:render"]).toBe("vite-node scripts/profileRenderPerformance.mts");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(pkg.scripts["release:check"])
-      .toBe("npm run typecheck && npm test && npm run mtt:completion && npm run mtt:blockers -- --summary && npm run range:intake -- --ready-only && npm run verify:ranges && npm run build && npm run bundle:budget");
+      .toBe("npm run typecheck && npm test && npm run mtt:completion && npm run mtt:blockers -- --summary && npm run range:intake:guard && npm run range:intake -- --ready-only && npm run verify:ranges && npm run build && npm run bundle:budget");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
 
@@ -105,6 +106,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:slots");
     expect(operatorGuide).toContain("npm run mtt:blockers");
     expect(operatorGuide).toContain("npm run range:intake");
+    expect(operatorGuide).toContain("npm run range:intake:guard");
     expect(operatorGuide).toContain("legal import slot: true");
     expect(operatorGuide).toContain("matched import slots");
     expect(operatorGuide).toContain("npm run verify:ranges");
@@ -126,6 +128,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("Statistics changes");
     expect(releaseTemplate).toContain("npm run mtt:completion");
     expect(releaseTemplate).toContain("npm run mtt:blockers");
+    expect(releaseTemplate).toContain("npm run range:intake:guard");
     expect(releaseTemplate).toContain("npm run range:intake -- --ready-only");
     expect(releaseTemplate).toContain("Known limitations");
   });

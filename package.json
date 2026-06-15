@@ -16,9 +16,10 @@
     "mtt:blockers": "vite-node scripts/checkMttBlockers.mts",
     "mtt:slots": "vite-node scripts/listMttImportSlots.mts",
     "range:intake": "vite-node scripts/checkRangeIntakeStatus.mts",
+    "range:intake:guard": "vite-node scripts/checkRangeIntakeWorkspace.mts",
     "bundle:budget": "vite-node scripts/checkBundleBudget.mts",
     "profile:render": "vite-node scripts/profileRenderPerformance.mts",
-    "release:check": "npm run typecheck && npm test && npm run mtt:completion && npm run mtt:blockers -- --summary && npm run range:intake -- --ready-only && npm run verify:ranges && npm run build && npm run bundle:budget",
+    "release:check": "npm run typecheck && npm test && npm run mtt:completion && npm run mtt:blockers -- --summary && npm run range:intake:guard && npm run range:intake -- --ready-only && npm run verify:ranges && npm run build && npm run bundle:budget",
     "test": "vitest run",
     "test:watch": "vitest"
   },

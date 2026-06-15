@@ -1069,6 +1069,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 102.1 Definovat adresar pro dodane legalni exporty mimo runtime bundle
     - Raw solver/chart exporty nesmi byt omylem zobrazeny v UI ani importovany bez validace
     - Hotovo: `Agents/range-intake/raw/` je ignorovany Git workspace pro lokalni legalni vstupy
+    - Hotovo: `npm run range:intake:guard` blokuje nechtene trackovane raw vstupy a hlida ignore politiku staging adresare
   - [x] 102.2 Pridat priklady minimalnich JSON importu pro MTT preflop a flop production
     - Fixtures musi byt synthetic/test-only, bez skutecnych third-party chart hodnot
     - Hotovo: synteticke MTT preflop, flop production and permission manifest examples
@@ -1472,6 +1473,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Jednim prikazem spustit typecheck, tests, verify:ranges and build
     - Hotovo: `npm run release:check` spousti typecheck, tests, verify:ranges and build
     - Hotovo: `npm run release:check` spousti take MTT completion gate, source-free blocker summary a ready-only range intake status
+    - Hotovo: `npm run release:check` spousti take range intake workspace guard proti omylem commitnutym raw vstupum
   - [x] 130.2 Pridat CI gate pro source-free visible UI
     - Test ma failnout pri URL/provider/pack id ve viditelnem UI
     - Hotovo: source-free UI test ma release-gate surface coverage a regex blokaci URL, provideru, pack id and rule id

@@ -37,12 +37,13 @@ Use `--json` when another script needs stable slot ids and paths.
 After staging raw files, check which legal slots have both expected local files:
 
 ```powershell
+npm run range:intake:guard
 npm run range:intake
 npm run range:intake -- --kind=preflop --format=SIX_MAX --speed=TURBO
 npm run range:intake -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 ```
 
-This command is source-free. It checks file presence for `normalized.json` and `permission.json`; it does not validate poker content.
+The guard checks that `Agents/range-intake/raw/` still ignores private local inputs and has no tracked raw files beyond its placeholder docs. The status command is source-free. It checks file presence for `normalized.json` and `permission.json`; it does not validate poker content.
 
 ## Validate an MTT preflop import
 

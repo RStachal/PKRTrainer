@@ -16,6 +16,7 @@ This folder is the internal staging area for future legal range inputs. Nothing 
 4. Check local intake file presence when staging one or more slots:
 
 ```bash
+npm run range:intake:guard
 npm run range:intake
 npm run range:intake -- --kind=preflop --format=SIX_MAX --speed=TURBO
 npm run range:intake -- --kind=postflop --format=SIX_MAX --street=RIVER --json
@@ -23,7 +24,8 @@ npm run range:intake -- --ready-only --json
 npm run range:intake -- --waiting-only
 ```
 
-The status command is source-free and only checks whether each legal slot has its expected
+The guard checks that `raw/` still ignores private local inputs and has no tracked raw files beyond
+`.gitignore` and `README.md`. The status command is source-free and only checks whether each legal slot has its expected
 `normalized.json` and `permission.json` files. Use `--ready-only` for slots that can go straight to
 `validate:range-import`, or `--waiting-only` for slots still missing local files.
 
