@@ -1511,7 +1511,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.5 Pridat ready/waiting filtr do prioritniho MTT intake planu
     - Po dodani prvnich legalnich souboru musi jit vypsat jen sloty pripravene k validaci bez rucniho parsovani cele fronty.
     - Hotovo: `npm run mtt:intake-plan -- --ready-only --json` a `--waiting-only` sdili stejny ready/waiting workflow jako obecny `range:intake` report.
-  - [ ] 133.6 Po dodani legalnich dat postupovat podle intake planu
+  - [x] 133.6 Pridat batch validaci ready MTT intake slotu
+    - Po vlozeni vice legalnich vstupu musi jit jednim prikazem overit, ze vsechny ready sloty projdou production, legal-slot a permission dry-run build validaci.
+    - Hotovo: `npm run mtt:validate-ready-intake` cte pouze sloty s `normalized.json` i `permission.json`, nic nezapisuje a vraci nenulovy exit pri blokovanem ready slotu.
+  - [ ] 133.7 Po dodani legalnich dat postupovat podle intake planu
     - Nejdriv validovat ready sloty, potom generovat production moduly, zapojit registry/resolvery a spustit `npm run release:check`.
 
 ## Notes

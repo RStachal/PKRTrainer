@@ -78,6 +78,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:completion"]).toBe("vite-node scripts/checkMttCompletion.mts");
     expect(pkg.scripts["mtt:blockers"]).toBe("vite-node scripts/checkMttBlockers.mts");
     expect(pkg.scripts["mtt:intake-plan"]).toBe("vite-node scripts/checkMttIntakePlan.mts");
+    expect(pkg.scripts["mtt:validate-ready-intake"]).toBe("vite-node scripts/validateMttReadyIntake.mts");
     expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
     expect(pkg.scripts["range:intake:guard"]).toBe("vite-node scripts/checkRangeIntakeWorkspace.mts");
     expect(pkg.scripts["bundle:budget"]).toBe("vite-node scripts/checkBundleBudget.mts");
@@ -85,7 +86,7 @@ describe("release bundle metadata", () => {
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(pkg.scripts["release:check"])
-      .toBe("npm run typecheck && npm test && npm run mtt:completion && npm run mtt:blockers -- --summary && npm run range:intake:guard && npm run range:intake -- --ready-only && npm run verify:ranges && npm run build && npm run bundle:budget");
+      .toBe("npm run typecheck && npm test && npm run mtt:completion && npm run mtt:blockers -- --summary && npm run range:intake:guard && npm run range:intake -- --ready-only && npm run mtt:validate-ready-intake && npm run verify:ranges && npm run build && npm run bundle:budget");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
 
@@ -109,6 +110,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:intake-plan");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");
+    expect(operatorGuide).toContain("npm run mtt:validate-ready-intake");
     expect(operatorGuide).toContain("npm run range:intake");
     expect(operatorGuide).toContain("npm run range:intake:guard");
     expect(operatorGuide).toContain("legal import slot: true");
@@ -128,6 +130,7 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");
+    expect(mttCoverageAudit).toContain("npm run mtt:validate-ready-intake");
     expect(mttCoverageAudit).toContain("regular-vs-turbo diff audit");
     expect(mttCoverageAudit).toContain("FLOP, TURN and RIVER production StrategyPacks are not registered");
     expect(releaseTemplate).toContain("Gameplay changes");
@@ -136,6 +139,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("npm run mtt:completion");
     expect(releaseTemplate).toContain("npm run mtt:blockers");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --ready-only");
+    expect(releaseTemplate).toContain("npm run mtt:validate-ready-intake");
     expect(releaseTemplate).toContain("npm run range:intake:guard");
     expect(releaseTemplate).toContain("npm run range:intake -- --ready-only");
     expect(releaseTemplate).toContain("MTT intake priority plan");

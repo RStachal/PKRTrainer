@@ -146,6 +146,8 @@ npm run mtt:intake-plan -- --all
 npm run mtt:intake-plan -- --ready-only --json
 npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all
 npm run mtt:intake-plan -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
+npm run mtt:validate-ready-intake
+npm run mtt:validate-ready-intake -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 ```
 
 To narrow the MTT matrix to the next import batch:
@@ -170,3 +172,7 @@ Use `--json` when another script needs the release gate and filtered readiness r
 8. Register the pack in the appropriate resolver.
 9. Run `npm run release:check`.
 10. Confirm runtime UI remains source-free.
+
+For batch work after multiple legal files are staged, `mtt:validate-ready-intake` reads only slots where both
+`normalized.json` and `permission.json` are present and runs the same source-free dry-run build validation without
+writing runtime modules.
