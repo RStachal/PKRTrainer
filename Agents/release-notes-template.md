@@ -51,6 +51,7 @@
 ## Operator notes
 
 - Range import notes:
+- MTT intake priority plan:
 - Range intake status:
 - Permission manifest notes:
 - Rollback notes:

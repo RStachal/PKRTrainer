@@ -138,6 +138,14 @@ npm run mtt:blockers -- --summary
 npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 ```
 
+For the prioritized import queue aligned to the current MTT completion goal:
+
+```powershell
+npm run mtt:intake-plan
+npm run mtt:intake-plan -- --all
+npm run mtt:intake-plan -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
+```
+
 To narrow the MTT matrix to the next import batch:
 
 ```powershell

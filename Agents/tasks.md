@@ -1493,6 +1493,21 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: `Agents/release-notes-template.md` oddeluje gameplay, range data, stats, gates and limitations
     - Hotovo: `Agents/mtt-production-coverage-audit.md` shrnuje aktualni MTT completion, DOLAR_EV, postflop production blockery, range intake a regular-vs-turbo diff audit
 
+- [ ] 133. Aktualni MTT dokoncovaci priority
+  - Stav 2026-06-15: `npm run release:check` je zeleny, MTT completion ma 64 radku, 2 production rows, 52 candidate/preview rows, 10 missing rows, 62 blocker rows a 0 ready-for-validation intake slotu.
+  - Aktualni cil: kompletni MTT simulace pro 6-max i 9-max full ring, regular i turbo, CHIP_EV i DOLAR_EV, preflop/flop/turn/river, vsechny pozice, streety a action typy.
+  - Zasada: nevyrabet ani nerecyklovat chart hodnoty bez legalniho `normalized.json` a `permission.json`; technicke kroky maji zkratit cestu k importu a zmensit riziko spatneho povyseni.
+  - [x] 133.1 Zanalyzovat aktualni vysledek proti prioritnim cilum
+    - Hotovo: release, completion, blocker, intake guard a task backlog ukazuji, ze runtime/tooling je pripraveny, ale production coverage je datove blokovana.
+  - [x] 133.2 Pridat prioritizovany source-free MTT intake plan
+    - Operator musi videt serazeny import queue: ready files nejdriv, potom preflop CHIP_EV gapy, preflop DOLAR_EV gapy a nasledne postflop production streety.
+    - Hotovo: `npm run mtt:intake-plan` radi 62 non-production slotu podle priority, ukazuje lokalni intake stav, validacni command a podporuje `--json`, `--all`, `--limit` i MTT filtry.
+  - [x] 133.3 Napojit intake plan do dokumentace a regression testu
+    - Plan musi byt dostupny pres npm script, podporovat JSON pro batch tooling a byt uvedeny v operator guide/release metadatech.
+    - Hotovo: operator guide, range-intake README, coverage audit, release notes template a metadata/CLI testy drzi `mtt:intake-plan` workflow.
+  - [ ] 133.4 Po dodani legalnich dat postupovat podle intake planu
+    - Nejdriv validovat ready sloty, potom generovat production moduly, zapojit registry/resolvery a spustit `npm run release:check`.
+
 ## Notes
 
 - Tasky oznacene `*` jsou volitelne (testy) a lze je preskocit pro rychlejsi MVP; nebudou implementovany automaticky.

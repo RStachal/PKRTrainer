@@ -35,6 +35,8 @@ For a blocker-only queue that combines completion readiness with the same local 
 npm run mtt:blockers
 npm run mtt:blockers -- --summary
 npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
+npm run mtt:intake-plan
+npm run mtt:intake-plan -- --all
 ```
 5. Validate the normalized import:
 

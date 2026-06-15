@@ -14,6 +14,7 @@
     "build:range-module": "vite-node scripts/buildRangeModule.mts",
     "mtt:completion": "vite-node scripts/checkMttCompletion.mts",
     "mtt:blockers": "vite-node scripts/checkMttBlockers.mts",
+    "mtt:intake-plan": "vite-node scripts/checkMttIntakePlan.mts",
     "mtt:slots": "vite-node scripts/listMttImportSlots.mts",
     "range:intake": "vite-node scripts/checkRangeIntakeStatus.mts",
     "range:intake:guard": "vite-node scripts/checkRangeIntakeWorkspace.mts",
