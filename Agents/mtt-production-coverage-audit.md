@@ -46,6 +46,8 @@ Useful filters:
 - `npm run range:intake -- --waiting-only`
 - `npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json`
 - `npm run mtt:blockers -- --summary`
+- `npm run mtt:postflop-matrix`
+- `npm run mtt:postflop-matrix -- --json`
 - `npm run mtt:intake-plan`
 - `npm run mtt:intake-plan -- --ready-only --json`
 - `npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all`
@@ -57,6 +59,8 @@ Useful filters:
 
 `mtt:blockers` reports the same priority buckets as `mtt:intake-plan`, so blocker summaries can be used to route work
 to the next P1-P5 import queue without reopening the full intake plan.
+`mtt:postflop-matrix` freezes the 48 FLOP/TURN/RIVER production targets and records whether each target is waiting for
+legal files, ready for validation, or already production.
 
 The preflop intake subset currently has 14 rows and 0 rows ready for validation. All 14 are waiting for both normalized data and permission manifests.
 

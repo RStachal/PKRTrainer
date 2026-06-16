@@ -1549,9 +1549,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - Cil: plne funkcni MTT postflop simulace od flopu po river pro FULL_RING_9 i SIX_MAX, REGULAR i TURBO, CHIP_EV i DOLAR_EV, ante ON/OFF, vsechny podporovane heads-up pozicni dvojice, SRP/3bet/facing-bet vetve, vsechny streety a vsechny akce, ktere dany node legalne pripousti.
   - Hotovy technicky zaklad: `generatePostflopLine` umi deterministickou FLOP->TURN->RIVER hand line, postflop UI umi single spot i hand line, stats ukladaji single-street i line eventy oddelene, flop/turn/river production schema maji validatory a resolvery, `mtt:slots` generuje 48 postflop import slotu, `validate:range-import`, `build:range-module`, `mtt:intake-plan`, `mtt:blockers` a `mtt:validate-ready-intake` jsou pripraveny na legalni data.
   - Zasada: postflop production nesmi vzniknout z public heuristic fallbacku ani z metadata-only reuse; kazdy slot potrebuje legalni `normalized.json`, `permission.json`, production-ready coverage report a source-free runtime vystup.
-  - [ ] 134.1 Zmrazit presnou MTT postflop variant matrix
+  - [x] 134.1 Zmrazit presnou MTT postflop variant matrix
     - Definovat release cile pro 48 postflop slotu: 2 tableFormat x 2 blindSpeed x 2 evModel x 2 ante x FLOP/TURN/RIVER.
     - Vystup: audit tabulka pro P3/P4/P5 s pocty slotu, pozadovanym import kindem a aktualnim stavem `WAITING/READY/PRODUCTION`.
+    - Hotovo: `npm run mtt:postflop-matrix` vypisuje 48 FLOP/TURN/RIVER cilu s P3/P4/P5 prioritou, import kindem, intake stavem a JSON vystupem pro batch tooling.
   - [ ] 134.2 Definovat pozicni coverage pro vsechny heads-up dvojice
     - Pro FULL_RING_9 a SIX_MAX vypsat vsechny podporovane aggressor/caller, IP/OOP a blind-vs-blind dvojice mezi pozicemi.
     - Kazda dvojice musi mit `PostflopPositionPattern`, pot type mapping, nebo explicitni unsupported duvod; zadna dvojice nesmi tise spadnout do nespravneho patternu.

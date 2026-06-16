@@ -138,10 +138,14 @@ For a shorter blocker-only queue with local intake file status:
 npm run mtt:blockers
 npm run mtt:blockers -- --summary
 npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
+npm run mtt:postflop-matrix
+npm run mtt:postflop-matrix -- --json
 ```
 
 The blocker report includes priority counts matching the intake plan buckets, so the summary can route work directly
 to the next `P1_PREFLOP_CHIP_EV`, `P2_PREFLOP_DOLAR_EV` or postflop production queue.
+The postflop matrix freezes the 48 FLOP/TURN/RIVER production targets and shows each target as `WAITING`, `READY` or
+`PRODUCTION`.
 
 For the prioritized import queue aligned to the current MTT completion goal:
 

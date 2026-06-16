@@ -15,6 +15,7 @@
     "mtt:completion": "vite-node scripts/checkMttCompletion.mts",
     "mtt:blockers": "vite-node scripts/checkMttBlockers.mts",
     "mtt:intake-plan": "vite-node scripts/checkMttIntakePlan.mts",
+    "mtt:postflop-matrix": "vite-node scripts/checkMttPostflopMatrix.mts",
     "mtt:validate-ready-intake": "vite-node scripts/validateMttReadyIntake.mts",
     "mtt:slots": "vite-node scripts/listMttImportSlots.mts",
     "range:intake": "vite-node scripts/checkRangeIntakeStatus.mts",

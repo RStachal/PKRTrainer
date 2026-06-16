@@ -78,6 +78,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:completion"]).toBe("vite-node scripts/checkMttCompletion.mts");
     expect(pkg.scripts["mtt:blockers"]).toBe("vite-node scripts/checkMttBlockers.mts");
     expect(pkg.scripts["mtt:intake-plan"]).toBe("vite-node scripts/checkMttIntakePlan.mts");
+    expect(pkg.scripts["mtt:postflop-matrix"]).toBe("vite-node scripts/checkMttPostflopMatrix.mts");
     expect(pkg.scripts["mtt:validate-ready-intake"]).toBe("vite-node scripts/validateMttReadyIntake.mts");
     expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
     expect(pkg.scripts["range:intake:guard"]).toBe("vite-node scripts/checkRangeIntakeWorkspace.mts");
@@ -108,6 +109,8 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:slots");
     expect(operatorGuide).toContain("npm run mtt:blockers");
     expect(operatorGuide).toContain("priority counts matching the intake plan buckets");
+    expect(operatorGuide).toContain("npm run mtt:postflop-matrix");
+    expect(operatorGuide).toContain("freezes the 48 FLOP/TURN/RIVER production targets");
     expect(operatorGuide).toContain("npm run mtt:intake-plan");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");
@@ -135,6 +138,8 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:blockers");
     expect(mttCoverageAudit).toContain("npm run mtt:blockers -- --summary");
     expect(mttCoverageAudit).toContain("reports the same priority buckets as `mtt:intake-plan`");
+    expect(mttCoverageAudit).toContain("npm run mtt:postflop-matrix");
+    expect(mttCoverageAudit).toContain("freezes the 48 FLOP/TURN/RIVER production targets");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");
