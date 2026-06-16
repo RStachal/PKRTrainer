@@ -55,6 +55,9 @@ Useful filters:
 - `npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json`
 - `npm run range:intake:guard`
 
+`mtt:blockers` reports the same priority buckets as `mtt:intake-plan`, so blocker summaries can be used to route work
+to the next P1-P5 import queue without reopening the full intake plan.
+
 The preflop intake subset currently has 14 rows and 0 rows ready for validation. All 14 are waiting for both normalized data and permission manifests.
 
 ## Known blocked profiles

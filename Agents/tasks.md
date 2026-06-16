@@ -1541,6 +1541,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.13 Udrzet DOLAR_EV jako samostatnou preflop intake prioritu
     - P2 fronta nesmi byt jen implicitni filtr, protoze aktualni cil explicitne zahrnuje CHIP_EV i DOLAR_EV.
     - Hotovo: operator guide, intake README, coverage audit a CLI regression test pokryvaji `P2_PREFLOP_DOLAR_EV`.
+  - [x] 133.14 Propagovat intake priority do blocker reportu
+    - Kratky blocker summary ma umet rict nejen kolik veci chybi, ale i do ktere P0-P5 import fronty patri.
+    - Hotovo: `mtt:blockers` text i JSON vraci `byPriority` pocty a detailni radky nesou stejny priority bucket jako `mtt:intake-plan`.
 
 ## Notes
 

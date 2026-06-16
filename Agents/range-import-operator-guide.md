@@ -140,6 +140,9 @@ npm run mtt:blockers -- --summary
 npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 ```
 
+The blocker report includes priority counts matching the intake plan buckets, so the summary can route work directly
+to the next `P1_PREFLOP_CHIP_EV`, `P2_PREFLOP_DOLAR_EV` or postflop production queue.
+
 For the prioritized import queue aligned to the current MTT completion goal:
 
 ```powershell

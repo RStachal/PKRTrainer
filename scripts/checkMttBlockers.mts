@@ -7,6 +7,12 @@ import {
   type MttCompletionReadinessRow,
 } from "../src/data/ranges/mttProductionReadiness.ts";
 import { parseMttFilterArg } from "../src/data/ranges/mttCliFilterParsing.ts";
+import {
+  emptyMttIntakePriorityCounts,
+  MTT_INTAKE_PRIORITY_KEYS,
+  mttIntakePriorityForProfile,
+  type MttIntakePriorityKey,
+} from "../src/data/ranges/mttIntakePriority.ts";
 
 interface CliArgs {
   filters: MttCompletionReadinessFilters;
@@ -15,6 +21,7 @@ interface CliArgs {
 }
 
 interface MttBlockerRow {
+  priority: MttIntakePriorityKey;
   slotId: string;
   status: MttCompletionReadinessRow["status"];
   coverageKind: MttCompletionReadinessRow["coverageKind"];
@@ -38,6 +45,7 @@ interface MttBlockerReport {
     readyForValidation: number;
     missingNormalized: number;
     missingPermission: number;
+    byPriority: Record<MttIntakePriorityKey, number>;
   };
   rows: readonly MttBlockerRow[];
 }
@@ -115,14 +123,22 @@ function buildMttBlockerReport(args: CliArgs): MttBlockerReport {
       readyForValidation: rows.filter((row) => row.intake.readyForValidation).length,
       missingNormalized: rows.filter((row) => !row.intake.normalizedPresent).length,
       missingPermission: rows.filter((row) => !row.intake.permissionPresent).length,
+      byPriority: countByPriority(rows),
     },
     rows,
   };
 }
 
+function countByPriority(rows: readonly MttBlockerRow[]): Record<MttIntakePriorityKey, number> {
+  const counts = emptyMttIntakePriorityCounts();
+  for (const row of rows) counts[row.priority] += 1;
+  return counts;
+}
+
 function blockerRowFromCompletionRow(row: MttCompletionReadinessRow): MttBlockerRow {
   const intake = intakeState(row.importSlot);
   return {
+    priority: mttIntakePriorityForProfile(row, intake.readyForValidation),
     slotId: [
       row.tableFormat,
       row.blindSpeed,
@@ -159,6 +175,7 @@ function renderMttBlockerReport(report: MttBlockerReport, summaryOnly = false): 
     `ready for validation: ${report.counts.readyForValidation}`,
     `missing normalized.json: ${report.counts.missingNormalized}`,
     `missing permission.json: ${report.counts.missingPermission}`,
+    `priority counts: ${MTT_INTAKE_PRIORITY_KEYS.map((priority) => `${priority}=${report.counts.byPriority[priority]}`).join(", ")}`,
   ];
 
   if (summaryOnly) return lines.join("\n");
@@ -167,6 +184,7 @@ function renderMttBlockerReport(report: MttBlockerReport, summaryOnly = false): 
     lines.push(
       [
         row.slotId,
+        row.priority,
         row.status,
         row.coverageKind,
         row.intake.readyForValidation ? "READY" : "WAITING",

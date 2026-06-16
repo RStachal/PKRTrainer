@@ -107,6 +107,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run validate:range-import");
     expect(operatorGuide).toContain("npm run mtt:slots");
     expect(operatorGuide).toContain("npm run mtt:blockers");
+    expect(operatorGuide).toContain("priority counts matching the intake plan buckets");
     expect(operatorGuide).toContain("npm run mtt:intake-plan");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");
@@ -133,6 +134,7 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run range:intake -- --ready-only --json");
     expect(mttCoverageAudit).toContain("npm run mtt:blockers");
     expect(mttCoverageAudit).toContain("npm run mtt:blockers -- --summary");
+    expect(mttCoverageAudit).toContain("reports the same priority buckets as `mtt:intake-plan`");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");
