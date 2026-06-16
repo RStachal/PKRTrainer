@@ -69,6 +69,21 @@ describe("mtt:validate-ready-intake CLI", () => {
     expect(parsed.rows).toEqual([]);
   });
 
+  it("umi omezit validaci na DOLAR_EV preflop prioritu", () => {
+    const result = runValidateReady("--priority=P2_PREFLOP_DOLAR_EV", "--json");
+
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
+      priority: string;
+      counts: { readyRows: number };
+      rows: unknown[];
+    };
+
+    expect(parsed.priority).toBe("P2_PREFLOP_DOLAR_EV");
+    expect(parsed.counts.readyRows).toBe(0);
+    expect(parsed.rows).toEqual([]);
+  });
+
   it("vrati chybu pro neznamou prioritu", () => {
     const result = runValidateReady("--priority=P9");
 
