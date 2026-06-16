@@ -1564,7 +1564,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 134.4 Dodelat production coverage report pro postflop pozicni dvojice
     - Pridat report/test, ktery porovna generator pozic s flop/turn/river production coverage.
     - Release blocker musi ukazat chybejici format/speed/EV/ante/street/position/potType/actionNode kombinace proti 50-pattern granularnimu kontraktu, ne jen chybejici obecny StrategyPack.
-    - Hotovo: `npm run mtt:postflop-coverage` rozbaluje 48 postflop profilu na 8,000 konkretnich street/pot/action/position targetu po doplneni flop a turn facing-bet vetvi; JSON vraci vsechny radky vcetne blocker kindu (`MISSING_PACK`, `MISSING_RULE`, `PACK_NOT_PRODUCTION_READY`).
+    - Hotovo: `npm run mtt:postflop-coverage` rozbaluje 48 postflop profilu na 9,600 konkretnich street/pot/action/position targetu po doplneni flop, turn a river facing-bet vetvi; JSON vraci vsechny radky vcetne blocker kindu (`MISSING_PACK`, `MISSING_RULE`, `PACK_NOT_PRODUCTION_READY`).
   - [x] 134.5 Rozsirit flop production schema na facing-bet vetve
     - `FlopProductionStrategyPack` dnes produkcne pokryva c-bet nody `SINGLE_RAISED_POT_CBET` a `THREE_BET_POT_CBET` s check/bet akcemi.
     - Doplnit legalni production podporu pro `FLOP_FACING_BET` s akcemi `CALL/RAISE/FOLD`, oddelenou od c-bet pravidel a validovanou coverage reportem.
@@ -1573,9 +1573,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - `TurnProductionStrategyPack` dnes produkcne pokryva `TURN_BARREL` s check/bet akcemi.
     - Doplnit `TURN_FACING_BET`, prior flop/turn action kontext, legalni `CALL/RAISE/FOLD` akce a coverage pro vsechny pozadovane turn card classes.
     - Hotovo: `TurnProductionStrategyPack` validuje `TURN_FACING_BET` s legalnimi `FOLD/CALL/RAISE` akcemi, `TURN_BARREL` zustava `CHECK/BET_SMALL/BET_BIG`, resolver matchuje facing-bet jen pri explicitnim action nodu a coverage report vyzaduje obe turn vetve.
-  - [ ] 134.7 Rozsirit river production schema na facing-bet vetve
+  - [x] 134.7 Rozsirit river production schema na facing-bet vetve
     - `RiverProductionStrategyPack` dnes produkcne pokryva `RIVER_PRESSURE` s check/bet akcemi.
     - Doplnit `RIVER_FACING_BET`, prior action kontext, runout class, blocker relevance a legalni `CALL/RAISE/FOLD` akce.
+    - Hotovo: `RiverProductionStrategyPack` validuje `RIVER_FACING_BET` s legalnimi `FOLD/CALL/RAISE` akcemi, `RIVER_PRESSURE` zustava `CHECK/BET_SMALL/BET_BIG`, resolver matchuje facing-bet jen pri explicitnim action nodu a coverage report vyzaduje obe river vetve.
   - [ ] 134.8 Navrhnout branching hand-line engine podle skutecne akce hrace
     - Soucasny line replay postupuje deterministicky pres doporucenou akci spotu.
     - Plna simulace musi umet posunout pot, stack, prior action a dalsi street podle realne zvolene akce hrace a podle modelovane reakce soupere, vcetne facing-bet vetvi.

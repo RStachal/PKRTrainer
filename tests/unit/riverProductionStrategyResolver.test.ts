@@ -96,6 +96,50 @@ function productionPack(confidence: "LOW" | "MEDIUM" = "MEDIUM"): RiverProductio
         ],
         explanation: "Production fixture uses polar pressure on this blank BTN vs BB river.",
       },
+      {
+        id: "river-production-btn-bb-blank-facing-call",
+        actionNode: "RIVER_FACING_BET",
+        potType: "SINGLE_RAISED",
+        positionPattern: "BTN_VS_BB",
+        priorTurnAction: "BET_SMALL",
+        riverRunoutClasses: ["BLANK"],
+        blockerRelevance: "MEDIUM",
+        sprMin: 1,
+        sprMax: 8,
+        actions: ["FOLD", "CALL", "RAISE"],
+        recommendedAction: "CALL",
+        rangeBuckets: [
+          {
+            lane: "VALUE",
+            label: "value continue",
+            action: "RAISE",
+            handClasses: ["AA"],
+            features: ["top value"],
+            blockerRelevance: "LOW",
+            actionMix: [
+              { action: "RAISE", frequencyPct: 40, visibility: "EXACT" },
+              { action: "CALL", frequencyPct: 60, visibility: "EXACT" },
+            ],
+          },
+          {
+            lane: "BLUFF",
+            label: "bluff raise",
+            action: "RAISE",
+            handClasses: ["QJs"],
+            features: ["blocker candidate"],
+            blockerRelevance: "HIGH",
+          },
+          {
+            lane: "CHECK",
+            label: "fold lane",
+            action: "FOLD",
+            handClasses: ["72o"],
+            features: ["give up"],
+            blockerRelevance: "LOW",
+          },
+        ],
+        explanation: "Production fixture calls when facing a river bet on this blank BTN vs BB river.",
+      },
     ],
   };
 }
@@ -144,6 +188,17 @@ describe("riverProductionStrategyResolver", () => {
     if (result?.source?.kind === "STRATEGY_PACK") {
       expect(result.source.packId).toBe("mtt-full-ring-9-river-srp-production-test-v1");
     }
+  });
+
+  it("matchuje river facing-bet jen pri explicitnim action nodu", () => {
+    const resolver = createRiverProductionStrategyResolver(productionPack());
+
+    expect(resolver(input)?.action).toBe("BET_BIG");
+    expect(resolver({ ...input, actionNode: "RIVER_FACING_BET" })?.action).toBe("CALL");
+    expect(resolver({ ...input, actionNode: "RIVER_FACING_BET" })?.source).toMatchObject({
+      kind: "STRATEGY_PACK",
+      ruleId: "river-production-btn-bb-blank-facing-call",
+    });
   });
 
   it("single-street river generator doplni default prior turn action a river runout class", () => {

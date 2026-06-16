@@ -152,7 +152,7 @@ The postflop matrix freezes the 48 FLOP/TURN/RIVER production targets and shows 
 `PRODUCTION`.
 The postflop positions report freezes supported and unsupported heads-up position pairs for SRP and 3bet pots.
 Production FLOP/TURN/RIVER packs must use the granular `SRP_<POS>_VS_<POS>` and `3BP_<POS>_VS_<POS>` patterns from this report; the old five broad patterns remain legacy-compatible but are not enough for production coverage.
-The postflop coverage report expands the 48 profile targets into 8,000 concrete street/pot/action/position targets
+The postflop coverage report expands the 48 profile targets into 9,600 concrete street/pot/action/position targets
 and shows the exact blocker for each target.
 
 For the prioritized import queue aligned to the current MTT completion goal:

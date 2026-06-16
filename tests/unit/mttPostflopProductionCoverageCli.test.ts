@@ -9,12 +9,12 @@ describe("mtt:postflop-coverage CLI", () => {
     expect(result.stdout).toContain("MTT postflop production coverage targets");
     expect(result.stdout).toContain("profile rows: 48");
     expect(result.stdout).toContain("required position patterns: 50");
-    expect(result.stdout).toContain("total targets: 8000");
+    expect(result.stdout).toContain("total targets: 9600");
     expect(result.stdout).toContain("covered targets: 0");
-    expect(result.stdout).toContain("blocked targets: 8000");
-    expect(result.stdout).toContain("street counts: FLOP=0/3200 covered, 3200 blocked, TURN=0/3200 covered, 3200 blocked, RIVER=0/1600 covered, 1600 blocked");
-    expect(result.stdout).toContain("blocker counts: MISSING_PACK=8000, MISSING_RULE=0, PACK_NOT_PRODUCTION_READY=0");
-    expect(result.stdout).toContain("shown rows: 5/8000");
+    expect(result.stdout).toContain("blocked targets: 9600");
+    expect(result.stdout).toContain("street counts: FLOP=0/3200 covered, 3200 blocked, TURN=0/3200 covered, 3200 blocked, RIVER=0/3200 covered, 3200 blocked");
+    expect(result.stdout).toContain("blocker counts: MISSING_PACK=9600, MISSING_RULE=0, PACK_NOT_PRODUCTION_READY=0");
+    expect(result.stdout).toContain("shown rows: 5/9600");
     expect(result.stdout).toContain("FULL_RING_9|REGULAR|CHIP_EV|FLOP|ON|SINGLE_RAISED|SINGLE_RAISED_POT_CBET|SRP_UTG_VS_BB");
     expect(result.stdout).toContain("No production FLOP StrategyPack is registered for FULL_RING_9/CHIP_EV.");
     expect(result.stdout).not.toContain("https://");
@@ -50,23 +50,23 @@ describe("mtt:postflop-coverage CLI", () => {
     expect(parsed.counts).toEqual({
       profileRows: 48,
       requiredPositionPatterns: 50,
-      totalTargets: 8000,
+      totalTargets: 9600,
       coveredTargets: 0,
-      blockedTargets: 8000,
+      blockedTargets: 9600,
       byStreet: {
         FLOP: { total: 3200, covered: 0, blocked: 3200 },
         TURN: { total: 3200, covered: 0, blocked: 3200 },
-        RIVER: { total: 1600, covered: 0, blocked: 1600 },
+        RIVER: { total: 3200, covered: 0, blocked: 3200 },
       },
-      byState: { COVERED: 0, BLOCKED: 8000 },
+      byState: { COVERED: 0, BLOCKED: 9600 },
       byBlockerKind: {
         NONE: 0,
-        MISSING_PACK: 8000,
+        MISSING_PACK: 9600,
         MISSING_RULE: 0,
         PACK_NOT_PRODUCTION_READY: 0,
       },
     });
-    expect(parsed.rows).toHaveLength(8000);
+    expect(parsed.rows).toHaveLength(9600);
     expect(parsed.rows).toContainEqual(expect.objectContaining({
       targetId: "FULL_RING_9|REGULAR|CHIP_EV|FLOP|ON|SINGLE_RAISED|SINGLE_RAISED_POT_CBET|SRP_UTG_VS_BB",
       state: "BLOCKED",
@@ -93,6 +93,12 @@ describe("mtt:postflop-coverage CLI", () => {
       targetId: "SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF|THREE_BET_POT|RIVER_PRESSURE|3BP_BTN_VS_UTG",
       state: "BLOCKED",
       blockerKind: "MISSING_PACK",
+    }));
+    expect(parsed.rows).toContainEqual(expect.objectContaining({
+      targetId: "SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF|THREE_BET_POT|RIVER_FACING_BET|3BP_BTN_VS_UTG",
+      state: "BLOCKED",
+      blockerKind: "MISSING_PACK",
+      actionNode: "RIVER_FACING_BET",
     }));
   });
 

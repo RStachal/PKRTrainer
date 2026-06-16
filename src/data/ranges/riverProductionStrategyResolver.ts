@@ -73,6 +73,7 @@ export function matchingRiverProductionRules(
   return pack.rules.filter((rule) => (
     rule.potType === input.potType &&
     rule.positionPattern === input.positionPattern &&
+    actionNodeMatchesInput(rule, input) &&
     rule.priorTurnAction === priorTurnAction &&
     rule.riverRunoutClasses.includes(riverRunoutClass)
   ));
@@ -111,11 +112,20 @@ function ruleMatchesInput(
     input.riverRunoutClass !== undefined &&
     rule.potType === input.potType &&
     rule.positionPattern === input.positionPattern &&
+    actionNodeMatchesInput(rule, input) &&
     rule.priorTurnAction === input.priorTurnAction &&
     rule.riverRunoutClasses.includes(input.riverRunoutClass) &&
     spr >= rule.sprMin &&
     spr <= rule.sprMax
   );
+}
+
+function actionNodeMatchesInput(
+  rule: RiverProductionStrategyRule,
+  input: PostflopStrategyInput,
+): boolean {
+  if (input.actionNode !== undefined) return rule.actionNode === input.actionNode;
+  return rule.actionNode !== "RIVER_FACING_BET";
 }
 
 function ruleScore(rule: RiverProductionStrategyRule, input: PostflopStrategyInput): number {

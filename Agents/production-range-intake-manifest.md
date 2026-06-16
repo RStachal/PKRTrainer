@@ -164,9 +164,11 @@ River production packs use the same permission gate as flop and turn and add riv
 - `street`: `RIVER`
 - `evModel`: `CHIP_EV` or `DOLAR_EV`
 - `antes`: one or more of `ON`, `OFF`
+- `actionNode`: `RIVER_PRESSURE` or `RIVER_FACING_BET`
 - `priorTurnAction`
 - `riverRunoutClasses`
 - `blockerRelevance`
+- Available `actions`: `CHECK/BET_SMALL/BET_BIG` for `RIVER_PRESSURE`, `FOLD/CALL/RAISE` for `RIVER_FACING_BET`
 - `rangeBuckets` with `VALUE`, `BLUFF` and `CHECK` lanes
 - Optional `actionMix` metadata; exact frequencies require owned export or explicit written permission
 

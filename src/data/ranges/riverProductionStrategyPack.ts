@@ -60,7 +60,7 @@ export interface RiverProductionRangeBucket {
 
 export interface RiverProductionStrategyRule {
   id: string;
-  actionNode: Extract<PostflopActionNode, "RIVER_PRESSURE">;
+  actionNode: Extract<PostflopActionNode, "RIVER_PRESSURE" | "RIVER_FACING_BET">;
   potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">;
   positionPattern: PostflopPositionPattern;
   priorTurnAction: PostflopAction;
@@ -142,6 +142,7 @@ export const RIVER_PRODUCTION_REQUIRED_BLOCKER_RELEVANCE = [
 
 export const RIVER_PRODUCTION_REQUIRED_ACTION_NODES = [
   "RIVER_PRESSURE",
+  "RIVER_FACING_BET",
 ] as const satisfies readonly PostflopActionNode[];
 
 export const RIVER_PRODUCTION_REQUIRED_RANGE_LANES = [
@@ -159,10 +160,15 @@ const LEGAL_BLIND_SPEEDS: readonly BlindSpeed[] = ["REGULAR", "TURBO"];
 const LEGAL_ANTE_MODES: readonly AnteMode[] = ["ON", "OFF"];
 const HAND_CLASS_SET: ReadonlySet<HandLabel> = new Set(ALL_HAND_CLASSES);
 const POSTFLOP_ACTION_SET: ReadonlySet<PostflopAction> = new Set(POSTFLOP_ACTIONS);
-const RIVER_PRODUCTION_ALLOWED_ACTIONS: readonly PostflopAction[] = [
+const RIVER_PRODUCTION_PRESSURE_ACTIONS: readonly PostflopAction[] = [
   "CHECK",
   "BET_SMALL",
   "BET_BIG",
+];
+const RIVER_PRODUCTION_FACING_BET_ACTIONS: readonly PostflopAction[] = [
+  "FOLD",
+  "CALL",
+  "RAISE",
 ];
 const RUNOUT_CLASS_SET: ReadonlySet<RiverProductionRunoutClass> = new Set(
   RIVER_PRODUCTION_REQUIRED_RUNOUT_CLASSES,
@@ -216,23 +222,25 @@ export function validateRiverProductionRule(
   const errors: string[] = [];
 
   if (rule.id.trim().length === 0) errors.push("River production rule id is required.");
-  if (rule.actionNode !== "RIVER_PRESSURE") errors.push(`${rule.id}: river production rule must use RIVER_PRESSURE.`);
+  if (!RIVER_PRODUCTION_REQUIRED_ACTION_NODES.includes(rule.actionNode)) {
+    errors.push(`${rule.id}: river production rule must use RIVER_PRESSURE or RIVER_FACING_BET.`);
+  }
   if (!POSTFLOP_ACTION_SET.has(rule.priorTurnAction)) errors.push(`${rule.id}: priorTurnAction is invalid.`);
-  if (!isRiverProductionAction(rule.priorTurnAction)) {
-    errors.push(`${rule.id}: priorTurnAction ${rule.priorTurnAction} is not valid for RIVER_PRESSURE.`);
+  if (!isRiverPriorTurnAction(rule.priorTurnAction)) {
+    errors.push(`${rule.id}: priorTurnAction ${rule.priorTurnAction} is not valid for ${rule.actionNode}.`);
   }
   if (rule.riverRunoutClasses.length === 0) errors.push(`${rule.id}: riverRunoutClasses are required.`);
   if (!BLOCKER_RELEVANCE_SET.has(rule.blockerRelevance)) errors.push(`${rule.id}: blockerRelevance is invalid.`);
   if (rule.actions.length === 0) errors.push(`${rule.id}: actions are required.`);
   for (const action of rule.actions) {
     if (!POSTFLOP_ACTION_SET.has(action)) errors.push(`${rule.id}: action ${action} is invalid.`);
-    if (!isRiverProductionAction(action)) {
-      errors.push(`${rule.id}: action ${action} is not valid for RIVER_PRESSURE.`);
+    if (!isRiverProductionActionForNode(action, rule.actionNode)) {
+      errors.push(`${rule.id}: action ${action} is not valid for ${rule.actionNode}.`);
     }
   }
   if (!rule.actions.includes(rule.recommendedAction)) errors.push(`${rule.id}: recommendedAction must be present in actions.`);
-  if (!isRiverProductionAction(rule.recommendedAction)) {
-    errors.push(`${rule.id}: recommendedAction ${rule.recommendedAction} is not valid for RIVER_PRESSURE.`);
+  if (!isRiverProductionActionForNode(rule.recommendedAction, rule.actionNode)) {
+    errors.push(`${rule.id}: recommendedAction ${rule.recommendedAction} is not valid for ${rule.actionNode}.`);
   }
   if (!Number.isFinite(rule.sprMin) || !Number.isFinite(rule.sprMax)) errors.push(`${rule.id}: SPR bounds must be finite.`);
   if (rule.sprMin < 0 || rule.sprMax < rule.sprMin) errors.push(`${rule.id}: SPR bounds are invalid.`);
@@ -250,8 +258,8 @@ export function validateRiverProductionRule(
       errors.push(`${rule.id}: range bucket ${bucket.label} blockerRelevance is invalid.`);
     }
     if (!rule.actions.includes(bucket.action)) errors.push(`${rule.id}: range bucket ${bucket.label} uses an unavailable action.`);
-    if (!isRiverProductionAction(bucket.action)) {
-      errors.push(`${rule.id}: range bucket ${bucket.label} action ${bucket.action} is not valid for RIVER_PRESSURE.`);
+    if (!isRiverProductionActionForNode(bucket.action, rule.actionNode)) {
+      errors.push(`${rule.id}: range bucket ${bucket.label} action ${bucket.action} is not valid for ${rule.actionNode}.`);
     }
     if (bucket.label.trim().length === 0) errors.push(`${rule.id}: range bucket label is required.`);
     if (bucket.handClasses.length === 0 && bucket.features.length === 0) {
@@ -408,8 +416,8 @@ function validateBucketActionMix(
   let includesBucketAction = false;
   for (const item of mix) {
     if (!rule.actions.includes(item.action)) errors.push(`${rule.id}: range bucket ${bucket.label} actionMix uses an unavailable action.`);
-    if (!isRiverProductionAction(item.action)) {
-      errors.push(`${rule.id}: range bucket ${bucket.label} actionMix uses action ${item.action} outside RIVER_PRESSURE.`);
+    if (!isRiverProductionActionForNode(item.action, rule.actionNode)) {
+      errors.push(`${rule.id}: range bucket ${bucket.label} actionMix uses action ${item.action} outside ${rule.actionNode}.`);
     }
     if (seenActions.has(item.action)) errors.push(`${rule.id}: range bucket ${bucket.label} actionMix duplicates ${item.action}.`);
     seenActions.add(item.action);
@@ -436,8 +444,28 @@ function licenseAllowsExactFrequency(kind: RiverProductionLicenseKind): boolean 
   return kind === "OWNED_SOLVER_EXPORT" || kind === "EXPLICIT_WRITTEN_PERMISSION";
 }
 
-function isRiverProductionAction(action: PostflopAction): boolean {
-  return RIVER_PRODUCTION_ALLOWED_ACTIONS.includes(action);
+function isRiverPriorTurnAction(action: PostflopAction): boolean {
+  const allowed: readonly PostflopAction[] = RIVER_PRODUCTION_REQUIRED_PRIOR_TURN_ACTIONS;
+  return allowed.includes(action);
+}
+
+function isRiverProductionActionForNode(
+  action: PostflopAction,
+  actionNode: RiverProductionStrategyRule["actionNode"],
+): boolean {
+  return riverProductionActionsForNode(actionNode).includes(action);
+}
+
+function riverProductionActionsForNode(
+  actionNode: RiverProductionStrategyRule["actionNode"],
+): readonly PostflopAction[] {
+  switch (actionNode) {
+    case "RIVER_PRESSURE":
+      return RIVER_PRODUCTION_PRESSURE_ACTIONS;
+    case "RIVER_FACING_BET":
+      return RIVER_PRODUCTION_FACING_BET_ACTIONS;
+  }
+  return [];
 }
 
 function validateProfileCoverage(

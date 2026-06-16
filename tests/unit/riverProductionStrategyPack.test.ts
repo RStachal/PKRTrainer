@@ -179,6 +179,69 @@ describe("riverProductionStrategyPack", () => {
     );
   });
 
+  it("povoli facing-bet akce jen v river facing-bet production nodu", () => {
+    const base = {
+      ...pack().rules[0],
+      id: "river-btn-bb-blank-facing-call",
+      actionNode: "RIVER_FACING_BET",
+      actions: ["FOLD", "CALL", "RAISE"],
+      recommendedAction: "CALL",
+      rangeBuckets: [
+        {
+          ...pack().rules[0].rangeBuckets[0],
+          label: "value continue",
+          action: "RAISE",
+          actionMix: [
+            { action: "RAISE", frequencyPct: 40, visibility: "EXACT" },
+            { action: "CALL", frequencyPct: 60, visibility: "EXACT" },
+          ],
+        },
+        {
+          ...pack().rules[0].rangeBuckets[1],
+          label: "bluff raise",
+          action: "RAISE",
+        },
+        {
+          ...pack().rules[0].rangeBuckets[2],
+          label: "fold lane",
+          action: "FOLD",
+        },
+      ],
+    } satisfies RiverProductionStrategyRule;
+    const invalid = {
+      ...base,
+      actions: ["FOLD", "CALL", "RAISE", "BET_SMALL"],
+      recommendedAction: "BET_SMALL",
+      rangeBuckets: [
+        {
+          ...base.rangeBuckets[0],
+          action: "BET_SMALL",
+          actionMix: [
+            { action: "BET_SMALL", frequencyPct: 100, visibility: "EXACT" },
+          ],
+        },
+        ...base.rangeBuckets.slice(1),
+      ],
+    } satisfies RiverProductionStrategyRule;
+
+    const validErrors = validateRiverProductionRule(base, { exactFrequencyAllowed: true });
+    const errors = validateRiverProductionRule(invalid, { exactFrequencyAllowed: true });
+
+    expect(validErrors).toEqual([]);
+    expect(errors).toContain(
+      "river-btn-bb-blank-facing-call: action BET_SMALL is not valid for RIVER_FACING_BET.",
+    );
+    expect(errors).toContain(
+      "river-btn-bb-blank-facing-call: recommendedAction BET_SMALL is not valid for RIVER_FACING_BET.",
+    );
+    expect(errors).toContain(
+      "river-btn-bb-blank-facing-call: range bucket value continue action BET_SMALL is not valid for RIVER_FACING_BET.",
+    );
+    expect(errors).toContain(
+      "river-btn-bb-blank-facing-call: range bucket value continue actionMix uses action BET_SMALL outside RIVER_FACING_BET.",
+    );
+  });
+
   it("vyzaduje MTT gameVariant pro river production pack", () => {
     const cashPack = {
       ...pack(),

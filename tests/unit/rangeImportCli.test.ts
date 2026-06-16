@@ -491,6 +491,55 @@ function riverRule(
   };
 }
 
+function riverFacingBetRule(
+  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
+  positionPattern: PostflopPositionPattern,
+  priorTurnAction: "CHECK" | "BET_SMALL" | "BET_BIG",
+  runoutClass: RiverProductionRunoutClass,
+  blockerRelevance: RiverProductionBlockerRelevance,
+): RiverProductionStrategyRule {
+  return {
+    id: `cli-river-facing-${potType.toLowerCase()}-${positionPattern.toLowerCase()}-${priorTurnAction.toLowerCase()}-${runoutClass.toLowerCase()}-${blockerRelevance.toLowerCase()}`,
+    actionNode: "RIVER_FACING_BET",
+    potType,
+    positionPattern,
+    priorTurnAction,
+    riverRunoutClasses: [runoutClass],
+    blockerRelevance,
+    sprMin: 0.5,
+    sprMax: 8,
+    actions: ["FOLD", "CALL", "RAISE"],
+    recommendedAction: "CALL",
+    rangeBuckets: [
+      {
+        lane: "VALUE",
+        label: "value continue",
+        action: "RAISE",
+        handClasses: ["AA", "AKs"],
+        features: ["top value"],
+        blockerRelevance: "LOW",
+      },
+      {
+        lane: "BLUFF",
+        label: "bluff raise",
+        action: "RAISE",
+        handClasses: ["QJs", "JTs"],
+        features: ["blocker candidate"],
+        blockerRelevance,
+      },
+      {
+        lane: "CHECK",
+        label: "fold lane",
+        action: "FOLD",
+        handClasses: ["72o", "83o"],
+        features: ["showdown or give up"],
+        blockerRelevance: "LOW",
+      },
+    ],
+    explanation: "CLI river facing-bet production fixture rule.",
+  };
+}
+
 function validRiverProductionPack(): RiverProductionStrategyPack {
   const rules: RiverProductionStrategyRule[] = [];
   for (const potType of RIVER_PRODUCTION_REQUIRED_POT_TYPES) {
@@ -499,6 +548,13 @@ function validRiverProductionPack(): RiverProductionStrategyPack {
         for (const runoutClass of RIVER_PRODUCTION_REQUIRED_RUNOUT_CLASSES) {
           for (const blockerRelevance of RIVER_PRODUCTION_REQUIRED_BLOCKER_RELEVANCE) {
             rules.push(riverRule(potType, positionPattern, priorTurnAction, runoutClass, blockerRelevance));
+            rules.push(riverFacingBetRule(
+              potType,
+              positionPattern,
+              priorTurnAction,
+              runoutClass,
+              blockerRelevance,
+            ));
           }
         }
       }
