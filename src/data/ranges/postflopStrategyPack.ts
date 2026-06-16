@@ -482,16 +482,48 @@ export function positionPatternMatches(
 
   switch (rulePattern) {
     case "IP_OR_RANGE_ADVANTAGE":
-      return spotPattern === "EP_VS_BB" || spotPattern === "BTN_VS_BB";
+      return spotPattern === "EP_VS_BB" || spotPattern === "BTN_VS_BB" || isSrpIpRaiserVsBigBlind(spotPattern);
     case "EP_VS_BLINDS_OR_STRONG_RANGE_ADVANTAGE":
-      return spotPattern === "EP_VS_BB";
+      return spotPattern === "EP_VS_BB" || isSrpNonBlindRaiserVsBigBlind(spotPattern);
     case "OOP_OR_DYNAMIC_BOARD":
-      return spotPattern === "SB_VS_BB" || spotPattern === "OOP_RAISER_VS_IP_CALLER";
+      return (
+        spotPattern === "SB_VS_BB" ||
+        spotPattern === "OOP_RAISER_VS_IP_CALLER" ||
+        isSrpSmallBlindVsBigBlind(spotPattern) ||
+        isSrpOopRaiserVsIpCaller(spotPattern) ||
+        isThreeBetIpAggressorVsOopCaller(spotPattern)
+      );
     case "EP_VS_BB":
+      return isSrpNonBlindRaiserVsBigBlind(spotPattern) && spotPattern !== "SRP_BTN_VS_BB";
     case "BTN_VS_BB":
+      return spotPattern === "SRP_BTN_VS_BB";
     case "SB_VS_BB":
+      return spotPattern === "SRP_SB_VS_BB";
     case "OOP_RAISER_VS_IP_CALLER":
+      return isSrpOopRaiserVsIpCaller(spotPattern);
     case "OOP_CALLER_VS_IP_3BETTOR":
-      return false;
+      return isThreeBetIpAggressorVsOopCaller(spotPattern);
   }
+
+  return false;
+}
+
+function isSrpIpRaiserVsBigBlind(pattern: PostflopPositionPattern): boolean {
+  return pattern.startsWith("SRP_") && pattern.endsWith("_VS_BB") && pattern !== "SRP_SB_VS_BB";
+}
+
+function isSrpNonBlindRaiserVsBigBlind(pattern: PostflopPositionPattern): boolean {
+  return isSrpIpRaiserVsBigBlind(pattern) && pattern !== "SRP_BTN_VS_BB";
+}
+
+function isSrpSmallBlindVsBigBlind(pattern: PostflopPositionPattern): boolean {
+  return pattern === "SRP_SB_VS_BB";
+}
+
+function isSrpOopRaiserVsIpCaller(pattern: PostflopPositionPattern): boolean {
+  return pattern.startsWith("SRP_") && !pattern.endsWith("_VS_BB");
+}
+
+function isThreeBetIpAggressorVsOopCaller(pattern: PostflopPositionPattern): boolean {
+  return pattern.startsWith("3BP_");
 }

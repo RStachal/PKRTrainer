@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { renderPostflopView } from "../../src/ui/postflopView";
 import type { PostflopStrategyResolver } from "../../src/core/postflopGenerator";
+import { isPostflopPositionPattern } from "../../src/core/postflopGenerator";
 
 describe("postflopView - DOM", () => {
   afterEach(() => {
@@ -47,8 +48,8 @@ describe("postflopView - DOM", () => {
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("RIVER");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
       .toBe("RIVER_PRESSURE");
-    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.positionPattern)
-      .toMatch(/^(EP_VS_BB|BTN_VS_BB|SB_VS_BB|OOP_RAISER_VS_IP_CALLER|OOP_CALLER_VS_IP_3BETTOR)$/);
+    expect(isPostflopPositionPattern(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.positionPattern))
+      .toBe(true);
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent).toContain("SPR");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.textContent).toContain(" vs ");
     expect(root.querySelector(".postflop-table")).not.toBeNull();

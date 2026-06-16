@@ -37,7 +37,8 @@
 import type { ActionKey, AnteMode, Card, Spot } from "../core/types";
 import { buildImportedFlopTrainingSpot } from "../core/hhPostflopBridge";
 import { parseHandHistory, type HHFieldName, type HHResult } from "../core/hhParser";
-import type { BoardTexture, PostflopAction, PostflopPotType, PostflopPositionPattern } from "../core/postflopGenerator";
+import type { BoardTexture, PostflopAction, PostflopPotType } from "../core/postflopGenerator";
+import { positionPatternLabel } from "../core/postflopGenerator";
 import type { PostflopTrainingSpot } from "../core/postflopTrainingSpot";
 import { grade } from "../core/scoring";
 import { rangeStore } from "../data/rangeStore";
@@ -187,21 +188,6 @@ function potTypeLabel(potType: PostflopPotType): string {
       return "3bet pot";
     case "LIMPED_POT":
       return "Limped pot";
-  }
-}
-
-function positionPatternLabel(pattern: PostflopPositionPattern): string {
-  switch (pattern) {
-    case "EP_VS_BB":
-      return "Early position vs BB (IP)";
-    case "BTN_VS_BB":
-      return "Button vs BB (IP)";
-    case "SB_VS_BB":
-      return "Small blind vs BB (OOP)";
-    case "OOP_RAISER_VS_IP_CALLER":
-      return "OOP raiser vs IP caller";
-    case "OOP_CALLER_VS_IP_3BETTOR":
-      return "OOP caller vs IP 3bettor";
   }
 }
 

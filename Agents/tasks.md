@@ -1557,12 +1557,13 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Pro FULL_RING_9 a SIX_MAX vypsat vsechny podporovane aggressor/caller, IP/OOP a blind-vs-blind dvojice mezi pozicemi.
     - Kazda dvojice musi mit `PostflopPositionPattern`, pot type mapping, nebo explicitni unsupported duvod; zadna dvojice nesmi tise spadnout do nespravneho patternu.
     - Hotovo: `npm run mtt:postflop-positions` vypisuje 204 ordered pair radku pro FULL_RING_9/SIX_MAX x SRP/3bet, vcetne 67 supported a 137 explicitne unsupported dvojic s duvodem.
-  - [ ] 134.3 Rozsirit position pattern model tam, kde soucasnych 5 patternu nestaci
-    - Aktualni patterny pokryvaji `EP_VS_BB`, `BTN_VS_BB`, `SB_VS_BB`, `OOP_RAISER_VS_IP_CALLER`, `OOP_CALLER_VS_IP_3BETTOR`.
+  - [x] 134.3 Rozsirit position pattern model tam, kde soucasnych 5 patternu nestaci
+    - Legacy patterny pokryvaji `EP_VS_BB`, `BTN_VS_BB`, `SB_VS_BB`, `OOP_RAISER_VS_IP_CALLER`, `OOP_CALLER_VS_IP_3BETTOR`.
     - Doplnit chybejici CO/HJ/LJ/UTG+1/UTG+2 full-ring a 6-max mapovani nebo zavest granularnejsi patterny tak, aby produkcni pack nemichal odlisne pozicni range.
+    - Hotovo: `PostflopPositionPattern` podporuje legacy hodnoty i granularni `SRP_<POS>_VS_<POS>` / `3BP_<POS>_VS_<POS>` patterny; MTT FLOP/TURN/RIVER production coverage ted vyzaduje 50 unikatnich granularnich patternu odvozenych z FULL_RING_9/SIX_MAX SRP/3bet heads-up coverage.
   - [ ] 134.4 Dodelat production coverage report pro postflop pozicni dvojice
     - Pridat report/test, ktery porovna generator pozic s flop/turn/river production coverage.
-    - Release blocker musi ukazat chybejici format/speed/EV/ante/street/position/potType/actionNode kombinace, ne jen chybejici obecny StrategyPack.
+    - Release blocker musi ukazat chybejici format/speed/EV/ante/street/position/potType/actionNode kombinace proti 50-pattern granularnimu kontraktu, ne jen chybejici obecny StrategyPack.
   - [ ] 134.5 Rozsirit flop production schema na facing-bet vetve
     - `FlopProductionStrategyPack` dnes produkcne pokryva c-bet nody `SINGLE_RAISED_POT_CBET` a `THREE_BET_POT_CBET` s check/bet akcemi.
     - Doplnit legalni production podporu pro `FLOP_FACING_BET` s akcemi `CALL/RAISE/FOLD`, oddelenou od c-bet pravidel a validovanou coverage reportem.

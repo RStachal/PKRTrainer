@@ -6,7 +6,7 @@ import type {
   PostflopRecommendationSource,
   PostflopStreet,
 } from "../core/postflopGenerator";
-import { POSTFLOP_ACTIONS } from "../core/postflopGenerator";
+import { POSTFLOP_ACTIONS, isPostflopPositionPattern } from "../core/postflopGenerator";
 import type {
   PostflopActionNode,
   PostflopTrainingSpot,
@@ -386,15 +386,5 @@ function isBoardTexture(value: unknown): value is BoardTexture {
     value === "straight-possible" ||
     value === "flush-draw-heavy" ||
     value === "disconnected"
-  );
-}
-
-function isPostflopPositionPattern(value: unknown): value is PostflopPositionPattern {
-  return (
-    value === "EP_VS_BB" ||
-    value === "BTN_VS_BB" ||
-    value === "SB_VS_BB" ||
-    value === "OOP_RAISER_VS_IP_CALLER" ||
-    value === "OOP_CALLER_VS_IP_3BETTOR"
   );
 }

@@ -232,12 +232,13 @@ describe("flopProductionStrategyPack", () => {
     expect(errors).toContain("flop-single_raised-btn_vs_bb-dry: missing CHECK range lane.");
     expect(coverage.productionReady).toBe(false);
     expect(coverage.missingPotTypes).toEqual(["THREE_BET_POT"]);
-    expect(coverage.missingPositionPatterns).toEqual([
-      "EP_VS_BB",
-      "SB_VS_BB",
-      "OOP_RAISER_VS_IP_CALLER",
-      "OOP_CALLER_VS_IP_3BETTOR",
-    ]);
+    expect(coverage.missingPositionPatterns).toHaveLength(FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS.length);
+    expect(coverage.missingPositionPatterns).toEqual(expect.arrayContaining([
+      "SRP_UTG_VS_BB",
+      "SRP_BTN_VS_BB",
+      "SRP_SB_VS_BB",
+      "3BP_BTN_VS_UTG",
+    ]));
     expect(coverage.sprBands).toEqual(["MID"]);
     expect(coverage.missingSprBands).toEqual(["LOW", "HIGH"]);
     expect(renderFlopProductionCoverageReport(pack, coverage)).toContain(

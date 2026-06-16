@@ -12,8 +12,8 @@ describe("mtt:postflop-positions CLI", () => {
     expect(result.stdout).toContain("unsupported rows: 137");
     expect(result.stdout).toContain("format counts: FULL_RING_9=50/144 supported, 94 unsupported, SIX_MAX=17/60 supported, 43 unsupported");
     expect(result.stdout).toContain("pot counts: SINGLE_RAISED=40/102 supported, 62 unsupported, THREE_BET_POT=27/102 supported, 75 unsupported");
-    expect(result.stdout).toContain("FULL_RING_9 | SINGLE_RAISED | BTN->BB | SUPPORTED | BTN_VS_BB");
-    expect(result.stdout).toContain("SIX_MAX | THREE_BET_POT | BTN->UTG | SUPPORTED | OOP_CALLER_VS_IP_3BETTOR");
+    expect(result.stdout).toContain("FULL_RING_9 | SINGLE_RAISED | BTN->BB | SUPPORTED | SRP_BTN_VS_BB");
+    expect(result.stdout).toContain("SIX_MAX | THREE_BET_POT | BTN->UTG | SUPPORTED | 3BP_BTN_VS_UTG");
     expect(result.stdout).toContain("FULL_RING_9 | SINGLE_RAISED | BB->UTG | UNSUPPORTED | UNMAPPED");
     expect(result.stdout).toContain("reason: BB open-raise SRP heads-up pair is not modeled as an aggressor source.");
     expect(result.stdout).not.toContain("https://");
@@ -43,7 +43,7 @@ describe("mtt:postflop-positions CLI", () => {
       }>;
     };
 
-    expect(parsed.counts).toEqual({
+    expect(parsed.counts).toMatchObject({
       totalRows: 204,
       supportedRows: 67,
       unsupportedRows: 137,
@@ -55,13 +55,15 @@ describe("mtt:postflop-positions CLI", () => {
         SINGLE_RAISED: { total: 102, supported: 40, unsupported: 62 },
         THREE_BET_POT: { total: 102, supported: 27, unsupported: 75 },
       },
-      byPattern: {
-        EP_VS_BB: 9,
-        BTN_VS_BB: 2,
-        SB_VS_BB: 2,
-        OOP_RAISER_VS_IP_CALLER: 27,
-        OOP_CALLER_VS_IP_3BETTOR: 27,
-      },
+    });
+    expect(Object.keys(parsed.counts.byPattern)).toHaveLength(50);
+    expect(Object.values(parsed.counts.byPattern).reduce((sum, count) => sum + count, 0)).toBe(67);
+    expect(parsed.counts.byPattern).toMatchObject({
+      SRP_UTG_VS_BB: 2,
+      SRP_BTN_VS_BB: 2,
+      SRP_SB_VS_BB: 2,
+      "3BP_BTN_VS_UTG": 2,
+      "3BP_UTG_1_VS_UTG": 1,
     });
     expect(parsed.rows).toHaveLength(204);
     expect(parsed.rows).toContainEqual(expect.objectContaining({
@@ -70,7 +72,7 @@ describe("mtt:postflop-positions CLI", () => {
       aggressorPosition: "SB",
       callerPosition: "BB",
       state: "SUPPORTED",
-      positionPattern: "SB_VS_BB",
+      positionPattern: "SRP_SB_VS_BB",
       reason: null,
     }));
     expect(parsed.rows).toContainEqual(expect.objectContaining({

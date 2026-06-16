@@ -5,7 +5,10 @@ import type {
   PostflopPositionPattern,
   PostflopPotType,
 } from "../../core/postflopGenerator";
-import { POSTFLOP_ACTIONS } from "../../core/postflopGenerator";
+import {
+  MTT_POSTFLOP_PRODUCTION_POSITION_PATTERNS,
+  POSTFLOP_ACTIONS,
+} from "../../core/postflopGenerator";
 import type { PostflopActionNode } from "../../core/postflopTrainingSpot";
 import type { HandLabel } from "../../core/types";
 import type {
@@ -106,11 +109,7 @@ export const FLOP_PRODUCTION_REQUIRED_POT_TYPES = [
 ] as const satisfies readonly PostflopPotType[];
 
 export const FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS = [
-  "EP_VS_BB",
-  "BTN_VS_BB",
-  "SB_VS_BB",
-  "OOP_RAISER_VS_IP_CALLER",
-  "OOP_CALLER_VS_IP_3BETTOR",
+  ...MTT_POSTFLOP_PRODUCTION_POSITION_PATTERNS,
 ] as const satisfies readonly PostflopPositionPattern[];
 
 export const FLOP_PRODUCTION_REQUIRED_TEXTURES = [

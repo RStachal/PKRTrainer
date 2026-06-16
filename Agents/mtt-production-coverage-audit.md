@@ -65,6 +65,8 @@ to the next P1-P5 import queue without reopening the full intake plan.
 legal files, ready for validation, or already production.
 `mtt:postflop-positions` freezes all supported and unsupported heads-up aggressor/caller pairs for full-ring and 6-max
 SRP/3bet pots.
+FLOP/TURN/RIVER production coverage now requires the 50 granular patterns emitted by this report, for example
+`SRP_UTG_VS_BB`, `SRP_BTN_VS_BB`, `SRP_SB_VS_BB`, `SRP_HJ_VS_CO`, and `3BP_BTN_VS_UTG`.
 
 The preflop intake subset currently has 14 rows and 0 rows ready for validation. All 14 are waiting for both normalized data and permission manifests.
 

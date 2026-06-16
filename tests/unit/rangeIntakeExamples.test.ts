@@ -65,7 +65,7 @@ describe("range intake examples", () => {
     expect(report.errors).toEqual([]);
     expect(report.productionReady).toBe(false);
     expect(report.missingPotTypes).toEqual(["THREE_BET_POT"]);
-    expect(report.missingPositionPatterns).toContain("EP_VS_BB");
+    expect(report.missingPositionPatterns).toContain("SRP_UTG_VS_BB");
     expect(report.missingRangeLanes).toEqual([]);
   });
 

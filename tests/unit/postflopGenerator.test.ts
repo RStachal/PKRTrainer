@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   POSTFLOP_POSITION_CONTEXTS,
+  isPostflopPositionPattern,
   classifyBoard,
   classifyRiverRunout,
   classifyTurnCard,
@@ -28,8 +29,7 @@ describe("postflopGenerator", () => {
     expect(a.actions).toEqual(["CHECK", "BET_SMALL", "BET_BIG"]);
     expect(a.recommendedAction).toMatch(/^(CHECK|BET_SMALL|BET_BIG)$/);
     expect(a.explanation.length).toBeGreaterThan(0);
-    expect(a.positionPattern)
-      .toMatch(/^(EP_VS_BB|BTN_VS_BB|SB_VS_BB|OOP_RAISER_VS_IP_CALLER|OOP_CALLER_VS_IP_3BETTOR)$/);
+    expect(isPostflopPositionPattern(a.positionPattern)).toBe(true);
   });
 
   it("umi pouzit explicitni board z importovane hand history", () => {
@@ -247,14 +247,15 @@ describe("postflopGenerator", () => {
     expect(new Set(fullRingSrp.map(contextKey)).size).toBe(fullRingSrp.length);
     expect(new Set(fullRingThreeBet.map(contextKey)).size).toBe(fullRingThreeBet.length);
     expect(fullRingSrp.map((context) => context.positionPattern)).toEqual(expect.arrayContaining([
-      "EP_VS_BB",
-      "BTN_VS_BB",
-      "SB_VS_BB",
-      "OOP_RAISER_VS_IP_CALLER",
+      "SRP_UTG_VS_BB",
+      "SRP_BTN_VS_BB",
+      "SRP_SB_VS_BB",
+      "SRP_HJ_VS_CO",
     ]));
     expect(fullRingThreeBet.map((context) => context.positionPattern)).toEqual(expect.arrayContaining([
-      "OOP_CALLER_VS_IP_3BETTOR",
+      "3BP_BTN_VS_UTG",
     ]));
+    expect(isPostflopPositionPattern("EP_VS_BB")).toBe(true);
   });
 
   it("umi pouzit externi strategy resolver a jinak zachova fallback", () => {

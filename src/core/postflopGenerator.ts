@@ -38,7 +38,40 @@ export type PostflopPositionPattern =
   | "BTN_VS_BB"
   | "SB_VS_BB"
   | "OOP_RAISER_VS_IP_CALLER"
-  | "OOP_CALLER_VS_IP_3BETTOR";
+  | "OOP_CALLER_VS_IP_3BETTOR"
+  | `SRP_${PositionPatternToken}_VS_${PositionPatternToken}`
+  | `3BP_${PositionPatternToken}_VS_${PositionPatternToken}`;
+
+export type PositionPatternToken =
+  | "UTG"
+  | "UTG_1"
+  | "UTG_2"
+  | "LJ"
+  | "HJ"
+  | "CO"
+  | "BTN"
+  | "SB"
+  | "BB";
+
+export const LEGACY_POSTFLOP_POSITION_PATTERNS = [
+  "EP_VS_BB",
+  "BTN_VS_BB",
+  "SB_VS_BB",
+  "OOP_RAISER_VS_IP_CALLER",
+  "OOP_CALLER_VS_IP_3BETTOR",
+] as const satisfies readonly PostflopPositionPattern[];
+
+const POSITION_PATTERN_TOKENS = [
+  "UTG",
+  "UTG_1",
+  "UTG_2",
+  "LJ",
+  "HJ",
+  "CO",
+  "BTN",
+  "SB",
+  "BB",
+] as const satisfies readonly PositionPatternToken[];
 
 export type PostflopTurnCardClass =
   | "BLANK"
@@ -275,6 +308,46 @@ export function postflopPositionContextsForFormat(
   }
 
   return uniquePositionContexts(singleRaisedContexts);
+}
+
+export const MTT_POSTFLOP_PRODUCTION_POSITION_PATTERNS = uniqueStrings([
+  ...postflopPositionContextsForFormat("FULL_RING_9", "SINGLE_RAISED").map((context) => context.positionPattern),
+  ...postflopPositionContextsForFormat("FULL_RING_9", "THREE_BET_POT").map((context) => context.positionPattern),
+  ...postflopPositionContextsForFormat("SIX_MAX", "SINGLE_RAISED").map((context) => context.positionPattern),
+  ...postflopPositionContextsForFormat("SIX_MAX", "THREE_BET_POT").map((context) => context.positionPattern),
+]) as readonly PostflopPositionPattern[];
+
+export function isPostflopPositionPattern(value: unknown): value is PostflopPositionPattern {
+  if (typeof value !== "string") return false;
+  if ((LEGACY_POSTFLOP_POSITION_PATTERNS as readonly string[]).includes(value)) return true;
+
+  const match = /^(SRP|3BP)_([A-Z0-9_]+)_VS_([A-Z0-9_]+)$/.exec(value);
+  if (match === null) return false;
+  return (
+    isPositionPatternToken(match[2]) &&
+    isPositionPatternToken(match[3]) &&
+    match[2] !== match[3]
+  );
+}
+
+export function positionPatternLabel(pattern: PostflopPositionPattern): string {
+  if (pattern.startsWith("SRP_")) return granularPatternLabel(pattern, "SRP");
+  if (pattern.startsWith("3BP_")) return granularPatternLabel(pattern, "3bet pot");
+
+  switch (pattern) {
+    case "EP_VS_BB":
+      return "Early position vs BB (IP)";
+    case "BTN_VS_BB":
+      return "Button vs BB (IP)";
+    case "SB_VS_BB":
+      return "Small blind vs BB (OOP)";
+    case "OOP_RAISER_VS_IP_CALLER":
+      return "OOP raiser vs IP caller";
+    case "OOP_CALLER_VS_IP_3BETTOR":
+      return "OOP caller vs IP 3bettor";
+  }
+
+  return pattern;
 }
 
 export const POSTFLOP_FULL_RING_POSITION_CONTEXTS = uniquePositionContexts([
@@ -609,8 +682,6 @@ function suitCounts(cards: readonly Card[]): Map<Card["suit"], number> {
 }
 
 function openRaiserVsBigBlindContext(heroPosition: Position): PostflopPositionContext {
-  if (heroPosition === "BTN") return btnVsBbContext();
-  if (heroPosition === "SB") return sbVsBbContext();
   return {
     heroPosition,
     villainPosition: "BB",
@@ -618,19 +689,7 @@ function openRaiserVsBigBlindContext(heroPosition: Position): PostflopPositionCo
     callerPosition: "BB",
     inPosition: true,
     callerType: "BIG_BLIND",
-    positionPattern: "EP_VS_BB",
-  };
-}
-
-function btnVsBbContext(): PostflopPositionContext {
-  return {
-    heroPosition: "BTN",
-    villainPosition: "BB",
-    aggressorPosition: "BTN",
-    callerPosition: "BB",
-    inPosition: true,
-    callerType: "BIG_BLIND",
-    positionPattern: "BTN_VS_BB",
+    positionPattern: srpPositionPattern(heroPosition, "BB"),
   };
 }
 
@@ -642,7 +701,7 @@ function sbVsBbContext(): PostflopPositionContext {
     callerPosition: "BB",
     inPosition: false,
     callerType: "BIG_BLIND",
-    positionPattern: "SB_VS_BB",
+    positionPattern: srpPositionPattern("SB", "BB"),
   };
 }
 
@@ -657,7 +716,7 @@ function oopRaiserVsIpCallerContext(
     callerPosition: villainPosition,
     inPosition: false,
     callerType: "IN_POSITION_CALLER",
-    positionPattern: "OOP_RAISER_VS_IP_CALLER",
+    positionPattern: srpPositionPattern(heroPosition, villainPosition),
   };
 }
 
@@ -672,7 +731,7 @@ function oopCallerVsIpThreeBettorContext(
     callerPosition: heroPosition,
     inPosition: false,
     callerType: "OUT_OF_POSITION_CALLER",
-    positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+    positionPattern: threeBetPositionPattern(villainPosition, heroPosition),
   };
 }
 
@@ -694,6 +753,70 @@ function uniquePositionContexts(
     unique.push(context);
   }
   return unique;
+}
+
+function srpPositionPattern(
+  aggressorPosition: Position,
+  callerPosition: Position,
+): PostflopPositionPattern {
+  return `SRP_${positionPatternToken(aggressorPosition)}_VS_${positionPatternToken(callerPosition)}`;
+}
+
+function threeBetPositionPattern(
+  aggressorPosition: Position,
+  callerPosition: Position,
+): PostflopPositionPattern {
+  return `3BP_${positionPatternToken(aggressorPosition)}_VS_${positionPatternToken(callerPosition)}`;
+}
+
+function positionPatternToken(position: Position): PositionPatternToken {
+  switch (position) {
+    case "UTG+1":
+      return "UTG_1";
+    case "UTG+2":
+      return "UTG_2";
+    case "UTG":
+    case "LJ":
+    case "HJ":
+    case "CO":
+    case "BTN":
+    case "SB":
+    case "BB":
+      return position;
+  }
+}
+
+function positionFromPatternToken(token: PositionPatternToken): Position {
+  switch (token) {
+    case "UTG_1":
+      return "UTG+1";
+    case "UTG_2":
+      return "UTG+2";
+    case "UTG":
+    case "LJ":
+    case "HJ":
+    case "CO":
+    case "BTN":
+    case "SB":
+    case "BB":
+      return token;
+  }
+}
+
+function isPositionPatternToken(value: string): value is PositionPatternToken {
+  return POSITION_PATTERN_TOKENS.includes(value as PositionPatternToken);
+}
+
+function granularPatternLabel(pattern: PostflopPositionPattern, prefix: string): string {
+  const match = /^(SRP|3BP)_([A-Z0-9_]+)_VS_([A-Z0-9_]+)$/.exec(pattern);
+  if (match === null || !isPositionPatternToken(match[2]) || !isPositionPatternToken(match[3])) {
+    return pattern;
+  }
+  return `${prefix} ${positionFromPatternToken(match[2])} vs ${positionFromPatternToken(match[3])}`;
+}
+
+function uniqueStrings<T extends string>(values: readonly T[]): T[] {
+  return [...new Set(values)];
 }
 
 function postflopHandClassFromCards(cards: readonly [Card, Card]): HandLabel {

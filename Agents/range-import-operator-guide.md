@@ -82,7 +82,7 @@ Expected properties:
 - `legal import slot: true`
 - at least one matched MTT postflop import slot
 - rules are present
-- all required pot types, position patterns, board textures, action nodes and range lanes are covered
+- all required pot types, the 50 granular MTT postflop position patterns, board textures, action nodes and range lanes are covered
 - range buckets use valid hand classes and poker feature labels
 
 ## Build a range module
@@ -149,6 +149,7 @@ to the next `P1_PREFLOP_CHIP_EV`, `P2_PREFLOP_DOLAR_EV` or postflop production q
 The postflop matrix freezes the 48 FLOP/TURN/RIVER production targets and shows each target as `WAITING`, `READY` or
 `PRODUCTION`.
 The postflop positions report freezes supported and unsupported heads-up position pairs for SRP and 3bet pots.
+Production FLOP/TURN/RIVER packs must use the granular `SRP_<POS>_VS_<POS>` and `3BP_<POS>_VS_<POS>` patterns from this report; the old five broad patterns remain legacy-compatible but are not enough for production coverage.
 
 For the prioritized import queue aligned to the current MTT completion goal:
 

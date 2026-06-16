@@ -96,7 +96,7 @@ Each rule must include:
 Production readiness requires coverage of:
 
 - Pot types: `SINGLE_RAISED`, `THREE_BET_POT`
-- Position patterns: `EP_VS_BB`, `BTN_VS_BB`, `SB_VS_BB`, `OOP_RAISER_VS_IP_CALLER`, `OOP_CALLER_VS_IP_3BETTOR`
+- Position patterns: the 50 granular MTT postflop patterns reported by `npm run mtt:postflop-positions`, e.g. `SRP_UTG_VS_BB`, `SRP_BTN_VS_BB`, `SRP_SB_VS_BB`, `SRP_HJ_VS_CO`, `3BP_BTN_VS_UTG`
 - Board textures: `paired`, `monotone`, `two-tone`, `rainbow`, `connected`, `dry`, `ace-high`, `broadway-high`, `low`, `medium`, `straight-possible`, `flush-draw-heavy`, `disconnected`
 - Action nodes: `SINGLE_RAISED_POT_CBET`, `THREE_BET_POT_CBET`
 - Range lanes: `VALUE`, `BLUFF`, `CHECK`
@@ -140,7 +140,7 @@ Each rule must include:
 Production readiness requires coverage of:
 
 - Pot types: `SINGLE_RAISED`, `THREE_BET_POT`
-- Position patterns: `EP_VS_BB`, `BTN_VS_BB`, `SB_VS_BB`, `OOP_RAISER_VS_IP_CALLER`, `OOP_CALLER_VS_IP_3BETTOR`
+- Position patterns: the 50 granular MTT postflop patterns reported by `npm run mtt:postflop-positions`, e.g. `SRP_UTG_VS_BB`, `SRP_BTN_VS_BB`, `SRP_SB_VS_BB`, `SRP_HJ_VS_CO`, `3BP_BTN_VS_UTG`
 - Prior flop actions: `CHECK`, `BET_SMALL`, `BET_BIG`
 - Turn card classes: `BLANK`, `LOW_BRICK`, `OVER_CARD`, `BROADWAY`, `BOARD_PAIRING`, `FLUSH_COMPLETING`, `STRAIGHT_COMPLETING`, `DYNAMIC`
 - Action nodes: `TURN_BARREL`

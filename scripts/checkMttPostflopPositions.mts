@@ -4,6 +4,7 @@ import {
   type TableFormat,
 } from "../src/core/trainingProfile.ts";
 import {
+  MTT_POSTFLOP_PRODUCTION_POSITION_PATTERNS,
   postflopPositionContextsForFormat,
   type PostflopPositionContext,
   type PostflopPositionPattern,
@@ -43,13 +44,7 @@ interface PositionCoverageReport {
 
 const TABLE_FORMATS = ["FULL_RING_9", "SIX_MAX"] as const satisfies readonly TableFormat[];
 const POT_TYPES = ["SINGLE_RAISED", "THREE_BET_POT"] as const satisfies readonly CoveredPotType[];
-const PATTERNS = [
-  "EP_VS_BB",
-  "BTN_VS_BB",
-  "SB_VS_BB",
-  "OOP_RAISER_VS_IP_CALLER",
-  "OOP_CALLER_VS_IP_3BETTOR",
-] as const satisfies readonly PostflopPositionPattern[];
+const PATTERNS = MTT_POSTFLOP_PRODUCTION_POSITION_PATTERNS;
 
 function usage(): string {
   return [
