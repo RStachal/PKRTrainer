@@ -74,4 +74,44 @@ describe("postflopLineSimulator", () => {
     expect(line.streets[1].spot.effectiveStackBB).toBe(35.5);
     expect(line.streets[2].actionHistory).toHaveLength(2);
   });
+
+  it("vetvi dalsi street podle skutecne zvolene akce a ukonci line po foldu", () => {
+    const line = generatePostflopLine({
+      seed: 33,
+      heroCards,
+      board,
+      potBB: 6,
+      effectiveStackBB: 40,
+      actionNode: "FLOP_FACING_BET",
+      chosenActionsByStreet: {
+        FLOP: "CALL",
+        TURN: "FOLD",
+      },
+    });
+
+    expect(line.streets.map((street) => street.street)).toEqual(["FLOP", "TURN"]);
+    expect(line.streets[0].spot.actionNode).toBe("FLOP_FACING_BET");
+    expect(line.streets[1].spot.actionNode).toBe("TURN_FACING_BET");
+    expect(line.streets[1].spot.actions).toEqual(["FOLD", "CALL", "RAISE"]);
+    expect(line.actionHistory).toEqual([
+      expect.objectContaining({
+        street: "FLOP",
+        actionNode: "FLOP_FACING_BET",
+        action: "CALL",
+        source: "CHOSEN",
+        potBBBefore: 6,
+        potBBAfter: 12,
+        effectiveStackBBAfter: 37,
+        terminal: false,
+      }),
+      expect.objectContaining({
+        street: "TURN",
+        actionNode: "TURN_FACING_BET",
+        action: "FOLD",
+        source: "CHOSEN",
+        terminal: true,
+      }),
+    ]);
+    expect(line.terminalReason).toBe("FOLD");
+  });
 });

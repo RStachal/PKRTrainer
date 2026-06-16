@@ -1577,9 +1577,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - `RiverProductionStrategyPack` dnes produkcne pokryva `RIVER_PRESSURE` s check/bet akcemi.
     - Doplnit `RIVER_FACING_BET`, prior action kontext, runout class, blocker relevance a legalni `CALL/RAISE/FOLD` akce.
     - Hotovo: `RiverProductionStrategyPack` validuje `RIVER_FACING_BET` s legalnimi `FOLD/CALL/RAISE` akcemi, `RIVER_PRESSURE` zustava `CHECK/BET_SMALL/BET_BIG`, resolver matchuje facing-bet jen pri explicitnim action nodu a coverage report vyzaduje obe river vetve.
-  - [ ] 134.8 Navrhnout branching hand-line engine podle skutecne akce hrace
+  - [x] 134.8 Navrhnout branching hand-line engine podle skutecne akce hrace
     - Soucasny line replay postupuje deterministicky pres doporucenou akci spotu.
     - Plna simulace musi umet posunout pot, stack, prior action a dalsi street podle realne zvolene akce hrace a podle modelovane reakce soupere, vcetne facing-bet vetvi.
+    - Hotovo: `generatePostflopLine` prijima `chosenActionsByStreet`, uklada zdroj akce (`RECOMMENDED`/`CHOSEN`), prepina dalsi street na facing-bet node po callu, ukonci line po foldu/all-in a UI line mode po odpovedi prepocita budouci streety podle realne volby hrace.
   - [ ] 134.9 Pridat street transition kontrakt FLOP->TURN->RIVER
     - Definovat, jak se prenasi board, pot, effective stack, aggressor, caller, in-position role, priorFlopAction, priorTurnAction a action history.
     - Testy musi overit, ze SRP a 3bet poty nepreskakuji do nespravneho action nodu po check/call/raise/fold vetvi.

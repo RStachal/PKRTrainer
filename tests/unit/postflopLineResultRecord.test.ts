@@ -82,7 +82,32 @@ describe("postflopLineResultRecord", () => {
     })).toBe(false);
     expect(isPostflopLineResultRecord({
       ...record,
-      actionHistory: [{ ...record.actionHistory[0], action: "CALL" }],
+      actionHistory: [{ ...record.actionHistory[0], action: "NOT_ACTION" }],
     })).toBe(false);
+  });
+
+  it("akceptuje line record s facing-bet CALL/FOLD akcemi", () => {
+    const line = generatePostflopLine({
+      seed: 33,
+      heroCards,
+      board,
+      actionNode: "FLOP_FACING_BET",
+      chosenActionsByStreet: {
+        FLOP: "CALL",
+        TURN: "FOLD",
+      },
+    });
+    const record = buildPostflopLineResultRecord(line, {
+      chosenByStreet: {
+        FLOP: "CALL",
+        TURN: "FOLD",
+      },
+      startedAt: 10,
+      completedAt: 20,
+    });
+
+    expect(record.totalStreets).toBe(2);
+    expect(record.actionHistory.map((action) => action.action)).toEqual(["CALL", "FOLD"]);
+    expect(isPostflopLineResultRecord(record)).toBe(true);
   });
 });

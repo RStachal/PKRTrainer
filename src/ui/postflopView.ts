@@ -12,6 +12,7 @@ import {
 import {
   generatePostflopLine,
   type PostflopLine,
+  type PostflopLineActionPlan,
 } from "../core/postflopLineSimulator";
 import {
   postflopSpotToTrainingSpot,
@@ -259,7 +260,8 @@ function renderLineSpot(
     ...options,
     onAnswered: (spot, chosen) => {
       chosenByStreet[spot.street] = chosen;
-      appendLineControls(root, line, streetIndex, chosenByStreet, lineStartedAt, options, controls);
+      const branchedLine = branchPostflopLine(line, chosenByStreet, options);
+      appendLineControls(root, branchedLine, streetIndex, chosenByStreet, lineStartedAt, options, controls);
     },
   }, controls, {
     mode: "line",
@@ -798,7 +800,7 @@ function appendLineControls(
     next.addEventListener("click", () => {
       renderLineSpot(
         root,
-        line,
+        branchPostflopLine(line, chosenByStreet, options),
         streetIndex + 1,
         { ...chosenByStreet },
         lineStartedAt,
@@ -822,6 +824,39 @@ function appendLineControls(
   }
 
   result.appendChild(actions);
+}
+
+function branchPostflopLine(
+  line: PostflopLine,
+  chosenActionsByStreet: PostflopLineActionPlan,
+  options: PostflopViewOptions,
+): PostflopLine {
+  const firstStreet = line.streets[0]?.spot;
+  const firstAction = line.actionHistory[0];
+  return generatePostflopLine({
+    seed: line.seed,
+    heroCards: line.heroCards,
+    board: line.board,
+    potType: firstStreet?.potType,
+    potBB: firstAction?.potBBBefore ?? firstStreet?.potBB,
+    effectiveStackBB: firstAction?.effectiveStackBBBefore ?? firstStreet?.effectiveStackBB,
+    positionContext: firstStreet ? positionContextFromSpot(firstStreet) : undefined,
+    actionNode: firstStreet?.actionNode,
+    strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
+    chosenActionsByStreet,
+  });
+}
+
+function positionContextFromSpot(spot: PostflopSpot): PostflopPositionContext {
+  return {
+    heroPosition: spot.heroPosition,
+    villainPosition: spot.villainPosition,
+    aggressorPosition: spot.aggressorPosition,
+    callerPosition: spot.callerPosition,
+    inPosition: spot.inPosition,
+    callerType: spot.callerType,
+    positionPattern: spot.positionPattern,
+  };
 }
 
 function renderPracticalExplanation(

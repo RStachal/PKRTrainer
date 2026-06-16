@@ -177,7 +177,14 @@ function isPostflopStreet(value: unknown): value is PostflopStreet {
 }
 
 function isPostflopAction(value: unknown): value is PostflopAction {
-  return value === "CHECK" || value === "BET_SMALL" || value === "BET_BIG";
+  return (
+    value === "CHECK" ||
+    value === "BET_SMALL" ||
+    value === "BET_BIG" ||
+    value === "CALL" ||
+    value === "RAISE" ||
+    value === "FOLD"
+  );
 }
 
 function validTimestamp(value: unknown): value is number {
