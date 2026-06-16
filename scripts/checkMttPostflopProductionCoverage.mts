@@ -51,7 +51,7 @@ interface CliArgs {
 
 interface PotActionTarget {
   potType: CoveredPotType;
-  actionNode: Extract<PostflopActionNode, "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET" | "TURN_BARREL" | "RIVER_PRESSURE">;
+  actionNode: Extract<PostflopActionNode, "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET" | "FLOP_FACING_BET" | "TURN_BARREL" | "RIVER_PRESSURE">;
 }
 
 interface PostflopProductionCoverageTarget {
@@ -207,6 +207,8 @@ function potActionTargetsForStreet(street: PostflopStreet): readonly PotActionTa
       return [
         { potType: "SINGLE_RAISED", actionNode: "SINGLE_RAISED_POT_CBET" },
         { potType: "THREE_BET_POT", actionNode: "THREE_BET_POT_CBET" },
+        { potType: "SINGLE_RAISED", actionNode: "FLOP_FACING_BET" },
+        { potType: "THREE_BET_POT", actionNode: "FLOP_FACING_BET" },
       ];
     case "TURN":
       return [

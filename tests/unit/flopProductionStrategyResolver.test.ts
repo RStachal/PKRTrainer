@@ -146,6 +146,51 @@ function threeBetProductionPack(): FlopProductionStrategyPack {
   };
 }
 
+function facingBetProductionPack(): FlopProductionStrategyPack {
+  return {
+    ...productionPack(),
+    id: "mtt-full-ring-9-flop-facing-bet-production-test-v1",
+    rules: [
+      {
+        id: "flop-production-facing-bet-btn-bb-dry-call",
+        actionNode: "FLOP_FACING_BET",
+        potType: "SINGLE_RAISED",
+        positionPattern: "BTN_VS_BB",
+        boardTextures: ["dry", "rainbow"],
+        sprMin: 2,
+        sprMax: 12,
+        actions: ["FOLD", "CALL", "RAISE"],
+        recommendedAction: "CALL",
+        rangeBuckets: [
+          {
+            lane: "VALUE",
+            label: "value continue",
+            action: "RAISE",
+            handClasses: ["AA"],
+            features: ["overpair"],
+          },
+          {
+            lane: "BLUFF",
+            label: "bluff raise",
+            action: "RAISE",
+            handClasses: ["QJs"],
+            features: ["backdoor equity"],
+          },
+          {
+            lane: "CHECK",
+            label: "fold lane",
+            action: "FOLD",
+            handClasses: ["72o"],
+            features: ["air"],
+          },
+        ],
+        explanation: "Production fixture calls facing bet on this dry BTN vs BB node.",
+      },
+      ...productionPack().rules,
+    ],
+  };
+}
+
 const input = {
   street: "FLOP" as const,
   textures: ["dry", "rainbow"] as const,
@@ -282,6 +327,32 @@ describe("flopProductionStrategyResolver", () => {
     });
 
     expect(result).toBeNull();
+  });
+
+  it("matchuje explicitni flop facing-bet production node", () => {
+    const resolver = createFlopProductionStrategyResolver(facingBetProductionPack());
+
+    const facingResult = resolver({
+      ...input,
+      actionNode: "FLOP_FACING_BET",
+      heroHand: "AA",
+    });
+    const implicitCbetResult = resolver({
+      ...input,
+      heroHand: "AA",
+    });
+
+    expect(facingResult?.action).toBe("CALL");
+    expect(facingResult?.source?.kind).toBe("STRATEGY_PACK");
+    if (facingResult?.source?.kind === "STRATEGY_PACK") {
+      expect(facingResult.source.ruleId).toBe("flop-production-facing-bet-btn-bb-dry-call");
+      expect(facingResult.source.heroRangeBucket).toMatchObject({
+        lane: "VALUE",
+        action: "RAISE",
+        handClass: "AA",
+      });
+    }
+    expect(implicitCbetResult?.action).toBe("BET_BIG");
   });
 
   it("bez validniho production packu zustane public heuristic fallback", () => {

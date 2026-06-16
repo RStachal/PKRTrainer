@@ -117,7 +117,8 @@ function actionNodeMatchesInput(
   rule: FlopProductionStrategyRule,
   input: PostflopStrategyInput,
 ): boolean {
-  return input.actionNode === undefined || rule.actionNode === input.actionNode;
+  if (input.actionNode !== undefined) return rule.actionNode === input.actionNode;
+  return rule.actionNode !== "FLOP_FACING_BET";
 }
 
 function ruleScore(rule: FlopProductionStrategyRule, input: PostflopStrategyInput): number {

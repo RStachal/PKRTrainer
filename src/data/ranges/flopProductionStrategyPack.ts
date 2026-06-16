@@ -59,7 +59,7 @@ export interface FlopProductionRangeBucket {
 
 export interface FlopProductionStrategyRule {
   id: string;
-  actionNode: Extract<PostflopActionNode, "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET">;
+  actionNode: Extract<PostflopActionNode, "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET" | "FLOP_FACING_BET">;
   potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">;
   positionPattern: PostflopPositionPattern;
   boardTextures: readonly BoardTexture[];
@@ -131,6 +131,7 @@ export const FLOP_PRODUCTION_REQUIRED_TEXTURES = [
 export const FLOP_PRODUCTION_REQUIRED_ACTION_NODES = [
   "SINGLE_RAISED_POT_CBET",
   "THREE_BET_POT_CBET",
+  "FLOP_FACING_BET",
 ] as const satisfies readonly PostflopActionNode[];
 
 export const FLOP_PRODUCTION_REQUIRED_SPR_BANDS = [
@@ -153,10 +154,15 @@ const LEGAL_LICENSE_KINDS: readonly FlopProductionLicenseKind[] = [
 const LEGAL_BLIND_SPEEDS: readonly BlindSpeed[] = ["REGULAR", "TURBO"];
 const LEGAL_ANTE_MODES: readonly AnteMode[] = ["ON", "OFF"];
 const POSTFLOP_ACTION_SET: ReadonlySet<PostflopAction> = new Set(POSTFLOP_ACTIONS);
-const FLOP_PRODUCTION_ALLOWED_ACTIONS: readonly PostflopAction[] = [
+const FLOP_PRODUCTION_CBET_ACTIONS: readonly PostflopAction[] = [
   "CHECK",
   "BET_SMALL",
   "BET_BIG",
+];
+const FLOP_PRODUCTION_FACING_BET_ACTIONS: readonly PostflopAction[] = [
+  "FOLD",
+  "CALL",
+  "RAISE",
 ];
 const HAND_CLASS_SET: ReadonlySet<HandLabel> = new Set(ALL_HAND_CLASSES);
 
@@ -213,14 +219,14 @@ export function validateFlopProductionRule(
   if (rule.actions.length === 0) errors.push(`${rule.id}: actions are required.`);
   for (const action of rule.actions) {
     if (!POSTFLOP_ACTION_SET.has(action)) errors.push(`${rule.id}: action ${action} is invalid.`);
-    if (!isFlopProductionAction(action)) {
+    if (!isFlopProductionActionForNode(action, rule.actionNode)) {
       errors.push(`${rule.id}: action ${action} is not valid for ${rule.actionNode}.`);
     }
   }
   if (!rule.actions.includes(rule.recommendedAction)) {
     errors.push(`${rule.id}: recommendedAction must be present in actions.`);
   }
-  if (!isFlopProductionAction(rule.recommendedAction)) {
+  if (!isFlopProductionActionForNode(rule.recommendedAction, rule.actionNode)) {
     errors.push(`${rule.id}: recommendedAction ${rule.recommendedAction} is not valid for ${rule.actionNode}.`);
   }
   if (!Number.isFinite(rule.sprMin) || !Number.isFinite(rule.sprMax)) {
@@ -231,11 +237,8 @@ export function validateFlopProductionRule(
   }
   if (rule.explanation.trim().length === 0) errors.push(`${rule.id}: explanation is required.`);
   if (rule.rangeBuckets.length === 0) errors.push(`${rule.id}: rangeBuckets are required.`);
-  if (rule.potType === "SINGLE_RAISED" && rule.actionNode !== "SINGLE_RAISED_POT_CBET") {
-    errors.push(`${rule.id}: SINGLE_RAISED pot must use SINGLE_RAISED_POT_CBET.`);
-  }
-  if (rule.potType === "THREE_BET_POT" && rule.actionNode !== "THREE_BET_POT_CBET") {
-    errors.push(`${rule.id}: THREE_BET_POT must use THREE_BET_POT_CBET.`);
+  if (!flopPotTypeMatchesActionNode(rule.potType, rule.actionNode)) {
+    errors.push(`${rule.id}: ${rule.potType} pot cannot use ${rule.actionNode}.`);
   }
 
   const lanes = new Set<FlopProductionRangeLane>();
@@ -245,7 +248,7 @@ export function validateFlopProductionRule(
     if (!rule.actions.includes(bucket.action)) {
       errors.push(`${rule.id}: range bucket ${bucket.label} uses an unavailable action.`);
     }
-    if (!isFlopProductionAction(bucket.action)) {
+    if (!isFlopProductionActionForNode(bucket.action, rule.actionNode)) {
       errors.push(`${rule.id}: range bucket ${bucket.label} action ${bucket.action} is not valid for ${rule.actionNode}.`);
     }
     if (bucket.label.trim().length === 0) {
@@ -301,7 +304,7 @@ function validateBucketActionMix(
     if (!rule.actions.includes(item.action)) {
       errors.push(`${rule.id}: range bucket ${bucket.label} actionMix uses an unavailable action.`);
     }
-    if (!isFlopProductionAction(item.action)) {
+    if (!isFlopProductionActionForNode(item.action, rule.actionNode)) {
       errors.push(`${rule.id}: range bucket ${bucket.label} actionMix uses action ${item.action} outside ${rule.actionNode}.`);
     }
     if (seenActions.has(item.action)) {
@@ -448,8 +451,37 @@ function licenseAllowsExactFrequency(kind: FlopProductionLicenseKind): boolean {
   return kind === "OWNED_SOLVER_EXPORT" || kind === "EXPLICIT_WRITTEN_PERMISSION";
 }
 
-function isFlopProductionAction(action: PostflopAction): boolean {
-  return FLOP_PRODUCTION_ALLOWED_ACTIONS.includes(action);
+function isFlopProductionActionForNode(
+  action: PostflopAction,
+  actionNode: FlopProductionStrategyRule["actionNode"],
+): boolean {
+  return flopProductionActionsForNode(actionNode).includes(action);
+}
+
+function flopProductionActionsForNode(
+  actionNode: FlopProductionStrategyRule["actionNode"],
+): readonly PostflopAction[] {
+  switch (actionNode) {
+    case "SINGLE_RAISED_POT_CBET":
+    case "THREE_BET_POT_CBET":
+      return FLOP_PRODUCTION_CBET_ACTIONS;
+    case "FLOP_FACING_BET":
+      return FLOP_PRODUCTION_FACING_BET_ACTIONS;
+  }
+}
+
+function flopPotTypeMatchesActionNode(
+  potType: FlopProductionStrategyRule["potType"],
+  actionNode: FlopProductionStrategyRule["actionNode"],
+): boolean {
+  switch (actionNode) {
+    case "SINGLE_RAISED_POT_CBET":
+      return potType === "SINGLE_RAISED";
+    case "THREE_BET_POT_CBET":
+      return potType === "THREE_BET_POT";
+    case "FLOP_FACING_BET":
+      return potType === "SINGLE_RAISED" || potType === "THREE_BET_POT";
+  }
 }
 
 function validateProfileCoverage(

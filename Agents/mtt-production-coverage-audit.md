@@ -69,7 +69,7 @@ legal files, ready for validation, or already production.
 SRP/3bet pots.
 FLOP/TURN/RIVER production coverage now requires the 50 granular patterns emitted by this report, for example
 `SRP_UTG_VS_BB`, `SRP_BTN_VS_BB`, `SRP_SB_VS_BB`, `SRP_HJ_VS_CO`, and `3BP_BTN_VS_UTG`.
-`mtt:postflop-coverage` expands the 48 profile targets into 4,800 concrete street/pot/action/position targets and
+`mtt:postflop-coverage` expands the 48 profile targets into 6,400 concrete street/pot/action/position targets and
 shows exact blockers for release routing.
 
 The preflop intake subset currently has 14 rows and 0 rows ready for validation. All 14 are waiting for both normalized data and permission manifests.

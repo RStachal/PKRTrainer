@@ -97,12 +97,62 @@ function productionRule(
   };
 }
 
+function facingBetProductionRule(
+  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
+  positionPattern: PostflopPositionPattern,
+  texture: BoardTexture,
+): FlopProductionStrategyRule {
+  return {
+    id: `flop-facing-${potType.toLowerCase()}-${positionPattern.toLowerCase()}-${texture}`,
+    actionNode: "FLOP_FACING_BET",
+    potType,
+    positionPattern,
+    boardTextures: [texture],
+    sprMin: potType === "SINGLE_RAISED" ? 2 : 1,
+    sprMax: potType === "SINGLE_RAISED" ? 12 : 8,
+    actions: ["FOLD", "CALL", "RAISE"],
+    recommendedAction: "CALL",
+    rangeBuckets: [
+      {
+        lane: "VALUE",
+        label: "value continue",
+        action: "RAISE",
+        handClasses: ["AA", "AKs"],
+        features: ["top pair+", "overpair"],
+        weightPct: 20,
+        actionMix: [
+          { action: "RAISE", frequencyPct: 40, visibility: "EXACT" },
+          { action: "CALL", frequencyPct: 60, visibility: "EXACT" },
+        ],
+      },
+      {
+        lane: "BLUFF",
+        label: "bluff raise",
+        action: "RAISE",
+        handClasses: ["QJs", "JTs"],
+        features: ["backdoor equity", "draw"],
+        weightPct: 20,
+      },
+      {
+        lane: "CHECK",
+        label: "fold lane",
+        action: "FOLD",
+        handClasses: ["72o", "83o"],
+        features: ["air", "weak showdown"],
+        weightPct: 60,
+      },
+    ],
+    explanation: "Production fixture facing-bet rule with explicit continue and fold lanes.",
+  };
+}
+
 function productionPack(): FlopProductionStrategyPack {
   const rules: FlopProductionStrategyRule[] = [];
   for (const potType of FLOP_PRODUCTION_REQUIRED_POT_TYPES) {
     for (const positionPattern of FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS) {
       for (const texture of FLOP_PRODUCTION_REQUIRED_TEXTURES) {
         rules.push(productionRule(potType, positionPattern, texture));
+        rules.push(facingBetProductionRule(potType, positionPattern, texture));
       }
     }
   }
@@ -281,6 +331,32 @@ describe("flopProductionStrategyPack", () => {
     expect(errors).toContain(
       "flop-single_raised-btn_vs_bb-dry: range bucket value actionMix uses action CALL outside SINGLE_RAISED_POT_CBET.",
     );
+  });
+
+  it("povoli facing-bet production node jen s fold/call/raise akcemi", () => {
+    const rule = facingBetProductionRule("SINGLE_RAISED", "SRP_BTN_VS_BB", "dry");
+
+    expect(validateFlopProductionRule(rule, { exactFrequencyAllowed: true })).toEqual([]);
+    expect(validateFlopProductionRule({
+      ...rule,
+      actions: ["FOLD", "CALL", "RAISE", "BET_SMALL"],
+      recommendedAction: "BET_SMALL",
+      rangeBuckets: [
+        {
+          ...rule.rangeBuckets[0],
+          action: "BET_SMALL",
+          actionMix: [
+            { action: "BET_SMALL", frequencyPct: 100, visibility: "EXACT" },
+          ],
+        },
+        ...rule.rangeBuckets.slice(1),
+      ],
+    }, { exactFrequencyAllowed: true })).toEqual(expect.arrayContaining([
+      "flop-facing-single_raised-srp_btn_vs_bb-dry: action BET_SMALL is not valid for FLOP_FACING_BET.",
+      "flop-facing-single_raised-srp_btn_vs_bb-dry: recommendedAction BET_SMALL is not valid for FLOP_FACING_BET.",
+      "flop-facing-single_raised-srp_btn_vs_bb-dry: range bucket value continue action BET_SMALL is not valid for FLOP_FACING_BET.",
+      "flop-facing-single_raised-srp_btn_vs_bb-dry: range bucket value continue actionMix uses action BET_SMALL outside FLOP_FACING_BET.",
+    ]));
   });
 
   it("vyzaduje MTT gameVariant pro flop production pack", () => {

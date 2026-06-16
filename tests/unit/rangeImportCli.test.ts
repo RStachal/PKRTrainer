@@ -192,12 +192,55 @@ function flopRule(
   };
 }
 
+function flopFacingBetRule(
+  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
+  positionPattern: PostflopPositionPattern,
+  texture: BoardTexture,
+): FlopProductionStrategyRule {
+  return {
+    id: `cli-facing-${potType.toLowerCase()}-${positionPattern.toLowerCase()}-${texture}`,
+    actionNode: "FLOP_FACING_BET",
+    potType,
+    positionPattern,
+    boardTextures: [texture],
+    sprMin: 1,
+    sprMax: 12,
+    actions: ["FOLD", "CALL", "RAISE"],
+    recommendedAction: "CALL",
+    rangeBuckets: [
+      {
+        lane: "VALUE",
+        label: "value continue",
+        action: "RAISE",
+        handClasses: ["AA", "AKs"],
+        features: ["top pair+"],
+      },
+      {
+        lane: "BLUFF",
+        label: "bluff raise",
+        action: "RAISE",
+        handClasses: ["QJs", "JTs"],
+        features: ["draw"],
+      },
+      {
+        lane: "CHECK",
+        label: "fold lane",
+        action: "FOLD",
+        handClasses: ["72o", "83o"],
+        features: ["air"],
+      },
+    ],
+    explanation: "CLI production facing-bet fixture rule.",
+  };
+}
+
 function validFlopProductionPack(): FlopProductionStrategyPack {
   const rules: FlopProductionStrategyRule[] = [];
   for (const potType of FLOP_PRODUCTION_REQUIRED_POT_TYPES) {
     for (const positionPattern of FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS) {
       for (const texture of FLOP_PRODUCTION_REQUIRED_TEXTURES) {
         rules.push(flopRule(potType, positionPattern, texture));
+        rules.push(flopFacingBetRule(potType, positionPattern, texture));
       }
     }
   }

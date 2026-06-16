@@ -88,7 +88,7 @@ Each rule must include:
 - `positionPattern`
 - `boardTextures`
 - `sprMin` / `sprMax`
-- Available `actions`
+- Available `actions`: `CHECK/BET_SMALL/BET_BIG` for c-bet nodes, `FOLD/CALL/RAISE` for `FLOP_FACING_BET`
 - `recommendedAction`
 - `rangeBuckets` with optional `actionMix` metadata; exact frequencies require owned export or explicit written permission
 - Explanation text
@@ -98,7 +98,7 @@ Production readiness requires coverage of:
 - Pot types: `SINGLE_RAISED`, `THREE_BET_POT`
 - Position patterns: the 50 granular MTT postflop patterns reported by `npm run mtt:postflop-positions`, e.g. `SRP_UTG_VS_BB`, `SRP_BTN_VS_BB`, `SRP_SB_VS_BB`, `SRP_HJ_VS_CO`, `3BP_BTN_VS_UTG`
 - Board textures: `paired`, `monotone`, `two-tone`, `rainbow`, `connected`, `dry`, `ace-high`, `broadway-high`, `low`, `medium`, `straight-possible`, `flush-draw-heavy`, `disconnected`
-- Action nodes: `SINGLE_RAISED_POT_CBET`, `THREE_BET_POT_CBET`
+- Action nodes: `SINGLE_RAISED_POT_CBET`, `THREE_BET_POT_CBET`, `FLOP_FACING_BET`
 - Range lanes: `VALUE`, `BLUFF`, `CHECK`
 
 Validator:
