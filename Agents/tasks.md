@@ -1561,9 +1561,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Legacy patterny pokryvaji `EP_VS_BB`, `BTN_VS_BB`, `SB_VS_BB`, `OOP_RAISER_VS_IP_CALLER`, `OOP_CALLER_VS_IP_3BETTOR`.
     - Doplnit chybejici CO/HJ/LJ/UTG+1/UTG+2 full-ring a 6-max mapovani nebo zavest granularnejsi patterny tak, aby produkcni pack nemichal odlisne pozicni range.
     - Hotovo: `PostflopPositionPattern` podporuje legacy hodnoty i granularni `SRP_<POS>_VS_<POS>` / `3BP_<POS>_VS_<POS>` patterny; MTT FLOP/TURN/RIVER production coverage ted vyzaduje 50 unikatnich granularnich patternu odvozenych z FULL_RING_9/SIX_MAX SRP/3bet heads-up coverage.
-  - [ ] 134.4 Dodelat production coverage report pro postflop pozicni dvojice
+  - [x] 134.4 Dodelat production coverage report pro postflop pozicni dvojice
     - Pridat report/test, ktery porovna generator pozic s flop/turn/river production coverage.
     - Release blocker musi ukazat chybejici format/speed/EV/ante/street/position/potType/actionNode kombinace proti 50-pattern granularnimu kontraktu, ne jen chybejici obecny StrategyPack.
+    - Hotovo: `npm run mtt:postflop-coverage` rozbaluje 48 postflop profilu na 4,800 konkretnich street/pot/action/position targetu; JSON vraci vsechny radky vcetne blocker kindu (`MISSING_PACK`, `MISSING_RULE`, `PACK_NOT_PRODUCTION_READY`).
   - [ ] 134.5 Rozsirit flop production schema na facing-bet vetve
     - `FlopProductionStrategyPack` dnes produkcne pokryva c-bet nody `SINGLE_RAISED_POT_CBET` a `THREE_BET_POT_CBET` s check/bet akcemi.
     - Doplnit legalni production podporu pro `FLOP_FACING_BET` s akcemi `CALL/RAISE/FOLD`, oddelenou od c-bet pravidel a validovanou coverage reportem.

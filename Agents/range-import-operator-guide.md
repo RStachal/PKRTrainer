@@ -142,6 +142,8 @@ npm run mtt:postflop-matrix
 npm run mtt:postflop-matrix -- --json
 npm run mtt:postflop-positions
 npm run mtt:postflop-positions -- --json
+npm run mtt:postflop-coverage
+npm run mtt:postflop-coverage -- --json
 ```
 
 The blocker report includes priority counts matching the intake plan buckets, so the summary can route work directly
@@ -150,6 +152,8 @@ The postflop matrix freezes the 48 FLOP/TURN/RIVER production targets and shows 
 `PRODUCTION`.
 The postflop positions report freezes supported and unsupported heads-up position pairs for SRP and 3bet pots.
 Production FLOP/TURN/RIVER packs must use the granular `SRP_<POS>_VS_<POS>` and `3BP_<POS>_VS_<POS>` patterns from this report; the old five broad patterns remain legacy-compatible but are not enough for production coverage.
+The postflop coverage report expands the 48 profile targets into 4,800 concrete street/pot/action/position targets
+and shows the exact blocker for each target.
 
 For the prioritized import queue aligned to the current MTT completion goal:
 
