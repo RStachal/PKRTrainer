@@ -1545,6 +1545,73 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Kratky blocker summary ma umet rict nejen kolik veci chybi, ale i do ktere P0-P5 import fronty patri.
     - Hotovo: `mtt:blockers` text i JSON vraci `byPriority` pocty a detailni radky nesou stejny priority bucket jako `mtt:intake-plan`.
 
+- [ ] 134. MTT postflop full production roadmap FLOP-TURN-RIVER
+  - Cil: plne funkcni MTT postflop simulace od flopu po river pro FULL_RING_9 i SIX_MAX, REGULAR i TURBO, CHIP_EV i DOLAR_EV, ante ON/OFF, vsechny podporovane heads-up pozicni dvojice, SRP/3bet/facing-bet vetve, vsechny streety a vsechny akce, ktere dany node legalne pripousti.
+  - Hotovy technicky zaklad: `generatePostflopLine` umi deterministickou FLOP->TURN->RIVER hand line, postflop UI umi single spot i hand line, stats ukladaji single-street i line eventy oddelene, flop/turn/river production schema maji validatory a resolvery, `mtt:slots` generuje 48 postflop import slotu, `validate:range-import`, `build:range-module`, `mtt:intake-plan`, `mtt:blockers` a `mtt:validate-ready-intake` jsou pripraveny na legalni data.
+  - Zasada: postflop production nesmi vzniknout z public heuristic fallbacku ani z metadata-only reuse; kazdy slot potrebuje legalni `normalized.json`, `permission.json`, production-ready coverage report a source-free runtime vystup.
+  - [ ] 134.1 Zmrazit presnou MTT postflop variant matrix
+    - Definovat release cile pro 48 postflop slotu: 2 tableFormat x 2 blindSpeed x 2 evModel x 2 ante x FLOP/TURN/RIVER.
+    - Vystup: audit tabulka pro P3/P4/P5 s pocty slotu, pozadovanym import kindem a aktualnim stavem `WAITING/READY/PRODUCTION`.
+  - [ ] 134.2 Definovat pozicni coverage pro vsechny heads-up dvojice
+    - Pro FULL_RING_9 a SIX_MAX vypsat vsechny podporovane aggressor/caller, IP/OOP a blind-vs-blind dvojice mezi pozicemi.
+    - Kazda dvojice musi mit `PostflopPositionPattern`, pot type mapping, nebo explicitni unsupported duvod; zadna dvojice nesmi tise spadnout do nespravneho patternu.
+  - [ ] 134.3 Rozsirit position pattern model tam, kde soucasnych 5 patternu nestaci
+    - Aktualni patterny pokryvaji `EP_VS_BB`, `BTN_VS_BB`, `SB_VS_BB`, `OOP_RAISER_VS_IP_CALLER`, `OOP_CALLER_VS_IP_3BETTOR`.
+    - Doplnit chybejici CO/HJ/LJ/UTG+1/UTG+2 full-ring a 6-max mapovani nebo zavest granularnejsi patterny tak, aby produkcni pack nemichal odlisne pozicni range.
+  - [ ] 134.4 Dodelat production coverage report pro postflop pozicni dvojice
+    - Pridat report/test, ktery porovna generator pozic s flop/turn/river production coverage.
+    - Release blocker musi ukazat chybejici format/speed/EV/ante/street/position/potType/actionNode kombinace, ne jen chybejici obecny StrategyPack.
+  - [ ] 134.5 Rozsirit flop production schema na facing-bet vetve
+    - `FlopProductionStrategyPack` dnes produkcne pokryva c-bet nody `SINGLE_RAISED_POT_CBET` a `THREE_BET_POT_CBET` s check/bet akcemi.
+    - Doplnit legalni production podporu pro `FLOP_FACING_BET` s akcemi `CALL/RAISE/FOLD`, oddelenou od c-bet pravidel a validovanou coverage reportem.
+  - [ ] 134.6 Rozsirit turn production schema na facing-bet vetve
+    - `TurnProductionStrategyPack` dnes produkcne pokryva `TURN_BARREL` s check/bet akcemi.
+    - Doplnit `TURN_FACING_BET`, prior flop/turn action kontext, legalni `CALL/RAISE/FOLD` akce a coverage pro vsechny pozadovane turn card classes.
+  - [ ] 134.7 Rozsirit river production schema na facing-bet vetve
+    - `RiverProductionStrategyPack` dnes produkcne pokryva `RIVER_PRESSURE` s check/bet akcemi.
+    - Doplnit `RIVER_FACING_BET`, prior action kontext, runout class, blocker relevance a legalni `CALL/RAISE/FOLD` akce.
+  - [ ] 134.8 Navrhnout branching hand-line engine podle skutecne akce hrace
+    - Soucasny line replay postupuje deterministicky pres doporucenou akci spotu.
+    - Plna simulace musi umet posunout pot, stack, prior action a dalsi street podle realne zvolene akce hrace a podle modelovane reakce soupere, vcetne facing-bet vetvi.
+  - [ ] 134.9 Pridat street transition kontrakt FLOP->TURN->RIVER
+    - Definovat, jak se prenasi board, pot, effective stack, aggressor, caller, in-position role, priorFlopAction, priorTurnAction a action history.
+    - Testy musi overit, ze SRP a 3bet poty nepreskakuji do nespravneho action nodu po check/call/raise/fold vetvi.
+  - [ ] 134.10 Importovat legalni P3 FLOP production data pro vsechny varianty
+    - Postupovat pres `npm run mtt:intake-plan -- --priority=P3_FLOP_PRODUCTION --all`.
+    - Pro kazdy ready slot spustit `validate:range-import`, `build:range-module --dry-run`, potom vygenerovat production modul a registrovat pack v resolver chainu.
+  - [ ] 134.11 Importovat legalni P4 TURN production data pro vsechny varianty
+    - Postupovat pres `npm run mtt:intake-plan -- --priority=P4_TURN_PRODUCTION --all`.
+    - Coverage musi zahrnout SRP/3bet, prior flop actions, turn card classes, SPR/pot windows, pozicni patterny, range lanes a facing-bet vetve.
+  - [ ] 134.12 Importovat legalni P5 RIVER production data pro vsechny varianty
+    - Postupovat pres `npm run mtt:intake-plan -- --priority=P5_RIVER_PRODUCTION --all`.
+    - Coverage musi zahrnout prior turn actions, river runout classes, blocker relevance, value/bluff/check lanes, facing-bet vetve a finalni decision akce.
+  - [ ] 134.13 Definovat legalni reuse policy pro speed/EV jen pokud je explicitne povolena
+    - REGULAR/TURBO a CHIP_EV/DOLAR_EV nesmi sdilet postflop doporuceni bez reviewed reuse policy v permission manifestu a auditnim reportu.
+    - Pokud reuse neni povoleny, kazdy speed/EV slot zustava samostatny import blocker.
+  - [ ] 134.14 Povysit postflop completion gate z preview na production
+    - Po importu legalnich dat musi `mtt:completion` ukazat FLOP/TURN/RIVER radky jako production-ready pro vsechny cilove varianty.
+    - Public heuristic fallback smi zustat jen v explicitnim preview/development rezimu, ne v produkcni MTT completion definici.
+  - [ ] 134.15 Otestovat runtime resolver bez ticheho fallbacku pro production profily
+    - Pro kazdy production postflop profil musi resolver vybrat legalni production pack nebo vratit blokujici stav; nesmi potichu pouzit public heuristic model.
+    - Testy pokryji FULL_RING_9/SIX_MAX, REGULAR/TURBO, CHIP_EV/DOLAR_EV, ante ON/OFF a FLOP/TURN/RIVER.
+  - [ ] 134.16 Otestovat UI hand-line flow pro vsechny street/action typy
+    - DOM testy musi projit single spot i hand line pro c-bet/barrel/pressure i facing-bet nody.
+    - UI musi zustat source-free, bez pack id, provideru, URL a raw enumu.
+  - [ ] 134.17 Rozsirit HH bridge na turn/river review
+    - HH import dnes mapuje preflop a flop review.
+    - Doplnit TURN/RIVER board, action history, pot/SPR a facing-bet mapovani tak, aby importovana handa sla porovnat proti stejnym production resolvers jako trainer.
+  - [ ] 134.18 Doplnit postflop KPI podle variant a line vetvi
+    - Dashboard musi umet oddelit FLOP/TURN/RIVER, SRP/3bet/facing-bet, position pair, action node, single spot vs hand line a confidence/production stav.
+    - Leak recommendation nesmi michat production a preview/fallback spoty bez confidence vahy.
+  - [ ] 134.19 Pridat finalni MTT postflop release gate
+    - Novy gate musi selhat, pokud nektery cilovy FLOP/TURN/RIVER production slot chybi, ma LOW confidence, chybejici permission, placeholder text, nekompletni coverage nebo fallback runtime.
+    - Gate spustit v `npm run release:check` az po nahrani legalnich production dat.
+  - [ ] 134.20 Finalni acceptance pro plne funkcni MTT postflop
+    - `npm run release:check` zeleny.
+    - `npm run mtt:blockers -- --summary` nema P3/P4/P5 blocker rows.
+    - `npm run mtt:intake-plan -- --priority=P3_FLOP_PRODUCTION --all`, P4 a P5 neukazuji waiting sloty.
+    - Manualni smoke: 6-max/9-max, regular/turbo, chipEV/$EV, ante ON/OFF, FLOP/TURN/RIVER hand line projde bez source citaci a bez fallback warningu.
+
 ## Notes
 
 - Tasky oznacene `*` jsou volitelne (testy) a lze je preskocit pro rychlejsi MVP; nebudou implementovany automaticky.
