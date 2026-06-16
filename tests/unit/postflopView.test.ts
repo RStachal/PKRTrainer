@@ -630,6 +630,111 @@ describe("postflopView - DOM", () => {
     expect(completedLines[0].completedAt).toBeGreaterThanOrEqual(completedLines[0].startedAt);
   });
 
+  it("vetvi hand line pres facing-bet akce bez source detailu v UI", () => {
+    const root = document.createElement("div");
+    const completedLines: Array<{ streets: string[]; actions: string[]; total: number }> = [];
+
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: "FLOP",
+      initialActionNode: "FLOP_FACING_BET",
+      onLineCompleted: (line) => {
+        completedLines.push({
+          streets: line.streets.map((street) => street.street),
+          actions: line.actionHistory.map((action) => action.action),
+          total: line.streets.length,
+        });
+      },
+    });
+
+    root.querySelector<HTMLSelectElement>(".postflop-mode")!.value = "line";
+    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+
+    expect([...root.querySelectorAll<HTMLButtonElement>(".postflop-action")]
+      .map((button) => button.dataset.action))
+      .toEqual(["FOLD", "CALL", "RAISE"]);
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
+      .toBe("FLOP_FACING_BET");
+
+    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CALL"]')?.click();
+    expect(root.querySelector<HTMLButtonElement>(".postflop-line-next")?.textContent)
+      .toBe("Next Turn");
+    expect(root.querySelector<HTMLElement>(".postflop-result")?.textContent)
+      .not.toContain("https://");
+
+    root.querySelector<HTMLButtonElement>(".postflop-line-next")?.click();
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
+      .toBe("TURN_FACING_BET");
+    expect([...root.querySelectorAll<HTMLButtonElement>(".postflop-action")]
+      .map((button) => button.dataset.action))
+      .toEqual(["FOLD", "CALL", "RAISE"]);
+
+    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="FOLD"]')?.click();
+
+    const complete = root.querySelector<HTMLElement>(".postflop-line-complete");
+    expect(complete?.textContent).toBe("Hand line complete: 1/2 streets.");
+    expect(complete?.dataset.totalStreets).toBe("2");
+    expect(completedLines).toEqual([{
+      streets: ["FLOP", "TURN"],
+      actions: ["CALL", "FOLD"],
+      total: 2,
+    }]);
+  });
+
+  it.each([
+    {
+      street: "FLOP",
+      actionNode: "SINGLE_RAISED_POT_CBET",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+    },
+    {
+      street: "FLOP",
+      actionNode: "FLOP_FACING_BET",
+      actions: ["FOLD", "CALL", "RAISE"],
+    },
+    {
+      street: "TURN",
+      actionNode: "TURN_BARREL",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+    },
+    {
+      street: "TURN",
+      actionNode: "TURN_FACING_BET",
+      actions: ["FOLD", "CALL", "RAISE"],
+    },
+    {
+      street: "RIVER",
+      actionNode: "RIVER_PRESSURE",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+    },
+    {
+      street: "RIVER",
+      actionNode: "RIVER_FACING_BET",
+      actions: ["FOLD", "CALL", "RAISE"],
+    },
+  ] as const)("vykresli single-spot UI pro $actionNode bez source uniků", ({ street, actionNode, actions }) => {
+    const root = document.createElement("div");
+
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: street,
+      initialActionNode: actionNode,
+      autoGenerate: true,
+    });
+
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
+      .toBe(actionNode);
+    expect([...root.querySelectorAll<HTMLButtonElement>(".postflop-action")]
+      .map((button) => button.dataset.action))
+      .toEqual(actions);
+
+    root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    const visibleText = root.textContent ?? "";
+    expect(visibleText).not.toContain("https://");
+    expect(visibleText).not.toContain("StrategyPack");
+    expect(visibleText).not.toContain("Rule:");
+  });
+
   it("umi zobrazit source-free model detail pro river pressure spot", () => {
     const root = document.createElement("div");
     renderPostflopView(root, { initialStreet: "RIVER", autoGenerate: true });

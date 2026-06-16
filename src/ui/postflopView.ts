@@ -16,6 +16,7 @@ import {
 } from "../core/postflopLineSimulator";
 import {
   postflopSpotToTrainingSpot,
+  type PostflopActionNode,
   type PostflopTrainingSpot,
 } from "../core/postflopTrainingSpot";
 import { createDefaultPostflopStrategyResolver } from "../data/ranges/postflopStrategyRegistry";
@@ -38,6 +39,7 @@ export interface PostflopViewOptions {
   initialSeed?: number | null;
   initialPositionContext?: PostflopPositionContext | null;
   initialPotType?: PostflopPotType;
+  initialActionNode?: PostflopActionNode;
   initialPotBB?: number;
   initialEffectiveStackBB?: number;
   autoGenerate?: boolean;
@@ -204,6 +206,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       const line = generatePostflopLine({
         seed,
         potType: options.initialPotType,
+        actionNode: options.initialActionNode,
         potBB: options.initialPotBB,
         effectiveStackBB: options.initialEffectiveStackBB,
         positionContext: options.initialPositionContext ?? undefined,
@@ -223,6 +226,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       seed,
       street,
       potType: options.initialPotType,
+      actionNode: options.initialActionNode,
       potBB: options.initialPotBB,
       effectiveStackBB: options.initialEffectiveStackBB,
       positionContext: options.initialPositionContext ?? undefined,
