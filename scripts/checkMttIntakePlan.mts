@@ -64,6 +64,7 @@ function usage(): string {
     "  npm run mtt:intake-plan -- --limit=20",
     "  npm run mtt:intake-plan -- --all",
     "  npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all",
+    "  npm run mtt:intake-plan -- --priority=P2_PREFLOP_DOLAR_EV --all",
     "  npm run mtt:intake-plan -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json",
     "",
     "Output:",

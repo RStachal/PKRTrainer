@@ -141,6 +141,7 @@ describe("mtt:intake-plan CLI", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Unsupported --priority value: P9");
     expect(result.stderr).toContain("Usage:");
+    expect(result.stderr).toContain("npm run mtt:intake-plan -- --priority=P2_PREFLOP_DOLAR_EV --all");
   });
 
   it("umi vypsat jen prioritni MTT sloty pripravene k validaci", () => {

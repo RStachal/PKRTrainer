@@ -64,6 +64,7 @@ function usage(): string {
     "  npm run mtt:validate-ready-intake -- --json",
     "  npm run mtt:validate-ready-intake -- --fail-on-empty",
     "  npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json",
+    "  npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json",
     "  npm run mtt:validate-ready-intake -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json",
     "",
     "Output:",

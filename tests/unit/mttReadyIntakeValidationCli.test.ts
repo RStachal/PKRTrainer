@@ -90,6 +90,7 @@ describe("mtt:validate-ready-intake CLI", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Unsupported --priority value: P9");
     expect(result.stderr).toContain("Usage:");
+    expect(result.stderr).toContain("npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json");
   });
 
   it("vrati chybu pro neznamy filtr", () => {
