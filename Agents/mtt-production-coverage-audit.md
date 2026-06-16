@@ -49,8 +49,10 @@ Useful filters:
 - `npm run mtt:intake-plan`
 - `npm run mtt:intake-plan -- --ready-only --json`
 - `npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all`
+- `npm run mtt:intake-plan -- --priority=P2_PREFLOP_DOLAR_EV --all`
 - `npm run mtt:validate-ready-intake`
 - `npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json`
+- `npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json`
 - `npm run range:intake:guard`
 
 The preflop intake subset currently has 14 rows and 0 rows ready for validation. All 14 are waiting for both normalized data and permission manifests.

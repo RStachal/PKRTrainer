@@ -1538,6 +1538,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
       - `npm run mtt:intake-plan -- --priority=P4_TURN_PRODUCTION --all`
       - `npm run mtt:intake-plan -- --priority=P5_RIVER_PRODUCTION --all`
       - `npm run mtt:validate-ready-intake -- --fail-on-empty`
+  - [x] 133.13 Udrzet DOLAR_EV jako samostatnou preflop intake prioritu
+    - P2 fronta nesmi byt jen implicitni filtr, protoze aktualni cil explicitne zahrnuje CHIP_EV i DOLAR_EV.
+    - Hotovo: operator guide, intake README, coverage audit a CLI regression test pokryvaji `P2_PREFLOP_DOLAR_EV`.
 
 ## Notes
 

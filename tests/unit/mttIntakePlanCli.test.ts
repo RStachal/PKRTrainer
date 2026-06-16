@@ -121,6 +121,20 @@ describe("mtt:intake-plan CLI", () => {
     expect(result.stdout).not.toContain("P2_PREFLOP_DOLAR_EV |");
   });
 
+  it("umi vypsat samostatnou DOLAR_EV preflop priority frontu", () => {
+    const result = runPlan("--priority=P2_PREFLOP_DOLAR_EV", "--all");
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("queue rows: 8");
+    expect(result.stdout).toContain("shown rows: 8");
+    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=0, P2_PREFLOP_DOLAR_EV=8");
+    expect(result.stdout).toContain("1. P2_PREFLOP_DOLAR_EV");
+    expect(result.stdout).toContain("8. P2_PREFLOP_DOLAR_EV");
+    expect(result.stdout).toContain("DOLAR_EV|PREFLOP");
+    expect(result.stdout).toContain("dolar-ev");
+    expect(result.stdout).not.toContain("P1_PREFLOP_CHIP_EV |");
+  });
+
   it("vrati chybu pro neznamou prioritu", () => {
     const result = runPlan("--priority=P9");
 

@@ -110,8 +110,10 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:intake-plan");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");
+    expect(operatorGuide).toContain("npm run mtt:intake-plan -- --priority=P2_PREFLOP_DOLAR_EV --all");
     expect(operatorGuide).toContain("npm run mtt:validate-ready-intake");
     expect(operatorGuide).toContain("npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json");
+    expect(operatorGuide).toContain("npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json");
     expect(operatorGuide).toContain("Permission manifests must not contain placeholder text");
     expect(operatorGuide).toContain("Normalized production imports must not contain placeholder text");
     expect(operatorGuide).toContain("build:range-module --dry-run");
@@ -134,8 +136,10 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");
+    expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --priority=P2_PREFLOP_DOLAR_EV --all");
     expect(mttCoverageAudit).toContain("npm run mtt:validate-ready-intake");
     expect(mttCoverageAudit).toContain("npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json");
+    expect(mttCoverageAudit).toContain("npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json");
     expect(mttCoverageAudit).toContain("regular-vs-turbo diff audit");
     expect(mttCoverageAudit).toContain("FLOP, TURN and RIVER production StrategyPacks are not registered");
     expect(releaseTemplate).toContain("Gameplay changes");
