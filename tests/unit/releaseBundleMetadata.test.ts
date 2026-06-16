@@ -123,7 +123,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("matched import slots");
     expect(operatorGuide).toContain("npm run verify:ranges");
     expect(operatorGuide).toContain("npm run release:check");
-    expect(mttCoverageAudit).toContain("Updated: 2026-06-15");
+    expect(mttCoverageAudit).toContain("Updated: 2026-06-16");
     expect(mttCoverageAudit).toContain("DOLAR_EV");
     expect(mttCoverageAudit).toContain("Completion matrix");
     expect(mttCoverageAudit).toContain("total MTT rows: 64");

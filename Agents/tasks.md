@@ -1494,7 +1494,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: `Agents/mtt-production-coverage-audit.md` shrnuje aktualni MTT completion, DOLAR_EV, postflop production blockery, range intake a regular-vs-turbo diff audit
 
 - [ ] 133. Aktualni MTT dokoncovaci priority
-  - Stav 2026-06-15: `npm run release:check` je zeleny, MTT completion ma 64 radku, 2 production rows, 52 candidate/preview rows, 10 missing rows, 62 blocker rows a 0 ready-for-validation intake slotu.
+  - Stav 2026-06-16: `npm run release:check` je zeleny, MTT completion ma 64 radku, 2 production rows, 52 candidate/preview rows, 10 missing rows, 62 blocker rows a 0 ready-for-validation intake slotu.
   - Aktualni cil: kompletni MTT simulace pro 6-max i 9-max full ring, regular i turbo, CHIP_EV i DOLAR_EV, preflop/flop/turn/river, vsechny pozice, streety a action typy.
   - Zasada: nevyrabet ani nerecyklovat chart hodnoty bez legalniho `normalized.json` a `permission.json`; technicke kroky maji zkratit cestu k importu a zmensit riziko spatneho povyseni.
   - [x] 133.1 Zanalyzovat aktualni vysledek proti prioritnim cilum
