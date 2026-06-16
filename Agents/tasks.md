@@ -1553,9 +1553,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Definovat release cile pro 48 postflop slotu: 2 tableFormat x 2 blindSpeed x 2 evModel x 2 ante x FLOP/TURN/RIVER.
     - Vystup: audit tabulka pro P3/P4/P5 s pocty slotu, pozadovanym import kindem a aktualnim stavem `WAITING/READY/PRODUCTION`.
     - Hotovo: `npm run mtt:postflop-matrix` vypisuje 48 FLOP/TURN/RIVER cilu s P3/P4/P5 prioritou, import kindem, intake stavem a JSON vystupem pro batch tooling.
-  - [ ] 134.2 Definovat pozicni coverage pro vsechny heads-up dvojice
+  - [x] 134.2 Definovat pozicni coverage pro vsechny heads-up dvojice
     - Pro FULL_RING_9 a SIX_MAX vypsat vsechny podporovane aggressor/caller, IP/OOP a blind-vs-blind dvojice mezi pozicemi.
     - Kazda dvojice musi mit `PostflopPositionPattern`, pot type mapping, nebo explicitni unsupported duvod; zadna dvojice nesmi tise spadnout do nespravneho patternu.
+    - Hotovo: `npm run mtt:postflop-positions` vypisuje 204 ordered pair radku pro FULL_RING_9/SIX_MAX x SRP/3bet, vcetne 67 supported a 137 explicitne unsupported dvojic s duvodem.
   - [ ] 134.3 Rozsirit position pattern model tam, kde soucasnych 5 patternu nestaci
     - Aktualni patterny pokryvaji `EP_VS_BB`, `BTN_VS_BB`, `SB_VS_BB`, `OOP_RAISER_VS_IP_CALLER`, `OOP_CALLER_VS_IP_3BETTOR`.
     - Doplnit chybejici CO/HJ/LJ/UTG+1/UTG+2 full-ring a 6-max mapovani nebo zavest granularnejsi patterny tak, aby produkcni pack nemichal odlisne pozicni range.

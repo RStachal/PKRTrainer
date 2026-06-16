@@ -140,12 +140,15 @@ npm run mtt:blockers -- --summary
 npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 npm run mtt:postflop-matrix
 npm run mtt:postflop-matrix -- --json
+npm run mtt:postflop-positions
+npm run mtt:postflop-positions -- --json
 ```
 
 The blocker report includes priority counts matching the intake plan buckets, so the summary can route work directly
 to the next `P1_PREFLOP_CHIP_EV`, `P2_PREFLOP_DOLAR_EV` or postflop production queue.
 The postflop matrix freezes the 48 FLOP/TURN/RIVER production targets and shows each target as `WAITING`, `READY` or
 `PRODUCTION`.
+The postflop positions report freezes supported and unsupported heads-up position pairs for SRP and 3bet pots.
 
 For the prioritized import queue aligned to the current MTT completion goal:
 
