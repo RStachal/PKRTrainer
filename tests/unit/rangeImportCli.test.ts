@@ -337,6 +337,50 @@ function turnRule(
   };
 }
 
+function turnFacingBetRule(
+  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
+  positionPattern: PostflopPositionPattern,
+  priorFlopAction: "CHECK" | "BET_SMALL" | "BET_BIG",
+  turnCardClass: TurnProductionTurnCardClass,
+): TurnProductionStrategyRule {
+  return {
+    id: `cli-turn-facing-${potType.toLowerCase()}-${positionPattern.toLowerCase()}-${priorFlopAction.toLowerCase()}-${turnCardClass.toLowerCase()}`,
+    actionNode: "TURN_FACING_BET",
+    potType,
+    positionPattern,
+    priorFlopAction,
+    turnCardClasses: [turnCardClass],
+    sprMin: 1,
+    sprMax: 10,
+    actions: ["FOLD", "CALL", "RAISE"],
+    recommendedAction: "CALL",
+    rangeBuckets: [
+      {
+        lane: "VALUE",
+        label: "value continue",
+        action: "RAISE",
+        handClasses: ["AA", "AKs"],
+        features: ["top pair+"],
+      },
+      {
+        lane: "BLUFF",
+        label: "bluff raise",
+        action: "RAISE",
+        handClasses: ["QJs", "JTs"],
+        features: ["draw"],
+      },
+      {
+        lane: "CHECK",
+        label: "fold lane",
+        action: "FOLD",
+        handClasses: ["72o", "83o"],
+        features: ["air"],
+      },
+    ],
+    explanation: "CLI turn facing-bet production fixture rule.",
+  };
+}
+
 function validTurnProductionPack(): TurnProductionStrategyPack {
   const rules: TurnProductionStrategyRule[] = [];
   for (const potType of TURN_PRODUCTION_REQUIRED_POT_TYPES) {
@@ -344,6 +388,7 @@ function validTurnProductionPack(): TurnProductionStrategyPack {
       for (const priorFlopAction of TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS) {
         for (const turnCardClass of TURN_PRODUCTION_REQUIRED_CARD_CLASSES) {
           rules.push(turnRule(potType, positionPattern, priorFlopAction, turnCardClass));
+          rules.push(turnFacingBetRule(potType, positionPattern, priorFlopAction, turnCardClass));
         }
       }
     }

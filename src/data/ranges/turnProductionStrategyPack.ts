@@ -66,7 +66,7 @@ export interface TurnProductionRangeBucket {
 
 export interface TurnProductionStrategyRule {
   id: string;
-  actionNode: Extract<PostflopActionNode, "TURN_BARREL">;
+  actionNode: Extract<PostflopActionNode, "TURN_BARREL" | "TURN_FACING_BET">;
   potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">;
   positionPattern: PostflopPositionPattern;
   priorFlopAction: PostflopAction;
@@ -139,6 +139,7 @@ export const TURN_PRODUCTION_REQUIRED_CARD_CLASSES = [
 
 export const TURN_PRODUCTION_REQUIRED_ACTION_NODES = [
   "TURN_BARREL",
+  "TURN_FACING_BET",
 ] as const satisfies readonly PostflopActionNode[];
 
 export const TURN_PRODUCTION_REQUIRED_RANGE_LANES = [
@@ -156,10 +157,15 @@ const LEGAL_BLIND_SPEEDS: readonly BlindSpeed[] = ["REGULAR", "TURBO"];
 const LEGAL_ANTE_MODES: readonly AnteMode[] = ["ON", "OFF"];
 const HAND_CLASS_SET: ReadonlySet<HandLabel> = new Set(ALL_HAND_CLASSES);
 const POSTFLOP_ACTION_SET: ReadonlySet<PostflopAction> = new Set(POSTFLOP_ACTIONS);
-const TURN_PRODUCTION_ALLOWED_ACTIONS: readonly PostflopAction[] = [
+const TURN_PRODUCTION_BARREL_ACTIONS: readonly PostflopAction[] = [
   "CHECK",
   "BET_SMALL",
   "BET_BIG",
+];
+const TURN_PRODUCTION_FACING_BET_ACTIONS: readonly PostflopAction[] = [
+  "FOLD",
+  "CALL",
+  "RAISE",
 ];
 const TURN_CARD_CLASS_SET: ReadonlySet<TurnProductionTurnCardClass> = new Set(
   TURN_PRODUCTION_REQUIRED_CARD_CLASSES,
@@ -214,26 +220,28 @@ export function validateTurnProductionRule(
   const errors: string[] = [];
 
   if (rule.id.trim().length === 0) errors.push("Turn production rule id is required.");
-  if (rule.actionNode !== "TURN_BARREL") errors.push(`${rule.id}: turn production rule must use TURN_BARREL.`);
+  if (!TURN_PRODUCTION_REQUIRED_ACTION_NODES.includes(rule.actionNode)) {
+    errors.push(`${rule.id}: turn production rule must use TURN_BARREL or TURN_FACING_BET.`);
+  }
   if (rule.turnCardClasses.length === 0) errors.push(`${rule.id}: turnCardClasses are required.`);
   if (!POSTFLOP_ACTION_SET.has(rule.priorFlopAction)) {
     errors.push(`${rule.id}: priorFlopAction is invalid.`);
   }
-  if (!isTurnProductionAction(rule.priorFlopAction)) {
-    errors.push(`${rule.id}: priorFlopAction ${rule.priorFlopAction} is not valid for TURN_BARREL.`);
+  if (!isTurnPriorFlopAction(rule.priorFlopAction)) {
+    errors.push(`${rule.id}: priorFlopAction ${rule.priorFlopAction} is not valid for ${rule.actionNode}.`);
   }
   if (rule.actions.length === 0) errors.push(`${rule.id}: actions are required.`);
   for (const action of rule.actions) {
     if (!POSTFLOP_ACTION_SET.has(action)) errors.push(`${rule.id}: action ${action} is invalid.`);
-    if (!isTurnProductionAction(action)) {
-      errors.push(`${rule.id}: action ${action} is not valid for TURN_BARREL.`);
+    if (!isTurnProductionActionForNode(action, rule.actionNode)) {
+      errors.push(`${rule.id}: action ${action} is not valid for ${rule.actionNode}.`);
     }
   }
   if (!rule.actions.includes(rule.recommendedAction)) {
     errors.push(`${rule.id}: recommendedAction must be present in actions.`);
   }
-  if (!isTurnProductionAction(rule.recommendedAction)) {
-    errors.push(`${rule.id}: recommendedAction ${rule.recommendedAction} is not valid for TURN_BARREL.`);
+  if (!isTurnProductionActionForNode(rule.recommendedAction, rule.actionNode)) {
+    errors.push(`${rule.id}: recommendedAction ${rule.recommendedAction} is not valid for ${rule.actionNode}.`);
   }
   if (!Number.isFinite(rule.sprMin) || !Number.isFinite(rule.sprMax)) {
     errors.push(`${rule.id}: SPR bounds must be finite.`);
@@ -256,8 +264,8 @@ export function validateTurnProductionRule(
     if (!rule.actions.includes(bucket.action)) {
       errors.push(`${rule.id}: range bucket ${bucket.label} uses an unavailable action.`);
     }
-    if (!isTurnProductionAction(bucket.action)) {
-      errors.push(`${rule.id}: range bucket ${bucket.label} action ${bucket.action} is not valid for TURN_BARREL.`);
+    if (!isTurnProductionActionForNode(bucket.action, rule.actionNode)) {
+      errors.push(`${rule.id}: range bucket ${bucket.label} action ${bucket.action} is not valid for ${rule.actionNode}.`);
     }
     if (bucket.label.trim().length === 0) {
       errors.push(`${rule.id}: range bucket label is required.`);
@@ -424,8 +432,8 @@ function validateBucketActionMix(
     if (!rule.actions.includes(item.action)) {
       errors.push(`${rule.id}: range bucket ${bucket.label} actionMix uses an unavailable action.`);
     }
-    if (!isTurnProductionAction(item.action)) {
-      errors.push(`${rule.id}: range bucket ${bucket.label} actionMix uses action ${item.action} outside TURN_BARREL.`);
+    if (!isTurnProductionActionForNode(item.action, rule.actionNode)) {
+      errors.push(`${rule.id}: range bucket ${bucket.label} actionMix uses action ${item.action} outside ${rule.actionNode}.`);
     }
     if (seenActions.has(item.action)) {
       errors.push(`${rule.id}: range bucket ${bucket.label} actionMix duplicates ${item.action}.`);
@@ -459,8 +467,28 @@ function licenseAllowsExactFrequency(kind: TurnProductionLicenseKind): boolean {
   return kind === "OWNED_SOLVER_EXPORT" || kind === "EXPLICIT_WRITTEN_PERMISSION";
 }
 
-function isTurnProductionAction(action: PostflopAction): boolean {
-  return TURN_PRODUCTION_ALLOWED_ACTIONS.includes(action);
+function isTurnPriorFlopAction(action: PostflopAction): boolean {
+  const allowed: readonly PostflopAction[] = TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS;
+  return allowed.includes(action);
+}
+
+function isTurnProductionActionForNode(
+  action: PostflopAction,
+  actionNode: TurnProductionStrategyRule["actionNode"],
+): boolean {
+  return turnProductionActionsForNode(actionNode).includes(action);
+}
+
+function turnProductionActionsForNode(
+  actionNode: TurnProductionStrategyRule["actionNode"],
+): readonly PostflopAction[] {
+  switch (actionNode) {
+    case "TURN_BARREL":
+      return TURN_PRODUCTION_BARREL_ACTIONS;
+    case "TURN_FACING_BET":
+      return TURN_PRODUCTION_FACING_BET_ACTIONS;
+  }
+  return [];
 }
 
 function validateProfileCoverage(

@@ -98,6 +98,46 @@ function productionPack(confidence: "LOW" | "MEDIUM" = "MEDIUM"): TurnProduction
         ],
         explanation: "Production fixture uses a small barrel on this low-brick BTN vs BB turn.",
       },
+      {
+        id: "turn-production-btn-bb-low-brick-facing-bet-call",
+        actionNode: "TURN_FACING_BET",
+        potType: "SINGLE_RAISED",
+        positionPattern: "BTN_VS_BB",
+        priorFlopAction: "BET_SMALL",
+        turnCardClasses: ["LOW_BRICK"],
+        sprMin: 2,
+        sprMax: 12,
+        actions: ["FOLD", "CALL", "RAISE"],
+        recommendedAction: "CALL",
+        rangeBuckets: [
+          {
+            lane: "VALUE",
+            label: "value continue",
+            action: "RAISE",
+            handClasses: ["AA"],
+            features: ["overpair"],
+            actionMix: [
+              { action: "RAISE", frequencyPct: 40, visibility: "EXACT" },
+              { action: "CALL", frequencyPct: 60, visibility: "EXACT" },
+            ],
+          },
+          {
+            lane: "BLUFF",
+            label: "bluff raise",
+            action: "RAISE",
+            handClasses: ["QJs"],
+            features: ["draw with blockers"],
+          },
+          {
+            lane: "CHECK",
+            label: "fold lane",
+            action: "FOLD",
+            handClasses: ["72o"],
+            features: ["air"],
+          },
+        ],
+        explanation: "Production fixture calls when facing a turn bet in this low-brick BTN vs BB spot.",
+      },
     ],
   };
 }
@@ -143,6 +183,17 @@ describe("turnProductionStrategyResolver", () => {
 
     expect(resolver({ ...input, priorFlopAction: "CHECK" })).toBeNull();
     expect(resolver({ ...input, turnCardClass: "OVER_CARD" })).toBeNull();
+  });
+
+  it("matchuje turn facing-bet jen pri explicitnim action nodu", () => {
+    const resolver = createTurnProductionStrategyResolver(productionPack());
+
+    expect(resolver(input)?.action).toBe("BET_SMALL");
+    expect(resolver({ ...input, actionNode: "TURN_FACING_BET" })?.action).toBe("CALL");
+    expect(resolver({ ...input, actionNode: "TURN_FACING_BET" })?.source).toMatchObject({
+      kind: "STRATEGY_PACK",
+      ruleId: "turn-production-btn-bb-low-brick-facing-bet-call",
+    });
   });
 
   it("production fallback registry preferuje turn production pack pred public heuristic packem", () => {

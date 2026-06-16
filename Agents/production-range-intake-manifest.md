@@ -126,13 +126,13 @@ Required for each production StrategyPack:
 
 Each rule must include:
 
-- `actionNode`: `TURN_BARREL`
+- `actionNode`: `TURN_BARREL` or `TURN_FACING_BET`
 - `potType`
 - `positionPattern`
 - `priorFlopAction`
 - `turnCardClasses`
 - `sprMin` / `sprMax`
-- Available `actions`
+- Available `actions`: `CHECK/BET_SMALL/BET_BIG` for `TURN_BARREL`, `FOLD/CALL/RAISE` for `TURN_FACING_BET`
 - `recommendedAction`
 - `rangeBuckets` with optional `actionMix` metadata; exact frequencies require owned export or explicit written permission
 - Explanation text
@@ -143,7 +143,7 @@ Production readiness requires coverage of:
 - Position patterns: the 50 granular MTT postflop patterns reported by `npm run mtt:postflop-positions`, e.g. `SRP_UTG_VS_BB`, `SRP_BTN_VS_BB`, `SRP_SB_VS_BB`, `SRP_HJ_VS_CO`, `3BP_BTN_VS_UTG`
 - Prior flop actions: `CHECK`, `BET_SMALL`, `BET_BIG`
 - Turn card classes: `BLANK`, `LOW_BRICK`, `OVER_CARD`, `BROADWAY`, `BOARD_PAIRING`, `FLUSH_COMPLETING`, `STRAIGHT_COMPLETING`, `DYNAMIC`
-- Action nodes: `TURN_BARREL`
+- Action nodes: `TURN_BARREL`, `TURN_FACING_BET`
 - Range lanes: `VALUE`, `BLUFF`, `CHECK`
 
 Validator:

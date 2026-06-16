@@ -116,7 +116,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:postflop-positions");
     expect(operatorGuide).toContain("freezes supported and unsupported heads-up position pairs");
     expect(operatorGuide).toContain("npm run mtt:postflop-coverage");
-    expect(operatorGuide).toContain("expands the 48 profile targets into 6,400 concrete street/pot/action/position targets");
+    expect(operatorGuide).toContain("expands the 48 profile targets into 8,000 concrete street/pot/action/position targets");
     expect(operatorGuide).toContain("npm run mtt:intake-plan");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");
@@ -149,7 +149,7 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:postflop-positions");
     expect(mttCoverageAudit).toContain("freezes all supported and unsupported heads-up aggressor/caller pairs");
     expect(mttCoverageAudit).toContain("npm run mtt:postflop-coverage");
-    expect(mttCoverageAudit).toContain("expands the 48 profile targets into 6,400 concrete street/pot/action/position targets");
+    expect(mttCoverageAudit).toContain("expands the 48 profile targets into 8,000 concrete street/pot/action/position targets");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");

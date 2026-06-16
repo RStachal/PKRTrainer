@@ -73,6 +73,7 @@ export function matchingTurnProductionRules(
   return pack.rules.filter((rule) => (
     rule.potType === input.potType &&
     rule.positionPattern === input.positionPattern &&
+    actionNodeMatchesInput(rule, input) &&
     rule.priorFlopAction === priorFlopAction &&
     rule.turnCardClasses.includes(turnCardClass)
   ));
@@ -111,11 +112,20 @@ function ruleMatchesInput(
     input.turnCardClass !== undefined &&
     rule.potType === input.potType &&
     rule.positionPattern === input.positionPattern &&
+    actionNodeMatchesInput(rule, input) &&
     rule.priorFlopAction === input.priorFlopAction &&
     rule.turnCardClasses.includes(input.turnCardClass) &&
     spr >= rule.sprMin &&
     spr <= rule.sprMax
   );
+}
+
+function actionNodeMatchesInput(
+  rule: TurnProductionStrategyRule,
+  input: PostflopStrategyInput,
+): boolean {
+  if (input.actionNode !== undefined) return rule.actionNode === input.actionNode;
+  return rule.actionNode !== "TURN_FACING_BET";
 }
 
 function ruleScore(rule: TurnProductionStrategyRule, input: PostflopStrategyInput): number {

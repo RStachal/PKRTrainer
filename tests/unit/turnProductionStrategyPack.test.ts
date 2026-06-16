@@ -8,6 +8,7 @@ import type {
 import type { PostflopStrategySourceEvidence } from "../../src/data/ranges/postflopStrategyPack";
 import {
   TURN_PRODUCTION_REQUIRED_CARD_CLASSES,
+  TURN_PRODUCTION_REQUIRED_ACTION_NODES,
   TURN_PRODUCTION_REQUIRED_POSITION_PATTERNS,
   TURN_PRODUCTION_REQUIRED_POT_TYPES,
   TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS,
@@ -94,6 +95,54 @@ function productionRule(
   };
 }
 
+function facingBetProductionRule(
+  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
+  positionPattern: PostflopPositionPattern,
+  priorFlopAction: PostflopAction,
+  turnCardClass: TurnProductionTurnCardClass,
+): TurnProductionStrategyRule {
+  return {
+    id: `turn-facing-${potType.toLowerCase()}-${positionPattern.toLowerCase()}-${priorFlopAction.toLowerCase()}-${turnCardClass.toLowerCase()}`,
+    actionNode: "TURN_FACING_BET",
+    potType,
+    positionPattern,
+    priorFlopAction,
+    turnCardClasses: [turnCardClass],
+    sprMin: potType === "SINGLE_RAISED" ? 1.5 : 0.8,
+    sprMax: potType === "SINGLE_RAISED" ? 10 : 6,
+    actions: ["FOLD", "CALL", "RAISE"],
+    recommendedAction: "CALL",
+    rangeBuckets: [
+      {
+        lane: "VALUE",
+        label: "value continue",
+        action: "RAISE",
+        handClasses: ["AA", "AKs"],
+        features: ["two pair+", "strong draw"],
+        actionMix: [
+          { action: "RAISE", frequencyPct: 35, visibility: "EXACT" },
+          { action: "CALL", frequencyPct: 65, visibility: "EXACT" },
+        ],
+      },
+      {
+        lane: "BLUFF",
+        label: "bluff raise",
+        action: "RAISE",
+        handClasses: ["QJs", "JTs"],
+        features: ["blocker", "combo draw"],
+      },
+      {
+        lane: "CHECK",
+        label: "fold lane",
+        action: "FOLD",
+        handClasses: ["72o", "83o"],
+        features: ["air", "dominated give-up"],
+      },
+    ],
+    explanation: "Production turn facing-bet fixture with prior flop action and turn card class.",
+  };
+}
+
 function productionPack(): TurnProductionStrategyPack {
   const rules: TurnProductionStrategyRule[] = [];
   for (const potType of TURN_PRODUCTION_REQUIRED_POT_TYPES) {
@@ -101,6 +150,7 @@ function productionPack(): TurnProductionStrategyPack {
       for (const priorFlopAction of TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS) {
         for (const turnCardClass of TURN_PRODUCTION_REQUIRED_CARD_CLASSES) {
           rules.push(productionRule(potType, positionPattern, priorFlopAction, turnCardClass));
+          rules.push(facingBetProductionRule(potType, positionPattern, priorFlopAction, turnCardClass));
         }
       }
     }
@@ -141,6 +191,7 @@ describe("turnProductionStrategyPack", () => {
     expect(coverage.positionPatterns).toEqual(TURN_PRODUCTION_REQUIRED_POSITION_PATTERNS);
     expect(coverage.priorFlopActions).toEqual(TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS);
     expect(coverage.turnCardClasses).toEqual(TURN_PRODUCTION_REQUIRED_CARD_CLASSES);
+    expect(coverage.actionNodes).toEqual(TURN_PRODUCTION_REQUIRED_ACTION_NODES);
     expect(coverage.rangeLanes).toEqual(TURN_PRODUCTION_REQUIRED_RANGE_LANES);
     expect(coverage.missingPotTypes).toEqual([]);
     expect(coverage.missingPositionPatterns).toEqual([]);
@@ -264,6 +315,42 @@ describe("turnProductionStrategyPack", () => {
     );
     expect(errors).toContain(
       "turn-single_raised-btn_vs_bb-bet_small-blank: range bucket value actionMix uses action RAISE outside TURN_BARREL.",
+    );
+  });
+
+  it("povoli facing-bet akce jen v turn facing-bet production nodu", () => {
+    const base = facingBetProductionRule("SINGLE_RAISED", "BTN_VS_BB", "BET_SMALL", "BLANK");
+    const validErrors = validateTurnProductionRule(base, { exactFrequencyAllowed: true });
+    const invalid = {
+      ...base,
+      actions: ["FOLD", "CALL", "RAISE", "BET_SMALL"],
+      recommendedAction: "BET_SMALL",
+      rangeBuckets: [
+        {
+          ...base.rangeBuckets[0],
+          action: "BET_SMALL",
+          actionMix: [
+            { action: "BET_SMALL", frequencyPct: 100, visibility: "EXACT" },
+          ],
+        },
+        ...base.rangeBuckets.slice(1),
+      ],
+    } satisfies TurnProductionStrategyRule;
+
+    const errors = validateTurnProductionRule(invalid, { exactFrequencyAllowed: true });
+
+    expect(validErrors).toEqual([]);
+    expect(errors).toContain(
+      "turn-facing-single_raised-btn_vs_bb-bet_small-blank: action BET_SMALL is not valid for TURN_FACING_BET.",
+    );
+    expect(errors).toContain(
+      "turn-facing-single_raised-btn_vs_bb-bet_small-blank: recommendedAction BET_SMALL is not valid for TURN_FACING_BET.",
+    );
+    expect(errors).toContain(
+      "turn-facing-single_raised-btn_vs_bb-bet_small-blank: range bucket value continue action BET_SMALL is not valid for TURN_FACING_BET.",
+    );
+    expect(errors).toContain(
+      "turn-facing-single_raised-btn_vs_bb-bet_small-blank: range bucket value continue actionMix uses action BET_SMALL outside TURN_FACING_BET.",
     );
   });
 
