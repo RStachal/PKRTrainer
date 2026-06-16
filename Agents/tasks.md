@@ -1581,9 +1581,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Soucasny line replay postupuje deterministicky pres doporucenou akci spotu.
     - Plna simulace musi umet posunout pot, stack, prior action a dalsi street podle realne zvolene akce hrace a podle modelovane reakce soupere, vcetne facing-bet vetvi.
     - Hotovo: `generatePostflopLine` prijima `chosenActionsByStreet`, uklada zdroj akce (`RECOMMENDED`/`CHOSEN`), prepina dalsi street na facing-bet node po callu, ukonci line po foldu/all-in a UI line mode po odpovedi prepocita budouci streety podle realne volby hrace.
-  - [ ] 134.9 Pridat street transition kontrakt FLOP->TURN->RIVER
+  - [x] 134.9 Pridat street transition kontrakt FLOP->TURN->RIVER
     - Definovat, jak se prenasi board, pot, effective stack, aggressor, caller, in-position role, priorFlopAction, priorTurnAction a action history.
     - Testy musi overit, ze SRP a 3bet poty nepreskakuji do nespravneho action nodu po check/call/raise/fold vetvi.
+    - Hotovo: `transitionPostflopLineState` formalizuje dalsi street, action node, pot, stack, prior action a terminal reason; testy overuji `CHECK -> TURN_BARREL`, `CALL -> *_FACING_BET`, `TURN CALL -> RIVER_FACING_BET` a `FOLD` terminal bez dalsi streety.
   - [ ] 134.10 Importovat legalni P3 FLOP production data pro vsechny varianty
     - Postupovat pres `npm run mtt:intake-plan -- --priority=P3_FLOP_PRODUCTION --all`.
     - Pro kazdy ready slot spustit `validate:range-import`, `build:range-module --dry-run`, potom vygenerovat production modul a registrovat pack v resolver chainu.

@@ -39,6 +39,24 @@ export interface PostflopLine {
   terminalReason?: PostflopLineTerminalReason;
 }
 
+export interface PostflopLineTransitionInput {
+  street: PostflopStreet;
+  potType: PostflopSpot["potType"];
+  action: PostflopLineAction;
+  priorFlopAction?: PostflopAction;
+  priorTurnAction?: PostflopAction;
+}
+
+export interface PostflopLineTransition {
+  nextStreet?: PostflopStreet;
+  nextActionNode?: PostflopActionNode;
+  potBB: number;
+  effectiveStackBB: number;
+  priorFlopAction?: PostflopAction;
+  priorTurnAction?: PostflopAction;
+  terminalReason?: PostflopLineTerminalReason;
+}
+
 export type PostflopLineConfig = Omit<
   PostflopConfig,
   "street" | "board" | "potBB" | "effectiveStackBB" | "priorFlopAction" | "priorTurnAction"
@@ -66,11 +84,11 @@ export function generatePostflopLine(config: PostflopLineConfig): PostflopLine {
   let effectiveStackBB = config.effectiveStackBB ?? riverSeedSpot.effectiveStackBB;
   let priorFlopAction: PostflopAction | undefined;
   let priorTurnAction: PostflopAction | undefined;
-  let previousAction: PostflopAction | undefined;
+  let nextActionNode: PostflopActionNode | undefined = config.actionNode;
   let terminalReason: PostflopLineTerminalReason | undefined;
 
   for (const street of LINE_STREETS) {
-    const actionNode = actionNodeForLineStreet(street, riverSeedSpot.potType, previousAction, config.actionNode);
+    const actionNode = street === "FLOP" ? config.actionNode : nextActionNode;
     const spot = generatePostflopSpot({
       ...config,
       seed: config.seed,
@@ -91,12 +109,19 @@ export function generatePostflopLine(config: PostflopLineConfig): PostflopLine {
 
     const action = lineActionFromSpot(spot, actionForStreet(spot, config.chosenActionsByStreet));
     actionHistory.push(action);
-    potBB = action.potBBAfter;
-    effectiveStackBB = action.effectiveStackBBAfter;
-    previousAction = action.action;
-    if (street === "FLOP") priorFlopAction = action.action;
-    if (street === "TURN") priorTurnAction = action.action;
-    terminalReason = terminalReasonForAction(action);
+    const transition = transitionPostflopLineState({
+      street,
+      potType: spot.potType,
+      action,
+      priorFlopAction,
+      priorTurnAction,
+    });
+    potBB = transition.potBB;
+    effectiveStackBB = transition.effectiveStackBB;
+    priorFlopAction = transition.priorFlopAction;
+    priorTurnAction = transition.priorTurnAction;
+    nextActionNode = transition.nextActionNode;
+    terminalReason = transition.terminalReason;
     if (terminalReason !== undefined) break;
   }
 
@@ -106,6 +131,31 @@ export function generatePostflopLine(config: PostflopLineConfig): PostflopLine {
     board,
     streets,
     actionHistory,
+    terminalReason,
+  };
+}
+
+export function transitionPostflopLineState(
+  input: PostflopLineTransitionInput,
+): PostflopLineTransition {
+  const terminalReason = terminalReasonForAction(input.action);
+  const nextStreet = terminalReason === undefined ? nextStreetAfter(input.street) : undefined;
+  const priorFlopAction = input.street === "FLOP"
+    ? input.action.action
+    : input.priorFlopAction;
+  const priorTurnAction = input.street === "TURN"
+    ? input.action.action
+    : input.priorTurnAction;
+
+  return {
+    nextStreet,
+    nextActionNode: nextStreet
+      ? actionNodeForLineStreet(nextStreet, input.potType, input.action.action, undefined)
+      : undefined,
+    potBB: input.action.potBBAfter,
+    effectiveStackBB: input.action.effectiveStackBBAfter,
+    priorFlopAction,
+    priorTurnAction,
     terminalReason,
   };
 }
@@ -153,6 +203,17 @@ function actionNodeForLineStreet(
   if (street === "TURN") return "TURN_BARREL";
   if (street === "RIVER") return "RIVER_PRESSURE";
   return potType === "THREE_BET_POT" ? "THREE_BET_POT_CBET" : "SINGLE_RAISED_POT_CBET";
+}
+
+function nextStreetAfter(street: PostflopStreet): PostflopStreet | undefined {
+  switch (street) {
+    case "FLOP":
+      return "TURN";
+    case "TURN":
+      return "RIVER";
+    case "RIVER":
+      return undefined;
+  }
 }
 
 function terminalReasonForAction(action: PostflopLineAction): PostflopLineTerminalReason | undefined {

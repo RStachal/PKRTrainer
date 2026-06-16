@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { generatePostflopLine } from "../../src/core/postflopLineSimulator";
+import {
+  generatePostflopLine,
+  transitionPostflopLineState,
+} from "../../src/core/postflopLineSimulator";
 import type { PostflopStrategyResolver } from "../../src/core/postflopGenerator";
 import type { Card } from "../../src/core/types";
 
@@ -113,5 +116,80 @@ describe("postflopLineSimulator", () => {
       }),
     ]);
     expect(line.terminalReason).toBe("FOLD");
+  });
+
+  it("definuje street transition kontrakt pro pressure a facing-bet vetve", () => {
+    const checkLine = generatePostflopLine({
+      seed: 34,
+      heroCards,
+      board,
+      potBB: 6,
+      effectiveStackBB: 40,
+      chosenActionsByStreet: { FLOP: "CHECK" },
+    });
+    const checkTransition = transitionPostflopLineState({
+      street: "FLOP",
+      potType: checkLine.streets[0].spot.potType,
+      action: checkLine.actionHistory[0],
+    });
+
+    expect(checkTransition).toMatchObject({
+      nextStreet: "TURN",
+      nextActionNode: "TURN_BARREL",
+      priorFlopAction: "CHECK",
+      potBB: 6,
+      effectiveStackBB: 40,
+    });
+
+    const callLine = generatePostflopLine({
+      seed: 35,
+      heroCards,
+      board,
+      potBB: 6,
+      effectiveStackBB: 40,
+      actionNode: "FLOP_FACING_BET",
+      chosenActionsByStreet: { FLOP: "CALL", TURN: "CALL" },
+    });
+    const flopCallTransition = transitionPostflopLineState({
+      street: "FLOP",
+      potType: callLine.streets[0].spot.potType,
+      action: callLine.actionHistory[0],
+    });
+    const turnCallTransition = transitionPostflopLineState({
+      street: "TURN",
+      potType: callLine.streets[1].spot.potType,
+      action: callLine.actionHistory[1],
+      priorFlopAction: flopCallTransition.priorFlopAction,
+    });
+
+    expect(flopCallTransition).toMatchObject({
+      nextStreet: "TURN",
+      nextActionNode: "TURN_FACING_BET",
+      priorFlopAction: "CALL",
+    });
+    expect(turnCallTransition).toMatchObject({
+      nextStreet: "RIVER",
+      nextActionNode: "RIVER_FACING_BET",
+      priorFlopAction: "CALL",
+      priorTurnAction: "CALL",
+    });
+
+    const foldTransition = transitionPostflopLineState({
+      street: "TURN",
+      potType: callLine.streets[1].spot.potType,
+      action: {
+        ...callLine.actionHistory[1],
+        action: "FOLD",
+        terminal: true,
+      },
+      priorFlopAction: "CALL",
+    });
+
+    expect(foldTransition).toMatchObject({
+      nextStreet: undefined,
+      nextActionNode: undefined,
+      terminalReason: "FOLD",
+      priorTurnAction: "FOLD",
+    });
   });
 });
