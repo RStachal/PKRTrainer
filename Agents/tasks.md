@@ -1702,9 +1702,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Musi podporovat `--priority`, `--format`, `--street`, `--json`, `--dry-run` a nesmi prepisovat existujici production modul bez `--force`.
     - Cilem je zrychlit import desitek legalnich slotu bez rucni chyby v command line.
     - Hotovo: `npm run mtt:promote-ready` planuje ready sloty, validuje build reporty, vypisuje output moduly, validate/build/write prikazy, podporuje `--priority`, MTT filtry, `--json`, `--dry-run`, `--write`, `--force` a zapis povoli jen s `--confirm=WRITE_READY_MTT_MODULES`.
-  - [ ] 135.12 Production registry integrity gate
+  - [x] 135.12 Production registry integrity gate
     - Pridat test/gate, ktery porovna legal import slots, vygenerovane production module ids, permission packIds a runtime registry.
     - Selhat pri orphan production packu, duplicitnim packId, registry packu mimo legal slot, mismatch table/speed/EV/ante/street nebo packu bez permission evidence.
+    - Hotovo: `npm run mtt:registry-integrity` kontroluje legal import sloty, runtime registry, vygenerovane `*-production-*` moduly, permission manifest packIds, duplicity a orphan/nelegalni production packy; soucasny legacy baseline zustava validni.
   - [ ] 135.13 User-facing MTT profile coverage QA
     - Overit, ze UI profile selector/start flow umi vsechny MTT kombinace a ze labely jsou srozumitelne: 9-max/6-max, regular/turbo, chipEV/$EV, ante ON/OFF, preflop/flop/turn/river.
     - Non-production stav muze byt viditelny jen source-free a nesmi zobrazit pack id, provider, URL ani raw internal enumy.

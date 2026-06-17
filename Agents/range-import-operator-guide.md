@@ -200,6 +200,8 @@ npm run mtt:promote-ready
 npm run mtt:promote-ready -- --priority=P1_PREFLOP_CHIP_EV --dry-run
 npm run mtt:promote-ready -- --json
 npm run mtt:promote-ready -- --write --confirm=WRITE_READY_MTT_MODULES
+npm run mtt:registry-integrity
+npm run mtt:registry-integrity -- --json
 ```
 
 To narrow the MTT matrix to the next import batch:
@@ -235,3 +237,6 @@ The prioritized `mtt:intake-plan` output also prints the per-slot `validate:rang
 After ready files validate cleanly, `mtt:promote-ready` can batch-plan module writes. It defaults to dry-run, refuses
 real writes without `--write --confirm=WRITE_READY_MTT_MODULES`, and refuses to overwrite existing output modules
 unless `--force` is present.
+After module generation and resolver registration, `mtt:registry-integrity` checks duplicate pack ids, generated
+production modules outside legal slots, generated modules not registered in runtime resolvers, and permission manifests
+whose `packId` is not a legal MTT slot.

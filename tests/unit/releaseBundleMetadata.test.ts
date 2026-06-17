@@ -86,6 +86,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:acceptance"]).toBe("vite-node scripts/checkMttAcceptance.mts");
     expect(pkg.scripts["mtt:next-action"]).toBe("vite-node scripts/reportNextMttAction.mts");
     expect(pkg.scripts["mtt:promote-ready"]).toBe("vite-node scripts/promoteReadyMttIntake.mts");
+    expect(pkg.scripts["mtt:registry-integrity"]).toBe("vite-node scripts/checkMttProductionRegistryIntegrity.mts");
     expect(pkg.scripts["mtt:validate-ready-intake"]).toBe("vite-node scripts/validateMttReadyIntake.mts");
     expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
     expect(pkg.scripts["range:intake:guard"]).toBe("vite-node scripts/checkRangeIntakeWorkspace.mts");
@@ -149,6 +150,8 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:promote-ready");
     expect(operatorGuide).toContain("WRITE_READY_MTT_MODULES");
     expect(operatorGuide).toContain("refuses to overwrite existing output modules");
+    expect(operatorGuide).toContain("npm run mtt:registry-integrity");
+    expect(operatorGuide).toContain("generated modules not registered in runtime resolvers");
     expect(operatorGuide).toContain("Permission manifests must not contain placeholder text");
     expect(operatorGuide).toContain("Normalized production imports must not contain placeholder text");
     expect(operatorGuide).toContain("build:range-module --dry-run");
@@ -232,6 +235,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --ready-only");
     expect(releaseTemplate).toContain("npm run mtt:validate-ready-intake");
     expect(releaseTemplate).toContain("npm run mtt:promote-ready");
+    expect(releaseTemplate).toContain("npm run mtt:registry-integrity");
     expect(releaseTemplate).toContain("npm run range:intake:guard");
     expect(releaseTemplate).toContain("npm run range:intake -- --ready-only");
     expect(releaseTemplate).toContain("MTT intake priority plan");
