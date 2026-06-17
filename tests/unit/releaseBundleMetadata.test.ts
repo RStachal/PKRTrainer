@@ -84,6 +84,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:postflop-release"]).toBe("vite-node scripts/checkMttPostflopReleaseGate.mts");
     expect(pkg.scripts["mtt:release-gates"]).toBe("vite-node scripts/checkMttReleaseGates.mts");
     expect(pkg.scripts["mtt:acceptance"]).toBe("vite-node scripts/checkMttAcceptance.mts");
+    expect(pkg.scripts["mtt:next-action"]).toBe("vite-node scripts/reportNextMttAction.mts");
     expect(pkg.scripts["mtt:validate-ready-intake"]).toBe("vite-node scripts/validateMttReadyIntake.mts");
     expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
     expect(pkg.scripts["range:intake:guard"]).toBe("vite-node scripts/checkRangeIntakeWorkspace.mts");
@@ -119,6 +120,9 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:blockers");
     expect(operatorGuide).toContain("npm run mtt:release-gates");
     expect(operatorGuide).toContain("npm run mtt:release-gates -- --json");
+    expect(operatorGuide).toContain("npm run mtt:next-action");
+    expect(operatorGuide).toContain("npm run mtt:next-action -- --json");
+    expect(operatorGuide).toContain("next concrete MTT import step");
     expect(operatorGuide).toContain("npm run mtt:acceptance");
     expect(operatorGuide).toContain("npm run mtt:acceptance -- --json");
     expect(operatorGuide).toContain("final MTT-only acceptance gate");
@@ -211,6 +215,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("Range data changes");
     expect(releaseTemplate).toContain("Statistics changes");
     expect(releaseTemplate).toContain("npm run mtt:completion -- --summary");
+    expect(releaseTemplate).toContain("npm run mtt:next-action");
     expect(releaseTemplate).toContain("npm run mtt:acceptance");
     expect(releaseTemplate).toContain("npm run mtt:acceptance -- --json");
     expect(releaseTemplate).toContain("npm run mtt:release-gates");

@@ -34,6 +34,7 @@
 - `npm run typecheck`:
 - `npm test`:
 - `npm run mtt:completion -- --summary`:
+- `npm run mtt:next-action`:
 - `npm run mtt:acceptance`:
 - `npm run mtt:acceptance -- --json`:
 - `npm run mtt:release-gates`:

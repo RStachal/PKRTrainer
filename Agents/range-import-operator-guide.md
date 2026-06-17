@@ -122,6 +122,8 @@ Before releasing:
 
 ```powershell
 npm run release:check
+npm run mtt:next-action
+npm run mtt:next-action -- --json
 npm run mtt:acceptance
 npm run mtt:acceptance -- --json
 npm run mtt:release-gates
@@ -130,6 +132,8 @@ npm run mtt:intake-plan -- --summary
 ```
 
 `release:check` runs typecheck, tests, MTT release gates, range verification and production build.
+`mtt:next-action` prints the next concrete MTT import step: first a ready slot, otherwise the first waiting slot by
+P0-P5 priority, including missing files and validate/build dry-run commands.
 `mtt:acceptance` is the final MTT-only acceptance gate. It is green only when the full MTT app matches
 `Agents/mtt-done-checklist.md`, including source-free UI checks and ready-intake validation.
 `mtt:release-gates` runs every MTT gate and intake priority summary before returning a failing exit code, so one failing
