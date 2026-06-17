@@ -90,7 +90,7 @@ describe("release bundle metadata", () => {
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(pkg.scripts["release:check"])
-      .toBe("npm run typecheck && npm test && npm run mtt:completion && npm run mtt:blockers -- --summary && npm run mtt:postflop-release -- --summary && npm run range:intake:guard && npm run range:intake -- --ready-only && npm run mtt:validate-ready-intake && npm run verify:ranges && npm run build && npm run bundle:budget");
+      .toBe("npm run typecheck && npm test && npm run mtt:completion -- --summary && npm run mtt:blockers -- --summary && npm run mtt:postflop-release -- --summary && npm run range:intake:guard && npm run range:intake -- --ready-only && npm run mtt:validate-ready-intake && npm run verify:ranges && npm run build && npm run bundle:budget");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
 
@@ -111,6 +111,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run validate:range-import");
     expect(operatorGuide).toContain("npm run mtt:slots");
     expect(operatorGuide).toContain("npm run mtt:blockers");
+    expect(operatorGuide).toContain("npm run mtt:completion -- --summary");
     expect(operatorGuide).toContain("priority counts matching the intake plan buckets");
     expect(operatorGuide).toContain("npm run mtt:postflop-matrix");
     expect(operatorGuide).toContain("freezes the 48 FLOP/TURN/RIVER production targets");

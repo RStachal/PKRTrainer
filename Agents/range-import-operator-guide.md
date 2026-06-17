@@ -130,6 +130,7 @@ For the full MTT matrix with blocker details and import slot paths:
 
 ```powershell
 npm run mtt:completion -- --details
+npm run mtt:completion -- --summary
 npm run mtt:completion -- --details --preview
 ```
 

@@ -276,6 +276,7 @@ export function buildMttCompletionReleaseGateReport(
 
 export function renderMttCompletionReleaseGateReport(
   report: MttCompletionReleaseGateReport = buildMttCompletionReleaseGateReport(),
+  summaryOnly = false,
 ): string {
   const lines = [
     "MTT completion release gate",
@@ -286,6 +287,8 @@ export function renderMttCompletionReleaseGateReport(
     `preview rows: ${report.previewRows}`,
     `blocked rows: ${report.blockedRows}`,
   ];
+
+  if (summaryOnly) return lines.join("\n");
 
   if (report.errors.length > 0) {
     lines.push("errors:");

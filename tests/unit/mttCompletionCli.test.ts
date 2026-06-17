@@ -13,6 +13,18 @@ describe("mtt:completion CLI", () => {
     expect(result.stdout).not.toContain("MTT completion readiness");
   });
 
+  it("umi vypsat strucny production gate pro release:check", () => {
+    const result = runCompletion("--summary");
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("MTT completion release gate");
+    expect(result.stdout).toContain("mode: PRODUCTION");
+    expect(result.stdout).toContain("valid: false");
+    expect(result.stdout).toContain("total rows: 64");
+    expect(result.stdout).not.toContain("errors:");
+    expect(result.stdout).not.toContain("FULL_RING_9|REGULAR|CHIP_EV|FLOP|ON");
+  });
+
   it("umi filtrovat detailni readiness podle MTT dimenzi", () => {
     const result = runCompletion(
       "--details",

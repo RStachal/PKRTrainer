@@ -12,6 +12,7 @@ interface CliArgs {
   details: boolean;
   json: boolean;
   mode: "PRODUCTION" | "PREVIEW";
+  summary: boolean;
   filters: MttCompletionReadinessFilters;
 }
 
@@ -19,6 +20,7 @@ function usage(): string {
   return [
     "Usage:",
     "  npm run mtt:completion",
+    "  npm run mtt:completion -- --summary",
     "  npm run mtt:completion -- --preview",
     "  npm run mtt:completion -- --details",
     "  npm run mtt:completion -- --details --format=SIX_MAX --speed=TURBO --ev=DOLAR_EV --street=RIVER --ante=OFF --status=candidate",
@@ -28,6 +30,7 @@ function usage(): string {
     "  --details",
     "  --json",
     "  --preview",
+    "  --summary",
     "",
     "Filters:",
     "  --format=FULL_RING_9|SIX_MAX",
@@ -44,6 +47,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let details = false;
   let json = false;
   let mode: CliArgs["mode"] = "PRODUCTION";
+  let summary = false;
 
   for (const item of argv) {
     if (item === "--details") {
@@ -58,6 +62,10 @@ function parseArgs(argv: readonly string[]): CliArgs {
       mode = "PREVIEW";
       continue;
     }
+    if (item === "--summary") {
+      summary = true;
+      continue;
+    }
     if (item === "--help" || item === "-h") {
       throw new Error(usage());
     }
@@ -65,7 +73,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { details, json, mode, filters };
+  return { details, json, mode, summary, filters };
 }
 
 try {
@@ -83,7 +91,7 @@ try {
   } else {
     console.log(args.details
       ? `${renderMttCompletionReleaseGateReport(report)}\n\n${renderMttCompletionReadinessReport(readiness)}`
-      : renderMttCompletionReleaseGateReport(report));
+      : renderMttCompletionReleaseGateReport(report, args.summary));
   }
   process.exitCode = report.valid ? 0 : 1;
 } catch (error) {
