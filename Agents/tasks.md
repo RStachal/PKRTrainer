@@ -1727,9 +1727,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Rozsirit/overit UI source-free release gate proti vsem MTT povrchum: profile selector, preflop question/result, range modal, postflop single spot, hand-line, HH review, dashboard, permission audit.
     - Zakazat URL, provider citace, pack id, rule id, raw internal enumy a lokalni raw path ve visible UI.
     - Hotovo: centralni `uiNoSourceCitation` release gate pokryva profile selector, range modal, postflop single spot, postflop hand-line, HH import/review, dashboard a permission audit; test injectuje source-heavy resolver s URL/pack/rule metadaty a hlida, ze visible UI zustava source-free.
-  - [ ] 135.18 Mobile/performance MTT release QA
+  - [x] 135.18 Mobile/performance MTT release QA
     - Po produkcnich packach spustit mobile viewport smoke, render profile, bundle budget a build.
     - Overit, ze lazy loading production packu nezpomali first render a ze Flopzilla/preflop 13x13 matice zustava pouzitelna na 360/390/412px sirce.
+    - Hotovo: `mobileWebViewSmoke`, `profile:render`, `build` a post-build `bundle:budget` prosly; bundle `main-DZKMtsFk.js` je 320.52 KiB raw / 84.46 KiB gzip pod limitem. Render profile eviduje neblokujici WARN u preflop 13x13 matrix avg 44.91 ms proti 35 ms warn threshold, postflop Flopzilla avg 28.13 ms OK.
   - [ ] 135.19 Final MTT release candidate checklist
     - Spustit: `npm run typecheck`, `npm test`, `npm run mtt:acceptance`, `npm run mtt:release-gates`, `npm run verify:ranges`, `npm run build`, `npm run bundle:budget`, `npm run release:check`.
     - Vystup ulozit do release notes: pocty production rows, 0 blockers, 0 waiting slots, bundle budget, known limitations.
