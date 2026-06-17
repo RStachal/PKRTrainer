@@ -82,6 +82,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:postflop-coverage"]).toBe("vite-node scripts/checkMttPostflopProductionCoverage.mts");
     expect(pkg.scripts["mtt:postflop-positions"]).toBe("vite-node scripts/checkMttPostflopPositions.mts");
     expect(pkg.scripts["mtt:postflop-release"]).toBe("vite-node scripts/checkMttPostflopReleaseGate.mts");
+    expect(pkg.scripts["mtt:release-gates"]).toBe("vite-node scripts/checkMttReleaseGates.mts");
     expect(pkg.scripts["mtt:validate-ready-intake"]).toBe("vite-node scripts/validateMttReadyIntake.mts");
     expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
     expect(pkg.scripts["range:intake:guard"]).toBe("vite-node scripts/checkRangeIntakeWorkspace.mts");
@@ -90,7 +91,7 @@ describe("release bundle metadata", () => {
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(pkg.scripts["release:check"])
-      .toBe("npm run typecheck && npm test && npm run mtt:completion -- --summary && npm run mtt:blockers -- --summary && npm run mtt:postflop-release -- --summary && npm run range:intake:guard && npm run range:intake -- --ready-only && npm run mtt:validate-ready-intake && npm run verify:ranges && npm run build && npm run bundle:budget");
+      .toBe("npm run typecheck && npm test && npm run mtt:release-gates && npm run verify:ranges && npm run build && npm run bundle:budget");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
 
@@ -111,6 +112,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run validate:range-import");
     expect(operatorGuide).toContain("npm run mtt:slots");
     expect(operatorGuide).toContain("npm run mtt:blockers");
+    expect(operatorGuide).toContain("npm run mtt:release-gates");
     expect(operatorGuide).toContain("npm run mtt:completion -- --summary");
     expect(operatorGuide).toContain("priority counts matching the intake plan buckets");
     expect(operatorGuide).toContain("npm run mtt:postflop-matrix");
@@ -143,6 +145,8 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("Completion matrix");
     expect(mttCoverageAudit).toContain("npm run mtt:completion -- --summary");
     expect(mttCoverageAudit).toContain("npm run mtt:completion -- --preview --json");
+    expect(mttCoverageAudit).toContain("npm run mtt:release-gates");
+    expect(mttCoverageAudit).toContain("prints completion, blocker, postflop release, intake workspace and ready-validation summaries");
     expect(mttCoverageAudit).toContain("defaults to a production gate");
     expect(mttCoverageAudit).toContain("total MTT rows: 64");
     expect(mttCoverageAudit).toContain("production-ready rows: 2");
@@ -174,6 +178,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("Range data changes");
     expect(releaseTemplate).toContain("Statistics changes");
     expect(releaseTemplate).toContain("npm run mtt:completion -- --summary");
+    expect(releaseTemplate).toContain("npm run mtt:release-gates");
     expect(releaseTemplate).toContain("npm run mtt:blockers");
     expect(releaseTemplate).toContain("npm run mtt:postflop-release -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --ready-only");

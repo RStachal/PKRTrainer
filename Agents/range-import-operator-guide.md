@@ -122,9 +122,12 @@ Before releasing:
 
 ```powershell
 npm run release:check
+npm run mtt:release-gates
 ```
 
-This runs typecheck, tests, range verification and production build.
+`release:check` runs typecheck, tests, MTT release gates, range verification and production build.
+`mtt:release-gates` runs every MTT gate summary before returning a failing exit code, so one failing gate does not hide
+the remaining blocker summaries.
 
 For the full MTT matrix with blocker details and import slot paths:
 
@@ -132,6 +135,7 @@ For the full MTT matrix with blocker details and import slot paths:
 npm run mtt:completion -- --details
 npm run mtt:completion -- --summary
 npm run mtt:completion -- --details --preview
+npm run mtt:release-gates
 ```
 
 For a shorter blocker-only queue with local intake file status:

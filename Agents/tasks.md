@@ -1544,6 +1544,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.14 Propagovat intake priority do blocker reportu
     - Kratky blocker summary ma umet rict nejen kolik veci chybi, ale i do ktere P0-P5 import fronty patri.
     - Hotovo: `mtt:blockers` text i JSON vraci `byPriority` pocty a detailni radky nesou stejny priority bucket jako `mtt:intake-plan`.
+  - [x] 133.15 Agregovat MTT release gate souhrny
+    - `release:check` nema po prvnim cervenem MTT gate schovat dalsi blocker souhrny.
+    - Hotovo: `npm run mtt:release-gates` spusti completion, blocker, postflop release, range intake guard, ready-only intake a ready validator souhrny pred vracenim finalniho exit code; `release:check` pouziva tento agregator.
 
 - [ ] 134. MTT postflop full production roadmap FLOP-TURN-RIVER
   - Cil: plne funkcni MTT postflop simulace od flopu po river pro FULL_RING_9 i SIX_MAX, REGULAR i TURBO, CHIP_EV i DOLAR_EV, ante ON/OFF, vsechny podporovane heads-up pozicni dvojice, SRP/3bet/facing-bet vetve, vsechny streety a vsechny akce, ktere dany node legalne pripousti.
