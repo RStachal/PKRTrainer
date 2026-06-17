@@ -1655,10 +1655,11 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - P4: importovat TURN production StrategyPacky.
     - P5: importovat RIVER production StrategyPacky.
     - P6: spustit end-to-end app QA, performance/mobile/source-free a release kandidat.
-  - [ ] 135.1 Zafixovat MTT product definition of done
+  - [x] 135.1 Zafixovat MTT product definition of done
     - Sepsat do `Agents/tasks.md` a release dokumentace presny stav, kdy je MTT cast povazovana za hotovou: vsechny 64 MTT completion rows production-ready, 0 blocker rows, 0 waiting ready/intake slotu, vsechny user flows bez fallback warningu.
     - Definition of done musi explicitne zahrnout 6-max/9-max, regular/turbo, CHIP_EV/DOLAR_EV, ante ON/OFF, PREFLOP/FLOP/TURN/RIVER, SRP/3bet/facing-bet, c-bet/barrel/pressure, call/raise/fold vetve a hand-line transitions.
     - Vystup: kratky "MTT done checklist" pouzitelny pri finalnim release rozhodnuti.
+    - Hotovo: `Agents/mtt-done-checklist.md` definuje produkcni matici, data/permission pozadavky, runtime pozadavky, user smoke a release candidate gate pro MTT complete v1.
   - [ ] 135.2 Zavest jeden MTT acceptance prikaz nad existujicimi gates
     - Pridat `npm run mtt:acceptance`, ktery spusti produkcni MTT completion, blockers, intake summary, postflop release, ready validation, source-free UI guard relevantni pro MTT a vrati strukturovany JSON/text.
     - Rozdil proti `mtt:release-gates`: acceptance ma byt finalni MTT-only gate s jasnym "green only when MTT app complete" kontraktem.
@@ -1731,6 +1732,24 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 135.22 Release rozhodnuti pro "MTT complete v1"
     - Po splneni 135.1-135.21 oznacit MTT cast jako produkcne kompletni pro v1.
     - Acceptance: `npm run release:check` zeleny, `mtt:completion -- --summary` valid true, `mtt:blockers -- --summary` 0 blockers, `mtt:postflop-release -- --summary` valid true, operator docs a release notes aktualni.
+
+- [ ] 136. Password-protected FORPSI staging deployment
+  - Cil: umet nahrat aktualni staticky build na FORPSI FTP a zamknout ho heslem, aby slo prakticky zkouset aplikaci mimo lokalni stroj bez verejneho zverejneni.
+  - Zasada: do gitu nepatri FTP hesla, `.htpasswd` hash ani realne staging prihlasovaci udaje.
+  - [x] 136.1 Pripravit FORPSI FTP deployment guide
+    - Hotovo: `Agents/forpsi-ftp-deployment.md` popisuje build, upload `dist/`, FORPSI `/www/` vs `/subdoms/<subdomain>/`, Basic Auth pres `.htaccess`/`.htpasswd`, HTTPS redirect a service worker kontrolu.
+  - [x] 136.2 Pridat bezpecnou `.htaccess` sablonu
+    - Hotovo: `deploy/forpsi/.htaccess.example` obsahuje vypnuti indexu, HTTPS redirect fallback a Basic Auth direktivy s placeholder `AuthUserFile`.
+  - [ ] 136.3 Overit cilovy FORPSI hosting
+    - Zjistit, zda jde o Linux webhosting s `.htaccess`/`AuthConfig`; pokud jde o Windows hosting, misto `.htaccess` bude potreba `web.config` nebo prepnout hosting.
+    - Zjistit FTP cil: hlavni domena `/www/` nebo subdomena `/subdoms/<subdomain>/`.
+  - [ ] 136.4 Vytvorit `.htpasswd` mimo webroot
+    - Podle FORPSI doporuceni ulozit `.htpasswd-pkrtrainer` do `/data/` v rootu FTP a v `.htaccess` nastavit absolutni serverovou cestu.
+    - Heslo/hash nevkladat do repozitare ani do chatu; vytvorit mimo git pres `htpasswd`.
+  - [ ] 136.5 Nahrat a otestovat staging
+    - Uploadnout obsah `dist/` a `.htaccess`, otevrit staging URL v anonymnim okne, overit login dialog, app load, service worker, Training, Postflop a Statistics.
+  - [ ] 136.6 Sepsat finalni staging URL a pristupovy postup mimo repo
+    - URL a pristupove udaje ulozit mimo git, napriklad do soukromeho password manageru nebo lokalni necommitovane poznamky.
 
 ## Notes
 

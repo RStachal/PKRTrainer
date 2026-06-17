@@ -1,0 +1,16 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+AuthType Basic
+AuthName "PKRTrainer staging"
+AuthUserFile /web/htdocsX/ftplogin/home/data/.htpasswd-pkrtrainer
+Require valid-user
+
+<FilesMatch "^\.ht">
+  Require all denied
+</FilesMatch>

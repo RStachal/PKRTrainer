@@ -98,6 +98,9 @@ describe("release bundle metadata", () => {
   it("release dokumentace obsahuje workflow a user quick start zustava bez citaci", () => {
     const quickStart = readFileSync("Agents/user-quick-start.md", "utf8");
     const operatorGuide = readFileSync("Agents/range-import-operator-guide.md", "utf8");
+    const forpsiDeployment = readFileSync("Agents/forpsi-ftp-deployment.md", "utf8");
+    const forpsiHtaccess = readFileSync("deploy/forpsi/.htaccess.example", "utf8");
+    const mttDoneChecklist = readFileSync("Agents/mtt-done-checklist.md", "utf8");
     const mttCoverageAudit = readFileSync("Agents/mtt-production-coverage-audit.md", "utf8");
     const productionIntakeManifest = readFileSync("Agents/production-range-intake-manifest.md", "utf8");
     const releaseTemplate = readFileSync("Agents/release-notes-template.md", "utf8");
@@ -143,6 +146,19 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("matched import slots");
     expect(operatorGuide).toContain("npm run verify:ranges");
     expect(operatorGuide).toContain("npm run release:check");
+    expect(mttDoneChecklist).toContain("All 64 MTT completion rows are production-ready");
+    expect(mttDoneChecklist).toContain("No production promotion uses public heuristic fallback");
+    expect(mttDoneChecklist).toContain("Start and answer representative 9-max turbo DOLAR_EV preflop training");
+    expect(forpsiDeployment).toContain("FORPSI FTP Deployment");
+    expect(forpsiDeployment).toContain("dist/index.html");
+    expect(forpsiDeployment).toContain("deploy/forpsi/.htaccess.example");
+    expect(forpsiDeployment).toContain("AuthUserFile");
+    expect(forpsiDeployment).toContain("/data/.htpasswd-pkrtrainer");
+    expect(forpsiDeployment).not.toContain("YOUR_REAL_PASSWORD");
+    expect(forpsiHtaccess).toContain("Options -Indexes");
+    expect(forpsiHtaccess).toContain("AuthType Basic");
+    expect(forpsiHtaccess).toContain("Require valid-user");
+    expect(forpsiHtaccess).toContain(".htpasswd-pkrtrainer");
     expect(mttCoverageAudit).toContain("Updated: 2026-06-17");
     expect(mttCoverageAudit).toContain("DOLAR_EV");
     expect(mttCoverageAudit).toContain("Completion matrix");
