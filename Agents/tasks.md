@@ -1744,6 +1744,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Spustit: `npm run typecheck`, `npm test`, `npm run mtt:acceptance`, `npm run mtt:release-gates`, `npm run verify:ranges`, `npm run build`, `npm run bundle:budget`, `npm run release:check`.
     - Vystup ulozit do release notes: pocty production rows, 0 blockers, 0 waiting slots, bundle budget, known limitations.
     - Stav: RC checklist zatim blokuje legalni production data, ne runtime kod. `npm run mtt:acceptance` je valid false: 64 total rows, 2 productionReady, 52 preview, 10 blocked; 62 blocker rows ceka na `normalized.json` a `permission.json`; postflop release gate ma 48/48 blocker rows a 0 productionReady. Source-free UI guard prochazi 9 testy, range intake workspace guard a registry integrity jsou valid.
+    - RC attempt notes: `Agents/release-notes-mtt-rc-2026-06-17.md`.
   - [ ] 135.20 Final MTT user smoke
     - Rucne projit reprezentativni MTT scenare: 9-max regular CHIP_EV preflop, 9-max turbo DOLAR_EV preflop, 6-max regular CHIP_EV flop line, 6-max turbo DOLAR_EV river facing-bet, HH import turn/river review a dashboard kontrola.
     - Zadny scenar nesmi zobrazit fallback warning, source citation, pack id nebo nevalidni action pro dany node.
