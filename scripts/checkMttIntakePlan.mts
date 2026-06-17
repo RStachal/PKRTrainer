@@ -255,7 +255,7 @@ function renderMttIntakePlanReport(report: IntakePlanReport, limit: number | nul
   const lines = [
     "MTT intake priority plan",
     `queue rows: ${report.counts.totalQueueRows}`,
-    `shown rows: ${report.counts.shownRows}`,
+    `${summaryOnly ? "detail rows available" : "shown rows"}: ${report.counts.shownRows}`,
     `ready for validation: ${report.counts.readyForValidation}`,
     `missing normalized.json: ${report.counts.missingNormalized}`,
     `missing permission.json: ${report.counts.missingPermission}`,
