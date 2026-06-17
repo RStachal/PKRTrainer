@@ -163,6 +163,68 @@ describe("range intake examples", () => {
     expect(rendered).not.toContain("url");
   });
 
+  it("vyzaduje explicitni reuse policy pro multi-speed permission target", () => {
+    const manifest = readExample<ProductionPermissionManifest>(
+      "Agents/range-intake/examples/permission-manifest.synthetic.json",
+    );
+    const manifestWithoutPolicy = { ...manifest };
+    delete (manifestWithoutPolicy as { reusePolicy?: unknown }).reusePolicy;
+    const missingPolicy = buildProductionPermissionManifestReport(manifestWithoutPolicy, {
+      packId: manifest.packId,
+      licenseKind: manifest.licenseKind,
+      blindSpeeds: ["REGULAR", "TURBO"],
+      evModels: ["CHIP_EV"],
+    });
+
+    expect(missingPolicy.valid).toBe(false);
+    expect(missingPolicy.errors.join("\n")).toContain(
+      "reviewed BLIND_SPEED reuse policy when target covers multiple blind speeds",
+    );
+
+    const withPolicy = buildProductionPermissionManifestReport({
+      ...manifest,
+      reusePolicy: {
+        allowedDimensions: ["BLIND_SPEED"],
+        reviewedAt: "2026-06-05",
+        reviewer: "PKRTrainer QA",
+        rationale: "Synthetic owned export fixture is reviewed for blind-speed reuse.",
+        sourceMaterialReferenceIds: [manifest.evidence[0].referenceId],
+      },
+    }, {
+      packId: manifest.packId,
+      licenseKind: manifest.licenseKind,
+      blindSpeeds: ["REGULAR", "TURBO"],
+      evModels: ["CHIP_EV"],
+    });
+
+    expect(withPolicy.valid).toBe(true);
+    expect(renderProductionPermissionManifestReport(withPolicy)).toContain("reusePolicy: BLIND_SPEED");
+  });
+
+  it("odmitne reuse policy bez vazby na evidence reference", () => {
+    const manifest = readExample<ProductionPermissionManifest>(
+      "Agents/range-intake/examples/permission-manifest.synthetic.json",
+    );
+    const report = buildProductionPermissionManifestReport({
+      ...manifest,
+      reusePolicy: {
+        allowedDimensions: ["BLIND_SPEED"],
+        reviewedAt: "2026-06-05",
+        reviewer: "PKRTrainer QA",
+        rationale: "Synthetic owned export fixture is reviewed for blind-speed reuse.",
+        sourceMaterialReferenceIds: ["missing-evidence"],
+      },
+    }, {
+      packId: manifest.packId,
+      licenseKind: manifest.licenseKind,
+      blindSpeeds: ["REGULAR", "TURBO"],
+      evModels: ["CHIP_EV"],
+    });
+
+    expect(report.valid).toBe(false);
+    expect(report.errors.join("\n")).toContain("must reference an evidence referenceId");
+  });
+
   it("odmitne URL pole v permission manifestu", () => {
     const manifest = readExample<ProductionPermissionManifest>(
       "Agents/range-intake/examples/permission-manifest.synthetic.json",

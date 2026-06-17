@@ -1,3 +1,4 @@
+import type { BlindSpeed, EvModel } from "../../core/trainingProfile";
 import { findPlaceholderStringPaths } from "./placeholderText";
 
 export type ProductionPermissionLicenseKind =
@@ -10,12 +11,22 @@ export type ProductionPermissionRedistributionScope =
   | "PKRTRAINER_INTERNAL_REVIEW_ONLY"
   | "NO_REDISTRIBUTION";
 
+export type ProductionPermissionReuseDimension = "BLIND_SPEED" | "EV_MODEL";
+
 export interface ProductionPermissionEvidence {
   referenceId: string;
   storedAt: string;
   reviewer: string;
   description: string;
   containsRangeValues: boolean;
+}
+
+export interface ProductionPermissionReusePolicy {
+  allowedDimensions: readonly ProductionPermissionReuseDimension[];
+  reviewedAt: string;
+  reviewer: string;
+  rationale: string;
+  sourceMaterialReferenceIds: readonly string[];
 }
 
 export interface ProductionPermissionManifest {
@@ -29,6 +40,7 @@ export interface ProductionPermissionManifest {
   sourceMaterialLocation: string;
   evidence: readonly ProductionPermissionEvidence[];
   notes: readonly string[];
+  reusePolicy?: ProductionPermissionReusePolicy;
 }
 
 export interface ProductionPermissionManifestReport {
@@ -44,11 +56,14 @@ export interface ProductionPermissionManifestReport {
   reviewer: string;
   reviewedAt: string;
   evidenceCount: number;
+  reusePolicyDimensions: readonly ProductionPermissionReuseDimension[];
 }
 
 interface PermissionManifestTarget {
   packId: string;
   licenseKind: string;
+  blindSpeeds?: readonly BlindSpeed[];
+  evModels?: readonly EvModel[];
 }
 
 const LEGAL_LICENSE_KINDS: readonly ProductionPermissionLicenseKind[] = [
@@ -65,6 +80,11 @@ const KNOWN_SCOPES: readonly ProductionPermissionRedistributionScope[] = [
   "PKRTRAINER_RUNTIME_BUNDLE",
   "PKRTRAINER_INTERNAL_REVIEW_ONLY",
   "NO_REDISTRIBUTION",
+];
+
+const KNOWN_REUSE_DIMENSIONS: readonly ProductionPermissionReuseDimension[] = [
+  "BLIND_SPEED",
+  "EV_MODEL",
 ];
 
 const FORBIDDEN_SOURCE_KEYS = new Set(["url", "href", "sourceUrl", "providerUrl"]);
@@ -87,6 +107,7 @@ export function buildProductionPermissionManifestReport(
       reviewer: "",
       reviewedAt: "",
       evidenceCount: 0,
+      reusePolicyDimensions: [],
     };
   }
 
@@ -106,6 +127,7 @@ export function buildProductionPermissionManifestReport(
     reviewer: manifest.reviewer,
     reviewedAt: manifest.reviewedAt,
     evidenceCount: manifest.evidence.length,
+    reusePolicyDimensions: manifest.reusePolicy?.allowedDimensions ?? [],
   };
 }
 
@@ -165,6 +187,21 @@ export function validateProductionPermissionManifest(
     }
   }
 
+  const reuseDimensions = new Set(manifest.reusePolicy?.allowedDimensions ?? []);
+  if (uniqueCount(target.blindSpeeds ?? []) > 1 && !reuseDimensions.has("BLIND_SPEED")) {
+    errors.push(
+      "Permission manifest must include reviewed BLIND_SPEED reuse policy when target covers multiple blind speeds.",
+    );
+  }
+  if (uniqueCount(target.evModels ?? []) > 1 && !reuseDimensions.has("EV_MODEL")) {
+    errors.push(
+      "Permission manifest must include reviewed EV_MODEL reuse policy when target covers multiple EV models.",
+    );
+  }
+  if (manifest.reusePolicy !== undefined) {
+    errors.push(...validateReusePolicy(manifest));
+  }
+
   const forbiddenPaths = findForbiddenSourceKeyPaths(manifest);
   if (forbiddenPaths.length > 0) {
     errors.push(
@@ -196,6 +233,7 @@ export function renderProductionPermissionManifestReport(
     `reviewer: ${report.reviewer || "none"}`,
     `reviewedAt: ${report.reviewedAt || "none"}`,
     `evidence: ${report.evidenceCount}`,
+    `reusePolicy: ${report.reusePolicyDimensions.length > 0 ? report.reusePolicyDimensions.join(",") : "none"}`,
   ];
 
   if (report.errors.length > 0) {
@@ -222,6 +260,57 @@ function warningMessages(manifest: ProductionPermissionManifest): string[] {
   }
 
   return warnings;
+}
+
+function validateReusePolicy(manifest: ProductionPermissionManifest): string[] {
+  const policy = manifest.reusePolicy;
+  if (policy === undefined) return [];
+
+  const errors: string[] = [];
+  const evidenceReferenceIds = new Set(manifest.evidence.map((item) => item.referenceId));
+  const seenDimensions = new Set<ProductionPermissionReuseDimension>();
+
+  if (policy.allowedDimensions.length === 0) {
+    errors.push("Permission manifest reusePolicy.allowedDimensions needs at least one dimension.");
+  }
+  for (const [index, dimension] of policy.allowedDimensions.entries()) {
+    if (!KNOWN_REUSE_DIMENSIONS.includes(dimension)) {
+      errors.push(`Permission manifest reusePolicy.allowedDimensions[${index}] is not supported.`);
+      continue;
+    }
+    if (seenDimensions.has(dimension)) {
+      errors.push(`Permission manifest reusePolicy.allowedDimensions[${index}] is duplicated.`);
+    }
+    seenDimensions.add(dimension);
+  }
+
+  if (policy.reviewedAt.trim().length === 0) {
+    errors.push("Permission manifest reusePolicy.reviewedAt is required.");
+  }
+  if (policy.reviewer.trim().length === 0) {
+    errors.push("Permission manifest reusePolicy.reviewer is required.");
+  }
+  if (policy.rationale.trim().length === 0) {
+    errors.push("Permission manifest reusePolicy.rationale is required.");
+  }
+  if (policy.sourceMaterialReferenceIds.length === 0) {
+    errors.push("Permission manifest reusePolicy.sourceMaterialReferenceIds needs at least one evidence reference.");
+  }
+  for (const [index, referenceId] of policy.sourceMaterialReferenceIds.entries()) {
+    if (referenceId.trim().length === 0) {
+      errors.push(`Permission manifest reusePolicy.sourceMaterialReferenceIds[${index}] is required.`);
+    } else if (!evidenceReferenceIds.has(referenceId)) {
+      errors.push(
+        `Permission manifest reusePolicy.sourceMaterialReferenceIds[${index}] must reference an evidence referenceId.`,
+      );
+    }
+  }
+
+  return errors;
+}
+
+function uniqueCount(values: readonly string[]): number {
+  return new Set(values).size;
 }
 
 function findForbiddenSourceKeyPaths(value: unknown): string[] {

@@ -196,6 +196,13 @@ Required fields:
 - `evidence`
 - `notes`
 
+Reuse fields:
+
+- `reusePolicy` is required whenever one source/manifest is used across more than one `blindSpeed` or more than one `evModel`.
+- `reusePolicy.allowedDimensions` must explicitly list `BLIND_SPEED`, `EV_MODEL`, or both.
+- `reusePolicy.reviewedAt`, `reusePolicy.reviewer`, `reusePolicy.rationale` and `reusePolicy.sourceMaterialReferenceIds` are required.
+- Each `reusePolicy.sourceMaterialReferenceIds` item must point to an `evidence.referenceId`.
+
 Accepted `allowedRedistributionScope` for production:
 
 - `PKRTRAINER_RUNTIME_BUNDLE`

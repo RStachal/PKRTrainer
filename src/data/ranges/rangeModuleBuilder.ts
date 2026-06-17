@@ -125,6 +125,8 @@ function buildMttPreflopRangeModule(
   const permissionReport = buildProductionPermissionManifestReport(permissionManifest, {
     packId: input.id,
     licenseKind: input.licenseKind,
+    blindSpeeds: [input.dimensions.blindSpeed],
+    evModels: [input.dimensions.evModel],
   });
   const slotReport = buildMttPreflopImportSlotValidationReport(input);
   const blockers = [
@@ -159,6 +161,8 @@ function buildFlopProductionRangeModule(
   const permissionReport = buildProductionPermissionManifestReport(permissionManifest, {
     packId: pack.id,
     licenseKind: pack.licenseKind,
+    blindSpeeds: pack.dimensions.blindSpeeds,
+    evModels: [pack.dimensions.evModel],
   });
   const slotReport = buildPostflopSlotReport(pack, "Flop");
   const blockers = [
@@ -197,6 +201,8 @@ function buildTurnProductionRangeModule(
   const permissionReport = buildProductionPermissionManifestReport(permissionManifest, {
     packId: pack.id,
     licenseKind: pack.licenseKind,
+    blindSpeeds: pack.dimensions.blindSpeeds,
+    evModels: [pack.dimensions.evModel],
   });
   const slotReport = buildPostflopSlotReport(pack, "Turn");
   const blockers = [
@@ -235,6 +241,8 @@ function buildRiverProductionRangeModule(
   const permissionReport = buildProductionPermissionManifestReport(permissionManifest, {
     packId: pack.id,
     licenseKind: pack.licenseKind,
+    blindSpeeds: pack.dimensions.blindSpeeds,
+    evModels: [pack.dimensions.evModel],
   });
   const slotReport = buildPostflopSlotReport(pack, "River");
   const blockers = [

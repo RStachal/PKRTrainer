@@ -1594,9 +1594,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 134.12 Importovat legalni P5 RIVER production data pro vsechny varianty
     - Postupovat pres `npm run mtt:intake-plan -- --priority=P5_RIVER_PRODUCTION --all`.
     - Coverage musi zahrnout prior turn actions, river runout classes, blocker relevance, value/bluff/check lanes, facing-bet vetve a finalni decision akce.
-  - [ ] 134.13 Definovat legalni reuse policy pro speed/EV jen pokud je explicitne povolena
+  - [x] 134.13 Definovat legalni reuse policy pro speed/EV jen pokud je explicitne povolena
     - REGULAR/TURBO a CHIP_EV/DOLAR_EV nesmi sdilet postflop doporuceni bez reviewed reuse policy v permission manifestu a auditnim reportu.
     - Pokud reuse neni povoleny, kazdy speed/EV slot zustava samostatny import blocker.
+    - Hotovo: `ProductionPermissionManifest` podporuje `reusePolicy.allowedDimensions`, permission report prijima cilove blind speed / EV dimenze, `validate:range-import` i `buildRangeModule` blokuji multi-speed/multi-EV target bez explicitniho reuse povoleni a testy kryji validni i nevalidni reuse evidenci.
   - [ ] 134.14 Povysit postflop completion gate z preview na production
     - Po importu legalnich dat musi `mtt:completion` ukazat FLOP/TURN/RIVER radky jako production-ready pro vsechny cilove varianty.
     - Public heuristic fallback smi zustat jen v explicitnim preview/development rezimu, ne v produkcni MTT completion definici.

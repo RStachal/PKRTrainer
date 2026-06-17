@@ -631,6 +631,13 @@ function validPermissionManifest(packId: string): ProductionPermissionManifest {
     notes: [
       "No third-party chart values copied.",
     ],
+    reusePolicy: {
+      allowedDimensions: ["BLIND_SPEED"],
+      reviewedAt: "2026-06-05",
+      reviewer: "PKRTrainer QA",
+      rationale: "Synthetic owned export fixture is reviewed for reuse across supported blind speeds.",
+      sourceMaterialReferenceIds: ["owned-export-manifest"],
+    },
   };
 }
 

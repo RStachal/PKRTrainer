@@ -19,5 +19,12 @@
   "notes": [
     "This is a synthetic example, not a permission record for real range data.",
     "Use internal reference IDs, not URL fields."
-  ]
+  ],
+  "reusePolicy": {
+    "allowedDimensions": ["BLIND_SPEED"],
+    "reviewedAt": "2026-06-05",
+    "reviewer": "PKRTrainer QA",
+    "rationale": "Synthetic owned export fixture demonstrates explicit review before reusing one source across regular and turbo blind speeds.",
+    "sourceMaterialReferenceIds": ["synthetic-owned-export-manifest"]
+  }
 }

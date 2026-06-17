@@ -124,6 +124,8 @@ function run(): void {
       {
         packId: typedInput.id,
         licenseKind: typedInput.licenseKind,
+        blindSpeeds: [typedInput.dimensions.blindSpeed],
+        evModels: [typedInput.dimensions.evModel],
       },
     );
     const slotReport = buildMttPreflopImportSlotValidationReport(typedInput);
@@ -151,6 +153,8 @@ function run(): void {
       {
         packId: pack.id,
         licenseKind: pack.licenseKind,
+        blindSpeeds: pack.dimensions.blindSpeeds,
+        evModels: [pack.dimensions.evModel],
       },
     );
     emitValidationResult(args, {
@@ -177,6 +181,8 @@ function run(): void {
       {
         packId: pack.id,
         licenseKind: pack.licenseKind,
+        blindSpeeds: pack.dimensions.blindSpeeds,
+        evModels: [pack.dimensions.evModel],
       },
     );
     emitValidationResult(args, {
@@ -202,6 +208,8 @@ function run(): void {
     {
       packId: pack.id,
       licenseKind: pack.licenseKind,
+      blindSpeeds: pack.dimensions.blindSpeeds,
+      evModels: [pack.dimensions.evModel],
     },
   );
   emitValidationResult(args, {

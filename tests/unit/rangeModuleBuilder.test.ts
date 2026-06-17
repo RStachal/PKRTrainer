@@ -142,6 +142,13 @@ function permissionManifest(packId: string): ProductionPermissionManifest {
       },
     ],
     notes: ["No third-party chart values copied."],
+    reusePolicy: {
+      allowedDimensions: ["BLIND_SPEED"],
+      reviewedAt: "2026-06-05",
+      reviewer: "PKRTrainer QA",
+      rationale: "Synthetic owned export fixture is reviewed for reuse across supported blind speeds.",
+      sourceMaterialReferenceIds: ["owned-export-manifest"],
+    },
   };
 }
 
@@ -541,6 +548,24 @@ describe("rangeModuleBuilder", () => {
     expect(result.matchedImportSlots).toEqual([]);
     expect(result.moduleText).toBeNull();
     expect(result.blockers).toContain("Flop production module must target MTT gameVariant.");
+  });
+
+  it("blokuje multi-speed postflop production module bez explicitni reuse policy", () => {
+    const pack = syntheticFlopPack();
+    const manifest = permissionManifest(pack.id);
+    delete (manifest as { reusePolicy?: unknown }).reusePolicy;
+    const result = buildRangeModule({
+      kind: "flop-production",
+      input: pack,
+      permissionManifest: manifest,
+    });
+
+    expect(result.permissionReady).toBe(false);
+    expect(result.writeReady).toBe(false);
+    expect(result.moduleText).toBeNull();
+    expect(result.blockers).toContain(
+      "Permission manifest must include reviewed BLIND_SPEED reuse policy when target covers multiple blind speeds.",
+    );
   });
 
   it("reportuje turn coverage blockery v dry-run stylu", () => {
