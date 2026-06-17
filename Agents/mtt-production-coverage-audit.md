@@ -50,6 +50,7 @@ Useful filters:
 - `npm run mtt:completion -- --summary`
 - `npm run mtt:completion -- --preview --json`
 - `npm run mtt:release-gates`
+- `npm run mtt:release-gates -- --json`
 - `npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json`
 - `npm run mtt:blockers -- --summary`
 - `npm run mtt:postflop-matrix`
@@ -75,7 +76,7 @@ to the next P1-P5 import queue without reopening the full intake plan.
 `mtt:completion` defaults to a production gate. It should remain red until every tracked MTT profile is production-ready;
 use `--preview` only for queue inspection.
 `mtt:release-gates` prints completion, blocker, postflop release, intake workspace and ready-validation summaries before
-returning a failing exit code.
+returning a failing exit code; `--json` returns the same command list, statuses and captured outputs for operator tooling.
 `mtt:postflop-matrix` freezes the 48 FLOP/TURN/RIVER production targets and records whether each target is waiting for
 legal files, ready for validation, or already production.
 `mtt:postflop-positions` freezes all supported and unsupported heads-up aggressor/caller pairs for full-ring and 6-max

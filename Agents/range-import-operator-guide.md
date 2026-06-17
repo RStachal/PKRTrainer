@@ -123,11 +123,13 @@ Before releasing:
 ```powershell
 npm run release:check
 npm run mtt:release-gates
+npm run mtt:release-gates -- --json
 ```
 
 `release:check` runs typecheck, tests, MTT release gates, range verification and production build.
 `mtt:release-gates` runs every MTT gate summary before returning a failing exit code, so one failing gate does not hide
-the remaining blocker summaries.
+the remaining blocker summaries. Use `--json` when CI or operator tooling needs the status and captured output of every
+gate command.
 
 For the full MTT matrix with blocker details and import slot paths:
 

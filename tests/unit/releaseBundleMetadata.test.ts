@@ -113,6 +113,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:slots");
     expect(operatorGuide).toContain("npm run mtt:blockers");
     expect(operatorGuide).toContain("npm run mtt:release-gates");
+    expect(operatorGuide).toContain("npm run mtt:release-gates -- --json");
     expect(operatorGuide).toContain("npm run mtt:completion -- --summary");
     expect(operatorGuide).toContain("priority counts matching the intake plan buckets");
     expect(operatorGuide).toContain("npm run mtt:postflop-matrix");
@@ -146,7 +147,9 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:completion -- --summary");
     expect(mttCoverageAudit).toContain("npm run mtt:completion -- --preview --json");
     expect(mttCoverageAudit).toContain("npm run mtt:release-gates");
+    expect(mttCoverageAudit).toContain("npm run mtt:release-gates -- --json");
     expect(mttCoverageAudit).toContain("prints completion, blocker, postflop release, intake workspace and ready-validation summaries");
+    expect(mttCoverageAudit).toContain("captured outputs for operator tooling");
     expect(mttCoverageAudit).toContain("defaults to a production gate");
     expect(mttCoverageAudit).toContain("total MTT rows: 64");
     expect(mttCoverageAudit).toContain("production-ready rows: 2");
@@ -179,6 +182,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("Statistics changes");
     expect(releaseTemplate).toContain("npm run mtt:completion -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:release-gates");
+    expect(releaseTemplate).toContain("npm run mtt:release-gates -- --json");
     expect(releaseTemplate).toContain("npm run mtt:blockers");
     expect(releaseTemplate).toContain("npm run mtt:postflop-release -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --ready-only");

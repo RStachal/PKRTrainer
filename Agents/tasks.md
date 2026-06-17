@@ -1547,6 +1547,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.15 Agregovat MTT release gate souhrny
     - `release:check` nema po prvnim cervenem MTT gate schovat dalsi blocker souhrny.
     - Hotovo: `npm run mtt:release-gates` spusti completion, blocker, postflop release, range intake guard, ready-only intake a ready validator souhrny pred vracenim finalniho exit code; `release:check` pouziva tento agregator.
+  - [x] 133.16 Pridat strojove citelny souhrn MTT release gates
+    - CI a operator tooling musi umet precist finalni stav i status kazdeho gate prikazu bez parsovani textoveho reportu.
+    - Hotovo: `npm run mtt:release-gates -- --json` vraci `valid`, pocty prikazu, statusy, argumenty a zachycene vystupy vsech MTT release gates.
 
 - [ ] 134. MTT postflop full production roadmap FLOP-TURN-RIVER
   - Cil: plne funkcni MTT postflop simulace od flopu po river pro FULL_RING_9 i SIX_MAX, REGULAR i TURBO, CHIP_EV i DOLAR_EV, ante ON/OFF, vsechny podporovane heads-up pozicni dvojice, SRP/3bet/facing-bet vetve, vsechny streety a vsechny akce, ktere dany node legalne pripousti.

@@ -35,6 +35,7 @@
 - `npm test`:
 - `npm run mtt:completion -- --summary`:
 - `npm run mtt:release-gates`:
+- `npm run mtt:release-gates -- --json`:
 - `npm run mtt:blockers`:
 - `npm run mtt:postflop-release -- --summary`:
 - `npm run mtt:intake-plan -- --ready-only`:
