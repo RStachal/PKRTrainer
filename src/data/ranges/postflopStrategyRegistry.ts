@@ -1,4 +1,6 @@
-import type { PostflopStrategyResolver } from "../../core/postflopGenerator";
+import type { PostflopStrategyResolver, PostflopStreet } from "../../core/postflopGenerator";
+import type { AnteMode } from "../../core/types";
+import type { BlindSpeed, EvModel, TableFormat } from "../../core/trainingProfile";
 import type { FlopProductionStrategyPack } from "./flopProductionStrategyPack";
 import {
   createFlopProductionStrategyResolverChain,
@@ -19,6 +21,20 @@ import {
   createRiverProductionStrategyResolverChain,
   riverProductionStrategyPacks,
 } from "./riverProductionStrategyResolver";
+
+export interface MttProductionPostflopResolverProfile {
+  tableFormat: TableFormat;
+  blindSpeed: BlindSpeed;
+  street: PostflopStreet;
+  evModel: EvModel;
+  ante: AnteMode;
+}
+
+export interface MttProductionPostflopResolverPacks {
+  flopProductionPacks?: readonly FlopProductionStrategyPack[];
+  turnProductionPacks?: readonly TurnProductionStrategyPack[];
+  riverProductionPacks?: readonly RiverProductionStrategyPack[];
+}
 
 export function createPostflopStrategyResolverWithProductionFallback(
   productionPacks: readonly FlopProductionStrategyPack[] = flopProductionStrategyPacks,
@@ -41,4 +57,77 @@ export function createPostflopStrategyResolverWithProductionFallback(
 
 export function createDefaultPostflopStrategyResolver(): PostflopStrategyResolver {
   return createPostflopStrategyResolverWithProductionFallback();
+}
+
+export function createMttProductionPostflopStrategyResolver(
+  profile: MttProductionPostflopResolverProfile,
+  packs: MttProductionPostflopResolverPacks = {},
+): PostflopStrategyResolver {
+  const resolver = createProductionResolverForProfile(profile, packs);
+  return (input) => {
+    if (input.street !== profile.street) return null;
+    return resolver(input);
+  };
+}
+
+function createProductionResolverForProfile(
+  profile: MttProductionPostflopResolverProfile,
+  packs: MttProductionPostflopResolverPacks,
+): PostflopStrategyResolver {
+  switch (profile.street) {
+    case "FLOP":
+      return createFlopProductionStrategyResolverChain(
+        matchingFlopPacksForProfile(profile, packs.flopProductionPacks ?? flopProductionStrategyPacks),
+      );
+    case "TURN":
+      return createTurnProductionStrategyResolverChain(
+        matchingTurnPacksForProfile(profile, packs.turnProductionPacks ?? turnProductionStrategyPacks),
+      );
+    case "RIVER":
+      return createRiverProductionStrategyResolverChain(
+        matchingRiverPacksForProfile(profile, packs.riverProductionPacks ?? riverProductionStrategyPacks),
+      );
+  }
+}
+
+function matchingFlopPacksForProfile(
+  profile: MttProductionPostflopResolverProfile,
+  packs: readonly FlopProductionStrategyPack[],
+): readonly FlopProductionStrategyPack[] {
+  return packs.filter((pack) => matchesProfile(pack.dimensions, profile));
+}
+
+function matchingTurnPacksForProfile(
+  profile: MttProductionPostflopResolverProfile,
+  packs: readonly TurnProductionStrategyPack[],
+): readonly TurnProductionStrategyPack[] {
+  return packs.filter((pack) => matchesProfile(pack.dimensions, profile));
+}
+
+function matchingRiverPacksForProfile(
+  profile: MttProductionPostflopResolverProfile,
+  packs: readonly RiverProductionStrategyPack[],
+): readonly RiverProductionStrategyPack[] {
+  return packs.filter((pack) => matchesProfile(pack.dimensions, profile));
+}
+
+function matchesProfile(
+  dimensions: {
+    gameVariant: string;
+    tableFormat: TableFormat;
+    blindSpeeds: readonly BlindSpeed[];
+    street: PostflopStreet;
+    evModel: EvModel;
+    antes: readonly AnteMode[];
+  },
+  profile: MttProductionPostflopResolverProfile,
+): boolean {
+  return (
+    dimensions.gameVariant === "MTT" &&
+    dimensions.tableFormat === profile.tableFormat &&
+    dimensions.street === profile.street &&
+    dimensions.evModel === profile.evModel &&
+    dimensions.blindSpeeds.includes(profile.blindSpeed) &&
+    dimensions.antes.includes(profile.ante)
+  );
 }

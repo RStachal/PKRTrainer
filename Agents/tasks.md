@@ -1601,9 +1601,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 134.14 Povysit postflop completion gate z preview na production
     - Po importu legalnich dat musi `mtt:completion` ukazat FLOP/TURN/RIVER radky jako production-ready pro vsechny cilove varianty.
     - Public heuristic fallback smi zustat jen v explicitnim preview/development rezimu, ne v produkcni MTT completion definici.
-  - [ ] 134.15 Otestovat runtime resolver bez ticheho fallbacku pro production profily
+  - [x] 134.15 Otestovat runtime resolver bez ticheho fallbacku pro production profily
     - Pro kazdy production postflop profil musi resolver vybrat legalni production pack nebo vratit blokujici stav; nesmi potichu pouzit public heuristic model.
     - Testy pokryji FULL_RING_9/SIX_MAX, REGULAR/TURBO, CHIP_EV/DOLAR_EV, ante ON/OFF a FLOP/TURN/RIVER.
+    - Hotovo: `createMttProductionPostflopStrategyResolver` filtruje packy podle MTT table/speed/EV/ante/street a nikdy nepridava public heuristic fallback; testy overuji celou postflop profilovou mrizku bez production packu i pozitivni FLOP/TURN/RIVER match.
   - [x] 134.16 Otestovat UI hand-line flow pro vsechny street/action typy
     - DOM testy musi projit single spot i hand line pro c-bet/barrel/pressure i facing-bet nody.
     - UI musi zustat source-free, bez pack id, provideru, URL a raw enumu.
