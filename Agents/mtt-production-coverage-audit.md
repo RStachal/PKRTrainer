@@ -1,6 +1,6 @@
 # MTT Production Coverage Audit
 
-Updated: 2026-06-16
+Updated: 2026-06-17
 
 ## Current production surface
 
@@ -22,14 +22,17 @@ Updated: 2026-06-16
 
 ## Completion matrix
 
-`npm run mtt:completion -- --json` currently reports:
+`npm run mtt:completion -- --summary` currently fails the production completion gate and reports:
 
 - total MTT rows: 64
 - production-ready rows: 2
 - candidate/preview rows: 52
 - blocked/missing rows: 10
 
-Coverage is intentionally broader than the current production data. The matrix includes 6-max and 9-max, regular and turbo, CHIP_EV and DOLAR_EV, preflop and postflop streets, and both ante states. Rows without legal production data remain candidate or missing.
+Use `npm run mtt:completion -- --preview --json` for operator tooling that needs the full matrix while production data
+is still missing. Coverage is intentionally broader than the current production data. The matrix includes 6-max and
+9-max, regular and turbo, CHIP_EV and DOLAR_EV, preflop and postflop streets, and both ante states. Rows without legal
+production data remain candidate or missing.
 
 ## Range intake state
 
@@ -44,6 +47,8 @@ Useful filters:
 - `npm run range:intake -- --kind=postflop --format=SIX_MAX --street=RIVER`
 - `npm run range:intake -- --ready-only --json`
 - `npm run range:intake -- --waiting-only`
+- `npm run mtt:completion -- --summary`
+- `npm run mtt:completion -- --preview --json`
 - `npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json`
 - `npm run mtt:blockers -- --summary`
 - `npm run mtt:postflop-matrix`
@@ -53,6 +58,7 @@ Useful filters:
 - `npm run mtt:postflop-coverage`
 - `npm run mtt:postflop-coverage -- --json`
 - `npm run mtt:postflop-release`
+- `npm run mtt:postflop-release -- --summary`
 - `npm run mtt:postflop-release -- --json`
 - `npm run mtt:intake-plan`
 - `npm run mtt:intake-plan -- --ready-only --json`
@@ -65,6 +71,8 @@ Useful filters:
 
 `mtt:blockers` reports the same priority buckets as `mtt:intake-plan`, so blocker summaries can be used to route work
 to the next P1-P5 import queue without reopening the full intake plan.
+`mtt:completion` defaults to a production gate. It should remain red until every tracked MTT profile is production-ready;
+use `--preview` only for queue inspection.
 `mtt:postflop-matrix` freezes the 48 FLOP/TURN/RIVER production targets and records whether each target is waiting for
 legal files, ready for validation, or already production.
 `mtt:postflop-positions` freezes all supported and unsupported heads-up aggressor/caller pairs for full-ring and 6-max
@@ -108,7 +116,7 @@ The preflop intake subset currently has 14 rows and 0 rows ready for validation.
 
 ## Verification hooks
 
-- `npm run mtt:completion`
+- `npm run mtt:completion -- --summary`
 - `npm run mtt:blockers`
 - `npm run mtt:intake-plan`
 - `npm run mtt:postflop-release`

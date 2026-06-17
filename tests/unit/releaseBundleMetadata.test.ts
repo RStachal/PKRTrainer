@@ -138,9 +138,12 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("matched import slots");
     expect(operatorGuide).toContain("npm run verify:ranges");
     expect(operatorGuide).toContain("npm run release:check");
-    expect(mttCoverageAudit).toContain("Updated: 2026-06-16");
+    expect(mttCoverageAudit).toContain("Updated: 2026-06-17");
     expect(mttCoverageAudit).toContain("DOLAR_EV");
     expect(mttCoverageAudit).toContain("Completion matrix");
+    expect(mttCoverageAudit).toContain("npm run mtt:completion -- --summary");
+    expect(mttCoverageAudit).toContain("npm run mtt:completion -- --preview --json");
+    expect(mttCoverageAudit).toContain("defaults to a production gate");
     expect(mttCoverageAudit).toContain("total MTT rows: 64");
     expect(mttCoverageAudit).toContain("production-ready rows: 2");
     expect(mttCoverageAudit).toContain("candidate/preview rows: 52");
@@ -156,6 +159,7 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:postflop-coverage");
     expect(mttCoverageAudit).toContain("expands the 48 profile targets into 9,600 concrete street/pot/action/position targets");
     expect(mttCoverageAudit).toContain("npm run mtt:postflop-release");
+    expect(mttCoverageAudit).toContain("npm run mtt:postflop-release -- --summary");
     expect(mttCoverageAudit).toContain("final postflop release gate currently fails");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --ready-only --json");
