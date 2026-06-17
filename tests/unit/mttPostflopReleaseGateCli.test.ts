@@ -67,6 +67,18 @@ describe("mtt:postflop-release CLI", () => {
     }));
     expect(parsed.rows.map((row) => row.slotId)).toContain("SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF");
   });
+
+  it("umi vypsat strucny summary report pro release:check", () => {
+    const result = runPostflopRelease("--summary");
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("MTT postflop final release gate");
+    expect(result.stdout).toContain("valid: false");
+    expect(result.stdout).toContain("total postflop rows: 48");
+    expect(result.stdout).toContain("fallback runtime rows: 48");
+    expect(result.stdout).not.toContain("errors:");
+    expect(result.stdout).not.toContain("FULL_RING_9|REGULAR|CHIP_EV|FLOP|ON");
+  });
 });
 
 function runPostflopRelease(...args: string[]) {

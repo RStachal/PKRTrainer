@@ -146,6 +146,7 @@ npm run mtt:postflop-positions -- --json
 npm run mtt:postflop-coverage
 npm run mtt:postflop-coverage -- --json
 npm run mtt:postflop-release
+npm run mtt:postflop-release -- --summary
 npm run mtt:postflop-release -- --json
 ```
 

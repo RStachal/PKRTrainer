@@ -8,6 +8,7 @@ import { findPlaceholderStringPaths } from "../src/data/ranges/placeholderText.t
 
 interface CliArgs {
   json: boolean;
+  summary: boolean;
 }
 
 interface MttPostflopReleaseGateRow {
@@ -44,6 +45,7 @@ function usage(): string {
   return [
     "Usage:",
     "  npm run mtt:postflop-release",
+    "  npm run mtt:postflop-release -- --summary",
     "  npm run mtt:postflop-release -- --json",
     "",
     "This is the final MTT postflop gate. It fails while any FLOP/TURN/RIVER target",
@@ -55,7 +57,9 @@ function usage(): string {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildMttPostflopReleaseGateReport();
-  console.log(args.json ? JSON.stringify(report, null, 2) : renderMttPostflopReleaseGateReport(report));
+  console.log(args.json
+    ? JSON.stringify(report, null, 2)
+    : renderMttPostflopReleaseGateReport(report, args.summary));
   process.exitCode = report.valid ? 0 : 1;
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
@@ -64,15 +68,20 @@ try {
 
 function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
+  let summary = false;
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
     if (item === "--json") {
       json = true;
       continue;
     }
+    if (item === "--summary") {
+      summary = true;
+      continue;
+    }
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
-  return { json };
+  return { json, summary };
 }
 
 function buildMttPostflopReleaseGateReport(): MttPostflopReleaseGateReport {
@@ -186,7 +195,10 @@ function hasIncompleteCoverageBlocker(row: MttPostflopReleaseGateRow): boolean {
   ));
 }
 
-function renderMttPostflopReleaseGateReport(report: MttPostflopReleaseGateReport): string {
+function renderMttPostflopReleaseGateReport(
+  report: MttPostflopReleaseGateReport,
+  summaryOnly = false,
+): string {
   const lines = [
     "MTT postflop final release gate",
     `valid: ${report.valid}`,
@@ -200,6 +212,8 @@ function renderMttPostflopReleaseGateReport(report: MttPostflopReleaseGateReport
     `LOW confidence rows: ${report.counts.lowConfidenceRows}`,
     `incomplete coverage rows: ${report.counts.incompleteCoverageRows}`,
   ];
+
+  if (summaryOnly) return lines.join("\n");
 
   if (report.errors.length > 0) {
     lines.push("errors:");

@@ -90,7 +90,7 @@ describe("release bundle metadata", () => {
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(pkg.scripts["release:check"])
-      .toBe("npm run typecheck && npm test && npm run mtt:completion && npm run mtt:blockers -- --summary && npm run mtt:postflop-release && npm run range:intake:guard && npm run range:intake -- --ready-only && npm run mtt:validate-ready-intake && npm run verify:ranges && npm run build && npm run bundle:budget");
+      .toBe("npm run typecheck && npm test && npm run mtt:completion && npm run mtt:blockers -- --summary && npm run mtt:postflop-release -- --summary && npm run range:intake:guard && npm run range:intake -- --ready-only && npm run mtt:validate-ready-intake && npm run verify:ranges && npm run build && npm run bundle:budget");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
 
@@ -119,6 +119,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:postflop-coverage");
     expect(operatorGuide).toContain("expands the 48 profile targets into 9,600 concrete street/pot/action/position targets");
     expect(operatorGuide).toContain("npm run mtt:postflop-release");
+    expect(operatorGuide).toContain("npm run mtt:postflop-release -- --summary");
     expect(operatorGuide).toContain("fails release while any FLOP/TURN/RIVER slot still uses fallback runtime");
     expect(operatorGuide).toContain("npm run mtt:intake-plan");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --ready-only --json");
