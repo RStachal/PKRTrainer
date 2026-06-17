@@ -1,0 +1,105 @@
+import { spawnSync } from "node:child_process";
+import { describe, expect, it } from "vitest";
+
+describe("mtt:acceptance CLI", () => {
+  it("spusti finalni MTT acceptance gate a zustane cerveny pred legalnimi production daty", () => {
+    const result = runAcceptance();
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("MTT acceptance gate");
+    expect(result.stdout).toContain("valid: false");
+    expect(result.stdout).toContain("checklist: Agents/mtt-done-checklist.md");
+    expect(result.stdout).toContain("commands: 8");
+    expect(result.stdout).toContain("failed commands: 2");
+    expect(result.stdout).toContain("## MTT completion production gate");
+    expect(result.stdout).toContain("MTT completion release gate");
+    expect(result.stdout).toContain("## MTT blocker summary");
+    expect(result.stdout).toContain("MTT production blockers");
+    expect(result.stdout).toContain("## MTT intake priority summary");
+    expect(result.stdout).toContain("MTT intake priority plan");
+    expect(result.stdout).toContain("## MTT postflop final release gate");
+    expect(result.stdout).toContain("MTT postflop final release gate");
+    expect(result.stdout).toContain("## Ready MTT intake validation");
+    expect(result.stdout).toContain("MTT ready intake validation");
+    expect(result.stdout).toContain("## MTT source-free UI guard");
+    expect(result.stdout).toContain("tests/unit/uiNoSourceCitation.test.ts");
+    expect(result.stdout).toContain("7 tests");
+    expect(result.stdout).toContain("## Range intake workspace guard");
+    expect(result.stdout).toContain("Range intake workspace guard");
+    expect(result.stdout).toContain("## Ready intake slots");
+    expect(result.stdout).toContain("Range intake status");
+    expect(result.stdout).not.toContain("https://");
+  });
+
+  it("umi vratit JSON report pro release/operator tooling", () => {
+    const result = runAcceptance("--json");
+
+    expect(result.status).toBe(1);
+    const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
+      valid: boolean;
+      checklist: string;
+      counts: {
+        commands: number;
+        failedCommands: number;
+      };
+      commands: Array<{
+        label: string;
+        npmArgs: string[];
+        status: number;
+        stdout: string;
+        stderr: string;
+      }>;
+    };
+
+    expect(parsed.valid).toBe(false);
+    expect(parsed.checklist).toBe("Agents/mtt-done-checklist.md");
+    expect(parsed.counts).toEqual({
+      commands: 8,
+      failedCommands: 2,
+    });
+    expect(parsed.commands.map((command) => command.label)).toEqual([
+      "MTT completion production gate",
+      "MTT blocker summary",
+      "MTT intake priority summary",
+      "MTT postflop final release gate",
+      "Ready MTT intake validation",
+      "MTT source-free UI guard",
+      "Range intake workspace guard",
+      "Ready intake slots",
+    ]);
+    expect(parsed.commands[0].npmArgs).toEqual(["run", "mtt:completion", "--", "--summary"]);
+    expect(parsed.commands[5].npmArgs).toEqual(["test", "--", "tests/unit/uiNoSourceCitation.test.ts"]);
+    expect(parsed.commands.every((command) => command.stdout.length > 0)).toBe(true);
+    expect(parsed.commands[0].stdout).toContain("MTT completion release gate");
+    expect(parsed.commands[5].stdout).toContain("tests/unit/uiNoSourceCitation.test.ts");
+    expect(parsed.commands[5].stdout).toContain("7 tests");
+    expect(parsed.commands[0].stdout).not.toContain("> mtt-preflop-trainer");
+    expect(JSON.stringify(parsed)).not.toContain("https://");
+  });
+
+  it("vrati chybu pro neznamy argument", () => {
+    const result = runAcceptance("--format=SIX_MAX");
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Unsupported argument: --format=SIX_MAX");
+    expect(result.stderr).toContain("Usage:");
+  });
+});
+
+function runAcceptance(...args: string[]) {
+  return spawnSync(command(), commandArgs(args), {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    maxBuffer: 12 * 1024 * 1024,
+    shell: false,
+  });
+}
+
+function command(): string {
+  return process.platform === "win32" ? "cmd" : "npm";
+}
+
+function commandArgs(args: string[]): string[] {
+  const npmArgs = ["run", "mtt:acceptance", "--", ...args];
+  return process.platform === "win32" ? ["/c", "npm", ...npmArgs] : npmArgs;
+}

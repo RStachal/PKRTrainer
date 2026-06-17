@@ -83,6 +83,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:postflop-positions"]).toBe("vite-node scripts/checkMttPostflopPositions.mts");
     expect(pkg.scripts["mtt:postflop-release"]).toBe("vite-node scripts/checkMttPostflopReleaseGate.mts");
     expect(pkg.scripts["mtt:release-gates"]).toBe("vite-node scripts/checkMttReleaseGates.mts");
+    expect(pkg.scripts["mtt:acceptance"]).toBe("vite-node scripts/checkMttAcceptance.mts");
     expect(pkg.scripts["mtt:validate-ready-intake"]).toBe("vite-node scripts/validateMttReadyIntake.mts");
     expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
     expect(pkg.scripts["range:intake:guard"]).toBe("vite-node scripts/checkRangeIntakeWorkspace.mts");
@@ -118,6 +119,9 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:blockers");
     expect(operatorGuide).toContain("npm run mtt:release-gates");
     expect(operatorGuide).toContain("npm run mtt:release-gates -- --json");
+    expect(operatorGuide).toContain("npm run mtt:acceptance");
+    expect(operatorGuide).toContain("npm run mtt:acceptance -- --json");
+    expect(operatorGuide).toContain("final MTT-only acceptance gate");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --summary");
     expect(operatorGuide).toContain("npm run mtt:completion -- --summary");
     expect(operatorGuide).toContain("priority counts matching the intake plan buckets");
@@ -147,6 +151,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run verify:ranges");
     expect(operatorGuide).toContain("npm run release:check");
     expect(mttDoneChecklist).toContain("All 64 MTT completion rows are production-ready");
+    expect(mttDoneChecklist).toContain("npm run mtt:acceptance");
     expect(mttDoneChecklist).toContain("No production promotion uses public heuristic fallback");
     expect(mttDoneChecklist).toContain("Start and answer representative 9-max turbo DOLAR_EV preflop training");
     expect(forpsiDeployment).toContain("FORPSI FTP Deployment");
@@ -166,6 +171,9 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:completion -- --preview --json");
     expect(mttCoverageAudit).toContain("npm run mtt:release-gates");
     expect(mttCoverageAudit).toContain("npm run mtt:release-gates -- --json");
+    expect(mttCoverageAudit).toContain("npm run mtt:acceptance");
+    expect(mttCoverageAudit).toContain("npm run mtt:acceptance -- --json");
+    expect(mttCoverageAudit).toContain("links its output to `Agents/mtt-done-checklist.md`");
     expect(mttCoverageAudit).toContain("prints completion, blocker, intake priority, postflop release, intake workspace and ready-validation summaries");
     expect(mttCoverageAudit).toContain("captured outputs for operator tooling");
     expect(mttCoverageAudit).toContain("defaults to a production gate");
@@ -203,6 +211,8 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("Range data changes");
     expect(releaseTemplate).toContain("Statistics changes");
     expect(releaseTemplate).toContain("npm run mtt:completion -- --summary");
+    expect(releaseTemplate).toContain("npm run mtt:acceptance");
+    expect(releaseTemplate).toContain("npm run mtt:acceptance -- --json");
     expect(releaseTemplate).toContain("npm run mtt:release-gates");
     expect(releaseTemplate).toContain("npm run mtt:release-gates -- --json");
     expect(releaseTemplate).toContain("npm run mtt:blockers");

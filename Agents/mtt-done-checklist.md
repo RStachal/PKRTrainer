@@ -10,6 +10,7 @@ This checklist defines when the MTT part of PKRTrainer is complete for the first
 - All 64 MTT completion rows are production-ready.
 - `npm run mtt:blockers -- --summary` reports 0 blocker rows.
 - `npm run mtt:intake-plan -- --summary` reports 0 queue rows.
+- `npm run mtt:acceptance` returns exit 0.
 - `npm run mtt:release-gates` returns exit 0.
 - `npm run release:check` returns exit 0.
 
@@ -56,6 +57,7 @@ This checklist defines when the MTT part of PKRTrainer is complete for the first
 
 - `npm run typecheck` passes.
 - `npm test` passes.
+- `npm run mtt:acceptance` passes.
 - `npm run verify:ranges` passes.
 - `npm run build` passes.
 - `npm run bundle:budget` passes.

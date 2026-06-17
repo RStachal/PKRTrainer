@@ -49,6 +49,8 @@ Useful filters:
 - `npm run range:intake -- --waiting-only`
 - `npm run mtt:completion -- --summary`
 - `npm run mtt:completion -- --preview --json`
+- `npm run mtt:acceptance`
+- `npm run mtt:acceptance -- --json`
 - `npm run mtt:release-gates`
 - `npm run mtt:release-gates -- --json`
 - `npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json`
@@ -76,6 +78,8 @@ Useful filters:
 to the next P1-P5 import queue without reopening the full intake plan.
 `mtt:completion` defaults to a production gate. It should remain red until every tracked MTT profile is production-ready;
 use `--preview` only for queue inspection.
+`mtt:acceptance` is the final MTT-only acceptance gate and links its output to `Agents/mtt-done-checklist.md`.
+It currently remains red until the missing production data and permissions are imported.
 `mtt:release-gates` prints completion, blocker, intake priority, postflop release, intake workspace and ready-validation summaries before
 returning a failing exit code; `--json` returns the same command list, statuses and captured outputs for operator tooling.
 `mtt:postflop-matrix` freezes the 48 FLOP/TURN/RIVER production targets and records whether each target is waiting for
@@ -122,6 +126,7 @@ The preflop intake subset currently has 14 rows and 0 rows ready for validation.
 ## Verification hooks
 
 - `npm run mtt:completion -- --summary`
+- `npm run mtt:acceptance`
 - `npm run mtt:release-gates`
 - `npm run mtt:blockers`
 - `npm run mtt:intake-plan`

@@ -20,6 +20,7 @@
     "mtt:postflop-positions": "vite-node scripts/checkMttPostflopPositions.mts",
     "mtt:postflop-release": "vite-node scripts/checkMttPostflopReleaseGate.mts",
     "mtt:release-gates": "vite-node scripts/checkMttReleaseGates.mts",
+    "mtt:acceptance": "vite-node scripts/checkMttAcceptance.mts",
     "mtt:validate-ready-intake": "vite-node scripts/validateMttReadyIntake.mts",
     "mtt:slots": "vite-node scripts/listMttImportSlots.mts",
     "range:intake": "vite-node scripts/checkRangeIntakeStatus.mts",

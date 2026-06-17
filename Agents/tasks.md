@@ -1660,10 +1660,11 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Definition of done musi explicitne zahrnout 6-max/9-max, regular/turbo, CHIP_EV/DOLAR_EV, ante ON/OFF, PREFLOP/FLOP/TURN/RIVER, SRP/3bet/facing-bet, c-bet/barrel/pressure, call/raise/fold vetve a hand-line transitions.
     - Vystup: kratky "MTT done checklist" pouzitelny pri finalnim release rozhodnuti.
     - Hotovo: `Agents/mtt-done-checklist.md` definuje produkcni matici, data/permission pozadavky, runtime pozadavky, user smoke a release candidate gate pro MTT complete v1.
-  - [ ] 135.2 Zavest jeden MTT acceptance prikaz nad existujicimi gates
+  - [x] 135.2 Zavest jeden MTT acceptance prikaz nad existujicimi gates
     - Pridat `npm run mtt:acceptance`, ktery spusti produkcni MTT completion, blockers, intake summary, postflop release, ready validation, source-free UI guard relevantni pro MTT a vrati strukturovany JSON/text.
     - Rozdil proti `mtt:release-gates`: acceptance ma byt finalni MTT-only gate s jasnym "green only when MTT app complete" kontraktem.
     - Testy: CLI text, JSON, zamerne cerveny stav pred legalnimi daty, green fixture/mocking jen pokud nevyzaduje falesna produkcni data.
+    - Hotovo: `npm run mtt:acceptance` agreguje completion, blockers, intake summary, postflop release, ready validation, source-free UI guard a range intake guardy do text/JSON reportu s checklist odkazem; aktualne spravne selhava na 2 gatech do dodani legalnich production dat.
   - [ ] 135.3 Pridat "next MTT action" operator report
     - Pridat prikaz/report, ktery z `mtt:intake-plan`, `mtt:blockers` a `mtt:release-gates -- --json` vybere dalsi nejdulezitejsi praci: prvni ready slot, jinak prvni waiting slot podle P0-P5.
     - Vystup musi obsahovat priority bucket, slotId, packId, chybejici soubory, validate command, build dry-run command a navazujici acceptance prikazy.
