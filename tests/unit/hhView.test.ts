@@ -2,6 +2,8 @@
 import { describe, it, expect } from "vitest";
 
 import { renderHHView } from "../../src/ui/hhView";
+import type { PostflopStrategyResolver } from "../../src/core/postflopGenerator";
+import type { HHReviewRecord } from "../../src/persistence/hhReviewStore";
 
 const validHh = [
   "PokerStars Hand #1: Tournament #1, 10/20",
@@ -77,6 +79,57 @@ const validTurnRiverHh = [
   "Hero: calls 120",
   "*** SUMMARY ***",
 ].join("\n");
+
+const productionFacingBetRunoutHh = [
+  "PokerStars Hand #4: Tournament #1, 10/20",
+  "Table 'Test' 9-max Seat #8 is the button",
+  "Seat 1: Villain1 (1000 in chips)",
+  "Seat 2: Villain2 (1000 in chips)",
+  "Seat 3: Villain3 (1000 in chips)",
+  "Seat 4: Villain4 (1000 in chips)",
+  "Seat 5: Villain5 (1000 in chips)",
+  "Seat 6: Villain6 (1000 in chips)",
+  "Seat 7: Villain7 (1000 in chips)",
+  "Seat 8: Hero (1000 in chips)",
+  "Seat 9: Villain9 (1000 in chips)",
+  "Villain9: posts small blind 10",
+  "Villain1: posts big blind 20",
+  "*** HOLE CARDS ***",
+  "Dealt to Hero [Ks Qs]",
+  "Hero: raises 40 to 60",
+  "Villain1: calls 40",
+  "*** FLOP *** [Ah 7d 2c]",
+  "Villain1: bets 40",
+  "Hero: calls 40",
+  "*** TURN *** [Ah 7d 2c] [5s]",
+  "Villain1: bets 80",
+  "Hero: calls 80",
+  "*** RIVER *** [Ah 7d 2c 5s] [Jd]",
+  "Villain1: bets 120",
+  "Hero: calls 120",
+  "*** SUMMARY ***",
+].join("\n");
+
+const productionLikePostflopResolver: PostflopStrategyResolver = (input) => ({
+  action: input.actionNode?.endsWith("_FACING_BET") ? "CALL" : "BET_SMALL",
+  explanation: `Production HH resolver ${input.street.toLowerCase()} recommendation`,
+  source: {
+    kind: "STRATEGY_PACK",
+    packId: "internal-hh-production-parity-pack",
+    packVersion: "2026.06",
+    packVerifiedAt: "2026-06-17",
+    ruleId: `hh-production-${input.street.toLowerCase()}`,
+    confidence: "HIGH",
+    matchedTextures: input.textures,
+    sprMin: 0,
+    sprMax: 30,
+    positionPattern: input.positionPattern,
+    sourceUrls: ["https://solver.example/internal/hh-production"],
+    assumptions: ["production parity test fixture"],
+    selectionScore: 100,
+    tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+  },
+});
 
 describe("hhView - DOM import", () => {
   it("zobrazi chyby a necitelna pole pro prazdny vstup bez padu", () => {
@@ -229,6 +282,69 @@ describe("hhView - DOM import", () => {
       street: "RIVER",
       savedToDrillStats: false,
       board: ["Ah", "7d", "2c", "5s", "Jd"],
+      positionPattern: "BTN_VS_BB",
+    });
+  });
+
+  it("zobrazi MTT flop-turn-river review pres production resolver bez source citaci", () => {
+    const root = document.createElement("div");
+    const reviews: HHReviewRecord[][] = [];
+    renderHHView(root, {
+      postflopStrategyResolver: productionLikePostflopResolver,
+      onReviewBuilt: (records) => {
+        reviews.push([...records]);
+      },
+    });
+
+    const textarea = root.querySelector<HTMLTextAreaElement>(".hh-input");
+    textarea!.value = productionFacingBetRunoutHh;
+    root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
+
+    const postflop = [...root.querySelectorAll<HTMLElement>(".hh-postflop-analysis")];
+    const visibleText = root.textContent ?? "";
+    expect(postflop).toHaveLength(3);
+    expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.reviewRecordCount).toBe("4");
+    expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.reviewSavedToDrillStats)
+      .toBe("false");
+    expect(postflop.map((section) => section.dataset.street)).toEqual(["FLOP", "TURN", "RIVER"]);
+    expect(postflop.map((section) => section.dataset.recommended)).toEqual(["CALL", "CALL", "CALL"]);
+    expect(postflop.map((section) => section.dataset.reviewSavedToDrillStats)).toEqual([
+      "false",
+      "false",
+      "false",
+    ]);
+    expect(visibleText).toContain("Production HH resolver flop recommendation");
+    expect(visibleText).toContain("Production HH resolver turn recommendation");
+    expect(visibleText).toContain("Production HH resolver river recommendation");
+    expect(visibleText).not.toContain("STRATEGY_PACK");
+    expect(visibleText).not.toContain("internal-hh-production-parity-pack");
+    expect(visibleText).not.toContain("hh-production-");
+    expect(visibleText).not.toContain("https://");
+    expect(visibleText).not.toContain("FACING_BET");
+    expect(reviews).toHaveLength(1);
+    expect(reviews[0].map((record) => record.street)).toEqual([
+      "PREFLOP",
+      "FLOP",
+      "TURN",
+      "RIVER",
+    ]);
+    expect(reviews[0].every((record) => record.savedToDrillStats === false)).toBe(true);
+    expect(reviews[0][1]).toMatchObject({
+      street: "FLOP",
+      recommended: "CALL",
+      actionNode: "FLOP_FACING_BET",
+      positionPattern: "BTN_VS_BB",
+    });
+    expect(reviews[0][2]).toMatchObject({
+      street: "TURN",
+      recommended: "CALL",
+      actionNode: "TURN_FACING_BET",
+      positionPattern: "BTN_VS_BB",
+    });
+    expect(reviews[0][3]).toMatchObject({
+      street: "RIVER",
+      recommended: "CALL",
+      actionNode: "RIVER_FACING_BET",
       positionPattern: "BTN_VS_BB",
     });
   });

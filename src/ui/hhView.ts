@@ -37,7 +37,12 @@
 import type { ActionKey, AnteMode, Card, Spot } from "../core/types";
 import { buildImportedPostflopTrainingSpots } from "../core/hhPostflopBridge";
 import { parseHandHistory, type HHFieldName, type HHResult } from "../core/hhParser";
-import type { BoardTexture, PostflopAction, PostflopPotType } from "../core/postflopGenerator";
+import type {
+  BoardTexture,
+  PostflopAction,
+  PostflopPotType,
+  PostflopStrategyResolver,
+} from "../core/postflopGenerator";
 import { positionPatternLabel } from "../core/postflopGenerator";
 import type { PostflopTrainingSpot } from "../core/postflopTrainingSpot";
 import { grade } from "../core/scoring";
@@ -65,6 +70,7 @@ export interface HHViewCallbacks {
    */
   onSpotBuilt?: (spot: Spot) => void;
   onReviewBuilt?: (records: readonly HHReviewRecord[]) => boolean | void;
+  postflopStrategyResolver?: PostflopStrategyResolver;
 }
 
 // ---------------------------------------------------------------------------
@@ -241,6 +247,7 @@ function renderAnalysis(
   container: HTMLElement,
   result: HHResult,
   spot: Spot,
+  strategyResolver: PostflopStrategyResolver = POSTFLOP_STRATEGY_RESOLVER,
 ): readonly HHReviewRecord[] {
   container.innerHTML = "";
   container.className = "hh-analysis";
@@ -295,7 +302,7 @@ function renderAnalysis(
   renderMatrix(spot, rangeStore, matrix);
   container.appendChild(matrix);
 
-  const postflopSpots = buildImportedPostflopTrainingSpots(result, POSTFLOP_STRATEGY_RESOLVER);
+  const postflopSpots = buildImportedPostflopTrainingSpots(result, strategyResolver);
   for (const postflopSpot of postflopSpots) {
     container.appendChild(renderImportedPostflopAnalysis(doc, postflopSpot));
     reviewRecords.push(buildHHPostflopReviewRecord(postflopSpot, importedAt));
@@ -383,7 +390,13 @@ function applyResult(
     // Req 11.4 — kompatibilní data: vykresli Spot do vyhrazeného kontejneru.
     const ante: AnteMode = result.fields.ante ?? "OFF";
     renderTable(result.spot, ante, regions.table);
-    const reviewRecords = renderAnalysis(doc, regions.analysis, result, result.spot);
+    const reviewRecords = renderAnalysis(
+      doc,
+      regions.analysis,
+      result,
+      result.spot,
+      callbacks?.postflopStrategyResolver,
+    );
     callbacks?.onReviewBuilt?.(reviewRecords);
     callbacks?.onSpotBuilt?.(result.spot);
   } else {

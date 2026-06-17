@@ -1715,9 +1715,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Doplnit manualni i automatizovane smoke testy pro FLOP->TURN->RIVER hand-line flow ve vsech street/action typech: check, bet small/big, call, raise, fold, facing bet, terminal fold/all-in.
     - Matice musi zahrnout aspon reprezentativni FULL_RING_9/SIX_MAX, REGULAR/TURBO, CHIP_EV/DOLAR_EV, ante ON/OFF a SRP/3bet priklady.
     - Hotovo: `tests/unit/mttHandLineQaMatrix.test.ts` prochazi reprezentativni MTT hand-line scenare pres 9-max/6-max, regular/turbo, chipEV/$EV, ante ON/OFF, SRP, 3bet, facing-bet call/fold vetev a source-free DOM vystup.
-  - [ ] 135.15 HH import/review MTT production parity
+  - [x] 135.15 HH import/review MTT production parity
     - Overit, ze HH bridge pouziva stejne production resolvery jako trainer pro flop/turn/river, vcetne facing-bet nodu a DOLAR_EV/CHIP_EV profilu.
     - Acceptance: importovana handa umi zobrazit MTT review od flopu po river bez source citaci, bez fallbacku pro production-ready profily a se spravnym ulozenim do review/stat struktur.
+    - Hotovo: HH view podporuje injektovatelny postflop resolver, core bridge test overuje flop/turn/river routing pres production-like strategy pack vcetne `*_FACING_BET`, prior street akci a `BTN_VS_BB`; DOM test hlida source-free MTT HH review, `CALL` rekomendace a review records ulozene mimo drill statistiky.
   - [ ] 135.16 Stats, KPI a export/import MTT production QA
     - Po produkcnich MTT importech overit, ze dashboard oddeluje MTT preflop/postflop, streety, action nody, table format, speed, EV, ante, production/fallback confidence a hand-line vs single spot.
     - Export/import stats musi zachovat MTT postflop single i line records a nesmi michat production a fallback KPI bez vahy.

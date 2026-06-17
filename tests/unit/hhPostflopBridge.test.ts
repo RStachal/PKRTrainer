@@ -1,0 +1,97 @@
+import { describe, expect, it } from "vitest";
+
+import { buildImportedPostflopTrainingSpots } from "../../src/core/hhPostflopBridge";
+import { parseHandHistory } from "../../src/core/hhParser";
+import type {
+  PostflopStrategyInput,
+  PostflopStrategyResolver,
+} from "../../src/core/postflopGenerator";
+
+const facingBetRunoutHh = [
+  "PokerStars Hand #4: Tournament #1, 10/20",
+  "Table 'Test' 9-max Seat #8 is the button",
+  "Seat 1: Villain1 (1000 in chips)",
+  "Seat 2: Villain2 (1000 in chips)",
+  "Seat 3: Villain3 (1000 in chips)",
+  "Seat 4: Villain4 (1000 in chips)",
+  "Seat 5: Villain5 (1000 in chips)",
+  "Seat 6: Villain6 (1000 in chips)",
+  "Seat 7: Villain7 (1000 in chips)",
+  "Seat 8: Hero (1000 in chips)",
+  "Seat 9: Villain9 (1000 in chips)",
+  "Villain9: posts small blind 10",
+  "Villain1: posts big blind 20",
+  "*** HOLE CARDS ***",
+  "Dealt to Hero [Ks Qs]",
+  "Hero: raises 40 to 60",
+  "Villain1: calls 40",
+  "*** FLOP *** [Ah 7d 2c]",
+  "Villain1: bets 40",
+  "Hero: calls 40",
+  "*** TURN *** [Ah 7d 2c] [5s]",
+  "Villain1: bets 80",
+  "Hero: calls 80",
+  "*** RIVER *** [Ah 7d 2c 5s] [Jd]",
+  "Villain1: bets 120",
+  "Hero: calls 120",
+  "*** SUMMARY ***",
+].join("\n");
+
+describe("hhPostflopBridge", () => {
+  it("routes imported flop-turn-river MTT spots through the provided production resolver", () => {
+    const result = parseHandHistory(facingBetRunoutHh);
+    const resolverInputs: PostflopStrategyInput[] = [];
+    const resolver: PostflopStrategyResolver = (input) => {
+      resolverInputs.push({
+        ...input,
+        textures: [...input.textures],
+        board: input.board ? [...input.board] : undefined,
+      });
+      return {
+        action: input.actionNode?.endsWith("_FACING_BET") ? "CALL" : "BET_SMALL",
+        explanation: `Production HH resolver ${input.street} ${input.actionNode}`,
+        source: {
+          kind: "STRATEGY_PACK",
+          packId: "internal-hh-production-parity-pack",
+          packVersion: "2026.06",
+          packVerifiedAt: "2026-06-17",
+          ruleId: `hh-production-${input.street.toLowerCase()}`,
+          confidence: "HIGH",
+          matchedTextures: input.textures,
+          sprMin: 0,
+          sprMax: 30,
+          positionPattern: input.positionPattern,
+          sourceUrls: ["https://solver.example/internal/hh-production"],
+          assumptions: ["production parity test fixture"],
+          selectionScore: 100,
+          tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        },
+      };
+    };
+
+    const spots = buildImportedPostflopTrainingSpots(result, resolver);
+
+    expect(result.ok).toBe(true);
+    expect(spots.map((spot) => spot.street)).toEqual(["FLOP", "TURN", "RIVER"]);
+    expect(spots.map((spot) => spot.actionNode)).toEqual([
+      "FLOP_FACING_BET",
+      "TURN_FACING_BET",
+      "RIVER_FACING_BET",
+    ]);
+    expect(spots.map((spot) => spot.recommendedAction)).toEqual(["CALL", "CALL", "CALL"]);
+    expect(spots.map((spot) => spot.explanation.source.kind)).toEqual([
+      "STRATEGY_PACK",
+      "STRATEGY_PACK",
+      "STRATEGY_PACK",
+    ]);
+    expect(resolverInputs.map((input) => input.street)).toEqual(["FLOP", "TURN", "RIVER"]);
+    expect(resolverInputs.map((input) => input.actionNode)).toEqual([
+      "FLOP_FACING_BET",
+      "TURN_FACING_BET",
+      "RIVER_FACING_BET",
+    ]);
+    expect(resolverInputs[1].priorFlopAction).toBe("CALL");
+    expect(resolverInputs[2].priorTurnAction).toBe("CALL");
+    expect(resolverInputs.every((input) => input.positionPattern === "BTN_VS_BB")).toBe(true);
+  });
+});
