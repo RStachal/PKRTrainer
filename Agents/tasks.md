@@ -1697,10 +1697,11 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Postupovat podle `npm run mtt:intake-plan -- --priority=P5_RIVER_PRODUCTION --all`.
     - Kazdy RIVER pack musi pokryt prior turn actions, river runout classes, blocker relevance, value/bluff/check lanes, `RIVER_PRESSURE`, `RIVER_FACING_BET`, final decision akce a source-free explanation texty.
     - Acceptance: `npm run mtt:postflop-release -- --summary` nema fallback runtime, missing normalized, missing permission, LOW confidence ani incomplete coverage rows.
-  - [ ] 135.11 Batch promotion pipeline pro ready MTT sloty
+  - [x] 135.11 Batch promotion pipeline pro ready MTT sloty
     - Vytvorit bezpecny batch workflow nad `mtt:validate-ready-intake`, ktery pro ready sloty umi spustit dry-run buildy, vypsat planned output modules a vyzadovat explicitni potvrzeni pred zapisem.
     - Musi podporovat `--priority`, `--format`, `--street`, `--json`, `--dry-run` a nesmi prepisovat existujici production modul bez `--force`.
     - Cilem je zrychlit import desitek legalnich slotu bez rucni chyby v command line.
+    - Hotovo: `npm run mtt:promote-ready` planuje ready sloty, validuje build reporty, vypisuje output moduly, validate/build/write prikazy, podporuje `--priority`, MTT filtry, `--json`, `--dry-run`, `--write`, `--force` a zapis povoli jen s `--confirm=WRITE_READY_MTT_MODULES`.
   - [ ] 135.12 Production registry integrity gate
     - Pridat test/gate, ktery porovna legal import slots, vygenerovane production module ids, permission packIds a runtime registry.
     - Selhat pri orphan production packu, duplicitnim packId, registry packu mimo legal slot, mismatch table/speed/EV/ante/street nebo packu bez permission evidence.

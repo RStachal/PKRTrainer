@@ -22,6 +22,7 @@
     "mtt:release-gates": "vite-node scripts/checkMttReleaseGates.mts",
     "mtt:acceptance": "vite-node scripts/checkMttAcceptance.mts",
     "mtt:next-action": "vite-node scripts/reportNextMttAction.mts",
+    "mtt:promote-ready": "vite-node scripts/promoteReadyMttIntake.mts",
     "mtt:validate-ready-intake": "vite-node scripts/validateMttReadyIntake.mts",
     "mtt:slots": "vite-node scripts/listMttImportSlots.mts",
     "range:intake": "vite-node scripts/checkRangeIntakeStatus.mts",

@@ -196,6 +196,10 @@ npm run mtt:validate-ready-intake
 npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json
 npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json
 npm run mtt:validate-ready-intake -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
+npm run mtt:promote-ready
+npm run mtt:promote-ready -- --priority=P1_PREFLOP_CHIP_EV --dry-run
+npm run mtt:promote-ready -- --json
+npm run mtt:promote-ready -- --write --confirm=WRITE_READY_MTT_MODULES
 ```
 
 To narrow the MTT matrix to the next import batch:
@@ -228,3 +232,6 @@ writing runtime modules. Its text and JSON output include the exact `build:range
 ready slot so failures can be reproduced manually.
 The prioritized `mtt:intake-plan` output also prints the per-slot `validate:range-import` command and the matching
 `build:range-module --dry-run` command.
+After ready files validate cleanly, `mtt:promote-ready` can batch-plan module writes. It defaults to dry-run, refuses
+real writes without `--write --confirm=WRITE_READY_MTT_MODULES`, and refuses to overwrite existing output modules
+unless `--force` is present.

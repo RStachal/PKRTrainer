@@ -44,6 +44,7 @@
 - `npm run mtt:intake-plan -- --summary`:
 - `npm run mtt:intake-plan -- --ready-only`:
 - `npm run mtt:validate-ready-intake`:
+- `npm run mtt:promote-ready`:
 - `npm run range:intake:guard`:
 - `npm run range:intake -- --ready-only`:
 - `npm run verify:ranges`:
