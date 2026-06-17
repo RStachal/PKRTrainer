@@ -21,11 +21,11 @@ import {
   type TableFormat,
   type TrainingProfile,
 } from "../core/trainingProfile";
-import type { Position } from "../core/types";
+import type { AnteMode, Position } from "../core/types";
 
 export const POSTFLOP_RESULT_RECORD_SCHEMA = "postflop_result_record_v1";
 export const POSTFLOP_STATS_V2_BRIDGE_SCHEMA = "postflop_stats_v2_bridge_v1";
-export const POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION = 2;
+export const POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION = 3;
 
 export interface PostflopResultRecord {
   schema: typeof POSTFLOP_RESULT_RECORD_SCHEMA;
@@ -61,6 +61,7 @@ export interface PostflopStatsV2BridgeRecord {
   blindSpeed: BlindSpeed;
   street: PostflopStreet;
   evModel: EvModel;
+  ante: AnteMode;
   rakeMode: RakeMode;
   actionNode: PostflopActionNode;
   potType: PostflopPotType;
@@ -77,8 +78,9 @@ export interface PostflopStatsV2BridgeRecord {
 }
 
 export type PostflopStatsV2BridgeRecordLike =
-  Omit<PostflopStatsV2BridgeRecord, "schemaVersion"> & {
+  Omit<PostflopStatsV2BridgeRecord, "schemaVersion" | "ante"> & {
     schemaVersion?: number;
+    ante?: AnteMode;
   };
 
 export interface PostflopStatsV2BridgeOptions {
@@ -86,6 +88,12 @@ export interface PostflopStatsV2BridgeOptions {
 }
 
 export type PostflopStatsBreakdownDim =
+  | "gameVariant"
+  | "tableFormat"
+  | "blindSpeed"
+  | "evModel"
+  | "ante"
+  | "rakeMode"
   | "street"
   | "actionNode"
   | "potType"
@@ -155,6 +163,7 @@ export function bridgePostflopResultRecordToStatsV2(
     blindSpeed: profile.blindSpeed,
     street: record.street,
     evModel: profile.evModel,
+    ante: profile.ante,
     rakeMode: profile.rakeMode,
     actionNode: record.actionNode,
     potType: record.potType,
@@ -222,6 +231,7 @@ export function isPostflopStatsV2BridgeRecord(
     typeof record.blindSpeed === "string" &&
     isPostflopStreet(record.street) &&
     typeof record.evModel === "string" &&
+    (record.ante === undefined || isAnteMode(record.ante)) &&
     typeof record.rakeMode === "string" &&
     isPostflopActionNode(record.actionNode) &&
     isPostflopPotType(record.potType) &&
@@ -250,11 +260,18 @@ export function normalizePostflopStatsV2BridgeRecord(
     schemaVersion: isValidSchemaVersion(record.schemaVersion)
       ? Math.floor(record.schemaVersion)
       : POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION,
+    ante: record.ante ?? parseAnteFromProfileId(record.profileId),
   };
 }
 
 export function availablePostflopStatsDimensions(): PostflopStatsBreakdownDim[] {
   return [
+    "gameVariant",
+    "tableFormat",
+    "blindSpeed",
+    "evModel",
+    "ante",
+    "rakeMode",
     "street",
     "actionNode",
     "potType",
@@ -314,6 +331,11 @@ function postflopSourceQualityKey(record: PostflopStatsV2BridgeRecord): string {
   return "PRODUCTION";
 }
 
+function parseAnteFromProfileId(value: string): AnteMode {
+  const ante = value.split("|")[5];
+  return isAnteMode(ante) ? ante : DEFAULT_TRAINING_PROFILE.ante;
+}
+
 function successRate(total: number, correct: number): number | null {
   if (total <= 0) return null;
   return Math.round((correct / total) * 1000) / 10;
@@ -333,6 +355,10 @@ function isValidSchemaVersion(value: unknown): value is number {
 
 function isOptionalSchemaVersion(value: unknown): boolean {
   return value === undefined || isValidSchemaVersion(value);
+}
+
+function isAnteMode(value: unknown): value is AnteMode {
+  return value === "ON" || value === "OFF";
 }
 
 function isPostflopAction(value: unknown): value is PostflopAction {

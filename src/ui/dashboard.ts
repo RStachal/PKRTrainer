@@ -222,6 +222,12 @@ const CONTEXT_LABEL: Record<ActionContext, string> = {
 };
 
 const POSTFLOP_DIM_TITLE: Record<PostflopStatsBreakdownDim, string> = {
+  gameVariant: "By game variant",
+  tableFormat: "By table format",
+  blindSpeed: "By blind speed",
+  evModel: "By model",
+  ante: "By ante",
+  rakeMode: "By rake mode",
   street: "By street",
   actionNode: "By postflop spot",
   potType: "By pot type",
@@ -243,6 +249,18 @@ function groupLabel(dim: BreakdownDim | PostflopDashboardBreakdownDim, key: stri
       return `${key} BB`;
     case "position":
       return key;
+    case "gameVariant":
+      return gameVariantLabel(key);
+    case "tableFormat":
+      return tableFormatLabel(key);
+    case "blindSpeed":
+      return blindSpeedLabel(key);
+    case "evModel":
+      return evModelLabel(key);
+    case "ante":
+      return key === "ON" ? "Ante on" : "Ante off";
+    case "rakeMode":
+      return rakeModeLabel(key);
     case "strategyPackId":
       return "Postflop model";
     case "confidence":
@@ -1709,13 +1727,19 @@ function postflopFlowModeGroups(
     records.length,
     records.filter((record) => record.correct).length,
   );
-  const lineStreetRecords = lineRecords.flatMap((line) => line.streetResults.map((street) => street.record));
+  const lineStreetRecords = postflopLineStreetRecords(lineRecords);
   const lines = postflopStatsGroup(
     "HAND_LINE",
     lineStreetRecords.length,
     lineStreetRecords.filter((record) => record.correct).length,
   );
   return [singles, lines].filter((group) => group.total > 0);
+}
+
+function postflopLineStreetRecords(
+  records: readonly PostflopLineResultRecord[],
+): PostflopStatsV2BridgeRecord[] {
+  return records.flatMap((line) => line.streetResults.map((street) => street.record));
 }
 
 function postflopLineStreetCount(records: readonly PostflopLineResultRecord[]): number {
@@ -1742,9 +1766,10 @@ function renderPostflopBreakdowns(
   heading.textContent = "Postflop breakdowns";
   box.appendChild(heading);
 
+  const allRecords = [...records, ...postflopLineStreetRecords(lineRecords)];
   box.appendChild(renderPostflopBreakdown("flowMode", postflopFlowModeGroups(records, lineRecords)));
   for (const dim of availablePostflopStatsDimensions()) {
-    box.appendChild(renderPostflopBreakdown(dim, breakdownPostflopStats(records, dim)));
+    box.appendChild(renderPostflopBreakdown(dim, breakdownPostflopStats(allRecords, dim)));
   }
 
   return box;
@@ -1752,9 +1777,11 @@ function renderPostflopBreakdowns(
 
 function renderPostflopKpiCharts(
   records: readonly PostflopStatsV2BridgeRecord[],
+  lineRecords: readonly PostflopLineResultRecord[] = [],
 ): HTMLElement {
+  const allRecords = [...records, ...postflopLineStreetRecords(lineRecords)];
   const box = el("section", "postflop-kpi-charts");
-  box.dataset.total = String(records.length);
+  box.dataset.total = String(allRecords.length);
   const heading = el("h3", "postflop-kpi-charts__title");
   heading.textContent = "Postflop KPI charts";
   box.appendChild(heading);
@@ -1768,7 +1795,7 @@ function renderPostflopKpiCharts(
     "sourceQuality",
     "confidence",
   ] as const) {
-    box.appendChild(renderPostflopKpiChart(dim, breakdownPostflopStats(records, dim)));
+    box.appendChild(renderPostflopKpiChart(dim, breakdownPostflopStats(allRecords, dim)));
   }
 
   return box;
@@ -2043,7 +2070,10 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
     data.postflopLineRecords ?? [],
   ));
   wrapper.appendChild(renderPreflopLeakCharts(store));
-  wrapper.appendChild(renderPostflopKpiCharts(data.postflopRecords ?? []));
+  wrapper.appendChild(renderPostflopKpiCharts(
+    data.postflopRecords ?? [],
+    data.postflopLineRecords ?? [],
+  ));
 
   // Legacy breakdown dimensions.
   const dims: BreakdownDim[] = ["context", "position", "bucket"];

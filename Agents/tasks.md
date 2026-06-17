@@ -1719,9 +1719,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Overit, ze HH bridge pouziva stejne production resolvery jako trainer pro flop/turn/river, vcetne facing-bet nodu a DOLAR_EV/CHIP_EV profilu.
     - Acceptance: importovana handa umi zobrazit MTT review od flopu po river bez source citaci, bez fallbacku pro production-ready profily a se spravnym ulozenim do review/stat struktur.
     - Hotovo: HH view podporuje injektovatelny postflop resolver, core bridge test overuje flop/turn/river routing pres production-like strategy pack vcetne `*_FACING_BET`, prior street akci a `BTN_VS_BB`; DOM test hlida source-free MTT HH review, `CALL` rekomendace a review records ulozene mimo drill statistiky.
-  - [ ] 135.16 Stats, KPI a export/import MTT production QA
+  - [x] 135.16 Stats, KPI a export/import MTT production QA
     - Po produkcnich MTT importech overit, ze dashboard oddeluje MTT preflop/postflop, streety, action nody, table format, speed, EV, ante, production/fallback confidence a hand-line vs single spot.
     - Export/import stats musi zachovat MTT postflop single i line records a nesmi michat production a fallback KPI bez vahy.
+    - Hotovo: postflop stats bridge schema v3 nese explicitni `ante`, legacy import bez `schemaVersion`/`ante` se normalizuje z `profileId`, dashboard postflop breakdowny zahrnuji single spoty i hand-line street records a test hlida 9-max/6-max, regular/turbo, chipEV/$EV, ante ON/OFF, production/preview/fallback a source-free labels.
   - [ ] 135.17 Source-free MTT UI release audit
     - Rozsirit/overit UI source-free release gate proti vsem MTT povrchum: profile selector, preflop question/result, range modal, postflop single spot, hand-line, HH review, dashboard, permission audit.
     - Zakazat URL, provider citace, pack id, rule id, raw internal enumy a lokalni raw path ve visible UI.

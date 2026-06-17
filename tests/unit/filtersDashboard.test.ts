@@ -49,7 +49,7 @@ const record: ResultRecord = {
 
 const postflopRecord: PostflopStatsV2BridgeRecord = {
   schema: "postflop_stats_v2_bridge_v1",
-  schemaVersion: 2,
+  schemaVersion: 3,
   qid: "POSTFLOP|FLOP|1|As-Kd-Qh",
   correct: true,
   ts: 2,
@@ -59,6 +59,7 @@ const postflopRecord: PostflopStatsV2BridgeRecord = {
   blindSpeed: "REGULAR",
   street: "FLOP",
   evModel: "CHIP_EV",
+  ante: "ON",
   rakeMode: "NONE",
   actionNode: "SINGLE_RAISED_POT_CBET",
   potType: "SINGLE_RAISED",
@@ -777,6 +778,126 @@ describe("dashboard - DOM statistiky", () => {
         '.postflop-breakdown--flowMode .postflop-breakdown-row[data-group="HAND_LINE"] .postflop-breakdown-row__name',
       )?.textContent,
     ).toBe("Hand line");
+  });
+
+  it("oddeluje MTT postflop KPI podle profilu, confidence a flow modu", () => {
+    const sixMaxDolarRiver: PostflopStatsV2BridgeRecord = {
+      ...postflopRecord,
+      qid: "POSTFLOP|RIVER|six-max-turbo-dollar",
+      correct: true,
+      profileId: "MTT|SIX_MAX|TURBO|RIVER|DOLAR_EV|OFF|NONE",
+      tableFormat: "SIX_MAX",
+      blindSpeed: "TURBO",
+      street: "RIVER",
+      evModel: "DOLAR_EV",
+      ante: "OFF",
+      actionNode: "RIVER_FACING_BET",
+      boardTextureKey: "two-tone|connected|straight-possible",
+      chosen: "CALL",
+      recommended: "CALL",
+      strategyPackId: "mtt-six-max-turbo-river-production-private-v1",
+      strategyRuleId: "river-six-max-turbo-dollar-facing-bet-call",
+      confidence: "HIGH",
+    };
+    const fallbackTurn: PostflopStatsV2BridgeRecord = {
+      ...postflopRecord,
+      qid: "POSTFLOP|TURN|fallback",
+      correct: false,
+      profileId: "MTT|FULL_RING_9|REGULAR|TURN|CHIP_EV|ON|NONE",
+      street: "TURN",
+      actionNode: "TURN_BARREL",
+      chosen: "CHECK",
+      recommended: "BET_SMALL",
+      strategyPackId: null,
+      strategyRuleId: "postflop-generator-heuristic",
+      confidence: null,
+    };
+    const dollarLineRecord: PostflopLineResultRecord = {
+      ...postflopLineRecord,
+      lineId: "POSTFLOP_LINE|dollar-river",
+      profileId: sixMaxDolarRiver.profileId,
+      streetResults: [{
+        ...postflopLineRecord.streetResults[0],
+        street: "RIVER",
+        record: sixMaxDolarRiver,
+      }],
+      actionHistory: [{
+        ...postflopLineRecord.actionHistory[0],
+        street: "RIVER",
+        actionNode: "RIVER_FACING_BET",
+        action: "CALL",
+      }],
+    };
+    const root = document.createElement("div");
+
+    renderDashboard({
+      store: createStatsStore(new MemoryStorage()),
+      sessionCount: 3,
+      postflopRecords: [postflopRecord, fallbackTurn],
+      postflopLineRecords: [dollarLineRecord],
+    }, root);
+
+    expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("3");
+    expect(root.querySelector<HTMLElement>(".postflop-kpi-charts")?.dataset.total).toBe("3");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--flowMode .postflop-breakdown-row[data-group="SINGLE_SPOT"]',
+      )?.dataset.total,
+    ).toBe("2");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--flowMode .postflop-breakdown-row[data-group="HAND_LINE"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--tableFormat .postflop-breakdown-row[data-group="SIX_MAX"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--tableFormat .postflop-breakdown-row[data-group="SIX_MAX"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("6-max");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--blindSpeed .postflop-breakdown-row[data-group="TURBO"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("Turbo");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--evModel .postflop-breakdown-row[data-group="DOLAR_EV"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("$EV");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--ante .postflop-breakdown-row[data-group="OFF"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("Ante off");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--sourceQuality .postflop-breakdown-row[data-group="PRODUCTION"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--sourceQuality .postflop-breakdown-row[data-group="PREVIEW"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--sourceQuality .postflop-breakdown-row[data-group="FALLBACK"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--actionNode .postflop-breakdown-row[data-group="RIVER_FACING_BET"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("River facing bet");
+    expect(root.textContent).not.toContain("DOLAR_EV");
+    expect(root.textContent).not.toContain("SIX_MAX");
+    expect(root.textContent).not.toContain("RIVER_FACING_BET");
+    expect(root.textContent).not.toContain("mtt-six-max-turbo-river-production-private-v1");
   });
 
   it("exportuje a importuje postflop breakdown pres JSON transfer", () => {

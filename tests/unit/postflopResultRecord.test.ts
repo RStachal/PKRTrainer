@@ -8,6 +8,7 @@ import {
   POSTFLOP_RESULT_RECORD_SCHEMA,
   POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION,
   POSTFLOP_STATS_V2_BRIDGE_SCHEMA,
+  availablePostflopStatsDimensions,
   bridgePostflopResultRecordToStatsV2,
   breakdownPostflopStats,
   buildPostflopResultRecord,
@@ -96,6 +97,7 @@ describe("postflopResultRecord", () => {
       blindSpeed: "TURBO",
       street: "FLOP",
       evModel: "CHIP_EV",
+      ante: "ON",
       actionNode: "SINGLE_RAISED_POT_CBET",
       potType: "SINGLE_RAISED",
       heroPosition: "SB",
@@ -116,12 +118,17 @@ describe("postflopResultRecord", () => {
     const bridge = bridgePostflopResultRecordToStatsV2(
       buildPostflopResultRecord(spot, spot.recommendedAction, 321, 654),
     );
-    const legacy = { ...bridge };
+    const legacy = { ...bridge } as Partial<typeof bridge>;
     delete (legacy as Partial<typeof bridge>).schemaVersion;
+    delete legacy.ante;
 
     expect(isPostflopStatsV2BridgeRecord(legacy)).toBe(true);
-    expect(normalizePostflopStatsV2BridgeRecord(legacy).schemaVersion)
-      .toBe(POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION);
+    expect(normalizePostflopStatsV2BridgeRecord(
+      legacy as Parameters<typeof normalizePostflopStatsV2BridgeRecord>[0],
+    )).toMatchObject({
+      schemaVersion: POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION,
+      ante: "ON",
+    });
     expect(isPostflopStatsV2BridgeRecord({ ...bridge, schemaVersion: 0 })).toBe(false);
   });
 
@@ -209,6 +216,27 @@ describe("postflopResultRecord", () => {
       key: "LOW",
       total: 1,
     });
+    expect(breakdownPostflopStats([correct], "ante")[0]).toMatchObject({
+      key: "ON",
+      total: 1,
+    });
+    expect(availablePostflopStatsDimensions()).toEqual([
+      "gameVariant",
+      "tableFormat",
+      "blindSpeed",
+      "evModel",
+      "ante",
+      "rakeMode",
+      "street",
+      "actionNode",
+      "potType",
+      "positionPattern",
+      "positionPair",
+      "boardTextureKey",
+      "strategyPackId",
+      "confidence",
+      "sourceQuality",
+    ]);
   });
 
   it("agreguje street progression pro flop, turn a river oddelene", () => {
