@@ -45,7 +45,11 @@ npm run range:intake -- --kind=preflop --format=SIX_MAX --speed=TURBO
 npm run range:intake -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 ```
 
-The guard checks that `Agents/range-intake/raw/` still ignores private local inputs and has no tracked raw files beyond its placeholder docs. The status command is source-free. It checks file presence for `normalized.json` and `permission.json`; it does not validate poker content.
+The guard checks that `Agents/range-intake/raw/` still ignores private local inputs and has no tracked raw files beyond
+its placeholder docs. It also checks local raw folders against the legal slot registry, verifies present `normalized.json`
+`id` and `permission.json` `packId`, and prints ready/waiting priority counts without reading source chart values.
+The status command is source-free. It checks file presence for `normalized.json` and `permission.json`; it does not
+validate poker content.
 
 ## Validate an MTT preflop import
 

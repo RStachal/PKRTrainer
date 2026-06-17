@@ -150,6 +150,8 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("build:range-module --dry-run");
     expect(operatorGuide).toContain("npm run range:intake");
     expect(operatorGuide).toContain("npm run range:intake:guard");
+    expect(operatorGuide).toContain("checks local raw folders against the legal slot registry");
+    expect(operatorGuide).toContain("permission.json` `packId");
     expect(operatorGuide).toContain("legal import slot: true");
     expect(operatorGuide).toContain("matched import slots");
     expect(operatorGuide).toContain("npm run verify:ranges");

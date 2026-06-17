@@ -1670,9 +1670,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Vystup musi obsahovat priority bucket, slotId, packId, chybejici soubory, validate command, build dry-run command a navazujici acceptance prikazy.
     - Cilem je, aby operator po dodani dat nemusel cist 62 radku, ale dostal dalsi konkretni krok.
     - Hotovo: `npm run mtt:next-action` vraci text/JSON s prioritou, slotem, target packem, chybejicimi `normalized.json`/`permission.json`, validate/build dry-run prikazy, follow-up acceptance prikazy a odkazy na zdrojove reporty.
-  - [ ] 135.4 Udelat preflight kontrolu raw MTT import workspace
+  - [x] 135.4 Udelat preflight kontrolu raw MTT import workspace
     - Rozsirit guard tak, aby umel rozlisit povolene lokalni raw soubory od omylem commitnutych privatnich zdroju, ukazal ready/waiting po priority buckets a failnul pri nevalidni strukture `Agents/range-intake/raw/<packId>/`.
     - Soucasti ma byt kontrola, ze `normalized.json` a `permission.json` patri ke stejnemu `packId` a ze slot existuje v legalnim registry.
+    - Hotovo: `npm run range:intake:guard` kontroluje git-tracked raw soubory, lokalni raw slozky proti legal slot registry, `normalized.json` id, `permission.json` packId, priority counts a JSON vystup pro operator tooling.
   - [ ] 135.5 P1 preflop CHIP_EV production import wave
     - Postupovat podle `npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all`.
     - Pro kazdy legalni vstup: ulozit raw evidence lokalne, normalizovat do `normalized.json`, pridat `permission.json`, spustit `validate:range-import`, `build:range-module --dry-run`, vygenerovat modul a zapojit registry/resolver.
