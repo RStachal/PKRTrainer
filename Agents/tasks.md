@@ -1556,6 +1556,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.18 Pridat kratky MTT intake plan summary do release diagnostiky
     - Release diagnostika ma ukazat priority frontu bez dlouheho vypisu slotu a bez rucniho parsovani full intake planu.
     - Hotovo: `npm run mtt:intake-plan -- --summary` vypise jen pocty a priority; `npm run mtt:release-gates` ho zahrnuje mezi agregovane souhrny.
+  - [x] 133.19 Pripravit konsolidovany MTT completion backlog
+    - Dosavadni hotove runtime/tooling/UI casti a datove blokery musi byt prevedene do jednoho hlavniho planu pro dokonceni MTT casti aplikace.
+    - Hotovo: sekce 135 definuje MTT application completion package od definition-of-done pres P1-P5 import waves az po finalni release candidate a supersedovani starsich duplicitnich tasku.
 
 - [ ] 134. MTT postflop full production roadmap FLOP-TURN-RIVER
   - Cil: plne funkcni MTT postflop simulace od flopu po river pro FULL_RING_9 i SIX_MAX, REGULAR i TURBO, CHIP_EV i DOLAR_EV, ante ON/OFF, vsechny podporovane heads-up pozicni dvojice, SRP/3bet/facing-bet vetve, vsechny streety a vsechny akce, ktere dany node legalne pripousti.
@@ -1639,6 +1642,95 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - `npm run mtt:blockers -- --summary` nema P3/P4/P5 blocker rows.
     - `npm run mtt:intake-plan -- --priority=P3_FLOP_PRODUCTION --all`, P4 a P5 neukazuji waiting sloty.
     - Manualni smoke: 6-max/9-max, regular/turbo, chipEV/$EV, ante ON/OFF, FLOP/TURN/RIVER hand line projde bez source citaci a bez fallback warningu.
+
+- [ ] 135. MTT application completion package - hlavni backlog pro dokonceni MTT casti
+  - Cil: v prvni produkcni casti aplikace mit kompletne funkcni MTT trenink pro FULL_RING_9 i SIX_MAX, REGULAR i TURBO, CHIP_EV i DOLAR_EV, ante ON/OFF, PREFLOP/FLOP/TURN/RIVER, vsechny podporovane pozice, pot/action nody, single spot i hand-line flow, HH review, stats a release gates.
+  - Aktualni stav 2026-06-17: technicky runtime/tooling/UI zaklad existuje; `npm run release:check` zamerne selhava na MTT production gatech, protoze 62 MTT slotu neni production-ready a 0 slotu je ready-for-validation.
+  - Kriticka zasada: produkcni MTT doporuceni nesmi vzniknout z public heuristic fallbacku, metadata-only reuse ani rucne domyslenych chart hodnot. Kazdy povyseny slot potrebuje legalni `normalized.json`, `permission.json`, production-ready validaci, legal-slot match a source-free runtime vystup.
+  - Primary execution order:
+    - P0: zafixovat definici hotove MTT casti, acceptance gate a operator workflow.
+    - P1: dokoncit preflop CHIP_EV produkcni mezery.
+    - P2: dokoncit preflop DOLAR_EV produkcni mezery.
+    - P3: importovat FLOP production StrategyPacky.
+    - P4: importovat TURN production StrategyPacky.
+    - P5: importovat RIVER production StrategyPacky.
+    - P6: spustit end-to-end app QA, performance/mobile/source-free a release kandidat.
+  - [ ] 135.1 Zafixovat MTT product definition of done
+    - Sepsat do `Agents/tasks.md` a release dokumentace presny stav, kdy je MTT cast povazovana za hotovou: vsechny 64 MTT completion rows production-ready, 0 blocker rows, 0 waiting ready/intake slotu, vsechny user flows bez fallback warningu.
+    - Definition of done musi explicitne zahrnout 6-max/9-max, regular/turbo, CHIP_EV/DOLAR_EV, ante ON/OFF, PREFLOP/FLOP/TURN/RIVER, SRP/3bet/facing-bet, c-bet/barrel/pressure, call/raise/fold vetve a hand-line transitions.
+    - Vystup: kratky "MTT done checklist" pouzitelny pri finalnim release rozhodnuti.
+  - [ ] 135.2 Zavest jeden MTT acceptance prikaz nad existujicimi gates
+    - Pridat `npm run mtt:acceptance`, ktery spusti produkcni MTT completion, blockers, intake summary, postflop release, ready validation, source-free UI guard relevantni pro MTT a vrati strukturovany JSON/text.
+    - Rozdil proti `mtt:release-gates`: acceptance ma byt finalni MTT-only gate s jasnym "green only when MTT app complete" kontraktem.
+    - Testy: CLI text, JSON, zamerne cerveny stav pred legalnimi daty, green fixture/mocking jen pokud nevyzaduje falesna produkcni data.
+  - [ ] 135.3 Pridat "next MTT action" operator report
+    - Pridat prikaz/report, ktery z `mtt:intake-plan`, `mtt:blockers` a `mtt:release-gates -- --json` vybere dalsi nejdulezitejsi praci: prvni ready slot, jinak prvni waiting slot podle P0-P5.
+    - Vystup musi obsahovat priority bucket, slotId, packId, chybejici soubory, validate command, build dry-run command a navazujici acceptance prikazy.
+    - Cilem je, aby operator po dodani dat nemusel cist 62 radku, ale dostal dalsi konkretni krok.
+  - [ ] 135.4 Udelat preflight kontrolu raw MTT import workspace
+    - Rozsirit guard tak, aby umel rozlisit povolene lokalni raw soubory od omylem commitnutych privatnich zdroju, ukazal ready/waiting po priority buckets a failnul pri nevalidni strukture `Agents/range-intake/raw/<packId>/`.
+    - Soucasti ma byt kontrola, ze `normalized.json` a `permission.json` patri ke stejnemu `packId` a ze slot existuje v legalnim registry.
+  - [ ] 135.5 P1 preflop CHIP_EV production import wave
+    - Postupovat podle `npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all`.
+    - Pro kazdy legalni vstup: ulozit raw evidence lokalne, normalizovat do `normalized.json`, pridat `permission.json`, spustit `validate:range-import`, `build:range-module --dry-run`, vygenerovat modul a zapojit registry/resolver.
+    - Acceptance: P1 bucket ma 0 blocker rows, preflop CHIP_EV 6-max/turbo/ante i 9-max turbo gapy jsou production-ready bez metadata-only reuse.
+  - [ ] 135.6 P2 preflop DOLAR_EV production import wave
+    - Postupovat podle `npm run mtt:intake-plan -- --priority=P2_PREFLOP_DOLAR_EV --all`.
+    - DOLAR_EV nesmi automaticky reuse CHIP_EV; reuse je povoleny jen s explicitni permission `reusePolicy.allowedDimensions` a auditnim rationale.
+    - Acceptance: vsechny preflop DOLAR_EV MTT profily jsou production-ready, scoring pouziva DOLAR_EV packy nebo explicitne povolenou reuse policy.
+  - [ ] 135.7 Preflop production runtime de-fallback
+    - Po P1/P2 importech overit, ze `rangePackForTrainingProfile` a souvisejici profile gates pro vsechny MTT preflop kombinace vybiraji production pack a nikdy tise nepadaji do candidate/fallback dat.
+    - Doplnit regresni test pres 2 tableFormat x 2 speed x 2 EV x 2 ante preflop matici.
+  - [ ] 135.8 P3 FLOP production import wave
+    - Postupovat podle `npm run mtt:intake-plan -- --priority=P3_FLOP_PRODUCTION --all`.
+    - Kazdy FLOP pack musi pokryt MTT gameVariant, table/speed/EV/ante dimenze, SRP/3bet, 50 granularnich position patterns, board textures, `SINGLE_RAISED_POT_CBET`, `THREE_BET_POT_CBET`, `FLOP_FACING_BET`, range lanes a legalni akce.
+    - Acceptance: `npm run mtt:postflop-coverage -- --json` nema P3 `MISSING_PACK`, `MISSING_RULE` ani `PACK_NOT_PRODUCTION_READY`.
+  - [ ] 135.9 P4 TURN production import wave
+    - Postupovat podle `npm run mtt:intake-plan -- --priority=P4_TURN_PRODUCTION --all`.
+    - Kazdy TURN pack musi pokryt SRP/3bet, 50 position patterns, prior flop actions, turn card classes, SPR windows, `TURN_BARREL`, `TURN_FACING_BET`, legalni akce, range lanes a explanations.
+    - Acceptance: `npm run mtt:postflop-coverage -- --json` nema P4 blockery a runtime resolver vraci production model pro vsechny targetovane TURN profily.
+  - [ ] 135.10 P5 RIVER production import wave
+    - Postupovat podle `npm run mtt:intake-plan -- --priority=P5_RIVER_PRODUCTION --all`.
+    - Kazdy RIVER pack musi pokryt prior turn actions, river runout classes, blocker relevance, value/bluff/check lanes, `RIVER_PRESSURE`, `RIVER_FACING_BET`, final decision akce a source-free explanation texty.
+    - Acceptance: `npm run mtt:postflop-release -- --summary` nema fallback runtime, missing normalized, missing permission, LOW confidence ani incomplete coverage rows.
+  - [ ] 135.11 Batch promotion pipeline pro ready MTT sloty
+    - Vytvorit bezpecny batch workflow nad `mtt:validate-ready-intake`, ktery pro ready sloty umi spustit dry-run buildy, vypsat planned output modules a vyzadovat explicitni potvrzeni pred zapisem.
+    - Musi podporovat `--priority`, `--format`, `--street`, `--json`, `--dry-run` a nesmi prepisovat existujici production modul bez `--force`.
+    - Cilem je zrychlit import desitek legalnich slotu bez rucni chyby v command line.
+  - [ ] 135.12 Production registry integrity gate
+    - Pridat test/gate, ktery porovna legal import slots, vygenerovane production module ids, permission packIds a runtime registry.
+    - Selhat pri orphan production packu, duplicitnim packId, registry packu mimo legal slot, mismatch table/speed/EV/ante/street nebo packu bez permission evidence.
+  - [ ] 135.13 User-facing MTT profile coverage QA
+    - Overit, ze UI profile selector/start flow umi vsechny MTT kombinace a ze labely jsou srozumitelne: 9-max/6-max, regular/turbo, chipEV/$EV, ante ON/OFF, preflop/flop/turn/river.
+    - Non-production stav muze byt viditelny jen source-free a nesmi zobrazit pack id, provider, URL ani raw internal enumy.
+    - Po produkcnim importu se MTT profily nesmi tvarit jako preview/fallback.
+  - [ ] 135.14 MTT hand-line end-to-end QA matrix
+    - Doplnit manualni i automatizovane smoke testy pro FLOP->TURN->RIVER hand-line flow ve vsech street/action typech: check, bet small/big, call, raise, fold, facing bet, terminal fold/all-in.
+    - Matice musi zahrnout aspon reprezentativni FULL_RING_9/SIX_MAX, REGULAR/TURBO, CHIP_EV/DOLAR_EV, ante ON/OFF a SRP/3bet priklady.
+  - [ ] 135.15 HH import/review MTT production parity
+    - Overit, ze HH bridge pouziva stejne production resolvery jako trainer pro flop/turn/river, vcetne facing-bet nodu a DOLAR_EV/CHIP_EV profilu.
+    - Acceptance: importovana handa umi zobrazit MTT review od flopu po river bez source citaci, bez fallbacku pro production-ready profily a se spravnym ulozenim do review/stat struktur.
+  - [ ] 135.16 Stats, KPI a export/import MTT production QA
+    - Po produkcnich MTT importech overit, ze dashboard oddeluje MTT preflop/postflop, streety, action nody, table format, speed, EV, ante, production/fallback confidence a hand-line vs single spot.
+    - Export/import stats musi zachovat MTT postflop single i line records a nesmi michat production a fallback KPI bez vahy.
+  - [ ] 135.17 Source-free MTT UI release audit
+    - Rozsirit/overit UI source-free release gate proti vsem MTT povrchum: profile selector, preflop question/result, range modal, postflop single spot, hand-line, HH review, dashboard, permission audit.
+    - Zakazat URL, provider citace, pack id, rule id, raw internal enumy a lokalni raw path ve visible UI.
+  - [ ] 135.18 Mobile/performance MTT release QA
+    - Po produkcnich packach spustit mobile viewport smoke, render profile, bundle budget a build.
+    - Overit, ze lazy loading production packu nezpomali first render a ze Flopzilla/preflop 13x13 matice zustava pouzitelna na 360/390/412px sirce.
+  - [ ] 135.19 Final MTT release candidate checklist
+    - Spustit: `npm run typecheck`, `npm test`, `npm run mtt:acceptance`, `npm run mtt:release-gates`, `npm run verify:ranges`, `npm run build`, `npm run bundle:budget`, `npm run release:check`.
+    - Vystup ulozit do release notes: pocty production rows, 0 blockers, 0 waiting slots, bundle budget, known limitations.
+  - [ ] 135.20 Final MTT user smoke
+    - Rucne projit reprezentativni MTT scenare: 9-max regular CHIP_EV preflop, 9-max turbo DOLAR_EV preflop, 6-max regular CHIP_EV flop line, 6-max turbo DOLAR_EV river facing-bet, HH import turn/river review a dashboard kontrola.
+    - Zadny scenar nesmi zobrazit fallback warning, source citation, pack id nebo nevalidni action pro dany node.
+  - [ ] 135.21 Uzavrit nebo supersedovat stare duplicitni MTT import tasky
+    - Po prijeti tohoto konsolidovaneho backlogu projit stare otevrene tasky 86-88, 104-108, 114 a 116 a oznacit je jako superseded-by 135.x nebo je premapovat na konkretni P1-P5 import wave.
+    - Cilem je mit jeden primarni backlog pro MTT dokonceni a neudrzovat paralelni, castecne duplicitni seznamy.
+  - [ ] 135.22 Release rozhodnuti pro "MTT complete v1"
+    - Po splneni 135.1-135.21 oznacit MTT cast jako produkcne kompletni pro v1.
+    - Acceptance: `npm run release:check` zeleny, `mtt:completion -- --summary` valid true, `mtt:blockers -- --summary` 0 blockers, `mtt:postflop-release -- --summary` valid true, operator docs a release notes aktualni.
 
 ## Notes
 
