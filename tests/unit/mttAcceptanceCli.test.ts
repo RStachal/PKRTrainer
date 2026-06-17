@@ -23,7 +23,7 @@ describe("mtt:acceptance CLI", () => {
     expect(result.stdout).toContain("MTT ready intake validation");
     expect(result.stdout).toContain("## MTT source-free UI guard");
     expect(result.stdout).toContain("tests/unit/uiNoSourceCitation.test.ts");
-    expect(result.stdout).toContain("7 tests");
+    expect(result.stdout).toContain("9 tests");
     expect(result.stdout).toContain("## Range intake workspace guard");
     expect(result.stdout).toContain("Range intake workspace guard");
     expect(result.stdout).toContain("## Ready intake slots");
@@ -75,7 +75,7 @@ describe("mtt:acceptance CLI", () => {
     expect(parsed.commands.every((command) => command.stdout.length > 0)).toBe(true);
     expect(parsed.commands[0].stdout).toContain("MTT completion release gate");
     expect(parsed.commands[5].stdout).toContain("tests/unit/uiNoSourceCitation.test.ts");
-    expect(parsed.commands[5].stdout).toContain("7 tests");
+    expect(parsed.commands[5].stdout).toContain("9 tests");
     expect(parsed.commands[8].stdout).toContain("MTT production registry integrity");
     expect(parsed.commands[0].stdout).not.toContain("> mtt-preflop-trainer");
     expect(JSON.stringify(parsed)).not.toContain("https://");
