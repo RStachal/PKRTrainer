@@ -34,9 +34,12 @@ the dry-run build command for every ready slot it checks.
 For a blocker-only queue that combines completion readiness with the same local file presence checks:
 
 ```bash
+npm run mtt:completion -- --summary
+npm run mtt:completion -- --preview --json
 npm run mtt:blockers
 npm run mtt:blockers -- --summary
 npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
+npm run mtt:postflop-release -- --summary
 npm run mtt:intake-plan
 npm run mtt:intake-plan -- --ready-only --json
 npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all

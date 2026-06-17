@@ -33,9 +33,9 @@
 
 - `npm run typecheck`:
 - `npm test`:
-- `npm run mtt:completion`:
+- `npm run mtt:completion -- --summary`:
 - `npm run mtt:blockers`:
-- `npm run mtt:postflop-release`:
+- `npm run mtt:postflop-release -- --summary`:
 - `npm run mtt:intake-plan -- --ready-only`:
 - `npm run mtt:validate-ready-intake`:
 - `npm run range:intake:guard`:

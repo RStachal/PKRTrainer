@@ -173,9 +173,9 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("Gameplay changes");
     expect(releaseTemplate).toContain("Range data changes");
     expect(releaseTemplate).toContain("Statistics changes");
-    expect(releaseTemplate).toContain("npm run mtt:completion");
+    expect(releaseTemplate).toContain("npm run mtt:completion -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:blockers");
-    expect(releaseTemplate).toContain("npm run mtt:postflop-release");
+    expect(releaseTemplate).toContain("npm run mtt:postflop-release -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --ready-only");
     expect(releaseTemplate).toContain("npm run mtt:validate-ready-intake");
     expect(releaseTemplate).toContain("npm run range:intake:guard");
