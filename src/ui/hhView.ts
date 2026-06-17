@@ -35,7 +35,7 @@
  */
 
 import type { ActionKey, AnteMode, Card, Spot } from "../core/types";
-import { buildImportedFlopTrainingSpot } from "../core/hhPostflopBridge";
+import { buildImportedPostflopTrainingSpots } from "../core/hhPostflopBridge";
 import { parseHandHistory, type HHFieldName, type HHResult } from "../core/hhParser";
 import type { BoardTexture, PostflopAction, PostflopPotType } from "../core/postflopGenerator";
 import { positionPatternLabel } from "../core/postflopGenerator";
@@ -295,16 +295,16 @@ function renderAnalysis(
   renderMatrix(spot, rangeStore, matrix);
   container.appendChild(matrix);
 
-  const flopSpot = buildImportedFlopTrainingSpot(result, POSTFLOP_STRATEGY_RESOLVER);
-  if (flopSpot) {
-    container.appendChild(renderImportedFlopAnalysis(doc, flopSpot));
-    reviewRecords.push(buildHHPostflopReviewRecord(flopSpot, importedAt));
+  const postflopSpots = buildImportedPostflopTrainingSpots(result, POSTFLOP_STRATEGY_RESOLVER);
+  for (const postflopSpot of postflopSpots) {
+    container.appendChild(renderImportedPostflopAnalysis(doc, postflopSpot));
+    reviewRecords.push(buildHHPostflopReviewRecord(postflopSpot, importedAt));
   }
   container.dataset.reviewRecordCount = String(reviewRecords.length);
   return reviewRecords;
 }
 
-function renderImportedFlopAnalysis(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
+function renderImportedPostflopAnalysis(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
   const section = el(doc, "section", "hh-postflop-analysis");
   section.dataset.reviewSavedToDrillStats = "false";
   section.dataset.street = spot.street;
@@ -314,7 +314,7 @@ function renderImportedFlopAnalysis(doc: Document, spot: PostflopTrainingSpot): 
   section.dataset.board = spot.board.map(cardLabel).join("-");
 
   const title = el(doc, "h3", "hh-postflop-analysis__title");
-  title.textContent = "Flop review";
+  title.textContent = `${streetLabel(spot.street)} review`;
   section.appendChild(title);
 
   const facts = el(doc, "div", "hh-postflop-analysis__facts");
@@ -343,6 +343,17 @@ function renderImportedFlopAnalysis(doc: Document, spot: PostflopTrainingSpot): 
   section.appendChild(explanation);
 
   return section;
+}
+
+function streetLabel(street: PostflopTrainingSpot["street"]): string {
+  switch (street) {
+    case "FLOP":
+      return "Flop";
+    case "TURN":
+      return "Turn";
+    case "RIVER":
+      return "River";
+  }
 }
 
 /**

@@ -97,10 +97,25 @@ export interface HHFields {
   /** Akce hrdiny v preflopu (textové tokeny, např. "raises 120 to 180"). */
   actions?: string[];
   flop?: [Card, Card, Card];
+  turn?: [Card, Card, Card, Card];
+  river?: [Card, Card, Card, Card, Card];
+  postflopActions?: HHPostflopActionHistoryByStreet;
   /** Počet obsazených sedadel u stolu (pro diagnostiku kompatibility). */
   tableSize?: number;
   /** Detekovaný režim ante (ON, pokud se objevil post ante). */
   ante?: AnteMode;
+}
+
+export interface HHStreetActionHistory {
+  actions: readonly string[];
+  actionsBeforeHero: readonly string[];
+  heroActions: readonly string[];
+}
+
+export interface HHPostflopActionHistoryByStreet {
+  flop?: HHStreetActionHistory;
+  turn?: HHStreetActionHistory;
+  river?: HHStreetActionHistory;
 }
 
 /** Výsledek parsování hand history. */
@@ -191,6 +206,9 @@ interface ParsedHand {
   /** Akce před první akcí hrdiny (pro odvození facing). */
   actionsBeforeHero: string[];
   flop?: [Card, Card, Card];
+  turn?: [Card, Card, Card, Card];
+  river?: [Card, Card, Card, Card, Card];
+  postflopActions: HHPostflopActionHistoryByStreet;
 }
 
 // ---------------------------------------------------------------------------
@@ -361,6 +379,8 @@ function extractHand(block: string): ParsedHand {
   let bigBlind: number | undefined;
   let anteSeen = false;
   let flop: [Card, Card, Card] | undefined;
+  let turn: [Card, Card, Card, Card] | undefined;
+  let river: [Card, Card, Card, Card, Card] | undefined;
 
   // Hlavička s buttonem: "... Seat #3 is the button" nebo "Seat 3 is the button".
   for (const line of lines) {
@@ -441,12 +461,18 @@ function extractHand(block: string): ParsedHand {
   }
 
   for (const line of lines) {
-    const m = line.match(/^\*\*\* FLOP \*\*\* \[(.+?)\]/iu);
-    if (!m) continue;
-    const board = parseBoardFromBracket(m[1]);
-    if (board?.length === 3) {
+    const board = /^\*\*\* (?:FLOP|TURN|RIVER) \*\*\*/iu.test(line)
+      ? parseBoardFromBracket(line)
+      : undefined;
+    if (!board) continue;
+    if (board.length >= 3 && flop === undefined) {
       flop = [board[0], board[1], board[2]];
-      break;
+    }
+    if (board.length >= 4 && turn === undefined) {
+      turn = [board[0], board[1], board[2], board[3]];
+    }
+    if (board.length >= 5 && river === undefined) {
+      river = [board[0], board[1], board[2], board[3], board[4]];
     }
   }
 
@@ -492,7 +518,62 @@ function extractHand(block: string): ParsedHand {
     heroPreActions,
     actionsBeforeHero,
     flop,
+    turn,
+    river,
+    postflopActions: heroName ? extractPostflopActionHistory(lines, heroName) : {},
   };
+}
+
+function extractPostflopActionHistory(
+  lines: readonly string[],
+  heroName: string,
+): HHPostflopActionHistoryByStreet {
+  return {
+    flop: extractStreetActionHistory(lines, heroName, "FLOP"),
+    turn: extractStreetActionHistory(lines, heroName, "TURN"),
+    river: extractStreetActionHistory(lines, heroName, "RIVER"),
+  };
+}
+
+function extractStreetActionHistory(
+  lines: readonly string[],
+  heroName: string,
+  street: "FLOP" | "TURN" | "RIVER",
+): HHStreetActionHistory | undefined {
+  const start = lines.findIndex((line) => new RegExp(`^\\*\\*\\* ${street} \\*\\*\\*`, "iu").test(line));
+  if (start === -1) return undefined;
+
+  const nextStreetMarkers: Record<typeof street, readonly string[]> = {
+    FLOP: ["TURN", "SUMMARY"],
+    TURN: ["RIVER", "SUMMARY"],
+    RIVER: ["SHOW DOWN", "SHOWDOWN", "SUMMARY"],
+  };
+  const end = lines.findIndex((line, index) => (
+    index > start &&
+    nextStreetMarkers[street].some((marker) => new RegExp(`^\\*\\*\\* ${marker} \\*\\*\\*`, "iu").test(line))
+  ));
+  const streetLines = lines.slice(start + 1, end === -1 ? lines.length : end);
+  const actions: string[] = [];
+  const actionsBeforeHero: string[] = [];
+  const heroActions: string[] = [];
+  let heroActed = false;
+  const actionRe = /:\s+(folds|checks|calls|bets|raises)\b/i;
+
+  for (const line of streetLines) {
+    if (!actionRe.test(line)) continue;
+    const actor = actorOfActionLine(line);
+    if (actor === undefined) continue;
+    const actionText = line.slice(line.indexOf(":") + 1).trim();
+    actions.push(actionText);
+    if (actor === heroName) {
+      heroActions.push(actionText);
+      heroActed = true;
+    } else if (!heroActed) {
+      actionsBeforeHero.push(actionText);
+    }
+  }
+
+  return { actions, actionsBeforeHero, heroActions };
 }
 
 // ---------------------------------------------------------------------------
@@ -833,6 +914,19 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
 
     if (hand.flop) {
       fields.flop = hand.flop;
+    }
+    if (hand.turn) {
+      fields.turn = hand.turn;
+    }
+    if (hand.river) {
+      fields.river = hand.river;
+    }
+    if (
+      hand.postflopActions.flop ||
+      hand.postflopActions.turn ||
+      hand.postflopActions.river
+    ) {
+      fields.postflopActions = hand.postflopActions;
     }
 
     // --- Pozice hrdiny (jen kompatibilní 9-handed) ---

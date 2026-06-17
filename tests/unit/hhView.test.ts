@@ -47,6 +47,37 @@ const validFlopHh = [
   "*** SUMMARY ***",
 ].join("\n");
 
+const validTurnRiverHh = [
+  "PokerStars Hand #3: Tournament #1, 10/20",
+  "Table 'Test' 9-max Seat #8 is the button",
+  "Seat 1: Villain1 (1000 in chips)",
+  "Seat 2: Villain2 (1000 in chips)",
+  "Seat 3: Villain3 (1000 in chips)",
+  "Seat 4: Villain4 (1000 in chips)",
+  "Seat 5: Villain5 (1000 in chips)",
+  "Seat 6: Villain6 (1000 in chips)",
+  "Seat 7: Villain7 (1000 in chips)",
+  "Seat 8: Hero (1000 in chips)",
+  "Seat 9: Villain9 (1000 in chips)",
+  "Villain9: posts small blind 10",
+  "Villain1: posts big blind 20",
+  "*** HOLE CARDS ***",
+  "Dealt to Hero [Ks Qs]",
+  "Hero: raises 40 to 60",
+  "Villain1: calls 40",
+  "*** FLOP *** [Ah 7d 2c]",
+  "Villain1: checks",
+  "Hero: bets 40",
+  "Villain1: calls 40",
+  "*** TURN *** [Ah 7d 2c] [5s]",
+  "Villain1: checks",
+  "Hero: checks",
+  "*** RIVER *** [Ah 7d 2c 5s] [Jd]",
+  "Villain1: bets 120",
+  "Hero: calls 120",
+  "*** SUMMARY ***",
+].join("\n");
+
 describe("hhView - DOM import", () => {
   it("zobrazi chyby a necitelna pole pro prazdny vstup bez padu", () => {
     const root = document.createElement("div");
@@ -157,6 +188,47 @@ describe("hhView - DOM import", () => {
       street: "FLOP",
       savedToDrillStats: false,
       board: ["Ah", "7d", "2c"],
+      positionPattern: "BTN_VS_BB",
+    });
+  });
+
+  it("zobrazi turn a river review z importovane HH vcetne facing-bet river akci", () => {
+    const root = document.createElement("div");
+    const reviews: unknown[][] = [];
+    renderHHView(root, {
+      onReviewBuilt: (records) => {
+        reviews.push([...records]);
+      },
+    });
+
+    const textarea = root.querySelector<HTMLTextAreaElement>(".hh-input");
+    textarea!.value = validTurnRiverHh;
+    root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
+
+    const postflop = [...root.querySelectorAll<HTMLElement>(".hh-postflop-analysis")];
+    expect(postflop).toHaveLength(3);
+    expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.reviewRecordCount).toBe("4");
+    expect(postflop.map((section) => section.dataset.street)).toEqual(["FLOP", "TURN", "RIVER"]);
+    expect(postflop[1].dataset.board).toBe("Ah-7d-2c-5s");
+    expect(postflop[2].dataset.board).toBe("Ah-7d-2c-5s-Jd");
+    expect(postflop[2].dataset.recommended).toMatch(/^(FOLD|CALL|RAISE)$/);
+    expect(postflop[1].textContent).toContain("Turn review");
+    expect(postflop[2].textContent).toContain("River review");
+    expect(postflop[2].textContent).not.toContain("RIVER_FACING_BET");
+    expect(postflop[2].textContent).not.toContain("StrategyPack");
+    expect(postflop[2].textContent).not.toContain("http");
+    expect(reviews).toHaveLength(1);
+    expect(reviews[0]).toHaveLength(4);
+    expect(reviews[0][2]).toMatchObject({
+      street: "TURN",
+      savedToDrillStats: false,
+      board: ["Ah", "7d", "2c", "5s"],
+      positionPattern: "BTN_VS_BB",
+    });
+    expect(reviews[0][3]).toMatchObject({
+      street: "RIVER",
+      savedToDrillStats: false,
+      board: ["Ah", "7d", "2c", "5s", "Jd"],
       positionPattern: "BTN_VS_BB",
     });
   });

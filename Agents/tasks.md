@@ -1609,9 +1609,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - DOM testy musi projit single spot i hand line pro c-bet/barrel/pressure i facing-bet nody.
     - UI musi zustat source-free, bez pack id, provideru, URL a raw enumu.
     - Hotovo: `postflopView` ma deterministicky `initialActionNode` pro testy/HH bridge, DOM testy pokryvaji vsechny single-spot nody (`*_CBET`, `TURN_BARREL`, `RIVER_PRESSURE`, `*_FACING_BET`) a hand-line facing-bet branch `CALL -> TURN_FACING_BET -> FOLD` bez URL/StrategyPack/Rule textu.
-  - [ ] 134.17 Rozsirit HH bridge na turn/river review
+  - [x] 134.17 Rozsirit HH bridge na turn/river review
     - HH import dnes mapuje preflop a flop review.
     - Doplnit TURN/RIVER board, action history, pot/SPR a facing-bet mapovani tak, aby importovana handa sla porovnat proti stejnym production resolvers jako trainer.
+    - Hotovo: `hhParser` extrahuje FLOP/TURN/RIVER board a postflop action history, `hhPostflopBridge` generuje importovane review spoty pro vsechny dostupne streety vcetne `*_FACING_BET` mapovani a HH UI uklada/ukazuje preflop+flop+turn+river review zaznamy bez source citaci.
   - [ ] 134.18 Doplnit postflop KPI podle variant a line vetvi
     - Dashboard musi umet oddelit FLOP/TURN/RIVER, SRP/3bet/facing-bet, position pair, action node, single spot vs hand line a confidence/production stav.
     - Leak recommendation nesmi michat production a preview/fallback spoty bez confidence vahy.
