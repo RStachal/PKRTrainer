@@ -1,7 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { DEFAULT_TRAINING_PROFILE } from "../../src/core/trainingProfile";
+import {
+  DEFAULT_TRAINING_PROFILE,
+  profileWith,
+  type BlindSpeed,
+  type EvModel,
+  type TableFormat,
+  type TrainingStreet,
+} from "../../src/core/trainingProfile";
+import type { AnteMode } from "../../src/core/types";
 import { renderProfileSelector } from "../../src/ui/profileSelector";
 
 afterEach(() => {
@@ -31,20 +39,24 @@ describe("profileSelector", () => {
     const variant = root.querySelector<HTMLSelectElement>(".profile-variant");
     const format = root.querySelector<HTMLSelectElement>(".profile-format");
     const speed = root.querySelector<HTMLSelectElement>(".profile-speed");
+    const ante = root.querySelector<HTMLSelectElement>(".profile-ante");
     expect(variant).not.toBeNull();
     expect(format).not.toBeNull();
     expect(speed).not.toBeNull();
+    expect(ante).not.toBeNull();
 
     variant!.value = "SNG";
     variant!.dispatchEvent(new Event("change"));
     format!.value = "SIX_MAX";
     speed!.value = "TURBO";
+    ante!.value = "OFF";
 
     expect(changes).toEqual(["SNG"]);
     expect(view.getProfile()).toMatchObject({
       gameVariant: "SNG",
       tableFormat: "SIX_MAX",
       blindSpeed: "TURBO",
+      ante: "OFF",
     });
   });
 
@@ -97,7 +109,8 @@ describe("profileSelector", () => {
 
       const note = root.querySelector<HTMLElement>(".profile-selector__note");
       expect(note?.dataset.status).toBe("preview");
-      expect(note?.textContent).toContain(`${value.toLowerCase()} postflop`);
+      expect(note?.textContent).toContain(`MTT 9-max regular ${value.toLowerCase()} chipEV ante on`);
+      expect(note?.textContent).toContain("postflop training");
       expect(note?.textContent).toContain("concrete spot");
       expect(note?.textContent).not.toContain("preflop chipEV");
       expect(note?.textContent).not.toContain("StrategyPack");
@@ -157,6 +170,61 @@ describe("profileSelector", () => {
     expect(note?.textContent).not.toContain("RangePack");
   });
 
+  it("pokryje vsechny MTT profilove dimenze source-free labely", () => {
+    const tableFormats: TableFormat[] = ["FULL_RING_9", "SIX_MAX"];
+    const blindSpeeds: BlindSpeed[] = ["REGULAR", "TURBO"];
+    const streets: TrainingStreet[] = ["PREFLOP", "FLOP", "TURN", "RIVER"];
+    const evModels: Extract<EvModel, "CHIP_EV" | "DOLAR_EV">[] = ["CHIP_EV", "DOLAR_EV"];
+    const antes: AnteMode[] = ["ON", "OFF"];
+    const root = document.createElement("div");
+    const view = renderProfileSelector(root);
+
+    const optionLabels = (selector: string) => Array.from(
+      root.querySelector<HTMLSelectElement>(selector)?.options ?? [],
+    ).map((option) => option.textContent);
+    expect(optionLabels(".profile-format")).toEqual(["9-max full ring", "6-max"]);
+    expect(optionLabels(".profile-speed")).toEqual(["Regular", "Turbo"]);
+    expect(optionLabels(".profile-street")).toEqual(["Preflop", "Flop", "Turn", "River"]);
+    expect(optionLabels(".profile-ev-model")).toEqual(["chipEV", "$EV", "ICM"]);
+    expect(optionLabels(".profile-ante")).toEqual(["Ante on", "No ante"]);
+
+    for (const tableFormat of tableFormats) {
+      for (const blindSpeed of blindSpeeds) {
+        for (const street of streets) {
+          for (const evModel of evModels) {
+            for (const ante of antes) {
+              view.setProfile(profileWith(DEFAULT_TRAINING_PROFILE, {
+                tableFormat,
+                blindSpeed,
+                street,
+                evModel,
+                ante,
+              }));
+              const note = root.querySelector<HTMLElement>(".profile-selector__note");
+              expect(view.getProfile()).toMatchObject({
+                gameVariant: "MTT",
+                tableFormat,
+                blindSpeed,
+                street,
+                evModel,
+                ante,
+              });
+              expect(note?.textContent).toContain(tableFormat === "FULL_RING_9" ? "9-max" : "6-max");
+              expect(note?.textContent).toContain(blindSpeed === "REGULAR" ? "regular" : "turbo");
+              expect(note?.textContent).toContain(street.toLowerCase());
+              expect(note?.textContent).toContain(evModel === "CHIP_EV" ? "chipEV" : "$EV");
+              expect(note?.textContent).toContain(ante === "ON" ? "ante on" : "no ante");
+              expect(note?.textContent).not.toMatch(/\b(?:FULL_RING_9|SIX_MAX|REGULAR|TURBO|PREFLOP|FLOP|TURN|RIVER|CHIP_EV|DOLAR_EV)\b/);
+              expect(note?.textContent).not.toMatch(/\b(?:RangePack|StrategyPack)\b/);
+              expect(note?.textContent).not.toMatch(/\bmtt-[a-z0-9-]+/i);
+              expect(note?.textContent).not.toMatch(/\bhttps?:\/\//i);
+            }
+          }
+        }
+      }
+    }
+  });
+
   it("rozlisi Cash rake/no-rake preview bez citaci zdroju v UI", () => {
     const root = document.createElement("div");
     renderProfileSelector(root);
@@ -169,6 +237,7 @@ describe("profileSelector", () => {
 
     let note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(format?.value).toBe("SIX_MAX");
+    expect(root.querySelector<HTMLSelectElement>(".profile-ante")?.value).toBe("OFF");
     expect(rakeMode?.value).toBe("RAKE");
     expect(Array.from(rakeMode?.options ?? []).map((option) => option.textContent)).toEqual([
       "N/A",

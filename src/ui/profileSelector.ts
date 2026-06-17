@@ -10,6 +10,7 @@ import {
   type TrainingProfile,
   type TrainingStreet,
 } from "../core/trainingProfile";
+import type { AnteMode } from "../core/types";
 import { mttCompletionReadinessRowForTrainingProfile } from "../data/ranges/mttProductionReadiness";
 import { rangePackForTrainingProfile } from "../data/ranges/trainingRangePacks";
 
@@ -54,6 +55,11 @@ const EV_MODELS: { value: EvModel; label: string }[] = [
   { value: "ICM", label: "ICM" },
 ];
 
+const ANTE_MODES: { value: AnteMode; label: string }[] = [
+  { value: "ON", label: "Ante on" },
+  { value: "OFF", label: "No ante" },
+];
+
 const RAKE_MODES: { value: RakeMode; label: string }[] = [
   { value: "NONE", label: "N/A" },
   { value: "RAKE", label: "Rake" },
@@ -82,9 +88,10 @@ export function renderProfileSelector(
   const speed = selectControl(doc, "Blind speed", "profile-speed", BLIND_SPEEDS);
   const street = selectControl(doc, "Street", "profile-street", STREETS);
   const evModel = selectControl(doc, "Model", "profile-ev-model", EV_MODELS);
+  const ante = selectControl(doc, "Ante", "profile-ante", ANTE_MODES);
   const rakeMode = selectControl(doc, "Rake", "profile-rake-mode", RAKE_MODES);
 
-  for (const control of [variant, format, speed, street, evModel, rakeMode]) {
+  for (const control of [variant, format, speed, street, evModel, ante, rakeMode]) {
     wrap.appendChild(control.label);
     control.select.addEventListener("change", handleChange);
   }
@@ -104,7 +111,7 @@ export function renderProfileSelector(
       blindSpeed: speed.select.value as BlindSpeed,
       street: street.select.value as TrainingStreet,
       evModel: evModel.select.value as EvModel,
-      ante: variant.select.value === "CASH" ? "OFF" : initialProfile.ante,
+      ante: variant.select.value === "CASH" ? "OFF" : ante.select.value as AnteMode,
       rakeMode: rakeMode.select.value as RakeMode,
     };
   }
@@ -115,6 +122,7 @@ export function renderProfileSelector(
     speed.select.value = profile.blindSpeed;
     street.select.value = profile.street;
     evModel.select.value = profile.evModel;
+    ante.select.value = profile.ante;
     rakeMode.select.value = profile.rakeMode;
     updateNote(profile);
   }
@@ -131,6 +139,7 @@ export function renderProfileSelector(
     if (selectedVariant === "CASH") {
       if (format.select.value !== "SIX_MAX") format.select.value = "SIX_MAX";
       if (rakeMode.select.value === "NONE") rakeMode.select.value = "RAKE";
+      if (ante.select.value !== "OFF") ante.select.value = "OFF";
       if (evModel.select.value === "ICM") evModel.select.value = "CHIP_EV";
       if (speed.select.value === "TURBO") speed.select.value = "REGULAR";
       if (street.select.value !== "PREFLOP") street.select.value = "PREFLOP";
@@ -151,7 +160,7 @@ export function renderProfileSelector(
     getProfile,
     setProfile,
     destroy(): void {
-      for (const control of [variant, format, speed, street, evModel, rakeMode]) {
+      for (const control of [variant, format, speed, street, evModel, ante, rakeMode]) {
         control.select.removeEventListener("change", handleChange);
       }
       root.innerHTML = "";
@@ -167,7 +176,7 @@ function describeProfileStatus(profile: TrainingProfile): {
     return {
       status: "preview",
       text:
-        `Preview: ${profile.street.toLowerCase()} postflop training opens a concrete ` +
+        `Preview: ${mttProfileLabel(profile)} postflop training opens a concrete ` +
         "spot, table and practical assumptions.",
     };
   }
@@ -220,7 +229,7 @@ function candidateProfileLabel(profile: TrainingProfile): string {
   if (profile.gameVariant === "CASH") {
     return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "no rake"} preview`;
   }
-  return `${profile.gameVariant} ${tableFormatLabel(profile.tableFormat)} preflop ${evModelLabel(profile.evModel)} preview`;
+  return `${profile.gameVariant} ${tableFormatLabel(profile.tableFormat)} preflop ${evModelLabel(profile.evModel)} ${anteLabel(profile.ante)} preview`;
 }
 
 function tableFormatLabel(format: TableFormat): string {
@@ -228,11 +237,19 @@ function tableFormatLabel(format: TableFormat): string {
 }
 
 function mttPreflopProfileLabel(profile: TrainingProfile): string {
-  return `MTT ${tableFormatLabel(profile.tableFormat)} ${blindSpeedLabel(profile.blindSpeed)} preflop ${evModelLabel(profile.evModel)}`;
+  return `MTT ${tableFormatLabel(profile.tableFormat)} ${blindSpeedLabel(profile.blindSpeed)} preflop ${evModelLabel(profile.evModel)} ${anteLabel(profile.ante)}`;
 }
 
 function blindSpeedLabel(speed: BlindSpeed): string {
   return speed === "REGULAR" ? "regular" : "turbo";
+}
+
+function mttProfileLabel(profile: TrainingProfile): string {
+  return `MTT ${tableFormatLabel(profile.tableFormat)} ${blindSpeedLabel(profile.blindSpeed)} ${profile.street.toLowerCase()} ${evModelLabel(profile.evModel)} ${anteLabel(profile.ante)}`;
+}
+
+function anteLabel(ante: AnteMode): string {
+  return ante === "ON" ? "ante on" : "no ante";
 }
 
 function selectControl<T extends string>(

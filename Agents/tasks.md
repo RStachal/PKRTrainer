@@ -1706,10 +1706,11 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Pridat test/gate, ktery porovna legal import slots, vygenerovane production module ids, permission packIds a runtime registry.
     - Selhat pri orphan production packu, duplicitnim packId, registry packu mimo legal slot, mismatch table/speed/EV/ante/street nebo packu bez permission evidence.
     - Hotovo: `npm run mtt:registry-integrity` kontroluje legal import sloty, runtime registry, vygenerovane `*-production-*` moduly, permission manifest packIds, duplicity a orphan/nelegalni production packy; soucasny legacy baseline zustava validni.
-  - [ ] 135.13 User-facing MTT profile coverage QA
+  - [x] 135.13 User-facing MTT profile coverage QA
     - Overit, ze UI profile selector/start flow umi vsechny MTT kombinace a ze labely jsou srozumitelne: 9-max/6-max, regular/turbo, chipEV/$EV, ante ON/OFF, preflop/flop/turn/river.
     - Non-production stav muze byt viditelny jen source-free a nesmi zobrazit pack id, provider, URL ani raw internal enumy.
     - Po produkcnim importu se MTT profily nesmi tvarit jako preview/fallback.
+    - Hotovo: profile selector ma samostatny `Ante` control, DOM test prochazi 64 MTT kombinaci a hlida source-free labely bez raw enumu, pack id, provideru a URL.
   - [ ] 135.14 MTT hand-line end-to-end QA matrix
     - Doplnit manualni i automatizovane smoke testy pro FLOP->TURN->RIVER hand-line flow ve vsech street/action typech: check, bet small/big, call, raise, fold, facing bet, terminal fold/all-in.
     - Matice musi zahrnout aspon reprezentativni FULL_RING_9/SIX_MAX, REGULAR/TURBO, CHIP_EV/DOLAR_EV, ante ON/OFF a SRP/3bet priklady.
