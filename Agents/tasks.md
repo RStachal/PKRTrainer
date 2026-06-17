@@ -1613,9 +1613,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - HH import dnes mapuje preflop a flop review.
     - Doplnit TURN/RIVER board, action history, pot/SPR a facing-bet mapovani tak, aby importovana handa sla porovnat proti stejnym production resolvers jako trainer.
     - Hotovo: `hhParser` extrahuje FLOP/TURN/RIVER board a postflop action history, `hhPostflopBridge` generuje importovane review spoty pro vsechny dostupne streety vcetne `*_FACING_BET` mapovani a HH UI uklada/ukazuje preflop+flop+turn+river review zaznamy bez source citaci.
-  - [ ] 134.18 Doplnit postflop KPI podle variant a line vetvi
+  - [x] 134.18 Doplnit postflop KPI podle variant a line vetvi
     - Dashboard musi umet oddelit FLOP/TURN/RIVER, SRP/3bet/facing-bet, position pair, action node, single spot vs hand line a confidence/production stav.
     - Leak recommendation nesmi michat production a preview/fallback spoty bez confidence vahy.
+    - Hotovo: postflop dashboard breakdowny rozlisuji street, action node, pot type, position pattern/pair, texture, model, confidence a production/preview/fallback stav; pridana je flow-mode agregace `Single spot` vs `Hand line` z postflop line zaznamu a confidence-weighted KPI zustava oddelene vahovane pro production/preview/fallback.
   - [ ] 134.19 Pridat finalni MTT postflop release gate
     - Novy gate musi selhat, pokud nektery cilovy FLOP/TURN/RIVER production slot chybi, ma LOW confidence, chybejici permission, placeholder text, nekompletni coverage nebo fallback runtime.
     - Gate spustit v `npm run release:check` az po nahrani legalnich production dat.

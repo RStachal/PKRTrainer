@@ -36,6 +36,7 @@ import type {
   StackBucket,
 } from "../core/types";
 import { evModelLabel } from "../core/trainingProfile";
+import { positionPatternLabel } from "../core/postflopGenerator";
 import type {
   Breakdown,
   BreakdownDim,
@@ -223,12 +224,18 @@ const CONTEXT_LABEL: Record<ActionContext, string> = {
 const POSTFLOP_DIM_TITLE: Record<PostflopStatsBreakdownDim, string> = {
   street: "By street",
   actionNode: "By postflop spot",
+  potType: "By pot type",
+  positionPattern: "By position pattern",
+  positionPair: "By position pair",
   boardTextureKey: "By board texture",
   strategyPackId: "By postflop model",
   confidence: "By confidence",
+  sourceQuality: "By production status",
 };
 
-function groupLabel(dim: BreakdownDim | PostflopStatsBreakdownDim, key: string): string {
+type PostflopDashboardBreakdownDim = PostflopStatsBreakdownDim | "flowMode";
+
+function groupLabel(dim: BreakdownDim | PostflopDashboardBreakdownDim, key: string): string {
   switch (dim) {
     case "context":
       return CONTEXT_LABEL[key as ActionContext] ?? key;
@@ -242,10 +249,20 @@ function groupLabel(dim: BreakdownDim | PostflopStatsBreakdownDim, key: string):
       return confidenceLabel(key);
     case "actionNode":
       return postflopActionNodeLabel(key);
+    case "potType":
+      return postflopPotTypeLabel(key);
+    case "positionPattern":
+      return positionPatternLabel(key as Parameters<typeof positionPatternLabel>[0]);
+    case "positionPair":
+      return positionPairLabel(key);
     case "boardTextureKey":
       return postflopBoardTextureKeyLabel(key);
     case "street":
       return streetLabel(key);
+    case "sourceQuality":
+      return postflopSourceQualityLabel(key);
+    case "flowMode":
+      return postflopFlowModeLabel(key);
   }
 }
 
@@ -356,6 +373,49 @@ function postflopActionNodeLabel(key: string): string {
       return "River pressure";
     case "RIVER_FACING_BET":
       return "River facing bet";
+    default:
+      return key;
+  }
+}
+
+function postflopPotTypeLabel(key: string): string {
+  switch (key) {
+    case "SINGLE_RAISED":
+      return "Single-raised pot";
+    case "THREE_BET_POT":
+      return "3bet pot";
+    case "LIMPED_POT":
+      return "Limped pot";
+    default:
+      return key;
+  }
+}
+
+function positionPairLabel(key: string): string {
+  const [hero, villain] = key.split("_VS_");
+  if (!hero || !villain) return key;
+  return `${hero} vs ${villain}`;
+}
+
+function postflopSourceQualityLabel(key: string): string {
+  switch (key) {
+    case "PRODUCTION":
+      return "Production";
+    case "PREVIEW":
+      return "Preview / low confidence";
+    case "FALLBACK":
+      return "Fallback";
+    default:
+      return key;
+  }
+}
+
+function postflopFlowModeLabel(key: string): string {
+  switch (key) {
+    case "SINGLE_SPOT":
+      return "Single spot";
+    case "HAND_LINE":
+      return "Hand line";
     default:
       return key;
   }
@@ -1593,7 +1653,7 @@ function renderProfileBreakdowns(store: StatsStore): HTMLElement {
 }
 
 function renderPostflopBreakdownRow(
-  dim: PostflopStatsBreakdownDim,
+  dim: PostflopDashboardBreakdownDim,
   g: PostflopStatsGroup,
 ): HTMLElement {
   const row = el("div", "postflop-breakdown-row");
@@ -1615,14 +1675,14 @@ function renderPostflopBreakdownRow(
 }
 
 function renderPostflopBreakdown(
-  dim: PostflopStatsBreakdownDim,
+  dim: PostflopDashboardBreakdownDim,
   groups: PostflopStatsGroup[],
 ): HTMLElement {
   const box = el("section", `postflop-breakdown postflop-breakdown--${dim}`);
   box.dataset.dim = dim;
 
   const heading = el("h4", "postflop-breakdown__title");
-  heading.textContent = POSTFLOP_DIM_TITLE[dim];
+  heading.textContent = dim === "flowMode" ? "By training flow" : POSTFLOP_DIM_TITLE[dim];
   box.appendChild(heading);
 
   const rows = el("div", "postflop-breakdown__rows");
@@ -1640,16 +1700,49 @@ function renderPostflopBreakdown(
   return box;
 }
 
+function postflopFlowModeGroups(
+  records: readonly PostflopStatsV2BridgeRecord[],
+  lineRecords: readonly PostflopLineResultRecord[],
+): PostflopStatsGroup[] {
+  const singles = postflopStatsGroup(
+    "SINGLE_SPOT",
+    records.length,
+    records.filter((record) => record.correct).length,
+  );
+  const lineStreetRecords = lineRecords.flatMap((line) => line.streetResults.map((street) => street.record));
+  const lines = postflopStatsGroup(
+    "HAND_LINE",
+    lineStreetRecords.length,
+    lineStreetRecords.filter((record) => record.correct).length,
+  );
+  return [singles, lines].filter((group) => group.total > 0);
+}
+
+function postflopLineStreetCount(records: readonly PostflopLineResultRecord[]): number {
+  return records.reduce((total, record) => total + record.streetResults.length, 0);
+}
+
+function postflopStatsGroup(key: string, total: number, correct: number): PostflopStatsGroup {
+  return {
+    key,
+    total,
+    correct,
+    rate: total <= 0 ? null : Math.round((correct / total) * 1000) / 10,
+  };
+}
+
 function renderPostflopBreakdowns(
   records: readonly PostflopStatsV2BridgeRecord[],
+  lineRecords: readonly PostflopLineResultRecord[] = [],
 ): HTMLElement {
   const box = el("section", "postflop-breakdowns");
-  box.dataset.total = String(records.length);
+  box.dataset.total = String(records.length + postflopLineStreetCount(lineRecords));
 
   const heading = el("h3", "postflop-breakdowns__title");
   heading.textContent = "Postflop breakdowns";
   box.appendChild(heading);
 
+  box.appendChild(renderPostflopBreakdown("flowMode", postflopFlowModeGroups(records, lineRecords)));
   for (const dim of availablePostflopStatsDimensions()) {
     box.appendChild(renderPostflopBreakdown(dim, breakdownPostflopStats(records, dim)));
   }
@@ -1666,7 +1759,15 @@ function renderPostflopKpiCharts(
   heading.textContent = "Postflop KPI charts";
   box.appendChild(heading);
 
-  for (const dim of ["street", "actionNode", "boardTextureKey", "confidence"] as const) {
+  for (const dim of [
+    "street",
+    "actionNode",
+    "potType",
+    "positionPattern",
+    "boardTextureKey",
+    "sourceQuality",
+    "confidence",
+  ] as const) {
     box.appendChild(renderPostflopKpiChart(dim, breakdownPostflopStats(records, dim)));
   }
 
@@ -1937,7 +2038,10 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
 
   // Profile breakdowns over migrated v2 records.
   wrapper.appendChild(renderProfileBreakdowns(store));
-  wrapper.appendChild(renderPostflopBreakdowns(data.postflopRecords ?? []));
+  wrapper.appendChild(renderPostflopBreakdowns(
+    data.postflopRecords ?? [],
+    data.postflopLineRecords ?? [],
+  ));
   wrapper.appendChild(renderPreflopLeakCharts(store));
   wrapper.appendChild(renderPostflopKpiCharts(data.postflopRecords ?? []));
 

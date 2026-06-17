@@ -88,9 +88,13 @@ export interface PostflopStatsV2BridgeOptions {
 export type PostflopStatsBreakdownDim =
   | "street"
   | "actionNode"
+  | "potType"
+  | "positionPattern"
+  | "positionPair"
   | "boardTextureKey"
   | "strategyPackId"
-  | "confidence";
+  | "confidence"
+  | "sourceQuality";
 
 export interface PostflopStatsGroup {
   key: string;
@@ -253,9 +257,13 @@ export function availablePostflopStatsDimensions(): PostflopStatsBreakdownDim[] 
   return [
     "street",
     "actionNode",
+    "potType",
+    "positionPattern",
+    "positionPair",
     "boardTextureKey",
     "strategyPackId",
     "confidence",
+    "sourceQuality",
   ];
 }
 
@@ -293,9 +301,17 @@ function postflopDimKey(
   record: PostflopStatsV2BridgeRecord,
   dim: PostflopStatsBreakdownDim,
 ): string {
+  if (dim === "positionPair") return `${record.heroPosition}_VS_${record.villainPosition}`;
+  if (dim === "sourceQuality") return postflopSourceQualityKey(record);
   const value = record[dim];
   if (value === null || value === "") return "N/A";
   return String(value);
+}
+
+function postflopSourceQualityKey(record: PostflopStatsV2BridgeRecord): string {
+  if (!record.strategyPackId || record.confidence === null) return "FALLBACK";
+  if (record.confidence === "LOW") return "PREVIEW";
+  return "PRODUCTION";
 }
 
 function successRate(total: number, correct: number): number | null {

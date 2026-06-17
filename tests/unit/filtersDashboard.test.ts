@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 
 import type { Filters } from "../../src/core/types";
 import type { TrainingProfile } from "../../src/core/trainingProfile";
+import type { PostflopLineResultRecord } from "../../src/persistence/postflopLineResultRecord";
 import type { PostflopStatsV2BridgeRecord } from "../../src/persistence/postflopResultRecord";
 import { createStatsStore, type ResultRecord } from "../../src/persistence/statsStore";
 import { renderDashboard } from "../../src/ui/dashboard";
@@ -70,6 +71,43 @@ const postflopRecord: PostflopStatsV2BridgeRecord = {
   strategyPackId: "mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1",
   strategyRuleId: "flop-srp-ace-high-disconnected-small-cbet",
   confidence: "LOW",
+};
+
+const postflopLineRecord: PostflopLineResultRecord = {
+  schema: "postflop_line_result_record_v1",
+  schemaVersion: 1,
+  lineId: "POSTFLOP_LINE|1|Ah-7d-2c-5s-Jd",
+  seed: 1,
+  profileId: postflopRecord.profileId,
+  startedAt: 1,
+  completedAt: 2,
+  totalStreets: 1,
+  correctStreets: 1,
+  perfect: true,
+  streetResults: [
+    {
+      index: 0,
+      street: "FLOP",
+      record: postflopRecord,
+      potBBBefore: 6,
+      effectiveStackBBBefore: 40,
+      potBBAfter: 10,
+      effectiveStackBBAfter: 38,
+    },
+  ],
+  actionHistory: [
+    {
+      street: "FLOP",
+      actionNode: "SINGLE_RAISED_POT_CBET",
+      action: "BET_SMALL",
+      source: "CHOSEN",
+      potBBBefore: 6,
+      effectiveStackBBBefore: 40,
+      potBBAfter: 10,
+      effectiveStackBBAfter: 38,
+      terminal: false,
+    },
+  ],
 };
 
 describe("filters - DOM start gate", () => {
@@ -663,6 +701,26 @@ describe("dashboard - DOM statistiky", () => {
         '.postflop-breakdown--confidence .postflop-breakdown-row[data-group="LOW"] .postflop-breakdown-row__name',
       )?.textContent,
     ).toBe("low");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--potType .postflop-breakdown-row[data-group="SINGLE_RAISED"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("Single-raised pot");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--positionPattern .postflop-breakdown-row[data-group="BTN_VS_BB"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("Button vs BB (IP)");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--positionPair .postflop-breakdown-row[data-group="BTN_VS_BB"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("BTN vs BB");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--sourceQuality .postflop-breakdown-row[data-group="PREVIEW"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("Preview / low confidence");
     expect(root.querySelector<HTMLElement>(".postflop-breakdown--actionNode")?.textContent)
       .toContain("Flop c-bet in SRP");
     expect(root.querySelector<HTMLElement>(".postflop-breakdown--actionNode")?.textContent)
@@ -687,6 +745,38 @@ describe("dashboard - DOM statistiky", () => {
         '.postflop-kpi-chart--confidence .postflop-kpi-chart-row[data-group="LOW"] .dashboard-kpi-chart-row__label',
       )?.textContent,
     ).toBe("low");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-kpi-chart--sourceQuality .postflop-kpi-chart-row[data-group="PREVIEW"] .dashboard-kpi-chart-row__label',
+      )?.textContent,
+    ).toBe("Preview / low confidence");
+  });
+
+  it("oddeluje single-spot a hand-line postflop KPI flow", () => {
+    const root = document.createElement("div");
+    renderDashboard({
+      store: createStatsStore(new MemoryStorage()),
+      sessionCount: 2,
+      postflopRecords: [postflopRecord],
+      postflopLineRecords: [postflopLineRecord],
+    }, root);
+
+    expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("2");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--flowMode .postflop-breakdown-row[data-group="SINGLE_SPOT"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--flowMode .postflop-breakdown-row[data-group="HAND_LINE"]',
+      )?.dataset.total,
+    ).toBe("1");
+    expect(
+      root.querySelector<HTMLElement>(
+        '.postflop-breakdown--flowMode .postflop-breakdown-row[data-group="HAND_LINE"] .postflop-breakdown-row__name',
+      )?.textContent,
+    ).toBe("Hand line");
   });
 
   it("exportuje a importuje postflop breakdown pres JSON transfer", () => {
