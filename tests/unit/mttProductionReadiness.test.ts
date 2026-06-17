@@ -304,16 +304,39 @@ describe("mttProductionReadiness", () => {
     )))).toBe(true);
   });
 
-  it("release gate vyzaduje explicitni blocker pro kazdy non-production MTT profil", () => {
+  it("production release gate selze pro kazdy non-production MTT profil", () => {
     const gate = buildMttCompletionReleaseGateReport();
     const rendered = renderMttCompletionReleaseGateReport(gate);
 
+    expect(gate.valid).toBe(false);
+    expect(gate.mode).toBe("PRODUCTION");
+    expect(gate.totalRows).toBe(64);
+    expect(gate.productionReadyRows).toBe(2);
+    expect(gate.previewRows).toBe(52);
+    expect(gate.blockedRows).toBe(10);
+    expect(gate.errors).toHaveLength(62);
+    expect(gate.errors[0]).toContain("row is not production-ready");
+    expect(rendered).toContain("mode: PRODUCTION");
+    expect(rendered).toContain("valid: false");
+    expect(rendered).toContain("productionReady rows: 2");
+    expect(rendered).not.toContain("https://");
+  });
+
+  it("preview release gate stale vyzaduje explicitni blocker pro non-production profil", () => {
+    const gate = buildMttCompletionReleaseGateReport(
+      buildMttCompletionReadinessReport(),
+      { mode: "PREVIEW" },
+    );
+    const rendered = renderMttCompletionReleaseGateReport(gate);
+
     expect(gate.valid).toBe(true);
+    expect(gate.mode).toBe("PREVIEW");
     expect(gate.totalRows).toBe(64);
     expect(gate.productionReadyRows).toBe(2);
     expect(gate.previewRows).toBe(52);
     expect(gate.blockedRows).toBe(10);
     expect(gate.errors).toEqual([]);
+    expect(rendered).toContain("mode: PREVIEW");
     expect(rendered).toContain("valid: true");
     expect(rendered).toContain("productionReady rows: 2");
     expect(rendered).not.toContain("https://");

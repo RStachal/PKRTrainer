@@ -1494,7 +1494,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: `Agents/mtt-production-coverage-audit.md` shrnuje aktualni MTT completion, DOLAR_EV, postflop production blockery, range intake a regular-vs-turbo diff audit
 
 - [ ] 133. Aktualni MTT dokoncovaci priority
-  - Stav 2026-06-16: `npm run release:check` je zeleny, MTT completion ma 64 radku, 2 production rows, 52 candidate/preview rows, 10 missing rows, 62 blocker rows a 0 ready-for-validation intake slotu.
+  - Stav 2026-06-17: `npm run release:check` je zamerne blokovany produkcnimi MTT gates; MTT completion ma 64 radku, 2 production rows, 52 candidate/preview rows, 10 missing rows, 62 blocker rows a 0 ready-for-validation intake slotu.
   - Aktualni cil: kompletni MTT simulace pro 6-max i 9-max full ring, regular i turbo, CHIP_EV i DOLAR_EV, preflop/flop/turn/river, vsechny pozice, streety a action typy.
   - Zasada: nevyrabet ani nerecyklovat chart hodnoty bez legalniho `normalized.json` a `permission.json`; technicke kroky maji zkratit cestu k importu a zmensit riziko spatneho povyseni.
   - [x] 133.1 Zanalyzovat aktualni vysledek proti prioritnim cilum
@@ -1598,9 +1598,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - REGULAR/TURBO a CHIP_EV/DOLAR_EV nesmi sdilet postflop doporuceni bez reviewed reuse policy v permission manifestu a auditnim reportu.
     - Pokud reuse neni povoleny, kazdy speed/EV slot zustava samostatny import blocker.
     - Hotovo: `ProductionPermissionManifest` podporuje `reusePolicy.allowedDimensions`, permission report prijima cilove blind speed / EV dimenze, `validate:range-import` i `buildRangeModule` blokuji multi-speed/multi-EV target bez explicitniho reuse povoleni a testy kryji validni i nevalidni reuse evidenci.
-  - [ ] 134.14 Povysit postflop completion gate z preview na production
+  - [x] 134.14 Povysit postflop completion gate z preview na production
     - Po importu legalnich dat musi `mtt:completion` ukazat FLOP/TURN/RIVER radky jako production-ready pro vsechny cilove varianty.
     - Public heuristic fallback smi zustat jen v explicitnim preview/development rezimu, ne v produkcni MTT completion definici.
+    - Hotovo: vychozi `npm run mtt:completion` bezi v `PRODUCTION` modu a vraci nenulovy exit pro kazdy non-production radek; puvodni operatorky nahled je dostupny pouze explicitne pres `--preview`.
   - [x] 134.15 Otestovat runtime resolver bez ticheho fallbacku pro production profily
     - Pro kazdy production postflop profil musi resolver vybrat legalni production pack nebo vratit blokujici stav; nesmi potichu pouzit public heuristic model.
     - Testy pokryji FULL_RING_9/SIX_MAX, REGULAR/TURBO, CHIP_EV/DOLAR_EV, ante ON/OFF a FLOP/TURN/RIVER.

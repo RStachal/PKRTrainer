@@ -5,8 +5,10 @@ describe("mtt:completion CLI", () => {
   it("vypise default release gate bez detailu", () => {
     const result = runCompletion();
 
-    expect(result.status).toBe(0);
+    expect(result.status).toBe(1);
     expect(result.stdout).toContain("MTT completion release gate");
+    expect(result.stdout).toContain("mode: PRODUCTION");
+    expect(result.stdout).toContain("valid: false");
     expect(result.stdout).toContain("total rows: 64");
     expect(result.stdout).not.toContain("MTT completion readiness");
   });
@@ -18,10 +20,12 @@ describe("mtt:completion CLI", () => {
       "--ev=DOLAR_EV",
       "--street=RIVER",
       "--status=candidate",
+      "--preview",
     );
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("MTT completion release gate");
+    expect(result.stdout).toContain("mode: PREVIEW");
     expect(result.stdout).toContain("MTT completion readiness");
     expect(result.stdout).toContain("total rows: 4");
     expect(result.stdout).toContain("candidate rows: 4");
@@ -38,12 +42,13 @@ describe("mtt:completion CLI", () => {
       "--street=RIVER",
       "--status=candidate",
       "--json",
+      "--preview",
     );
 
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
       filters: { tableFormat: string; evModel: string; street: string; status: string };
-      gate: { valid: boolean; totalRows: number; productionReadyRows: number };
+      gate: { valid: boolean; mode: string; totalRows: number; productionReadyRows: number };
       readiness: {
         rows: { slotId?: string; tableFormat: string; evModel: string; street: string; importSlot: { packId: string } | null }[];
         productionRows: number;
@@ -59,6 +64,7 @@ describe("mtt:completion CLI", () => {
     });
     expect(parsed.gate).toMatchObject({
       valid: true,
+      mode: "PREVIEW",
       totalRows: 64,
       productionReadyRows: 2,
     });
@@ -84,7 +90,7 @@ describe("mtt:completion CLI", () => {
       "--status=candidate",
       "--json",
     ];
-    const completionResult = runCompletion(...args);
+    const completionResult = runCompletion(...args, "--preview");
     const slotsResult = runSlots("--kind=postflop", ...args);
 
     expect(completionResult.status).toBe(0);

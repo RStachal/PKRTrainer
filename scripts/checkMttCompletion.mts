@@ -11,6 +11,7 @@ import { parseMttFilterArg } from "../src/data/ranges/mttCliFilterParsing.ts";
 interface CliArgs {
   details: boolean;
   json: boolean;
+  mode: "PRODUCTION" | "PREVIEW";
   filters: MttCompletionReadinessFilters;
 }
 
@@ -18,6 +19,7 @@ function usage(): string {
   return [
     "Usage:",
     "  npm run mtt:completion",
+    "  npm run mtt:completion -- --preview",
     "  npm run mtt:completion -- --details",
     "  npm run mtt:completion -- --details --format=SIX_MAX --speed=TURBO --ev=DOLAR_EV --street=RIVER --ante=OFF --status=candidate",
     "  npm run mtt:completion -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json",
@@ -25,6 +27,7 @@ function usage(): string {
     "Output:",
     "  --details",
     "  --json",
+    "  --preview",
     "",
     "Filters:",
     "  --format=FULL_RING_9|SIX_MAX",
@@ -40,6 +43,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let details = false;
   let json = false;
+  let mode: CliArgs["mode"] = "PRODUCTION";
 
   for (const item of argv) {
     if (item === "--details") {
@@ -50,6 +54,10 @@ function parseArgs(argv: readonly string[]): CliArgs {
       json = true;
       continue;
     }
+    if (item === "--preview") {
+      mode = "PREVIEW";
+      continue;
+    }
     if (item === "--help" || item === "-h") {
       throw new Error(usage());
     }
@@ -57,7 +65,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { details, json, filters };
+  return { details, json, mode, filters };
 }
 
 try {
@@ -65,7 +73,7 @@ try {
   const fullReadiness = buildMttCompletionReadinessReport();
   const readiness = filterMttCompletionReadinessReport(fullReadiness, args.filters);
   const gateReadiness = hasFilters(args.filters) ? fullReadiness : readiness;
-  const report = buildMttCompletionReleaseGateReport(gateReadiness);
+  const report = buildMttCompletionReleaseGateReport(gateReadiness, { mode: args.mode });
   if (args.json) {
     console.log(JSON.stringify({
       filters: args.filters,

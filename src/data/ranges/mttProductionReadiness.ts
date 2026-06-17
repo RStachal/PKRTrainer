@@ -139,11 +139,16 @@ export interface MttCompletionReadinessOptions {
 
 export interface MttCompletionReleaseGateReport {
   valid: boolean;
+  mode: "PRODUCTION" | "PREVIEW";
   totalRows: number;
   productionReadyRows: number;
   previewRows: number;
   blockedRows: number;
   errors: readonly string[];
+}
+
+export interface MttCompletionReleaseGateOptions {
+  mode?: MttCompletionReleaseGateReport["mode"];
 }
 
 export interface MttPreflopPackImportReadinessRow {
@@ -237,10 +242,16 @@ export function buildMttCompletionReadinessReport(
 
 export function buildMttCompletionReleaseGateReport(
   report: MttCompletionReadinessReport = buildMttCompletionReadinessReport(),
+  options: MttCompletionReleaseGateOptions = {},
 ): MttCompletionReleaseGateReport {
+  const mode = options.mode ?? "PRODUCTION";
   const errors: string[] = [];
   for (const row of report.rows) {
     const label = completionRowLabel(row);
+    if (mode === "PRODUCTION" && !row.productionReady) {
+      errors.push(`${label}: row is not production-ready.`);
+      continue;
+    }
     if (row.status === "PRODUCTION" && !row.productionReady) {
       errors.push(`${label}: production row is not productionReady.`);
     }
@@ -254,6 +265,7 @@ export function buildMttCompletionReleaseGateReport(
 
   return {
     valid: errors.length === 0,
+    mode,
     totalRows: report.rows.length,
     productionReadyRows: report.rows.filter((row) => row.productionReady).length,
     previewRows: report.rows.filter((row) => row.status === "CANDIDATE").length,
@@ -267,6 +279,7 @@ export function renderMttCompletionReleaseGateReport(
 ): string {
   const lines = [
     "MTT completion release gate",
+    `mode: ${report.mode}`,
     `valid: ${report.valid}`,
     `total rows: ${report.totalRows}`,
     `productionReady rows: ${report.productionReadyRows}`,

@@ -130,6 +130,7 @@ For the full MTT matrix with blocker details and import slot paths:
 
 ```powershell
 npm run mtt:completion -- --details
+npm run mtt:completion -- --details --preview
 ```
 
 For a shorter blocker-only queue with local intake file status:
@@ -177,11 +178,12 @@ npm run mtt:validate-ready-intake -- --format=SIX_MAX --ev=DOLAR_EV --street=RIV
 To narrow the MTT matrix to the next import batch:
 
 ```powershell
-npm run mtt:completion -- --details --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --status=candidate
-npm run mtt:completion -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
+npm run mtt:completion -- --details --preview --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --status=candidate
+npm run mtt:completion -- --preview --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 ```
 
 Available filters are `--format`, `--speed`, `--ev`, `--street`, `--ante` and `--status`.
+Use `--preview` for operator queue inspection without treating missing production data as a failed release gate.
 Use `--json` when another script needs the release gate and filtered readiness rows.
 
 ## Promotion checklist
