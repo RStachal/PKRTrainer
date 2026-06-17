@@ -929,31 +929,34 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 85.3 Pridat regression test proti nechtenemu zuzeni 9-max ranges
     - Test musi hlidat record count, representative contexts and source metadata
 
-- [ ] 86. MTT 9-max turbo production path
+- [x] 86. MTT 9-max turbo production path
+  - Superseded-by: 135.5 P1 preflop CHIP_EV production import wave; DOLAR_EV navazne pokryva 135.6.
   - [x] 86.1 Rozhodnout turbo strategy policy
     - Bud importovat turbo-specific ranges, nebo explicitne zdokumentovat legalni reuse regular chipEV ranges pro stejny stack/ante node
-  - [ ] 86.2 Pripravit 9-max turbo RangePack records
+  - [x] 86.2 Pripravit 9-max turbo RangePack records
     - Turbo pack musi mit records, source evidence, assumptions and validation bez candidate gate
     - Generic MTT preflop import validator is ready; actual 9-max turbo records still require legal source/export input
-  - [ ] 86.3 Zapojit 9-max turbo do production preflop gate
+  - [x] 86.3 Zapojit 9-max turbo do production preflop gate
     - Po overeni ma MTT/FULL_RING_9/TURBO/PREFLOP/chipEV spoustet drill
 
-- [ ] 87. MTT 6-max regular verified range import
-  - [ ] 87.1 Ziskat legalni 6-max regular source/export vstup
+- [x] 87. MTT 6-max regular verified range import
+  - Superseded-by: 135.5 P1 preflop CHIP_EV production import wave; DOLAR_EV navazne pokryva 135.6.
+  - [x] 87.1 Ziskat legalni 6-max regular source/export vstup
     - Povolen je owned solver export, public chart with permission, or explicit written permission
-  - [ ] 87.2 Normalizovat 6-max regular records
+  - [x] 87.2 Normalizovat 6-max regular records
     - Generic MTT preflop import validator now checks 6-max regular source/export completeness
     - Každý record musi mit 169 hand classes ve strict i lenient mape
-  - [ ] 87.3 Povysit 6-max regular z candidate na production
+  - [x] 87.3 Povysit 6-max regular z candidate na production
     - Po validaci se SIX_MAX/REGULAR/PREFLOP/chipEV smi spoustet v drill enginu
 
-- [ ] 88. MTT 6-max turbo verified range import
-  - [ ] 88.1 Ziskat legalni 6-max turbo source/export vstup
+- [x] 88. MTT 6-max turbo verified range import
+  - Superseded-by: 135.5 P1 preflop CHIP_EV production import wave; DOLAR_EV navazne pokryva 135.6.
+  - [x] 88.1 Ziskat legalni 6-max turbo source/export vstup
     - Turbo assumptions a stack mapping musi byt explicitni
-  - [ ] 88.2 Normalizovat 6-max turbo records
+  - [x] 88.2 Normalizovat 6-max turbo records
     - Records musi pokryt required positions, buckets, contexts and 169 hand classes
     - Generic MTT preflop import validator now checks 6-max turbo source/export completeness
-  - [ ] 88.3 Povysit 6-max turbo z candidate na production
+  - [x] 88.3 Povysit 6-max turbo z candidate na production
     - Po validaci se SIX_MAX/TURBO/PREFLOP/chipEV smi spoustet v drill enginu
 
 - [x] 89. Production range import UX and audit artifacts
@@ -1090,16 +1093,18 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Interni audit muze mit zdroje, uzivatelske UI zustava source-free
     - Hotovo: dashboard umi volitelny source-free permission audit panel bez URL, provideru a pack id
 
-- [ ] 104. MTT 9-max turbo import execution
-  - [ ] 104.1 Zpracovat legalni 9-max turbo ante ON export
+- [x] 104. MTT 9-max turbo import execution
+  - Superseded-by: 135.5 P1 preflop CHIP_EV production import wave.
+  - [x] 104.1 Zpracovat legalni 9-max turbo ante ON export
     - Import musi projit `validate:range-import --kind=mtt-preflop`
-  - [ ] 104.2 Zpracovat legalni 9-max turbo ante OFF export
+  - [x] 104.2 Zpracovat legalni 9-max turbo ante OFF export
     - Stack mapping a ante assumptions musi byt explicitni
-  - [ ] 104.3 Vytvorit production RangePacky pro 9-max turbo
+  - [x] 104.3 Vytvorit production RangePacky pro 9-max turbo
     - Packy musi mit MEDIUM/HIGH confidence, records > 0 and full hand-class maps
 
-- [ ] 105. MTT 9-max turbo promotion QA
-  - [ ] 105.1 Zapojit turbo packy do MTT preflop registry
+- [x] 105. MTT 9-max turbo promotion QA
+  - Superseded-by: 135.7 Preflop production runtime de-fallback.
+  - [x] 105.1 Zapojit turbo packy do MTT preflop registry
     - Readiness report musi prejit z MISSING na PRODUCTION
   - [x] 105.2 Otestovat turbo gate v UI a drill engine
     - MTT/FULL_RING_9/TURBO/PREFLOP/chipEV ma spustit drill jen po validaci
@@ -1108,12 +1113,13 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Diff musi ukazat, zda jde o dedicated ranges nebo schvaleny reuse policy
     - Hotovo: `buildMttPreflopSpeedDiffReport` a `verify:ranges` vypisuji FULL_RING_9 regular-vs-turbo diff jako BLOCKED, protoze turbo pack chybi a neni schvaleny reuse policy
 
-- [ ] 106. MTT 6-max regular import execution
-  - [ ] 106.1 Zpracovat legalni 6-max regular ante ON export
+- [x] 106. MTT 6-max regular import execution
+  - Superseded-by: 135.5 P1 preflop CHIP_EV production import wave.
+  - [x] 106.1 Zpracovat legalni 6-max regular ante ON export
     - Pokryt UTG,HJ,CO,BTN,SB,BB, vsechny buckets a contexts
-  - [ ] 106.2 Zpracovat legalni 6-max regular ante OFF export
+  - [x] 106.2 Zpracovat legalni 6-max regular ante OFF export
     - Strict i lenient mapy musi mit 169 hand classes na record
-  - [ ] 106.3 Vytvorit production 6-max regular RangePacky
+  - [x] 106.3 Vytvorit production 6-max regular RangePacky
     - Candidate LOW/empty packy nahradit nebo doplnit produkcnimi packy bez legacy fallbacku
 
 - [x] 107. MTT 6-max regular promotion QA
@@ -1127,12 +1133,13 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - 6-max vysledky se nesmi michat s 9-max profilem bez explicitniho breakdownu
     - Hotovo: `statsV2Analytics` regresni test micha FULL_RING_9 a SIX_MAX V2 zaznamy a overuje oddeleny `tableFormat` breakdown i rozdilny `profileId`
 
-- [ ] 108. MTT 6-max turbo import execution
-  - [ ] 108.1 Zpracovat legalni 6-max turbo ante ON export
+- [x] 108. MTT 6-max turbo import execution
+  - Superseded-by: 135.5 P1 preflop CHIP_EV production import wave.
+  - [x] 108.1 Zpracovat legalni 6-max turbo ante ON export
     - Turbo assumptions musi byt oddelene od regular metadata
-  - [ ] 108.2 Zpracovat legalni 6-max turbo ante OFF export
+  - [x] 108.2 Zpracovat legalni 6-max turbo ante OFF export
     - Source stack to bucket mapping musi byt soucasti review reportu
-  - [ ] 108.3 Vytvorit production 6-max turbo RangePacky
+  - [x] 108.3 Vytvorit production 6-max turbo RangePacky
     - Readiness musi projit bez SPEED_METADATA_ONLY shortcutu
 
 - [x] 109. MTT 6-max turbo promotion QA
@@ -1190,12 +1197,13 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Napr. 20 spotu, 80% recent accuracy, streak target, leak cleanup
     - Hotovo: curriculum plan obsahuje target spots, target accuracy, streak target and leak cleanup target
 
-- [ ] 114. Flop SRP production import execution
-  - [ ] 114.1 Zpracovat legalni SRP flop production StrategyPack
+- [x] 114. Flop SRP production import execution
+  - Superseded-by: 135.8 P3 FLOP production import wave.
+  - [x] 114.1 Zpracovat legalni SRP flop production StrategyPack
     - Pokryt EP vs BB, BTN vs BB, SB vs BB, OOP raiser vs IP caller
-  - [ ] 114.2 Pokryt vsechny required board textures v SRP
+  - [x] 114.2 Pokryt vsechny required board textures v SRP
     - A-high, broadway, low, paired, monotone, two-tone, connected, dry, draw-heavy
-  - [ ] 114.3 Zapojit SRP production pack do resolver chain
+  - [x] 114.3 Zapojit SRP production pack do resolver chain
     - Production data ma mit prioritu pred public heuristic fallbackem
 
 - [x] 115. Flop SRP production UI QA
@@ -1209,12 +1217,13 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Matrix scroll, seat labels and board cards nesmi pretekat
     - Hotovo: postflop DOM/CSS test hlida mobile SRP table rozmery, seat mobile pozice, board card sizing a matrix min-width scroll guard; `mobileWebViewSmoke` pokryva 360x800, 390x844 and 412x915 bez source URL v UI
 
-- [ ] 116. Flop 3bet pot production import execution
-  - [ ] 116.1 Zpracovat legalni 3bet pot flop StrategyPack
+- [x] 116. Flop 3bet pot production import execution
+  - Superseded-by: 135.8 P3 FLOP production import wave.
+  - [x] 116.1 Zpracovat legalni 3bet pot flop StrategyPack
     - OOP caller vs IP 3bettor a IP/OOP c-bet situace musi byt pokryte
-  - [ ] 116.2 Rozlisit SPR windows pro 3bet poty
+  - [x] 116.2 Rozlisit SPR windows pro 3bet poty
     - Low/mid SPR pravidla nesmi pouzivat SRP sizing heuristiku bez mappingu
-  - [ ] 116.3 Zapojit 3bet production pack do resolver chain
+  - [x] 116.3 Zapojit 3bet production pack do resolver chain
     - 3bet pot fallback se pouzije jen tam, kde production rule chybi
 
 - [x] 117. Flop production range frequencies and mixes
@@ -1738,9 +1747,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 135.20 Final MTT user smoke
     - Rucne projit reprezentativni MTT scenare: 9-max regular CHIP_EV preflop, 9-max turbo DOLAR_EV preflop, 6-max regular CHIP_EV flop line, 6-max turbo DOLAR_EV river facing-bet, HH import turn/river review a dashboard kontrola.
     - Zadny scenar nesmi zobrazit fallback warning, source citation, pack id nebo nevalidni action pro dany node.
-  - [ ] 135.21 Uzavrit nebo supersedovat stare duplicitni MTT import tasky
+  - [x] 135.21 Uzavrit nebo supersedovat stare duplicitni MTT import tasky
     - Po prijeti tohoto konsolidovaneho backlogu projit stare otevrene tasky 86-88, 104-108, 114 a 116 a oznacit je jako superseded-by 135.x nebo je premapovat na konkretni P1-P5 import wave.
     - Cilem je mit jeden primarni backlog pro MTT dokonceni a neudrzovat paralelni, castecne duplicitni seznamy.
+    - Hotovo: stare preflop import/promotion tasky 86-88 a 104-108 jsou superseded 135.5/135.6/135.7/135.11; stare FLOP SRP/3bet import tasky 114 a 116 jsou superseded 135.8/135.11. Skutecne production dodani zustava v P1-P5 legal intake wavech, ne ve starych duplicitach.
   - [ ] 135.22 Release rozhodnuti pro "MTT complete v1"
     - Po splneni 135.1-135.21 oznacit MTT cast jako produkcne kompletni pro v1.
     - Acceptance: `npm run release:check` zeleny, `mtt:completion -- --summary` valid true, `mtt:blockers -- --summary` 0 blockers, `mtt:postflop-release -- --summary` valid true, operator docs a release notes aktualni.
