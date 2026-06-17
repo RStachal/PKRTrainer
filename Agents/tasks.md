@@ -1723,9 +1723,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Po produkcnich MTT importech overit, ze dashboard oddeluje MTT preflop/postflop, streety, action nody, table format, speed, EV, ante, production/fallback confidence a hand-line vs single spot.
     - Export/import stats musi zachovat MTT postflop single i line records a nesmi michat production a fallback KPI bez vahy.
     - Hotovo: postflop stats bridge schema v3 nese explicitni `ante`, legacy import bez `schemaVersion`/`ante` se normalizuje z `profileId`, dashboard postflop breakdowny zahrnuji single spoty i hand-line street records a test hlida 9-max/6-max, regular/turbo, chipEV/$EV, ante ON/OFF, production/preview/fallback a source-free labels.
-  - [ ] 135.17 Source-free MTT UI release audit
+  - [x] 135.17 Source-free MTT UI release audit
     - Rozsirit/overit UI source-free release gate proti vsem MTT povrchum: profile selector, preflop question/result, range modal, postflop single spot, hand-line, HH review, dashboard, permission audit.
     - Zakazat URL, provider citace, pack id, rule id, raw internal enumy a lokalni raw path ve visible UI.
+    - Hotovo: centralni `uiNoSourceCitation` release gate pokryva profile selector, range modal, postflop single spot, postflop hand-line, HH import/review, dashboard a permission audit; test injectuje source-heavy resolver s URL/pack/rule metadaty a hlida, ze visible UI zustava source-free.
   - [ ] 135.18 Mobile/performance MTT release QA
     - Po produkcnich packach spustit mobile viewport smoke, render profile, bundle budget a build.
     - Overit, ze lazy loading production packu nezpomali first render a ze Flopzilla/preflop 13x13 matice zustava pouzitelna na 360/390/412px sirce.

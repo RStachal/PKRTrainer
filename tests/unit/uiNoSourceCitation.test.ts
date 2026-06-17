@@ -5,8 +5,10 @@ import { DEFAULT_TRAINING_PROFILE, profileWith } from "../../src/core/trainingPr
 import { renderPostflopView } from "../../src/ui/postflopView";
 import { renderProfileSelector } from "../../src/ui/profileSelector";
 import { renderRangeModalButton } from "../../src/ui/rangeModal";
+import { renderHHView } from "../../src/ui/hhView";
 import { createStatsStore, type ResultRecord } from "../../src/persistence/statsStore";
 import { renderDashboard } from "../../src/ui/dashboard";
+import type { PostflopStrategyResolver } from "../../src/core/postflopGenerator";
 import type { PostflopStatsV2BridgeRecord } from "../../src/persistence/postflopResultRecord";
 import type { RangeStore } from "../../src/data/rangeStore";
 import type { Card, Spot, TableState } from "../../src/core/types";
@@ -97,6 +99,57 @@ const loadedStore: RangeStore = {
     strict: { AKs: ["OPEN_2X"] },
   }),
 };
+
+const hhRunout = [
+  "PokerStars Hand #17: Tournament #1, 10/20",
+  "Table 'Test' 9-max Seat #8 is the button",
+  "Seat 1: Villain1 (1000 in chips)",
+  "Seat 2: Villain2 (1000 in chips)",
+  "Seat 3: Villain3 (1000 in chips)",
+  "Seat 4: Villain4 (1000 in chips)",
+  "Seat 5: Villain5 (1000 in chips)",
+  "Seat 6: Villain6 (1000 in chips)",
+  "Seat 7: Villain7 (1000 in chips)",
+  "Seat 8: Hero (1000 in chips)",
+  "Seat 9: Villain9 (1000 in chips)",
+  "Villain9: posts small blind 10",
+  "Villain1: posts big blind 20",
+  "*** HOLE CARDS ***",
+  "Dealt to Hero [Ks Qs]",
+  "Hero: raises 40 to 60",
+  "Villain1: calls 40",
+  "*** FLOP *** [Ah 7d 2c]",
+  "Villain1: bets 40",
+  "Hero: calls 40",
+  "*** TURN *** [Ah 7d 2c] [5s]",
+  "Villain1: bets 80",
+  "Hero: calls 80",
+  "*** RIVER *** [Ah 7d 2c 5s] [Jd]",
+  "Villain1: bets 120",
+  "Hero: calls 120",
+  "*** SUMMARY ***",
+].join("\n");
+
+const sourceHeavyResolver: PostflopStrategyResolver = (input) => ({
+  action: input.actionNode?.endsWith("_FACING_BET") ? "CALL" : "BET_SMALL",
+  explanation: `Release gate ${input.street.toLowerCase()} recommendation`,
+  source: {
+    kind: "STRATEGY_PACK",
+    packId: "mtt-full-ring-9-flop-production-private-v1",
+    packVersion: "source-free-test-v1",
+    packVerifiedAt: "2026-06-17",
+    ruleId: `flop-srp-production-${input.street.toLowerCase()}`,
+    confidence: "HIGH",
+    matchedTextures: input.textures,
+    sprMin: 0,
+    sprMax: 30,
+    positionPattern: input.positionPattern,
+    sourceUrls: ["https://example.test/private-source"],
+    assumptions: ["Private StrategyPack source metadata must stay hidden."],
+    selectionScore: 100,
+    tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+  },
+});
 
 class MemoryStorage implements Storage {
   private readonly data = new Map<string, string>();
@@ -251,6 +304,36 @@ describe("UI source citation policy", () => {
       .toContain("Postflop model");
   });
 
+  it("nezobrazuje source/pack citace v HH import review", () => {
+    const root = document.createElement("div");
+    renderHHView(root, { postflopStrategyResolver: sourceHeavyResolver });
+
+    root.querySelector<HTMLTextAreaElement>(".hh-input")!.value = hhRunout;
+    root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
+
+    expect(root.querySelectorAll(".hh-postflop-analysis")).toHaveLength(3);
+    expectNoSourceCitation(root.textContent ?? "");
+  });
+
+  it("nezobrazuje source/pack citace v postflop hand-line flow", () => {
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: "FLOP",
+      initialActionNode: "FLOP_FACING_BET",
+    });
+
+    root.querySelector<HTMLSelectElement>(".postflop-mode")!.value = "line";
+    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CALL"]')?.click();
+    root.querySelector<HTMLButtonElement>(".postflop-line-next")?.click();
+    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="FOLD"]')?.click();
+
+    expect(root.querySelector<HTMLElement>(".postflop-line-complete")?.textContent)
+      .toBe("Hand line complete: 1/2 streets.");
+    expectNoSourceCitation(root.textContent ?? "");
+  });
+
   it("nezobrazuje URL ani pack id v permission audit panelu", () => {
     const store = createStatsStore(new MemoryStorage());
     const report = buildProductionPermissionManifestReport({
@@ -301,6 +384,8 @@ describe("UI source citation policy", () => {
     const profileRoot = root.appendChild(document.createElement("section"));
     const dashboardRoot = root.appendChild(document.createElement("section"));
     const postflopRoot = root.appendChild(document.createElement("section"));
+    const handLineRoot = root.appendChild(document.createElement("section"));
+    const hhRoot = root.appendChild(document.createElement("section"));
     const rangeRoot = root.appendChild(document.createElement("section"));
 
     const profileView = renderProfileSelector(profileRoot);
@@ -308,6 +393,17 @@ describe("UI source citation policy", () => {
     renderDashboard({ store, sessionCount: 1, postflopRecords: [postflopRecord] }, dashboardRoot);
     renderPostflopView(postflopRoot, { initialStreet: "FLOP", autoGenerate: true });
     postflopRoot.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+    renderPostflopView(handLineRoot, {
+      initialSeed: 42,
+      initialStreet: "FLOP",
+      initialActionNode: "FLOP_FACING_BET",
+    });
+    handLineRoot.querySelector<HTMLSelectElement>(".postflop-mode")!.value = "line";
+    handLineRoot.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+    handLineRoot.querySelector<HTMLButtonElement>('.postflop-action[data-action="FOLD"]')?.click();
+    renderHHView(hhRoot, { postflopStrategyResolver: sourceHeavyResolver });
+    hhRoot.querySelector<HTMLTextAreaElement>(".hh-input")!.value = hhRunout;
+    hhRoot.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
     renderRangeModalButton(spot, loadedStore, rangeRoot);
     rangeRoot.querySelector<HTMLButtonElement>(".range-modal-open")?.click();
 
