@@ -233,7 +233,7 @@ Raw legal inputs belong under `Agents/range-intake/raw/<pack-id>/`; that folder 
 5. Dry-run module generation with `npm run build:range-module -- --dry-run`.
 6. Promote only when both `productionReady: true`, `permissionReady: true` and `writeReady: true`.
 7. Run `npm run verify:ranges`, targeted tests, `npm run typecheck` and `npm run build`.
-8. Run `npm run mtt:completion -- --summary` and `npm run mtt:postflop-release -- --summary`; both must pass before release.
+8. Run `npm run mtt:release-gates` before release; use `npm run mtt:release-gates -- --json` for CI or operator tooling that needs every gate command status.
 9. Verify that visible app UI remains source-free.
 
 ## Production Module Builder

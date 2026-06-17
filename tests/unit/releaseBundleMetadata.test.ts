@@ -99,6 +99,7 @@ describe("release bundle metadata", () => {
     const quickStart = readFileSync("Agents/user-quick-start.md", "utf8");
     const operatorGuide = readFileSync("Agents/range-import-operator-guide.md", "utf8");
     const mttCoverageAudit = readFileSync("Agents/mtt-production-coverage-audit.md", "utf8");
+    const productionIntakeManifest = readFileSync("Agents/production-range-intake-manifest.md", "utf8");
     const releaseTemplate = readFileSync("Agents/release-notes-template.md", "utf8");
 
     expect(quickStart).toContain("Training");
@@ -177,6 +178,9 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json");
     expect(mttCoverageAudit).toContain("regular-vs-turbo diff audit");
     expect(mttCoverageAudit).toContain("FLOP, TURN and RIVER production StrategyPacks are not registered");
+    expect(productionIntakeManifest).toContain("npm run mtt:release-gates");
+    expect(productionIntakeManifest).toContain("npm run mtt:release-gates -- --json");
+    expect(productionIntakeManifest).not.toContain("mtt:completion -- --summary` and `npm run mtt:postflop-release");
     expect(releaseTemplate).toContain("Gameplay changes");
     expect(releaseTemplate).toContain("Range data changes");
     expect(releaseTemplate).toContain("Statistics changes");

@@ -1550,6 +1550,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.16 Pridat strojove citelny souhrn MTT release gates
     - CI a operator tooling musi umet precist finalni stav i status kazdeho gate prikazu bez parsovani textoveho reportu.
     - Hotovo: `npm run mtt:release-gates -- --json` vraci `valid`, pocty prikazu, statusy, argumenty a zachycene vystupy vsech MTT release gates.
+  - [x] 133.17 Sjednotit production intake manifest s agregovanym release gate
+    - Import checklist nesmi operatora vracet ke starym izolovanym gate prikazum, kdyz release tok pouziva agregator.
+    - Hotovo: `Agents/production-range-intake-manifest.md` vede finalni overeni pres `npm run mtt:release-gates` a JSON variantu pro CI/tooling.
 
 - [ ] 134. MTT postflop full production roadmap FLOP-TURN-RIVER
   - Cil: plne funkcni MTT postflop simulace od flopu po river pro FULL_RING_9 i SIX_MAX, REGULAR i TURBO, CHIP_EV i DOLAR_EV, ante ON/OFF, vsechny podporovane heads-up pozicni dvojice, SRP/3bet/facing-bet vetve, vsechny streety a vsechny akce, ktere dany node legalne pripousti.
