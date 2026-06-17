@@ -144,6 +144,8 @@ npm run mtt:postflop-positions
 npm run mtt:postflop-positions -- --json
 npm run mtt:postflop-coverage
 npm run mtt:postflop-coverage -- --json
+npm run mtt:postflop-release
+npm run mtt:postflop-release -- --json
 ```
 
 The blocker report includes priority counts matching the intake plan buckets, so the summary can route work directly
@@ -154,6 +156,8 @@ The postflop positions report freezes supported and unsupported heads-up positio
 Production FLOP/TURN/RIVER packs must use the granular `SRP_<POS>_VS_<POS>` and `3BP_<POS>_VS_<POS>` patterns from this report; the old five broad patterns remain legacy-compatible but are not enough for production coverage.
 The postflop coverage report expands the 48 profile targets into 9,600 concrete street/pot/action/position targets
 and shows the exact blocker for each target.
+The postflop release gate fails release while any FLOP/TURN/RIVER slot still uses fallback runtime, lacks production
+coverage, lacks `permission.json`, contains placeholder text, has LOW confidence or is not production-ready.
 
 For the prioritized import queue aligned to the current MTT completion goal:
 

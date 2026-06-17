@@ -52,6 +52,8 @@ Useful filters:
 - `npm run mtt:postflop-positions -- --json`
 - `npm run mtt:postflop-coverage`
 - `npm run mtt:postflop-coverage -- --json`
+- `npm run mtt:postflop-release`
+- `npm run mtt:postflop-release -- --json`
 - `npm run mtt:intake-plan`
 - `npm run mtt:intake-plan -- --ready-only --json`
 - `npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all`
@@ -71,6 +73,8 @@ FLOP/TURN/RIVER production coverage now requires the 50 granular patterns emitte
 `SRP_UTG_VS_BB`, `SRP_BTN_VS_BB`, `SRP_SB_VS_BB`, `SRP_HJ_VS_CO`, and `3BP_BTN_VS_UTG`.
 `mtt:postflop-coverage` expands the 48 profile targets into 9,600 concrete street/pot/action/position targets and
 shows exact blockers for release routing.
+`mtt:postflop-release` is the final postflop release gate. The final postflop release gate currently fails because
+all 48 FLOP/TURN/RIVER targets are waiting for legal production data and still resolve through fallback runtime.
 
 The preflop intake subset currently has 14 rows and 0 rows ready for validation. All 14 are waiting for both normalized data and permission manifests.
 
@@ -107,6 +111,7 @@ The preflop intake subset currently has 14 rows and 0 rows ready for validation.
 - `npm run mtt:completion`
 - `npm run mtt:blockers`
 - `npm run mtt:intake-plan`
+- `npm run mtt:postflop-release`
 - `npm run mtt:validate-ready-intake`
 - `npm run mtt:slots`
 - `npm run range:intake`

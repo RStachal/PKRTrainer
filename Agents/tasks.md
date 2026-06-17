@@ -1617,9 +1617,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Dashboard musi umet oddelit FLOP/TURN/RIVER, SRP/3bet/facing-bet, position pair, action node, single spot vs hand line a confidence/production stav.
     - Leak recommendation nesmi michat production a preview/fallback spoty bez confidence vahy.
     - Hotovo: postflop dashboard breakdowny rozlisuji street, action node, pot type, position pattern/pair, texture, model, confidence a production/preview/fallback stav; pridana je flow-mode agregace `Single spot` vs `Hand line` z postflop line zaznamu a confidence-weighted KPI zustava oddelene vahovane pro production/preview/fallback.
-  - [ ] 134.19 Pridat finalni MTT postflop release gate
+  - [x] 134.19 Pridat finalni MTT postflop release gate
     - Novy gate musi selhat, pokud nektery cilovy FLOP/TURN/RIVER production slot chybi, ma LOW confidence, chybejici permission, placeholder text, nekompletni coverage nebo fallback runtime.
     - Gate spustit v `npm run release:check` az po nahrani legalnich production dat.
+    - Hotovo: `npm run mtt:postflop-release` je zapojeny do `npm run release:check`; gate je source-free a aktualne spravne selhava na 48 FLOP/TURN/RIVER slotech bez production packu, normalized importu a permission manifestu.
   - [ ] 134.20 Finalni acceptance pro plne funkcni MTT postflop
     - `npm run release:check` zeleny.
     - `npm run mtt:blockers -- --summary` nema P3/P4/P5 blocker rows.
