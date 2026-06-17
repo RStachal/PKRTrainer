@@ -109,6 +109,19 @@ describe("mtt:intake-plan CLI", () => {
     expect(result.stdout).not.toContain("2. ");
   });
 
+  it("umi vypsat jen souhrn prioritni fronty pro release diagnostiku", () => {
+    const result = runPlan("--summary");
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("MTT intake priority plan");
+    expect(result.stdout).toContain("queue rows: 62");
+    expect(result.stdout).toContain("shown rows: 12");
+    expect(result.stdout).toContain("ready for validation: 0");
+    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=6");
+    expect(result.stdout).not.toContain("1. P1_PREFLOP_CHIP_EV");
+    expect(result.stdout).not.toContain("build dry-run:");
+  });
+
   it("umi filtrovat primo podle prioritniho bucketu", () => {
     const result = runPlan("--priority=P1_PREFLOP_CHIP_EV", "--all");
 

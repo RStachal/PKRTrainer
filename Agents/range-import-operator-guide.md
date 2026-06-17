@@ -124,12 +124,13 @@ Before releasing:
 npm run release:check
 npm run mtt:release-gates
 npm run mtt:release-gates -- --json
+npm run mtt:intake-plan -- --summary
 ```
 
 `release:check` runs typecheck, tests, MTT release gates, range verification and production build.
-`mtt:release-gates` runs every MTT gate summary before returning a failing exit code, so one failing gate does not hide
-the remaining blocker summaries. Use `--json` when CI or operator tooling needs the status and captured output of every
-gate command.
+`mtt:release-gates` runs every MTT gate and intake priority summary before returning a failing exit code, so one failing
+gate does not hide the remaining blocker summaries. Use `--json` when CI or operator tooling needs the status and
+captured output of every gate command.
 
 For the full MTT matrix with blocker details and import slot paths:
 
@@ -173,6 +174,7 @@ For the prioritized import queue aligned to the current MTT completion goal:
 ```powershell
 npm run mtt:intake-plan
 npm run mtt:intake-plan -- --all
+npm run mtt:intake-plan -- --summary
 npm run mtt:intake-plan -- --ready-only --json
 npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all
 npm run mtt:intake-plan -- --priority=P2_PREFLOP_DOLAR_EV --all

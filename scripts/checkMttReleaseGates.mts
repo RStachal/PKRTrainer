@@ -19,6 +19,10 @@ const gateCommands: readonly GateCommand[] = [
     npmArgs: ["run", "mtt:blockers", "--", "--summary"],
   },
   {
+    label: "MTT intake priority summary",
+    npmArgs: ["run", "mtt:intake-plan", "--", "--summary"],
+  },
+  {
     label: "MTT postflop final release gate",
     npmArgs: ["run", "mtt:postflop-release", "--", "--summary"],
   },

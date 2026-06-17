@@ -8,12 +8,14 @@ describe("mtt:release-gates CLI", () => {
     expect(result.status).toBe(1);
     expect(result.stdout).toContain("MTT release gates");
     expect(result.stdout).toContain("valid: false");
-    expect(result.stdout).toContain("commands: 6");
+    expect(result.stdout).toContain("commands: 7");
     expect(result.stdout).toContain("failed commands: 2");
     expect(result.stdout).toContain("## MTT completion production gate");
     expect(result.stdout).toContain("MTT completion release gate");
     expect(result.stdout).toContain("## MTT blocker summary");
     expect(result.stdout).toContain("MTT production blockers");
+    expect(result.stdout).toContain("## MTT intake priority summary");
+    expect(result.stdout).toContain("MTT intake priority plan");
     expect(result.stdout).toContain("## MTT postflop final release gate");
     expect(result.stdout).toContain("MTT postflop final release gate");
     expect(result.stdout).toContain("## Range intake workspace guard");
@@ -46,18 +48,21 @@ describe("mtt:release-gates CLI", () => {
 
     expect(parsed.valid).toBe(false);
     expect(parsed.counts).toEqual({
-      commands: 6,
+      commands: 7,
       failedCommands: 2,
     });
     expect(parsed.commands.map((command) => command.label)).toEqual([
       "MTT completion production gate",
       "MTT blocker summary",
+      "MTT intake priority summary",
       "MTT postflop final release gate",
       "Range intake workspace guard",
       "Ready intake slots",
       "Ready MTT intake validation",
     ]);
     expect(parsed.commands[0].npmArgs).toEqual(["run", "mtt:completion", "--", "--summary"]);
+    expect(parsed.commands[2].npmArgs).toEqual(["run", "mtt:intake-plan", "--", "--summary"]);
+    expect(parsed.commands[2].stdout).toContain("MTT intake priority plan");
     expect(parsed.commands.every((command) => command.stdout.length > 0)).toBe(true);
     expect(parsed.commands[0].stdout).toContain("MTT completion release gate");
     expect(parsed.commands[0].stdout).not.toContain("> mtt-preflop-trainer");

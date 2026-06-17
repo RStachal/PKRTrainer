@@ -25,6 +25,7 @@ interface CliArgs {
   json: boolean;
   limit: number | null;
   priority: MttIntakePriorityKey | null;
+  summary: boolean;
   visibility: "all" | "ready-only" | "waiting-only";
 }
 
@@ -63,6 +64,7 @@ function usage(): string {
     "  npm run mtt:intake-plan",
     "  npm run mtt:intake-plan -- --limit=20",
     "  npm run mtt:intake-plan -- --all",
+    "  npm run mtt:intake-plan -- --summary",
     "  npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all",
     "  npm run mtt:intake-plan -- --priority=P2_PREFLOP_DOLAR_EV --all",
     "  npm run mtt:intake-plan -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json",
@@ -72,6 +74,7 @@ function usage(): string {
     "  --all",
     "  --limit=<positive integer>",
     `  --priority=${MTT_INTAKE_PRIORITY_KEYS.join("|")}`,
+    "  --summary",
     "  --ready-only",
     "  --waiting-only",
     "",
@@ -88,7 +91,7 @@ function usage(): string {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildMttIntakePlanReport(args);
-  console.log(args.json ? JSON.stringify(report, null, 2) : renderMttIntakePlanReport(report, args.limit));
+  console.log(args.json ? JSON.stringify(report, null, 2) : renderMttIntakePlanReport(report, args.limit, args.summary));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
@@ -99,6 +102,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
   let limit: number | null = 12;
   let priority: MttIntakePriorityKey | null = null;
+  let summary = false;
   let visibility: CliArgs["visibility"] = "all";
 
   for (const item of argv) {
@@ -111,6 +115,10 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (item === "--all") {
       limit = null;
+      continue;
+    }
+    if (item === "--summary") {
+      summary = true;
       continue;
     }
     if (item.startsWith("--limit=")) {
@@ -133,7 +141,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, json, limit, priority, visibility };
+  return { filters, json, limit, priority, summary, visibility };
 }
 
 function parseLimit(value: string): number {
@@ -243,7 +251,7 @@ function stringRank(a: string, b: string): number {
   return a.localeCompare(b, "en");
 }
 
-function renderMttIntakePlanReport(report: IntakePlanReport, limit: number | null): string {
+function renderMttIntakePlanReport(report: IntakePlanReport, limit: number | null, summaryOnly = false): string {
   const lines = [
     "MTT intake priority plan",
     `queue rows: ${report.counts.totalQueueRows}`,
@@ -253,6 +261,8 @@ function renderMttIntakePlanReport(report: IntakePlanReport, limit: number | nul
     `missing permission.json: ${report.counts.missingPermission}`,
     `priority counts: ${MTT_INTAKE_PRIORITY_KEYS.map((priority) => `${priority}=${report.counts.byPriority[priority]}`).join(", ")}`,
   ];
+  if (summaryOnly) return lines.join("\n");
+
   if (limit !== null && report.counts.totalQueueRows > report.counts.shownRows) {
     lines.push(`showing first ${limit} rows; use --all to show the full queue`);
   }

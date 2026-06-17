@@ -115,6 +115,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:blockers");
     expect(operatorGuide).toContain("npm run mtt:release-gates");
     expect(operatorGuide).toContain("npm run mtt:release-gates -- --json");
+    expect(operatorGuide).toContain("npm run mtt:intake-plan -- --summary");
     expect(operatorGuide).toContain("npm run mtt:completion -- --summary");
     expect(operatorGuide).toContain("priority counts matching the intake plan buckets");
     expect(operatorGuide).toContain("npm run mtt:postflop-matrix");
@@ -149,7 +150,7 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:completion -- --preview --json");
     expect(mttCoverageAudit).toContain("npm run mtt:release-gates");
     expect(mttCoverageAudit).toContain("npm run mtt:release-gates -- --json");
-    expect(mttCoverageAudit).toContain("prints completion, blocker, postflop release, intake workspace and ready-validation summaries");
+    expect(mttCoverageAudit).toContain("prints completion, blocker, intake priority, postflop release, intake workspace and ready-validation summaries");
     expect(mttCoverageAudit).toContain("captured outputs for operator tooling");
     expect(mttCoverageAudit).toContain("defaults to a production gate");
     expect(mttCoverageAudit).toContain("total MTT rows: 64");
@@ -170,6 +171,7 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:postflop-release -- --summary");
     expect(mttCoverageAudit).toContain("final postflop release gate currently fails");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan");
+    expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --summary");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --ready-only --json");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan -- --priority=P2_PREFLOP_DOLAR_EV --all");
@@ -189,6 +191,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("npm run mtt:release-gates -- --json");
     expect(releaseTemplate).toContain("npm run mtt:blockers");
     expect(releaseTemplate).toContain("npm run mtt:postflop-release -- --summary");
+    expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --ready-only");
     expect(releaseTemplate).toContain("npm run mtt:validate-ready-intake");
     expect(releaseTemplate).toContain("npm run range:intake:guard");
