@@ -38,6 +38,10 @@ const gateCommands: readonly GateCommand[] = [
     label: "Ready MTT intake validation",
     npmArgs: ["run", "mtt:validate-ready-intake"],
   },
+  {
+    label: "MTT registry integrity",
+    npmArgs: ["run", "mtt:registry-integrity"],
+  },
 ];
 
 try {

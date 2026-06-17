@@ -8,7 +8,7 @@ describe("mtt:release-gates CLI", () => {
     expect(result.status).toBe(1);
     expect(result.stdout).toContain("MTT release gates");
     expect(result.stdout).toContain("valid: false");
-    expect(result.stdout).toContain("commands: 7");
+    expect(result.stdout).toContain("commands: 8");
     expect(result.stdout).toContain("failed commands: 2");
     expect(result.stdout).toContain("## MTT completion production gate");
     expect(result.stdout).toContain("MTT completion release gate");
@@ -24,6 +24,8 @@ describe("mtt:release-gates CLI", () => {
     expect(result.stdout).toContain("Range intake status");
     expect(result.stdout).toContain("## Ready MTT intake validation");
     expect(result.stdout).toContain("MTT ready intake validation");
+    expect(result.stdout).toContain("## MTT registry integrity");
+    expect(result.stdout).toContain("MTT production registry integrity");
     expect(result.stdout).not.toContain("https://");
   });
 
@@ -48,7 +50,7 @@ describe("mtt:release-gates CLI", () => {
 
     expect(parsed.valid).toBe(false);
     expect(parsed.counts).toEqual({
-      commands: 7,
+      commands: 8,
       failedCommands: 2,
     });
     expect(parsed.commands.map((command) => command.label)).toEqual([
@@ -59,12 +61,14 @@ describe("mtt:release-gates CLI", () => {
       "Range intake workspace guard",
       "Ready intake slots",
       "Ready MTT intake validation",
+      "MTT registry integrity",
     ]);
     expect(parsed.commands[0].npmArgs).toEqual(["run", "mtt:completion", "--", "--summary"]);
     expect(parsed.commands[2].npmArgs).toEqual(["run", "mtt:intake-plan", "--", "--summary"]);
     expect(parsed.commands[2].stdout).toContain("MTT intake priority plan");
     expect(parsed.commands.every((command) => command.stdout.length > 0)).toBe(true);
     expect(parsed.commands[0].stdout).toContain("MTT completion release gate");
+    expect(parsed.commands[7].stdout).toContain("MTT production registry integrity");
     expect(parsed.commands[0].stdout).not.toContain("> mtt-preflop-trainer");
     expect(JSON.stringify(parsed)).not.toContain("https://");
   });

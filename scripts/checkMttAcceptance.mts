@@ -42,6 +42,10 @@ const acceptanceCommands: readonly AcceptanceCommand[] = [
     label: "Ready intake slots",
     npmArgs: ["run", "range:intake", "--", "--ready-only"],
   },
+  {
+    label: "MTT registry integrity",
+    npmArgs: ["run", "mtt:registry-integrity"],
+  },
 ];
 
 try {

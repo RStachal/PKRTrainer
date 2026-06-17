@@ -51,6 +51,7 @@ Useful filters:
 - `npm run mtt:completion -- --preview --json`
 - `npm run mtt:acceptance`
 - `npm run mtt:acceptance -- --json`
+- `npm run mtt:registry-integrity`
 - `npm run mtt:release-gates`
 - `npm run mtt:release-gates -- --json`
 - `npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json`
@@ -127,6 +128,7 @@ The preflop intake subset currently has 14 rows and 0 rows ready for validation.
 
 - `npm run mtt:completion -- --summary`
 - `npm run mtt:acceptance`
+- `npm run mtt:registry-integrity`
 - `npm run mtt:release-gates`
 - `npm run mtt:blockers`
 - `npm run mtt:intake-plan`
