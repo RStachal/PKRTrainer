@@ -35,7 +35,7 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
   - postflop Flopzilla matrix 13x13: OK avg 28.13 ms
 - `npm run build`: passed.
 - `npm run bundle:budget`: passed after build.
-  - main-DZKMtsFk.js: raw 320.52 KiB, gzip 84.46 KiB
+  - current build after the 2026-06-18 matrix optimization: main-9cmG-2BA.js, raw 320.96 KiB, gzip 84.63 KiB
   - limits: raw 325 KiB, gzip 86 KiB
 
 ## Completed in this pass
