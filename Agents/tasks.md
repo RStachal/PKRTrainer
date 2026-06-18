@@ -1740,6 +1740,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Po produkcnich packach spustit mobile viewport smoke, render profile, bundle budget a build.
     - Overit, ze lazy loading production packu nezpomali first render a ze Flopzilla/preflop 13x13 matice zustava pouzitelna na 360/390/412px sirce.
     - Hotovo: `mobileWebViewSmoke`, `profile:render`, `build` a post-build `bundle:budget` prosly; bundle `main-DZKMtsFk.js` je 320.52 KiB raw / 84.46 KiB gzip pod limitem. Render profile eviduje neblokujici WARN u preflop 13x13 matrix avg 44.91 ms proti 35 ms warn threshold, postflop Flopzilla avg 28.13 ms OK.
+    - Optimalizace 2026-06-18: preflop matrix pouziva 2 delegovane event listenery misto 338 listeneru na 169 bunkach a cacheuje stabilni 13x13 hand label grid. DOM/property/modal/HH testy zustavaji zelene; absolutni JSDOM profil dnes kolisal i na nezmenene postflop matici, proto puvodni performance WARN zustava evidovany.
   - [ ] 135.19 Final MTT release candidate checklist
     - Spustit: `npm run typecheck`, `npm test`, `npm run mtt:acceptance`, `npm run mtt:release-gates`, `npm run verify:ranges`, `npm run build`, `npm run bundle:budget`, `npm run release:check`.
     - Vystup ulozit do release notes: pocty production rows, 0 blockers, 0 waiting slots, bundle budget, known limitations.

@@ -46,6 +46,7 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
 - Central source-free UI release audit expanded to HH review and postflop hand-line.
 - Mobile/performance/build/bundle QA recorded.
 - Duplicate old MTT import tasks superseded into the 135.x P1-P5 backlog.
+- Follow-up 2026-06-18: preflop matrix now delegates cell click/keyboard handling at the matrix level and caches the stable 13x13 hand-label grid, reducing per-render listeners from 338 to 2.
 
 ## Blocking items
 

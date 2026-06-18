@@ -133,6 +133,11 @@ const LEGEND_ORDER: ActionCategory[] = [
 
 type CategoryCounts = Partial<Record<ActionCategory, number>>;
 
+const HAND_LABEL_GRID: readonly (readonly HandLabel[])[] = Array.from(
+  { length: GRID_SIZE },
+  (_, row) => Array.from({ length: GRID_SIZE }, (_, column) => handLabel(row, column)),
+);
+
 const ACTION_LABEL: Record<ActionKey, string> = {
   FOLD: "Fold",
   CALL: "Call",
@@ -458,6 +463,34 @@ function showCellDetail(
   detail.focus();
 }
 
+function bindMatrixInteraction(
+  matrix: HTMLElement,
+  detail: HTMLElement,
+  entry: RangeEntry,
+  heroHand: HandLabel,
+): void {
+  const activate = (target: EventTarget | null): void => {
+    const ElementCtor = matrix.ownerDocument.defaultView?.Element;
+    if (!ElementCtor || !(target instanceof ElementCtor)) return;
+    const cell = target.closest<HTMLElement>(".matrix-cell");
+    if (!cell || !matrix.contains(cell)) return;
+    const hand = cell.dataset.hand as HandLabel | undefined;
+    const category = cell.dataset.action as ActionCategory | undefined;
+    if (!hand || !category || !(category in CATEGORIES)) return;
+    showCellDetail(matrix, detail, entry, hand, category, hand === heroHand);
+  };
+
+  matrix.addEventListener("click", (event) => activate(event.target));
+  matrix.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const ElementCtor = matrix.ownerDocument.defaultView?.Element;
+    if (!ElementCtor || !(event.target instanceof ElementCtor)) return;
+    if (!event.target.closest(".matrix-cell")) return;
+    event.preventDefault();
+    activate(event.target);
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Hlavní vykreslení (Req 10)
 // ---------------------------------------------------------------------------
@@ -578,7 +611,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
       matrix.appendChild(makeHeaderCell(doc, RANKS[i], "row"));
 
       for (let j = 0; j < GRID_SIZE; j++) {
-        const hand = handLabel(i, j); // Req 10.4: pár/suited/offsuit dle (i,j)
+        const hand = HAND_LABEL_GRID[i][j]; // Req 10.4: pár/suited/offsuit dle (i,j)
         const keys = entry.actions[hand];
         const category = categoryForHand(keys); // Req 10.2
         usedCategories.add(category);
@@ -621,18 +654,10 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
           cell.style.zIndex = "1";
         }
 
-        cell.addEventListener("click", () => {
-          showCellDetail(matrix, cellDetail, entry, hand, category, hand === spot.hand);
-        });
-        cell.addEventListener("keydown", (event) => {
-          if (event.key !== "Enter" && event.key !== " ") return;
-          event.preventDefault();
-          cell.click();
-        });
-
         matrix.appendChild(cell);
       }
     }
+    bindMatrixInteraction(matrix, cellDetail, entry, spot.hand);
 
     wrap.appendChild(matrix);
 
