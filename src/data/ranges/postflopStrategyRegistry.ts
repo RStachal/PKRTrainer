@@ -1,6 +1,8 @@
 import type { PostflopStrategyResolver, PostflopStreet } from "../../core/postflopGenerator";
 import type { AnteMode } from "../../core/types";
 import type { BlindSpeed, EvModel, TableFormat } from "../../core/trainingProfile";
+import { isMttV1Profile } from "../../core/trainingCapability";
+import type { GameVariant, RakeMode } from "../../core/trainingProfile";
 import type { FlopProductionStrategyPack } from "./flopProductionStrategyPack";
 import {
   createFlopProductionStrategyResolverChain,
@@ -23,11 +25,13 @@ import {
 } from "./riverProductionStrategyResolver";
 
 export interface MttProductionPostflopResolverProfile {
+  gameVariant?: GameVariant;
   tableFormat: TableFormat;
   blindSpeed: BlindSpeed;
   street: PostflopStreet;
   evModel: EvModel;
   ante: AnteMode;
+  rakeMode?: RakeMode;
 }
 
 export interface MttProductionPostflopResolverPacks {
@@ -63,6 +67,17 @@ export function createMttProductionPostflopStrategyResolver(
   profile: MttProductionPostflopResolverProfile,
   packs: MttProductionPostflopResolverPacks = {},
 ): PostflopStrategyResolver {
+  if (!isMttV1Profile({
+    gameVariant: profile.gameVariant ?? "MTT",
+    tableFormat: profile.tableFormat,
+    blindSpeed: profile.blindSpeed,
+    street: profile.street,
+    evModel: profile.evModel,
+    ante: profile.ante,
+    rakeMode: profile.rakeMode ?? "NONE",
+  })) {
+    return () => null;
+  }
   const resolver = createProductionResolverForProfile(profile, packs);
   return (input) => {
     if (input.street !== profile.street) return null;

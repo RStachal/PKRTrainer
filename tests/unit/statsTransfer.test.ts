@@ -17,6 +17,7 @@ import {
   STATS_EXPORT_PROFILE,
 } from "../../src/persistence/statsTransfer";
 import { migrateResultRecordsToV2 } from "../../src/persistence/statsRecordV2";
+import { PREFLOP_RESULT_IDENTITY_SCHEMA } from "../../src/persistence/statsStore";
 
 class MemoryStorage implements Storage {
   private readonly data = new Map<string, string>();
@@ -56,9 +57,35 @@ const record: ResultRecord = {
   ts: 1,
 };
 
+function profiledRecord(ante: "ON" | "OFF", ts: number): ResultRecord {
+  const qid = `RFI|BTN|25|AKs|${ante}`;
+  const profileId = `MTT|FULL_RING_9|REGULAR|PREFLOP|CHIP_EV|${ante}|NONE`;
+  return {
+    ...record,
+    qid,
+    ts,
+    identity: {
+      schema: PREFLOP_RESULT_IDENTITY_SCHEMA,
+      scenarioId: `preflop_scenario_v1|${profileId}|${qid}`,
+      profileId,
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      blindSpeed: "REGULAR",
+      street: "PREFLOP",
+      evModel: "CHIP_EV",
+      ante,
+      rakeMode: "NONE",
+      rangePackId: `mtt-full-ring-9-regular-preflop-chip-ev-ante-${ante.toLowerCase()}-v1`,
+      rangePackVersion: "1",
+      sourceVerifiedAt: "2026-06-01",
+      scoringMode: "LENIENT",
+    },
+  };
+}
+
 const postflopRecord: PostflopStatsV2BridgeRecord = {
   schema: "postflop_stats_v2_bridge_v1",
-  schemaVersion: 3,
+  schemaVersion: 4,
   qid: "POSTFLOP|FLOP|1|As-Kd-Qh",
   correct: true,
   ts: 2,
@@ -158,8 +185,8 @@ describe("statsTransfer - export/import JSON", () => {
 
   it("umi vybrat, exportovat a odebrat statistiky jen pro jeden profil", () => {
     const source = createStatsStore(new MemoryStorage());
-    const offRecord = { ...record, qid: "RFI|BTN|25|AKs|OFF", ts: 1 };
-    const onRecord = { ...record, qid: "RFI|BTN|25|AQs|ON", ts: 2 };
+    const offRecord = profiledRecord("OFF", 1);
+    const onRecord = profiledRecord("ON", 2);
     expect(source.record(offRecord).ok).toBe(true);
     expect(source.record(onRecord).ok).toBe(true);
     const offProfileId = migrateResultRecordsToV2([offRecord])[0].profileId;

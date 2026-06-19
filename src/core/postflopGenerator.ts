@@ -160,6 +160,12 @@ export interface PostflopRecommendation {
   source?: PostflopRecommendationSource;
 }
 
+export interface PostflopOpponentPolicyBranch {
+  afterHeroCheck: Extract<PostflopAction, "CHECK" | "BET_SMALL" | "BET_BIG"> | "ALL_IN";
+  facingHeroBet: Extract<PostflopAction, "CALL" | "FOLD" | "RAISE"> | "ALL_IN";
+  facingHeroRaise: Extract<PostflopAction, "CALL" | "FOLD">;
+}
+
 export type PostflopRecommendationSource =
   | {
       kind: "STRATEGY_PACK";
@@ -178,6 +184,7 @@ export type PostflopRecommendationSource =
       tieBreak: "RULE_SCORE_THEN_PACK_ORDER";
       rangeBuckets?: readonly PostflopRangeBucket[];
       heroRangeBucket?: PostflopHeroRangeBucket;
+      opponentPolicy?: PostflopOpponentPolicyBranch;
     }
   | {
       kind: "FALLBACK";
@@ -230,6 +237,14 @@ export interface PostflopConfig {
   turnCardClass?: PostflopTurnCardClass;
   priorTurnAction?: PostflopAction;
   riverRunoutClass?: PostflopRiverRunoutClass;
+  allowFallback?: boolean;
+}
+
+export class PostflopStrategyUnavailableError extends Error {
+  constructor() {
+    super("No production postflop strategy matched the selected spot.");
+    this.name = "PostflopStrategyUnavailableError";
+  }
 }
 
 export const POSTFLOP_POSITION_CONTEXTS = [
@@ -385,9 +400,16 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
       riverRunoutClass: street === "RIVER" ? config.riverRunoutClass ?? classifyRiverRunout(board) : config.riverRunoutClass,
     });
   const fallbackRecommendation = recommendPostflopActionForNode(actionNode, street, textures);
-  const recommendation = resolvedRecommendation && actions.includes(resolvedRecommendation.action)
+  const validResolvedRecommendation = (
+    resolvedRecommendation &&
+    actions.includes(resolvedRecommendation.action)
+  )
     ? resolvedRecommendation
-    : fallbackRecommendation;
+    : null;
+  if (validResolvedRecommendation === null && config.allowFallback === false) {
+    throw new PostflopStrategyUnavailableError();
+  }
+  const recommendation = validResolvedRecommendation ?? fallbackRecommendation;
 
   return {
     seed: config.seed >>> 0,

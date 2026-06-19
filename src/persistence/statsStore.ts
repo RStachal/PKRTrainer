@@ -31,10 +31,20 @@
 import type {
   ActionContext,
   ActionKey,
+  AnteMode,
   Position,
+  ScoringMode,
   StackBucket,
 } from "../core/types";
 import { POSITION_ORDER, STACK_BUCKETS } from "../core/types";
+import type {
+  BlindSpeed,
+  EvModel,
+  GameVariant,
+  RakeMode,
+  TableFormat,
+  TrainingStreet,
+} from "../core/trainingProfile";
 import { KEY_EVENTS, KEY_STATE, SCHEMA_VERSION } from "./keys";
 
 // ---------------------------------------------------------------------------
@@ -46,6 +56,25 @@ import { KEY_EVENTS, KEY_STATE, SCHEMA_VERSION } from "./keys";
  * Obsahuje povinná pole: Question_ID, zvolený Akční_klíč, příznak správnosti,
  * kategorii akce (context), Pozici a Hloubkový_koš daného Spotu + časové razítko.
  */
+export const PREFLOP_RESULT_IDENTITY_SCHEMA = "preflop_result_identity_v1";
+
+export interface PreflopResultIdentity {
+  schema: typeof PREFLOP_RESULT_IDENTITY_SCHEMA;
+  scenarioId: string;
+  profileId: string;
+  gameVariant: GameVariant;
+  tableFormat: TableFormat;
+  blindSpeed: BlindSpeed;
+  street: TrainingStreet;
+  evModel: EvModel;
+  ante: AnteMode;
+  rakeMode: RakeMode;
+  rangePackId: string;
+  rangePackVersion: string;
+  sourceVerifiedAt: string;
+  scoringMode: ScoringMode;
+}
+
 export interface ResultRecord {
   qid: string;
   chosen: ActionKey;
@@ -55,6 +84,8 @@ export interface ResultRecord {
   bucket: StackBucket;
   ts: number;
   responseMs?: number;
+  /** Přímá profilová a strategická identita nových preflop odpovědí. */
+  identity?: PreflopResultIdentity;
 }
 
 /**
@@ -242,8 +273,44 @@ export function isValidResultRecord(x: unknown): x is ResultRecord {
     (STACK_BUCKETS as readonly number[]).includes(r.bucket) &&
     typeof r.ts === "number" &&
     Number.isFinite(r.ts) &&
-    isOptionalNonNegativeFiniteNumber(r.responseMs)
+    isOptionalNonNegativeFiniteNumber(r.responseMs) &&
+    isOptionalPreflopResultIdentity(r.identity)
   );
+}
+
+function isOptionalPreflopResultIdentity(
+  value: unknown,
+): value is PreflopResultIdentity | undefined {
+  if (value === undefined) return true;
+  if (typeof value !== "object" || value === null) return false;
+  const identity = value as Partial<PreflopResultIdentity>;
+  return (
+    identity.schema === PREFLOP_RESULT_IDENTITY_SCHEMA &&
+    isNonEmptyString(identity.scenarioId) &&
+    isNonEmptyString(identity.profileId) &&
+    isOneOf(identity.gameVariant, ["MTT", "SNG", "CASH"]) &&
+    isOneOf(identity.tableFormat, ["FULL_RING_9", "SIX_MAX"]) &&
+    isOneOf(identity.blindSpeed, ["REGULAR", "TURBO"]) &&
+    isOneOf(identity.street, ["PREFLOP", "FLOP", "TURN", "RIVER"]) &&
+    isOneOf(identity.evModel, ["CHIP_EV", "DOLAR_EV", "ICM"]) &&
+    isOneOf(identity.ante, ["ON", "OFF"]) &&
+    isOneOf(identity.rakeMode, ["NONE", "RAKE", "NO_RAKE"]) &&
+    isNonEmptyString(identity.rangePackId) &&
+    isNonEmptyString(identity.rangePackVersion) &&
+    isNonEmptyString(identity.sourceVerifiedAt) &&
+    isOneOf(identity.scoringMode, ["LENIENT", "STRICT"])
+  );
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isOneOf<T extends string>(
+  value: unknown,
+  values: readonly T[],
+): value is T {
+  return typeof value === "string" && values.includes(value as T);
 }
 
 function isOptionalNonNegativeFiniteNumber(value: unknown): boolean {

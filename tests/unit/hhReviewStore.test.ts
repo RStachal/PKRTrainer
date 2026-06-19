@@ -80,7 +80,29 @@ describe("hhReviewStore", () => {
   it("uklada HH review oddelene od drill statistik", () => {
     const storage = new MemoryStorage();
     const store = createHHReviewStore(storage);
-    const preflop = buildHHPreflopReviewRecord(preflopSpot, "OPEN_25X", true, 100);
+    const profile = {
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      blindSpeed: "REGULAR",
+      street: "PREFLOP",
+      evModel: "CHIP_EV",
+      ante: "OFF",
+      rakeMode: "NONE",
+    } as const;
+    const preflop = buildHHPreflopReviewRecord(
+      preflopSpot,
+      "OPEN_25X",
+      true,
+      100,
+      {
+        profile,
+        strategyPack: {
+          id: "mtt-nine-max-off",
+          version: "1",
+          verifiedAt: "2026-06-19",
+        },
+      },
+    );
     const flop = buildHHPostflopReviewRecord(postflopSpotToTrainingSpot(generatePostflopSpot({
       seed: 1,
       street: "FLOP",
@@ -113,6 +135,8 @@ describe("hhReviewStore", () => {
       savedToDrillStats: false,
       chosen: "OPEN_25X",
       correct: true,
+      profileId: "MTT|FULL_RING_9|REGULAR|PREFLOP|CHIP_EV|OFF|NONE",
+      strategyPackId: "mtt-nine-max-off",
     });
     expect(parsed[1]).toMatchObject({
       street: "FLOP",

@@ -11,8 +11,10 @@ import {
   type FlopProductionStrategyRule,
   validateFlopProductionStrategyPack,
 } from "./flopProductionStrategyPack";
+import { generatedMttFlopStrategyPacks } from "./mttProductionRegistry.generated";
 
-export const flopProductionStrategyPacks: readonly FlopProductionStrategyPack[] = [];
+export const flopProductionStrategyPacks: readonly FlopProductionStrategyPack[] =
+  generatedMttFlopStrategyPacks;
 
 export function createFlopProductionStrategyResolver(
   pack: FlopProductionStrategyPack,
@@ -45,6 +47,9 @@ export function createFlopProductionStrategyResolver(
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
         rangeBuckets: rangeBuckets(rule),
         heroRangeBucket: heroRangeBucket(rule, input),
+        ...(rule.opponentPolicy
+          ? { opponentPolicy: { ...rule.opponentPolicy } }
+          : {}),
       },
     };
   };

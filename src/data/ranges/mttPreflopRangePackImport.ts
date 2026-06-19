@@ -130,6 +130,17 @@ const EXPECTED_NON_FOLD_ACTIONS_BY_CONTEXT: Record<ActionContext, readonly Actio
   VS_ALLIN: ["CALL", "CALL_JAM"],
 };
 
+const LEGAL_ACTIONS_BY_CONTEXT = ACTION_CONTEXTS.reduce(
+  (out, context) => {
+    out[context] = new Set<ActionKey>([
+      "FOLD",
+      ...EXPECTED_NON_FOLD_ACTIONS_BY_CONTEXT[context],
+    ]);
+    return out;
+  },
+  {} as Record<ActionContext, ReadonlySet<ActionKey>>,
+);
+
 const LEGAL_LICENSE_KINDS: readonly MttPreflopImportLicenseKind[] = [
   "OWNED_SOLVER_EXPORT",
   "PUBLIC_CHART_WITH_PERMISSION",
@@ -346,7 +357,24 @@ function validateMttPreflopInput(input: MttPreflopRangePackImportInput): string[
         for (const action of actions) {
           if (!ACTION_KEYS.includes(action)) {
             errors.push(`${tag}.${mapName}.${hand} contains unsupported action ${action}.`);
+          } else if (!LEGAL_ACTIONS_BY_CONTEXT[record.context].has(action)) {
+            errors.push(
+              `${tag}.${mapName}.${hand} contains action ${action} illegal for ${record.context}.`,
+            );
           }
+        }
+        if (new Set(actions).size !== actions.length) {
+          errors.push(`${tag}.${mapName}.${hand} contains duplicate actions.`);
+        }
+      }
+    }
+
+    for (const hand of ALL_HAND_CLASSES) {
+      const strict = record.strict[hand] ?? [];
+      const lenient = new Set(record.lenient[hand] ?? []);
+      for (const action of strict) {
+        if (!lenient.has(action)) {
+          errors.push(`${tag}.strict.${hand} action ${action} is missing from lenient.`);
         }
       }
     }

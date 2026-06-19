@@ -2,7 +2,9 @@ import { hashStr } from "./rng";
 import type { HHResult } from "./hhParser";
 import {
   generatePostflopSpot,
+  postflopPositionContextsForFormat,
   type PostflopAction,
+  type PostflopPotType,
   type PostflopStreet,
   type PostflopPositionContext,
   type PostflopStrategyResolver,
@@ -12,23 +14,35 @@ import {
   type PostflopTrainingSpot,
 } from "./postflopTrainingSpot";
 import type { Card, Spot } from "./types";
+import type { TableFormat } from "./trainingProfile";
 
 export function buildImportedFlopTrainingSpot(
   result: HHResult,
   strategyResolver?: PostflopStrategyResolver,
+  options: ImportedPostflopStrategyOptions = {},
 ): PostflopTrainingSpot | undefined {
-  return buildImportedPostflopTrainingSpots(result, strategyResolver)[0];
+  return buildImportedPostflopTrainingSpots(result, strategyResolver, options)[0];
+}
+
+export interface ImportedPostflopStrategyOptions {
+  allowFallback?: boolean;
 }
 
 export function buildImportedPostflopTrainingSpots(
   result: HHResult,
   strategyResolver?: PostflopStrategyResolver,
+  options: ImportedPostflopStrategyOptions = {},
 ): readonly PostflopTrainingSpot[] {
   if (!result.ok || !result.spot) return [];
   if (!result.fields.flop || !result.fields.heroCards) return [];
   if (!isSupportedPreflopAggressor(result.spot, result.fields.actions)) return [];
 
-  const positionContext = positionContextFromPreflopSpot(result.spot);
+  const potType = importedPotType(result.spot);
+  const positionContext = positionContextFromPreflopSpot(
+    result.spot,
+    result.fields.tableFormat ?? "FULL_RING_9",
+    potType,
+  );
   if (!positionContext) return [];
 
   const spots: PostflopTrainingSpot[] = [];
@@ -36,10 +50,11 @@ export function buildImportedPostflopTrainingSpots(
     result,
     heroCards: result.fields.heroCards,
     street: "FLOP",
-    potBB: 6,
+    potType,
     positionContext,
     board: result.fields.flop,
     strategyResolver,
+    allowFallback: options.allowFallback,
   }));
 
   if (result.fields.turn) {
@@ -47,10 +62,11 @@ export function buildImportedPostflopTrainingSpots(
       result,
       heroCards: result.fields.heroCards,
       street: "TURN",
-      potBB: 10,
+      potType,
       positionContext,
       board: result.fields.turn,
       strategyResolver,
+      allowFallback: options.allowFallback,
     }));
   }
 
@@ -59,10 +75,11 @@ export function buildImportedPostflopTrainingSpots(
       result,
       heroCards: result.fields.heroCards,
       street: "RIVER",
-      potBB: 18,
+      potType,
       positionContext,
       board: result.fields.river,
       strategyResolver,
+      allowFallback: options.allowFallback,
     }));
   }
 
@@ -73,21 +90,36 @@ function buildImportedPostflopTrainingSpot(input: {
   result: HHResult;
   heroCards: [Card, Card];
   street: PostflopStreet;
-  potBB: number;
+  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">;
   board: readonly Card[];
   positionContext: PostflopPositionContext;
   strategyResolver?: PostflopStrategyResolver;
+  allowFallback?: boolean;
 }): PostflopTrainingSpot {
-  const { result, heroCards, street, potBB, board, positionContext, strategyResolver } = input;
+  const {
+    result,
+    heroCards,
+    street,
+    potType,
+    board,
+    positionContext,
+    strategyResolver,
+    allowFallback,
+  } = input;
   const history = historyForStreet(result, street);
+  const financial = financialStateForStreet(result, street);
   return postflopSpotToTrainingSpot(generatePostflopSpot({
     seed: hashStr(`HH_${street}|${result.spot?.id ?? "unknown"}|${cardLabels(board)}`),
     street,
     heroCards,
     board: [...board],
-    potType: "SINGLE_RAISED",
-    potBB,
-    effectiveStackBB: result.fields.effStackBB ?? result.spot?.effStack ?? 40,
+    potType,
+    potBB: financial?.potBeforeBB ?? defaultImportedPotBB(street),
+    effectiveStackBB:
+      financial?.effectiveStackBeforeBB ??
+      result.fields.effStackBB ??
+      result.spot?.effStack ??
+      40,
     positionContext,
     actionNode: actionNodeForStreet(street, history),
     priorFlopAction: street === "TURN" ? postflopActionFromRaw(
@@ -97,7 +129,30 @@ function buildImportedPostflopTrainingSpot(input: {
       result.fields.postflopActions?.turn?.heroActions[0],
     ) : undefined,
     strategyResolver,
+    allowFallback,
   }));
+}
+
+function financialStateForStreet(result: HHResult, street: PostflopStreet) {
+  switch (street) {
+    case "FLOP":
+      return result.fields.financialState?.flop;
+    case "TURN":
+      return result.fields.financialState?.turn;
+    case "RIVER":
+      return result.fields.financialState?.river;
+  }
+}
+
+function defaultImportedPotBB(street: PostflopStreet): number {
+  switch (street) {
+    case "FLOP":
+      return 6;
+    case "TURN":
+      return 10;
+    case "RIVER":
+      return 18;
+  }
 }
 
 function isSupportedPreflopAggressor(
@@ -106,38 +161,32 @@ function isSupportedPreflopAggressor(
 ): boolean {
   const firstAction = actions?.[0]?.toLowerCase() ?? "";
   if (!firstAction.startsWith("raise") && !firstAction.startsWith("bet")) return false;
-  return spot.context === "RFI" || spot.context === "BVB";
+  return spot.context === "RFI" ||
+    spot.context === "BVB" ||
+    spot.context === "VS_OPEN" ||
+    spot.context === "SQUEEZE";
 }
 
-function positionContextFromPreflopSpot(spot: Spot): PostflopPositionContext | undefined {
+function importedPotType(
+  spot: Spot,
+): Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT"> {
+  return spot.context === "VS_OPEN" || spot.context === "SQUEEZE"
+    ? "THREE_BET_POT"
+    : "SINGLE_RAISED";
+}
+
+function positionContextFromPreflopSpot(
+  spot: Spot,
+  tableFormat: TableFormat,
+  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
+): PostflopPositionContext | undefined {
   if (spot.heroPos === "BB") return undefined;
-  if (spot.heroPos === "SB") return {
-    heroPosition: "SB",
-    villainPosition: "BB",
-    aggressorPosition: "SB",
-    callerPosition: "BB",
-    inPosition: false,
-    callerType: "BIG_BLIND",
-    positionPattern: "SB_VS_BB",
-  };
-  if (spot.heroPos === "BTN") return {
-    heroPosition: "BTN",
-    villainPosition: "BB",
-    aggressorPosition: "BTN",
-    callerPosition: "BB",
-    inPosition: true,
-    callerType: "BIG_BLIND",
-    positionPattern: "BTN_VS_BB",
-  };
-  return {
-    heroPosition: spot.heroPos,
-    villainPosition: "BB",
-    aggressorPosition: spot.heroPos,
-    callerPosition: "BB",
-    inPosition: true,
-    callerType: "BIG_BLIND",
-    positionPattern: "EP_VS_BB",
-  };
+  return postflopPositionContextsForFormat(tableFormat, potType)
+    .find((context) => (
+      context.heroPosition === spot.heroPos &&
+      context.villainPosition === "BB" &&
+      context.aggressorPosition === spot.heroPos
+    ));
 }
 
 function cardLabels(cards: readonly { rank: string; suit: string }[]): string {

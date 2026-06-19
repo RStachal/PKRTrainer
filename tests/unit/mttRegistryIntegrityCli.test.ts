@@ -1,5 +1,16 @@
 import { spawnSync } from "node:child_process";
-import { describe, expect, it } from "vitest";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, describe, expect, it } from "vitest";
+
+const temporaryDirectories: string[] = [];
+
+afterEach(() => {
+  for (const directory of temporaryDirectories.splice(0)) {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 describe("mtt:registry-integrity CLI", () => {
   it("overi soucasny MTT registry baseline bez importovanych production modulu", () => {
@@ -65,6 +76,30 @@ describe("mtt:registry-integrity CLI", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Unsupported argument: --format=SIX_MAX");
     expect(result.stderr).toContain("Usage:");
+  });
+
+  it("blokuje orphan generated modul bez runtime registrace a provenance", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-registry-integrity-"));
+    temporaryDirectories.push(directory);
+    const modulePath = join(
+      directory,
+      "mtt-full-ring-9-turbo-production-preflop-chip-ev-ante-on-v1.ts",
+    );
+    writeFileSync(
+      modulePath,
+      'export const orphanPack = {\n' +
+        '  "id": "mtt-full-ring-9-turbo-production-preflop-chip-ev-ante-on-v1"\n' +
+        "};\n",
+      "utf8",
+    );
+
+    const result = runRegistryIntegrity(`--range-dir=${directory}`);
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("valid: false");
+    expect(result.stdout).toContain("Generated production module is not registered");
+    expect(result.stdout).toContain("Generated production module has no permission manifest");
+    expect(result.stdout).toContain("Generated production module has no provenance fingerprint");
   });
 });
 

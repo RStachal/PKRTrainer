@@ -44,6 +44,7 @@ export interface PostflopViewOptions {
   initialEffectiveStackBB?: number;
   autoGenerate?: boolean;
   strategyResolver?: PostflopStrategyResolver;
+  allowFallback?: boolean;
   onLineCompleted?: (
     line: PostflopLine,
     chosenByStreet: Partial<Record<PostflopStreet, PostflopAction>>,
@@ -201,43 +202,54 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
 
   const showNewSpot = (): void => {
     const seed = parseSeed(seedInput.value) ?? randomSeed();
-    seedInput.value = String(seed);
-    if (modeSelect.value === "line") {
-      const line = generatePostflopLine({
+    // Seed je jednorázový vstup pro reprodukci konkrétní situace. Po použití
+    // jej vyčistíme, aby další "Generate spot" / "New spot" nevytvořil znovu
+    // tutéž situaci, ale sáhl po novém náhodném seedu.
+    seedInput.value = "";
+    try {
+      if (modeSelect.value === "line") {
+        const line = generatePostflopLine({
+          seed,
+          potType: options.initialPotType,
+          actionNode: options.initialActionNode,
+          potBB: options.initialPotBB,
+          effectiveStackBB: options.initialEffectiveStackBB,
+          positionContext: options.initialPositionContext ?? undefined,
+          strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
+          allowFallback: options.allowFallback,
+        });
+        controls.hidden = true;
+        output.hidden = false;
+        renderLineSpot(output, line, 0, {}, Date.now(), options, {
+          onNewSpot: showNewSpot,
+          onChangeSituation: showSituationInput,
+        });
+        return;
+      }
+
+      const street = parseStreet(streetSelect.value);
+      const spot = generatePostflopSpot({
         seed,
+        street,
         potType: options.initialPotType,
         actionNode: options.initialActionNode,
         potBB: options.initialPotBB,
         effectiveStackBB: options.initialEffectiveStackBB,
         positionContext: options.initialPositionContext ?? undefined,
         strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
+        allowFallback: options.allowFallback,
       });
       controls.hidden = true;
       output.hidden = false;
-      renderLineSpot(output, line, 0, {}, Date.now(), options, {
+      renderSpot(output, spot, options, {
         onNewSpot: showNewSpot,
         onChangeSituation: showSituationInput,
       });
-      return;
+    } catch {
+      controls.hidden = false;
+      output.hidden = false;
+      renderUnavailable(output);
     }
-
-    const street = parseStreet(streetSelect.value);
-    const spot = generatePostflopSpot({
-      seed,
-      street,
-      potType: options.initialPotType,
-      actionNode: options.initialActionNode,
-      potBB: options.initialPotBB,
-      effectiveStackBB: options.initialEffectiveStackBB,
-      positionContext: options.initialPositionContext ?? undefined,
-      strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
-    });
-    controls.hidden = true;
-    output.hidden = false;
-    renderSpot(output, spot, options, {
-      onNewSpot: showNewSpot,
-      onChangeSituation: showSituationInput,
-    });
   };
 
   generate.addEventListener("click", showNewSpot);
@@ -245,6 +257,17 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   if (options.autoGenerate === true) {
     showNewSpot();
   }
+}
+
+function renderUnavailable(root: HTMLElement): void {
+  const doc = root.ownerDocument ?? document;
+  root.innerHTML = "";
+  const notice = doc.createElement("div");
+  notice.className = "postflop-unavailable";
+  notice.setAttribute("role", "alert");
+  notice.textContent =
+    "Production strategy is not available for this situation. Choose another profile or try again after the production data is installed.";
+  root.appendChild(notice);
 }
 
 function renderLineSpot(
@@ -847,6 +870,7 @@ function branchPostflopLine(
     positionContext: firstStreet ? positionContextFromSpot(firstStreet) : undefined,
     actionNode: firstStreet?.actionNode,
     strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
+    allowFallback: options.allowFallback,
     chosenActionsByStreet,
   });
 }

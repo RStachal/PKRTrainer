@@ -1,6 +1,7 @@
 import { ALL_HAND_CLASSES } from "../../core/poker";
 import type {
   PostflopAction,
+  PostflopOpponentPolicyBranch,
   PostflopPositionPattern,
   PostflopPotType,
   PostflopRiverRunoutClass,
@@ -17,7 +18,12 @@ import type {
   GameVariant,
   TableFormat,
 } from "../../core/trainingProfile";
-import type { PostflopStrategySourceEvidence } from "./postflopStrategyPack";
+import type {
+  PostflopStrategySourceEvidence,
+  ProductionCardRemovalSample,
+  ProductionHandClassOverlapPolicy,
+} from "./postflopStrategyPack";
+import { validatePostflopOpponentPolicyBranch } from "./postflopStrategyPack";
 import { findPlaceholderStringPaths } from "./placeholderText";
 
 export type RiverProductionLicenseKind =
@@ -70,7 +76,10 @@ export interface RiverProductionStrategyRule {
   sprMax: number;
   actions: readonly PostflopAction[];
   recommendedAction: PostflopAction;
+  opponentPolicy?: PostflopOpponentPolicyBranch;
   rangeBuckets: readonly RiverProductionRangeBucket[];
+  handClassOverlapPolicies?: readonly ProductionHandClassOverlapPolicy[];
+  cardRemovalSamples?: readonly ProductionCardRemovalSample[];
   explanation: string;
 }
 
@@ -245,6 +254,9 @@ export function validateRiverProductionRule(
   if (!Number.isFinite(rule.sprMin) || !Number.isFinite(rule.sprMax)) errors.push(`${rule.id}: SPR bounds must be finite.`);
   if (rule.sprMin < 0 || rule.sprMax < rule.sprMin) errors.push(`${rule.id}: SPR bounds are invalid.`);
   if (rule.explanation.trim().length === 0) errors.push(`${rule.id}: explanation is required.`);
+  if (rule.opponentPolicy) {
+    errors.push(...validatePostflopOpponentPolicyBranch(rule.opponentPolicy, rule.id));
+  }
   if (rule.rangeBuckets.length === 0) errors.push(`${rule.id}: rangeBuckets are required.`);
   for (const runoutClass of rule.riverRunoutClasses) {
     if (!RUNOUT_CLASS_SET.has(runoutClass)) errors.push(`${rule.id}: invalid riverRunoutClass ${runoutClass}.`);

@@ -10,8 +10,10 @@ import {
   type RiverProductionStrategyRule,
   validateRiverProductionStrategyPack,
 } from "./riverProductionStrategyPack";
+import { generatedMttRiverStrategyPacks } from "./mttProductionRegistry.generated";
 
-export const riverProductionStrategyPacks: readonly RiverProductionStrategyPack[] = [];
+export const riverProductionStrategyPacks: readonly RiverProductionStrategyPack[] =
+  generatedMttRiverStrategyPacks;
 
 export function createRiverProductionStrategyResolver(
   pack: RiverProductionStrategyPack,
@@ -45,6 +47,9 @@ export function createRiverProductionStrategyResolver(
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
         rangeBuckets: rangeBuckets(rule),
         heroRangeBucket: heroRangeBucket(rule, input),
+        ...(rule.opponentPolicy
+          ? { opponentPolicy: { ...rule.opponentPolicy } }
+          : {}),
       },
     };
   };

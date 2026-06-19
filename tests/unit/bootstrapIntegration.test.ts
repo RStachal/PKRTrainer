@@ -162,9 +162,21 @@ describe("bootstrap - inicializacni tok", () => {
       .toBe("Next spot");
     const preflopEvents = JSON.parse(storage.getItem(KEY_EVENTS) ?? "[]") as Array<{
       responseMs?: number;
+      identity?: {
+        scenarioId?: string;
+        profileId?: string;
+        rangePackId?: string;
+        scoringMode?: string;
+      };
     }>;
     expect(preflopEvents[0].responseMs).toEqual(expect.any(Number));
     expect(preflopEvents[0].responseMs).toBeGreaterThanOrEqual(0);
+    expect(preflopEvents[0].identity).toMatchObject({
+      profileId: "MTT|FULL_RING_9|REGULAR|PREFLOP|CHIP_EV|ON|NONE",
+      rangePackId: "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-v1",
+      scoringMode: "LENIENT",
+    });
+    expect(preflopEvents[0].identity?.scenarioId).toContain("preflop_scenario_v1");
     expect(root.querySelector<HTMLElement>(".training__result")?.textContent)
       .not.toMatch(/Doporu|Spr\u00e1vn|Špatn|Dal\u0161\u00ed/);
 
@@ -197,7 +209,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector<HTMLButtonElement>('[data-tab="postflop"]')).toBeNull();
     expect(root.querySelector<HTMLButtonElement>('[data-tab="training"]')
       ?.classList.contains("app__tab--active")).toBe(false);
-    expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("123");
+    expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("FLOP");
     expect(root.querySelector(".poker-table")).toBeNull();
     expect(document.activeElement).toBe(root.querySelector<HTMLButtonElement>(".postflop-action"));
@@ -234,7 +246,7 @@ describe("bootstrap - inicializacni tok", () => {
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
 
     expect(root.querySelector<HTMLElement>(".app__panel--postflop")?.hidden).toBe(false);
-    expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("321");
+    expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("RIVER");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
       .toBe("RIVER_PRESSURE");
@@ -292,6 +304,9 @@ describe("bootstrap - inicializacni tok", () => {
 
     bootstrap({ root, storage, registerSw: false });
 
+    const ante = root.querySelector<HTMLInputElement>(".filter-ante");
+    ante!.checked = false;
+    ante!.dispatchEvent(new Event("change"));
     const textarea = root.querySelector<HTMLTextAreaElement>(".hh-input");
     textarea!.value = validFlopHh;
     root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
@@ -304,16 +319,17 @@ describe("bootstrap - inicializacni tok", () => {
     const preflopEvents = JSON.parse(storage.getItem(KEY_EVENTS) ?? "[]") as unknown[];
     const postflopEvents = JSON.parse(storage.getItem(KEY_POSTFLOP_EVENTS) ?? "[]") as unknown[];
 
-    expect(reviewRecords).toHaveLength(2);
+    expect(reviewRecords).toHaveLength(1);
     expect(reviewRecords[0]).toMatchObject({
       street: "PREFLOP",
       savedToDrillStats: false,
     });
-    expect(reviewRecords[1]).toMatchObject({
-      street: "FLOP",
-      savedToDrillStats: false,
-      board: ["Ah", "7d", "2c"],
-    });
+    const unavailable = root.querySelector<HTMLElement>(".hh-postflop-unavailable");
+    expect(unavailable?.textContent).toContain(
+      "Production postflop strategy is not available",
+    );
+    expect(unavailable?.textContent).not.toMatch(/https?:|source|RangePack|mtt-/i);
+    expect(root.querySelector(".hh-postflop-analysis")).toBeNull();
     expect(preflopEvents).toEqual([]);
     expect(postflopEvents).toEqual([]);
     expect(root.querySelector<HTMLElement>(".summary-total")?.dataset.total).toBe("0");

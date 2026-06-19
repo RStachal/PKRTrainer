@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  technical:
+    name: Technical baseline (Node 22)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Full tests
+        run: |
+          mkdir -p artifacts
+          npm test -- --reporter=default --reporter=junit --outputFile=artifacts/vitest-junit.xml
+
+      - name: Generated registry is current
+        run: npm run mtt:refresh-registry -- --check
+
+      - name: Registry integrity
+        run: npm run mtt:registry-integrity
+
+      - name: Raw intake workspace guard
+        run: npm run range:intake:guard
+
+      - name: Verify ranges
+        run: npm run verify:ranges
+
+      - name: Production build
+        run: npm run build
+
+      - name: Precache integrity
+        run: npm run verify:precache
+
+      - name: Bundle budget
+        run: npm run bundle:budget
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-report-node-22
+          path: artifacts/vitest-junit.xml
+          if-no-files-found: warn
+
+      - name: Upload production build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-node-22
+          path: dist
+          if-no-files-found: error
+
+  mtt-data-status:
+    name: MTT production data status (diagnostic)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run production-data gates
+        run: |
+          set -o pipefail
+          npm run mtt:release-gates -- --json | tee mtt-release-gates.json
+
+      - name: Upload MTT gate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mtt-production-data-status
+          path: mtt-release-gates.json
+          if-no-files-found: warn

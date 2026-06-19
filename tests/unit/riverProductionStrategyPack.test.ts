@@ -255,4 +255,5 @@ describe("riverProductionStrategyPack", () => {
       "River production pack must use gameVariant MTT.",
     );
   });
+
 });

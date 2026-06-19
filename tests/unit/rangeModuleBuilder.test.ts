@@ -15,6 +15,7 @@ import {
 import type { FlopProductionStrategyPack } from "../../src/data/ranges/flopProductionStrategyPack";
 import type { MttPreflopRangePackImportInput } from "../../src/data/ranges/mttPreflopRangePackImport";
 import type { ProductionPermissionManifest } from "../../src/data/ranges/productionPermissionManifest";
+import type { ProductionCardRemovalSample } from "../../src/data/ranges/postflopStrategyPack";
 import type { RiverProductionStrategyPack } from "../../src/data/ranges/riverProductionStrategyPack";
 import type { TurnProductionStrategyPack } from "../../src/data/ranges/turnProductionStrategyPack";
 import {
@@ -152,6 +153,27 @@ function permissionManifest(packId: string): ProductionPermissionManifest {
   };
 }
 
+function cardRemovalSample(
+  street: "FLOP" | "TURN" | "RIVER",
+): ProductionCardRemovalSample {
+  const board = [
+    { rank: "K", suit: "d" },
+    { rank: "7", suit: "c" },
+    { rank: "2", suit: "d" },
+    { rank: "5", suit: "c" },
+    { rank: "J", suit: "d" },
+  ] as const;
+  return {
+    board: board.slice(0, street === "FLOP" ? 3 : street === "TURN" ? 4 : 5),
+    heroCards: [
+      { rank: "A", suit: "s" },
+      { rank: "A", suit: "h" },
+    ],
+    handClass: "AA",
+    rationale: "Deterministicky source-free builder QA sample.",
+  };
+}
+
 function syntheticFlopPack(): FlopProductionStrategyPack {
   return {
     id: "builder-flop-synthetic-v1",
@@ -228,6 +250,7 @@ function syntheticFlopPack(): FlopProductionStrategyPack {
             features: ["air"],
           },
         ],
+        cardRemovalSamples: [cardRemovalSample("FLOP")],
         explanation: "Synthetic flop builder fixture.",
       },
     ],
@@ -311,6 +334,7 @@ function syntheticTurnPack(): TurnProductionStrategyPack {
             features: ["air"],
           },
         ],
+        cardRemovalSamples: [cardRemovalSample("TURN")],
         explanation: "Synthetic turn builder fixture.",
       },
     ],
@@ -398,6 +422,7 @@ function syntheticRiverPack(): RiverProductionStrategyPack {
             blockerRelevance: "LOW",
           },
         ],
+        cardRemovalSamples: [cardRemovalSample("RIVER")],
         explanation: "Synthetic river builder fixture.",
       },
     ],
@@ -461,6 +486,16 @@ describe("rangeModuleBuilder", () => {
     expect(result.moduleText).toContain("satisfies RangePack");
     expect(result.moduleText).toContain("export const builderFixtureRangePack");
     expect(result.moduleText).toContain('"records"');
+    expect(result.moduleText).toMatch(
+      /^\/\/ provenance-fingerprint: sha256:[a-f0-9]{64}$/m,
+    );
+    expect(result.moduleText).not.toContain("Agents/range-intake/raw/");
+    expect(buildRangeModule({
+      kind: "mtt-preflop",
+      input,
+      permissionManifest: permissionManifest(input.id),
+      exportName: "builderFixtureRangePack",
+    }).moduleText).toBe(result.moduleText);
   });
 
   it("blokuje production module pro MTT preflop import mimo legal slot packId", () => {
@@ -525,9 +560,43 @@ describe("rangeModuleBuilder", () => {
       "FULL_RING_9|REGULAR|CHIP_EV|FLOP|ON",
     );
     expect(result.moduleText).toBeNull();
+    expect(result.runtimeSmokeReport).toEqual({
+      valid: true,
+      sampleCount: 1,
+      errors: [],
+    });
     expect(result.blockers).toContain("missing pot types: THREE_BET_POT");
     expect(result.blockers).toContain("missing SPR bands: LOW,HIGH");
     expect(result.blockers).not.toContain("Flop production pack must match at least one legal MTT postflop import slot.");
+  });
+
+  it("blokuje semanticky nejednoznacny postflop modul", () => {
+    const base = syntheticFlopPack();
+    const pack = {
+      ...base,
+      rules: [
+        base.rules[0],
+        {
+          ...base.rules[0],
+          id: "builder-flop-duplicate-selector",
+        },
+      ],
+    };
+    const result = buildRangeModule({
+      kind: "flop-production",
+      input: pack,
+      permissionManifest: permissionManifest(pack.id),
+    });
+
+    expect(result.writeReady).toBe(false);
+    expect(result.moduleText).toBeNull();
+    expect(result.blockers).toContain(
+      "Flop production rule builder-flop-duplicate-selector duplicates selector of builder-flop-srp-btn-bb-dry.",
+    );
+    expect(result.runtimeSmokeReport?.valid).toBe(false);
+    expect(result.blockers).toContain(
+      "builder-flop-synthetic-v1/builder-flop-duplicate-selector: runtime source quality metadata differs from imported pack.",
+    );
   });
 
   it("blokuje postflop production module mimo MTT slot registry", () => {
@@ -581,6 +650,11 @@ describe("rangeModuleBuilder", () => {
     expect(result.productionReady).toBe(false);
     expect(result.matchedImportSlots).toHaveLength(4);
     expect(result.moduleText).toBeNull();
+    expect(result.runtimeSmokeReport).toEqual({
+      valid: true,
+      sampleCount: 1,
+      errors: [],
+    });
     expect(result.blockers).toContain("missing pot types: THREE_BET_POT");
     expect(result.blockers).toContain("missing prior flop actions: CHECK,BET_BIG");
     expect(result.blockers).toContain(
@@ -601,6 +675,11 @@ describe("rangeModuleBuilder", () => {
     expect(result.productionReady).toBe(false);
     expect(result.matchedImportSlots).toHaveLength(4);
     expect(result.moduleText).toBeNull();
+    expect(result.runtimeSmokeReport).toEqual({
+      valid: true,
+      sampleCount: 1,
+      errors: [],
+    });
     expect(result.blockers).toContain("missing pot types: THREE_BET_POT");
     expect(result.blockers).toContain("missing prior turn actions: CHECK,BET_BIG");
     expect(result.blockers).toContain(

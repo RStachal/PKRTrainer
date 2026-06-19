@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { RangePack } from "./rangePack";
 import {
   buildMttPreflopImportReadinessReport,
@@ -29,6 +30,11 @@ import {
 import {
   type MttPostflopProductionPack,
 } from "./mttPostflopImportSlots";
+import { validateProductionStrategySemantics } from "./productionStrategySemanticValidation";
+import {
+  buildProductionStrategyRuntimeSmokeReport,
+  type ProductionStrategyRuntimeSmokeReport,
+} from "./productionStrategyRuntimeSmoke";
 
 export type RangeModuleBuildKind = "mtt-preflop" | "flop-production" | "turn-production" | "river-production";
 
@@ -55,6 +61,7 @@ export interface RangeModuleBuildResult {
   matchedImportSlots: readonly RangeModuleMatchedImportSlot[];
   blockers: readonly string[];
   permissionReport: ProductionPermissionManifestReport;
+  runtimeSmokeReport: ProductionStrategyRuntimeSmokeReport | null;
   moduleText: string | null;
 }
 
@@ -99,6 +106,7 @@ export function renderRangeModuleBuildReport(result: RangeModuleBuildResult): st
     `permissionReady: ${result.permissionReady}`,
     `writeReady: ${result.writeReady}`,
     `matched import slots: ${result.matchedImportSlots.length}`,
+    `runtime smoke samples: ${result.runtimeSmokeReport?.sampleCount ?? 0}`,
   ];
 
   for (const slot of result.matchedImportSlots) {
@@ -148,7 +156,10 @@ function buildMttPreflopRangeModule(
     matchedImportSlots: slotReport.matchedSlots,
     blockers,
     permissionReport,
-    moduleText: writeReady ? renderMttPreflopRangePackModule(pack, exportName) : null,
+    runtimeSmokeReport: null,
+    moduleText: writeReady
+      ? renderMttPreflopRangePackModule(pack, exportName, permissionFingerprint(permissionManifest!))
+      : null,
   };
 }
 
@@ -165,6 +176,8 @@ function buildFlopProductionRangeModule(
     evModels: [pack.dimensions.evModel],
   });
   const slotReport = buildPostflopSlotReport(pack, "Flop");
+  const semanticErrors = validateProductionStrategySemantics(pack);
+  const runtimeSmokeReport = buildProductionStrategyRuntimeSmokeReport(pack);
   const blockers = [
     ...coverage.errors,
     ...coverageBlockers("missing pot types", coverage.missingPotTypes),
@@ -174,9 +187,16 @@ function buildFlopProductionRangeModule(
     ...coverageBlockers("missing action nodes", coverage.missingActionNodes),
     ...coverageBlockers("missing range lanes", coverage.missingRangeLanes),
     ...slotReport.errors,
+    ...semanticErrors,
+    ...runtimeSmokeReport.errors,
     ...permissionReport.errors,
   ];
-  const writeReady = coverage.productionReady && slotReport.valid && permissionReport.valid;
+  const writeReady =
+    coverage.productionReady &&
+    slotReport.valid &&
+    permissionReport.valid &&
+    semanticErrors.length === 0 &&
+    runtimeSmokeReport.valid;
 
   return {
     kind: "flop-production",
@@ -188,7 +208,10 @@ function buildFlopProductionRangeModule(
     matchedImportSlots: slotReport.matchedSlots,
     blockers,
     permissionReport,
-    moduleText: writeReady ? renderFlopProductionStrategyPackModule(pack, exportName) : null,
+    runtimeSmokeReport,
+    moduleText: writeReady
+      ? renderFlopProductionStrategyPackModule(pack, exportName, permissionFingerprint(permissionManifest!))
+      : null,
   };
 }
 
@@ -205,6 +228,8 @@ function buildTurnProductionRangeModule(
     evModels: [pack.dimensions.evModel],
   });
   const slotReport = buildPostflopSlotReport(pack, "Turn");
+  const semanticErrors = validateProductionStrategySemantics(pack);
+  const runtimeSmokeReport = buildProductionStrategyRuntimeSmokeReport(pack);
   const blockers = [
     ...coverage.errors,
     ...coverageBlockers("missing pot types", coverage.missingPotTypes),
@@ -214,9 +239,16 @@ function buildTurnProductionRangeModule(
     ...coverageBlockers("missing action nodes", coverage.missingActionNodes),
     ...coverageBlockers("missing range lanes", coverage.missingRangeLanes),
     ...slotReport.errors,
+    ...semanticErrors,
+    ...runtimeSmokeReport.errors,
     ...permissionReport.errors,
   ];
-  const writeReady = coverage.productionReady && slotReport.valid && permissionReport.valid;
+  const writeReady =
+    coverage.productionReady &&
+    slotReport.valid &&
+    permissionReport.valid &&
+    semanticErrors.length === 0 &&
+    runtimeSmokeReport.valid;
 
   return {
     kind: "turn-production",
@@ -228,7 +260,10 @@ function buildTurnProductionRangeModule(
     matchedImportSlots: slotReport.matchedSlots,
     blockers,
     permissionReport,
-    moduleText: writeReady ? renderTurnProductionStrategyPackModule(pack, exportName) : null,
+    runtimeSmokeReport,
+    moduleText: writeReady
+      ? renderTurnProductionStrategyPackModule(pack, exportName, permissionFingerprint(permissionManifest!))
+      : null,
   };
 }
 
@@ -245,6 +280,8 @@ function buildRiverProductionRangeModule(
     evModels: [pack.dimensions.evModel],
   });
   const slotReport = buildPostflopSlotReport(pack, "River");
+  const semanticErrors = validateProductionStrategySemantics(pack);
+  const runtimeSmokeReport = buildProductionStrategyRuntimeSmokeReport(pack);
   const blockers = [
     ...coverage.errors,
     ...coverageBlockers("missing pot types", coverage.missingPotTypes),
@@ -255,9 +292,16 @@ function buildRiverProductionRangeModule(
     ...coverageBlockers("missing action nodes", coverage.missingActionNodes),
     ...coverageBlockers("missing range lanes", coverage.missingRangeLanes),
     ...slotReport.errors,
+    ...semanticErrors,
+    ...runtimeSmokeReport.errors,
     ...permissionReport.errors,
   ];
-  const writeReady = coverage.productionReady && slotReport.valid && permissionReport.valid;
+  const writeReady =
+    coverage.productionReady &&
+    slotReport.valid &&
+    permissionReport.valid &&
+    semanticErrors.length === 0 &&
+    runtimeSmokeReport.valid;
 
   return {
     kind: "river-production",
@@ -269,7 +313,10 @@ function buildRiverProductionRangeModule(
     matchedImportSlots: slotReport.matchedSlots,
     blockers,
     permissionReport,
-    moduleText: writeReady ? renderRiverProductionStrategyPackModule(pack, exportName) : null,
+    runtimeSmokeReport,
+    moduleText: writeReady
+      ? renderRiverProductionStrategyPackModule(pack, exportName, permissionFingerprint(permissionManifest!))
+      : null,
   };
 }
 
@@ -288,8 +335,13 @@ function buildPostflopSlotReport(
   });
 }
 
-function renderMttPreflopRangePackModule(pack: RangePack, exportName: string): string {
+function renderMttPreflopRangePackModule(
+  pack: RangePack,
+  exportName: string,
+  fingerprint: string,
+): string {
   return [
+    `// provenance-fingerprint: sha256:${fingerprint}`,
     'import type { RangePack } from "./rangePack";',
     "",
     `export const ${exportName} = ${jsonForModule(pack)} satisfies RangePack;`,
@@ -300,8 +352,10 @@ function renderMttPreflopRangePackModule(pack: RangePack, exportName: string): s
 function renderFlopProductionStrategyPackModule(
   pack: FlopProductionStrategyPack,
   exportName: string,
+  fingerprint: string,
 ): string {
   return [
+    `// provenance-fingerprint: sha256:${fingerprint}`,
     'import type { FlopProductionStrategyPack } from "./flopProductionStrategyPack";',
     "",
     `export const ${exportName} = ${jsonForModule(pack)} satisfies FlopProductionStrategyPack;`,
@@ -312,8 +366,10 @@ function renderFlopProductionStrategyPackModule(
 function renderTurnProductionStrategyPackModule(
   pack: TurnProductionStrategyPack,
   exportName: string,
+  fingerprint: string,
 ): string {
   return [
+    `// provenance-fingerprint: sha256:${fingerprint}`,
     'import type { TurnProductionStrategyPack } from "./turnProductionStrategyPack";',
     "",
     `export const ${exportName} = ${jsonForModule(pack)} satisfies TurnProductionStrategyPack;`,
@@ -324,8 +380,10 @@ function renderTurnProductionStrategyPackModule(
 function renderRiverProductionStrategyPackModule(
   pack: RiverProductionStrategyPack,
   exportName: string,
+  fingerprint: string,
 ): string {
   return [
+    `// provenance-fingerprint: sha256:${fingerprint}`,
     'import type { RiverProductionStrategyPack } from "./riverProductionStrategyPack";',
     "",
     `export const ${exportName} = ${jsonForModule(pack)} satisfies RiverProductionStrategyPack;`,
@@ -335,6 +393,36 @@ function renderRiverProductionStrategyPackModule(
 
 function jsonForModule(value: unknown): string {
   return JSON.stringify(value, null, 2);
+}
+
+function permissionFingerprint(manifest: ProductionPermissionManifest): string {
+  const auditPayload = {
+    packId: manifest.packId,
+    version: manifest.version,
+    reviewedAt: manifest.reviewedAt,
+    reviewer: manifest.reviewer,
+    rightsOwner: manifest.rightsOwner,
+    licenseKind: manifest.licenseKind,
+    allowedRedistributionScope: manifest.allowedRedistributionScope,
+    evidence: manifest.evidence.map((item) => ({
+      referenceId: item.referenceId,
+      reviewer: item.reviewer,
+      containsRangeValues: item.containsRangeValues,
+    })),
+    reusePolicy: manifest.reusePolicy === undefined
+      ? null
+      : {
+        allowedDimensions: [...manifest.reusePolicy.allowedDimensions].sort(),
+        reviewedAt: manifest.reusePolicy.reviewedAt,
+        reviewer: manifest.reusePolicy.reviewer,
+        sourceMaterialReferenceIds: [
+          ...manifest.reusePolicy.sourceMaterialReferenceIds,
+        ].sort(),
+      },
+  };
+  return createHash("sha256")
+    .update(JSON.stringify(auditPayload))
+    .digest("hex");
 }
 
 function defaultExportName(packId: string, suffix: string): string {

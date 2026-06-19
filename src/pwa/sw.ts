@@ -32,10 +32,22 @@
 // projde `tsc --noEmit` se stávajícím tsconfig bez konfliktů.
 
 /** Verze cache. Při změně app shellu / strategie zvyš verzi (úklid ve `activate`). */
-const CACHE = "mtt-preflop-v1";
+const CACHE = "mtt-preflop-__PKR_PRECACHE_VERSION__";
 
 /** Stabilní (nehashovaný) app shell pro precache při install. */
-const APP_SHELL: readonly string[] = ["./", "./index.html", "./manifest.webmanifest"];
+const APP_SHELL = injectedAppShell();
+
+function injectedAppShell(): readonly string[] {
+  try {
+    const value = JSON.parse("__PKR_PRECACHE_ENTRIES__") as unknown;
+    if (Array.isArray(value) && value.every((item) => typeof item === "string")) {
+      return value;
+    }
+  } catch {
+    // Unit test/source execution uses the stable fallback before Vite injection.
+  }
+  return ["./", "./index.html", "./manifest.webmanifest"];
+}
 
 // --- Minimální typy SW kontextu (vyhneme se konfliktu webworker × DOM lib) ---
 
@@ -71,7 +83,6 @@ sw.addEventListener("install", (event: ExtendableEventLike) => {
     })(),
   );
   // Nový SW převezme řízení co nejdříve (nečekat na zavření všech karet).
-  void sw.skipWaiting();
 });
 
 // --- activate: úklid starých verzí cache -----------------------------------
@@ -80,13 +91,13 @@ sw.addEventListener("activate", (event: ExtendableEventLike) => {
   event.waitUntil(
     (async () => {
       const names = await caches.keys();
+      const applicationCaches = names.filter((name) => name.startsWith("mtt-preflop-"));
+      const previousCaches = applicationCaches.filter((name) => name !== CACHE);
+      const staleCaches = previousCaches.slice(0, Math.max(0, previousCaches.length - 1));
       await Promise.all(
-        names
-          .filter((name) => name.startsWith("mtt-preflop-") && name !== CACHE)
-          .map((name) => caches.delete(name)),
+        staleCaches.map((name) => caches.delete(name)),
       );
       // Převzít řízení nad otevřenými klienty bez nutnosti reloadu.
-      await sw.clients.claim();
     })(),
   );
 });
@@ -108,8 +119,29 @@ sw.addEventListener("fetch", (event: FetchEventLike) => {
     return;
   }
 
-  event.respondWith(cacheFirst(request));
+  event.respondWith(
+    request.mode === "navigate"
+      ? networkFirstNavigation(request)
+      : cacheFirst(request),
+  );
 });
+
+async function networkFirstNavigation(request: Request): Promise<Response> {
+  const cache = await caches.open(CACHE);
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const shell = (await cache.match(request)) ??
+      (await cache.match("./index.html")) ??
+      (await cache.match("./"));
+    if (shell) return shell;
+    throw error;
+  }
+}
 
 /**
  * Cache-first: nejdřív cache, jinak síť (a úspěšnou odpověď do cache uložit).
@@ -136,12 +168,6 @@ async function cacheFirst(request: Request): Promise<Response> {
   } catch (error) {
     // Offline a zdroj není v cache. Pro navigační požadavky vrátíme app shell,
     // aby se SPA dokázala načíst z cache (Req 12.5).
-    if (request.mode === "navigate") {
-      const shell = (await cache.match("./index.html")) ?? (await cache.match("./"));
-      if (shell) {
-        return shell;
-      }
-    }
     throw error;
   }
 }

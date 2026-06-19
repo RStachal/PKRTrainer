@@ -47,6 +47,9 @@ describe("profileSelector", () => {
 
     variant!.value = "SNG";
     variant!.dispatchEvent(new Event("change"));
+    expect(root.querySelector<HTMLOptionElement>('.profile-street option[value="FLOP"]')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLOptionElement>('.profile-ev-model option[value="DOLAR_EV"]')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLOptionElement>('.profile-ev-model option[value="ICM"]')?.disabled).toBe(false);
     format!.value = "SIX_MAX";
     speed!.value = "TURBO";
     ante!.value = "OFF";
@@ -71,7 +74,7 @@ describe("profileSelector", () => {
     format!.dispatchEvent(new Event("change"));
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
-    expect(note?.dataset.status).toBe("candidate");
+    expect(note?.dataset.status).toBe("blocked");
     expect(note?.textContent).toContain("MTT 6-max regular preflop chipEV");
     expect(note?.textContent).toContain("candidate/preview");
     expect(note?.textContent).toContain("hand-class coverage is complete");
@@ -90,7 +93,7 @@ describe("profileSelector", () => {
     speed!.dispatchEvent(new Event("change"));
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
-    expect(note?.dataset.status).toBe("missing");
+    expect(note?.dataset.status).toBe("blocked");
     expect(note?.textContent).toContain("MTT 9-max turbo preflop chipEV");
     expect(note?.textContent).toContain("missing production range");
     expect(note?.textContent).not.toContain("RangePack");
@@ -127,7 +130,7 @@ describe("profileSelector", () => {
     variant!.dispatchEvent(new Event("change"));
 
     let note = root.querySelector<HTMLElement>(".profile-selector__note");
-    expect(note?.dataset.status).toBe("candidate");
+    expect(note?.dataset.status).toBe("preview");
     expect(note?.textContent).toContain("SNG chipEV preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent).not.toContain("RangePack");
@@ -136,7 +139,7 @@ describe("profileSelector", () => {
     evModel!.dispatchEvent(new Event("change"));
 
     note = root.querySelector<HTMLElement>(".profile-selector__note");
-    expect(note?.dataset.status).toBe("candidate");
+    expect(note?.dataset.status).toBe("preview");
     expect(note?.textContent).toContain("SNG ICM preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent).not.toContain("payout");
@@ -156,13 +159,14 @@ describe("profileSelector", () => {
       { value: "DOLAR_EV", label: "$EV" },
       { value: "ICM", label: "ICM" },
     ]);
+    expect(evModel?.querySelector<HTMLOptionElement>('option[value="ICM"]')?.disabled).toBe(true);
 
     evModel!.value = "DOLAR_EV";
     evModel!.dispatchEvent(new Event("change"));
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(view.getProfile().evModel).toBe("DOLAR_EV");
-    expect(note?.dataset.status).toBe("missing");
+    expect(note?.dataset.status).toBe("blocked");
     expect(note?.textContent).toContain("MTT 9-max regular preflop $EV");
     expect(note?.textContent).toContain("missing production range");
     expect(note?.textContent).not.toContain("CHIP_EV");
@@ -239,12 +243,15 @@ describe("profileSelector", () => {
     expect(format?.value).toBe("SIX_MAX");
     expect(root.querySelector<HTMLSelectElement>(".profile-ante")?.value).toBe("OFF");
     expect(rakeMode?.value).toBe("RAKE");
+    expect(format?.querySelector<HTMLOptionElement>('option[value="FULL_RING_9"]')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLOptionElement>('.profile-speed option[value="TURBO"]')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLOptionElement>('.profile-street option[value="FLOP"]')?.disabled).toBe(true);
     expect(Array.from(rakeMode?.options ?? []).map((option) => option.textContent)).toEqual([
       "N/A",
       "Rake",
       "No rake",
     ]);
-    expect(note?.dataset.status).toBe("candidate");
+    expect(note?.dataset.status).toBe("preview");
     expect(note?.textContent).toContain("Cash rake preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent?.toLowerCase()).not.toContain("zdroj");
@@ -254,7 +261,7 @@ describe("profileSelector", () => {
     rakeMode!.dispatchEvent(new Event("change"));
 
     note = root.querySelector<HTMLElement>(".profile-selector__note");
-    expect(note?.dataset.status).toBe("candidate");
+    expect(note?.dataset.status).toBe("preview");
     expect(note?.textContent).toContain("Cash no rake preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent?.toLowerCase()).not.toContain("zdroj");

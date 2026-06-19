@@ -112,6 +112,12 @@ describe("MTT production postflop runtime resolver", () => {
       expect(result.source.packId).toBe("mtt-runtime-flop-production-v1");
     }
     expect(turboResolver(baseInput)).toBeNull();
+    expect(createMttProductionPostflopStrategyResolver({
+      ...baseProfile,
+      evModel: "ICM",
+    }, {
+      flopProductionPacks: [flopPack()],
+    })(baseInput)).toBeNull();
   });
 
   it("umi production-only resolver pro flop, turn i river bez heuristiky", () => {

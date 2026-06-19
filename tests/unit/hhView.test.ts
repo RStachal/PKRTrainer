@@ -4,6 +4,7 @@ import { describe, it, expect } from "vitest";
 import { renderHHView } from "../../src/ui/hhView";
 import type { PostflopStrategyResolver } from "../../src/core/postflopGenerator";
 import type { HHReviewRecord } from "../../src/persistence/hhReviewStore";
+import type { RangeStore } from "../../src/data/rangeStore";
 
 const validHh = [
   "PokerStars Hand #1: Tournament #1, 10/20",
@@ -24,6 +25,31 @@ const validHh = [
   "Hero: folds",
   "*** SUMMARY ***",
 ].join("\n");
+
+const validSixMaxHh = [
+  "PokerStars Hand #6: Tournament #1, 10/20",
+  "Table 'Six' 6-max Seat #1 is the button",
+  "Seat 1: Hero (1000 in chips)",
+  "Seat 2: Villain2 (1000 in chips)",
+  "Seat 3: Villain3 (1000 in chips)",
+  "Seat 4: Villain4 (1000 in chips)",
+  "Seat 5: Villain5 (1000 in chips)",
+  "Seat 6: Villain6 (1000 in chips)",
+  "Villain2: posts small blind 10",
+  "Villain3: posts big blind 20",
+  "*** HOLE CARDS ***",
+  "Dealt to Hero [Ah Kd]",
+  "Hero: folds",
+  "*** SUMMARY ***",
+].join("\n");
+
+const sixMaxStore: RangeStore = {
+  isLoaded: () => true,
+  lookup: () => ({
+    actions: { AKo: ["FOLD"] } as never,
+    strict: { AKo: ["FOLD"] } as never,
+  }),
+};
 
 const validFlopHh = [
   "PokerStars Hand #2: Tournament #1, 10/20",
@@ -132,6 +158,46 @@ const productionLikePostflopResolver: PostflopStrategyResolver = (input) => ({
 });
 
 describe("hhView - DOM import", () => {
+  it("vykresli potvrzeny 6-max profil se sesti sedadly a profilovou identitou", () => {
+    const root = document.createElement("div");
+    const reviews: HHReviewRecord[][] = [];
+    renderHHView(root, {
+      parseOptions: () => ({
+        profile: {
+          gameVariant: "MTT",
+          tableFormat: "SIX_MAX",
+          blindSpeed: "REGULAR",
+          street: "PREFLOP",
+          evModel: "CHIP_EV",
+          ante: "OFF",
+          rakeMode: "NONE",
+        },
+        rangeStore: sixMaxStore,
+        requireLoadedStrategy: true,
+        rangePack: {
+          id: "six-max-fixture",
+          version: "1",
+          verifiedAt: "2026-06-19",
+        },
+      }),
+      onReviewBuilt: (records) => {
+        reviews.push([...records]);
+      },
+    });
+
+    root.querySelector<HTMLTextAreaElement>(".hh-input")!.value = validSixMaxHh;
+    root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
+
+    expect(root.querySelectorAll(".seat")).toHaveLength(6);
+    expect([...root.querySelectorAll<HTMLElement>(".seat")].map((seat) => seat.dataset.position))
+      .toEqual(expect.arrayContaining(["UTG", "HJ", "CO", "BTN", "SB", "BB"]));
+    expect(reviews[0][0]).toMatchObject({
+      profileId: "MTT|SIX_MAX|REGULAR|PREFLOP|CHIP_EV|OFF|NONE",
+      strategyPackId: "six-max-fixture",
+      position: "BTN",
+    });
+  });
+
   it("zobrazi chyby a necitelna pole pro prazdny vstup bez padu", () => {
     const root = document.createElement("div");
     renderHHView(root);
@@ -188,6 +254,8 @@ describe("hhView - DOM import", () => {
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.correct).toMatch(/true|false/);
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.reviewRecordCount).toBe("1");
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Your action");
+    expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent)
+      .toContain("50 BB → 50 BB bucket (nearest)");
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Fold");
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Result");
     expect(root.querySelectorAll(".hh-analysis .matrix-cell")).toHaveLength(169);
@@ -218,16 +286,16 @@ describe("hhView - DOM import", () => {
     expect(flop?.dataset.reviewSavedToDrillStats).toBe("false");
     expect(flop?.dataset.street).toBe("FLOP");
     expect(flop?.dataset.potType).toBe("SINGLE_RAISED");
-    expect(flop?.dataset.positionPattern).toBe("BTN_VS_BB");
+    expect(flop?.dataset.positionPattern).toBe("SRP_BTN_VS_BB");
     expect(flop?.dataset.board).toBe("Ah-7d-2c");
     expect(flop?.dataset.recommended).toMatch(/^(CHECK|BET_SMALL|BET_BIG)$/);
     expect(flop?.textContent).toContain("Flop review");
     expect(flop?.textContent).toContain("Ah 7d 2c");
     expect(flop?.textContent).toContain("Single-raised pot");
-    expect(flop?.textContent).toContain("Button vs BB");
+    expect(flop?.textContent).toContain("SRP BTN vs BB");
     expect(flop?.textContent).toContain("Recommended");
     expect(flop?.textContent).not.toContain("SINGLE_RAISED");
-    expect(flop?.textContent).not.toContain("BTN_VS_BB");
+    expect(flop?.textContent).not.toContain("SRP_BTN_VS_BB");
     expect(flop?.textContent).not.toContain("StrategyPack");
     expect(flop?.textContent).not.toContain("http");
     expect(reviews).toHaveLength(1);
@@ -241,7 +309,7 @@ describe("hhView - DOM import", () => {
       street: "FLOP",
       savedToDrillStats: false,
       board: ["Ah", "7d", "2c"],
-      positionPattern: "BTN_VS_BB",
+      positionPattern: "SRP_BTN_VS_BB",
     });
   });
 
@@ -276,13 +344,13 @@ describe("hhView - DOM import", () => {
       street: "TURN",
       savedToDrillStats: false,
       board: ["Ah", "7d", "2c", "5s"],
-      positionPattern: "BTN_VS_BB",
+      positionPattern: "SRP_BTN_VS_BB",
     });
     expect(reviews[0][3]).toMatchObject({
       street: "RIVER",
       savedToDrillStats: false,
       board: ["Ah", "7d", "2c", "5s", "Jd"],
-      positionPattern: "BTN_VS_BB",
+      positionPattern: "SRP_BTN_VS_BB",
     });
   });
 
@@ -333,20 +401,43 @@ describe("hhView - DOM import", () => {
       street: "FLOP",
       recommended: "CALL",
       actionNode: "FLOP_FACING_BET",
-      positionPattern: "BTN_VS_BB",
+      positionPattern: "SRP_BTN_VS_BB",
     });
     expect(reviews[0][2]).toMatchObject({
       street: "TURN",
       recommended: "CALL",
       actionNode: "TURN_FACING_BET",
-      positionPattern: "BTN_VS_BB",
+      positionPattern: "SRP_BTN_VS_BB",
     });
     expect(reviews[0][3]).toMatchObject({
       street: "RIVER",
       recommended: "CALL",
       actionNode: "RIVER_FACING_BET",
-      positionPattern: "BTN_VS_BB",
+      positionPattern: "SRP_BTN_VS_BB",
     });
+  });
+
+  it("v production rezimu zablokuje postflop review bez resolver match a nepouzije heuristiku", () => {
+    const root = document.createElement("div");
+    const reviews: HHReviewRecord[][] = [];
+    renderHHView(root, {
+      postflopStrategyResolver: () => null,
+      postflopAllowFallback: false,
+      onReviewBuilt: (records) => {
+        reviews.push([...records]);
+      },
+    });
+
+    const textarea = root.querySelector<HTMLTextAreaElement>(".hh-input");
+    textarea!.value = productionFacingBetRunoutHh;
+    root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
+
+    const unavailable = root.querySelector<HTMLElement>(".hh-postflop-unavailable");
+    expect(unavailable?.textContent).toContain("Production postflop strategy is not available");
+    expect(unavailable?.textContent).not.toMatch(/https?:|source|StrategyPack|mtt-/i);
+    expect(root.querySelector(".hh-postflop-analysis")).toBeNull();
+    expect(reviews).toHaveLength(1);
+    expect(reviews[0].map((record) => record.street)).toEqual(["PREFLOP"]);
   });
 
   it("vycisti HH analyzu po nevalidnim vstupu", () => {

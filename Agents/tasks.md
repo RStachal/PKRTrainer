@@ -1538,7 +1538,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 133.11 Sjednotit reprodukovatelne build dry-run prikazy pro ready validaci
     - Ready validator ma ukazat stejny navazujici build command jako intake plan, aby sel kazdy validovany slot rucne reprodukovat.
     - Hotovo: `mtt:validate-ready-intake` vraci `buildCommand` v JSON i textovem reportu a sdili command builder s intake planem.
-  - [ ] 133.12 Po dodani legalnich dat postupovat podle intake planu
+  - [x] 133.12 Po dodani legalnich dat postupovat podle intake planu - superseded
     - Nejdriv validovat ready sloty, potom generovat production moduly, zapojit registry/resolvery a spustit `npm run release:check`.
     - Navazne fronty:
       - `npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all`
@@ -1547,6 +1547,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
       - `npm run mtt:intake-plan -- --priority=P4_TURN_PRODUCTION --all`
       - `npm run mtt:intake-plan -- --priority=P5_RIVER_PRODUCTION --all`
       - `npm run mtt:validate-ready-intake -- --fail-on-empty`
+    - Superseded: vlastni execution a acceptance jsou vedene v 135.27, 135.5, 135.6, 135.28 a 135.8-135.10.
   - [x] 133.13 Udrzet DOLAR_EV jako samostatnou preflop intake prioritu
     - P2 fronta nesmi byt jen implicitni filtr, protoze aktualni cil explicitne zahrnuje CHIP_EV i DOLAR_EV.
     - Hotovo: operator guide, intake README, coverage audit a CLI regression test pokryvaji `P2_PREFLOP_DOLAR_EV`.
@@ -1609,15 +1610,18 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Definovat, jak se prenasi board, pot, effective stack, aggressor, caller, in-position role, priorFlopAction, priorTurnAction a action history.
     - Testy musi overit, ze SRP a 3bet poty nepreskakuji do nespravneho action nodu po check/call/raise/fold vetvi.
     - Hotovo: `transitionPostflopLineState` formalizuje dalsi street, action node, pot, stack, prior action a terminal reason; testy overuji `CHECK -> TURN_BARREL`, `CALL -> *_FACING_BET`, `TURN CALL -> RIVER_FACING_BET` a `FOLD` terminal bez dalsi streety.
-  - [ ] 134.10 Importovat legalni P3 FLOP production data pro vsechny varianty
+  - [x] 134.10 Importovat legalni P3 FLOP production data pro vsechny varianty - superseded
     - Postupovat pres `npm run mtt:intake-plan -- --priority=P3_FLOP_PRODUCTION --all`.
     - Pro kazdy ready slot spustit `validate:range-import`, `build:range-module --dry-run`, potom vygenerovat production modul a registrovat pack v resolver chainu.
-  - [ ] 134.11 Importovat legalni P4 TURN production data pro vsechny varianty
+    - Superseded: realne dodani zustava otevrene v 135.28 a 135.8.
+  - [x] 134.11 Importovat legalni P4 TURN production data pro vsechny varianty - superseded
     - Postupovat pres `npm run mtt:intake-plan -- --priority=P4_TURN_PRODUCTION --all`.
     - Coverage musi zahrnout SRP/3bet, prior flop actions, turn card classes, SPR/pot windows, pozicni patterny, range lanes a facing-bet vetve.
-  - [ ] 134.12 Importovat legalni P5 RIVER production data pro vsechny varianty
+    - Superseded: realne dodani zustava otevrene v 135.28 a 135.9.
+  - [x] 134.12 Importovat legalni P5 RIVER production data pro vsechny varianty - superseded
     - Postupovat pres `npm run mtt:intake-plan -- --priority=P5_RIVER_PRODUCTION --all`.
     - Coverage musi zahrnout prior turn actions, river runout classes, blocker relevance, value/bluff/check lanes, facing-bet vetve a finalni decision akce.
+    - Superseded: realne dodani zustava otevrene v 135.28 a 135.10.
   - [x] 134.13 Definovat legalni reuse policy pro speed/EV jen pokud je explicitne povolena
     - REGULAR/TURBO a CHIP_EV/DOLAR_EV nesmi sdilet postflop doporuceni bez reviewed reuse policy v permission manifestu a auditnim reportu.
     - Pokud reuse neni povoleny, kazdy speed/EV slot zustava samostatny import blocker.
@@ -1646,24 +1650,46 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Novy gate musi selhat, pokud nektery cilovy FLOP/TURN/RIVER production slot chybi, ma LOW confidence, chybejici permission, placeholder text, nekompletni coverage nebo fallback runtime.
     - Gate spustit v `npm run release:check` az po nahrani legalnich production dat.
     - Hotovo: `npm run mtt:postflop-release` je zapojeny do `npm run release:check`; gate je source-free a aktualne spravne selhava na 48 FLOP/TURN/RIVER slotech bez production packu, normalized importu a permission manifestu.
-  - [ ] 134.20 Finalni acceptance pro plne funkcni MTT postflop
+  - [x] 134.20 Finalni acceptance pro plne funkcni MTT postflop - superseded
     - `npm run release:check` zeleny.
     - `npm run mtt:blockers -- --summary` nema P3/P4/P5 blocker rows.
     - `npm run mtt:intake-plan -- --priority=P3_FLOP_PRODUCTION --all`, P4 a P5 neukazuji waiting sloty.
     - Manualni smoke: 6-max/9-max, regular/turbo, chipEV/$EV, ante ON/OFF, FLOP/TURN/RIVER hand line projde bez source citaci a bez fallback warningu.
+    - Superseded: finalni postflop acceptance je soucasti 135.19, 135.20 a 135.22.
 
 - [ ] 135. MTT application completion package - hlavni backlog pro dokonceni MTT casti
   - Cil: v prvni produkcni casti aplikace mit kompletne funkcni MTT trenink pro FULL_RING_9 i SIX_MAX, REGULAR i TURBO, CHIP_EV i DOLAR_EV, ante ON/OFF, PREFLOP/FLOP/TURN/RIVER, vsechny podporovane pozice, pot/action nody, single spot i hand-line flow, HH review, stats a release gates.
-  - Aktualni stav 2026-06-17: technicky runtime/tooling/UI zaklad existuje; `npm run release:check` zamerne selhava na MTT production gatech, protoze 62 MTT slotu neni production-ready a 0 slotu je ready-for-validation.
+  - Aktualni audit 2026-06-18:
+    - Working tree baseline byl 2026-06-18 obnoven v 135.29: typecheck, aktualne 485 testu, build a bundle budget jsou zelene; dalsi prace muze navazat na P0 runtime/release ukoly.
+    - Posledni znamy zeleny commit baseline mel 100 test files / 475 testu, build a bundle budget, ale tento stav uz neodpovida aktualnimu working tree.
+    - Produkcni MTT gate je cerveny: 64 completion rows, 2 production-ready, 52 preview, 10 missing; 62 blocker rows a 0 ready-for-validation slotu.
+    - P1/P2/P3/P4/P5 fronta je 6 / 8 / 16 / 16 / 16 slotu. Vsem 62 chybi `normalized.json` i `permission.json`.
+    - Postflop ma 48/48 blocker rows, 48 fallback runtime rows a 0 production-ready rows.
+    - Intake workspace a registry integrity jsou technicky validni, ale registry report oznacuje vsech 6 registrovanych MTT preflop packu jako `LEGACY_OR_UNKNOWN`; dva z nich jsou dnes povazovane za production.
+    - Generovany runtime katalog a automaticky refresh po `mtt:promote-ready --write` jsou rozpracovane, ale chybi kompletni test matrix, provenance vazba a fail-closed integrity.
+    - Preflop start gate je rozpracovany z CHIP_EV-only na obecny completion routing, ale neni dovedeny do funkcniho store/sequence/stats flow.
+    - Postflop trainer a HH review stale v realnem bootstrap flow nedostavaji strict profilovy production resolver a mohou pouzit default heuristic fallback.
+    - `Agents/requirements.md` a `Agents/design.md` jsou nove oznacene jako historicky preflop-only baseline s odkazem na 64radkovy release kontrakt; navazujici plny MTT variant scope je v sekci 137.
   - Kriticka zasada: produkcni MTT doporuceni nesmi vzniknout z public heuristic fallbacku, metadata-only reuse ani rucne domyslenych chart hodnot. Kazdy povyseny slot potrebuje legalni `normalized.json`, `permission.json`, production-ready validaci, legal-slot match a source-free runtime vystup.
   - Primary execution order:
-    - P0: zafixovat definici hotove MTT casti, acceptance gate a operator workflow.
+    - P0-A: obnovit zeleny working tree (135.29), uzavrit specifikaci (135.23), capability matrix (135.30), identitu spotu/statistik (135.31), registry (135.25) a profile-bound fail-closed runtime (135.26).
+    - P0-B: uzavrit legalni status legacy dat (135.24), korektnost postflop state machine (135.32), HH parity (135.33), lokalizaci/a11y (135.34), lazy/offline pack delivery (135.35), semanticke data gate (135.36), CI (135.37) a browser/device E2E (135.38).
+    - P0 pilot: povysit jeden P1 slot kompletne od raw evidence az po realny start treninku.
     - P1: dokoncit preflop CHIP_EV produkcni mezery.
     - P2: dokoncit preflop DOLAR_EV produkcni mezery.
     - P3: importovat FLOP production StrategyPacky.
     - P4: importovat TURN production StrategyPacky.
     - P5: importovat RIVER production StrategyPacky.
     - P6: spustit end-to-end app QA, performance/mobile/source-free a release kandidat.
+  - Definition of done pro kazdy jednotlive povyseny slot:
+    - Legalni raw evidence je ulozena lokalne mimo Git.
+    - `normalized.json` a `permission.json` maji shodny `packId` a projdou workspace guardem.
+    - `validate:range-import` vrati productionReady i permissionReady.
+    - `build:range-module --dry-run` vrati writeReady a legal-slot match.
+    - Modul je vygenerovan, deterministicky registrovan v runtime katalogu a projde `mtt:registry-integrity`.
+    - Odpovidajici completion row je `PRODUCTION`, profil lze spustit a runtime nevrati candidate/heuristic fallback.
+    - Spot, score i statisticky zaznam nesou spravny profil a strategii; zadna data se nepripisi defaultnimu 9-max CHIP_EV profilu.
+    - Targetovane testy, source-free UI guard a prislusny wave gate jsou zelene.
   - [x] 135.1 Zafixovat MTT product definition of done
     - Sepsat do `Agents/tasks.md` a release dokumentace presny stav, kdy je MTT cast povazovana za hotovou: vsechny 64 MTT completion rows production-ready, 0 blocker rows, 0 waiting ready/intake slotu, vsechny user flows bez fallback warningu.
     - Definition of done musi explicitne zahrnout 6-max/9-max, regular/turbo, CHIP_EV/DOLAR_EV, ante ON/OFF, PREFLOP/FLOP/TURN/RIVER, SRP/3bet/facing-bet, c-bet/barrel/pressure, call/raise/fold vetve a hand-line transitions.
@@ -1683,29 +1709,170 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Rozsirit guard tak, aby umel rozlisit povolene lokalni raw soubory od omylem commitnutych privatnich zdroju, ukazal ready/waiting po priority buckets a failnul pri nevalidni strukture `Agents/range-intake/raw/<packId>/`.
     - Soucasti ma byt kontrola, ze `normalized.json` a `permission.json` patri ke stejnemu `packId` a ze slot existuje v legalnim registry.
     - Hotovo: `npm run range:intake:guard` kontroluje git-tracked raw soubory, lokalni raw slozky proti legal slot registry, `normalized.json` id, `permission.json` packId, priority counts a JSON vystup pro operator tooling.
+  - [x] 135.23 Sjednotit MTT v1 specifikaci s release kontraktem
+    - Aktualizovat `Agents/requirements.md` a `Agents/design.md`, nebo je explicitne oznacit jako historicky preflop-only scope a pridat odkaz na aktualni `Agents/mtt-done-checklist.md`.
+    - Jediny platny MTT v1 scope musi byt 2 formaty x 2 speeds x 2 EV modely x 2 ante x 4 streety = 64 completion rows.
+    - Explicitne potvrdit, ze DOLAR_EV zde znamena projektovy produkcni model podporeny legalnim vstupem/reuse policy; nesmi se tise vydavat za plny turnajovy ICM model.
+    - Acceptance: requirements, design, tasks, completion gate a release notes si neodporuji v poctu profilu ani v postflop scope.
+    - Hotovo 2026-06-18: `Agents/requirements.md` a `Agents/design.md` jsou explicitne oznacene jako historicky 9-max CHIP_EV preflop baseline a odkazuji na 64profilovy MTT v1 release kontrakt; DOLAR_EV neni prezentovan jako obecny plny ICM engine.
+  - [ ] 135.24 Uzavrit legalni provenance dvou legacy production packu
+    - Auditovat `mtt-full-ring-9-regular-preflop-chip-ev-ante-on-v1` a `...ante-off-v1`, ktere registry report dnes vede jako `LEGACY_OR_UNKNOWN`.
+    - Preferovany vysledek: re-importovat je standardnim production pipeline pod legalnim `normalized.json` + `permission.json`, nebo je fail-closed preradit z production, pokud nelze prokazat pravo k runtime redistribuci hodnot.
+    - Rozsirit produkcni registry/provenance kontrakt tak, aby commitnuty runtime artefakt nesl source-free audit metadata potrebna pro release kontrolu, i kdyz raw permission evidence zustava mimo Git.
+    - Acceptance: zadny MTT production pack neni `LEGACY_OR_UNKNOWN`; finalni gate nepovazuje pouhou existenci historickych dat za legalni production readiness.
+  - [x] 135.25 Automatizovat runtime registry pro vygenerovane production moduly
+    - Doplnit deterministicky generovany katalog se statickymi importy pro MTT preflop RangePacky a FLOP/TURN/RIVER StrategyPacky.
+    - `mtt:promote-ready --write` musi bud katalog aktualizovat atomicky, nebo vypsat/povinne spustit samostatny `mtt:refresh-registry` krok; rucni editace 4 poli pro desitky packu neni akceptovatelna.
+    - Zapojit katalog do `allMttPreflopRangePacks`, `flopProductionStrategyPacks`, `turnProductionStrategyPacks` a `riverProductionStrategyPacks`.
+    - Generator musi byt idempotentni, stabilne serazeny podle packId a bezpecny pri nulovem poctu production modulu.
+    - Zprisnit `mtt:registry-integrity`: generated-but-unregistered, registered-without-provenance, duplicitni profil a pack pokryvajici nepovolene dimenze jsou release blockery.
+    - Testy: prazdny katalog, jeden pack kazdeho druhu, batch packy, opakovany run bez diffu a orphan modul.
+    - Hotovo 2026-06-18: `mtt:refresh-registry` deterministicky generuje staticke importy pro vsechny ctyri druhy MTT packu, zapisuje katalog atomickym temp+rename krokem a `mtt:promote-ready --write` ho automaticky obnovuje. Ctyri runtime registry pole nacitaji generated katalog bez rucniho wiring.
+    - `release:check` povinne spousti `mtt:refresh-registry -- --check`. Integrity gate blokuje orphan generated modul, chybejici permission manifest, duplicitni runtime profil, nelegalni packId a pack pokryvajici jine dimenze nez jeho legalni slot.
+    - Testy pokryvaji prazdny katalog, jeden modul kazdeho druhu, batch/stabilni razeni, ignorovani neplatneho modulu, opakovany run bez diffu a orphan modul bez registrace/provenance. Overeni: typecheck, 102 testovacich souboru / 480 testu, build a bundle budget prosly.
+  - [x] 135.26 Udelat produkcni runtime profile-bound a fail-closed
+    - Preflop: nahradit CHIP_EV-only start gate obecnym `mttCompletionReadinessRowForTrainingProfile` routovanim, aby CHIP_EV i DOLAR_EV startovaly pouze na odpovidajicim production packu.
+    - Preflop lookup nesmi vratit candidate nebo pack z jineho EV/speed/format/ante profilu.
+    - Postflop: v `main.ts` sestavit `createMttProductionPostflopStrategyResolver(profile)` a injektovat ho do `renderPostflopView`; production profil nesmi pouzit `createDefaultPostflopStrategyResolver` fallback.
+    - HH review musi dostat explicitni profilovy production resolver; pokud profil nebo production coverage chybi, ma zobrazit source-free blokujici stav, ne heuristic radu.
+    - Default heuristic resolver ponechat jen pro explicitni preview/development flow, nikoli pro MTT production start.
+    - Testy: cela 64profilova matice, cross-profile isolation, DOLAR_EV preflop start, postflop no-fallback a HH no-fallback.
+    - Hotovo 2026-06-18: production preflop pouziva izolovany RangeStore konkretniho readiness packu a kontroluje packId; CHIP_EV ani DOLAR_EV nemohou pouzit pack jineho profilu. DOLAR_EV readiness uz neni natvrdo `MISSING`: do production prejde jen po registraci dedikovaneho validniho DOLAR_EV packu.
+    - Production-ready postflop start pouziva resolver filtrovany podle format/speed/EV/street/ante a `allowFallback=false`; preview flow zustava explicitne heuristicky. HH postflop review dostava aktualni profil ze selectoru, kontroluje 9-max/ante shodu a pri chybejicim production matchi zobrazi source-free blokujici stav bez ulozeni heuristic review.
+    - Testy: cela 64radkova runtime matice, cross-ante izolace preflop store, DOLAR_EV promotion fixture, 48 postflop no-fallback profilu, HH no-fallback a bootstrap quota/mobile regrese. Overeni: typecheck, 103 testovacich souboru / 483 testu, build a bundle budget prosly; hlavni JS 324.97 KiB raw / 85.50 KiB gzip.
+  - [x] 135.29 Obnovit zeleny baseline po rozpracovanem profile-bound routingu
+    - Dokoncit nebo bezpecne docasne uzavrit vsechny rozpracovane reference v `src/main.ts`: nahradit odstraneny `isProductionPreflopProfile`, skutecne pouzit profilovy RangeStore/RangePack/postflop resolver a vratit kompletni `TrainingController`.
+    - Opravit start production 9-max preflopu, candidate/missing gating, quota-save flow, mobile smoke a TypeScript unused/missing symbol chyby bez navratu k cross-profile fallbacku.
+    - Doplnit targetovane testy pro aktualni bug a teprve pote spustit full suite.
+    - Acceptance: `npm run typecheck`, `npm test`, `npm run build` a `npm run bundle:budget` jsou znovu zelene; zadna global error boundary hlaska pri beznem startu treninku.
+    - Hotovo 2026-06-18: `main.ts` pouziva pro production preflop izolovany RangeStore konkretniho readiness packu, production postflop resolver je profilovy a fallback se zakazuje pro production-ready radky; preview flow zustava explicitni. TrainingController je kompletni, quota/mobile/bootstrap regrese jsou opravene a novy test overuje cross-ante/cross-position izolaci store.
+    - Overeni: `npm run typecheck`, `npm test -- --reporter=dot` (101 souboru, 476 testu), `npm run build` a `npm run bundle:budget` prosly; hlavni JS ma 323.44 KiB raw / 85.07 KiB gzip.
+  - [x] 135.30 Zavest jedinou capability matrix podporovanych profilu
+    - Nahradit roztrousene podminky v profile selectoru, start gatech, completion reportu, HH a stats jednim typovanym katalogem schopnosti.
+    - Pro kazdy profil rozhodnout `PRODUCTION`, `PREVIEW`, `BLOCKED` nebo `UNSUPPORTED` a povolene streety, EV modely, ante/rake, table formaty a flow modes.
+    - MTT v1 nesmi nabizet `ICM`, pokud pro nej neni samostatny release kontrakt; SNG/Cash postflop a dalsi nehotove kombinace musi byt disabled/unsupported, ne obecne MTT preview.
+    - UI ma neplatne kombinace zakazat nebo vysvetlit source-free textem; URL/editovana hodnota nesmi obejit gate.
+    - Acceptance: selector, bootstrap, completion CLI a runtime resolver pouzivaji stejnou capability funkci a exhaustive test vsech kombinaci neukazuje drift.
+    - Hotovo 2026-06-19: `staticTrainingCapability` definuje produktovy kontrakt a `trainingCapabilityForProfile` ho spojuje s MTT completion readiness do kanonickych stavu `PRODUCTION`, `PREVIEW`, `BLOCKED`, `UNSUPPORTED`, povolenych flow modes a fallback policy.
+    - Selector zakazuje MTT ICM, SNG/Cash postflop a neplatne Cash dimenze; programaticky neplatna hodnota zustane fail-closed s explicitnim source-free stavem. Bootstrap, HH guard, completion routing a production postflop resolver pouzivaji stejny kontrakt.
+    - Exhaustive test klasifikuje vsech 864 kartézskych profilu a potvrzuje presne 64 legalnich MTT v1 kombinaci. Pri implementaci byl opraven Cash ante drift, kdy obecny filtr prepisoval povinne `OFF`.
+    - Lokalni overeni: typecheck, 106 testovacich souboru / 501 testu, build, registry integrity/refresh, range audit a bundle budget prosly; main JS 314.98 KiB raw / 82.68 KiB gzip.
+  - [x] 135.31 Udelat identitu spotu, scoring a preflop statistiky plne profile-aware
+    - Soucasny preflop `Question_ID` nerozlisuje format, speed ani EV a `ResultRecord` neuklada profil; dashboard pak umi historicke udalosti chybne priradit defaultnimu 9-max CHIP_EV profilu.
+    - Zavest verzovany `scenarioId` pro preflop i postflop zahrnujici plny profil a rozhodujici stav spotu (pozice aktoru, sizingy, pot/node, hero hand/board), plus samostatnou auditni identitu strategie (`packId`, verze, verifiedAt).
+    - Zachovat migraci starych qid/stat zaznamu; stare nejednoznacne udalosti oznacit `LEGACY_UNKNOWN_PROFILE`, ne domyslet produkcni profil.
+    - Preflop event schema musi pri odpovedi primo ulozit `profileId`, table/speed/EV/ante, range pack metadata, response time a scoring mode; dashboard/export/import/curriculum nesmi profil zpetne odhadovat.
+    - Spaced repetition a deduplikace musi byt oddelene podle profilu a scenare; update strategie nesmi zpusobit tichou kolizi ani ztratu historie.
+    - Acceptance: dva jinak shodne spoty v ruznych format/speed/EV profilech maji odlisnou identitu a oddelene KPI; round-trip migrace a export/import jsou otestovane.
+    - Progress 2026-06-19: nove preflop odpovedi se ukladaji s `preflop_result_identity_v1`, plnym `profileId`/profile dimensions, `rangePackId`/version/verifiedAt, scoring mode a verzovanym `preflop_scenario_v1` odvozenym z profilu, puvodniho qid a rozhodujiciho table state.
+    - Historicke zaznamy bez teto identity se v dashboard/export vrstve oznacuji `LEGACY_UNKNOWN_PROFILE` a `LEGACY_UNKNOWN_STRATEGY`; uz se automaticky nevydavaji za defaultni 9-max regular CHIP_EV production profil.
+    - Spaced repetition seskupuje podle `scenarioId`, ne pouze podle qid, takze stejny pokerovy spot v ruznych profilech nesdili attempts/misses. Puvodni Question_ID a pool determinismus zustaly beze zmeny.
+    - Postflop bridge schema v4 nese `postflop_scenario_v1`, StrategyPack id/version/verifiedAt a hand-line zaznam sklada `postflop_line_scenario_v1` z profilu, line identity a street scenaru. Legacy postflop zaznamy bez scenario ID zustavaji validni a normalizuji se bez vymysleni chybejiciho stavu.
+    - Aktualizace strategie nemeni scenario ID; auditni pack metadata se uchovaji oddelene, takze historie pod stejnym scenarem nekoliduje ani se neztraci.
+    - Testy pokryvaji profilovou a stavovou odlisnost scenario ID, realny bootstrap zapis identity, legacy migraci, export/import, oddeleni repetition fronty, postflop single/line identity a update strategie. Overeni: typecheck, 108 testovacich souboru / 510 testu, registry refresh/integrity, range audit, build, precache a bundle budget prosly; main JS 318.42 KiB raw / 83.52 KiB gzip.
+  - [x] 135.32 Nahradit zjednoduseny postflop line replay korektnim stavovym automatem
+    - Soucasny simulator odvozuje dalsi node hlavne z akce hero a pocita `pot + 2 * bet`, aniz explicitne modeluje castku k dorovnani, kontribuce hracu a reakci soupere.
+    - Zavest street state s potem, stacky obou hracu, outstanding betem, sizingem, agresorem, IP/OOP, historii akci a terminalnim stavem.
+    - Rozlisit bet/call/raise/all-in, check-through, bet-fold, bet-call, check-raise, raise-call/fold a legalni reopen pravidla; pot a stack se musi pocitat z realnych kontribuci.
+    - Modelovana akce soupere musi pochazet z explicitni opponent policy/StrategyPack vetve, ne z implicitniho automatickeho callu.
+    - V MTT v1 pokryt heads-up SRP a 3bet poty; limped, 4bet, multiway a side-pot flow explicitne oznacit jako navazujici scope 137, dokud nejsou implementovane.
+    - Acceptance: invarianty zachovani chipu, nezapornych stacku, legalnich akci a terminalnich vetvi projdou property testy; reprezentativni FLOP->TURN->RIVER line odpovida rucne spocitanemu potu.
+    - Progress 2026-06-19: `PostflopStreetState` explicitne drzi pot, hero/villain stack, outstanding bet, street kontribuce, agresora a terminalni stav. Kazda vygenerovana line akce uklada state before/after, amount-to-call, obe kontribuce a skutecnou reakci soupere.
+    - Puvodni `pot + 2 * bet` zkratka byla nahrazena commit/settle prechody. Facing-bet nejdriv odecte villain lead, call dorovna pouze outstanding bet, raise pocita raise-to a nasledny villain call; bet-fold nepridava implicitni call.
+    - Souperova reakce pochazi z injektovatelne `PostflopOpponentPolicy`; vychozi policy zachovava dosavadni bet-call/check-through UX, ale testovana custom policy umi bet-fold terminal. Terminal reasons rozlisuji `HERO_FOLD`, `OPPONENT_FOLD`, `STACK_EXHAUSTED` a `SHOWDOWN`.
+    - Testy rucne overuji 6 BB pot / 40 BB stack: 75% bet-call -> 15 BB pot a 35.5 BB stacky; facing 3 BB raise-call -> 25.6 BB pot a 30.2 BB stacky. Invariantni matice pres stacky 1/3/10/40/150 BB hlida nezaporne stacky a zachovani chipu.
+    - Kazda street akce nyni muze nest atomickou sekvenci s aktorem, castkou, kontribuci po akci, amount-to-call, all-in priznakem, full-raise priznakem a informaci, zda se betting znovu otevrel. Implementovane jsou check-bet-raise-call, bet-raise-call/fold a all-in vetve; kratky all-in nelegalne nereopenne betting.
+    - FLOP/TURN/RIVER production StrategyPack rule schema podporuje explicitni `opponentPolicy` pro `afterHeroCheck`, `facingHeroBet` a `facingHeroRaise`. Resolver ji prenasi ve strategy source a line simulator ji pouzije pred vychozi explicitni policy.
+    - Stavove snapshoty i atomicke sekvence se validuji a hluboce kopiruji v line persistence/export/import. Testy rucne overuji check-bet-raise-call pot, bet-raise-fold, kratky all-in bez reopen, nelegalni re-raise fallback, StrategyPack policy routing, nezaporne stacky a zachovani chipu.
+    - Hotovo 2026-06-19: typecheck, 108 testovacich souboru / 517 testu, registry refresh/integrity, range audit, build, precache a bundle budget prosly. Postflop simulator je v samostatnem offline-precache chunku; main JS 306.24 KiB raw / 79.54 KiB gzip, postflop-line 20.88 KiB raw / 7.10 KiB gzip.
+    - Navazujici limped, 4bet, multiway a side-pot flow zustava explicitne scope 137.
+  - [ ] 135.33 Dodelat MTT HH import/review profilovou paritu
+    - Parser dnes sestavuje preflop Spot jen pro plny 9-handed model a pouziva globalni legacy RangeStore; 6-max a DOLAR_EV/regular-turbo profil tak nelze spolehlive reviewovat.
+    - Detekovat nebo nechat uzivatele potvrdit table format, blind speed, ante, EV model a street; pro 6-max i 9-max spravne odvodit pozice z buttonu a obsazenych sedadel.
+    - Preflop review musi pouzit stejny profilovy RangePack jako trainer, postflop stejny strict production resolver; bez produkcni coverage zobrazit blokujici source-free stav.
+    - Parsovat realne sizingy, all-iny, pot/stack po streetach a validovat duplicity karet; nepouzivat nearest-bucket scoring bez viditelne a testovane bucket policy.
+    - Acceptance: reprezentativni 6-max a 9-max HH pro CHIP_EV i DOLAR_EV projdou preflop->river review bez global fallbacku a ulozi spravny profil do HH review logu.
+  - [ ] 135.34 Dokoncit ceskou lokalizaci, terminologii a pristupnost
+    - Hard rule projektu pozaduje ceske UI, ale aktualni `main.ts`, filtry, dashboard, HH, postflop, manifest a chybove stavy obsahuji rozsahle anglicke texty.
+    - Zavest centralni textovy katalog, sjednotit pokerovou terminologii a prelozit vsechny visible texty, validation/error stavy, PWA manifest (`lang`) a user guide; strojove enumy ponechat interni.
+    - Doplnit release test, ktery inventarizuje viditelne texty a zabrani novym nahodnym inline stringum mimo katalog.
+    - Overit keyboard-only flow, focus po start/answer/next/error, ARIA labely/live regions, kontrast, reduced motion a 200% zoom.
+    - Acceptance: reprezentativni E2E pruchod nema anglicke systemove vety ani raw enumy a projde source-free + accessibility smoke.
+  - [ ] 135.35 Pripravit 62 production packu na lazy loading a spolehlivy offline provoz
+    - Staticky import vsech budoucich RangePacku/StrategyPacku muze radove prekrocit soucasny 325 KiB bundle budget a zpomalit start.
+    - Pred prvnim velkym batchem zmerit realnou velikost jednoho preflop a postflop packu a stanovit budget pro app shell, profilovy chunk a celou offline cache.
+    - Generated registry zmenit na typovany manifest s lazy `import()` po profilu/streetu; nacist jen vybrany pack a bezpecne zrusit race pri rychlem prepnuti profilu.
+    - Build musi vygenerovat uplny seznam hashovanych assetu pro versioned precache; soucasny runtime cache-first nesmi po deployi drzet stary `index.html` proti novym chunkum.
+    - Doplnit update flow, cache migraci/rollback, offline cold/warm start a Android WebView test; manifest potrebuje instalacni ikony a korektni metadata.
+    - Acceptance: first render a vybrany profil zustanou pod budgetem, vsech 64 v1 profilu funguje po prvnim nacteni offline a upgrade mezi dvema buildy nezpusobi white screen.
+    - Rozpracovano 2026-06-19: capability routing odstranil z hlavniho MTT app shellu staticke SNG/Cash candidate packy vcetne source evidence; historicka preview stats metadata se odvozuji bez natazeni strategickych hodnot. Main bundle klesl z 324.97 na 314.98 KiB raw a z 85.50 na 82.68 KiB gzip.
+    - Build plugin nyni injektuje do `sw.js` uplny seznam aktualnich hashovanych assetu a obsahovy cache identifikator. `npm run verify:precache` failuje na chybejici main chunk, placeholder nebo neversionovanou cache a je zapojen do CI i `release:check`.
+    - Navigace pouziva network-first, aby novy deploy nespojil stary `index.html` s novymi chunky; offline fallback zustava v cache. Aktivace zachova bezprostredne predchozi cache jako rollback/stary-client generaci a uklizi starsi verze.
+    - Zbyva: generated registry prevest na profilove lazy importy, race cancellation, instalacni ikony/metadata a realny cold/warm + dvoubuildovy Android WebView upgrade test.
+  - [x] 135.36 Zprisnit semanticke QA produkcnich strategii
+    - Registry musi failnout na dva production packy pro stejny profil/street bez explicitni precedence, na cross-profile dimenze a na pack bez source-free provenance fingerprintu.
+    - Preflop validovat 169 hand classes, legalni akce/sizing pro konkretni node, kontextove mozne pozice a uplnost vsech pozadovanych stacku; zadny implicitni fold nesmi maskovat omylem chybejici cely segment.
+    - Postflop validovat soucty exact frequencies, legalni mixy, disjunktni/explicitne prekryvajici se range bucket pravidla, hero hand match, card removal, unreachable pravidla a deterministicky tie-break.
+    - Po povyseni kazdeho packu generovat sampled runtime smoke corpus a porovnat recommendation, explanation a source quality mezi import reportem a aplikaci.
+    - Acceptance: validace umi zamerne rozbite fixture odmitnout pro kazdou uvedenou tridu chyby a release gate nema pouze strukturou zelene, ale semanticky nejednoznacne packy.
+    - Rozpracovano 2026-06-19: registry integrity failuje na duplicitni production profil, cross-profile dimenze, orphan modul a chybejici source-free SHA-256 provenance fingerprint. Builder generuje deterministicky fingerprint bez raw source cesty.
+    - Preflop import navic odmita nelegalni/duplicitni akce pro konkretni context a strict akci chybejici v lenient mape; dosavadni validace dale hlida uplnost 169 hand classes, stack coverage, pozice a segmenty.
+    - Tooling-only postflop semantic gate odmita duplicitni coverage dimenze, rule id, identicky i castecne prekryty selector bez precedence a stejnou hand class ve vice range buckets. Gate je zapojen do module builderu i kontroly uz registrovanych packu, bez navyseni runtime bundle.
+    - Zamerne rozbite flop/turn/river fixture pokryvaji duplicate selector, SPR/texture/runout overlap, bucket collision, runtime source mismatch a card-removal chyby. Lokalni overeni: typecheck, registry integrity/refresh check, range audit, 105 testovacich souboru / 498 testu, build a bundle budget 324.97/325 KiB raw a 85.50/86 KiB gzip.
+    - Doplneno 2026-06-19: promotion builder i registry integrity generuji deterministicky runtime smoke sample pro kazde postflop pravidlo pres stejny FLOP/TURN/RIVER resolver jako aplikace. Porovnavaji recommendation, explanation, rule/pack/version/verifiedAt/confidence metadata a hero range bucket; mismatch blokuje zapis i release kontrolu.
+    - River selector uz nesmi predstirat rozliseni pouze pres `blockerRelevance`, protoze tento udaj neni soucasti runtime vstupu; takove pravidlo je nyni spravne vyhodnoceno jako kolize.
+    - Range rule muze deklarovat `handClassOverlapPolicies` pouze s presnym seznamem VALUE/BLUFF/CHECK lanes a neprázdným rationale. Nedeklarovany overlap, neodpovidajici lanes, duplicitni policy i policy bez skutecneho overlapu jsou blokery.
+    - Card removal je povinna soucast kazdeho postflop rule pres source-free `cardRemovalSamples`: gate hlida 3/4/5 karet podle streetu, fyzicke duplicity, shodu konkretnich hero karet s hand class, pritomnost hand v buckets a dostupnost alespon jedne kombinace kazde range hand po odecteni boardu.
+    - Hotovo 2026-06-19: promotion i release gate nyni blokuji strukturou validni, ale semanticky nejednoznacne nebo runtime nekonzistentni packy. Sampled runtime corpus se automaticky uplatni pri prvnim realnem povyseni production packu.
+  - [x] 135.37 Zavest reprodukovatelne CI pro pull request a release
+    - Pridat CI workflow na podporovane Node LTS s `npm ci`, typecheck, full tests, registry `--check`, MTT gates, verify ranges, build, bundle budget a artefakt `dist/`.
+    - Oddelit ocekavane cervene production-data gate od beznych PR checks tak, aby kodova regrese nebyla skryta znamym datovym blockerem; final release job musi vyzadovat oba typy zelene.
+    - Pridat deterministic generated-file check, lockfile integrity, test timeout/report artefakty a jasny fail summary.
+    - Acceptance: cisty clone bez lokalnich raw dat reprodukuje stejny technicky vysledek a release tag nelze vytvorit s cervenym MTT gate.
+    - Hotovo 2026-06-18: `.github/workflows/ci.yml` pouziva Node 22 + `npm ci`, typecheck, full Vitest s JUnit artefaktem, generated registry check, registry integrity, raw intake guard, range verification, build, bundle budget a upload `dist/`. Concurrency rusi zastarale runy a job ma explicitni timeout.
+    - Znamy production-data blocker je oddelen do diagnostickeho `mtt-data-status` jobu s JSON artefaktem; jeho cerveny stav nemaskuje technickou regresi. `.github/workflows/release.yml` pro `v*` tag/manual release nema `continue-on-error` a uploadne `dist/` az po kompletnim `npm run release:check`, ktery obsahuje MTT gates.
+    - Workflow kontrakt hlidaji unit testy. Lokalni overeni: typecheck, registry check/integrity, `git diff --check`, 104 testovacich souboru / 485 testu, build a bundle budget prosly.
+  - [ ] 135.38 Dodelat skutecne browser/device E2E acceptance
+    - Unit/jsdom testy doplnit o produkcni build spusteny v prohlizeci: start profilu, answer/next, single spot, hand line, HH review, stats export/import, reload a offline reopen.
+    - Matice: desktop + 360/390/412 px, Chromium a Android WebView/emulator; keyboard a touch.
+    - Testovat prazdny storage, legacy migraci, quota failure, corrupt JSON, service-worker update a chybejici profilovy chunk.
+    - Pro produkcni data pouzit source-free test fixture packy oddelene od realnych legalnich hodnot.
+    - Acceptance: E2E artefakty obsahuji screenshoty/logy, zadny uncaught error, page-level overflow, fallback recommendation ani profilovy mix-up.
+    - Pokus 2026-06-18: production build a lokalni Vite preview na `http://127.0.0.1:4173/` byly pripraveny, ale in-app Browser backend nebyl v teto relaci dostupny. Chrome fallback vyzaduje explicitni souhlas uzivatele, proto nebyl autonomne prevzat. Browser/device E2E zustava otevrene; jsdom/mobile smoke neni vydavan za jeho nahradu.
+  - [ ] 135.27 Provest jeden kompletni P1 pilot import
+    - Pouzit aktualni `mtt:next-action`: `FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF`, pack `mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1`.
+    - Projit realny tok evidence -> normalize -> permission -> validate -> dry-run -> write -> registry refresh -> targeted tests -> app start.
+    - Pilot nesmi pouzit metadata-only kopii regular packu; reuse je mozny jen s explicitni reviewed `BLIND_SPEED` policy podlozenou zdrojem.
+    - Acceptance: pilot row je production-ready, profil realne generuje a scoreuje spoty, `mtt:registry-integrity` zustane zeleny a blocker count klesne o 1.
   - [ ] 135.5 P1 preflop CHIP_EV production import wave
-    - Postupovat podle `npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all`.
+    - Navazuje na uspesny 135.27 pilot; postupovat podle `npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all`.
     - Pro kazdy legalni vstup: ulozit raw evidence lokalne, normalizovat do `normalized.json`, pridat `permission.json`, spustit `validate:range-import`, `build:range-module --dry-run`, vygenerovat modul a zapojit registry/resolver.
-    - Acceptance: P1 bucket ma 0 blocker rows, preflop CHIP_EV 6-max/turbo/ante i 9-max turbo gapy jsou production-ready bez metadata-only reuse.
+    - Po kazdem batchi spustit `mtt:validate-ready-intake`, `mtt:promote-ready --dry-run`, zapis s explicitnim potvrzenim, registry refresh a targetovane preflop testy.
+    - Acceptance: P1 bucket ma 0 blocker rows, vsech 8 CHIP_EV preflop rows je production-ready a celkovy MTT blocker count je nejvyse 56.
   - [ ] 135.6 P2 preflop DOLAR_EV production import wave
     - Postupovat podle `npm run mtt:intake-plan -- --priority=P2_PREFLOP_DOLAR_EV --all`.
     - DOLAR_EV nesmi automaticky reuse CHIP_EV; reuse je povoleny jen s explicitni permission `reusePolicy.allowedDimensions` a auditnim rationale.
-    - Acceptance: vsechny preflop DOLAR_EV MTT profily jsou production-ready, scoring pouziva DOLAR_EV packy nebo explicitne povolenou reuse policy.
+    - Acceptance: vsech 8 DOLAR_EV preflop rows je production-ready, scoring pouziva profilove DOLAR_EV packy nebo explicitne povolenou reuse policy; preflop ma 16/16 production rows a zbyva presne 48 postflop blocker rows.
   - [ ] 135.7 Preflop production runtime de-fallback
     - Po P1/P2 importech overit, ze `rangePackForTrainingProfile` a souvisejici profile gates pro vsechny MTT preflop kombinace vybiraji production pack a nikdy tise nepadaji do candidate/fallback dat.
     - Doplnit regresni test pres 2 tableFormat x 2 speed x 2 EV x 2 ante preflop matici.
+    - Acceptance: `mtt:completion -- --street=PREFLOP --json` ma 16 production rows, 0 preview/missing; vsech 16 profilu projde realnym start/answer/stat persistence smokem.
+  - [ ] 135.28 Provest postflop pilot pro kazdou street
+    - Pred 16slotovymi batchi povysit jeden reprezentativni FLOP, TURN a RIVER pack pro stejny profil a overit jejich navazani v jedne hand-line.
+    - Pilot musi prokazat granularni position patterny, SRP/3bet, facing-bet, prior-street action, runout/card class, range lanes, source-free explanation a strict profilovy resolver.
+    - Acceptance: tri pilot packy projdou coverage i registry gate; jedna FLOP->TURN->RIVER production hand-line nevola heuristic fallback.
   - [ ] 135.8 P3 FLOP production import wave
-    - Postupovat podle `npm run mtt:intake-plan -- --priority=P3_FLOP_PRODUCTION --all`.
+    - Navazuje na FLOP cast 135.28; postupovat podle `npm run mtt:intake-plan -- --priority=P3_FLOP_PRODUCTION --all`.
     - Kazdy FLOP pack musi pokryt MTT gameVariant, table/speed/EV/ante dimenze, SRP/3bet, 50 granularnich position patterns, board textures, `SINGLE_RAISED_POT_CBET`, `THREE_BET_POT_CBET`, `FLOP_FACING_BET`, range lanes a legalni akce.
-    - Acceptance: `npm run mtt:postflop-coverage -- --json` nema P3 `MISSING_PACK`, `MISSING_RULE` ani `PACK_NOT_PRODUCTION_READY`.
+    - Acceptance: vsech 16 FLOP rows je production-ready; `npm run mtt:postflop-coverage -- --json` nema FLOP `MISSING_PACK`, `MISSING_RULE` ani `PACK_NOT_PRODUCTION_READY`.
   - [ ] 135.9 P4 TURN production import wave
-    - Postupovat podle `npm run mtt:intake-plan -- --priority=P4_TURN_PRODUCTION --all`.
+    - Navazuje na TURN cast 135.28; postupovat podle `npm run mtt:intake-plan -- --priority=P4_TURN_PRODUCTION --all`.
     - Kazdy TURN pack musi pokryt SRP/3bet, 50 position patterns, prior flop actions, turn card classes, SPR windows, `TURN_BARREL`, `TURN_FACING_BET`, legalni akce, range lanes a explanations.
-    - Acceptance: `npm run mtt:postflop-coverage -- --json` nema P4 blockery a runtime resolver vraci production model pro vsechny targetovane TURN profily.
+    - Acceptance: vsech 16 TURN rows je production-ready; coverage nema TURN blockery a runtime resolver vraci produkcni model pro vsechny targetovane TURN profily.
   - [ ] 135.10 P5 RIVER production import wave
-    - Postupovat podle `npm run mtt:intake-plan -- --priority=P5_RIVER_PRODUCTION --all`.
+    - Navazuje na RIVER cast 135.28; postupovat podle `npm run mtt:intake-plan -- --priority=P5_RIVER_PRODUCTION --all`.
     - Kazdy RIVER pack musi pokryt prior turn actions, river runout classes, blocker relevance, value/bluff/check lanes, `RIVER_PRESSURE`, `RIVER_FACING_BET`, final decision akce a source-free explanation texty.
-    - Acceptance: `npm run mtt:postflop-release -- --summary` nema fallback runtime, missing normalized, missing permission, LOW confidence ani incomplete coverage rows.
+    - Acceptance: vsech 16 RIVER rows je production-ready; `npm run mtt:postflop-release -- --summary` nema fallback runtime, missing normalized, missing permission, LOW confidence ani incomplete coverage rows.
   - [x] 135.11 Batch promotion pipeline pro ready MTT sloty
     - Vytvorit bezpecny batch workflow nad `mtt:validate-ready-intake`, ktery pro ready sloty umi spustit dry-run buildy, vypsat planned output modules a vyzadovat explicitni potvrzeni pred zapisem.
     - Musi podporovat `--priority`, `--format`, `--street`, `--json`, `--dry-run` a nesmi prepisovat existujici production modul bez `--force`.
@@ -1714,7 +1881,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 135.12 Production registry integrity gate
     - Pridat test/gate, ktery porovna legal import slots, vygenerovane production module ids, permission packIds a runtime registry.
     - Selhat pri orphan production packu, duplicitnim packId, registry packu mimo legal slot, mismatch table/speed/EV/ante/street nebo packu bez permission evidence.
-    - Hotovo: `npm run mtt:registry-integrity` kontroluje legal import sloty, runtime registry, vygenerovane `*-production-*` moduly, permission manifest packIds, duplicity a orphan/nelegalni production packy; soucasny legacy baseline zustava validni.
+    - Hotovo: `npm run mtt:registry-integrity` kontroluje legal import sloty, runtime registry, vygenerovane `*-production-*` moduly, permission manifest packIds, duplicity a orphan/nelegalni production packy.
+    - Follow-up pred final release: 135.25 odstranil rucni registry wiring; 135.24 musi samostatne odstranit `LEGACY_OR_UNKNOWN` vyjimku u dvou legacy packu.
   - [x] 135.13 User-facing MTT profile coverage QA
     - Overit, ze UI profile selector/start flow umi vsechny MTT kombinace a ze labely jsou srozumitelne: 9-max/6-max, regular/turbo, chipEV/$EV, ante ON/OFF, preflop/flop/turn/river.
     - Non-production stav muze byt viditelny jen source-free a nesmi zobrazit pack id, provider, URL ani raw internal enumy.
@@ -1744,18 +1912,21 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 135.19 Final MTT release candidate checklist
     - Spustit: `npm run typecheck`, `npm test`, `npm run mtt:acceptance`, `npm run mtt:release-gates`, `npm run verify:ranges`, `npm run build`, `npm run bundle:budget`, `npm run release:check`.
     - Vystup ulozit do release notes: pocty production rows, 0 blockers, 0 waiting slots, bundle budget, known limitations.
-    - Stav: RC checklist zatim blokuje legalni production data, ne runtime kod. `npm run mtt:acceptance` je valid false: 64 total rows, 2 productionReady, 52 preview, 10 blocked; 62 blocker rows ceka na `normalized.json` a `permission.json`; postflop release gate ma 48/48 blocker rows a 0 productionReady. Source-free UI guard prochazi 9 testy, range intake workspace guard a registry integrity jsou valid.
+    - Stav auditu 2026-06-18: data jsou nejvetsi objemovy blocker, ale pred batch importem zbyvaji P0 runtime/release ukoly 135.24-135.38. `mtt:acceptance` je valid false: 64 total rows, 2 productionReady, 52 preview, 10 blocked; 62 blocker rows ceka na `normalized.json` a `permission.json`; postflop release gate ma 48/48 blocker rows a 0 productionReady.
+    - Technicky baseline byl 2026-06-18 obnoven v 135.29; typecheck, aktualne 485 testu, build i bundle budget jsou zelene. Release candidate dale blokuji otevrene P0/data ukoly v sekci 135.
     - RC attempt notes: `Agents/release-notes-mtt-rc-2026-06-17.md`.
   - [ ] 135.20 Final MTT user smoke
     - Rucne projit reprezentativni MTT scenare: 9-max regular CHIP_EV preflop, 9-max turbo DOLAR_EV preflop, 6-max regular CHIP_EV flop line, 6-max turbo DOLAR_EV river facing-bet, HH import turn/river review a dashboard kontrola.
-    - Zadny scenar nesmi zobrazit fallback warning, source citation, pack id nebo nevalidni action pro dany node.
+    - Doplnit 6-max HH review, reload/resume, offline reopen, stats export/import a mobilni keyboard/touch pruchod.
+    - Zadny scenar nesmi zobrazit fallback warning, source citation, pack id, anglickou systemovou vetu nebo nevalidni action pro dany node.
   - [x] 135.21 Uzavrit nebo supersedovat stare duplicitni MTT import tasky
     - Po prijeti tohoto konsolidovaneho backlogu projit stare otevrene tasky 86-88, 104-108, 114 a 116 a oznacit je jako superseded-by 135.x nebo je premapovat na konkretni P1-P5 import wave.
     - Cilem je mit jeden primarni backlog pro MTT dokonceni a neudrzovat paralelni, castecne duplicitni seznamy.
     - Hotovo: stare preflop import/promotion tasky 86-88 a 104-108 jsou superseded 135.5/135.6/135.7/135.11; stare FLOP SRP/3bet import tasky 114 a 116 jsou superseded 135.8/135.11. Skutecne production dodani zustava v P1-P5 legal intake wavech, ne ve starych duplicitach.
   - [ ] 135.22 Release rozhodnuti pro "MTT complete v1"
-    - Po splneni 135.1-135.21 oznacit MTT cast jako produkcne kompletni pro v1.
-    - Acceptance: `npm run release:check` zeleny, `mtt:completion -- --summary` valid true, `mtt:blockers -- --summary` 0 blockers, `mtt:postflop-release -- --summary` valid true, operator docs a release notes aktualni.
+    - Oznacit MTT cast jako produkcne kompletni az po uzavreni vsech otevrenych tasku v sekci 135, vcetne P0 ukolu 135.24-135.38 a import pilotu/waves.
+    - Acceptance: `npm run release:check` zeleny, `mtt:completion -- --summary` valid true se 64/64 production rows, `mtt:blockers -- --summary` 0 blockers, intake queue 0, `mtt:postflop-release -- --summary` valid true, registry bez `LEGACY_OR_UNKNOWN`, operator docs a release notes aktualni.
+    - Task 136 (FORPSI staging) je samostatny deployment workstream a neblokuje oznaceni kodu/dat jako "MTT complete v1", pokud neni staging soucasti konkretniho release rozhodnuti.
 
 - [ ] 136. Password-protected FORPSI staging deployment
   - Cil: umet nahrat aktualni staticky build na FORPSI FTP a zamknout ho heslem, aby slo prakticky zkouset aplikaci mimo lokalni stroj bez verejneho zverejneni.
@@ -1775,9 +1946,136 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 136.6 Sepsat finalni staging URL a pristupovy postup mimo repo
     - URL a pristupove udaje ulozit mimo git, napriklad do soukromeho password manageru nebo lokalni necommitovane poznamky.
 
+- [ ] 137. Full MTT NLHE variant roadmap - navazujici rozsah po 64radkovem MTT v1
+  - Cil: postupne rozsirit produkcni MTT trenink z v1 matice na realne turnajove faze a formaty bez nekontrolovaneho karteskeho soucinu dat.
+  - Scope guard: tato sekce neblokuje MTT v1 release podle 135.22, dokud neni konkretni varianta explicitne povysena do release kontraktu.
+  - Zakladni produktova hranice: tento roadmap je pro No-Limit Hold'em MTT. PLO, Short Deck, mixed games a dalsi pokerove hry potrebuji samostatny domain/data model a nesmi se tise vydavat za MTT variantu stejneho solver prostoru.
+  - Strategie pro rychlost: nejdriv dodelat 64radkovy v1, potom pridavat vertikalni releasy po jedne uzivatelsky hodnotne variante s vlastnim completion gate; nevytvaret plny soucin vsech dimenzi predem.
+  - [ ] 137.1 Zmrazit taxonomii "vsech MTT variant" a jejich produktovou prioritu
+    - Evidovat table size, speed, ante structure, tournament phase, payout utility, bounty model, entry model, blind schedule, stack distribution, pot type a street.
+    - Rozlisit strategicky relevantni dimenze od pouhych metadat. Napriklad re-entry label sam o sobe nemusi vyzadovat novy strategy pack, pokud se nemeni utility/payout/field assumptions.
+    - Navrhnout release trains: `V1_BASE`, `V2_ICM`, `V3_FINAL_TABLE_SATELLITE`, `V4_BOUNTY`, `V5_DYNAMIC_TABLE_MULTIWAY`.
+    - Acceptance: kazda podporovana varianta ma ownera, data zdroj, gate, UI status a explicitni out-of-scope polozky.
+  - [ ] 137.2 Nahradit pevny kartesky completion model rizenym scenario katalogem
+    - Soucasnych 64 rows je uzavrena v1 matice; dalsi dimenze by jinak explodovaly do tisicu prazdnych slotu.
+    - Zavest verzovany `TournamentScenarioDefinition` katalog s explicitnimi podporovanymi kombinacemi, required coverage a povolenou inheritance/reuse policy.
+    - Completion CLI musi umet reportovat po release trainu, variante a scenario id; nepodporovana kombinace je `UNSUPPORTED`, ne `MISSING`.
+    - Acceptance: pridani PKO nebo satellite scenare nevytvori automaticky blockery pro vsechny nesmyslne kombinace.
+  - [ ] 137.3 Rozsirit TrainingProfile na TournamentProfile bez rozbiti historie
+    - Pridat verzovane dimenze: `tableSize`, `speedClass`, `anteStructure`, `phase`, `payoutModel`, `bountyModel`, `entryModel`, `blindScheduleId`, `stackDistributionId` a `utilityModel`.
+    - Zachovat migraci v1 profileId, qid, stats, exportu a ulozenych filtru; nezname legacy dimenze oznacit explicitnim default/legacy stavem.
+    - Capability matrix musi rozhodovat podporu nad novym profilem a nedovolit nelegalni kombinace.
+    - Acceptance: stare v1 statistiky zustanou citelne a nove varianty se nemichaji do puvodnich KPI.
+  - [ ] 137.4 Podporit dynamickou velikost stolu a realne presazovani pozic
+    - Rozsirit 9-max/6-max na bezne 8-max a dynamicke 7/6/5/4/3-handed, final-table short-handed a heads-up.
+    - Pozice odvozovat relativne k buttonu a poctu aktivnich sedadel, ne z jednoho globalniho `Position` unionu urceneho pro 9-max.
+    - Generator, action tree, table renderer, HH parser, position patterns a range keys musi sdilet jeden seat/position model.
+    - Acceptance: property test projde 2-9 aktivnich hracu, unikátní pozice, spravne poradi akce a button/SB/BB pri kazdem poctu.
+  - [ ] 137.5 Podporit blind speed a ante struktury
+    - Rozsirit `REGULAR/TURBO` o explicitne definovane `SLOW/DEEP`, `HYPER` a custom schedule; speed nesmi byt jen metadata, pokud meni stack distribution nebo strategii.
+    - Rozlisit `NO_ANTE`, `BIG_BLIND_ANTE` a `PLAYER_ANTE`; modelovat castku ante a prechod mezi levely.
+    - Blind schedule ma podporit late registration, breaky, level duration a vypocet stacku v BB z realnych chipu.
+    - Acceptance: pot, stack bucket a profilova identita jsou spravne pro kazdou ante strukturu a level.
+  - [ ] 137.6 Zavest turnajove faze a distribuci stacku
+    - Modelovat early, middle, late registration, pre-bubble, direct bubble, in-the-money, pay-jump, final table a heads-up.
+    - Scenar musi nest hero stack, stacky relevantnich souperu, remaining players, average stack, payout positions a blind level.
+    - Umoznit trenink big-stack/mid-stack/short-stack interakci a covering/covered statusu.
+    - Acceptance: stejna handa/pozice/BB muze mit odlisnou strategii jen tehdy, kdyz profil nese odlisnou utility/stack-distribution evidenci.
+  - [ ] 137.7 Implementovat overitelny ICM a $EV engine
+    - Soucasny `icmModel.ts` odhaduje bubble factor pro SNG a neni plny MTT ICM kalkulator.
+    - Implementovat nebo integrovat licencovany ICM vypocet pro arbitrary payouts/stacks, validovat sumu equity a porovnat s nezavislymi fixture.
+    - Pro postflop/hlubsi stromy rozhodnout rozsah approximation vs solver-import; UI musi jasne rozlisit chipEV, ICM a projektovy DOLAR_EV model.
+    - Pripravit Future Game Simulation / risk-premium vrstvu pro final-table a satellite situace, pokud ji data podpori.
+    - Acceptance: golden fixtures pro bubble/final table/HU a zadne tiche mapovani DOLAR_EV na CHIP_EV.
+  - [ ] 137.8 Pridat standardni payout a final-table varianty
+    - Presety: flat, standard, top-heavy, winner-take-all, final-table pay jumps a custom payout editor/import.
+    - Strategie a statistiky oddelit podle payout/scenario id; payout z HH/tournament lobby musi byt validovany pred review.
+    - Doplnit final-table 9->2 handed scenare a heads-up transition.
+    - Acceptance: payout zmena meni pouze ICM/$EV profily a neovlivni cisty CHIP_EV profil.
+  - [ ] 137.9 Pridat satellite a seat-value utility
+    - Modelovat fixed-seat satellites, target-stack/double-or-nothing-like utility, kvalifikacni tokeny a situace s vice stejne hodnotnymi misty.
+    - Implementovat satellite-specific bubble pressure, overfold/call-off scenare a stack preservation.
+    - Nevydavat bezny ICM payout model za satellite utility.
+    - Acceptance: golden scenare short stack/big stack na satellite bubble a samostatny release gate.
+  - [ ] 137.10 Pridat bounty varianty
+    - Podporit `NONE`, fixed KO, PKO a Mystery Bounty; nest aktualni bounty hero/souperu, bounty stage a cash/utility konverzi.
+    - Implementovat bountyEV/PKO utility a covering logic; mystery bounty musi pracovat s distribuci zbyvajicich odmen, ne s jednou pevnou castkou.
+    - Rozsirit preflop call/jam a postflop all-in scenare o bounty incentive bez michani s beznym $EV.
+    - Acceptance: stejny all-in spot ma samostatne CHIP_EV, ICM a BOUNTY_EV vysledky s auditovatelnym vstupem.
+  - [ ] 137.11 Evidovat freezeout, re-entry, rebuy, add-on a multi-flight metadata
+    - Modelovat entry policy, late-reg stav, rebuy/add-on dostupnost, flight/Day 2 a stack carry-over.
+    - Do strategie povysit jen tyto dimenze, pokud existuje explicitni utility model nebo reviewed data; jinak je pouzit pro scenar/filtry/HH metadata.
+    - Doplnit UX vysvetleni, aby uzivatel necekal od pouheho `re-entry` labelu automaticky jinou GTO range.
+    - Acceptance: metadata se zachovaji v HH/stats/exportu a nezpusobi nelegalni cross-profile reuse.
+  - [ ] 137.12 Rozsirit preflop akci a sizing model na plny turnajovy strom
+    - Identita spotu musi nest konkretni opener/caller/3bettor pozice, sizingy, pocet hracu, effective stacky a covering status.
+    - Doplnit cold-call, cold-4bet, vs squeeze, limp-reraise, multiple limpers/callers, overcall, iso multiway, reshove, multiway all-in a blind complete/check vetve.
+    - Sizing keys nahradit obecnym typem castky v BB/pot fraction/all-in; 3bet/4bet/squeeze nesmi zustat bez sizingu.
+    - Acceptance: action legality a pot contributions projdou stavovym/property testem pro vsechny podporovane preflop nody.
+  - [ ] 137.13 Rozsirit postflop node katalog
+    - Vedle c-bet/barrel/pressure/facing-bet pridat delayed c-bet, probe, donk/lead, check-raise, bet-vs-missed-cbet, raise-vs-bet, overbet, block bet a all-in nodes.
+    - Pridat limped a 4bet poty; zachovat presny preflop action history a range origin.
+    - StrategyPack schema musi byt verzovana a node-specific, ne jeden obecny action seznam pro neslucitelne situace.
+    - Acceptance: kazdy node ma legalni action/sizing contract, coverage gate a hand-line transition.
+  - [ ] 137.14 Implementovat multiway postflop a side-pot engine
+    - Modelovat 3+ aktivni hrace, poradi akce, rozdilne stacky, folded/all-in seaty, main pot a side poty.
+    - Resolver musi dostat multiway range kontext a nesmi pouzit heads-up pack jako fallback.
+    - Table UI, HH parser a stats musi uchovat vsechny relevantni hrace a terminalni showdown/all-in stav.
+    - Acceptance: zachovani chipu a side-pot eligibility projdou property testy a rucne overenymi HH fixture.
+  - [ ] 137.15 Zavest explicitni opponent policy a plnou hand simulation
+    - Oddelit rozhodnuti hero od reakce soupere; opponent policy muze byt production strategy, scripted training branch nebo user-selected population model.
+    - Umoznovat branch replay, alternative-line comparison a fixed-board/fixed-hand study bez zmeny seedu.
+    - Vysledek line nesmi hodnotit jen shodu s jednou preferovanou akci, ale EV loss/frequency, pokud jsou legalni exact data dostupna.
+    - Acceptance: stejny hero action plan a opponent policy dava deterministickou, legalni a auditovatelnou line.
+  - [ ] 137.16 Podporit mixed strategies, frekvence a randomizer
+    - Preflop i postflop pack musi umet exact nebo qualitative action mix; soucty frekvenci a combo weights validovat.
+    - Scoring rozlisit pure mistake, acceptable mix a low-frequency deviation; strict mode nesmi trestat legalni mixed action bez definovane tolerance.
+    - Pridat deterministicky seeded randomizer a zobrazit frekvence bez odhaleni zakazanych source metadat.
+    - Acceptance: frequency fixtures, rounding policy a replay se stejnym seedem jsou stabilni.
+  - [ ] 137.17 Vybudovat vlastni solver/import content pipeline
+    - Definovat canonical scenario input, solver export adaptery, normalization, combo aggregation, human review a signed provenance fingerprint.
+    - Automatizovat diff mezi verzemi strategie, anomalie, regression corpus a approval workflow.
+    - Raw solver data a permission evidence zustavaji mimo runtime/Git podle licence; runtime artefakt obsahuje jen potrebna source-free audit metadata.
+    - Acceptance: nova varianta projde jednim reprodukovatelnym pipeline od scenario definition po lazy production pack a release gate.
+  - [ ] 137.18 Rozsirit HH import na hlavni herny a turnajova metadata
+    - Vedle PokerStars-like pridat adaptery podle priorit realnych vstupu; kazdy provider ma fixture corpus a verzovany parser.
+    - Parsovat tournament id, level, ante typ, table size, payouts/bounty pokud jsou dostupne, side poty, showdowns a all-in runouty.
+    - Unknown provider ma vratit strukturovanou diagnostiku bez padu a bez pokusu reviewovat nejednoznacny profil.
+    - Acceptance: anonymizovany fixture corpus pokryva 6/8/9-max, PKO, satellite a final-table handy.
+  - [ ] 137.19 Vytvorit MTT scenario builder a learning paths
+    - UI pro tournament phase, stack distribution, payout/bounty, table size, speed/ante, street/node a fixed hand/board.
+    - Nabidnout predvolene curriculum: early-stage chipEV, short-stack, bubble, final table, PKO calls, satellite bubble a heads-up.
+    - Zobrazit jen kombinace povolene capability/scenario katalogem a odhad velikosti dostupneho poolu pred startem.
+    - Acceptance: uzivatel sestavi validni scenar bez raw enumu a jednim klikem spusti reprodukovatelnou relaci.
+  - [ ] 137.20 Rozsirit statistiky a spaced repetition pro turnajove utility
+    - KPI podle phase, payout, bounty, covering statusu, table size, node, sizing, EV modelu a source quality.
+    - Oddelit strategickou chybu od varianty po zmene pack verze; umoznit before/after porovnani.
+    - Spaced repetition ma prioritizovat EV loss a kriticke bubble/final-table chyby, ne jen binarni accuracy.
+    - Acceptance: export/import a dashboard umi filtrovat kazdou release variantu bez michani nekompatibilnich modelu.
+  - [ ] 137.21 Udrzet rozsirenou variantovou knihovnu rychlou a offline
+    - Lazy manifest delit podle release trainu/scenare; umoznit uzivateli stahnout/odstranit volitelne offline content baliky.
+    - Pridat storage quota management, integrity hash, resumable update a rollback na posledni validni pack.
+    - Android WebView nesmi nacitat vsechny ICM/PKO/multiway packy pri startu.
+    - Acceptance: zakladni app shell zustane maly a kazdy instalovany content balik je overitelny a plne offline.
+  - [ ] 137.22 Zavest variant-specific QA a release gates
+    - Kazdy release train ma completion matrix, legal intake gate, runtime no-fallback test, browser E2E, mobile/offline smoke a user acceptance scenare.
+    - Property testy: chip conservation, seat/position order, payout equity, bounty utility, side-pot eligibility, deterministic replay a mixed-frequency sums.
+    - Golden corpus musi obsahovat edge cases: 2 BB, 150+ BB, exact bubble, multiple all-ins, dead button, incomplete HH a corrupt pack.
+    - Acceptance: varianta se v selectoru oznaci production az po vlastnim zelenem gate, ne jen po existenci libovolneho packu.
+  - [ ] 137.23 Zavest content governance a pravidelne strategicke aktualizace
+    - Definovat ownera, review cadence, semantic versioning, deprecation, rollback a release notes pro kazdy production pack.
+    - Zmeny range hodnot musi mit diff summary, reviewer approval, legal provenance a migracni dopad na KPI/scenario identity.
+    - Udrzovat source-free UI a minimalizovat citliva metadata v distribuovanem bundle.
+    - Acceptance: zadny pack nezustane bez ownera/verze/provenance a lze dohledat, ktera strategie ohodnotila kazdy zaznam.
+  - [ ] 137.24 Release rozhodnuti pro "Full MTT NLHE"
+    - Predem vybrat konkretni seznam variant povazovanych za full release; formulace "vsechny varianty" nesmi zustat neomezena nebo neoveritelna.
+    - Minimalni navrhovany full set: dynamic 9/8/6-max az HU, regular/turbo/hyper, no ante/BBA/player ante, CHIP_EV + ICM/$EV, standard/final-table/satellite payouts, freezeout/re-entry metadata, KO/PKO/Mystery Bounty, preflop + heads-up/multiway postflop, HH review, stats a offline content delivery.
+    - Acceptance: vsechny vybrane scenario katalogy jsou production, 0 fallbacku, 0 legal/data blockeru, zeleny variant-specific release gate a podepsane release notes s explicitnimi limitations.
+
 ## Notes
 
 - Tasky oznacene `*` jsou volitelne (testy) a lze je preskocit pro rychlejsi MVP; nebudou implementovany automaticky.
+- Testy a gate v sekcich 135-137 nejsou volitelne pro production release, i kdyz historicky plan oznacuje nektere starsi testovaci tasky hvezdickou.
 - Kazdy task odkazuje na konkretni granularni klauzule pozadavku kvuli sledovatelnosti.
 - Property testy realizuji univerzalni vlastnosti 1-33 z designu (fast-check, >= 100 iteraci), kazda vlastnost jednim testem; znacka ve formatu `// Feature: mtt-preflop-trainer, Property {cislo}: {text}`.
 - Unit/DOM/integracni testy pokryvaji specificke chovani, edge cases a chybove toky mimo property sadu.

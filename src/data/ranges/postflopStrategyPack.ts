@@ -1,12 +1,14 @@
 import type {
   BoardTexture,
   PostflopAction,
+  PostflopOpponentPolicyBranch,
   PostflopPotType,
   PostflopPositionPattern,
   PostflopStrategyPositionPattern,
   PostflopStreet,
 } from "../../core/postflopGenerator";
 import type { PostflopActionNode } from "../../core/postflopTrainingSpot";
+import type { Card, HandLabel } from "../../core/types";
 import type {
   EvModel,
   GameVariant,
@@ -36,6 +38,7 @@ export interface PostflopStrategyRule {
   positionPattern: PostflopStrategyPositionPattern;
   actions: readonly PostflopStrategyAction[];
   preferredAction: PostflopStrategyAction;
+  opponentPolicy?: PostflopOpponentPolicyBranch;
   explanation: string;
 }
 
@@ -61,6 +64,19 @@ export interface PostflopStrategySourceEvidence {
   evModel: EvModel | "GENERAL";
   methodology: string;
   licenseNote: string;
+}
+
+export interface ProductionHandClassOverlapPolicy {
+  handClass: HandLabel;
+  lanes: readonly ("VALUE" | "BLUFF" | "CHECK")[];
+  rationale: string;
+}
+
+export interface ProductionCardRemovalSample {
+  board: readonly Card[];
+  heroCards: readonly [Card, Card];
+  handClass: HandLabel;
+  rationale: string;
 }
 
 export const POSTFLOP_STRATEGY_ACTIONS = [
@@ -451,7 +467,27 @@ export function validatePostflopStrategyRule(rule: PostflopStrategyRule): string
     errors.push(`${rule.id}: SPR bounds are invalid.`);
   }
   if (rule.explanation.trim().length === 0) errors.push(`${rule.id}: explanation is required.`);
+  if (rule.opponentPolicy) {
+    errors.push(...validatePostflopOpponentPolicyBranch(rule.opponentPolicy, rule.id));
+  }
 
+  return errors;
+}
+
+export function validatePostflopOpponentPolicyBranch(
+  policy: PostflopOpponentPolicyBranch,
+  prefix = "opponentPolicy",
+): string[] {
+  const errors: string[] = [];
+  if (!["CHECK", "BET_SMALL", "BET_BIG", "ALL_IN"].includes(policy.afterHeroCheck)) {
+    errors.push(`${prefix}: afterHeroCheck is invalid.`);
+  }
+  if (!["CALL", "FOLD", "RAISE", "ALL_IN"].includes(policy.facingHeroBet)) {
+    errors.push(`${prefix}: facingHeroBet is invalid.`);
+  }
+  if (!["CALL", "FOLD"].includes(policy.facingHeroRaise)) {
+    errors.push(`${prefix}: facingHeroRaise is invalid.`);
+  }
   return errors;
 }
 

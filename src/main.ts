@@ -48,14 +48,20 @@ import {
   isPostflopStreet,
   type TrainingProfile,
 } from "./core/trainingProfile";
+import { isFlowAllowed } from "./core/trainingCapability";
 import { resolveSeed, spotSequence } from "./core/drillEngine";
 import { postflopIntentFromFilters } from "./core/postflopIntent";
 import { grade } from "./core/scoring";
 import type { PostflopStreet } from "./core/postflopGenerator";
-import { rangeStore } from "./data/rangeStore";
+import {
+  createRangeStoreFromRangePack,
+  rangeStore,
+  type RangeStore,
+} from "./data/rangeStore";
 import { getRangeDataErrors, isRangeDataLoaded } from "./data/ranges";
 import { hasNewState, runMigration, type MigrationResult } from "./persistence/migration";
-import { createStatsStore, type ResultRecord, type StatsStore } from "./persistence/statsStore";
+import { createStatsStore, type StatsStore } from "./persistence/statsStore";
+import { buildProfileAwarePreflopResultRecord } from "./persistence/statsRecordV2";
 import { KEY_EVENTS, KEY_STATE, SCHEMA_VERSION } from "./persistence/keys";
 import { createHHReviewStore } from "./persistence/hhReviewStore";
 import {
@@ -65,11 +71,12 @@ import {
 import { createPostflopStatsStore } from "./persistence/postflopStatsStore";
 import { createPostflopLineStatsStore } from "./persistence/postflopLineStatsStore";
 import { buildPostflopLineResultRecord } from "./persistence/postflopLineResultRecord";
+import { trainingCapabilityForProfile } from "./data/ranges/trainingCapability";
+import { mttPreflopRangePackForProfile } from "./data/ranges/mttPreflopRangePacks";
+import type { RangePack } from "./data/ranges/rangePack";
 import {
-  mttPreflopProductionReadyForTrainingProfile,
-  mttPreflopReadinessRowForTrainingProfile,
-} from "./data/ranges/mttProductionReadiness";
-import { rangePackForTrainingProfile } from "./data/ranges/trainingRangePacks";
+  createMttProductionPostflopStrategyResolver,
+} from "./data/ranges/postflopStrategyRegistry";
 import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
 import { renderMatrix } from "./ui/rangeMatrixView";
@@ -321,6 +328,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   let sessionCount = 0;
   let currentPostflopProfile: TrainingProfile | undefined;
   let startPreflopFocusSession: ((filters: Filters) => void) | null = null;
+  let getSelectedTrainingProfile = (): TrainingProfile => DEFAULT_TRAINING_PROFILE;
   const refreshDashboard = (): void => {
     renderDashboard({
       store: statsStore,
@@ -362,8 +370,33 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       autoGenerate?: boolean;
     } = {},
   ): void => {
-    currentPostflopProfile = options.profile ?? currentPostflopProfile;
+    const selectedProfile = options.profile ?? currentPostflopProfile;
+    const resolvedProfile = selectedProfile && options.filters
+      ? runtimeProfile(selectedProfile, options.filters)
+      : selectedProfile;
+    currentPostflopProfile = resolvedProfile;
     const postflopIntent = options.filters ? postflopIntentFromFilters(options.filters) : null;
+    const readiness = resolvedProfile && options.filters
+      ? productionMttReadiness(resolvedProfile, options.filters)
+      : null;
+    const capability = resolvedProfile
+      ? trainingCapabilityForProfile(resolvedProfile)
+      : null;
+    const productionResolver = (
+      resolvedProfile &&
+      isPostflopStreet(resolvedProfile.street) &&
+      readiness?.productionReady === true
+    )
+      ? createMttProductionPostflopStrategyResolver({
+        gameVariant: resolvedProfile.gameVariant,
+        tableFormat: resolvedProfile.tableFormat,
+        blindSpeed: resolvedProfile.blindSpeed,
+        street: resolvedProfile.street,
+        evModel: resolvedProfile.evModel,
+        ante: resolvedProfile.ante,
+        rakeMode: resolvedProfile.rakeMode,
+      })
+      : undefined;
     renderPostflopView(shell.postflopPanel, {
       initialStreet: options.initialStreet ?? "FLOP",
       initialSeed: options.initialSeed,
@@ -372,6 +405,8 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       initialPotBB: postflopIntent?.potBB,
       initialEffectiveStackBB: postflopIntent?.effectiveStackBB,
       autoGenerate: options.autoGenerate === true,
+      strategyResolver: productionResolver,
+      allowFallback: capability?.allowHeuristicFallback ?? true,
       onAnswered: (spot, chosen, responseMs) => {
         const record = buildPostflopResultRecord(spot, chosen, Date.now(), responseMs);
         const save = postflopStatsStore.record(bridgePostflopResultRecordToStatsV2(record, {
@@ -407,6 +442,63 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   };
   refreshDashboard();
   renderHHView(shell.hhPanel, {
+    parseOptions: () => {
+      const selected = getSelectedTrainingProfile();
+      const profile: TrainingProfile = {
+        ...selected,
+        street: "PREFLOP",
+      };
+      const pack = mttPreflopRangePackForProfile(profile);
+      const profileRangeStore = pack
+        ? createRangeStoreFromRangePack(pack)
+        : {
+          lookup: () => undefined,
+          isLoaded: () => false,
+        };
+      return {
+        profile,
+        rangeStore: profileRangeStore,
+        requireLoadedStrategy: true,
+        ...(pack
+          ? {
+            rangePack: {
+              id: pack.id,
+              version: pack.version,
+              verifiedAt: pack.verifiedAt,
+            },
+          }
+          : {}),
+      };
+    },
+    postflopStrategyResolver: (input) => {
+      const profile = getSelectedTrainingProfile();
+      const capability = trainingCapabilityForProfile({ ...profile, street: input.street });
+      if (capability.status !== "PRODUCTION") return null;
+      return createMttProductionPostflopStrategyResolver({
+        gameVariant: profile.gameVariant,
+        tableFormat: profile.tableFormat,
+        blindSpeed: profile.blindSpeed,
+        street: input.street,
+        evModel: profile.evModel,
+        ante: profile.ante,
+        rakeMode: profile.rakeMode,
+      })(input);
+    },
+    postflopAllowFallback: false,
+    postflopProfileGuard: (result) => {
+      const profile = getSelectedTrainingProfile();
+      const capability = trainingCapabilityForProfile(profile);
+      if (!isFlowAllowed(capability, "HH_REVIEW")) {
+        return "HH production review requires an MTT training profile.";
+      }
+      if (result.fields.tableFormat !== profile.tableFormat) {
+        return "The imported hand and selected training profile use different table formats.";
+      }
+      if (profile.ante !== (result.fields.ante ?? "OFF")) {
+        return "The imported hand and selected training profile use different ante modes.";
+      }
+      return null;
+    },
     onReviewBuilt: (records) => {
       const save = hhReviewStore.replaceAll(hhReviewStore.events().concat(records));
       if (!save.ok) {
@@ -443,6 +535,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
     },
   });
   startPreflopFocusSession = trainingController.startPreflopFocusSession;
+  getSelectedTrainingProfile = trainingController.getProfile;
 
   // --- Service Worker (Req 12.4) ---
   maybeRegisterServiceWorker(shell.notice, options.registerSw);
@@ -594,10 +687,22 @@ interface TrainingHooks {
 
 interface TrainingController {
   startPreflopFocusSession: (filters: Filters) => void;
+  getProfile: () => TrainingProfile;
 }
 
-function isProductionPreflopProfile(profile: TrainingProfile, filters: Filters): boolean {
-  return mttPreflopProductionReadyForTrainingProfile(profile, filters.ante);
+function runtimeProfile(profile: TrainingProfile, filters: Filters): TrainingProfile {
+  return {
+    ...profile,
+    ante: profile.gameVariant === "CASH" ? "OFF" : filters.ante,
+  };
+}
+
+function productionMttReadiness(
+  profile: TrainingProfile,
+  filters: Filters,
+) {
+  const resolvedProfile = runtimeProfile(profile, filters);
+  return trainingCapabilityForProfile(resolvedProfile).mttReadiness;
 }
 
 function candidateProfileLabel(profile: TrainingProfile): string {
@@ -611,32 +716,34 @@ function candidateProfileLabel(profile: TrainingProfile): string {
 }
 
 function profileGateMessage(profile: TrainingProfile, filters: Filters): string {
-  const mttReadiness = mttPreflopReadinessRowForTrainingProfile(profile, filters.ante);
+  const resolvedProfile = runtimeProfile(profile, filters);
+  const capability = trainingCapabilityForProfile(resolvedProfile);
+  const mttReadiness = capability.mttReadiness;
   if (mttReadiness) {
-    const label = mttPreflopProfileLabel(profile);
+    const label = mttProfileLabel(resolvedProfile);
     if (mttReadiness.status === "CANDIDATE") {
       return (
         `${label}: candidate/preview. Production training is disabled until reviewed ` +
-        "hand-class coverage is complete."
+        (resolvedProfile.street === "PREFLOP"
+          ? "hand-class coverage is complete."
+          : "strategy coverage is complete.")
       );
     }
-    return `${label}: missing production range. Production training is disabled.`;
+    return `${label}: missing production ${
+      resolvedProfile.street === "PREFLOP" ? "range" : "strategy"
+    }. Production training is disabled.`;
   }
 
-  {
-    const pack = rangePackForTrainingProfile(profile);
-    if (pack && (pack.confidence === "LOW" || pack.records.length === 0)) {
-      return (
-        `${candidateProfileLabel(profile)}: candidate/preview. Production training is disabled ` +
-        "until hand-class values are reviewed."
-      );
-    }
+  if (capability.status === "PREVIEW") {
+    return (
+      `${candidateProfileLabel(profile)}: candidate/preview. Production training is disabled ` +
+      "until hand-class values are reviewed."
+    );
   }
 
-  return (
-    "The selected profile is still a preview and does not have production scoring enabled. " +
-    "Use a production-ready MTT preflop profile or postflop preview."
-  );
+  return capability.status === "UNSUPPORTED"
+    ? `Unsupported profile: ${capability.reason}`
+    : capability.reason;
 
 }
 
@@ -647,9 +754,10 @@ function logRangeLoadFailure(): void {
   }
 }
 
-function mttPreflopProfileLabel(profile: TrainingProfile): string {
+function mttProfileLabel(profile: TrainingProfile): string {
   return `MTT ${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} ` +
-    `${profile.blindSpeed === "REGULAR" ? "regular" : "turbo"} preflop ${evModelLabel(profile.evModel)}`;
+    `${profile.blindSpeed === "REGULAR" ? "regular" : "turbo"} ` +
+    `${profile.street.toLowerCase()} ${evModelLabel(profile.evModel)}`;
 }
 
 /**
@@ -697,16 +805,27 @@ function setupTraining(
 
   // Stav bÄ›ĹľĂ­cĂ­ relace (iterĂˇtor sekvence).
   let iterator: Iterator<Spot> | null = null;
+  let activeRangeStore: RangeStore = rangeStore;
+  let activeTrainingProfile: TrainingProfile | null = null;
+  let activeRangePack: RangePack | null = null;
   let answered = false; // bylo uĹľ na aktuĂˇlnĂ­ spot odpovÄ›zeno?
   let activeQuestionStartedAt = 0;
 
   const filtersView: FiltersView = renderFilters(filtersBox, {
     onStart: (filters: Filters, seed: number | null, profile) => {
+      const resolvedProfile = runtimeProfile(profile, filters);
+      const capability = trainingCapabilityForProfile(resolvedProfile);
       if (isPostflopStreet(profile.street)) {
-        startPostflopSession(filters, seed, profile.street, profile);
+        if (!capability.canStartTraining) {
+          gameBox.hidden = true;
+          filtersView.showEmptyResult(profileGateMessage(profile, filters));
+          return;
+        }
+        startPostflopSession(filters, seed, profile.street, resolvedProfile);
         return;
       }
-      if (!isProductionPreflopProfile(profile, filters)) {
+      const readiness = capability.mttReadiness;
+      if (capability.status !== "PRODUCTION" || readiness?.productionReady !== true) {
         gameBox.hidden = true;
         filtersView.showEmptyResult(profileGateMessage(profile, filters));
         return;
@@ -719,7 +838,13 @@ function setupTraining(
         );
         return;
       }
-      startSession(filters, seed);
+      const pack = mttPreflopRangePackForProfile(resolvedProfile);
+      if (!pack || pack.id !== readiness.packId) {
+        gameBox.hidden = true;
+        filtersView.showEmptyResult(profileGateMessage(profile, filters));
+        return;
+      }
+      startSession(filters, seed, resolvedProfile, pack);
     },
   });
 
@@ -753,7 +878,12 @@ function setupTraining(
    * start). SestavĂ­ deterministickou sekvenci; je-li prĂˇzdnĂˇ (Req 13.6),
    * zobrazĂ­ upozornÄ›nĂ­ a relaci nespustĂ­.
    */
-  function startSession(filters: Filters, seed: number | null): void {
+  function startSession(
+    filters: Filters,
+    seed: number | null,
+    profile: TrainingProfile,
+    pack: RangePack,
+  ): void {
     // Req 6.7: vyĹ™eĹˇ a zpĹ™Ă­stupni platnĂ˝ seed (aby Ĺˇel zopakovat).
     const resolvedSeed = resolveSeed(seed);
     filtersView.setSeed(resolvedSeed);
@@ -761,7 +891,16 @@ function setupTraining(
     const cfg: SessionConfig = { seed: resolvedSeed, filters };
 
     // Sestav sekvenci a zjisti, zda obsahuje alespoĹ jeden spot.
-    const seq = spotSequence(cfg, rangeStore);
+    const profileRangeStore = createRangeStoreFromRangePack(pack);
+    if (!profileRangeStore.isLoaded()) {
+      clearActiveQuestion();
+      gameBox.hidden = true;
+      filtersView.showEmptyResult(
+        `${mttProfileLabel(profile)}: production strategy could not be loaded.`,
+      );
+      return;
+    }
+    const seq = spotSequence(cfg, profileRangeStore);
     const it = seq[Symbol.iterator]();
     const first = it.next();
 
@@ -778,6 +917,9 @@ function setupTraining(
     hooks.refreshDashboard();
     filtersView.clearWarning();
 
+    activeRangeStore = profileRangeStore;
+    activeTrainingProfile = profile;
+    activeRangePack = pack;
     iterator = it;
     filtersBox.hidden = true;
     gameBox.hidden = false;
@@ -792,7 +934,14 @@ function setupTraining(
     };
     filtersView.setProfile(profile);
     filtersView.setFilters(filters);
-    startSession(filters, null);
+    const readiness = productionMttReadiness(profile, filters);
+    const pack = mttPreflopRangePackForProfile(profile);
+    if (readiness?.productionReady !== true || !pack || pack.id !== readiness.packId) {
+      gameBox.hidden = true;
+      filtersView.showEmptyResult(profileGateMessage(profile, filters));
+      return;
+    }
+    startSession(filters, null, profile, pack);
   }
 
   /** ZobrazĂ­ spot: vykreslĂ­ stĹŻl a nabĂ­dku akcĂ­, vyÄŤistĂ­ pĹ™edchozĂ­ vĂ˝sledek. */
@@ -862,16 +1011,19 @@ function setupTraining(
     const responseMs = elapsedMs(activeQuestionStartedAt);
 
     // ZĂˇznam vĂ˝sledku PĹED dalĹˇĂ­m spotem (Req 9.1); selhĂˇnĂ­ â‡’ upozornÄ›nĂ­ (Req 9.6).
-    const record: ResultRecord = {
-      qid: spot.id,
+    if (!activeTrainingProfile || !activeRangePack) {
+      throw new Error("Active preflop profile identity is missing.");
+    }
+    const record = buildProfileAwarePreflopResultRecord({
+      spot,
       chosen,
       correct: result.correct,
-      context: spot.context,
-      position: spot.heroPos,
-      bucket: spot.effStack,
+      profile: activeTrainingProfile,
+      rangePack: activeRangePack,
+      scoringMode: mode,
       ts: Date.now(),
-      ...(responseMs !== undefined ? { responseMs } : {}),
-    };
+      responseMs,
+    });
     const save = statsStore.record(record);
 
     // Inkrement poÄŤtu spotĹŻ relace + pĹ™ekreslenĂ­ dashboardu (Req 9.5).
@@ -883,10 +1035,10 @@ function setupTraining(
 
     // Range matice pro danĂ˝ spot (Req 10) + legacy parity modal.
     matrixContainer.innerHTML = "";
-    renderRangeModalButton(spot, rangeStore, matrixContainer);
+    renderRangeModalButton(spot, activeRangeStore, matrixContainer);
     const inlineMatrix = el("div", "training__matrix-inline");
     matrixContainer.appendChild(inlineMatrix);
-    renderMatrix(spot, rangeStore, inlineMatrix);
+    renderMatrix(spot, activeRangeStore, inlineMatrix);
   }
 
   /** VykreslĂ­ indikaci sprĂˇvnosti, zdĹŻvodnÄ›nĂ­ a doporuÄŤenĂ© AkÄŤnĂ­_klĂ­ÄŤe (Req 7.4). */
@@ -964,6 +1116,7 @@ function setupTraining(
 
   return {
     startPreflopFocusSession,
+    getProfile: () => runtimeProfile(filtersView.getProfile(), filtersView.getFilters()),
   };
 }
 

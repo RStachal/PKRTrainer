@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { ResultRecord } from "../../src/persistence/statsStore";
 import { migrateResultRecordsToV2 } from "../../src/persistence/statsRecordV2";
 import {
+  DEFAULT_TRAINING_PROFILE,
+  profileWith,
+} from "../../src/core/trainingProfile";
+import {
   buildPreflopCurriculumPlan,
   buildPreflopSpacedRepetitionQueue,
 } from "../../src/persistence/preflopCurriculum";
@@ -102,6 +106,26 @@ describe("preflopCurriculum", () => {
       "VS_OPEN|BB|15|KQo|ON",
     ]);
     expect(a[0]).toMatchObject({ attempts: 2, misses: 2 });
+  });
+
+  it("spaced repetition nemicha stejny qid mezi ruznymi profily", () => {
+    const shared = record("VS_OPEN|BB|15|A5s|ON", false, { ts: 1 });
+    const regular = migrateResultRecordsToV2([shared], {
+      profile: DEFAULT_TRAINING_PROFILE,
+    });
+    const sixMax = migrateResultRecordsToV2([{ ...shared, ts: 2 }], {
+      profile: profileWith(DEFAULT_TRAINING_PROFILE, { tableFormat: "SIX_MAX" }),
+    });
+
+    const queue = buildPreflopSpacedRepetitionQueue([...regular, ...sixMax]);
+
+    expect(queue).toHaveLength(2);
+    expect(new Set(queue.map((item) => item.scenarioId)).size).toBe(2);
+    expect(queue.map((item) => item.qid)).toEqual([
+      shared.qid,
+      shared.qid,
+    ]);
+    expect(queue.every((item) => item.attempts === 1 && item.misses === 1)).toBe(true);
   });
 
   it("prioritizuje top 3 focus oblasti podle recent mistakes, ne jen lifetime accuracy", () => {

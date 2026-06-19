@@ -14,6 +14,7 @@ import {
   type TrainingStreet,
   type TrainingProfile,
 } from "../../core/trainingProfile";
+import { isMttV1Profile } from "../../core/trainingCapability";
 import {
   allMttPreflopRangePacks,
   mttPreflopRangePackForProfile,
@@ -132,6 +133,7 @@ export interface MttCompletionImportSlotHint {
 }
 
 export interface MttCompletionReadinessOptions {
+  preflopPacks?: readonly RangePack[];
   flopProductionPacks?: readonly FlopProductionStrategyPack[];
   turnProductionPacks?: readonly TurnProductionStrategyPack[];
   riverProductionPacks?: readonly RiverProductionStrategyPack[];
@@ -443,11 +445,7 @@ export function mttCompletionReadinessRowForTrainingProfile(
   profile: TrainingProfile,
   ante: AnteMode = profile.ante,
 ): MttCompletionReadinessRow | null {
-  if (
-    profile.gameVariant !== "MTT" ||
-    profile.rakeMode !== "NONE" ||
-    (profile.evModel !== "CHIP_EV" && profile.evModel !== "DOLAR_EV")
-  ) {
+  if (!isMttV1Profile(profile)) {
     return null;
   }
 
@@ -518,7 +516,7 @@ function completionReadinessRowForProfile(
   options: MttCompletionReadinessOptions = {},
 ): MttCompletionReadinessRow {
   if (profile.street === "PREFLOP") {
-    return preflopCompletionReadinessRow(profile);
+    return preflopCompletionReadinessRow(profile, options);
   }
 
   return postflopCompletionReadinessRow(profile, options);
@@ -526,8 +524,10 @@ function completionReadinessRowForProfile(
 
 function preflopCompletionReadinessRow(
   profile: MttCompletionReadinessProfile,
+  options: MttCompletionReadinessOptions,
 ): MttCompletionReadinessRow {
-  if (profile.evModel === "CHIP_EV") {
+  const pack = matchingPreflopPack(profile, options.preflopPacks ?? allMttPreflopRangePacks);
+  if (pack === undefined && profile.evModel === "CHIP_EV") {
     const row = readinessRowForProfile(profile);
     return {
       ...profile,
@@ -540,28 +540,54 @@ function preflopCompletionReadinessRow(
     };
   }
 
-  const pack = mttPreflopRangePackForProfile({
-    gameVariant: "MTT",
-    tableFormat: profile.tableFormat,
-    blindSpeed: profile.blindSpeed,
-    street: "PREFLOP",
-    evModel: profile.evModel,
-    ante: profile.ante,
-    rakeMode: "NONE",
-  });
+  if (pack !== undefined) {
+    const coverage = coverageForPack(pack);
+    const recommendationPolicy = recommendationPolicyForPack(pack);
+    const missingReasons = productionMissingReasons(
+      pack,
+      coverage,
+      recommendationPolicy,
+      options.preflopPacks ?? allMttPreflopRangePacks,
+    );
+    const productionReady = missingReasons.length === 0;
+    return {
+      ...profile,
+      status: productionReady ? "PRODUCTION" : "CANDIDATE",
+      productionReady,
+      coverageKind: "PREFLOP_RANGE_PACK",
+      packId: pack.id,
+      importSlot: productionReady ? null : completionImportSlotHint(profile),
+      missingReasons,
+    };
+  }
 
   return {
     ...profile,
     status: "MISSING",
     productionReady: false,
-    coverageKind: pack ? "PREFLOP_RANGE_PACK" : "MISSING",
-    packId: pack?.id ?? null,
+    coverageKind: "MISSING",
+    packId: null,
     importSlot: completionImportSlotHint(profile),
     missingReasons: [
       "No dedicated DOLAR_EV MTT preflop RangePack is registered for this profile.",
       "Do not reuse chipEV ranges for $EV production scoring without an explicit reviewed reuse policy.",
     ],
   };
+}
+
+function matchingPreflopPack(
+  profile: MttCompletionReadinessProfile,
+  packs: readonly RangePack[],
+): RangePack | undefined {
+  return packs.find((pack) => (
+    pack.dimensions.gameVariant === "MTT" &&
+    pack.dimensions.tableFormat === profile.tableFormat &&
+    pack.dimensions.blindSpeed === profile.blindSpeed &&
+    pack.dimensions.street === "PREFLOP" &&
+    pack.dimensions.evModel === profile.evModel &&
+    pack.dimensions.ante === profile.ante &&
+    pack.dimensions.rakeMode === "NONE"
+  ));
 }
 
 function postflopCompletionReadinessRow(
@@ -783,10 +809,11 @@ function productionMissingReasons(
   pack: RangePack,
   coverage: MttPreflopCoverage,
   recommendationPolicy: MttPreflopRecommendationPolicy,
+  registeredPacks: readonly RangePack[] = allMttPreflopRangePacks,
 ): string[] {
   const reasons: string[] = [];
 
-  if (!allMttPreflopRangePacks.includes(pack as (typeof allMttPreflopRangePacks)[number])) {
+  if (!registeredPacks.includes(pack)) {
     reasons.push("RangePack is not part of the MTT preflop registry.");
   }
   if (pack.confidence === "LOW") {

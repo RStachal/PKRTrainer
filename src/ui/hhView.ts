@@ -36,17 +36,27 @@
 
 import type { ActionKey, AnteMode, Card, Spot } from "../core/types";
 import { buildImportedPostflopTrainingSpots } from "../core/hhPostflopBridge";
-import { parseHandHistory, type HHFieldName, type HHResult } from "../core/hhParser";
+import {
+  parseHandHistory,
+  type HHFieldName,
+  type HHParseOptions,
+  type HHResult,
+} from "../core/hhParser";
 import type {
   BoardTexture,
   PostflopAction,
   PostflopPotType,
   PostflopStrategyResolver,
 } from "../core/postflopGenerator";
-import { positionPatternLabel } from "../core/postflopGenerator";
+import {
+  PostflopStrategyUnavailableError,
+  positionPatternLabel,
+} from "../core/postflopGenerator";
 import type { PostflopTrainingSpot } from "../core/postflopTrainingSpot";
+import { positionsForFormat } from "../core/trainingProfile";
 import { grade } from "../core/scoring";
 import { rangeStore } from "../data/rangeStore";
+import type { RangeStore } from "../data/rangeStore";
 import { createDefaultPostflopStrategyResolver } from "../data/ranges/postflopStrategyRegistry";
 import {
   buildHHPostflopReviewRecord,
@@ -71,6 +81,9 @@ export interface HHViewCallbacks {
   onSpotBuilt?: (spot: Spot) => void;
   onReviewBuilt?: (records: readonly HHReviewRecord[]) => boolean | void;
   postflopStrategyResolver?: PostflopStrategyResolver;
+  postflopAllowFallback?: boolean;
+  postflopProfileGuard?: (result: HHResult) => string | null;
+  parseOptions?: () => HHParseOptions;
 }
 
 // ---------------------------------------------------------------------------
@@ -139,7 +152,7 @@ function renderIncompatible(container: HTMLElement, incompatible: boolean): void
   if (incompatible) {
     container.textContent =
       "The hand history was readable, but it is not compatible with the trainer model " +
-      "(requires a 9-handed table and 5-150 BB effective depth). No spot was built.";
+      "(requires a matching 6-max or 9-handed profile and 5-150 BB effective depth). No spot was built.";
     setVisible(container, true);
   } else {
     container.textContent = "";
@@ -248,6 +261,9 @@ function renderAnalysis(
   result: HHResult,
   spot: Spot,
   strategyResolver: PostflopStrategyResolver = POSTFLOP_STRATEGY_RESOLVER,
+  allowFallback = true,
+  profileGuard?: (result: HHResult) => string | null,
+  preflopRangeStore: RangeStore = rangeStore,
 ): readonly HHReviewRecord[] {
   container.innerHTML = "";
   container.className = "hh-analysis";
@@ -255,8 +271,18 @@ function renderAnalysis(
   const chosen = importedActionKey(result.fields.actions, spot);
   const feedback = chosen ? grade(spot, chosen, "LENIENT") : undefined;
   const importedAt = Date.now();
+  const preflopIdentity = {
+    profile: result.fields.profile,
+    strategyPack: result.fields.rangePack,
+  };
   const reviewRecords: HHReviewRecord[] = [
-    buildHHPreflopReviewRecord(spot, chosen, feedback?.correct, importedAt),
+    buildHHPreflopReviewRecord(
+      spot,
+      chosen,
+      feedback?.correct,
+      importedAt,
+      preflopIdentity,
+    ),
   ];
   container.dataset.reviewSavedToDrillStats = "false";
   if (chosen) container.dataset.chosen = chosen;
@@ -275,7 +301,12 @@ function renderAnalysis(
   const items = [
     ["Position", spot.heroPos],
     ["Hand", spot.hand],
-    ["Stack", `${spot.effStack} BB`],
+    [
+      "Stack",
+      result.fields.effStackBB !== undefined
+        ? `${result.fields.effStackBB} BB → ${spot.effStack} BB bucket (nearest)`
+        : `${spot.effStack} BB`,
+    ],
     ["Node", spot.context],
     ["Your action", actionLabel(chosen)],
     ["Result", feedback ? (feedback.correct ? "Accepted" : "Review") : "Not scored"],
@@ -299,16 +330,50 @@ function renderAnalysis(
   container.appendChild(explanation);
 
   const matrix = el(doc, "div", "hh-analysis__matrix");
-  renderMatrix(spot, rangeStore, matrix);
+  renderMatrix(spot, preflopRangeStore, matrix);
   container.appendChild(matrix);
 
-  const postflopSpots = buildImportedPostflopTrainingSpots(result, strategyResolver);
-  for (const postflopSpot of postflopSpots) {
-    container.appendChild(renderImportedPostflopAnalysis(doc, postflopSpot));
-    reviewRecords.push(buildHHPostflopReviewRecord(postflopSpot, importedAt));
+  const blockedReason = profileGuard?.(result) ?? null;
+  if (blockedReason !== null) {
+    container.appendChild(renderPostflopUnavailable(doc, blockedReason));
+  } else {
+    try {
+      const postflopSpots = buildImportedPostflopTrainingSpots(result, strategyResolver, {
+        allowFallback,
+      });
+      for (const postflopSpot of postflopSpots) {
+        container.appendChild(renderImportedPostflopAnalysis(doc, postflopSpot));
+        const source = postflopSpot.explanation.source;
+        reviewRecords.push(buildHHPostflopReviewRecord(postflopSpot, importedAt, {
+          profile: result.fields.profile
+            ? { ...result.fields.profile, street: postflopSpot.street }
+            : undefined,
+          strategyPack: source.kind === "STRATEGY_PACK"
+            ? {
+              id: source.packId,
+              version: source.packVersion,
+              verifiedAt: source.packVerifiedAt,
+            }
+            : undefined,
+        }));
+      }
+    } catch (error) {
+      if (!(error instanceof PostflopStrategyUnavailableError)) throw error;
+      container.appendChild(renderPostflopUnavailable(
+        doc,
+        "Production postflop strategy is not available for this hand and selected profile.",
+      ));
+    }
   }
   container.dataset.reviewRecordCount = String(reviewRecords.length);
   return reviewRecords;
+}
+
+function renderPostflopUnavailable(doc: Document, message: string): HTMLElement {
+  const notice = el(doc, "div", "hh-postflop-unavailable");
+  notice.setAttribute("role", "alert");
+  notice.textContent = message;
+  return notice;
 }
 
 function renderImportedPostflopAnalysis(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
@@ -389,13 +454,21 @@ function applyResult(
   if (result.ok && result.spot) {
     // Req 11.4 — kompatibilní data: vykresli Spot do vyhrazeného kontejneru.
     const ante: AnteMode = result.fields.ante ?? "OFF";
-    renderTable(result.spot, ante, regions.table);
+    renderTable(
+      result.spot,
+      ante,
+      regions.table,
+      positionsForFormat(result.fields.tableFormat ?? "FULL_RING_9"),
+    );
     const reviewRecords = renderAnalysis(
       doc,
       regions.analysis,
       result,
       result.spot,
       callbacks?.postflopStrategyResolver,
+      callbacks?.postflopAllowFallback !== false,
+      callbacks?.postflopProfileGuard,
+      callbacks?.parseOptions?.().rangeStore ?? rangeStore,
     );
     callbacks?.onReviewBuilt?.(reviewRecords);
     callbacks?.onSpotBuilt?.(result.spot);
@@ -530,7 +603,7 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
   const hint = el(doc, "p", "hh-view__hint");
   hint.textContent =
     "Paste a PokerStars hand history and run analysis. " +
-    "Supported model: 9-handed table, 5-150 BB effective depth.";
+    "Supported model: matching 6-max or 9-handed profile, 5-150 BB effective depth.";
   wrap.appendChild(hint);
 
   // Textarea pro vstup (Req 11.2).
@@ -581,7 +654,10 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
   // Obsluha kliknutí — totální parser + ochrana proti pádu při vykreslování.
   button.addEventListener("click", () => {
     try {
-      const result = parseHandHistory(textarea.value);
+      const parseOptions = callbacks?.parseOptions?.();
+      const result = parseOptions
+        ? parseHandHistory(textarea.value, parseOptions)
+        : parseHandHistory(textarea.value);
       applyResult(doc, result, regions, callbacks);
     } catch (err) {
       // Pojistka: parser je totální, ale ani neočekávaná chyba při vykreslování

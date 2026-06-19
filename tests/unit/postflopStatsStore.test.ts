@@ -40,7 +40,7 @@ class ThrowingSetStorage extends MemoryStorage {
 
 const postflopRecord: PostflopStatsV2BridgeRecord = {
   schema: "postflop_stats_v2_bridge_v1",
-  schemaVersion: 3,
+  schemaVersion: 4,
   qid: "POSTFLOP|FLOP|1|As-Kd-Qh",
   correct: true,
   ts: 2,

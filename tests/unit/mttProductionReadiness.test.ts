@@ -31,6 +31,7 @@ import {
   type FlopProductionStrategyPack,
 } from "../../src/data/ranges/flopProductionStrategyPack";
 import type { PostflopStrategySourceEvidence } from "../../src/data/ranges/postflopStrategyPack";
+import type { RangePack } from "../../src/data/ranges/rangePack";
 
 const REQUIRED_CONTEXTS: ActionContext[] = [
   "RFI",
@@ -125,6 +126,54 @@ function incompleteFlopProductionPack(): FlopProductionStrategyPack {
         explanation: "Incomplete readiness fixture rule.",
       },
     ],
+  };
+}
+
+function productionDolarEvPreflopPack(): RangePack {
+  return {
+    id: "mtt-full-ring-9-regular-preflop-dolar-ev-ante-on-production-v1",
+    version: "dolar-runtime-test-v1",
+    createdAt: "2026-06-18",
+    verifiedAt: "2026-06-18",
+    confidence: "MEDIUM",
+    dimensions: {
+      gameVariant: "MTT",
+      tableFormat: "FULL_RING_9",
+      blindSpeed: "REGULAR",
+      street: "PREFLOP",
+      evModel: "DOLAR_EV",
+      ante: "ON",
+      rakeMode: "NONE",
+    },
+    assumptions: ["Synthetic reviewed DOLAR_EV production fixture."],
+    searchQueries: ["owned query one", "owned query two", "owned query three"],
+    sourceEvidence: [
+      {
+        title: "Owned DOLAR_EV export",
+        url: "https://example.test/dolar-owned",
+        provider: "PKRTrainer Solver",
+        verifiedAt: "2026-06-18",
+        licenseNote: "Owned synthetic fixture.",
+      },
+      {
+        title: "Independent DOLAR_EV review",
+        url: "https://example.test/dolar-review",
+        provider: "PKRTrainer Review",
+        verifiedAt: "2026-06-18",
+        licenseNote: "Synthetic review fixture.",
+      },
+    ],
+    records: POSITION_ORDER.flatMap((position) => (
+      STACK_BUCKETS.flatMap((bucket) => (
+        REQUIRED_CONTEXTS.map((context) => ({
+          position,
+          bucket,
+          context,
+          lenient: { AA: ["FOLD" as const] },
+          strict: { AA: ["FOLD" as const] },
+        }))
+      ))
+    )),
   };
 }
 
@@ -255,6 +304,32 @@ describe("mttProductionReadiness", () => {
       permissionManifestPath:
         "Agents/range-intake/raw/mtt-six-max-turbo-river-dolar-ev-ante-off-production-v1/permission.json",
     });
+  });
+
+  it("povoli DOLAR_EV preflop production pouze po registraci dedikovaneho packu", () => {
+    const pack = productionDolarEvPreflopPack();
+    const report = buildMttCompletionReadinessReport({ preflopPacks: [pack] });
+    const row = report.rows.find((item) => (
+      item.tableFormat === "FULL_RING_9" &&
+      item.blindSpeed === "REGULAR" &&
+      item.evModel === "DOLAR_EV" &&
+      item.street === "PREFLOP" &&
+      item.ante === "ON"
+    ));
+
+    expect(row).toMatchObject({
+      status: "PRODUCTION",
+      productionReady: true,
+      coverageKind: "PREFLOP_RANGE_PACK",
+      packId: pack.id,
+      importSlot: null,
+      missingReasons: [],
+    });
+    expect(report.rows.filter((item) => (
+      item.evModel === "DOLAR_EV" &&
+      item.street === "PREFLOP" &&
+      item.productionReady
+    ))).toHaveLength(1);
   });
 
   it("napoji postflop completion matrix na registrovany production pack coverage", () => {

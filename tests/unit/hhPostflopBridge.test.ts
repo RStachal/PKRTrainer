@@ -92,6 +92,67 @@ describe("hhPostflopBridge", () => {
     ]);
     expect(resolverInputs[1].priorFlopAction).toBe("CALL");
     expect(resolverInputs[2].priorTurnAction).toBe("CALL");
-    expect(resolverInputs.every((input) => input.positionPattern === "BTN_VS_BB")).toBe(true);
+    expect(resolverInputs.map((input) => input.potBB)).toEqual([6.5, 10.5, 18.5]);
+    expect(resolverInputs.map((input) => input.effectiveStackBB)).toEqual([47, 45, 41]);
+    expect(result.fields.financialState).toEqual({
+      flop: {
+        potBeforeBB: 6.5,
+        potAfterBB: 10.5,
+        heroStackBeforeBB: 47,
+        heroStackAfterBB: 45,
+        effectiveStackBeforeBB: 47,
+        effectiveStackAfterBB: 45,
+      },
+      turn: {
+        potBeforeBB: 10.5,
+        potAfterBB: 18.5,
+        heroStackBeforeBB: 45,
+        heroStackAfterBB: 41,
+        effectiveStackBeforeBB: 45,
+        effectiveStackAfterBB: 41,
+      },
+      river: {
+        potBeforeBB: 18.5,
+        potAfterBB: 30.5,
+        heroStackBeforeBB: 41,
+        heroStackAfterBB: 35,
+        effectiveStackBeforeBB: 41,
+        effectiveStackAfterBB: 35,
+      },
+    });
+    expect(result.fields.preflopActionDetails).toEqual([
+      {
+        actor: "Hero",
+        kind: "RAISE",
+        raw: "raises 40 to 60",
+        amountBB: 2,
+        raiseToBB: 3,
+        allIn: false,
+      },
+      {
+        actor: "Villain1",
+        kind: "CALL",
+        raw: "calls 40",
+        amountBB: 2,
+        allIn: false,
+      },
+    ]);
+    expect(result.fields.postflopActions?.river?.details).toEqual([
+      {
+        actor: "Villain1",
+        kind: "BET",
+        raw: "bets 120",
+        amountBB: 6,
+        allIn: false,
+      },
+      {
+        actor: "Hero",
+        kind: "CALL",
+        raw: "calls 120",
+        amountBB: 6,
+        allIn: false,
+      },
+    ]);
+    expect(resolverInputs.every((input) => input.positionPattern === "SRP_BTN_VS_BB")).toBe(true);
   });
 });

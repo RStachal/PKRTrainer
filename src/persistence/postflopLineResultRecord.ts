@@ -1,4 +1,10 @@
-import type { PostflopLine, PostflopLineAction } from "../core/postflopLineSimulator";
+import type {
+  PostflopAtomicAction,
+  PostflopLine,
+  PostflopLineAction,
+  PostflopPolicyAction,
+  PostflopStreetState,
+} from "../core/postflopLineSimulator";
 import type { PostflopAction, PostflopStreet } from "../core/postflopGenerator";
 import { postflopSpotToTrainingSpot } from "../core/postflopTrainingSpot";
 import type { TrainingProfile } from "../core/trainingProfile";
@@ -27,6 +33,7 @@ export interface PostflopLineResultRecord {
   schema: typeof POSTFLOP_LINE_RESULT_RECORD_SCHEMA;
   schemaVersion: number;
   lineId: string;
+  scenarioId?: string;
   seed: number;
   profileId: string;
   startedAt: number;
@@ -74,11 +81,17 @@ export function buildPostflopLineResultRecord(
   });
   const correctStreets = streetResults.filter((street) => street.record.correct).length;
   const profileId = streetResults[0]?.record.profileId ?? "";
+  const lineId = postflopLineId(line);
 
   return {
     schema: POSTFLOP_LINE_RESULT_RECORD_SCHEMA,
     schemaVersion: POSTFLOP_LINE_RESULT_RECORD_VERSION,
-    lineId: postflopLineId(line),
+    lineId,
+    scenarioId: postflopLineScenarioId(
+      profileId,
+      lineId,
+      streetResults.map((street) => street.record.scenarioId ?? street.record.qid),
+    ),
     seed: line.seed,
     profileId,
     startedAt,
@@ -87,7 +100,7 @@ export function buildPostflopLineResultRecord(
     correctStreets,
     perfect: correctStreets === streetResults.length,
     streetResults,
-    actionHistory: line.actionHistory.map((action) => ({ ...action })),
+    actionHistory: line.actionHistory.map(cloneLineAction),
   };
 }
 
@@ -98,6 +111,10 @@ export function isPostflopLineResultRecord(value: unknown): value is PostflopLin
     record.schema === POSTFLOP_LINE_RESULT_RECORD_SCHEMA &&
     isValidSchemaVersion(record.schemaVersion) &&
     typeof record.lineId === "string" &&
+    (
+      record.scenarioId === undefined ||
+      (typeof record.scenarioId === "string" && record.scenarioId.length > 0)
+    ) &&
     typeof record.seed === "number" &&
     Number.isFinite(record.seed) &&
     typeof record.profileId === "string" &&
@@ -129,7 +146,7 @@ export function normalizePostflopLineResultRecord(
       ...street,
       record: normalizePostflopStatsV2BridgeRecord(street.record),
     })),
-    actionHistory: record.actionHistory.map((action) => ({ ...action })),
+    actionHistory: record.actionHistory.map(cloneLineAction),
   };
 }
 
@@ -138,6 +155,19 @@ export function postflopLineId(line: Pick<PostflopLine, "seed" | "board">): stri
     "POSTFLOP_LINE",
     line.seed >>> 0,
     line.board.map((card) => `${card.rank}${card.suit}`).join("-"),
+  ].join("|");
+}
+
+export function postflopLineScenarioId(
+  profileId: string,
+  lineId: string,
+  streetScenarioIds: readonly string[],
+): string {
+  return [
+    "postflop_line_scenario_v1",
+    profileId,
+    lineId,
+    ...streetScenarioIds,
   ].join("|");
 }
 
@@ -168,7 +198,75 @@ function isPostflopLineAction(value: unknown): value is PostflopLineAction {
     isNonNegativeFinite(action.potBBBefore) &&
     isNonNegativeFinite(action.effectiveStackBBBefore) &&
     isNonNegativeFinite(action.potBBAfter) &&
-    isNonNegativeFinite(action.effectiveStackBBAfter)
+    isNonNegativeFinite(action.effectiveStackBBAfter) &&
+    isOptionalNonNegativeFinite(action.amountToCallBB) &&
+    isOptionalNonNegativeFinite(action.heroContributionBB) &&
+    isOptionalNonNegativeFinite(action.villainContributionBB) &&
+    (action.opponentResponse === undefined || isPostflopPolicyAction(action.opponentResponse)) &&
+    (
+      action.sequence === undefined ||
+      (
+        Array.isArray(action.sequence) &&
+        action.sequence.every(isPostflopAtomicAction)
+      )
+    ) &&
+    isOptionalPostflopStreetState(action.stateBefore) &&
+    isOptionalPostflopStreetState(action.stateAfter)
+  );
+}
+
+function isPostflopAtomicAction(value: unknown): value is PostflopAtomicAction {
+  if (typeof value !== "object" || value === null) return false;
+  const action = value as Partial<PostflopAtomicAction>;
+  return (
+    (action.actor === "HERO" || action.actor === "VILLAIN") &&
+    isPostflopPolicyAction(action.action) &&
+    isNonNegativeFinite(action.amountBB) &&
+    isNonNegativeFinite(action.contributionAfterBB) &&
+    isNonNegativeFinite(action.amountToCallBeforeBB) &&
+    typeof action.allIn === "boolean" &&
+    typeof action.fullRaise === "boolean" &&
+    typeof action.bettingReopened === "boolean"
+  );
+}
+
+function isPostflopPolicyAction(value: unknown): value is PostflopPolicyAction {
+  return value === "CHECK" ||
+    value === "CALL" ||
+    value === "FOLD" ||
+    value === "BET_SMALL" ||
+    value === "BET_BIG" ||
+    value === "RAISE" ||
+    value === "ALL_IN";
+}
+
+function isOptionalPostflopStreetState(
+  value: unknown,
+): value is PostflopStreetState | undefined {
+  if (value === undefined) return true;
+  if (typeof value !== "object" || value === null) return false;
+  const state = value as Partial<PostflopStreetState>;
+  return (
+    isPostflopStreet(state.street) &&
+    isNonNegativeFinite(state.potBB) &&
+    isNonNegativeFinite(state.heroStackBB) &&
+    isNonNegativeFinite(state.villainStackBB) &&
+    isNonNegativeFinite(state.outstandingBetBB) &&
+    isNonNegativeFinite(state.heroStreetContributionBB) &&
+    isNonNegativeFinite(state.villainStreetContributionBB) &&
+    (
+      state.aggressor === null ||
+      state.aggressor === "HERO" ||
+      state.aggressor === "VILLAIN"
+    ) &&
+    typeof state.terminal === "boolean" &&
+    (
+      state.terminalReason === undefined ||
+      state.terminalReason === "HERO_FOLD" ||
+      state.terminalReason === "OPPONENT_FOLD" ||
+      state.terminalReason === "STACK_EXHAUSTED" ||
+      state.terminalReason === "SHOWDOWN"
+    )
   );
 }
 
@@ -193,6 +291,21 @@ function validTimestamp(value: unknown): value is number {
 
 function isNonNegativeFinite(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
+function isOptionalNonNegativeFinite(value: unknown): boolean {
+  return value === undefined || isNonNegativeFinite(value);
+}
+
+function cloneLineAction(action: PostflopLineAction): PostflopLineAction {
+  return {
+    ...action,
+    ...(action.sequence
+      ? { sequence: action.sequence.map((step) => ({ ...step })) }
+      : {}),
+    ...(action.stateBefore ? { stateBefore: { ...action.stateBefore } } : {}),
+    ...(action.stateAfter ? { stateAfter: { ...action.stateAfter } } : {}),
+  };
 }
 
 function isValidSchemaVersion(value: unknown): value is number {

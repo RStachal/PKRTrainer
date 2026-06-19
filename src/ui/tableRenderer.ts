@@ -194,18 +194,21 @@ function buildActionEvents(spot: Spot): ActionEvent[] {
  *
  * Viz dokumentační blok modulu pro popis zjednodušení.
  */
-function deriveSeats(spot: Spot): SeatRender[] {
+function deriveSeats(
+  spot: Spot,
+  positionOrder: readonly Position[] = POSITION_ORDER,
+): SeatRender[] {
   const heroPos = spot.heroPos;
-  const heroIdx = POSITION_ORDER.indexOf(heroPos);
+  const heroIdx = positionOrder.indexOf(heroPos);
 
-  const seats: SeatRender[] = POSITION_ORDER.map((position) => ({
+  const seats: SeatRender[] = positionOrder.map((position) => ({
     position,
     isHero: position === heroPos,
     active: true,
     badge: null,
   }));
 
-  const byPos = (p: Position): SeatRender => seats[POSITION_ORDER.indexOf(p)];
+  const byPos = (p: Position): SeatRender => seats[positionOrder.indexOf(p)];
 
   if (spot.tableState.isBvB) {
     // Blind-vs-blind: aktivní pouze SB a BB, ostatní složeni.
@@ -225,7 +228,7 @@ function deriveSeats(spot: Spot): SeatRender[] {
   }
 
   // Standardní (ne-BvB) rozmístění: události na sedadla bezprostředně před hrdinou.
-  const beforePositions = POSITION_ORDER.slice(0, heroIdx);
+  const beforePositions = positionOrder.slice(0, heroIdx);
   const events = buildActionEvents(spot);
   const e = Math.min(events.length, beforePositions.length);
   const startIdx = beforePositions.length - e;
@@ -265,16 +268,16 @@ function el(tag: string, className?: string): HTMLElement {
 }
 
 /** Geometrie sedadla na oválu (v procentech kontejneru). */
-function seatPosition(slot: number): { left: number; top: number } {
+function seatPosition(slot: number, seatCount: number): { left: number; top: number } {
   // slot 0 = hrdina dole uprostřed; další sedadla po 40° dokola.
-  const angle = Math.PI / 2 + slot * ((2 * Math.PI) / POSITION_ORDER.length);
+  const angle = Math.PI / 2 + slot * ((2 * Math.PI) / seatCount);
   const left = 50 + 44 * Math.cos(angle);
   const top = 50 + 42 * Math.sin(angle);
   return { left, top };
 }
 
-function seatPositionMobile(slot: number): { left: number; top: number } {
-  const angle = Math.PI / 2 + slot * ((2 * Math.PI) / POSITION_ORDER.length);
+function seatPositionMobile(slot: number, seatCount: number): { left: number; top: number } {
+  const angle = Math.PI / 2 + slot * ((2 * Math.PI) / seatCount);
   return {
     left: 50 + 34 * Math.cos(angle),
     top: 50 + 40 * Math.sin(angle),
@@ -319,7 +322,12 @@ function renderPositionMark(position: Position): HTMLElement | null {
 }
 
 /** Vykreslí jedno sedadlo. */
-function renderSeat(seat: SeatRender, spot: Spot, slot: number): HTMLElement {
+function renderSeat(
+  seat: SeatRender,
+  spot: Spot,
+  slot: number,
+  seatCount: number,
+): HTMLElement {
   const classes = ["seat"];
   if (seat.isHero) classes.push("seat--hero");
   classes.push(seat.active ? "seat--active" : "seat--folded");
@@ -327,8 +335,8 @@ function renderSeat(seat: SeatRender, spot: Spot, slot: number): HTMLElement {
   const node = el("div", classes.join(" "));
   node.dataset.position = seat.position;
   node.dataset.active = String(seat.active);
-  const pos = seatPosition(slot);
-  const mobilePos = seatPositionMobile(slot);
+  const pos = seatPosition(slot, seatCount);
+  const mobilePos = seatPositionMobile(slot, seatCount);
   node.style.setProperty("--seat-left", `${pos.left}%`);
   node.style.setProperty("--seat-top", `${pos.top}%`);
   node.style.setProperty("--seat-mobile-left", `${mobilePos.left}%`);
@@ -477,7 +485,12 @@ function tableStyles(): HTMLStyleElement {
  * @param ante Aktuální stav big blind ante (ovlivňuje velikost potu).
  * @param root Cílový kontejner.
  */
-export function renderTable(spot: Spot, ante: AnteMode, root: HTMLElement): void {
+export function renderTable(
+  spot: Spot,
+  ante: AnteMode,
+  root: HTMLElement,
+  positionOrder: readonly Position[] = POSITION_ORDER,
+): void {
   root.innerHTML = "";
 
   const table = el("div", "poker-table");
@@ -506,13 +519,13 @@ export function renderTable(spot: Spot, ante: AnteMode, root: HTMLElement): void
   table.appendChild(center);
 
   // 9 sedadel (Req 8.1, bijektivně přes POSITION_ORDER).
-  const seats = deriveSeats(spot);
-  const heroIdx = POSITION_ORDER.indexOf(spot.heroPos);
+  const seats = deriveSeats(spot, positionOrder);
+  const heroIdx = positionOrder.indexOf(spot.heroPos);
   for (const seat of seats) {
     // Slot 0 = hrdina dole; ostatní rotačně dle pořadí pozic.
-    const slot = (POSITION_ORDER.indexOf(seat.position) - heroIdx + POSITION_ORDER.length) %
-      POSITION_ORDER.length;
-    table.appendChild(renderSeat(seat, spot, slot));
+    const slot = (positionOrder.indexOf(seat.position) - heroIdx + positionOrder.length) %
+      positionOrder.length;
+    table.appendChild(renderSeat(seat, spot, slot, positionOrder.length));
   }
 
   root.appendChild(table);

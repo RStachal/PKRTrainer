@@ -50,8 +50,7 @@ describe("statsV2Analytics", () => {
       { key: "ON", total: 1, correct: 0, rate: 0 },
     ]);
     expect(breakdownStatsV2(migrated, "rangePackId").map((group) => group.key)).toEqual([
-      "mtt-full-ring-9-regular-preflop-chip-ev-ante-off-v1",
-      "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-v1",
+      "LEGACY_UNKNOWN_STRATEGY",
     ]);
     expect(breakdownStatsV2(migrated, "position")).toEqual([
       { key: "BTN", total: 1, correct: 1, rate: 100 },

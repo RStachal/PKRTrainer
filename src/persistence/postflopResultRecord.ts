@@ -25,7 +25,8 @@ import type { AnteMode, Position } from "../core/types";
 
 export const POSTFLOP_RESULT_RECORD_SCHEMA = "postflop_result_record_v1";
 export const POSTFLOP_STATS_V2_BRIDGE_SCHEMA = "postflop_stats_v2_bridge_v1";
-export const POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION = 3;
+export const POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION = 4;
+export const POSTFLOP_SCENARIO_ID_VERSION = "postflop_scenario_v1";
 
 export interface PostflopResultRecord {
   schema: typeof POSTFLOP_RESULT_RECORD_SCHEMA;
@@ -43,6 +44,8 @@ export interface PostflopResultRecord {
   positionPattern: PostflopPositionPattern;
   sourceKind: PostflopRecommendationSource["kind"];
   sourcePackId: string | null;
+  sourcePackVersion: string | null;
+  sourceVerifiedAt: string | null;
   sourceRuleId: string;
   sourceConfidence: "LOW" | "MEDIUM" | "HIGH" | null;
   ts: number;
@@ -53,6 +56,7 @@ export interface PostflopStatsV2BridgeRecord {
   schema: typeof POSTFLOP_STATS_V2_BRIDGE_SCHEMA;
   schemaVersion: number;
   qid: string;
+  scenarioId?: string;
   correct: boolean;
   ts: number;
   profileId: string;
@@ -72,6 +76,8 @@ export interface PostflopStatsV2BridgeRecord {
   chosen: PostflopAction;
   recommended: PostflopAction;
   strategyPackId: string | null;
+  strategyPackVersion?: string | null;
+  strategyVerifiedAt?: string | null;
   strategyRuleId: string;
   confidence: "LOW" | "MEDIUM" | "HIGH" | null;
   responseMs?: number;
@@ -134,6 +140,8 @@ export function buildPostflopResultRecord(
     positionPattern: spot.positionPattern,
     sourceKind: source.kind,
     sourcePackId: source.kind === "STRATEGY_PACK" ? source.packId : null,
+    sourcePackVersion: source.kind === "STRATEGY_PACK" ? source.packVersion : null,
+    sourceVerifiedAt: source.kind === "STRATEGY_PACK" ? source.packVerifiedAt : null,
     sourceRuleId: source.ruleId,
     sourceConfidence: source.kind === "STRATEGY_PACK" ? source.confidence : null,
     ts,
@@ -155,6 +163,7 @@ export function bridgePostflopResultRecordToStatsV2(
     schema: POSTFLOP_STATS_V2_BRIDGE_SCHEMA,
     schemaVersion: POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION,
     qid: record.qid,
+    scenarioId: postflopScenarioId(profile, record),
     correct: record.correct,
     ts: record.ts,
     profileId: profileId(profile),
@@ -174,6 +183,8 @@ export function bridgePostflopResultRecordToStatsV2(
     chosen: record.chosen,
     recommended: record.recommended,
     strategyPackId: record.sourcePackId,
+    strategyPackVersion: record.sourcePackVersion,
+    strategyVerifiedAt: record.sourceVerifiedAt,
     strategyRuleId: record.sourceRuleId,
     confidence: record.sourceConfidence,
     ...(isValidResponseMs(record.responseMs) ? { responseMs: record.responseMs } : {}),
@@ -202,6 +213,8 @@ export function isPostflopResultRecord(value: unknown): value is PostflopResultR
     isPostflopPositionPattern(record.positionPattern) &&
     (record.sourceKind === "STRATEGY_PACK" || record.sourceKind === "FALLBACK") &&
     (typeof record.sourcePackId === "string" || record.sourcePackId === null) &&
+    (typeof record.sourcePackVersion === "string" || record.sourcePackVersion === null) &&
+    (typeof record.sourceVerifiedAt === "string" || record.sourceVerifiedAt === null) &&
     typeof record.sourceRuleId === "string" &&
     (record.sourceConfidence === "LOW" ||
       record.sourceConfidence === "MEDIUM" ||
@@ -222,6 +235,7 @@ export function isPostflopStatsV2BridgeRecord(
     record.schema === POSTFLOP_STATS_V2_BRIDGE_SCHEMA &&
     isOptionalSchemaVersion(record.schemaVersion) &&
     typeof record.qid === "string" &&
+    isOptionalNonEmptyString(record.scenarioId) &&
     typeof record.correct === "boolean" &&
     typeof record.ts === "number" &&
     Number.isFinite(record.ts) &&
@@ -243,6 +257,8 @@ export function isPostflopStatsV2BridgeRecord(
     isPostflopAction(record.recommended) &&
     areActionsCompatibleWithNode(record.actionNode, record.chosen, record.recommended) &&
     (typeof record.strategyPackId === "string" || record.strategyPackId === null) &&
+    isOptionalNullableString(record.strategyPackVersion) &&
+    isOptionalNullableString(record.strategyVerifiedAt) &&
     typeof record.strategyRuleId === "string" &&
     (record.confidence === "LOW" ||
       record.confidence === "MEDIUM" ||
@@ -262,6 +278,34 @@ export function normalizePostflopStatsV2BridgeRecord(
       : POSTFLOP_STATS_V2_BRIDGE_RECORD_VERSION,
     ante: record.ante ?? parseAnteFromProfileId(record.profileId),
   };
+}
+
+export function postflopScenarioId(
+  profile: TrainingProfile,
+  record: Pick<
+    PostflopResultRecord,
+    | "qid"
+    | "street"
+    | "actionNode"
+    | "potType"
+    | "spr"
+    | "heroPosition"
+    | "villainPosition"
+    | "positionPattern"
+  >,
+): string {
+  return [
+    POSTFLOP_SCENARIO_ID_VERSION,
+    profileId(profile),
+    record.qid,
+    record.street,
+    record.actionNode,
+    record.potType,
+    `spr=${record.spr}`,
+    `hero=${record.heroPosition}`,
+    `villain=${record.villainPosition}`,
+    `pattern=${record.positionPattern}`,
+  ].join("|");
 }
 
 export function availablePostflopStatsDimensions(): PostflopStatsBreakdownDim[] {
@@ -347,6 +391,14 @@ function isValidResponseMs(value: unknown): value is number {
 
 function isOptionalResponseMs(value: unknown): boolean {
   return value === undefined || isValidResponseMs(value);
+}
+
+function isOptionalNonEmptyString(value: unknown): boolean {
+  return value === undefined || (typeof value === "string" && value.length > 0);
+}
+
+function isOptionalNullableString(value: unknown): boolean {
+  return value === undefined || value === null || typeof value === "string";
 }
 
 function isValidSchemaVersion(value: unknown): value is number {

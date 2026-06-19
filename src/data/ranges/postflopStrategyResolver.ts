@@ -48,6 +48,9 @@ export function createPostflopStrategyResolver(
         assumptions: pack.assumptions,
         selectionScore: ruleScore(rule, input),
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        ...(rule.opponentPolicy
+          ? { opponentPolicy: { ...rule.opponentPolicy } }
+          : {}),
       },
     };
   };

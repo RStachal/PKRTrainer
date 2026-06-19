@@ -1,5 +1,22 @@
 # Requirements Document
 
+> Scope status (2026-06-18)
+>
+> This document is the historical requirements baseline for the first
+> 9-max CHIP_EV preflop iteration. It is not the complete MTT v1 release
+> contract anymore.
+>
+> The active MTT v1 release scope is defined by
+> `Agents/mtt-done-checklist.md` and section 135 of `Agents/tasks.md`.
+> The release matrix contains 64 profiles: 2 table formats x 2 blind speeds x
+> 2 EV models x 2 ante modes x 4 streets.
+>
+> Where this historical document conflicts with that release contract, the
+> MTT done checklist and completion gate take precedence. `DOLAR_EV` means a
+> separately reviewed project strategy model backed by legal production data
+> or an explicit reviewed reuse policy. It must not be presented as a complete
+> generic ICM model.
+
 ## Introduction
 
 Tento dokument popisuje požadavky první iterace nové aplikace **MTT Preflop Trainer**. Cílem je trénovat správné preflop rozhodování v turnajovém pokeru (MTT) na plně obsazeném stole **9-handed (full ring)** napříč efektivními hloubkami zásobníku od **5 BB do 150 BB**. Aplikace pokrývá kompletní preflop akční strom (open/RFI, limp, iso-raise, call, 3bet, 4bet, jam/shove, fold, blind-vs-blind, squeeze, push/fold krátkých stacků) a zobrazuje situace v grafice připomínající klienta pokerové herny (9 pozic u stolu, pot, board, karty, akční odznaky).

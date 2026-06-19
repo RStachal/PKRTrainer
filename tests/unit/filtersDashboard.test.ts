@@ -49,7 +49,7 @@ const record: ResultRecord = {
 
 const postflopRecord: PostflopStatsV2BridgeRecord = {
   schema: "postflop_stats_v2_bridge_v1",
-  schemaVersion: 3,
+  schemaVersion: 4,
   qid: "POSTFLOP|FLOP|1|As-Kd-Qh",
   correct: true,
   ts: 2,
@@ -393,7 +393,7 @@ describe("dashboard - DOM statistiky", () => {
     ).toBe("Ante off");
     expect(
       root.querySelector<HTMLElement>(
-        '.profile-breakdown--rangePackId .profile-breakdown-row[data-group="mtt-full-ring-9-regular-preflop-chip-ev-ante-off-v1"]',
+        '.profile-breakdown--rangePackId .profile-breakdown-row[data-group="LEGACY_UNKNOWN_STRATEGY"]',
       )?.dataset.total,
     ).toBe("1");
     expect(

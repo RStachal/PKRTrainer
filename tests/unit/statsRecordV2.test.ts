@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import type { ResultRecord } from "../../src/persistence/statsStore";
 import { DEFAULT_TRAINING_PROFILE, profileWith } from "../../src/core/trainingProfile";
+import type { Spot } from "../../src/core/types";
 import {
+  LEGACY_UNKNOWN_PROFILE_ID,
   RESULT_RECORD_V2_SCHEMA,
+  buildProfileAwarePreflopResultRecord,
   isResultRecordV2,
   migrateResultRecordsToV2,
   parseAnteFromQuestionId,
@@ -36,7 +39,7 @@ describe("statsRecordV2", () => {
     expect(parseAnteFromQuestionId("legacy-id")).toBeNull();
   });
 
-  it("upgraduje ResultRecord v1 na profilovy ResultRecord v2", () => {
+  it("stary ResultRecord oznaci jako legacy bez domysleni produkcniho profilu", () => {
     const upgraded = upgradeResultRecordToV2(anteOffRecord);
 
     expect(upgraded).toMatchObject({
@@ -54,13 +57,15 @@ describe("statsRecordV2", () => {
       evModel: "CHIP_EV",
       ante: "OFF",
       rakeMode: "NONE",
-      rangePackId: "mtt-full-ring-9-regular-preflop-chip-ev-ante-off-v1",
+      rangePackId: "LEGACY_UNKNOWN_STRATEGY",
+      profileStatus: "LEGACY_UNKNOWN",
+      scoringMode: "UNKNOWN",
     });
-    expect(upgraded.profileId).toBe("MTT|FULL_RING_9|REGULAR|PREFLOP|CHIP_EV|OFF|NONE");
+    expect(upgraded.profileId).toBe(LEGACY_UNKNOWN_PROFILE_ID);
     expect(isResultRecordV2(upgraded)).toBe(true);
   });
 
-  it("migruje sadu dnesnich zaznamu a zachova historicke vysledky", () => {
+  it("migruje sadu starych zaznamu bez falesne strategie a zachova vysledky", () => {
     const migrated = migrateResultRecordsToV2([anteOffRecord, anteOnRecord]);
 
     expect(migrated).toHaveLength(2);
@@ -69,8 +74,12 @@ describe("statsRecordV2", () => {
       anteOnRecord.qid,
     ]);
     expect(migrated.map((record) => record.correct)).toEqual([true, true]);
-    expect(migrated[0].rangePackId).toContain("ante-off");
-    expect(migrated[1].rangePackId).toContain("ante-on");
+    expect(migrated.map((record) => record.profileId)).toEqual([
+      LEGACY_UNKNOWN_PROFILE_ID,
+      LEGACY_UNKNOWN_PROFILE_ID,
+    ]);
+    expect(migrated.every((record) => record.rangePackId === "LEGACY_UNKNOWN_STRATEGY"))
+      .toBe(true);
   });
 
   it("zachova volitelny decision time a stare zaznamy bez casu zustanou validni", () => {
@@ -105,6 +114,117 @@ describe("statsRecordV2", () => {
     expect(upgraded.rangePackId).toBe(
       "sng-six-max-turbo-preflop-chip-ev-ante-off-candidate-v0",
     );
+  });
+
+  it("novy preflop zaznam nese profil, strategii, scoring a scenario identitu", () => {
+    const profile = profileWith(DEFAULT_TRAINING_PROFILE, { ante: "OFF" });
+    const spot: Spot = {
+      id: "RFI|BTN|25|AKs|OFF",
+      context: "RFI",
+      heroPos: "BTN",
+      effStack: 25,
+      ante: "OFF",
+      pushFold: false,
+      hand: "AKs",
+      heroCards: [
+        { rank: "A", suit: "s" },
+        { rank: "K", suit: "s" },
+      ],
+      tableState: {
+        heroPos: "BTN",
+        pushFold: false,
+        limpsBefore: 0,
+        callsBefore: 0,
+        facing: "NONE",
+        isBvB: false,
+      },
+      answers: [
+        { key: "FOLD", label: "Fold" },
+        { key: "OPEN_2X", label: "Open 2x" },
+      ],
+      correctKeys: ["OPEN_2X"],
+      strictCorrect: ["OPEN_2X"],
+      explanation: "Test.",
+      startingPot: 1.5,
+    };
+    const stored = buildProfileAwarePreflopResultRecord({
+      spot,
+      chosen: "OPEN_2X",
+      correct: true,
+      profile,
+      rangePack: {
+        id: "mtt-full-ring-9-regular-preflop-chip-ev-ante-off-v1",
+        version: "1",
+        verifiedAt: "2026-06-01",
+      },
+      scoringMode: "STRICT",
+      ts: 123,
+      responseMs: 456,
+    });
+    const upgraded = upgradeResultRecordToV2(stored);
+
+    expect(stored.identity?.scenarioId).toContain(
+      "MTT|FULL_RING_9|REGULAR|PREFLOP|CHIP_EV|OFF|NONE",
+    );
+    expect(upgraded).toMatchObject({
+      profileStatus: "KNOWN",
+      profileId: "MTT|FULL_RING_9|REGULAR|PREFLOP|CHIP_EV|OFF|NONE",
+      rangePackId: "mtt-full-ring-9-regular-preflop-chip-ev-ante-off-v1",
+      scoringMode: "STRICT",
+      responseMs: 456,
+    });
+    expect(isResultRecordV2(upgraded)).toBe(true);
+  });
+
+  it("update strategie zachova identitu scenare a oddeli audit packu", () => {
+    const profile = profileWith(DEFAULT_TRAINING_PROFILE, { ante: "OFF" });
+    const spot: Spot = {
+      id: "RFI|BTN|25|AKs|OFF",
+      context: "RFI",
+      heroPos: "BTN",
+      effStack: 25,
+      ante: "OFF",
+      pushFold: false,
+      hand: "AKs",
+      heroCards: [
+        { rank: "A", suit: "s" },
+        { rank: "K", suit: "s" },
+      ],
+      tableState: {
+        heroPos: "BTN",
+        pushFold: false,
+        limpsBefore: 0,
+        callsBefore: 0,
+        facing: "NONE",
+        isBvB: false,
+      },
+      answers: [{ key: "OPEN_2X", label: "Open 2x" }],
+      correctKeys: ["OPEN_2X"],
+      strictCorrect: ["OPEN_2X"],
+      explanation: "Test.",
+    };
+    const first = buildProfileAwarePreflopResultRecord({
+      spot,
+      chosen: "OPEN_2X",
+      correct: true,
+      profile,
+      rangePack: { id: "pack-v1", version: "1", verifiedAt: "2026-01-01" },
+      scoringMode: "LENIENT",
+      ts: 1,
+    });
+    const updated = buildProfileAwarePreflopResultRecord({
+      spot,
+      chosen: "OPEN_2X",
+      correct: true,
+      profile,
+      rangePack: { id: "pack-v2", version: "2", verifiedAt: "2026-06-19" },
+      scoringMode: "LENIENT",
+      ts: 2,
+    });
+
+    expect(first.identity?.scenarioId).toBe(updated.identity?.scenarioId);
+    expect(first.identity?.rangePackId).toBe("pack-v1");
+    expect(updated.identity?.rangePackId).toBe("pack-v2");
   });
 
   it("umi priradit cash candidate RangePack bez MTT fallbacku", () => {

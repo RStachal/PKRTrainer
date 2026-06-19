@@ -151,6 +151,54 @@ describe("service worker - offline provoz", () => {
       restoreGlobal(globals, "fetch", previousFetch);
     }
   });
+
+  it("pro navigaci preferuje novy index ze site pred starou cache", async () => {
+    const listeners: ListenerMap = {};
+    const cache = new FakeCache();
+    const globals = globalThis as Record<string, unknown>;
+    const previousSelf = globals.self;
+    const previousCaches = globals.caches;
+    const previousFetch = globals.fetch;
+    let networkCalls = 0;
+
+    globals.self = {
+      location: { origin: "https://trainer.test" },
+      clients: { claim: () => Promise.resolve() },
+      skipWaiting: () => Promise.resolve(),
+      addEventListener: (type: keyof ListenerMap, listener: ListenerMap[keyof ListenerMap]) => {
+        if (type === "install") listeners.install = listener as (event: ExtendableEventLike) => void;
+        if (type === "fetch") listeners.fetch = listener as (event: FetchEventLike) => void;
+      },
+    };
+    globals.caches = {
+      open: () => Promise.resolve(cache),
+      keys: () => Promise.resolve([]),
+      delete: () => Promise.resolve(true),
+    };
+    globals.fetch = async () => {
+      networkCalls += 1;
+      return new Response("fresh-index", { status: 200 });
+    };
+
+    try {
+      vi.resetModules();
+      await import("../../src/pwa/sw");
+      const installWork: Promise<unknown>[] = [];
+      listeners.install?.({ waitUntil: (promise) => installWork.push(promise) });
+      await Promise.all(installWork);
+
+      const request = new Request("https://trainer.test/");
+      Object.defineProperty(request, "mode", { value: "navigate" });
+      const response = await dispatchFetch(listeners, request);
+
+      expect(await response.text()).toBe("fresh-index");
+      expect(networkCalls).toBe(1);
+    } finally {
+      restoreGlobal(globals, "self", previousSelf);
+      restoreGlobal(globals, "caches", previousCaches);
+      restoreGlobal(globals, "fetch", previousFetch);
+    }
+  });
 });
 
 async function dispatchFetch(listeners: ListenerMap, request: Request): Promise<Response> {

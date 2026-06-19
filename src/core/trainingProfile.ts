@@ -1,4 +1,5 @@
 import { POSITION_ORDER, type AnteMode, type Position } from "./types";
+import { staticTrainingCapability } from "./trainingCapability";
 
 export type GameVariant = "MTT" | "SNG" | "CASH";
 export type TableFormat = "FULL_RING_9" | "SIX_MAX";
@@ -98,19 +99,7 @@ export function profileWith(
 }
 
 export function isProfileSupported(profile: TrainingProfile): boolean {
-  if (profile.gameVariant === "CASH") {
-    return profile.rakeMode === "RAKE" || profile.rakeMode === "NO_RAKE";
-  }
-
-  if (profile.gameVariant === "SNG") {
-    return (
-      profile.evModel === "CHIP_EV" ||
-      profile.evModel === "DOLAR_EV" ||
-      profile.evModel === "ICM"
-    );
-  }
-
-  return profile.gameVariant === "MTT";
+  return staticTrainingCapability(profile).status !== "UNSUPPORTED";
 }
 
 function assertNever(value: never): never {

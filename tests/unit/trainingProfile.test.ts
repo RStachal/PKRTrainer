@@ -69,7 +69,7 @@ describe("trainingProfile", () => {
     expect(isProfileSupported(profileWith(DEFAULT_TRAINING_PROFILE, {
       gameVariant: "SNG",
       evModel: "DOLAR_EV",
-    }))).toBe(true);
+    }))).toBe(false);
     expect(isProfileSupported(profileWith(DEFAULT_TRAINING_PROFILE, {
       gameVariant: "CASH",
       rakeMode: "NONE",

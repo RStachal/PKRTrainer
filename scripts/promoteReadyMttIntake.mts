@@ -29,6 +29,7 @@ import {
   buildRangeModuleDryRunCommand,
   validateRangeImportCommand,
 } from "../src/data/ranges/rangeImportCommands.ts";
+import { refreshMttProductionRegistry } from "./mttProductionRegistryFile.mts";
 
 const WRITE_CONFIRMATION = "WRITE_READY_MTT_MODULES";
 
@@ -69,6 +70,7 @@ interface PromotionReport {
   filters: MttCompletionReadinessFilters;
   priority: MttIntakePriorityKey | null;
   force: boolean;
+  registryRefreshed: boolean;
   counts: {
     readyRows: number;
     writeReadyRows: number;
@@ -180,6 +182,11 @@ function buildPromotionReport(args: CliArgs): PromotionReport {
   const blockedRows = rows.filter((row) => !row.writeReady).length;
   const existingOutputRows = rows.filter((row) => row.plannedAction === "SKIP_EXISTS").length;
   const valid = blockedRows === 0 && existingOutputRows === 0;
+  const registryRefreshed = (
+    args.mode === "write" &&
+    rows.some((row) => row.written) &&
+    refreshMttProductionRegistry({ write: true }).changed
+  );
 
   return {
     mode: args.mode,
@@ -187,6 +194,7 @@ function buildPromotionReport(args: CliArgs): PromotionReport {
     filters: args.filters,
     priority: args.priority,
     force: args.force,
+    registryRefreshed,
     counts: {
       readyRows: rows.length,
       writeReadyRows: writeReadyRows.length,
@@ -309,6 +317,7 @@ function renderPromotionReport(report: PromotionReport): string {
     `valid: ${report.valid}`,
     `priority: ${report.priority ?? "all"}`,
     `force: ${report.force}`,
+    `registry refreshed: ${report.registryRefreshed}`,
     `ready rows: ${report.counts.readyRows}`,
     `writeReady rows: ${report.counts.writeReadyRows}`,
     `blocked rows: ${report.counts.blockedRows}`,

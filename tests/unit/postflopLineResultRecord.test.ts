@@ -52,6 +52,11 @@ describe("postflopLineResultRecord", () => {
       "MTT|SIX_MAX|TURBO|TURN|DOLAR_EV|ON|NONE",
       "MTT|SIX_MAX|TURBO|RIVER|DOLAR_EV|ON|NONE",
     ]);
+    expect(record.scenarioId).toContain("postflop_line_scenario_v1");
+    expect(record.scenarioId).toContain("MTT|SIX_MAX|TURBO|FLOP|DOLAR_EV|ON|NONE");
+    expect(record.streetResults.every((street) => (
+      street.record.scenarioId?.startsWith("postflop_scenario_v1|") === true
+    ))).toBe(true);
     expect(record.actionHistory).toHaveLength(3);
     expect(isPostflopLineResultRecord(record)).toBe(true);
   });

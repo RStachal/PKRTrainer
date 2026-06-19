@@ -10,8 +10,10 @@ import {
   type TurnProductionStrategyRule,
   validateTurnProductionStrategyPack,
 } from "./turnProductionStrategyPack";
+import { generatedMttTurnStrategyPacks } from "./mttProductionRegistry.generated";
 
-export const turnProductionStrategyPacks: readonly TurnProductionStrategyPack[] = [];
+export const turnProductionStrategyPacks: readonly TurnProductionStrategyPack[] =
+  generatedMttTurnStrategyPacks;
 
 export function createTurnProductionStrategyResolver(
   pack: TurnProductionStrategyPack,
@@ -45,6 +47,9 @@ export function createTurnProductionStrategyResolver(
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
         rangeBuckets: rangeBuckets(rule),
         heroRangeBucket: heroRangeBucket(rule, input),
+        ...(rule.opponentPolicy
+          ? { opponentPolicy: { ...rule.opponentPolicy } }
+          : {}),
       },
     };
   };

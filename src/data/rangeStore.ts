@@ -37,6 +37,8 @@ import {
   isRangeDataLoaded,
 } from "./ranges";
 import type { RangeRecord } from "./ranges/schema";
+import type { RangePack } from "./ranges/rangePack";
+import { validateRangePack } from "./ranges/rangePack";
 
 // ---------------------------------------------------------------------------
 // Veřejné typy (dle design „Range_Store")
@@ -150,6 +152,55 @@ export function createRangeStore(deps: RangeStoreDeps = DEFAULT_DEPS): RangeStor
       return deps.isLoaded();
     },
   };
+}
+
+/**
+ * Creates an isolated runtime store for one concrete preflop RangePack.
+ * Lookups are rejected when the requested ante differs from the pack profile,
+ * which prevents cross-profile scoring through the legacy global store.
+ */
+export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
+  const records = new Map<string, RangeRecord>();
+  const errors = validateRangePack(pack);
+
+  for (const record of pack.records) {
+    const key = packRecordKey(record.position, record.bucket, record.context);
+    if (records.has(key)) {
+      errors.push(`Duplicate RangePack runtime key: ${key}.`);
+      continue;
+    }
+    records.set(key, {
+      position: record.position,
+      bucket: record.bucket,
+      context: record.context,
+      lenient: record.lenient,
+      strict: record.strict,
+    });
+  }
+
+  const loaded = errors.length === 0 && records.size > 0;
+  return {
+    lookup(key: RangeKey): RangeEntry | undefined {
+      if (!loaded || key.ante !== pack.dimensions.ante) return undefined;
+      const record = records.get(packRecordKey(
+        key.position,
+        key.bucket,
+        key.context,
+      ));
+      return record === undefined ? undefined : toRangeEntry(record);
+    },
+    isLoaded(): boolean {
+      return loaded;
+    },
+  };
+}
+
+function packRecordKey(
+  position: Position,
+  bucket: StackBucket,
+  context: ActionContext,
+): string {
+  return `${position}|${bucket}|${context}`;
 }
 
 // ---------------------------------------------------------------------------

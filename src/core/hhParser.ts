@@ -76,6 +76,11 @@ import { offeredActions } from "./actionTree";
 import { questionId } from "./questionId";
 import { buildPreflopExplanation } from "./preflopExplanation";
 import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
+import {
+  positionsForFormat,
+  type TableFormat,
+  type TrainingProfile,
+} from "./trainingProfile";
 
 // ---------------------------------------------------------------------------
 // Veřejné typy výsledku
@@ -96,26 +101,61 @@ export interface HHFields {
   effStackBucket?: StackBucket;
   /** Akce hrdiny v preflopu (textové tokeny, např. "raises 120 to 180"). */
   actions?: string[];
+  preflopActionDetails?: readonly HHParsedAction[];
   flop?: [Card, Card, Card];
   turn?: [Card, Card, Card, Card];
   river?: [Card, Card, Card, Card, Card];
   postflopActions?: HHPostflopActionHistoryByStreet;
+  financialState?: HHFinancialStateByStreet;
   /** Počet obsazených sedadel u stolu (pro diagnostiku kompatibility). */
   tableSize?: number;
+  tableFormat?: TableFormat;
   /** Detekovaný režim ante (ON, pokud se objevil post ante). */
   ante?: AnteMode;
+  profile?: TrainingProfile;
+  rangePack?: {
+    id: string;
+    version: string;
+    verifiedAt: string;
+  };
+  stackBucketPolicy?: "NEAREST_SUPPORTED_BUCKET";
 }
 
 export interface HHStreetActionHistory {
   actions: readonly string[];
   actionsBeforeHero: readonly string[];
   heroActions: readonly string[];
+  details: readonly HHParsedAction[];
+}
+
+export interface HHParsedAction {
+  actor: string;
+  kind: "FOLD" | "CHECK" | "CALL" | "BET" | "RAISE";
+  raw: string;
+  amountBB?: number;
+  raiseToBB?: number;
+  allIn: boolean;
+}
+
+export interface HHStreetFinancialState {
+  potBeforeBB: number;
+  potAfterBB: number;
+  heroStackBeforeBB: number;
+  heroStackAfterBB: number;
+  effectiveStackBeforeBB: number;
+  effectiveStackAfterBB: number;
 }
 
 export interface HHPostflopActionHistoryByStreet {
   flop?: HHStreetActionHistory;
   turn?: HHStreetActionHistory;
   river?: HHStreetActionHistory;
+}
+
+export interface HHFinancialStateByStreet {
+  flop?: HHStreetFinancialState;
+  turn?: HHStreetFinancialState;
+  river?: HHStreetFinancialState;
 }
 
 /** Výsledek parsování hand history. */
@@ -132,6 +172,18 @@ export interface HHResult {
   errors: string[];
   /** Data přečtena, ale nekompatibilní s modelem trenažéru (Req 11.5). */
   incompatible?: boolean;
+  strategyUnavailable?: boolean;
+}
+
+export interface HHParseOptions {
+  profile?: TrainingProfile;
+  rangeStore?: RangeStore;
+  requireLoadedStrategy?: boolean;
+  rangePack?: {
+    id: string;
+    version: string;
+    verifiedAt: string;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -147,20 +199,7 @@ const MIN_BB = 5;
 const MAX_BB = 150;
 
 /** Mapování offsetu od buttonu na pozici u plně obsazeného 9-handed stolu. */
-const POS_BY_OFFSET_FROM_BUTTON: Position[] = [
-  "BTN", // offset 0 = button
-  "SB",
-  "BB",
-  "UTG",
-  "UTG+1",
-  "UTG+2",
-  "LJ",
-  "HJ",
-  "CO",
-];
-
-/** Počet pozic / sedadel plně obsazeného full ring stolu. */
-const FULL_RING = 9;
+const SUPPORTED_TABLE_SIZES = [6, 9] as const;
 
 /** Český popisek pro každý Akční_klíč (label v `Answer`). */
 const ACTION_KEY_LABEL: Record<ActionKey, string> = {
@@ -205,10 +244,12 @@ interface ParsedHand {
   heroPreActions: string[]; // raw preflop akce hrdiny
   /** Akce před první akcí hrdiny (pro odvození facing). */
   actionsBeforeHero: string[];
+  preflopActionDetails: HHParsedAction[];
   flop?: [Card, Card, Card];
   turn?: [Card, Card, Card, Card];
   river?: [Card, Card, Card, Card, Card];
   postflopActions: HHPostflopActionHistoryByStreet;
+  financialState: HHFinancialStateByStreet;
 }
 
 // ---------------------------------------------------------------------------
@@ -263,6 +304,16 @@ function normalizeCardToken(token: string): string {
     "\u2663": "c",
   };
   return `${rank}${suitMap[suit] ?? suit}`;
+}
+
+function cardKey(card: Card): string {
+  return `${card.rank}${card.suit}`;
+}
+
+function hasDuplicateKnownCards(fields: HHFields): boolean {
+  const board = fields.river ?? fields.turn ?? fields.flop ?? [];
+  const cards = [...(fields.heroCards ?? []), ...board];
+  return new Set(cards.map(cardKey)).size !== cards.length;
 }
 
 function parseCardsFromBracket(raw: string): [Card, Card] | undefined {
@@ -332,6 +383,41 @@ function actorOfActionLine(line: string): string | undefined {
   const idx = line.indexOf(":");
   if (idx <= 0) return undefined;
   return line.slice(0, idx).trim();
+}
+
+function parseActionDetail(
+  line: string,
+  bigBlind?: number,
+): HHParsedAction | undefined {
+  const actor = actorOfActionLine(line);
+  if (!actor) return undefined;
+  const raw = line.slice(line.indexOf(":") + 1).trim();
+  const kindMatch = raw.match(/^(folds|checks|calls|bets|raises)\b/i);
+  if (!kindMatch) return undefined;
+  const kindMap: Record<string, HHParsedAction["kind"]> = {
+    folds: "FOLD",
+    checks: "CHECK",
+    calls: "CALL",
+    bets: "BET",
+    raises: "RAISE",
+  };
+  const amount = raw.match(/^(?:calls|bets|raises)\s+(?:\$|€|£)?([\d.,]+)/i);
+  const raiseTo = raw.match(/^raises\s+(?:\$|€|£)?[\d.,]+\s+to\s+(?:\$|€|£)?([\d.,]+)/i);
+  const divisor = bigBlind && bigBlind > 0 ? bigBlind : undefined;
+  const amountValue = amount ? parseAmount(amount[1]) : undefined;
+  const raiseToValue = raiseTo ? parseAmount(raiseTo[1]) : undefined;
+  return {
+    actor,
+    kind: kindMap[kindMatch[1].toLowerCase()],
+    raw,
+    ...(amountValue !== undefined
+      ? { amountBB: divisor ? round1(amountValue / divisor) : amountValue }
+      : {}),
+    ...(raiseToValue !== undefined
+      ? { raiseToBB: divisor ? round1(raiseToValue / divisor) : raiseToValue }
+      : {}),
+    allIn: /all-in/i.test(raw),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -480,6 +566,7 @@ function extractHand(block: string): ParsedHand {
   const holeIdx = block.indexOf("*** HOLE CARDS ***");
   const heroPreActions: string[] = [];
   const actionsBeforeHero: string[] = [];
+  const preflopActionDetails: HHParsedAction[] = [];
   if (heroName) {
     const dealtIdx = block.indexOf("Dealt to");
     const startIdx = holeIdx !== -1 ? holeIdx : dealtIdx;
@@ -498,6 +585,8 @@ function extractHand(block: string): ParsedHand {
       const actor = actorOfActionLine(line);
       if (actor === undefined) continue;
       const actionText = line.slice(line.indexOf(":") + 1).trim();
+      const detail = parseActionDetail(line, bigBlind);
+      if (detail) preflopActionDetails.push(detail);
       if (actor === heroName) {
         heroPreActions.push(actionText);
         heroActed = true;
@@ -517,21 +606,146 @@ function extractHand(block: string): ParsedHand {
     anteSeen,
     heroPreActions,
     actionsBeforeHero,
+    preflopActionDetails,
     flop,
     turn,
     river,
-    postflopActions: heroName ? extractPostflopActionHistory(lines, heroName) : {},
+    postflopActions: heroName
+      ? extractPostflopActionHistory(lines, heroName, bigBlind)
+      : {},
+    financialState: heroName && bigBlind
+      ? simulateFinancialState(lines, seats, heroName, bigBlind)
+      : {},
   };
+}
+
+function simulateFinancialState(
+  lines: readonly string[],
+  seats: readonly SeatInfo[],
+  heroName: string,
+  bigBlind: number,
+): HHFinancialStateByStreet {
+  const stacks = new Map(seats.map((seat) => [seat.name, seat.chips]));
+  const contributions = new Map<string, number>();
+  const states: HHFinancialStateByStreet = {};
+  const firstPostflopIndex = lines.findIndex((line) => /^\*\*\* FLOP \*\*\*/iu.test(line));
+  const postflopOpponents = new Set(
+    lines.slice(Math.max(0, firstPostflopIndex + 1))
+      .map(actorOfActionLine)
+      .filter((actor): actor is string => actor !== undefined && actor !== heroName),
+  );
+  let pot = 0;
+  let activeStreet: "FLOP" | "TURN" | "RIVER" | undefined;
+
+  const effectiveStack = (): number => {
+    const hero = stacks.get(heroName) ?? 0;
+    const opponents = [...stacks.entries()]
+      .filter(([name]) => (
+        name !== heroName &&
+        (postflopOpponents.size === 0 || postflopOpponents.has(name))
+      ))
+      .map(([, stack]) => stack);
+    return Math.min(hero, opponents.length > 0 ? Math.max(...opponents) : hero);
+  };
+  const closeStreet = (): void => {
+    if (!activeStreet) return;
+    const key = activeStreet.toLowerCase() as "flop" | "turn" | "river";
+    const prior = states[key];
+    if (!prior) return;
+    states[key] = {
+      ...prior,
+      potAfterBB: round1(pot / bigBlind),
+      heroStackAfterBB: round1((stacks.get(heroName) ?? 0) / bigBlind),
+      effectiveStackAfterBB: round1(effectiveStack() / bigBlind),
+    };
+  };
+  const commit = (actor: string, requested: number, trackContribution = true): void => {
+    const stack = stacks.get(actor);
+    if (stack === undefined) return;
+    const amount = Math.min(stack, Math.max(0, requested));
+    stacks.set(actor, stack - amount);
+    if (trackContribution) {
+      contributions.set(actor, (contributions.get(actor) ?? 0) + amount);
+    }
+    pot += amount;
+  };
+
+  for (const line of lines) {
+    const marker = line.match(/^\*\*\* (FLOP|TURN|RIVER) \*\*\*/iu)?.[1] as
+      | "FLOP"
+      | "TURN"
+      | "RIVER"
+      | undefined;
+    if (marker) {
+      closeStreet();
+      activeStreet = marker;
+      contributions.clear();
+      const key = marker.toLowerCase() as "flop" | "turn" | "river";
+      const potBeforeBB = round1(pot / bigBlind);
+      const heroStackBeforeBB = round1((stacks.get(heroName) ?? 0) / bigBlind);
+      const effectiveStackBeforeBB = round1(effectiveStack() / bigBlind);
+      states[key] = {
+        potBeforeBB,
+        potAfterBB: potBeforeBB,
+        heroStackBeforeBB,
+        heroStackAfterBB: heroStackBeforeBB,
+        effectiveStackBeforeBB,
+        effectiveStackAfterBB: effectiveStackBeforeBB,
+      };
+      continue;
+    }
+    if (/^\*\*\* (?:SUMMARY|SHOW ?DOWN) \*\*\*/iu.test(line)) {
+      closeStreet();
+      activeStreet = undefined;
+      continue;
+    }
+
+    const returned = line.match(/^Uncalled bet \((?:\$|€|£)?([\d.,]+)\) returned to (.+)$/i);
+    if (returned) {
+      const amount = parseAmount(returned[1]) ?? 0;
+      const actor = returned[2].trim();
+      stacks.set(actor, (stacks.get(actor) ?? 0) + amount);
+      pot = Math.max(0, pot - amount);
+      continue;
+    }
+
+    const actor = actorOfActionLine(line);
+    if (!actor) continue;
+    const text = line.slice(line.indexOf(":") + 1).trim();
+    const post = text.match(/^posts (?:the )?(?:small blind|big blind|ante)\s+(?:\$|€|£)?([\d.,]+)/i);
+    if (post) {
+      commit(actor, parseAmount(post[1]) ?? 0, !/^posts (?:the )?ante\b/i.test(text));
+      continue;
+    }
+    const call = text.match(/^calls\s+(?:\$|€|£)?([\d.,]+)/i);
+    if (call) {
+      commit(actor, parseAmount(call[1]) ?? 0);
+      continue;
+    }
+    const bet = text.match(/^bets\s+(?:\$|€|£)?([\d.,]+)/i);
+    if (bet) {
+      commit(actor, parseAmount(bet[1]) ?? 0);
+      continue;
+    }
+    const raise = text.match(/^raises\s+(?:\$|€|£)?([\d.,]+)\s+to\s+(?:\$|€|£)?([\d.,]+)/i);
+    if (raise) {
+      const target = parseAmount(raise[2]) ?? 0;
+      commit(actor, Math.max(0, target - (contributions.get(actor) ?? 0)));
+    }
+  }
+  closeStreet();
+  return states;
 }
 
 function extractPostflopActionHistory(
   lines: readonly string[],
   heroName: string,
+  bigBlind?: number,
 ): HHPostflopActionHistoryByStreet {
   return {
-    flop: extractStreetActionHistory(lines, heroName, "FLOP"),
-    turn: extractStreetActionHistory(lines, heroName, "TURN"),
-    river: extractStreetActionHistory(lines, heroName, "RIVER"),
+    flop: extractStreetActionHistory(lines, heroName, "FLOP", bigBlind),
+    turn: extractStreetActionHistory(lines, heroName, "TURN", bigBlind),
+    river: extractStreetActionHistory(lines, heroName, "RIVER", bigBlind),
   };
 }
 
@@ -539,6 +753,7 @@ function extractStreetActionHistory(
   lines: readonly string[],
   heroName: string,
   street: "FLOP" | "TURN" | "RIVER",
+  bigBlind?: number,
 ): HHStreetActionHistory | undefined {
   const start = lines.findIndex((line) => new RegExp(`^\\*\\*\\* ${street} \\*\\*\\*`, "iu").test(line));
   if (start === -1) return undefined;
@@ -556,6 +771,7 @@ function extractStreetActionHistory(
   const actions: string[] = [];
   const actionsBeforeHero: string[] = [];
   const heroActions: string[] = [];
+  const details: HHParsedAction[] = [];
   let heroActed = false;
   const actionRe = /:\s+(folds|checks|calls|bets|raises)\b/i;
 
@@ -565,6 +781,8 @@ function extractStreetActionHistory(
     if (actor === undefined) continue;
     const actionText = line.slice(line.indexOf(":") + 1).trim();
     actions.push(actionText);
+    const detail = parseActionDetail(line, bigBlind);
+    if (detail) details.push(detail);
     if (actor === heroName) {
       heroActions.push(actionText);
       heroActed = true;
@@ -573,7 +791,7 @@ function extractStreetActionHistory(
     }
   }
 
-  return { actions, actionsBeforeHero, heroActions };
+  return { actions, actionsBeforeHero, heroActions, details };
 }
 
 // ---------------------------------------------------------------------------
@@ -584,8 +802,12 @@ function extractStreetActionHistory(
  * Odvodí pozici hrdiny z buttonu a pořadí obsazených sedadel. Vrací pozici jen
  * pro plně obsazený 9-handed stůl; jinak `undefined` (model nekompatibilní).
  */
-function deriveHeroPosition(hand: ParsedHand): Position | undefined {
-  if (hand.seats.length !== FULL_RING) return undefined;
+function deriveHeroPosition(
+  hand: ParsedHand,
+  tableFormat: TableFormat,
+): Position | undefined {
+  const positions = positionsForFormat(tableFormat);
+  if (hand.seats.length !== positions.length) return undefined;
   if (hand.heroName === undefined) return undefined;
 
   // Seřaď sedadla podle čísla.
@@ -604,8 +826,16 @@ function deriveHeroPosition(hand: ParsedHand): Position | undefined {
   if (heroIdx === -1) return undefined;
 
   // Offset od buttonu po směru rozdávání (rostoucí index sedadel, cyklicky).
-  const offset = (heroIdx - btnIdx + FULL_RING) % FULL_RING;
-  return POS_BY_OFFSET_FROM_BUTTON[offset];
+  const offset = (heroIdx - btnIdx + positions.length) % positions.length;
+  const positionsFromButton: readonly Position[] = [
+    "BTN",
+    "SB",
+    "BB",
+    ...positions.filter((position) => (
+      position !== "BTN" && position !== "SB" && position !== "BB"
+    )),
+  ];
+  return positionsFromButton[offset];
 }
 
 // ---------------------------------------------------------------------------
@@ -769,7 +999,8 @@ function buildSpot(
   ante: AnteMode,
   ctx: { context: ActionContext; facing: FacingAction; limps: number; calls: number; isBvB: boolean },
   store: RangeStore,
-): Spot {
+  requireRangeRecord = false,
+): Spot | undefined {
   const hand = handLabelFromCards(heroCards);
   const pushFold = bucket <= PUSH_FOLD_MAX;
 
@@ -787,6 +1018,7 @@ function buildSpot(
   // Lookup doporučení (může chybět ⇒ fallback).
   const key: RangeKey = { position: heroPos, bucket, context: ctx.context, ante };
   const entry = store.isLoaded() ? store.lookup(key) : undefined;
+  if (requireRangeRecord && entry === undefined) return undefined;
   const handStrict = entry?.strict[hand] as ActionKey[] | undefined;
   const handLenient = entry?.actions[hand] as ActionKey[] | undefined;
 
@@ -836,6 +1068,43 @@ function buildSpot(
   };
 }
 
+function tableFormatFromSeatCount(seatCount: number): TableFormat | undefined {
+  if (seatCount === 9) return "FULL_RING_9";
+  if (seatCount === 6) return "SIX_MAX";
+  return undefined;
+}
+
+function isRangeStore(value: RangeStore | HHParseOptions): value is RangeStore {
+  return typeof (value as RangeStore).lookup === "function" &&
+    typeof (value as RangeStore).isLoaded === "function";
+}
+
+function resolveParseOptions(
+  value: RangeStore | HHParseOptions,
+): {
+  profile?: TrainingProfile;
+  rangeStore: RangeStore;
+  requireLoadedStrategy: boolean;
+  rangePack?: {
+    id: string;
+    version: string;
+    verifiedAt: string;
+  };
+} {
+  if (isRangeStore(value)) {
+    return {
+      rangeStore: value,
+      requireLoadedStrategy: false,
+    };
+  }
+  return {
+    profile: value.profile,
+    rangePack: value.rangePack,
+    rangeStore: value.rangeStore ?? rangeStore,
+    requireLoadedStrategy: value.requireLoadedStrategy ?? false,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Veřejné API: totální parser
 // ---------------------------------------------------------------------------
@@ -859,7 +1128,10 @@ function buildSpot(
  * @param store Range_Store (injektovatelný; výchozí = reálný singleton).
  * @returns Výsledek parsování (vždy definovaný, nikdy nevyhodí výjimku).
  */
-export function parseHandHistory(text: string, store: RangeStore = rangeStore): HHResult {
+export function parseHandHistory(
+  text: string,
+  storeOrOptions: RangeStore | HHParseOptions = rangeStore,
+): HHResult {
   // Req 11.6 — kontrola délky jako úplně první krok, ještě před jakoukoli prací.
   // Defenzivně i pro nestringový vstup.
   const raw = typeof text === "string" ? text : "";
@@ -876,6 +1148,7 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
   }
 
   try {
+    const options = resolveParseOptions(storeOrOptions);
     // Req 11.2 — prázdný / jen bílé znaky.
     if (raw.trim().length === 0) {
       return {
@@ -897,6 +1170,11 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
     const ante: AnteMode = hand.anteSeen ? "ON" : "OFF";
     fields.ante = ante;
     fields.tableSize = hand.seats.length;
+    const detectedTableFormat = tableFormatFromSeatCount(hand.seats.length);
+    if (detectedTableFormat) fields.tableFormat = detectedTableFormat;
+    fields.stackBucketPolicy = "NEAREST_SUPPORTED_BUCKET";
+    if (options.profile) fields.profile = { ...options.profile };
+    if (options.rangePack) fields.rangePack = { ...options.rangePack };
 
     // --- Karty hrdiny ---
     if (hand.heroCards) {
@@ -910,6 +1188,11 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
       fields.actions = [...hand.heroPreActions];
     } else {
       unreadable.push("actions");
+    }
+    if (hand.preflopActionDetails.length > 0) {
+      fields.preflopActionDetails = hand.preflopActionDetails.map((action) => ({
+        ...action,
+      }));
     }
 
     if (hand.flop) {
@@ -928,9 +1211,32 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
     ) {
       fields.postflopActions = hand.postflopActions;
     }
+    if (
+      hand.financialState.flop ||
+      hand.financialState.turn ||
+      hand.financialState.river
+    ) {
+      fields.financialState = hand.financialState;
+    }
+
+    if (hasDuplicateKnownCards(fields)) {
+      errors.push(
+        "The hand history contains duplicate cards between the hero hand and board.",
+      );
+      return {
+        ok: false,
+        fields,
+        unreadableFields: unreadable,
+        errors,
+        incompatible: true,
+      };
+    }
 
     // --- Pozice hrdiny (jen kompatibilní 9-handed) ---
-    const heroPos = deriveHeroPosition(hand);
+    const tableFormat = options.profile?.tableFormat ?? detectedTableFormat;
+    const heroPos = tableFormat
+      ? deriveHeroPosition(hand, tableFormat)
+      : undefined;
     if (heroPos) {
       fields.position = heroPos;
     } else {
@@ -956,7 +1262,13 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
     }
 
     // --- Posouzení kompatibility a sestavení Spotu (Req 11.4 / 11.5) ---
-    const tableOk = hand.seats.length === FULL_RING;
+    const formatConfirmed = detectedTableFormat === "FULL_RING_9" ||
+      options.profile !== undefined;
+    const tableOk = detectedTableFormat !== undefined && formatConfirmed;
+    const profileTableMatches = options.profile === undefined ||
+      detectedTableFormat === options.profile.tableFormat;
+    const profileAnteMatches = options.profile === undefined ||
+      ante === options.profile.ante;
     const depthInRange =
       effBB !== undefined && effBB >= MIN_BB && effBB <= MAX_BB;
 
@@ -965,7 +1277,29 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
     const bucket = fields.effStackBucket;
     const haveCore = heroPos !== undefined && heroCards !== undefined;
 
-    if (haveCore && heroPos !== undefined && heroCards !== undefined && tableOk && depthInRange && bucket !== undefined) {
+    if (options.requireLoadedStrategy && !options.rangeStore.isLoaded()) {
+      errors.push(
+        "Production preflop strategy is not available for the selected training profile.",
+      );
+      return {
+        ok: false,
+        fields,
+        unreadableFields: unreadable,
+        errors,
+        strategyUnavailable: true,
+      };
+    }
+
+    if (
+      haveCore &&
+      heroPos !== undefined &&
+      heroCards !== undefined &&
+      tableOk &&
+      profileTableMatches &&
+      profileAnteMatches &&
+      depthInRange &&
+      bucket !== undefined
+    ) {
       // Kompatibilní a úplná data ⇒ sestav Spot (Req 11.4).
       const ctx = deriveContext(hand, heroPos, bucket <= PUSH_FOLD_MAX);
       const spot = buildSpot(
@@ -974,8 +1308,21 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
         heroCards,
         ante,
         ctx,
-        store,
+        options.rangeStore,
+        options.requireLoadedStrategy,
       );
+      if (!spot) {
+        errors.push(
+          "Production preflop strategy does not cover this imported situation.",
+        );
+        return {
+          ok: false,
+          fields,
+          unreadableFields: unreadable,
+          errors,
+          strategyUnavailable: true,
+        };
+      }
       return {
         ok: true,
         spot,
@@ -988,11 +1335,24 @@ export function parseHandHistory(text: string, store: RangeStore = rangeStore): 
     // Data se přečetla (alespoň z části), ale nekompatibilní s modelem.
     // Req 11.5 — rozliš důvod nekompatibility, pokud byla data čitelná.
     const dataReadable = haveCore || fields.effStackBB !== undefined || tableOk;
-    if (dataReadable && (!tableOk || effBB !== undefined)) {
+    if (
+      dataReadable &&
+      (!tableOk || !profileTableMatches || !profileAnteMatches || effBB !== undefined)
+    ) {
       const reasons: string[] = [];
       if (!tableOk) {
+        reasons.push(detectedTableFormat === "SIX_MAX"
+          ? "6-max table format must be confirmed by the selected training profile"
+          : `table size ${hand.seats.length} is not supported (supported: ${SUPPORTED_TABLE_SIZES.join(" or ")})`);
+      }
+      if (!profileTableMatches) {
         reasons.push(
-          `table is not 9-handed (found ${hand.seats.length} seats)`,
+          `detected table format ${detectedTableFormat ?? "unknown"} does not match selected profile ${options.profile?.tableFormat}`,
+        );
+      }
+      if (!profileAnteMatches) {
+        reasons.push(
+          `detected ante mode ${ante} does not match selected profile ${options.profile?.ante}`,
         );
       }
       if (effBB !== undefined && !depthInRange) {

@@ -6,7 +6,9 @@ import {
   parseHandHistory,
   type HHFieldName,
 } from "../../src/core/hhParser";
+import type { TrainingProfile } from "../../src/core/trainingProfile";
 import { POSITION_ORDER, type Card, type Position, type Rank, type Suit } from "../../src/core/types";
+import type { RangeStore } from "../../src/data/rangeStore";
 
 const HH_FIELDS: HHFieldName[] = ["position", "actions", "stack", "cards"];
 const RANKS: Rank[] = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
@@ -84,6 +86,24 @@ function incompatibleTableText(seatCount: number): string {
   ].join("\n");
 }
 
+const sixMaxProfile: TrainingProfile = {
+  gameVariant: "MTT",
+  tableFormat: "SIX_MAX",
+  blindSpeed: "REGULAR",
+  street: "PREFLOP",
+  evModel: "CHIP_EV",
+  ante: "OFF",
+  rakeMode: "NONE",
+};
+
+const sixMaxFixtureStore: RangeStore = {
+  isLoaded: () => true,
+  lookup: () => ({
+    actions: { AKo: ["FOLD"] } as never,
+    strict: { AKo: ["FOLD"] } as never,
+  }),
+};
+
 describe("hhParser - total parser properties", () => {
   // Feature: mtt-preflop-trainer, Property 28: HH round-trip zachova pole hrdiny a sestavi Spot
   // Validates: Requirements 11.1, 11.4
@@ -144,6 +164,79 @@ describe("hhParser - total parser properties", () => {
       }),
       { numRuns: 100 },
     );
+  });
+
+  it("s potvrzenym SIX_MAX profilem odvozuje sest pozic bez 9-max fallbacku", () => {
+    const result = parseHandHistory(incompatibleTableText(6), {
+      profile: sixMaxProfile,
+      rangeStore: sixMaxFixtureStore,
+      requireLoadedStrategy: true,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.fields.tableFormat).toBe("SIX_MAX");
+    expect(result.fields.position).toBe("BTN");
+    expect(result.fields.profile).toEqual(sixMaxProfile);
+    expect(result.fields.stackBucketPolicy).toBe("NEAREST_SUPPORTED_BUCKET");
+    expect(result.spot?.heroPos).toBe("BTN");
+  });
+
+  it("fail-closed zablokuje review bez nactene strategie pro potvrzeny profil", () => {
+    const result = parseHandHistory(validNineHandedText("BTN", [
+      { rank: "A", suit: "s" },
+      { rank: "K", suit: "d" },
+    ]), {
+      profile: {
+        ...sixMaxProfile,
+        tableFormat: "FULL_RING_9",
+        evModel: "DOLAR_EV",
+      },
+      rangeStore: {
+        lookup: () => undefined,
+        isLoaded: () => false,
+      },
+      requireLoadedStrategy: true,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.strategyUnavailable).toBe(true);
+    expect(result.fields.profile?.evModel).toBe("DOLAR_EV");
+    expect(result.spot).toBeUndefined();
+    expect(result.errors.join(" ")).toContain("Production preflop strategy");
+  });
+
+  it("odmitne duplicitni kartu mezi hero handou a boardem", () => {
+    const text = validNineHandedText("BTN", [
+      { rank: "A", suit: "s" },
+      { rank: "K", suit: "d" },
+    ]).replace("*** SUMMARY ***", "*** FLOP *** [As 7d 2c]\n*** SUMMARY ***");
+
+    const result = parseHandHistory(text);
+
+    expect(result.ok).toBe(false);
+    expect(result.incompatible).toBe(true);
+    expect(result.errors.join(" ")).toContain("duplicate cards");
+  });
+
+  it("normalizuje sizing a all-in priznak v BB", () => {
+    const text = validNineHandedText("BTN", [
+      { rank: "A", suit: "s" },
+      { rank: "K", suit: "d" },
+    ]).replace("Hero: folds", "Hero: raises 980 to 1000 and is all-in");
+
+    const result = parseHandHistory(text);
+
+    expect(result.ok).toBe(true);
+    expect(result.fields.preflopActionDetails).toEqual([
+      {
+        actor: "Hero",
+        kind: "RAISE",
+        raw: "raises 980 to 1000 and is all-in",
+        amountBB: 49,
+        raiseToBB: 50,
+        allIn: true,
+      },
+    ]);
   });
 
   it("odmitne vstup delsi nez 100000 znaku bez padu", () => {

@@ -58,6 +58,8 @@ describe("postflopResultRecord", () => {
     expect(record.boardTextures.length).toBeGreaterThan(0);
     expect(record.sourceRuleId.length).toBeGreaterThan(0);
     expect(record.sourceConfidence).toBe("LOW");
+    expect(record.sourcePackVersion).toBe(flopSingleRaisedPrototypeStrategyPack.version);
+    expect(record.sourceVerifiedAt).toBe(flopSingleRaisedPrototypeStrategyPack.verifiedAt);
     expect(isPostflopResultRecord(record)).toBe(true);
   });
 
@@ -108,6 +110,11 @@ describe("postflopResultRecord", () => {
     });
     expect(bridge.boardTextureKey).toBe(record.boardTextures.join("|"));
     expect(bridge.strategyRuleId).toBe(record.sourceRuleId);
+    expect(bridge.scenarioId).toContain(
+      "MTT|FULL_RING_9|TURBO|FLOP|CHIP_EV|ON|NONE",
+    );
+    expect(bridge.strategyPackVersion).toBe(record.sourcePackVersion);
+    expect(bridge.strategyVerifiedAt).toBe(record.sourceVerifiedAt);
   });
 
   it("normalizuje legacy postflop bridge record bez schemaVersion", () => {

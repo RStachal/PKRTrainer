@@ -8,6 +8,8 @@ import { allMttPreflopRangePacks } from "../src/data/ranges/mttPreflopRangePacks
 import { flopProductionStrategyPacks } from "../src/data/ranges/flopProductionStrategyResolver.ts";
 import { turnProductionStrategyPacks } from "../src/data/ranges/turnProductionStrategyResolver.ts";
 import { riverProductionStrategyPacks } from "../src/data/ranges/riverProductionStrategyResolver.ts";
+import { validateProductionStrategySemantics } from "../src/data/ranges/productionStrategySemanticValidation.ts";
+import { buildProductionStrategyRuntimeSmokeReport } from "../src/data/ranges/productionStrategyRuntimeSmoke.ts";
 import {
   buildMttCompletionReadinessReport,
   type MttCompletionImportSlotHint,
@@ -15,6 +17,7 @@ import {
 
 interface CliArgs {
   json: boolean;
+  rangeDir: string;
 }
 
 interface RegistryPackSummary {
@@ -24,6 +27,12 @@ interface RegistryPackSummary {
   legalImportSlot: boolean;
   generatedModulePath: string | null;
   permissionManifestPath: string | null;
+}
+
+interface RegisteredRuntimePack {
+  packId: string;
+  kind: RegistryPackSummary["kind"];
+  profileKeys: readonly string[];
 }
 
 interface RegistryIntegrityReport {
@@ -41,7 +50,7 @@ interface RegistryIntegrityReport {
 
 try {
   const args = parseArgs(process.argv.slice(2));
-  const report = buildRegistryIntegrityReport();
+  const report = buildRegistryIntegrityReport(args.rangeDir);
   console.log(args.json ? JSON.stringify(report, null, 2) : renderRegistryIntegrityReport(report));
   process.exitCode = report.valid ? 0 : 1;
 } catch (error) {
@@ -54,34 +63,55 @@ function usage(): string {
     "Usage:",
     "  npm run mtt:registry-integrity",
     "  npm run mtt:registry-integrity -- --json",
+    "  npm run mtt:registry-integrity -- --range-dir=src/data/ranges",
   ].join("\n");
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
+  let rangeDir = "src/data/ranges";
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
     if (item === "--json") {
       json = true;
       continue;
     }
+    if (item.startsWith("--range-dir=")) {
+      const value = item.slice("--range-dir=".length).trim();
+      if (value.length === 0) throw new Error(`--range-dir requires a path.\n\n${usage()}`);
+      rangeDir = value;
+      continue;
+    }
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
-  return { json };
+  return { json, rangeDir };
 }
 
-function buildRegistryIntegrityReport(): RegistryIntegrityReport {
-  const legalSlots = legalImportSlots();
+function buildRegistryIntegrityReport(rangeDir: string): RegistryIntegrityReport {
+  const completionRows = buildMttCompletionReadinessReport().rows
+    .filter((row) => row.importSlot !== null);
+  const legalSlots = completionRows.map((row) => row.importSlot as MttCompletionImportSlotHint);
   const legalPackIds = new Map(legalSlots.map((slot) => [slot.packId, slot]));
+  const legalProfileKeys = new Map(completionRows.map((row) => [
+    (row.importSlot as MttCompletionImportSlotHint).packId,
+    profileKey(row.tableFormat, row.blindSpeed, row.evModel, row.street, row.ante),
+  ]));
   const registeredPacks = registeredRuntimePacks();
   const registeredPackIds = new Set(registeredPacks.map((pack) => pack.packId));
-  const generatedModules = generatedProductionModules();
+  const generatedModules = generatedProductionModules(rangeDir);
   const permissionManifests = permissionManifestPackIds(legalSlots);
   const errors = [
     ...duplicateErrors("registered runtime pack", registeredPacks.map((pack) => pack.packId)),
     ...duplicateErrors("generated production module", generatedModules.map((module) => module.packId)),
-    ...registeredProductionSlotErrors(registeredPacks, legalPackIds),
-    ...generatedModuleErrors(generatedModules, legalPackIds, registeredPackIds),
+    ...duplicateRegisteredProfileErrors(registeredPacks),
+    ...registeredProductionSlotErrors(registeredPacks, legalPackIds, legalProfileKeys),
+    ...registeredProductionSemanticErrors(),
+    ...generatedModuleErrors(
+      generatedModules,
+      legalPackIds,
+      registeredPackIds,
+      new Set(permissionManifests.map((manifest) => manifest.packId)),
+    ),
     ...permissionManifestErrors(permissionManifests, legalPackIds),
   ];
   const generatedByPackId = new Map(generatedModules.map((module) => [module.packId, module.path]));
@@ -113,45 +143,73 @@ function buildRegistryIntegrityReport(): RegistryIntegrityReport {
   };
 }
 
-function legalImportSlots(): MttCompletionImportSlotHint[] {
-  return buildMttCompletionReadinessReport().rows
-    .map((row) => row.importSlot)
-    .filter((slot): slot is MttCompletionImportSlotHint => slot !== null);
+function registeredProductionSemanticErrors(): string[] {
+  return [
+    ...flopProductionStrategyPacks,
+    ...turnProductionStrategyPacks,
+    ...riverProductionStrategyPacks,
+  ].flatMap((pack) => [
+    ...validateProductionStrategySemantics(pack),
+    ...buildProductionStrategyRuntimeSmokeReport(pack).errors,
+  ].map((error) => `${pack.id}: ${error}`));
 }
 
-function registeredRuntimePacks(): Array<{
-  packId: string;
-  kind: RegistryPackSummary["kind"];
-}> {
+function registeredRuntimePacks(): RegisteredRuntimePack[] {
   return [
     ...allMttPreflopRangePacks.map((pack) => ({
       packId: pack.id,
       kind: "mtt-preflop" as const,
+      profileKeys: [
+        profileKey(
+          pack.dimensions.tableFormat,
+          pack.dimensions.blindSpeed,
+          pack.dimensions.evModel,
+          "PREFLOP",
+          pack.dimensions.ante,
+        ),
+      ],
     })),
     ...flopProductionStrategyPacks.map((pack) => ({
       packId: pack.id,
       kind: "flop-production" as const,
+      profileKeys: postflopProfileKeys(pack.dimensions),
     })),
     ...turnProductionStrategyPacks.map((pack) => ({
       packId: pack.id,
       kind: "turn-production" as const,
+      profileKeys: postflopProfileKeys(pack.dimensions),
     })),
     ...riverProductionStrategyPacks.map((pack) => ({
       packId: pack.id,
       kind: "river-production" as const,
+      profileKeys: postflopProfileKeys(pack.dimensions),
     })),
   ];
 }
 
-function generatedProductionModules(): Array<{ packId: string; path: string }> {
-  const rangeDir = "src/data/ranges";
+function generatedProductionModules(
+  rangeDir: string,
+): Array<{ packId: string; path: string; provenanceFingerprint: string | null }> {
   if (!existsSync(rangeDir)) return [];
   return readdirSync(rangeDir, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(".ts"))
     .map((entry) => join(rangeDir, entry.name).replace(/\\/g, "/"))
-    .map((path) => ({ path, packId: readGeneratedModulePackId(path) }))
-    .filter((item): item is { packId: string; path: string } => item.packId !== null)
+    .map((path) => ({
+      path,
+      packId: readGeneratedModulePackId(path),
+      provenanceFingerprint: readGeneratedModuleFingerprint(path),
+    }))
+    .filter((item): item is {
+      packId: string;
+      path: string;
+      provenanceFingerprint: string | null;
+    } => item.packId !== null)
     .filter((item) => item.packId.includes("-production-"));
+}
+
+function readGeneratedModuleFingerprint(path: string): string | null {
+  const content = readFileSync(path, "utf8");
+  return content.match(/provenance-fingerprint:\s*sha256:([a-f0-9]{64})/i)?.[1] ?? null;
 }
 
 function readGeneratedModulePackId(path: string): string | null {
@@ -191,28 +249,74 @@ function duplicateErrors(label: string, values: readonly string[]): string[] {
   return [...duplicates].sort().map((value) => `Duplicate ${label}: ${value}`);
 }
 
-function registeredProductionSlotErrors(
-  registeredPacks: readonly { packId: string; kind: RegistryPackSummary["kind"] }[],
-  legalPackIds: ReadonlyMap<string, MttCompletionImportSlotHint>,
+function duplicateRegisteredProfileErrors(
+  registeredPacks: readonly RegisteredRuntimePack[],
 ): string[] {
-  return registeredPacks
-    .filter((pack) => pack.packId.includes("-production-"))
-    .filter((pack) => !legalPackIds.has(pack.packId))
-    .map((pack) => `Registered production pack is outside legal MTT import slots: ${pack.packId}`);
+  const packIdsByProfile = new Map<string, Set<string>>();
+  for (const pack of registeredPacks) {
+    for (const key of pack.profileKeys) {
+      const packIds = packIdsByProfile.get(key) ?? new Set<string>();
+      packIds.add(pack.packId);
+      packIdsByProfile.set(key, packIds);
+    }
+  }
+
+  return [...packIdsByProfile.entries()]
+    .filter(([, packIds]) => packIds.size > 1)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, packIds]) => (
+      `Duplicate registered MTT production profile ${key}: ${[...packIds].sort().join(", ")}`
+    ));
+}
+
+function registeredProductionSlotErrors(
+  registeredPacks: readonly RegisteredRuntimePack[],
+  legalPackIds: ReadonlyMap<string, MttCompletionImportSlotHint>,
+  legalProfileKeys: ReadonlyMap<string, string>,
+): string[] {
+  const errors: string[] = [];
+  for (const pack of registeredPacks.filter((item) => item.packId.includes("-production-"))) {
+    if (!legalPackIds.has(pack.packId)) {
+      errors.push(`Registered production pack is outside legal MTT import slots: ${pack.packId}`);
+      continue;
+    }
+    const expectedProfileKey = legalProfileKeys.get(pack.packId);
+    if (
+      expectedProfileKey === undefined ||
+      pack.profileKeys.length !== 1 ||
+      pack.profileKeys[0] !== expectedProfileKey
+    ) {
+      errors.push(
+        `Registered production pack covers unsupported MTT dimensions: ${pack.packId}`,
+      );
+    }
+  }
+  return errors;
 }
 
 function generatedModuleErrors(
-  generatedModules: readonly { packId: string; path: string }[],
+  generatedModules: readonly {
+    packId: string;
+    path: string;
+    provenanceFingerprint: string | null;
+  }[],
   legalPackIds: ReadonlyMap<string, MttCompletionImportSlotHint>,
   registeredPackIds: ReadonlySet<string>,
+  permissionPackIds: ReadonlySet<string>,
 ): string[] {
   const errors: string[] = [];
   for (const module of generatedModules) {
+    if (module.provenanceFingerprint === null) {
+      errors.push(`Generated production module has no provenance fingerprint: ${module.path}`);
+    }
     if (!legalPackIds.has(module.packId)) {
       errors.push(`Generated production module is outside legal MTT import slots: ${module.path}`);
     }
     if (!registeredPackIds.has(module.packId)) {
       errors.push(`Generated production module is not registered in runtime resolver: ${module.path}`);
+    }
+    if (!permissionPackIds.has(module.packId)) {
+      errors.push(`Generated production module has no permission manifest: ${module.path}`);
     }
   }
   return errors;
@@ -229,12 +333,40 @@ function permissionManifestErrors(
 
 function packKindFor(
   packId: string,
-  registeredPacks: readonly { packId: string; kind: RegistryPackSummary["kind"] }[],
+  registeredPacks: readonly RegisteredRuntimePack[],
   legalPackIds: ReadonlyMap<string, MttCompletionImportSlotHint>,
 ): RegistryPackSummary["kind"] {
   return registeredPacks.find((pack) => pack.packId === packId)?.kind ??
     legalPackIds.get(packId)?.kind ??
     "mtt-preflop";
+}
+
+function postflopProfileKeys(dimensions: {
+  tableFormat: string;
+  blindSpeeds: readonly string[];
+  evModel: string;
+  street: string;
+  antes: readonly string[];
+}): string[] {
+  return dimensions.blindSpeeds.flatMap((blindSpeed) => (
+    dimensions.antes.map((ante) => profileKey(
+      dimensions.tableFormat,
+      blindSpeed,
+      dimensions.evModel,
+      dimensions.street,
+      ante,
+    ))
+  ));
+}
+
+function profileKey(
+  tableFormat: string,
+  blindSpeed: string,
+  evModel: string,
+  street: string,
+  ante: string,
+): string {
+  return [tableFormat, blindSpeed, evModel, street, ante].join("|");
 }
 
 function renderRegistryIntegrityReport(report: RegistryIntegrityReport): string {

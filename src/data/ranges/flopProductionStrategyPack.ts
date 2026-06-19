@@ -2,6 +2,7 @@ import { ALL_HAND_CLASSES } from "../../core/poker";
 import type {
   BoardTexture,
   PostflopAction,
+  PostflopOpponentPolicyBranch,
   PostflopPositionPattern,
   PostflopPotType,
 } from "../../core/postflopGenerator";
@@ -18,7 +19,12 @@ import type {
   TableFormat,
 } from "../../core/trainingProfile";
 import type { AnteMode } from "../../core/types";
-import type { PostflopStrategySourceEvidence } from "./postflopStrategyPack";
+import type {
+  PostflopStrategySourceEvidence,
+  ProductionCardRemovalSample,
+  ProductionHandClassOverlapPolicy,
+} from "./postflopStrategyPack";
+import { validatePostflopOpponentPolicyBranch } from "./postflopStrategyPack";
 import { findPlaceholderStringPaths } from "./placeholderText";
 
 export type FlopProductionLicenseKind =
@@ -67,7 +73,10 @@ export interface FlopProductionStrategyRule {
   sprMax: number;
   actions: readonly PostflopAction[];
   recommendedAction: PostflopAction;
+  opponentPolicy?: PostflopOpponentPolicyBranch;
   rangeBuckets: readonly FlopProductionRangeBucket[];
+  handClassOverlapPolicies?: readonly ProductionHandClassOverlapPolicy[];
+  cardRemovalSamples?: readonly ProductionCardRemovalSample[];
   explanation: string;
 }
 
@@ -236,6 +245,9 @@ export function validateFlopProductionRule(
     errors.push(`${rule.id}: SPR bounds are invalid.`);
   }
   if (rule.explanation.trim().length === 0) errors.push(`${rule.id}: explanation is required.`);
+  if (rule.opponentPolicy) {
+    errors.push(...validatePostflopOpponentPolicyBranch(rule.opponentPolicy, rule.id));
+  }
   if (rule.rangeBuckets.length === 0) errors.push(`${rule.id}: rangeBuckets are required.`);
   if (!flopPotTypeMatchesActionNode(rule.potType, rule.actionNode)) {
     errors.push(`${rule.id}: ${rule.potType} pot cannot use ${rule.actionNode}.`);

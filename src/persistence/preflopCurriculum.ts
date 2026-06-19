@@ -44,6 +44,7 @@ export interface PreflopSessionGoal {
 }
 
 export interface PreflopSpacedRepetitionItem {
+  scenarioId: string;
   qid: string;
   attempts: number;
   misses: number;
@@ -147,9 +148,16 @@ export function buildPreflopSpacedRepetitionQueue(
   records: readonly ResultRecordV2[],
   options: { seed?: number; limit?: number } = {},
 ): PreflopSpacedRepetitionItem[] {
-  const groups = new Map<string, { attempts: number; misses: number; lastTs: number; lastCorrect: boolean }>();
+  const groups = new Map<string, {
+    qid: string;
+    attempts: number;
+    misses: number;
+    lastTs: number;
+    lastCorrect: boolean;
+  }>();
   for (const record of records.filter((item) => item.street === "PREFLOP")) {
-    const group = groups.get(record.qid) ?? {
+    const group = groups.get(record.scenarioId) ?? {
+      qid: record.qid,
       attempts: 0,
       misses: 0,
       lastTs: Number.NEGATIVE_INFINITY,
@@ -161,19 +169,20 @@ export function buildPreflopSpacedRepetitionQueue(
       group.lastTs = record.ts;
       group.lastCorrect = record.correct;
     }
-    groups.set(record.qid, group);
+    groups.set(record.scenarioId, group);
   }
 
   const maxTs = Math.max(0, ...[...groups.values()].map((group) => group.lastTs));
   const seed = options.seed ?? 0;
   const queue = [...groups.entries()]
-    .map(([qid, group]) => {
+    .map(([scenarioId, group]) => {
       const ageBonus = Math.min(40, Math.max(0, Math.round((maxTs - group.lastTs) / 86_400_000)));
       const lastMissBonus = group.lastCorrect ? 0 : 35;
       const missRate = group.attempts === 0 ? 0 : group.misses / group.attempts;
-      const deterministicTieBreak = (hashStr(`${seed}|${qid}`) % 1000) / 1000;
+      const deterministicTieBreak = (hashStr(`${seed}|${scenarioId}`) % 1000) / 1000;
       return {
-        qid,
+        scenarioId,
+        qid: group.qid,
         attempts: group.attempts,
         misses: group.misses,
         lastTs: group.lastTs,
@@ -182,7 +191,7 @@ export function buildPreflopSpacedRepetitionQueue(
       };
     })
     .filter((item) => item.misses > 0)
-    .sort((a, b) => b.priority - a.priority || a.qid.localeCompare(b.qid));
+    .sort((a, b) => b.priority - a.priority || a.scenarioId.localeCompare(b.scenarioId));
 
   return queue.slice(0, options.limit ?? 8);
 }

@@ -36,6 +36,7 @@ describe("postflopView - DOM", () => {
     street!.value = "RIVER";
     root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
 
+    expect(seed?.value).toBe("");
     expect(root.querySelector<HTMLElement>(".postflop-controls")?.hidden).toBe(true);
     expect(root.querySelector<HTMLButtonElement>(".postflop-new-spot")?.textContent)
       .toBe("New spot");
@@ -119,6 +120,7 @@ describe("postflopView - DOM", () => {
     renderPostflopView(root, { initialSeed: 42, initialStreet: "FLOP" });
 
     root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+    expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("");
     expect(root.querySelector<HTMLElement>(".postflop-controls")?.hidden).toBe(true);
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(false);
     expect(root.querySelectorAll(".postflop-action")).toHaveLength(3);
@@ -129,6 +131,7 @@ describe("postflopView - DOM", () => {
     const seed = root.querySelector<HTMLInputElement>(".postflop-seed");
     seed!.value = "43";
     root.querySelector<HTMLButtonElement>(".postflop-new-spot")?.click();
+    expect(seed?.value).toBe("");
     expect(root.querySelector<HTMLElement>(".postflop-controls")?.hidden).toBe(true);
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.seed).toBe("43");
 

@@ -252,4 +252,33 @@ describe("mttPreflopRangePackImport", () => {
       "missing positions: UTG,HJ,CO,SB,BB",
     );
   });
+
+  it("blokuje akci nelegalni pro node, duplicitni akci a strict mimo lenient", () => {
+    const input = fullRingTurboInput();
+    const lenient = { ...input.records[0].lenient, AA: ["FOLD" as const] };
+    const strict = {
+      ...input.records[0].strict,
+      AA: ["CALL" as const, "CALL" as const],
+    };
+    const report = buildMttPreflopImportReadinessReport({
+      ...input,
+      records: [
+        {
+          ...input.records[0],
+          context: "RFI",
+          lenient,
+          strict,
+        },
+        ...input.records.slice(1),
+      ],
+    });
+
+    expect(report.valid).toBe(false);
+    expect(report.productionReady).toBe(false);
+    expect(report.errors).toEqual(expect.arrayContaining([
+      "records[0].strict.AA contains action CALL illegal for RFI.",
+      "records[0].strict.AA contains duplicate actions.",
+      "records[0].strict.AA action CALL is missing from lenient.",
+    ]));
+  });
 });

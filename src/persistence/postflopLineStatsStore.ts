@@ -105,6 +105,13 @@ function cloneRecord(record: PostflopLineResultRecord): PostflopLineResultRecord
       ...street,
       record: { ...street.record },
     })),
-    actionHistory: record.actionHistory.map((action) => ({ ...action })),
+    actionHistory: record.actionHistory.map((action) => ({
+      ...action,
+      ...(action.sequence
+        ? { sequence: action.sequence.map((step) => ({ ...step })) }
+        : {}),
+      ...(action.stateBefore ? { stateBefore: { ...action.stateBefore } } : {}),
+      ...(action.stateAfter ? { stateAfter: { ...action.stateAfter } } : {}),
+    })),
   };
 }

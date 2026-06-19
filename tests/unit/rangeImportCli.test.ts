@@ -46,6 +46,7 @@ import {
 } from "../../src/data/ranges/riverProductionStrategyPack";
 import type { MttPreflopRangePackImportInput } from "../../src/data/ranges/mttPreflopRangePackImport";
 import type { ProductionPermissionManifest } from "../../src/data/ranges/productionPermissionManifest";
+import type { ProductionCardRemovalSample } from "../../src/data/ranges/postflopStrategyPack";
 
 const ACTION_CONTEXTS: readonly ActionContext[] = [
   "RFI",
@@ -87,6 +88,27 @@ function handMap(action: ActionKey): Record<HandLabel, ActionKey[]> {
   const out = {} as Record<HandLabel, ActionKey[]>;
   for (const hand of ALL_HAND_CLASSES) out[hand] = [hand === "AA" ? action : "FOLD"];
   return out;
+}
+
+function cardRemovalSample(
+  street: "FLOP" | "TURN" | "RIVER",
+): ProductionCardRemovalSample {
+  const board = [
+    { rank: "K", suit: "d" },
+    { rank: "7", suit: "c" },
+    { rank: "2", suit: "d" },
+    { rank: "5", suit: "c" },
+    { rank: "J", suit: "d" },
+  ] as const;
+  return {
+    board: board.slice(0, street === "FLOP" ? 3 : street === "TURN" ? 4 : 5),
+    heroCards: [
+      { rank: "A", suit: "s" },
+      { rank: "A", suit: "h" },
+    ],
+    handClass: "AA",
+    rationale: "Deterministicky source-free CLI QA sample.",
+  };
 }
 
 function validMttImport(): MttPreflopRangePackImportInput {
@@ -188,6 +210,7 @@ function flopRule(
         features: ["air"],
       },
     ],
+    cardRemovalSamples: [cardRemovalSample("FLOP")],
     explanation: "CLI production fixture rule.",
   };
 }
@@ -230,6 +253,7 @@ function flopFacingBetRule(
         features: ["air"],
       },
     ],
+    cardRemovalSamples: [cardRemovalSample("FLOP")],
     explanation: "CLI production facing-bet fixture rule.",
   };
 }
@@ -333,6 +357,7 @@ function turnRule(
         features: ["air"],
       },
     ],
+    cardRemovalSamples: [cardRemovalSample("TURN")],
     explanation: "CLI turn production fixture rule.",
   };
 }
@@ -377,6 +402,7 @@ function turnFacingBetRule(
         features: ["air"],
       },
     ],
+    cardRemovalSamples: [cardRemovalSample("TURN")],
     explanation: "CLI turn facing-bet production fixture rule.",
   };
 }
@@ -487,6 +513,7 @@ function riverRule(
         blockerRelevance: "LOW",
       },
     ],
+    cardRemovalSamples: [cardRemovalSample("RIVER")],
     explanation: "CLI river production fixture rule.",
   };
 }
@@ -536,6 +563,7 @@ function riverFacingBetRule(
         blockerRelevance: "LOW",
       },
     ],
+    cardRemovalSamples: [cardRemovalSample("RIVER")],
     explanation: "CLI river facing-bet production fixture rule.",
   };
 }
@@ -545,17 +573,19 @@ function validRiverProductionPack(): RiverProductionStrategyPack {
   for (const potType of RIVER_PRODUCTION_REQUIRED_POT_TYPES) {
     for (const positionPattern of RIVER_PRODUCTION_REQUIRED_POSITION_PATTERNS) {
       for (const priorTurnAction of RIVER_PRODUCTION_REQUIRED_PRIOR_TURN_ACTIONS) {
-        for (const runoutClass of RIVER_PRODUCTION_REQUIRED_RUNOUT_CLASSES) {
-          for (const blockerRelevance of RIVER_PRODUCTION_REQUIRED_BLOCKER_RELEVANCE) {
-            rules.push(riverRule(potType, positionPattern, priorTurnAction, runoutClass, blockerRelevance));
-            rules.push(riverFacingBetRule(
-              potType,
-              positionPattern,
-              priorTurnAction,
-              runoutClass,
-              blockerRelevance,
-            ));
-          }
+        for (const [runoutIndex, runoutClass] of RIVER_PRODUCTION_REQUIRED_RUNOUT_CLASSES.entries()) {
+          const blockerRelevance =
+            RIVER_PRODUCTION_REQUIRED_BLOCKER_RELEVANCE[
+              runoutIndex % RIVER_PRODUCTION_REQUIRED_BLOCKER_RELEVANCE.length
+            ];
+          rules.push(riverRule(potType, positionPattern, priorTurnAction, runoutClass, blockerRelevance));
+          rules.push(riverFacingBetRule(
+            potType,
+            positionPattern,
+            priorTurnAction,
+            runoutClass,
+            blockerRelevance,
+          ));
         }
       }
     }

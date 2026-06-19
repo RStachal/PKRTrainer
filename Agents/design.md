@@ -1,5 +1,20 @@
 # Design Document — MTT Preflop Trainer
 
+> Scope status (2026-06-18)
+>
+> This is the historical architecture and property-test design for the first
+> 9-max CHIP_EV preflop implementation. It remains authoritative for the
+> preflop engine invariants documented below, but it is not the complete MTT v1
+> product design.
+>
+> The active release contract is `Agents/mtt-done-checklist.md` plus section
+> 135 of `Agents/tasks.md`: 2 table formats x 2 blind speeds x 2 EV models x
+> 2 ante modes x 4 streets = 64 MTT completion rows. Production postflop uses
+> profile-bound FLOP/TURN/RIVER StrategyPacks and must fail closed instead of
+> silently using heuristic fallback. `DOLAR_EV` requires dedicated reviewed
+> data or an explicit reviewed reuse policy and is not a synonym for a generic
+> full ICM engine.
+
 ## Overview
 
 MTT Preflop Trainer je nová, čistě klientská (offline-capable) aplikace pro trénink preflop rozhodování v turnajovém pokeru na **full ring 9-handed** stole napříč efektivními hloubkami **5–150 BB**. Aplikace generuje deterministické tréninkové spoty, nechá uživatele zvolit akci, vyhodnotí ji proti referenčním cEV ranges (režim LENIENT/STRICT), vizualizuje situaci v grafice připomínající pokerový klient, zobrazí doporučenou range v mřížce 13×13 a perzistuje statistiky.

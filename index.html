@@ -11,6 +11,16 @@
     <div id="app">
       <noscript>This app requires JavaScript to be enabled.</noscript>
     </div>
+    <script>
+      if (window.location.protocol === "file:") {
+        document.getElementById("app").innerHTML =
+          '<main style="max-width:720px;margin:64px auto;padding:24px;font:16px/1.5 system-ui,sans-serif;color:#17211d">' +
+          "<h1>PKR Trainer potřebuje lokální webový server</h1>" +
+          "<p>Aplikaci nelze spustit dvojklikem na <code>index.html</code>, protože prohlížeč blokuje JavaScript moduly načítané přes <code>file://</code>.</p>" +
+          "<p>Spusťte soubor <strong>START_LOCAL.bat</strong> přiložený v balíčku. Pro webový deploy nahrajte obsah balíčku na HTTPS hosting.</p>" +
+          "</main>";
+      }
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

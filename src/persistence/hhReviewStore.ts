@@ -12,6 +12,7 @@ import type {
   PostflopPositionPattern,
   PostflopStreet,
 } from "../core/postflopGenerator";
+import { profileId, type TrainingProfile } from "../core/trainingProfile";
 import { POSTFLOP_ACTIONS, isPostflopPositionPattern } from "../core/postflopGenerator";
 import type {
   PostflopActionNode,
@@ -31,6 +32,20 @@ interface HHReviewRecordBase {
   reviewId: string;
   importedAt: number;
   savedToDrillStats: false;
+  profileId?: string;
+  profile?: TrainingProfile;
+  strategyPackId?: string;
+  strategyPackVersion?: string;
+  strategyPackVerifiedAt?: string;
+}
+
+export interface HHReviewIdentity {
+  profile?: TrainingProfile;
+  strategyPack?: {
+    id: string;
+    version: string;
+    verifiedAt: string;
+  };
 }
 
 export interface HHPreflopReviewRecord extends HHReviewRecordBase {
@@ -116,6 +131,7 @@ export function buildHHPreflopReviewRecord(
   chosen: ActionKey | undefined,
   correct: boolean | undefined,
   importedAt = Date.now(),
+  identity: HHReviewIdentity = {},
 ): HHPreflopReviewRecord {
   return {
     schema: HH_REVIEW_RECORD_SCHEMA,
@@ -123,6 +139,7 @@ export function buildHHPreflopReviewRecord(
     reviewId: `HH|PREFLOP|${spot.id}|${importedAt}`,
     importedAt,
     savedToDrillStats: false,
+    ...reviewIdentityFields(identity),
     street: "PREFLOP",
     qid: spot.id,
     chosen: chosen ?? null,
@@ -138,6 +155,7 @@ export function buildHHPreflopReviewRecord(
 export function buildHHPostflopReviewRecord(
   spot: PostflopTrainingSpot,
   importedAt = Date.now(),
+  identity: HHReviewIdentity = {},
 ): HHPostflopReviewRecord {
   return {
     schema: HH_REVIEW_RECORD_SCHEMA,
@@ -145,6 +163,7 @@ export function buildHHPostflopReviewRecord(
     reviewId: `HH|${spot.street}|${spot.id}|${importedAt}`,
     importedAt,
     savedToDrillStats: false,
+    ...reviewIdentityFields(identity),
     street: spot.street,
     qid: spot.id,
     recommended: spot.recommendedAction,
@@ -169,7 +188,8 @@ export function isHHReviewRecord(value: unknown): value is HHReviewRecord {
     record.reviewId.length === 0 ||
     typeof record.importedAt !== "number" ||
     !Number.isFinite(record.importedAt) ||
-    record.savedToDrillStats !== false
+    record.savedToDrillStats !== false ||
+    !isOptionalReviewIdentity(record)
   ) {
     return false;
   }
@@ -209,6 +229,72 @@ export function isHHReviewRecord(value: unknown): value is HHReviewRecord {
     isPosition(postflop.heroPosition) &&
     isPosition(postflop.villainPosition) &&
     isPostflopPositionPattern(postflop.positionPattern)
+  );
+}
+
+function reviewIdentityFields(identity: HHReviewIdentity) {
+  return {
+    ...(identity.profile
+      ? {
+        profileId: profileId(identity.profile),
+        profile: { ...identity.profile },
+      }
+      : {}),
+    ...(identity.strategyPack
+      ? {
+        strategyPackId: identity.strategyPack.id,
+        strategyPackVersion: identity.strategyPack.version,
+        strategyPackVerifiedAt: identity.strategyPack.verifiedAt,
+      }
+      : {}),
+  };
+}
+
+function isOptionalReviewIdentity(record: Partial<HHReviewRecord>): boolean {
+  if (record.profileId === undefined && record.profile === undefined) return true;
+  if (
+    typeof record.profileId !== "string" ||
+    record.profileId.length === 0 ||
+    typeof record.profile !== "object" ||
+    record.profile === null ||
+    !isTrainingProfile(record.profile) ||
+    profileId(record.profile as TrainingProfile) !== record.profileId
+  ) {
+    return false;
+  }
+  const strategyFields = [
+    record.strategyPackId,
+    record.strategyPackVersion,
+    record.strategyPackVerifiedAt,
+  ];
+  return strategyFields.every((value) => value === undefined) ||
+    strategyFields.every((value) => typeof value === "string" && value.length > 0);
+}
+
+function isTrainingProfile(value: unknown): value is TrainingProfile {
+  if (typeof value !== "object" || value === null) return false;
+  const profile = value as Partial<TrainingProfile>;
+  return (
+    (profile.gameVariant === "MTT" || profile.gameVariant === "SNG" || profile.gameVariant === "CASH") &&
+    (profile.tableFormat === "FULL_RING_9" || profile.tableFormat === "SIX_MAX") &&
+    (profile.blindSpeed === "REGULAR" || profile.blindSpeed === "TURBO") &&
+    (
+      profile.street === "PREFLOP" ||
+      profile.street === "FLOP" ||
+      profile.street === "TURN" ||
+      profile.street === "RIVER"
+    ) &&
+    (
+      profile.evModel === "CHIP_EV" ||
+      profile.evModel === "DOLAR_EV" ||
+      profile.evModel === "ICM"
+    ) &&
+    (profile.ante === "ON" || profile.ante === "OFF") &&
+    (
+      profile.rakeMode === "NONE" ||
+      profile.rakeMode === "RAKE" ||
+      profile.rakeMode === "NO_RAKE"
+    )
   );
 }
 
@@ -292,6 +378,7 @@ class LocalHHReviewStore implements HHReviewStore {
 function cloneRecord<T extends HHReviewRecord>(record: T): T {
   return {
     ...record,
+    ...(record.profile ? { profile: { ...record.profile } } : {}),
     ...(record.street === "PREFLOP"
       ? { recommended: [...record.recommended] }
       : {

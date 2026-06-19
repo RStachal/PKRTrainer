@@ -1,7 +1,6 @@
 import {
   DEFAULT_TRAINING_PROFILE,
   evModelLabel,
-  isPostflopStreet,
   type BlindSpeed,
   type EvModel,
   type GameVariant,
@@ -11,8 +10,7 @@ import {
   type TrainingStreet,
 } from "../core/trainingProfile";
 import type { AnteMode } from "../core/types";
-import { mttCompletionReadinessRowForTrainingProfile } from "../data/ranges/mttProductionReadiness";
-import { rangePackForTrainingProfile } from "../data/ranges/trainingRangePacks";
+import { trainingCapabilityForProfile } from "../data/ranges/trainingCapability";
 
 export interface ProfileSelectorView {
   getProfile(): TrainingProfile;
@@ -24,7 +22,7 @@ export interface ProfileSelectorCallbacks {
   onChange?: (profile: TrainingProfile) => void;
 }
 
-type ProfileStatus = "production" | "candidate" | "missing" | "preview";
+type ProfileStatus = "production" | "preview" | "blocked" | "unsupported";
 
 const GAME_VARIANTS: { value: GameVariant; label: string }[] = [
   { value: "MTT", label: "MTT" },
@@ -124,12 +122,14 @@ export function renderProfileSelector(
     evModel.select.value = profile.evModel;
     ante.select.value = profile.ante;
     rakeMode.select.value = profile.rakeMode;
+    updateOptionAvailability(profile.gameVariant);
     updateNote(profile);
   }
 
   function handleChange(): void {
     applyVariantDefaults();
     const profile = getProfile();
+    updateOptionAvailability(profile.gameVariant);
     updateNote(profile);
     callbacks.onChange?.(profile);
   }
@@ -147,6 +147,27 @@ export function renderProfileSelector(
     }
 
     if (rakeMode.select.value !== "NONE") rakeMode.select.value = "NONE";
+    if (selectedVariant === "MTT" && evModel.select.value === "ICM") {
+      evModel.select.value = "CHIP_EV";
+    }
+    if (selectedVariant === "SNG") {
+      if (evModel.select.value === "DOLAR_EV") evModel.select.value = "CHIP_EV";
+      if (street.select.value !== "PREFLOP") street.select.value = "PREFLOP";
+    }
+  }
+
+  function updateOptionAvailability(selectedVariant: GameVariant): void {
+    setOptionDisabled(evModel.select, "ICM", selectedVariant !== "SNG");
+    setOptionDisabled(evModel.select, "DOLAR_EV", selectedVariant !== "MTT");
+    for (const value of ["FLOP", "TURN", "RIVER"]) {
+      setOptionDisabled(street.select, value, selectedVariant !== "MTT");
+    }
+    setOptionDisabled(format.select, "FULL_RING_9", selectedVariant === "CASH");
+    setOptionDisabled(speed.select, "TURBO", selectedVariant === "CASH");
+    setOptionDisabled(ante.select, "ON", selectedVariant === "CASH");
+    setOptionDisabled(rakeMode.select, "NONE", selectedVariant === "CASH");
+    setOptionDisabled(rakeMode.select, "RAKE", selectedVariant !== "CASH");
+    setOptionDisabled(rakeMode.select, "NO_RAKE", selectedVariant !== "CASH");
   }
 
   function updateNote(profile: TrainingProfile): void {
@@ -172,53 +193,48 @@ function describeProfileStatus(profile: TrainingProfile): {
   status: ProfileStatus;
   text: string;
 } {
-  if (isPostflopStreet(profile.street)) {
+  const capability = trainingCapabilityForProfile(profile);
+  if (capability.status === "PRODUCTION") {
+    return {
+      status: "production",
+      text: `Production: ${mttProfileLabel(profile)}. Training runs from the offline bundle.`,
+    };
+  }
+  if (capability.status === "PREVIEW") {
+    if (profile.gameVariant === "MTT") {
+      return {
+        status: "preview",
+        text:
+          `Preview: ${mttProfileLabel(profile)} postflop training opens a concrete ` +
+          "spot, table and practical assumptions.",
+      };
+    }
     return {
       status: "preview",
-      text:
-        `Preview: ${mttProfileLabel(profile)} postflop training opens a concrete ` +
-        "spot, table and practical assumptions.",
-    };
-  }
-
-  const mttReadiness = mttCompletionReadinessRowForTrainingProfile(profile);
-  if (mttReadiness) {
-    const label = mttPreflopProfileLabel(profile);
-    if (mttReadiness.status === "PRODUCTION") {
-      return {
-        status: "production",
-        text: `Production: ${label}. Training runs from the offline bundle.`,
-      };
-    }
-
-    if (mttReadiness.status === "CANDIDATE") {
-      return {
-        status: "candidate",
-        text:
-          `${label}: candidate/preview. Production scoring is disabled until reviewed ` +
-          "hand-class coverage is complete.",
-      };
-    }
-
-    return {
-      status: "missing",
-      text: `${label}: missing production range. Production scoring is disabled.`,
-    };
-  }
-
-  const pack = rangePackForTrainingProfile(profile);
-  if (pack && (pack.confidence === "LOW" || pack.records.length === 0)) {
-    return {
-      status: "candidate",
       text:
         `${candidateProfileLabel(profile)}: candidate/preview. Production scoring is disabled ` +
         "until hand-class values are reviewed.",
     };
   }
-
+  if (capability.status === "BLOCKED") {
+    const readiness = capability.mttReadiness;
+    const label = mttProfileLabel(profile);
+    if (readiness?.status === "CANDIDATE") {
+      return {
+        status: "blocked",
+        text:
+          `${label}: candidate/preview. Production scoring is disabled until reviewed ` +
+          "hand-class coverage is complete.",
+      };
+    }
+    return {
+      status: "blocked",
+      text: `${label}: missing production range. Production scoring is disabled.`,
+    };
+  }
   return {
-    status: "preview",
-    text: `${candidateProfileLabel(profile)}. Production scoring is disabled.`,
+    status: "unsupported",
+    text: `Unsupported profile: ${capability.reason}`,
   };
 }
 
@@ -236,12 +252,17 @@ function tableFormatLabel(format: TableFormat): string {
   return format === "FULL_RING_9" ? "9-max" : "6-max";
 }
 
-function mttPreflopProfileLabel(profile: TrainingProfile): string {
-  return `MTT ${tableFormatLabel(profile.tableFormat)} ${blindSpeedLabel(profile.blindSpeed)} preflop ${evModelLabel(profile.evModel)} ${anteLabel(profile.ante)}`;
-}
-
 function blindSpeedLabel(speed: BlindSpeed): string {
   return speed === "REGULAR" ? "regular" : "turbo";
+}
+
+function setOptionDisabled(
+  select: HTMLSelectElement,
+  value: string,
+  disabled: boolean,
+): void {
+  const option = Array.from(select.options).find((item) => item.value === value);
+  if (option) option.disabled = disabled;
 }
 
 function mttProfileLabel(profile: TrainingProfile): string {
