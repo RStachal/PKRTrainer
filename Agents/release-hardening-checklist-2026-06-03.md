@@ -10,8 +10,8 @@
 
 ## Offline / Service Worker
 
-- Service worker precaches every production asset emitted into `dist/`, including hashed chunks, manifest and install icon.
-- First same-origin GET for hashed JS/CSS/data is network-served and then runtime cached.
+- Service worker precaches the app shell and shared production assets, including main/dashboard/postflop chunks, manifest and install icon.
+- Profile-specific `mtt-*-production-*` chunks are excluded from install precache, fetched on first use and durably runtime-cached before the response completes.
 - Second same-origin GET for the same asset is cache-served without another network call.
 - Navigation fallback returns cached app shell when offline.
 - A newly installed worker takes control after successful precache and claims open clients.

@@ -6,6 +6,7 @@ import { defineConfig } from "vite";
 import {
   buildPrecacheManifest,
   injectPrecacheManifest,
+  isLazyMttProductionAsset,
 } from "./src/pwa/precacheManifestBuild";
 
 const publicDirectory = fileURLToPath(new URL("./public", import.meta.url));
@@ -41,7 +42,7 @@ export default defineConfig({
           throw new Error("Expected generated sw.js chunk.");
         }
         const manifest = buildPrecacheManifest([
-          ...Object.keys(bundle),
+          ...Object.keys(bundle).filter((fileName) => !isLazyMttProductionAsset(fileName)),
           ...listPublicAssets(),
         ]);
         worker.code = injectPrecacheManifest(worker.code, manifest);
@@ -64,6 +65,7 @@ export default defineConfig({
         // očekávané cestě v registraci); ostatní vstupy zůstávají hashované.
         entryFileNames: (chunk) =>
           chunk.name === "sw" ? "sw.js" : "assets/[name]-[hash].js",
+        chunkFileNames: "assets/[name]-[hash].js",
         manualChunks(id) {
           if (id.split("\\").join("/").endsWith("/src/core/postflopLineSimulator.ts")) {
             return "postflop-line";

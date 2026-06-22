@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildPrecacheManifest,
   injectPrecacheManifest,
+  isLazyMttProductionAsset,
 } from "../../src/pwa/precacheManifestBuild";
 
 describe("precache build manifest", () => {
@@ -35,6 +36,20 @@ describe("precache build manifest", () => {
   it("zmeni cache verzi pri zmene hashovaneho chunku", () => {
     expect(buildPrecacheManifest(["assets/main-a.js"]).version)
       .not.toBe(buildPrecacheManifest(["assets/main-b.js"]).version);
+  });
+
+  it("neprecachuje profilove MTT production chunky", () => {
+    const lazyPack = "assets/mtt-full-ring-9-turbo-flop-chip-ev-ante-off-production-v1-AbCd1234.js";
+    const manifest = buildPrecacheManifest([
+      "assets/main-AbCd1234.js",
+      lazyPack,
+      `${lazyPack}.map`,
+    ]);
+
+    expect(isLazyMttProductionAsset(lazyPack)).toBe(true);
+    expect(isLazyMttProductionAsset("assets/postflop-line-AbCd1234.js")).toBe(false);
+    expect(manifest.entries).toContain("./assets/main-AbCd1234.js");
+    expect(manifest.entries).not.toContain(`./${lazyPack}`);
   });
 
   it("vlozi manifest do worker kodu a odstrani build tokeny", () => {

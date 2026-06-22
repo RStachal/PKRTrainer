@@ -1,7 +1,8 @@
 // Service Worker pro MTT Preflop Trainer (Req 12.1, 12.2, 12.4, 12.5).
 //
-// Aktualni build pri instalaci precachuje kompletni seznam produkcnich souboru
-// vlozeny z Vite buildu. Runtime cache pokryva nove same-origin GET odpovedi.
+// Aktualni build pri instalaci precachuje app shell a sdilene produkcni chunky.
+// Profilove MTT production chunky se stahuji az pri prvnim pouziti a worker
+// dokonci jejich zapis do runtime cache pred vracenim odpovedi.
 // Pri dvoubuildovem upgradu se z predchozi cache docasne obslouzi pouze
 // hashovane build artefakty; stabilni soubory se ze stare verze neprebiraji.
 //
@@ -173,9 +174,11 @@ async function cacheFirst(request: Request): Promise<Response> {
     // Ukládáme jen úspěšné same-origin odpovědi (basic/default), ne opaque.
     if (response.ok && (response.type === "basic" || response.type === "default")) {
       // Odpověď je jednorázový stream — před uložením je nutné ji klonovat.
-      void cache.put(request, response.clone()).catch(() => {
-        /* Selhání zápisu do cache nesmí shodit servírování odpovědi. */
-      });
+      try {
+        await cache.put(request, response.clone());
+      } catch {
+        // Selhání zápisu do cache nesmí shodit servírování odpovědi.
+      }
     }
     return response;
   } catch (error) {

@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
+import { isLazyMttProductionAsset } from "../src/pwa/precacheManifestBuild";
 
 const workerPath = "dist/sw.js";
 const distPath = resolve("dist");
@@ -24,12 +25,19 @@ function listPrecacheFiles(directory: string): string[] {
 
 const worker = readFileSync(workerPath, "utf8");
 const precacheFiles = listPrecacheFiles(distPath);
+const lazyMttProductionFiles = precacheFiles.filter(isLazyMttProductionAsset);
+const requiredPrecacheFiles = precacheFiles.filter((name) => !isLazyMttProductionAsset(name));
 const mainChunks = precacheFiles.filter((name) => /^assets\/main-[a-zA-Z0-9_-]+\.js$/.test(name));
 const errors: string[] = [];
 if (mainChunks.length !== 1) errors.push(`Expected one main JS chunk, found ${mainChunks.length}.`);
-for (const file of precacheFiles) {
+for (const file of requiredPrecacheFiles) {
   if (!worker.includes(`./${file}`)) {
     errors.push(`Service worker precache is missing ${file}.`);
+  }
+}
+for (const file of lazyMttProductionFiles) {
+  if (worker.includes(`./${file}`)) {
+    errors.push(`Lazy MTT production chunk must not be install-precached: ${file}.`);
   }
 }
 if (worker.includes("__PKR_PRECACHE_")) errors.push("Service worker contains build placeholders.");
@@ -40,7 +48,8 @@ if (!/mtt-preflop-[a-f0-9]{16}/.test(worker)) {
 
 console.log("Dist precache integrity");
 console.log(`valid: ${errors.length === 0}`);
-console.log(`precache files: ${precacheFiles.length}`);
+console.log(`precache files: ${requiredPrecacheFiles.length}`);
+console.log(`lazy MTT production files: ${lazyMttProductionFiles.length}`);
 console.log(`main chunks: ${mainChunks.length}`);
 for (const error of errors) console.log(`error: ${error}`);
 process.exitCode = errors.length === 0 ? 0 : 1;

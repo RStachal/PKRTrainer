@@ -44,7 +44,7 @@ class FakeCache {
 }
 
 describe("service worker - offline provoz", () => {
-  it("po prvnim online nacteni serviruje same-origin GET z runtime cache bez site", async () => {
+  it("po prvnim online nacteni serviruje lazy MTT chunk z runtime cache bez site", async () => {
     const listeners: ListenerMap = {};
     const cache = new FakeCache();
     const globals = globalThis as Record<string, unknown>;
@@ -74,8 +74,10 @@ describe("service worker - offline provoz", () => {
       keys: () => Promise.resolve(["mtt-preflop-old", "mtt-preflop-v1"]),
       delete: () => Promise.resolve(true),
     };
+    let online = true;
     globals.fetch = async () => {
       networkCalls += 1;
+      if (!online) throw new Error("offline");
       return new Response("network-js-bundle", { status: 200 });
     };
 
@@ -87,11 +89,14 @@ describe("service worker - offline provoz", () => {
       listeners.install?.({ waitUntil: (promise) => installWork.push(promise) });
       await Promise.all(installWork);
 
-      const request = new Request("https://trainer.test/assets/index-a1b2c3.js");
+      const request = new Request(
+        "https://trainer.test/assets/mtt-full-ring-9-turbo-flop-chip-ev-ante-off-production-v1-a1b2c3d4.js",
+      );
       const first = await dispatchFetch(listeners, request);
       expect(await first.text()).toBe("network-js-bundle");
       expect(networkCalls).toBe(1);
 
+      online = false;
       const second = await dispatchFetch(listeners, request);
       expect(await second.text()).toBe("network-js-bundle");
       expect(networkCalls).toBe(1);
