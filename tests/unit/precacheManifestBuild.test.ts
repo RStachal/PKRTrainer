@@ -1,4 +1,9 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import type { RollupOutput } from "rollup";
 import { describe, expect, it } from "vitest";
+import { build } from "vite";
 
 import {
   buildPrecacheManifest,
@@ -67,6 +72,59 @@ describe("precache build manifest", () => {
     expect(mttProductionChunkNameForModuleId(
       "/repo/src/data/ranges/flopProductionStrategyPack.ts",
     )).toBeNull();
+  });
+
+  it("realny Vite build emituje production modul jako lazy chunk mimo precache", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-lazy-mtt-"));
+    const packId = "mtt-six-max-turbo-turn-chip-ev-ante-off-production-v1";
+    try {
+      writeFileSync(
+        join(directory, "index.html"),
+        '<script type="module" src="/main.ts"></script>',
+        "utf8",
+      );
+      writeFileSync(
+        join(directory, "main.ts"),
+        `(globalThis as typeof globalThis & { loadPack?: unknown }).loadPack = ` +
+          `() => import("./${packId}.ts").then((module) => module.pack);`,
+        "utf8",
+      );
+      writeFileSync(
+        join(directory, `${packId}.ts`),
+        `export const pack = { id: ${JSON.stringify(packId)} };`,
+        "utf8",
+      );
+
+      const result = await build({
+        root: directory,
+        logLevel: "silent",
+        build: {
+          write: false,
+          rollupOptions: {
+            output: {
+              chunkFileNames: "assets/[name]-[hash].js",
+              manualChunks(id) {
+                return mttProductionChunkNameForModuleId(id) ?? undefined;
+              },
+            },
+          },
+        },
+      });
+      const outputs = (Array.isArray(result) ? result : [result]) as RollupOutput[];
+      const fileNames = outputs.flatMap((output) => (
+        output.output.map((entry) => entry.fileName)
+      ));
+      const productionChunk = fileNames.find((fileName) => (
+        fileName.startsWith(`assets/${packId}-`) && fileName.endsWith(".js")
+      ));
+
+      expect(productionChunk).toBeDefined();
+      expect(isLazyMttProductionAsset(productionChunk!)).toBe(true);
+      expect(buildPrecacheManifest(fileNames).entries)
+        .not.toContain(`./${productionChunk}`);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("vlozi manifest do worker kodu a odstrani build tokeny", () => {
