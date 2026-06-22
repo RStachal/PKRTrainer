@@ -65,6 +65,7 @@ import {
 } from "../persistence/hhReviewStore";
 import { renderMatrix } from "./rangeMatrixView";
 import { renderTable } from "./tableRenderer";
+import { CS } from "./cs";
 
 const POSTFLOP_STRATEGY_RESOLVER = createDefaultPostflopStrategyResolver();
 
@@ -115,14 +116,14 @@ function renderUnreadable(doc: Document, container: HTMLElement, fields: HHField
   }
 
   const title = el(doc, "div", "hh-unreadable__title");
-  title.textContent = "Could not read fields:";
+  title.textContent = CS.hh.unreadableTitle;
   container.appendChild(title);
 
   const list = el(doc, "ul", "hh-unreadable__list");
   for (const f of fields) {
     const item = el(doc, "li");
     item.dataset.field = f;
-    item.textContent = f;
+    item.textContent = CS.hh.fields[f];
     list.appendChild(item);
   }
   container.appendChild(list);
@@ -150,9 +151,7 @@ function renderErrors(doc: Document, container: HTMLElement, errors: string[]): 
 /** Zobrazí / skryje indikaci nekompatibility dat s modelem (Req 11.5). */
 function renderIncompatible(container: HTMLElement, incompatible: boolean): void {
   if (incompatible) {
-    container.textContent =
-      "The hand history was readable, but it is not compatible with the trainer model " +
-      "(requires a matching 6-max or 9-handed profile and 5-150 BB effective depth). No spot was built.";
+    container.textContent = CS.hh.incompatible;
     setVisible(container, true);
   } else {
     container.textContent = "";
@@ -179,7 +178,7 @@ const ACTION_LABEL: Record<ActionKey, string> = {
 };
 
 function actionLabel(key: ActionKey | undefined): string {
-  return key ? ACTION_LABEL[key] : "Not mapped";
+  return key ? ACTION_LABEL[key] : CS.hh.results.notMapped;
 }
 
 const POSTFLOP_ACTION_LABEL: Record<PostflopAction, string> = {
@@ -289,7 +288,7 @@ function renderAnalysis(
   if (feedback) container.dataset.correct = String(feedback.correct);
 
   const title = el(doc, "h3", "hh-analysis__title");
-  title.textContent = "Decision analysis";
+  title.textContent = CS.hh.decisionAnalysis;
   container.appendChild(title);
 
   const facts = el(doc, "div", "hh-analysis__facts");
@@ -299,18 +298,23 @@ function renderAnalysis(
   facts.dataset.context = spot.context;
 
   const items = [
-    ["Position", spot.heroPos],
-    ["Hand", spot.hand],
+    [CS.hh.facts.position, spot.heroPos],
+    [CS.hh.facts.hand, spot.hand],
     [
-      "Stack",
+      CS.hh.facts.stack,
       result.fields.effStackBB !== undefined
-        ? `${result.fields.effStackBB} BB → ${spot.effStack} BB bucket (nearest)`
+        ? `${result.fields.effStackBB} BB → nejbližší úroveň ${spot.effStack} BB`
         : `${spot.effStack} BB`,
     ],
-    ["Node", spot.context],
-    ["Your action", actionLabel(chosen)],
-    ["Result", feedback ? (feedback.correct ? "Accepted" : "Review") : "Not scored"],
-    ["Recommended", spot.correctKeys.join(" / ")],
+    [CS.hh.facts.node, spot.context],
+    [CS.hh.facts.yourAction, actionLabel(chosen)],
+    [
+      CS.hh.facts.result,
+      feedback
+        ? (feedback.correct ? CS.hh.results.accepted : CS.hh.results.review)
+        : CS.hh.results.notScored,
+    ],
+    [CS.hh.facts.recommended, spot.correctKeys.join(" / ")],
   ];
 
   for (const [label, value] of items) {
@@ -361,7 +365,7 @@ function renderAnalysis(
       if (!(error instanceof PostflopStrategyUnavailableError)) throw error;
       container.appendChild(renderPostflopUnavailable(
         doc,
-        "Production postflop strategy is not available for this hand and selected profile.",
+        CS.hh.postflopUnavailable,
       ));
     }
   }
@@ -391,11 +395,11 @@ function renderImportedPostflopAnalysis(doc: Document, spot: PostflopTrainingSpo
 
   const facts = el(doc, "div", "hh-postflop-analysis__facts");
   const items = [
-    ["Board", spot.board.map(cardLabel).join(" ")],
-    ["Pot", `${potTypeLabel(spot.potType)} | SPR ${spot.spr}`],
-    ["Position", positionPatternLabel(spot.positionPattern)],
-    ["Texture", spot.boardTextures.map(textureLabel).join(", ")],
-    ["Recommended", postflopActionLabel(spot.recommendedAction)],
+    [CS.hh.facts.board, spot.board.map(cardLabel).join(" ")],
+    [CS.hh.facts.pot, `${potTypeLabel(spot.potType)} | SPR ${spot.spr}`],
+    [CS.hh.facts.position, positionPatternLabel(spot.positionPattern)],
+    [CS.hh.facts.texture, spot.boardTextures.map(textureLabel).join(", ")],
+    [CS.hh.facts.recommended, postflopActionLabel(spot.recommendedAction)],
   ];
 
   for (const [label, value] of items) {
@@ -476,7 +480,7 @@ function applyResult(
     // Chyba / nekompatibilita / částečná data: Spot nevykresluj, vyčisti stůl.
     regions.table.innerHTML = "";
     const placeholder = el(doc, "p", "hh-table__placeholder");
-    placeholder.textContent = "The table appears after importing a compatible hand history.";
+    placeholder.textContent = CS.hh.tablePlaceholder;
     placeholder.style.opacity = "0.7";
     placeholder.style.fontStyle = "italic";
     regions.table.appendChild(placeholder);
@@ -597,27 +601,25 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
 
   // Nadpis a nápověda.
   const title = el(doc, "h2", "hh-view__title");
-  title.textContent = "Import hand history";
+  title.textContent = CS.hh.title;
   wrap.appendChild(title);
 
   const hint = el(doc, "p", "hh-view__hint");
-  hint.textContent =
-    "Paste a PokerStars hand history and run analysis. " +
-    "Supported model: matching 6-max or 9-handed profile, 5-150 BB effective depth.";
+  hint.textContent = CS.hh.hint;
   wrap.appendChild(hint);
 
   // Textarea pro vstup (Req 11.2).
   const textarea = doc.createElement("textarea");
   textarea.className = "hh-input";
-  textarea.setAttribute("aria-label", "Text hand history");
-  textarea.placeholder = "Paste hand history here...";
+  textarea.setAttribute("aria-label", CS.hh.inputLabel);
+  textarea.placeholder = CS.hh.inputPlaceholder;
   wrap.appendChild(textarea);
 
   // Tlačítko "Analyzovat" (Req 11.2).
   const button = doc.createElement("button");
   button.className = "hh-analyze";
   button.type = "button";
-  button.textContent = "Analyze";
+  button.textContent = CS.hh.analyze;
   wrap.appendChild(button);
 
   // Výstupní oblasti.
@@ -639,14 +641,15 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
   // Kontejner stolu (Req 11.4) + výchozí placeholder.
   const table = el(doc, "div", "hh-table");
   const placeholder = el(doc, "p", "hh-table__placeholder");
-  placeholder.textContent = "The table appears after importing a compatible hand history.";
+  placeholder.textContent = CS.hh.tablePlaceholder;
   placeholder.style.opacity = "0.7";
   placeholder.style.fontStyle = "italic";
   table.appendChild(placeholder);
   wrap.appendChild(table);
 
   const analysis = el(doc, "section", "hh-analysis");
-  analysis.setAttribute("aria-label", "Imported hand history analysis");
+  analysis.setAttribute("aria-label", CS.hh.analysisLabel);
+  analysis.setAttribute("tabindex", "-1");
   wrap.appendChild(analysis);
 
   const regions = { errors, unreadable, incompatible, table, analysis };
@@ -659,18 +662,27 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
         ? parseHandHistory(textarea.value, parseOptions)
         : parseHandHistory(textarea.value);
       applyResult(doc, result, regions, callbacks);
+      if (result.ok && result.spot) {
+        analysis.focus();
+      } else {
+        const target = result.errors.length > 0 ? errors : incompatible;
+        target.setAttribute("tabindex", "-1");
+        target.focus();
+      }
     } catch (err) {
       // Pojistka: parser je totální, ale ani neočekávaná chyba při vykreslování
       // nesmí shodit view (Req 11.2 — bez pádu aplikace).
       const msg = err instanceof Error ? err.message : String(err);
       renderErrors(doc, regions.errors, [
-        `Unexpected error while processing hand history: ${msg}`,
+        `Neočekávaná chyba při zpracování hand history: ${msg}`,
       ]);
       renderUnreadable(doc, regions.unreadable, []);
       renderIncompatible(regions.incompatible, false);
       regions.table.innerHTML = "";
       regions.analysis.innerHTML = "";
       regions.analysis.removeAttribute("data-spot-id");
+      regions.errors.setAttribute("tabindex", "-1");
+      regions.errors.focus();
     }
   });
 

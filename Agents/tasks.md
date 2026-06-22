@@ -1659,16 +1659,15 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
 
 - [ ] 135. MTT application completion package - hlavni backlog pro dokonceni MTT casti
   - Cil: v prvni produkcni casti aplikace mit kompletne funkcni MTT trenink pro FULL_RING_9 i SIX_MAX, REGULAR i TURBO, CHIP_EV i DOLAR_EV, ante ON/OFF, PREFLOP/FLOP/TURN/RIVER, vsechny podporovane pozice, pot/action nody, single spot i hand-line flow, HH review, stats a release gates.
-  - Aktualni audit 2026-06-18:
-    - Working tree baseline byl 2026-06-18 obnoven v 135.29: typecheck, aktualne 485 testu, build a bundle budget jsou zelene; dalsi prace muze navazat na P0 runtime/release ukoly.
-    - Posledni znamy zeleny commit baseline mel 100 test files / 475 testu, build a bundle budget, ale tento stav uz neodpovida aktualnimu working tree.
+  - Aktualni audit 2026-06-22:
+    - Technicky baseline je zeleny: typecheck, 109 testovacich souboru / 524 testu, produkcni build, precache integrity a bundle budget prosly 2026-06-22.
+    - Profile-bound runtime, capability matrix, scenario identity, postflop state machine, generated registry, semanticke QA a CI jsou implementovane; otevrene P0 zustavaji hlavne provenance, dokonceni lokalizace, lazy pack delivery a skutecne browser/device E2E.
     - Produkcni MTT gate je cerveny: 64 completion rows, 2 production-ready, 52 preview, 10 missing; 62 blocker rows a 0 ready-for-validation slotu.
     - P1/P2/P3/P4/P5 fronta je 6 / 8 / 16 / 16 / 16 slotu. Vsem 62 chybi `normalized.json` i `permission.json`.
     - Postflop ma 48/48 blocker rows, 48 fallback runtime rows a 0 production-ready rows.
     - Intake workspace a registry integrity jsou technicky validni, ale registry report oznacuje vsech 6 registrovanych MTT preflop packu jako `LEGACY_OR_UNKNOWN`; dva z nich jsou dnes povazovane za production.
-    - Generovany runtime katalog a automaticky refresh po `mtt:promote-ready --write` jsou rozpracovane, ale chybi kompletni test matrix, provenance vazba a fail-closed integrity.
-    - Preflop start gate je rozpracovany z CHIP_EV-only na obecny completion routing, ale neni dovedeny do funkcniho store/sequence/stats flow.
-    - Postflop trainer a HH review stale v realnem bootstrap flow nedostavaji strict profilovy production resolver a mohou pouzit default heuristic fallback.
+    - Generovany runtime katalog, automaticky refresh a fail-closed integrity jsou hotove; samostatnym blockerem zustava legalni provenance dvou historickych packu.
+    - Preflop i postflop runtime a HH review jsou profile-bound a fail-closed; bez legalniho production packu zobrazi blokujici source-free stav.
     - `Agents/requirements.md` a `Agents/design.md` jsou nove oznacene jako historicky preflop-only baseline s odkazem na 64radkovy release kontrakt; navazujici plny MTT variant scope je v sekci 137.
   - Kriticka zasada: produkcni MTT doporuceni nesmi vzniknout z public heuristic fallbacku, metadata-only reuse ani rucne domyslenych chart hodnot. Kazdy povyseny slot potrebuje legalni `normalized.json`, `permission.json`, production-ready validaci, legal-slot match a source-free runtime vystup.
   - Primary execution order:
@@ -1786,18 +1785,31 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Stavove snapshoty i atomicke sekvence se validuji a hluboce kopiruji v line persistence/export/import. Testy rucne overuji check-bet-raise-call pot, bet-raise-fold, kratky all-in bez reopen, nelegalni re-raise fallback, StrategyPack policy routing, nezaporne stacky a zachovani chipu.
     - Hotovo 2026-06-19: typecheck, 108 testovacich souboru / 517 testu, registry refresh/integrity, range audit, build, precache a bundle budget prosly. Postflop simulator je v samostatnem offline-precache chunku; main JS 306.24 KiB raw / 79.54 KiB gzip, postflop-line 20.88 KiB raw / 7.10 KiB gzip.
     - Navazujici limped, 4bet, multiway a side-pot flow zustava explicitne scope 137.
-  - [ ] 135.33 Dodelat MTT HH import/review profilovou paritu
+  - [x] 135.33 Dodelat MTT HH import/review profilovou paritu
     - Parser dnes sestavuje preflop Spot jen pro plny 9-handed model a pouziva globalni legacy RangeStore; 6-max a DOLAR_EV/regular-turbo profil tak nelze spolehlive reviewovat.
     - Detekovat nebo nechat uzivatele potvrdit table format, blind speed, ante, EV model a street; pro 6-max i 9-max spravne odvodit pozice z buttonu a obsazenych sedadel.
     - Preflop review musi pouzit stejny profilovy RangePack jako trainer, postflop stejny strict production resolver; bez produkcni coverage zobrazit blokujici source-free stav.
     - Parsovat realne sizingy, all-iny, pot/stack po streetach a validovat duplicity karet; nepouzivat nearest-bucket scoring bez viditelne a testovane bucket policy.
     - Acceptance: reprezentativni 6-max a 9-max HH pro CHIP_EV i DOLAR_EV projdou preflop->river review bez global fallbacku a ulozi spravny profil do HH review logu.
+    - Progress 2026-06-20: `parseHandHistory` prijima potvrzeny `TrainingProfile`, profilovy `RangeStore` a metadata konkretniho RangePacku. Produkcni HH preflop review je fail-closed: nepouzije globalni legacy store, pri nenactenem packu nebo chybejicim node vrati blokujici source-free stav.
+    - Parser odvozuje pozice z buttonu pro potvrzeny `FULL_RING_9` i `SIX_MAX`; 6-max bez potvrzeneho profilu se automaticky nevyhodnoti. HH renderer prijima profilove poradi pozic a pro 6-max skutecne kresli 6 sedadel.
+    - Aktivni table format, ante, blind speed a EV model pochazeji ze stejneho profilu jako trainer. Table/ante mismatch blokuje review. DOLAR_EV a neprodukci profily jsou pripraveny fail-closed a nesmi se propadnout do CHIP_EV fallbacku.
+    - Preflop i postflop akce nesou normalizovane sizingy v BB, raise-to a all-in priznak. Parser simuluje skutecny pot, hero/effective stack pred a po FLOP/TURN/RIVER; HH postflop bridge uz nepouziva pevne poty 6/10/18 a routuje granularni SRP/3bet pozicni patterny do produkcniho resolveru.
+    - Duplicity mezi hero kartami a boardem se odmitaji. Nearest-bucket policy je explicitni v parser resultu a UI ukazuje skutecnou hloubku i pouzity nejblizsi bucket.
+    - HH review log zustava oddeleny od drill statistik a nove nese `profileId`, plny profil a StrategyPack/RangePack id, version a verifiedAt; legacy zaznamy bez identity zustavaji citelne.
+    - Technicka implementace a fixture parity prosly: typecheck, 108 testovacich souboru / 522 testu, registry refresh/integrity, range audit, build, precache a bundle budget. Main JS 312.67 KiB raw / 81.54 KiB gzip; postflop-line 20.89 KiB raw / 7.10 KiB gzip.
+    - Zbyvajici blocker pro uplne uzavreni acceptance neni v HH kodu: registry nema legalni production 6-max ani DOLAR_EV preflop packy a nema zadny legalni FLOP/TURN/RIVER production StrategyPack. Do jejich importu se tyto profily spravne blokuji.
+    - Hotovo 2026-06-22: technicka HH parity je uzavrena; chybejici production data jsou sledovana v 135.24, 135.27 a import waves, nikoli jako dalsi HH implementace.
   - [ ] 135.34 Dokoncit ceskou lokalizaci, terminologii a pristupnost
     - Hard rule projektu pozaduje ceske UI, ale aktualni `main.ts`, filtry, dashboard, HH, postflop, manifest a chybove stavy obsahuji rozsahle anglicke texty.
     - Zavest centralni textovy katalog, sjednotit pokerovou terminologii a prelozit vsechny visible texty, validation/error stavy, PWA manifest (`lang`) a user guide; strojove enumy ponechat interni.
     - Doplnit release test, ktery inventarizuje viditelne texty a zabrani novym nahodnym inline stringum mimo katalog.
     - Overit keyboard-only flow, focus po start/answer/next/error, ARIA labely/live regions, kontrast, reduced motion a 200% zoom.
     - Acceptance: reprezentativni E2E pruchod nema anglicke systemove vety ani raw enumy a projde source-free + accessibility smoke.
+    - Progress 2026-06-22: vznikl centralni katalog `src/ui/cs.ts`; app shell, hlavni navigace, HH import/analyza, HH parserove chyby, PWA manifest, HTML fallback a user quick start jsou cesky. Manifest deklaruje `lang=cs` a ma source-free instalacni SVG ikonu.
+    - HH flow po uspechu presouva fokus na analyzu a po chybe na live error region; reduced-motion pravidla zustavaji aktivni. Novy release test hlida pouziti katalogu v shell/HH vrstve, ceska metadata a instalacni ikonu.
+    - Overeni 2026-06-22: typecheck, 109 testovacich souboru / 524 testu, build, precache a bundle budget jsou zelene; hlavni JS 313.92 KiB raw / 82.35 KiB gzip.
+    - Zbyva: presunout texty filtru, profile selectoru, dashboardu, range/postflop views a vsechny bootstrap error/gate vety do katalogu; projit keyboard/zoom/contrast acceptance v realnem prohlizeci.
   - [ ] 135.35 Pripravit 62 production packu na lazy loading a spolehlivy offline provoz
     - Staticky import vsech budoucich RangePacku/StrategyPacku muze radove prekrocit soucasny 325 KiB bundle budget a zpomalit start.
     - Pred prvnim velkym batchem zmerit realnou velikost jednoho preflop a postflop packu a stanovit budget pro app shell, profilovy chunk a celou offline cache.
@@ -1809,6 +1821,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Build plugin nyni injektuje do `sw.js` uplny seznam aktualnich hashovanych assetu a obsahovy cache identifikator. `npm run verify:precache` failuje na chybejici main chunk, placeholder nebo neversionovanou cache a je zapojen do CI i `release:check`.
     - Navigace pouziva network-first, aby novy deploy nespojil stary `index.html` s novymi chunky; offline fallback zustava v cache. Aktivace zachova bezprostredne predchozi cache jako rollback/stary-client generaci a uklizi starsi verze.
     - Zbyva: generated registry prevest na profilove lazy importy, race cancellation, instalacni ikony/metadata a realny cold/warm + dvoubuildovy Android WebView upgrade test.
+    - Progress 2026-06-22: manifest ma ceske metadata a instalacni maskable SVG ikonu; lazy registry, race cancellation a realny upgrade test zustavaji otevrene.
   - [x] 135.36 Zprisnit semanticke QA produkcnich strategii
     - Registry musi failnout na dva production packy pro stejny profil/street bez explicitni precedence, na cross-profile dimenze a na pack bez source-free provenance fingerprintu.
     - Preflop validovat 169 hand classes, legalni akce/sizing pro konkretni node, kontextove mozne pozice a uplnost vsech pozadovanych stacku; zadny implicitni fold nesmi maskovat omylem chybejici cely segment.
@@ -1912,8 +1925,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 135.19 Final MTT release candidate checklist
     - Spustit: `npm run typecheck`, `npm test`, `npm run mtt:acceptance`, `npm run mtt:release-gates`, `npm run verify:ranges`, `npm run build`, `npm run bundle:budget`, `npm run release:check`.
     - Vystup ulozit do release notes: pocty production rows, 0 blockers, 0 waiting slots, bundle budget, known limitations.
-    - Stav auditu 2026-06-18: data jsou nejvetsi objemovy blocker, ale pred batch importem zbyvaji P0 runtime/release ukoly 135.24-135.38. `mtt:acceptance` je valid false: 64 total rows, 2 productionReady, 52 preview, 10 blocked; 62 blocker rows ceka na `normalized.json` a `permission.json`; postflop release gate ma 48/48 blocker rows a 0 productionReady.
-    - Technicky baseline byl 2026-06-18 obnoven v 135.29; typecheck, aktualne 485 testu, build i bundle budget jsou zelene. Release candidate dale blokuji otevrene P0/data ukoly v sekci 135.
+    - Stav auditu 2026-06-22: data jsou nejvetsi objemovy blocker. `mtt:acceptance` je valid false: 64 total rows, 2 productionReady, 52 preview, 10 blocked; 62 blocker rows ceka na `normalized.json` a `permission.json`; postflop release gate ma 48/48 blocker rows a 0 productionReady.
+    - Technicky baseline 2026-06-22: typecheck, 109 testovacich souboru / 524 testu, build, precache a bundle budget jsou zelene. Release candidate dale blokuji 135.24, dokonceni 135.34/135.35/135.38 a legalni import waves.
     - RC attempt notes: `Agents/release-notes-mtt-rc-2026-06-17.md`.
   - [ ] 135.20 Final MTT user smoke
     - Rucne projit reprezentativni MTT scenare: 9-max regular CHIP_EV preflop, 9-max turbo DOLAR_EV preflop, 6-max regular CHIP_EV flop line, 6-max turbo DOLAR_EV river facing-bet, HH import turn/river review a dashboard kontrola.

@@ -200,6 +200,7 @@ describe("hhView - DOM import", () => {
 
   it("zobrazi chyby a necitelna pole pro prazdny vstup bez padu", () => {
     const root = document.createElement("div");
+    document.body.appendChild(root);
     renderHHView(root);
 
     root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
@@ -211,14 +212,14 @@ describe("hhView - DOM import", () => {
     expect(css).toContain("@media (max-width:640px)");
     expect(css).toContain(".hh-analysis__matrix");
     expect(root.querySelector<HTMLTextAreaElement>(".hh-input")?.placeholder)
-      .toBe("Paste hand history here...");
-    expect(root.querySelector<HTMLButtonElement>(".hh-analyze")?.textContent).toBe("Analyze");
+      .toBe("Vložte hand history…");
+    expect(root.querySelector<HTMLButtonElement>(".hh-analyze")?.textContent).toBe("Analyzovat");
     expect(errors?.hidden).toBe(false);
-    expect(errors?.textContent).toContain("Input is empty");
+    expect(errors?.textContent).toContain("Vstup je prázdný");
     expect(unreadable?.hidden).toBe(false);
-    expect(unreadable?.textContent).toContain("position");
+    expect(unreadable?.textContent).toContain("pozice");
     expect(root.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
-    expect(root.textContent).not.toContain("Analyzovat");
+    expect(document.activeElement).toBe(errors);
     expect(root.querySelector(".poker-table")).toBeNull();
   });
 
@@ -253,11 +254,11 @@ describe("hhView - DOM import", () => {
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.chosen).toBe("FOLD");
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.correct).toMatch(/true|false/);
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.dataset.reviewRecordCount).toBe("1");
-    expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Your action");
+    expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Vaše akce");
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent)
-      .toContain("50 BB → 50 BB bucket (nearest)");
+      .toContain("50 BB → nejbližší úroveň 50 BB");
     expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Fold");
-    expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Result");
+    expect(root.querySelector<HTMLElement>(".hh-analysis")?.textContent).toContain("Výsledek");
     expect(root.querySelectorAll(".hh-analysis .matrix-cell")).toHaveLength(169);
     expect(root.querySelector<HTMLElement>(".hh-analysis .matrix-cell--hero")?.dataset.hand)
       .toBe("AKo");
@@ -293,7 +294,7 @@ describe("hhView - DOM import", () => {
     expect(flop?.textContent).toContain("Ah 7d 2c");
     expect(flop?.textContent).toContain("Single-raised pot");
     expect(flop?.textContent).toContain("SRP BTN vs BB");
-    expect(flop?.textContent).toContain("Recommended");
+    expect(flop?.textContent).toContain("Doporučení");
     expect(flop?.textContent).not.toContain("SINGLE_RAISED");
     expect(flop?.textContent).not.toContain("SRP_BTN_VS_BB");
     expect(flop?.textContent).not.toContain("StrategyPack");
@@ -433,7 +434,7 @@ describe("hhView - DOM import", () => {
     root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
 
     const unavailable = root.querySelector<HTMLElement>(".hh-postflop-unavailable");
-    expect(unavailable?.textContent).toContain("Production postflop strategy is not available");
+    expect(unavailable?.textContent).toContain("není dostupná produkční postflop strategie");
     expect(unavailable?.textContent).not.toMatch(/https?:|source|StrategyPack|mtt-/i);
     expect(root.querySelector(".hh-postflop-analysis")).toBeNull();
     expect(reviews).toHaveLength(1);

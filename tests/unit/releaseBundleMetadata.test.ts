@@ -54,7 +54,7 @@ describe("release bundle metadata", () => {
     }))).toBeUndefined();
   });
 
-  it("publikovana app metadata pouzivaji anglictinu a ciste ASCII popisy", () => {
+  it("publikovana app metadata pouzivaji cestinu a platne UTF-8 popisy", () => {
     const html = readFileSync("index.html", "utf8");
     const budgetScript = readFileSync("scripts/checkBundleBudget.mts", "utf8");
     const manifest = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8")) as {
@@ -66,10 +66,10 @@ describe("release bundle metadata", () => {
       scripts: Record<string, string>;
     };
 
-    expect(html).toContain('<html lang="en">');
-    expect(html).toContain("This app requires JavaScript to be enabled.");
-    expect(manifest.lang).toBe("en");
-    expect(manifest.description).toBe("Offline full-ring 9-handed poker decision trainer.");
+    expect(html).toContain('<html lang="cs">');
+    expect(html).toContain("Tato aplikace vyžaduje zapnutý JavaScript.");
+    expect(manifest.lang).toBe("cs");
+    expect(manifest.description).toBe("Offline trenažér pokerových rozhodnutí pro turnajovou hru.");
     expect(pkg.description).toContain("offline full-ring 9-handed poker decision trainer");
     expect(pkg.scripts["verify:ranges"]).toBe("vite-node scripts/verifyRanges.mts");
     expect(pkg.scripts["validate:range-import"]).toBe("vite-node scripts/validateRangeImport.mts");
@@ -110,9 +110,9 @@ describe("release bundle metadata", () => {
     const productionIntakeManifest = readFileSync("Agents/production-range-intake-manifest.md", "utf8");
     const releaseTemplate = readFileSync("Agents/release-notes-template.md", "utf8");
 
-    expect(quickStart).toContain("Training");
-    expect(quickStart).toContain("Statistics");
-    expect(quickStart).toContain("HH Import");
+    expect(quickStart).toContain("Trénink");
+    expect(quickStart).toContain("Statistiky");
+    expect(quickStart).toContain("Import HH");
     expect(quickStart).toContain("Postflop");
     expect(quickStart).not.toMatch(/\bhttps?:\/\//i);
     expect(quickStart).not.toMatch(/\b(?:RangePack|StrategyPack)\b/);

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">PKR Trainer</title>
+  <rect width="512" height="512" rx="104" fill="#0b3d2e"/>
+  <rect x="80" y="112" width="352" height="288" rx="144" fill="#10261f" stroke="#45e58c" stroke-width="20"/>
+  <circle cx="256" cy="256" r="74" fill="#f8fbff"/>
+  <path d="M256 184c-25 35-61 60-61 94 0 25 20 45 45 45 7 0 14-2 20-5l-12 30h16l-12-30c6 3 13 5 20 5 25 0 45-20 45-45 0-34-36-59-61-94Z" fill="#0b3d2e"/>
+</svg>

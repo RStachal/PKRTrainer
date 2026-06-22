@@ -86,6 +86,12 @@ describe("mobile / Android WebView smoke", () => {
 
     variant!.value = "MTT";
     variant!.dispatchEvent(new Event("change"));
+    const format = root.querySelector<HTMLSelectElement>(".profile-format");
+    format!.value = "FULL_RING_9";
+    format!.dispatchEvent(new Event("change"));
+    const ante = root.querySelector<HTMLInputElement>(".filter-ante");
+    ante!.checked = false;
+    ante!.dispatchEvent(new Event("change"));
     const street = root.querySelector<HTMLSelectElement>(".profile-street");
     street!.value = "FLOP";
     street!.dispatchEvent(new Event("change"));

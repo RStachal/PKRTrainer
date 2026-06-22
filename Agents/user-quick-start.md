@@ -1,72 +1,75 @@
-# PKRTrainer user quick start
+# PKRTrainer – rychlý start
 
-This guide is for players. It intentionally avoids source, provider and pack details.
+Tento průvodce je určen hráčům. Záměrně neobsahuje informace o zdrojích,
+poskytovatelích ani interních datových balíčcích.
 
-## Training
+## Trénink
 
-1. Open the Training tab.
-2. Pick the training profile: game type, table format, speed, street, model and rake mode.
-3. Select positions, stack depths and action context.
-4. Press Start training.
-5. Answer with the best poker action shown for the spot.
+1. Otevřete záložku **Trénink**.
+2. Vyberte profil: typ hry, formát stolu, rychlost blindů, streetu, model a rake.
+3. Vyberte pozice, hloubky stacku a kontext akce.
+4. Stiskněte **Spustit trénink**.
+5. Zvolte nejlepší pokerovou akci pro zobrazený spot.
 
-The table appears only after a concrete question is generated. Use it to read positions, stacks, pot, hero hand and active players before answering.
+Stůl se zobrazí až po vygenerování konkrétní otázky. Před odpovědí zkontrolujte
+pozice, stacky, pot, karty hráče a aktivní soupeře.
 
-## Preflop flow
+## Preflop
 
-Preflop questions focus on position, effective stack, ante state and action context.
+Preflop otázky se zaměřují na pozici, efektivní stack, ante a kontext akce:
 
-Important contexts:
+- RFI / open,
+- proti limpu,
+- proti openu,
+- proti 3-betu,
+- proti 4-betu,
+- squeeze,
+- blind vs blind,
+- push / fold,
+- proti all-inu.
 
-- RFI / Open
-- vs limp
-- vs open
-- vs 3-bet
-- vs 4-bet
-- squeeze
-- blind vs blind
-- push / fold
-- vs all-in
+Po každé odpovědi projděte výsledek a matici range. Porovnejte svou akci
+s doporučenou větví a sledujte, které handy patří do value, bluff, call/check
+nebo fold části strategie.
 
-After each answer, review the result text and range matrix. The matrix is the main learning surface: compare your chosen action with the recommended lane and notice which hands belong to value, bluff, call/check or fold candidates.
+## Postflop
 
-## Postflop flow
+Postflop otázka vychází z vybraného profilu a zobrazuje konkrétní stůl.
+Nejdříve zkontrolujte:
 
-Postflop questions start from the selected training situation and show a concrete table.
+- pozice a stav IP/OOP,
+- typ potu a SPR,
+- karty hráče,
+- board,
+- popis textury boardu.
 
-Use the table first:
+Poté vyberte jednu z dostupných akcí, například check, malý bet nebo velký bet.
+Po odpovědi projděte range pohled, který seskupuje handy podle pokerové funkce,
+například value, bluffy, draw, overkarty a check range.
 
-- positions and IP/OOP state
-- pot type and SPR
-- hero hand
-- board cards
-- board texture tags
+## Statistiky
 
-Then choose between the available actions, usually Check, Bet small or Bet big. After answering, review the Flopzilla-style range view. It groups candidate hands by poker function such as value, bluffs, draws, overcards and check range.
+Záložka **Statistiky** slouží ke zlepšování hry. Sledujte hlavně:
 
-## Statistics
+- vývoj úspěšnosti,
+- nejslabší pozici,
+- nejslabší hloubku stacku,
+- nejslabší kontext akce,
+- postflop úniky podle streety a textury,
+- čas rozhodnutí po nasbírání dostatečného počtu hand.
 
-The Statistics tab is for improvement, not bookkeeping.
+Z nejslabšího ukazatele spusťte cílený trénink pomocí akce **Trénovat zaměření**.
 
-Focus on:
+## Import HH
 
-- accuracy trend
-- weakest position
-- weakest stack depth
-- weakest action context
-- postflop street and texture leaks
-- decision time when enough hands are recorded
+Do záložky **Import HH** vložte hand history a projděte rozhodnutí z odehraných
+hand. Importované handy slouží k review; stejné situace si následně procvičte
+v běžném tréninku.
 
-Use Train focus from a weak KPI to jump back into targeted practice.
+## Doporučený cyklus
 
-## HH Import
-
-Use HH Import to paste hand history text and review decisions from played hands. Imported hands should be used as review material, then trained again through the normal Training flow.
-
-## Good practice loop
-
-1. Train a small focused sample.
-2. Review wrong answers immediately.
-3. Check Statistics for the weakest KPI.
-4. Train that exact focus.
-5. Repeat with a new seed when accuracy stabilizes.
+1. Odehrajte malý cílený vzorek.
+2. Ihned projděte chybné odpovědi.
+3. Ve Statistikách najděte nejslabší ukazatel.
+4. Spusťte trénink tohoto zaměření.
+5. Po stabilizaci úspěšnosti pokračujte s novým seedem.

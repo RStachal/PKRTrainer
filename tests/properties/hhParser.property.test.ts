@@ -202,7 +202,7 @@ describe("hhParser - total parser properties", () => {
     expect(result.strategyUnavailable).toBe(true);
     expect(result.fields.profile?.evModel).toBe("DOLAR_EV");
     expect(result.spot).toBeUndefined();
-    expect(result.errors.join(" ")).toContain("Production preflop strategy");
+    expect(result.errors.join(" ")).toContain("produkční preflop strategie");
   });
 
   it("odmitne duplicitni kartu mezi hero handou a boardem", () => {
@@ -215,7 +215,7 @@ describe("hhParser - total parser properties", () => {
 
     expect(result.ok).toBe(false);
     expect(result.incompatible).toBe(true);
-    expect(result.errors.join(" ")).toContain("duplicate cards");
+    expect(result.errors.join(" ")).toContain("duplicitní karty");
   });
 
   it("normalizuje sizing a all-in priznak v BB", () => {

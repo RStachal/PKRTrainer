@@ -84,6 +84,7 @@ import { renderRangeModalButton } from "./ui/rangeModal";
 import { renderDashboard } from "./ui/dashboard";
 import { renderHHView } from "./ui/hhView";
 import { renderPostflopView } from "./ui/postflopView";
+import { CS } from "./ui/cs";
 import { registerServiceWorker } from "./pwa/registerSw";
 
 // ---------------------------------------------------------------------------
@@ -489,13 +490,13 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       const profile = getSelectedTrainingProfile();
       const capability = trainingCapabilityForProfile(profile);
       if (!isFlowAllowed(capability, "HH_REVIEW")) {
-        return "HH production review requires an MTT training profile.";
+        return "Produkční HH review vyžaduje tréninkový profil MTT.";
       }
       if (result.fields.tableFormat !== profile.tableFormat) {
-        return "The imported hand and selected training profile use different table formats.";
+        return "Importovaná handa a vybraný profil používají jiný formát stolu.";
       }
       if (profile.ante !== (result.fields.ante ?? "OFF")) {
-        return "The imported hand and selected training profile use different ante modes.";
+        return "Importovaná handa a vybraný profil používají jiný režim ante.";
       }
       return null;
     },
@@ -504,7 +505,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       if (!save.ok) {
         showNotice(
           shell.notice,
-          "The HH review could not be saved. Drill statistics were not changed.",
+          "HH review se nepodařilo uložit. Statistiky tréninku nebyly změněny.",
         );
       }
       return save.ok;
@@ -570,12 +571,12 @@ function buildAppShell(root: HTMLElement): AppShell {
 
   // HlaviÄŤka.
   const header = el("header", "app__header");
-  header.appendChild(el("h1", "app__title", "MTT Preflop Trainer"));
+  header.appendChild(el("h1", "app__title", CS.app.title));
   header.appendChild(
     el(
       "p",
       "app__subtitle",
-      "Preflop decision trainer - full ring 9-handed, 5-150 BB.",
+      CS.app.subtitle,
     ),
   );
   app.appendChild(header);
@@ -588,7 +589,7 @@ function buildAppShell(root: HTMLElement): AppShell {
 
   // Navigace zĂˇloĹľek.
   const nav = el("nav", "app__tabs");
-  nav.setAttribute("aria-label", "Primary sections");
+  nav.setAttribute("aria-label", CS.app.primarySections);
   nav.setAttribute("role", "tablist");
   const trainingPanel = el("section", "app__panel app__panel--training");
   const statsPanel = el("section", "app__panel app__panel--stats");
@@ -604,9 +605,9 @@ function buildAppShell(root: HTMLElement): AppShell {
 
   const allTabIds: readonly TabId[] = ["training", "stats", "hh", "postflop"];
   const tabDefs: { id: Exclude<TabId, "postflop">; label: string }[] = [
-    { id: "training", label: "Training" },
-    { id: "stats", label: "Statistics" },
-    { id: "hh", label: "Import HH" },
+    { id: "training", label: CS.app.tabs.training },
+    { id: "stats", label: CS.app.tabs.stats },
+    { id: "hh", label: CS.app.tabs.hh },
   ];
 
   for (const tabId of allTabIds) {
@@ -615,7 +616,7 @@ function buildAppShell(root: HTMLElement): AppShell {
     panel.setAttribute("role", "tabpanel");
     panel.setAttribute("tabindex", "-1");
     if (tabId === "postflop") {
-      panel.setAttribute("aria-label", "Postflop training");
+      panel.setAttribute("aria-label", CS.app.postflopTraining);
     } else {
       panel.setAttribute("aria-labelledby", `app-tab-${tabId}`);
     }
@@ -974,7 +975,7 @@ function setupTraining(
   function renderActions(spot: Spot, mode: ScoringMode): void {
     actionsContainer.innerHTML = "";
 
-    const heading = el("div", "training__actions-title", "Your action:");
+    const heading = el("div", "training__actions-title", CS.app.actionsTitle);
     actionsContainer.appendChild(heading);
 
     const row = el("div", "training__actions-row");

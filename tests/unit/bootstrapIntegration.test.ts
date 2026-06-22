@@ -92,10 +92,10 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
     expect(root.querySelector('[data-tab="postflop"]')).toBeNull();
     expect(Array.from(root.querySelectorAll<HTMLElement>(".app__tab")).map((tab) => tab.textContent))
-      .toEqual(["Training", "Statistics", "Import HH"]);
+      .toEqual(["Trénink", "Statistiky", "Import HH"]);
     expect(root.querySelector<HTMLElement>(".app__tabs")?.getAttribute("role")).toBe("tablist");
     expect(root.querySelector<HTMLElement>(".app__tabs")?.getAttribute("aria-label"))
-      .toBe("Primary sections");
+      .toBe("Hlavní sekce");
     expect(root.querySelector<HTMLButtonElement>('[data-tab="training"]')?.getAttribute("role"))
       .toBe("tab");
     expect(root.querySelector<HTMLButtonElement>('[data-tab="training"]')?.getAttribute("aria-controls"))
@@ -107,7 +107,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector<HTMLElement>("#app-panel-training")?.getAttribute("aria-labelledby"))
       .toBe("app-tab-training");
     expect(root.querySelector<HTMLElement>("#app-panel-postflop")?.getAttribute("aria-label"))
-      .toBe("Postflop training");
+      .toBe("Postflop trénink");
     expect(root.querySelector(".postflop-view")).not.toBeNull();
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(true);
     expect(root.querySelector(".postflop-meta")).toBeNull();
@@ -147,7 +147,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector<HTMLElement>(".training__session-meta")?.textContent)
       .toContain("BB - ante ON - seed");
     expect(root.querySelector<HTMLElement>(".training__actions-title")?.textContent)
-      .toBe("Your action:");
+      .toBe("Vaše akce:");
     const actionLabels = Array.from(root.querySelectorAll<HTMLButtonElement>(".action-btn"))
       .map((button) => button.textContent ?? "");
     expect(actionLabels.join(" ")).not.toMatch(/[×Ă—]|2,5/);
@@ -326,7 +326,7 @@ describe("bootstrap - inicializacni tok", () => {
     });
     const unavailable = root.querySelector<HTMLElement>(".hh-postflop-unavailable");
     expect(unavailable?.textContent).toContain(
-      "Production postflop strategy is not available",
+      "není dostupná produkční postflop strategie",
     );
     expect(unavailable?.textContent).not.toMatch(/https?:|source|RangePack|mtt-/i);
     expect(root.querySelector(".hh-postflop-analysis")).toBeNull();

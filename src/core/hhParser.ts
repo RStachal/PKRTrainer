@@ -1141,8 +1141,8 @@ export function parseHandHistory(
       fields: {},
       unreadableFields: ["position", "actions", "stack", "cards"],
       errors: [
-        `Input exceeds the maximum allowed length of ${MAX_INPUT_LENGTH} characters ` +
-          `(received ${text.length}). Processing was rejected.`,
+        `Vstup překračuje maximální délku ${MAX_INPUT_LENGTH} znaků ` +
+          `(přijato ${text.length}). Zpracování bylo odmítnuto.`,
       ],
     };
   }
@@ -1155,7 +1155,7 @@ export function parseHandHistory(
         ok: false,
         fields: {},
         unreadableFields: ["position", "actions", "stack", "cards"],
-        errors: ["Input is empty or contains only whitespace."],
+        errors: ["Vstup je prázdný nebo obsahuje pouze mezery."],
       };
     }
 
@@ -1221,7 +1221,7 @@ export function parseHandHistory(
 
     if (hasDuplicateKnownCards(fields)) {
       errors.push(
-        "The hand history contains duplicate cards between the hero hand and board.",
+        "Hand history obsahuje duplicitní karty mezi kartami hráče a boardem.",
       );
       return {
         ok: false,
@@ -1256,7 +1256,7 @@ export function parseHandHistory(
 
     if (unreadable.length > 0) {
       errors.push(
-        `Input is incomplete or in an unsupported format. Could not read: ` +
+        `Vstup je neúplný nebo v nepodporovaném formátu. Nepodařilo se načíst: ` +
           `${unreadable.join(", ")}.`,
       );
     }
@@ -1279,7 +1279,7 @@ export function parseHandHistory(
 
     if (options.requireLoadedStrategy && !options.rangeStore.isLoaded()) {
       errors.push(
-        "Production preflop strategy is not available for the selected training profile.",
+        "Pro vybraný tréninkový profil není dostupná produkční preflop strategie.",
       );
       return {
         ok: false,
@@ -1313,7 +1313,7 @@ export function parseHandHistory(
       );
       if (!spot) {
         errors.push(
-          "Production preflop strategy does not cover this imported situation.",
+          "Produkční preflop strategie nepokrývá tuto importovanou situaci.",
         );
         return {
           ok: false,
@@ -1342,28 +1342,28 @@ export function parseHandHistory(
       const reasons: string[] = [];
       if (!tableOk) {
         reasons.push(detectedTableFormat === "SIX_MAX"
-          ? "6-max table format must be confirmed by the selected training profile"
-          : `table size ${hand.seats.length} is not supported (supported: ${SUPPORTED_TABLE_SIZES.join(" or ")})`);
+          ? "formát stolu 6-max musí potvrdit vybraný tréninkový profil"
+          : `velikost stolu ${hand.seats.length} není podporována (podporováno: ${SUPPORTED_TABLE_SIZES.join(" nebo ")})`);
       }
       if (!profileTableMatches) {
         reasons.push(
-          `detected table format ${detectedTableFormat ?? "unknown"} does not match selected profile ${options.profile?.tableFormat}`,
+          `zjištěný formát stolu ${detectedTableFormat ?? "neznámý"} neodpovídá vybranému profilu ${options.profile?.tableFormat}`,
         );
       }
       if (!profileAnteMatches) {
         reasons.push(
-          `detected ante mode ${ante} does not match selected profile ${options.profile?.ante}`,
+          `zjištěný režim ante ${ante} neodpovídá vybranému profilu ${options.profile?.ante}`,
         );
       }
       if (effBB !== undefined && !depthInRange) {
         reasons.push(
-          `effective depth ${effBB} BB is outside ${MIN_BB}-${MAX_BB} BB`,
+          `efektivní stack ${effBB} BB je mimo rozsah ${MIN_BB}-${MAX_BB} BB`,
         );
       }
       if (reasons.length > 0) {
         errors.push(
-          `Data is not compatible with the trainer model: ${reasons.join("; ")}. ` +
-            `No spot was built.`,
+          `Data nejsou kompatibilní s modelem tréninku: ${reasons.join("; ")}. ` +
+            `Spot nebyl vytvořen.`,
         );
         return {
           ok: false,
@@ -1389,7 +1389,7 @@ export function parseHandHistory(
       ok: false,
       fields: {},
       unreadableFields: ["position", "actions", "stack", "cards"],
-      errors: [`Error while processing hand history: ${msg}`],
+      errors: [`Chyba při zpracování hand history: ${msg}`],
     };
   }
 }
