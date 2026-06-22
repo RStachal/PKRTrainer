@@ -7,6 +7,7 @@ import {
   buildPrecacheManifest,
   injectPrecacheManifest,
   isLazyMttProductionAsset,
+  mttProductionChunkNameForModuleId,
 } from "./src/pwa/precacheManifestBuild";
 
 const publicDirectory = fileURLToPath(new URL("./public", import.meta.url));
@@ -67,6 +68,8 @@ export default defineConfig({
           chunk.name === "sw" ? "sw.js" : "assets/[name]-[hash].js",
         chunkFileNames: "assets/[name]-[hash].js",
         manualChunks(id) {
+          const mttProductionChunkName = mttProductionChunkNameForModuleId(id);
+          if (mttProductionChunkName !== null) return mttProductionChunkName;
           if (id.split("\\").join("/").endsWith("/src/core/postflopLineSimulator.ts")) {
             return "postflop-line";
           }

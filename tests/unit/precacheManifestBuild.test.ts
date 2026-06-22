@@ -4,6 +4,7 @@ import {
   buildPrecacheManifest,
   injectPrecacheManifest,
   isLazyMttProductionAsset,
+  mttProductionChunkNameForModuleId,
 } from "../../src/pwa/precacheManifestBuild";
 
 describe("precache build manifest", () => {
@@ -50,6 +51,22 @@ describe("precache build manifest", () => {
     expect(isLazyMttProductionAsset("assets/postflop-line-AbCd1234.js")).toBe(false);
     expect(manifest.entries).toContain("./assets/main-AbCd1234.js");
     expect(manifest.entries).not.toContain(`./${lazyPack}`);
+  });
+
+  it("odvozuje deterministicky chunk name z production module path", () => {
+    const expected = "mtt-six-max-regular-river-dolar-ev-ante-on-production-v1";
+    expect(mttProductionChunkNameForModuleId(
+      `C:\\repo\\src\\data\\ranges\\${expected}.ts`,
+    )).toBe(expected);
+    expect(mttProductionChunkNameForModuleId(
+      `/repo/src/data/ranges/${expected}.ts`,
+    )).toBe(expected);
+    expect(mttProductionChunkNameForModuleId(
+      "/repo/src/data/ranges/mttProductionRuntimeRegistry.ts",
+    )).toBeNull();
+    expect(mttProductionChunkNameForModuleId(
+      "/repo/src/data/ranges/flopProductionStrategyPack.ts",
+    )).toBeNull();
   });
 
   it("vlozi manifest do worker kodu a odstrani build tokeny", () => {

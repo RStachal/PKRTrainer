@@ -15,6 +15,19 @@ export function isLazyMttProductionAsset(fileName: string): boolean {
   );
 }
 
+export function mttProductionChunkNameForModuleId(moduleId: string): string | null {
+  const normalized = moduleId.replace(/\\/g, "/");
+  const fileName = normalized.split("/").pop() ?? "";
+  if (
+    !fileName.endsWith(".ts") ||
+    !fileName.startsWith("mtt-") ||
+    !fileName.includes("-production-")
+  ) {
+    return null;
+  }
+  return fileName.slice(0, -3);
+}
+
 export function buildPrecacheManifest(
   bundleFileNames: readonly string[],
 ): PrecacheBuildManifest {
