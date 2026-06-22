@@ -451,6 +451,22 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   };
   refreshDashboard();
   renderHHView(shell.hhPanel, {
+    beforeAnalyze: async () => {
+      while (true) {
+        const selected = getSelectedTrainingProfile();
+        const selectedFamily = mttProductionProfileFamilyKey(selected);
+        const profileKeys = (["PREFLOP", "FLOP", "TURN", "RIVER"] as const)
+          .map((street) => mttProductionProfileKey({ ...selected, street }))
+          .filter((profileKey): profileKey is string => profileKey !== null);
+        await mttProductionLazyLoader.loadProfiles(profileKeys);
+        if (
+          selectedFamily ===
+          mttProductionProfileFamilyKey(getSelectedTrainingProfile())
+        ) {
+          return;
+        }
+      }
+    },
     parseOptions: () => {
       const selected = getSelectedTrainingProfile();
       const profile: TrainingProfile = {
@@ -770,6 +786,17 @@ function mttProductionProfileKey(
     street: profile.street,
     ante: profile.ante,
   });
+}
+
+function mttProductionProfileFamilyKey(profile: TrainingProfile): string {
+  return [
+    profile.gameVariant,
+    profile.tableFormat,
+    profile.blindSpeed,
+    profile.evModel,
+    profile.ante,
+    profile.rakeMode,
+  ].join("|");
 }
 
 function logRangeLoadFailure(): void {

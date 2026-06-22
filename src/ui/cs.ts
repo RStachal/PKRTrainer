@@ -199,6 +199,8 @@ export const CS = {
     decisionAnalysis: "Analýza rozhodnutí",
     postflopUnavailable:
       "Pro tuto handu a zvolený profil není dostupná produkční postflop strategie.",
+    productionStrategyUnavailable:
+      "Produkční strategii pro HH analýzu se nepodařilo načíst.",
     facts: {
       position: "Pozice",
       hand: "Karty",

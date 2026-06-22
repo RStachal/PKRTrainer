@@ -13,6 +13,7 @@ export interface MttProductionProfileLoadResult {
 
 export interface MttProductionLazyLoader {
   loadProfile(profileKey: string): Promise<MttProductionProfileLoadResult>;
+  loadProfiles(profileKeys: readonly string[]): Promise<readonly GeneratedMttProductionPack[]>;
   loadAll(): Promise<readonly GeneratedMttProductionPack[]>;
   loadedPackIds(): readonly string[];
   isProfileLoaded(profileKey: string): boolean;
@@ -59,6 +60,14 @@ export function createMttProductionLazyLoader(
         packs,
         stale: request !== latestProfileRequest,
       };
+    },
+    loadProfiles(profileKeys) {
+      const requested = new Set(profileKeys);
+      return Promise.all(
+        manifest
+          .filter((entry) => requested.has(entry.profileKey))
+          .map(loadEntry),
+      );
     },
     loadAll() {
       return Promise.all(manifest.map(loadEntry));

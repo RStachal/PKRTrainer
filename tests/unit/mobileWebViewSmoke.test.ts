@@ -111,7 +111,9 @@ describe("mobile / Android WebView smoke", () => {
     textarea!.value = validHh;
     root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
     expect(root.querySelector(".hh-analysis")).not.toBeNull();
-    expect(root.querySelectorAll(".hh-analysis .matrix-cell")).toHaveLength(169);
+    await vi.waitFor(() => {
+      expect(root.querySelectorAll(".hh-analysis .matrix-cell")).toHaveLength(169);
+    });
 
     root.querySelector<HTMLButtonElement>('[data-tab="stats"]')?.click();
     await waitForDashboard(root);

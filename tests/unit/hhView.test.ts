@@ -158,6 +158,57 @@ const productionLikePostflopResolver: PostflopStrategyResolver = (input) => ({
 });
 
 describe("hhView - DOM import", () => {
+  it("pred analyzou pocka na produkcni preload a teprve potom sestavi spot", async () => {
+    const root = document.createElement("div");
+    let finishPreload!: () => void;
+    const beforeAnalyze = vi.fn(() => new Promise<void>((resolve) => {
+      finishPreload = resolve;
+    }));
+    const parseOptions = vi.fn(() => ({}));
+    renderHHView(root, { beforeAnalyze, parseOptions });
+
+    root.querySelector<HTMLTextAreaElement>(".hh-input")!.value = validHh;
+    const button = root.querySelector<HTMLButtonElement>(".hh-analyze")!;
+    button.click();
+
+    expect(beforeAnalyze).toHaveBeenCalledOnce();
+    expect(parseOptions).not.toHaveBeenCalled();
+    expect(button.disabled).toBe(true);
+    expect(button.getAttribute("aria-busy")).toBe("true");
+    expect(root.querySelector(".poker-table")).toBeNull();
+
+    finishPreload();
+    await vi.waitFor(() => {
+      expect(root.querySelector(".poker-table")).not.toBeNull();
+    });
+    expect(parseOptions).toHaveBeenCalledOnce();
+    expect(button.disabled).toBe(false);
+    expect(button.hasAttribute("aria-busy")).toBe(false);
+  });
+
+  it("zobrazi source-free chybu kdyz produkcni preload selze", async () => {
+    const root = document.createElement("div");
+    document.body.appendChild(root);
+    const parseOptions = vi.fn(() => ({ rangeStore: sixMaxStore }));
+    renderHHView(root, {
+      beforeAnalyze: async () => {
+        throw new Error("https://private.example/pack failed");
+      },
+      parseOptions,
+    });
+
+    root.querySelector<HTMLTextAreaElement>(".hh-input")!.value = validSixMaxHh;
+    root.querySelector<HTMLButtonElement>(".hh-analyze")!.click();
+
+    await vi.waitFor(() => {
+      expect(root.querySelector(".hh-errors")?.textContent)
+        .toContain("Produkční strategii pro HH analýzu se nepodařilo načíst.");
+    });
+    expect(root.textContent).not.toContain("private.example");
+    expect(parseOptions).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(root.querySelector(".hh-errors"));
+  });
+
   it("vykresli potvrzeny 6-max profil se sesti sedadly a profilovou identitou", () => {
     const root = document.createElement("div");
     const reviews: HHReviewRecord[][] = [];

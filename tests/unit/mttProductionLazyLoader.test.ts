@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createMttProductionLazyLoader } from "../../src/data/ranges/mttProductionLazyLoader";
+import { mttPreflopRangePackForProfile } from "../../src/data/ranges/mttPreflopRangePacks";
+import type { RangePack } from "../../src/data/ranges/rangePack";
 import type {
   GeneratedMttProductionManifestEntry,
   GeneratedMttProductionPack,
@@ -37,7 +39,9 @@ describe("MTT production lazy loader", () => {
     expect(loader.loadedPackIds()).toEqual(["first"]);
     expect(loader.isProfileLoaded("PROFILE_A")).toBe(true);
     expect(loader.isProfileLoaded("PROFILE_B")).toBe(false);
-    expect(runtimeMttPreflopRangePacks).toEqual([firstPack]);
+    expect(runtimeMttPreflopRangePacks[0]).toBe(firstPack);
+    expect(runtimeMttPreflopRangePacks.filter((candidate) => candidate.id === "first"))
+      .toEqual([firstPack]);
   });
 
   it("oznaci pomaly vysledek stareho profilu jako stale", async () => {
@@ -70,6 +74,28 @@ describe("MTT production lazy loader", () => {
     expect(load).toHaveBeenCalledOnce();
   });
 
+  it("nacte vybranou sadu profilu bez zneplatneni training requestu", async () => {
+    let resolveTraining!: (value: GeneratedMttProductionPack) => void;
+    const loader = createMttProductionLazyLoader([
+      entry("training", "TRAINING", () => new Promise((resolve) => {
+        resolveTraining = resolve;
+      })),
+      entry("preflop", "PREFLOP", async () => pack("preflop")),
+      entry("flop", "FLOP", async () => pack("flop")),
+      entry("other", "OTHER", async () => pack("other")),
+    ]);
+
+    const training = loader.loadProfile("TRAINING");
+    await expect(loader.loadProfiles(["PREFLOP", "FLOP"])).resolves.toEqual([
+      pack("preflop"),
+      pack("flop"),
+    ]);
+
+    resolveTraining(pack("training"));
+    await expect(training).resolves.toMatchObject({ stale: false });
+    expect(loader.loadedPackIds()).toEqual(["flop", "preflop", "training"]);
+  });
+
   it("odmitne modul jehoz export ma jine id nez manifest", async () => {
     const loader = createMttProductionLazyLoader([
       entry("expected", "PROFILE_A", async () => pack("unexpected")),
@@ -95,6 +121,38 @@ describe("MTT production lazy loader", () => {
 
     resolveFirst(pack("first"));
     await expect(first).resolves.toMatchObject({ stale: true });
+  });
+
+  it("po lazy importu zpristupni pack pres synchronni gameplay resolver", async () => {
+    const productionPack: RangePack = {
+      id: "mtt-full-ring-9-turbo-preflop-dolar-ev-ante-off-production-v1",
+      version: "1.0.0",
+      createdAt: "2026-06-22",
+      verifiedAt: "2026-06-22",
+      confidence: "HIGH",
+      dimensions: {
+        gameVariant: "MTT",
+        tableFormat: "FULL_RING_9",
+        blindSpeed: "TURBO",
+        street: "PREFLOP",
+        evModel: "DOLAR_EV",
+        ante: "OFF",
+        rakeMode: "NONE",
+      },
+      assumptions: [],
+      searchQueries: [],
+      sourceEvidence: [],
+      records: [],
+    };
+    const profileKey = "FULL_RING_9|TURBO|DOLAR_EV|PREFLOP|OFF";
+    const loader = createMttProductionLazyLoader([
+      entry(productionPack.id, profileKey, async () => productionPack),
+    ]);
+
+    expect(mttPreflopRangePackForProfile(productionPack.dimensions)).toBeUndefined();
+    await loader.loadProfile(profileKey);
+
+    expect(mttPreflopRangePackForProfile(productionPack.dimensions)).toBe(productionPack);
   });
 });
 

@@ -314,6 +314,9 @@ describe("bootstrap - inicializacni tok", () => {
     textarea!.value = validFlopHh;
     root.querySelector<HTMLButtonElement>(".hh-analyze")?.click();
 
+    await vi.waitFor(() => {
+      expect(JSON.parse(storage.getItem(KEY_HH_REVIEWS) ?? "[]")).toHaveLength(1);
+    });
     const reviewRecords = JSON.parse(storage.getItem(KEY_HH_REVIEWS) ?? "[]") as Array<{
       street: string;
       savedToDrillStats: boolean;

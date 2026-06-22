@@ -85,6 +85,7 @@ export interface HHViewCallbacks {
   postflopAllowFallback?: boolean;
   postflopProfileGuard?: (result: HHResult) => string | null;
   parseOptions?: () => HHParseOptions;
+  beforeAnalyze?: () => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -450,6 +451,7 @@ function applyResult(
     analysis: HTMLElement;
   },
   callbacks?: HHViewCallbacks,
+  parseOptions?: HHParseOptions,
 ): void {
   renderErrors(doc, regions.errors, result.errors);
   renderUnreadable(doc, regions.unreadable, result.unreadableFields);
@@ -472,7 +474,7 @@ function applyResult(
       callbacks?.postflopStrategyResolver,
       callbacks?.postflopAllowFallback !== false,
       callbacks?.postflopProfileGuard,
-      callbacks?.parseOptions?.().rangeStore ?? rangeStore,
+      parseOptions?.rangeStore ?? rangeStore,
     );
     callbacks?.onReviewBuilt?.(reviewRecords);
     callbacks?.onSpotBuilt?.(result.spot);
@@ -653,15 +655,16 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
   wrap.appendChild(analysis);
 
   const regions = { errors, unreadable, incompatible, table, analysis };
+  let analyzeRequest = 0;
 
   // Obsluha kliknutí — totální parser + ochrana proti pádu při vykreslování.
-  button.addEventListener("click", () => {
+  const analyze = (): void => {
     try {
       const parseOptions = callbacks?.parseOptions?.();
       const result = parseOptions
         ? parseHandHistory(textarea.value, parseOptions)
         : parseHandHistory(textarea.value);
-      applyResult(doc, result, regions, callbacks);
+      applyResult(doc, result, regions, callbacks, parseOptions);
       if (result.ok && result.spot) {
         analysis.focus();
       } else {
@@ -684,6 +687,36 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
       regions.errors.setAttribute("tabindex", "-1");
       regions.errors.focus();
     }
+  };
+
+  button.addEventListener("click", () => {
+    const beforeAnalyze = callbacks?.beforeAnalyze;
+    if (!beforeAnalyze) {
+      analyze();
+      return;
+    }
+
+    const request = ++analyzeRequest;
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    void beforeAnalyze()
+      .then(() => {
+        if (request === analyzeRequest) analyze();
+      })
+      .catch((err) => {
+        if (request !== analyzeRequest) return;
+        void err;
+        renderErrors(doc, regions.errors, [
+          CS.hh.productionStrategyUnavailable,
+        ]);
+        regions.errors.setAttribute("tabindex", "-1");
+        regions.errors.focus();
+      })
+      .finally(() => {
+        if (request !== analyzeRequest) return;
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+      });
   });
 
   root.appendChild(wrap);
