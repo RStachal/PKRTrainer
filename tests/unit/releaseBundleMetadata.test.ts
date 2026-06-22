@@ -95,6 +95,12 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["profile:render"]).toBe("vite-node scripts/profileRenderPerformance.mts");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400)');
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_GZIP_KB", 128)');
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 512)');
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128)');
+    expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 32768');
+    expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",');
     expect(pkg.scripts["release:check"])
       .toBe("npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:release-gates && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);

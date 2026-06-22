@@ -1,10 +1,20 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
+import { isLazyMttProductionAsset } from "../src/pwa/precacheManifestBuild";
 
 const DIST_ASSETS_DIR = join(process.cwd(), "dist", "assets");
 const MAX_JS_KB = numberFromEnv("BUNDLE_MAX_JS_KB", 325);
 const MAX_GZIP_KB = numberFromEnv("BUNDLE_MAX_GZIP_KB", 86);
+const MAX_PRECACHE_JS_KB = numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400);
+const MAX_PRECACHE_GZIP_KB = numberFromEnv("BUNDLE_MAX_PRECACHE_GZIP_KB", 128);
+const MAX_LAZY_MTT_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 512);
+const MAX_LAZY_MTT_GZIP_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128);
+const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 32768);
+const MAX_LAZY_MTT_TOTAL_GZIP_KB = numberFromEnv(
+  "BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",
+  8192,
+);
 
 let hasFailure = false;
 
@@ -26,6 +36,12 @@ console.log("\n=== Bundle budget ===");
 console.log(`max raw JS asset: ${MAX_JS_KB} KiB`);
 console.log(`max gzip JS asset: ${MAX_GZIP_KB} KiB`);
 
+let precacheRawKb = 0;
+let precacheGzipKb = 0;
+let lazyMttRawKb = 0;
+let lazyMttGzipKb = 0;
+let lazyMttCount = 0;
+
 for (const file of jsFiles) {
   const path = join(DIST_ASSETS_DIR, file);
   const rawBytes = statSync(path).size;
@@ -35,18 +51,49 @@ for (const file of jsFiles) {
 
   console.log(`${file}: raw=${rawKb.toFixed(2)} KiB gzip=${gzipKb.toFixed(2)} KiB`);
 
-  if (rawKb > MAX_JS_KB) {
-    hasFailure = true;
-    console.error(`${file} exceeds raw JS budget: ${rawKb.toFixed(2)} KiB > ${MAX_JS_KB} KiB`);
+  const lazyMttProduction = isLazyMttProductionAsset(file);
+  if (lazyMttProduction) {
+    lazyMttCount += 1;
+    lazyMttRawKb += rawKb;
+    lazyMttGzipKb += gzipKb;
+  } else {
+    precacheRawKb += rawKb;
+    precacheGzipKb += gzipKb;
   }
-  if (gzipKb > MAX_GZIP_KB) {
+
+  const rawLimit = lazyMttProduction ? MAX_LAZY_MTT_JS_KB : MAX_JS_KB;
+  const gzipLimit = lazyMttProduction ? MAX_LAZY_MTT_GZIP_KB : MAX_GZIP_KB;
+  if (rawKb > rawLimit) {
     hasFailure = true;
-    console.error(`${file} exceeds gzip JS budget: ${gzipKb.toFixed(2)} KiB > ${MAX_GZIP_KB} KiB`);
+    console.error(`${file} exceeds raw JS budget: ${rawKb.toFixed(2)} KiB > ${rawLimit} KiB`);
+  }
+  if (gzipKb > gzipLimit) {
+    hasFailure = true;
+    console.error(`${file} exceeds gzip JS budget: ${gzipKb.toFixed(2)} KiB > ${gzipLimit} KiB`);
   }
 }
 
+console.log(
+  `precache JS total: raw=${precacheRawKb.toFixed(2)} KiB gzip=${precacheGzipKb.toFixed(2)} KiB`,
+);
+console.log(
+  `lazy MTT JS total: count=${lazyMttCount} raw=${lazyMttRawKb.toFixed(2)} KiB ` +
+    `gzip=${lazyMttGzipKb.toFixed(2)} KiB`,
+);
+
+checkTotalBudget("precache raw JS", precacheRawKb, MAX_PRECACHE_JS_KB);
+checkTotalBudget("precache gzip JS", precacheGzipKb, MAX_PRECACHE_GZIP_KB);
+checkTotalBudget("lazy MTT raw JS", lazyMttRawKb, MAX_LAZY_MTT_TOTAL_JS_KB);
+checkTotalBudget("lazy MTT gzip JS", lazyMttGzipKb, MAX_LAZY_MTT_TOTAL_GZIP_KB);
+
 if (hasFailure) {
   process.exitCode = 1;
+}
+
+function checkTotalBudget(label: string, actualKb: number, limitKb: number): void {
+  if (actualKb <= limitKb) return;
+  hasFailure = true;
+  console.error(`${label} exceeds budget: ${actualKb.toFixed(2)} KiB > ${limitKb} KiB`);
 }
 
 function bytesToKiB(bytes: number): number {

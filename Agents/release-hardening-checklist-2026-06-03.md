@@ -12,6 +12,7 @@
 
 - Service worker precaches the app shell and shared production assets, including main/dashboard/postflop chunks, manifest and install icon.
 - Profile-specific `mtt-*-production-*` chunks are excluded from install precache, fetched on first use and durably runtime-cached before the response completes.
+- Bundle budget reports shared install-precache JS separately from per-pack and aggregate lazy MTT JS totals.
 - Second same-origin GET for the same asset is cache-served without another network call.
 - Navigation fallback returns cached app shell when offline.
 - A newly installed worker takes control after successful precache and claims open clients.
