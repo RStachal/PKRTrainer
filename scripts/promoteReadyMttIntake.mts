@@ -346,3 +346,5 @@ function renderPromotionReport(report: PromotionReport): string {
 
   return lines.join("\n");
 }
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+await loadCompleteMttProductionRegistry();

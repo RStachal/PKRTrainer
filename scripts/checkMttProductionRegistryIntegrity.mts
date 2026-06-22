@@ -396,3 +396,5 @@ function renderRegistryIntegrityReport(report: RegistryIntegrityReport): string 
 
   return lines.join("\n");
 }
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+await loadCompleteMttProductionRegistry();

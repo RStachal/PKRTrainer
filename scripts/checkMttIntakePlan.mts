@@ -281,3 +281,5 @@ function renderMttIntakePlanReport(report: IntakePlanReport, limit: number | nul
 
   return lines.join("\n");
 }
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+await loadCompleteMttProductionRegistry();

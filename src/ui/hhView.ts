@@ -390,7 +390,7 @@ function renderImportedPostflopAnalysis(doc: Document, spot: PostflopTrainingSpo
   section.dataset.board = spot.board.map(cardLabel).join("-");
 
   const title = el(doc, "h3", "hh-postflop-analysis__title");
-  title.textContent = `${streetLabel(spot.street)} review`;
+  title.textContent = `${streetLabel(spot.street)} – rozbor`;
   section.appendChild(title);
 
   const facts = el(doc, "div", "hh-postflop-analysis__facts");

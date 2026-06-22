@@ -66,9 +66,9 @@ describe("rangeMatrixView - DOM", () => {
     expect(hero?.dataset.hand).toBe("AKs");
     expect(hero?.dataset.action).toBe("OPEN");
     expect(root.querySelector<HTMLElement>(".range-matrix-title")?.textContent)
-      .toBe("Preflop range matrix");
+      .toBe("Preflop matice range");
     expect(root.querySelector<HTMLElement>(".range-matrix-meta")?.textContent)
-      .toContain("Hero AKs");
+      .toContain("Hero: AKs");
     expect(root.querySelector<HTMLElement>(".range-matrix-view")?.style.background)
       .toContain("linear-gradient");
     expect(root.querySelector<HTMLElement>(".range-matrix-view")?.style.overflowX)
@@ -119,10 +119,10 @@ describe("rangeMatrixView - DOM", () => {
     expect(detail?.hidden).toBe(false);
     expect(detail?.dataset.hand).toBe("AKs");
     expect(detail?.dataset.action).toBe("OPEN");
-    expect(detail?.textContent).toContain("hero hand");
-    expect(detail?.textContent).toContain("Strict action");
+    expect(detail?.textContent).toContain("handa Hero");
+    expect(detail?.textContent).toContain("Přísná akce");
     expect(detail?.textContent).toContain("Raise 2x");
-    expect(detail?.textContent).toContain("Lenient actions");
+    expect(detail?.textContent).toContain("Tolerované akce");
     expect(hero?.classList.contains("matrix-cell--selected")).toBe(true);
 
     const aces = root.querySelector<HTMLElement>('.matrix-cell[data-hand="AA"]');
@@ -138,7 +138,7 @@ describe("rangeMatrixView - DOM", () => {
 
     const unavailable = root.querySelector<HTMLElement>(".matrix-unavailable");
     expect(unavailable).not.toBeNull();
-    expect(unavailable?.textContent).toBe("Range data is not available for this spot.");
+    expect(unavailable?.textContent).toBe("Pro tento spot nejsou dostupná data range.");
     expect(unavailable?.textContent).not.toContain("k dispozici");
     expect(root.querySelectorAll(".matrix-cell")).toHaveLength(0);
   });

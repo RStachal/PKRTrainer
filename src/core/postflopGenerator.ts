@@ -607,13 +607,13 @@ function recommendFacingBetAction(
     return {
       action: "CALL",
       explanation:
-        "Facing pressure on a dynamic board, the fallback keeps continuing hands in the pot instead of bluff-raising without a model.",
+        "Proti tlaku na dynamickém boardu fallback ponechá pokračovací handy v potu a bez modelu nevolí bluff raise.",
     };
   }
   return {
     action: "FOLD",
     explanation:
-      "Facing pressure without a dedicated range model, the fallback folds low-equity hands on stable boards.",
+      "Proti tlaku bez samostatného range modelu fallback na stabilních boardech zahazuje handy s nízkou equity.",
   };
 }
 
@@ -627,7 +627,7 @@ export function recommendPostflopAction(
     return {
       action: "CHECK",
       explanation:
-        "The board is dynamic. Without a detailed range model, check is the best control action.",
+        "Board je dynamický. Bez podrobného range modelu je check nejlepší kontrolní akce.",
     };
   }
 
@@ -635,7 +635,7 @@ export function recommendPostflopAction(
     return {
       action: "BET_BIG",
       explanation:
-        "Dry rivers create few new draws. The prototype prefers higher pressure.",
+        "Suchý river vytváří málo nových draw. Prototyp preferuje vyšší tlak.",
     };
   }
 
@@ -643,14 +643,14 @@ export function recommendPostflopAction(
     return {
       action: "BET_SMALL",
       explanation:
-        "Dry or stable boards are suitable for a small c-bet in the prototype strategy.",
+        "Suché nebo stabilní boardy jsou v prototypové strategii vhodné pro malý c-bet.",
     };
   }
 
   return {
     action: "CHECK",
     explanation:
-      "The board texture is not clearly stable. The prototype recommends check.",
+      "Textura boardu není jednoznačně stabilní. Prototyp doporučuje check.",
   };
 }
 

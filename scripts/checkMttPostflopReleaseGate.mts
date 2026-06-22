@@ -222,3 +222,5 @@ function renderMttPostflopReleaseGateReport(
 
   return lines.join("\n");
 }
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+await loadCompleteMttProductionRegistry();

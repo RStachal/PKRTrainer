@@ -6,7 +6,16 @@ import type { FlopProductionStrategyPack } from "./flopProductionStrategyPack";
 import type { TurnProductionStrategyPack } from "./turnProductionStrategyPack";
 import type { RiverProductionStrategyPack } from "./riverProductionStrategyPack";
 
-export const generatedMttPreflopRangePacks: readonly RangePack[] = [];
-export const generatedMttFlopStrategyPacks: readonly FlopProductionStrategyPack[] = [];
-export const generatedMttTurnStrategyPacks: readonly TurnProductionStrategyPack[] = [];
-export const generatedMttRiverStrategyPacks: readonly RiverProductionStrategyPack[] = [];
+export type GeneratedMttProductionPack =
+  | RangePack
+  | FlopProductionStrategyPack
+  | TurnProductionStrategyPack
+  | RiverProductionStrategyPack;
+
+export interface GeneratedMttProductionManifestEntry {
+  kind: "mtt-preflop" | "flop-production" | "turn-production" | "river-production";
+  packId: string;
+  profileKey: string;
+  load(): Promise<GeneratedMttProductionPack>;
+}
+export const generatedMttProductionManifest: readonly GeneratedMttProductionManifestEntry[] = [];

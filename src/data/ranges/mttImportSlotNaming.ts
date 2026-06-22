@@ -67,6 +67,21 @@ export function mttProductionImportPackId(
   ].join("-");
 }
 
+export function mttProductionImportIdentityFromPackId(
+  packId: string,
+): MttProductionImportSlotIdentity | null {
+  const match = /^mtt-(full-ring-9|six-max)-(regular|turbo)-(preflop|flop|turn|river)-(chip-ev|dolar-ev)-ante-(on|off)-production-v1$/
+    .exec(packId);
+  if (!match) return null;
+  return {
+    tableFormat: match[1] === "full-ring-9" ? "FULL_RING_9" : "SIX_MAX",
+    blindSpeed: match[2] === "regular" ? "REGULAR" : "TURBO",
+    street: match[3].toUpperCase() as MttProductionImportStreet,
+    evModel: match[4] === "chip-ev" ? "CHIP_EV" : "DOLAR_EV",
+    ante: match[5] === "on" ? "ON" : "OFF",
+  };
+}
+
 export function mttProductionImportSlotPaths(packId: string): MttProductionImportSlotPaths {
   const rawInputFolder = `Agents/range-intake/raw/${packId}`;
   return {

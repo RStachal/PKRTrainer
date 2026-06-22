@@ -73,6 +73,7 @@ import {
   type TrainingProfile,
 } from "../core/trainingProfile";
 import { renderProfileSelector, type ProfileSelectorView } from "./profileSelector";
+import { CS } from "./cs";
 
 // ---------------------------------------------------------------------------
 // Uzavřená sada akčních kontextů + české popisky (Req 13.3, 12.3)
@@ -97,14 +98,14 @@ const CONTEXT_ORDER: ActionContext[] = [
 /** Český popisek akčního kontextu pro UI (Req 13.3, 12.3). */
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
-  VS_LIMP: "Vs limp (Iso-raise)",
-  VS_OPEN: "Vs open",
-  VS_3BET: "Vs 3-bet",
-  VS_4BET: "Vs 4-bet",
+  VS_LIMP: "Proti limpu (iso-raise)",
+  VS_OPEN: "Proti openu",
+  VS_3BET: "Proti 3-betu",
+  VS_4BET: "Proti 4-betu",
   SQUEEZE: "Squeeze",
   BVB: "Blind vs blind",
   PUSH_FOLD: "Push / Fold",
-  VS_ALLIN: "Vs all-in (Call-jam)",
+  VS_ALLIN: "Proti all-inu (call-jam)",
 };
 
 /** Mez 32-bit unsigned seedu (4 294 967 295), tj. 2^32 − 1 (Req 6.1). */
@@ -233,16 +234,16 @@ function makeBulkToggles(
   const all = doc.createElement("button");
   all.type = "button";
   all.className = "filter-bulk-all";
-  all.textContent = "All";
-  all.setAttribute("aria-label", `Select all ${sectionName}`);
+  all.textContent = CS.filters.all;
+  all.setAttribute("aria-label", CS.filters.selectAll(sectionName));
   all.style.marginRight = "4px";
   all.addEventListener("click", onAll);
 
   const none = doc.createElement("button");
   none.type = "button";
   none.className = "filter-bulk-none";
-  none.textContent = "None";
-  none.setAttribute("aria-label", `Clear ${sectionName}`);
+  none.textContent = CS.filters.none;
+  none.setAttribute("aria-label", CS.filters.clearAll(sectionName));
   none.addEventListener("click", onNone);
 
   wrap.appendChild(all);
@@ -311,12 +312,12 @@ export function renderFilters(
 
   // --- Sekce: Pozice (Req 13.1) ---
   const posTitleRow = el(doc, "div", "filter-row");
-  const posTitle = sectionTitle(doc, "Positions");
+  const posTitle = sectionTitle(doc, CS.filters.positions);
   posTitleRow.appendChild(posTitle);
   posTitleRow.appendChild(
     makeBulkToggles(
       doc,
-      "positions",
+      CS.filters.positions.toLowerCase(),
       () => {
         for (const inp of positionInputs.values()) inp.checked = true;
         hideWarning();
@@ -335,12 +336,12 @@ export function renderFilters(
 
   // --- Sekce: Hloubkové koše (Req 13.2) ---
   const bucketTitleRow = el(doc, "div", "filter-row");
-  const bucketTitle = sectionTitle(doc, "Stack depths (BB)");
+  const bucketTitle = sectionTitle(doc, CS.filters.stackDepths);
   bucketTitleRow.appendChild(bucketTitle);
   bucketTitleRow.appendChild(
     makeBulkToggles(
       doc,
-      "stack depths",
+      CS.filters.stackDepths.toLowerCase(),
       () => {
         for (const inp of bucketInputs.values()) inp.checked = true;
         hideWarning();
@@ -367,12 +368,12 @@ export function renderFilters(
 
   // --- Sekce: Akční kontexty (Req 13.3) ---
   const ctxTitleRow = el(doc, "div", "filter-row");
-  const ctxTitle = sectionTitle(doc, "Action context");
+  const ctxTitle = sectionTitle(doc, CS.filters.actionContext);
   ctxTitleRow.appendChild(ctxTitle);
   ctxTitleRow.appendChild(
     makeBulkToggles(
       doc,
-      "action contexts",
+      CS.filters.actionContext.toLowerCase(),
       () => {
         for (const inp of contextInputs.values()) inp.checked = true;
         hideWarning();
@@ -398,7 +399,7 @@ export function renderFilters(
   wrap.appendChild(ctxBox);
 
   // --- Sekce: Konfigurace (ante, scoring, seed) ---
-  wrap.appendChild(sectionTitle(doc, "Configuration"));
+  wrap.appendChild(sectionTitle(doc, CS.filters.configuration));
   const configBox = el(doc, "div", "filter-group filter-group--config");
   configBox.style.display = "flex";
   configBox.style.flexWrap = "wrap";
@@ -418,7 +419,7 @@ export function renderFilters(
   anteInput.checked = true; // Req 5.1 — ante ON jako výchozí.
   anteInput.addEventListener("change", hideWarning);
   const anteText = doc.createElement("span");
-  anteText.textContent = "Ante (big blind ante)";
+  anteText.textContent = CS.filters.ante;
   anteLabel.appendChild(anteInput);
   anteLabel.appendChild(anteText);
   configBox.appendChild(anteLabel);
@@ -431,15 +432,15 @@ export function renderFilters(
   scoringLabel.style.gap = "4px";
   scoringLabel.style.fontSize = "13px";
   const scoringText = doc.createElement("span");
-  scoringText.textContent = "Scoring:";
+  scoringText.textContent = CS.filters.scoring;
   const scoringSelect = doc.createElement("select");
   scoringSelect.className = "filter-scoring";
   const optLenient = doc.createElement("option");
   optLenient.value = "LENIENT";
-  optLenient.textContent = "Lenient";
+  optLenient.textContent = CS.filters.lenient;
   const optStrict = doc.createElement("option");
   optStrict.value = "STRICT";
-  optStrict.textContent = "Strict";
+  optStrict.textContent = CS.filters.strict;
   scoringSelect.appendChild(optLenient);
   scoringSelect.appendChild(optStrict);
   scoringSelect.value = "LENIENT"; // výchozí režim.
@@ -455,11 +456,11 @@ export function renderFilters(
   seedLabel.style.gap = "4px";
   seedLabel.style.fontSize = "13px";
   const seedText = doc.createElement("span");
-  seedText.textContent = "Seed:";
+  seedText.textContent = CS.filters.seed;
   const seedInput = doc.createElement("input");
   seedInput.type = "text";
   seedInput.className = "filter-seed";
-  seedInput.placeholder = "random";
+  seedInput.placeholder = CS.filters.random;
   seedInput.inputMode = "numeric";
   seedInput.style.width = "120px";
   seedLabel.appendChild(seedText);
@@ -486,7 +487,7 @@ export function renderFilters(
   const startBtn = doc.createElement("button");
   startBtn.type = "button";
   startBtn.className = "filter-start";
-  startBtn.textContent = "Start training";
+  startBtn.textContent = CS.filters.start;
   startBtn.style.marginTop = "8px";
   startBtn.style.padding = "8px 18px";
   startBtn.style.fontWeight = "700";
@@ -576,7 +577,7 @@ export function renderFilters(
       warning.hidden = false;
       warning.textContent =
         message ??
-        "The selected filters do not match any spot. Adjust positions, stack depths or action context.";
+        CS.filters.empty;
     },
     clearWarning(): void {
       hideWarning();

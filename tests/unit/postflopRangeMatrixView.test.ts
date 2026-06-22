@@ -58,19 +58,19 @@ describe("postflopRangeMatrixView", () => {
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla")?.dataset.heroCategoryLabel)
       .toBeTruthy();
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__title")?.textContent)
-      .toBe("Flopzilla range matrix");
+      .toBe("Flopzilla matice range");
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__meta")?.textContent)
       .toContain("Hero AKs");
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__meta")?.textContent)
       .toMatch(/Hero AKs: [A-Za-z+ ]+/);
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__meta")?.textContent)
-      .toContain("Board");
+      .toContain("Společné karty");
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__hint")?.textContent)
-      .toContain("Swipe horizontally");
+      .toContain("Na mobilu posouvejte vodorovně");
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__matrix")?.getAttribute("role"))
       .toBe("grid");
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__matrix")?.getAttribute("aria-label"))
-      .toContain("Flopzilla range matrix for board");
+      .toContain("Flopzilla matice range pro společné karty");
     expect(root.querySelectorAll<HTMLElement>(".postflop-flopzilla__header-cell--row"))
       .toHaveLength(13);
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__header-cell--row")?.dataset.axis)
@@ -81,7 +81,7 @@ describe("postflopRangeMatrixView", () => {
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__cell--hero")?.dataset.hand)
       .toBe("AKs");
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__cell--hero")
-      ?.getAttribute("aria-label")).toContain("hero hand");
+      ?.getAttribute("aria-label")).toContain("handa Hero");
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__cell[data-hand='AA']")
       ?.dataset.category).toBeTruthy();
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__cell[data-hand='AA']")
@@ -109,10 +109,10 @@ describe("postflopRangeMatrixView", () => {
     expect(detail?.dataset.hand).toBe("AKs");
     expect(detail?.dataset.category).toBeTruthy();
     expect(detail?.dataset.lane).toMatch(/^(VALUE|BLUFF|CHECK)$/);
-    expect(detail?.textContent).toContain("hero hand");
-    expect(detail?.textContent).toContain("Category");
-    expect(detail?.textContent).toContain("Lane");
-    expect(detail?.textContent).toContain("Plan");
+    expect(detail?.textContent).toContain("handa Hero");
+    expect(detail?.textContent).toContain("Kategorie");
+    expect(detail?.textContent).toContain("Větev");
+    expect(detail?.textContent).toContain("Plán");
     expect(heroCell?.classList.contains("postflop-flopzilla__cell--selected")).toBe(true);
   });
 

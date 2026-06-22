@@ -71,6 +71,7 @@ import {
 } from "../persistence/postflopResultRecord";
 import type { ProductionPermissionManifestReport } from "../data/ranges/productionPermissionManifest";
 import { buildPreflopCurriculumPlan } from "../persistence/preflopCurriculum";
+import { CS } from "./cs";
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -190,53 +191,53 @@ function normalizeCount(n: number): number {
 // ---------------------------------------------------------------------------
 
 const DIM_TITLE: Record<BreakdownDim, string> = {
-  context: "By action category",
-  position: "By position",
-  bucket: "By stack depth",
+  context: "Podle kategorie akce",
+  position: "Podle pozice",
+  bucket: "Podle hloubky stacku",
 };
 
 const PROFILE_DIM_TITLE: Record<StatsV2BreakdownDim, string> = {
-  gameVariant: "By game variant",
-  tableFormat: "By table format",
-  blindSpeed: "By blind speed",
-  street: "By street",
-  evModel: "By model",
-  ante: "By ante",
-  rakeMode: "By rake mode",
-  rangePackId: "By preflop model",
-  position: "By position",
-  bucket: "By stack",
-  context: "By action spot",
+  gameVariant: "Podle varianty hry",
+  tableFormat: "Podle formátu stolu",
+  blindSpeed: "Podle rychlosti blindů",
+  street: "Podle streety",
+  evModel: "Podle modelu",
+  ante: "Podle ante",
+  rakeMode: "Podle rake",
+  rangePackId: "Podle preflop modelu",
+  position: "Podle pozice",
+  bucket: "Podle stacku",
+  context: "Podle situace",
 };
 
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
-  VS_LIMP: "Vs limp (iso-raise)",
-  VS_OPEN: "Vs open",
-  VS_3BET: "Vs 3-bet",
-  VS_4BET: "Vs 4-bet",
+  VS_LIMP: "Proti limpu (iso-raise)",
+  VS_OPEN: "Proti openu",
+  VS_3BET: "Proti 3-betu",
+  VS_4BET: "Proti 4-betu",
   SQUEEZE: "Squeeze",
-  BVB: "Blind vs blind",
+  BVB: "Blind proti blindu",
   PUSH_FOLD: "Push / Fold",
-  VS_ALLIN: "Vs all-in",
+  VS_ALLIN: "Proti all-inu",
 };
 
 const POSTFLOP_DIM_TITLE: Record<PostflopStatsBreakdownDim, string> = {
-  gameVariant: "By game variant",
-  tableFormat: "By table format",
-  blindSpeed: "By blind speed",
-  evModel: "By model",
-  ante: "By ante",
-  rakeMode: "By rake mode",
-  street: "By street",
-  actionNode: "By postflop spot",
-  potType: "By pot type",
-  positionPattern: "By position pattern",
-  positionPair: "By position pair",
-  boardTextureKey: "By board texture",
-  strategyPackId: "By postflop model",
-  confidence: "By confidence",
-  sourceQuality: "By production status",
+  gameVariant: "Podle varianty hry",
+  tableFormat: "Podle formátu stolu",
+  blindSpeed: "Podle rychlosti blindů",
+  evModel: "Podle modelu",
+  ante: "Podle ante",
+  rakeMode: "Podle rake",
+  street: "Podle streety",
+  actionNode: "Podle postflop situace",
+  potType: "Podle typu potu",
+  positionPattern: "Podle pozičního vzoru",
+  positionPair: "Podle dvojice pozic",
+  boardTextureKey: "Podle textury boardu",
+  strategyPackId: "Podle postflop modelu",
+  confidence: "Podle spolehlivosti",
+  sourceQuality: "Podle produkčního stavu",
 };
 
 type PostflopDashboardBreakdownDim = PostflopStatsBreakdownDim | "flowMode";
@@ -258,7 +259,7 @@ function groupLabel(dim: BreakdownDim | PostflopDashboardBreakdownDim, key: stri
     case "evModel":
       return evModelLabel(key);
     case "ante":
-      return key === "ON" ? "Ante on" : "Ante off";
+      return key === "ON" ? "Ante zapnuto" : "Bez ante";
     case "rakeMode":
       return rakeModeLabel(key);
     case "strategyPackId":
@@ -299,7 +300,7 @@ function profileGroupLabel(dim: StatsV2BreakdownDim, key: string): string {
     case "bucket":
       return `${key} BB`;
     case "ante":
-      return key === "ON" ? "Ante on" : "Ante off";
+      return key === "ON" ? "Ante zapnuto" : "Bez ante";
     case "evModel":
       return evModelLabel(key);
     case "rakeMode":
@@ -356,7 +357,7 @@ function rakeModeLabel(key: string): string {
     case "RAKE":
       return "Rake";
     case "NO_RAKE":
-      return "No rake";
+      return "Bez rake";
     default:
       return key;
   }
@@ -365,11 +366,11 @@ function rakeModeLabel(key: string): string {
 function confidenceLabel(key: string): string {
   switch (key) {
     case "LOW":
-      return "low";
+      return "nízká";
     case "MEDIUM":
-      return "medium";
+      return "střední";
     case "HIGH":
-      return "high";
+      return "vysoká";
     default:
       return key;
   }
@@ -378,19 +379,19 @@ function confidenceLabel(key: string): string {
 function postflopActionNodeLabel(key: string): string {
   switch (key) {
     case "SINGLE_RAISED_POT_CBET":
-      return "Flop c-bet in SRP";
+      return "Flop c-bet v SRP";
     case "THREE_BET_POT_CBET":
-      return "Flop c-bet in 3bet pot";
+      return "Flop c-bet ve 3bet potu";
     case "FLOP_FACING_BET":
-      return "Flop facing bet";
+      return "Flop proti betu";
     case "TURN_BARREL":
       return "Turn barrel";
     case "TURN_FACING_BET":
-      return "Turn facing bet";
+      return "Turn proti betu";
     case "RIVER_PRESSURE":
-      return "River pressure";
+      return "River tlak";
     case "RIVER_FACING_BET":
-      return "River facing bet";
+      return "River proti betu";
     default:
       return key;
   }
@@ -403,7 +404,7 @@ function postflopPotTypeLabel(key: string): string {
     case "THREE_BET_POT":
       return "3bet pot";
     case "LIMPED_POT":
-      return "Limped pot";
+      return "Limpovaný pot";
     default:
       return key;
   }
@@ -418,11 +419,11 @@ function positionPairLabel(key: string): string {
 function postflopSourceQualityLabel(key: string): string {
   switch (key) {
     case "PRODUCTION":
-      return "Production";
+      return "Produkční";
     case "PREVIEW":
-      return "Preview / low confidence";
+      return "Náhled / nízká spolehlivost";
     case "FALLBACK":
-      return "Fallback";
+      return "Náhradní model";
     default:
       return key;
   }
@@ -431,7 +432,7 @@ function postflopSourceQualityLabel(key: string): string {
 function postflopFlowModeLabel(key: string): string {
   switch (key) {
     case "SINGLE_SPOT":
-      return "Single spot";
+      return "Jeden spot";
     case "HAND_LINE":
       return "Hand line";
     default:
@@ -450,31 +451,31 @@ function postflopBoardTextureKeyLabel(key: string): string {
 function boardTextureLabel(key: string): string {
   switch (key) {
     case "paired":
-      return "paired";
+      return "párovaný";
     case "monotone":
-      return "monotone";
+      return "monotónní";
     case "two-tone":
-      return "two-tone";
+      return "dvoubarevný";
     case "rainbow":
       return "rainbow";
     case "connected":
-      return "connected";
+      return "propojený";
     case "dry":
-      return "dry";
+      return "suchý";
     case "ace-high":
       return "A-high";
     case "broadway-high":
-      return "broadway-high";
+      return "broadway high";
     case "low":
-      return "low";
+      return "nízký";
     case "medium":
-      return "medium";
+      return "střední";
     case "straight-possible":
-      return "straight possible";
+      return "možná postupka";
     case "flush-draw-heavy":
-      return "flush draw";
+      return "silný flush draw";
     case "disconnected":
-      return "disconnected";
+      return "nepropojený";
     default:
       return key;
   }
@@ -525,17 +526,17 @@ function renderSummary(summary: Summary): HTMLElement {
   const box = el("section", "dashboard-summary");
 
   const heading = el("h3", "dashboard-summary__title");
-  heading.textContent = "Summary";
+  heading.textContent = "Souhrn";
   box.appendChild(heading);
 
   const total = el("div", "summary-total");
   total.dataset.total = String(summary.total);
-  total.textContent = `Answered total: ${summary.total}`;
+  total.textContent = `Celkem odpovědí: ${summary.total}`;
   box.appendChild(total);
 
   const rateLine = el("div", "summary-rate-line");
   const rateLabel = el("span", "summary-rate-label");
-  rateLabel.textContent = "Success rate: ";
+  rateLabel.textContent = CS.dashboard.successRate;
   const rate = rateElement("span", "summary-rate", summary.rate);
   rateLine.appendChild(rateLabel);
   rateLine.appendChild(rate);
@@ -574,25 +575,25 @@ function renderKpiPanel(
   box.appendChild(heading);
 
   const cards = el("div", "dashboard-kpi__cards");
-  cards.appendChild(kpiCard("Lifetime accuracy", "lifetimeRate", formatRate(model.lifetimeRate)));
+  cards.appendChild(kpiCard(CS.dashboard.lifetimeAccuracy, "lifetimeRate", formatRate(model.lifetimeRate)));
   cards.appendChild(kpiCard(
-    `Recent ${model.recentWindowSize}`,
+    `Posledních ${model.recentWindowSize}`,
     "recentRate",
     `${formatRate(model.recentRate)} (${model.recentTotal})`,
   ));
-  cards.appendChild(kpiCard("Best streak", "bestStreak", String(model.bestStreak)));
-  cards.appendChild(kpiCard("Leak focus", "leakFocus", leakFocusText(model)));
+  cards.appendChild(kpiCard(CS.dashboard.bestStreak, "bestStreak", String(model.bestStreak)));
+  cards.appendChild(kpiCard(CS.dashboard.leakFocus, "leakFocus", leakFocusText(model)));
   cards.appendChild(kpiCard(
-    "Weighted accuracy",
+    CS.dashboard.weightedAccuracy,
     "confidenceWeightedRate",
     `${formatRate(confidenceWeightedKpi.rate)} (${formatWeightedNumber(confidenceWeightedKpi.weightedTotal)}w)`,
   ));
   if (avgDecisionMs !== null) {
-    cards.appendChild(kpiCard("Avg decision", "avgResponseMs", formatDurationMs(avgDecisionMs)));
+    cards.appendChild(kpiCard(CS.dashboard.averageDecision, "avgResponseMs", formatDurationMs(avgDecisionMs)));
   }
   if (decisionTrend.available) {
     cards.appendChild(kpiCard(
-      "Decision trend",
+      CS.dashboard.decisionTrend,
       "decisionTrend",
       formatDecisionTrendSummary(decisionTrend),
     ));
@@ -619,30 +620,30 @@ function renderPreflopCurriculumPanel(
   box.dataset.recommendations = String(plan.recommendations.length);
 
   const heading = el("h3", "preflop-curriculum__title");
-  heading.textContent = "Training focus";
+  heading.textContent = CS.dashboard.trainingFocus;
   box.appendChild(heading);
 
   const summary = el("div", "preflop-curriculum__summary");
   summary.textContent = plan.focus
-    ? `${plan.focus.label} - ${formatRate(plan.focus.rate)} over ${plan.focus.total} spots`
+    ? `${plan.focus.label} – ${formatRate(plan.focus.rate)}, ${plan.focus.total} spotů`
     : plan.reason;
   box.appendChild(summary);
 
   const goals = el("div", "preflop-curriculum__goals");
   goals.textContent =
-    `${plan.sessionGoal.targetSpots} spots | ` +
-    `${plan.sessionGoal.targetAccuracy}% target | ` +
-    `${plan.sessionGoal.streakTarget} streak`;
+    `${plan.sessionGoal.targetSpots} spotů | ` +
+    `cíl ${plan.sessionGoal.targetAccuracy} % | ` +
+    `série ${plan.sessionGoal.streakTarget}`;
   box.appendChild(goals);
 
   const due = el("div", "preflop-curriculum__due");
-  due.textContent = `${plan.repetitionQueue.length} due review spots`;
+  due.textContent = `Spoty k opakování: ${plan.repetitionQueue.length}`;
   box.appendChild(due);
 
   if (plan.recommendations.length > 0) {
     const recommendations = el("div", "preflop-curriculum__recommendations");
     const recommendationTitle = el("div", "preflop-curriculum__recommendations-title");
-    recommendationTitle.textContent = "Next study focus";
+    recommendationTitle.textContent = CS.dashboard.nextStudyFocus;
     recommendations.appendChild(recommendationTitle);
 
     for (const recommendation of plan.recommendations) {
@@ -661,7 +662,7 @@ function renderPreflopCurriculumPanel(
       const train = document.createElement("button");
       train.type = "button";
       train.className = "preflop-curriculum__recommendation-train";
-      train.textContent = "Train";
+      train.textContent = CS.dashboard.train;
       train.disabled = onStartPreflopFocus === undefined;
       train.addEventListener("click", () => onStartPreflopFocus?.(recommendation.filters));
       row.appendChild(train);
@@ -676,7 +677,7 @@ function renderPreflopCurriculumPanel(
     const start = document.createElement("button");
     start.type = "button";
     start.className = "preflop-curriculum__start";
-    start.textContent = "Train focus";
+    start.textContent = CS.dashboard.trainFocus;
     start.disabled = onStartPreflopFocus === undefined;
     start.addEventListener("click", () => onStartPreflopFocus?.(plan.focus!.filters));
     actions.appendChild(start);
@@ -694,12 +695,12 @@ function renderPermissionAuditPanel(
   box.dataset.ready = String(reports.filter((report) => report.valid).length);
 
   const heading = el("h3", "permission-audit__title");
-  heading.textContent = "Range audit";
+  heading.textContent = CS.dashboard.rangeAudit;
   box.appendChild(heading);
 
   if (reports.length === 0) {
     const empty = el("div", "permission-audit__empty");
-    empty.textContent = "No audit reports loaded.";
+    empty.textContent = "Nejsou načtené žádné kontrolní reporty.";
     box.appendChild(empty);
     return box;
   }
@@ -720,11 +721,11 @@ function renderPermissionAuditRow(
   row.dataset.ready = report.valid ? "true" : "false";
 
   const title = el("div", "permission-audit-row__title");
-  title.textContent = `Audit ${index + 1}`;
+  title.textContent = `Kontrola ${index + 1}`;
   row.appendChild(title);
 
   const status = el("div", "permission-audit-row__status");
-  status.textContent = report.valid ? "Ready" : `Blocked (${report.errors.length})`;
+  status.textContent = report.valid ? CS.dashboard.ready : `Blokováno (${report.errors.length})`;
   row.appendChild(status);
 
   const license = el("div", "permission-audit-row__license");
@@ -736,7 +737,7 @@ function renderPermissionAuditRow(
   row.appendChild(scope);
 
   const evidence = el("div", "permission-audit-row__evidence");
-  evidence.textContent = `${report.evidenceCount} evidence`;
+  evidence.textContent = `Podklady: ${report.evidenceCount}`;
   row.appendChild(evidence);
 
   return row;
@@ -745,26 +746,26 @@ function renderPermissionAuditRow(
 function permissionLicenseLabel(kind: string): string {
   switch (kind) {
     case "OWNED_SOLVER_EXPORT":
-      return "Owned solver export";
+      return "Vlastní solver export";
     case "PUBLIC_CHART_WITH_PERMISSION":
-      return "Public chart with permission";
+      return "Veřejný chart s povolením";
     case "EXPLICIT_WRITTEN_PERMISSION":
-      return "Written permission";
+      return "Písemné povolení";
     default:
-      return "Permission missing";
+      return "Chybí povolení";
   }
 }
 
 function permissionScopeLabel(scope: string): string {
   switch (scope) {
     case "PKRTRAINER_RUNTIME_BUNDLE":
-      return "Runtime bundle allowed";
+      return "Povoleno v aplikačním balíčku";
     case "PKRTRAINER_INTERNAL_REVIEW_ONLY":
-      return "Review only";
+      return "Pouze interní kontrola";
     case "NO_REDISTRIBUTION":
-      return "No redistribution";
+      return "Bez další distribuce";
     default:
-      return "Scope missing";
+      return "Chybí rozsah povolení";
   }
 }
 
@@ -876,7 +877,7 @@ function buildConfidenceWeightedKpi(
     const verified = record.rangePackId.length > 0 && record.sourceVerifiedAt.length > 0;
     add(
       verified ? "preflop-verified" : "preflop-fallback",
-      verified ? "Preflop verified" : "Preflop fallback",
+      verified ? "Ověřený preflop" : "Náhradní preflop model",
       record.correct,
       verified ? 1 : 0.6,
     );
@@ -917,17 +918,17 @@ function postflopConfidenceWeightGroup(record: PostflopStatsV2BridgeRecord): {
   weight: number;
 } {
   if (!record.strategyPackId || record.confidence === null) {
-    return { key: "postflop-fallback", label: "Postflop fallback", weight: 0.25 };
+    return { key: "postflop-fallback", label: "Náhradní postflop model", weight: 0.25 };
   }
 
   switch (record.confidence) {
     case "HIGH":
-      return { key: "postflop-high", label: "Postflop high confidence", weight: 1 };
+      return { key: "postflop-high", label: "Postflop s vysokou spolehlivostí", weight: 1 };
     case "MEDIUM":
-      return { key: "postflop-medium", label: "Postflop medium confidence", weight: 0.75 };
+      return { key: "postflop-medium", label: "Postflop se střední spolehlivostí", weight: 0.75 };
     case "LOW":
     default:
-      return { key: "postflop-low", label: "Postflop low confidence", weight: 0.5 };
+      return { key: "postflop-low", label: "Postflop s nízkou spolehlivostí", weight: 0.5 };
   }
 }
 
@@ -1052,9 +1053,14 @@ function decisionTrendDirection(deltaMs: number | null): DecisionTimeTrendModel[
 }
 
 function formatDecisionTrendSummary(model: DecisionTimeTrendModel): string {
-  if (!model.available || model.deltaMs === null || model.direction === null) return "Pending sample";
-  if (model.direction === "stable") return "Stable";
-  return `${model.direction === "faster" ? "Faster" : "Slower"} by ${formatDurationMs(Math.abs(model.deltaMs))}`;
+  if (!model.available || model.deltaMs === null || model.direction === null) {
+    return CS.dashboard.pendingSample;
+  }
+  if (model.direction === "stable") return CS.dashboard.stable;
+  const duration = formatDurationMs(Math.abs(model.deltaMs));
+  return model.direction === "faster"
+    ? `Rychlejší o ${duration}`
+    : `Pomalejší o ${duration}`;
 }
 
 function kpiCard(labelText: string, key: string, valueText: string): HTMLElement {
@@ -1071,14 +1077,14 @@ function kpiCard(labelText: string, key: string, valueText: string): HTMLElement
 
 function leakFocusText(model: StatsV2KpiModel): string {
   const first = model.leakCandidates[0];
-  if (!first) return `No leak over ${model.minLeakSample}+ samples`;
+  if (!first) return `Žádná slabina nad ${model.minLeakSample}+ vzorků`;
   return `${profileGroupLabel(first.dim, first.key)} (${formatRate(first.rate)})`;
 }
 
 function renderKpiChart(model: StatsV2KpiModel): HTMLElement {
   const chart = el("div", "dashboard-kpi-chart");
-  chart.appendChild(rateBar("Lifetime", "lifetime", model.lifetimeRate, model.total));
-  chart.appendChild(rateBar("Recent", "recent", model.recentRate, model.recentTotal));
+  chart.appendChild(rateBar("Celkem", "lifetime", model.lifetimeRate, model.total));
+  chart.appendChild(rateBar("Nedávné", "recent", model.recentRate, model.recentTotal));
   return chart;
 }
 
@@ -1090,12 +1096,12 @@ function renderConfidenceWeightedKpi(model: ConfidenceWeightedKpiModel): HTMLEle
   chart.dataset.rate = model.rate === null ? "" : String(model.rate);
 
   const title = el("div", "dashboard-confidence-kpi__title");
-  title.textContent = "Confidence-weighted KPI";
+  title.textContent = CS.dashboard.confidenceWeightedKpi;
   chart.appendChild(title);
 
   if (model.groups.length === 0) {
     const empty = el("div", "dashboard-confidence-kpi__empty");
-    empty.textContent = "No weighted sample yet.";
+    empty.textContent = "Zatím není dostupný vážený vzorek.";
     chart.appendChild(empty);
     return chart;
   }
@@ -1148,12 +1154,13 @@ function renderDecisionTimeTrend(model: DecisionTimeTrendModel): HTMLElement {
   chart.dataset.windows = String(model.points.length);
 
   const title = el("div", "dashboard-decision-trend__title");
-  title.textContent = "Decision-time trend";
+  title.textContent = CS.dashboard.decisionTimeTrend;
   chart.appendChild(title);
 
   if (!model.available) {
     const empty = el("div", "dashboard-decision-trend__empty");
-    empty.textContent = `Needs ${model.minSample} timed decisions. Current sample: ${model.sample}.`;
+    empty.textContent =
+      `Je potřeba ${model.minSample} měřených rozhodnutí. Aktuální vzorek: ${model.sample}.`;
     chart.appendChild(empty);
     return chart;
   }
@@ -1195,7 +1202,7 @@ function renderDecisionTrendBar(point: DecisionTrendPoint, maxAverageMs: number)
   bar.appendChild(label);
 
   const sample = el("div", "dashboard-decision-trend__sample");
-  sample.textContent = `${point.total} decisions`;
+  sample.textContent = `Rozhodnutí: ${point.total}`;
   bar.appendChild(sample);
 
   return bar;
@@ -1206,12 +1213,12 @@ function renderAccuracyTrend(points: readonly AccuracyTrendPoint[]): HTMLElement
   chart.dataset.windows = String(points.length);
 
   const title = el("div", "dashboard-accuracy-trend__title");
-  title.textContent = "Recent accuracy trend";
+  title.textContent = CS.dashboard.recentAccuracyTrend;
   chart.appendChild(title);
 
   if (points.length === 0) {
     const empty = el("div", "dashboard-accuracy-trend__empty");
-    empty.textContent = "No recent trend yet.";
+    empty.textContent = "Zatím není dostupný nedávný vývoj.";
     chart.appendChild(empty);
     return chart;
   }
@@ -1263,12 +1270,12 @@ function renderLeakChart(
   const chart = el("div", "dashboard-leak-chart");
   chart.dataset.count = String(candidates.length);
   const title = el("div", "dashboard-leak-chart__title");
-  title.textContent = "Lowest-sample-qualified spots";
+  title.textContent = CS.dashboard.qualifiedLeaks;
   chart.appendChild(title);
 
   if (candidates.length === 0) {
     const empty = el("div", "dashboard-leak-chart__empty");
-    empty.textContent = "No qualified leaks yet.";
+    empty.textContent = "Zatím není dostupná slabina s dostatečným vzorkem.";
     chart.appendChild(empty);
     return chart;
   }
@@ -1288,7 +1295,7 @@ function renderLeakChart(
     const train = document.createElement("button");
     train.type = "button";
     train.className = "dashboard-leak-row__train";
-    train.textContent = "Train";
+    train.textContent = CS.dashboard.train;
     train.disabled = filters === null || onStartPreflopFocus === undefined;
     train.addEventListener("click", () => {
       if (filters !== null) onStartPreflopFocus?.(filters);
@@ -1350,17 +1357,17 @@ function renderStreakSession(streak: number, sessionCount: number): HTMLElement 
   const box = el("section", "dashboard-session");
 
   const heading = el("h3", "dashboard-session__title");
-  heading.textContent = "Current session";
+  heading.textContent = "Aktuální relace";
   box.appendChild(heading);
 
   const streakNode = el("div", "dashboard-streak");
   streakNode.dataset.streak = String(streak);
-  streakNode.textContent = `Correct streak: ${streak}`;
+  streakNode.textContent = `Série správných odpovědí: ${streak}`;
   box.appendChild(streakNode);
 
   const sessionNode = el("div", "dashboard-session-count");
   sessionNode.dataset.sessionCount = String(sessionCount);
-  sessionNode.textContent = `Spots this session: ${sessionCount}`;
+  sessionNode.textContent = `Spoty v této relaci: ${sessionCount}`;
   box.appendChild(sessionNode);
 
   return box;
@@ -1405,7 +1412,7 @@ function renderBreakdown(dim: BreakdownDim, breakdown: Breakdown): HTMLElement {
 function renderPreflopLeakCharts(store: StatsStore): HTMLElement {
   const box = el("section", "preflop-leak-charts");
   const heading = el("h3", "preflop-leak-charts__title");
-  heading.textContent = "Preflop leak charts";
+  heading.textContent = CS.dashboard.preflopLeakCharts;
   box.appendChild(heading);
 
   const dims: BreakdownDim[] = ["context", "position", "bucket"];
@@ -1441,10 +1448,10 @@ function renderStatsProfileSelector(
   const wrap = el("div", "stats-profile-filter");
   const label = document.createElement("label");
   label.className = "stats-profile-filter__label";
-  label.textContent = "Profile";
+  label.textContent = CS.dashboard.profile;
   const select = document.createElement("select");
   select.className = "stats-profile-select";
-  select.appendChild(statsProfileOption("", "All profiles"));
+  select.appendChild(statsProfileOption("", CS.dashboard.allProfiles));
   for (const profile of profiles) {
     select.appendChild(statsProfileOption(
       profile.profileId,
@@ -1475,7 +1482,7 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
   const box = el("section", "stats-transfer");
 
   const heading = el("h3", "stats-transfer__title");
-  heading.textContent = "Stats export / import";
+  heading.textContent = "Export / import statistik";
   box.appendChild(heading);
 
   const profileOptions = listStatsProfiles(
@@ -1490,17 +1497,17 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
   const exportBtn = document.createElement("button");
   exportBtn.type = "button";
   exportBtn.className = "stats-export";
-  exportBtn.textContent = "Export JSON";
+  exportBtn.textContent = CS.dashboard.exportJson;
 
   const importBtn = document.createElement("button");
   importBtn.type = "button";
   importBtn.className = "stats-import";
-  importBtn.textContent = "Import JSON";
+  importBtn.textContent = CS.dashboard.importJson;
 
   const resetProfileBtn = document.createElement("button");
   resetProfileBtn.type = "button";
   resetProfileBtn.className = "stats-reset-profile";
-  resetProfileBtn.textContent = "Reset selected profile";
+  resetProfileBtn.textContent = CS.dashboard.resetProfile;
   resetProfileBtn.disabled = profileSelector.select.value === "";
   profileSelector.select.addEventListener("change", () => {
     resetProfileBtn.disabled = profileSelector.select.value === "";
@@ -1513,7 +1520,7 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
 
   const textarea = document.createElement("textarea");
   textarea.className = "stats-json-box";
-  textarea.placeholder = "Export / import stats JSON";
+  textarea.placeholder = CS.dashboard.transferPlaceholder;
   textarea.rows = 8;
   box.appendChild(textarea);
 
@@ -1532,8 +1539,8 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     status.hidden = false;
     status.className = "stats-transfer__status stats-transfer__status--ok";
     status.textContent = selectedProfileId
-      ? "Selected profile export is ready in the JSON field."
-      : "Stats export is ready in the JSON field.";
+      ? "Export vybraného profilu je připravený v poli JSON."
+      : "Export statistik je připravený v poli JSON.";
   });
 
   importBtn.addEventListener("click", () => {
@@ -1543,13 +1550,14 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
       const postflopSaved = data.onPostflopRecordsImported?.(result.postflopRecords) ?? true;
       if (!postflopSaved) {
         status.className = "stats-transfer__status stats-transfer__status--error";
-        status.textContent = "Preflop stats were imported, but the postflop log could not be saved.";
+        status.textContent = "Preflop statistiky byly importovány, ale postflop záznam se nepodařilo uložit.";
         return;
       }
       const postflopLinesSaved = data.onPostflopLineRecordsImported?.(result.postflopLineRecords) ?? true;
       if (!postflopLinesSaved) {
         status.className = "stats-transfer__status stats-transfer__status--error";
-        status.textContent = "Preflop and postflop stats were imported, but the postflop line log could not be saved.";
+        status.textContent =
+          "Preflop a postflop statistiky byly importovány, ale záznam postflop hand line se nepodařilo uložit.";
         return;
       }
       renderDashboard({
@@ -1561,12 +1569,12 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
       if (refreshedStatus) {
         refreshedStatus.hidden = false;
         refreshedStatus.className = "stats-transfer__status stats-transfer__status--ok";
-        refreshedStatus.textContent = `Imported ${result.imported} stats records.`;
+        refreshedStatus.textContent = `Importováno záznamů statistik: ${result.imported}.`;
       }
       return;
     }
     status.className = "stats-transfer__status stats-transfer__status--error";
-    status.textContent = result.error ?? "Stats import failed.";
+    status.textContent = "Import statistik selhal.";
   });
 
   resetProfileBtn.addEventListener("click", () => {
@@ -1582,19 +1590,20 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     status.hidden = false;
     if (!save.ok) {
       status.className = "stats-transfer__status stats-transfer__status--error";
-      status.textContent = save.error ?? "Selected profile reset failed.";
+      status.textContent = "Reset vybraného profilu selhal.";
       return;
     }
     const postflopSaved = data.onPostflopRecordsImported?.(selected.postflopRecords) ?? true;
     if (!postflopSaved) {
       status.className = "stats-transfer__status stats-transfer__status--error";
-      status.textContent = "Preflop stats were reset, but the postflop log could not be saved.";
+      status.textContent = "Preflop statistiky byly resetovány, ale postflop záznam se nepodařilo uložit.";
       return;
     }
     const postflopLinesSaved = data.onPostflopLineRecordsImported?.(selected.postflopLineRecords) ?? true;
     if (!postflopLinesSaved) {
       status.className = "stats-transfer__status stats-transfer__status--error";
-      status.textContent = "Preflop and postflop stats were reset, but the postflop line log could not be saved.";
+      status.textContent =
+        "Preflop a postflop statistiky byly resetovány, ale záznam postflop hand line se nepodařilo uložit.";
       return;
     }
     renderDashboard({
@@ -1606,7 +1615,7 @@ function renderStatsTransfer(data: DashboardData, root: HTMLElement): HTMLElemen
     if (refreshedStatus) {
       refreshedStatus.hidden = false;
       refreshedStatus.className = "stats-transfer__status stats-transfer__status--ok";
-      refreshedStatus.textContent = "Selected profile stats were reset.";
+      refreshedStatus.textContent = "Statistiky vybraného profilu byly resetovány.";
     }
   });
 
@@ -1643,7 +1652,7 @@ function renderProfileBreakdown(dim: StatsV2BreakdownDim, groups: StatsV2Group[]
   const rows = el("div", "profile-breakdown__rows");
   if (groups.length === 0) {
     const empty = el("div", "profile-breakdown__empty");
-    empty.textContent = "No records yet.";
+    empty.textContent = "Zatím nejsou žádné záznamy.";
     rows.appendChild(empty);
   } else {
     for (const g of groups) {
@@ -1659,7 +1668,7 @@ function renderProfileBreakdowns(store: StatsStore): HTMLElement {
   const box = el("section", "profile-breakdowns");
 
   const heading = el("h3", "profile-breakdowns__title");
-  heading.textContent = "Profile breakdowns";
+  heading.textContent = "Statistiky podle profilu";
   box.appendChild(heading);
 
   const eventsV2 = migrateResultRecordsToV2(store.events());
@@ -1700,13 +1709,13 @@ function renderPostflopBreakdown(
   box.dataset.dim = dim;
 
   const heading = el("h4", "postflop-breakdown__title");
-  heading.textContent = dim === "flowMode" ? "By training flow" : POSTFLOP_DIM_TITLE[dim];
+  heading.textContent = dim === "flowMode" ? "Podle typu tréninku" : POSTFLOP_DIM_TITLE[dim];
   box.appendChild(heading);
 
   const rows = el("div", "postflop-breakdown__rows");
   if (groups.length === 0) {
     const empty = el("div", "postflop-breakdown__empty");
-    empty.textContent = "No postflop answers yet.";
+    empty.textContent = "Zatím nejsou žádné postflop odpovědi.";
     rows.appendChild(empty);
   } else {
     for (const group of groups) {
@@ -1763,7 +1772,7 @@ function renderPostflopBreakdowns(
   box.dataset.total = String(records.length + postflopLineStreetCount(lineRecords));
 
   const heading = el("h3", "postflop-breakdowns__title");
-  heading.textContent = "Postflop breakdowns";
+  heading.textContent = "Postflop statistiky";
   box.appendChild(heading);
 
   const allRecords = [...records, ...postflopLineStreetRecords(lineRecords)];
@@ -1783,7 +1792,7 @@ function renderPostflopKpiCharts(
   const box = el("section", "postflop-kpi-charts");
   box.dataset.total = String(allRecords.length);
   const heading = el("h3", "postflop-kpi-charts__title");
-  heading.textContent = "Postflop KPI charts";
+  heading.textContent = "Postflop KPI";
   box.appendChild(heading);
 
   for (const dim of [
@@ -1814,7 +1823,7 @@ function renderPostflopKpiChart(
   const rows = el("div", "postflop-kpi-chart__rows");
   if (groups.length === 0) {
     const empty = el("div", "postflop-kpi-chart__empty");
-    empty.textContent = "No postflop answers yet.";
+    empty.textContent = "Zatím nejsou žádné postflop odpovědi.";
     rows.appendChild(empty);
   } else {
     for (const group of groups) {

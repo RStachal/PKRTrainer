@@ -84,6 +84,7 @@ export interface RiverProductionStrategyRule {
 }
 
 export interface RiverProductionStrategyPack {
+  contentLanguage?: string;
   id: string;
   version: string;
   createdAt: string;

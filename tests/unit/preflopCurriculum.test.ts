@@ -73,7 +73,7 @@ describe("preflopCurriculum", () => {
       recentMistakes: 3,
     });
     expect(plan.recommendations[0].priority).toBeGreaterThan(0);
-    expect(plan.recommendations[0].reason).toContain("recent mistakes");
+    expect(plan.recommendations[0].reason).toContain("chyb v posledním vzorku");
     expect(plan.sessionGoal).toEqual({
       targetSpots: 20,
       targetAccuracy: 80,
@@ -191,7 +191,7 @@ describe("preflopCurriculum", () => {
     const plan = buildPreflopCurriculumPlan([], { targetSpots: 10 });
 
     expect(plan.available).toBe(false);
-    expect(plan.reason).toBe("No preflop answers yet.");
+    expect(plan.reason).toBe("Zatím nejsou žádné preflop odpovědi.");
     expect(plan.focus).toBeNull();
     expect(plan.recommendations).toEqual([]);
     expect(plan.sessionGoal.targetSpots).toBe(10);
@@ -214,6 +214,6 @@ describe("preflopCurriculum", () => {
     expect(plan.available).toBe(false);
     expect(plan.focus).toBeNull();
     expect(plan.recommendations).toEqual([]);
-    expect(plan.reason).toBe("Build sample: 2 more preflop spots before leak recommendations.");
+    expect(plan.reason).toBe("Doplňte ještě 2 preflop spotů pro doporučení slabin.");
   });
 });

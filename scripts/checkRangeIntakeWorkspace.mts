@@ -239,3 +239,5 @@ function renderIntakeWorkspaceReport(report: IntakeWorkspaceReport): string {
 function normalizeLineEndings(value: string): string {
   return value.replace(/\r\n/g, "\n");
 }
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+await loadCompleteMttProductionRegistry();

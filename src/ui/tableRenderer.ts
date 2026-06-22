@@ -508,7 +508,7 @@ export function renderTable(
   const potBB = startingPotBB(spot, ante);
   const pot = el("div", "pot");
   pot.dataset.potBb = String(potBB);
-  pot.textContent = `Pot: ${formatBB(potBB)} BB`;
+  pot.textContent = `Bank: ${formatBB(potBB)} BB`;
   center.appendChild(pot);
 
   const chipStack = el("div", "poker-table__chip-stack");

@@ -73,6 +73,8 @@ import { createPostflopLineStatsStore } from "./persistence/postflopLineStatsSto
 import { buildPostflopLineResultRecord } from "./persistence/postflopLineResultRecord";
 import { trainingCapabilityForProfile } from "./data/ranges/trainingCapability";
 import { mttPreflopRangePackForProfile } from "./data/ranges/mttPreflopRangePacks";
+import { mttProductionImportSlotId } from "./data/ranges/mttImportSlotNaming";
+import { mttProductionLazyLoader } from "./data/ranges/mttProductionLazyLoader";
 import type { RangePack } from "./data/ranges/rangePack";
 import {
   createMttProductionPostflopStrategyResolver,
@@ -81,7 +83,6 @@ import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
 import { renderMatrix } from "./ui/rangeMatrixView";
 import { renderRangeModalButton } from "./ui/rangeModal";
-import { renderDashboard } from "./ui/dashboard";
 import { renderHHView } from "./ui/hhView";
 import { renderPostflopView } from "./ui/postflopView";
 import { CS } from "./ui/cs";
@@ -111,14 +112,14 @@ const ACTION_KEY_LABEL: Record<ActionKey, string> = {
 
 const ACTION_CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
-  VS_LIMP: "Vs limp (Iso-raise)",
-  VS_OPEN: "Vs open",
-  VS_3BET: "Vs 3-bet",
-  VS_4BET: "Vs 4-bet",
+  VS_LIMP: "Proti limpu (iso-raise)",
+  VS_OPEN: "Proti openu",
+  VS_3BET: "Proti 3-betu",
+  VS_4BET: "Proti 4-betu",
   SQUEEZE: "Squeeze",
   BVB: "Blind vs blind",
   PUSH_FOLD: "Push / Fold",
-  VS_ALLIN: "Vs all-in (Call-jam)",
+  VS_ALLIN: "Proti all-inu (call-jam)",
 };
 
 /** PĹ™eloĹľĂ­ AkÄŤnĂ­_klĂ­ÄŤ na ÄŤeskĂ˝ popisek (fallback = samotnĂ˝ klĂ­ÄŤ). */
@@ -272,7 +273,7 @@ export function bootstrap(options: BootstrapOptions = {}): void {
   } catch (err) {
       showFatalError(
         root,
-        "The app could not start because of an unexpected error. Please reload it.",
+        CS.system.unexpectedStart,
         err,
       );
   }
@@ -315,8 +316,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   if (storageInit.startedEmpty) {
     showNotice(
       shell.notice,
-      "Data migration from the previous version did not complete. Training starts with empty " +
-        "statistics; your original data was left untouched.",
+      CS.system.migrationFailed,
     );
   }
 
@@ -330,37 +330,45 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
   let currentPostflopProfile: TrainingProfile | undefined;
   let startPreflopFocusSession: ((filters: Filters) => void) | null = null;
   let getSelectedTrainingProfile = (): TrainingProfile => DEFAULT_TRAINING_PROFILE;
+  const dashboardModule = import("./ui/dashboard");
+  let dashboardRenderVersion = 0;
   const refreshDashboard = (): void => {
-    renderDashboard({
-      store: statsStore,
-      sessionCount,
-      postflopRecords: postflopStatsStore.events(),
-      postflopLineRecords: postflopLineStatsStore.events(),
-      onStartPreflopFocus: (filters) => {
-        shell.selectTab("training");
-        startPreflopFocusSession?.(filters);
-      },
-      onPostflopRecordsImported: (records) => {
-        const save = postflopStatsStore.replaceAll(records);
-        if (!save.ok) {
-          showNotice(
-            shell.notice,
-            "Postflop records could not be saved. The preflop stats export remains intact.",
-          );
-        }
-        return save.ok;
-      },
-      onPostflopLineRecordsImported: (records) => {
-        const save = postflopLineStatsStore.replaceAll(records);
-        if (!save.ok) {
-          showNotice(
-            shell.notice,
-            "Postflop line records could not be saved. The preflop stats export remains intact.",
-          );
-        }
-        return save.ok;
-      },
-    }, shell.statsPanel);
+    const renderVersion = ++dashboardRenderVersion;
+    void dashboardModule.then(({ renderDashboard }) => {
+      if (renderVersion !== dashboardRenderVersion) return;
+      renderDashboard({
+        store: statsStore,
+        sessionCount,
+        postflopRecords: postflopStatsStore.events(),
+        postflopLineRecords: postflopLineStatsStore.events(),
+        onStartPreflopFocus: (filters) => {
+          shell.selectTab("training");
+          startPreflopFocusSession?.(filters);
+        },
+        onPostflopRecordsImported: (records) => {
+          const save = postflopStatsStore.replaceAll(records);
+          if (!save.ok) {
+            showNotice(
+              shell.notice,
+              CS.system.postflopRecordsSave,
+            );
+          }
+          return save.ok;
+        },
+        onPostflopLineRecordsImported: (records) => {
+          const save = postflopLineStatsStore.replaceAll(records);
+          if (!save.ok) {
+            showNotice(
+              shell.notice,
+              CS.system.postflopLinesSave,
+            );
+          }
+          return save.ok;
+        },
+      }, shell.statsPanel);
+    }).catch(() => {
+      showNotice(shell.notice, CS.system.unexpectedStart);
+    });
   };
   const renderPostflopPanel = (
     options: {
@@ -416,7 +424,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
         if (!save.ok) {
           showNotice(
             shell.notice,
-            "The postflop answer could not be saved to local storage.",
+            CS.system.postflopAnswerSave,
           );
         }
         sessionCount += 1;
@@ -433,7 +441,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
         if (!save.ok) {
           showNotice(
             shell.notice,
-            "The postflop hand line could not be saved to local storage.",
+            CS.system.postflopLineSave,
           );
         }
         sessionCount += 1;
@@ -708,12 +716,12 @@ function productionMttReadiness(
 
 function candidateProfileLabel(profile: TrainingProfile): string {
   if (profile.gameVariant === "SNG") {
-    return `SNG ${evModelLabel(profile.evModel)} preview`;
+    return `SNG ${evModelLabel(profile.evModel)} náhled`;
   }
   if (profile.gameVariant === "CASH") {
-    return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "no rake"} preview`;
+    return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "bez rake"} náhled`;
   }
-  return `${profile.gameVariant} ${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} preflop ${evModelLabel(profile.evModel)} preview`;
+  return `${profile.gameVariant} ${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} preflop ${evModelLabel(profile.evModel)} náhled`;
 }
 
 function profileGateMessage(profile: TrainingProfile, filters: Filters): string {
@@ -723,29 +731,45 @@ function profileGateMessage(profile: TrainingProfile, filters: Filters): string 
   if (mttReadiness) {
     const label = mttProfileLabel(resolvedProfile);
     if (mttReadiness.status === "CANDIDATE") {
-      return (
-        `${label}: candidate/preview. Production training is disabled until reviewed ` +
-        (resolvedProfile.street === "PREFLOP"
-          ? "hand-class coverage is complete."
-          : "strategy coverage is complete.")
-      );
+      return `${label}: ${CS.training.profile.candidate}. ${CS.training.profile.disabledUntilCoverage}`;
     }
-    return `${label}: missing production ${
-      resolvedProfile.street === "PREFLOP" ? "range" : "strategy"
-    }. Production training is disabled.`;
+    return `${label}: ${
+      resolvedProfile.street === "PREFLOP"
+        ? CS.training.profile.missingRange
+        : CS.training.profile.missingStrategy
+    }. ${CS.training.profile.disabled}`;
   }
 
   if (capability.status === "PREVIEW") {
     return (
-      `${candidateProfileLabel(profile)}: candidate/preview. Production training is disabled ` +
-      "until hand-class values are reviewed."
+      `${candidateProfileLabel(profile)}: ${CS.training.profile.candidate}. ` +
+      CS.training.profile.disabledUntilCoverage
     );
   }
 
   return capability.status === "UNSUPPORTED"
-    ? `Unsupported profile: ${capability.reason}`
-    : capability.reason;
+    ? CS.training.profile.unsupported
+    : CS.training.profile.disabled;
 
+}
+
+function mttProductionProfileKey(
+  profile: TrainingProfile,
+): string | null {
+  if (
+    profile.gameVariant !== "MTT" ||
+    profile.evModel === "ICM" ||
+    profile.rakeMode !== "NONE"
+  ) {
+    return null;
+  }
+  return mttProductionImportSlotId({
+    tableFormat: profile.tableFormat,
+    blindSpeed: profile.blindSpeed,
+    evModel: profile.evModel,
+    street: profile.street,
+    ante: profile.ante,
+  });
 }
 
 function logRangeLoadFailure(): void {
@@ -784,12 +808,12 @@ function setupTraining(
   // HernĂ­ sub-oblasti.
   const sessionBar = el("div", "training__session-bar");
   const sessionInfo = el("div", "training__session-info");
-  const sessionTitle = el("div", "training__session-title", "Question");
+  const sessionTitle = el("div", "training__session-title", CS.training.question);
   const sessionMeta = el("div", "training__session-meta");
   const changeSituationBtn = document.createElement("button");
   changeSituationBtn.type = "button";
   changeSituationBtn.className = "training__change-situation";
-  changeSituationBtn.textContent = "Change situation";
+  changeSituationBtn.textContent = CS.training.changeSituation;
   sessionInfo.appendChild(sessionTitle);
   sessionInfo.appendChild(sessionMeta);
   sessionBar.appendChild(sessionInfo);
@@ -815,37 +839,57 @@ function setupTraining(
   const filtersView: FiltersView = renderFilters(filtersBox, {
     onStart: (filters: Filters, seed: number | null, profile) => {
       const resolvedProfile = runtimeProfile(profile, filters);
-      const capability = trainingCapabilityForProfile(resolvedProfile);
-      if (isPostflopStreet(profile.street)) {
-        if (!capability.canStartTraining) {
+      const startResolvedProfile = (): void => {
+        const capability = trainingCapabilityForProfile(resolvedProfile);
+        if (isPostflopStreet(profile.street)) {
+          if (!capability.canStartTraining) {
+            gameBox.hidden = true;
+            filtersView.showEmptyResult(profileGateMessage(profile, filters));
+            return;
+          }
+          startPostflopSession(filters, seed, profile.street, resolvedProfile);
+          return;
+        }
+        const readiness = capability.mttReadiness;
+        if (capability.status !== "PRODUCTION" || readiness?.productionReady !== true) {
           gameBox.hidden = true;
           filtersView.showEmptyResult(profileGateMessage(profile, filters));
           return;
         }
-        startPostflopSession(filters, seed, profile.street, resolvedProfile);
+        if (!isRangeDataLoaded()) {
+          logRangeLoadFailure();
+          gameBox.hidden = true;
+          filtersView.showEmptyResult(
+            CS.training.referenceRangesUnavailable,
+          );
+          return;
+        }
+        const pack = mttPreflopRangePackForProfile(resolvedProfile);
+        if (!pack || pack.id !== readiness.packId) {
+          gameBox.hidden = true;
+          filtersView.showEmptyResult(profileGateMessage(profile, filters));
+          return;
+        }
+        startSession(filters, seed, resolvedProfile, pack);
+      };
+
+      mttProductionLazyLoader.cancelPendingProfileLoads();
+      const profileKey = mttProductionProfileKey(resolvedProfile);
+      if (
+        profileKey === null ||
+        mttProductionLazyLoader.isProfileLoaded(profileKey)
+      ) {
+        startResolvedProfile();
         return;
       }
-      const readiness = capability.mttReadiness;
-      if (capability.status !== "PRODUCTION" || readiness?.productionReady !== true) {
-        gameBox.hidden = true;
-        filtersView.showEmptyResult(profileGateMessage(profile, filters));
-        return;
-      }
-      if (!isRangeDataLoaded()) {
-        logRangeLoadFailure();
-        gameBox.hidden = true;
-        filtersView.showEmptyResult(
-          "Reference ranges are not available. Reload the app or run release checks before training.",
-        );
-        return;
-      }
-      const pack = mttPreflopRangePackForProfile(resolvedProfile);
-      if (!pack || pack.id !== readiness.packId) {
-        gameBox.hidden = true;
-        filtersView.showEmptyResult(profileGateMessage(profile, filters));
-        return;
-      }
-      startSession(filters, seed, resolvedProfile, pack);
+      void mttProductionLazyLoader.loadProfile(profileKey)
+        .then((loaded) => {
+          if (!loaded.stale) startResolvedProfile();
+        })
+        .catch(() => {
+          gameBox.hidden = true;
+          filtersView.showEmptyResult(CS.training.productionStrategyUnavailable);
+        });
     },
   });
 
@@ -897,7 +941,7 @@ function setupTraining(
       clearActiveQuestion();
       gameBox.hidden = true;
       filtersView.showEmptyResult(
-        `${mttProfileLabel(profile)}: production strategy could not be loaded.`,
+        `${mttProfileLabel(profile)}: ${CS.training.productionStrategyUnavailable}`,
       );
       return;
     }
@@ -947,7 +991,7 @@ function setupTraining(
 
   /** ZobrazĂ­ spot: vykreslĂ­ stĹŻl a nabĂ­dku akcĂ­, vyÄŤistĂ­ pĹ™edchozĂ­ vĂ˝sledek. */
   function clearActiveQuestion(): void {
-    sessionTitle.textContent = "Question";
+    sessionTitle.textContent = CS.training.question;
     sessionMeta.textContent = "";
     tableContainer.innerHTML = "";
     actionsContainer.innerHTML = "";
@@ -963,7 +1007,7 @@ function setupTraining(
     sessionTitle.textContent = `${actionContextLabel(spot.context)} - ${spot.heroPos} - ${spot.hand}`;
     sessionMeta.textContent =
       `${spot.effStack} BB - ${filters.ante === "ON" ? "ante ON" : "ante OFF"} - ` +
-      `seed ${filtersView.getSeed() ?? "random"}`;
+      `seed ${filtersView.getSeed() ?? CS.filters.random}`;
     renderTable(spot, filters.ante, tableContainer);
     resultContainer.innerHTML = "";
     matrixContainer.innerHTML = "";
@@ -1056,7 +1100,7 @@ function setupTraining(
     const verdict = el(
       "div",
       "result__verdict",
-      result.correct ? "Correct." : "Not yet.",
+      result.correct ? CS.training.correct : CS.training.incorrect,
     );
     box.appendChild(verdict);
 
@@ -1065,7 +1109,7 @@ function setupTraining(
       const rec = el(
         "div",
         "result__recommended",
-        `Recommended: ${result.recommended.map(actionKeyLabel).join(" / ")}`,
+        `${CS.training.recommended}: ${result.recommended.map(actionKeyLabel).join(" / ")}`,
       );
       box.appendChild(rec);
     }
@@ -1075,7 +1119,7 @@ function setupTraining(
     if (result.explanationAvailable) {
       explanation.textContent = spot.explanation;
     } else {
-      explanation.textContent = "Explanation is not available for this spot.";
+      explanation.textContent = CS.training.explanationUnavailable;
       explanation.classList.add("result__explanation--unavailable");
     }
     box.appendChild(explanation);
@@ -1085,7 +1129,7 @@ function setupTraining(
       const warn = el(
         "div",
         "result__save-warning",
-        "Warning: the result could not be saved. Statistics may be incomplete.",
+        CS.training.saveWarning,
       );
       box.appendChild(warn);
     }
@@ -1094,7 +1138,7 @@ function setupTraining(
     const nextBtn = document.createElement("button");
     nextBtn.type = "button";
     nextBtn.className = "result__next";
-    nextBtn.textContent = "Next spot";
+    nextBtn.textContent = CS.training.nextSpot;
     nextBtn.addEventListener("click", () => advance());
     box.appendChild(nextBtn);
 
@@ -1139,9 +1183,8 @@ function renderBlockingError(panel: HTMLElement, title: string, message: string)
 function renderStorageError(panel: HTMLElement): void {
   renderBlockingError(
     panel,
-    "Storage is inconsistent",
-    "Local storage is inconsistent and a clean valid state could not be created. Training cannot " +
-      "start. Check your browser storage permissions and reload the app.",
+    CS.system.storageTitle,
+    CS.system.storageMessage,
   );
 }
 
@@ -1167,7 +1210,7 @@ function showFatalError(root: HTMLElement, message: string, err?: unknown): void
     notice.appendChild(el("div", "app__notice-line", message));
     return;
   }
-  renderBlockingError(root, "An error occurred", message);
+  renderBlockingError(root, CS.system.errorTitle, message);
 }
 
 // ---------------------------------------------------------------------------
@@ -1189,8 +1232,7 @@ function maybeRegisterServiceWorker(notice: HTMLElement, force?: boolean): void 
     onCacheFailure: () => {
       showNotice(
         notice,
-        "The app could not be fully prepared for offline use. Online mode works normally, but " +
-          "offline mode may not be available.",
+        CS.system.offlineFailure,
       );
     },
   });

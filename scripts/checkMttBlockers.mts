@@ -201,3 +201,5 @@ function renderMttBlockerReport(report: MttBlockerReport, summaryOnly = false): 
 
   return lines.join("\n");
 }
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+await loadCompleteMttProductionRegistry();

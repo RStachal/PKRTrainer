@@ -151,45 +151,45 @@ function valueHandsForSpot(spot: PostflopSpot): readonly string[] {
   if (spot.street === "FLOP") {
     if (spot.potType === "THREE_BET_POT") {
       return spot.recommendedAction === "CHECK"
-        ? ["overpairs with pot-control", "top pair good kicker", "middle pairs with backdoors"]
-        : ["overpairs", "top pair top kicker", "strong combo draws"];
+        ? ["overpairy s pot-control", "top pair s dobrým kickerem", "střední páry s backdoory"]
+        : ["overpairy", "top pair top kicker", "silné combo draw"];
     }
     if (spot.positionPattern === "BTN_VS_BB" || spot.positionPattern === "EP_VS_BB") {
       if (spot.textures.includes("ace-high") || spot.textures.includes("dry")) {
-        return ["top pair", "second pair", "overpairs from preflop range"];
+        return ["top pair", "second pair", "overpairy z preflop range"];
       }
-      return ["top pair good kicker", "overpairs", "strong pair+draw"];
+      return ["top pair s dobrým kickerem", "overpairy", "silná pair+draw"];
     }
     if (spot.positionPattern === "OOP_RAISER_VS_IP_CALLER") {
       return spot.recommendedAction === "CHECK"
-        ? ["top pair weak kicker", "second pair", "overpair check-call portion"]
-        : ["top pair+", "overpairs", "strong made hands"];
+        ? ["top pair se slabým kickerem", "second pair", "check-call část overpairů"]
+        : ["top pair+", "overpairy", "silné made hands"];
     }
     if (spot.positionPattern === "SB_VS_BB") {
-      return ["top pair+", "good second pairs", "strong equity draws"];
+      return ["top pair+", "dobré second pairy", "draw se silnou equity"];
     }
   }
 
   switch (spot.recommendedAction) {
     case "BET_BIG":
-      return ["top pair+", "overpair", "strong made hands"];
+      return ["top pair+", "overpair", "silné made hands"];
     case "BET_SMALL":
-      return ["top pair", "middle pair", "range advantage hands"];
+      return ["top pair", "middle pair", "handy s range výhodou"];
     case "CALL":
-      return ["showdown value", "pairs with blocker support", "draws getting price"];
+      return ["showdown value", "páry podpořené blockery", "draw se správnou cenou"];
     case "RAISE":
-      return ["strong value", "nut advantage hands", "premium blockers"];
+      return ["silná value", "handy s nut výhodou", "prémiové blockery"];
     case "FOLD":
-      return ["hands without enough equity or blockers"];
+      return ["handy bez dostatečné equity nebo blockerů"];
     case "CHECK":
-      return ["marginal showdown value", "pot-control hands"];
+      return ["marginální showdown value", "pot-control handy"];
   }
 }
 
 function bluffHandsForSpot(spot: PostflopSpot): readonly string[] {
   if (spot.recommendedAction === "CHECK") {
     if (spot.street === "FLOP" && spot.potType === "THREE_BET_POT") {
-      return ["A-high backdoor blockers", "gutshot with overcards"];
+      return ["A-high backdoor blockery", "gutshot s overkartami"];
     }
     return [];
   }
@@ -197,46 +197,46 @@ function bluffHandsForSpot(spot: PostflopSpot): readonly string[] {
     return [];
   }
   if (spot.recommendedAction === "RAISE") {
-    return ["nut blockers", "combo draws", "low showdown bluffs with removal"];
+    return ["nut blockery", "combo draw", "bluffy s nízkou showdown value a removalem"];
   }
 
   if (spot.street === "FLOP") {
     if (spot.potType === "THREE_BET_POT") {
-      return ["nut flush draw", "A-high blocker hands", "gutshot + overcards"];
+      return ["nut flush draw", "A-high blocker handy", "gutshot + overkarty"];
     }
     if (spot.positionPattern === "BTN_VS_BB") {
       return spot.textures.includes("connected") || spot.textures.includes("two-tone")
-        ? ["open-ended draws", "flush draws", "overcards with backdoor equity"]
-        : ["backdoor flush draw", "BDFD + overcard", "blocker hands"];
+        ? ["open-ended draw", "flush draw", "overkarty s backdoor equity"]
+        : ["backdoor flush draw", "BDFD + overkarta", "blocker handy"];
     }
     if (spot.positionPattern === "OOP_RAISER_VS_IP_CALLER") {
-      return ["strong draw without showdown value", "overcards with backdoor equity", "top-pair blockers"];
+      return ["silná draw bez showdown value", "overkarty s backdoor equity", "top-pair blockery"];
     }
   }
 
   if (spot.textures.includes("connected") || spot.textures.includes("two-tone")) {
-    return ["open-ended draws", "flush draws", "overcards"];
+    return ["open-ended draw", "flush draw", "overkarty"];
   }
-  return ["backdoor draws", "blocker hands"];
+  return ["backdoor draw", "blocker handy"];
 }
 
 function checkHandsForSpot(spot: PostflopSpot): readonly string[] {
   if (spot.street === "FLOP") {
     if (spot.potType === "THREE_BET_POT") {
-      return ["underpairs without backdoors", "A-high showdown", "air without blockers"];
+      return ["underpairy bez backdoorů", "A-high showdown", "air bez blockerů"];
     }
     if (!spot.inPosition || spot.textures.includes("connected") || spot.textures.includes("monotone")) {
-      return ["weaker pairs", "medium showdown value", "air without good backdoors"];
+      return ["slabší páry", "střední showdown value", "air bez dobrých backdoorů"];
     }
     if (spot.textures.includes("ace-high") || spot.textures.includes("dry")) {
-      return ["worst air", "slowplay portion", "weak backdoor combos"];
+      return ["nejhorší air", "slowplay část", "slabá backdoor komba"];
     }
   }
 
   if (spot.textures.includes("monotone") || spot.textures.includes("connected")) {
-    return ["weak pairs", "air without blockers", "medium showdown value"];
+    return ["slabé páry", "air bez blockerů", "střední showdown value"];
   }
-  return ["worst air", "slowplay portion"];
+  return ["nejhorší air", "slowplay část"];
 }
 
 function nextStreetPlanForStreet(
@@ -244,19 +244,19 @@ function nextStreetPlanForStreet(
   action: PostflopAction,
 ): string {
   if (street === "RIVER") {
-    return "River is the final street; evaluate showdown value and sizing.";
+    return "River je poslední street; vyhodnoťte showdown value a sizing.";
   }
   if (action === "CHECK") {
-    return "On the next street, re-check texture, range advantage and SPR.";
+    return "Na další streetě znovu vyhodnoťte texturu, range výhodu a SPR.";
   }
   if (action === "CALL") {
-    return "Continue by re-evaluating pot odds, blockers and showdown value on the next card.";
+    return "Po další kartě znovu vyhodnoťte pot odds, blockery a showdown value.";
   }
   if (action === "RAISE") {
-    return "After raising, plan turn or river barrels around nut advantage and blocker quality.";
+    return "Po raisu plánujte turn nebo river barrely podle nut výhody a kvality blockerů.";
   }
   if (action === "FOLD") {
-    return "Folding ends this branch; review whether equity, blockers or pot odds justified continuing.";
+    return "Fold ukončí tuto větev; ověřte, zda equity, blockery nebo pot odds opravňovaly pokračování.";
   }
-  return "On blank runouts you can keep pressure; slow down on dynamic cards.";
+  return "Na blank runoutech můžete pokračovat v tlaku; na dynamických kartách zpomalte.";
 }

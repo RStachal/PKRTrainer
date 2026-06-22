@@ -79,18 +79,33 @@ function watchForInstallFailure(
   onCacheFailure?: (error: unknown) => void,
 ): void {
   try {
-    const installing = registration.installing;
-    if (!installing) {
-      return;
-    }
-    installing.addEventListener("statechange", () => {
-      // `redundant` před dosažením `activated`/`installed` ⇒ install selhal.
-      if (installing.state === "redundant") {
-        onCacheFailure?.(
-          new Error("Service Worker could not be installed (cache setup failed)."),
-        );
-      }
-    });
+    const watched = new WeakSet<ServiceWorker>();
+    const watchInstallingWorker = (): void => {
+      const installing = registration.installing;
+      if (!installing || watched.has(installing)) return;
+      watched.add(installing);
+      let installedSuccessfully = installing.state === "installed" ||
+        installing.state === "activating" ||
+        installing.state === "activated";
+
+      installing.addEventListener("statechange", () => {
+        if (
+          installing.state === "installed" ||
+          installing.state === "activating" ||
+          installing.state === "activated"
+        ) {
+          installedSuccessfully = true;
+        }
+        if (installing.state === "redundant" && !installedSuccessfully) {
+          onCacheFailure?.(
+            new Error("Service Worker could not be installed (cache setup failed)."),
+          );
+        }
+      });
+    };
+
+    watchInstallingWorker();
+    registration.addEventListener("updatefound", watchInstallingWorker);
   } catch {
     // Nic neděláme — sledování selhání je best-effort a nesmí shodit appku.
   }

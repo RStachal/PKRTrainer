@@ -24,9 +24,9 @@ describe("postflopView - DOM", () => {
     expect(root.querySelector(".postflop-view")).not.toBeNull();
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(true);
     expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.placeholder)
-      .toBe("random");
+      .toBe("náhodný");
     expect(root.querySelector<HTMLButtonElement>(".postflop-generate")?.textContent)
-      .toBe("Generate spot");
+      .toBe("Vygenerovat spot");
     expect(root.querySelectorAll(".postflop-card")).toHaveLength(0);
     expect(root.querySelectorAll(".postflop-action")).toHaveLength(0);
 
@@ -39,11 +39,11 @@ describe("postflopView - DOM", () => {
     expect(seed?.value).toBe("");
     expect(root.querySelector<HTMLElement>(".postflop-controls")?.hidden).toBe(true);
     expect(root.querySelector<HTMLButtonElement>(".postflop-new-spot")?.textContent)
-      .toBe("New spot");
+      .toBe("Nový spot");
     expect(root.querySelector<HTMLButtonElement>(".postflop-change-situation")?.textContent)
-      .toBe("Change situation");
+      .toBe("Změnit situaci");
     expect(root.querySelector<HTMLElement>(".postflop-question-title")?.textContent)
-      .toBe("Question");
+      .toBe("Otázka");
     expect(root.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.seed).toBe("42");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("RIVER");
@@ -73,7 +73,7 @@ describe("postflopView - DOM", () => {
     expect(root.querySelector<HTMLElement>(".postflop-seat--oop")?.dataset.positionRole)
       .toBe("OOP");
     expect(root.querySelector(".postflop-seat__role-chip--aggressor")?.textContent)
-      .toBe("Aggressor");
+      .toBe("Agresor");
     expect(root.querySelector(".postflop-seat__role-chip--caller")?.textContent)
       .toBe("Caller");
     expect(root.querySelectorAll(".postflop-seat__stack-bar")).toHaveLength(2);
@@ -101,7 +101,7 @@ describe("postflopView - DOM", () => {
     expect(smallGeometry?.dataset.betSizing).toBe("small");
     expect(smallGeometry?.dataset.betBB).toBe("2");
     expect(smallGeometry?.style.getPropertyValue("--bet-size")).toBe("33%");
-    expect(smallGeometry?.textContent).toContain("Small 2 BB");
+    expect(smallGeometry?.textContent).toContain("Malý bet 2 BB");
     expect(smallGeometry?.querySelectorAll(".postflop-table__bet-chip")).toHaveLength(2);
 
     const bigRoot = renderGeneratedSpot(12, "RIVER");
@@ -110,7 +110,7 @@ describe("postflopView - DOM", () => {
     expect(bigGeometry?.dataset.betSizing).toBe("big");
     expect(bigGeometry?.dataset.betBB).toBe("4.5");
     expect(bigGeometry?.style.getPropertyValue("--bet-size")).toBe("75%");
-    expect(bigGeometry?.textContent).toContain("Big 4.5 BB");
+    expect(bigGeometry?.textContent).toContain("Velký bet 4.5 BB");
     expect(bigGeometry?.querySelectorAll(".postflop-table__bet-chip")).toHaveLength(4);
   });
 
@@ -181,7 +181,7 @@ describe("postflopView - DOM", () => {
     }
 
     expect(result?.hidden).toBe(false);
-    expect(result?.textContent).toContain("Recommended");
+    expect(result?.textContent).toContain("Doporučení");
     expect(root.querySelectorAll<HTMLButtonElement>(".postflop-action:disabled"))
       .toHaveLength(3);
     expect(root.querySelector(".postflop-action--recommended")).not.toBeNull();
@@ -190,8 +190,8 @@ describe("postflopView - DOM", () => {
     expect(rangeSummary).not.toBeNull();
     expect(rangeSummary?.dataset.street).toBe("FLOP");
     expect(rangeSummary?.textContent).toContain("Flop range");
-    expect(rangeSummary?.textContent).toContain("Recommended:");
-    expect(rangeSummary?.textContent).toContain("Your action:");
+    expect(rangeSummary?.textContent).toContain("Doporučení:");
+    expect(rangeSummary?.textContent).toContain("Vaše akce:");
     const heroBucket = root.querySelector<HTMLElement>(".postflop-range-summary__hero-bucket");
     expect(heroBucket).not.toBeNull();
     expect(heroBucket?.dataset.heroHand).toMatch(/^[AKQJT98765432]{2}[so]?$/);
@@ -199,8 +199,8 @@ describe("postflopView - DOM", () => {
     expect(heroBucket?.dataset.heroCategoryLabel).toMatch(/^[A-Za-z+ ]+$/);
     expect(heroBucket?.dataset.heroLane).toMatch(/^(VALUE|BLUFF|CHECK)$/);
     expect(heroBucket?.dataset.heroLaneLabel).toMatch(/^(Value|Bluffs|Check)$/);
-    expect(heroBucket?.textContent).toContain("Hero bucket");
-    expect(heroBucket?.textContent).toContain("Compare it against the value, bluff and check lanes.");
+    expect(heroBucket?.textContent).toContain("Kategorie handy Hero");
+    expect(heroBucket?.textContent).toContain("Porovnejte ji s value, bluff a check částí range.");
     expect(rangeSummary?.textContent).toContain("Value");
     expect(rangeSummary?.textContent).toContain("Bluffs");
     expect(rangeSummary?.textContent).toContain("Check");
@@ -211,25 +211,24 @@ describe("postflopView - DOM", () => {
     expect(root.querySelector(".postflop-flopzilla__legend")).not.toBeNull();
     expect(root.querySelector(".postflop-flopzilla__meta")?.textContent).toContain("Hero");
     expect(root.querySelector(".postflop-flopzilla__legend")?.textContent)
-      .toContain("Top pair");
+      .toContain("Top pár");
     expect(root.querySelector(".postflop-flopzilla__legend")?.textContent)
       .toMatch(/(Flush draw|Backdoor draw|Overcards|Air)/);
     expect(root.querySelectorAll(".postflop-flopzilla__legend-count").length)
       .toBeGreaterThan(3);
     expect(result?.textContent).toContain("Value range");
     expect(result?.textContent).toContain("Model");
-    expect(result?.textContent).toContain("Heuristic model");
+    expect(result?.textContent).toContain("Heuristický model");
     expect(result?.textContent).not.toContain("StrategyPack");
     expect(result?.textContent).not.toContain("Rule:");
     expect(result?.textContent).not.toContain("Pack:");
     expect(result?.textContent).not.toContain("https://");
-    expect(result?.textContent).toContain("Texture match:");
-    expect(result?.textContent).toContain("SPR window:");
+    expect(result?.textContent).toContain("Shoda textury:");
+    expect(result?.textContent).toContain("Rozsah SPR:");
     expect(result?.textContent).not.toContain("Duvod vyberu:");
-    expect(result?.textContent).toContain("Assumption 1:");
-    expect(result?.textContent).toContain("Plan");
-    expect(result?.textContent ?? "").toMatch(/^[\x00-\x7F]*$/);
-    expect(result?.textContent ?? "").not.toMatch(/[ĂĹÄŤĹˇĹľ]|mal[yý]|velk[yý]|stredni|slabsi|silne/i);
+    expect(result?.textContent).toContain("Předpoklad 1:");
+    expect(result?.textContent).toContain("Plán");
+    expect(result?.textContent ?? "").not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
 
   it("zobrazi mixed-action feedback pro hero production bucket bez source citaci", () => {
@@ -279,15 +278,15 @@ describe("postflopView - DOM", () => {
     expect(heroBucket?.dataset.rangeBucketLane).toBe("VALUE");
     expect(heroBucket?.dataset.rangeBucketAction).toBe("BET_SMALL");
     expect(heroBucket?.dataset.rangeBucketMixed).toBe("true");
-    expect(heroBucket?.textContent).toContain("Mixed action: Bet small 70% / Check 30%.");
-    expect(heroBucket?.textContent).toContain("Your action is part of this bucket mix.");
-    expect(heroBucket?.textContent).toContain("Key features: top pair, range advantage.");
+    expect(heroBucket?.textContent).toContain("Mix akcí: Bet small 70% / Check 30%.");
+    expect(heroBucket?.textContent).toContain("Vaše akce je součástí mixu tohoto bucketu.");
+    expect(heroBucket?.textContent).toContain("Hlavní vlastnosti: top pair, range advantage.");
     expect(heroBucket?.textContent).not.toContain("internal-test-pack");
     expect(heroBucket?.textContent).not.toContain("internal-test-rule");
     expect(heroBucket?.textContent).not.toContain("https://");
     const result = root.querySelector<HTMLElement>(".postflop-result");
-    expect(result?.textContent).toContain("Production model");
-    expect(result?.textContent).not.toContain("Heuristic model");
+    expect(result?.textContent).toContain("Produkční model");
+    expect(result?.textContent).not.toContain("Heuristický model");
     expect(result?.textContent).not.toContain("internal-test-pack");
     expect(result?.textContent).not.toContain("internal-test-rule");
     expect(result?.textContent).not.toContain("https://");
@@ -336,8 +335,8 @@ describe("postflopView - DOM", () => {
     root.querySelector<HTMLButtonElement>('.postflop-action[data-action="BET_SMALL"]')?.click();
 
     const heroBucket = root.querySelector<HTMLElement>(".postflop-range-summary__hero-bucket");
-    expect(heroBucket?.textContent).toContain("Mixed action: Bet small / Check.");
-    expect(heroBucket?.textContent).toContain("Exact frequencies are hidden for this bucket.");
+    expect(heroBucket?.textContent).toContain("Mix akcí: Bet small / Check.");
+    expect(heroBucket?.textContent).toContain("Přesné frekvence jsou pro tento bucket skryté.");
     expect(heroBucket?.textContent).not.toContain("70%");
     expect(heroBucket?.textContent).not.toContain("30%");
     expect(heroBucket?.textContent).not.toContain("internal-qual-pack");
@@ -523,7 +522,7 @@ describe("postflopView - DOM", () => {
     expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="LJ"]')
       ?.dataset.positionRole).toBe("OOP");
     expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="LJ"]')
-      ?.textContent).toContain("Aggressor");
+      ?.textContent).toContain("Agresor");
     expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="HJ"]')
       ?.dataset.actionRole).toBe("caller");
     expect(root.querySelector<HTMLElement>('.postflop-seat[data-position="HJ"]')
@@ -559,12 +558,12 @@ describe("postflopView - DOM", () => {
     expect(meta?.dataset.actionNode).toBe("THREE_BET_POT_CBET");
     expect(meta?.dataset.positionPattern).toBe("OOP_CALLER_VS_IP_3BETTOR");
     expect(meta?.textContent).toContain("3bet pot");
-    expect(meta?.textContent).toContain("pot 18 BB");
+    expect(meta?.textContent).toContain("bank 18 BB");
 
     root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
     expect(answered[0]).toContain("THREE_BET_POT|THREE_BET_POT_CBET|");
     expect(root.querySelector<HTMLElement>(".postflop-result")?.textContent)
-      .toContain("Baseline heuristic");
+      .toContain("Základní heuristika");
     expect(root.querySelector<HTMLElement>(".postflop-result")?.textContent)
       .not.toContain("https://");
   });
@@ -606,7 +605,7 @@ describe("postflopView - DOM", () => {
     root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
     expect(singleStreetAnswers).toHaveLength(0);
     expect(root.querySelector<HTMLButtonElement>(".postflop-line-next")?.textContent)
-      .toBe("Next Turn");
+      .toBe("Další: Turn");
 
     root.querySelector<HTMLButtonElement>(".postflop-line-next")?.click();
     expect(root.querySelector<HTMLElement>(".postflop-question-title")?.textContent)
@@ -615,7 +614,7 @@ describe("postflopView - DOM", () => {
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.streetIndex).toBe("1");
     root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
     expect(root.querySelector<HTMLButtonElement>(".postflop-line-next")?.textContent)
-      .toBe("Next River");
+      .toBe("Další: River");
 
     root.querySelector<HTMLButtonElement>(".postflop-line-next")?.click();
     expect(root.querySelector<HTMLElement>(".postflop-question-title")?.textContent)
@@ -625,7 +624,7 @@ describe("postflopView - DOM", () => {
     root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
 
     const complete = root.querySelector<HTMLElement>(".postflop-line-complete");
-    expect(complete?.textContent).toMatch(/^Hand line complete: \d\/3 streets\.$/);
+    expect(complete?.textContent).toMatch(/^Hand line dokončena: \d\/3 street\.$/);
     expect(complete?.dataset.totalStreets).toBe("3");
     expect(completedLines).toHaveLength(1);
     expect(completedLines[0].streets).toEqual(["FLOP", "TURN", "RIVER"]);
@@ -661,7 +660,7 @@ describe("postflopView - DOM", () => {
 
     root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CALL"]')?.click();
     expect(root.querySelector<HTMLButtonElement>(".postflop-line-next")?.textContent)
-      .toBe("Next Turn");
+      .toBe("Další: Turn");
     expect(root.querySelector<HTMLElement>(".postflop-result")?.textContent)
       .not.toContain("https://");
 
@@ -675,7 +674,7 @@ describe("postflopView - DOM", () => {
     root.querySelector<HTMLButtonElement>('.postflop-action[data-action="FOLD"]')?.click();
 
     const complete = root.querySelector<HTMLElement>(".postflop-line-complete");
-    expect(complete?.textContent).toBe("Hand line complete: 1/2 streets.");
+    expect(complete?.textContent).toBe("Hand line dokončena: 1/2 street.");
     expect(complete?.dataset.totalStreets).toBe("2");
     expect(completedLines).toEqual([{
       streets: ["FLOP", "TURN"],
@@ -754,8 +753,8 @@ describe("postflopView - DOM", () => {
 
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
       .toBe("RIVER_PRESSURE");
-    expect(result?.textContent).toContain("Heuristic model");
-    expect(result?.textContent).toContain("Confidence: low");
+    expect(result?.textContent).toContain("Heuristický model");
+    expect(result?.textContent).toContain("Spolehlivost: nízká");
     expect(result?.textContent).not.toContain("StrategyPack");
     expect(result?.textContent).not.toContain("Rule:");
     expect(result?.textContent).not.toContain("https://");

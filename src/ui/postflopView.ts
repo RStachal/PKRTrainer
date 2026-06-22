@@ -30,6 +30,7 @@ import {
   renderPostflopRangeMatrix,
   type FlopzillaLane,
 } from "./postflopRangeMatrixView";
+import { CS } from "./cs";
 
 const SEED_MAX = 0xffffffff;
 const POSTFLOP_STRATEGY_RESOLVER = createDefaultPostflopStrategyResolver();
@@ -71,19 +72,19 @@ const POT_TYPE_LABEL: Record<PostflopPotType, string> = {
 };
 
 const TEXTURE_LABEL: Record<BoardTexture, string> = {
-  paired: "Paired",
-  monotone: "Monotone",
-  "two-tone": "Two-tone",
+  paired: "Párovaný",
+  monotone: "Monotónní",
+  "two-tone": "Dvoubarevný",
   rainbow: "Rainbow",
-  connected: "Connected",
-  dry: "Dry",
+  connected: "Propojený",
+  dry: "Suchý",
   "ace-high": "A-high",
   "broadway-high": "Broadway-high",
-  low: "Low",
-  medium: "Medium",
-  "straight-possible": "Straight possible",
+  low: "Nízký",
+  medium: "Střední",
+  "straight-possible": "Možná straight",
   "flush-draw-heavy": "Flush draw",
-  disconnected: "Disconnected",
+  disconnected: "Nepropojený",
 };
 
 const SUIT_SYMBOL: Record<Suit, string> = {
@@ -132,7 +133,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   const streetLabel = doc.createElement("label");
   streetLabel.className = "postflop-field";
   const streetText = doc.createElement("span");
-  streetText.textContent = "Street";
+  streetText.textContent = CS.postflop.street;
   const streetSelect = doc.createElement("select");
   streetSelect.className = "postflop-street";
   for (const street of ["FLOP", "TURN", "RIVER"] as const) {
@@ -148,12 +149,12 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   const seedLabel = doc.createElement("label");
   seedLabel.className = "postflop-field";
   const seedText = doc.createElement("span");
-  seedText.textContent = "Seed";
+  seedText.textContent = CS.postflop.seed;
   const seedInput = doc.createElement("input");
   seedInput.className = "postflop-seed";
   seedInput.type = "text";
   seedInput.inputMode = "numeric";
-  seedInput.placeholder = "random";
+  seedInput.placeholder = CS.postflop.random;
   if (options.initialSeed !== undefined && options.initialSeed !== null) {
     seedInput.value = String(options.initialSeed);
   }
@@ -163,15 +164,15 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   const modeLabel = doc.createElement("label");
   modeLabel.className = "postflop-field";
   const modeText = doc.createElement("span");
-  modeText.textContent = "Mode";
+  modeText.textContent = CS.postflop.mode;
   const modeSelect = doc.createElement("select");
   modeSelect.className = "postflop-mode";
   const singleOption = doc.createElement("option");
   singleOption.value = "single";
-  singleOption.textContent = "Single spot";
+  singleOption.textContent = CS.postflop.singleSpot;
   const lineOption = doc.createElement("option");
   lineOption.value = "line";
-  lineOption.textContent = "Hand line";
+  lineOption.textContent = CS.postflop.handLine;
   modeSelect.appendChild(singleOption);
   modeSelect.appendChild(lineOption);
   modeLabel.appendChild(modeText);
@@ -180,7 +181,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   const generate = doc.createElement("button");
   generate.type = "button";
   generate.className = "postflop-generate";
-  generate.textContent = "Generate spot";
+  generate.textContent = CS.postflop.generate;
 
   controls.appendChild(streetLabel);
   controls.appendChild(seedLabel);
@@ -203,7 +204,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   const showNewSpot = (): void => {
     const seed = parseSeed(seedInput.value) ?? randomSeed();
     // Seed je jednorázový vstup pro reprodukci konkrétní situace. Po použití
-    // jej vyčistíme, aby další "Generate spot" / "New spot" nevytvořil znovu
+    // jej vyčistíme, aby další generování nebo nový spot nevytvořily znovu
     // tutéž situaci, ale sáhl po novém náhodném seedu.
     seedInput.value = "";
     try {
@@ -265,8 +266,7 @@ function renderUnavailable(root: HTMLElement): void {
   const notice = doc.createElement("div");
   notice.className = "postflop-unavailable";
   notice.setAttribute("role", "alert");
-  notice.textContent =
-    "Production strategy is not available for this situation. Choose another profile or try again after the production data is installed.";
+  notice.textContent = CS.postflop.unavailable;
   root.appendChild(notice);
 }
 
@@ -321,20 +321,20 @@ function renderSpot(
   questionTitle.className = "postflop-question-title";
   questionTitle.textContent = lineMeta
     ? `Hand line ${lineMeta.streetIndex + 1}/${lineMeta.streetTotal}`
-    : "Question";
+    : CS.postflop.question;
   const questionActions = doc.createElement("div");
   questionActions.className = "postflop-question-actions";
 
   const newSpot = doc.createElement("button");
   newSpot.type = "button";
   newSpot.className = "postflop-new-spot";
-  newSpot.textContent = "New spot";
+  newSpot.textContent = CS.postflop.newSpot;
   newSpot.addEventListener("click", controls.onNewSpot);
 
   const changeSituation = doc.createElement("button");
   changeSituation.type = "button";
   changeSituation.className = "postflop-change-situation";
-  changeSituation.textContent = "Change situation";
+  changeSituation.textContent = CS.postflop.changeSituation;
   changeSituation.addEventListener("click", controls.onChangeSituation);
 
   questionActions.appendChild(newSpot);
@@ -357,8 +357,8 @@ function renderSpot(
   }
   meta.textContent =
     `${STREET_LABEL[spot.street]} - seed ${spot.seed} - ${POT_TYPE_LABEL[trainingSpot.potType]} - ` +
-    `pot ${spot.potBB} BB - ` +
-    `eff. stack ${spot.effectiveStackBB} BB - SPR ${trainingSpot.spr} - ` +
+    `bank ${spot.potBB} BB - ` +
+    `efektivní stack ${spot.effectiveStackBB} BB - SPR ${trainingSpot.spr} - ` +
     `${trainingSpot.heroPosition} vs ${trainingSpot.villainPosition} ` +
     `(${trainingSpot.inPosition ? "IP" : "OOP"})`;
   root.appendChild(meta);
@@ -461,7 +461,7 @@ function postflopTable(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
 
   const pot = doc.createElement("div");
   pot.className = "postflop-table__pot";
-  pot.textContent = `Pot ${spot.potBB} BB`;
+  pot.textContent = `Bank ${spot.potBB} BB`;
   center.appendChild(pot);
   center.appendChild(betGeometry(doc, spot));
 
@@ -547,39 +547,39 @@ function betSizingVisual(spot: PostflopTrainingSpot): {
     case "BET_SMALL": {
       const betBB = roundedBetBB(spot.potBB * 0.33);
       return {
-        ariaLabel: `Recommended small bet around ${betBB} BB`,
+        ariaLabel: CS.postflop.sizing.recommendedSmall(betBB),
         betBB,
         chips: 2,
         kind: "small",
-        label: `Small ${betBB} BB`,
+        label: CS.postflop.sizing.small(betBB),
         ratio: 0.33,
       };
     }
     case "BET_BIG": {
       const betBB = roundedBetBB(spot.potBB * 0.75);
       return {
-        ariaLabel: `Recommended big bet around ${betBB} BB`,
+        ariaLabel: CS.postflop.sizing.recommendedBig(betBB),
         betBB,
         chips: 4,
         kind: "big",
-        label: `Big ${betBB} BB`,
+        label: CS.postflop.sizing.big(betBB),
         ratio: 0.75,
       };
     }
     case "RAISE": {
       const betBB = roundedBetBB(spot.potBB * 0.75);
       return {
-        ariaLabel: `Recommended raise pressure around ${betBB} BB`,
+        ariaLabel: CS.postflop.sizing.recommendedRaise(betBB),
         betBB,
         chips: 4,
         kind: "big",
-        label: `Raise ${betBB} BB`,
+        label: CS.postflop.sizing.raise(betBB),
         ratio: 0.75,
       };
     }
     case "CALL":
       return {
-        ariaLabel: "Recommended call",
+        ariaLabel: CS.postflop.sizing.recommendedCall,
         betBB: 0,
         chips: 1,
         kind: "check",
@@ -588,7 +588,7 @@ function betSizingVisual(spot: PostflopTrainingSpot): {
       };
     case "FOLD":
       return {
-        ariaLabel: "Recommended fold",
+        ariaLabel: CS.postflop.sizing.recommendedFold,
         betBB: 0,
         chips: 0,
         kind: "check",
@@ -598,7 +598,7 @@ function betSizingVisual(spot: PostflopTrainingSpot): {
     case "CHECK":
     default:
       return {
-        ariaLabel: "Recommended check",
+        ariaLabel: CS.postflop.sizing.recommendedCheck,
         betBB: 0,
         chips: 0,
         kind: "check",
@@ -648,14 +648,14 @@ function postflopSeat(
   if (!active) {
     const folded = doc.createElement("div");
     folded.className = "postflop-seat__folded";
-    folded.textContent = "folded";
+    folded.textContent = CS.postflop.folded;
     seat.appendChild(folded);
     return seat;
   }
 
   const badge = doc.createElement("div");
   badge.className = "postflop-seat__badge";
-  badge.textContent = isHero ? "Hero" : "Villain";
+  badge.textContent = isHero ? CS.postflop.hero : CS.postflop.villain;
   seat.appendChild(badge);
 
   const role = doc.createElement("div");
@@ -685,7 +685,7 @@ function postflopSeat(
   if (isHero) {
     const heroTag = doc.createElement("span");
     heroTag.className = "postflop-seat__tag";
-    heroTag.textContent = "You";
+    heroTag.textContent = CS.postflop.you;
     seat.appendChild(heroTag);
 
     const cards = doc.createElement("div");
@@ -728,7 +728,7 @@ function seatRoleBadges(
   if (actionRole) {
     badges.push({
       kind: actionRole,
-      label: actionRole === "aggressor" ? "Aggressor" : "Caller",
+      label: actionRole === "aggressor" ? CS.postflop.aggressor : CS.postflop.caller,
     });
   }
   if (positionRole) badges.push({ kind: positionRole.toLowerCase(), label: positionRole });
@@ -823,7 +823,7 @@ function appendLineControls(
     const next = doc.createElement("button");
     next.type = "button";
     next.className = "postflop-line-next";
-    next.textContent = `Next ${STREET_LABEL[line.streets[streetIndex + 1].street]}`;
+    next.textContent = CS.postflop.next(STREET_LABEL[line.streets[streetIndex + 1].street]);
     next.addEventListener("click", () => {
       renderLineSpot(
         root,
@@ -846,7 +846,7 @@ function appendLineControls(
     )).length;
     done.dataset.correctStreets = String(correct);
     done.dataset.totalStreets = String(line.streets.length);
-    done.textContent = `Hand line complete: ${correct}/${line.streets.length} streets.`;
+    done.textContent = CS.postflop.lineComplete(correct, line.streets.length);
     actions.appendChild(done);
   }
 
@@ -899,22 +899,22 @@ function renderPracticalExplanation(
   const summary = doc.createElement("p");
   summary.className = "postflop-result__summary";
   summary.textContent =
-    `${correct ? "Correct." : "Not yet."} Recommended: ` +
+    `${correct ? CS.postflop.correct : CS.postflop.incorrect} ${CS.postflop.recommended}: ` +
     `${actionLabel(spot.recommendedAction)}. ${spot.explanation.summary}`;
   root.appendChild(summary);
 
   const grid = doc.createElement("div");
   grid.className = "postflop-practical";
-  grid.appendChild(explanationBlock(doc, "Value range", spot.explanation.valueHands));
-  grid.appendChild(explanationBlock(doc, "Bluffs", spot.explanation.bluffHands));
-  grid.appendChild(explanationBlock(doc, "Check range", spot.explanation.checkHands));
-  grid.appendChild(explanationBlock(doc, "Model", modelItems(spot)));
+  grid.appendChild(explanationBlock(doc, CS.postflop.blocks.value, spot.explanation.valueHands));
+  grid.appendChild(explanationBlock(doc, CS.postflop.blocks.bluffs, spot.explanation.bluffHands));
+  grid.appendChild(explanationBlock(doc, CS.postflop.blocks.check, spot.explanation.checkHands));
+  grid.appendChild(explanationBlock(doc, CS.postflop.blocks.model, modelItems(spot)));
 
   const plan = doc.createElement("div");
   plan.className = "postflop-practical__block postflop-practical__block--wide";
   const planTitle = doc.createElement("div");
   planTitle.className = "postflop-practical__title";
-  planTitle.textContent = "Plan";
+  planTitle.textContent = CS.postflop.blocks.plan;
   const planText = doc.createElement("p");
   planText.className = "postflop-practical__text";
   planText.textContent = spot.explanation.nextStreetPlan;
@@ -943,7 +943,7 @@ function explanationBlock(
 
   const list = doc.createElement("ul");
   list.className = "postflop-practical__list";
-  const visibleItems = items.length > 0 ? items : ["No natural candidates"];
+  const visibleItems = items.length > 0 ? items : [CS.postflop.noCandidates];
   for (const item of visibleItems) {
     const li = doc.createElement("li");
     li.textContent = item;
@@ -969,12 +969,12 @@ function renderFlopRangeSummary(
   header.className = "postflop-range-summary__header";
   const title = doc.createElement("div");
   title.className = "postflop-range-summary__title";
-  title.textContent = "Flop range";
+  title.textContent = CS.postflop.flopRange;
   const meta = doc.createElement("div");
   meta.className = "postflop-range-summary__meta";
   meta.textContent =
-    `Recommended: ${actionLabel(spot.recommendedAction)} | ` +
-    `Your action: ${actionLabel(chosen)}`;
+    `${CS.postflop.recommended}: ${actionLabel(spot.recommendedAction)} | ` +
+    `${CS.postflop.yourAction}: ${actionLabel(chosen)}`;
   header.appendChild(title);
   header.appendChild(meta);
   section.appendChild(header);
@@ -1031,15 +1031,15 @@ function heroBucketInsight(
 
   const label = doc.createElement("span");
   label.className = "postflop-range-summary__hero-bucket-label";
-  label.textContent = "Hero bucket";
+  label.textContent = CS.postflop.heroBucket;
   insight.appendChild(label);
 
   const text = doc.createElement("span");
   text.className = "postflop-range-summary__hero-bucket-text";
   text.textContent = sourceBucket
     ? sourceBucketFeedback(heroHand, heroCategoryLabel, sourceBucket, chosen)
-    : `${heroHand} is ${heroCategoryLabel} on this flop, usually sitting in the ` +
-      `${flopzillaLaneLabel(heroLane).toLowerCase()} lane. Compare it against the value, bluff and check lanes.`;
+    : `${heroHand} je na tomto flopu kategorie ${heroCategoryLabel} a obvykle patří do části ` +
+      `${flopzillaLaneLabel(heroLane).toLowerCase()}. Porovnejte ji s value, bluff a check částí range.`;
   insight.appendChild(text);
 
   return insight;
@@ -1053,28 +1053,28 @@ function sourceBucketFeedback(
 ): string {
   const mix = bucket.actionMix;
   const choiceText = mix?.some((item) => item.action === chosen)
-    ? "Your action is part of this bucket mix."
+    ? "Vaše akce je součástí mixu tohoto bucketu."
     : chosen === bucket.action
-      ? "Your action matches the primary bucket action."
-      : `Your action is outside the primary ${actionLabel(bucket.action).toLowerCase()} bucket line.`;
+      ? "Vaše akce odpovídá primární akci bucketu."
+      : `Vaše akce je mimo primární ${actionLabel(bucket.action).toLowerCase()} line tohoto bucketu.`;
   const featureText = bucket.features.length > 0
-    ? ` Key features: ${bucket.features.join(", ")}.`
+    ? ` Hlavní vlastnosti: ${bucket.features.join(", ")}.`
     : "";
-  return `${heroHand} is ${heroCategoryLabel} in the ${bucket.label} range bucket. ` +
-    `Bucket lane: ${bucket.lane.toLowerCase()}. Primary action: ${actionLabel(bucket.action)}. ` +
+  return `${heroHand} je kategorie ${heroCategoryLabel} v range bucketu ${bucket.label}. ` +
+    `Část bucketu: ${bucket.lane.toLowerCase()}. Primární akce: ${actionLabel(bucket.action)}. ` +
     `${actionMixText(bucket)} ${choiceText}${featureText}`;
 }
 
 function actionMixText(bucket: PostflopHeroRangeBucket): string {
   const mix = bucket.actionMix;
-  if (!mix || mix.length === 0) return "No explicit mixed-action split is attached.";
+  if (!mix || mix.length === 0) return "Není připojen explicitní mixed-action poměr.";
   const exact = mix.every((item) => item.visibility === "EXACT");
   const items = mix.map((item) => (
     exact ? `${actionLabel(item.action)} ${formatPct(item.frequencyPct)}` : actionLabel(item.action)
   ));
   return exact
-    ? `Mixed action: ${items.join(" / ")}.`
-    : `Mixed action: ${items.join(" / ")}. Exact frequencies are hidden for this bucket.`;
+    ? `Mix akcí: ${items.join(" / ")}.`
+    : `Mix akcí: ${items.join(" / ")}. Přesné frekvence jsou pro tento bucket skryté.`;
 }
 
 function formatPct(value: number): string {
@@ -1096,7 +1096,7 @@ function rangeLane(
   lane.setAttribute("role", "button");
   lane.setAttribute("tabindex", "0");
   lane.setAttribute("aria-pressed", "false");
-  lane.setAttribute("aria-label", `Highlight ${title.toLowerCase()} lane in the matrix`);
+  lane.setAttribute("aria-label", CS.postflop.laneHighlight(title));
   const recommendedLane = actionBelongsToLane(spot.recommendedAction, laneAction);
   const chosenLane = actionBelongsToLane(chosen, laneAction);
   lane.classList.toggle("postflop-range-summary__lane--recommended", recommendedLane);
@@ -1109,7 +1109,7 @@ function rangeLane(
 
   const chips = doc.createElement("div");
   chips.className = "postflop-range-summary__chips";
-  const visibleItems = items.length > 0 ? items : ["No natural candidates"];
+  const visibleItems = items.length > 0 ? items : [CS.postflop.noCandidates];
   for (const item of visibleItems) {
     const chip = doc.createElement("span");
     chip.className = "postflop-range-summary__chip";
@@ -1160,17 +1160,17 @@ function actionBelongsToLane(action: PostflopAction, laneAction: "BET" | "CHECK"
 function rangeFocusText(spot: PostflopTrainingSpot): string {
   switch (spot.recommendedAction) {
     case "BET_SMALL":
-      return "Small c-bet range mixes value with natural bluffs; check range keeps weaker showdown and traps.";
+      return "Range malého c-betu kombinuje value s přirozenými bluffy; check range si ponechává slabší showdown a trapy.";
     case "BET_BIG":
-      return "Large bet range is more polarized: strong value plus the best draws or blockers.";
+      return "Range velkého betu je polarizovanější: silná value a nejlepší draw nebo blockery.";
     case "CALL":
-      return "Call range keeps hands with enough equity, blockers or showdown value to continue.";
+      return "Call range pokračuje s handami, které mají dost equity, blockerů nebo showdown value.";
     case "RAISE":
-      return "Raise range is polarized: strong value and blocker-heavy bluffs apply maximum pressure.";
+      return "Raise range je polarizovaná: silná value a bluffy s blockery vytvářejí maximální tlak.";
     case "FOLD":
-      return "Fold range drops hands without enough equity, blockers or pot odds to continue.";
+      return "Fold range zahazuje handy bez dostatečné equity, blockerů nebo pot odds.";
     case "CHECK":
-      return "Check protects equity realization: weaker showdown, pot-control and hands for check-call or check-back plans.";
+      return "Check chrání realizaci equity: slabší showdown, pot-control a handy pro check-call nebo check-back plán.";
   }
 }
 
@@ -1178,16 +1178,16 @@ function modelItems(spot: PostflopTrainingSpot): readonly string[] {
   const source = spot.explanation.source;
   if (source.kind === "STRATEGY_PACK") {
     return [
-      isPublicHeuristicStrategySource(source) ? "Heuristic model" : "Production model",
-      `Confidence: ${confidenceLabel(source.confidence)}`,
-      `Texture match: ${source.matchedTextures.map(textureLabel).join(", ")}`,
-      `SPR window: ${source.sprMin}-${source.sprMax}`,
+      isPublicHeuristicStrategySource(source) ? "Heuristický model" : "Produkční model",
+      `Spolehlivost: ${confidenceLabel(source.confidence)}`,
+      `Shoda textury: ${source.matchedTextures.map(textureLabel).join(", ")}`,
+      `Rozsah SPR: ${source.sprMin}-${source.sprMax}`,
       ...source.assumptions.map(
-        (assumption, index) => `Assumption ${index + 1}: ${userFacingAssumption(assumption)}`,
+        (assumption, index) => `Předpoklad ${index + 1}: ${userFacingAssumption(assumption)}`,
       ),
     ];
   }
-  return ["Baseline heuristic"];
+  return ["Základní heuristika"];
 }
 
 function isPublicHeuristicStrategySource(
@@ -1199,22 +1199,42 @@ function isPublicHeuristicStrategySource(
 function userFacingAssumption(assumption: string): string {
   return assumption
     .replace(
-      /^Public heuristic .* StrategyPack only; no paid chart values or exact solver frequencies are copied\.$/,
-      "Public training heuristic without exact solver frequencies.",
+      /^Public heuristic(?: .*?)? StrategyPack only; no paid chart values or exact solver frequencies are copied\.$/,
+      "Veřejná tréninková heuristika bez přesných solverových frekvencí.",
+    )
+    .replace(
+      "Flop first: board texture, position pattern, pot type, SPR and effective stack are explicit dimensions.",
+      "Flop model explicitně rozlišuje texturu boardu, pozice, typ potu, SPR a efektivní stack.",
+    )
+    .replace(
+      "Turn and river packs should be added only after the flop model is stable.",
+      "Turn a river model se přidává až po stabilizaci flop modelu.",
+    )
+    .replace(
+      "Rules are texture-level training prompts, not production equilibrium strategy.",
+      "Pravidla jsou tréninkové podněty podle textury, nikoli produkční rovnovážná strategie.",
+    )
+    .replace(
+      "River decisions are simplified to check, small value/block bet, or large polarized pressure.",
+      "River rozhodnutí jsou zjednodušena na check, malý value/block bet nebo velký polarizovaný tlak.",
+    )
+    .replace(
+      "Specific blocker/card-removal selection remains future solver/import work.",
+      "Přesný výběr podle blockerů a card removal zůstává úkolem solver/import pipeline.",
     )
     .replace(/\bStrategyPack\b/g, "model")
     .replace(/\bRangePack\b/g, "model")
-    .replace(/\bLOW confidence\b/g, "low confidence");
+    .replace(/\bLOW confidence\b/g, "nízká spolehlivost");
 }
 
 function confidenceLabel(confidence: "LOW" | "MEDIUM" | "HIGH"): string {
   switch (confidence) {
     case "LOW":
-      return "low";
+      return "nízká";
     case "MEDIUM":
-      return "medium";
+      return "střední";
     case "HIGH":
-      return "high";
+      return "vysoká";
     default:
       return confidence;
   }

@@ -9,7 +9,7 @@ import {
 import { rangePackMatchesTrainingProfile } from "./rangePackProfileGuard";
 import { anteOffRanges } from "./ante-off";
 import { anteOnRanges } from "./ante-on";
-import { generatedMttPreflopRangePacks } from "./mttProductionRegistry.generated";
+import { runtimeMttPreflopRangePacks } from "./mttProductionRuntimeRegistry";
 
 const VERIFIED_AT = "2026-06-01";
 
@@ -231,11 +231,15 @@ export const mttSixMaxPreflopRangePackCandidates = [
 export const mttSixMaxCandidateImportReports: readonly RangePackImportReport[] =
   mttSixMaxPreflopRangePackCandidates.map(buildRangePackImportReport);
 
-export const allMttPreflopRangePacks = [
-  ...generatedMttPreflopRangePacks,
+const mutableAllMttPreflopRangePacks =
+  runtimeMttPreflopRangePacks as RangePack[];
+mutableAllMttPreflopRangePacks.push(
   ...mttPreflopRangePacks,
   ...mttSixMaxPreflopRangePackCandidates,
-] as const;
+);
+
+export const allMttPreflopRangePacks: readonly RangePack[] =
+  mutableAllMttPreflopRangePacks;
 
 export function currentMttPreflopRangePack(ante: AnteMode): RangePack {
   return ante === "ON" ? mttPreflopAnteOnRangePack : mttPreflopAnteOffRangePack;

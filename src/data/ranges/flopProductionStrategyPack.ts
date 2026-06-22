@@ -81,6 +81,7 @@ export interface FlopProductionStrategyRule {
 }
 
 export interface FlopProductionStrategyPack {
+  contentLanguage?: string;
   id: string;
   version: string;
   createdAt: string;

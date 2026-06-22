@@ -212,7 +212,7 @@ describe("hhView - DOM import", () => {
     expect(css).toContain("@media (max-width:640px)");
     expect(css).toContain(".hh-analysis__matrix");
     expect(root.querySelector<HTMLTextAreaElement>(".hh-input")?.placeholder)
-      .toBe("Vložte hand history…");
+      .toBe("Vložte historii handy…");
     expect(root.querySelector<HTMLButtonElement>(".hh-analyze")?.textContent).toBe("Analyzovat");
     expect(errors?.hidden).toBe(false);
     expect(errors?.textContent).toContain("Vstup je prázdný");
@@ -290,7 +290,7 @@ describe("hhView - DOM import", () => {
     expect(flop?.dataset.positionPattern).toBe("SRP_BTN_VS_BB");
     expect(flop?.dataset.board).toBe("Ah-7d-2c");
     expect(flop?.dataset.recommended).toMatch(/^(CHECK|BET_SMALL|BET_BIG)$/);
-    expect(flop?.textContent).toContain("Flop review");
+    expect(flop?.textContent).toContain("Flop – rozbor");
     expect(flop?.textContent).toContain("Ah 7d 2c");
     expect(flop?.textContent).toContain("Single-raised pot");
     expect(flop?.textContent).toContain("SRP BTN vs BB");
@@ -334,8 +334,8 @@ describe("hhView - DOM import", () => {
     expect(postflop[1].dataset.board).toBe("Ah-7d-2c-5s");
     expect(postflop[2].dataset.board).toBe("Ah-7d-2c-5s-Jd");
     expect(postflop[2].dataset.recommended).toMatch(/^(FOLD|CALL|RAISE)$/);
-    expect(postflop[1].textContent).toContain("Turn review");
-    expect(postflop[2].textContent).toContain("River review");
+    expect(postflop[1].textContent).toContain("Turn – rozbor");
+    expect(postflop[2].textContent).toContain("River – rozbor");
     expect(postflop[2].textContent).not.toContain("RIVER_FACING_BET");
     expect(postflop[2].textContent).not.toContain("StrategyPack");
     expect(postflop[2].textContent).not.toContain("http");

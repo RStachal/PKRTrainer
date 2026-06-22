@@ -87,3 +87,5 @@ for (const pack of flopProductionStrategyPacks) {
 if (hasHardFailure) {
   process.exitCode = 1;
 }
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+await loadCompleteMttProductionRegistry();

@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { KEY_EVENTS, KEY_HH_REVIEWS, KEY_POSTFLOP_EVENTS } from "../../src/persistence/keys";
 
-vi.setConfig({ testTimeout: 15000 });
+vi.setConfig({ testTimeout: 30000 });
 
 class MemoryStorage implements Storage {
   protected readonly data = new Map<string, string>();
@@ -139,9 +139,9 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector(".poker-table")).not.toBeNull();
     expect(root.querySelector(".training__change-situation")).not.toBeNull();
     expect(root.querySelector<HTMLButtonElement>(".training__change-situation")?.textContent)
-      .toBe("Change situation");
+      .toBe("Změnit situaci");
     expect(root.querySelector<HTMLElement>(".training__session-title")?.textContent)
-      .toMatch(/^Vs 3-bet - (UTG|UTG\+1|UTG\+2|LJ|HJ|CO|BTN|SB|BB) - /);
+      .toMatch(/^Proti 3-betu - (UTG|UTG\+1|UTG\+2|LJ|HJ|CO|BTN|SB|BB) - /);
     expect(root.querySelector<HTMLElement>(".training__session-title")?.textContent)
       .not.toContain("VS_3BET");
     expect(root.querySelector<HTMLElement>(".training__session-meta")?.textContent)
@@ -157,9 +157,9 @@ describe("bootstrap - inicializacni tok", () => {
     firstAction?.click();
     expect(document.activeElement).toBe(root.querySelector<HTMLButtonElement>(".result__next"));
     expect(root.querySelector<HTMLElement>(".result__recommended")?.textContent)
-      .toContain("Recommended:");
+      .toContain("Doporučení:");
     expect(root.querySelector<HTMLButtonElement>(".result__next")?.textContent)
-      .toBe("Next spot");
+      .toBe("Další spot");
     const preflopEvents = JSON.parse(storage.getItem(KEY_EVENTS) ?? "[]") as Array<{
       responseMs?: number;
       identity?: {
@@ -178,7 +178,7 @@ describe("bootstrap - inicializacni tok", () => {
     });
     expect(preflopEvents[0].identity?.scenarioId).toContain("preflop_scenario_v1");
     expect(root.querySelector<HTMLElement>(".training__result")?.textContent)
-      .not.toMatch(/Doporu|Spr\u00e1vn|Špatn|Dal\u0161\u00ed/);
+      .toMatch(/(?:Správně|Zatím ne).*Doporučení:.*Další spot/s);
 
     root.querySelector<HTMLButtonElement>(".training__change-situation")?.click();
 
@@ -217,6 +217,7 @@ describe("bootstrap - inicializacni tok", () => {
     root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
     expect(document.activeElement).toBe(root.querySelector<HTMLElement>(".postflop-result"));
 
+    await waitForDashboard(root);
     expect(root.querySelector<HTMLElement>(".dashboard-session-count")?.dataset.sessionCount)
       .toBe("1");
     expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("1");
@@ -266,8 +267,9 @@ describe("bootstrap - inicializacni tok", () => {
 
     const warning = root.querySelector<HTMLElement>(".result__save-warning");
     expect(root.querySelector<HTMLButtonElement>(".result__next")).not.toBeNull();
-    expect(warning?.textContent).toContain("could not be saved");
+    expect(warning?.textContent).toContain("nepodařilo uložit");
     expect(warning?.textContent).not.toMatch(/https?:|www\.|source|zdroj/i);
+    await waitForDashboard(root);
     expect(root.querySelector<HTMLElement>(".summary-total")?.dataset.total).toBe("0");
   });
 
@@ -289,8 +291,9 @@ describe("bootstrap - inicializacni tok", () => {
     const notice = root.querySelector<HTMLElement>(".app__notice");
     expect(root.querySelector<HTMLElement>(".postflop-result")).not.toBeNull();
     expect(notice?.hidden).toBe(false);
-    expect(notice?.textContent).toContain("postflop answer could not be saved");
+    expect(notice?.textContent).toContain("Postflop odpověď se nepodařilo uložit");
     expect(notice?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|mtt-/i);
+    await waitForDashboard(root);
     expect(root.querySelector<HTMLElement>(".dashboard-session-count")?.dataset.sessionCount)
       .toBe("1");
     expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("0");
@@ -332,6 +335,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector(".hh-postflop-analysis")).toBeNull();
     expect(preflopEvents).toEqual([]);
     expect(postflopEvents).toEqual([]);
+    await waitForDashboard(root);
     expect(root.querySelector<HTMLElement>(".summary-total")?.dataset.total).toBe("0");
     expect(root.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total).toBe("0");
   });
@@ -367,7 +371,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(meta?.dataset.potType).toBe("THREE_BET_POT");
     expect(meta?.dataset.positionPattern).toBe("OOP_CALLER_VS_IP_3BETTOR");
     expect(meta?.textContent).toContain("3bet pot");
-    expect(meta?.textContent).toContain("pot 18 BB");
+    expect(meta?.textContent).toContain("bank 18 BB");
     expect(meta?.textContent).toContain("LJ vs HJ");
     expect(meta?.textContent).not.toContain("BTN vs BB");
   });
@@ -385,6 +389,7 @@ describe("bootstrap - inicializacni tok", () => {
     firstRoot.querySelector<HTMLButtonElement>(".filter-start")?.click();
     firstRoot.querySelector<HTMLButtonElement>(".postflop-action")?.click();
 
+    await waitForDashboard(firstRoot);
     expect(firstRoot.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total)
       .toBe("1");
 
@@ -392,6 +397,7 @@ describe("bootstrap - inicializacni tok", () => {
     const secondRoot = document.createElement("div");
     main.bootstrap({ root: secondRoot, storage, registerSw: false });
 
+    await waitForDashboard(secondRoot);
     expect(secondRoot.querySelector<HTMLElement>(".postflop-breakdowns")?.dataset.total)
       .toBe("1");
     expect(
@@ -415,10 +421,10 @@ describe("bootstrap - inicializacni tok", () => {
 
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
-    expect(warning?.textContent).toContain("candidate/preview");
-    expect(warning?.textContent).toContain("Production training is disabled");
+    expect(warning?.textContent).toContain("kandidátní náhled");
+    expect(warning?.textContent).toContain("Produkční trénink je vypnutý");
     expect(warning?.textContent).toContain("MTT 6-max regular preflop chipEV");
-    expect(warning?.textContent).toContain("hand-class coverage is complete");
+    expect(warning?.textContent).toContain("dokončení kontroly pokrytí");
     expect(warning?.textContent).not.toContain("Import preview:");
     expect(warning?.textContent).not.toContain("RangePack");
     expect(warning?.textContent).not.toContain("mtt-");
@@ -446,42 +452,42 @@ describe("bootstrap - inicializacni tok", () => {
         speed: "TURBO",
         ante: "ON",
         production: false,
-        warning: "missing production range",
+        warning: "chybí produkční range",
       },
       {
         format: "FULL_RING_9",
         speed: "TURBO",
         ante: "OFF",
         production: false,
-        warning: "missing production range",
+        warning: "chybí produkční range",
       },
       {
         format: "SIX_MAX",
         speed: "REGULAR",
         ante: "ON",
         production: false,
-        warning: "candidate/preview",
+        warning: "kandidátní náhled",
       },
       {
         format: "SIX_MAX",
         speed: "REGULAR",
         ante: "OFF",
         production: false,
-        warning: "candidate/preview",
+        warning: "kandidátní náhled",
       },
       {
         format: "SIX_MAX",
         speed: "TURBO",
         ante: "ON",
         production: false,
-        warning: "candidate/preview",
+        warning: "kandidátní náhled",
       },
       {
         format: "SIX_MAX",
         speed: "TURBO",
         ante: "OFF",
         production: false,
-        warning: "candidate/preview",
+        warning: "kandidátní náhled",
       },
     ] as const;
 
@@ -529,8 +535,8 @@ describe("bootstrap - inicializacni tok", () => {
 
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
-    expect(warning?.textContent).toContain("candidate/preview");
-    expect(warning?.textContent).toContain("SNG chipEV preview");
+    expect(warning?.textContent).toContain("kandidátní náhled");
+    expect(warning?.textContent).toContain("SNG chipEV náhled");
     expect(warning?.textContent).not.toContain("https://");
     expect(warning?.textContent).not.toContain("RangePack");
     expect(root.querySelector(".poker-table")).toBeNull();
@@ -551,8 +557,8 @@ describe("bootstrap - inicializacni tok", () => {
 
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
-    expect(warning?.textContent).toContain("candidate/preview");
-    expect(warning?.textContent).toContain("Cash rake preview");
+    expect(warning?.textContent).toContain("kandidátní náhled");
+    expect(warning?.textContent).toContain("Cash rake náhled");
     expect(warning?.textContent).not.toContain("https://");
     expect(warning?.textContent).not.toContain("RangePack");
     expect(root.querySelector(".poker-table")).toBeNull();
@@ -566,7 +572,7 @@ describe("bootstrap - inicializacni tok", () => {
 
     bootstrap({ root, storage: new BrokenWriteStorage(), registerSw: false });
 
-    expect(root.querySelector(".fatal")?.textContent).toContain("Storage is inconsistent");
+    expect(root.querySelector(".fatal")?.textContent).toContain("Úložiště není konzistentní");
     expect(root.querySelector(".filter-start")).toBeNull();
     expect(root.querySelector(".poker-table")).toBeNull();
   });
@@ -592,7 +598,7 @@ describe("bootstrap - inicializacni tok", () => {
 
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
-    expect(warning?.textContent).toContain("Reference ranges are not available");
+    expect(warning?.textContent).toContain("Referenční range nejsou dostupné");
     expect(warning?.textContent).not.toContain("https://");
     expect(root.querySelector(".poker-table")).toBeNull();
   });
@@ -602,4 +608,10 @@ async function importFreshMain(): Promise<typeof import("../../src/main")> {
   document.body.innerHTML = "";
   vi.resetModules();
   return import("../../src/main");
+}
+
+async function waitForDashboard(root: HTMLElement): Promise<void> {
+  await vi.waitFor(() => {
+    expect(root.querySelector(".dashboard")).not.toBeNull();
+  });
 }

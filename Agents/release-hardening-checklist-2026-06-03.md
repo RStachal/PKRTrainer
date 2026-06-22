@@ -10,10 +10,14 @@
 
 ## Offline / Service Worker
 
-- Service worker precaches the stable app shell: `./`, `./index.html`, `./manifest.webmanifest`.
+- Service worker precaches every production asset emitted into `dist/`, including hashed chunks, manifest and install icon.
 - First same-origin GET for hashed JS/CSS/data is network-served and then runtime cached.
 - Second same-origin GET for the same asset is cache-served without another network call.
 - Navigation fallback returns cached app shell when offline.
+- A newly installed worker takes control after successful precache and claims open clients.
+- During a two-build upgrade, one previous app cache remains available only for old hashed build assets requested by already-open clients.
+- Stable URLs removed from the new build are never served from the previous cache.
+- Registration watches both the current installing worker and later `updatefound` workers without reporting a previously activated worker as a failed install.
 - If SW registration or install cache fails, app remains usable online and shows a Czech warning.
 
 ## Mobile / Android WebView smoke
@@ -35,3 +39,4 @@
 - Cash data must never resolve for MTT/SNG profiles.
 - SNG ICM data must never resolve for chipEV profiles.
 - UI may display model metadata and assumptions, but not source URLs or provider citations.
+- Generated production registry entries must use dynamic `import()` only; CLI release audits call `loadAll`, while runtime training loads the selected profile key.

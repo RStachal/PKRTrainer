@@ -199,6 +199,82 @@ describe("service worker - offline provoz", () => {
       restoreGlobal(globals, "fetch", previousFetch);
     }
   });
+
+  it("pri dvoubuildovem upgradu obslouzi stary hashovany chunk z predchozi cache", async () => {
+    const listeners: ListenerMap = {};
+    const cacheByName = new Map<string, FakeCache>();
+    const oldCache = new FakeCache();
+    const olderCache = new FakeCache();
+    const oldChunk = new Request("https://trainer.test/assets/main-oldbuild1.js");
+    const removedStableAsset = new Request("https://trainer.test/legacy-icon.svg");
+    await oldCache.put(oldChunk, new Response("old-client-chunk", { status: 200 }));
+    await oldCache.put(removedStableAsset, new Response("stale-icon", { status: 200 }));
+    cacheByName.set("mtt-preflop-older", olderCache);
+    cacheByName.set("mtt-preflop-previous", oldCache);
+    const deleted: string[] = [];
+    const globals = globalThis as Record<string, unknown>;
+    const previousSelf = globals.self;
+    const previousCaches = globals.caches;
+    const previousFetch = globals.fetch;
+    const skipWaiting = vi.fn(() => Promise.resolve());
+    const claim = vi.fn(() => Promise.resolve());
+
+    globals.self = {
+      location: { origin: "https://trainer.test" },
+      clients: { claim },
+      skipWaiting,
+      addEventListener: (type: keyof ListenerMap, listener: ListenerMap[keyof ListenerMap]) => {
+        if (type === "install") listeners.install = listener as (event: ExtendableEventLike) => void;
+        if (type === "activate") listeners.activate = listener as (event: ExtendableEventLike) => void;
+        if (type === "fetch") listeners.fetch = listener as (event: FetchEventLike) => void;
+      },
+    };
+    globals.caches = {
+      open: (name: string) => {
+        let cache = cacheByName.get(name);
+        if (!cache) {
+          cache = new FakeCache();
+          cacheByName.set(name, cache);
+        }
+        return Promise.resolve(cache);
+      },
+      keys: () => Promise.resolve([...cacheByName.keys()]),
+      delete: (name: string) => {
+        deleted.push(name);
+        return Promise.resolve(cacheByName.delete(name));
+      },
+    };
+    globals.fetch = async () => {
+      throw new Error("old chunk was removed from the new deployment");
+    };
+
+    try {
+      vi.resetModules();
+      await import("../../src/pwa/sw");
+
+      const installWork: Promise<unknown>[] = [];
+      listeners.install?.({ waitUntil: (promise) => installWork.push(promise) });
+      await Promise.all(installWork);
+      expect(skipWaiting).toHaveBeenCalledOnce();
+
+      const activateWork: Promise<unknown>[] = [];
+      listeners.activate?.({ waitUntil: (promise) => activateWork.push(promise) });
+      await Promise.all(activateWork);
+      expect(claim).toHaveBeenCalledOnce();
+      expect(deleted).toEqual(["mtt-preflop-older"]);
+
+      const response = await dispatchFetch(listeners, oldChunk);
+      expect(await response.text()).toBe("old-client-chunk");
+
+      await expect(dispatchFetch(listeners, removedStableAsset)).rejects.toThrow(
+        "old chunk was removed from the new deployment",
+      );
+    } finally {
+      restoreGlobal(globals, "self", previousSelf);
+      restoreGlobal(globals, "caches", previousCaches);
+      restoreGlobal(globals, "fetch", previousFetch);
+    }
+  });
 });
 
 async function dispatchFetch(listeners: ListenerMap, request: Request): Promise<Response> {

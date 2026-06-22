@@ -89,6 +89,7 @@ export interface TurnProductionStrategyRule {
 }
 
 export interface TurnProductionStrategyPack {
+  contentLanguage?: string;
   id: string;
   version: string;
   createdAt: string;

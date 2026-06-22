@@ -1,5 +1,10 @@
 // Service Worker pro MTT Preflop Trainer (Req 12.1, 12.2, 12.4, 12.5).
 //
+// Aktualni build pri instalaci precachuje kompletni seznam produkcnich souboru
+// vlozeny z Vite buildu. Runtime cache pokryva nove same-origin GET odpovedi.
+// Pri dvoubuildovem upgradu se z predchozi cache docasne obslouzi pouze
+// hashovane build artefakty; stabilni soubory se ze stare verze neprebiraji.
+//
 // ┌─────────────────────────────────────────────────────────────────────────┐
 // │ STRATEGIE NAKEŠOVÁNÍ                                                       │
 // ├─────────────────────────────────────────────────────────────────────────┤
@@ -80,9 +85,9 @@ sw.addEventListener("install", (event: ExtendableEventLike) => {
       // addAll je atomické: pokud kterýkoliv zdroj selže, install selže a worker
       // se stane redundantním → registerSw.ts to detekuje (Req 12.4).
       await cache.addAll(APP_SHELL as string[]);
+      await sw.skipWaiting();
     })(),
   );
-  // Nový SW převezme řízení co nejdříve (nečekat na zavření všech karet).
 });
 
 // --- activate: úklid starých verzí cache -----------------------------------
@@ -97,7 +102,7 @@ sw.addEventListener("activate", (event: ExtendableEventLike) => {
       await Promise.all(
         staleCaches.map((name) => caches.delete(name)),
       );
-      // Převzít řízení nad otevřenými klienty bez nutnosti reloadu.
+      await sw.clients.claim();
     })(),
   );
 });
@@ -155,6 +160,14 @@ async function cacheFirst(request: Request): Promise<Response> {
     return cached;
   }
 
+  // Po aktivaci nového workeru mohou již otevřené klienty ještě požadovat
+  // hashované chunky předchozího buildu. Předchozí cache proto slouží jako
+  // přesně jedna rollback generace; stabilní URL z ní nikdy nevracíme.
+  if (isVersionedBuildAsset(request)) {
+    const previous = await matchPreviousApplicationCache(request);
+    if (previous) return previous;
+  }
+
   try {
     const response = await fetch(request);
     // Ukládáme jen úspěšné same-origin odpovědi (basic/default), ne opaque.
@@ -170,4 +183,23 @@ async function cacheFirst(request: Request): Promise<Response> {
     // aby se SPA dokázala načíst z cache (Req 12.5).
     throw error;
   }
+}
+
+function isVersionedBuildAsset(request: Request): boolean {
+  const fileName = new URL(request.url).pathname.split("/").pop() ?? "";
+  return /-[a-zA-Z0-9_-]{8,}\.(?:css|js|json|wasm)$/.test(fileName);
+}
+
+async function matchPreviousApplicationCache(
+  request: Request,
+): Promise<Response | undefined> {
+  const names = await caches.keys();
+  const previousCaches = names
+    .filter((name) => name.startsWith("mtt-preflop-") && name !== CACHE)
+    .reverse();
+  for (const name of previousCaches) {
+    const cached = await (await caches.open(name)).match(request);
+    if (cached) return cached;
+  }
+  return undefined;
 }

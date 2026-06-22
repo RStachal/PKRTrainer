@@ -262,3 +262,5 @@ function matchesStatusFilter(
   if (filter === undefined || filter === "NON_PRODUCTION") return true;
   return status === filter;
 }
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+await loadCompleteMttProductionRegistry();

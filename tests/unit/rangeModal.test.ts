@@ -67,15 +67,15 @@ describe("rangeModal - DOM", () => {
 
     expect(document.querySelector(".range-modal")).not.toBeNull();
     expect(root.querySelector<HTMLButtonElement>(".range-modal-open")?.textContent)
-      .toContain("Show range");
+      .toContain("Zobrazit range");
     expect(document.querySelectorAll(".range-modal .matrix-cell")).toHaveLength(169);
     expect(document.querySelector<HTMLElement>(".range-modal .matrix-cell--hero")?.dataset.hand)
       .toBe("AKs");
     expect(model?.textContent).toContain("Model range");
     expect(model?.textContent).toContain("chipEV");
-    expect(model?.textContent).toContain("Assumptions:");
+    expect(model?.textContent).toContain("Předpoklady:");
     expect(document.querySelector<HTMLElement>(".range-modal .range-matrix-title")?.textContent)
-      .toBe("Preflop range matrix");
+      .toBe("Preflop matice range");
     expect(document.querySelectorAll(".range-modal .legend-count").length)
       .toBeGreaterThan(1);
     expect(document.querySelector<HTMLElement>(".range-modal .legend-item")?.dataset.count)
@@ -109,7 +109,7 @@ describe("rangeModal - DOM", () => {
     expect(document.querySelector<HTMLElement>(".range-modal__matrix")?.textContent)
       .toContain("AKs");
     expect(document.querySelector<HTMLButtonElement>(".range-modal__close")?.textContent)
-      .toBe("Close");
+      .toBe("Zavřít");
 
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
 
@@ -129,7 +129,7 @@ describe("rangeModal - DOM", () => {
 
     const modelText = document.querySelector<HTMLElement>(".range-modal__evidence")?.textContent;
     expect(modelText).toContain("Model range");
-    expect(modelText).toContain("Assumptions:");
+    expect(modelText).toContain("Předpoklady:");
     expect(modelText).not.toContain("https://");
     expect(modelText).not.toContain("RangePack");
     expect(fetchSpy).not.toHaveBeenCalled();

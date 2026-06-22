@@ -10,10 +10,10 @@ import {
   type RiverProductionStrategyRule,
   validateRiverProductionStrategyPack,
 } from "./riverProductionStrategyPack";
-import { generatedMttRiverStrategyPacks } from "./mttProductionRegistry.generated";
+import { runtimeMttRiverStrategyPacks } from "./mttProductionRuntimeRegistry";
 
 export const riverProductionStrategyPacks: readonly RiverProductionStrategyPack[] =
-  generatedMttRiverStrategyPacks;
+  runtimeMttRiverStrategyPacks;
 
 export function createRiverProductionStrategyResolver(
   pack: RiverProductionStrategyPack,

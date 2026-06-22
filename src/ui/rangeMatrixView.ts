@@ -293,7 +293,7 @@ function renderLegend(
     item.setAttribute("role", "button");
     item.setAttribute("tabindex", "0");
     item.setAttribute("aria-pressed", "false");
-    item.setAttribute("aria-label", `Show only ${def.label} hands`);
+    item.setAttribute("aria-label", `Zobrazit pouze handy kategorie ${def.label}`);
     item.dataset.action = cat;
     item.dataset.count = String(counts[cat] ?? 0);
     item.dataset.share = categoryShare(counts[cat] ?? 0);
@@ -451,15 +451,15 @@ function showCellDetail(
 
   const title = doc.createElement("div");
   title.className = "matrix-cell-detail__title";
-  title.textContent = `${hand}${hero ? " - hero hand" : ""}`;
+  title.textContent = `${hand}${hero ? " – handa Hero" : ""}`;
   title.style.fontSize = "13px";
   title.style.fontWeight = "950";
   title.style.color = "#f8fbff";
   detail.appendChild(title);
 
-  detail.appendChild(renderDetailLine(doc, "Range class", CATEGORIES[category].label));
-  detail.appendChild(renderDetailLine(doc, "Strict action", actionListLabel(entry.strict[hand])));
-  detail.appendChild(renderDetailLine(doc, "Lenient actions", actionListLabel(entry.actions[hand])));
+  detail.appendChild(renderDetailLine(doc, "Kategorie range", CATEGORIES[category].label));
+  detail.appendChild(renderDetailLine(doc, "Přísná akce", actionListLabel(entry.strict[hand])));
+  detail.appendChild(renderDetailLine(doc, "Tolerované akce", actionListLabel(entry.actions[hand])));
   detail.focus();
 }
 
@@ -518,7 +518,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
   try {
     // Req 10.6: data nejsou konzistentně načtena jako celek.
     if (!store.isLoaded()) {
-      renderUnavailable(doc, root, "Range data is not available.");
+      renderUnavailable(doc, root, "Data range nejsou dostupná.");
       return;
     }
 
@@ -536,7 +536,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
       renderUnavailable(
         doc,
         root,
-        "Range data is not available for this spot.",
+        "Pro tento spot nejsou dostupná data range.",
       );
       return;
     }
@@ -565,7 +565,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
 
     const title = doc.createElement("div");
     title.className = "range-matrix-title";
-    title.textContent = "Preflop range matrix";
+    title.textContent = "Preflop matice range";
     title.style.fontSize = "12px";
     title.style.fontWeight = "950";
     title.style.textTransform = "uppercase";
@@ -573,7 +573,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
 
     const meta = doc.createElement("div");
     meta.className = "range-matrix-meta";
-    meta.textContent = `${spot.context} | ${spot.heroPos} | ${spot.effStack} BB | Hero ${spot.hand}`;
+    meta.textContent = `${spot.context} | ${spot.heroPos} | ${spot.effStack} BB | Hero: ${spot.hand}`;
     meta.style.fontSize = "11px";
     meta.style.fontWeight = "850";
     meta.style.color = "#b9cff4";
@@ -625,7 +625,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
         cell.setAttribute("tabindex", "0");
         cell.setAttribute(
           "aria-label",
-          `${hand}: ${CATEGORIES[category].label}; show strict and lenient actions`,
+          `${hand}: ${CATEGORIES[category].label}; zobrazit přísnou a tolerované akce`,
         );
         cell.textContent = hand;
         cell.style.background = CATEGORIES[category].color;
@@ -668,6 +668,6 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     root.appendChild(wrap);
   } catch {
     // Req 10.6: za žádných okolností neprovést pád aplikace.
-    renderUnavailable(doc, root, "Range matrix could not be displayed.");
+    renderUnavailable(doc, root, "Matici range se nepodařilo zobrazit.");
   }
 }

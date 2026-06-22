@@ -42,11 +42,11 @@ describe("preflopExplanation", () => {
     const text = explanation("STANDARD");
 
     expect(text).toContain("RFI / Open");
-    expect(text).toContain("Recommended: Open 2x");
-    expect(text).toContain("Position:");
+    expect(text).toContain("Doporučení: Open 2x");
+    expect(text).toContain("Pozice:");
     expect(text).toContain("Stack:");
-    expect(text).toContain("Hand class:");
-    expect(text).toContain("Plan:");
+    expect(text).toContain("Třída handy:");
+    expect(text).toContain("Plán:");
     for (const forbidden of FORBIDDEN) expect(text).not.toContain(forbidden);
   });
 
@@ -54,8 +54,8 @@ describe("preflopExplanation", () => {
     const beginner = explanation("BEGINNER");
     const advanced = explanation("ADVANCED");
 
-    expect(beginner).not.toContain("Range note:");
-    expect(advanced).toContain("Range note:");
+    expect(beginner).not.toContain("Poznámka k range:");
+    expect(advanced).toContain("Poznámka k range:");
     expect(advanced.length).toBeGreaterThan(beginner.length);
   });
 
@@ -74,8 +74,8 @@ describe("preflopExplanation", () => {
       importedFromHandHistory: true,
     });
 
-    expect(text).toContain("Vs 3-bet HH spot");
-    expect(text).toContain("Recommended: 4-bet");
-    expect(text).toContain("4-bet the strongest continues");
+    expect(text).toContain("Proti 3-betu HH spot");
+    expect(text).toContain("Doporučení: 4-bet");
+    expect(text).toContain("4-betujte nejsilnější pokračování");
   });
 });

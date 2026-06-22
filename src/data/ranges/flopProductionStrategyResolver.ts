@@ -11,10 +11,10 @@ import {
   type FlopProductionStrategyRule,
   validateFlopProductionStrategyPack,
 } from "./flopProductionStrategyPack";
-import { generatedMttFlopStrategyPacks } from "./mttProductionRegistry.generated";
+import { runtimeMttFlopStrategyPacks } from "./mttProductionRuntimeRegistry";
 
 export const flopProductionStrategyPacks: readonly FlopProductionStrategyPack[] =
-  generatedMttFlopStrategyPacks;
+  runtimeMttFlopStrategyPacks;
 
 export function createFlopProductionStrategyResolver(
   pack: FlopProductionStrategyPack,

@@ -67,6 +67,7 @@ function handMap(action: ActionKey): Record<HandLabel, ActionKey[]> {
 
 function validMttImport(): MttPreflopRangePackImportInput {
   return {
+    contentLanguage: "cs",
     id: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1",
     version: "builder-fixture-v1",
     createdAt: "2026-06-05",
@@ -176,6 +177,7 @@ function cardRemovalSample(
 
 function syntheticFlopPack(): FlopProductionStrategyPack {
   return {
+    contentLanguage: "cs",
     id: "builder-flop-synthetic-v1",
     version: "builder-fixture-v1",
     createdAt: "2026-06-05",
@@ -259,6 +261,7 @@ function syntheticFlopPack(): FlopProductionStrategyPack {
 
 function syntheticTurnPack(): TurnProductionStrategyPack {
   return {
+    contentLanguage: "cs",
     id: "builder-turn-synthetic-v1",
     version: "builder-fixture-v1",
     createdAt: "2026-06-11",
@@ -343,6 +346,7 @@ function syntheticTurnPack(): TurnProductionStrategyPack {
 
 function syntheticRiverPack(): RiverProductionStrategyPack {
   return {
+    contentLanguage: "cs",
     id: "builder-river-synthetic-v1",
     version: "builder-fixture-v1",
     createdAt: "2026-06-11",
@@ -496,6 +500,23 @@ describe("rangeModuleBuilder", () => {
       permissionManifest: permissionManifest(input.id),
       exportName: "builderFixtureRangePack",
     }).moduleText).toBe(result.moduleText);
+  });
+
+  it("blokuje promotion bez ceskeho contentLanguage deklarovaneho pro hracske texty", () => {
+    const input = validMttImport();
+    delete input.contentLanguage;
+
+    const result = buildRangeModule({
+      kind: "mtt-preflop",
+      input,
+      permissionManifest: permissionManifest(input.id),
+    });
+
+    expect(result.writeReady).toBe(false);
+    expect(result.moduleText).toBeNull();
+    expect(result.blockers).toContain(
+      "player-facing production content must declare contentLanguage=cs",
+    );
   });
 
   it("blokuje production module pro MTT preflop import mimo legal slot packId", () => {

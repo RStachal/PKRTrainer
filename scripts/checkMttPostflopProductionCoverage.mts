@@ -432,3 +432,5 @@ function renderPostflopProductionCoverageReport(
 function formatCount(count: { total: number; covered: number; blocked: number }): string {
   return `${count.covered}/${count.total} covered, ${count.blocked} blocked`;
 }
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+await loadCompleteMttProductionRegistry();

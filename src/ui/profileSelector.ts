@@ -11,6 +11,7 @@ import {
 } from "../core/trainingProfile";
 import type { AnteMode } from "../core/types";
 import { trainingCapabilityForProfile } from "../data/ranges/trainingCapability";
+import { CS } from "./cs";
 
 export interface ProfileSelectorView {
   getProfile(): TrainingProfile;
@@ -27,24 +28,24 @@ type ProfileStatus = "production" | "preview" | "blocked" | "unsupported";
 const GAME_VARIANTS: { value: GameVariant; label: string }[] = [
   { value: "MTT", label: "MTT" },
   { value: "SNG", label: "SNG" },
-  { value: "CASH", label: "Cash game" },
+  { value: "CASH", label: CS.profile.options.cash },
 ];
 
 const TABLE_FORMATS: { value: TableFormat; label: string }[] = [
-  { value: "FULL_RING_9", label: "9-max full ring" },
-  { value: "SIX_MAX", label: "6-max" },
+  { value: "FULL_RING_9", label: CS.profile.options.fullRing },
+  { value: "SIX_MAX", label: CS.profile.options.sixMax },
 ];
 
 const BLIND_SPEEDS: { value: BlindSpeed; label: string }[] = [
-  { value: "REGULAR", label: "Regular" },
-  { value: "TURBO", label: "Turbo" },
+  { value: "REGULAR", label: CS.profile.options.regular },
+  { value: "TURBO", label: CS.profile.options.turbo },
 ];
 
 const STREETS: { value: TrainingStreet; label: string }[] = [
-  { value: "PREFLOP", label: "Preflop" },
-  { value: "FLOP", label: "Flop" },
-  { value: "TURN", label: "Turn" },
-  { value: "RIVER", label: "River" },
+  { value: "PREFLOP", label: CS.profile.options.preflop },
+  { value: "FLOP", label: CS.profile.options.flop },
+  { value: "TURN", label: CS.profile.options.turn },
+  { value: "RIVER", label: CS.profile.options.river },
 ];
 
 const EV_MODELS: { value: EvModel; label: string }[] = [
@@ -54,14 +55,14 @@ const EV_MODELS: { value: EvModel; label: string }[] = [
 ];
 
 const ANTE_MODES: { value: AnteMode; label: string }[] = [
-  { value: "ON", label: "Ante on" },
-  { value: "OFF", label: "No ante" },
+  { value: "ON", label: CS.profile.options.anteOn },
+  { value: "OFF", label: CS.profile.options.anteOff },
 ];
 
 const RAKE_MODES: { value: RakeMode; label: string }[] = [
   { value: "NONE", label: "N/A" },
   { value: "RAKE", label: "Rake" },
-  { value: "NO_RAKE", label: "No rake" },
+  { value: "NO_RAKE", label: CS.profile.options.noRake },
 ];
 
 export function renderProfileSelector(
@@ -74,20 +75,20 @@ export function renderProfileSelector(
 
   const wrap = doc.createElement("section");
   wrap.className = "profile-selector";
-  wrap.setAttribute("aria-label", "Training profile");
+  wrap.setAttribute("aria-label", CS.profile.title);
 
   const title = doc.createElement("div");
   title.className = "profile-selector__title";
-  title.textContent = "Training profile";
+  title.textContent = CS.profile.title;
   wrap.appendChild(title);
 
-  const variant = selectControl(doc, "Variant", "profile-variant", GAME_VARIANTS);
-  const format = selectControl(doc, "Table", "profile-format", TABLE_FORMATS);
-  const speed = selectControl(doc, "Blind speed", "profile-speed", BLIND_SPEEDS);
-  const street = selectControl(doc, "Street", "profile-street", STREETS);
-  const evModel = selectControl(doc, "Model", "profile-ev-model", EV_MODELS);
-  const ante = selectControl(doc, "Ante", "profile-ante", ANTE_MODES);
-  const rakeMode = selectControl(doc, "Rake", "profile-rake-mode", RAKE_MODES);
+  const variant = selectControl(doc, CS.profile.fields.variant, "profile-variant", GAME_VARIANTS);
+  const format = selectControl(doc, CS.profile.fields.table, "profile-format", TABLE_FORMATS);
+  const speed = selectControl(doc, CS.profile.fields.blindSpeed, "profile-speed", BLIND_SPEEDS);
+  const street = selectControl(doc, CS.profile.fields.street, "profile-street", STREETS);
+  const evModel = selectControl(doc, CS.profile.fields.model, "profile-ev-model", EV_MODELS);
+  const ante = selectControl(doc, CS.profile.fields.ante, "profile-ante", ANTE_MODES);
+  const rakeMode = selectControl(doc, CS.profile.fields.rake, "profile-rake-mode", RAKE_MODES);
 
   for (const control of [variant, format, speed, street, evModel, ante, rakeMode]) {
     wrap.appendChild(control.label);
@@ -197,23 +198,19 @@ function describeProfileStatus(profile: TrainingProfile): {
   if (capability.status === "PRODUCTION") {
     return {
       status: "production",
-      text: `Production: ${mttProfileLabel(profile)}. Training runs from the offline bundle.`,
+      text: `${CS.profile.production}: ${mttProfileLabel(profile)}. ${CS.profile.productionOffline}`,
     };
   }
   if (capability.status === "PREVIEW") {
     if (profile.gameVariant === "MTT") {
       return {
         status: "preview",
-        text:
-          `Preview: ${mttProfileLabel(profile)} postflop training opens a concrete ` +
-          "spot, table and practical assumptions.",
+        text: `Náhled: ${mttProfileLabel(profile)}. ${CS.profile.postflopPreview}`,
       };
     }
     return {
       status: "preview",
-      text:
-        `${candidateProfileLabel(profile)}: candidate/preview. Production scoring is disabled ` +
-        "until hand-class values are reviewed.",
+      text: `${candidateProfileLabel(profile)}: ${CS.profile.candidatePreview}`,
     };
   }
   if (capability.status === "BLOCKED") {
@@ -222,30 +219,28 @@ function describeProfileStatus(profile: TrainingProfile): {
     if (readiness?.status === "CANDIDATE") {
       return {
         status: "blocked",
-        text:
-          `${label}: candidate/preview. Production scoring is disabled until reviewed ` +
-          "hand-class coverage is complete.",
+        text: `${label}: ${CS.profile.candidateBlocked}`,
       };
     }
     return {
       status: "blocked",
-      text: `${label}: missing production range. Production scoring is disabled.`,
+      text: `${label}: ${CS.profile.missingRange}`,
     };
   }
   return {
     status: "unsupported",
-    text: `Unsupported profile: ${capability.reason}`,
+    text: CS.profile.unsupported,
   };
 }
 
 function candidateProfileLabel(profile: TrainingProfile): string {
   if (profile.gameVariant === "SNG") {
-    return `SNG ${evModelLabel(profile.evModel)} preview`;
+    return `SNG ${evModelLabel(profile.evModel)} náhled`;
   }
   if (profile.gameVariant === "CASH") {
-    return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "no rake"} preview`;
+    return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "bez rake"} náhled`;
   }
-  return `${profile.gameVariant} ${tableFormatLabel(profile.tableFormat)} preflop ${evModelLabel(profile.evModel)} ${anteLabel(profile.ante)} preview`;
+  return `${profile.gameVariant} ${tableFormatLabel(profile.tableFormat)} preflop ${evModelLabel(profile.evModel)} ${anteLabel(profile.ante)} náhled`;
 }
 
 function tableFormatLabel(format: TableFormat): string {
@@ -266,11 +261,15 @@ function setOptionDisabled(
 }
 
 function mttProfileLabel(profile: TrainingProfile): string {
-  return `MTT ${tableFormatLabel(profile.tableFormat)} ${blindSpeedLabel(profile.blindSpeed)} ${profile.street.toLowerCase()} ${evModelLabel(profile.evModel)} ${anteLabel(profile.ante)}`;
+  return `MTT ${tableFormatLabel(profile.tableFormat)} ${blindSpeedLabel(profile.blindSpeed)} ${streetLabel(profile.street)} ${evModelLabel(profile.evModel)} ${anteLabel(profile.ante)}`;
 }
 
 function anteLabel(ante: AnteMode): string {
-  return ante === "ON" ? "ante on" : "no ante";
+  return ante === "ON" ? "ante zapnuto" : "bez ante";
+}
+
+function streetLabel(street: TrainingStreet): string {
+  return STREETS.find((item) => item.value === street)?.label.toLowerCase() ?? street.toLowerCase();
 }
 
 function selectControl<T extends string>(

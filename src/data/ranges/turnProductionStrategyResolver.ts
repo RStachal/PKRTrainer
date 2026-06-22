@@ -10,10 +10,10 @@ import {
   type TurnProductionStrategyRule,
   validateTurnProductionStrategyPack,
 } from "./turnProductionStrategyPack";
-import { generatedMttTurnStrategyPacks } from "./mttProductionRegistry.generated";
+import { runtimeMttTurnStrategyPacks } from "./mttProductionRuntimeRegistry";
 
 export const turnProductionStrategyPacks: readonly TurnProductionStrategyPack[] =
-  generatedMttTurnStrategyPacks;
+  runtimeMttTurnStrategyPacks;
 
 export function createTurnProductionStrategyResolver(
   pack: TurnProductionStrategyPack,

@@ -28,19 +28,16 @@ describe("MTT production registry generator", () => {
 
     expect(discoverMttProductionModules(directory)).toEqual([]);
     expect(renderMttProductionRegistry([])).toContain(
-      "generatedMttPreflopRangePacks: readonly RangePack[] = [];",
-    );
-    expect(renderMttProductionRegistry([])).toContain(
-      "generatedMttRiverStrategyPacks: readonly RiverProductionStrategyPack[] = [];",
+      "generatedMttProductionManifest: readonly GeneratedMttProductionManifestEntry[] = [];",
     );
   });
 
   it("objevi jeden realny modul kazdeho druhu a stabilne je seradi podle packId", () => {
     const directory = temporaryDirectory();
-    writeModule(directory, "mtt-z-production-turn.ts", "mtt-z-production-turn-v1", "turnPack");
-    writeModule(directory, "mtt-a-production-preflop.ts", "mtt-a-production-preflop-v1", "preflopPack");
-    writeModule(directory, "mtt-c-production-river.ts", "mtt-c-production-river-v1", "riverPack");
-    writeModule(directory, "mtt-b-production-flop.ts", "mtt-b-production-flop-v1", "flopPack");
+    writeModule(directory, "mtt-z-production-turn.ts", "mtt-six-max-turbo-turn-dolar-ev-ante-off-production-v1", "turnPack");
+    writeModule(directory, "mtt-a-production-preflop.ts", "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1", "preflopPack");
+    writeModule(directory, "mtt-c-production-river.ts", "mtt-six-max-regular-river-chip-ev-ante-on-production-v1", "riverPack");
+    writeModule(directory, "mtt-b-production-flop.ts", "mtt-full-ring-9-turbo-flop-dolar-ev-ante-off-production-v1", "flopPack");
     writeFileSync(
       join(directory, "mtt-invalid-production-flop.ts"),
       'export const missingId = {};\n',
@@ -49,24 +46,31 @@ describe("MTT production registry generator", () => {
 
     const modules = discoverMttProductionModules(directory);
     expect(modules.map((module) => module.packId)).toEqual([
-      "mtt-a-production-preflop-v1",
-      "mtt-b-production-flop-v1",
-      "mtt-c-production-river-v1",
-      "mtt-z-production-turn-v1",
+      "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1",
+      "mtt-full-ring-9-turbo-flop-dolar-ev-ante-off-production-v1",
+      "mtt-six-max-regular-river-chip-ev-ante-on-production-v1",
+      "mtt-six-max-turbo-turn-dolar-ev-ante-off-production-v1",
     ]);
 
     const registry = renderMttProductionRegistry(modules);
-    expect(registry).toContain('import { preflopPack } from "./mtt-a-production-preflop";');
-    expect(registry).toContain("generatedMttPreflopRangePacks: readonly RangePack[] = [");
-    expect(registry).toContain("generatedMttFlopStrategyPacks: readonly FlopProductionStrategyPack[] = [");
-    expect(registry).toContain("generatedMttTurnStrategyPacks: readonly TurnProductionStrategyPack[] = [");
-    expect(registry).toContain("generatedMttRiverStrategyPacks: readonly RiverProductionStrategyPack[] = [");
+    expect(registry).not.toContain('import { preflopPack } from "./mtt-a-production-preflop";');
+    expect(registry).toContain(
+      'profileKey: "FULL_RING_9|REGULAR|CHIP_EV|PREFLOP|ON"',
+    );
+    expect(registry).toContain(
+      'load: () => import("./mtt-a-production-preflop").then((module) => module.preflopPack)',
+    );
   });
 
   it("zapisuje katalog idempotentne a opakovany run nevytvori diff", () => {
     const directory = temporaryDirectory();
     const registryPath = join(directory, "registry.generated.ts");
-    writeModule(directory, "mtt-a-production-preflop.ts", "mtt-a-production-preflop-v1", "preflopPack");
+    writeModule(
+      directory,
+      "mtt-a-production-preflop.ts",
+      "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1",
+      "preflopPack",
+    );
 
     const first = refreshMttProductionRegistry({
       rangeDir: directory,

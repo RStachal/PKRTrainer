@@ -61,7 +61,7 @@ describe("postflopActionTaxonomy", () => {
       "Fold",
     ]);
     expect(trainingSpot.recommendedAction).toBe("RAISE");
-    expect(trainingSpot.explanation.valueHands).toContain("strong value");
-    expect(trainingSpot.explanation.bluffHands).toContain("nut blockers");
+    expect(trainingSpot.explanation.valueHands).toContain("silná value");
+    expect(trainingSpot.explanation.bluffHands).toContain("nut blockery");
   });
 });

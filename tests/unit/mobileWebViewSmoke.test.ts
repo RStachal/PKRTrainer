@@ -79,7 +79,7 @@ describe("mobile / Android WebView smoke", () => {
 
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
-    expect(warning?.textContent).toContain("Cash rake preview");
+    expect(warning?.textContent).toContain("Cash rake náhled");
     expect(warning?.textContent).not.toContain("https://");
     expect(warning?.textContent?.toLowerCase()).not.toContain("zdroj");
     expect(root.querySelector(".poker-table")).toBeNull();
@@ -114,6 +114,7 @@ describe("mobile / Android WebView smoke", () => {
     expect(root.querySelectorAll(".hh-analysis .matrix-cell")).toHaveLength(169);
 
     root.querySelector<HTMLButtonElement>('[data-tab="stats"]')?.click();
+    await waitForDashboard(root);
     root.querySelector<HTMLButtonElement>(".stats-export")?.click();
     const exported = root.querySelector<HTMLTextAreaElement>(".stats-json-box")?.value;
     expect(exported).toContain("postflopRecords");
@@ -190,6 +191,7 @@ describe("mobile / Android WebView smoke", () => {
       bootstrap({ root, storage, registerSw: false });
 
       root.querySelector<HTMLButtonElement>('[data-tab="stats"]')?.click();
+      await waitForDashboard(root);
       root.querySelector<HTMLButtonElement>(".stats-export")?.click();
       const exported = root.querySelector<HTMLTextAreaElement>(".stats-json-box")?.value ?? "";
       expect(exported).toContain("postflopRecords");
@@ -198,6 +200,12 @@ describe("mobile / Android WebView smoke", () => {
     }
   });
 });
+
+async function waitForDashboard(root: HTMLElement): Promise<void> {
+  await vi.waitFor(() => {
+    expect(root.querySelector(".stats-export")).not.toBeNull();
+  });
+}
 
 async function importFreshMain(): Promise<typeof import("../../src/main")> {
   vi.resetModules();

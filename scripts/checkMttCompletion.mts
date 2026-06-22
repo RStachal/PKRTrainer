@@ -102,3 +102,5 @@ try {
 function hasFilters(filters: MttCompletionReadinessFilters): boolean {
   return Object.keys(filters).length > 0;
 }
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+await loadCompleteMttProductionRegistry();

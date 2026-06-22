@@ -80,7 +80,7 @@ export function buildPreflopCurriculumPlan(
   if (preflopRecords.length === 0) {
     return {
       available: false,
-      reason: "No preflop answers yet.",
+      reason: "Zatím nejsou žádné preflop odpovědi.",
       focus: null,
       alternates: [],
       recommendations: [],
@@ -120,7 +120,7 @@ export function buildPreflopCurriculumPlan(
   if (focuses.length === 0) {
     return {
       available: false,
-      reason: `No leak with ${kpi.minLeakSample}+ samples below ${kpi.leakRateThreshold}%.`,
+      reason: `Žádná slabina s ${kpi.minLeakSample}+ vzorky pod ${kpi.leakRateThreshold} %.`,
       focus: null,
       alternates: [],
       recommendations: [],
@@ -132,7 +132,7 @@ export function buildPreflopCurriculumPlan(
   const focus = recommendations[0] ?? focuses[0];
   return {
     available: true,
-    reason: "Target the highest-priority sample-qualified preflop leak.",
+    reason: "Zaměřte se na nejdůležitější preflop slabinu s dostatečným vzorkem.",
     focus,
     alternates: recommendations.slice(1, 4),
     recommendations,
@@ -247,12 +247,12 @@ function recommendationReason(
   recentMistakes: number,
 ): string {
   if (recentTotal > 0 && recentMistakes > 0) {
-    return `${recentMistakes}/${recentTotal} recent mistakes, ${formatRateForReason(focus.rate)} overall`;
+    return `${recentMistakes}/${recentTotal} chyb v posledním vzorku, celkem ${formatRateForReason(focus.rate)}`;
   }
   if (recentTotal > 0) {
-    return `No recent miss, ${formatRateForReason(focus.rate)} overall over ${focus.total} spots`;
+    return `Bez nedávné chyby, celkem ${formatRateForReason(focus.rate)} za ${focus.total} spotů`;
   }
-  return `${formatRateForReason(focus.rate)} overall over ${focus.total} spots`;
+  return `Celkem ${formatRateForReason(focus.rate)} za ${focus.total} spotů`;
 }
 
 function focusMatchesRecord(focus: PreflopCurriculumFocus, record: ResultRecordV2): boolean {
@@ -260,7 +260,7 @@ function focusMatchesRecord(focus: PreflopCurriculumFocus, record: ResultRecordV
 }
 
 function formatRateForReason(rate: number | null): string {
-  if (rate === null) return "no rate";
+  if (rate === null) return "bez úspěšnosti";
   return `${rate.toFixed(1)}%`;
 }
 
@@ -275,8 +275,8 @@ function buildSessionGoal(options: PreflopCurriculumOptions): PreflopSessionGoal
 
 function volumeGoalReason(currentSample: number, minSample: number): string {
   const remaining = Math.max(0, minSample - currentSample);
-  if (remaining === 0) return `Build sample: ${minSample}+ preflop spots before leak recommendations.`;
-  return `Build sample: ${remaining} more preflop spots before leak recommendations.`;
+  if (remaining === 0) return `Doplňte alespoň ${minSample} preflop spotů pro doporučení slabin.`;
+  return `Doplňte ještě ${remaining} preflop spotů pro doporučení slabin.`;
 }
 
 function focusFromLeakCandidate(
@@ -316,9 +316,9 @@ function filtersForFocus(
 function focusLabel(dim: PreflopCurriculumFocus["dim"], key: string): string {
   switch (dim) {
     case "context":
-      return `Action spot: ${contextLabel(key)}`;
+      return `Situace: ${contextLabel(key)}`;
     case "position":
-      return `Position: ${key}`;
+      return `Pozice: ${key}`;
     case "bucket":
       return `Stack: ${key} BB`;
   }
@@ -329,21 +329,21 @@ function contextLabel(key: string): string {
     case "RFI":
       return "RFI / Open";
     case "VS_LIMP":
-      return "Vs limp";
+      return "Proti limpu";
     case "VS_OPEN":
-      return "Vs open";
+      return "Proti openu";
     case "VS_3BET":
-      return "Vs 3-bet";
+      return "Proti 3-betu";
     case "VS_4BET":
-      return "Vs 4-bet";
+      return "Proti 4-betu";
     case "SQUEEZE":
       return "Squeeze";
     case "BVB":
-      return "Blind vs blind";
+      return "Blind proti blindu";
     case "PUSH_FOLD":
       return "Push / Fold";
     case "VS_ALLIN":
-      return "Vs all-in";
+      return "Proti all-inu";
     default:
       return key;
   }

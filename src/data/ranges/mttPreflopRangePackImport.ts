@@ -35,6 +35,7 @@ export interface MttPreflopImportRecord {
 }
 
 export interface MttPreflopRangePackImportInput {
+  contentLanguage?: string;
   id: string;
   version: string;
   createdAt: string;

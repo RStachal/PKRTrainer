@@ -3,20 +3,30 @@ import { describe, expect, it } from "vitest";
 import { CS } from "../../src/ui/cs";
 
 describe("český katalog viditelných textů", () => {
-  it("drží hlavní shell a HH import v centrálním katalogu", () => {
+  it("drží hlavní shell, profil, filtry a HH import v centrálním katalogu", () => {
     expect(CS.app.tabs).toEqual({
       training: "Trénink",
       stats: "Statistiky",
       hh: "Import HH",
     });
     expect(CS.hh.analyze).toBe("Analyzovat");
+    expect(CS.hh.title).toBe("Import historie hand");
+    expect(CS.hh.facts.board).toBe("Společné karty");
+    expect(CS.hh.facts.pot).toBe("Bank");
+    expect(CS.postflop.heroBucket).toBe("Kategorie handy Hero");
 
     const main = readFileSync("src/main.ts", "utf8");
     const hhView = readFileSync("src/ui/hhView.ts", "utf8");
+    const filters = readFileSync("src/ui/filters.ts", "utf8");
+    const profileSelector = readFileSync("src/ui/profileSelector.ts", "utf8");
+    const postflopView = readFileSync("src/ui/postflopView.ts", "utf8");
     expect(main).toContain('import { CS } from "./ui/cs"');
     expect(hhView).toContain('import { CS } from "./cs"');
-    expect(`${main}\n${hhView}`).not.toMatch(
-      /\b(?:Primary sections|Paste hand history here|Decision analysis|Your action|Not scored)\b/,
+    expect(filters).toContain('import { CS } from "./cs"');
+    expect(profileSelector).toContain('import { CS } from "./cs"');
+    expect(postflopView).toContain('import { CS } from "./cs"');
+    expect(`${main}\n${hhView}\n${filters}\n${profileSelector}\n${postflopView}`).not.toMatch(
+      /\b(?:Primary sections|Paste hand history here|Decision analysis|Your action|Not scored|Training profile|Start training|Change situation|Next spot|Unsupported profile|Generate spot|New spot|Hand line complete|Hero bucket|Flop review|Turn review|River review|eff\. stack)\b/,
     );
   });
 

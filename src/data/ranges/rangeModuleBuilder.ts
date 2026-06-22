@@ -137,13 +137,19 @@ function buildMttPreflopRangeModule(
     evModels: [input.dimensions.evModel],
   });
   const slotReport = buildMttPreflopImportSlotValidationReport(input);
+  const languageBlockers = playerFacingLanguageBlockers(input.contentLanguage);
   const blockers = [
     ...readiness.errors,
     ...readiness.warnings,
     ...slotReport.errors,
     ...permissionReport.errors,
+    ...languageBlockers,
   ];
-  const writeReady = readiness.productionReady && slotReport.valid && permissionReport.valid;
+  const writeReady =
+    readiness.productionReady &&
+    slotReport.valid &&
+    permissionReport.valid &&
+    languageBlockers.length === 0;
   const pack = normalizeMttPreflopRangePackImport(input);
 
   return {
@@ -178,6 +184,7 @@ function buildFlopProductionRangeModule(
   const slotReport = buildPostflopSlotReport(pack, "Flop");
   const semanticErrors = validateProductionStrategySemantics(pack);
   const runtimeSmokeReport = buildProductionStrategyRuntimeSmokeReport(pack);
+  const languageBlockers = playerFacingLanguageBlockers(pack.contentLanguage);
   const blockers = [
     ...coverage.errors,
     ...coverageBlockers("missing pot types", coverage.missingPotTypes),
@@ -190,6 +197,7 @@ function buildFlopProductionRangeModule(
     ...semanticErrors,
     ...runtimeSmokeReport.errors,
     ...permissionReport.errors,
+    ...languageBlockers,
   ];
   const writeReady =
     coverage.productionReady &&
@@ -197,6 +205,7 @@ function buildFlopProductionRangeModule(
     permissionReport.valid &&
     semanticErrors.length === 0 &&
     runtimeSmokeReport.valid;
+  const localizedWriteReady = writeReady && languageBlockers.length === 0;
 
   return {
     kind: "flop-production",
@@ -204,12 +213,12 @@ function buildFlopProductionRangeModule(
     exportName,
     productionReady: coverage.productionReady,
     permissionReady: permissionReport.valid,
-    writeReady,
+    writeReady: localizedWriteReady,
     matchedImportSlots: slotReport.matchedSlots,
     blockers,
     permissionReport,
     runtimeSmokeReport,
-    moduleText: writeReady
+    moduleText: localizedWriteReady
       ? renderFlopProductionStrategyPackModule(pack, exportName, permissionFingerprint(permissionManifest!))
       : null,
   };
@@ -230,6 +239,7 @@ function buildTurnProductionRangeModule(
   const slotReport = buildPostflopSlotReport(pack, "Turn");
   const semanticErrors = validateProductionStrategySemantics(pack);
   const runtimeSmokeReport = buildProductionStrategyRuntimeSmokeReport(pack);
+  const languageBlockers = playerFacingLanguageBlockers(pack.contentLanguage);
   const blockers = [
     ...coverage.errors,
     ...coverageBlockers("missing pot types", coverage.missingPotTypes),
@@ -242,6 +252,7 @@ function buildTurnProductionRangeModule(
     ...semanticErrors,
     ...runtimeSmokeReport.errors,
     ...permissionReport.errors,
+    ...languageBlockers,
   ];
   const writeReady =
     coverage.productionReady &&
@@ -249,6 +260,7 @@ function buildTurnProductionRangeModule(
     permissionReport.valid &&
     semanticErrors.length === 0 &&
     runtimeSmokeReport.valid;
+  const localizedWriteReady = writeReady && languageBlockers.length === 0;
 
   return {
     kind: "turn-production",
@@ -256,12 +268,12 @@ function buildTurnProductionRangeModule(
     exportName,
     productionReady: coverage.productionReady,
     permissionReady: permissionReport.valid,
-    writeReady,
+    writeReady: localizedWriteReady,
     matchedImportSlots: slotReport.matchedSlots,
     blockers,
     permissionReport,
     runtimeSmokeReport,
-    moduleText: writeReady
+    moduleText: localizedWriteReady
       ? renderTurnProductionStrategyPackModule(pack, exportName, permissionFingerprint(permissionManifest!))
       : null,
   };
@@ -282,6 +294,7 @@ function buildRiverProductionRangeModule(
   const slotReport = buildPostflopSlotReport(pack, "River");
   const semanticErrors = validateProductionStrategySemantics(pack);
   const runtimeSmokeReport = buildProductionStrategyRuntimeSmokeReport(pack);
+  const languageBlockers = playerFacingLanguageBlockers(pack.contentLanguage);
   const blockers = [
     ...coverage.errors,
     ...coverageBlockers("missing pot types", coverage.missingPotTypes),
@@ -295,6 +308,7 @@ function buildRiverProductionRangeModule(
     ...semanticErrors,
     ...runtimeSmokeReport.errors,
     ...permissionReport.errors,
+    ...languageBlockers,
   ];
   const writeReady =
     coverage.productionReady &&
@@ -302,6 +316,7 @@ function buildRiverProductionRangeModule(
     permissionReport.valid &&
     semanticErrors.length === 0 &&
     runtimeSmokeReport.valid;
+  const localizedWriteReady = writeReady && languageBlockers.length === 0;
 
   return {
     kind: "river-production",
@@ -309,12 +324,12 @@ function buildRiverProductionRangeModule(
     exportName,
     productionReady: coverage.productionReady,
     permissionReady: permissionReport.valid,
-    writeReady,
+    writeReady: localizedWriteReady,
     matchedImportSlots: slotReport.matchedSlots,
     blockers,
     permissionReport,
     runtimeSmokeReport,
-    moduleText: writeReady
+    moduleText: localizedWriteReady
       ? renderRiverProductionStrategyPackModule(pack, exportName, permissionFingerprint(permissionManifest!))
       : null,
   };
@@ -322,6 +337,12 @@ function buildRiverProductionRangeModule(
 
 function coverageBlockers(label: string, values: readonly string[]): string[] {
   return values.length === 0 ? [] : [`${label}: ${values.join(",")}`];
+}
+
+function playerFacingLanguageBlockers(contentLanguage: string | undefined): string[] {
+  return contentLanguage === "cs"
+    ? []
+    : ["player-facing production content must declare contentLanguage=cs"];
 }
 
 function buildPostflopSlotReport(

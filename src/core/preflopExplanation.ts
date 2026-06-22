@@ -39,14 +39,14 @@ const ACTION_LABEL: Record<ActionKey, string> = {
 
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
-  VS_LIMP: "Vs limp",
-  VS_OPEN: "Vs open",
-  VS_3BET: "Vs 3-bet",
-  VS_4BET: "Vs 4-bet",
+  VS_LIMP: "Proti limpu",
+  VS_OPEN: "Proti openu",
+  VS_3BET: "Proti 3-betu",
+  VS_4BET: "Proti 4-betu",
   SQUEEZE: "Squeeze",
   BVB: "Blind vs blind",
   PUSH_FOLD: "Push / Fold",
-  VS_ALLIN: "Vs all-in",
+  VS_ALLIN: "Proti all-inu",
 };
 
 export function buildPreflopExplanation(
@@ -56,7 +56,7 @@ export function buildPreflopExplanation(
   const recommended = input.recommended.map((action) => ACTION_LABEL[action]).join(" / ");
   const intro =
     `${CONTEXT_LABEL[input.context]}${input.importedFromHandHistory ? " HH spot" : ""}: ` +
-    `${input.heroPos}, ${input.effStack} BB, ${input.hand}. Recommended: ${recommended}.`;
+    `${input.heroPos}, ${input.effStack} BB, ${input.hand}. Doporučení: ${recommended}.`;
 
   if (mode === "BEGINNER") {
     return `${intro} ${beginnerReason(input)}`;
@@ -64,14 +64,14 @@ export function buildPreflopExplanation(
 
   const parts = [
     intro,
-    `Position: ${positionReason(input.heroPos, input.context)}.`,
+    `Pozice: ${positionReason(input.heroPos, input.context)}.`,
     `Stack: ${stackReason(input.effStack, input.context)}.`,
-    `Hand class: ${handReason(input.hand)}.`,
-    `Plan: ${actionPlan(input.recommended, input.context, input.tableState)}.`,
+    `Třída handy: ${handReason(input.hand)}.`,
+    `Plán: ${actionPlan(input.recommended, input.context, input.tableState)}.`,
   ];
 
   if (mode === "ADVANCED") {
-    parts.push(`Range note: ${advancedRangeNote(input)}.`);
+    parts.push(`Poznámka k range: ${advancedRangeNote(input)}.`);
   }
 
   return parts.join(" ");
@@ -79,58 +79,58 @@ export function buildPreflopExplanation(
 
 function beginnerReason(input: PreflopExplanationInput): string {
   if (input.recommended.includes("FOLD")) {
-    return "Keep the range disciplined and protect the stack.";
+    return "Držte disciplinovanou range a chraňte stack.";
   }
   if (input.recommended.some(isRaiseAction)) {
-    return "Use fold equity and apply pressure with a hand that belongs in the active range.";
+    return "Využijte fold equity a vytvořte tlak s handou, která patří do aktivní range.";
   }
   if (input.recommended.some((action) => action === "CALL" || action === "CALL_JAM")) {
-    return "Continue because the hand has enough strength or price to realize equity.";
+    return "Pokračujte, protože handa má dostatečnou sílu nebo cenu pro realizaci equity.";
   }
-  return "Choose the lowest-risk line that fits the spot.";
+  return "Zvolte nejméně rizikovou line odpovídající spotu.";
 }
 
 function positionReason(position: Position, context: ActionContext): string {
   if (position === "SB" || position === "BB") {
     return context === "BVB"
-      ? "blind versus blind ranges are wider, but position and realization still matter"
-      : "blind defense needs pot odds, blockers and postflop realization";
+      ? "blind vs blind range jsou širší, ale stále záleží na pozici a realizaci equity"
+      : "obrana blindu vyžaduje správné pot odds, blockery a postflop realizaci";
   }
   if (position === "BTN" || position === "CO") {
-    return "late position can pressure blinds with wider value and bluff components";
+    return "pozdní pozice může tlačit na blindy širší value i bluff částí range";
   }
   if (position === "LJ" || position === "HJ") {
-    return "middle position wants playable hands and avoids thin dominated continues";
+    return "střední pozice preferuje hratelné handy a omezuje slabá dominovaná pokračování";
   }
-  return "early position keeps the range tighter because many players are left to act";
+  return "časná pozice drží užší range, protože za hráčem zbývá mnoho soupeřů";
 }
 
 function stackReason(stack: StackBucket, context: ActionContext): string {
   if (context === "PUSH_FOLD" || context === "VS_ALLIN" || stack <= 10) {
-    return "short-stack decisions are driven by fold equity, blockers and immediate all-in risk";
+    return "short-stack rozhodnutí určují fold equity, blockery a bezprostřední riziko all-inu";
   }
   if (stack <= 25) {
-    return "reshove pressure is high, so marginal opens and calls lose value quickly";
+    return "reshove tlak je vysoký, takže marginální openy a cally rychle ztrácejí hodnotu";
   }
   if (stack <= 60) {
-    return "medium stacks can apply pressure while still preserving postflop playability";
+    return "střední stack může vytvářet tlak a současně zachovat postflop hratelnost";
   }
-  return "deep stacks reward suitedness, nut potential and position because realization matters more";
+  return "deep stack zvýhodňuje suited handy, nut potenciál a pozici, protože více záleží na realizaci equity";
 }
 
 function handReason(hand: HandLabel): string {
   if (hand.length === 2 && hand[0] === hand[1]) {
-    return `${hand} is a pocket pair with set value and clean showdown potential`;
+    return `${hand} je pocket pár se set value a čistým showdown potenciálem`;
   }
   const suited = hand.endsWith("s");
   const ranks = hand.slice(0, 2);
   const broadway = /[AKQJT]/.test(ranks[0]) && /[AKQJT]/.test(ranks[1]);
   const ace = ranks.includes("A");
-  if (suited && broadway) return `${hand} has suited broadway playability, blockers and nut potential`;
-  if (suited && ace) return `${hand} has ace blocker value and nut-flush potential`;
-  if (suited) return `${hand} realizes better than offsuit hands through flush and straight equity`;
-  if (broadway) return `${hand} has high-card value but can be dominated when facing aggression`;
-  return `${hand} is mostly driven by price, position and fold equity`;
+  if (suited && broadway) return `${hand} nabízí suited broadway hratelnost, blockery a nut potenciál`;
+  if (suited && ace) return `${hand} má hodnotu ace blockeru a nut-flush potenciál`;
+  if (suited) return `${hand} realizuje equity lépe než offsuit handy díky flush a straight potenciálu`;
+  if (broadway) return `${hand} má high-card hodnotu, ale proti agresi může být dominována`;
+  return `${hand} je určována především cenou, pozicí a fold equity`;
 }
 
 function actionPlan(
@@ -139,53 +139,53 @@ function actionPlan(
   tableState: TableState,
 ): string {
   if (recommended.includes("FOLD")) {
-    return "fold the bottom of range and keep future stack leverage";
+    return "foldněte spodní část range a zachovejte si využitelný stack";
   }
   if (recommended.includes("JAM")) {
-    return "jam to maximize fold equity and avoid awkward postflop SPR";
+    return "jamněte pro maximalizaci fold equity a vyhněte se nepříjemnému postflop SPR";
   }
   if (recommended.includes("CALL_JAM")) {
-    return "call the all-in with enough equity against the shoving range";
+    return "callněte all-in s dostatečnou equity proti shoving range";
   }
   if (recommended.includes("4BET")) {
-    return "4-bet the strongest continues and blocker-heavy pressure hands";
+    return "4-betujte nejsilnější pokračování a tlakové handy s kvalitními blockery";
   }
   if (recommended.includes("3BET") || recommended.includes("SQUEEZE")) {
     return tableState.callsBefore > 0
-      ? "attack dead money and isolate with a polarized or linear pressure range"
-      : "apply pressure while denying equity to the opener";
+      ? "útočte na dead money a izolujte polarizovanou nebo lineární tlakovou range"
+      : "vytvořte tlak a odepřete openerovi realizaci equity";
   }
   if (recommended.some((action) => action.startsWith("OPEN") || action.startsWith("ISO"))) {
     return context === "VS_LIMP"
-      ? "isolate limpers and take initiative with a clear sizing"
-      : "open first in and use position plus fold equity";
+      ? "izolujte limpery a převezměte iniciativu jasným sizingem"
+      : "otevřete jako první a využijte pozici spolu s fold equity";
   }
   if (recommended.includes("CALL")) {
-    return "continue with hands that can realize equity at the offered price";
+    return "pokračujte s handami, které při nabídnuté ceně dokážou realizovat equity";
   }
-  return "take the passive line and avoid building a dominated pot";
+  return "zvolte pasivní line a nevytvářejte dominovaný pot";
 }
 
 function advancedRangeNote(input: PreflopExplanationInput): string {
   switch (input.context) {
     case "RFI":
-      return "opening range is shaped by players left to act, blind pressure and blocker coverage";
+      return "opening range určuje počet hráčů za vámi, tlak blindů a pokrytí blockerů";
     case "VS_LIMP":
-      return "iso range should separate value isolation from over-limp hands with realization";
+      return "iso range má oddělit value izolaci od over-limp hand s dobrou realizací";
     case "VS_OPEN":
-      return "defense range balances direct pot odds, 3-bet blockers and dominated flatting risk";
+      return "obranná range vyvažuje přímé pot odds, 3-bet blockery a riziko dominovaného callu";
     case "VS_3BET":
-      return "continue range tightens around blockers, equity realization and stack-off thresholds";
+      return "pokračovací range se zužuje podle blockerů, realizace equity a stack-off hranic";
     case "VS_4BET":
-      return "range is condensed toward premiums, blocker jams and calls with enough equity";
+      return "range se koncentruje na premium handy, blocker jamy a cally s dostatečnou equity";
     case "SQUEEZE":
-      return "squeeze pressure benefits from dead money but needs blockers and stack leverage";
+      return "squeeze těží z dead money, ale potřebuje blockery a dostatečný stack leverage";
     case "BVB":
-      return "blind ranges are wide, so blocker quality and postflop position swing close hands";
+      return "blind range jsou široké, takže kvalita blockerů a postflop pozice rozhodují těsné handy";
     case "PUSH_FOLD":
-      return "push-fold EV depends on fold equity, calling ranges and stack preservation";
+      return "push-fold EV závisí na fold equity, calling range a zachování stacku";
     case "VS_ALLIN":
-      return "calling range must beat the shoving range after pot odds and tournament risk";
+      return "calling range musí po započtení pot odds a turnajového rizika porážet shoving range";
   }
 }
 

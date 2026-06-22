@@ -113,6 +113,7 @@ function cardRemovalSample(
 
 function validMttImport(): MttPreflopRangePackImportInput {
   return {
+    contentLanguage: "cs",
     id: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1",
     version: "cli-fixture-v1",
     createdAt: "2026-06-05",
@@ -270,6 +271,7 @@ function validFlopProductionPack(): FlopProductionStrategyPack {
   }
 
   return {
+    contentLanguage: "cs",
     id: "mtt-full-ring-9-flop-production-cli-fixture-v1",
     version: "cli-fixture-v1",
     createdAt: "2026-06-05",
@@ -421,6 +423,7 @@ function validTurnProductionPack(): TurnProductionStrategyPack {
   }
 
   return {
+    contentLanguage: "cs",
     id: "mtt-full-ring-9-turn-production-cli-fixture-v1",
     version: "cli-fixture-v1",
     createdAt: "2026-06-11",
@@ -592,6 +595,7 @@ function validRiverProductionPack(): RiverProductionStrategyPack {
   }
 
   return {
+    contentLanguage: "cs",
     id: "mtt-full-ring-9-river-production-cli-fixture-v1",
     version: "cli-fixture-v1",
     createdAt: "2026-06-11",

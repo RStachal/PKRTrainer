@@ -330,7 +330,7 @@ describe("UI source citation policy", () => {
     root.querySelector<HTMLButtonElement>('.postflop-action[data-action="FOLD"]')?.click();
 
     expect(root.querySelector<HTMLElement>(".postflop-line-complete")?.textContent)
-      .toBe("Hand line complete: 1/2 streets.");
+      .toBe("Hand line dokončena: 1/2 street.");
     expectNoSourceCitation(root.textContent ?? "");
   });
 
@@ -368,8 +368,8 @@ describe("UI source citation policy", () => {
     }, root);
 
     const text = root.querySelector<HTMLElement>(".permission-audit")?.textContent ?? "";
-    expect(text).toContain("Range audit");
-    expect(text).toContain("Owned solver export");
+    expect(text).toContain("Kontrola range");
+    expect(text).toContain("Vlastní solver export");
     expectNoSourceCitation(root.textContent ?? "");
     expect(text).not.toContain("mtt-full-ring-9-flop-production-private-v1");
     expect(text).not.toContain("Private Solver Owner");

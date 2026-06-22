@@ -1,10 +1,27 @@
 /// <reference types="vitest/config" />
+import { readdirSync } from "node:fs";
+import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import {
   buildPrecacheManifest,
   injectPrecacheManifest,
 } from "./src/pwa/precacheManifestBuild";
+
+const publicDirectory = fileURLToPath(new URL("./public", import.meta.url));
+
+function listFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true })
+    .flatMap((entry) => {
+      const path = join(directory, entry.name);
+      return entry.isDirectory() ? listFiles(path) : [path];
+    });
+}
+
+function listPublicAssets(): string[] {
+  return listFiles(publicDirectory)
+    .map((path) => relative(publicDirectory, path).split(sep).join("/"));
+}
 
 // Vite konfigurace pro MTT Preflop Trainer.
 // - relativní base pro offline/Android WebView nasazení (Req 12.1, 12.2)
@@ -23,7 +40,10 @@ export default defineConfig({
         if (!worker || worker.type !== "chunk") {
           throw new Error("Expected generated sw.js chunk.");
         }
-        const manifest = buildPrecacheManifest(Object.keys(bundle));
+        const manifest = buildPrecacheManifest([
+          ...Object.keys(bundle),
+          ...listPublicAssets(),
+        ]);
         worker.code = injectPrecacheManifest(worker.code, manifest);
       },
     },

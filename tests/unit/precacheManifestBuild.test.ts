@@ -11,10 +11,12 @@ describe("precache build manifest", () => {
       "sw.js",
       "assets/main-abc.js.map",
       "assets/main-abc.js",
+      "icons/pkr-trainer.svg",
       "index.html",
     ]);
     const second = buildPrecacheManifest([
       "index.html",
+      "icons/pkr-trainer.svg",
       "assets/main-abc.js",
       "sw.js",
     ]);
@@ -24,6 +26,7 @@ describe("precache build manifest", () => {
     expect(first.entries).toEqual([
       "./",
       "./assets/main-abc.js",
+      "./icons/pkr-trainer.svg",
       "./index.html",
       "./manifest.webmanifest",
     ]);

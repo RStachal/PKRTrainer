@@ -14,7 +14,7 @@ export function renderRangeModalButton(
   const button = doc.createElement("button");
   button.type = "button";
   button.className = "range-modal-open";
-  button.textContent = "Show range (Flopzilla)";
+  button.textContent = "Zobrazit range (Flopzilla)";
   button.addEventListener("click", () => openRangeModal(doc, spot, store));
   root.appendChild(button);
 }
@@ -25,12 +25,12 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   overlay.className = "range-modal";
   overlay.setAttribute("role", "dialog");
   overlay.setAttribute("aria-modal", "true");
-  overlay.setAttribute("aria-label", "Range matrix");
+  overlay.setAttribute("aria-label", "Matice range");
 
   const backdrop = doc.createElement("button");
   backdrop.type = "button";
   backdrop.className = "range-modal__backdrop";
-  backdrop.setAttribute("aria-label", "Close range");
+  backdrop.setAttribute("aria-label", "Zavřít range");
   overlay.appendChild(backdrop);
 
   const dialog = doc.createElement("div");
@@ -49,7 +49,7 @@ function openRangeModal(doc: Document, spot: Spot, store: RangeStore): void {
   const close = doc.createElement("button");
   close.type = "button";
   close.className = "range-modal__close";
-  close.textContent = "Close";
+  close.textContent = "Zavřít";
   header.appendChild(close);
 
   dialog.appendChild(renderRangeModelSummary(doc, currentMttPreflopRangePack(spot.ante)));
@@ -148,12 +148,12 @@ function renderRangeModelSummary(doc: Document, pack: RangePack): HTMLElement {
   meta.textContent =
     `${gameVariantLabel(pack.dimensions.gameVariant)} | ` +
     `${tableFormatLabel(pack.dimensions.tableFormat)} | ` +
-    `${evModelLabel(pack.dimensions.evModel)} | ante ${pack.dimensions.ante}`;
+    `${evModelLabel(pack.dimensions.evModel)} | ${pack.dimensions.ante === "ON" ? "ante zapnuto" : "bez ante"}`;
   section.appendChild(meta);
 
   const assumptions = doc.createElement("div");
   assumptions.className = "range-modal__evidence-assumptions";
-  assumptions.textContent = `Assumptions: ${pack.assumptions.join(" ")}`;
+  assumptions.textContent = "Předpoklady: 9-max MTT chipEV.";
   section.appendChild(assumptions);
 
   return section;

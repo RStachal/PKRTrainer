@@ -104,9 +104,9 @@ describe("postflopTrainingSpot", () => {
     expect(trainingSpot.potType).toBe("THREE_BET_POT");
     expect(trainingSpot.potBB).toBe(18);
     expect(trainingSpot.spr).toBe(2.2);
-    expect(trainingSpot.explanation.valueHands).toContain("overpairs with pot-control");
-    expect(trainingSpot.explanation.bluffHands).toContain("A-high backdoor blockers");
-    expect(trainingSpot.explanation.checkHands).toContain("underpairs without backdoors");
+    expect(trainingSpot.explanation.valueHands).toContain("overpairy s pot-control");
+    expect(trainingSpot.explanation.bluffHands).toContain("A-high backdoor blockery");
+    expect(trainingSpot.explanation.checkHands).toContain("underpairy bez backdoorů");
     expect(trainingSpot.explanation.valueHands).not.toContain("range advantage hands");
   });
 
@@ -128,6 +128,6 @@ describe("postflopTrainingSpot", () => {
     expect(trainingSpot.actionNode).toBe("RIVER_FACING_BET");
     expect(trainingSpot.actions.map((action) => action.action)).toEqual(["FOLD", "CALL", "RAISE"]);
     expect(trainingSpot.actions.map((action) => action.label)).toEqual(["Fold", "Call", "Raise"]);
-    expect(trainingSpot.explanation.nextStreetPlan).toContain("River is the final street");
+    expect(trainingSpot.explanation.nextStreetPlan).toContain("River je poslední street");
   });
 });

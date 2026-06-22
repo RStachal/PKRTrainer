@@ -69,6 +69,6 @@ describe("tableRenderer - DOM vykresleni stolu", () => {
     expect(root.querySelector("style")?.textContent).toContain("@media (max-width:640px)");
 
     const pot = root.querySelector<HTMLElement>(".pot");
-    expect(pot?.textContent).toBe("Pot: 2.5 BB");
+    expect(pot?.textContent).toBe("Bank: 2.5 BB");
   });
 });

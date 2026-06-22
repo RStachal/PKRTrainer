@@ -214,3 +214,5 @@ function renderPostflopMatrixReport(report: PostflopMatrixReport): string {
 
   return lines.join("\n");
 }
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+await loadCompleteMttProductionRegistry();

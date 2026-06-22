@@ -235,3 +235,5 @@ function renderReadyValidationReport(report: ReadyValidationReport): string {
 
   return lines.join("\n");
 }
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+await loadCompleteMttProductionRegistry();
