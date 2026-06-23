@@ -113,6 +113,7 @@ describe("release bundle metadata", () => {
     expect(chromeE2eScript).toContain("Emulation.setPageScaleFactor");
     expect(chromeE2eScript).toContain("mtt_preflop_state_v1");
     expect(chromeE2eScript).toContain("Simulated quota failure");
+    expect(chromeE2eScript).toContain("MTT_E2E_POSTFLOP_SEED");
     expect(chromeE2eScript).toContain("auditContrast");
     expect(chromeE2eScript).toContain("required = fontSize >= 24");
     expect(chromeE2eScript).toContain("runServiceWorkerUpgradeScenario");
@@ -120,7 +121,16 @@ describe("release bundle metadata", () => {
     expect(chromeE2eScript).toContain("stableAssetIsolation");
     expect(productionFixtureE2eScript).toContain("Synthetic source-free browser fixture");
     expect(productionFixtureE2eScript).toContain("MTT_E2E_EXPECT_PREFLOP");
-    expect(productionFixtureE2eScript).toContain("mtt:refresh-registry");
+    expect(productionFixtureE2eScript).toContain("MTT_E2E_EXPECT_POSTFLOP_PACK_ID");
+    expect(productionFixtureE2eScript)
+      .toContain("mtt-full-ring-9-regular-flop-chip-ev-ante-on-production-v1");
+    expect(productionFixtureE2eScript).toContain("renderFlopFixtureModule");
+    expect(productionFixtureE2eScript).toContain("buildFlopProductionCoverageReport");
+    expect(productionFixtureE2eScript).toContain("findAvailablePort");
+    expect(productionFixtureE2eScript).toContain('"--strictPort"');
+    expect(productionFixtureE2eScript).toContain("scripts/refreshMttProductionRegistry.mts");
+    expect(productionFixtureE2eScript).toContain("node_modules/vite/bin/vite.js");
+    expect(productionFixtureE2eScript).toContain("process.execPath");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400)');

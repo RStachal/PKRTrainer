@@ -141,6 +141,8 @@ const buildDirectory = resolve(process.env.MTT_E2E_DIST ?? "dist");
 const expectedPreflop = process.env.MTT_E2E_EXPECT_PREFLOP === "production"
   ? "production"
   : "blocked";
+const expectedPostflopPackId = process.env.MTT_E2E_EXPECT_POSTFLOP_PACK_ID ?? "";
+const postflopSeed = process.env.MTT_E2E_POSTFLOP_SEED ?? "1788246284";
 const chromePath = findChromePath();
 const profileDirectory = mkdtempSync(join(tmpdir(), "pkrtrainer-chrome-e2e-"));
 let chrome: ChildProcess | null = null;
@@ -294,6 +296,10 @@ try {
       if (!(select instanceof HTMLSelectElement)) throw new Error("Missing street selector");
       select.value = "FLOP";
       select.dispatchEvent(new Event("change", { bubbles: true }));
+      const seed = document.querySelector(".filter-seed");
+      if (!(seed instanceof HTMLInputElement)) throw new Error("Missing seed input");
+      seed.value = ${JSON.stringify(postflopSeed)};
+      seed.dispatchEvent(new Event("input", { bubbles: true }));
     })()`);
     await activate(cdp, ".filter-start", viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".postflop-action");
@@ -307,6 +313,16 @@ try {
     assert(postflop.street === "FLOP", `${viewport.name}: wrong postflop street`);
     assert(postflop.overflow <= 1, `${viewport.name}: postflop page overflow ${postflop.overflow}px`);
     assertSourceFree(postflop.text, viewport.name);
+    if (expectedPostflopPackId) {
+      const productionPostflop = await evaluate<boolean>(cdp, (
+        `performance.getEntriesByType("resource").some((entry) => (` +
+        `entry.name.includes(${JSON.stringify(expectedPostflopPackId)})))`
+      ));
+      assert(
+        productionPostflop,
+        `${viewport.name}: production FLOP lazy chunk was not requested`,
+      );
+    }
 
     await activate(cdp, ".postflop-action", viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".postflop-result");
@@ -380,6 +396,12 @@ try {
     );
     assert(exportedStats.includes('"postflopRecords"'), `${viewport.name}: stats export is incomplete`);
     assert(!/https?:|www\./i.test(exportedStats), `${viewport.name}: stats export leaked a URL`);
+    if (expectedPostflopPackId) {
+      assert(
+        exportedStats.includes(expectedPostflopPackId),
+        `${viewport.name}: postflop stats did not preserve production pack identity`,
+      );
+    }
     await activate(cdp, ".stats-import", viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".stats-transfer__status--ok");
     contrastAudits.push({
