@@ -11,8 +11,12 @@ import { resolve, sep } from "node:path";
 const root = resolve(".");
 const packId = "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1";
 const flopPackId = "mtt-full-ring-9-regular-flop-chip-ev-ante-on-production-v1";
+const turnPackId = "mtt-full-ring-9-regular-turn-chip-ev-ante-on-production-v1";
+const riverPackId = "mtt-full-ring-9-regular-river-chip-ev-ante-on-production-v1";
 const modulePath = resolve("src/data/ranges", `${packId}.ts`);
 const flopModulePath = resolve("src/data/ranges", `${flopPackId}.ts`);
+const turnModulePath = resolve("src/data/ranges", `${turnPackId}.ts`);
+const riverModulePath = resolve("src/data/ranges", `${riverPackId}.ts`);
 const validationPath = resolve("scripts/.mtt-production-fixture-validation.mts");
 const registryPath = resolve("src/data/ranges/mttProductionRegistry.generated.ts");
 const fixtureDist = resolve("dist-e2e-production-fixture");
@@ -26,6 +30,8 @@ let preview: ChildProcess | null = null;
 
 assertInsideWorkspace(modulePath);
 assertInsideWorkspace(flopModulePath);
+assertInsideWorkspace(turnModulePath);
+assertInsideWorkspace(riverModulePath);
 assertInsideWorkspace(validationPath);
 assertInsideWorkspace(registryPath);
 assertInsideWorkspace(fixtureDist);
@@ -36,6 +42,12 @@ if (existsSync(modulePath)) {
 if (existsSync(flopModulePath)) {
   throw new Error(`Synthetic fixture refuses to overwrite existing module: ${flopModulePath}`);
 }
+if (existsSync(turnModulePath)) {
+  throw new Error(`Synthetic fixture refuses to overwrite existing module: ${turnModulePath}`);
+}
+if (existsSync(riverModulePath)) {
+  throw new Error(`Synthetic fixture refuses to overwrite existing module: ${riverModulePath}`);
+}
 if (existsSync(validationPath)) {
   throw new Error(`Synthetic fixture refuses to overwrite validator: ${validationPath}`);
 }
@@ -45,7 +57,13 @@ const registryBackup = readFileSync(registryPath, "utf8");
 try {
   writeFileSync(modulePath, renderFixtureModule(packId), "utf8");
   writeFileSync(flopModulePath, renderFlopFixtureModule(flopPackId), "utf8");
-  writeFileSync(validationPath, renderFixtureValidationModule(flopPackId), "utf8");
+  writeFileSync(turnModulePath, renderTurnFixtureModule(turnPackId), "utf8");
+  writeFileSync(riverModulePath, renderRiverFixtureModule(riverPackId), "utf8");
+  writeFileSync(
+    validationPath,
+    renderFixtureValidationModule(flopPackId, turnPackId, riverPackId),
+    "utf8",
+  );
   runNode([viteNodeCli, "scripts/refreshMttProductionRegistry.mts", "--write"]);
   runNode([viteNodeCli, validationPath]);
   runNode([tscCli, "--noEmit"]);
@@ -74,6 +92,8 @@ try {
     MTT_E2E_ARTIFACTS: fixtureArtifacts,
     MTT_E2E_EXPECT_PREFLOP: "production",
     MTT_E2E_EXPECT_POSTFLOP_PACK_ID: flopPackId,
+    MTT_E2E_EXPECT_TURN_PACK_ID: turnPackId,
+    MTT_E2E_EXPECT_RIVER_PACK_ID: riverPackId,
     MTT_E2E_VIEWPORTS: "desktop",
   });
   console.log("Synthetic production fixture E2E passed.");
@@ -82,6 +102,8 @@ try {
   writeFileSync(registryPath, registryBackup, "utf8");
   rmSync(modulePath, { force: true });
   rmSync(flopModulePath, { force: true });
+  rmSync(turnModulePath, { force: true });
+  rmSync(riverModulePath, { force: true });
   rmSync(validationPath, { force: true });
   rmSync(fixtureDist, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 }
@@ -226,16 +248,197 @@ function renderFlopFixtureModule(id: string): string {
   ].join("\n");
 }
 
-function renderFixtureValidationModule(id: string): string {
+function renderTurnFixtureModule(id: string): string {
   return [
-    `import { browserE2eFlopProductionPack } from "../src/data/ranges/${id}";`,
-    'import { buildFlopProductionCoverageReport } from "../src/data/ranges/flopProductionStrategyPack";',
+    "// Synthetic source-free browser fixture. Never ship this module.",
+    'import { LEGACY_POSTFLOP_POSITION_PATTERNS, type PostflopAction, type PostflopPositionPattern, type PostflopPotType } from "../../core/postflopGenerator";',
+    'import { ALL_HAND_CLASSES } from "../../core/poker";',
+    "import {",
+    "  TURN_PRODUCTION_REQUIRED_CARD_CLASSES,",
+    "  TURN_PRODUCTION_REQUIRED_POSITION_PATTERNS,",
+    "  TURN_PRODUCTION_REQUIRED_POT_TYPES,",
+    "  TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS,",
+    '  type TurnProductionStrategyPack,',
+    '  type TurnProductionStrategyRule,',
+    '} from "./turnProductionStrategyPack";',
     "",
-    "const report = buildFlopProductionCoverageReport(browserE2eFlopProductionPack);",
-    "if (!report.productionReady) {",
-    '  throw new Error(`Invalid browser FLOP fixture:\\n${report.errors.join("\\n")}`);',
+    "const positionPatterns: readonly PostflopPositionPattern[] = [",
+    "  ...TURN_PRODUCTION_REQUIRED_POSITION_PATTERNS,",
+    "  ...LEGACY_POSTFLOP_POSITION_PATTERNS,",
+    "];",
+    "const rules: TurnProductionStrategyRule[] = [];",
+    "for (const potType of TURN_PRODUCTION_REQUIRED_POT_TYPES) {",
+    "  for (const positionPattern of positionPatterns) {",
+    "    for (const priorFlopAction of TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS) {",
+    "      rules.push(turnRule(potType, positionPattern, priorFlopAction, false));",
+    "      rules.push(turnRule(potType, positionPattern, priorFlopAction, true));",
+    "    }",
+    "  }",
     "}",
-    'console.log("Synthetic FLOP production fixture validation passed.");',
+    "",
+    "export const browserE2eTurnProductionPack = {",
+    `  "id": ${JSON.stringify(id)},`,
+    '  version: "browser-e2e-turn-production-v1",',
+    '  createdAt: "2026-06-23", verifiedAt: "2026-06-23", confidence: "MEDIUM",',
+    '  licenseKind: "OWNED_SOLVER_EXPORT", licenseNote: "Synthetic browser fixture.",',
+    '  dimensions: { gameVariant: "MTT", tableFormat: "FULL_RING_9", blindSpeeds: ["REGULAR"], street: "TURN", evModel: "CHIP_EV", antes: ["ON"] },',
+    "  sourceEvidence: sourceEvidence(),",
+    '  assumptions: ["Synthetic source-free TURN routing fixture."],',
+    "  rules,",
+    "} satisfies TurnProductionStrategyPack;",
+    "",
+    "function turnRule(",
+    '  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,',
+    "  positionPattern: PostflopPositionPattern,",
+    "  priorFlopAction: PostflopAction,",
+    "  facingBet: boolean,",
+    "): TurnProductionStrategyRule {",
+    '  const actionNode = facingBet ? "TURN_FACING_BET" : "TURN_BARREL";',
+    '  const actions = facingBet ? ["FOLD", "CALL", "RAISE"] as const : ["CHECK", "BET_SMALL", "BET_BIG"] as const;',
+    '  const recommendedAction = facingBet ? "CALL" : "BET_SMALL";',
+    "  return {",
+    '    id: `browser-turn-${actionNode}-${potType}-${positionPattern}-${priorFlopAction}`,',
+    "    actionNode, potType, positionPattern, priorFlopAction,",
+    "    turnCardClasses: TURN_PRODUCTION_REQUIRED_CARD_CLASSES,",
+    "    sprMin: 0, sprMax: 20, actions, recommendedAction,",
+    "    rangeBuckets: rangeBuckets(facingBet),",
+    '    explanation: "Synthetic production turn fixture.",',
+    "  };",
+    "}",
+    "",
+    "function rangeBuckets(facingBet: boolean): TurnProductionStrategyRule['rangeBuckets'] {",
+    "  return facingBet ? [",
+    '    { lane: "VALUE", label: "value", action: "RAISE", handClasses: ALL_HAND_CLASSES.slice(0, 57), features: ["value"] },',
+    '    { lane: "BLUFF", label: "bluff", action: "CALL", handClasses: ALL_HAND_CLASSES.slice(57, 113), features: ["draw"] },',
+    '    { lane: "CHECK", label: "fold", action: "FOLD", handClasses: ALL_HAND_CLASSES.slice(113), features: ["air"] },',
+    "  ] : [",
+    '    { lane: "VALUE", label: "value", action: "BET_SMALL", handClasses: ALL_HAND_CLASSES.slice(0, 57), features: ["value"] },',
+    '    { lane: "BLUFF", label: "bluff", action: "BET_SMALL", handClasses: ALL_HAND_CLASSES.slice(57, 113), features: ["draw"] },',
+    '    { lane: "CHECK", label: "check", action: "CHECK", handClasses: ALL_HAND_CLASSES.slice(113), features: ["air"] },',
+    "  ];",
+    "}",
+    "",
+    "function sourceEvidence(): TurnProductionStrategyPack['sourceEvidence'] {",
+    "  return [",
+    '    { url: "https://example.test/browser-turn-owned", verifiedAt: "2026-06-23", operator: "PKRTrainer Browser Fixture", gameVariant: "MTT", tableFormat: "FULL_RING_9", street: "TURN", evModel: "CHIP_EV", methodology: "Synthetic source-free browser production fixture.", licenseNote: "Owned synthetic fixture." },',
+    '    { url: "https://example.test/browser-turn-review", verifiedAt: "2026-06-23", operator: "PKRTrainer Browser Review", gameVariant: "MTT", tableFormat: "FULL_RING_9", street: "TURN", evModel: "CHIP_EV", methodology: "Independent synthetic fixture review.", licenseNote: "Synthetic review fixture." },',
+    "  ];",
+    "}",
+    "",
+  ].join("\n");
+}
+
+function renderRiverFixtureModule(id: string): string {
+  return [
+    "// Synthetic source-free browser fixture. Never ship this module.",
+    'import { LEGACY_POSTFLOP_POSITION_PATTERNS, type PostflopAction, type PostflopPositionPattern, type PostflopPotType } from "../../core/postflopGenerator";',
+    'import { ALL_HAND_CLASSES } from "../../core/poker";',
+    "import {",
+    "  RIVER_PRODUCTION_REQUIRED_BLOCKER_RELEVANCE,",
+    "  RIVER_PRODUCTION_REQUIRED_POSITION_PATTERNS,",
+    "  RIVER_PRODUCTION_REQUIRED_POT_TYPES,",
+    "  RIVER_PRODUCTION_REQUIRED_PRIOR_TURN_ACTIONS,",
+    "  RIVER_PRODUCTION_REQUIRED_RUNOUT_CLASSES,",
+    '  type RiverProductionBlockerRelevance,',
+    '  type RiverProductionStrategyPack,',
+    '  type RiverProductionStrategyRule,',
+    '} from "./riverProductionStrategyPack";',
+    "",
+    "const positionPatterns: readonly PostflopPositionPattern[] = [",
+    "  ...RIVER_PRODUCTION_REQUIRED_POSITION_PATTERNS,",
+    "  ...LEGACY_POSTFLOP_POSITION_PATTERNS,",
+    "];",
+    "const rules: RiverProductionStrategyRule[] = [];",
+    "for (const potType of RIVER_PRODUCTION_REQUIRED_POT_TYPES) {",
+    "  for (const positionPattern of positionPatterns) {",
+    "    for (const [actionIndex, priorTurnAction] of RIVER_PRODUCTION_REQUIRED_PRIOR_TURN_ACTIONS.entries()) {",
+    "      const relevance = RIVER_PRODUCTION_REQUIRED_BLOCKER_RELEVANCE[actionIndex];",
+    "      rules.push(riverRule(potType, positionPattern, priorTurnAction, relevance, false));",
+    "      rules.push(riverRule(potType, positionPattern, priorTurnAction, relevance, true));",
+    "    }",
+    "  }",
+    "}",
+    "",
+    "export const browserE2eRiverProductionPack = {",
+    `  "id": ${JSON.stringify(id)},`,
+    '  version: "browser-e2e-river-production-v1",',
+    '  createdAt: "2026-06-23", verifiedAt: "2026-06-23", confidence: "MEDIUM",',
+    '  licenseKind: "OWNED_SOLVER_EXPORT", licenseNote: "Synthetic browser fixture.",',
+    '  dimensions: { gameVariant: "MTT", tableFormat: "FULL_RING_9", blindSpeeds: ["REGULAR"], street: "RIVER", evModel: "CHIP_EV", antes: ["ON"] },',
+    "  sourceEvidence: sourceEvidence(),",
+    '  assumptions: ["Synthetic source-free RIVER routing fixture."],',
+    "  rules,",
+    "} satisfies RiverProductionStrategyPack;",
+    "",
+    "function riverRule(",
+    '  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,',
+    "  positionPattern: PostflopPositionPattern,",
+    "  priorTurnAction: PostflopAction,",
+    "  blockerRelevance: RiverProductionBlockerRelevance,",
+    "  facingBet: boolean,",
+    "): RiverProductionStrategyRule {",
+    '  const actionNode = facingBet ? "RIVER_FACING_BET" : "RIVER_PRESSURE";',
+    '  const actions = facingBet ? ["FOLD", "CALL", "RAISE"] as const : ["CHECK", "BET_SMALL", "BET_BIG"] as const;',
+    '  const recommendedAction = facingBet ? "CALL" : "BET_BIG";',
+    "  return {",
+    '    id: `browser-river-${actionNode}-${potType}-${positionPattern}-${priorTurnAction}`,',
+    "    actionNode, potType, positionPattern, priorTurnAction,",
+    "    riverRunoutClasses: RIVER_PRODUCTION_REQUIRED_RUNOUT_CLASSES, blockerRelevance,",
+    "    sprMin: 0, sprMax: 20, actions, recommendedAction,",
+    "    rangeBuckets: rangeBuckets(facingBet, blockerRelevance),",
+    '    explanation: "Synthetic production river fixture.",',
+    "  };",
+    "}",
+    "",
+    "function rangeBuckets(",
+    "  facingBet: boolean,",
+    "  blockerRelevance: RiverProductionBlockerRelevance,",
+    "): RiverProductionStrategyRule['rangeBuckets'] {",
+    "  return facingBet ? [",
+    '    { lane: "VALUE", label: "value", action: "RAISE", handClasses: ALL_HAND_CLASSES.slice(0, 57), features: ["value"], blockerRelevance: "LOW" },',
+    '    { lane: "BLUFF", label: "bluff", action: "CALL", handClasses: ALL_HAND_CLASSES.slice(57, 113), features: ["blocker"], blockerRelevance },',
+    '    { lane: "CHECK", label: "fold", action: "FOLD", handClasses: ALL_HAND_CLASSES.slice(113), features: ["air"], blockerRelevance: "LOW" },',
+    "  ] : [",
+    '    { lane: "VALUE", label: "value", action: "BET_BIG", handClasses: ALL_HAND_CLASSES.slice(0, 57), features: ["value"], blockerRelevance: "LOW" },',
+    '    { lane: "BLUFF", label: "bluff", action: "BET_BIG", handClasses: ALL_HAND_CLASSES.slice(57, 113), features: ["blocker"], blockerRelevance },',
+    '    { lane: "CHECK", label: "check", action: "CHECK", handClasses: ALL_HAND_CLASSES.slice(113), features: ["air"], blockerRelevance: "LOW" },',
+    "  ];",
+    "}",
+    "",
+    "function sourceEvidence(): RiverProductionStrategyPack['sourceEvidence'] {",
+    "  return [",
+    '    { url: "https://example.test/browser-river-owned", verifiedAt: "2026-06-23", operator: "PKRTrainer Browser Fixture", gameVariant: "MTT", tableFormat: "FULL_RING_9", street: "RIVER", evModel: "CHIP_EV", methodology: "Synthetic source-free browser production fixture.", licenseNote: "Owned synthetic fixture." },',
+    '    { url: "https://example.test/browser-river-review", verifiedAt: "2026-06-23", operator: "PKRTrainer Browser Review", gameVariant: "MTT", tableFormat: "FULL_RING_9", street: "RIVER", evModel: "CHIP_EV", methodology: "Independent synthetic fixture review.", licenseNote: "Synthetic review fixture." },',
+    "  ];",
+    "}",
+    "",
+  ].join("\n");
+}
+
+function renderFixtureValidationModule(
+  flopId: string,
+  turnId: string,
+  riverId: string,
+): string {
+  return [
+    `import { browserE2eFlopProductionPack } from "../src/data/ranges/${flopId}";`,
+    `import { browserE2eTurnProductionPack } from "../src/data/ranges/${turnId}";`,
+    `import { browserE2eRiverProductionPack } from "../src/data/ranges/${riverId}";`,
+    'import { buildFlopProductionCoverageReport } from "../src/data/ranges/flopProductionStrategyPack";',
+    'import { buildTurnProductionCoverageReport } from "../src/data/ranges/turnProductionStrategyPack";',
+    'import { buildRiverProductionCoverageReport } from "../src/data/ranges/riverProductionStrategyPack";',
+    "",
+    "const reports = [",
+    '  ["FLOP", buildFlopProductionCoverageReport(browserE2eFlopProductionPack)],',
+    '  ["TURN", buildTurnProductionCoverageReport(browserE2eTurnProductionPack)],',
+    '  ["RIVER", buildRiverProductionCoverageReport(browserE2eRiverProductionPack)],',
+    "] as const;",
+    "for (const [street, report] of reports) {",
+    "  if (!report.productionReady) {",
+    '    throw new Error(`Invalid browser ${street} fixture:\\n${report.errors.join("\\n")}`);',
+    "  }",
+    "}",
+    'console.log("Synthetic FLOP/TURN/RIVER production fixture validation passed.");',
     "",
   ].join("\n");
 }

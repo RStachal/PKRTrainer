@@ -65,5 +65,5 @@ This checklist defines when the MTT part of PKRTrainer is complete for the first
 - `npm run build` passes.
 - `npm run bundle:budget` passes.
 - Normal Chrome E2E passes desktop plus 360/390/412 px, offline reopen and service-worker rollback.
-- Synthetic canonical production fixture E2E passes PREFLOP and FLOP lazy routing without leaving fixture data in the release build.
+- Synthetic canonical production fixture E2E passes PREFLOP, FLOP, TURN and RIVER lazy routing without leaving fixture data in the release build.
 - Release notes include MTT production row counts, blocker counts, bundle budget and remaining limitations.

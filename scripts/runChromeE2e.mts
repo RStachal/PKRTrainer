@@ -142,6 +142,13 @@ const expectedPreflop = process.env.MTT_E2E_EXPECT_PREFLOP === "production"
   ? "production"
   : "blocked";
 const expectedPostflopPackId = process.env.MTT_E2E_EXPECT_POSTFLOP_PACK_ID ?? "";
+const expectedTurnPackId = process.env.MTT_E2E_EXPECT_TURN_PACK_ID ?? "";
+const expectedRiverPackId = process.env.MTT_E2E_EXPECT_RIVER_PACK_ID ?? "";
+const expectedPostflopPackIds = [
+  expectedPostflopPackId,
+  expectedTurnPackId,
+  expectedRiverPackId,
+].filter((packId) => packId.length > 0);
 const postflopSeed = process.env.MTT_E2E_POSTFLOP_SEED ?? "1788246284";
 const chromePath = findChromePath();
 const profileDirectory = mkdtempSync(join(tmpdir(), "pkrtrainer-chrome-e2e-"));
@@ -372,6 +379,53 @@ try {
       ]),
     });
 
+    for (const expectedStreet of [
+      { street: "TURN", packId: expectedTurnPackId },
+      { street: "RIVER", packId: expectedRiverPackId },
+    ] as const) {
+      if (!expectedStreet.packId) continue;
+      await activate(cdp, '[data-tab="training"]', viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, ".filter-start");
+      await configureProductionPostflopProfile(cdp, expectedStreet.street, postflopSeed);
+      await activate(cdp, ".filter-start", viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(
+        cdp,
+        `.postflop-meta[data-street="${expectedStreet.street}"]`,
+      );
+      await waitForSelector(cdp, ".postflop-action");
+      const streetState = await evaluate(cdp, `(() => (({
+        actions: document.querySelectorAll(".postflop-action").length,
+        street: document.querySelector(".postflop-meta")?.getAttribute("data-street"),
+        potType: document.querySelector(".postflop-meta")?.getAttribute("data-pot-type"),
+        positionPattern: document.querySelector(".postflop-meta")?.getAttribute("data-position-pattern"),
+        productionChunk: performance.getEntriesByType("resource").some((entry) => (
+          entry.name.includes(${JSON.stringify(expectedStreet.packId)})
+        ))
+      })))()`);
+      assert(
+        streetState.actions >= 3,
+        `${viewport.name}: ${expectedStreet.street} actions did not render`,
+      );
+      assert(
+        streetState.street === expectedStreet.street,
+        `${viewport.name}: wrong ${expectedStreet.street} street`,
+      );
+      assert(
+        streetState.potType === "THREE_BET_POT",
+        `${viewport.name}: wrong ${expectedStreet.street} fixture pot type`,
+      );
+      assert(
+        streetState.positionPattern === "OOP_CALLER_VS_IP_3BETTOR",
+        `${viewport.name}: wrong ${expectedStreet.street} fixture position pattern`,
+      );
+      assert(
+        streetState.productionChunk,
+        `${viewport.name}: production ${expectedStreet.street} lazy chunk was not requested`,
+      );
+      await activate(cdp, ".postflop-action", viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, ".postflop-result");
+    }
+
     await evaluate(cdp, `(() => {
       const ante = document.querySelector(".profile-ante");
       if (!(ante instanceof HTMLSelectElement)) throw new Error("Missing ante selector");
@@ -423,7 +477,10 @@ try {
       sessionCount: document.querySelector(".dashboard-session-count")?.getAttribute("data-session-count"),
       text: document.querySelector(".dashboard")?.textContent ?? ""
     }))()`);
-    assert(stats.sessionCount === "1", `${viewport.name}: result was not persisted to dashboard`);
+    assert(
+      stats.sessionCount === "1",
+      `${viewport.name}: result was not persisted to dashboard`,
+    );
     assertSourceFree(stats.text, `${viewport.name} stats`);
     await activate(cdp, ".stats-export", viewport.mobile ? "touch" : "keyboard");
     const exportedStats = await evaluate<string>(
@@ -432,10 +489,10 @@ try {
     );
     assert(exportedStats.includes('"postflopRecords"'), `${viewport.name}: stats export is incomplete`);
     assert(!/https?:|www\./i.test(exportedStats), `${viewport.name}: stats export leaked a URL`);
-    if (expectedPostflopPackId) {
+    for (const expectedPackId of expectedPostflopPackIds) {
       assert(
-        exportedStats.includes(expectedPostflopPackId),
-        `${viewport.name}: postflop stats did not preserve production pack identity`,
+        exportedStats.includes(expectedPackId),
+        `${viewport.name}: postflop stats did not preserve ${expectedPackId} identity`,
       );
     }
     await activate(cdp, ".stats-import", viewport.mobile ? "touch" : "keyboard");
@@ -468,7 +525,13 @@ try {
     const reloadedCount = await evaluate(cdp, (
       `document.querySelector(".postflop-breakdowns")?.getAttribute("data-total")`
     ));
-    assert(reloadedCount === "1", `${viewport.name}: persisted postflop stats did not survive reload`);
+    const expectedPersistedCount = expectedPostflopPackIds.length > 0
+      ? String(expectedPostflopPackIds.length)
+      : "1";
+    assert(
+      reloadedCount === expectedPersistedCount,
+      `${viewport.name}: persisted postflop stats did not survive reload`,
+    );
 
     await cdp.send("Network.emulateNetworkConditions", {
       offline: true,
@@ -733,6 +796,44 @@ async function waitForSelector(client: CdpClient, selector: string, timeoutMs = 
   throw new Error(
     `Timed out waiting for selector: ${selector} at ${debug.url}; body=${debug.text}`,
   );
+}
+
+async function configureProductionPostflopProfile(
+  client: CdpClient,
+  street: "TURN" | "RIVER",
+  seed: string,
+): Promise<void> {
+  await evaluate(client, `(() => {
+    const select = document.querySelector(".profile-street");
+    if (!(select instanceof HTMLSelectElement)) throw new Error("Missing street selector");
+    select.value = ${JSON.stringify(street)};
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    const seedInput = document.querySelector(".filter-seed");
+    if (!(seedInput instanceof HTMLInputElement)) throw new Error("Missing seed input");
+    seedInput.value = ${JSON.stringify(seed)};
+    seedInput.dispatchEvent(new Event("input", { bubbles: true }));
+    for (const item of document.querySelectorAll(".filter-position")) {
+      if (item instanceof HTMLInputElement) item.checked = false;
+    }
+    for (const position of ["LJ", "HJ"]) {
+      const item = document.querySelector(
+        '.filter-position[data-position="' + position + '"]',
+      );
+      if (!(item instanceof HTMLInputElement)) {
+        throw new Error("Missing production fixture position " + position);
+      }
+      item.checked = true;
+    }
+    for (const item of document.querySelectorAll(".filter-context")) {
+      if (item instanceof HTMLInputElement) item.checked = false;
+    }
+    const context = document.querySelector('.filter-context[data-context="VS_3BET"]');
+    if (!(context instanceof HTMLInputElement)) {
+      throw new Error("Missing production fixture VS_3BET context");
+    }
+    context.checked = true;
+    context.dispatchEvent(new Event("change", { bubbles: true }));
+  })()`);
 }
 
 async function activate(

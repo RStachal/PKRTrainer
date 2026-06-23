@@ -128,9 +128,13 @@ describe("release bundle metadata", () => {
     expect(productionFixtureE2eScript).toContain("Synthetic source-free browser fixture");
     expect(productionFixtureE2eScript).toContain("MTT_E2E_EXPECT_PREFLOP");
     expect(productionFixtureE2eScript).toContain("MTT_E2E_EXPECT_POSTFLOP_PACK_ID");
+    expect(productionFixtureE2eScript).toContain("MTT_E2E_EXPECT_TURN_PACK_ID");
+    expect(productionFixtureE2eScript).toContain("MTT_E2E_EXPECT_RIVER_PACK_ID");
     expect(productionFixtureE2eScript)
       .toContain("mtt-full-ring-9-regular-flop-chip-ev-ante-on-production-v1");
     expect(productionFixtureE2eScript).toContain("renderFlopFixtureModule");
+    expect(productionFixtureE2eScript).toContain("renderTurnFixtureModule");
+    expect(productionFixtureE2eScript).toContain("renderRiverFixtureModule");
     expect(productionFixtureE2eScript).toContain("buildFlopProductionCoverageReport");
     expect(productionFixtureE2eScript).toContain("findAvailablePort");
     expect(productionFixtureE2eScript).toContain('"--strictPort"');
@@ -139,7 +143,8 @@ describe("release bundle metadata", () => {
     expect(productionFixtureE2eScript).toContain("process.execPath");
     expect(technicalAcceptanceScript).toContain("Complete Vitest suite");
     expect(technicalAcceptanceScript).toContain("Chrome production-build E2E");
-    expect(technicalAcceptanceScript).toContain("Chrome synthetic production PREFLOP/FLOP E2E");
+    expect(technicalAcceptanceScript)
+      .toContain("Chrome synthetic production PREFLOP/FLOP/TURN/RIVER E2E");
     expect(technicalAcceptanceScript).toContain("createNpmShim");
     expect(technicalAcceptanceScript).toContain("findAvailablePort");
     expect(technicalAcceptanceScript).toContain("mtt-technical-acceptance");

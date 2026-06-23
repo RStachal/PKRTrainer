@@ -9,11 +9,11 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
 ## Command results
 
 - `npm run mtt:technical-acceptance`: passed on 2026-06-23.
-  - Runs typecheck, all Vitest suites, deterministic registry and integrity checks, range verification, production build, precache, bundle budget, four-viewport Chrome E2E and isolated canonical production PREFLOP/FLOP fixture E2E.
+  - Runs typecheck, all Vitest suites, deterministic registry and integrity checks, range verification, production build, precache, bundle budget, four-viewport Chrome E2E and isolated canonical production PREFLOP/FLOP/TURN/RIVER fixture E2E.
   - 10/10 commands passed; Vitest reported 225/225 suites and 542/542 tests.
   - Main build: 269.86 KiB raw / 74.00 KiB gzip; install-precache JS total: 346.75 / 95.11 KiB.
   - Chrome passed desktop 1280 plus mobile 360/390/412, 52 contrast checks, offline reopen and real service-worker rollback.
-  - Synthetic lazy chunks: preflop 23.43 / 7.19 KiB and FLOP 21.39 / 5.86 KiB raw/gzip.
+  - Synthetic lazy chunks raw/gzip: preflop 23.43 / 7.19 KiB, FLOP 21.39 / 5.86 KiB, TURN 9.63 / 3.09 KiB and RIVER 10.29 / 3.21 KiB.
   - Writes `artifacts/mtt-technical-acceptance/report.json`; this is a technical gate and does not override the red legal production-data gates below.
 - `npm run mtt:acceptance`: failed as expected before legal production data.
   - valid: false

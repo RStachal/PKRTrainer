@@ -138,7 +138,7 @@ try {
     results.push(skippedResult("chrome", "Chrome production-build E2E", "Production build failed."));
   }
 
-  results.push(runNodeCommand("production-fixture", "Chrome synthetic production PREFLOP/FLOP E2E", [
+  results.push(runNodeCommand("production-fixture", "Chrome synthetic production PREFLOP/FLOP/TURN/RIVER E2E", [
     viteNodeCli,
     "scripts/runChromeProductionFixtureE2e.mts",
   ]));
