@@ -10,6 +10,7 @@ import type { FlopProductionStrategyPack } from "../../src/data/ranges/flopProdu
 import type { RiverProductionStrategyPack } from "../../src/data/ranges/riverProductionStrategyPack";
 import {
   createDefaultPostflopStrategyResolver,
+  createMttProductionPostflopFamilyResolver,
   createMttProductionPostflopStrategyResolver,
   type MttProductionPostflopResolverProfile,
 } from "../../src/data/ranges/postflopStrategyRegistry";
@@ -161,6 +162,30 @@ describe("MTT production postflop runtime resolver", () => {
         expect(result.source.confidence, item.street).toBe("MEDIUM");
       }
     }
+  });
+
+  it("dispatchuje jednu production hand-line rodinu podle street vstupu", () => {
+    const resolver = createMttProductionPostflopFamilyResolver({
+      tableFormat: "FULL_RING_9",
+      blindSpeed: "REGULAR",
+      evModel: "CHIP_EV",
+      ante: "ON",
+    }, {
+      flopProductionPacks: [flopPack()],
+      turnProductionPacks: [turnPack()],
+      riverProductionPacks: [riverPack()],
+    });
+
+    expect(["FLOP", "TURN", "RIVER"].map((street) => {
+      const result = resolver(inputForStreet(street as PostflopStreet));
+      return result?.source?.kind === "STRATEGY_PACK"
+        ? result.source.packId
+        : null;
+    })).toEqual([
+      "mtt-runtime-flop-production-v1",
+      "mtt-runtime-turn-production-v1",
+      "mtt-runtime-river-production-v1",
+    ]);
   });
 });
 

@@ -46,6 +46,7 @@ export interface PostflopViewOptions {
   autoGenerate?: boolean;
   strategyResolver?: PostflopStrategyResolver;
   allowFallback?: boolean;
+  beforeGenerate?: (mode: "single" | "line") => Promise<void> | void;
   onLineCompleted?: (
     line: PostflopLine,
     chosenByStreet: Partial<Record<PostflopStreet, PostflopAction>>,
@@ -146,6 +147,26 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   streetLabel.appendChild(streetText);
   streetLabel.appendChild(streetSelect);
 
+  const situationLabel = doc.createElement("label");
+  situationLabel.className = "postflop-field";
+  const situationText = doc.createElement("span");
+  situationText.textContent = CS.postflop.situation;
+  const situationSelect = doc.createElement("select");
+  situationSelect.className = "postflop-situation";
+  const initiativeOption = doc.createElement("option");
+  initiativeOption.value = "initiative";
+  initiativeOption.textContent = CS.postflop.initiative;
+  const facingBetOption = doc.createElement("option");
+  facingBetOption.value = "facing-bet";
+  facingBetOption.textContent = CS.postflop.facingBet;
+  situationSelect.appendChild(initiativeOption);
+  situationSelect.appendChild(facingBetOption);
+  situationSelect.value = options.initialActionNode?.endsWith("_FACING_BET")
+    ? "facing-bet"
+    : "initiative";
+  situationLabel.appendChild(situationText);
+  situationLabel.appendChild(situationSelect);
+
   const seedLabel = doc.createElement("label");
   seedLabel.className = "postflop-field";
   const seedText = doc.createElement("span");
@@ -184,6 +205,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   generate.textContent = CS.postflop.generate;
 
   controls.appendChild(streetLabel);
+  controls.appendChild(situationLabel);
   controls.appendChild(seedLabel);
   controls.appendChild(modeLabel);
   controls.appendChild(generate);
@@ -201,18 +223,25 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
     focusElement(streetSelect);
   };
 
-  const showNewSpot = (): void => {
+  const showNewSpot = async (): Promise<void> => {
     const seed = parseSeed(seedInput.value) ?? randomSeed();
     // Seed je jednorázový vstup pro reprodukci konkrétní situace. Po použití
     // jej vyčistíme, aby další generování nebo nový spot nevytvořily znovu
     // tutéž situaci, ale sáhl po novém náhodném seedu.
     seedInput.value = "";
     try {
+      const mode = modeSelect.value === "line" ? "line" : "single";
+      const preparation = options.beforeGenerate?.(mode);
+      if (preparation) await preparation;
       if (modeSelect.value === "line") {
         const line = generatePostflopLine({
           seed,
           potType: options.initialPotType,
-          actionNode: options.initialActionNode,
+          actionNode: selectedActionNode(
+            "FLOP",
+            situationSelect.value,
+            options.initialPotType,
+          ),
           potBB: options.initialPotBB,
           effectiveStackBB: options.initialEffectiveStackBB,
           positionContext: options.initialPositionContext ?? undefined,
@@ -233,7 +262,11 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
         seed,
         street,
         potType: options.initialPotType,
-        actionNode: options.initialActionNode,
+        actionNode: selectedActionNode(
+          street,
+          situationSelect.value,
+          options.initialPotType,
+        ),
         potBB: options.initialPotBB,
         effectiveStackBB: options.initialEffectiveStackBB,
         positionContext: options.initialPositionContext ?? undefined,
@@ -256,7 +289,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   generate.addEventListener("click", showNewSpot);
   root.appendChild(wrap);
   if (options.autoGenerate === true) {
-    showNewSpot();
+    void showNewSpot();
   }
 }
 
@@ -1265,6 +1298,23 @@ function parseStreet(value: string): PostflopStreet {
   return value === "TURN" || value === "RIVER" ? value : "FLOP";
 }
 
+function selectedActionNode(
+  street: PostflopStreet,
+  situation: string,
+  potType: PostflopPotType | undefined,
+): PostflopActionNode {
+  if (situation === "facing-bet") {
+    if (street === "FLOP") return "FLOP_FACING_BET";
+    if (street === "TURN") return "TURN_FACING_BET";
+    return "RIVER_FACING_BET";
+  }
+  if (street === "TURN") return "TURN_BARREL";
+  if (street === "RIVER") return "RIVER_PRESSURE";
+  return potType === "THREE_BET_POT"
+    ? "THREE_BET_POT_CBET"
+    : "SINGLE_RAISED_POT_CBET";
+}
+
 function parseSeed(raw: string): number | null {
   const trimmed = raw.trim();
   if (trimmed === "") return null;
@@ -1293,7 +1343,7 @@ function styles(doc: Document): HTMLStyleElement {
   padding:14px 16px;margin-bottom:16px;box-shadow:0 18px 44px rgba(0,0,0,.2);}
 .postflop-field{display:flex;flex-direction:column;gap:4px;font-size:12px;
   color:#9aa6c2;font-weight:700;}
-.postflop-street,.postflop-seed,.postflop-mode{box-sizing:border-box;min-width:130px;border:1px solid
+.postflop-street,.postflop-situation,.postflop-seed,.postflop-mode{box-sizing:border-box;min-width:130px;border:1px solid
   rgba(148,163,184,.28);border-radius:9px;background:#172033;color:#e8ecf7;
   font-size:14px;padding:9px 11px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
 .postflop-generate{appearance:none;border:0;border-radius:9px;
@@ -1552,7 +1602,7 @@ function styles(doc: Document): HTMLStyleElement {
   .postflop-view{max-width:100%;}
   .postflop-controls{align-items:stretch;}
   .postflop-field,.postflop-generate{width:100%;}
-  .postflop-street,.postflop-seed,.postflop-mode{width:100%;}
+  .postflop-street,.postflop-situation,.postflop-seed,.postflop-mode{width:100%;}
   .postflop-question-bar{align-items:stretch;flex-direction:column;}
   .postflop-question-actions{display:grid;grid-template-columns:1fr 1fr;}
   .postflop-table{aspect-ratio:auto;min-height:560px;max-width:390px;}

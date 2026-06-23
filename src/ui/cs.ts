@@ -92,6 +92,9 @@ export const CS = {
   postflop: {
     street: "Street",
     seed: "Seed",
+    situation: "Situace",
+    initiative: "Máme iniciativu",
+    facingBet: "Čelíme sázce",
     mode: "Režim",
     random: "náhodný",
     singleSpot: "Jeden spot",

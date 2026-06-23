@@ -103,7 +103,7 @@ function productionPack(confidence: "LOW" | "MEDIUM" = "MEDIUM"): TurnProduction
         actionNode: "TURN_FACING_BET",
         potType: "SINGLE_RAISED",
         positionPattern: "BTN_VS_BB",
-        priorFlopAction: "BET_SMALL",
+        priorFlopAction: "CALL",
         turnCardClasses: ["LOW_BRICK"],
         sprMin: 2,
         sprMax: 12,
@@ -189,8 +189,10 @@ describe("turnProductionStrategyResolver", () => {
     const resolver = createTurnProductionStrategyResolver(productionPack());
 
     expect(resolver(input)?.action).toBe("BET_SMALL");
-    expect(resolver({ ...input, actionNode: "TURN_FACING_BET" })?.action).toBe("CALL");
-    expect(resolver({ ...input, actionNode: "TURN_FACING_BET" })?.source).toMatchObject({
+    expect(resolver({ ...input, priorFlopAction: "CALL", actionNode: "TURN_FACING_BET" })?.action).toBe("CALL");
+    expect(
+      resolver({ ...input, priorFlopAction: "CALL", actionNode: "TURN_FACING_BET" })?.source,
+    ).toMatchObject({
       kind: "STRATEGY_PACK",
       ruleId: "turn-production-btn-bb-low-brick-facing-bet-call",
     });

@@ -134,6 +134,8 @@ export const TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS = [
   "CHECK",
   "BET_SMALL",
   "BET_BIG",
+  "CALL",
+  "RAISE",
 ] as const satisfies readonly PostflopAction[];
 
 export const TURN_PRODUCTION_REQUIRED_CARD_CLASSES = [
@@ -237,7 +239,7 @@ export function validateTurnProductionRule(
   if (!POSTFLOP_ACTION_SET.has(rule.priorFlopAction)) {
     errors.push(`${rule.id}: priorFlopAction is invalid.`);
   }
-  if (!isTurnPriorFlopAction(rule.priorFlopAction)) {
+  if (!isTurnPriorFlopAction(rule.priorFlopAction, rule.actionNode)) {
     errors.push(`${rule.id}: priorFlopAction ${rule.priorFlopAction} is not valid for ${rule.actionNode}.`);
   }
   if (rule.actions.length === 0) errors.push(`${rule.id}: actions are required.`);
@@ -480,8 +482,13 @@ function licenseAllowsExactFrequency(kind: TurnProductionLicenseKind): boolean {
   return kind === "OWNED_SOLVER_EXPORT" || kind === "EXPLICIT_WRITTEN_PERMISSION";
 }
 
-function isTurnPriorFlopAction(action: PostflopAction): boolean {
-  const allowed: readonly PostflopAction[] = TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS;
+function isTurnPriorFlopAction(
+  action: PostflopAction,
+  actionNode: TurnProductionStrategyRule["actionNode"],
+): boolean {
+  const allowed: readonly PostflopAction[] = actionNode === "TURN_FACING_BET"
+    ? ["CALL"]
+    : ["CHECK", "BET_SMALL", "BET_BIG", "RAISE"];
   return allowed.includes(action);
 }
 

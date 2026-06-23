@@ -131,6 +131,8 @@ export const RIVER_PRODUCTION_REQUIRED_PRIOR_TURN_ACTIONS = [
   "CHECK",
   "BET_SMALL",
   "BET_BIG",
+  "CALL",
+  "RAISE",
 ] as const satisfies readonly PostflopAction[];
 
 export const RIVER_PRODUCTION_REQUIRED_RUNOUT_CLASSES = [
@@ -236,7 +238,7 @@ export function validateRiverProductionRule(
     errors.push(`${rule.id}: river production rule must use RIVER_PRESSURE or RIVER_FACING_BET.`);
   }
   if (!POSTFLOP_ACTION_SET.has(rule.priorTurnAction)) errors.push(`${rule.id}: priorTurnAction is invalid.`);
-  if (!isRiverPriorTurnAction(rule.priorTurnAction)) {
+  if (!isRiverPriorTurnAction(rule.priorTurnAction, rule.actionNode)) {
     errors.push(`${rule.id}: priorTurnAction ${rule.priorTurnAction} is not valid for ${rule.actionNode}.`);
   }
   if (rule.riverRunoutClasses.length === 0) errors.push(`${rule.id}: riverRunoutClasses are required.`);
@@ -457,8 +459,13 @@ function licenseAllowsExactFrequency(kind: RiverProductionLicenseKind): boolean 
   return kind === "OWNED_SOLVER_EXPORT" || kind === "EXPLICIT_WRITTEN_PERMISSION";
 }
 
-function isRiverPriorTurnAction(action: PostflopAction): boolean {
-  const allowed: readonly PostflopAction[] = RIVER_PRODUCTION_REQUIRED_PRIOR_TURN_ACTIONS;
+function isRiverPriorTurnAction(
+  action: PostflopAction,
+  actionNode: RiverProductionStrategyRule["actionNode"],
+): boolean {
+  const allowed: readonly PostflopAction[] = actionNode === "RIVER_FACING_BET"
+    ? ["CALL"]
+    : ["CHECK", "BET_SMALL", "BET_BIG", "RAISE"];
   return allowed.includes(action);
 }
 

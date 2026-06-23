@@ -141,7 +141,8 @@ Production readiness requires coverage of:
 
 - Pot types: `SINGLE_RAISED`, `THREE_BET_POT`
 - Position patterns: the 50 granular MTT postflop patterns reported by `npm run mtt:postflop-positions`, e.g. `SRP_UTG_VS_BB`, `SRP_BTN_VS_BB`, `SRP_SB_VS_BB`, `SRP_HJ_VS_CO`, `3BP_BTN_VS_UTG`
-- Prior flop actions: `CHECK`, `BET_SMALL`, `BET_BIG`
+- Prior flop actions: `CHECK`, `BET_SMALL`, `BET_BIG`, `CALL`, `RAISE`
+- Transition mapping: `CALL` is valid for `TURN_FACING_BET`; `CHECK`, `BET_SMALL`, `BET_BIG` and `RAISE` are valid for `TURN_BARREL`. `FOLD` is terminal and must not appear in a continuing turn rule.
 - Turn card classes: `BLANK`, `LOW_BRICK`, `OVER_CARD`, `BROADWAY`, `BOARD_PAIRING`, `FLUSH_COMPLETING`, `STRAIGHT_COMPLETING`, `DYNAMIC`
 - Action nodes: `TURN_BARREL`, `TURN_FACING_BET`
 - Range lanes: `VALUE`, `BLUFF`, `CHECK`
@@ -171,6 +172,8 @@ River production packs use the same permission gate as flop and turn and add riv
 - Available `actions`: `CHECK/BET_SMALL/BET_BIG` for `RIVER_PRESSURE`, `FOLD/CALL/RAISE` for `RIVER_FACING_BET`
 - `rangeBuckets` with `VALUE`, `BLUFF` and `CHECK` lanes
 - Optional `actionMix` metadata; exact frequencies require owned export or explicit written permission
+
+Production readiness requires prior-turn coverage for `CHECK`, `BET_SMALL`, `BET_BIG`, `CALL` and `RAISE`. `CALL` maps to `RIVER_FACING_BET`; `CHECK`, `BET_SMALL`, `BET_BIG` and `RAISE` map to `RIVER_PRESSURE`. `FOLD` is terminal and must not appear in a continuing river rule.
 
 Validator:
 

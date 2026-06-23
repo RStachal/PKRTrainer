@@ -10,10 +10,11 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
 
 - `npm run mtt:technical-acceptance`: passed on 2026-06-23.
   - Runs typecheck, all Vitest suites, deterministic registry and integrity checks, range verification, production build, precache, bundle budget, four-viewport Chrome E2E and isolated canonical production PREFLOP/FLOP/TURN/RIVER fixture E2E.
-  - 10/10 commands passed; Vitest reported 225/225 suites and 542/542 tests.
-  - Main build: 269.86 KiB raw / 74.00 KiB gzip; install-precache JS total: 346.75 / 95.11 KiB.
+  - 10/10 commands passed; Vitest reported 225/225 suites and 545/545 tests.
+  - Main build: 271.25 KiB raw / 74.42 KiB gzip; install-precache JS total: 348.13 / 95.53 KiB.
   - Chrome passed desktop 1280 plus mobile 360/390/412, 52 contrast checks, offline reopen and real service-worker rollback.
-  - Synthetic lazy chunks raw/gzip: preflop 23.43 / 7.19 KiB, FLOP 21.39 / 5.86 KiB, TURN 9.63 / 3.09 KiB and RIVER 10.29 / 3.21 KiB.
+  - Synthetic lazy chunks raw/gzip: preflop 23.43 / 7.19 KiB, FLOP 21.39 / 5.86 KiB, TURN 9.72 / 3.11 KiB and RIVER 10.39 / 3.24 KiB; fixture main is 222.12 / 64.04 KiB.
+  - Production fixture now exercises an actual source-free facing-bet FLOP/TURN/RIVER hand-line with `CALL -> CALL -> CALL`; line mode preloads the profile's postflop family, while single-street mode remains street-lazy.
   - Writes `artifacts/mtt-technical-acceptance/report.json`; this is a technical gate and does not override the red legal production-data gates below.
 - `npm run mtt:acceptance`: failed as expected before legal production data.
   - valid: false
@@ -57,6 +58,7 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
 - Duplicate old MTT import tasks superseded into the 135.x P1-P5 backlog.
 - Follow-up 2026-06-18: preflop matrix now delegates cell click/keyboard handling at the matrix level and caches the stable 13x13 hand-label grid, reducing per-render listeners from 338 to 2.
 - Follow-up 2026-06-22: two historical full-ring regular CHIP_EV packs now fail closed as `PREVIEW_ONLY`; their non-canonical IDs cannot satisfy legal production readiness or start scoring.
+- Follow-up 2026-06-23: postflop UI exposes source-free initiative/facing-bet selection, production hand-lines dynamically dispatch each street to the loaded family pack, and transition validation distinguishes `CALL` facing branches from initiative `CHECK/BET_SMALL/BET_BIG/RAISE` branches.
 
 ## Blocking items
 

@@ -14,6 +14,8 @@ describe("český katalog viditelných textů", () => {
     expect(CS.hh.facts.board).toBe("Společné karty");
     expect(CS.hh.facts.pot).toBe("Bank");
     expect(CS.postflop.heroBucket).toBe("Kategorie handy Hero");
+    expect(CS.postflop.situation).toBe("Situace");
+    expect(CS.postflop.facingBet).toBe("Čelíme sázce");
 
     const main = readFileSync("src/main.ts", "utf8");
     const hhView = readFileSync("src/ui/hhView.ts", "utf8");

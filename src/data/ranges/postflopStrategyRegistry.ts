@@ -85,6 +85,16 @@ export function createMttProductionPostflopStrategyResolver(
   };
 }
 
+export function createMttProductionPostflopFamilyResolver(
+  profile: Omit<MttProductionPostflopResolverProfile, "street">,
+  packs: MttProductionPostflopResolverPacks = {},
+): PostflopStrategyResolver {
+  return (input) => createMttProductionPostflopStrategyResolver({
+    ...profile,
+    street: input.street,
+  }, packs)(input);
+}
+
 function createProductionResolverForProfile(
   profile: MttProductionPostflopResolverProfile,
   packs: MttProductionPostflopResolverPacks,

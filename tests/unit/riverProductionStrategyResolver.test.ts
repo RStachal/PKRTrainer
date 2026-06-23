@@ -101,7 +101,7 @@ function productionPack(confidence: "LOW" | "MEDIUM" = "MEDIUM"): RiverProductio
         actionNode: "RIVER_FACING_BET",
         potType: "SINGLE_RAISED",
         positionPattern: "BTN_VS_BB",
-        priorTurnAction: "BET_SMALL",
+        priorTurnAction: "CALL",
         riverRunoutClasses: ["BLANK"],
         blockerRelevance: "MEDIUM",
         sprMin: 1,
@@ -194,8 +194,10 @@ describe("riverProductionStrategyResolver", () => {
     const resolver = createRiverProductionStrategyResolver(productionPack());
 
     expect(resolver(input)?.action).toBe("BET_BIG");
-    expect(resolver({ ...input, actionNode: "RIVER_FACING_BET" })?.action).toBe("CALL");
-    expect(resolver({ ...input, actionNode: "RIVER_FACING_BET" })?.source).toMatchObject({
+    expect(resolver({ ...input, priorTurnAction: "CALL", actionNode: "RIVER_FACING_BET" })?.action).toBe("CALL");
+    expect(
+      resolver({ ...input, priorTurnAction: "CALL", actionNode: "RIVER_FACING_BET" })?.source,
+    ).toMatchObject({
       kind: "STRATEGY_PACK",
       ruleId: "river-production-btn-bb-blank-facing-call",
     });

@@ -66,4 +66,5 @@ This checklist defines when the MTT part of PKRTrainer is complete for the first
 - `npm run bundle:budget` passes.
 - Normal Chrome E2E passes desktop plus 360/390/412 px, offline reopen and service-worker rollback.
 - Synthetic canonical production fixture E2E passes PREFLOP, FLOP, TURN and RIVER lazy routing without leaving fixture data in the release build.
+- Synthetic canonical production fixture E2E completes a facing-bet `CALL -> CALL -> CALL` hand-line, preloads only the selected profile's postflop family for line mode and preserves all three StrategyPack identities in persisted stats.
 - Release notes include MTT production row counts, blocker counts, bundle budget and remaining limitations.

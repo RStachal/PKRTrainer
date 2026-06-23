@@ -14,6 +14,7 @@ import {
 } from "../../src/core/types";
 import type {
   BoardTexture,
+  PostflopAction,
   PostflopPositionPattern,
   PostflopPotType,
 } from "../../src/core/postflopGenerator";
@@ -322,7 +323,7 @@ function validFlopProductionPack(): FlopProductionStrategyPack {
 function turnRule(
   potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
   positionPattern: PostflopPositionPattern,
-  priorFlopAction: "CHECK" | "BET_SMALL" | "BET_BIG",
+  priorFlopAction: PostflopAction,
   turnCardClass: TurnProductionTurnCardClass,
 ): TurnProductionStrategyRule {
   return {
@@ -367,7 +368,7 @@ function turnRule(
 function turnFacingBetRule(
   potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
   positionPattern: PostflopPositionPattern,
-  priorFlopAction: "CHECK" | "BET_SMALL" | "BET_BIG",
+  priorFlopAction: PostflopAction,
   turnCardClass: TurnProductionTurnCardClass,
 ): TurnProductionStrategyRule {
   return {
@@ -415,8 +416,9 @@ function validTurnProductionPack(): TurnProductionStrategyPack {
     for (const positionPattern of TURN_PRODUCTION_REQUIRED_POSITION_PATTERNS) {
       for (const priorFlopAction of TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS) {
         for (const turnCardClass of TURN_PRODUCTION_REQUIRED_CARD_CLASSES) {
-          rules.push(turnRule(potType, positionPattern, priorFlopAction, turnCardClass));
-          rules.push(turnFacingBetRule(potType, positionPattern, priorFlopAction, turnCardClass));
+          rules.push(priorFlopAction === "CALL"
+            ? turnFacingBetRule(potType, positionPattern, priorFlopAction, turnCardClass)
+            : turnRule(potType, positionPattern, priorFlopAction, turnCardClass));
         }
       }
     }
@@ -474,7 +476,7 @@ function validTurnProductionPack(): TurnProductionStrategyPack {
 function riverRule(
   potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
   positionPattern: PostflopPositionPattern,
-  priorTurnAction: "CHECK" | "BET_SMALL" | "BET_BIG",
+  priorTurnAction: PostflopAction,
   runoutClass: RiverProductionRunoutClass,
   blockerRelevance: RiverProductionBlockerRelevance,
 ): RiverProductionStrategyRule {
@@ -524,7 +526,7 @@ function riverRule(
 function riverFacingBetRule(
   potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">,
   positionPattern: PostflopPositionPattern,
-  priorTurnAction: "CHECK" | "BET_SMALL" | "BET_BIG",
+  priorTurnAction: PostflopAction,
   runoutClass: RiverProductionRunoutClass,
   blockerRelevance: RiverProductionBlockerRelevance,
 ): RiverProductionStrategyRule {
@@ -581,14 +583,21 @@ function validRiverProductionPack(): RiverProductionStrategyPack {
             RIVER_PRODUCTION_REQUIRED_BLOCKER_RELEVANCE[
               runoutIndex % RIVER_PRODUCTION_REQUIRED_BLOCKER_RELEVANCE.length
             ];
-          rules.push(riverRule(potType, positionPattern, priorTurnAction, runoutClass, blockerRelevance));
-          rules.push(riverFacingBetRule(
-            potType,
-            positionPattern,
-            priorTurnAction,
-            runoutClass,
-            blockerRelevance,
-          ));
+          rules.push(priorTurnAction === "CALL"
+            ? riverFacingBetRule(
+              potType,
+              positionPattern,
+              priorTurnAction,
+              runoutClass,
+              blockerRelevance,
+            )
+            : riverRule(
+              potType,
+              positionPattern,
+              priorTurnAction,
+              runoutClass,
+              blockerRelevance,
+            ));
         }
       }
     }

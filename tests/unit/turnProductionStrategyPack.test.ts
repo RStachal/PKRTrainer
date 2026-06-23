@@ -149,8 +149,9 @@ function productionPack(): TurnProductionStrategyPack {
     for (const positionPattern of TURN_PRODUCTION_REQUIRED_POSITION_PATTERNS) {
       for (const priorFlopAction of TURN_PRODUCTION_REQUIRED_PRIOR_FLOP_ACTIONS) {
         for (const turnCardClass of TURN_PRODUCTION_REQUIRED_CARD_CLASSES) {
-          rules.push(productionRule(potType, positionPattern, priorFlopAction, turnCardClass));
-          rules.push(facingBetProductionRule(potType, positionPattern, priorFlopAction, turnCardClass));
+          rules.push(priorFlopAction === "CALL"
+            ? facingBetProductionRule(potType, positionPattern, priorFlopAction, turnCardClass)
+            : productionRule(potType, positionPattern, priorFlopAction, turnCardClass));
         }
       }
     }
@@ -272,7 +273,8 @@ describe("turnProductionStrategyPack", () => {
     expect(errors).toContain("turn-single_raised-btn_vs_bb-bet_small-blank: missing CHECK range lane.");
     expect(coverage.productionReady).toBe(false);
     expect(coverage.missingPotTypes).toEqual(["THREE_BET_POT"]);
-    expect(coverage.missingPriorFlopActions).toEqual(["CHECK", "BET_SMALL", "BET_BIG"]);
+    expect(coverage.missingPriorFlopActions)
+      .toEqual(["CHECK", "BET_SMALL", "BET_BIG", "CALL", "RAISE"]);
     expect(coverage.missingTurnCardClasses).toEqual(TURN_PRODUCTION_REQUIRED_CARD_CLASSES);
     expect(renderTurnProductionCoverageReport(pack, coverage)).toContain(
       "missing prior flop actions: CHECK,BET_SMALL,BET_BIG",
@@ -319,7 +321,7 @@ describe("turnProductionStrategyPack", () => {
   });
 
   it("povoli facing-bet akce jen v turn facing-bet production nodu", () => {
-    const base = facingBetProductionRule("SINGLE_RAISED", "BTN_VS_BB", "BET_SMALL", "BLANK");
+    const base = facingBetProductionRule("SINGLE_RAISED", "BTN_VS_BB", "CALL", "BLANK");
     const validErrors = validateTurnProductionRule(base, { exactFrequencyAllowed: true });
     const invalid = {
       ...base,
@@ -341,16 +343,16 @@ describe("turnProductionStrategyPack", () => {
 
     expect(validErrors).toEqual([]);
     expect(errors).toContain(
-      "turn-facing-single_raised-btn_vs_bb-bet_small-blank: action BET_SMALL is not valid for TURN_FACING_BET.",
+      "turn-facing-single_raised-btn_vs_bb-call-blank: action BET_SMALL is not valid for TURN_FACING_BET.",
     );
     expect(errors).toContain(
-      "turn-facing-single_raised-btn_vs_bb-bet_small-blank: recommendedAction BET_SMALL is not valid for TURN_FACING_BET.",
+      "turn-facing-single_raised-btn_vs_bb-call-blank: recommendedAction BET_SMALL is not valid for TURN_FACING_BET.",
     );
     expect(errors).toContain(
-      "turn-facing-single_raised-btn_vs_bb-bet_small-blank: range bucket value continue action BET_SMALL is not valid for TURN_FACING_BET.",
+      "turn-facing-single_raised-btn_vs_bb-call-blank: range bucket value continue action BET_SMALL is not valid for TURN_FACING_BET.",
     );
     expect(errors).toContain(
-      "turn-facing-single_raised-btn_vs_bb-bet_small-blank: range bucket value continue actionMix uses action BET_SMALL outside TURN_FACING_BET.",
+      "turn-facing-single_raised-btn_vs_bb-call-blank: range bucket value continue actionMix uses action BET_SMALL outside TURN_FACING_BET.",
     );
   });
 

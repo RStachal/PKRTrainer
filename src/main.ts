@@ -77,6 +77,7 @@ import { mttProductionImportSlotId } from "./data/ranges/mttImportSlotNaming";
 import { mttProductionLazyLoader } from "./data/ranges/mttProductionLazyLoader";
 import type { RangePack } from "./data/ranges/rangePack";
 import {
+  createMttProductionPostflopFamilyResolver,
   createMttProductionPostflopStrategyResolver,
 } from "./data/ranges/postflopStrategyRegistry";
 import { renderFilters, type FiltersView } from "./ui/filters";
@@ -396,11 +397,10 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       isPostflopStreet(resolvedProfile.street) &&
       readiness?.productionReady === true
     )
-      ? createMttProductionPostflopStrategyResolver({
+      ? createMttProductionPostflopFamilyResolver({
         gameVariant: resolvedProfile.gameVariant,
         tableFormat: resolvedProfile.tableFormat,
         blindSpeed: resolvedProfile.blindSpeed,
-        street: resolvedProfile.street,
         evModel: resolvedProfile.evModel,
         ante: resolvedProfile.ante,
         rakeMode: resolvedProfile.rakeMode,
@@ -416,6 +416,18 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       autoGenerate: options.autoGenerate === true,
       strategyResolver: productionResolver,
       allowFallback: capability?.allowHeuristicFallback ?? true,
+      beforeGenerate: productionResolver && resolvedProfile
+        ? async (mode) => {
+          if (mode !== "line") return;
+          const profileKeys = (["FLOP", "TURN", "RIVER"] as const)
+            .map((street) => mttProductionProfileKey({
+              ...resolvedProfile,
+              street,
+            }))
+            .filter((profileKey): profileKey is string => profileKey !== null);
+          await mttProductionLazyLoader.loadProfiles(profileKeys);
+        }
+        : undefined,
       onAnswered: (spot, chosen, responseMs) => {
         const record = buildPostflopResultRecord(spot, chosen, Date.now(), responseMs);
         const save = postflopStatsStore.record(bridgePostflopResultRecordToStatsV2(record, {

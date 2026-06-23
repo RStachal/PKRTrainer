@@ -379,6 +379,70 @@ try {
       ]),
     });
 
+    const productionHandLine = expectedTurnPackId.length > 0 && expectedRiverPackId.length > 0;
+    if (productionHandLine) {
+      await activate(
+        cdp,
+        ".postflop-change-situation",
+        viewport.mobile ? "touch" : "keyboard",
+      );
+      await waitForSelector(cdp, ".postflop-generate");
+      await evaluate(cdp, `(() => {
+        const mode = document.querySelector(".postflop-mode");
+        if (!(mode instanceof HTMLSelectElement)) throw new Error("Missing postflop mode");
+        mode.value = "line";
+        mode.dispatchEvent(new Event("change", { bubbles: true }));
+        const situation = document.querySelector(".postflop-situation");
+        if (!(situation instanceof HTMLSelectElement)) {
+          throw new Error("Missing postflop situation");
+        }
+        situation.value = "facing-bet";
+        situation.dispatchEvent(new Event("change", { bubbles: true }));
+        const seed = document.querySelector(".postflop-seed");
+        if (!(seed instanceof HTMLInputElement)) throw new Error("Missing postflop seed");
+        seed.value = ${JSON.stringify(postflopSeed)};
+      })()`);
+      await activate(cdp, ".postflop-generate", viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, '.postflop-meta[data-mode="line"][data-street="FLOP"]');
+      const familyChunksLoaded = await evaluate<boolean>(cdp, (
+        `(() => { const resources = performance.getEntriesByType("resource"); return (` +
+        `resources.some((entry) => entry.name.includes(${JSON.stringify(expectedTurnPackId)})) && ` +
+        `resources.some((entry) => entry.name.includes(${JSON.stringify(expectedRiverPackId)}))); })()`
+      ));
+      assert(
+        familyChunksLoaded,
+        `${viewport.name}: production hand-line did not preload TURN/RIVER chunks`,
+      );
+      await activate(
+        cdp,
+        '.postflop-action[data-action="CALL"]',
+        viewport.mobile ? "touch" : "keyboard",
+      );
+      await waitForSelector(cdp, ".postflop-line-next");
+      await activate(cdp, ".postflop-line-next", viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, '.postflop-meta[data-mode="line"][data-street="TURN"]');
+      await activate(
+        cdp,
+        '.postflop-action[data-action="CALL"]',
+        viewport.mobile ? "touch" : "keyboard",
+      );
+      await waitForSelector(cdp, ".postflop-line-next");
+      await activate(cdp, ".postflop-line-next", viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, '.postflop-meta[data-mode="line"][data-street="RIVER"]');
+      await activate(
+        cdp,
+        '.postflop-action[data-action="CALL"]',
+        viewport.mobile ? "touch" : "keyboard",
+      );
+      await waitForSelector(cdp, ".postflop-line-complete");
+      const lineState = await evaluate(cdp, `(() => ({
+        total: document.querySelector(".postflop-line-complete")?.getAttribute("data-total-streets"),
+        text: document.querySelector(".postflop-output")?.textContent ?? ""
+      }))()`);
+      assert(lineState.total === "3", `${viewport.name}: production hand-line was incomplete`);
+      assertSourceFree(lineState.text, `${viewport.name} production hand-line`);
+    }
+
     for (const expectedStreet of [
       { street: "TURN", packId: expectedTurnPackId },
       { street: "RIVER", packId: expectedRiverPackId },
@@ -488,6 +552,12 @@ try {
       `document.querySelector(".stats-json-box")?.value ?? ""`,
     );
     assert(exportedStats.includes('"postflopRecords"'), `${viewport.name}: stats export is incomplete`);
+    if (productionHandLine) {
+      assert(
+        exportedStats.includes('"postflopLineRecords"'),
+        `${viewport.name}: production hand-line stats export is incomplete`,
+      );
+    }
     assert(!/https?:|www\./i.test(exportedStats), `${viewport.name}: stats export leaked a URL`);
     for (const expectedPackId of expectedPostflopPackIds) {
       assert(
@@ -526,7 +596,7 @@ try {
       `document.querySelector(".postflop-breakdowns")?.getAttribute("data-total")`
     ));
     const expectedPersistedCount = expectedPostflopPackIds.length > 0
-      ? String(expectedPostflopPackIds.length)
+      ? String(expectedPostflopPackIds.length + (productionHandLine ? 3 : 0))
       : "1";
     assert(
       reloadedCount === expectedPersistedCount,

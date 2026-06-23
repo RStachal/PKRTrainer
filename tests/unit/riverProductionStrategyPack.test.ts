@@ -184,6 +184,7 @@ describe("riverProductionStrategyPack", () => {
       ...pack().rules[0],
       id: "river-btn-bb-blank-facing-call",
       actionNode: "RIVER_FACING_BET",
+      priorTurnAction: "CALL",
       actions: ["FOLD", "CALL", "RAISE"],
       recommendedAction: "CALL",
       rangeBuckets: [

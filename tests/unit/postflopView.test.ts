@@ -27,6 +27,9 @@ describe("postflopView - DOM", () => {
       .toBe("náhodný");
     expect(root.querySelector<HTMLButtonElement>(".postflop-generate")?.textContent)
       .toBe("Vygenerovat spot");
+    expect([...root.querySelectorAll<HTMLOptionElement>(".postflop-situation option")]
+      .map((option) => option.textContent))
+      .toEqual(["Máme iniciativu", "Čelíme sázce"]);
     expect(root.querySelectorAll(".postflop-card")).toHaveLength(0);
     expect(root.querySelectorAll(".postflop-action")).toHaveLength(0);
 
@@ -632,6 +635,33 @@ describe("postflopView - DOM", () => {
     expect(completedLines[0].completedAt).toBeGreaterThanOrEqual(completedLines[0].startedAt);
   });
 
+  it("pred production hand line pocka na asynchronni pripravu street rodiny", async () => {
+    const root = document.createElement("div");
+    let releasePreparation = (): void => {};
+    const preparation = new Promise<void>((resolve) => {
+      releasePreparation = resolve;
+    });
+    const modes: string[] = [];
+
+    renderPostflopView(root, {
+      initialSeed: 42,
+      beforeGenerate: async (mode) => {
+        modes.push(mode);
+        await preparation;
+      },
+    });
+
+    root.querySelector<HTMLSelectElement>(".postflop-mode")!.value = "line";
+    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+
+    expect(modes).toEqual(["line"]);
+    expect(root.querySelector(".postflop-meta")).toBeNull();
+    releasePreparation();
+    await vi.waitFor(() => {
+      expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("FLOP");
+    });
+  });
+
   it("vetvi hand line pres facing-bet akce bez source detailu v UI", () => {
     const root = document.createElement("div");
     const completedLines: Array<{ streets: string[]; actions: string[]; total: number }> = [];
@@ -681,6 +711,24 @@ describe("postflopView - DOM", () => {
       actions: ["CALL", "FOLD"],
       total: 2,
     }]);
+  });
+
+  it("umi zvolit facing-bet situaci bez interniho action-node identifikatoru", () => {
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: "RIVER",
+    });
+
+    root.querySelector<HTMLSelectElement>(".postflop-situation")!.value = "facing-bet";
+    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+
+    expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.actionNode)
+      .toBe("RIVER_FACING_BET");
+    expect([...root.querySelectorAll<HTMLButtonElement>(".postflop-action")]
+      .map((button) => button.dataset.action))
+      .toEqual(["FOLD", "CALL", "RAISE"]);
+    expect(root.textContent).not.toContain("RIVER_FACING_BET");
   });
 
   it.each([

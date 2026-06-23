@@ -677,7 +677,7 @@ describe("rangeModuleBuilder", () => {
       errors: [],
     });
     expect(result.blockers).toContain("missing pot types: THREE_BET_POT");
-    expect(result.blockers).toContain("missing prior flop actions: CHECK,BET_BIG");
+    expect(result.blockers).toContain("missing prior flop actions: CHECK,BET_BIG,CALL,RAISE");
     expect(result.blockers).toContain(
       "missing turn card classes: LOW_BRICK,OVER_CARD,BROADWAY,BOARD_PAIRING,FLUSH_COMPLETING,STRAIGHT_COMPLETING,DYNAMIC",
     );
@@ -702,7 +702,7 @@ describe("rangeModuleBuilder", () => {
       errors: [],
     });
     expect(result.blockers).toContain("missing pot types: THREE_BET_POT");
-    expect(result.blockers).toContain("missing prior turn actions: CHECK,BET_BIG");
+    expect(result.blockers).toContain("missing prior turn actions: CHECK,BET_BIG,CALL,RAISE");
     expect(result.blockers).toContain(
       "missing river runout classes: OVER_CARD,BOARD_PAIRING,FLUSH_COMPLETING,STRAIGHT_COMPLETING,FOUR_FLUSH,FOUR_STRAIGHT,DYNAMIC",
     );

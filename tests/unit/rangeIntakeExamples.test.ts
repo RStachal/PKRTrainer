@@ -98,7 +98,7 @@ describe("range intake examples", () => {
     expect(report.errors).toEqual([]);
     expect(report.productionReady).toBe(false);
     expect(report.missingPotTypes).toEqual(["THREE_BET_POT"]);
-    expect(report.missingPriorFlopActions).toEqual(["CHECK", "BET_BIG"]);
+    expect(report.missingPriorFlopActions).toEqual(["CHECK", "BET_BIG", "CALL", "RAISE"]);
     expect(report.missingTurnCardClasses).toContain("DYNAMIC");
     expect(report.missingRangeLanes).toEqual([]);
   });
@@ -127,7 +127,7 @@ describe("range intake examples", () => {
     expect(report.errors).toEqual([]);
     expect(report.productionReady).toBe(false);
     expect(report.missingPotTypes).toEqual(["THREE_BET_POT"]);
-    expect(report.missingPriorTurnActions).toEqual(["CHECK", "BET_BIG"]);
+    expect(report.missingPriorTurnActions).toEqual(["CHECK", "BET_BIG", "CALL", "RAISE"]);
     expect(report.missingRiverRunoutClasses).toContain("DYNAMIC");
     expect(report.missingBlockerRelevance).toEqual(["MEDIUM"]);
     expect(report.missingRangeLanes).toEqual([]);
