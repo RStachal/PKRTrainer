@@ -1821,7 +1821,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Doplneno 2026-06-22: range modal, preflop 13x13 matice a postflop Flopzilla matice vcetne detailu, ARIA popisku, mobilni napovedy a unavailable stavu jsou cesky.
     - Promotion tooling nyni vyzaduje `contentLanguage=cs` pro legalni MTT preflop i FLOP/TURN/RIVER production vstupy; bez deklarace se modul nevygeneruje. Synthetic intake priklady deklaraci obsahuji.
     - Doplneno 2026-06-22: HH titulky a rozbory, postflop metadata, oznaceni banku, Flopzilla board metadata a Hero bucket jsou cesky; centralni katalogovy test hlida navrat nejvyraznejsich anglickych retezcu.
-    - Zbyva: projit keyboard/zoom/contrast acceptance v realnem prohlizeci. Pokus 2026-06-22 byl blokovan nedostupnym vestavenym browserem a selhanim aktivace izolovaneho Chrome okna; zadne existujici uzivatelske okno nebylo zmeneno.
+    - Realny Chrome acceptance 2026-06-23 prosel desktop keyboard flow, mobilni touch flow, 200% zoom/reflow, cesky/source-free preflop blocker, postflop, HH review a stats transfer bez runtime chyby nebo horizontalniho overflow.
+    - Zbyva: formalni kontrast audit a Android WebView potvrzeni; lokalizacni/keyboard/zoom cast je pokryta reprodukovatelnym `npm run e2e:chrome`.
   - [ ] 135.35 Pripravit 64 production packu na lazy loading a spolehlivy offline provoz
     - Staticky import vsech budoucich RangePacku/StrategyPacku muze radove prekrocit soucasny 325 KiB bundle budget a zpomalit start.
     - Pred prvnim velkym batchem zmerit realnou velikost jednoho preflop a postflop packu a stanovit budget pro app shell, profilovy chunk a celou offline cache.
@@ -1879,7 +1880,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Rozpracovano 2026-06-23: `npm run e2e:chrome` spousti izolovany headless Chrome bez dalsi npm zavislosti a nad produkcnim buildem overuje desktop 1280 px a mobilni 360/390/412 px. Kontroluje fail-closed legacy preflop gate, postflop start/answer/stats, source-free UI, horizontalni overflow, persistence po reloadu, offline reopen a browser runtime chyby.
     - Lokalni realny Chrome run prosel 4/4 viewporty a ulozil `report.json` + PNG screenshoty do `dist/e2e-chrome`. CI technicky job runner spousti po buildu a artefakty vzdy uploaduje.
     - Doplneno 2026-06-23: desktop flow aktivuje ovladaci prvky skutecnymi keyboard eventy, mobilni flow CDP touch eventy. Vsechny 4 viewporty navic prochazeji HH review s 169bunecnou matici a stats export/import bez URL citaci.
-    - Zbyva: Android WebView/emulator, zoom/contrast pruchod a corrupt/quota/service-worker upgrade/chybejici lazy chunk scenare.
+    - Doplneno 2026-06-23: resilience cast realneho Chrome runneru prochazi 200% zoom bez overflow, corrupt versioned localStorage bez fatal stavu a simulovany quota failure s recoverable source-free warningem.
+    - Android audit 2026-06-23: na lokalnim stroji neni `adb` ani bezici emulator, proto device/WebView cast zustava explicitne blokovana prostredim a neni vydavana za hotovou.
+    - Zbyva: Android WebView/emulator, formalni kontrast audit a dvoubuildovy service-worker upgrade/chybejici lazy chunk v realnem browseru.
   - [ ] 135.27 Provest jeden kompletni P1 pilot import
     - Pouzit aktualni `mtt:next-action`: `FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF`, pack `mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1`.
     - Projit realny tok evidence -> normalize -> permission -> validate -> dry-run -> write -> registry refresh -> targeted tests -> app start.

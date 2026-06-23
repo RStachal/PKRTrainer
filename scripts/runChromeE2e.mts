@@ -355,12 +355,93 @@ try {
     });
   }
 
+  browserErrors.length = 0;
+  await cdp.send("Network.emulateNetworkConditions", {
+    offline: false,
+    latency: 0,
+    downloadThroughput: -1,
+    uploadThroughput: -1,
+  });
+  await cdp.send("Emulation.setDeviceMetricsOverride", {
+    width: 640,
+    height: 450,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await cdp.send("Emulation.setPageScaleFactor", { pageScaleFactor: 2 });
+  await reload(cdp);
+  await waitForSelector(cdp, ".filter-start");
+  const zoomState = await evaluate(cdp, `(() => ({
+    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    fatal: document.querySelector(".fatal")?.textContent ?? ""
+  }))()`);
+  assert(zoomState.overflow <= 1, `200% zoom: page overflow ${zoomState.overflow}px`);
+  assert(zoomState.fatal === "", `200% zoom: fatal bootstrap error`);
+  await cdp.send("Emulation.setPageScaleFactor", { pageScaleFactor: 1 });
+
+  await evaluate(cdp, `(() => {
+    localStorage.clear();
+    for (const key of [
+      "mtt_preflop_state_v1",
+      "mtt_preflop_events_v1",
+      "mtt_preflop_postflop_events_v1",
+      "mtt_preflop_postflop_line_events_v1",
+      "mtt_preflop_hh_v1",
+      "mtt_preflop_hh_reviews_v1"
+    ]) localStorage.setItem(key, "{broken-json");
+  })()`);
+  await reload(cdp);
+  await waitForSelector(cdp, ".filter-start");
+  const corruptState = await evaluate(cdp, `(() => ({
+    fatal: document.querySelector(".fatal")?.textContent ?? "",
+    filters: Boolean(document.querySelector(".filters"))
+  }))()`);
+  assert(corruptState.fatal === "", `Corrupt storage caused a fatal bootstrap state`);
+  assert(corruptState.filters, `Corrupt storage removed the training filters`);
+
+  await evaluate(cdp, `(() => {
+    localStorage.clear();
+    const street = document.querySelector(".profile-street");
+    if (!(street instanceof HTMLSelectElement)) throw new Error("Missing street selector");
+    street.value = "FLOP";
+    street.dispatchEvent(new Event("change", { bubbles: true }));
+    document.querySelector(".filter-start")?.click();
+  })()`);
+  await waitForSelector(cdp, ".postflop-action");
+  await evaluate(cdp, `(() => {
+    const original = Storage.prototype.setItem;
+    Object.defineProperty(window, "__pkrOriginalSetItem", { value: original, configurable: true });
+    Storage.prototype.setItem = function () {
+      throw new DOMException("Simulated quota failure", "QuotaExceededError");
+    };
+  })()`);
+  await activate(cdp, ".postflop-action", "keyboard");
+  await waitForSelector(cdp, ".postflop-result");
+  await waitForSelector(cdp, ".app__notice:not([hidden])");
+  const quotaNotice = await evaluate<string>(
+    cdp,
+    `document.querySelector(".app__notice")?.textContent ?? ""`,
+  );
+  assert(
+    quotaNotice.includes("nepodařilo uložit"),
+    `Quota failure did not produce a recoverable save notice`,
+  );
+  assertSourceFree(quotaNotice, "quota failure notice");
+  assert(browserErrors.length === 0, `resilience scenarios: ${browserErrors.join(" | ")}`);
+
+  const resilience = {
+    zoom200: "passed",
+    corruptStorage: "passed",
+    quotaFailure: "passed",
+    browserErrors: 0,
+  };
   const report = {
     valid: true,
     url: targetUrl,
     chrome: chromePath,
     artifacts: artifactDirectory,
     results,
+    resilience,
   };
   writeFileSync(join(artifactDirectory, "report.json"), JSON.stringify(report, null, 2));
   console.log("MTT Chrome E2E");
@@ -372,6 +453,7 @@ try {
       `- ${result.viewport}: ${result.inputMode}, postflop/HH/stats/reload/offline passed, errors=0`,
     );
   }
+  console.log("- resilience: zoom 200% / corrupt storage / quota failure passed");
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;

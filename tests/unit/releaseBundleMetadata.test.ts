@@ -104,6 +104,9 @@ describe("release bundle metadata", () => {
     expect(chromeE2eScript).toContain(".stats-export");
     expect(chromeE2eScript).toContain(".stats-import");
     expect(chromeE2eScript).toContain("Network.emulateNetworkConditions");
+    expect(chromeE2eScript).toContain("Emulation.setPageScaleFactor");
+    expect(chromeE2eScript).toContain("mtt_preflop_state_v1");
+    expect(chromeE2eScript).toContain("Simulated quota failure");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400)');
