@@ -58,6 +58,10 @@ describe("release bundle metadata", () => {
     const html = readFileSync("index.html", "utf8");
     const budgetScript = readFileSync("scripts/checkBundleBudget.mts", "utf8");
     const chromeE2eScript = readFileSync("scripts/runChromeE2e.mts", "utf8");
+    const productionFixtureE2eScript = readFileSync(
+      "scripts/runChromeProductionFixtureE2e.mts",
+      "utf8",
+    );
     const manifest = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8")) as {
       description: string;
       lang: string;
@@ -95,6 +99,8 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["verify:precache"]).toBe("vite-node scripts/checkDistPrecache.mts");
     expect(pkg.scripts["profile:render"]).toBe("vite-node scripts/profileRenderPerformance.mts");
     expect(pkg.scripts["e2e:chrome"]).toBe("vite-node scripts/runChromeE2e.mts");
+    expect(pkg.scripts["e2e:chrome:production-fixture"])
+      .toBe("vite-node scripts/runChromeProductionFixtureE2e.mts");
     expect(chromeE2eScript).toContain('"mobile-360"');
     expect(chromeE2eScript).toContain('"mobile-390"');
     expect(chromeE2eScript).toContain('"mobile-412"');
@@ -112,6 +118,9 @@ describe("release bundle metadata", () => {
     expect(chromeE2eScript).toContain("runServiceWorkerUpgradeScenario");
     expect(chromeE2eScript).toContain("previous-build-chunk");
     expect(chromeE2eScript).toContain("stableAssetIsolation");
+    expect(productionFixtureE2eScript).toContain("Synthetic source-free browser fixture");
+    expect(productionFixtureE2eScript).toContain("MTT_E2E_EXPECT_PREFLOP");
+    expect(productionFixtureE2eScript).toContain("mtt:refresh-registry");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400)');

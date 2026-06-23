@@ -17,7 +17,8 @@ describe("CI workflows", () => {
     expect(workflow).toContain("npm run bundle:budget");
     expect(workflow).toContain("npm run verify:precache");
     expect(workflow).toContain("npm run e2e:chrome");
-    expect(workflow).toContain("path: artifacts/e2e-chrome");
+    expect(workflow).toContain("npm run e2e:chrome:production-fixture");
+    expect(workflow).toContain("path: artifacts/e2e-*");
     expect(workflow).toContain("mtt-data-status:");
     expect(workflow).toContain("continue-on-error: true");
     expect(workflow).toContain("npm run mtt:release-gates -- --json");

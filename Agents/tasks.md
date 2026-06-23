@@ -1848,6 +1848,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Bundle po dokonceni lazy runtime katalogu: main 268.82 KiB raw / 73.67 KiB gzip, dashboard 55.99 / 13.89 KiB, postflop-line 20.89 / 7.22 KiB; vsechny chunky jsou pod individualnim 325/86 KiB limitem.
     - Finalni overeni navazujici vlny 2026-06-22: typecheck, 111 testovacich souboru / 541 testu, registry refresh/integrity, range audit, build, precache a bundle budget jsou zelene. Skutecny docasny Vite build potvrzuje canonical production chunk name a jeho vylouceni z install precache. Po HH preloadu ma main 269.62 KiB raw / 73.93 KiB gzip; aktualni aplikacni build ma 0 legalnich lazy pack chunku, dokud neprijde prvni production import.
     - Doplneno 2026-06-23: realny Chrome dvoubuildovy test docasne prepne verzi v generovanem `dist/sw.js`, nainstaluje a aktivuje novy worker, overi prevzeti aktualniho klienta, zachovani jedne predchozi cache, obsluhu odstraneneho hashovaneho chunku z rollback generace a zakaz vraceni stabilni URL ze stare cache. Worker soubor je vzdy obnoven.
+    - Doplneno 2026-06-23: `npm run e2e:chrome:production-fixture` vytvori pouze po dobu testu canonical source-free preflop pack a generated registry, postavi oddeleny fixture dist a po overeni vse atomicky obnovi/smaze. Realny Vite chunk ma 23.43 KiB raw / 7.19 KiB gzip, main fixture build 252.90 / 69.60 KiB a profil po prvnim nacteni startuje znovu offline.
     - Zbyva: po prvnim legalnim preflop/postflop importu zmerit realne profilove chunky a celou offline cache a potvrdit cold/warm i dvoubuildovy upgrade na realnem Android WebView zarizeni/emulatoru.
   - [x] 135.36 Zprisnit semanticke QA produkcnich strategii
     - Registry musi failnout na dva production packy pro stejny profil/street bez explicitni precedence, na cross-profile dimenze a na pack bez source-free provenance fingerprintu.
@@ -1885,6 +1886,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Doplneno 2026-06-23: resilience cast realneho Chrome runneru prochazi 200% zoom bez overflow, corrupt versioned localStorage bez fatal stavu a simulovany quota failure s recoverable source-free warningem.
     - Android audit 2026-06-23: na lokalnim stroji neni `adb` ani bezici emulator, proto device/WebView cast zustava explicitne blokovana prostredim a neni vydavana za hotovou.
     - Doplneno 2026-06-23: realny Chrome runner provadi skutecnou registraci druhe worker verze a overuje previous-build hash chunk rollback i izolaci stabilnich assetu; missing-asset/update browser cast je hotova.
+    - Source-free production fixture Chrome flow 2026-06-23 realne prosel lazy pack load, preflop start, answer, next, navrat do filtru a offline opakovany start. Fixture ani docasny registry zapis nezustavaji v source tree nebo release `dist`.
     - Zbyva: Android WebView/emulator. Plne lazy profilovy chunk lze na device zmerit az po prvnim legalnim production importu.
   - [ ] 135.27 Provest jeden kompletni P1 pilot import
     - Pouzit aktualni `mtt:next-action`: `FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF`, pack `mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1`.

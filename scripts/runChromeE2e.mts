@@ -39,6 +39,9 @@ const VIEWPORTS: readonly Viewport[] = [
   { name: "mobile-390", width: 390, height: 844, mobile: true },
   { name: "mobile-412", width: 412, height: 915, mobile: true },
 ];
+const activeViewports = process.env.MTT_E2E_VIEWPORTS === "desktop"
+  ? [VIEWPORTS[0]]
+  : VIEWPORTS;
 
 const VALID_HH = [
   "PokerStars Hand #1: Tournament #1, 10/20",
@@ -134,6 +137,10 @@ class CdpClient {
 
 const targetUrl = process.env.MTT_E2E_URL ?? "http://127.0.0.1:4173/";
 const artifactDirectory = resolve(process.env.MTT_E2E_ARTIFACTS ?? "artifacts/e2e-chrome");
+const buildDirectory = resolve(process.env.MTT_E2E_DIST ?? "dist");
+const expectedPreflop = process.env.MTT_E2E_EXPECT_PREFLOP === "production"
+  ? "production"
+  : "blocked";
 const chromePath = findChromePath();
 const profileDirectory = mkdtempSync(join(tmpdir(), "pkrtrainer-chrome-e2e-"));
 let chrome: ChildProcess | null = null;
@@ -192,7 +199,10 @@ try {
     surface: string;
     entries: ContrastAuditEntry[];
   }> = [];
-  for (const viewport of VIEWPORTS) {
+  for (const viewport of activeViewports) {
+    if (expectedPreflop === "production") {
+      console.log(`Production fixture viewport: ${viewport.name}`);
+    }
     browserErrors.length = 0;
     await cdp.send("Emulation.setDeviceMetricsOverride", {
       width: viewport.width,
@@ -209,6 +219,7 @@ try {
     await evaluate(cdp, `localStorage.clear()`);
     await reload(cdp);
     await waitForSelector(cdp, ".filter-start");
+    await ensureServiceWorkerControl(cdp);
 
     const initial = await evaluate(cdp, `(() => ({
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -218,7 +229,7 @@ try {
     }))()`);
     assert(initial.overflow <= 1, `${viewport.name}: page has horizontal overflow ${initial.overflow}px`);
     assert(initial.fatal === "", `${viewport.name}: fatal bootstrap error: ${initial.fatal}`);
-    assert(initial.profileStatus === "blocked", `${viewport.name}: legacy preflop must be blocked`);
+    assert(initial.profileStatus === "blocked", `${viewport.name}: unloaded preflop must fail closed`);
     assert(
       initial.profileText.includes("Kandidátní náhled"),
       `${viewport.name}: missing fail-closed preflop notice`,
@@ -235,24 +246,48 @@ try {
     });
 
     await activate(cdp, ".filter-start", viewport.mobile ? "touch" : "keyboard");
-    await waitForSelector(cdp, ".filter-empty-warning:not([hidden])");
-    const preflopGate = await evaluate(cdp, `(() => ({
-      table: Boolean(document.querySelector(".poker-table")),
-      warning: document.querySelector(".filter-empty-warning")?.textContent ?? ""
-    }))()`);
-    assert(!preflopGate.table, `${viewport.name}: blocked preflop rendered a poker table`);
-    assert(
-      preflopGate.warning.includes("kandidátní náhled"),
-      `${viewport.name}: blocked preflop warning is missing`,
-    );
-
-    contrastAudits.push({
-      viewport: viewport.name,
-      surface: "preflop-blocker",
-      entries: await auditContrast(cdp, viewport.name, "preflop blocker", [
-        ".filter-empty-warning",
-      ]),
-    });
+    if (expectedPreflop === "blocked") {
+      await waitForSelector(cdp, ".filter-empty-warning:not([hidden])");
+      const preflopGate = await evaluate(cdp, `(() => ({
+        table: Boolean(document.querySelector(".poker-table")),
+        warning: document.querySelector(".filter-empty-warning")?.textContent ?? ""
+      }))()`);
+      assert(!preflopGate.table, `${viewport.name}: blocked preflop rendered a poker table`);
+      assert(
+        preflopGate.warning.includes("kandidátní náhled"),
+        `${viewport.name}: blocked preflop warning is missing`,
+      );
+      contrastAudits.push({
+        viewport: viewport.name,
+        surface: "preflop-blocker",
+        entries: await auditContrast(cdp, viewport.name, "preflop blocker", [
+          ".filter-empty-warning",
+        ]),
+      });
+    } else {
+      await waitForSelector(cdp, ".action-btn");
+      const productionPreflop = await evaluate(cdp, `(() => ({
+        table: Boolean(document.querySelector(".poker-table")),
+        productionChunk: performance.getEntriesByType("resource").some((entry) => (
+          entry.name.includes("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1")
+        ))
+      }))()`);
+      assert(productionPreflop.table, `${viewport.name}: production preflop table did not render`);
+      assert(
+        productionPreflop.productionChunk,
+        `${viewport.name}: production preflop lazy chunk was not requested`,
+      );
+      await activate(cdp, ".action-btn", viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, ".result__next");
+      await activate(cdp, ".result__next", viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, ".action-btn");
+      await activate(
+        cdp,
+        ".training__change-situation",
+        viewport.mobile ? "touch" : "keyboard",
+      );
+      await waitForSelector(cdp, ".filter-start");
+    }
 
     await evaluate(cdp, `(() => {
       const select = document.querySelector(".profile-street");
@@ -385,6 +420,16 @@ try {
     });
     await reload(cdp);
     await waitForSelector(cdp, ".filter-start");
+    if (expectedPreflop === "production") {
+      await activate(cdp, ".filter-start", viewport.mobile ? "touch" : "keyboard");
+      await waitForSelector(cdp, ".action-btn");
+      await activate(
+        cdp,
+        ".training__change-situation",
+        viewport.mobile ? "touch" : "keyboard",
+      );
+      await waitForSelector(cdp, ".filter-start");
+    }
     const offline = await evaluate(cdp, `(() => ({
       fatal: document.querySelector(".fatal")?.textContent ?? "",
       title: document.querySelector("h1")?.textContent ?? ""
@@ -402,7 +447,7 @@ try {
     results.push({
       viewport: viewport.name,
       size: `${viewport.width}x${viewport.height}`,
-      preflopGate: "blocked",
+      preflopGate: expectedPreflop,
       postflopFlow: "passed",
       hhReview: "passed",
       statsTransfer: "passed",
@@ -552,6 +597,48 @@ async function navigate(client: CdpClient, url: string): Promise<void> {
   await loaded;
 }
 
+async function ensureServiceWorkerControl(client: CdpClient): Promise<void> {
+  const supported = await evaluate<boolean>(
+    client,
+    `"serviceWorker" in navigator`,
+  );
+  if (!supported) return;
+  const controlled = await evaluate<boolean>(
+    client,
+    `navigator.serviceWorker.controller !== null`,
+  );
+  if (controlled) return;
+  await evaluate(client, `(async () => {
+    const existing = await navigator.serviceWorker.getRegistration("./");
+    if (!existing) {
+      await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+    }
+    await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise((_, reject) => setTimeout(
+        () => reject(new Error("Timed out waiting for service worker readiness")),
+        15000
+      ))
+    ]);
+    const deadline = Date.now() + 15000;
+    while (navigator.serviceWorker.controller === null && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  })()`);
+  const claimed = await evaluate<boolean>(
+    client,
+    `navigator.serviceWorker.controller !== null`,
+  );
+  if (claimed) return;
+  await reload(client);
+  await waitForSelector(client, ".filter-start");
+  const controlledAfterReload = await evaluate<boolean>(
+    client,
+    `navigator.serviceWorker.controller !== null`,
+  );
+  assert(controlledAfterReload, "Service worker did not control the page after reload");
+}
+
 async function reload(client: CdpClient): Promise<void> {
   const loaded = client.waitFor("Page.loadEventFired");
   await client.send("Page.reload", { ignoreCache: false });
@@ -581,7 +668,13 @@ async function waitForSelector(client: CdpClient, selector: string, timeoutMs = 
     }
     await sleep(100);
   }
-  throw new Error(`Timed out waiting for selector: ${selector}`);
+  const debug = await evaluate<{ url: string; text: string }>(client, `(() => ({
+    url: location.href,
+    text: (document.body?.innerText ?? "").slice(0, 500)
+  }))()`);
+  throw new Error(
+    `Timed out waiting for selector: ${selector} at ${debug.url}; body=${debug.text}`,
+  );
 }
 
 async function activate(
@@ -729,7 +822,7 @@ async function runServiceWorkerUpgradeScenario(
   previousChunkRollback: "passed";
   stableAssetIsolation: "passed";
 }> {
-  const workerPath = resolve("dist/sw.js");
+  const workerPath = resolve(buildDirectory, "sw.js");
   assert(existsSync(workerPath), "Service-worker upgrade scenario requires dist/sw.js");
   const originalWorker = readFileSync(workerPath, "utf8");
   const cacheMatch = originalWorker.match(/mtt-preflop-[a-zA-Z0-9_-]+/);
@@ -866,8 +959,12 @@ async function waitForDevToolsPort(directory: string): Promise<number> {
   const deadline = Date.now() + 15_000;
   while (Date.now() < deadline) {
     if (existsSync(path)) {
-      const port = Number(readFileSync(path, "utf8").split(/\r?\n/)[0]);
-      if (Number.isInteger(port) && port > 0) return port;
+      try {
+        const port = Number(readFileSync(path, "utf8").split(/\r?\n/)[0]);
+        if (Number.isInteger(port) && port > 0) return port;
+      } catch {
+        // Chrome can briefly lock DevToolsActivePort while finishing startup.
+      }
     }
     await sleep(100);
   }
