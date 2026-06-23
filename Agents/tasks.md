@@ -1803,7 +1803,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Technicka implementace a fixture parity prosly: typecheck, 108 testovacich souboru / 522 testu, registry refresh/integrity, range audit, build, precache a bundle budget. Main JS 312.67 KiB raw / 81.54 KiB gzip; postflop-line 20.89 KiB raw / 7.10 KiB gzip.
     - Zbyvajici blocker pro uplne uzavreni acceptance neni v HH kodu: registry nema legalni production 6-max ani DOLAR_EV preflop packy a nema zadny legalni FLOP/TURN/RIVER production StrategyPack. Do jejich importu se tyto profily spravne blokuji.
     - Hotovo 2026-06-22: technicka HH parity je uzavrena; chybejici production data jsou sledovana v 135.24, 135.27 a import waves, nikoli jako dalsi HH implementace.
-  - [ ] 135.34 Dokoncit ceskou lokalizaci, terminologii a pristupnost
+  - [x] 135.34 Dokoncit ceskou lokalizaci, terminologii a pristupnost
     - Hard rule projektu pozaduje ceske UI, ale aktualni `main.ts`, filtry, dashboard, HH, postflop, manifest a chybove stavy obsahuji rozsahle anglicke texty.
     - Zavest centralni textovy katalog, sjednotit pokerovou terminologii a prelozit vsechny visible texty, validation/error stavy, PWA manifest (`lang`) a user guide; strojove enumy ponechat interni.
     - Doplnit release test, ktery inventarizuje viditelne texty a zabrani novym nahodnym inline stringum mimo katalog.
@@ -1822,7 +1822,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Promotion tooling nyni vyzaduje `contentLanguage=cs` pro legalni MTT preflop i FLOP/TURN/RIVER production vstupy; bez deklarace se modul nevygeneruje. Synthetic intake priklady deklaraci obsahuji.
     - Doplneno 2026-06-22: HH titulky a rozbory, postflop metadata, oznaceni banku, Flopzilla board metadata a Hero bucket jsou cesky; centralni katalogovy test hlida navrat nejvyraznejsich anglickych retezcu.
     - Realny Chrome acceptance 2026-06-23 prosel desktop keyboard flow, mobilni touch flow, 200% zoom/reflow, cesky/source-free preflop blocker, postflop, HH review a stats transfer bez runtime chyby nebo horizontalniho overflow.
-    - Zbyva: formalni kontrast audit a Android WebView potvrzeni; lokalizacni/keyboard/zoom cast je pokryta reprodukovatelnym `npm run e2e:chrome`.
+    - Formalni Chrome kontrast audit 2026-06-23 pocita WCAG relativni luminanci vcetne alpha kompozice a gradient stops. Proslo 52 text/background kontrol pres app shell, blocker, postflop result, HH review a stats transfer ve vsech 4 viewportech.
+    - Hotovo: ceska lokalizace, keyboard/touch, focus, source-free texty, reduced motion, 200% zoom/reflow a reprezentativni WCAG kontrast jsou pokryte reprodukovatelnym `npm run e2e:chrome`. Android WebView je nadale samostatna device cast 135.38.
   - [ ] 135.35 Pripravit 64 production packu na lazy loading a spolehlivy offline provoz
     - Staticky import vsech budoucich RangePacku/StrategyPacku muze radove prekrocit soucasny 325 KiB bundle budget a zpomalit start.
     - Pred prvnim velkym batchem zmerit realnou velikost jednoho preflop a postflop packu a stanovit budget pro app shell, profilovy chunk a celou offline cache.
@@ -1882,7 +1883,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Doplneno 2026-06-23: desktop flow aktivuje ovladaci prvky skutecnymi keyboard eventy, mobilni flow CDP touch eventy. Vsechny 4 viewporty navic prochazeji HH review s 169bunecnou matici a stats export/import bez URL citaci.
     - Doplneno 2026-06-23: resilience cast realneho Chrome runneru prochazi 200% zoom bez overflow, corrupt versioned localStorage bez fatal stavu a simulovany quota failure s recoverable source-free warningem.
     - Android audit 2026-06-23: na lokalnim stroji neni `adb` ani bezici emulator, proto device/WebView cast zustava explicitne blokovana prostredim a neni vydavana za hotovou.
-    - Zbyva: Android WebView/emulator, formalni kontrast audit a dvoubuildovy service-worker upgrade/chybejici lazy chunk v realnem browseru.
+    - Zbyva: Android WebView/emulator a dvoubuildovy service-worker upgrade/chybejici lazy chunk v realnem browseru.
   - [ ] 135.27 Provest jeden kompletni P1 pilot import
     - Pouzit aktualni `mtt:next-action`: `FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF`, pack `mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1`.
     - Projit realny tok evidence -> normalize -> permission -> validate -> dry-run -> write -> registry refresh -> targeted tests -> app start.

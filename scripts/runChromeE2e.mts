@@ -25,6 +25,14 @@ interface CdpMessage {
   error?: { message?: string };
 }
 
+interface ContrastAuditEntry {
+  selector: string;
+  ratio: number;
+  required: number;
+  fontSize: number;
+  fontWeight: string;
+}
+
 const VIEWPORTS: readonly Viewport[] = [
   { name: "desktop-1280", width: 1280, height: 900, mobile: false },
   { name: "mobile-360", width: 360, height: 800, mobile: true },
@@ -179,6 +187,11 @@ try {
   });
 
   const results = [];
+  const contrastAudits: Array<{
+    viewport: string;
+    surface: string;
+    entries: ContrastAuditEntry[];
+  }> = [];
   for (const viewport of VIEWPORTS) {
     browserErrors.length = 0;
     await cdp.send("Emulation.setDeviceMetricsOverride", {
@@ -211,6 +224,16 @@ try {
       `${viewport.name}: missing fail-closed preflop notice`,
     );
 
+    contrastAudits.push({
+      viewport: viewport.name,
+      surface: "initial",
+      entries: await auditContrast(cdp, viewport.name, "initial", [
+        "h1",
+        ".profile-selector__note",
+        ".filter-start",
+      ]),
+    });
+
     await activate(cdp, ".filter-start", viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".filter-empty-warning:not([hidden])");
     const preflopGate = await evaluate(cdp, `(() => ({
@@ -222,6 +245,14 @@ try {
       preflopGate.warning.includes("kandidátní náhled"),
       `${viewport.name}: blocked preflop warning is missing`,
     );
+
+    contrastAudits.push({
+      viewport: viewport.name,
+      surface: "preflop-blocker",
+      entries: await auditContrast(cdp, viewport.name, "preflop blocker", [
+        ".filter-empty-warning",
+      ]),
+    });
 
     await evaluate(cdp, `(() => {
       const select = document.querySelector(".profile-street");
@@ -244,6 +275,15 @@ try {
 
     await activate(cdp, ".postflop-action", viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".postflop-result");
+    contrastAudits.push({
+      viewport: viewport.name,
+      surface: "postflop-result",
+      entries: await auditContrast(cdp, viewport.name, "postflop result", [
+        ".postflop-meta",
+        ".postflop-action",
+        ".postflop-result",
+      ]),
+    });
 
     await evaluate(cdp, `(() => {
       const ante = document.querySelector(".profile-ante");
@@ -280,6 +320,15 @@ try {
     }))()`);
     assert(hhReview.matrixCells === 169, `${viewport.name}: HH review matrix is incomplete`);
     assertSourceFree(hhReview.text, `${viewport.name} HH review`);
+    contrastAudits.push({
+      viewport: viewport.name,
+      surface: "hh-review",
+      entries: await auditContrast(cdp, viewport.name, "HH review", [
+        ".hh-analyze",
+        ".hh-analysis__title",
+        ".hh-analysis__explanation",
+      ]),
+    });
 
     await activate(cdp, '[data-tab="stats"]', viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".dashboard");
@@ -298,6 +347,15 @@ try {
     assert(!/https?:|www\./i.test(exportedStats), `${viewport.name}: stats export leaked a URL`);
     await activate(cdp, ".stats-import", viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".stats-transfer__status--ok");
+    contrastAudits.push({
+      viewport: viewport.name,
+      surface: "stats-transfer",
+      entries: await auditContrast(cdp, viewport.name, "stats transfer", [
+        ".stats-export",
+        ".stats-import",
+        ".stats-transfer__status--ok",
+      ]),
+    });
 
     const screenshot = await cdp.send("Page.captureScreenshot", {
       format: "png",
@@ -441,6 +499,7 @@ try {
     chrome: chromePath,
     artifacts: artifactDirectory,
     results,
+    contrastAudits,
     resilience,
   };
   writeFileSync(join(artifactDirectory, "report.json"), JSON.stringify(report, null, 2));
@@ -454,6 +513,7 @@ try {
     );
   }
   console.log("- resilience: zoom 200% / corrupt storage / quota failure passed");
+  console.log(`- contrast: ${contrastAudits.flatMap((audit) => audit.entries).length} checks passed`);
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
@@ -555,6 +615,100 @@ async function activate(
     type: "touchEnd",
     touchPoints: [],
   });
+}
+
+async function auditContrast(
+  client: CdpClient,
+  viewport: string,
+  surface: string,
+  selectors: readonly string[],
+): Promise<ContrastAuditEntry[]> {
+  const entries = await evaluate<ContrastAuditEntry[]>(client, `(() => {
+    const selectors = ${JSON.stringify(selectors)};
+    const parseColor = (value) => {
+      const match = value.match(/rgba?\\(([^)]+)\\)/i);
+      if (!match) throw new Error("Unsupported computed color: " + value);
+      const parts = match[1].split(/[ ,/]+/).filter(Boolean).map(Number);
+      return {
+        r: parts[0],
+        g: parts[1],
+        b: parts[2],
+        a: Number.isFinite(parts[3]) ? parts[3] : 1
+      };
+    };
+    const composite = (front, back) => {
+      const alpha = front.a + back.a * (1 - front.a);
+      if (alpha === 0) return { r: 0, g: 0, b: 0, a: 0 };
+      return {
+        r: (front.r * front.a + back.r * back.a * (1 - front.a)) / alpha,
+        g: (front.g * front.a + back.g * back.a * (1 - front.a)) / alpha,
+        b: (front.b * front.a + back.b * back.a * (1 - front.a)) / alpha,
+        a: alpha
+      };
+    };
+    const background = (element) => {
+      const chain = [];
+      for (let current = element; current instanceof Element; current = current.parentElement) {
+        chain.push(current);
+      }
+      let color = { r: 9, g: 15, b: 24, a: 1 };
+      for (const current of chain.reverse()) {
+        color = composite(parseColor(getComputedStyle(current).backgroundColor), color);
+      }
+      return color;
+    };
+    const channel = (value) => {
+      const normalized = value / 255;
+      return normalized <= 0.04045
+        ? normalized / 12.92
+        : Math.pow((normalized + 0.055) / 1.055, 2.4);
+    };
+    const luminance = (color) => (
+      0.2126 * channel(color.r) +
+      0.7152 * channel(color.g) +
+      0.0722 * channel(color.b)
+    );
+    return selectors.map((selector) => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) throw new Error("Missing contrast target: " + selector);
+      const style = getComputedStyle(element);
+      const baseBackground = background(element);
+      const gradientColors = [...style.backgroundImage.matchAll(/rgba?\\([^)]+\\)/gi)]
+        .map((match) => parseColor(match[0]));
+      const parentBackground = element.parentElement
+        ? background(element.parentElement)
+        : { r: 9, g: 15, b: 24, a: 1 };
+      const backgrounds = gradientColors.length > 0
+        ? gradientColors.map((color) => composite(color, parentBackground))
+        : [baseBackground];
+      const ratios = backgrounds.map((bg) => {
+        const fg = composite(parseColor(style.color), bg);
+        const lighter = Math.max(luminance(fg), luminance(bg));
+        const darker = Math.min(luminance(fg), luminance(bg));
+        return (lighter + 0.05) / (darker + 0.05);
+      });
+      const ratio = Math.min(...ratios);
+      const fontSize = Number.parseFloat(style.fontSize);
+      const numericWeight = Number.parseInt(style.fontWeight, 10);
+      const bold = Number.isFinite(numericWeight) ? numericWeight >= 700 : style.fontWeight === "bold";
+      const required = fontSize >= 24 || (bold && fontSize >= 18.66) ? 3 : 4.5;
+      return {
+        selector,
+        ratio: Math.round(ratio * 100) / 100,
+        required,
+        fontSize,
+        fontWeight: style.fontWeight
+      };
+    });
+  })()`);
+  const failures = entries.filter((entry) => entry.ratio < entry.required);
+  assert(
+    failures.length === 0,
+    `${viewport} ${surface}: insufficient contrast ${failures.map((entry) => (
+      `${entry.selector}=${entry.ratio}:1 required ${entry.required}:1`
+    )).join(", ")}`,
+  );
+  return entries;
 }
 
 async function waitForDevToolsPort(directory: string): Promise<number> {
