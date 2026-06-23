@@ -84,7 +84,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mtt-chrome-e2e-node-22
-          path: dist/e2e-chrome
+          path: artifacts/e2e-chrome
           if-no-files-found: warn
 
       - name: Upload production build

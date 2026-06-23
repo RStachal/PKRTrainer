@@ -109,6 +109,9 @@ describe("release bundle metadata", () => {
     expect(chromeE2eScript).toContain("Simulated quota failure");
     expect(chromeE2eScript).toContain("auditContrast");
     expect(chromeE2eScript).toContain("required = fontSize >= 24");
+    expect(chromeE2eScript).toContain("runServiceWorkerUpgradeScenario");
+    expect(chromeE2eScript).toContain("previous-build-chunk");
+    expect(chromeE2eScript).toContain("stableAssetIsolation");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400)');

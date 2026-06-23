@@ -133,7 +133,7 @@ class CdpClient {
 }
 
 const targetUrl = process.env.MTT_E2E_URL ?? "http://127.0.0.1:4173/";
-const artifactDirectory = resolve(process.env.MTT_E2E_ARTIFACTS ?? "dist/e2e-chrome");
+const artifactDirectory = resolve(process.env.MTT_E2E_ARTIFACTS ?? "artifacts/e2e-chrome");
 const chromePath = findChromePath();
 const profileDirectory = mkdtempSync(join(tmpdir(), "pkrtrainer-chrome-e2e-"));
 let chrome: ChildProcess | null = null;
@@ -486,6 +486,13 @@ try {
   );
   assertSourceFree(quotaNotice, "quota failure notice");
   assert(browserErrors.length === 0, `resilience scenarios: ${browserErrors.join(" | ")}`);
+  await cdp.send("Network.emulateNetworkConditions", {
+    offline: false,
+    latency: 0,
+    downloadThroughput: -1,
+    uploadThroughput: -1,
+  });
+  const serviceWorkerUpgrade = await runServiceWorkerUpgradeScenario(cdp, targetUrl);
 
   const resilience = {
     zoom200: "passed",
@@ -501,6 +508,7 @@ try {
     results,
     contrastAudits,
     resilience,
+    serviceWorkerUpgrade,
   };
   writeFileSync(join(artifactDirectory, "report.json"), JSON.stringify(report, null, 2));
   console.log("MTT Chrome E2E");
@@ -514,6 +522,7 @@ try {
   }
   console.log("- resilience: zoom 200% / corrupt storage / quota failure passed");
   console.log(`- contrast: ${contrastAudits.flatMap((audit) => audit.entries).length} checks passed`);
+  console.log("- service worker: real upgrade and previous-build chunk rollback passed");
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
@@ -709,6 +718,147 @@ async function auditContrast(
     )).join(", ")}`,
   );
   return entries;
+}
+
+async function runServiceWorkerUpgradeScenario(
+  client: CdpClient,
+  appUrl: string,
+): Promise<{
+  oldCache: string;
+  newCache: string;
+  previousChunkRollback: "passed";
+  stableAssetIsolation: "passed";
+}> {
+  const workerPath = resolve("dist/sw.js");
+  assert(existsSync(workerPath), "Service-worker upgrade scenario requires dist/sw.js");
+  const originalWorker = readFileSync(workerPath, "utf8");
+  const cacheMatch = originalWorker.match(/mtt-preflop-[a-zA-Z0-9_-]+/);
+  assert(cacheMatch, "Built service worker does not contain a versioned cache name");
+  const oldCache = cacheMatch[0];
+  const newCache = `${oldCache}-e2e-upgrade`;
+  const upgradedWorker = originalWorker.replaceAll(oldCache, newCache);
+  assert(upgradedWorker !== originalWorker, "Service-worker cache version could not be changed");
+
+  const baseUrl = new URL(appUrl);
+  const removedChunkUrl = new URL(
+    "./assets/main-browserprevious-a1b2c3d4.js",
+    baseUrl,
+  ).href;
+  const removedStableUrl = new URL("./removed-browser-icon.svg", baseUrl).href;
+
+  await reload(client);
+  await waitForSelector(client, ".filter-start");
+  const workerReady = await evaluate<boolean>(client, `(() => (
+    "serviceWorker" in navigator && navigator.serviceWorker.controller !== null
+  ))()`);
+  assert(workerReady, "Current page is not controlled by a service worker");
+  await evaluate(client, `(async () => {
+    const cache = await caches.open(${JSON.stringify(oldCache)});
+    await cache.put(
+      ${JSON.stringify(removedChunkUrl)},
+      new Response("previous-build-chunk", {
+        status: 200,
+        headers: { "content-type": "text/javascript" }
+      })
+    );
+    await cache.put(
+      ${JSON.stringify(removedStableUrl)},
+      new Response("stale-stable-asset", { status: 200 })
+    );
+  })()`);
+
+  try {
+    writeFileSync(workerPath, upgradedWorker);
+    const upgrade = await evaluate<{
+      activeScript: string;
+      caches: string[];
+    }>(client, `(async () => {
+      const registration = await navigator.serviceWorker.register(
+        "./sw.js?e2e-upgrade=1",
+        { scope: "./", updateViaCache: "none" }
+      );
+      const candidate = registration.installing ?? registration.waiting;
+      if (candidate && candidate.state !== "activated") {
+        await new Promise((resolve, reject) => {
+          const timer = setTimeout(
+            () => reject(new Error("Timed out installing upgraded service worker")),
+            15000
+          );
+          candidate.addEventListener("statechange", () => {
+            if (candidate.state === "activated") {
+              clearTimeout(timer);
+              resolve(undefined);
+            }
+            if (candidate.state === "redundant") {
+              clearTimeout(timer);
+              reject(new Error("Upgraded service worker became redundant"));
+            }
+          });
+        });
+      }
+      await navigator.serviceWorker.ready;
+      const deadline = Date.now() + 15000;
+      while (
+        !navigator.serviceWorker.controller?.scriptURL.includes("e2e-upgrade=1") &&
+        Date.now() < deadline
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      if (!navigator.serviceWorker.controller?.scriptURL.includes("e2e-upgrade=1")) {
+        throw new Error("Upgraded service worker did not claim the current page");
+      }
+      return {
+        activeScript: registration.active?.scriptURL ?? "",
+        caches: await caches.keys()
+      };
+    })()`);
+    assert(
+      upgrade.activeScript.includes("e2e-upgrade=1"),
+      "Upgraded service worker did not become active",
+    );
+    assert(upgrade.caches.includes(oldCache), "Previous build cache was not preserved");
+    assert(upgrade.caches.includes(newCache), "New build cache was not created");
+
+    await client.send("Network.emulateNetworkConditions", {
+      offline: true,
+      latency: 0,
+      downloadThroughput: 0,
+      uploadThroughput: 0,
+    });
+    const rollbackText = await evaluate<string>(
+      client,
+      `fetch(${JSON.stringify(removedChunkUrl)}).then((response) => response.text())`,
+    );
+    assert(
+      rollbackText === "previous-build-chunk",
+      "Removed previous-build chunk was not served from rollback cache",
+    );
+    const stableFetch = await evaluate<{ failed: boolean; text: string }>(
+      client,
+      `fetch(${JSON.stringify(removedStableUrl)})
+        .then((response) => response.text().then((text) => ({ failed: false, text })))
+        .catch(() => ({ failed: true, text: "" }))`,
+    );
+    assert(
+      stableFetch.text !== "stale-stable-asset",
+      "Stable asset leaked from the previous-build rollback cache",
+    );
+  } finally {
+    writeFileSync(workerPath, originalWorker);
+    await client.send("Network.emulateNetworkConditions", {
+      offline: false,
+      latency: 0,
+      downloadThroughput: -1,
+      uploadThroughput: -1,
+    });
+  }
+
+  return {
+    oldCache,
+    newCache,
+    previousChunkRollback: "passed",
+    stableAssetIsolation: "passed",
+  };
 }
 
 async function waitForDevToolsPort(directory: string): Promise<number> {
