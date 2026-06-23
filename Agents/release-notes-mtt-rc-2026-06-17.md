@@ -1,5 +1,7 @@
 # MTT RC attempt - 2026-06-17
 
+Updated 2026-06-22 after fail-closed legal provenance enforcement.
+
 ## Decision
 
 Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are largely in place, but final MTT production gates are blocked by missing legal production import data.
@@ -10,9 +12,9 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
   - valid: false
   - commands: 9
   - failed commands: 2
-  - completion matrix: 64 rows, 2 productionReady, 52 preview, 10 blocked
-  - blocker summary: 62 blocker rows, 52 candidate blocker rows, 10 missing blocker rows
-  - intake files: 62 rows missing `normalized.json`, 62 rows missing `permission.json`
+  - completion matrix: 64 rows, 0 productionReady, 54 preview, 10 blocked
+  - blocker summary: 64 blocker rows, 54 candidate blocker rows, 10 missing blocker rows
+  - intake files: 64 rows missing `normalized.json`, 64 rows missing `permission.json`
   - postflop final release: 48 total postflop rows, 0 productionReady, 48 blockers
   - source-free UI guard: passed, 9 tests
   - range intake workspace guard: valid
@@ -25,7 +27,7 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
 - `npm run verify:ranges`: passed legacy range validation and reported current MTT production blockers.
   - ante ON records: 487, validation errors: 0
   - ante OFF records: 487, validation errors: 0
-  - MTT preflop readiness: 2 production, 4 candidate, 2 missing
+  - MTT preflop readiness: 0 production, 6 candidate, 2 missing
   - flop production strategy readiness: 0 registered production packs
 - `npm test -- tests/unit/mttAcceptanceCli.test.ts`: passed after updating the source-free guard expectation from 7 to 9 tests.
 - `npm test -- tests/unit/mobileWebViewSmoke.test.ts`: passed, 3 tests.
@@ -47,15 +49,16 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
 - Mobile/performance/build/bundle QA recorded.
 - Duplicate old MTT import tasks superseded into the 135.x P1-P5 backlog.
 - Follow-up 2026-06-18: preflop matrix now delegates cell click/keyboard handling at the matrix level and caches the stable 13x13 hand-label grid, reducing per-render listeners from 338 to 2.
+- Follow-up 2026-06-22: two historical full-ring regular CHIP_EV packs now fail closed as `PREVIEW_ONLY`; their non-canonical IDs cannot satisfy legal production readiness or start scoring.
 
 ## Blocking items
 
-- P1 preflop CHIP_EV legal production imports: 6 blocker rows.
+- P1 preflop CHIP_EV legal production imports: 8 blocker rows.
 - P2 preflop DOLAR_EV legal production imports: 8 blocker rows.
 - P3 FLOP production imports: 16 blocker rows.
 - P4 TURN production imports: 16 blocker rows.
 - P5 RIVER production imports: 16 blocker rows.
-- No ready validation slots exist yet because all 62 legal intake slots are waiting for `normalized.json` and `permission.json`.
+- No ready validation slots exist yet because all 64 legal intake slots are waiting for `normalized.json` and `permission.json`.
 
 ## Next operator action
 

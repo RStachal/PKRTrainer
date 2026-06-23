@@ -19,12 +19,13 @@ describe("mtt:registry-integrity CLI", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("MTT production registry integrity");
     expect(result.stdout).toContain("valid: true");
-    expect(result.stdout).toContain("legal import slots: 62");
+    expect(result.stdout).toContain("legal import slots: 64");
     expect(result.stdout).toContain("registered runtime packs: 6");
     expect(result.stdout).toContain("generated production modules: 0");
     expect(result.stdout).toContain("permission manifests: 0");
     expect(result.stdout).toContain("errors: 0");
-    expect(result.stdout).toContain("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-v1 | mtt-preflop | REGISTERED | LEGACY_OR_UNKNOWN");
+    expect(result.stdout).toContain("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-v1 | mtt-preflop | REGISTERED | PREVIEW_ONLY");
+    expect(result.stdout).not.toContain("LEGACY_OR_UNKNOWN");
     expect(result.stdout).not.toContain("error:");
     expect(result.stdout).not.toContain("https://");
   });
@@ -47,6 +48,7 @@ describe("mtt:registry-integrity CLI", () => {
         kind: string;
         registered: boolean;
         legalImportSlot: boolean;
+        registryStatus: string;
         generatedModulePath: string | null;
         permissionManifestPath: string | null;
       }>;
@@ -55,7 +57,7 @@ describe("mtt:registry-integrity CLI", () => {
 
     expect(parsed.valid).toBe(true);
     expect(parsed.counts).toEqual({
-      legalImportSlots: 62,
+      legalImportSlots: 64,
       registeredRuntimePacks: 6,
       generatedProductionModules: 0,
       permissionManifests: 0,
@@ -64,7 +66,8 @@ describe("mtt:registry-integrity CLI", () => {
     expect(parsed.packs.some((pack) => (
       pack.packId === "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-v1" &&
       pack.registered &&
-      !pack.legalImportSlot
+      !pack.legalImportSlot &&
+      pack.registryStatus === "PREVIEW_ONLY"
     ))).toBe(true);
     expect(parsed.errors).toEqual([]);
     expect(JSON.stringify(parsed)).not.toContain("https://");

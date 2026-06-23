@@ -185,7 +185,7 @@ describe("release bundle metadata", () => {
     expect(forpsiHtaccess).toContain("AuthType Basic");
     expect(forpsiHtaccess).toContain("Require valid-user");
     expect(forpsiHtaccess).toContain(".htpasswd-pkrtrainer");
-    expect(mttCoverageAudit).toContain("Updated: 2026-06-17");
+    expect(mttCoverageAudit).toContain("Updated: 2026-06-22");
     expect(mttCoverageAudit).toContain("DOLAR_EV");
     expect(mttCoverageAudit).toContain("Completion matrix");
     expect(mttCoverageAudit).toContain("npm run mtt:completion -- --summary");
@@ -200,8 +200,8 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("captured outputs for operator tooling");
     expect(mttCoverageAudit).toContain("defaults to a production gate");
     expect(mttCoverageAudit).toContain("total MTT rows: 64");
-    expect(mttCoverageAudit).toContain("production-ready rows: 2");
-    expect(mttCoverageAudit).toContain("candidate/preview rows: 52");
+    expect(mttCoverageAudit).toContain("production-ready rows: 0");
+    expect(mttCoverageAudit).toContain("candidate/preview rows: 54");
     expect(mttCoverageAudit).toContain("blocked/missing rows: 10");
     expect(mttCoverageAudit).toContain("npm run range:intake -- --ready-only --json");
     expect(mttCoverageAudit).toContain("npm run mtt:blockers");

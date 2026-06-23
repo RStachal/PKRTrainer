@@ -812,9 +812,21 @@ function productionMissingReasons(
   registeredPacks: readonly RangePack[] = allMttPreflopRangePacks,
 ): string[] {
   const reasons: string[] = [];
+  const expectedProductionPackId = mttProductionImportPackId({
+    tableFormat: pack.dimensions.tableFormat,
+    blindSpeed: pack.dimensions.blindSpeed,
+    evModel: pack.dimensions.evModel as Extract<EvModel, "CHIP_EV" | "DOLAR_EV">,
+    street: "PREFLOP",
+    ante: pack.dimensions.ante,
+  });
 
   if (!registeredPacks.includes(pack)) {
     reasons.push("RangePack is not part of the MTT preflop registry.");
+  }
+  if (pack.id !== expectedProductionPackId) {
+    reasons.push(
+      `RangePack lacks canonical legal production provenance; expected packId ${expectedProductionPackId}.`,
+    );
   }
   if (pack.confidence === "LOW") {
     reasons.push("RangePack confidence is LOW.");

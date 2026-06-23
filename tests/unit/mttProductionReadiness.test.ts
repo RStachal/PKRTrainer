@@ -182,20 +182,25 @@ describe("mttProductionReadiness", () => {
     const report = buildMttPreflopReadinessReport();
 
     expect(report.rows).toHaveLength(8);
-    expect(report.productionRows).toBe(2);
-    expect(report.candidateRows).toBe(4);
+    expect(report.productionRows).toBe(0);
+    expect(report.candidateRows).toBe(6);
     expect(report.missingRows).toBe(2);
 
-    const production = report.rows.filter((row) => row.status === "PRODUCTION");
-    expect(production.map((row) => `${row.tableFormat}|${row.blindSpeed}|${row.ante}`))
+    const legacyCandidates = report.rows.filter((row) => (
+      row.tableFormat === "FULL_RING_9" && row.blindSpeed === "REGULAR"
+    ));
+    expect(legacyCandidates.map((row) => `${row.tableFormat}|${row.blindSpeed}|${row.ante}`))
       .toEqual(["FULL_RING_9|REGULAR|ON", "FULL_RING_9|REGULAR|OFF"]);
-    expect(production.every((row) => row.recordCount > 0)).toBe(true);
-    expect(production.every((row) => row.sourceCount >= 2)).toBe(true);
-    expect(production.every((row) => row.missingReasons.length === 0)).toBe(true);
-    expect(production.every((row) => (
+    expect(legacyCandidates.every((row) => row.status === "CANDIDATE")).toBe(true);
+    expect(legacyCandidates.every((row) => row.recordCount > 0)).toBe(true);
+    expect(legacyCandidates.every((row) => row.sourceCount >= 2)).toBe(true);
+    expect(legacyCandidates.every((row) => row.missingReasons.some((reason) => (
+      reason.includes("canonical legal production provenance")
+    )))).toBe(true);
+    expect(legacyCandidates.every((row) => (
       row.recommendationPolicy === "DEDICATED_HAND_RECOMMENDATIONS"
     ))).toBe(true);
-    expect(production.every((row) => (
+    expect(legacyCandidates.every((row) => (
       row.coverage.positions.join("|") === POSITION_ORDER.join("|") &&
       row.coverage.stackBuckets.join("|") === STACK_BUCKETS.join("|") &&
       row.coverage.contexts.join("|") === REQUIRED_CONTEXTS.join("|")
@@ -248,20 +253,29 @@ describe("mttProductionReadiness", () => {
     const report = buildMttCompletionReadinessReport();
 
     expect(report.rows).toHaveLength(64);
-    expect(report.productionRows).toBe(2);
+    expect(report.productionRows).toBe(0);
     expect(report.missingRows).toBe(10);
-    expect(report.candidateRows).toBe(52);
+    expect(report.candidateRows).toBe(54);
 
     const production = report.rows.filter((row) => row.status === "PRODUCTION");
-    expect(production.map((row) => (
-      `${row.tableFormat}|${row.blindSpeed}|${row.evModel}|${row.street}|${row.ante}`
-    ))).toEqual([
-      "FULL_RING_9|REGULAR|CHIP_EV|PREFLOP|ON",
-      "FULL_RING_9|REGULAR|CHIP_EV|PREFLOP|OFF",
-    ]);
-    expect(production.every((row) => row.productionReady)).toBe(true);
-    expect(production.every((row) => row.coverageKind === "PREFLOP_RANGE_PACK")).toBe(true);
-    expect(production.every((row) => row.importSlot === null)).toBe(true);
+    expect(production).toEqual([]);
+
+    const legacyCandidates = report.rows.filter((row) => (
+      row.tableFormat === "FULL_RING_9" &&
+      row.blindSpeed === "REGULAR" &&
+      row.evModel === "CHIP_EV" &&
+      row.street === "PREFLOP"
+    ));
+    expect(legacyCandidates).toHaveLength(2);
+    expect(legacyCandidates.every((row) => (
+      row.status === "CANDIDATE" &&
+      !row.productionReady &&
+      row.coverageKind === "PREFLOP_RANGE_PACK" &&
+      row.importSlot?.packId.includes("-production-v1") === true &&
+      row.missingReasons.some((reason) => (
+        reason.includes("canonical legal production provenance")
+      ))
+    ))).toBe(true);
 
     const dolarPreflop = report.rows.filter((row) => (
       row.evModel === "DOLAR_EV" && row.street === "PREFLOP"
@@ -337,8 +351,8 @@ describe("mttProductionReadiness", () => {
       flopProductionPacks: [incompleteFlopProductionPack()],
     });
 
-    expect(report.productionRows).toBe(2);
-    expect(report.candidateRows).toBe(52);
+    expect(report.productionRows).toBe(0);
+    expect(report.candidateRows).toBe(54);
     expect(report.missingRows).toBe(10);
 
     const flopRows = report.rows.filter((row) => (
@@ -386,14 +400,14 @@ describe("mttProductionReadiness", () => {
     expect(gate.valid).toBe(false);
     expect(gate.mode).toBe("PRODUCTION");
     expect(gate.totalRows).toBe(64);
-    expect(gate.productionReadyRows).toBe(2);
-    expect(gate.previewRows).toBe(52);
+    expect(gate.productionReadyRows).toBe(0);
+    expect(gate.previewRows).toBe(54);
     expect(gate.blockedRows).toBe(10);
-    expect(gate.errors).toHaveLength(62);
+    expect(gate.errors).toHaveLength(64);
     expect(gate.errors[0]).toContain("row is not production-ready");
     expect(rendered).toContain("mode: PRODUCTION");
     expect(rendered).toContain("valid: false");
-    expect(rendered).toContain("productionReady rows: 2");
+    expect(rendered).toContain("productionReady rows: 0");
     expect(rendered).not.toContain("https://");
   });
 
@@ -407,13 +421,13 @@ describe("mttProductionReadiness", () => {
     expect(gate.valid).toBe(true);
     expect(gate.mode).toBe("PREVIEW");
     expect(gate.totalRows).toBe(64);
-    expect(gate.productionReadyRows).toBe(2);
-    expect(gate.previewRows).toBe(52);
+    expect(gate.productionReadyRows).toBe(0);
+    expect(gate.previewRows).toBe(54);
     expect(gate.blockedRows).toBe(10);
     expect(gate.errors).toEqual([]);
     expect(rendered).toContain("mode: PREVIEW");
     expect(rendered).toContain("valid: true");
-    expect(rendered).toContain("productionReady rows: 2");
+    expect(rendered).toContain("productionReady rows: 0");
     expect(rendered).not.toContain("https://");
   });
 
@@ -421,7 +435,7 @@ describe("mttProductionReadiness", () => {
     const rendered = renderMttCompletionReadinessReport(buildMttCompletionReadinessReport());
 
     expect(rendered).toContain("MTT completion readiness");
-    expect(rendered).toContain("non-production rows: 62");
+    expect(rendered).toContain("non-production rows: 64");
     expect(rendered).toContain("SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF");
     expect(rendered).toContain("import kind: river-production");
     expect(rendered).toContain("import pack: mtt-six-max-turbo-river-dolar-ev-ante-off-production-v1");
@@ -461,7 +475,16 @@ describe("mttProductionReadiness", () => {
       tableFormat: "FULL_RING_9",
       blindSpeed: "REGULAR",
       ante: "ON",
-    })).toBe(true);
+    })).toBe(false);
+
+    const legacyCandidate = mttPreflopReadinessRowForProfile({
+      tableFormat: "FULL_RING_9",
+      blindSpeed: "REGULAR",
+      ante: "ON",
+    });
+    expect(legacyCandidate.status).toBe("CANDIDATE");
+    expect(legacyCandidate.missingReasons.join(" "))
+      .toContain("canonical legal production provenance");
 
     expect(mttPreflopProductionReady({
       tableFormat: "FULL_RING_9",
@@ -484,7 +507,7 @@ describe("mttProductionReadiness", () => {
 
   it("umi vyhodnotit readiness primo z TrainingProfile a skutecne zvoleneho ante", () => {
     expect(mttPreflopProductionReadyForTrainingProfile(DEFAULT_TRAINING_PROFILE, "OFF"))
-      .toBe(true);
+      .toBe(false);
 
     const turbo = profileWith(DEFAULT_TRAINING_PROFILE, { blindSpeed: "TURBO" });
     expect(mttPreflopProductionReadyForTrainingProfile(turbo, "ON")).toBe(false);
@@ -527,8 +550,8 @@ describe("mttProductionReadiness", () => {
     const report = buildMttPreflopPackImportReadinessReport();
 
     expect(report.rows).toHaveLength(6);
-    expect(report.productionReadyRows).toBe(2);
-    expect(report.candidateRows).toBe(4);
+    expect(report.productionReadyRows).toBe(0);
+    expect(report.candidateRows).toBe(6);
     expect(report.lowConfidenceRows).toBe(4);
     expect(report.emptyRecordRows).toBe(4);
     expect(report.missingExpectedProfiles).toHaveLength(2);
@@ -537,15 +560,25 @@ describe("mttProductionReadiness", () => {
     ))).toBe(true);
 
     const productionRows = report.rows.filter((row) => row.productionReady);
-    expect(productionRows.every((row) => row.status === "PRODUCTION")).toBe(true);
-    expect(productionRows.every((row) => row.warnings.length === 0)).toBe(true);
-    expect(productionRows.every((row) => row.recordCount === 487)).toBe(true);
+    expect(productionRows).toEqual([]);
+
+    const legacyCandidates = report.rows.filter((row) => row.recordCount === 487);
+    expect(legacyCandidates).toHaveLength(2);
+    expect(legacyCandidates.every((row) => (
+      row.status === "CANDIDATE" &&
+      !row.productionReady &&
+      row.warnings.some((warning) => (
+        warning.includes("canonical legal production provenance")
+      ))
+    ))).toBe(true);
 
     const candidateRows = report.rows.filter((row) => row.status === "CANDIDATE");
     expect(candidateRows.every((row) => row.productionReady === false)).toBe(true);
-    expect(candidateRows.every((row) => row.warnings.some((warning) => (
-      warning.includes("no normalized hand-class records")
-    )))).toBe(true);
+    expect(candidateRows.filter((row) => row.recordCount === 0).every((row) => (
+      row.warnings.some((warning) => (
+        warning.includes("no normalized hand-class records")
+      ))
+    ))).toBe(true);
     expect(report.rows.flatMap((row) => row.warnings).join(" ")).not.toContain("https://");
   });
 
@@ -553,15 +586,12 @@ describe("mttProductionReadiness", () => {
     const mttReport = buildMttPreflopPackImportReadinessReport();
     const productionRows = mttReport.rows.filter((row) => row.status === "PRODUCTION");
 
-    expect(productionRows.length).toBeGreaterThan(0);
-    for (const row of productionRows) {
-      expect(row.productionReady).toBe(true);
-      expect(row.confidence).not.toBe("LOW");
-      expect(row.recordCount).toBeGreaterThan(0);
-      expect(row.sourceCount).toBeGreaterThanOrEqual(2);
-      expect(row.searchQueryCount).toBeGreaterThanOrEqual(3);
-      expect(row.warnings).toEqual([]);
-    }
+    expect(productionRows).toEqual([]);
+    expect(mttReport.rows.filter((row) => row.recordCount === 487).every((row) => (
+      row.warnings.some((warning) => (
+        warning.includes("canonical legal production provenance")
+      ))
+    ))).toBe(true);
 
     const unsafeRows = mttReport.rows.filter((row) => (
       row.status !== "PRODUCTION" ||

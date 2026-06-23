@@ -25,6 +25,7 @@ interface RegistryPackSummary {
   kind: "mtt-preflop" | "flop-production" | "turn-production" | "river-production";
   registered: boolean;
   legalImportSlot: boolean;
+  registryStatus: "LEGAL_SLOT" | "PREVIEW_ONLY" | "UNKNOWN";
   generatedModulePath: string | null;
   permissionManifestPath: string | null;
 }
@@ -131,14 +132,23 @@ function buildRegistryIntegrityReport(rangeDir: string): RegistryIntegrityReport
       permissionManifests: permissionManifests.length,
       errors: errors.length,
     },
-    packs: packIds.map((packId) => ({
-      packId,
-      kind: packKindFor(packId, registeredPacks, legalPackIds),
-      registered: registeredPackIds.has(packId),
-      legalImportSlot: legalPackIds.has(packId),
-      generatedModulePath: generatedByPackId.get(packId) ?? null,
-      permissionManifestPath: permissionByPackId.get(packId) ?? null,
-    })),
+    packs: packIds.map((packId) => {
+      const registered = registeredPackIds.has(packId);
+      const legalImportSlot = legalPackIds.has(packId);
+      return {
+        packId,
+        kind: packKindFor(packId, registeredPacks, legalPackIds),
+        registered,
+        legalImportSlot,
+        registryStatus: legalImportSlot
+          ? "LEGAL_SLOT"
+          : registered
+            ? "PREVIEW_ONLY"
+            : "UNKNOWN",
+        generatedModulePath: generatedByPackId.get(packId) ?? null,
+        permissionManifestPath: permissionByPackId.get(packId) ?? null,
+      };
+    }),
     errors,
   };
 }
@@ -386,7 +396,7 @@ function renderRegistryIntegrityReport(report: RegistryIntegrityReport): string 
         pack.packId,
         pack.kind,
         pack.registered ? "REGISTERED" : "UNREGISTERED",
-        pack.legalImportSlot ? "LEGAL_SLOT" : "LEGACY_OR_UNKNOWN",
+        pack.registryStatus,
       ].join(" | "),
     );
     if (pack.generatedModulePath !== null) lines.push(`  module: ${pack.generatedModulePath}`);

@@ -7,10 +7,10 @@ describe("range:intake CLI", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("Range intake status");
-    expect(result.stdout).toContain("slots: 62");
+    expect(result.stdout).toContain("slots: 64");
     expect(result.stdout).toContain("ready for validation: 0");
-    expect(result.stdout).toContain("missing normalized.json: 62");
-    expect(result.stdout).toContain("missing permission.json: 62");
+    expect(result.stdout).toContain("missing normalized.json: 64");
+    expect(result.stdout).toContain("missing permission.json: 64");
     expect(result.stdout).toContain("preflop | SIX_MAX|TURBO|DOLAR_EV|PREFLOP|OFF");
     expect(result.stdout).toContain("postflop | SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF");
     expect(result.stdout).not.toContain("https://");

@@ -1510,7 +1510,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: release, completion, blocker, intake guard a task backlog ukazuji, ze runtime/tooling je pripraveny, ale production coverage je datove blokovana.
   - [x] 133.2 Pridat prioritizovany source-free MTT intake plan
     - Operator musi videt serazeny import queue: ready files nejdriv, potom preflop CHIP_EV gapy, preflop DOLAR_EV gapy a nasledne postflop production streety.
-    - Hotovo: `npm run mtt:intake-plan` radi 62 non-production slotu podle priority, ukazuje lokalni intake stav, validacni command a podporuje `--json`, `--all`, `--limit` i MTT filtry.
+    - Hotovo: `npm run mtt:intake-plan` radi aktualnich 64 non-production slotu podle priority, ukazuje lokalni intake stav, validacni command a podporuje `--json`, `--all`, `--limit` i MTT filtry.
   - [x] 133.3 Napojit intake plan do dokumentace a regression testu
     - Plan musi byt dostupny pres npm script, podporovat JSON pro batch tooling a byt uvedeny v operator guide/release metadatech.
     - Hotovo: operator guide, range-intake README, coverage audit, release notes template a metadata/CLI testy drzi `mtt:intake-plan` workflow.
@@ -1662,11 +1662,11 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - Aktualni audit 2026-06-22:
     - Technicky baseline je zeleny: typecheck, 109 testovacich souboru / 524 testu, produkcni build, precache integrity a bundle budget prosly 2026-06-22.
     - Profile-bound runtime, capability matrix, scenario identity, postflop state machine, generated registry, semanticke QA a CI jsou implementovane; otevrene P0 zustavaji hlavne provenance, dokonceni lokalizace, lazy pack delivery a skutecne browser/device E2E.
-    - Produkcni MTT gate je cerveny: 64 completion rows, 2 production-ready, 52 preview, 10 missing; 62 blocker rows a 0 ready-for-validation slotu.
-    - P1/P2/P3/P4/P5 fronta je 6 / 8 / 16 / 16 / 16 slotu. Vsem 62 chybi `normalized.json` i `permission.json`.
+    - Produkcni MTT gate je cerveny: 64 completion rows, 0 production-ready, 54 preview, 10 missing; 64 blocker rows a 0 ready-for-validation slotu.
+    - P1/P2/P3/P4/P5 fronta je 8 / 8 / 16 / 16 / 16 slotu. Vsem 64 chybi `normalized.json` i `permission.json`.
     - Postflop ma 48/48 blocker rows, 48 fallback runtime rows a 0 production-ready rows.
-    - Intake workspace a registry integrity jsou technicky validni, ale registry report oznacuje vsech 6 registrovanych MTT preflop packu jako `LEGACY_OR_UNKNOWN`; dva z nich jsou dnes povazovane za production.
-    - Generovany runtime katalog, automaticky refresh a fail-closed integrity jsou hotove; samostatnym blockerem zustava legalni provenance dvou historickych packu.
+    - Intake workspace a registry integrity jsou technicky validni. Vsech 6 historickych/candidate MTT preflop packu je explicitne `PREVIEW_ONLY`; zadny z nich neni povazovan za production.
+    - Generovany runtime katalog, automaticky refresh a fail-closed integrity jsou hotove; dva historicke full-ring packy vyzaduji stejny canonical legalni re-import jako ostatni P1 sloty.
     - Preflop i postflop runtime a HH review jsou profile-bound a fail-closed; bez legalniho production packu zobrazi blokujici source-free stav.
     - `Agents/requirements.md` a `Agents/design.md` jsou nove oznacene jako historicky preflop-only baseline s odkazem na 64radkovy release kontrakt; navazujici plny MTT variant scope je v sekci 137.
   - Kriticka zasada: produkcni MTT doporuceni nesmi vzniknout z public heuristic fallbacku, metadata-only reuse ani rucne domyslenych chart hodnot. Kazdy povyseny slot potrebuje legalni `normalized.json`, `permission.json`, production-ready validaci, legal-slot match a source-free runtime vystup.
@@ -1702,7 +1702,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [x] 135.3 Pridat "next MTT action" operator report
     - Pridat prikaz/report, ktery z `mtt:intake-plan`, `mtt:blockers` a `mtt:release-gates -- --json` vybere dalsi nejdulezitejsi praci: prvni ready slot, jinak prvni waiting slot podle P0-P5.
     - Vystup musi obsahovat priority bucket, slotId, packId, chybejici soubory, validate command, build dry-run command a navazujici acceptance prikazy.
-    - Cilem je, aby operator po dodani dat nemusel cist 62 radku, ale dostal dalsi konkretni krok.
+    - Cilem je, aby operator po dodani dat nemusel cist 64 radku, ale dostal dalsi konkretni krok.
     - Hotovo: `npm run mtt:next-action` vraci text/JSON s prioritou, slotem, target packem, chybejicimi `normalized.json`/`permission.json`, validate/build dry-run prikazy, follow-up acceptance prikazy a odkazy na zdrojove reporty.
   - [x] 135.4 Udelat preflight kontrolu raw MTT import workspace
     - Rozsirit guard tak, aby umel rozlisit povolene lokalni raw soubory od omylem commitnutych privatnich zdroju, ukazal ready/waiting po priority buckets a failnul pri nevalidni strukture `Agents/range-intake/raw/<packId>/`.
@@ -1714,11 +1714,14 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Explicitne potvrdit, ze DOLAR_EV zde znamena projektovy produkcni model podporeny legalnim vstupem/reuse policy; nesmi se tise vydavat za plny turnajovy ICM model.
     - Acceptance: requirements, design, tasks, completion gate a release notes si neodporuji v poctu profilu ani v postflop scope.
     - Hotovo 2026-06-18: `Agents/requirements.md` a `Agents/design.md` jsou explicitne oznacene jako historicky 9-max CHIP_EV preflop baseline a odkazuji na 64profilovy MTT v1 release kontrakt; DOLAR_EV neni prezentovan jako obecny plny ICM engine.
-  - [ ] 135.24 Uzavrit legalni provenance dvou legacy production packu
+  - [x] 135.24 Uzavrit legalni provenance dvou legacy production packu
     - Auditovat `mtt-full-ring-9-regular-preflop-chip-ev-ante-on-v1` a `...ante-off-v1`, ktere registry report dnes vede jako `LEGACY_OR_UNKNOWN`.
     - Preferovany vysledek: re-importovat je standardnim production pipeline pod legalnim `normalized.json` + `permission.json`, nebo je fail-closed preradit z production, pokud nelze prokazat pravo k runtime redistribuci hodnot.
     - Rozsirit produkcni registry/provenance kontrakt tak, aby commitnuty runtime artefakt nesl source-free audit metadata potrebna pro release kontrolu, i kdyz raw permission evidence zustava mimo Git.
     - Acceptance: zadny MTT production pack neni `LEGACY_OR_UNKNOWN`; finalni gate nepovazuje pouhou existenci historickych dat za legalni production readiness.
+    - Hotovo 2026-06-22 fail-closed variantou: readiness vyzaduje canonical production `packId`, oba historicke packy jsou `CANDIDATE`, scoring je blokovany a oba canonical sloty jsou znovu v P1 legal intake fronte.
+    - Registry report rozlisuje registrovane neprodukcni packy jako `PREVIEW_ONLY`; `LEGACY_OR_UNKNOWN` se v aktualnim registry baseline nevyskytuje a nelegalni generated production artefakt zustava hard error.
+    - Overeni 2026-06-23: typecheck, 542/542 testu, registry refresh/integrity, range audit, produkcni build, precache integrity a bundle budget prosly. Completion baseline je fail-closed 0 production / 54 preview / 10 missing a legal intake fronta obsahuje vsech 64 slotu.
   - [x] 135.25 Automatizovat runtime registry pro vygenerovane production moduly
     - Doplnit deterministicky generovany katalog se statickymi importy pro MTT preflop RangePacky a FLOP/TURN/RIVER StrategyPacky.
     - `mtt:promote-ready --write` musi bud katalog aktualizovat atomicky, nebo vypsat/povinne spustit samostatny `mtt:refresh-registry` krok; rucni editace 4 poli pro desitky packu neni akceptovatelna.
@@ -1819,7 +1822,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Promotion tooling nyni vyzaduje `contentLanguage=cs` pro legalni MTT preflop i FLOP/TURN/RIVER production vstupy; bez deklarace se modul nevygeneruje. Synthetic intake priklady deklaraci obsahuji.
     - Doplneno 2026-06-22: HH titulky a rozbory, postflop metadata, oznaceni banku, Flopzilla board metadata a Hero bucket jsou cesky; centralni katalogovy test hlida navrat nejvyraznejsich anglickych retezcu.
     - Zbyva: projit keyboard/zoom/contrast acceptance v realnem prohlizeci. Pokus 2026-06-22 byl blokovan nedostupnym vestavenym browserem a selhanim aktivace izolovaneho Chrome okna; zadne existujici uzivatelske okno nebylo zmeneno.
-  - [ ] 135.35 Pripravit 62 production packu na lazy loading a spolehlivy offline provoz
+  - [ ] 135.35 Pripravit 64 production packu na lazy loading a spolehlivy offline provoz
     - Staticky import vsech budoucich RangePacku/StrategyPacku muze radove prekrocit soucasny 325 KiB bundle budget a zpomalit start.
     - Pred prvnim velkym batchem zmerit realnou velikost jednoho preflop a postflop packu a stanovit budget pro app shell, profilovy chunk a celou offline cache.
     - Generated registry zmenit na typovany manifest s lazy `import()` po profilu/streetu; nacist jen vybrany pack a bezpecne zrusit race pri rychlem prepnuti profilu.
@@ -1916,7 +1919,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Pridat test/gate, ktery porovna legal import slots, vygenerovane production module ids, permission packIds a runtime registry.
     - Selhat pri orphan production packu, duplicitnim packId, registry packu mimo legal slot, mismatch table/speed/EV/ante/street nebo packu bez permission evidence.
     - Hotovo: `npm run mtt:registry-integrity` kontroluje legal import sloty, runtime registry, vygenerovane `*-production-*` moduly, permission manifest packIds, duplicity a orphan/nelegalni production packy.
-    - Follow-up pred final release: 135.25 odstranil rucni registry wiring; 135.24 musi samostatne odstranit `LEGACY_OR_UNKNOWN` vyjimku u dvou legacy packu.
+    - Follow-up 2026-06-22: 135.25 odstranil rucni registry wiring a 135.24 fail-closed preradil historicke packy na `PREVIEW_ONLY`; registry baseline uz nema `LEGACY_OR_UNKNOWN` production vyjimku.
   - [x] 135.13 User-facing MTT profile coverage QA
     - Overit, ze UI profile selector/start flow umi vsechny MTT kombinace a ze labely jsou srozumitelne: 9-max/6-max, regular/turbo, chipEV/$EV, ante ON/OFF, preflop/flop/turn/river.
     - Non-production stav muze byt viditelny jen source-free a nesmi zobrazit pack id, provider, URL ani raw internal enumy.
@@ -1946,8 +1949,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
   - [ ] 135.19 Final MTT release candidate checklist
     - Spustit: `npm run typecheck`, `npm test`, `npm run mtt:acceptance`, `npm run mtt:release-gates`, `npm run verify:ranges`, `npm run build`, `npm run bundle:budget`, `npm run release:check`.
     - Vystup ulozit do release notes: pocty production rows, 0 blockers, 0 waiting slots, bundle budget, known limitations.
-    - Stav auditu 2026-06-22: data jsou nejvetsi objemovy blocker. `mtt:acceptance` je valid false: 64 total rows, 2 productionReady, 52 preview, 10 blocked; 62 blocker rows ceka na `normalized.json` a `permission.json`; postflop release gate ma 48/48 blocker rows a 0 productionReady.
-    - Technicky baseline 2026-06-22: typecheck, 109 testovacich souboru / 524 testu, build, precache a bundle budget jsou zelene. Release candidate dale blokuji 135.24, dokonceni 135.34/135.35/135.38 a legalni import waves.
+    - Stav auditu 2026-06-22: data jsou nejvetsi objemovy blocker. `mtt:acceptance` je valid false: 64 total rows, 0 productionReady, 54 preview, 10 blocked; 64 blocker rows ceka na `normalized.json` a `permission.json`; postflop release gate ma 48/48 blocker rows a 0 productionReady.
+    - Technicky baseline 2026-06-22: typecheck, testy, build, precache a bundle budget jsou zelene. Release candidate dale blokuji dokonceni 135.34/135.38 a legalni import waves.
     - RC attempt notes: `Agents/release-notes-mtt-rc-2026-06-17.md`.
   - [ ] 135.20 Final MTT user smoke
     - Rucne projit reprezentativni MTT scenare: 9-max regular CHIP_EV preflop, 9-max turbo DOLAR_EV preflop, 6-max regular CHIP_EV flop line, 6-max turbo DOLAR_EV river facing-bet, HH import turn/river review a dashboard kontrola.

@@ -9,9 +9,9 @@ describe("mttPreflopImportSlots", () => {
   it("vytvori legal import sloty pro vsechny neprodukcni MTT preflop profily", () => {
     const slots = buildMttPreflopImportSlots();
 
-    expect(slots).toHaveLength(14);
-    expect(slots.map((slot) => slot.slotId)).not.toContain("FULL_RING_9|REGULAR|CHIP_EV|PREFLOP|ON");
-    expect(slots.map((slot) => slot.slotId)).not.toContain("FULL_RING_9|REGULAR|CHIP_EV|PREFLOP|OFF");
+    expect(slots).toHaveLength(16);
+    expect(slots.map((slot) => slot.slotId)).toContain("FULL_RING_9|REGULAR|CHIP_EV|PREFLOP|ON");
+    expect(slots.map((slot) => slot.slotId)).toContain("FULL_RING_9|REGULAR|CHIP_EV|PREFLOP|OFF");
     expect(slots.map((slot) => slot.slotId)).toContain("FULL_RING_9|TURBO|CHIP_EV|PREFLOP|ON");
     expect(slots.map((slot) => slot.slotId)).toContain("SIX_MAX|REGULAR|CHIP_EV|PREFLOP|OFF");
     expect(slots.map((slot) => slot.slotId)).toContain("SIX_MAX|TURBO|DOLAR_EV|PREFLOP|ON");
@@ -39,7 +39,8 @@ describe("mttPreflopImportSlots", () => {
     const text = renderMttPreflopImportSlots();
 
     expect(text).toContain("MTT preflop legal import slots");
-    expect(text).toContain("slots: 14");
+    expect(text).toContain("slots: 16");
+    expect(text).toContain("FULL_RING_9|REGULAR|CHIP_EV|PREFLOP|ON");
     expect(text).toContain("FULL_RING_9|TURBO|CHIP_EV|PREFLOP|ON");
     expect(text).toContain("SIX_MAX|REGULAR|DOLAR_EV|PREFLOP|OFF");
     expect(text).not.toContain("https://");

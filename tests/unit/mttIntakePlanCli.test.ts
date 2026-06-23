@@ -7,11 +7,11 @@ describe("mtt:intake-plan CLI", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("MTT intake priority plan");
-    expect(result.stdout).toContain("queue rows: 62");
+    expect(result.stdout).toContain("queue rows: 64");
     expect(result.stdout).toContain("shown rows: 12");
     expect(result.stdout).toContain("ready for validation: 0");
     expect(result.stdout).toContain(
-      "priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=6, P2_PREFLOP_DOLAR_EV=8, P3_FLOP_PRODUCTION=16, P4_TURN_PRODUCTION=16, P5_RIVER_PRODUCTION=16",
+      "priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=8, P2_PREFLOP_DOLAR_EV=8, P3_FLOP_PRODUCTION=16, P4_TURN_PRODUCTION=16, P5_RIVER_PRODUCTION=16",
     );
     expect(result.stdout).toContain("showing first 12 rows; use --all to show the full queue");
     expect(result.stdout).toContain(
@@ -114,11 +114,11 @@ describe("mtt:intake-plan CLI", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("MTT intake priority plan");
-    expect(result.stdout).toContain("queue rows: 62");
+    expect(result.stdout).toContain("queue rows: 64");
     expect(result.stdout).toContain("detail rows available: 12");
     expect(result.stdout).not.toContain("shown rows: 12");
     expect(result.stdout).toContain("ready for validation: 0");
-    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=6");
+    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=8");
     expect(result.stdout).not.toContain("1. P1_PREFLOP_CHIP_EV");
     expect(result.stdout).not.toContain("build dry-run:");
   });
@@ -127,11 +127,11 @@ describe("mtt:intake-plan CLI", () => {
     const result = runPlan("--priority=P1_PREFLOP_CHIP_EV", "--all");
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("queue rows: 6");
-    expect(result.stdout).toContain("shown rows: 6");
-    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=6");
+    expect(result.stdout).toContain("queue rows: 8");
+    expect(result.stdout).toContain("shown rows: 8");
+    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=8");
     expect(result.stdout).toContain("1. P1_PREFLOP_CHIP_EV");
-    expect(result.stdout).toContain("6. P1_PREFLOP_CHIP_EV");
+    expect(result.stdout).toContain("8. P1_PREFLOP_CHIP_EV");
     expect(result.stdout).not.toContain("P2_PREFLOP_DOLAR_EV |");
   });
 

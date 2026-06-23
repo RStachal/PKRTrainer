@@ -7,7 +7,7 @@ describe("mtt:slots CLI", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("MTT preflop legal import slots");
-    expect(result.stdout).toContain("slots: 14");
+    expect(result.stdout).toContain("slots: 16");
     expect(result.stdout).toContain("MTT postflop legal import slots");
     expect(result.stdout).toContain("slots: 48");
     expect(result.stdout).toContain("SIX_MAX|TURBO|DOLAR_EV|PREFLOP|OFF");

@@ -11,12 +11,12 @@ describe("range:intake:guard CLI", () => {
     expect(result.stdout).toContain("raw folder: Agents/range-intake/raw");
     expect(result.stdout).toContain("tracked raw files: 2");
     expect(result.stdout).toContain("local raw folders: 0");
-    expect(result.stdout).toContain("legal slots: 62");
+    expect(result.stdout).toContain("legal slots: 64");
     expect(result.stdout).toContain("ready for validation: 0");
-    expect(result.stdout).toContain("waiting for files: 62");
-    expect(result.stdout).toContain("missing normalized.json: 62");
-    expect(result.stdout).toContain("missing permission.json: 62");
-    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=6");
+    expect(result.stdout).toContain("waiting for files: 64");
+    expect(result.stdout).toContain("missing normalized.json: 64");
+    expect(result.stdout).toContain("missing permission.json: 64");
+    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=8");
     expect(result.stdout).toContain("tracked: Agents/range-intake/raw/.gitignore");
     expect(result.stdout).toContain("tracked: Agents/range-intake/raw/README.md");
     expect(result.stdout).not.toContain("error:");
@@ -50,13 +50,13 @@ describe("range:intake:guard CLI", () => {
       "Agents/range-intake/raw/README.md",
     ]);
     expect(parsed.localRawFolders).toEqual([]);
-    expect(parsed.counts.legalSlots).toBe(62);
+    expect(parsed.counts.legalSlots).toBe(64);
     expect(parsed.counts.localFolders).toBe(0);
     expect(parsed.counts.readyForValidation).toBe(0);
-    expect(parsed.counts.waitingForFiles).toBe(62);
-    expect(parsed.counts.missingNormalized).toBe(62);
-    expect(parsed.counts.missingPermission).toBe(62);
-    expect(parsed.counts.byPriority.P1_PREFLOP_CHIP_EV).toBe(6);
+    expect(parsed.counts.waitingForFiles).toBe(64);
+    expect(parsed.counts.missingNormalized).toBe(64);
+    expect(parsed.counts.missingPermission).toBe(64);
+    expect(parsed.counts.byPriority.P1_PREFLOP_CHIP_EV).toBe(8);
     expect(parsed.errors).toEqual([]);
   });
 });

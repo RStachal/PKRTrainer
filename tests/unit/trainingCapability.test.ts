@@ -70,11 +70,14 @@ describe("training capability matrix", () => {
       }
     }
     expect(statuses).toEqual(new Set([
-      "PRODUCTION",
       "PREVIEW",
       "BLOCKED",
       "UNSUPPORTED",
     ]));
+    expect(trainingCapabilityForProfile(DEFAULT_TRAINING_PROFILE)).toMatchObject({
+      status: "BLOCKED",
+      canStartTraining: false,
+    });
   });
 
   it("drzi MTT v1 na 64 legalnich profilech a nepovoli ICM", () => {

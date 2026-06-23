@@ -51,11 +51,11 @@ describe("mtt:next-action CLI", () => {
 
     expect(parsed.valid).toBe(false);
     expect(parsed.state).toBe("WAITING_FOR_FILES");
-    expect(parsed.counts.blockerRows).toBe(62);
+    expect(parsed.counts.blockerRows).toBe(64);
     expect(parsed.counts.readyForValidation).toBe(0);
-    expect(parsed.counts.missingNormalized).toBe(62);
-    expect(parsed.counts.missingPermission).toBe(62);
-    expect(parsed.counts.byPriority.P1_PREFLOP_CHIP_EV).toBe(6);
+    expect(parsed.counts.missingNormalized).toBe(64);
+    expect(parsed.counts.missingPermission).toBe(64);
+    expect(parsed.counts.byPriority.P1_PREFLOP_CHIP_EV).toBe(8);
     expect(parsed.nextAction.priority).toBe("P1_PREFLOP_CHIP_EV");
     expect(parsed.nextAction.slotId).toBe("FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF");
     expect(parsed.nextAction.packId).toBe("mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1");

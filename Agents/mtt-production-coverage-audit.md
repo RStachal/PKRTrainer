@@ -1,6 +1,6 @@
 # MTT Production Coverage Audit
 
-Updated: 2026-06-17
+Updated: 2026-06-22
 
 ## Current production surface
 
@@ -10,23 +10,20 @@ Updated: 2026-06-17
 - EV models tracked: CHIP_EV and DOLAR_EV
 - Streets tracked: PREFLOP, FLOP, TURN and RIVER
 - Ante states tracked: ON and OFF
-- Current production-ready profiles:
-  - FULL_RING_9 / REGULAR / CHIP_EV / PREFLOP / ante ON
-  - FULL_RING_9 / REGULAR / CHIP_EV / PREFLOP / ante OFF
+- Current production-ready profiles: none until a canonical legal production import is present.
 - Current production baseline:
-  - 2 production RangePacks
-  - 487 records per pack
-  - 169 normalized hand classes per record
-  - MEDIUM confidence
-  - source metadata present, but no source citations are shown in app UI
+  - 0 production RangePacks
+  - 2 historical FULL_RING_9 / REGULAR / CHIP_EV packs remain available as preview-only data
+  - historical pack IDs are not canonical production import IDs and cannot start scoring
+  - source citations are not shown in app UI
 
 ## Completion matrix
 
 `npm run mtt:completion -- --summary` currently fails the production completion gate and reports:
 
 - total MTT rows: 64
-- production-ready rows: 2
-- candidate/preview rows: 52
+- production-ready rows: 0
+- candidate/preview rows: 54
 - blocked/missing rows: 10
 
 Use `npm run mtt:completion -- --preview --json` for operator tooling that needs the full matrix while production data
@@ -36,7 +33,7 @@ production data remain candidate or missing.
 
 ## Range intake state
 
-`npm run range:intake` currently tracks 62 import rows that are waiting for both files:
+`npm run range:intake` currently tracks 64 import rows that are waiting for both files:
 
 - `normalized.json`
 - `permission.json`
@@ -94,10 +91,11 @@ shows exact blockers for release routing.
 `mtt:postflop-release` is the final postflop release gate. The final postflop release gate currently fails because
 all 48 FLOP/TURN/RIVER targets are waiting for legal production data and still resolve through fallback runtime.
 
-The preflop intake subset currently has 14 rows and 0 rows ready for validation. All 14 are waiting for both normalized data and permission manifests.
+The preflop intake subset currently has 16 rows and 0 rows ready for validation. All 16 are waiting for both normalized data and permission manifests.
 
 ## Known blocked profiles
 
+- FULL_RING_9 / REGULAR / CHIP_EV / PREFLOP / ante ON and OFF have complete historical records, but remain preview-only until canonical legal production imports and permission manifests are supplied.
 - FULL_RING_9 / TURBO / CHIP_EV / PREFLOP / ante ON and OFF are missing dedicated turbo records.
 - FULL_RING_9 / REGULAR and TURBO / DOLAR_EV / PREFLOP / ante ON and OFF are missing dedicated DOLAR_EV records or an explicitly reviewed reuse policy.
 - SIX_MAX / REGULAR and TURBO / CHIP_EV / PREFLOP / ante ON and OFF are candidate metadata only; normalized hand-class records are not present.
@@ -117,6 +115,7 @@ The preflop intake subset currently has 14 rows and 0 rows ready for validation.
 ## Production rules enforced
 
 - Production requires MEDIUM or HIGH confidence.
+- Production pack IDs must match the canonical legal import slot; historical IDs fail closed as preview-only.
 - Production requires non-empty normalized records.
 - Production requires at least two source evidence entries and at least three recorded searches.
 - Production coverage must include every required position, stack bucket and action context for the profile.
