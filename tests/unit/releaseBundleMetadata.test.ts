@@ -62,6 +62,10 @@ describe("release bundle metadata", () => {
       "scripts/runChromeProductionFixtureE2e.mts",
       "utf8",
     );
+    const technicalAcceptanceScript = readFileSync(
+      "scripts/checkMttTechnicalAcceptance.mts",
+      "utf8",
+    );
     const manifest = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8")) as {
       description: string;
       lang: string;
@@ -89,6 +93,8 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:postflop-release"]).toBe("vite-node scripts/checkMttPostflopReleaseGate.mts");
     expect(pkg.scripts["mtt:release-gates"]).toBe("vite-node scripts/checkMttReleaseGates.mts");
     expect(pkg.scripts["mtt:acceptance"]).toBe("vite-node scripts/checkMttAcceptance.mts");
+    expect(pkg.scripts["mtt:technical-acceptance"])
+      .toBe("vite-node scripts/checkMttTechnicalAcceptance.mts");
     expect(pkg.scripts["mtt:next-action"]).toBe("vite-node scripts/reportNextMttAction.mts");
     expect(pkg.scripts["mtt:promote-ready"]).toBe("vite-node scripts/promoteReadyMttIntake.mts");
     expect(pkg.scripts["mtt:registry-integrity"]).toBe("vite-node scripts/checkMttProductionRegistryIntegrity.mts");
@@ -131,6 +137,12 @@ describe("release bundle metadata", () => {
     expect(productionFixtureE2eScript).toContain("scripts/refreshMttProductionRegistry.mts");
     expect(productionFixtureE2eScript).toContain("node_modules/vite/bin/vite.js");
     expect(productionFixtureE2eScript).toContain("process.execPath");
+    expect(technicalAcceptanceScript).toContain("Complete Vitest suite");
+    expect(technicalAcceptanceScript).toContain("Chrome production-build E2E");
+    expect(technicalAcceptanceScript).toContain("Chrome synthetic production PREFLOP/FLOP E2E");
+    expect(technicalAcceptanceScript).toContain("createNpmShim");
+    expect(technicalAcceptanceScript).toContain("findAvailablePort");
+    expect(technicalAcceptanceScript).toContain("mtt-technical-acceptance");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400)');

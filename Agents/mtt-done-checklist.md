@@ -1,6 +1,6 @@
 # MTT Done Checklist
 
-Updated: 2026-06-17
+Updated: 2026-06-23
 
 This checklist defines when the MTT part of PKRTrainer is complete for the first production release.
 
@@ -56,6 +56,7 @@ This checklist defines when the MTT part of PKRTrainer is complete for the first
 
 ## Release Candidate
 
+- `npm run mtt:technical-acceptance` passes and writes `artifacts/mtt-technical-acceptance/report.json`.
 - `npm run typecheck` passes.
 - `npm test` passes.
 - `npm run mtt:acceptance` passes.
@@ -63,4 +64,6 @@ This checklist defines when the MTT part of PKRTrainer is complete for the first
 - `npm run verify:ranges` passes.
 - `npm run build` passes.
 - `npm run bundle:budget` passes.
+- Normal Chrome E2E passes desktop plus 360/390/412 px, offline reopen and service-worker rollback.
+- Synthetic canonical production fixture E2E passes PREFLOP and FLOP lazy routing without leaving fixture data in the release build.
 - Release notes include MTT production row counts, blocker counts, bundle budget and remaining limitations.

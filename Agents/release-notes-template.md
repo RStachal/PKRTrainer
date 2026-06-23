@@ -31,6 +31,8 @@
 
 ## Quality gates
 
+- `npm run mtt:technical-acceptance`:
+- Technical acceptance report: `artifacts/mtt-technical-acceptance/report.json`
 - `npm run typecheck`:
 - `npm test`:
 - `npm run mtt:completion -- --summary`:
@@ -50,6 +52,10 @@
 - `npm run range:intake -- --ready-only`:
 - `npm run verify:ranges`:
 - `npm run build`:
+- `npm run verify:precache`:
+- `npm run bundle:budget`:
+- `npm run e2e:chrome`:
+- `npm run e2e:chrome:production-fixture`:
 - `npm run release:check`:
 
 ## Known limitations

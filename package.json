@@ -21,6 +21,7 @@
     "mtt:postflop-release": "vite-node scripts/checkMttPostflopReleaseGate.mts",
     "mtt:release-gates": "vite-node scripts/checkMttReleaseGates.mts",
     "mtt:acceptance": "vite-node scripts/checkMttAcceptance.mts",
+    "mtt:technical-acceptance": "vite-node scripts/checkMttTechnicalAcceptance.mts",
     "mtt:next-action": "vite-node scripts/reportNextMttAction.mts",
     "mtt:promote-ready": "vite-node scripts/promoteReadyMttIntake.mts",
     "mtt:refresh-registry": "vite-node scripts/refreshMttProductionRegistry.mts",

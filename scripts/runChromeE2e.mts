@@ -300,17 +300,53 @@ try {
       if (!(seed instanceof HTMLInputElement)) throw new Error("Missing seed input");
       seed.value = ${JSON.stringify(postflopSeed)};
       seed.dispatchEvent(new Event("input", { bubbles: true }));
+      if (${JSON.stringify(expectedPostflopPackId)} !== "") {
+        const positions = [...document.querySelectorAll(".filter-position")];
+        for (const item of positions) {
+          if (item instanceof HTMLInputElement) item.checked = false;
+        }
+        for (const position of ["LJ", "HJ"]) {
+          const item = document.querySelector(
+            '.filter-position[data-position="' + position + '"]',
+          );
+          if (!(item instanceof HTMLInputElement)) {
+            throw new Error("Missing production fixture position " + position);
+          }
+          item.checked = true;
+        }
+        const contexts = [...document.querySelectorAll(".filter-context")];
+        for (const item of contexts) {
+          if (item instanceof HTMLInputElement) item.checked = false;
+        }
+        const context = document.querySelector(
+          '.filter-context[data-context="VS_3BET"]',
+        );
+        if (!(context instanceof HTMLInputElement)) {
+          throw new Error("Missing production fixture VS_3BET context");
+        }
+        context.checked = true;
+        context.dispatchEvent(new Event("change", { bubbles: true }));
+      }
     })()`);
     await activate(cdp, ".filter-start", viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".postflop-action");
     const postflop = await evaluate(cdp, `(() => ({
       actions: document.querySelectorAll(".postflop-action").length,
       street: document.querySelector(".postflop-meta")?.getAttribute("data-street"),
+      potType: document.querySelector(".postflop-meta")?.getAttribute("data-pot-type"),
+      positionPattern: document.querySelector(".postflop-meta")?.getAttribute("data-position-pattern"),
       text: document.querySelector(".app")?.textContent ?? "",
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
     }))()`);
     assert(postflop.actions >= 3, `${viewport.name}: postflop actions did not render`);
     assert(postflop.street === "FLOP", `${viewport.name}: wrong postflop street`);
+    if (expectedPostflopPackId) {
+      assert(postflop.potType === "THREE_BET_POT", `${viewport.name}: wrong fixture pot type`);
+      assert(
+        postflop.positionPattern === "OOP_CALLER_VS_IP_3BETTOR",
+        `${viewport.name}: wrong fixture position pattern`,
+      );
+    }
     assert(postflop.overflow <= 1, `${viewport.name}: postflop page overflow ${postflop.overflow}px`);
     assertSourceFree(postflop.text, viewport.name);
     if (expectedPostflopPackId) {

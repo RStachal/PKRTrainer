@@ -107,7 +107,7 @@ function renderFixtureModule(id: string): string {
 function renderFlopFixtureModule(id: string): string {
   return [
     "// Synthetic source-free browser fixture. Never ship this module.",
-    'import type { BoardTexture, PostflopPositionPattern, PostflopPotType } from "../../core/postflopGenerator";',
+    'import { LEGACY_POSTFLOP_POSITION_PATTERNS, type BoardTexture, type PostflopPositionPattern, type PostflopPotType } from "../../core/postflopGenerator";',
     'import { ALL_HAND_CLASSES } from "../../core/poker";',
     "import {",
     "  FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS,",
@@ -117,9 +117,13 @@ function renderFlopFixtureModule(id: string): string {
     '  type FlopProductionStrategyRule,',
     '} from "./flopProductionStrategyPack";',
     "",
+    "const positionPatterns: readonly PostflopPositionPattern[] = [",
+    "  ...FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS,",
+    "  ...LEGACY_POSTFLOP_POSITION_PATTERNS,",
+    "];",
     "const rules: FlopProductionStrategyRule[] = [];",
     "for (const potType of FLOP_PRODUCTION_REQUIRED_POT_TYPES) {",
-    "  for (const positionPattern of FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS) {",
+    "  for (const positionPattern of positionPatterns) {",
     "    for (const texture of FLOP_PRODUCTION_REQUIRED_TEXTURES) {",
     "      rules.push(cbetRule(potType, positionPattern, texture));",
     "      rules.push(facingBetRule(potType, positionPattern, texture));",
