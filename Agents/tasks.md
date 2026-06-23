@@ -1876,6 +1876,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Pro produkcni data pouzit source-free test fixture packy oddelene od realnych legalnich hodnot.
     - Acceptance: E2E artefakty obsahuji screenshoty/logy, zadny uncaught error, page-level overflow, fallback recommendation ani profilovy mix-up.
     - Pokus 2026-06-18: production build a lokalni Vite preview na `http://127.0.0.1:4173/` byly pripraveny, ale in-app Browser backend nebyl v teto relaci dostupny. Chrome fallback vyzaduje explicitni souhlas uzivatele, proto nebyl autonomne prevzat. Browser/device E2E zustava otevrene; jsdom/mobile smoke neni vydavan za jeho nahradu.
+    - Rozpracovano 2026-06-23: `npm run e2e:chrome` spousti izolovany headless Chrome bez dalsi npm zavislosti a nad produkcnim buildem overuje desktop 1280 px a mobilni 360/390/412 px. Kontroluje fail-closed legacy preflop gate, postflop start/answer/stats, source-free UI, horizontalni overflow, persistence po reloadu, offline reopen a browser runtime chyby.
+    - Lokalni realny Chrome run prosel 4/4 viewporty a ulozil `report.json` + PNG screenshoty do `dist/e2e-chrome`. CI technicky job runner spousti po buildu a artefakty vzdy uploaduje.
+    - Zbyva: Android WebView/emulator, realny touch/keyboard/zoom/contrast pruchod, HH review a stats import v browser runneru, corrupt/quota/service-worker upgrade/chybejici lazy chunk scenare.
   - [ ] 135.27 Provest jeden kompletni P1 pilot import
     - Pouzit aktualni `mtt:next-action`: `FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF`, pack `mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1`.
     - Projit realny tok evidence -> normalize -> permission -> validate -> dry-run -> write -> registry refresh -> targeted tests -> app start.

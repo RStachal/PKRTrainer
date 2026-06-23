@@ -60,12 +60,31 @@ jobs:
       - name: Bundle budget
         run: npm run bundle:budget
 
+      - name: Production Chrome E2E
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > preview.log 2>&1 &
+          for attempt in {1..40}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
+          npm run e2e:chrome
+
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vitest-report-node-22
           path: artifacts/vitest-junit.xml
+          if-no-files-found: warn
+
+      - name: Upload Chrome E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mtt-chrome-e2e-node-22
+          path: dist/e2e-chrome
           if-no-files-found: warn
 
       - name: Upload production build
