@@ -1660,8 +1660,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
 - [ ] 135. MTT application completion package - hlavni backlog pro dokonceni MTT casti
   - Cil: v prvni produkcni casti aplikace mit kompletne funkcni MTT trenink pro FULL_RING_9 i SIX_MAX, REGULAR i TURBO, CHIP_EV i DOLAR_EV, ante ON/OFF, PREFLOP/FLOP/TURN/RIVER, vsechny podporovane pozice, pot/action nody, single spot i hand-line flow, HH review, stats a release gates.
   - Aktualni audit 2026-06-22:
-    - Technicky baseline je zeleny: typecheck, 109 testovacich souboru / 524 testu, produkcni build, precache integrity a bundle budget prosly 2026-06-22.
-    - Profile-bound runtime, capability matrix, scenario identity, postflop state machine, generated registry, semanticke QA a CI jsou implementovane; otevrene P0 zustavaji hlavne provenance, dokonceni lokalizace, lazy pack delivery a skutecne browser/device E2E.
+    - Technicky baseline je zeleny: typecheck, 225 test suites / 542 testu, produkcni build, precache integrity a bundle budget prosly 2026-06-23.
+    - Profile-bound runtime, capability matrix, scenario identity, postflop state machine, generated registry, semanticke QA, lokalizace/a11y, CI a realny Chrome E2E jsou implementovane; otevrene P0 zustavaji lazy pack delivery navazana na prvni legalni import a Android WebView/device potvrzeni.
     - Produkcni MTT gate je cerveny: 64 completion rows, 0 production-ready, 54 preview, 10 missing; 64 blocker rows a 0 ready-for-validation slotu.
     - P1/P2/P3/P4/P5 fronta je 8 / 8 / 16 / 16 / 16 slotu. Vsem 64 chybi `normalized.json` i `permission.json`.
     - Postflop ma 48/48 blocker rows, 48 fallback runtime rows a 0 production-ready rows.
@@ -1887,6 +1887,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Android audit 2026-06-23: na lokalnim stroji neni `adb` ani bezici emulator, proto device/WebView cast zustava explicitne blokovana prostredim a neni vydavana za hotovou.
     - Doplneno 2026-06-23: realny Chrome runner provadi skutecnou registraci druhe worker verze a overuje previous-build hash chunk rollback i izolaci stabilnich assetu; missing-asset/update browser cast je hotova.
     - Source-free production fixture Chrome flow 2026-06-23 realne prosel lazy pack load, preflop start, answer, next, navrat do filtru a offline opakovany start. Fixture ani docasny registry zapis nezustavaji v source tree nebo release `dist`.
+    - Finalni technicke overeni 2026-06-23: normalni 4-viewport Chrome E2E i oddeleny production fixture E2E prosly; plny Vitest report ma 225/225 suites a 542/542 testu, build/precache/budget i registry/range gates jsou zelene.
     - Zbyva: Android WebView/emulator. Plne lazy profilovy chunk lze na device zmerit az po prvnim legalnim production importu.
   - [ ] 135.27 Provest jeden kompletni P1 pilot import
     - Pouzit aktualni `mtt:next-action`: `FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF`, pack `mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1`.
@@ -1962,7 +1963,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Spustit: `npm run typecheck`, `npm test`, `npm run mtt:acceptance`, `npm run mtt:release-gates`, `npm run verify:ranges`, `npm run build`, `npm run bundle:budget`, `npm run release:check`.
     - Vystup ulozit do release notes: pocty production rows, 0 blockers, 0 waiting slots, bundle budget, known limitations.
     - Stav auditu 2026-06-22: data jsou nejvetsi objemovy blocker. `mtt:acceptance` je valid false: 64 total rows, 0 productionReady, 54 preview, 10 blocked; 64 blocker rows ceka na `normalized.json` a `permission.json`; postflop release gate ma 48/48 blocker rows a 0 productionReady.
-    - Technicky baseline 2026-06-22: typecheck, testy, build, precache a bundle budget jsou zelene. Release candidate dale blokuji dokonceni 135.34/135.38 a legalni import waves.
+    - Technicky baseline 2026-06-23: typecheck, 542/542 testu, normalni i production-fixture Chrome E2E, build, precache a bundle budget jsou zelene. Release candidate dale blokuji Android cast 135.38, realna packova cast 135.35 a legalni import waves.
     - RC attempt notes: `Agents/release-notes-mtt-rc-2026-06-17.md`.
   - [ ] 135.20 Final MTT user smoke
     - Rucne projit reprezentativni MTT scenare: 9-max regular CHIP_EV preflop, 9-max turbo DOLAR_EV preflop, 6-max regular CHIP_EV flop line, 6-max turbo DOLAR_EV river facing-bet, HH import turn/river review a dashboard kontrola.
