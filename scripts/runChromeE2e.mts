@@ -32,6 +32,26 @@ const VIEWPORTS: readonly Viewport[] = [
   { name: "mobile-412", width: 412, height: 915, mobile: true },
 ];
 
+const VALID_HH = [
+  "PokerStars Hand #1: Tournament #1, 10/20",
+  "Table 'Test' 9-max Seat #1 is the button",
+  "Seat 1: Villain1 (1000 in chips)",
+  "Seat 2: Villain2 (1000 in chips)",
+  "Seat 3: Villain3 (1000 in chips)",
+  "Seat 4: Villain4 (1000 in chips)",
+  "Seat 5: Villain5 (1000 in chips)",
+  "Seat 6: Villain6 (1000 in chips)",
+  "Seat 7: Villain7 (1000 in chips)",
+  "Seat 8: Hero (1000 in chips)",
+  "Seat 9: Villain9 (1000 in chips)",
+  "Villain2: posts small blind 10",
+  "Villain3: posts big blind 20",
+  "*** HOLE CARDS ***",
+  "Dealt to Hero [Ah Kd]",
+  "Hero: folds",
+  "*** SUMMARY ***",
+].join("\n");
+
 class CdpClient {
   private socket: WebSocket | null = null;
   private nextId = 1;
@@ -167,6 +187,10 @@ try {
       deviceScaleFactor: 1,
       mobile: viewport.mobile,
     });
+    await cdp.send("Emulation.setTouchEmulationEnabled", {
+      enabled: viewport.mobile,
+      maxTouchPoints: viewport.mobile ? 5 : 1,
+    });
     await navigate(cdp, targetUrl);
     await waitForSelector(cdp, ".filter-start");
     await evaluate(cdp, `localStorage.clear()`);
@@ -187,7 +211,7 @@ try {
       `${viewport.name}: missing fail-closed preflop notice`,
     );
 
-    await evaluate(cdp, `document.querySelector(".filter-start")?.click()`);
+    await activate(cdp, ".filter-start", viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".filter-empty-warning:not([hidden])");
     const preflopGate = await evaluate(cdp, `(() => ({
       table: Boolean(document.querySelector(".poker-table")),
@@ -204,8 +228,8 @@ try {
       if (!(select instanceof HTMLSelectElement)) throw new Error("Missing street selector");
       select.value = "FLOP";
       select.dispatchEvent(new Event("change", { bubbles: true }));
-      document.querySelector(".filter-start")?.click();
     })()`);
+    await activate(cdp, ".filter-start", viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".postflop-action");
     const postflop = await evaluate(cdp, `(() => ({
       actions: document.querySelectorAll(".postflop-action").length,
@@ -218,9 +242,46 @@ try {
     assert(postflop.overflow <= 1, `${viewport.name}: postflop page overflow ${postflop.overflow}px`);
     assertSourceFree(postflop.text, viewport.name);
 
-    await evaluate(cdp, `document.querySelector(".postflop-action")?.click()`);
+    await activate(cdp, ".postflop-action", viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".postflop-result");
-    await evaluate(cdp, `document.querySelector('[data-tab="stats"]')?.click()`);
+
+    await evaluate(cdp, `(() => {
+      const ante = document.querySelector(".profile-ante");
+      if (!(ante instanceof HTMLSelectElement)) throw new Error("Missing ante selector");
+      ante.value = "OFF";
+      ante.dispatchEvent(new Event("change", { bubbles: true }));
+      const filterAnte = document.querySelector(".filter-ante");
+      if (filterAnte instanceof HTMLInputElement) {
+        filterAnte.checked = false;
+        filterAnte.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    })()`);
+    await activate(cdp, '[data-tab="hh"]', viewport.mobile ? "touch" : "keyboard");
+    await waitForSelector(cdp, ".hh-input");
+    await evaluate(cdp, `(() => {
+      const input = document.querySelector(".hh-input");
+      if (!(input instanceof HTMLTextAreaElement)) throw new Error("Missing HH input");
+      input.value = ${JSON.stringify(VALID_HH)};
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    })()`);
+    await evaluate(cdp, `document.querySelector(".hh-analyze")?.click()`);
+    await sleep(500);
+    const hhState = await evaluate(cdp, `(() => ({
+      error: document.querySelector(".hh-errors:not([hidden])")?.textContent ?? "",
+      analysisHidden: document.querySelector(".hh-analysis")?.hasAttribute("hidden") ?? true,
+      matrixCells: document.querySelectorAll(".hh-analysis .matrix-cell").length
+    }))()`);
+    assert(hhState.error === "", `${viewport.name}: HH review failed: ${hhState.error}`);
+    assert(!hhState.analysisHidden, `${viewport.name}: HH review did not become visible`);
+    await waitForSelector(cdp, ".hh-analysis .matrix-cell");
+    const hhReview = await evaluate(cdp, `(() => ({
+      matrixCells: document.querySelectorAll(".hh-analysis .matrix-cell").length,
+      text: document.querySelector(".hh-analysis")?.textContent ?? ""
+    }))()`);
+    assert(hhReview.matrixCells === 169, `${viewport.name}: HH review matrix is incomplete`);
+    assertSourceFree(hhReview.text, `${viewport.name} HH review`);
+
+    await activate(cdp, '[data-tab="stats"]', viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".dashboard");
     const stats = await evaluate(cdp, `(() => ({
       sessionCount: document.querySelector(".dashboard-session-count")?.getAttribute("data-session-count"),
@@ -228,6 +289,15 @@ try {
     }))()`);
     assert(stats.sessionCount === "1", `${viewport.name}: result was not persisted to dashboard`);
     assertSourceFree(stats.text, `${viewport.name} stats`);
+    await activate(cdp, ".stats-export", viewport.mobile ? "touch" : "keyboard");
+    const exportedStats = await evaluate<string>(
+      cdp,
+      `document.querySelector(".stats-json-box")?.value ?? ""`,
+    );
+    assert(exportedStats.includes('"postflopRecords"'), `${viewport.name}: stats export is incomplete`);
+    assert(!/https?:|www\./i.test(exportedStats), `${viewport.name}: stats export leaked a URL`);
+    await activate(cdp, ".stats-import", viewport.mobile ? "touch" : "keyboard");
+    await waitForSelector(cdp, ".stats-transfer__status--ok");
 
     const screenshot = await cdp.send("Page.captureScreenshot", {
       format: "png",
@@ -276,6 +346,9 @@ try {
       size: `${viewport.width}x${viewport.height}`,
       preflopGate: "blocked",
       postflopFlow: "passed",
+      hhReview: "passed",
+      statsTransfer: "passed",
+      inputMode: viewport.mobile ? "touch" : "keyboard",
       reload: "passed",
       offlineReload: "passed",
       browserErrors: 0,
@@ -295,7 +368,9 @@ try {
   console.log(`viewports: ${results.length}`);
   console.log(`artifacts: ${artifactDirectory}`);
   for (const result of results) {
-    console.log(`- ${result.viewport}: postflop/reload/offline passed, errors=0`);
+    console.log(
+      `- ${result.viewport}: ${result.inputMode}, postflop/HH/stats/reload/offline passed, errors=0`,
+    );
   }
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
@@ -356,6 +431,48 @@ async function waitForSelector(client: CdpClient, selector: string, timeoutMs = 
     await sleep(100);
   }
   throw new Error(`Timed out waiting for selector: ${selector}`);
+}
+
+async function activate(
+  client: CdpClient,
+  selector: string,
+  mode: "keyboard" | "touch",
+): Promise<void> {
+  if (mode === "keyboard") {
+    await evaluate(client, `(() => {
+      const element = document.querySelector(${JSON.stringify(selector)});
+      if (!(element instanceof HTMLElement)) throw new Error("Missing interactive element");
+      element.scrollIntoView({ block: "center" });
+      element.focus();
+    })()`);
+    const key = {
+      key: "Enter",
+      code: "Enter",
+      text: "\r",
+      unmodifiedText: "\r",
+      windowsVirtualKeyCode: 13,
+      nativeVirtualKeyCode: 13,
+    };
+    await client.send("Input.dispatchKeyEvent", { type: "keyDown", ...key });
+    await client.send("Input.dispatchKeyEvent", { type: "keyUp", ...key });
+    return;
+  }
+
+  const point = await evaluate<{ x: number; y: number }>(client, `(() => {
+    const element = document.querySelector(${JSON.stringify(selector)});
+    if (!(element instanceof HTMLElement)) throw new Error("Missing interactive element");
+    element.scrollIntoView({ block: "center" });
+    const rect = element.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  })()`);
+  await client.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: point.x, y: point.y }],
+  });
+  await client.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
 }
 
 async function waitForDevToolsPort(directory: string): Promise<number> {

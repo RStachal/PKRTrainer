@@ -139,6 +139,7 @@ The preflop intake subset currently has 16 rows and 0 rows ready for validation.
 - `npm run validate:range-import`
 - `npm run build:range-module`
 - `npm run verify:ranges`
+- `npm run e2e:chrome`
 - `npm run release:check`
 - `tests/unit/mttProductionReadiness.test.ts`
 - `tests/unit/mttPreflopRangePackImport.test.ts`

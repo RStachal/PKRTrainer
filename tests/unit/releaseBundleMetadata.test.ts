@@ -57,6 +57,7 @@ describe("release bundle metadata", () => {
   it("publikovana app metadata pouzivaji cestinu a platne UTF-8 popisy", () => {
     const html = readFileSync("index.html", "utf8");
     const budgetScript = readFileSync("scripts/checkBundleBudget.mts", "utf8");
+    const chromeE2eScript = readFileSync("scripts/runChromeE2e.mts", "utf8");
     const manifest = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8")) as {
       description: string;
       lang: string;
@@ -94,6 +95,15 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["verify:precache"]).toBe("vite-node scripts/checkDistPrecache.mts");
     expect(pkg.scripts["profile:render"]).toBe("vite-node scripts/profileRenderPerformance.mts");
     expect(pkg.scripts["e2e:chrome"]).toBe("vite-node scripts/runChromeE2e.mts");
+    expect(chromeE2eScript).toContain('"mobile-360"');
+    expect(chromeE2eScript).toContain('"mobile-390"');
+    expect(chromeE2eScript).toContain('"mobile-412"');
+    expect(chromeE2eScript).toContain("Input.dispatchTouchEvent");
+    expect(chromeE2eScript).toContain("Input.dispatchKeyEvent");
+    expect(chromeE2eScript).toContain(".hh-analysis .matrix-cell");
+    expect(chromeE2eScript).toContain(".stats-export");
+    expect(chromeE2eScript).toContain(".stats-import");
+    expect(chromeE2eScript).toContain("Network.emulateNetworkConditions");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400)');
