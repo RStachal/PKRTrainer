@@ -1,4 +1,6 @@
 import { spawnSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 
 interface AcceptanceCommand {
   label: string;
@@ -7,6 +9,7 @@ interface AcceptanceCommand {
 
 interface CliArgs {
   json: boolean;
+  outputPath: string | null;
 }
 
 const acceptanceCommands: readonly AcceptanceCommand[] = [
@@ -61,6 +64,10 @@ try {
   const results = acceptanceCommands.map(runAcceptanceCommand);
   const failed = results.filter((result) => result.status !== 0);
   const report = buildAcceptanceReport(results);
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderAcceptanceResults(report));
   process.exitCode = failed.length === 0 ? 0 : 1;
 } catch (error) {
@@ -89,6 +96,7 @@ function usage(): string {
     "Usage:",
     "  npm run mtt:acceptance",
     "  npm run mtt:acceptance -- --json",
+    "  npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json",
     "",
     "Runs the final MTT-only acceptance gate. It is green only when the MTT app is complete.",
   ].join("\n");
@@ -96,15 +104,22 @@ function usage(): string {
 
 function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
+  let outputPath: string | null = null;
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
     if (item === "--json") {
       json = true;
       continue;
     }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
+      continue;
+    }
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
-  return { json };
+  return { json, outputPath };
 }
 
 function runAcceptanceCommand(command: AcceptanceCommand): AcceptanceCommandResult {

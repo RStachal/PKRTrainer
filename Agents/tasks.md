@@ -1699,6 +1699,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Rozdil proti `mtt:release-gates`: acceptance ma byt finalni MTT-only gate s jasnym "green only when MTT app complete" kontraktem.
     - Testy: CLI text, JSON, zamerne cerveny stav pred legalnimi daty, green fixture/mocking jen pokud nevyzaduje falesna produkcni data.
     - Hotovo: `npm run mtt:acceptance` agreguje completion, blockers, intake summary, next action, postflop release, ready validation, source-free UI guard, range intake guardy, registry integrity a Android WebView/device preflight do text/JSON reportu s checklist odkazem; aktualne spravne selhava na legalnich production datech a chybejicim Android targetu.
+    - Doplneno 2026-06-24: `mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json` a `mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json` ukladaji cisty JSON artefakt bez npm headeru pro release handoff/CI.
   - [x] 135.3 Pridat "next MTT action" operator report
     - Pridat prikaz/report, ktery z `mtt:intake-plan`, `mtt:blockers` a `mtt:release-gates -- --json` vybere dalsi nejdulezitejsi praci: prvni ready slot, jinak prvni waiting slot podle P0-P5.
     - Vystup musi obsahovat priority bucket, slotId, packId, chybejici soubory, validate command, build dry-run command a navazujici acceptance prikazy.

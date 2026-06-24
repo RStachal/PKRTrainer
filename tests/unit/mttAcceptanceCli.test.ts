@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:acceptance CLI", () => {
@@ -98,6 +101,25 @@ describe("mtt:acceptance CLI", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Unsupported argument: --format=SIX_MAX");
     expect(result.stderr).toContain("Usage:");
+  });
+
+  it("umi zapsat cisty JSON artefakt pro finalni MTT handoff", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-acceptance-"));
+    const outputPath = join(directory, "report.json");
+    try {
+      const result = runAcceptance(`--output=${outputPath}`);
+
+      expect(result.status).toBe(1);
+      expect(existsSync(outputPath)).toBe(true);
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        checklist: string;
+        counts: { commands: number; failedCommands: number };
+      };
+      expect(parsed.checklist).toBe("Agents/mtt-done-checklist.md");
+      expect(parsed.counts).toEqual({ commands: 11, failedCommands: 3 });
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });
 

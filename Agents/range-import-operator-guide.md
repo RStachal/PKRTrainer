@@ -132,8 +132,10 @@ npm run mtt:next-action -- --output=artifacts/mtt-next-action/report.json
 npm run mtt:next-action -- --priority=P2_PREFLOP_DOLAR_EV
 npm run mtt:acceptance
 npm run mtt:acceptance -- --json
+npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json
 npm run mtt:release-gates
 npm run mtt:release-gates -- --json
+npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json
 npm run mtt:intake-plan -- --summary
 ```
 

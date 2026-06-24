@@ -40,8 +40,10 @@
 - MTT next-action report: `artifacts/mtt-next-action/report.json`
 - `npm run mtt:acceptance`:
 - `npm run mtt:acceptance -- --json`:
+- `npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json`:
 - `npm run mtt:release-gates`:
 - `npm run mtt:release-gates -- --json`:
+- `npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json`:
 - `npm run mtt:blockers`:
 - `npm run mtt:postflop-release -- --summary`:
 - `npm run mtt:intake-plan -- --summary`:

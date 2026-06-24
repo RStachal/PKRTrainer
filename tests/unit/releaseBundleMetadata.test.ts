@@ -186,6 +186,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:blockers");
     expect(operatorGuide).toContain("npm run mtt:release-gates");
     expect(operatorGuide).toContain("npm run mtt:release-gates -- --json");
+    expect(operatorGuide).toContain("npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json");
     expect(operatorGuide).toContain("npm run mtt:next-action");
     expect(operatorGuide).toContain("npm run mtt:next-action -- --json");
     expect(operatorGuide).toContain("npm run mtt:next-action -- --output=artifacts/mtt-next-action/report.json");
@@ -199,6 +200,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("Do not create placeholder");
     expect(operatorGuide).toContain("npm run mtt:acceptance");
     expect(operatorGuide).toContain("npm run mtt:acceptance -- --json");
+    expect(operatorGuide).toContain("npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json");
     expect(operatorGuide).toContain("final MTT-only acceptance gate");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --summary");
     expect(operatorGuide).toContain("npm run mtt:completion -- --summary");
@@ -306,8 +308,10 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("artifacts/mtt-next-action/report.json");
     expect(releaseTemplate).toContain("npm run mtt:acceptance");
     expect(releaseTemplate).toContain("npm run mtt:acceptance -- --json");
+    expect(releaseTemplate).toContain("npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json");
     expect(releaseTemplate).toContain("npm run mtt:release-gates");
     expect(releaseTemplate).toContain("npm run mtt:release-gates -- --json");
+    expect(releaseTemplate).toContain("npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json");
     expect(releaseTemplate).toContain("npm run mtt:blockers");
     expect(releaseTemplate).toContain("npm run mtt:postflop-release -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --summary");
