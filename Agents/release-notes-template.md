@@ -56,6 +56,8 @@
 - `npm run bundle:budget`:
 - `npm run e2e:chrome`:
 - `npm run e2e:chrome:production-fixture`:
+- `npm run e2e:android:preflight`:
+- Android preflight report: `artifacts/e2e-android-preflight/report.json`
 - `npm run release:check`:
 
 ## Known limitations
