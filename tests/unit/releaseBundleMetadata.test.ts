@@ -225,6 +225,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:promote-ready");
     expect(operatorGuide).toContain("WRITE_READY_MTT_MODULES");
     expect(operatorGuide).toContain("refuses to overwrite existing output modules");
+    expect(operatorGuide).toContain("an empty promotion plan prints waiting rows");
     expect(operatorGuide).toContain("npm run mtt:registry-integrity");
     expect(operatorGuide).toContain("generated modules not registered in runtime resolvers");
     expect(operatorGuide).toContain("Permission manifests must not contain placeholder text");

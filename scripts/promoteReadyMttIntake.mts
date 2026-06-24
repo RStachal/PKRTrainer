@@ -73,11 +73,15 @@ interface PromotionReport {
   registryRefreshed: boolean;
   counts: {
     readyRows: number;
+    waitingRows: number;
+    missingNormalized: number;
+    missingPermission: number;
     writeReadyRows: number;
     blockedRows: number;
     existingOutputRows: number;
     writtenRows: number;
   };
+  nextActionCommand: string;
   rows: readonly PromotionRow[];
 }
 
@@ -173,15 +177,24 @@ function setMode(current: CliArgs["mode"], next: CliArgs["mode"]): CliArgs["mode
 
 function buildPromotionReport(args: CliArgs): PromotionReport {
   const readiness = filterMttCompletionReadinessReport(buildMttCompletionReadinessReport(), args.filters);
-  const rows = readiness.rows
+  const queueRows = readiness.rows
     .filter((row) => !row.productionReady && row.importSlot !== null)
-    .filter((row) => isReady(row.importSlot as MttCompletionImportSlotHint))
-    .filter((row) => matchesPriority(row, args.priority))
+    .filter((row) => matchesPriority(row, args.priority));
+  const readyRows = queueRows.filter((row) => isReady(row.importSlot as MttCompletionImportSlotHint));
+  const rows = readyRows
     .map((row) => buildPromotionRow(row, args));
   const writeReadyRows = rows.filter((row) => row.writeReady);
   const blockedRows = rows.filter((row) => !row.writeReady).length;
   const existingOutputRows = rows.filter((row) => row.plannedAction === "SKIP_EXISTS").length;
   const valid = blockedRows === 0 && existingOutputRows === 0;
+  const missingNormalized = queueRows.filter((row) => {
+    const importSlot = row.importSlot as MttCompletionImportSlotHint;
+    return !existsSync(importSlot.normalizedInputPath);
+  }).length;
+  const missingPermission = queueRows.filter((row) => {
+    const importSlot = row.importSlot as MttCompletionImportSlotHint;
+    return !existsSync(importSlot.permissionManifestPath);
+  }).length;
   const registryRefreshed = (
     args.mode === "write" &&
     rows.some((row) => row.written) &&
@@ -197,11 +210,15 @@ function buildPromotionReport(args: CliArgs): PromotionReport {
     registryRefreshed,
     counts: {
       readyRows: rows.length,
+      waitingRows: queueRows.length - readyRows.length,
+      missingNormalized,
+      missingPermission,
       writeReadyRows: writeReadyRows.length,
       blockedRows,
       existingOutputRows,
       writtenRows: rows.filter((row) => row.written).length,
     },
+    nextActionCommand: "npm run mtt:next-action",
     rows,
   };
 }
@@ -319,10 +336,14 @@ function renderPromotionReport(report: PromotionReport): string {
     `force: ${report.force}`,
     `registry refreshed: ${report.registryRefreshed}`,
     `ready rows: ${report.counts.readyRows}`,
+    `waiting rows: ${report.counts.waitingRows}`,
+    `missing normalized.json: ${report.counts.missingNormalized}`,
+    `missing permission.json: ${report.counts.missingPermission}`,
     `writeReady rows: ${report.counts.writeReadyRows}`,
     `blocked rows: ${report.counts.blockedRows}`,
     `existing output rows: ${report.counts.existingOutputRows}`,
     `written rows: ${report.counts.writtenRows}`,
+    `next action: ${report.nextActionCommand}`,
   ];
 
   for (const row of report.rows) {

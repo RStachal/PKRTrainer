@@ -11,9 +11,13 @@ describe("mtt:promote-ready CLI", () => {
     expect(result.stdout).toContain("valid: true");
     expect(result.stdout).toContain("priority: all");
     expect(result.stdout).toContain("ready rows: 0");
+    expect(result.stdout).toContain("waiting rows: 64");
+    expect(result.stdout).toContain("missing normalized.json: 64");
+    expect(result.stdout).toContain("missing permission.json: 64");
     expect(result.stdout).toContain("writeReady rows: 0");
     expect(result.stdout).toContain("blocked rows: 0");
     expect(result.stdout).toContain("written rows: 0");
+    expect(result.stdout).toContain("next action: npm run mtt:next-action");
     expect(result.stdout).toContain("write guard: rerun with --write --confirm=WRITE_READY_MTT_MODULES");
     expect(result.stdout).not.toContain("https://");
   });
@@ -29,11 +33,15 @@ describe("mtt:promote-ready CLI", () => {
       force: boolean;
       counts: {
         readyRows: number;
+        waitingRows: number;
+        missingNormalized: number;
+        missingPermission: number;
         writeReadyRows: number;
         blockedRows: number;
         existingOutputRows: number;
         writtenRows: number;
       };
+      nextActionCommand: string;
       rows: unknown[];
     };
 
@@ -43,11 +51,15 @@ describe("mtt:promote-ready CLI", () => {
     expect(parsed.force).toBe(false);
     expect(parsed.counts).toEqual({
       readyRows: 0,
+      waitingRows: 8,
+      missingNormalized: 8,
+      missingPermission: 8,
       writeReadyRows: 0,
       blockedRows: 0,
       existingOutputRows: 0,
       writtenRows: 0,
     });
+    expect(parsed.nextActionCommand).toBe("npm run mtt:next-action");
     expect(parsed.rows).toEqual([]);
     expect(JSON.stringify(parsed)).not.toContain("https://");
   });

@@ -247,7 +247,8 @@ The prioritized `mtt:intake-plan` output also prints the per-slot `validate:rang
 `build:range-module --dry-run` command.
 After ready files validate cleanly, `mtt:promote-ready` can batch-plan module writes. It defaults to dry-run, refuses
 real writes without `--write --confirm=WRITE_READY_MTT_MODULES`, and refuses to overwrite existing output modules
-unless `--force` is present.
+unless `--force` is present. Like ready-intake validation, an empty promotion plan prints waiting rows, missing
+`normalized.json`, missing `permission.json` and `npm run mtt:next-action`.
 After module generation and resolver registration, `mtt:registry-integrity` checks duplicate pack ids, generated
 production modules outside legal slots, generated modules not registered in runtime resolvers, and permission manifests
 whose `packId` is not a legal MTT slot.
