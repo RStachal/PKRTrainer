@@ -782,4 +782,23 @@ describe("rangeModuleBuilder", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it("odmitne build:range-module CLI volbu bez hodnoty", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkr-range-builder-"));
+    try {
+      const input = validMttImport();
+      const inputFile = join(dir, "input.json");
+      const manifestFile = join(dir, "permission.json");
+      writeFileSync(inputFile, JSON.stringify(input), "utf8");
+      writeFileSync(manifestFile, JSON.stringify(permissionManifest(input.id)), "utf8");
+
+      const result = runBuilderCli("mtt-preflop", inputFile, manifestFile, ["--out", "--force"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("--out requires a value.");
+      expect(result.stderr).toContain("Usage:");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

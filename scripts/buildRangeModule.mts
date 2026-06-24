@@ -60,16 +60,16 @@ function parseArgs(argv: readonly string[]): CliArgs {
       continue;
     }
     if (item === "--kind") {
-      kind = parseKind(argv[index + 1]);
+      kind = parseKind(requiredOptionValue(argv, index, "--kind"));
       index += 1;
       continue;
     }
     if (item.startsWith("--permission-manifest=")) {
-      permissionManifest = item.slice("--permission-manifest=".length);
+      permissionManifest = parsePathOption(item.slice("--permission-manifest=".length), "--permission-manifest");
       continue;
     }
     if (item === "--permission-manifest") {
-      permissionManifest = argv[index + 1] ?? null;
+      permissionManifest = requiredOptionValue(argv, index, "--permission-manifest");
       index += 1;
       continue;
     }
@@ -78,16 +78,16 @@ function parseArgs(argv: readonly string[]): CliArgs {
       continue;
     }
     if (item === "--export-name") {
-      exportName = parseExportName(argv[index + 1]);
+      exportName = parseExportName(requiredOptionValue(argv, index, "--export-name"));
       index += 1;
       continue;
     }
     if (item.startsWith("--out=")) {
-      outFile = item.slice("--out=".length);
+      outFile = parsePathOption(item.slice("--out=".length), "--out");
       continue;
     }
     if (item === "--out") {
-      outFile = argv[index + 1] ?? null;
+      outFile = requiredOptionValue(argv, index, "--out");
       index += 1;
       continue;
     }
@@ -118,6 +118,17 @@ function parseArgs(argv: readonly string[]): CliArgs {
     force,
     json,
   };
+}
+
+function requiredOptionValue(argv: readonly string[], index: number, flag: string): string {
+  return parsePathOption(argv[index + 1] ?? "", flag);
+}
+
+function parsePathOption(value: string, flag: string): string {
+  if (value.length === 0 || value.startsWith("-")) {
+    throw new Error(`${flag} requires a value.\n\n${usage()}`);
+  }
+  return value;
 }
 
 function parseKind(value: string | undefined): RangeModuleBuildKind {
