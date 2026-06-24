@@ -189,6 +189,9 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:next-action");
     expect(operatorGuide).toContain("npm run mtt:next-action -- --json");
     expect(operatorGuide).toContain("next concrete MTT import step");
+    expect(operatorGuide).toContain("required file acceptance notes");
+    expect(operatorGuide).toContain("slot intake packet");
+    expect(operatorGuide).toContain("Do not create placeholder");
     expect(operatorGuide).toContain("npm run mtt:acceptance");
     expect(operatorGuide).toContain("npm run mtt:acceptance -- --json");
     expect(operatorGuide).toContain("final MTT-only acceptance gate");

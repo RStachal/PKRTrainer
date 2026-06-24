@@ -35,11 +35,18 @@ interface NextMttActionRow {
   normalizedInputPath: string;
   permissionManifestPath: string;
   missingFiles: readonly string[];
+  requiredFiles: readonly RequiredIntakeFile[];
   blockers: readonly string[];
   commands: {
     validate: string;
     buildDryRun: string;
+    validateReady: string;
+    promoteDryRun: string;
+    promoteWrite: string;
+    registryIntegrity: string;
+    technicalAcceptance: string;
   };
+  operatorChecklist: readonly string[];
 }
 
 interface NextMttActionReport {
@@ -56,6 +63,12 @@ interface NextMttActionReport {
   nextAction: NextMttActionRow | null;
   followUpCommands: readonly string[];
   sourceReports: readonly string[];
+}
+
+interface RequiredIntakeFile {
+  path: string;
+  purpose: string;
+  acceptance: readonly string[];
 }
 
 try {
@@ -167,11 +180,87 @@ function nextMttActionRow(
     permissionManifestPath: importSlot.permissionManifestPath,
     missingFiles,
     blockers: row.missingReasons,
+    requiredFiles: requiredFilesForSlot(importSlot),
     commands: {
       validate: validateRangeImportCommand(importSlot),
       buildDryRun: buildRangeModuleDryRunCommand(importSlot),
+      validateReady: validateReadyCommand(row),
+      promoteDryRun: promoteDryRunCommand(row),
+      promoteWrite: "npm run mtt:promote-ready -- --write --confirm=WRITE_READY_MTT_MODULES",
+      registryIntegrity: "npm run mtt:registry-integrity",
+      technicalAcceptance: "npm run mtt:technical-acceptance",
     },
+    operatorChecklist: operatorChecklistForSlot(row),
   };
+}
+
+function requiredFilesForSlot(importSlot: MttCompletionImportSlotHint): readonly RequiredIntakeFile[] {
+  return [
+    {
+      path: importSlot.normalizedInputPath,
+      purpose: "Normalized production range JSON for the exact canonical MTT slot.",
+      acceptance: [
+        `Pack id must be ${importSlot.packId}.`,
+        `Import kind must validate as ${importSlot.kind}.`,
+        "No placeholder values, metadata-only profile copies or inferred chart values.",
+      ],
+    },
+    {
+      path: importSlot.permissionManifestPath,
+      purpose: "Permission manifest proving runtime redistribution rights for this pack.",
+      acceptance: [
+        `Manifest packId must be ${importSlot.packId}.`,
+        "Evidence must permit redistribution inside the PKRTrainer runtime bundle.",
+        "Reviewer, rights owner and evidence references must be explicit.",
+      ],
+    },
+  ];
+}
+
+function validateReadyCommand(row: MttCompletionReadinessRow): string {
+  return [
+    "npm run mtt:validate-ready-intake --",
+    `--format=${row.tableFormat}`,
+    `--speed=${row.blindSpeed}`,
+    `--ev=${row.evModel}`,
+    `--street=${row.street}`,
+    `--ante=${row.ante}`,
+  ].join(" ");
+}
+
+function promoteDryRunCommand(row: MttCompletionReadinessRow): string {
+  return [
+    "npm run mtt:promote-ready --",
+    "--dry-run",
+    `--format=${row.tableFormat}`,
+    `--speed=${row.blindSpeed}`,
+    `--ev=${row.evModel}`,
+    `--street=${row.street}`,
+    `--ante=${row.ante}`,
+  ].join(" ");
+}
+
+function operatorChecklistForSlot(row: MttCompletionReadinessRow): readonly string[] {
+  const checklist = [
+    "Place both required files in the listed raw folder.",
+    "Run the single-slot validate command before any module generation.",
+    "Run the build dry-run command and inspect the output module path.",
+    "Run the filtered ready-intake validation; it must report productionReady true for this slot.",
+    "Run promote-ready in dry-run mode before the confirmed write.",
+    "After write, refresh/check registry, run registry integrity and technical acceptance.",
+  ];
+
+  if (row.blindSpeed === "TURBO") {
+    checklist.unshift(
+      "Turbo slot must use dedicated turbo hand recommendations or an explicit reviewed reuse policy.",
+    );
+  }
+  if (row.evModel === "DOLAR_EV") {
+    checklist.unshift(
+      "$EV slot must not reuse chipEV ranges without explicit reviewed reuse permission.",
+    );
+  }
+  return checklist;
 }
 
 function countByPriority(rows: readonly NextMttActionRow[]): Record<MttIntakePriorityKey, number> {
@@ -224,9 +313,21 @@ function renderNextMttActionReport(report: NextMttActionReport): string {
     lines.push(`raw folder: ${action.rawInputFolder}`);
     if (action.currentPackId !== null) lines.push(`current pack: ${action.currentPackId}`);
     for (const missingFile of action.missingFiles) lines.push(`missing file: ${missingFile}`);
+    lines.push("required files:");
+    for (const requiredFile of action.requiredFiles) {
+      lines.push(`  - ${requiredFile.path}: ${requiredFile.purpose}`);
+      for (const acceptance of requiredFile.acceptance) lines.push(`    acceptance: ${acceptance}`);
+    }
     lines.push(`validate: ${action.commands.validate}`);
     lines.push(`build dry-run: ${action.commands.buildDryRun}`);
+    lines.push(`validate ready: ${action.commands.validateReady}`);
+    lines.push(`promote dry-run: ${action.commands.promoteDryRun}`);
+    lines.push(`promote write: ${action.commands.promoteWrite}`);
+    lines.push(`registry integrity: ${action.commands.registryIntegrity}`);
+    lines.push(`technical acceptance: ${action.commands.technicalAcceptance}`);
     for (const blocker of action.blockers) lines.push(`blocker: ${blocker}`);
+    lines.push("operator checklist:");
+    for (const item of action.operatorChecklist) lines.push(`  - ${item}`);
   }
 
   lines.push("follow-up commands:");

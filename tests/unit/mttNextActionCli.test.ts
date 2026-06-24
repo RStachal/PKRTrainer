@@ -14,8 +14,14 @@ describe("mtt:next-action CLI", () => {
     expect(result.stdout).toContain("pack: mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1");
     expect(result.stdout).toContain("missing file: Agents/range-intake/raw/mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1/normalized.json");
     expect(result.stdout).toContain("missing file: Agents/range-intake/raw/mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1/permission.json");
+    expect(result.stdout).toContain("required files:");
+    expect(result.stdout).toContain("Pack id must be mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1.");
+    expect(result.stdout).toContain("Turbo slot must use dedicated turbo hand recommendations");
     expect(result.stdout).toContain("validate: npm run validate:range-import");
     expect(result.stdout).toContain("build dry-run: npm run build:range-module");
+    expect(result.stdout).toContain("validate ready: npm run mtt:validate-ready-intake");
+    expect(result.stdout).toContain("promote dry-run: npm run mtt:promote-ready");
+    expect(result.stdout).toContain("technical acceptance: npm run mtt:technical-acceptance");
     expect(result.stdout).toContain("npm run mtt:acceptance");
     expect(result.stdout).toContain("npm run mtt:release-gates -- --json");
     expect(result.stdout).not.toContain("https://");
@@ -43,7 +49,18 @@ describe("mtt:next-action CLI", () => {
         commands: {
           validate: string;
           buildDryRun: string;
+          validateReady: string;
+          promoteDryRun: string;
+          promoteWrite: string;
+          registryIntegrity: string;
+          technicalAcceptance: string;
         };
+        requiredFiles: Array<{
+          path: string;
+          purpose: string;
+          acceptance: string[];
+        }>;
+        operatorChecklist: string[];
       };
       followUpCommands: string[];
       sourceReports: string[];
@@ -65,6 +82,19 @@ describe("mtt:next-action CLI", () => {
     ]);
     expect(parsed.nextAction.commands.validate).toContain("npm run validate:range-import");
     expect(parsed.nextAction.commands.buildDryRun).toContain("npm run build:range-module");
+    expect(parsed.nextAction.commands.validateReady).toContain("npm run mtt:validate-ready-intake");
+    expect(parsed.nextAction.commands.promoteDryRun).toContain("npm run mtt:promote-ready");
+    expect(parsed.nextAction.commands.promoteWrite).toContain("WRITE_READY_MTT_MODULES");
+    expect(parsed.nextAction.commands.registryIntegrity).toBe("npm run mtt:registry-integrity");
+    expect(parsed.nextAction.commands.technicalAcceptance).toBe("npm run mtt:technical-acceptance");
+    expect(parsed.nextAction.requiredFiles).toHaveLength(2);
+    expect(parsed.nextAction.requiredFiles[0].path).toContain("normalized.json");
+    expect(parsed.nextAction.requiredFiles[0].acceptance).toContain(
+      "Pack id must be mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1.",
+    );
+    expect(parsed.nextAction.requiredFiles[1].path).toContain("permission.json");
+    expect(parsed.nextAction.operatorChecklist.join("\n"))
+      .toContain("Turbo slot must use dedicated turbo hand recommendations");
     expect(parsed.followUpCommands).toContain("npm run mtt:acceptance");
     expect(parsed.sourceReports).toContain("npm run mtt:release-gates -- --json");
     expect(JSON.stringify(parsed)).not.toContain("https://");

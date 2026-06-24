@@ -137,12 +137,17 @@ npm run mtt:intake-plan -- --summary
 
 `release:check` runs typecheck, tests, MTT release gates, range verification and production build.
 `mtt:next-action` prints the next concrete MTT import step: first a ready slot, otherwise the first waiting slot by
-P0-P5 priority, including missing files and validate/build dry-run commands.
+P0-P5 priority, including missing files, required file acceptance notes, validate/build dry-run commands, filtered
+ready-intake validation, promote-ready dry-run/write commands, registry integrity and technical acceptance follow-ups.
 `mtt:acceptance` is the final MTT-only acceptance gate. It is green only when the full MTT app matches
 `Agents/mtt-done-checklist.md`, including source-free UI checks and ready-intake validation.
 `mtt:release-gates` runs every MTT gate and intake priority summary before returning a failing exit code, so one failing
 gate does not hide the remaining blocker summaries. Use `--json` when CI or operator tooling needs the status and
 captured output of every gate command.
+
+When `mtt:next-action` is in `WAITING_FOR_FILES`, treat its output as the slot intake packet. Do not create placeholder
+`normalized.json` or `permission.json`; the files must come from reviewed legal evidence and must match the printed
+canonical `packId`.
 
 For the full MTT matrix with blocker details and import slot paths:
 
