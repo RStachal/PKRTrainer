@@ -137,6 +137,8 @@ npm run mtt:release-gates
 npm run mtt:release-gates -- --json
 npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json
 npm run mtt:intake-plan -- --summary
+npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json
+npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json
 ```
 
 `release:check` runs typecheck, tests, MTT release gates, range verification and production build.
@@ -146,7 +148,8 @@ ready-intake validation, promote-ready dry-run/write commands, registry integrit
 preflight follow-ups.
 Use `--priority=<bucket>` to ask for the next concrete step inside a specific P1-P5 import wave.
 Use `--output=artifacts/mtt-next-action/report.json` when the slot intake packet should be saved for handoff or release notes.
-The packet's source reports also include clean JSON handoff commands for `artifacts/mtt-release-gates-report.json` and
+The packet's source reports also include clean JSON handoff commands for `artifacts/mtt-intake-plan-report.json`,
+`artifacts/mtt-blockers-report.json`, `artifacts/mtt-release-gates-report.json` and
 `artifacts/mtt-acceptance-report.json`.
 `mtt:acceptance` is the final MTT-only acceptance gate. It is green only when the full MTT app matches
 `Agents/mtt-done-checklist.md`, including source-free UI checks and ready-intake validation.

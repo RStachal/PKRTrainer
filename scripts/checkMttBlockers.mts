@@ -1,4 +1,5 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import {
   buildMttCompletionReadinessReport,
   filterMttCompletionReadinessReport,
@@ -17,6 +18,7 @@ import {
 interface CliArgs {
   filters: MttCompletionReadinessFilters;
   json: boolean;
+  outputPath: string | null;
   summary: boolean;
 }
 
@@ -59,6 +61,7 @@ function usage(): string {
     "",
     "Output:",
     "  --json",
+    "  --output=artifacts/mtt-blockers-report.json",
     "  --summary",
     "",
     "Filters:",
@@ -74,6 +77,10 @@ function usage(): string {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildMttBlockerReport(args);
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderMttBlockerReport(report, args.summary));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
@@ -83,6 +90,7 @@ try {
 function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let json = false;
+  let outputPath: string | null = null;
   let summary = false;
 
   for (const item of argv) {
@@ -97,11 +105,17 @@ function parseArgs(argv: readonly string[]): CliArgs {
       summary = true;
       continue;
     }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
+      continue;
+    }
     if (parseMttFilterArg(item, filters, usage)) continue;
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, json, summary };
+  return { filters, json, outputPath, summary };
 }
 
 function buildMttBlockerReport(args: CliArgs): MttBlockerReport {

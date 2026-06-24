@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:intake-plan CLI", () => {
@@ -185,6 +188,25 @@ describe("mtt:intake-plan CLI", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Use only one of --ready-only or --waiting-only.");
     expect(result.stderr).toContain("Usage:");
+  });
+
+  it("umi zapsat cisty JSON artefakt pro intake handoff", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-intake-plan-"));
+    const outputPath = join(directory, "report.json");
+    try {
+      const result = runPlan("--summary", `--output=${outputPath}`);
+
+      expect(result.status).toBe(0);
+      expect(existsSync(outputPath)).toBe(true);
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        counts: { totalQueueRows: number; missingNormalized: number; missingPermission: number };
+      };
+      expect(parsed.counts.totalQueueRows).toBe(64);
+      expect(parsed.counts.missingNormalized).toBe(64);
+      expect(parsed.counts.missingPermission).toBe(64);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("vrati chybu pro neplatny limit", () => {

@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:blockers CLI", () => {
@@ -134,6 +137,25 @@ describe("mtt:blockers CLI", () => {
     expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=8");
     expect(result.stdout).not.toContain("SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF");
     expect(result.stdout).not.toContain("blocker:");
+  });
+
+  it("umi zapsat cisty JSON artefakt pro blocker handoff", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-blockers-"));
+    const outputPath = join(directory, "report.json");
+    try {
+      const result = runBlockers("--summary", `--output=${outputPath}`);
+
+      expect(result.status).toBe(0);
+      expect(existsSync(outputPath)).toBe(true);
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        counts: { blockerRows: number; missingNormalized: number; missingPermission: number };
+      };
+      expect(parsed.counts.blockerRows).toBe(64);
+      expect(parsed.counts.missingNormalized).toBe(64);
+      expect(parsed.counts.missingPermission).toBe(64);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("vrati chybu pro neznamy filtr", () => {

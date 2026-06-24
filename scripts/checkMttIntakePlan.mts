@@ -1,4 +1,5 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import {
   buildMttCompletionReadinessReport,
   filterMttCompletionReadinessReport,
@@ -24,6 +25,7 @@ interface CliArgs {
   filters: MttCompletionReadinessFilters;
   json: boolean;
   limit: number | null;
+  outputPath: string | null;
   priority: MttIntakePriorityKey | null;
   summary: boolean;
   visibility: "all" | "ready-only" | "waiting-only";
@@ -71,6 +73,7 @@ function usage(): string {
     "",
     "Output:",
     "  --json",
+    "  --output=artifacts/mtt-intake-plan-report.json",
     "  --all",
     "  --limit=<positive integer>",
     `  --priority=${MTT_INTAKE_PRIORITY_KEYS.join("|")}`,
@@ -91,6 +94,10 @@ function usage(): string {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildMttIntakePlanReport(args);
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderMttIntakePlanReport(report, args.limit, args.summary));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
@@ -101,6 +108,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let json = false;
   let limit: number | null = 12;
+  let outputPath: string | null = null;
   let priority: MttIntakePriorityKey | null = null;
   let summary = false;
   let visibility: CliArgs["visibility"] = "all";
@@ -119,6 +127,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (item === "--summary") {
       summary = true;
+      continue;
+    }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
       continue;
     }
     if (item.startsWith("--limit=")) {
@@ -141,7 +155,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, json, limit, priority, summary, visibility };
+  return { filters, json, limit, outputPath, priority, summary, visibility };
 }
 
 function parseLimit(value: string): number {

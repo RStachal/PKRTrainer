@@ -45,8 +45,10 @@
 - `npm run mtt:release-gates -- --json`:
 - `npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json`:
 - `npm run mtt:blockers`:
+- `npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json`:
 - `npm run mtt:postflop-release -- --summary`:
 - `npm run mtt:intake-plan -- --summary`:
+- `npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json`:
 - `npm run mtt:intake-plan -- --ready-only`:
 - `npm run mtt:validate-ready-intake`:
 - `npm run mtt:promote-ready`:
