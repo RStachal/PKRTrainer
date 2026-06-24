@@ -772,6 +772,25 @@ describe("range import CLI", () => {
     }
   });
 
+  it("odmitne neznamy validate:range-import CLI argument", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkr-range-import-"));
+    try {
+      const file = join(dir, "valid.json");
+      const input = validMttImport();
+      const manifestFile = join(dir, "permission.json");
+      writeFileSync(file, JSON.stringify(input), "utf8");
+      writeFileSync(manifestFile, JSON.stringify(validPermissionManifest(input.id)), "utf8");
+
+      const result = runImportCli("mtt-preflop", file, manifestFile, ["--premission-manifest"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("Unsupported argument: --premission-manifest");
+      expect(result.stderr).toContain("Usage:");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("blokuje production-ready MTT preflop import mimo legal slot packId", () => {
     const dir = mkdtempSync(join(tmpdir(), "pkr-range-import-"));
     try {
