@@ -1,6 +1,6 @@
 # MTT Done Checklist
 
-Updated: 2026-06-23
+Updated: 2026-06-24
 
 This checklist defines when the MTT part of PKRTrainer is complete for the first production release.
 
@@ -53,6 +53,7 @@ This checklist defines when the MTT part of PKRTrainer is complete for the first
 - Import a hand history with turn and river review.
 - Open Statistics and verify MTT breakdowns for preflop, postflop single spots and hand lines.
 - Repeat at mobile widths 360px, 390px and 412px without page-level horizontal overflow.
+- Run `npm run e2e:android:preflight`; final MTT release requires a ready Android WebView/emulator target plus device E2E evidence, not only the preflight.
 
 ## Release Candidate
 
@@ -67,4 +68,5 @@ This checklist defines when the MTT part of PKRTrainer is complete for the first
 - Normal Chrome E2E passes desktop plus 360/390/412 px, offline reopen and service-worker rollback.
 - Synthetic canonical production fixture E2E passes PREFLOP, FLOP, TURN and RIVER lazy routing without leaving fixture data in the release build.
 - Synthetic canonical production fixture E2E completes a facing-bet `CALL -> CALL -> CALL` hand-line, preloads only the selected profile's postflop family for line mode and preserves all three StrategyPack identities in persisted stats.
+- Android device preflight writes `artifacts/e2e-android-preflight/report.json`; final release still requires a real ready target and captured WebView/device screenshots/logs.
 - Release notes include MTT production row counts, blocker counts, bundle budget and remaining limitations.

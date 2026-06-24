@@ -1,6 +1,6 @@
 # MTT RC attempt - 2026-06-17
 
-Updated 2026-06-23 after fail-closed legal provenance and real-browser technical acceptance work.
+Updated 2026-06-24 after Android device preflight tooling was added.
 
 ## Decision
 
@@ -47,6 +47,11 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
 - `npm run bundle:budget`: passed after build.
   - current build after the 2026-06-18 matrix optimization: main-9cmG-2BA.js, raw 320.96 KiB, gzip 84.63 KiB
   - limits: raw 325 KiB, gzip 86 KiB
+- `npm run e2e:android:preflight`: added on 2026-06-24.
+  - Writes `artifacts/e2e-android-preflight/report.json`.
+  - Distinguishes missing adb, no listed device, unauthorized device, offline device and ready Android target.
+  - Local 2026-06-24 run found adb at the Android SDK path but reported `NO_DEVICE`, so no Android WebView/emulator acceptance was claimed.
+  - This is a reproducible environment gate for the remaining Android WebView/device acceptance; it does not replace the final device E2E pass.
 
 ## Completed in this pass
 
@@ -59,6 +64,7 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
 - Follow-up 2026-06-18: preflop matrix now delegates cell click/keyboard handling at the matrix level and caches the stable 13x13 hand-label grid, reducing per-render listeners from 338 to 2.
 - Follow-up 2026-06-22: two historical full-ring regular CHIP_EV packs now fail closed as `PREVIEW_ONLY`; their non-canonical IDs cannot satisfy legal production readiness or start scoring.
 - Follow-up 2026-06-23: postflop UI exposes source-free initiative/facing-bet selection, production hand-lines dynamically dispatch each street to the loaded family pack, and transition validation distinguishes `CALL` facing branches from initiative `CHECK/BET_SMALL/BET_BIG/RAISE` branches.
+- Follow-up 2026-06-24: Android/WebView blocker is now executable as `npm run e2e:android:preflight` with JSON evidence instead of a manual note.
 
 ## Blocking items
 
@@ -68,6 +74,7 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
 - P4 TURN production imports: 16 blocker rows.
 - P5 RIVER production imports: 16 blocker rows.
 - No ready validation slots exist yet because all 64 legal intake slots are waiting for `normalized.json` and `permission.json`.
+- Android WebView/device E2E remains blocked until `adb devices -l` exposes a ready emulator or physical device.
 
 ## Next operator action
 

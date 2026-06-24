@@ -35,6 +35,7 @@
     "profile:render": "vite-node scripts/profileRenderPerformance.mts",
     "e2e:chrome": "vite-node scripts/runChromeE2e.mts",
     "e2e:chrome:production-fixture": "vite-node scripts/runChromeProductionFixtureE2e.mts",
+    "e2e:android:preflight": "vite-node scripts/checkAndroidDeviceAvailability.mts",
     "release:check": "npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:release-gates && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget",
     "test": "vitest run",
     "test:watch": "vitest"

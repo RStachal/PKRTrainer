@@ -107,6 +107,8 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["e2e:chrome"]).toBe("vite-node scripts/runChromeE2e.mts");
     expect(pkg.scripts["e2e:chrome:production-fixture"])
       .toBe("vite-node scripts/runChromeProductionFixtureE2e.mts");
+    expect(pkg.scripts["e2e:android:preflight"])
+      .toBe("vite-node scripts/checkAndroidDeviceAvailability.mts");
     expect(chromeE2eScript).toContain('"mobile-360"');
     expect(chromeE2eScript).toContain('"mobile-390"');
     expect(chromeE2eScript).toContain('"mobile-412"');
