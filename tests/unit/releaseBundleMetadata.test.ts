@@ -319,6 +319,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("npm run range:intake -- --ready-only");
     expect(releaseTemplate).toContain("npm run e2e:android:preflight");
     expect(releaseTemplate).toContain("artifacts/e2e-android-preflight/report.json");
+    expect(releaseTemplate).toContain("Android preflight status / readySerial");
     expect(releaseTemplate).toContain("MTT intake priority plan");
     expect(releaseTemplate).toContain("Known limitations");
   });
