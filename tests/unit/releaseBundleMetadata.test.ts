@@ -216,6 +216,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("expands the 48 profile targets into 9,600 concrete street/pot/action/position targets");
     expect(operatorGuide).toContain("npm run mtt:postflop-release");
     expect(operatorGuide).toContain("npm run mtt:postflop-release -- --summary");
+    expect(operatorGuide).toContain("npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json");
     expect(operatorGuide).toContain("fails release while any FLOP/TURN/RIVER slot still uses fallback runtime");
     expect(operatorGuide).toContain("npm run mtt:intake-plan");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --ready-only --json");

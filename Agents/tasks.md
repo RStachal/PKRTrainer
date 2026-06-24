@@ -1706,7 +1706,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Vystup musi obsahovat priority bucket, slotId, packId, chybejici soubory, validate command, build dry-run command a navazujici acceptance prikazy.
     - Cilem je, aby operator po dodani dat nemusel cist 64 radku, ale dostal dalsi konkretni krok.
     - Hotovo: `npm run mtt:next-action` vraci text/JSON s prioritou, slotem, target packem, chybejicimi `normalized.json`/`permission.json`, validate/build dry-run prikazy, follow-up acceptance prikazy a odkazy na zdrojove reporty.
-    - Doplneno 2026-06-24: report nyni obsahuje i intake packet pro dalsi slot: required-file acceptance poznamky, filtered `mtt:validate-ready-intake`, promote-ready dry-run/write prikazy, registry integrity, technical acceptance a operator checklist bez URL/source citaci.
+    - Doplneno 2026-06-24: report nyni obsahuje i intake packet pro dalsi slot: required-file acceptance poznamky, filtered `mtt:validate-ready-intake`, promote-ready dry-run/write prikazy, registry integrity, technical acceptance, postflop release handoff report a operator checklist bez URL/source citaci.
     - Doplneno 2026-06-24: `mtt:next-action -- --priority=<bucket>` umi vytahnout dalsi konkretni krok pro P1/P2/P3/P4/P5 wave bez prochazeni cele fronty.
     - Doplneno 2026-06-24: `mtt:next-action -- --output=artifacts/mtt-next-action/report.json` uklada stejny source-free intake packet jako JSON artefakt pro operator handoff/release notes.
     - Doplneno 2026-06-24: next-action packet obsahuje take `npm run e2e:android:preflight`, aby po importu zustal u slotu pripojeny device/readySerial dukaz nebo explicitni Android blocker.
