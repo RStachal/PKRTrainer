@@ -1883,7 +1883,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Acceptance: cisty clone bez lokalnich raw dat reprodukuje stejny technicky vysledek a release tag nelze vytvorit s cervenym MTT gate.
     - Hotovo 2026-06-18: `.github/workflows/ci.yml` pouziva Node 22 + `npm ci`, typecheck, full Vitest s JUnit artefaktem, generated registry check, registry integrity, raw intake guard, range verification, build, bundle budget a upload `dist/`. Concurrency rusi zastarale runy a job ma explicitni timeout.
     - Znamy production-data blocker je oddelen do diagnostickeho `mtt-data-status` jobu s JSON artefaktem; jeho cerveny stav nemaskuje technickou regresi. `.github/workflows/release.yml` pro `v*` tag/manual release nema `continue-on-error` a uploadne `dist/` az po kompletnim `npm run release:check`, ktery obsahuje MTT gates.
-    - Doplneno 2026-06-24: CI `mtt-data-status` pouziva `mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json`, takze uploaduje cisty parsovatelny JSON bez npm headeru.
+    - Doplneno 2026-06-24: CI `mtt-data-status` uklada `mtt-intake-plan`, `mtt-blockers`, `mtt-next-action` a `mtt-release-gates` jako ciste parsovatelne JSON artefakty bez npm headeru.
     - Workflow kontrakt hlidaji unit testy. Lokalni overeni: typecheck, registry check/integrity, `git diff --check`, 104 testovacich souboru / 485 testu, build a bundle budget prosly.
   - [ ] 135.38 Dodelat skutecne browser/device E2E acceptance
     - Unit/jsdom testy doplnit o produkcni build spusteny v prohlizeci: start profilu, answer/next, single spot, hand line, HH review, stats export/import, reload a offline reopen.

@@ -116,6 +116,9 @@ jobs:
       - name: Run production-data gates
         run: |
           mkdir -p artifacts
+          npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json
+          npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json
+          npm run mtt:next-action -- --output=artifacts/mtt-next-action-report.json
           npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json
 
       - name: Upload MTT gate report
@@ -123,5 +126,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mtt-production-data-status
-          path: artifacts/mtt-release-gates-report.json
+          path: artifacts/mtt-*-report.json
           if-no-files-found: warn
