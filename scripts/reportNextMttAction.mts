@@ -12,6 +12,7 @@ import {
   MTT_INTAKE_PRIORITY_KEYS,
   mttIntakePriorityForProfile,
   mttIntakePriorityRank,
+  parseMttIntakePriority,
   type MttIntakePriorityKey,
 } from "../src/data/ranges/mttIntakePriority.ts";
 import {
@@ -22,6 +23,7 @@ import {
 interface CliArgs {
   filters: MttCompletionReadinessFilters;
   json: boolean;
+  priority: MttIntakePriorityKey | null;
 }
 
 interface NextMttActionRow {
@@ -53,6 +55,7 @@ interface NextMttActionReport {
   valid: boolean;
   state: "COMPLETE" | "READY_FOR_VALIDATION" | "WAITING_FOR_FILES";
   filters: MttCompletionReadinessFilters;
+  priority: MttIntakePriorityKey | null;
   counts: {
     blockerRows: number;
     readyForValidation: number;
@@ -85,7 +88,12 @@ function usage(): string {
     "Usage:",
     "  npm run mtt:next-action",
     "  npm run mtt:next-action -- --json",
+    "  npm run mtt:next-action -- --priority=P2_PREFLOP_DOLAR_EV",
     "  npm run mtt:next-action -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER",
+    "",
+    "Output:",
+    "  --json",
+    `  --priority=${MTT_INTAKE_PRIORITY_KEYS.join("|")}`,
     "",
     "Filters:",
     "  --format=FULL_RING_9|SIX_MAX",
@@ -94,15 +102,13 @@ function usage(): string {
     "  --street=PREFLOP|FLOP|TURN|RIVER",
     "  --ante=ON|OFF",
     "  --status=candidate|missing|non-production|preview|blocked",
-    "",
-    "Output:",
-    "  --json",
   ].join("\n");
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let json = false;
+  let priority: MttIntakePriorityKey | null = null;
 
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
@@ -110,11 +116,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
       json = true;
       continue;
     }
+    if (item.startsWith("--priority=")) {
+      priority = parseMttIntakePriority(item.slice("--priority=".length), usage);
+      continue;
+    }
     if (parseMttFilterArg(item, filters, usage)) continue;
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, json };
+  return { filters, json, priority };
 }
 
 function buildNextMttActionReport(args: CliArgs): NextMttActionReport {
@@ -122,6 +132,7 @@ function buildNextMttActionReport(args: CliArgs): NextMttActionReport {
   const rows = filtered.rows
     .filter((row) => !row.productionReady && row.importSlot !== null)
     .map((row) => nextMttActionRow(row, row.importSlot as MttCompletionImportSlotHint))
+    .filter((row) => args.priority === null || row.priority === args.priority)
     .sort(compareRows);
   const nextAction = rows.find((row) => row.missingFiles.length === 0) ?? rows[0] ?? null;
   const readyForValidation = rows.filter((row) => row.missingFiles.length === 0).length;
@@ -130,6 +141,7 @@ function buildNextMttActionReport(args: CliArgs): NextMttActionReport {
     valid: rows.length === 0,
     state: nextAction === null ? "COMPLETE" : nextAction.missingFiles.length === 0 ? "READY_FOR_VALIDATION" : "WAITING_FOR_FILES",
     filters: args.filters,
+    priority: args.priority,
     counts: {
       blockerRows: rows.length,
       readyForValidation,
@@ -291,6 +303,7 @@ function statusRank(status: MttCompletionReadinessRow["status"]): number {
 function renderNextMttActionReport(report: NextMttActionReport): string {
   const lines = [
     "Next MTT action",
+    `priority filter: ${report.priority ?? "all"}`,
     `valid: ${report.valid}`,
     `state: ${report.state}`,
     `blocker rows: ${report.counts.blockerRows}`,

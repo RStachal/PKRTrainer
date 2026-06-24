@@ -128,6 +128,7 @@ Before releasing:
 npm run release:check
 npm run mtt:next-action
 npm run mtt:next-action -- --json
+npm run mtt:next-action -- --priority=P2_PREFLOP_DOLAR_EV
 npm run mtt:acceptance
 npm run mtt:acceptance -- --json
 npm run mtt:release-gates
@@ -139,6 +140,7 @@ npm run mtt:intake-plan -- --summary
 `mtt:next-action` prints the next concrete MTT import step: first a ready slot, otherwise the first waiting slot by
 P0-P5 priority, including missing files, required file acceptance notes, validate/build dry-run commands, filtered
 ready-intake validation, promote-ready dry-run/write commands, registry integrity and technical acceptance follow-ups.
+Use `--priority=<bucket>` to ask for the next concrete step inside a specific P1-P5 import wave.
 `mtt:acceptance` is the final MTT-only acceptance gate. It is green only when the full MTT app matches
 `Agents/mtt-done-checklist.md`, including source-free UI checks and ready-intake validation.
 `mtt:release-gates` runs every MTT gate and intake priority summary before returning a failing exit code, so one failing

@@ -1705,6 +1705,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Cilem je, aby operator po dodani dat nemusel cist 64 radku, ale dostal dalsi konkretni krok.
     - Hotovo: `npm run mtt:next-action` vraci text/JSON s prioritou, slotem, target packem, chybejicimi `normalized.json`/`permission.json`, validate/build dry-run prikazy, follow-up acceptance prikazy a odkazy na zdrojove reporty.
     - Doplneno 2026-06-24: report nyni obsahuje i intake packet pro dalsi slot: required-file acceptance poznamky, filtered `mtt:validate-ready-intake`, promote-ready dry-run/write prikazy, registry integrity, technical acceptance a operator checklist bez URL/source citaci.
+    - Doplneno 2026-06-24: `mtt:next-action -- --priority=<bucket>` umi vytahnout dalsi konkretni krok pro P1/P2/P3/P4/P5 wave bez prochazeni cele fronty.
   - [x] 135.4 Udelat preflight kontrolu raw MTT import workspace
     - Rozsirit guard tak, aby umel rozlisit povolene lokalni raw soubory od omylem commitnutych privatnich zdroju, ukazal ready/waiting po priority buckets a failnul pri nevalidni strukture `Agents/range-intake/raw/<packId>/`.
     - Soucasti ma byt kontrola, ze `normalized.json` a `permission.json` patri ke stejnemu `packId` a ze slot existuje v legalnim registry.

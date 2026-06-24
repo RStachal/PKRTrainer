@@ -7,6 +7,7 @@ describe("mtt:next-action CLI", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("Next MTT action");
+    expect(result.stdout).toContain("priority filter: all");
     expect(result.stdout).toContain("valid: false");
     expect(result.stdout).toContain("state: WAITING_FOR_FILES");
     expect(result.stdout).toContain("priority: P1_PREFLOP_CHIP_EV");
@@ -34,6 +35,7 @@ describe("mtt:next-action CLI", () => {
     const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
       valid: boolean;
       state: string;
+      priority: string | null;
       counts: {
         blockerRows: number;
         readyForValidation: number;
@@ -68,6 +70,7 @@ describe("mtt:next-action CLI", () => {
 
     expect(parsed.valid).toBe(false);
     expect(parsed.state).toBe("WAITING_FOR_FILES");
+    expect(parsed.priority).toBe(null);
     expect(parsed.counts.blockerRows).toBe(64);
     expect(parsed.counts.readyForValidation).toBe(0);
     expect(parsed.counts.missingNormalized).toBe(64);
@@ -100,11 +103,32 @@ describe("mtt:next-action CLI", () => {
     expect(JSON.stringify(parsed)).not.toContain("https://");
   });
 
-  it("vrati chybu pro neznamy argument", () => {
-    const result = runNextAction("--priority=P1_PREFLOP_CHIP_EV");
+  it("umi vybrat dalsi krok pro konkretni prioritu", () => {
+    const result = runNextAction("--priority=P2_PREFLOP_DOLAR_EV", "--json");
+
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout.slice(result.stdout.indexOf("{"))) as {
+      priority: string;
+      counts: { blockerRows: number; byPriority: Record<string, number> };
+      nextAction: { priority: string; slotId: string; packId: string };
+    };
+
+    expect(parsed.priority).toBe("P2_PREFLOP_DOLAR_EV");
+    expect(parsed.counts.blockerRows).toBe(8);
+    expect(parsed.counts.byPriority.P2_PREFLOP_DOLAR_EV).toBe(8);
+    expect(parsed.nextAction.priority).toBe("P2_PREFLOP_DOLAR_EV");
+    expect(parsed.nextAction.slotId).toBe("FULL_RING_9|REGULAR|DOLAR_EV|PREFLOP|OFF");
+    expect(parsed.nextAction.packId).toBe(
+      "mtt-full-ring-9-regular-preflop-dolar-ev-ante-off-production-v1",
+    );
+    expect(JSON.stringify(parsed)).not.toContain("https://");
+  });
+
+  it("vrati chybu pro neznamou prioritu", () => {
+    const result = runNextAction("--priority=P9");
 
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain("Unsupported argument: --priority=P1_PREFLOP_CHIP_EV");
+    expect(result.stderr).toContain("Unsupported --priority value: P9");
     expect(result.stderr).toContain("Usage:");
   });
 });
