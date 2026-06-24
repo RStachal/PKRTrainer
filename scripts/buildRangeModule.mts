@@ -101,7 +101,10 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (!item.startsWith("-") && inputFile === null) {
       inputFile = item;
+      continue;
     }
+    if (item.startsWith("-")) throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
+    throw new Error(`Unexpected input file argument: ${item}\n\n${usage()}`);
   }
 
   if (!kind || !inputFile) throw new Error(usage());

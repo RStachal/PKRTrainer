@@ -763,4 +763,23 @@ describe("rangeModuleBuilder", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it("odmitne neznamy build:range-module CLI argument", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkr-range-builder-"));
+    try {
+      const input = validMttImport();
+      const inputFile = join(dir, "input.json");
+      const manifestFile = join(dir, "permission.json");
+      writeFileSync(inputFile, JSON.stringify(input), "utf8");
+      writeFileSync(manifestFile, JSON.stringify(permissionManifest(input.id)), "utf8");
+
+      const result = runBuilderCli("mtt-preflop", inputFile, manifestFile, ["--wirte"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("Unsupported argument: --wirte");
+      expect(result.stderr).toContain("Usage:");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
