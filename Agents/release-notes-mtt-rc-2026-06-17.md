@@ -10,7 +10,7 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
 
 - `npm run mtt:technical-acceptance`: passed on 2026-06-24.
   - Runs typecheck, all Vitest suites, deterministic registry and integrity checks, range verification, production build, precache, bundle budget, four-viewport Chrome E2E and isolated canonical production PREFLOP/FLOP/TURN/RIVER fixture E2E.
-  - 10/10 commands passed; Vitest reported 229/229 suites and 558/558 tests.
+  - 10/10 commands passed; Vitest reported 229/229 suites and 559/559 tests.
   - Main build: 271.67 KiB raw / 74.56 KiB gzip; install-precache JS total: 348.55 / 95.67 KiB.
   - Chrome passed desktop 1280 plus mobile 360/390/412, 52 contrast checks, offline reopen and real service-worker rollback.
   - Synthetic lazy chunks raw/gzip: preflop 23.43 / 7.19 KiB, FLOP 21.39 / 5.86 KiB, TURN 9.72 / 3.11 KiB and RIVER 10.39 / 3.24 KiB; fixture main is 222.12 / 64.04 KiB.
