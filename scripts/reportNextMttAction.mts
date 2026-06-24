@@ -177,6 +177,8 @@ function buildNextMttActionReport(args: CliArgs): NextMttActionReport {
       "npm run mtt:intake-plan -- --json",
       "npm run mtt:blockers -- --json",
       "npm run mtt:release-gates -- --json",
+      "npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json",
+      "npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json",
     ],
   };
 }

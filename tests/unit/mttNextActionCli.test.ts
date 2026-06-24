@@ -31,6 +31,7 @@ describe("mtt:next-action CLI", () => {
     expect(result.stdout).toContain("npm run mtt:acceptance");
     expect(result.stdout).toContain("npm run e2e:android:preflight");
     expect(result.stdout).toContain("npm run mtt:release-gates -- --json");
+    expect(result.stdout).toContain("npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json");
     expect(result.stdout).not.toContain("https://");
   });
 
@@ -109,6 +110,12 @@ describe("mtt:next-action CLI", () => {
     expect(parsed.followUpCommands).toContain("npm run mtt:acceptance");
     expect(parsed.followUpCommands).toContain("npm run e2e:android:preflight");
     expect(parsed.sourceReports).toContain("npm run mtt:release-gates -- --json");
+    expect(parsed.sourceReports).toContain(
+      "npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json",
+    );
+    expect(parsed.sourceReports).toContain(
+      "npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json",
+    );
     expect(JSON.stringify(parsed)).not.toContain("https://");
   });
 

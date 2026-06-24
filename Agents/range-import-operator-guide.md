@@ -146,6 +146,8 @@ ready-intake validation, promote-ready dry-run/write commands, registry integrit
 preflight follow-ups.
 Use `--priority=<bucket>` to ask for the next concrete step inside a specific P1-P5 import wave.
 Use `--output=artifacts/mtt-next-action/report.json` when the slot intake packet should be saved for handoff or release notes.
+The packet's source reports also include clean JSON handoff commands for `artifacts/mtt-release-gates-report.json` and
+`artifacts/mtt-acceptance-report.json`.
 `mtt:acceptance` is the final MTT-only acceptance gate. It is green only when the full MTT app matches
 `Agents/mtt-done-checklist.md`, including source-free UI checks and ready-intake validation.
 `mtt:release-gates` runs every MTT gate, intake priority summary and next-action packet before returning a failing
