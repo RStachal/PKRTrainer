@@ -1,4 +1,5 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import {
   buildMttCompletionReadinessReport,
   filterMttCompletionReadinessReport,
@@ -23,6 +24,7 @@ import {
 interface CliArgs {
   filters: MttCompletionReadinessFilters;
   json: boolean;
+  outputPath: string | null;
   priority: MttIntakePriorityKey | null;
 }
 
@@ -77,6 +79,10 @@ interface RequiredIntakeFile {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildNextMttActionReport(args);
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderNextMttActionReport(report));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
@@ -93,6 +99,7 @@ function usage(): string {
     "",
     "Output:",
     "  --json",
+    "  --output=artifacts/mtt-next-action/report.json",
     `  --priority=${MTT_INTAKE_PRIORITY_KEYS.join("|")}`,
     "",
     "Filters:",
@@ -108,6 +115,7 @@ function usage(): string {
 function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let json = false;
+  let outputPath: string | null = null;
   let priority: MttIntakePriorityKey | null = null;
 
   for (const item of argv) {
@@ -120,11 +128,17 @@ function parseArgs(argv: readonly string[]): CliArgs {
       priority = parseMttIntakePriority(item.slice("--priority=".length), usage);
       continue;
     }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
+      continue;
+    }
     if (parseMttFilterArg(item, filters, usage)) continue;
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, json, priority };
+  return { filters, json, outputPath, priority };
 }
 
 function buildNextMttActionReport(args: CliArgs): NextMttActionReport {

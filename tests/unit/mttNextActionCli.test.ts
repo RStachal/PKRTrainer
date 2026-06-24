@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:next-action CLI", () => {
@@ -122,6 +125,30 @@ describe("mtt:next-action CLI", () => {
       "mtt-full-ring-9-regular-preflop-dolar-ev-ante-off-production-v1",
     );
     expect(JSON.stringify(parsed)).not.toContain("https://");
+  });
+
+  it("umi zapsat JSON artefakt pro operator handoff", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-next-action-"));
+    const outputPath = join(directory, "report.json");
+    try {
+      const result = runNextAction("--priority=P3_FLOP_PRODUCTION", `--output=${outputPath}`);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("priority filter: P3_FLOP_PRODUCTION");
+      expect(existsSync(outputPath)).toBe(true);
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        priority: string;
+        nextAction: { priority: string; slotId: string; commands: { technicalAcceptance: string } };
+      };
+
+      expect(parsed.priority).toBe("P3_FLOP_PRODUCTION");
+      expect(parsed.nextAction.priority).toBe("P3_FLOP_PRODUCTION");
+      expect(parsed.nextAction.slotId).toBe("FULL_RING_9|REGULAR|CHIP_EV|FLOP|OFF");
+      expect(parsed.nextAction.commands.technicalAcceptance).toBe("npm run mtt:technical-acceptance");
+      expect(JSON.stringify(parsed)).not.toContain("https://");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("vrati chybu pro neznamou prioritu", () => {

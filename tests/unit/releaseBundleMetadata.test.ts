@@ -188,8 +188,10 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:release-gates -- --json");
     expect(operatorGuide).toContain("npm run mtt:next-action");
     expect(operatorGuide).toContain("npm run mtt:next-action -- --json");
+    expect(operatorGuide).toContain("npm run mtt:next-action -- --output=artifacts/mtt-next-action/report.json");
     expect(operatorGuide).toContain("npm run mtt:next-action -- --priority=P2_PREFLOP_DOLAR_EV");
     expect(operatorGuide).toContain("Use `--priority=<bucket>`");
+    expect(operatorGuide).toContain("slot intake packet should be saved");
     expect(operatorGuide).toContain("next concrete MTT import step");
     expect(operatorGuide).toContain("next-action packet");
     expect(operatorGuide).toContain("required file acceptance notes");
@@ -300,6 +302,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("Statistics changes");
     expect(releaseTemplate).toContain("npm run mtt:completion -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:next-action");
+    expect(releaseTemplate).toContain("artifacts/mtt-next-action/report.json");
     expect(releaseTemplate).toContain("npm run mtt:acceptance");
     expect(releaseTemplate).toContain("npm run mtt:acceptance -- --json");
     expect(releaseTemplate).toContain("npm run mtt:release-gates");

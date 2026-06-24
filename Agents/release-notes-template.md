@@ -37,6 +37,7 @@
 - `npm test`:
 - `npm run mtt:completion -- --summary`:
 - `npm run mtt:next-action`:
+- MTT next-action report: `artifacts/mtt-next-action/report.json`
 - `npm run mtt:acceptance`:
 - `npm run mtt:acceptance -- --json`:
 - `npm run mtt:release-gates`:
