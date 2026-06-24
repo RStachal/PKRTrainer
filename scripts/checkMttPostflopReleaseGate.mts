@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import {
   buildMttCompletionReadinessReport,
   type MttCompletionImportSlotHint,
@@ -8,6 +9,7 @@ import { findPlaceholderStringPaths } from "../src/data/ranges/placeholderText.t
 
 interface CliArgs {
   json: boolean;
+  outputPath: string | null;
   summary: boolean;
 }
 
@@ -47,6 +49,7 @@ function usage(): string {
     "  npm run mtt:postflop-release",
     "  npm run mtt:postflop-release -- --summary",
     "  npm run mtt:postflop-release -- --json",
+    "  npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json",
     "",
     "This is the final MTT postflop gate. It fails while any FLOP/TURN/RIVER target",
     "uses fallback runtime, lacks production coverage, lacks legal intake permission,",
@@ -57,6 +60,10 @@ function usage(): string {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildMttPostflopReleaseGateReport();
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
   console.log(args.json
     ? JSON.stringify(report, null, 2)
     : renderMttPostflopReleaseGateReport(report, args.summary));
@@ -68,6 +75,7 @@ try {
 
 function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
+  let outputPath: string | null = null;
   let summary = false;
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
@@ -79,9 +87,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
       summary = true;
       continue;
     }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
+      continue;
+    }
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
-  return { json, summary };
+  return { json, outputPath, summary };
 }
 
 function buildMttPostflopReleaseGateReport(): MttPostflopReleaseGateReport {

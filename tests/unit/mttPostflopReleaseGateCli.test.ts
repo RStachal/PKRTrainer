@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:postflop-release CLI", () => {
@@ -78,6 +81,26 @@ describe("mtt:postflop-release CLI", () => {
     expect(result.stdout).toContain("fallback runtime rows: 48");
     expect(result.stdout).not.toContain("errors:");
     expect(result.stdout).not.toContain("FULL_RING_9|REGULAR|CHIP_EV|FLOP|ON");
+  });
+
+  it("umi zapsat cisty JSON artefakt pro postflop handoff", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-postflop-release-"));
+    const outputPath = join(directory, "report.json");
+    try {
+      const result = runPostflopRelease("--summary", `--output=${outputPath}`);
+
+      expect(result.status).toBe(1);
+      expect(existsSync(outputPath)).toBe(true);
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        valid: boolean;
+        counts: { totalPostflopRows: number; blockerRows: number };
+      };
+      expect(parsed.valid).toBe(false);
+      expect(parsed.counts.totalPostflopRows).toBe(48);
+      expect(parsed.counts.blockerRows).toBe(48);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });
 

@@ -317,6 +317,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("npm run mtt:blockers");
     expect(releaseTemplate).toContain("npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json");
     expect(releaseTemplate).toContain("npm run mtt:postflop-release -- --summary");
+    expect(releaseTemplate).toContain("npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --ready-only");

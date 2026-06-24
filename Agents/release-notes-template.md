@@ -47,6 +47,7 @@
 - `npm run mtt:blockers`:
 - `npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json`:
 - `npm run mtt:postflop-release -- --summary`:
+- `npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json`:
 - `npm run mtt:intake-plan -- --summary`:
 - `npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json`:
 - `npm run mtt:intake-plan -- --ready-only`:
