@@ -28,6 +28,7 @@ npm run mtt:slots -- --kind=preflop
 npm run mtt:slots -- --kind=postflop
 npm run mtt:slots -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --status=candidate
 npm run mtt:slots -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
+npm run mtt:slots -- --output=artifacts/mtt-slots-report.json
 ```
 
 The output is source-free and includes each legal pack id, normalized input path and permission manifest path.
@@ -150,8 +151,8 @@ ready-intake validation, promote-ready dry-run/write commands, registry integrit
 preflight follow-ups.
 Use `--priority=<bucket>` to ask for the next concrete step inside a specific P1-P5 import wave.
 Use `--output=artifacts/mtt-next-action/report.json` when the slot intake packet should be saved for handoff or release notes.
-The packet's source reports also include clean JSON handoff commands for `artifacts/mtt-completion-report.json`,
-`artifacts/mtt-intake-plan-report.json`, `artifacts/mtt-blockers-report.json`,
+The packet's source reports also include clean JSON handoff commands for `artifacts/mtt-slots-report.json`,
+`artifacts/mtt-completion-report.json`, `artifacts/mtt-intake-plan-report.json`, `artifacts/mtt-blockers-report.json`,
 `artifacts/mtt-postflop-release-report.json`, `artifacts/mtt-release-gates-report.json` and
 `artifacts/mtt-acceptance-report.json`.
 `mtt:acceptance` is the final MTT-only acceptance gate. It is green only when the full MTT app matches

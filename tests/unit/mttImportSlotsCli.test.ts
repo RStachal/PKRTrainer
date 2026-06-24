@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:slots CLI", () => {
@@ -64,6 +67,31 @@ describe("mtt:slots CLI", () => {
       "SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF",
     );
     expect(parsed.postflopSlots[0].normalizedInputPath).toContain("Agents/range-intake/raw/");
+  });
+
+  it("umi zapsat cisty JSON artefakt se vsemi legalnimi MTT sloty", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-mtt-slots-"));
+    try {
+      const outputPath = join(directory, "mtt-slots-report.json");
+      const result = runSlots(`--output=${outputPath}`);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("MTT preflop legal import slots");
+      expect(result.stdout.trim().startsWith("{")).toBe(false);
+
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        kind: string;
+        counts: { preflop: number; postflop: number; total: number };
+        preflopSlots: unknown[];
+        postflopSlots: unknown[];
+      };
+      expect(parsed.kind).toBe("all");
+      expect(parsed.counts).toEqual({ preflop: 16, postflop: 48, total: 64 });
+      expect(parsed.preflopSlots).toHaveLength(16);
+      expect(parsed.postflopSlots).toHaveLength(48);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("vrati chybu pro neznamy kind", () => {

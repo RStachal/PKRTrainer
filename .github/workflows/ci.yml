@@ -116,6 +116,7 @@ jobs:
       - name: Run production-data gates
         run: |
           mkdir -p artifacts
+          npm run mtt:slots -- --output=artifacts/mtt-slots-report.json
           npm run mtt:completion -- --output=artifacts/mtt-completion-report.json || true
           npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json
           npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json || true

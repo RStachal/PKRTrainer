@@ -174,6 +174,8 @@ function buildNextMttActionReport(args: CliArgs): NextMttActionReport {
       "npm run release:check",
     ],
     sourceReports: [
+      "npm run mtt:slots -- --json",
+      "npm run mtt:slots -- --output=artifacts/mtt-slots-report.json",
       "npm run mtt:completion -- --json",
       "npm run mtt:completion -- --output=artifacts/mtt-completion-report.json",
       "npm run mtt:intake-plan -- --json",

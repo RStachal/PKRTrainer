@@ -183,6 +183,7 @@ describe("release bundle metadata", () => {
 
     expect(operatorGuide).toContain("npm run validate:range-import");
     expect(operatorGuide).toContain("npm run mtt:slots");
+    expect(operatorGuide).toContain("npm run mtt:slots -- --output=artifacts/mtt-slots-report.json");
     expect(operatorGuide).toContain("npm run mtt:blockers");
     expect(operatorGuide).toContain("npm run mtt:release-gates");
     expect(operatorGuide).toContain("npm run mtt:release-gates -- --json");
@@ -307,6 +308,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("Gameplay changes");
     expect(releaseTemplate).toContain("Range data changes");
     expect(releaseTemplate).toContain("Statistics changes");
+    expect(releaseTemplate).toContain("npm run mtt:slots -- --output=artifacts/mtt-slots-report.json");
     expect(releaseTemplate).toContain("npm run mtt:completion -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:completion -- --output=artifacts/mtt-completion-report.json");
     expect(releaseTemplate).toContain("npm run mtt:next-action");

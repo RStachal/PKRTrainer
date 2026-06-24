@@ -35,6 +35,7 @@
 - Technical acceptance report: `artifacts/mtt-technical-acceptance/report.json`
 - `npm run typecheck`:
 - `npm test`:
+- `npm run mtt:slots -- --output=artifacts/mtt-slots-report.json`:
 - `npm run mtt:completion -- --summary`:
 - `npm run mtt:completion -- --output=artifacts/mtt-completion-report.json`:
 - `npm run mtt:next-action`:

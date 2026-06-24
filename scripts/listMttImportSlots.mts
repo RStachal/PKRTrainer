@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import {
   buildMttPostflopImportSlots,
   renderMttPostflopImportSlots,
@@ -20,6 +22,7 @@ interface CliArgs {
   kind: SlotKind;
   filters: MttCompletionReadinessFilters;
   json: boolean;
+  outputPath: string | null;
 }
 
 function usage(): string {
@@ -30,9 +33,11 @@ function usage(): string {
     "  npm run mtt:slots -- --kind=postflop",
     "  npm run mtt:slots -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --status=candidate",
     "  npm run mtt:slots -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json",
+    "  npm run mtt:slots -- --output=artifacts/mtt-slots-report.json",
     "",
     "Output:",
     "  --json",
+    "  --output=artifacts/mtt-slots-report.json",
     "",
     "Filters:",
     "  --format=FULL_RING_9|SIX_MAX",
@@ -52,19 +57,24 @@ try {
   const postflopSlots = args.kind === "all" || args.kind === "postflop"
     ? filterMttPostflopImportSlots(buildMttPostflopImportSlots(), args.filters)
     : [];
+  const payload = {
+    kind: args.kind,
+    filters: args.filters,
+    counts: {
+      preflop: preflopSlots.length,
+      postflop: postflopSlots.length,
+      total: preflopSlots.length + postflopSlots.length,
+    },
+    preflopSlots,
+    postflopSlots,
+  };
 
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  }
   if (args.json) {
-    console.log(JSON.stringify({
-      kind: args.kind,
-      filters: args.filters,
-      counts: {
-        preflop: preflopSlots.length,
-        postflop: postflopSlots.length,
-        total: preflopSlots.length + postflopSlots.length,
-      },
-      preflopSlots,
-      postflopSlots,
-    }, null, 2));
+    console.log(JSON.stringify(payload, null, 2));
   } else {
     const sections: string[] = [];
     if (args.kind === "all" || args.kind === "preflop") {
@@ -84,6 +94,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let kind: SlotKind = "all";
   let json = false;
+  let outputPath: string | null = null;
 
   for (let index = 0; index < argv.length; index += 1) {
     const item = argv[index];
@@ -92,6 +103,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (item === "--json") {
       json = true;
+      continue;
+    }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
       continue;
     }
     if (item === "--kind") {
@@ -107,7 +124,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { kind, filters, json };
+  return { kind, filters, json, outputPath };
 }
 
 function parseKind(value: string): SlotKind {
