@@ -21,7 +21,8 @@ describe("CI workflows", () => {
     expect(workflow).toContain("path: artifacts/e2e-*");
     expect(workflow).toContain("mtt-data-status:");
     expect(workflow).toContain("continue-on-error: true");
-    expect(workflow).toContain("npm run mtt:release-gates -- --json");
+    expect(workflow).toContain("npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json");
+    expect(workflow).toContain("path: artifacts/mtt-release-gates-report.json");
     expect(workflow).toContain("path: dist");
   });
 

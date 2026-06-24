@@ -115,13 +115,13 @@ jobs:
 
       - name: Run production-data gates
         run: |
-          set -o pipefail
-          npm run mtt:release-gates -- --json | tee mtt-release-gates.json
+          mkdir -p artifacts
+          npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json
 
       - name: Upload MTT gate report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mtt-production-data-status
-          path: mtt-release-gates.json
+          path: artifacts/mtt-release-gates-report.json
           if-no-files-found: warn
