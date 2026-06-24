@@ -1707,6 +1707,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Doplneno 2026-06-24: report nyni obsahuje i intake packet pro dalsi slot: required-file acceptance poznamky, filtered `mtt:validate-ready-intake`, promote-ready dry-run/write prikazy, registry integrity, technical acceptance a operator checklist bez URL/source citaci.
     - Doplneno 2026-06-24: `mtt:next-action -- --priority=<bucket>` umi vytahnout dalsi konkretni krok pro P1/P2/P3/P4/P5 wave bez prochazeni cele fronty.
     - Doplneno 2026-06-24: `mtt:next-action -- --output=artifacts/mtt-next-action/report.json` uklada stejny source-free intake packet jako JSON artefakt pro operator handoff/release notes.
+    - Doplneno 2026-06-24: next-action packet obsahuje take `npm run e2e:android:preflight`, aby po importu zustal u slotu pripojeny device/readySerial dukaz nebo explicitni Android blocker.
     - Doplneno 2026-06-24: `mtt:acceptance` i `mtt:release-gates` vypisuji `MTT next action`, aby cerveny release report rovnou ukazal prvni konkretni import slot.
   - [x] 135.4 Udelat preflight kontrolu raw MTT import workspace
     - Rozsirit guard tak, aby umel rozlisit povolene lokalni raw soubory od omylem commitnutych privatnich zdroju, ukazal ready/waiting po priority buckets a failnul pri nevalidni strukture `Agents/range-intake/raw/<packId>/`.

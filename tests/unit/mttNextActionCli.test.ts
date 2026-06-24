@@ -26,6 +26,8 @@ describe("mtt:next-action CLI", () => {
     expect(result.stdout).toContain("validate ready: npm run mtt:validate-ready-intake");
     expect(result.stdout).toContain("promote dry-run: npm run mtt:promote-ready");
     expect(result.stdout).toContain("technical acceptance: npm run mtt:technical-acceptance");
+    expect(result.stdout).toContain("android preflight: npm run e2e:android:preflight");
+    expect(result.stdout).toContain("attach readySerial/device blocker evidence");
     expect(result.stdout).toContain("npm run mtt:acceptance");
     expect(result.stdout).toContain("npm run mtt:release-gates -- --json");
     expect(result.stdout).not.toContain("https://");
@@ -59,6 +61,7 @@ describe("mtt:next-action CLI", () => {
           promoteWrite: string;
           registryIntegrity: string;
           technicalAcceptance: string;
+          androidPreflight: string;
         };
         requiredFiles: Array<{
           path: string;
@@ -93,6 +96,7 @@ describe("mtt:next-action CLI", () => {
     expect(parsed.nextAction.commands.promoteWrite).toContain("WRITE_READY_MTT_MODULES");
     expect(parsed.nextAction.commands.registryIntegrity).toBe("npm run mtt:registry-integrity");
     expect(parsed.nextAction.commands.technicalAcceptance).toBe("npm run mtt:technical-acceptance");
+    expect(parsed.nextAction.commands.androidPreflight).toBe("npm run e2e:android:preflight");
     expect(parsed.nextAction.requiredFiles).toHaveLength(2);
     expect(parsed.nextAction.requiredFiles[0].path).toContain("normalized.json");
     expect(parsed.nextAction.requiredFiles[0].acceptance).toContain(
@@ -138,13 +142,18 @@ describe("mtt:next-action CLI", () => {
       expect(existsSync(outputPath)).toBe(true);
       const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
         priority: string;
-        nextAction: { priority: string; slotId: string; commands: { technicalAcceptance: string } };
+        nextAction: {
+          priority: string;
+          slotId: string;
+          commands: { technicalAcceptance: string; androidPreflight: string };
+        };
       };
 
       expect(parsed.priority).toBe("P3_FLOP_PRODUCTION");
       expect(parsed.nextAction.priority).toBe("P3_FLOP_PRODUCTION");
       expect(parsed.nextAction.slotId).toBe("FULL_RING_9|REGULAR|CHIP_EV|FLOP|OFF");
       expect(parsed.nextAction.commands.technicalAcceptance).toBe("npm run mtt:technical-acceptance");
+      expect(parsed.nextAction.commands.androidPreflight).toBe("npm run e2e:android:preflight");
       expect(JSON.stringify(parsed)).not.toContain("https://");
     } finally {
       rmSync(directory, { recursive: true, force: true });

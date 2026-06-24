@@ -49,6 +49,7 @@ interface NextMttActionRow {
     promoteWrite: string;
     registryIntegrity: string;
     technicalAcceptance: string;
+    androidPreflight: string;
   };
   operatorChecklist: readonly string[];
 }
@@ -215,6 +216,7 @@ function nextMttActionRow(
       promoteWrite: "npm run mtt:promote-ready -- --write --confirm=WRITE_READY_MTT_MODULES",
       registryIntegrity: "npm run mtt:registry-integrity",
       technicalAcceptance: "npm run mtt:technical-acceptance",
+      androidPreflight: "npm run e2e:android:preflight",
     },
     operatorChecklist: operatorChecklistForSlot(row),
   };
@@ -274,6 +276,7 @@ function operatorChecklistForSlot(row: MttCompletionReadinessRow): readonly stri
     "Run the filtered ready-intake validation; it must report productionReady true for this slot.",
     "Run promote-ready in dry-run mode before the confirmed write.",
     "After write, refresh/check registry, run registry integrity and technical acceptance.",
+    "Run Android preflight and attach readySerial/device blocker evidence to release notes.",
   ];
 
   if (row.blindSpeed === "TURBO") {
@@ -352,6 +355,7 @@ function renderNextMttActionReport(report: NextMttActionReport): string {
     lines.push(`promote write: ${action.commands.promoteWrite}`);
     lines.push(`registry integrity: ${action.commands.registryIntegrity}`);
     lines.push(`technical acceptance: ${action.commands.technicalAcceptance}`);
+    lines.push(`android preflight: ${action.commands.androidPreflight}`);
     for (const blocker of action.blockers) lines.push(`blocker: ${blocker}`);
     lines.push("operator checklist:");
     for (const item of action.operatorChecklist) lines.push(`  - ${item}`);

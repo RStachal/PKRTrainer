@@ -140,7 +140,8 @@ npm run mtt:intake-plan -- --summary
 `release:check` runs typecheck, tests, MTT release gates, range verification and production build.
 `mtt:next-action` prints the next concrete MTT import step: first a ready slot, otherwise the first waiting slot by
 P0-P5 priority, including missing files, required file acceptance notes, validate/build dry-run commands, filtered
-ready-intake validation, promote-ready dry-run/write commands, registry integrity and technical acceptance follow-ups.
+ready-intake validation, promote-ready dry-run/write commands, registry integrity, technical acceptance and Android
+preflight follow-ups.
 Use `--priority=<bucket>` to ask for the next concrete step inside a specific P1-P5 import wave.
 Use `--output=artifacts/mtt-next-action/report.json` when the slot intake packet should be saved for handoff or release notes.
 `mtt:acceptance` is the final MTT-only acceptance gate. It is green only when the full MTT app matches
