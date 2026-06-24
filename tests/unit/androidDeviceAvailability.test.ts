@@ -33,8 +33,10 @@ describe("Android device availability preflight", () => {
     });
     expect(report.valid).toBe(true);
     expect(report.status).toBe("READY");
+    expect(report.readySerial).toBe("emulator-5554");
     expect(report.counts.ready).toBe(2);
     expect(report.blockers).toEqual([]);
+    expect(report.followups.join("\n")).toContain("ready serial emulator-5554");
   });
 
   it("vraci reprodukovatelny blocker kdyz adb chybi", () => {
@@ -42,6 +44,7 @@ describe("Android device availability preflight", () => {
 
     expect(report.valid).toBe(false);
     expect(report.status).toBe("MISSING_ADB");
+    expect(report.readySerial).toBeNull();
     expect(report.blockers.join("\n")).toContain("adb was not found");
     expect(report.followups.join("\n")).toContain("Install Android SDK platform-tools");
   });

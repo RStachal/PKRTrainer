@@ -135,6 +135,7 @@ function renderReport(report: AndroidDevicePreflightReport): string {
     `valid: ${report.valid}`,
     `status: ${report.status}`,
     `adb: ${report.adbPath ?? "not found"}`,
+    `ready serial: ${report.readySerial ?? "none"}`,
     `devices: ${report.counts.devices} total, ${report.counts.ready} ready`,
   ];
 

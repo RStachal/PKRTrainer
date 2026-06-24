@@ -30,6 +30,7 @@ export interface AndroidDevicePreflightReport {
   valid: boolean;
   status: AndroidDevicePreflightStatus;
   adbPath: string | null;
+  readySerial: string | null;
   counts: {
     devices: number;
     ready: number;
@@ -57,9 +58,10 @@ export function summarizeAndroidDeviceAvailability(
 ): AndroidDevicePreflightReport {
   const devices = input.devices ?? [];
   const counts = countDevices(devices);
+  const readySerial = devices.find((device) => device.state === "device")?.serial ?? null;
 
   if (!input.adbPath) {
-    return buildReport(input.adbPath, "MISSING_ADB", counts, devices, [
+    return buildReport(input.adbPath, readySerial, "MISSING_ADB", counts, devices, [
       "Android device/WebView acceptance cannot run because adb was not found.",
       "This is an environment blocker, not an application pass/fail result.",
     ], [
@@ -70,7 +72,7 @@ export function summarizeAndroidDeviceAvailability(
   }
 
   if (input.adbError) {
-    return buildReport(input.adbPath, "ADB_FAILED", counts, devices, [
+    return buildReport(input.adbPath, readySerial, "ADB_FAILED", counts, devices, [
       `adb devices -l failed: ${input.adbError}`,
       "Android device/WebView acceptance cannot run until adb is callable.",
     ], [
@@ -80,14 +82,14 @@ export function summarizeAndroidDeviceAvailability(
   }
 
   if (counts.ready > 0) {
-    return buildReport(input.adbPath, "READY", counts, devices, [], [
-      "Run the Android WebView/device E2E flow against a ready serial.",
+    return buildReport(input.adbPath, readySerial, "READY", counts, devices, [], [
+      `Run the Android WebView/device E2E flow against ready serial ${readySerial}.`,
       "Capture screenshots, logcat and offline reload evidence for 135.38.",
     ]);
   }
 
   if (devices.length === 0) {
-    return buildReport(input.adbPath, "NO_DEVICE", counts, devices, [
+    return buildReport(input.adbPath, readySerial, "NO_DEVICE", counts, devices, [
       "adb is available, but no Android emulator/device is listed.",
     ], [
       "Start an Android emulator or connect a physical Android device with USB debugging enabled.",
@@ -96,7 +98,7 @@ export function summarizeAndroidDeviceAvailability(
   }
 
   if (counts.unauthorized > 0) {
-    return buildReport(input.adbPath, "UNAUTHORIZED_DEVICE", counts, devices, [
+    return buildReport(input.adbPath, readySerial, "UNAUTHORIZED_DEVICE", counts, devices, [
       "Android device/WebView acceptance cannot run because every listed device is unauthorized or otherwise not ready.",
     ], [
       "Confirm the USB debugging authorization prompt on the device.",
@@ -105,7 +107,7 @@ export function summarizeAndroidDeviceAvailability(
   }
 
   if (counts.offline > 0) {
-    return buildReport(input.adbPath, "OFFLINE_DEVICE", counts, devices, [
+    return buildReport(input.adbPath, readySerial, "OFFLINE_DEVICE", counts, devices, [
       "Android device/WebView acceptance cannot run because every listed device is offline or otherwise not ready.",
     ], [
       "Restart the emulator/device and adb server.",
@@ -113,7 +115,7 @@ export function summarizeAndroidDeviceAvailability(
     ]);
   }
 
-  return buildReport(input.adbPath, "NO_READY_DEVICE", counts, devices, [
+  return buildReport(input.adbPath, readySerial, "NO_READY_DEVICE", counts, devices, [
     "adb is available, but no listed Android target is ready for WebView/device E2E.",
   ], [
     "Resolve the listed adb device states until one target reports state 'device'.",
@@ -169,6 +171,7 @@ function countDevices(devices: readonly AndroidDeviceInfo[]): AndroidDevicePrefl
 
 function buildReport(
   adbPath: string | null,
+  readySerial: string | null,
   status: AndroidDevicePreflightStatus,
   counts: AndroidDevicePreflightReport["counts"],
   devices: readonly AndroidDeviceInfo[],
@@ -179,6 +182,7 @@ function buildReport(
     valid: status === "READY",
     status,
     adbPath,
+    readySerial,
     counts,
     devices,
     blockers,
