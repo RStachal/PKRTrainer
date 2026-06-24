@@ -29,6 +29,7 @@ describe("mtt:next-action CLI", () => {
     expect(result.stdout).toContain("android preflight: npm run e2e:android:preflight");
     expect(result.stdout).toContain("attach readySerial/device blocker evidence");
     expect(result.stdout).toContain("npm run mtt:acceptance");
+    expect(result.stdout).toContain("npm run e2e:android:preflight");
     expect(result.stdout).toContain("npm run mtt:release-gates -- --json");
     expect(result.stdout).not.toContain("https://");
   });
@@ -106,6 +107,7 @@ describe("mtt:next-action CLI", () => {
     expect(parsed.nextAction.operatorChecklist.join("\n"))
       .toContain("Turbo slot must use dedicated turbo hand recommendations");
     expect(parsed.followUpCommands).toContain("npm run mtt:acceptance");
+    expect(parsed.followUpCommands).toContain("npm run e2e:android:preflight");
     expect(parsed.sourceReports).toContain("npm run mtt:release-gates -- --json");
     expect(JSON.stringify(parsed)).not.toContain("https://");
   });
