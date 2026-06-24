@@ -174,7 +174,7 @@ try {
   });
 
   const port = await waitForDevToolsPort(profileDirectory);
-  const target = await createTarget(port, targetUrl);
+  const target = await createTarget(port, "about:blank");
   cdp = new CdpClient(target.webSocketDebuggerUrl);
   await cdp.connect();
   await Promise.all([
@@ -783,9 +783,12 @@ try {
 }
 
 async function navigate(client: CdpClient, url: string): Promise<void> {
-  const loaded = client.waitFor("Page.loadEventFired");
+  const loaded = client.waitFor("Page.loadEventFired", 30_000);
   await client.send("Page.navigate", { url });
-  await loaded;
+  await Promise.race([
+    loaded,
+    waitForPageReady(client, url, 30_000),
+  ]);
 }
 
 async function ensureServiceWorkerControl(client: CdpClient): Promise<void> {
@@ -831,9 +834,44 @@ async function ensureServiceWorkerControl(client: CdpClient): Promise<void> {
 }
 
 async function reload(client: CdpClient): Promise<void> {
-  const loaded = client.waitFor("Page.loadEventFired");
+  const loaded = client.waitFor("Page.loadEventFired", 30_000);
   await client.send("Page.reload", { ignoreCache: false });
-  await loaded;
+  await Promise.race([
+    loaded,
+    waitForPageReady(client, null, 30_000, 100),
+  ]);
+}
+
+async function waitForPageReady(
+  client: CdpClient,
+  expectedUrl: string | null,
+  timeoutMs: number,
+  initialDelayMs = 0,
+): Promise<void> {
+  if (initialDelayMs > 0) await sleep(initialDelayMs);
+  const deadline = Date.now() + timeoutMs;
+  let lastError = "";
+  while (Date.now() < deadline) {
+    try {
+      const state = await evaluate<{
+        href: string;
+        readyState: DocumentReadyState;
+      }>(client, `(() => ({ href: location.href, readyState: document.readyState }))()`);
+      const expectedMatches = expectedUrl === null || state.href === expectedUrl;
+      if (
+        expectedMatches &&
+        (state.readyState === "interactive" || state.readyState === "complete")
+      ) {
+        return;
+      }
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+    await sleep(100);
+  }
+  throw new Error(
+    `Timed out waiting for page readiness${lastError ? `: ${lastError}` : ""}`,
+  );
 }
 
 async function evaluate<T = any>(client: CdpClient, expression: string): Promise<T> {

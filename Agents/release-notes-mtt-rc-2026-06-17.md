@@ -1,6 +1,6 @@
 # MTT RC attempt - 2026-06-17
 
-Updated 2026-06-24 after Android device preflight tooling was added.
+Updated 2026-06-24 after Android device preflight and Chrome E2E navigation hardening.
 
 ## Decision
 
@@ -8,9 +8,9 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
 
 ## Command results
 
-- `npm run mtt:technical-acceptance`: passed on 2026-06-23.
+- `npm run mtt:technical-acceptance`: passed on 2026-06-24.
   - Runs typecheck, all Vitest suites, deterministic registry and integrity checks, range verification, production build, precache, bundle budget, four-viewport Chrome E2E and isolated canonical production PREFLOP/FLOP/TURN/RIVER fixture E2E.
-  - 10/10 commands passed; Vitest reported 225/225 suites and 545/545 tests.
+  - 10/10 commands passed; Vitest reported 229/229 suites and 549/549 tests.
   - Main build: 271.25 KiB raw / 74.42 KiB gzip; install-precache JS total: 348.13 / 95.53 KiB.
   - Chrome passed desktop 1280 plus mobile 360/390/412, 52 contrast checks, offline reopen and real service-worker rollback.
   - Synthetic lazy chunks raw/gzip: preflop 23.43 / 7.19 KiB, FLOP 21.39 / 5.86 KiB, TURN 9.72 / 3.11 KiB and RIVER 10.39 / 3.24 KiB; fixture main is 222.12 / 64.04 KiB.
@@ -65,6 +65,7 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
 - Follow-up 2026-06-22: two historical full-ring regular CHIP_EV packs now fail closed as `PREVIEW_ONLY`; their non-canonical IDs cannot satisfy legal production readiness or start scoring.
 - Follow-up 2026-06-23: postflop UI exposes source-free initiative/facing-bet selection, production hand-lines dynamically dispatch each street to the loaded family pack, and transition validation distinguishes `CALL` facing branches from initiative `CHECK/BET_SMALL/BET_BIG/RAISE` branches.
 - Follow-up 2026-06-24: Android/WebView blocker is now executable as `npm run e2e:android:preflight` with JSON evidence instead of a manual note.
+- Follow-up 2026-06-24: Chrome E2E navigation now creates fresh tabs at `about:blank` and waits for either CDP load event or document readiness, preventing a same-URL `Page.loadEventFired` race during technical acceptance.
 
 ## Blocking items
 
