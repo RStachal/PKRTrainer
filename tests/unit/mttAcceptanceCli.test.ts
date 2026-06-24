@@ -9,8 +9,8 @@ describe("mtt:acceptance CLI", () => {
     expect(result.stdout).toContain("MTT acceptance gate");
     expect(result.stdout).toContain("valid: false");
     expect(result.stdout).toContain("checklist: Agents/mtt-done-checklist.md");
-    expect(result.stdout).toContain("commands: 10");
-    expect(result.stdout).toContain("failed commands: 2");
+    expect(result.stdout).toContain("commands: 11");
+    expect(result.stdout).toContain("failed commands: 3");
     expect(result.stdout).toContain("## MTT completion production gate");
     expect(result.stdout).toContain("MTT completion release gate");
     expect(result.stdout).toContain("## MTT blocker summary");
@@ -33,6 +33,9 @@ describe("mtt:acceptance CLI", () => {
     expect(result.stdout).toContain("Range intake status");
     expect(result.stdout).toContain("## MTT registry integrity");
     expect(result.stdout).toContain("MTT production registry integrity");
+    expect(result.stdout).toContain("## Android WebView/device preflight");
+    expect(result.stdout).toContain("Android WebView/device preflight");
+    expect(result.stdout).toContain("ready serial:");
     expect(result.stdout).not.toContain("https://");
   });
 
@@ -59,8 +62,8 @@ describe("mtt:acceptance CLI", () => {
     expect(parsed.valid).toBe(false);
     expect(parsed.checklist).toBe("Agents/mtt-done-checklist.md");
     expect(parsed.counts).toEqual({
-      commands: 10,
-      failedCommands: 2,
+      commands: 11,
+      failedCommands: 3,
     });
     expect(parsed.commands.map((command) => command.label)).toEqual([
       "MTT completion production gate",
@@ -73,6 +76,7 @@ describe("mtt:acceptance CLI", () => {
       "Range intake workspace guard",
       "Ready intake slots",
       "MTT registry integrity",
+      "Android WebView/device preflight",
     ]);
     expect(parsed.commands[0].npmArgs).toEqual(["run", "mtt:completion", "--", "--summary"]);
     expect(parsed.commands[5].npmArgs).toEqual(["run", "mtt:validate-ready-intake"]);
@@ -82,6 +86,8 @@ describe("mtt:acceptance CLI", () => {
     expect(parsed.commands[6].stdout).toContain("tests/unit/uiNoSourceCitation.test.ts");
     expect(parsed.commands[6].stdout).toContain("9 tests");
     expect(parsed.commands[9].stdout).toContain("MTT production registry integrity");
+    expect(parsed.commands[10].npmArgs).toEqual(["run", "e2e:android:preflight"]);
+    expect(parsed.commands[10].stdout).toContain("ready serial:");
     expect(parsed.commands[0].stdout).not.toContain("> mtt-preflop-trainer");
     expect(JSON.stringify(parsed)).not.toContain("https://");
   });
