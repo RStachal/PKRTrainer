@@ -72,4 +72,25 @@ describe("Android device availability preflight", () => {
     expect(noPermissions.status).toBe("NO_READY_DEVICE");
     expect(noPermissions.counts.noPermissions).toBe(1);
   });
+
+  it("pro smiseny seznam ne-ready targetu vraci obecny NO_READY_DEVICE", () => {
+    const report = summarizeAndroidDeviceAvailability({
+      adbPath: "adb",
+      devices: parseAdbDevices([
+        "List of devices attached",
+        "ABC123 unauthorized usb:1-2",
+        "emulator-5554 offline transport_id:1",
+        "???????????? no permissions (udev rules)",
+      ].join("\n")),
+    });
+
+    expect(report.status).toBe("NO_READY_DEVICE");
+    expect(report.readySerial).toBeNull();
+    expect(report.counts).toMatchObject({
+      devices: 3,
+      unauthorized: 1,
+      offline: 1,
+      noPermissions: 1,
+    });
+  });
 });

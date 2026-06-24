@@ -97,7 +97,7 @@ export function summarizeAndroidDeviceAvailability(
     ]);
   }
 
-  if (counts.unauthorized > 0) {
+  if (counts.unauthorized === devices.length) {
     return buildReport(input.adbPath, readySerial, "UNAUTHORIZED_DEVICE", counts, devices, [
       "Android device/WebView acceptance cannot run because every listed device is unauthorized or otherwise not ready.",
     ], [
@@ -106,7 +106,7 @@ export function summarizeAndroidDeviceAvailability(
     ]);
   }
 
-  if (counts.offline > 0) {
+  if (counts.offline === devices.length) {
     return buildReport(input.adbPath, readySerial, "OFFLINE_DEVICE", counts, devices, [
       "Android device/WebView acceptance cannot run because every listed device is offline or otherwise not ready.",
     ], [
