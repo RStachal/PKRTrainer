@@ -16,10 +16,10 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
   - Synthetic lazy chunks raw/gzip: preflop 23.43 / 7.19 KiB, FLOP 21.39 / 5.86 KiB, TURN 9.72 / 3.11 KiB and RIVER 10.39 / 3.24 KiB; fixture main is 222.12 / 64.04 KiB.
   - Production fixture now exercises an actual source-free facing-bet FLOP/TURN/RIVER hand-line with `CALL -> CALL -> CALL`; line mode preloads the profile's postflop family, while single-street mode remains street-lazy.
   - Writes `artifacts/mtt-technical-acceptance/report.json`; this is a technical gate and does not override the red legal production-data gates below.
-- `npm run mtt:acceptance`: failed as expected before legal production data.
+- `npm run mtt:acceptance`: failed as expected before legal production data and Android device acceptance.
   - valid: false
-  - commands: 10
-  - failed commands: 2
+  - commands: 11
+  - failed commands: 3
   - completion matrix: 64 rows, 0 productionReady, 54 preview, 10 blocked
   - blocker summary: 64 blocker rows, 54 candidate blocker rows, 10 missing blocker rows
   - intake files: 64 rows missing `normalized.json`, 64 rows missing `permission.json`
@@ -27,6 +27,7 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
   - source-free UI guard: passed, 9 tests
   - range intake workspace guard: valid
   - registry integrity: valid, 0 errors
+  - Android WebView/device preflight: `NO_DEVICE`, `readySerial: null`
   - next action: `FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF`
 - `npm run mtt:release-gates`: failed as expected on the same production data gates.
   - commands: 9
