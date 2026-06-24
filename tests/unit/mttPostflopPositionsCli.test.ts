@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:postflop-positions CLI", () => {
@@ -83,6 +86,27 @@ describe("mtt:postflop-positions CLI", () => {
       state: "UNSUPPORTED",
       positionPattern: null,
     }));
+  });
+
+  it("umi zapsat cisty JSON artefakt pro postflop position handoff", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-postflop-positions-"));
+    try {
+      const outputPath = join(directory, "mtt-postflop-positions-report.json");
+      const result = runPositions(`--output=${outputPath}`);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("MTT postflop position coverage");
+      expect(result.stdout.trim().startsWith("{")).toBe(false);
+
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        counts: { totalRows: number; supportedRows: number; unsupportedRows: number };
+        rows: unknown[];
+      };
+      expect(parsed.counts).toMatchObject({ totalRows: 204, supportedRows: 67, unsupportedRows: 137 });
+      expect(parsed.rows).toHaveLength(204);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("vrati chybu pro neznamy argument", () => {

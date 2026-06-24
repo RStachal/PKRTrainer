@@ -124,6 +124,15 @@ describe("mtt:next-action CLI", () => {
       "npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json",
     );
     expect(parsed.sourceReports).toContain(
+      "npm run mtt:postflop-matrix -- --output=artifacts/mtt-postflop-matrix-report.json",
+    );
+    expect(parsed.sourceReports).toContain(
+      "npm run mtt:postflop-positions -- --output=artifacts/mtt-postflop-positions-report.json",
+    );
+    expect(parsed.sourceReports).toContain(
+      "npm run mtt:postflop-coverage -- --output=artifacts/mtt-postflop-coverage-report.json",
+    );
+    expect(parsed.sourceReports).toContain(
       "npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json",
     );
     expect(parsed.sourceReports).toContain("npm run mtt:release-gates -- --json");

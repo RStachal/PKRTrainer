@@ -153,7 +153,9 @@ Use `--priority=<bucket>` to ask for the next concrete step inside a specific P1
 Use `--output=artifacts/mtt-next-action/report.json` when the slot intake packet should be saved for handoff or release notes.
 The packet's source reports also include clean JSON handoff commands for `artifacts/mtt-slots-report.json`,
 `artifacts/mtt-completion-report.json`, `artifacts/mtt-intake-plan-report.json`, `artifacts/mtt-blockers-report.json`,
-`artifacts/mtt-postflop-release-report.json`, `artifacts/mtt-release-gates-report.json` and
+`artifacts/mtt-postflop-matrix-report.json`, `artifacts/mtt-postflop-positions-report.json`,
+`artifacts/mtt-postflop-coverage-report.json`, `artifacts/mtt-postflop-release-report.json`,
+`artifacts/mtt-release-gates-report.json` and
 `artifacts/mtt-acceptance-report.json`.
 `mtt:acceptance` is the final MTT-only acceptance gate. It is green only when the full MTT app matches
 `Agents/mtt-done-checklist.md`, including source-free UI checks and ready-intake validation.
@@ -183,10 +185,13 @@ npm run mtt:blockers -- --summary
 npm run mtt:blockers -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 npm run mtt:postflop-matrix
 npm run mtt:postflop-matrix -- --json
+npm run mtt:postflop-matrix -- --output=artifacts/mtt-postflop-matrix-report.json
 npm run mtt:postflop-positions
 npm run mtt:postflop-positions -- --json
+npm run mtt:postflop-positions -- --output=artifacts/mtt-postflop-positions-report.json
 npm run mtt:postflop-coverage
 npm run mtt:postflop-coverage -- --json
+npm run mtt:postflop-coverage -- --output=artifacts/mtt-postflop-coverage-report.json
 npm run mtt:postflop-release
 npm run mtt:postflop-release -- --summary
 npm run mtt:postflop-release -- --json

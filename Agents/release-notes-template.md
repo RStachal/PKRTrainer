@@ -48,6 +48,9 @@
 - `npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json`:
 - `npm run mtt:blockers`:
 - `npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json`:
+- `npm run mtt:postflop-matrix -- --output=artifacts/mtt-postflop-matrix-report.json`:
+- `npm run mtt:postflop-positions -- --output=artifacts/mtt-postflop-positions-report.json`:
+- `npm run mtt:postflop-coverage -- --output=artifacts/mtt-postflop-coverage-report.json`:
 - `npm run mtt:postflop-release -- --summary`:
 - `npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json`:
 - `npm run mtt:intake-plan -- --summary`:

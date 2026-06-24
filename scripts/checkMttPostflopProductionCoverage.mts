@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import {
   MTT_POSTFLOP_PRODUCTION_POSITION_PATTERNS,
   type PostflopPositionPattern,
@@ -47,6 +49,7 @@ type ProductionPack = FlopProductionStrategyPack | TurnProductionStrategyPack | 
 interface CliArgs {
   json: boolean;
   limit: number;
+  outputPath: string | null;
 }
 
 interface PotActionTarget {
@@ -90,16 +93,22 @@ function usage(): string {
     "  npm run mtt:postflop-coverage",
     "  npm run mtt:postflop-coverage -- --json",
     "  npm run mtt:postflop-coverage -- --limit=200",
+    "  npm run mtt:postflop-coverage -- --output=artifacts/mtt-postflop-coverage-report.json",
     "",
     "Output:",
     "  --json",
     "  --limit=<positive integer>",
+    "  --output=artifacts/mtt-postflop-coverage-report.json",
   ].join("\n");
 }
 
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildPostflopProductionCoverageReport();
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderPostflopProductionCoverageReport(report, args.limit));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
@@ -109,6 +118,7 @@ try {
 function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
   let limit = 80;
+  let outputPath: string | null = null;
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
     if (item === "--json") {
@@ -119,9 +129,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
       limit = parseLimit(item.slice("--limit=".length));
       continue;
     }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
+      continue;
+    }
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
-  return { json, limit };
+  return { json, limit, outputPath };
 }
 
 function parseLimit(value: string): number {

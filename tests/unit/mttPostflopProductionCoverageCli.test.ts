@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:postflop-coverage CLI", () => {
@@ -100,6 +103,28 @@ describe("mtt:postflop-coverage CLI", () => {
       blockerKind: "MISSING_PACK",
       actionNode: "RIVER_FACING_BET",
     }));
+  });
+
+  it("umi zapsat cisty JSON artefakt pro granularni postflop coverage handoff", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-postflop-coverage-"));
+    try {
+      const outputPath = join(directory, "mtt-postflop-coverage-report.json");
+      const result = runCoverage("--limit=3", `--output=${outputPath}`);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("MTT postflop production coverage targets");
+      expect(result.stdout).toContain("shown rows: 3/9600");
+      expect(result.stdout.trim().startsWith("{")).toBe(false);
+
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        counts: { totalTargets: number; blockedTargets: number };
+        rows: unknown[];
+      };
+      expect(parsed.counts).toMatchObject({ totalTargets: 9600, blockedTargets: 9600 });
+      expect(parsed.rows).toHaveLength(9600);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("vrati chybu pro neznamy argument", () => {

@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:postflop-matrix CLI", () => {
@@ -76,6 +79,27 @@ describe("mtt:postflop-matrix CLI", () => {
       kind: "flop-production",
       intake: expect.objectContaining({ readyForValidation: false }),
     }));
+  });
+
+  it("umi zapsat cisty JSON artefakt pro postflop matrix handoff", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-postflop-matrix-"));
+    try {
+      const outputPath = join(directory, "mtt-postflop-matrix-report.json");
+      const result = runMatrix(`--output=${outputPath}`);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("MTT postflop production matrix");
+      expect(result.stdout.trim().startsWith("{")).toBe(false);
+
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        counts: { totalRows: number; waitingRows: number; productionRows: number };
+        rows: unknown[];
+      };
+      expect(parsed.counts).toMatchObject({ totalRows: 48, waitingRows: 48, productionRows: 0 });
+      expect(parsed.rows).toHaveLength(48);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("vrati chybu pro neznamy argument", () => {

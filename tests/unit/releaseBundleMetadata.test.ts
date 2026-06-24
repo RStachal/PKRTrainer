@@ -210,10 +210,13 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:completion -- --output=artifacts/mtt-completion-report.json");
     expect(operatorGuide).toContain("priority counts matching the intake plan buckets");
     expect(operatorGuide).toContain("npm run mtt:postflop-matrix");
+    expect(operatorGuide).toContain("npm run mtt:postflop-matrix -- --output=artifacts/mtt-postflop-matrix-report.json");
     expect(operatorGuide).toContain("freezes the 48 FLOP/TURN/RIVER production targets");
     expect(operatorGuide).toContain("npm run mtt:postflop-positions");
+    expect(operatorGuide).toContain("npm run mtt:postflop-positions -- --output=artifacts/mtt-postflop-positions-report.json");
     expect(operatorGuide).toContain("freezes supported and unsupported heads-up position pairs");
     expect(operatorGuide).toContain("npm run mtt:postflop-coverage");
+    expect(operatorGuide).toContain("npm run mtt:postflop-coverage -- --output=artifacts/mtt-postflop-coverage-report.json");
     expect(operatorGuide).toContain("expands the 48 profile targets into 9,600 concrete street/pot/action/position targets");
     expect(operatorGuide).toContain("npm run mtt:postflop-release");
     expect(operatorGuide).toContain("npm run mtt:postflop-release -- --summary");
@@ -321,6 +324,9 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json");
     expect(releaseTemplate).toContain("npm run mtt:blockers");
     expect(releaseTemplate).toContain("npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json");
+    expect(releaseTemplate).toContain("npm run mtt:postflop-matrix -- --output=artifacts/mtt-postflop-matrix-report.json");
+    expect(releaseTemplate).toContain("npm run mtt:postflop-positions -- --output=artifacts/mtt-postflop-positions-report.json");
+    expect(releaseTemplate).toContain("npm run mtt:postflop-coverage -- --output=artifacts/mtt-postflop-coverage-report.json");
     expect(releaseTemplate).toContain("npm run mtt:postflop-release -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --summary");
