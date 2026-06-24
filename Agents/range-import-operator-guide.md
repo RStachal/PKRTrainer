@@ -143,9 +143,9 @@ ready-intake validation, promote-ready dry-run/write commands, registry integrit
 Use `--priority=<bucket>` to ask for the next concrete step inside a specific P1-P5 import wave.
 `mtt:acceptance` is the final MTT-only acceptance gate. It is green only when the full MTT app matches
 `Agents/mtt-done-checklist.md`, including source-free UI checks and ready-intake validation.
-`mtt:release-gates` runs every MTT gate and intake priority summary before returning a failing exit code, so one failing
-gate does not hide the remaining blocker summaries. Use `--json` when CI or operator tooling needs the status and
-captured output of every gate command.
+`mtt:release-gates` runs every MTT gate, intake priority summary and next-action packet before returning a failing
+exit code, so one failing gate does not hide the remaining blocker summaries. Use `--json` when CI or operator tooling
+needs the status and captured output of every gate command.
 
 When `mtt:next-action` is in `WAITING_FOR_FILES`, treat its output as the slot intake packet. Do not create placeholder
 `normalized.json` or `permission.json`; the files must come from reviewed legal evidence and must match the printed

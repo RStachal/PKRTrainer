@@ -1698,7 +1698,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Pridat `npm run mtt:acceptance`, ktery spusti produkcni MTT completion, blockers, intake summary, postflop release, ready validation, source-free UI guard relevantni pro MTT a vrati strukturovany JSON/text.
     - Rozdil proti `mtt:release-gates`: acceptance ma byt finalni MTT-only gate s jasnym "green only when MTT app complete" kontraktem.
     - Testy: CLI text, JSON, zamerne cerveny stav pred legalnimi daty, green fixture/mocking jen pokud nevyzaduje falesna produkcni data.
-    - Hotovo: `npm run mtt:acceptance` agreguje completion, blockers, intake summary, postflop release, ready validation, source-free UI guard a range intake guardy do text/JSON reportu s checklist odkazem; aktualne spravne selhava na 2 gatech do dodani legalnich production dat.
+    - Hotovo: `npm run mtt:acceptance` agreguje completion, blockers, intake summary, next action, postflop release, ready validation, source-free UI guard a range intake guardy do text/JSON reportu s checklist odkazem; aktualne spravne selhava na 2 gatech do dodani legalnich production dat.
   - [x] 135.3 Pridat "next MTT action" operator report
     - Pridat prikaz/report, ktery z `mtt:intake-plan`, `mtt:blockers` a `mtt:release-gates -- --json` vybere dalsi nejdulezitejsi praci: prvni ready slot, jinak prvni waiting slot podle P0-P5.
     - Vystup musi obsahovat priority bucket, slotId, packId, chybejici soubory, validate command, build dry-run command a navazujici acceptance prikazy.
@@ -1706,6 +1706,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo: `npm run mtt:next-action` vraci text/JSON s prioritou, slotem, target packem, chybejicimi `normalized.json`/`permission.json`, validate/build dry-run prikazy, follow-up acceptance prikazy a odkazy na zdrojove reporty.
     - Doplneno 2026-06-24: report nyni obsahuje i intake packet pro dalsi slot: required-file acceptance poznamky, filtered `mtt:validate-ready-intake`, promote-ready dry-run/write prikazy, registry integrity, technical acceptance a operator checklist bez URL/source citaci.
     - Doplneno 2026-06-24: `mtt:next-action -- --priority=<bucket>` umi vytahnout dalsi konkretni krok pro P1/P2/P3/P4/P5 wave bez prochazeni cele fronty.
+    - Doplneno 2026-06-24: `mtt:acceptance` i `mtt:release-gates` vypisuji `MTT next action`, aby cerveny release report rovnou ukazal prvni konkretni import slot.
   - [x] 135.4 Udelat preflight kontrolu raw MTT import workspace
     - Rozsirit guard tak, aby umel rozlisit povolene lokalni raw soubory od omylem commitnutych privatnich zdroju, ukazal ready/waiting po priority buckets a failnul pri nevalidni strukture `Agents/range-intake/raw/<packId>/`.
     - Soucasti ma byt kontrola, ze `normalized.json` a `permission.json` patri ke stejnemu `packId` a ze slot existuje v legalnim registry.

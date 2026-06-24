@@ -18,7 +18,7 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
   - Writes `artifacts/mtt-technical-acceptance/report.json`; this is a technical gate and does not override the red legal production-data gates below.
 - `npm run mtt:acceptance`: failed as expected before legal production data.
   - valid: false
-  - commands: 9
+  - commands: 10
   - failed commands: 2
   - completion matrix: 64 rows, 0 productionReady, 54 preview, 10 blocked
   - blocker summary: 64 blocker rows, 54 candidate blocker rows, 10 missing blocker rows
@@ -27,11 +27,13 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
   - source-free UI guard: passed, 9 tests
   - range intake workspace guard: valid
   - registry integrity: valid, 0 errors
+  - next action: `FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF`
 - `npm run mtt:release-gates`: failed as expected on the same production data gates.
-  - commands: 8
+  - commands: 9
   - failed commands: 2
   - ready intake slots: 0
   - ready validation: valid true with 0 ready rows
+  - includes the same `MTT next action` packet as the acceptance report
 - `npm run verify:ranges`: passed legacy range validation and reported current MTT production blockers.
   - ante ON records: 487, validation errors: 0
   - ante OFF records: 487, validation errors: 0

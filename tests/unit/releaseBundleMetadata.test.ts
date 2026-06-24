@@ -191,6 +191,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:next-action -- --priority=P2_PREFLOP_DOLAR_EV");
     expect(operatorGuide).toContain("Use `--priority=<bucket>`");
     expect(operatorGuide).toContain("next concrete MTT import step");
+    expect(operatorGuide).toContain("next-action packet");
     expect(operatorGuide).toContain("required file acceptance notes");
     expect(operatorGuide).toContain("slot intake packet");
     expect(operatorGuide).toContain("Do not create placeholder");

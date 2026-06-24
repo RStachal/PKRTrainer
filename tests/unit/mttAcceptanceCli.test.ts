@@ -9,7 +9,7 @@ describe("mtt:acceptance CLI", () => {
     expect(result.stdout).toContain("MTT acceptance gate");
     expect(result.stdout).toContain("valid: false");
     expect(result.stdout).toContain("checklist: Agents/mtt-done-checklist.md");
-    expect(result.stdout).toContain("commands: 9");
+    expect(result.stdout).toContain("commands: 10");
     expect(result.stdout).toContain("failed commands: 2");
     expect(result.stdout).toContain("## MTT completion production gate");
     expect(result.stdout).toContain("MTT completion release gate");
@@ -17,6 +17,9 @@ describe("mtt:acceptance CLI", () => {
     expect(result.stdout).toContain("MTT production blockers");
     expect(result.stdout).toContain("## MTT intake priority summary");
     expect(result.stdout).toContain("MTT intake priority plan");
+    expect(result.stdout).toContain("## MTT next action");
+    expect(result.stdout).toContain("Next MTT action");
+    expect(result.stdout).toContain("slot: FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF");
     expect(result.stdout).toContain("## MTT postflop final release gate");
     expect(result.stdout).toContain("MTT postflop final release gate");
     expect(result.stdout).toContain("## Ready MTT intake validation");
@@ -56,13 +59,14 @@ describe("mtt:acceptance CLI", () => {
     expect(parsed.valid).toBe(false);
     expect(parsed.checklist).toBe("Agents/mtt-done-checklist.md");
     expect(parsed.counts).toEqual({
-      commands: 9,
+      commands: 10,
       failedCommands: 2,
     });
     expect(parsed.commands.map((command) => command.label)).toEqual([
       "MTT completion production gate",
       "MTT blocker summary",
       "MTT intake priority summary",
+      "MTT next action",
       "MTT postflop final release gate",
       "Ready MTT intake validation",
       "MTT source-free UI guard",
@@ -71,12 +75,13 @@ describe("mtt:acceptance CLI", () => {
       "MTT registry integrity",
     ]);
     expect(parsed.commands[0].npmArgs).toEqual(["run", "mtt:completion", "--", "--summary"]);
-    expect(parsed.commands[5].npmArgs).toEqual(["test", "--", "tests/unit/uiNoSourceCitation.test.ts"]);
+    expect(parsed.commands[5].npmArgs).toEqual(["run", "mtt:validate-ready-intake"]);
     expect(parsed.commands.every((command) => command.stdout.length > 0)).toBe(true);
     expect(parsed.commands[0].stdout).toContain("MTT completion release gate");
-    expect(parsed.commands[5].stdout).toContain("tests/unit/uiNoSourceCitation.test.ts");
-    expect(parsed.commands[5].stdout).toContain("9 tests");
-    expect(parsed.commands[8].stdout).toContain("MTT production registry integrity");
+    expect(parsed.commands[3].stdout).toContain("Next MTT action");
+    expect(parsed.commands[6].stdout).toContain("tests/unit/uiNoSourceCitation.test.ts");
+    expect(parsed.commands[6].stdout).toContain("9 tests");
+    expect(parsed.commands[9].stdout).toContain("MTT production registry integrity");
     expect(parsed.commands[0].stdout).not.toContain("> mtt-preflop-trainer");
     expect(JSON.stringify(parsed)).not.toContain("https://");
   });
