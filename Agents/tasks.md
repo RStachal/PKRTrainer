@@ -1709,6 +1709,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Doplneno 2026-06-24: `mtt:next-action -- --output=artifacts/mtt-next-action/report.json` uklada stejny source-free intake packet jako JSON artefakt pro operator handoff/release notes.
     - Doplneno 2026-06-24: next-action packet obsahuje take `npm run e2e:android:preflight`, aby po importu zustal u slotu pripojeny device/readySerial dukaz nebo explicitni Android blocker.
     - Doplneno 2026-06-24: `mtt:acceptance` i `mtt:release-gates` vypisuji `MTT next action`, aby cerveny release report rovnou ukazal prvni konkretni import slot.
+    - Doplneno 2026-06-24: `mtt:release-gates` zahrnuje Android WebView/device preflight, takze `release:check` po dodani dat nezezeleni bez `readySerial`/device evidence.
   - [x] 135.4 Udelat preflight kontrolu raw MTT import workspace
     - Rozsirit guard tak, aby umel rozlisit povolene lokalni raw soubory od omylem commitnutych privatnich zdroju, ukazal ready/waiting po priority buckets a failnul pri nevalidni strukture `Agents/range-intake/raw/<packId>/`.
     - Soucasti ma byt kontrola, ze `normalized.json` a `permission.json` patri ke stejnemu `packId` a ze slot existuje v legalnim registry.
@@ -1980,7 +1981,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Spustit: `npm run typecheck`, `npm test`, `npm run mtt:acceptance`, `npm run mtt:release-gates`, `npm run verify:ranges`, `npm run build`, `npm run bundle:budget`, `npm run release:check`.
     - Vystup ulozit do release notes: pocty production rows, 0 blockers, 0 waiting slots, bundle budget, known limitations.
     - Stav auditu 2026-06-22: data jsou nejvetsi objemovy blocker. `mtt:acceptance` je valid false: 64 total rows, 0 productionReady, 54 preview, 10 blocked; 64 blocker rows ceka na `normalized.json` a `permission.json`; postflop release gate ma 48/48 blocker rows a 0 productionReady.
-    - Aktualizace 2026-06-24: `mtt:acceptance -- --json` ma 11 prikazu a 3 failujici casti: completion production data, postflop production data a Android WebView/device preflight `NO_DEVICE` s `readySerial: null`.
+    - Aktualizace 2026-06-24: `mtt:acceptance -- --json` ma 11 prikazu a `mtt:release-gates -- --json` 10 prikazu; oba spravne failuji na completion production datech, postflop production datech a Android WebView/device preflight `NO_DEVICE` s `readySerial: null`.
     - Technicky baseline 2026-06-24: typecheck, 554/554 testu, normalni i production-fixture Chrome E2E, build, precache a bundle budget jsou zelene. Release candidate dale blokuji Android cast 135.38, realna packova cast 135.35 a legalni import waves.
     - Doplneno 2026-06-23: `npm run mtt:technical-acceptance` agreguje technickou RC cast bez zavislosti na globalnim `npm`: typecheck, plny Vitest, registry/integrity, range audit, build, precache, bundle budget, 4-viewport Chrome a izolovany canonical PREFLOP/FLOP/TURN/RIVER fixture. Posledni realny run 2026-06-24 prosel 10/10 prikazu, 229/229 suites a 554/554 testu; JSON dukaz uklada do `artifacts/mtt-technical-acceptance/report.json`. Legalni data gate zustava zamerne oddeleny.
     - RC attempt notes: `Agents/release-notes-mtt-rc-2026-06-17.md`.

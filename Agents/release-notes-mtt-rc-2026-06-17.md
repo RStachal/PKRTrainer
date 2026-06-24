@@ -29,11 +29,12 @@ Not a production MTT v1 release candidate yet. Runtime/UI/tooling gates are larg
   - registry integrity: valid, 0 errors
   - Android WebView/device preflight: `NO_DEVICE`, `readySerial: null`
   - next action: `FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF`
-- `npm run mtt:release-gates`: failed as expected on the same production data gates.
-  - commands: 9
-  - failed commands: 2
+- `npm run mtt:release-gates`: failed as expected on the same production data and Android device gates.
+  - commands: 10
+  - failed commands: 3
   - ready intake slots: 0
   - ready validation: valid true with 0 ready rows
+  - Android WebView/device preflight: `NO_DEVICE`, `readySerial: null`
   - includes the same `MTT next action` packet as the acceptance report
 - `npm run verify:ranges`: passed legacy range validation and reported current MTT production blockers.
   - ante ON records: 487, validation errors: 0

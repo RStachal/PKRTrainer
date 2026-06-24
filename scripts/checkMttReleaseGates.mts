@@ -46,6 +46,10 @@ const gateCommands: readonly GateCommand[] = [
     label: "MTT registry integrity",
     npmArgs: ["run", "mtt:registry-integrity"],
   },
+  {
+    label: "Android WebView/device preflight",
+    npmArgs: ["run", "e2e:android:preflight"],
+  },
 ];
 
 try {
