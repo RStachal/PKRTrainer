@@ -1935,6 +1935,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Musi podporovat `--priority`, `--format`, `--street`, `--json`, `--dry-run` a nesmi prepisovat existujici production modul bez `--force`.
     - Cilem je zrychlit import desitek legalnich slotu bez rucni chyby v command line.
     - Hotovo: `npm run mtt:promote-ready` planuje ready sloty, validuje build reporty, vypisuje output moduly, validate/build/write prikazy, podporuje `--priority`, MTT filtry, `--json`, `--dry-run`, `--write`, `--force` a zapis povoli jen s `--confirm=WRITE_READY_MTT_MODULES`.
+    - Doplneno 2026-06-24: `mtt:validate-ready-intake` pri prazdne ready fronte vypisuje waiting rows, missing normalized/permission counts a `mtt:next-action`, takze prazdny zeleny dry-run nelze zamenit za hotovou import wave.
   - [x] 135.12 Production registry integrity gate
     - Pridat test/gate, ktery porovna legal import slots, vygenerovane production module ids, permission packIds a runtime registry.
     - Selhat pri orphan production packu, duplicitnim packId, registry packu mimo legal slot, mismatch table/speed/EV/ante/street nebo packu bez permission evidence.

@@ -51,9 +51,13 @@ interface ReadyValidationReport {
   valid: boolean;
   counts: {
     readyRows: number;
+    waitingRows: number;
+    missingNormalized: number;
+    missingPermission: number;
     validRows: number;
     failedRows: number;
   };
+  nextActionCommand: string;
   rows: readonly ReadyValidationRow[];
 }
 
@@ -126,13 +130,23 @@ function buildReadyValidationReport(args: CliArgs): ReadyValidationReport {
     buildMttCompletionReadinessReport(),
     args.filters,
   );
-  const rows = readiness.rows
+  const queueRows = readiness.rows
     .filter((row) => !row.productionReady && row.importSlot !== null)
-    .filter((row) => isReady(row.importSlot as MttCompletionImportSlotHint))
-    .filter((row) => matchesPriority(row, args.priority))
+    .filter((row) => matchesPriority(row, args.priority));
+  const readyRows = queueRows
+    .filter((row) => isReady(row.importSlot as MttCompletionImportSlotHint));
+  const rows = readyRows
     .map(validateReadyRow);
   const failedRows = rows.filter((row) => !row.valid).length;
   const valid = failedRows === 0 && (!args.failOnEmpty || rows.length > 0);
+  const missingNormalized = queueRows.filter((row) => {
+    const importSlot = row.importSlot as MttCompletionImportSlotHint;
+    return !existsSync(importSlot.normalizedInputPath);
+  }).length;
+  const missingPermission = queueRows.filter((row) => {
+    const importSlot = row.importSlot as MttCompletionImportSlotHint;
+    return !existsSync(importSlot.permissionManifestPath);
+  }).length;
 
   return {
     filters: args.filters,
@@ -140,9 +154,13 @@ function buildReadyValidationReport(args: CliArgs): ReadyValidationReport {
     valid,
     counts: {
       readyRows: rows.length,
+      waitingRows: queueRows.length - readyRows.length,
+      missingNormalized,
+      missingPermission,
       validRows: rows.length - failedRows,
       failedRows,
     },
+    nextActionCommand: "npm run mtt:next-action",
     rows,
   };
 }
@@ -216,8 +234,12 @@ function renderReadyValidationReport(report: ReadyValidationReport): string {
     `priority: ${report.priority ?? "all"}`,
     `valid: ${report.valid}`,
     `ready rows: ${report.counts.readyRows}`,
+    `waiting rows: ${report.counts.waitingRows}`,
+    `missing normalized.json: ${report.counts.missingNormalized}`,
+    `missing permission.json: ${report.counts.missingPermission}`,
     `valid rows: ${report.counts.validRows}`,
     `failed rows: ${report.counts.failedRows}`,
+    `next action: ${report.nextActionCommand}`,
   ];
 
   for (const row of report.rows) {

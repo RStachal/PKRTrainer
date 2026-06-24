@@ -214,6 +214,9 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:validate-ready-intake");
     expect(operatorGuide).toContain("npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json");
     expect(operatorGuide).toContain("npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json");
+    expect(operatorGuide).toContain("waiting rows");
+    expect(operatorGuide).toContain("staged yet");
+    expect(operatorGuide).toContain("completed import wave");
     expect(operatorGuide).toContain("npm run mtt:promote-ready");
     expect(operatorGuide).toContain("WRITE_READY_MTT_MODULES");
     expect(operatorGuide).toContain("refuses to overwrite existing output modules");

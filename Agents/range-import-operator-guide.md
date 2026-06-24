@@ -236,7 +236,9 @@ Use `--json` when another script needs the release gate and filtered readiness r
 For batch work after multiple legal files are staged, `mtt:validate-ready-intake` reads only slots where both
 `normalized.json` and `permission.json` are present and runs the same source-free dry-run build validation without
 writing runtime modules. Its text and JSON output include the exact `build:range-module --dry-run` command for each
-ready slot so failures can be reproduced manually.
+ready slot so failures can be reproduced manually. When no slot is ready, it still prints waiting rows, missing
+`normalized.json`, missing `permission.json` and `npm run mtt:next-action` so the operator can distinguish "nothing
+staged yet" from a completed import wave.
 The prioritized `mtt:intake-plan` output also prints the per-slot `validate:range-import` command and the matching
 `build:range-module --dry-run` command.
 After ready files validate cleanly, `mtt:promote-ready` can batch-plan module writes. It defaults to dry-run, refuses

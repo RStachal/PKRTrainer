@@ -10,8 +10,12 @@ describe("mtt:validate-ready-intake CLI", () => {
     expect(result.stdout).toContain("priority: all");
     expect(result.stdout).toContain("valid: true");
     expect(result.stdout).toContain("ready rows: 0");
+    expect(result.stdout).toContain("waiting rows: 64");
+    expect(result.stdout).toContain("missing normalized.json: 64");
+    expect(result.stdout).toContain("missing permission.json: 64");
     expect(result.stdout).toContain("valid rows: 0");
     expect(result.stdout).toContain("failed rows: 0");
+    expect(result.stdout).toContain("next action: npm run mtt:next-action");
     expect(result.stdout).not.toContain("https://");
   });
 
@@ -25,9 +29,13 @@ describe("mtt:validate-ready-intake CLI", () => {
       valid: boolean;
       counts: {
         readyRows: number;
+        waitingRows: number;
+        missingNormalized: number;
+        missingPermission: number;
         validRows: number;
         failedRows: number;
       };
+      nextActionCommand: string;
       rows: unknown[];
     };
 
@@ -40,9 +48,13 @@ describe("mtt:validate-ready-intake CLI", () => {
     expect(parsed.valid).toBe(true);
     expect(parsed.counts).toEqual({
       readyRows: 0,
+      waitingRows: 4,
+      missingNormalized: 4,
+      missingPermission: 4,
       validRows: 0,
       failedRows: 0,
     });
+    expect(parsed.nextActionCommand).toBe("npm run mtt:next-action");
     expect(parsed.rows).toEqual([]);
   });
 
