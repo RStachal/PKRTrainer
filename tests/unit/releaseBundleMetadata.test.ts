@@ -206,6 +206,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("final MTT-only acceptance gate");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --summary");
     expect(operatorGuide).toContain("npm run mtt:completion -- --summary");
+    expect(operatorGuide).toContain("npm run mtt:completion -- --output=artifacts/mtt-completion-report.json");
     expect(operatorGuide).toContain("priority counts matching the intake plan buckets");
     expect(operatorGuide).toContain("npm run mtt:postflop-matrix");
     expect(operatorGuide).toContain("freezes the 48 FLOP/TURN/RIVER production targets");
@@ -306,6 +307,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("Range data changes");
     expect(releaseTemplate).toContain("Statistics changes");
     expect(releaseTemplate).toContain("npm run mtt:completion -- --summary");
+    expect(releaseTemplate).toContain("npm run mtt:completion -- --output=artifacts/mtt-completion-report.json");
     expect(releaseTemplate).toContain("npm run mtt:next-action");
     expect(releaseTemplate).toContain("artifacts/mtt-next-action/report.json");
     expect(releaseTemplate).toContain("npm run mtt:acceptance");

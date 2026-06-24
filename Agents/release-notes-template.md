@@ -36,6 +36,7 @@
 - `npm run typecheck`:
 - `npm test`:
 - `npm run mtt:completion -- --summary`:
+- `npm run mtt:completion -- --output=artifacts/mtt-completion-report.json`:
 - `npm run mtt:next-action`:
 - MTT next-action report: `artifacts/mtt-next-action/report.json`
 - `npm run mtt:acceptance`:

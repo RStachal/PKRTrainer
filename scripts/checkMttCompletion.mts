@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import {
   buildMttCompletionReleaseGateReport,
   buildMttCompletionReadinessReport,
@@ -12,6 +14,7 @@ interface CliArgs {
   details: boolean;
   json: boolean;
   mode: "PRODUCTION" | "PREVIEW";
+  outputPath: string | null;
   summary: boolean;
   filters: MttCompletionReadinessFilters;
 }
@@ -25,10 +28,12 @@ function usage(): string {
     "  npm run mtt:completion -- --details",
     "  npm run mtt:completion -- --details --format=SIX_MAX --speed=TURBO --ev=DOLAR_EV --street=RIVER --ante=OFF --status=candidate",
     "  npm run mtt:completion -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json",
+    "  npm run mtt:completion -- --output=artifacts/mtt-completion-report.json",
     "",
     "Output:",
     "  --details",
     "  --json",
+    "  --output=artifacts/mtt-completion-report.json",
     "  --preview",
     "  --summary",
     "",
@@ -47,6 +52,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let details = false;
   let json = false;
   let mode: CliArgs["mode"] = "PRODUCTION";
+  let outputPath: string | null = null;
   let summary = false;
 
   for (const item of argv) {
@@ -62,6 +68,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
       mode = "PREVIEW";
       continue;
     }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
+      continue;
+    }
     if (item === "--summary") {
       summary = true;
       continue;
@@ -73,7 +85,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { details, json, mode, summary, filters };
+  return { details, json, mode, outputPath, summary, filters };
 }
 
 try {
@@ -82,12 +94,17 @@ try {
   const readiness = filterMttCompletionReadinessReport(fullReadiness, args.filters);
   const gateReadiness = hasFilters(args.filters) ? fullReadiness : readiness;
   const report = buildMttCompletionReleaseGateReport(gateReadiness, { mode: args.mode });
+  const payload = {
+    filters: args.filters,
+    gate: report,
+    readiness,
+  };
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  }
   if (args.json) {
-    console.log(JSON.stringify({
-      filters: args.filters,
-      gate: report,
-      readiness,
-    }, null, 2));
+    console.log(JSON.stringify(payload, null, 2));
   } else {
     console.log(args.details
       ? `${renderMttCompletionReleaseGateReport(report)}\n\n${renderMttCompletionReadinessReport(readiness)}`

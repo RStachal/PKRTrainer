@@ -21,10 +21,13 @@ describe("CI workflows", () => {
     expect(workflow).toContain("path: artifacts/e2e-*");
     expect(workflow).toContain("mtt-data-status:");
     expect(workflow).toContain("continue-on-error: true");
+    expect(workflow).toContain("npm run mtt:completion -- --output=artifacts/mtt-completion-report.json || true");
     expect(workflow).toContain("npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json");
-    expect(workflow).toContain("npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json");
+    expect(workflow).toContain("npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json || true");
     expect(workflow).toContain("npm run mtt:next-action -- --output=artifacts/mtt-next-action-report.json");
-    expect(workflow).toContain("npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json");
+    expect(workflow).toContain("npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json || true");
+    expect(workflow).toContain("npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json || true");
+    expect(workflow).toContain("npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json || true");
     expect(workflow).toContain("path: artifacts/mtt-*-report.json");
     expect(workflow).toContain("path: dist");
   });

@@ -130,6 +130,7 @@ npm run mtt:next-action
 npm run mtt:next-action -- --json
 npm run mtt:next-action -- --output=artifacts/mtt-next-action/report.json
 npm run mtt:next-action -- --priority=P2_PREFLOP_DOLAR_EV
+npm run mtt:completion -- --output=artifacts/mtt-completion-report.json
 npm run mtt:acceptance
 npm run mtt:acceptance -- --json
 npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json
@@ -148,8 +149,8 @@ ready-intake validation, promote-ready dry-run/write commands, registry integrit
 preflight follow-ups.
 Use `--priority=<bucket>` to ask for the next concrete step inside a specific P1-P5 import wave.
 Use `--output=artifacts/mtt-next-action/report.json` when the slot intake packet should be saved for handoff or release notes.
-The packet's source reports also include clean JSON handoff commands for `artifacts/mtt-intake-plan-report.json`,
-`artifacts/mtt-blockers-report.json`, `artifacts/mtt-release-gates-report.json` and
+The packet's source reports also include clean JSON handoff commands for `artifacts/mtt-completion-report.json`,
+`artifacts/mtt-intake-plan-report.json`, `artifacts/mtt-blockers-report.json`, `artifacts/mtt-release-gates-report.json` and
 `artifacts/mtt-acceptance-report.json`.
 `mtt:acceptance` is the final MTT-only acceptance gate. It is green only when the full MTT app matches
 `Agents/mtt-done-checklist.md`, including source-free UI checks and ready-intake validation.

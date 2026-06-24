@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:completion CLI", () => {
@@ -121,6 +124,33 @@ describe("mtt:completion CLI", () => {
     const slotPackIds = slots.postflopSlots.map((slot) => slot.packId).sort();
 
     expect(completionPackIds).toEqual(slotPackIds);
+  });
+
+  it("umi zapsat cisty JSON artefakt pro production completion handoff", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-completion-"));
+    try {
+      const outputPath = join(directory, "completion-report.json");
+      const result = runCompletion("--summary", `--output=${outputPath}`);
+
+      expect(result.status).toBe(1);
+      expect(result.stdout).toContain("MTT completion release gate");
+      expect(result.stdout.trim().startsWith("{")).toBe(false);
+
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        filters: Record<string, never>;
+        gate: { valid: boolean; mode: string; totalRows: number };
+        readiness: { rows: unknown[] };
+      };
+      expect(parsed.filters).toEqual({});
+      expect(parsed.gate).toMatchObject({
+        valid: false,
+        mode: "PRODUCTION",
+        totalRows: 64,
+      });
+      expect(parsed.readiness.rows).toHaveLength(64);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("vrati chybu pro neznamy filtr", () => {
