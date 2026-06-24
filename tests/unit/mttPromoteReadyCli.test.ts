@@ -75,6 +75,19 @@ describe("mtt:promote-ready CLI", () => {
     expect(result.stderr).toContain("Usage:");
   });
 
+  it("odmitne soucasne dry-run a write rezimy v libovolnem poradi", () => {
+    for (const args of [
+      ["--dry-run", "--write"],
+      ["--write", "--dry-run"],
+    ]) {
+      const result = runPromoteReady(...args);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("Use only one of --dry-run or --write.");
+      expect(result.stderr).toContain("Usage:");
+    }
+  });
+
   it("podporuje zapis jen s explicitnim potvrzenim", () => {
     const result = runPromoteReady("--write", "--confirm=WRITE_READY_MTT_MODULES", "--json");
 

@@ -135,6 +135,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let force = false;
   let json = false;
   let mode: CliArgs["mode"] = "dry-run";
+  let modeSeen = false;
   let outputPath: string | null = null;
   let priority: MttIntakePriorityKey | null = null;
   let confirmation: string | null = null;
@@ -146,11 +147,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
       continue;
     }
     if (item === "--dry-run") {
-      mode = setMode(mode, "dry-run");
+      if (modeSeen) throw new Error(`Use only one of --dry-run or --write.\n\n${usage()}`);
+      mode = "dry-run";
+      modeSeen = true;
       continue;
     }
     if (item === "--write") {
-      mode = setMode(mode, "write");
+      if (modeSeen) throw new Error(`Use only one of --dry-run or --write.\n\n${usage()}`);
+      mode = "write";
+      modeSeen = true;
       continue;
     }
     if (item === "--force") {
@@ -180,13 +185,6 @@ function parseArgs(argv: readonly string[]): CliArgs {
   }
 
   return { filters, force, json, mode, outputPath, priority, confirmation };
-}
-
-function setMode(current: CliArgs["mode"], next: CliArgs["mode"]): CliArgs["mode"] {
-  if (current !== "dry-run" && current !== next) {
-    throw new Error(`Use only one of --dry-run or --write.\n\n${usage()}`);
-  }
-  return next;
 }
 
 function buildPromotionReport(args: CliArgs): PromotionReport {
