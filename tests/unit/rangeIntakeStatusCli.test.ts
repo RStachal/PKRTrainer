@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("range:intake CLI", () => {
@@ -87,6 +90,32 @@ describe("range:intake CLI", () => {
     expect(parsed.counts.total).toBe(0);
     expect(parsed.counts.readyForValidation).toBe(0);
     expect(parsed.rows).toEqual([]);
+  });
+
+  it("umi zapsat cisty JSON artefakt pro range intake handoff", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-range-intake-"));
+    try {
+      const outputPath = join(directory, "range-intake-report.json");
+      const result = runIntake(`--output=${outputPath}`);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("Range intake status");
+      expect(result.stdout.trim().startsWith("{")).toBe(false);
+
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        counts: { total: number; readyForValidation: number; missingNormalized: number; missingPermission: number };
+        rows: unknown[];
+      };
+      expect(parsed.counts).toEqual({
+        total: 64,
+        readyForValidation: 0,
+        missingNormalized: 64,
+        missingPermission: 64,
+      });
+      expect(parsed.rows).toHaveLength(64);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("odmitne konflikt ready-only a waiting-only filtru", () => {

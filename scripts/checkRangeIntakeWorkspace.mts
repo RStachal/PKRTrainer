@@ -1,6 +1,6 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import {
   buildMttCompletionReadinessReport,
   type MttCompletionImportSlotHint,
@@ -22,6 +22,7 @@ const expectedRawGitignore = ["*", "!.gitignore", "!README.md"].join("\n");
 
 interface CliArgs {
   json: boolean;
+  outputPath: string | null;
 }
 
 interface IntakeWorkspaceReport {
@@ -44,6 +45,10 @@ interface IntakeWorkspaceReport {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildIntakeWorkspaceReport();
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderIntakeWorkspaceReport(report));
   process.exitCode = report.valid ? 0 : 1;
 } catch (error) {
@@ -56,20 +61,32 @@ function usage(): string {
     "Usage:",
     "  npm run range:intake:guard",
     "  npm run range:intake:guard -- --json",
+    "  npm run range:intake:guard -- --output=artifacts/range-intake-guard-report.json",
+    "",
+    "Output:",
+    "  --json",
+    "  --output=artifacts/range-intake-guard-report.json",
   ].join("\n");
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
+  let outputPath: string | null = null;
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
     if (item === "--json") {
       json = true;
       continue;
     }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
+      continue;
+    }
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
-  return { json };
+  return { json, outputPath };
 }
 
 function buildIntakeWorkspaceReport(): IntakeWorkspaceReport {

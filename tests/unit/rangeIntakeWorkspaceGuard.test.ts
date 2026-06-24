@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("range:intake:guard CLI", () => {
@@ -58,6 +61,34 @@ describe("range:intake:guard CLI", () => {
     expect(parsed.counts.missingPermission).toBe(64);
     expect(parsed.counts.byPriority.P1_PREFLOP_CHIP_EV).toBe(8);
     expect(parsed.errors).toEqual([]);
+  });
+
+  it("umi zapsat cisty JSON artefakt pro raw workspace handoff", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-range-intake-guard-"));
+    try {
+      const outputPath = join(directory, "range-intake-guard-report.json");
+      const result = runGuard(`--output=${outputPath}`);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("Range intake workspace guard");
+      expect(result.stdout.trim().startsWith("{")).toBe(false);
+
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        valid: boolean;
+        counts: { legalSlots: number; waitingForFiles: number; missingNormalized: number; missingPermission: number };
+        errors: string[];
+      };
+      expect(parsed.valid).toBe(true);
+      expect(parsed.counts).toMatchObject({
+        legalSlots: 64,
+        waitingForFiles: 64,
+        missingNormalized: 64,
+        missingPermission: 64,
+      });
+      expect(parsed.errors).toEqual([]);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });
 

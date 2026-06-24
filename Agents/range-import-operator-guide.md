@@ -41,7 +41,9 @@ After staging raw files, check which legal slots have both expected local files:
 
 ```powershell
 npm run range:intake:guard
+npm run range:intake:guard -- --output=artifacts/range-intake-guard-report.json
 npm run range:intake
+npm run range:intake -- --output=artifacts/range-intake-report.json
 npm run range:intake -- --kind=preflop --format=SIX_MAX --speed=TURBO
 npm run range:intake -- --kind=postflop --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
 ```
@@ -156,6 +158,7 @@ The packet's source reports also include clean JSON handoff commands for `artifa
 `artifacts/mtt-postflop-matrix-report.json`, `artifacts/mtt-postflop-positions-report.json`,
 `artifacts/mtt-postflop-coverage-report.json`, `artifacts/mtt-postflop-release-report.json`,
 `artifacts/mtt-validate-ready-intake-report.json`, `artifacts/mtt-promote-ready-report.json`,
+`artifacts/range-intake-guard-report.json`, `artifacts/range-intake-report.json`,
 `artifacts/mtt-release-gates-report.json` and
 `artifacts/mtt-acceptance-report.json`.
 `mtt:acceptance` is the final MTT-only acceptance gate. It is green only when the full MTT app matches

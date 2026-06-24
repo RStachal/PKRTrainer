@@ -244,7 +244,9 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("Normalized production imports must not contain placeholder text");
     expect(operatorGuide).toContain("build:range-module --dry-run");
     expect(operatorGuide).toContain("npm run range:intake");
+    expect(operatorGuide).toContain("npm run range:intake -- --output=artifacts/range-intake-report.json");
     expect(operatorGuide).toContain("npm run range:intake:guard");
+    expect(operatorGuide).toContain("npm run range:intake:guard -- --output=artifacts/range-intake-guard-report.json");
     expect(operatorGuide).toContain("checks local raw folders against the legal slot registry");
     expect(operatorGuide).toContain("permission.json` `packId");
     expect(operatorGuide).toContain("legal import slot: true");
@@ -340,7 +342,9 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json");
     expect(releaseTemplate).toContain("npm run mtt:registry-integrity");
     expect(releaseTemplate).toContain("npm run range:intake:guard");
+    expect(releaseTemplate).toContain("npm run range:intake:guard -- --output=artifacts/range-intake-guard-report.json");
     expect(releaseTemplate).toContain("npm run range:intake -- --ready-only");
+    expect(releaseTemplate).toContain("npm run range:intake -- --output=artifacts/range-intake-report.json");
     expect(releaseTemplate).toContain("npm run e2e:android:preflight");
     expect(releaseTemplate).toContain("artifacts/e2e-android-preflight/report.json");
     expect(releaseTemplate).toContain("Android preflight status / readySerial");

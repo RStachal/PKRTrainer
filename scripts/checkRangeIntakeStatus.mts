@@ -1,4 +1,5 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import {
   buildMttPostflopImportSlots,
   type MttPostflopImportSlot,
@@ -19,6 +20,7 @@ interface CliArgs {
   kind: SlotKind;
   filters: MttCompletionReadinessFilters;
   json: boolean;
+  outputPath: string | null;
   visibility: "all" | "ready-only" | "waiting-only";
 }
 
@@ -53,9 +55,11 @@ function usage(): string {
     "  npm run range:intake -- --kind=postflop --format=SIX_MAX --street=RIVER --json",
     "  npm run range:intake -- --ready-only --json",
     "  npm run range:intake -- --waiting-only",
+    "  npm run range:intake -- --output=artifacts/range-intake-report.json",
     "",
     "Output:",
     "  --json",
+    "  --output=artifacts/range-intake-report.json",
     "  --ready-only",
     "  --waiting-only",
     "",
@@ -72,6 +76,10 @@ function usage(): string {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildIntakeStatusReport(args);
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
   if (args.json) {
     console.log(JSON.stringify(report, null, 2));
   } else {
@@ -86,6 +94,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let kind: SlotKind = "all";
   let json = false;
+  let outputPath: string | null = null;
   let visibility: CliArgs["visibility"] = "all";
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -105,6 +114,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
       visibility = setVisibility(visibility, "waiting-only");
       continue;
     }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
+      continue;
+    }
     if (item === "--kind") {
       kind = parseKind(argv[index + 1] ?? "");
       index += 1;
@@ -118,7 +133,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { kind, filters, json, visibility };
+  return { kind, filters, json, outputPath, visibility };
 }
 
 function parseKind(value: string): SlotKind {

@@ -1073,6 +1073,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Raw solver/chart exporty nesmi byt omylem zobrazeny v UI ani importovany bez validace
     - Hotovo: `Agents/range-intake/raw/` je ignorovany Git workspace pro lokalni legalni vstupy
     - Hotovo: `npm run range:intake:guard` blokuje nechtene trackovane raw vstupy a hlida ignore politiku staging adresare
+    - Doplneno 2026-06-24: `range:intake:guard -- --output=artifacts/range-intake-guard-report.json` uklada cisty JSON workspace guard artefakt.
   - [x] 102.2 Pridat priklady minimalnich JSON importu pro MTT preflop a flop production
     - Fixtures musi byt synthetic/test-only, bez skutecnych third-party chart hodnot
     - Hotovo: synteticke MTT preflop, flop production and permission manifest examples
@@ -1080,6 +1081,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Kroky: ulozit raw export, spustit validator, review report, commit normalized pack, release checkpoint
     - Hotovo: `Agents/range-intake/README.md` and intake manifest workflow
     - Hotovo: `npm run range:intake` kontroluje pritomnost `normalized.json` a `permission.json` pro legalni MTT sloty pred validaci obsahu
+    - Doplneno 2026-06-24: `range:intake -- --output=artifacts/range-intake-report.json` uklada cisty JSON stav vsech legalnich intake slotu.
     - Hotovo: `npm run mtt:blockers` vypisuje source-free frontu neprodukcnich MTT blockeru vcetne lokalniho intake file statusu
 
 - [x] 103. Legal source and permission audit workflow
@@ -1885,7 +1887,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Acceptance: cisty clone bez lokalnich raw dat reprodukuje stejny technicky vysledek a release tag nelze vytvorit s cervenym MTT gate.
     - Hotovo 2026-06-18: `.github/workflows/ci.yml` pouziva Node 22 + `npm ci`, typecheck, full Vitest s JUnit artefaktem, generated registry check, registry integrity, raw intake guard, range verification, build, bundle budget a upload `dist/`. Concurrency rusi zastarale runy a job ma explicitni timeout.
     - Znamy production-data blocker je oddelen do diagnostickeho `mtt-data-status` jobu s JSON artefaktem; jeho cerveny stav nemaskuje technickou regresi. `.github/workflows/release.yml` pro `v*` tag/manual release nema `continue-on-error` a uploadne `dist/` az po kompletnim `npm run release:check`, ktery obsahuje MTT gates.
-    - Doplneno 2026-06-24: CI `mtt-data-status` uklada `mtt-slots`, `mtt-completion`, `mtt-intake-plan`, `mtt-blockers`, `mtt-next-action`, `mtt-postflop-matrix`, `mtt-postflop-positions`, `mtt-postflop-coverage`, `mtt-postflop-release`, `mtt-validate-ready-intake`, `mtt-promote-ready`, `mtt-acceptance` a `mtt-release-gates` jako ciste parsovatelne JSON artefakty bez npm headeru; cervene data gates jsou v diagnostickem jobu tolerovane, aby se uploadly vsechny reporty.
+    - Doplneno 2026-06-24: CI `mtt-data-status` uklada `range-intake-guard`, `range-intake`, `mtt-slots`, `mtt-completion`, `mtt-intake-plan`, `mtt-blockers`, `mtt-next-action`, `mtt-postflop-matrix`, `mtt-postflop-positions`, `mtt-postflop-coverage`, `mtt-postflop-release`, `mtt-validate-ready-intake`, `mtt-promote-ready`, `mtt-acceptance` a `mtt-release-gates` jako ciste parsovatelne JSON artefakty bez npm headeru; cervene data gates jsou v diagnostickem jobu tolerovane, aby se uploadly vsechny reporty.
     - Workflow kontrakt hlidaji unit testy. Lokalni overeni: typecheck, registry check/integrity, `git diff --check`, 104 testovacich souboru / 485 testu, build a bundle budget prosly.
   - [ ] 135.38 Dodelat skutecne browser/device E2E acceptance
     - Unit/jsdom testy doplnit o produkcni build spusteny v prohlizeci: start profilu, answer/next, single spot, hand line, HH review, stats export/import, reload a offline reopen.
@@ -1905,7 +1907,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Lokalni preflight 2026-06-24 nasel `adb` v Android SDK, ale `adb devices -l` nevraci zadny emulator/telefon (`status: NO_DEVICE`); device/WebView acceptance zustava blokovana pouze dostupnosti targetu.
     - Doplneno 2026-06-23: realny Chrome runner provadi skutecnou registraci druhe worker verze a overuje previous-build hash chunk rollback i izolaci stabilnich assetu; missing-asset/update browser cast je hotova.
     - Source-free production fixture Chrome flow 2026-06-23 realne prosel lazy preflop pack load, start, answer, next, navrat do filtru a offline opakovany start. Canonical FLOP/TURN/RIVER fixture navic prosly produkcnimi lazy resolvery v deterministickem 3bet kontextu, nacetly presne profilove chunky a zachovaly vsechny pack identity v postflop stats i po reloadu. Fixture ani docasny registry zapis nezustavaji v source tree nebo release `dist`.
-    - Finalni technicke overeni 2026-06-24: normalni 4-viewport Chrome E2E i oddeleny production fixture E2E prosly; plny Vitest report ma 229/229 suites a 566/566 testu, build/precache/budget i registry/range gates jsou zelene.
+    - Finalni technicke overeni 2026-06-24: normalni 4-viewport Chrome E2E i oddeleny production fixture E2E prosly; plny Vitest report ma 229/229 suites a 568/568 testu, build/precache/budget i registry/range gates jsou zelene.
     - Doplneno 2026-06-24: Chrome E2E runner vytvari novy tab jako `about:blank` a navigaci/reload povazuje za hotovou i podle `document.readyState`, aby nezavisela jen na zachyceni `Page.loadEventFired` pri same-URL load race.
     - Zbyva: Android WebView/emulator s ready `adb` targetem. Plne lazy profilovy chunk lze na device zmerit az po prvnim legalnim production importu.
   - [ ] 135.27 Provest jeden kompletni P1 pilot import
@@ -1988,8 +1990,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Vystup ulozit do release notes: pocty production rows, 0 blockers, 0 waiting slots, bundle budget, known limitations.
     - Stav auditu 2026-06-22: data jsou nejvetsi objemovy blocker. `mtt:acceptance` je valid false: 64 total rows, 0 productionReady, 54 preview, 10 blocked; 64 blocker rows ceka na `normalized.json` a `permission.json`; postflop release gate ma 48/48 blocker rows a 0 productionReady.
     - Aktualizace 2026-06-24: `mtt:acceptance -- --json` ma 11 prikazu a `mtt:release-gates -- --json` 10 prikazu; oba spravne failuji na completion production datech, postflop production datech a Android WebView/device preflight `NO_DEVICE` s `readySerial: null`.
-    - Technicky baseline 2026-06-24: typecheck, 566/566 testu, normalni i production-fixture Chrome E2E, build, precache a bundle budget jsou zelene. Release candidate dale blokuji Android cast 135.38, realna packova cast 135.35 a legalni import waves.
-    - Doplneno 2026-06-23: `npm run mtt:technical-acceptance` agreguje technickou RC cast bez zavislosti na globalnim `npm`: typecheck, plny Vitest, registry/integrity, range audit, build, precache, bundle budget, 4-viewport Chrome a izolovany canonical PREFLOP/FLOP/TURN/RIVER fixture. Posledni realny run 2026-06-24 prosel 10/10 prikazu, 229/229 suites a 566/566 testu; JSON dukaz uklada do `artifacts/mtt-technical-acceptance/report.json`. Legalni data gate zustava zamerne oddeleny.
+    - Technicky baseline 2026-06-24: typecheck, 568/568 testu, normalni i production-fixture Chrome E2E, build, precache a bundle budget jsou zelene. Release candidate dale blokuji Android cast 135.38, realna packova cast 135.35 a legalni import waves.
+    - Doplneno 2026-06-23: `npm run mtt:technical-acceptance` agreguje technickou RC cast bez zavislosti na globalnim `npm`: typecheck, plny Vitest, registry/integrity, range audit, build, precache, bundle budget, 4-viewport Chrome a izolovany canonical PREFLOP/FLOP/TURN/RIVER fixture. Posledni realny run 2026-06-24 prosel 10/10 prikazu, 229/229 suites a 568/568 testu; JSON dukaz uklada do `artifacts/mtt-technical-acceptance/report.json`. Legalni data gate zustava zamerne oddeleny.
     - RC attempt notes: `Agents/release-notes-mtt-rc-2026-06-17.md`.
   - [ ] 135.20 Final MTT user smoke
     - Rucne projit reprezentativni MTT scenare: 9-max regular CHIP_EV preflop, 9-max turbo DOLAR_EV preflop, 6-max regular CHIP_EV flop line, 6-max turbo DOLAR_EV river facing-bet, HH import turn/river review a dashboard kontrola.

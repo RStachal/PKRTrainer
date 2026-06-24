@@ -62,7 +62,9 @@
 - `npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json`:
 - `npm run mtt:registry-integrity`:
 - `npm run range:intake:guard`:
+- `npm run range:intake:guard -- --output=artifacts/range-intake-guard-report.json`:
 - `npm run range:intake -- --ready-only`:
+- `npm run range:intake -- --output=artifacts/range-intake-report.json`:
 - `npm run verify:ranges`:
 - `npm run build`:
 - `npm run verify:precache`:

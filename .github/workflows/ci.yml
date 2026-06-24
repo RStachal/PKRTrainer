@@ -116,6 +116,8 @@ jobs:
       - name: Run production-data gates
         run: |
           mkdir -p artifacts
+          npm run range:intake:guard -- --output=artifacts/range-intake-guard-report.json
+          npm run range:intake -- --output=artifacts/range-intake-report.json
           npm run mtt:slots -- --output=artifacts/mtt-slots-report.json
           npm run mtt:completion -- --output=artifacts/mtt-completion-report.json || true
           npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json
@@ -135,5 +137,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mtt-production-data-status
-          path: artifacts/mtt-*-report.json
+          path: |
+            artifacts/mtt-*-report.json
+            artifacts/range-intake*-report.json
           if-no-files-found: warn
