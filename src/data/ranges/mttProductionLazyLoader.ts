@@ -24,6 +24,8 @@ export function createMttProductionLazyLoader(
   manifest: readonly GeneratedMttProductionManifestEntry[] =
     generatedMttProductionManifest,
 ): MttProductionLazyLoader {
+  validateManifest(manifest);
+
   const loads = new Map<string, Promise<GeneratedMttProductionPack>>();
   const loaded = new Set<string>();
   let latestProfileRequest = 0;
@@ -87,3 +89,31 @@ export function createMttProductionLazyLoader(
 }
 
 export const mttProductionLazyLoader = createMttProductionLazyLoader();
+
+function validateManifest(manifest: readonly GeneratedMttProductionManifestEntry[]): void {
+  const packIds = new Set<string>();
+  const duplicatePackIds = new Set<string>();
+  const profileSlots = new Set<string>();
+  const duplicateProfileSlots = new Set<string>();
+
+  for (const entry of manifest) {
+    if (packIds.has(entry.packId)) duplicatePackIds.add(entry.packId);
+    packIds.add(entry.packId);
+
+    const profileSlot = `${entry.kind}|${entry.profileKey}`;
+    if (profileSlots.has(profileSlot)) duplicateProfileSlots.add(profileSlot);
+    profileSlots.add(profileSlot);
+  }
+
+  if (duplicatePackIds.size > 0) {
+    throw new Error(
+      `MTT production manifest contains duplicate packId: ${[...duplicatePackIds].sort().join(", ")}`,
+    );
+  }
+
+  if (duplicateProfileSlots.size > 0) {
+    throw new Error(
+      `MTT production manifest contains duplicate profile slot: ${[...duplicateProfileSlots].sort().join(", ")}`,
+    );
+  }
+}

@@ -107,6 +107,20 @@ describe("MTT production lazy loader", () => {
     expect(loader.loadedPackIds()).toEqual([]);
   });
 
+  it("odmitne duplicitni packId v lazy manifestu", () => {
+    expect(() => createMttProductionLazyLoader([
+      entry("duplicate", "PROFILE_A", async () => pack("duplicate")),
+      entry("duplicate", "PROFILE_B", async () => pack("duplicate")),
+    ])).toThrow("MTT production manifest contains duplicate packId: duplicate");
+  });
+
+  it("odmitne duplicitni production slot ve stejnem kind/profileKey", () => {
+    expect(() => createMttProductionLazyLoader([
+      entry("first", "PROFILE_A", async () => pack("first")),
+      entry("second", "PROFILE_A", async () => pack("second")),
+    ])).toThrow("MTT production manifest contains duplicate profile slot: mtt-preflop|PROFILE_A");
+  });
+
   it("umi zneplatnit pending profil i kdyz nova volba nepotrebuje import", async () => {
     let resolveFirst!: (value: GeneratedMttProductionPack) => void;
     const loader = createMttProductionLazyLoader([
