@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import {
   buildMttCompletionReadinessReport,
   filterMttCompletionReadinessReport,
@@ -25,6 +26,7 @@ interface CliArgs {
   filters: MttCompletionReadinessFilters;
   failOnEmpty: boolean;
   json: boolean;
+  outputPath: string | null;
   priority: MttIntakePriorityKey | null;
 }
 
@@ -70,9 +72,11 @@ function usage(): string {
     "  npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json",
     "  npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json",
     "  npm run mtt:validate-ready-intake -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json",
+    "  npm run mtt:validate-ready-intake -- --output=artifacts/mtt-validate-ready-intake-report.json",
     "",
     "Output:",
     "  --json",
+    "  --output=artifacts/mtt-validate-ready-intake-report.json",
     "  --fail-on-empty",
     `  --priority=${MTT_INTAKE_PRIORITY_KEYS.join("|")}`,
     "",
@@ -89,6 +93,10 @@ function usage(): string {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildReadyValidationReport(args);
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderReadyValidationReport(report));
   process.exitCode = report.valid ? 0 : 1;
 } catch (error) {
@@ -100,6 +108,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let failOnEmpty = false;
   let json = false;
+  let outputPath: string | null = null;
   let priority: MttIntakePriorityKey | null = null;
 
   for (const item of argv) {
@@ -114,6 +123,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
       failOnEmpty = true;
       continue;
     }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
+      continue;
+    }
     if (item.startsWith("--priority=")) {
       priority = parseMttIntakePriority(item.slice("--priority=".length), usage);
       continue;
@@ -122,7 +137,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, failOnEmpty, json, priority };
+  return { filters, failOnEmpty, json, outputPath, priority };
 }
 
 function buildReadyValidationReport(args: CliArgs): ReadyValidationReport {

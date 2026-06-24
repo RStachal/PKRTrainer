@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:validate-ready-intake CLI", () => {
@@ -94,6 +97,34 @@ describe("mtt:validate-ready-intake CLI", () => {
     expect(parsed.priority).toBe("P2_PREFLOP_DOLAR_EV");
     expect(parsed.counts.readyRows).toBe(0);
     expect(parsed.rows).toEqual([]);
+  });
+
+  it("umi zapsat cisty JSON artefakt pro ready-intake validation handoff", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-ready-validation-"));
+    try {
+      const outputPath = join(directory, "mtt-validate-ready-intake-report.json");
+      const result = runValidateReady("--priority=P1_PREFLOP_CHIP_EV", `--output=${outputPath}`);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("MTT ready intake validation");
+      expect(result.stdout.trim().startsWith("{")).toBe(false);
+
+      const parsed = JSON.parse(readFileSync(outputPath, "utf8")) as {
+        priority: string;
+        counts: { readyRows: number; waitingRows: number; missingNormalized: number; missingPermission: number };
+        rows: unknown[];
+      };
+      expect(parsed.priority).toBe("P1_PREFLOP_CHIP_EV");
+      expect(parsed.counts).toMatchObject({
+        readyRows: 0,
+        waitingRows: 8,
+        missingNormalized: 8,
+        missingPermission: 8,
+      });
+      expect(parsed.rows).toEqual([]);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("vrati chybu pro neznamou prioritu", () => {

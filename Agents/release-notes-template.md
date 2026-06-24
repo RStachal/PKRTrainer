@@ -57,7 +57,9 @@
 - `npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json`:
 - `npm run mtt:intake-plan -- --ready-only`:
 - `npm run mtt:validate-ready-intake`:
+- `npm run mtt:validate-ready-intake -- --output=artifacts/mtt-validate-ready-intake-report.json`:
 - `npm run mtt:promote-ready`:
+- `npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json`:
 - `npm run mtt:registry-integrity`:
 - `npm run range:intake:guard`:
 - `npm run range:intake -- --ready-only`:

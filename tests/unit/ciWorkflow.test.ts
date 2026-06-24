@@ -30,6 +30,8 @@ describe("CI workflows", () => {
     expect(workflow).toContain("npm run mtt:postflop-positions -- --output=artifacts/mtt-postflop-positions-report.json");
     expect(workflow).toContain("npm run mtt:postflop-coverage -- --output=artifacts/mtt-postflop-coverage-report.json");
     expect(workflow).toContain("npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json || true");
+    expect(workflow).toContain("npm run mtt:validate-ready-intake -- --output=artifacts/mtt-validate-ready-intake-report.json");
+    expect(workflow).toContain("npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json");
     expect(workflow).toContain("npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json || true");
     expect(workflow).toContain("npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json || true");
     expect(workflow).toContain("path: artifacts/mtt-*-report.json");

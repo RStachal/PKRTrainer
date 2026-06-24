@@ -229,10 +229,12 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:validate-ready-intake");
     expect(operatorGuide).toContain("npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json");
     expect(operatorGuide).toContain("npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json");
+    expect(operatorGuide).toContain("npm run mtt:validate-ready-intake -- --output=artifacts/mtt-validate-ready-intake-report.json");
     expect(operatorGuide).toContain("waiting rows");
     expect(operatorGuide).toContain("staged yet");
     expect(operatorGuide).toContain("completed import wave");
     expect(operatorGuide).toContain("npm run mtt:promote-ready");
+    expect(operatorGuide).toContain("npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json");
     expect(operatorGuide).toContain("WRITE_READY_MTT_MODULES");
     expect(operatorGuide).toContain("refuses to overwrite existing output modules");
     expect(operatorGuide).toContain("an empty promotion plan prints waiting rows");
@@ -333,7 +335,9 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --ready-only");
     expect(releaseTemplate).toContain("npm run mtt:validate-ready-intake");
+    expect(releaseTemplate).toContain("npm run mtt:validate-ready-intake -- --output=artifacts/mtt-validate-ready-intake-report.json");
     expect(releaseTemplate).toContain("npm run mtt:promote-ready");
+    expect(releaseTemplate).toContain("npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json");
     expect(releaseTemplate).toContain("npm run mtt:registry-integrity");
     expect(releaseTemplate).toContain("npm run range:intake:guard");
     expect(releaseTemplate).toContain("npm run range:intake -- --ready-only");

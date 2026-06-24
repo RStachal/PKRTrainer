@@ -135,6 +135,12 @@ describe("mtt:next-action CLI", () => {
     expect(parsed.sourceReports).toContain(
       "npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json",
     );
+    expect(parsed.sourceReports).toContain(
+      "npm run mtt:validate-ready-intake -- --output=artifacts/mtt-validate-ready-intake-report.json",
+    );
+    expect(parsed.sourceReports).toContain(
+      "npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json",
+    );
     expect(parsed.sourceReports).toContain("npm run mtt:release-gates -- --json");
     expect(parsed.sourceReports).toContain(
       "npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json",

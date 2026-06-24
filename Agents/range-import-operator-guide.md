@@ -155,6 +155,7 @@ The packet's source reports also include clean JSON handoff commands for `artifa
 `artifacts/mtt-completion-report.json`, `artifacts/mtt-intake-plan-report.json`, `artifacts/mtt-blockers-report.json`,
 `artifacts/mtt-postflop-matrix-report.json`, `artifacts/mtt-postflop-positions-report.json`,
 `artifacts/mtt-postflop-coverage-report.json`, `artifacts/mtt-postflop-release-report.json`,
+`artifacts/mtt-validate-ready-intake-report.json`, `artifacts/mtt-promote-ready-report.json`,
 `artifacts/mtt-release-gates-report.json` and
 `artifacts/mtt-acceptance-report.json`.
 `mtt:acceptance` is the final MTT-only acceptance gate. It is green only when the full MTT app matches
@@ -222,9 +223,11 @@ npm run mtt:validate-ready-intake
 npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json
 npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json
 npm run mtt:validate-ready-intake -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json
+npm run mtt:validate-ready-intake -- --output=artifacts/mtt-validate-ready-intake-report.json
 npm run mtt:promote-ready
 npm run mtt:promote-ready -- --priority=P1_PREFLOP_CHIP_EV --dry-run
 npm run mtt:promote-ready -- --json
+npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json
 npm run mtt:promote-ready -- --write --confirm=WRITE_READY_MTT_MODULES
 npm run mtt:registry-integrity
 npm run mtt:registry-integrity -- --json

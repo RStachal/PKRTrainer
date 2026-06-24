@@ -4,7 +4,7 @@ import {
   readFileSync,
   writeFileSync,
 } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import {
   buildMttCompletionReadinessReport,
   filterMttCompletionReadinessReport,
@@ -38,6 +38,7 @@ interface CliArgs {
   force: boolean;
   json: boolean;
   mode: "dry-run" | "write";
+  outputPath: string | null;
   priority: MttIntakePriorityKey | null;
   confirmation: string | null;
 }
@@ -88,6 +89,10 @@ interface PromotionReport {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildPromotionReport(args);
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderPromotionReport(report));
   process.exitCode = report.valid ? 0 : 1;
 } catch (error) {
@@ -102,11 +107,13 @@ function usage(): string {
     "  npm run mtt:promote-ready -- --json",
     "  npm run mtt:promote-ready -- --priority=P1_PREFLOP_CHIP_EV --dry-run",
     "  npm run mtt:promote-ready -- --format=SIX_MAX --ev=DOLAR_EV --street=RIVER --json",
+    "  npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json",
     `  npm run mtt:promote-ready -- --write --confirm=${WRITE_CONFIRMATION}`,
     `  npm run mtt:promote-ready -- --write --force --confirm=${WRITE_CONFIRMATION}`,
     "",
     "Output:",
     "  --json",
+    "  --output=artifacts/mtt-promote-ready-report.json",
     "  --dry-run",
     "  --write",
     "  --force",
@@ -128,6 +135,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let force = false;
   let json = false;
   let mode: CliArgs["mode"] = "dry-run";
+  let outputPath: string | null = null;
   let priority: MttIntakePriorityKey | null = null;
   let confirmation: string | null = null;
 
@@ -149,6 +157,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
       force = true;
       continue;
     }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
+      continue;
+    }
     if (item.startsWith("--confirm=")) {
       confirmation = item.slice("--confirm=".length);
       continue;
@@ -165,7 +179,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Writing ready MTT modules requires --confirm=${WRITE_CONFIRMATION}.\n\n${usage()}`);
   }
 
-  return { filters, force, json, mode, priority, confirmation };
+  return { filters, force, json, mode, outputPath, priority, confirmation };
 }
 
 function setMode(current: CliArgs["mode"], next: CliArgs["mode"]): CliArgs["mode"] {
