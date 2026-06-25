@@ -261,6 +261,8 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run release:check");
     expect(mttDoneChecklist).toContain("All 64 MTT completion rows are production-ready");
     expect(mttDoneChecklist).toContain("npm run mtt:acceptance");
+    expect(mttDoneChecklist).toContain("npm run mtt:handoff -- --strict");
+    expect(mttDoneChecklist).toContain("artifacts/mtt-handoff-report.json");
     expect(mttDoneChecklist).toContain("npm run mtt:registry-integrity");
     expect(mttDoneChecklist).toContain("No production promotion uses public heuristic fallback");
     expect(mttDoneChecklist).toContain("Start and answer representative 9-max turbo DOLAR_EV preflop training");
@@ -283,6 +285,8 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:release-gates -- --json");
     expect(mttCoverageAudit).toContain("npm run mtt:acceptance");
     expect(mttCoverageAudit).toContain("npm run mtt:acceptance -- --json");
+    expect(mttCoverageAudit).toContain("npm run mtt:handoff");
+    expect(mttCoverageAudit).toContain("npm run mtt:handoff -- --strict");
     expect(mttCoverageAudit).toContain("npm run mtt:registry-integrity");
     expect(mttCoverageAudit).toContain("links its output to `Agents/mtt-done-checklist.md`");
     expect(mttCoverageAudit).toContain("prints completion, blocker, intake priority, postflop release, intake workspace and ready-validation summaries");

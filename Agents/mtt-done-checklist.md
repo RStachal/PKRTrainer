@@ -12,6 +12,7 @@ This checklist defines when the MTT part of PKRTrainer is complete for the first
 - `npm run mtt:intake-plan -- --summary` reports 0 queue rows.
 - `npm run mtt:acceptance` returns exit 0.
 - `npm run mtt:release-gates` returns exit 0.
+- `npm run mtt:handoff -- --strict` returns exit 0 and writes `artifacts/mtt-handoff-report.json`.
 - `npm run mtt:registry-integrity` returns exit 0.
 - `npm run release:check` returns exit 0.
 
@@ -58,6 +59,7 @@ This checklist defines when the MTT part of PKRTrainer is complete for the first
 ## Release Candidate
 
 - `npm run mtt:technical-acceptance` passes and writes `artifacts/mtt-technical-acceptance/report.json`.
+- `npm run mtt:handoff -- --strict` passes and writes the complete source-free MTT/range/Android handoff bundle.
 - `npm run typecheck` passes.
 - `npm test` passes.
 - `npm run mtt:acceptance` passes.

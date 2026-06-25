@@ -48,6 +48,8 @@ Useful filters:
 - `npm run mtt:completion -- --preview --json`
 - `npm run mtt:acceptance`
 - `npm run mtt:acceptance -- --json`
+- `npm run mtt:handoff`
+- `npm run mtt:handoff -- --strict`
 - `npm run mtt:registry-integrity`
 - `npm run mtt:release-gates`
 - `npm run mtt:release-gates -- --json`
@@ -78,6 +80,8 @@ to the next P1-P5 import queue without reopening the full intake plan.
 use `--preview` only for queue inspection.
 `mtt:acceptance` is the final MTT-only acceptance gate and links its output to `Agents/mtt-done-checklist.md`.
 It currently remains red until the missing production data and permissions are imported.
+`mtt:handoff` regenerates the full source-free MTT/range/Android JSON bundle for operator handoff; use `--strict`
+for final RC evidence because it returns non-zero until `releaseReady` is true.
 `mtt:release-gates` prints completion, blocker, intake priority, postflop release, intake workspace and ready-validation summaries before
 returning a failing exit code; `--json` returns the same command list, statuses and captured outputs for operator tooling.
 `mtt:postflop-matrix` freezes the 48 FLOP/TURN/RIVER production targets and records whether each target is waiting for
