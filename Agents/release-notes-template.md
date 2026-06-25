@@ -34,6 +34,7 @@
 - `npm run mtt:technical-acceptance`:
 - Technical acceptance report: `artifacts/mtt-technical-acceptance/report.json`
 - `npm run mtt:handoff`:
+- `npm run mtt:handoff -- --strict`:
 - MTT handoff report: `artifacts/mtt-handoff-report.json`
 - `npm run typecheck`:
 - `npm test`:

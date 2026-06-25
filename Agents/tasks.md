@@ -1706,6 +1706,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Doplneno 2026-06-24: `mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json` a `mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json` ukladaji cisty JSON artefakt bez npm headeru pro release handoff/CI.
     - Doplneno 2026-06-24: `mtt:completion -- --output=artifacts/mtt-completion-report.json`, `mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json`, `mtt:blockers -- --output=artifacts/mtt-blockers-report.json` a `mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json` ukladaji ciste zdrojove reporty pro handoff.
     - Doplneno 2026-06-25: `npm run mtt:handoff` regeneruje vsechny source-free MTT/range/Android JSON artefakty jednim prikazem, ulozi agregat do `artifacts/mtt-handoff-report.json` a selze jen pri chybejicim artefaktu; cervene produkcni data gates zustavaji zapsane jako `releaseReady: false`.
+    - Doplneno 2026-06-25: `mtt:handoff -- --strict` pouziva stejny artefaktovy balik jako finalni RC kontrolu a vrati nenulovy exit, dokud neni `releaseReady: true`.
   - [x] 135.3 Pridat "next MTT action" operator report
     - Pridat prikaz/report, ktery z `mtt:intake-plan`, `mtt:blockers` a `mtt:release-gates -- --json` vybere dalsi nejdulezitejsi praci: prvni ready slot, jinak prvni waiting slot podle P0-P5.
     - Vystup musi obsahovat priority bucket, slotId, packId, chybejici soubory, validate command, build dry-run command a navazujici acceptance prikazy.

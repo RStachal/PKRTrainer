@@ -204,6 +204,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("Do not create placeholder");
     expect(operatorGuide).toContain("npm run mtt:handoff");
     expect(operatorGuide).toContain("npm run mtt:handoff -- --json");
+    expect(operatorGuide).toContain("npm run mtt:handoff -- --strict");
     expect(operatorGuide).toContain("npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json");
     expect(operatorGuide).toContain("regenerates every source-free MTT handoff JSON artifact");
     expect(operatorGuide).toContain("npm run mtt:acceptance");
@@ -321,6 +322,7 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("Range data changes");
     expect(releaseTemplate).toContain("Statistics changes");
     expect(releaseTemplate).toContain("npm run mtt:handoff");
+    expect(releaseTemplate).toContain("npm run mtt:handoff -- --strict");
     expect(releaseTemplate).toContain("MTT handoff report: `artifacts/mtt-handoff-report.json`");
     expect(releaseTemplate).toContain("npm run mtt:slots -- --output=artifacts/mtt-slots-report.json");
     expect(releaseTemplate).toContain("npm run mtt:completion -- --summary");

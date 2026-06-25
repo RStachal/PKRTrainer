@@ -12,6 +12,7 @@ interface HandoffCommand {
 interface CliArgs {
   json: boolean;
   outputPath: string;
+  strict: boolean;
 }
 
 interface HandoffCommandResult extends HandoffCommand {
@@ -142,7 +143,7 @@ try {
   mkdirSync(dirname(args.outputPath), { recursive: true });
   writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   console.log(args.json ? JSON.stringify(report, null, 2) : renderReport(report));
-  process.exitCode = report.valid ? 0 : 1;
+  process.exitCode = report.valid && (!args.strict || report.releaseReady) ? 0 : 1;
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
@@ -153,21 +154,27 @@ function usage(): string {
     "Usage:",
     "  npm run mtt:handoff",
     "  npm run mtt:handoff -- --json",
+    "  npm run mtt:handoff -- --strict",
     "  npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json",
     "",
     "Regenerates every source-free MTT handoff JSON artifact. The command exits 0 when artifacts were written,",
-    "even if production-data gates correctly remain red before legal range imports.",
+    "even if production-data gates correctly remain red before legal range imports. Add --strict for final release checks.",
   ].join("\n");
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
   let outputPath = resolve(DEFAULT_OUTPUT_PATH);
+  let strict = false;
 
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
     if (item === "--json") {
       json = true;
+      continue;
+    }
+    if (item === "--strict") {
+      strict = true;
       continue;
     }
     if (item.startsWith("--output=")) {
@@ -179,7 +186,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { json, outputPath };
+  return { json, outputPath, strict };
 }
 
 function runHandoffCommand(command: HandoffCommand): HandoffCommandResult {

@@ -61,13 +61,15 @@ Before handing off a data wave or release decision, regenerate all source-free M
 ```powershell
 npm run mtt:handoff
 npm run mtt:handoff -- --json
+npm run mtt:handoff -- --strict
 npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json
 ```
 
 `mtt:handoff` regenerates every source-free MTT handoff JSON artifact, including range intake, legal slots,
 completion, blockers, next action, postflop matrices, ready validation, promotion plan, Android preflight,
 acceptance and release gates. It exits successfully when the artifacts were written, even while production-data
-gates remain red before legal imports.
+gates remain red before legal imports. Use `--strict` for a final RC handoff check that must fail until
+`releaseReady` is true.
 
 ## Validate an MTT preflop import
 
