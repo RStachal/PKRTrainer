@@ -191,6 +191,7 @@ function buildNextMttActionReport(args: CliArgs): NextMttActionReport {
       "npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json",
       "npm run mtt:validate-ready-intake -- --output=artifacts/mtt-validate-ready-intake-report.json",
       "npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json",
+      "npm run e2e:android:preflight -- --output=artifacts/e2e-android-preflight/report.json",
       "npm run mtt:release-gates -- --json",
       "npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json",
       "npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json",

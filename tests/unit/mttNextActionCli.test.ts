@@ -150,6 +150,9 @@ describe("mtt:next-action CLI", () => {
     expect(parsed.sourceReports).toContain(
       "npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json",
     );
+    expect(parsed.sourceReports).toContain(
+      "npm run e2e:android:preflight -- --output=artifacts/e2e-android-preflight/report.json",
+    );
     expect(parsed.sourceReports).toContain("npm run mtt:release-gates -- --json");
     expect(parsed.sourceReports).toContain(
       "npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json",
