@@ -108,6 +108,7 @@ describe("mtt:next-action CLI", () => {
     expect(parsed.nextAction.operatorChecklist.join("\n"))
       .toContain("Turbo slot must use dedicated turbo hand recommendations");
     expect(parsed.followUpCommands).toContain("npm run mtt:acceptance");
+    expect(parsed.followUpCommands).toContain("npm run mtt:handoff -- --strict");
     expect(parsed.followUpCommands).toContain("npm run e2e:android:preflight");
     expect(parsed.sourceReports).toContain(
       "npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json",

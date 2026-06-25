@@ -170,6 +170,7 @@ function buildNextMttActionReport(args: CliArgs): NextMttActionReport {
       "npm run mtt:intake-plan -- --summary",
       "npm run mtt:acceptance",
       "npm run mtt:release-gates",
+      "npm run mtt:handoff -- --strict",
       "npm run e2e:android:preflight",
       "npm run release:check",
     ],
