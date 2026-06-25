@@ -95,6 +95,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:acceptance"]).toBe("vite-node scripts/checkMttAcceptance.mts");
     expect(pkg.scripts["mtt:technical-acceptance"])
       .toBe("vite-node scripts/checkMttTechnicalAcceptance.mts");
+    expect(pkg.scripts["mtt:handoff"]).toBe("vite-node scripts/writeMttHandoffArtifacts.mts");
     expect(pkg.scripts["mtt:next-action"]).toBe("vite-node scripts/reportNextMttAction.mts");
     expect(pkg.scripts["mtt:promote-ready"]).toBe("vite-node scripts/promoteReadyMttIntake.mts");
     expect(pkg.scripts["mtt:registry-integrity"]).toBe("vite-node scripts/checkMttProductionRegistryIntegrity.mts");
@@ -201,6 +202,10 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("required file acceptance notes");
     expect(operatorGuide).toContain("slot intake packet");
     expect(operatorGuide).toContain("Do not create placeholder");
+    expect(operatorGuide).toContain("npm run mtt:handoff");
+    expect(operatorGuide).toContain("npm run mtt:handoff -- --json");
+    expect(operatorGuide).toContain("npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json");
+    expect(operatorGuide).toContain("regenerates every source-free MTT handoff JSON artifact");
     expect(operatorGuide).toContain("npm run mtt:acceptance");
     expect(operatorGuide).toContain("npm run mtt:acceptance -- --json");
     expect(operatorGuide).toContain("npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json");
@@ -315,6 +320,8 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("Gameplay changes");
     expect(releaseTemplate).toContain("Range data changes");
     expect(releaseTemplate).toContain("Statistics changes");
+    expect(releaseTemplate).toContain("npm run mtt:handoff");
+    expect(releaseTemplate).toContain("MTT handoff report: `artifacts/mtt-handoff-report.json`");
     expect(releaseTemplate).toContain("npm run mtt:slots -- --output=artifacts/mtt-slots-report.json");
     expect(releaseTemplate).toContain("npm run mtt:completion -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:completion -- --output=artifacts/mtt-completion-report.json");

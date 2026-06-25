@@ -54,6 +54,21 @@ its placeholder docs. It also checks local raw folders against the legal slot re
 The status command is source-free. It checks file presence for `normalized.json` and `permission.json`; it does not
 validate poker content.
 
+## Regenerate the full MTT handoff bundle
+
+Before handing off a data wave or release decision, regenerate all source-free MTT JSON reports with one command:
+
+```powershell
+npm run mtt:handoff
+npm run mtt:handoff -- --json
+npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json
+```
+
+`mtt:handoff` regenerates every source-free MTT handoff JSON artifact, including range intake, legal slots,
+completion, blockers, next action, postflop matrices, ready validation, promotion plan, Android preflight,
+acceptance and release gates. It exits successfully when the artifacts were written, even while production-data
+gates remain red before legal imports.
+
 ## Validate an MTT preflop import
 
 Use the synthetic example as the command shape:

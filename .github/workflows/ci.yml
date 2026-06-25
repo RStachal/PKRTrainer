@@ -116,21 +116,7 @@ jobs:
       - name: Run production-data gates
         run: |
           mkdir -p artifacts
-          npm run range:intake:guard -- --output=artifacts/range-intake-guard-report.json
-          npm run range:intake -- --output=artifacts/range-intake-report.json
-          npm run mtt:slots -- --output=artifacts/mtt-slots-report.json
-          npm run mtt:completion -- --output=artifacts/mtt-completion-report.json || true
-          npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json
-          npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json || true
-          npm run mtt:next-action -- --output=artifacts/mtt-next-action-report.json
-          npm run mtt:postflop-matrix -- --output=artifacts/mtt-postflop-matrix-report.json
-          npm run mtt:postflop-positions -- --output=artifacts/mtt-postflop-positions-report.json
-          npm run mtt:postflop-coverage -- --output=artifacts/mtt-postflop-coverage-report.json
-          npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json || true
-          npm run mtt:validate-ready-intake -- --output=artifacts/mtt-validate-ready-intake-report.json
-          npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json
-          npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json || true
-          npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json || true
+          npm run mtt:handoff
 
       - name: Upload MTT gate report
         if: always()
@@ -140,4 +126,5 @@ jobs:
           path: |
             artifacts/mtt-*-report.json
             artifacts/range-intake*-report.json
+            artifacts/e2e-android-preflight/report.json
           if-no-files-found: warn

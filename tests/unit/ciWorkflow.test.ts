@@ -21,23 +21,10 @@ describe("CI workflows", () => {
     expect(workflow).toContain("path: artifacts/e2e-*");
     expect(workflow).toContain("mtt-data-status:");
     expect(workflow).toContain("continue-on-error: true");
-    expect(workflow).toContain("npm run range:intake:guard -- --output=artifacts/range-intake-guard-report.json");
-    expect(workflow).toContain("npm run range:intake -- --output=artifacts/range-intake-report.json");
-    expect(workflow).toContain("npm run mtt:slots -- --output=artifacts/mtt-slots-report.json");
-    expect(workflow).toContain("npm run mtt:completion -- --output=artifacts/mtt-completion-report.json || true");
-    expect(workflow).toContain("npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json");
-    expect(workflow).toContain("npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json || true");
-    expect(workflow).toContain("npm run mtt:next-action -- --output=artifacts/mtt-next-action-report.json");
-    expect(workflow).toContain("npm run mtt:postflop-matrix -- --output=artifacts/mtt-postflop-matrix-report.json");
-    expect(workflow).toContain("npm run mtt:postflop-positions -- --output=artifacts/mtt-postflop-positions-report.json");
-    expect(workflow).toContain("npm run mtt:postflop-coverage -- --output=artifacts/mtt-postflop-coverage-report.json");
-    expect(workflow).toContain("npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json || true");
-    expect(workflow).toContain("npm run mtt:validate-ready-intake -- --output=artifacts/mtt-validate-ready-intake-report.json");
-    expect(workflow).toContain("npm run mtt:promote-ready -- --output=artifacts/mtt-promote-ready-report.json");
-    expect(workflow).toContain("npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json || true");
-    expect(workflow).toContain("npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json || true");
+    expect(workflow).toContain("npm run mtt:handoff");
     expect(workflow).toContain("artifacts/mtt-*-report.json");
     expect(workflow).toContain("artifacts/range-intake*-report.json");
+    expect(workflow).toContain("artifacts/e2e-android-preflight/report.json");
     expect(workflow).toContain("path: dist");
   });
 

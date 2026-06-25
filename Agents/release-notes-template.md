@@ -33,6 +33,8 @@
 
 - `npm run mtt:technical-acceptance`:
 - Technical acceptance report: `artifacts/mtt-technical-acceptance/report.json`
+- `npm run mtt:handoff`:
+- MTT handoff report: `artifacts/mtt-handoff-report.json`
 - `npm run typecheck`:
 - `npm test`:
 - `npm run mtt:slots -- --output=artifacts/mtt-slots-report.json`:
