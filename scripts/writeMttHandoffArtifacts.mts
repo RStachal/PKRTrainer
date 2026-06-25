@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 interface HandoffCommand {
@@ -183,6 +183,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
 }
 
 function runHandoffCommand(command: HandoffCommand): HandoffCommandResult {
+  rmSync(command.outputPath, { force: true });
   const result = spawnSync(npmCommand(), npmCommandArgs(command.npmArgs), {
     cwd: process.cwd(),
     encoding: "utf8",
