@@ -110,6 +110,9 @@ describe("mtt:next-action CLI", () => {
     expect(parsed.followUpCommands).toContain("npm run mtt:acceptance");
     expect(parsed.followUpCommands).toContain("npm run e2e:android:preflight");
     expect(parsed.sourceReports).toContain(
+      "npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json",
+    );
+    expect(parsed.sourceReports).toContain(
       "npm run range:intake:guard -- --output=artifacts/range-intake-guard-report.json",
     );
     expect(parsed.sourceReports).toContain(

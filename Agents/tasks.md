@@ -1715,6 +1715,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Doplneno 2026-06-24: `mtt:next-action -- --priority=<bucket>` umi vytahnout dalsi konkretni krok pro P1/P2/P3/P4/P5 wave bez prochazeni cele fronty.
     - Doplneno 2026-06-24: `mtt:next-action -- --output=artifacts/mtt-next-action/report.json` uklada stejny source-free intake packet jako JSON artefakt pro operator handoff/release notes.
     - Doplneno 2026-06-24: next-action packet obsahuje take `npm run e2e:android:preflight`, aby po importu zustal u slotu pripojeny device/readySerial dukaz nebo explicitni Android blocker.
+    - Doplneno 2026-06-25: `mtt:next-action` mezi source reporty uvadi take `npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json`, aby operator mohl pred importem jednim prikazem obnovit cely MTT handoff balik.
     - Doplneno 2026-06-24: `mtt:acceptance` i `mtt:release-gates` vypisuji `MTT next action`, aby cerveny release report rovnou ukazal prvni konkretni import slot.
     - Doplneno 2026-06-24: `mtt:release-gates` zahrnuje Android WebView/device preflight, takze `release:check` po dodani dat nezezeleni bez `readySerial`/device evidence.
   - [x] 135.4 Udelat preflight kontrolu raw MTT import workspace

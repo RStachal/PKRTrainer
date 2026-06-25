@@ -174,6 +174,7 @@ function buildNextMttActionReport(args: CliArgs): NextMttActionReport {
       "npm run release:check",
     ],
     sourceReports: [
+      "npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json",
       "npm run range:intake:guard -- --output=artifacts/range-intake-guard-report.json",
       "npm run range:intake -- --output=artifacts/range-intake-report.json",
       "npm run mtt:slots -- --json",
