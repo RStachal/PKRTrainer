@@ -75,8 +75,8 @@ describe("training capability matrix", () => {
       "UNSUPPORTED",
     ]));
     expect(trainingCapabilityForProfile(DEFAULT_TRAINING_PROFILE)).toMatchObject({
-      status: "BLOCKED",
-      canStartTraining: false,
+      status: "PREVIEW",
+      canStartTraining: true,
     });
   });
 

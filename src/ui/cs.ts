@@ -41,6 +41,8 @@ export const CS = {
     productionOffline: "Trénink používá ověřená data z offline balíčku.",
     postflopPreview:
       "Náhled postflop tréninku otevře konkrétní spot, stůl a praktické předpoklady.",
+    mttPreflopPreview:
+      "Náhled preflop tréninku je hratelný z historických dat; produkční release gate zůstává vypnutý do dokončení importu.",
     candidatePreview:
       "Kandidátní náhled. Produkční hodnocení je vypnuté do dokončení kontroly strategických hodnot.",
     candidateBlocked:

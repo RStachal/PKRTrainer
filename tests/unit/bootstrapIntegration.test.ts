@@ -117,7 +117,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector(".poker-table")).toBeNull();
   });
 
-  it("legacy preflop pack bez canonical provenance nespusti production scoring", async () => {
+  it("9-max regular chipEV preflop preview lze spustit bez production promotion", async () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
     const storage = new MemoryStorage();
@@ -134,16 +134,24 @@ describe("bootstrap - inicializacni tok", () => {
       .dispatchEvent(new Event("change"));
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
 
-    expect(root.querySelector<HTMLElement>(".training__filters")?.hidden).toBe(false);
-    expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
-    expect(root.querySelector(".poker-table")).toBeNull();
-    expect(root.querySelector(".action-btn")).toBeNull();
+    expect(root.querySelector<HTMLElement>(".training__filters")?.hidden).toBe(true);
+    expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
+    expect(root.querySelector(".poker-table")).not.toBeNull();
+    expect(root.querySelector(".action-btn")).not.toBeNull();
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
-    expect(warning?.hidden).toBe(false);
-    expect(warning?.textContent).toContain("kandidátní náhled");
-    expect(warning?.textContent).toContain("Produkční trénink je vypnutý");
+    expect(warning?.hidden).toBe(true);
     expect(warning?.textContent).not.toMatch(/https?:|RangePack|mtt-/i);
-    expect(JSON.parse(storage.getItem(KEY_EVENTS) ?? "[]")).toEqual([]);
+
+    root.querySelector<HTMLButtonElement>(".action-btn")?.click();
+    const events = JSON.parse(storage.getItem(KEY_EVENTS) ?? "[]") as Array<{
+      identity?: {
+        profileId?: string;
+        rangePackId?: string;
+      };
+    }>;
+    expect(events).toHaveLength(1);
+    expect(events[0].identity?.profileId).toBe("MTT|FULL_RING_9|REGULAR|PREFLOP|CHIP_EV|ON|NONE");
+    expect(events[0].identity?.rangePackId).toBe("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-v1");
   });
 
   it("start s FLOP profilem prepne do postflop flow bez rucniho tabovani", async () => {
@@ -210,7 +218,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector(".poker-table")).toBeNull();
   });
 
-  it("legacy preflop provenance gate predchazi pokusu o zapis vysledku", async () => {
+  it("9-max regular chipEV preview pri quota selhani zobrazi notice bez ulozeni", async () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
     const storage = new QuotaAfterBootstrapStorage();
@@ -219,11 +227,12 @@ describe("bootstrap - inicializacni tok", () => {
     bootstrap({ root, storage, registerSw: false });
     storage.failWrites = true;
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    root.querySelector<HTMLButtonElement>(".action-btn")?.click();
 
-    const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
-    expect(root.querySelector(".action-btn")).toBeNull();
-    expect(warning?.textContent).toContain("kandidátní náhled");
-    expect(warning?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|mtt-/i);
+    const saveWarning = root.querySelector<HTMLElement>(".result__save-warning");
+    expect(root.querySelector(".action-btn")).not.toBeNull();
+    expect(saveWarning?.textContent).toContain("Výsledek se nepodařilo uložit");
+    expect(saveWarning?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|mtt-/i);
     expect(JSON.parse(storage.getItem(KEY_EVENTS) ?? "[]")).toEqual([]);
   });
 
@@ -396,56 +405,56 @@ describe("bootstrap - inicializacni tok", () => {
         format: "FULL_RING_9",
         speed: "REGULAR",
         ante: "ON",
-        production: false,
+        playable: true,
         warning: "kandidátní náhled",
       },
       {
         format: "FULL_RING_9",
         speed: "REGULAR",
         ante: "OFF",
-        production: false,
+        playable: true,
         warning: "kandidátní náhled",
       },
       {
         format: "FULL_RING_9",
         speed: "TURBO",
         ante: "ON",
-        production: false,
+        playable: false,
         warning: "chybí produkční range",
       },
       {
         format: "FULL_RING_9",
         speed: "TURBO",
         ante: "OFF",
-        production: false,
+        playable: false,
         warning: "chybí produkční range",
       },
       {
         format: "SIX_MAX",
         speed: "REGULAR",
         ante: "ON",
-        production: false,
+        playable: false,
         warning: "kandidátní náhled",
       },
       {
         format: "SIX_MAX",
         speed: "REGULAR",
         ante: "OFF",
-        production: false,
+        playable: false,
         warning: "kandidátní náhled",
       },
       {
         format: "SIX_MAX",
         speed: "TURBO",
         ante: "ON",
-        production: false,
+        playable: false,
         warning: "kandidátní náhled",
       },
       {
         format: "SIX_MAX",
         speed: "TURBO",
         ante: "OFF",
-        production: false,
+        playable: false,
         warning: "kandidátní náhled",
       },
     ] as const;
@@ -466,7 +475,7 @@ describe("bootstrap - inicializacni tok", () => {
 
       root.querySelector<HTMLButtonElement>(".filter-start")?.click();
 
-      if (scenario.production) {
+      if (scenario.playable) {
         expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
         expect(root.querySelector(".poker-table")).not.toBeNull();
         expect(root.querySelector<HTMLElement>(".filter-empty-warning")?.hidden).toBe(true);
@@ -536,7 +545,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector(".poker-table")).toBeNull();
   });
 
-  it("legacy provenance gate ma prednost pred nacitanim production Range_Store", async () => {
+  it("playable preview stale respektuje nedostupny Range_Store", async () => {
     vi.doMock("../../src/data/ranges", async (importOriginal) => {
       const actual = await importOriginal<typeof import("../../src/data/ranges")>();
       return {
@@ -557,7 +566,7 @@ describe("bootstrap - inicializacni tok", () => {
 
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
-    expect(warning?.textContent).toContain("kandidátní náhled");
+    expect(warning?.textContent).toContain("Referenční range nejsou dostupné");
     expect(warning?.textContent).not.toContain("https://");
     expect(root.querySelector(".poker-table")).toBeNull();
   });

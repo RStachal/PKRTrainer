@@ -24,9 +24,9 @@ describe("profileSelector", () => {
 
     expect(root.querySelector(".profile-selector")).not.toBeNull();
     expect(view.getProfile()).toEqual(DEFAULT_TRAINING_PROFILE);
-    expect(note?.dataset.status).toBe("blocked");
+    expect(note?.dataset.status).toBe("preview");
     expect(note?.textContent).toContain("MTT 9-max regular preflop chipEV");
-    expect(note?.textContent).toContain("Kandidátní náhled");
+    expect(note?.textContent).toContain("Náhled");
   });
 
   it("umi zmenit profil a zavola onChange", () => {

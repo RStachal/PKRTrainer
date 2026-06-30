@@ -71,7 +71,11 @@ import {
 import { createPostflopStatsStore } from "./persistence/postflopStatsStore";
 import { createPostflopLineStatsStore } from "./persistence/postflopLineStatsStore";
 import { buildPostflopLineResultRecord } from "./persistence/postflopLineResultRecord";
-import { trainingCapabilityForProfile } from "./data/ranges/trainingCapability";
+import {
+  isPlayableMttPreflopPreview,
+  trainingCapabilityForProfile,
+  type TrainingCapability,
+} from "./data/ranges/trainingCapability";
 import { mttPreflopRangePackForProfile } from "./data/ranges/mttPreflopRangePacks";
 import { mttProductionImportSlotId } from "./data/ranges/mttImportSlotNaming";
 import { mttProductionLazyLoader } from "./data/ranges/mttProductionLazyLoader";
@@ -781,6 +785,26 @@ function profileGateMessage(profile: TrainingProfile, filters: Filters): string 
 
 }
 
+function preflopRangePackForStart(
+  profile: TrainingProfile,
+  capability: TrainingCapability,
+): RangePack | undefined {
+  const pack = mttPreflopRangePackForProfile(profile);
+  const readiness = capability.mttReadiness;
+  if (capability.status === "PRODUCTION" && readiness?.productionReady === true) {
+    return pack?.id === readiness.packId ? pack : undefined;
+  }
+  if (
+    capability.status === "PREVIEW" &&
+    isPlayableMttPreflopPreview(profile) &&
+    pack &&
+    pack.records.length > 0
+  ) {
+    return pack;
+  }
+  return undefined;
+}
+
 function mttProductionProfileKey(
   profile: TrainingProfile,
 ): string | null {
@@ -889,12 +913,6 @@ function setupTraining(
           startPostflopSession(filters, seed, profile.street, resolvedProfile);
           return;
         }
-        const readiness = capability.mttReadiness;
-        if (capability.status !== "PRODUCTION" || readiness?.productionReady !== true) {
-          gameBox.hidden = true;
-          filtersView.showEmptyResult(profileGateMessage(profile, filters));
-          return;
-        }
         if (!isRangeDataLoaded()) {
           logRangeLoadFailure();
           gameBox.hidden = true;
@@ -903,8 +921,8 @@ function setupTraining(
           );
           return;
         }
-        const pack = mttPreflopRangePackForProfile(resolvedProfile);
-        if (!pack || pack.id !== readiness.packId) {
+        const pack = preflopRangePackForStart(resolvedProfile, capability);
+        if (!pack) {
           gameBox.hidden = true;
           filtersView.showEmptyResult(profileGateMessage(profile, filters));
           return;
@@ -915,6 +933,10 @@ function setupTraining(
       mttProductionLazyLoader.cancelPendingProfileLoads();
       const profileKey = mttProductionProfileKey(resolvedProfile);
       if (
+        (
+          profile.street === "PREFLOP" &&
+          isPlayableMttPreflopPreview(resolvedProfile)
+        ) ||
         profileKey === null ||
         mttProductionLazyLoader.isProfileLoaded(profileKey)
       ) {
@@ -1018,14 +1040,15 @@ function setupTraining(
     };
     filtersView.setProfile(profile);
     filtersView.setFilters(filters);
-    const readiness = productionMttReadiness(profile, filters);
-    const pack = mttPreflopRangePackForProfile(profile);
-    if (readiness?.productionReady !== true || !pack || pack.id !== readiness.packId) {
+    const resolvedProfile = runtimeProfile(profile, filters);
+    const capability = trainingCapabilityForProfile(resolvedProfile);
+    const pack = preflopRangePackForStart(resolvedProfile, capability);
+    if (!pack) {
       gameBox.hidden = true;
       filtersView.showEmptyResult(profileGateMessage(profile, filters));
       return;
     }
-    startSession(filters, null, profile, pack);
+    startSession(filters, null, resolvedProfile, pack);
   }
 
   /** ZobrazĂ­ spot: vykreslĂ­ stĹŻl a nabĂ­dku akcĂ­, vyÄŤistĂ­ pĹ™edchozĂ­ vĂ˝sledek. */

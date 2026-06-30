@@ -201,6 +201,16 @@ function describeProfileStatus(profile: TrainingProfile): {
       text: `${CS.profile.production}: ${mttProfileLabel(profile)}. ${CS.profile.productionOffline}`,
     };
   }
+  if (
+    capability.status === "PREVIEW" &&
+    profile.gameVariant === "MTT" &&
+    profile.street === "PREFLOP"
+  ) {
+    return {
+      status: "preview",
+      text: `Náhled: ${mttProfileLabel(profile)}. ${CS.profile.mttPreflopPreview}`,
+    };
+  }
   if (capability.status === "PREVIEW") {
     if (profile.gameVariant === "MTT") {
       return {

@@ -140,7 +140,9 @@ const artifactDirectory = resolve(process.env.MTT_E2E_ARTIFACTS ?? "artifacts/e2
 const buildDirectory = resolve(process.env.MTT_E2E_DIST ?? "dist");
 const expectedPreflop = process.env.MTT_E2E_EXPECT_PREFLOP === "production"
   ? "production"
-  : "blocked";
+  : process.env.MTT_E2E_EXPECT_PREFLOP === "blocked"
+    ? "blocked"
+    : "preview";
 const expectedPostflopPackId = process.env.MTT_E2E_EXPECT_POSTFLOP_PACK_ID ?? "";
 const expectedTurnPackId = process.env.MTT_E2E_EXPECT_TURN_PACK_ID ?? "";
 const expectedRiverPackId = process.env.MTT_E2E_EXPECT_RIVER_PACK_ID ?? "";
@@ -238,11 +240,27 @@ try {
     }))()`);
     assert(initial.overflow <= 1, `${viewport.name}: page has horizontal overflow ${initial.overflow}px`);
     assert(initial.fatal === "", `${viewport.name}: fatal bootstrap error: ${initial.fatal}`);
-    assert(initial.profileStatus === "blocked", `${viewport.name}: unloaded preflop must fail closed`);
-    assert(
+    if (expectedPreflop === "blocked") {
+      assert(initial.profileStatus === "blocked", `${viewport.name}: unloaded preflop must fail closed`);
+    } else if (expectedPreflop === "production") {
+      assert(
+        initial.profileStatus === "production" || initial.profileStatus === "preview",
+        `${viewport.name}: production preflop is not marked ready or preview before lazy activation`,
+      );
+    } else {
+      assert(initial.profileStatus === "preview", `${viewport.name}: playable preflop preview is not marked preview`);
+    }
+    if (expectedPreflop === "blocked") {
+      assert(
       initial.profileText.includes("Kandidátní náhled"),
-      `${viewport.name}: missing fail-closed preflop notice`,
-    );
+        `${viewport.name}: missing fail-closed preflop notice`,
+      );
+    } else {
+      assert(
+        initial.profileText.includes("preflop"),
+        `${viewport.name}: missing playable preflop notice`,
+      );
+    }
 
     contrastAudits.push({
       viewport: viewport.name,
@@ -275,17 +293,24 @@ try {
       });
     } else {
       await waitForSelector(cdp, ".action-btn");
-      const productionPreflop = await evaluate(cdp, `(() => ({
+      const playablePreflop = await evaluate(cdp, `(() => ({
         table: Boolean(document.querySelector(".poker-table")),
         productionChunk: performance.getEntriesByType("resource").some((entry) => (
           entry.name.includes("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1")
         ))
       }))()`);
-      assert(productionPreflop.table, `${viewport.name}: production preflop table did not render`);
-      assert(
-        productionPreflop.productionChunk,
-        `${viewport.name}: production preflop lazy chunk was not requested`,
-      );
+      assert(playablePreflop.table, `${viewport.name}: playable preflop table did not render`);
+      if (expectedPreflop === "production") {
+        assert(
+          playablePreflop.productionChunk,
+          `${viewport.name}: production preflop lazy chunk was not requested`,
+        );
+      } else {
+        assert(
+          !playablePreflop.productionChunk,
+          `${viewport.name}: preview preflop unexpectedly requested production chunk`,
+        );
+      }
       await activate(cdp, ".action-btn", viewport.mobile ? "touch" : "keyboard");
       await waitForSelector(cdp, ".result__next");
       await activate(cdp, ".result__next", viewport.mobile ? "touch" : "keyboard");
@@ -611,7 +636,7 @@ try {
     });
     await reload(cdp);
     await waitForSelector(cdp, ".filter-start");
-    if (expectedPreflop === "production") {
+    if (expectedPreflop !== "blocked") {
       await activate(cdp, ".filter-start", viewport.mobile ? "touch" : "keyboard");
       await waitForSelector(cdp, ".action-btn");
       await activate(

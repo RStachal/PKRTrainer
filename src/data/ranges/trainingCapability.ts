@@ -50,6 +50,16 @@ export function trainingCapabilityForProfile(
       mttReadiness: readiness,
     };
   }
+  if (isPlayableMttPreflopPreview(profile) && readiness?.status === "CANDIDATE") {
+    return {
+      status: "PREVIEW",
+      canStartTraining: true,
+      allowHeuristicFallback: false,
+      allowedFlowModes: contract.allowedFlowModes,
+      reason: "Historical 9-max regular chipEV preflop data is available as a playable preview; production promotion still requires legal import evidence.",
+      mttReadiness: readiness,
+    };
+  }
   if (profile.street !== "PREFLOP") {
     return {
       status: "PREVIEW",
@@ -69,4 +79,15 @@ export function trainingCapabilityForProfile(
       "Production preflop range is missing for this MTT v1 profile.",
     mttReadiness: readiness,
   };
+}
+
+export function isPlayableMttPreflopPreview(profile: TrainingProfile): boolean {
+  return (
+    profile.gameVariant === "MTT" &&
+    profile.tableFormat === "FULL_RING_9" &&
+    profile.blindSpeed === "REGULAR" &&
+    profile.street === "PREFLOP" &&
+    profile.evModel === "CHIP_EV" &&
+    profile.rakeMode === "NONE"
+  );
 }

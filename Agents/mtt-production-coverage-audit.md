@@ -99,7 +99,7 @@ The preflop intake subset currently has 16 rows and 0 rows ready for validation.
 
 ## Known blocked profiles
 
-- FULL_RING_9 / REGULAR / CHIP_EV / PREFLOP / ante ON and OFF have complete historical records, but remain preview-only until canonical legal production imports and permission manifests are supplied.
+- FULL_RING_9 / REGULAR / CHIP_EV / PREFLOP / ante ON and OFF have complete historical records and are playable as pre-production preview drills; they remain non-production until canonical legal imports and permission manifests are supplied.
 - FULL_RING_9 / TURBO / CHIP_EV / PREFLOP / ante ON and OFF are missing dedicated turbo records.
 - FULL_RING_9 / REGULAR and TURBO / DOLAR_EV / PREFLOP / ante ON and OFF are missing dedicated DOLAR_EV records or an explicitly reviewed reuse policy.
 - SIX_MAX / REGULAR and TURBO / CHIP_EV / PREFLOP / ante ON and OFF are candidate metadata only; normalized hand-class records are not present.

@@ -1934,6 +1934,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Doplnit regresni test pres 2 tableFormat x 2 speed x 2 EV x 2 ante preflop matici.
     - Acceptance: `mtt:completion -- --street=PREFLOP --json` ma 16 production rows, 0 preview/missing; vsech 16 profilu projde realnym start/answer/stat persistence smokem.
     - Doplneno 2026-06-24: `tests/unit/mttPreflopDefallback.test.ts` hlida aktualni fail-closed stav cele 16slotove preflop matice: 0 production-ready, 6 candidate/preview, 10 missing a pro kazdy nehotovy slot canonical production import hint. Finalni zeleny de-fallback zustava blokovany P1/P2 legalnimi importy.
+    - Doplneno 2026-06-30: FULL_RING_9/REGULAR/CHIP_EV/PREFLOP ante ON/OFF je odblokovany jako hratelny pre-production preview drill z historickym RangePackem a profile-aware statistikami; mtt:completion a release gates zustavaji spravne cervene, dokud chybi canonical production import a permission manifest.
   - [ ] 135.28 Provest postflop pilot pro kazdou street
     - Pred 16slotovymi batchi povysit jeden reprezentativni FLOP, TURN a RIVER pack pro stejny profil a overit jejich navazani v jedne hand-line.
     - Pilot musi prokazat granularni position patterny, SRP/3bet, facing-bet, prior-street action, runout/card class, range lanes, source-free explanation a strict profilovy resolver.
