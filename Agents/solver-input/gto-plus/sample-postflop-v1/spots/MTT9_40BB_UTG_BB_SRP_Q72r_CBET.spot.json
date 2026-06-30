@@ -1,0 +1,28 @@
+{
+  "id": "MTT9_40BB_UTG_BB_SRP_Q72r_CBET",
+  "title": "MTT 9-max 40bb UTG vs BB SRP Q72r c-bet",
+  "street": "flop",
+  "effectiveStackBb": 40,
+  "ante": "on",
+  "line": "UTG opens 2.1bb, folds to BB, BB calls",
+  "board": "Qs7d2c",
+  "potBbOnFlop": 5.7,
+  "players": {
+    "oop": "BB",
+    "ip": "UTG",
+    "heroDecisionPlayer": "UTG"
+  },
+  "ranges": {
+    "oop": "../ranges/BB_DEFEND_VS_UTG_RFI_40BB.txt",
+    "ip": "../ranges/UTG_RFI_40BB.txt"
+  },
+  "tree": {
+    "flop": {
+      "oopFirst": ["CHECK"],
+      "ipVsCheck": ["CHECK_BACK", "BET_25", "BET_50"],
+      "oopVsBet": ["FOLD", "CALL", "RAISE_3X"]
+    },
+    "turnRiver": "Simple test tree; tighten only after export workflow passes."
+  },
+  "exportFocus": "UTG first decision after BB checks"
+}

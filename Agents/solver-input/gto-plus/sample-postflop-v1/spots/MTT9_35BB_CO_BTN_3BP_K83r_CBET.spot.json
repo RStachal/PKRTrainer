@@ -1,0 +1,28 @@
+{
+  "id": "MTT9_35BB_CO_BTN_3BP_K83r_CBET",
+  "title": "MTT 9-max 35bb CO vs BTN 3bet pot K83r c-bet",
+  "street": "flop",
+  "effectiveStackBb": 35,
+  "ante": "on",
+  "line": "CO opens 2.1bb, BTN 3bets 6.4bb, blinds fold, CO calls",
+  "board": "Ks8d3c",
+  "potBbOnFlop": 15.7,
+  "players": {
+    "oop": "CO",
+    "ip": "BTN",
+    "heroDecisionPlayer": "BTN"
+  },
+  "ranges": {
+    "oop": "../ranges/CO_CALL_VS_BTN_3BET_35BB.txt",
+    "ip": "../ranges/BTN_3BET_VS_CO_35BB.txt"
+  },
+  "tree": {
+    "flop": {
+      "oopFirst": ["CHECK"],
+      "ipVsCheck": ["CHECK_BACK", "BET_25", "BET_50"],
+      "oopVsBet": ["FOLD", "CALL", "RAISE_ALL_IN"]
+    },
+    "turnRiver": "Lower SPR spot; keep turn/river tree compact for the first batch run."
+  },
+  "exportFocus": "BTN first decision after CO checks"
+}

@@ -1,0 +1,55 @@
+{
+  "packId": "gto-plus-sample-postflop-v1",
+  "createdFor": "PKRTrainer MTT postflop validation workflow",
+  "solver": "GTO+",
+  "formatStatus": "text-input-pack-not-binary-gto",
+  "purpose": "Create a small manually importable GTO+ sample pack for overnight postflop solving and export validation.",
+  "gameProfile": {
+    "format": "MTT",
+    "tableSize": "9-max",
+    "model": "chipEV",
+    "ante": "varies-by-spot",
+    "rake": "none"
+  },
+  "defaults": {
+    "street": "flop",
+    "players": 2,
+    "accuracyTargetTest": "0.5% pot to 1.0% pot",
+    "accuracyTargetProductionLater": "tighten after workflow is proven"
+  },
+  "spots": [
+    {
+      "id": "MTT9_50BB_BTN_BB_SRP_A72r_CBET",
+      "file": "spots/MTT9_50BB_BTN_BB_SRP_A72r_CBET.spot.json",
+      "boardFile": "boards/A72r.txt",
+      "ipRangeFile": "ranges/BTN_RFI_50BB.txt",
+      "oopRangeFile": "ranges/BB_DEFEND_VS_BTN_RFI_50BB.txt"
+    },
+    {
+      "id": "MTT9_50BB_BTN_BB_SRP_JT9tt_CBET",
+      "file": "spots/MTT9_50BB_BTN_BB_SRP_JT9tt_CBET.spot.json",
+      "boardFile": "boards/JT9tt.txt",
+      "ipRangeFile": "ranges/BTN_RFI_50BB.txt",
+      "oopRangeFile": "ranges/BB_DEFEND_VS_BTN_RFI_50BB.txt"
+    },
+    {
+      "id": "MTT9_40BB_UTG_BB_SRP_Q72r_CBET",
+      "file": "spots/MTT9_40BB_UTG_BB_SRP_Q72r_CBET.spot.json",
+      "boardFile": "boards/Q72r.txt",
+      "ipRangeFile": "ranges/UTG_RFI_40BB.txt",
+      "oopRangeFile": "ranges/BB_DEFEND_VS_UTG_RFI_40BB.txt"
+    },
+    {
+      "id": "MTT9_35BB_CO_BTN_3BP_K83r_CBET",
+      "file": "spots/MTT9_35BB_CO_BTN_3BP_K83r_CBET.spot.json",
+      "boardFile": "boards/K83r.txt",
+      "ipRangeFile": "ranges/BTN_3BET_VS_CO_35BB.txt",
+      "oopRangeFile": "ranges/CO_CALL_VS_BTN_3BET_35BB.txt"
+    }
+  ],
+  "notes": [
+    "Ranges are deliberately plausible test inputs, not production-approved ranges.",
+    "The pack avoids generating proprietary .gto binaries.",
+    "Use exported solved strategies as input for later normalized PKRTrainer strategy conversion."
+  ]
+}

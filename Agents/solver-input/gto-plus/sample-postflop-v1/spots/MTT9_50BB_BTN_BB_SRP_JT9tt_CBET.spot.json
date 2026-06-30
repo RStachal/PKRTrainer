@@ -1,0 +1,28 @@
+{
+  "id": "MTT9_50BB_BTN_BB_SRP_JT9tt_CBET",
+  "title": "MTT 9-max 50bb BTN vs BB SRP JT9 two-tone c-bet",
+  "street": "flop",
+  "effectiveStackBb": 50,
+  "ante": "on",
+  "line": "BTN opens 2.2bb, SB folds, BB calls",
+  "board": "JhTs9h",
+  "potBbOnFlop": 5.9,
+  "players": {
+    "oop": "BB",
+    "ip": "BTN",
+    "heroDecisionPlayer": "BTN"
+  },
+  "ranges": {
+    "oop": "../ranges/BB_DEFEND_VS_BTN_RFI_50BB.txt",
+    "ip": "../ranges/BTN_RFI_50BB.txt"
+  },
+  "tree": {
+    "flop": {
+      "oopFirst": ["CHECK"],
+      "ipVsCheck": ["CHECK_BACK", "BET_33", "BET_75"],
+      "oopVsBet": ["FOLD", "CALL", "RAISE_3X", "RAISE_ALL_IN"]
+    },
+    "turnRiver": "Allow larger sizing on dynamic runouts if configured manually."
+  },
+  "exportFocus": "BTN first decision after BB checks"
+}

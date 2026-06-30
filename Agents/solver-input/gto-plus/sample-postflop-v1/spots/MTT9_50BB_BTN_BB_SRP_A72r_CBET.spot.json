@@ -1,0 +1,28 @@
+{
+  "id": "MTT9_50BB_BTN_BB_SRP_A72r_CBET",
+  "title": "MTT 9-max 50bb BTN vs BB SRP A72r c-bet",
+  "street": "flop",
+  "effectiveStackBb": 50,
+  "ante": "on",
+  "line": "BTN opens 2.2bb, SB folds, BB calls",
+  "board": "As7d2c",
+  "potBbOnFlop": 5.9,
+  "players": {
+    "oop": "BB",
+    "ip": "BTN",
+    "heroDecisionPlayer": "BTN"
+  },
+  "ranges": {
+    "oop": "../ranges/BB_DEFEND_VS_BTN_RFI_50BB.txt",
+    "ip": "../ranges/BTN_RFI_50BB.txt"
+  },
+  "tree": {
+    "flop": {
+      "oopFirst": ["CHECK"],
+      "ipVsCheck": ["CHECK_BACK", "BET_33", "BET_66"],
+      "oopVsBet": ["FOLD", "CALL", "RAISE_3X"]
+    },
+    "turnRiver": "Use simple geometric sizing for test; avoid overfitting this sample pack."
+  },
+  "exportFocus": "BTN first decision after BB checks"
+}
