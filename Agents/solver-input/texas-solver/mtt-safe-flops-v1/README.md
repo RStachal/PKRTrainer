@@ -76,11 +76,29 @@ Připravený runner s limitem:
 .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 1
 ```
 
-Po ověření:
+Nejdřív si můžeš jen vypsat, co by se spustilo:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 8 -ListOnly
+```
+
+Po ověření spusť více flopů:
 
 ```powershell
 .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 2
 .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 8
+```
+
+Runner spouští soubory sekvenčně přes `console_solver.exe`, přesouvá JSON výstupy do:
+
+```text
+Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/MTT9_50BB_BTN_BB_SRP/raw
+```
+
+Pokud výstup už existuje, přeskočí ho. Přepočet vynutíš:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 8 -Force
 ```
 
 ## Po doběhu
