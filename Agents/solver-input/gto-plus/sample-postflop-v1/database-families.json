@@ -1,0 +1,38 @@
+{
+  "packId": "gto-plus-sample-postflop-v1",
+  "format": "gto-plus-database-family-plan",
+  "note": "GTO+ databases should group trees that share ranges, stacks, pots and tree configuration. These family definitions are not directly importable by GTO+.",
+  "families": [
+    {
+      "familyId": "MTT9_50BB_BTN_BB_SRP",
+      "description": "BTN opens, BB calls, 50bb SRP. Same ranges/tree; multiple flops can live in one GTO+ database.",
+      "spots": [
+        "MTT9_50BB_BTN_BB_SRP_A72r_CBET",
+        "MTT9_50BB_BTN_BB_SRP_JT9tt_CBET"
+      ],
+      "flopListFile": "flop-lists/MTT9_50BB_BTN_BB_SRP.flops.txt",
+      "ipRangeFile": "ranges/BTN_RFI_50BB.txt",
+      "oopRangeFile": "ranges/BB_DEFEND_VS_BTN_RFI_50BB.txt"
+    },
+    {
+      "familyId": "MTT9_40BB_UTG_BB_SRP",
+      "description": "UTG opens, BB calls, 40bb SRP. Separate GTO+ database because ranges/stack differ.",
+      "spots": [
+        "MTT9_40BB_UTG_BB_SRP_Q72r_CBET"
+      ],
+      "flopListFile": "flop-lists/MTT9_40BB_UTG_BB_SRP.flops.txt",
+      "ipRangeFile": "ranges/UTG_RFI_40BB.txt",
+      "oopRangeFile": "ranges/BB_DEFEND_VS_UTG_RFI_40BB.txt"
+    },
+    {
+      "familyId": "MTT9_35BB_CO_BTN_3BP",
+      "description": "CO opens, BTN 3bets, CO calls, 35bb 3bet pot. Separate GTO+ database because pot/tree/ranges differ.",
+      "spots": [
+        "MTT9_35BB_CO_BTN_3BP_K83r_CBET"
+      ],
+      "flopListFile": "flop-lists/MTT9_35BB_CO_BTN_3BP.flops.txt",
+      "ipRangeFile": "ranges/BTN_3BET_VS_CO_35BB.txt",
+      "oopRangeFile": "ranges/CO_CALL_VS_BTN_3BET_35BB.txt"
+    }
+  ]
+}
