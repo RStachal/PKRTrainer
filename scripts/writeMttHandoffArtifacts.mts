@@ -76,7 +76,13 @@ const handoffCommands: readonly HandoffCommand[] = [
   },
   {
     label: "MTT next action",
-    npmArgs: ["run", "mtt:next-action", "--", "--output=artifacts/mtt-next-action-report.json"],
+    npmArgs: [
+      "run",
+      "mtt:next-action",
+      "--",
+      "--output=artifacts/mtt-next-action-report.json",
+      "--packet-dir=artifacts/mtt-next-action/packet",
+    ],
     outputPath: "artifacts/mtt-next-action-report.json",
     releaseBlocking: true,
   },

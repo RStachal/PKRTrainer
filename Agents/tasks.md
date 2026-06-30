@@ -1707,6 +1707,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Doplneno 2026-06-24: `mtt:completion -- --output=artifacts/mtt-completion-report.json`, `mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json`, `mtt:blockers -- --output=artifacts/mtt-blockers-report.json` a `mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json` ukladaji ciste zdrojove reporty pro handoff.
     - Doplneno 2026-06-25: `npm run mtt:handoff` regeneruje vsechny source-free MTT/range/Android JSON artefakty jednim prikazem, ulozi agregat do `artifacts/mtt-handoff-report.json` a selze jen pri chybejicim artefaktu; cervene produkcni data gates zustavaji zapsane jako `releaseReady: false`.
     - Doplneno 2026-06-25: `mtt:handoff -- --strict` pouziva stejny artefaktovy balik jako finalni RC kontrolu a vrati nenulovy exit, dokud neni `releaseReady: true`.
+    - Doplneno 2026-06-30: mtt:handoff automaticky vola mtt:next-action -- --packet-dir=artifacts/mtt-next-action/packet, takze handoff obsahuje i checklist packet pro prvni blokujici legal slot bez raw placeholder souboru.
   - [x] 135.3 Pridat "next MTT action" operator report
     - Pridat prikaz/report, ktery z `mtt:intake-plan`, `mtt:blockers` a `mtt:release-gates -- --json` vybere dalsi nejdulezitejsi praci: prvni ready slot, jinak prvni waiting slot podle P0-P5.
     - Vystup musi obsahovat priority bucket, slotId, packId, chybejici soubory, validate command, build dry-run command a navazujici acceptance prikazy.
@@ -1719,6 +1720,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Doplneno 2026-06-25: `mtt:next-action` mezi source reporty uvadi take `npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json`, aby operator mohl pred importem jednim prikazem obnovit cely MTT handoff balik.
     - Doplneno 2026-06-25: `mtt:next-action` source reporty obsahuji i `e2e:android:preflight -- --output=artifacts/e2e-android-preflight/report.json`, aby byl device/readySerial dukaz soucasti stejneho handoff baliku.
     - Doplneno 2026-06-25: `mtt:next-action` follow-up prikazy obsahuji i `npm run mtt:handoff -- --strict` jako finalni RC artefaktovy gate po legalnich importech.
+    - Doplneno 2026-06-30: mtt:next-action -- --packet-dir=artifacts/mtt-next-action/packet zapisuje source-free checklist packet pro dalsi slot do artefaktu, ale zamerne nevytvari raw normalized.json/permission.json placeholdery.
     - Doplneno 2026-06-24: `mtt:acceptance` i `mtt:release-gates` vypisuji `MTT next action`, aby cerveny release report rovnou ukazal prvni konkretni import slot.
     - Doplneno 2026-06-24: `mtt:release-gates` zahrnuje Android WebView/device preflight, takze `release:check` po dodani dat nezezeleni bez `readySerial`/device evidence.
   - [x] 135.4 Udelat preflight kontrolu raw MTT import workspace

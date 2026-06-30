@@ -149,6 +149,7 @@ npm run release:check
 npm run mtt:next-action
 npm run mtt:next-action -- --json
 npm run mtt:next-action -- --output=artifacts/mtt-next-action/report.json
+npm run mtt:next-action -- --packet-dir=artifacts/mtt-next-action/packet
 npm run mtt:next-action -- --priority=P2_PREFLOP_DOLAR_EV
 npm run mtt:completion -- --output=artifacts/mtt-completion-report.json
 npm run mtt:acceptance
@@ -170,6 +171,9 @@ ready-intake validation, promote-ready dry-run/write commands, registry integrit
 preflight follow-ups.
 Use `--priority=<bucket>` to ask for the next concrete step inside a specific P1-P5 import wave.
 Use `--output=artifacts/mtt-next-action/report.json` when the slot intake packet should be saved for handoff or release notes.
+Use `--packet-dir=artifacts/mtt-next-action/packet` to write a source-free checklist packet for the next slot. The
+packet writes README/requirements files under `artifacts/` only; it intentionally does not create `normalized.json` or
+`permission.json`, because those two raw intake files must come from reviewed legal evidence.
 The packet's source reports also include clean JSON handoff commands for `artifacts/mtt-slots-report.json`,
 `artifacts/mtt-completion-report.json`, `artifacts/mtt-intake-plan-report.json`, `artifacts/mtt-blockers-report.json`,
 `artifacts/mtt-postflop-matrix-report.json`, `artifacts/mtt-postflop-positions-report.json`,
@@ -183,6 +187,9 @@ The packet's source reports also include clean JSON handoff commands for `artifa
 `mtt:release-gates` runs every MTT gate, intake priority summary and next-action packet before returning a failing
 exit code, so one failing gate does not hide the remaining blocker summaries. Use `--json` when CI or operator tooling
 needs the status and captured output of every gate command.
+`mtt:handoff` regenerates every source-free MTT handoff JSON artifact and also writes the next-action checklist packet
+under `artifacts/mtt-next-action/packet`, while still leaving the raw intake folder untouched until real reviewed files
+are supplied.
 
 When `mtt:next-action` is in `WAITING_FOR_FILES`, treat its output as the slot intake packet. Do not create placeholder
 `normalized.json` or `permission.json`; the files must come from reviewed legal evidence and must match the printed

@@ -114,6 +114,9 @@ describe("mtt:next-action CLI", () => {
       "npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json",
     );
     expect(parsed.sourceReports).toContain(
+      "npm run mtt:next-action -- --packet-dir=artifacts/mtt-next-action/packet",
+    );
+    expect(parsed.sourceReports).toContain(
       "npm run range:intake:guard -- --output=artifacts/range-intake-guard-report.json",
     );
     expect(parsed.sourceReports).toContain(
@@ -209,6 +212,56 @@ describe("mtt:next-action CLI", () => {
       expect(parsed.nextAction.commands.technicalAcceptance).toBe("npm run mtt:technical-acceptance");
       expect(parsed.nextAction.commands.androidPreflight).toBe("npm run e2e:android:preflight");
       expect(JSON.stringify(parsed)).not.toContain("https://");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("umi zapsat bezpecny intake packet bez raw placeholder souboru", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-next-action-packet-"));
+    try {
+      const result = runNextAction(
+        "--priority=P1_PREFLOP_CHIP_EV",
+        `--packet-dir=${directory}`,
+      );
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("priority filter: P1_PREFLOP_CHIP_EV");
+
+      const packId = "mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1";
+      const packetDir = join(directory, packId);
+      const readmePath = join(packetDir, "README.md");
+      const pathsPath = join(packetDir, "expected-paths.json");
+      const normalizedNotesPath = join(packetDir, "NORMALIZED_JSON_REQUIREMENTS.md");
+      const permissionNotesPath = join(packetDir, "PERMISSION_JSON_REQUIREMENTS.md");
+
+      expect(existsSync(readmePath)).toBe(true);
+      expect(existsSync(pathsPath)).toBe(true);
+      expect(existsSync(normalizedNotesPath)).toBe(true);
+      expect(existsSync(permissionNotesPath)).toBe(true);
+      expect(existsSync(join(packetDir, "normalized.json"))).toBe(false);
+      expect(existsSync(join(packetDir, "permission.json"))).toBe(false);
+
+      const readme = readFileSync(readmePath, "utf8");
+      const expectedPaths = JSON.parse(readFileSync(pathsPath, "utf8")) as {
+        warning: string;
+        packId: string;
+        normalizedInputPath: string;
+        permissionManifestPath: string;
+      };
+
+      expect(readme).toContain("This packet is a checklist only");
+      expect(readme).toContain("Do not create placeholder normalized.json or permission.json files");
+      expect(readme).toContain("Turbo slot must use dedicated turbo hand recommendations");
+      expect(expectedPaths.warning).toContain("checklist only");
+      expect(expectedPaths.packId).toBe(packId);
+      expect(expectedPaths.normalizedInputPath).toBe(
+        `Agents/range-intake/raw/${packId}/normalized.json`,
+      );
+      expect(expectedPaths.permissionManifestPath).toBe(
+        `Agents/range-intake/raw/${packId}/permission.json`,
+      );
+      expect(`${readme}\n${JSON.stringify(expectedPaths)}`).not.toContain("https://");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

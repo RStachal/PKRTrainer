@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import {
   buildMttCompletionReadinessReport,
   filterMttCompletionReadinessReport,
@@ -25,6 +25,7 @@ interface CliArgs {
   filters: MttCompletionReadinessFilters;
   json: boolean;
   outputPath: string | null;
+  packetDir: string | null;
   priority: MttIntakePriorityKey | null;
 }
 
@@ -84,6 +85,9 @@ try {
     mkdirSync(dirname(args.outputPath), { recursive: true });
     writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   }
+  if (args.packetDir !== null) {
+    writeNextActionIntakePacket(report, args.packetDir);
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderNextMttActionReport(report));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
@@ -101,6 +105,7 @@ function usage(): string {
     "Output:",
     "  --json",
     "  --output=artifacts/mtt-next-action/report.json",
+    "  --packet-dir=artifacts/mtt-next-action/packet",
     `  --priority=${MTT_INTAKE_PRIORITY_KEYS.join("|")}`,
     "",
     "Filters:",
@@ -117,6 +122,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   const filters: MttCompletionReadinessFilters = {};
   let json = false;
   let outputPath: string | null = null;
+  let packetDir: string | null = null;
   let priority: MttIntakePriorityKey | null = null;
 
   for (const item of argv) {
@@ -135,11 +141,17 @@ function parseArgs(argv: readonly string[]): CliArgs {
       outputPath = resolve(value);
       continue;
     }
+    if (item.startsWith("--packet-dir=")) {
+      const value = item.slice("--packet-dir=".length).trim();
+      if (value.length === 0) throw new Error(`--packet-dir requires a path.\n\n${usage()}`);
+      packetDir = resolve(value);
+      continue;
+    }
     if (parseMttFilterArg(item, filters, usage)) continue;
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, json, outputPath, priority };
+  return { filters, json, outputPath, packetDir, priority };
 }
 
 function buildNextMttActionReport(args: CliArgs): NextMttActionReport {
@@ -176,6 +188,7 @@ function buildNextMttActionReport(args: CliArgs): NextMttActionReport {
     ],
     sourceReports: [
       "npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json",
+      "npm run mtt:next-action -- --packet-dir=artifacts/mtt-next-action/packet",
       "npm run range:intake:guard -- --output=artifacts/range-intake-guard-report.json",
       "npm run range:intake -- --output=artifacts/range-intake-report.json",
       "npm run mtt:slots -- --json",
@@ -387,6 +400,119 @@ function renderNextMttActionReport(report: NextMttActionReport): string {
   for (const command of report.sourceReports) lines.push(`  ${command}`);
 
   return lines.join("\n");
+}
+
+function writeNextActionIntakePacket(report: NextMttActionReport, packetRoot: string): void {
+  const action = report.nextAction;
+  if (action === null) {
+    mkdirSync(packetRoot, { recursive: true });
+    writeFileSync(
+      join(packetRoot, "README.md"),
+      [
+        "# MTT intake packet",
+        "",
+        "No pending MTT intake action matches the selected filters.",
+        "Do not create placeholder range files.",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    return;
+  }
+
+  const packetDir = join(packetRoot, action.packId);
+  mkdirSync(packetDir, { recursive: true });
+  const expectedPaths = {
+    warning: "Do not copy this packet into raw intake as data. It is a checklist only.",
+    slotId: action.slotId,
+    priority: action.priority,
+    packId: action.packId,
+    rawInputFolder: action.rawInputFolder,
+    normalizedInputPath: action.normalizedInputPath,
+    permissionManifestPath: action.permissionManifestPath,
+    requiredFiles: action.requiredFiles,
+    missingFiles: action.missingFiles,
+    commands: action.commands,
+    operatorChecklist: action.operatorChecklist,
+    blockers: action.blockers,
+  };
+
+  writeFileSync(
+    join(packetDir, "expected-paths.json"),
+    `${JSON.stringify(expectedPaths, null, 2)}\n`,
+    "utf8",
+  );
+  writeFileSync(join(packetDir, "README.md"), renderIntakePacketReadme(action), "utf8");
+  writeFileSync(
+    join(packetDir, "NORMALIZED_JSON_REQUIREMENTS.md"),
+    renderRequiredFileNotes(action.requiredFiles[0]),
+    "utf8",
+  );
+  writeFileSync(
+    join(packetDir, "PERMISSION_JSON_REQUIREMENTS.md"),
+    renderRequiredFileNotes(action.requiredFiles[1]),
+    "utf8",
+  );
+}
+
+function renderIntakePacketReadme(action: NextMttActionRow): string {
+  return [
+    "# MTT intake packet",
+    "",
+    `Priority: ${action.priority}`,
+    `Slot: ${action.slotId}`,
+    `Pack: ${action.packId}`,
+    `Raw folder: ${action.rawInputFolder}`,
+    "",
+    "This packet is a checklist only. It must not be used as strategy data.",
+    "Do not create placeholder normalized.json or permission.json files.",
+    "The two raw intake files must come from reviewed legal evidence and must match the canonical pack id above.",
+    "",
+    "## Required files",
+    "",
+    ...action.requiredFiles.flatMap((file) => [
+      `- ${file.path}`,
+      `  - Purpose: ${file.purpose}`,
+      ...file.acceptance.map((item) => `  - Acceptance: ${item}`),
+    ]),
+    "",
+    "## Commands",
+    "",
+    `- Validate import: ${action.commands.validate}`,
+    `- Build dry-run: ${action.commands.buildDryRun}`,
+    `- Validate ready slot: ${action.commands.validateReady}`,
+    `- Promote dry-run: ${action.commands.promoteDryRun}`,
+    `- Promote write: ${action.commands.promoteWrite}`,
+    `- Registry integrity: ${action.commands.registryIntegrity}`,
+    `- Technical acceptance: ${action.commands.technicalAcceptance}`,
+    `- Android preflight: ${action.commands.androidPreflight}`,
+    "",
+    "## Operator checklist",
+    "",
+    ...action.operatorChecklist.map((item) => `- ${item}`),
+    "",
+    "## Current blockers",
+    "",
+    ...action.blockers.map((item) => `- ${item}`),
+    "",
+  ].join("\n");
+}
+
+function renderRequiredFileNotes(file: RequiredIntakeFile): string {
+  return [
+    "# Required intake file",
+    "",
+    `Path: ${file.path}`,
+    "",
+    file.purpose,
+    "",
+    "## Acceptance",
+    "",
+    ...file.acceptance.map((item) => `- ${item}`),
+    "",
+    "Do not use placeholder values. Do not infer strategy values from metadata only.",
+    "",
+  ].join("\n");
 }
 import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 await loadCompleteMttProductionRegistry();

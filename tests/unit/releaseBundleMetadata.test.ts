@@ -194,6 +194,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:next-action");
     expect(operatorGuide).toContain("npm run mtt:next-action -- --json");
     expect(operatorGuide).toContain("npm run mtt:next-action -- --output=artifacts/mtt-next-action/report.json");
+    expect(operatorGuide).toContain("npm run mtt:next-action -- --packet-dir=artifacts/mtt-next-action/packet");
     expect(operatorGuide).toContain("npm run mtt:next-action -- --priority=P2_PREFLOP_DOLAR_EV");
     expect(operatorGuide).toContain("Use `--priority=<bucket>`");
     expect(operatorGuide).toContain("slot intake packet should be saved");
@@ -207,6 +208,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:handoff -- --strict");
     expect(operatorGuide).toContain("npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json");
     expect(operatorGuide).toContain("regenerates every source-free MTT handoff JSON artifact");
+    expect(operatorGuide).toContain("also writes the next-action checklist packet");
     expect(operatorGuide).toContain("npm run mtt:acceptance");
     expect(operatorGuide).toContain("npm run mtt:acceptance -- --json");
     expect(operatorGuide).toContain("npm run mtt:acceptance -- --output=artifacts/mtt-acceptance-report.json");
