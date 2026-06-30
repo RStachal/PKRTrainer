@@ -2015,6 +2015,89 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Oznacit MTT cast jako produkcne kompletni az po uzavreni vsech otevrenych tasku v sekci 135, vcetne P0 ukolu 135.24-135.38 a import pilotu/waves.
     - Acceptance: `npm run release:check` zeleny, `mtt:completion -- --summary` valid true se 64/64 production rows, `mtt:blockers -- --summary` 0 blockers, intake queue 0, `mtt:postflop-release -- --summary` valid true, registry bez `LEGACY_OR_UNKNOWN`, operator docs a release notes aktualni.
     - Task 136 (FORPSI staging) je samostatny deployment workstream a neblokuje oznaceni kodu/dat jako "MTT complete v1", pokud neni staging soucasti konkretniho release rozhodnuti.
+  - [ ] 135.39 Udrzovat aktualni MTT completion audit pred kazdou dalsi praci
+    - Snapshot 2026-06-30: `mtt:completion -- --summary` je valid false, 64 total rows, 0 productionReady, 54 preview, 10 blocked.
+    - Snapshot 2026-06-30: `mtt:next-action -- --json` je WAITING_FOR_FILES, 64 blocker rows, 0 readyForValidation, chybi 64x `normalized.json` a 64x `permission.json`.
+    - Snapshot 2026-06-30: prvni konkretni legal intake slot je `FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF`, pack `mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1`.
+    - Snapshot 2026-06-30: technicka akceptace kodu je zelena, posledni overeni `mtt:technical-acceptance` proslo 10/10 prikazu a 574/574 testu; cerveny zustava pouze produkcni data/Android release stav.
+    - Pred kazdym povysenim dat obnovit `mtt:handoff -- --output=artifacts/mtt-handoff-report.json` a ulozit next-action packet; nesmi dojit k "false green" stavu, kdy jsou artefakty neaktualni.
+    - Acceptance: tasks/release notes vzdy uvadi aktualni productionReady/preview/blocked pocty, prvni blocker slot, stav Android preflight a posledni zeleny technical acceptance run.
+  - [ ] 135.40 Pripravit operator intake board pro vsech 64 MTT slotu
+    - Pro kazdy P1-P5 bucket vygenerovat next-action/intake packet nebo souhrn s packId, raw folderem, required files, validate/dry-run/promote prikazy a specialni anti-reuse pravidla.
+    - P1/P2 preflop sloty rozdelit na CHIP_EV a DOLAR_EV vlnu; DOLAR_EV nesmi byt oznacen jako ready pomoci ticheho CHIP_EV reuse.
+    - P3/P4/P5 postflop sloty rozdelit po streetu a profilu; FLOP/TURN/RIVER pack musi mit granularni coverage, ne jen genericky street placeholder.
+    - U kazdeho slotu evidovat owner/evidence status mimo git: waiting, files supplied, validation failed, dry-run passed, promoted, acceptance passed.
+    - Raw `Agents/range-intake/raw/` zustava necommitovany workspace; do gitu patri jen tooling, reporty a source-free dokumentace, nikdy realne privatni exporty.
+    - Acceptance: operator umi bez cteni celeho backlogu vzit dalsi slot, dodat oba soubory, spustit prikazy a videt presny duvod, proc slot jeste neni productionReady.
+  - [ ] 135.41 Dokoncit prvni P1 pilot slot FULL_RING_9 TURBO CHIP_EV PREFLOP OFF
+    - Dodat legalni `normalized.json` a `permission.json` do `Agents/range-intake/raw/mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1/`.
+    - Overit, ze packId, kind, table format, speed, EV, ante, street, stacky, pozice, 169 hand classes a akce odpovidaji presne slotu.
+    - Turbo slot musi mit dedicated turbo hand recommendations nebo explicitni reviewed reuse policy pro BLIND_SPEED; samotna zmena metadat regular->turbo nesmi projit.
+    - Spustit `validate:range-import`, `build:range-module --dry-run`, `mtt:validate-ready-intake -- --format=FULL_RING_9 --speed=TURBO --ev=CHIP_EV --street=PREFLOP --ante=OFF`.
+    - Spustit `mtt:promote-ready -- --dry-run` a teprve pote confirmed write pres `--write --confirm=WRITE_READY_MTT_MODULES`.
+    - Po write spustit registry refresh/check, registry integrity, targeted preflop smoke, stats persistence smoke, `mtt:completion -- --street=PREFLOP --summary` a `mtt:technical-acceptance`.
+    - Acceptance: prvni P1 slot je productionReady, blocker count klesne o 1, UI spusti turbo ante OFF preflop bez preview fallbacku a bez source citaci.
+  - [ ] 135.42 Dokoncit zbyvajicich 7 P1 preflop CHIP_EV slotu
+    - Po uspesnem pilotu zpracovat P1 v poradi podle `mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all`.
+    - Kazdy slot musi mit vlastni legal import nebo explicitne povolenou reviewed reuse policy pro konkretni dimenzi; zadny metadata-only clone.
+    - Po kazdem malem batchi spustit ready validation, promote dry-run/write, registry integrity a targeted start/answer/stat persistence.
+    - Po dokonceni P1 spustit `mtt:completion -- --street=PREFLOP --ev=CHIP_EV --summary`, normalni i production fixture Chrome E2E a handoff.
+    - Acceptance: P1_PREFLOP_CHIP_EV ma 0 blocker rows, vsech 8 CHIP_EV preflop rows je productionReady a celkovy MTT blocker count je nejvyse 56.
+  - [ ] 135.43 Dokoncit P2 preflop DOLAR_EV bez ticheho CHIP_EV reuse
+    - Pro vsech 8 DOLAR_EV preflop slotu dodat legalni data nebo explicitni permission reuse policy s `allowedDimensions`, rationale a reviewerem.
+    - Validace musi selhat, pokud se DOLAR_EV snazi pouzit CHIP_EV pack bez povolene utility/reuse evidence.
+    - UI, stats a profileId musi rozlisit DOLAR_EV od CHIP_EV; dashboard nesmi michat KPI bez viditelneho modelu.
+    - Po P2 spustit preflop 16slot matrix smoke: 2 tableFormat x 2 speed x 2 EV x 2 ante, start/answer/stat persistence.
+    - Acceptance: `mtt:completion -- --street=PREFLOP --summary` ma 16/16 production rows, 0 preview/missing pro preflop a preflop de-fallback task 135.7 muze byt uzavren.
+  - [ ] 135.44 Uzavrit preflop preview/production UX po dokoncenych P1/P2 datech
+    - Rozhodnout, zda historical 9-max regular CHIP_EV preview zustane pouze jako explicitni non-production fallback pro ne-release build, nebo se plne nahradi canonical production importem.
+    - Po production importu musi profile selector ukazat production status, ne "Náhled", pro vsechny productionReady preflop profily.
+    - Start flow nesmi pro productionReady profil sahnout po historical/candidate packu, pokud existuje canonical production pack.
+    - Zachovat source-free copy: zadne packId, URL, provider nebo raw path ve visible UI.
+    - Acceptance: unit/jsdom/Chrome testy pro default profil rozlisi preview pred importem a production po importu; release gates zustanou cervene jen pro opravdu nedodane sloty.
+  - [ ] 135.45 Dokoncit postflop pilot FLOP/TURN/RIVER pro jednu hand-line
+    - Vybrat jeden reprezentativni profil navazujici na P1/P2 data a dodat legal FLOP, TURN, RIVER packy se stejnymi dimenzemi.
+    - FLOP pack musi pokryt SRP/3bet, facing bet, granularni position patterns, board textures, range lanes, legal actions a source-free explanation.
+    - TURN pack musi pokryt prior flop action, turn card class, SPR windows, barrel/facing-bet nodes, range lanes a card-removal samples.
+    - RIVER pack musi pokryt prior turn action, river runout class, value/bluff/check lanes, final pressure/facing-bet nodes a card-removal samples.
+    - Pilot musi projit single street starty i jednu FLOP->TURN->RIVER hand-line bez heuristic fallbacku.
+    - Acceptance: `mtt:postflop-coverage` pro pilot nema missing rule/position/permission/confidence blocker a Chrome production fixture pro pilot zachova pack identity ve stats po reloadu.
+  - [ ] 135.46 Dokoncit P3/P4/P5 postflop production waves
+    - P3 FLOP: 16 profile rows, 50 granularnich heads-up position patterns, SRP/3bet/facing-bet coverage, zadny PACK_NOT_PRODUCTION_READY.
+    - P4 TURN: 16 profile rows, prior flop actions, turn classes, SPR windows, barrel/facing-bet coverage a runtime resolver bez fallbacku.
+    - P5 RIVER: 16 profile rows, prior turn actions, river runout classes, blocker/value/bluff/check lanes a final decision coverage.
+    - Po kazde street wave spustit `mtt:postflop-matrix`, `mtt:postflop-positions`, `mtt:postflop-coverage`, `mtt:postflop-release`, technical acceptance a source-free UI guard.
+    - Acceptance: `mtt:postflop-release -- --summary` ma 48/48 productionReady postflop rows, 0 fallback runtime, 0 missing permission, 0 LOW confidence a 0 incomplete coverage.
+  - [ ] 135.47 Udelat production stats/HH/dashboard parity po dokoncenych datech
+    - Overit preflop i postflop stats pro vsechny production profily: profileId, rangePackId/strategyPackId, street, action node, confidence, hand-line vs single spot.
+    - Export/import stats musi zachovat production identity a nesmi downgradovat na preview/fallback.
+    - HH review musi pouzit stejne production resolvery jako trainer pro FLOP/TURN/RIVER; pokud profil neni productionReady, musi failnout source-free a neheuristicky.
+    - Dashboard nesmi ukazat raw source metadata, ale musi umoznit oddelit CHIP_EV/DOLAR_EV, 9-max/6-max, regular/turbo, ante ON/OFF a street.
+    - Acceptance: reprezentativni HH import + trainer session + stats export/import projdou v Chrome a ve unit testech bez source citaci.
+  - [ ] 135.48 Dokoncit Android WebView/device acceptance
+    - Zajistit dostupny `adb` ready target nebo emulator; `e2e:android:preflight` musi vratit READY a nenulovy `readySerial`.
+    - Spustit production build v Android WebView/emulatoru: app load, preflop start/answer, postflop single spot, hand-line, HH review, stats, reload, offline reopen.
+    - Overit touch input, viewport 360/390/412 ekvivalenty, service worker/offline chovani, localStorage quota/corrupt recovery a zadny horizontal overflow.
+    - Pokud device neni dostupny, release notes musi explicitne nest blocker a nesmi oznacit MTT complete v1.
+    - Acceptance: Android report obsahuje readySerial/device evidence, screenshot/log artefakty a `mtt:release-gates` prestane selhavat na Android preflight.
+  - [ ] 135.49 Premerit bundle, lazy loading a offline storage po skutecnych produkcnich packach
+    - Po kazde import wave zmerit raw/gzip velikost main bundle, jednotlivych lazy MTT chunku a souctu cele knihovny.
+    - Otestovat cold start bez nacitani cele produkcni knihovny, warm start po jednom profilu a offline reopen po service-worker update.
+    - Lazy chunky nesmi byt install-precached; service worker musi umet rollback predchoziho buildu bez stale stable asset leak.
+    - Pokud data prekroci budget, rozdelit chunky granularneji podle street/profile nebo upravit delivery strategii pred release.
+    - Acceptance: `build`, `verify:precache`, `bundle:budget`, Chrome E2E a Android E2E projdou s realnymi production daty.
+  - [ ] 135.50 Finalni source-free UX polish pro MTT complete v1
+    - Projit profile selector, gate warnings, preflop result, postflop single/line, HH review, dashboard, import errors, release notes a quick start.
+    - Vsechny user-facing texty maji byt profesionalni, konzistentni a bez internich packId/source/provider/raw path detailu.
+    - Production profily maji jasne pusobit jako hotovy trenink, preview profily jako hratelny nahled jen tam, kde je to zamerne povoleno.
+    - Error states musi byt akcni: rict co chybi nebo co ma operator spustit, bez vystaveni citlivych zdroju.
+    - Acceptance: `uiNoSourceCitation`, release metadata tests a realny Chrome smoke nenajdou source leak, mojibake regresi ani matoucí preview/production copy.
+  - [ ] 135.51 Finalni release governance a go/no-go matice
+    - Sepsat go/no-go tabulku: data readiness 64/64, postflop release 48/48, Android READY, technical acceptance green, release:check green, source-free UI green, bundle budget green.
+    - `mtt:handoff -- --strict` musi byt zeleny; `mtt:release-gates` a `mtt:acceptance` musi mit 0 release-blocking failures.
+    - V release notes uvest presne pocty production rows, import vlny, zname limity, Android device evidence a FTP/staging balicek.
+    - Pred final tag/zip zkontrolovat cisty git stav bez nechtenych raw dat a bez legacy lokalnich zmen ve stagingu.
+    - Acceptance: finalni release commit obsahuje pouze source-safe artefakty/kod/docs, `release:check` je zeleny a MTT complete v1 je oznacen az po splneni vsech vyse uvedenych gate.
 
 - [ ] 136. Password-protected FORPSI staging deployment
   - Cil: umet nahrat aktualni staticky build na FORPSI FTP a zamknout ho heslem, aby slo prakticky zkouset aplikaci mimo lokalni stroj bez verejneho zverejneni.
