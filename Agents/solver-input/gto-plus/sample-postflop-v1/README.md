@@ -1,6 +1,8 @@
-# GTO+ sample postflop pack v1
+# GTO+ sample postflop source pack v1
 
 Účel: rychle otestovat, jestli dokážeme připravit několik MTT postflop spotů, ručně je založit v GTO+, uložit jako `.gto`, spustit hromadný výpočet přes noc a získat export použitelné strategie/ranges pro PKRTrainer.
+
+Pozor: tento adresář není přímý import do GTO+. GTO+ Open dialog načítá hotové `.gto` projektové soubory. Tady jsou pouze zdrojové podklady pro jejich ruční vytvoření v GTO+.
 
 Obsah balíčku:
 

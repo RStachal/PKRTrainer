@@ -2,6 +2,8 @@
 
 Tento postup je navržený tak, aby se dal provést bez reverzního inženýrství `.gto` formátu.
 
+Nejde o přímý import `manifest.json` do GTO+. GTO+ umí otevřít hotový `.gto` projekt; tento source pack slouží k rychlému založení těchto projektů ručně v GTO+.
+
 ## Příprava jednou
 
 1. Otevři GTO+.
