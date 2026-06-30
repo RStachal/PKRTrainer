@@ -19,6 +19,7 @@
     "mtt:postflop-coverage": "vite-node scripts/checkMttPostflopProductionCoverage.mts",
     "mtt:postflop-positions": "vite-node scripts/checkMttPostflopPositions.mts",
     "mtt:postflop-release": "vite-node scripts/checkMttPostflopReleaseGate.mts",
+    "mtt:solver-verification": "vite-node scripts/checkMttSolverVerification.mts",
     "mtt:release-gates": "vite-node scripts/checkMttReleaseGates.mts",
     "mtt:acceptance": "vite-node scripts/checkMttAcceptance.mts",
     "mtt:technical-acceptance": "vite-node scripts/checkMttTechnicalAcceptance.mts",

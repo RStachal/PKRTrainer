@@ -92,6 +92,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:postflop-coverage"]).toBe("vite-node scripts/checkMttPostflopProductionCoverage.mts");
     expect(pkg.scripts["mtt:postflop-positions"]).toBe("vite-node scripts/checkMttPostflopPositions.mts");
     expect(pkg.scripts["mtt:postflop-release"]).toBe("vite-node scripts/checkMttPostflopReleaseGate.mts");
+    expect(pkg.scripts["mtt:solver-verification"]).toBe("vite-node scripts/checkMttSolverVerification.mts");
     expect(pkg.scripts["mtt:release-gates"]).toBe("vite-node scripts/checkMttReleaseGates.mts");
     expect(pkg.scripts["mtt:acceptance"]).toBe("vite-node scripts/checkMttAcceptance.mts");
     expect(pkg.scripts["mtt:technical-acceptance"])
@@ -155,6 +156,8 @@ describe("release bundle metadata", () => {
     expect(handoffScript).toContain("nextActionPacket");
     expect(handoffScript).toContain("--packet-dir=artifacts/mtt-next-action/packet");
     expect(handoffScript).toContain("--board-dir=artifacts/mtt-intake-board");
+    expect(handoffScript).toContain("mtt:solver-verification");
+    expect(handoffScript).toContain("artifacts/mtt-solver-verification/report.json");
     expect(handoffScript).toContain("expected-paths.json");
     expect(handoffScript).toContain("NORMALIZED_JSON_REQUIREMENTS.md");
     expect(handoffScript).toContain("PERMISSION_JSON_REQUIREMENTS.md");
@@ -215,6 +218,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:handoff -- --strict");
     expect(operatorGuide).toContain("npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json");
     expect(operatorGuide).toContain("regenerates every source-free MTT handoff JSON artifact");
+    expect(operatorGuide).toContain("solver verification");
     expect(operatorGuide).toContain("also writes the next-action checklist packet");
     expect(operatorGuide).toContain("npm run mtt:acceptance");
     expect(operatorGuide).toContain("npm run mtt:acceptance -- --json");
@@ -236,6 +240,11 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:postflop-release");
     expect(operatorGuide).toContain("npm run mtt:postflop-release -- --summary");
     expect(operatorGuide).toContain("npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json");
+    expect(operatorGuide).toContain("npm run mtt:solver-verification");
+    expect(operatorGuide).toContain("npm run mtt:solver-verification -- --solver=texas-solver --json");
+    expect(operatorGuide).toContain("npm run mtt:solver-verification -- --output=artifacts/mtt-solver-verification/report.json");
+    expect(operatorGuide).toContain("maps the current GTO+/TexasSolver source families");
+    expect(operatorGuide).toContain("strategy-export.json");
     expect(operatorGuide).toContain("fails release while any FLOP/TURN/RIVER slot still uses fallback runtime");
     expect(operatorGuide).toContain("npm run mtt:intake-plan");
     expect(operatorGuide).toContain("npm run mtt:intake-plan -- --ready-only --json");
