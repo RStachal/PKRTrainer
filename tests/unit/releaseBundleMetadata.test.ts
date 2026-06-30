@@ -154,6 +154,7 @@ describe("release bundle metadata", () => {
     expect(technicalAcceptanceScript).toContain("mtt-technical-acceptance");
     expect(handoffScript).toContain("nextActionPacket");
     expect(handoffScript).toContain("--packet-dir=artifacts/mtt-next-action/packet");
+    expect(handoffScript).toContain("--board-dir=artifacts/mtt-intake-board");
     expect(handoffScript).toContain("expected-paths.json");
     expect(handoffScript).toContain("NORMALIZED_JSON_REQUIREMENTS.md");
     expect(handoffScript).toContain("PERMISSION_JSON_REQUIREMENTS.md");

@@ -74,7 +74,13 @@ const handoffCommands: readonly HandoffCommand[] = [
   },
   {
     label: "MTT intake priority plan",
-    npmArgs: ["run", "mtt:intake-plan", "--", "--output=artifacts/mtt-intake-plan-report.json"],
+    npmArgs: [
+      "run",
+      "mtt:intake-plan",
+      "--",
+      "--output=artifacts/mtt-intake-plan-report.json",
+      "--board-dir=artifacts/mtt-intake-board",
+    ],
     outputPath: "artifacts/mtt-intake-plan-report.json",
     releaseBlocking: true,
   },

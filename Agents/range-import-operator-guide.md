@@ -160,6 +160,7 @@ npm run mtt:release-gates -- --json
 npm run mtt:release-gates -- --output=artifacts/mtt-release-gates-report.json
 npm run mtt:intake-plan -- --summary
 npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json
+npm run mtt:intake-plan -- --board-dir=artifacts/mtt-intake-board
 npm run mtt:blockers -- --output=artifacts/mtt-blockers-report.json
 npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json
 ```
@@ -242,6 +243,7 @@ For the prioritized import queue aligned to the current MTT completion goal:
 ```powershell
 npm run mtt:intake-plan
 npm run mtt:intake-plan -- --all
+npm run mtt:intake-plan -- --board-dir=artifacts/mtt-intake-board
 npm run mtt:intake-plan -- --summary
 npm run mtt:intake-plan -- --ready-only --json
 npm run mtt:intake-plan -- --priority=P1_PREFLOP_CHIP_EV --all

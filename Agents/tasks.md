@@ -2029,6 +2029,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - U kazdeho slotu evidovat owner/evidence status mimo git: waiting, files supplied, validation failed, dry-run passed, promoted, acceptance passed.
     - Raw `Agents/range-intake/raw/` zustava necommitovany workspace; do gitu patri jen tooling, reporty a source-free dokumentace, nikdy realne privatni exporty.
     - Acceptance: operator umi bez cteni celeho backlogu vzit dalsi slot, dodat oba soubory, spustit prikazy a videt presny duvod, proc slot jeste neni productionReady.
+    - Doplneno 2026-06-30: mtt:intake-plan -- --board-dir=artifacts/mtt-intake-board generuje source-free board po P0-P5 bucketech vcetne summary, per-priority Markdown/JSON a anti-reuse guardrails.
+    - Doplneno 2026-06-30: mtt:handoff board automaticky obnovuje spolecne s intake plan JSON artefaktem.
   - [ ] 135.41 Dokoncit prvni P1 pilot slot FULL_RING_9 TURBO CHIP_EV PREFLOP OFF
     - Dodat legalni `normalized.json` a `permission.json` do `Agents/range-intake/raw/mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1/`.
     - Overit, ze packId, kind, table format, speed, EV, ante, street, stacky, pozice, 169 hand classes a akce odpovidaji presne slotu.

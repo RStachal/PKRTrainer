@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import {
   buildMttCompletionReadinessReport,
   filterMttCompletionReadinessReport,
@@ -22,6 +22,7 @@ import {
 } from "../src/data/ranges/rangeImportCommands.ts";
 
 interface CliArgs {
+  boardDir: string | null;
   filters: MttCompletionReadinessFilters;
   json: boolean;
   limit: number | null;
@@ -74,6 +75,7 @@ function usage(): string {
     "Output:",
     "  --json",
     "  --output=artifacts/mtt-intake-plan-report.json",
+    "  --board-dir=artifacts/mtt-intake-board",
     "  --all",
     "  --limit=<positive integer>",
     `  --priority=${MTT_INTAKE_PRIORITY_KEYS.join("|")}`,
@@ -98,6 +100,10 @@ try {
     mkdirSync(dirname(args.outputPath), { recursive: true });
     writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   }
+  if (args.boardDir !== null) {
+    const boardReport = buildMttIntakePlanReport({ ...args, limit: null });
+    writeMttIntakeBoard(boardReport, args.boardDir);
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderMttIntakePlanReport(report, args.limit, args.summary));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
@@ -105,6 +111,7 @@ try {
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
+  let boardDir: string | null = null;
   const filters: MttCompletionReadinessFilters = {};
   let json = false;
   let limit: number | null = 12;
@@ -135,6 +142,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
       outputPath = resolve(value);
       continue;
     }
+    if (item.startsWith("--board-dir=")) {
+      const value = item.slice("--board-dir=".length).trim();
+      if (value.length === 0) throw new Error(`--board-dir requires a path.\n\n${usage()}`);
+      boardDir = resolve(value);
+      continue;
+    }
     if (item.startsWith("--limit=")) {
       limit = parseLimit(item.slice("--limit=".length));
       continue;
@@ -155,7 +168,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, json, limit, outputPath, priority, summary, visibility };
+  return { boardDir, filters, json, limit, outputPath, priority, summary, visibility };
 }
 
 function parseLimit(value: string): number {
@@ -294,6 +307,113 @@ function renderMttIntakePlanReport(report: IntakePlanReport, limit: number | nul
   });
 
   return lines.join("\n");
+}
+
+function writeMttIntakeBoard(report: IntakePlanReport, boardDir: string): void {
+  mkdirSync(boardDir, { recursive: true });
+  writeFileSync(
+    join(boardDir, "summary.json"),
+    `${JSON.stringify({
+      filters: report.filters,
+      counts: report.counts,
+      priorities: MTT_INTAKE_PRIORITY_KEYS.map((priority) => ({
+        priority,
+        rows: report.rows.filter((row) => row.priority === priority).length,
+      })),
+    }, null, 2)}\n`,
+    "utf8",
+  );
+  writeFileSync(join(boardDir, "README.md"), renderBoardReadme(report), "utf8");
+
+  for (const priority of MTT_INTAKE_PRIORITY_KEYS) {
+    const rows = report.rows.filter((row) => row.priority === priority);
+    writeFileSync(
+      join(boardDir, `${priority}.json`),
+      `${JSON.stringify({ priority, rows }, null, 2)}\n`,
+      "utf8",
+    );
+    writeFileSync(join(boardDir, `${priority}.md`), renderPriorityBoard(priority, rows), "utf8");
+  }
+}
+
+function renderBoardReadme(report: IntakePlanReport): string {
+  return [
+    "# MTT intake board",
+    "",
+    "Source-free operator board for the current MTT production import queue.",
+    "This board is an artifact only; do not place strategy values or permission evidence here.",
+    "",
+    `Queue rows: ${report.counts.totalQueueRows}`,
+    `Ready for validation: ${report.counts.readyForValidation}`,
+    `Missing normalized.json: ${report.counts.missingNormalized}`,
+    `Missing permission.json: ${report.counts.missingPermission}`,
+    "",
+    "## Priority buckets",
+    "",
+    ...MTT_INTAKE_PRIORITY_KEYS.map((priority) => (
+      `- ${priority}: ${report.counts.byPriority[priority]} rows`
+    )),
+    "",
+    "## Required flow",
+    "",
+    "- Put reviewed legal normalized.json and permission.json files only in the printed raw intake folder.",
+    "- Run validate:range-import before any module generation.",
+    "- Run build:range-module --dry-run and inspect the planned module.",
+    "- Run mtt:validate-ready-intake and mtt:promote-ready --dry-run before confirmed write.",
+    "- After write, run registry integrity, technical acceptance, handoff and Android preflight.",
+    "",
+  ].join("\n");
+}
+
+function renderPriorityBoard(priority: MttIntakePriorityKey, rows: readonly IntakePlanRow[]): string {
+  return [
+    `# ${priority}`,
+    "",
+    `Rows: ${rows.length}`,
+    "",
+    ...rows.flatMap((row, index) => [
+      `## ${index + 1}. ${row.slotId}`,
+      "",
+      `Status: ${row.status}`,
+      `Coverage: ${row.coverageKind}`,
+      `Pack: ${row.importSlot.packId}`,
+      `Raw folder: ${row.importSlot.rawInputFolder}`,
+      `Ready for validation: ${row.intake.readyForValidation}`,
+      `Normalized present: ${row.intake.normalizedPresent}`,
+      `Permission present: ${row.intake.permissionPresent}`,
+      "",
+      "Commands:",
+      "",
+      `- Validate: ${row.nextCommand}`,
+      `- Build dry-run: ${row.buildCommand}`,
+      "",
+      "Guardrails:",
+      "",
+      ...guardrailsForRow(row).map((item) => `- ${item}`),
+      "",
+      "Blockers:",
+      "",
+      ...row.blockers.map((blocker) => `- ${blocker}`),
+      "",
+    ]),
+  ].join("\n");
+}
+
+function guardrailsForRow(row: IntakePlanRow): readonly string[] {
+  const guardrails = [
+    "No placeholder values, metadata-only profile copies or inferred strategy values.",
+    "Permission evidence must explicitly allow runtime redistribution.",
+  ];
+  if (row.slotId.includes("|TURBO|")) {
+    guardrails.push("Turbo slots require dedicated turbo recommendations or explicit reviewed blind-speed reuse.");
+  }
+  if (row.slotId.includes("|DOLAR_EV|")) {
+    guardrails.push("$EV slots must not silently reuse chipEV data without explicit utility/reuse permission.");
+  }
+  if (!row.slotId.includes("|PREFLOP|")) {
+    guardrails.push("Postflop slots require granular node, position, street-transition and card-removal coverage.");
+  }
+  return guardrails;
 }
 import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 await loadCompleteMttProductionRegistry();

@@ -209,6 +209,37 @@ describe("mtt:intake-plan CLI", () => {
     }
   });
 
+  it("umi zapsat kompletni source-free operator intake board", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-intake-board-"));
+    try {
+      const result = runPlan(`--board-dir=${directory}`);
+
+      expect(result.status).toBe(0);
+      expect(existsSync(join(directory, "README.md"))).toBe(true);
+      expect(existsSync(join(directory, "summary.json"))).toBe(true);
+      expect(existsSync(join(directory, "P1_PREFLOP_CHIP_EV.md"))).toBe(true);
+      expect(existsSync(join(directory, "P2_PREFLOP_DOLAR_EV.md"))).toBe(true);
+      expect(existsSync(join(directory, "P5_RIVER_PRODUCTION.json"))).toBe(true);
+
+      const summary = JSON.parse(readFileSync(join(directory, "summary.json"), "utf8")) as {
+        counts: { totalQueueRows: number; byPriority: Record<string, number> };
+      };
+      const p1 = readFileSync(join(directory, "P1_PREFLOP_CHIP_EV.md"), "utf8");
+      const p2 = readFileSync(join(directory, "P2_PREFLOP_DOLAR_EV.md"), "utf8");
+      const p5 = readFileSync(join(directory, "P5_RIVER_PRODUCTION.md"), "utf8");
+
+      expect(summary.counts.totalQueueRows).toBe(64);
+      expect(summary.counts.byPriority.P1_PREFLOP_CHIP_EV).toBe(8);
+      expect(p1).toContain("mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1");
+      expect(p1).toContain("Turbo slots require dedicated turbo recommendations");
+      expect(p2).toContain("$EV slots must not silently reuse chipEV data");
+      expect(p5).toContain("Postflop slots require granular node");
+      expect(`${p1}\n${p2}\n${p5}`).not.toContain("https://");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("vrati chybu pro neplatny limit", () => {
     const result = runPlan("--limit=0");
 
