@@ -66,6 +66,7 @@ describe("release bundle metadata", () => {
       "scripts/checkMttTechnicalAcceptance.mts",
       "utf8",
     );
+    const handoffScript = readFileSync("scripts/writeMttHandoffArtifacts.mts", "utf8");
     const manifest = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8")) as {
       description: string;
       lang: string;
@@ -151,6 +152,11 @@ describe("release bundle metadata", () => {
     expect(technicalAcceptanceScript).toContain("createNpmShim");
     expect(technicalAcceptanceScript).toContain("findAvailablePort");
     expect(technicalAcceptanceScript).toContain("mtt-technical-acceptance");
+    expect(handoffScript).toContain("nextActionPacket");
+    expect(handoffScript).toContain("--packet-dir=artifacts/mtt-next-action/packet");
+    expect(handoffScript).toContain("expected-paths.json");
+    expect(handoffScript).toContain("NORMALIZED_JSON_REQUIREMENTS.md");
+    expect(handoffScript).toContain("PERMISSION_JSON_REQUIREMENTS.md");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400)');

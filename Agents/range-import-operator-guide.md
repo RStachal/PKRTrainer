@@ -189,7 +189,8 @@ exit code, so one failing gate does not hide the remaining blocker summaries. Us
 needs the status and captured output of every gate command.
 `mtt:handoff` regenerates every source-free MTT handoff JSON artifact and also writes the next-action checklist packet
 under `artifacts/mtt-next-action/packet`, while still leaving the raw intake folder untouched until real reviewed files
-are supplied.
+are supplied. The handoff report checks the packet README, expected-paths JSON and both requirements files, so a missing
+packet is reported as a missing handoff artifact.
 
 When `mtt:next-action` is in `WAITING_FOR_FILES`, treat its output as the slot intake packet. Do not create placeholder
 `normalized.json` or `permission.json`; the files must come from reviewed legal evidence and must match the printed

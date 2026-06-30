@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 
 interface HandoffCommand {
   label: string;
@@ -32,7 +32,17 @@ interface HandoffReport {
     missingArtifacts: number;
     releaseBlockingFailures: number;
   };
+  nextActionPacket: HandoffPacketArtifact;
   commands: readonly HandoffCommandResult[];
+}
+
+interface HandoffPacketArtifact {
+  expected: boolean;
+  directory: string;
+  requiredFiles: readonly {
+    path: string;
+    exists: boolean;
+  }[];
 }
 
 const DEFAULT_OUTPUT_PATH = "artifacts/mtt-handoff-report.json";
@@ -217,17 +227,21 @@ function buildReport(outputPath: string, results: readonly HandoffCommandResult[
   const failedCommands = results.filter((result) => result.status !== 0);
   const missingArtifacts = results.filter((result) => !result.artifactExists);
   const releaseBlockingFailures = failedCommands.filter((result) => result.releaseBlocking);
+  const nextActionPacket = inspectNextActionPacket();
+  const missingPacketArtifacts = nextActionPacket.requiredFiles.filter((file) => !file.exists);
+  const missingArtifactCount = missingArtifacts.length + missingPacketArtifacts.length;
 
   return {
-    valid: missingArtifacts.length === 0,
-    releaseReady: releaseBlockingFailures.length === 0 && missingArtifacts.length === 0,
+    valid: missingArtifactCount === 0,
+    releaseReady: releaseBlockingFailures.length === 0 && missingArtifactCount === 0,
     outputPath,
     counts: {
       commands: results.length,
       failedCommands: failedCommands.length,
-      missingArtifacts: missingArtifacts.length,
+      missingArtifacts: missingArtifactCount,
       releaseBlockingFailures: releaseBlockingFailures.length,
     },
+    nextActionPacket,
     commands: results,
   };
 }
@@ -247,8 +261,53 @@ function renderReport(report: HandoffReport): string {
   for (const result of report.commands) {
     lines.push(`${result.artifactExists ? "OK" : "MISSING"} status=${result.status} ${result.outputPath} (${result.label})`);
   }
+  if (report.nextActionPacket.expected) {
+    lines.push(`next-action packet: ${report.nextActionPacket.directory}`);
+    for (const file of report.nextActionPacket.requiredFiles) {
+      lines.push(`${file.exists ? "OK" : "MISSING"} ${file.path}`);
+    }
+  }
 
   return lines.join("\n");
+}
+
+function inspectNextActionPacket(): HandoffPacketArtifact {
+  const reportPath = "artifacts/mtt-next-action-report.json";
+  const packetRoot = "artifacts/mtt-next-action/packet";
+  const fallback = {
+    expected: true,
+    directory: packetRoot,
+    requiredFiles: [
+      {
+        path: join(packetRoot, "README.md"),
+        exists: existsSync(join(packetRoot, "README.md")),
+      },
+    ],
+  };
+  if (!existsSync(reportPath)) return fallback;
+
+  try {
+    const parsed = JSON.parse(readFileSync(reportPath, "utf8")) as {
+      nextAction?: { packId?: unknown } | null;
+    };
+    const packId = typeof parsed.nextAction?.packId === "string"
+      ? parsed.nextAction.packId
+      : null;
+    if (packId === null) return fallback;
+    const directory = join(packetRoot, packId);
+    return {
+      expected: true,
+      directory,
+      requiredFiles: [
+        join(directory, "README.md"),
+        join(directory, "expected-paths.json"),
+        join(directory, "NORMALIZED_JSON_REQUIREMENTS.md"),
+        join(directory, "PERMISSION_JSON_REQUIREMENTS.md"),
+      ].map((path) => ({ path, exists: existsSync(path) })),
+    };
+  } catch {
+    return fallback;
+  }
 }
 
 function stripNpmRunHeader(value: string): string {

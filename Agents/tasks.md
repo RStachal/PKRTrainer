@@ -1708,6 +1708,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Doplneno 2026-06-25: `npm run mtt:handoff` regeneruje vsechny source-free MTT/range/Android JSON artefakty jednim prikazem, ulozi agregat do `artifacts/mtt-handoff-report.json` a selze jen pri chybejicim artefaktu; cervene produkcni data gates zustavaji zapsane jako `releaseReady: false`.
     - Doplneno 2026-06-25: `mtt:handoff -- --strict` pouziva stejny artefaktovy balik jako finalni RC kontrolu a vrati nenulovy exit, dokud neni `releaseReady: true`.
     - Doplneno 2026-06-30: mtt:handoff automaticky vola mtt:next-action -- --packet-dir=artifacts/mtt-next-action/packet, takze handoff obsahuje i checklist packet pro prvni blokujici legal slot bez raw placeholder souboru.
+    - Doplneno 2026-06-30: handoff report validuje README, expected-paths a oba requirements soubory next-action packetu jako soucast missing artefaktu.
   - [x] 135.3 Pridat "next MTT action" operator report
     - Pridat prikaz/report, ktery z `mtt:intake-plan`, `mtt:blockers` a `mtt:release-gates -- --json` vybere dalsi nejdulezitejsi praci: prvni ready slot, jinak prvni waiting slot podle P0-P5.
     - Vystup musi obsahovat priority bucket, slotId, packId, chybejici soubory, validate command, build dry-run command a navazujici acceptance prikazy.
