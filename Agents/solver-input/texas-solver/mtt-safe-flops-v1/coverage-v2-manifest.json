@@ -1,0 +1,246 @@
+{
+  "packId": "pkrtrainer-mtt-texas-solver-coverage-v2",
+  "generatedAt": "2026-07-01",
+  "parameterDir": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2",
+  "outputBase": "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
+  "scenarios": [
+    {
+      "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "templateFile": "01_MTT9_50BB_BTN_BB_SRP_A72r.txt",
+      "pot": 50,
+      "effectiveStack": 100,
+      "boards": [
+        "A72r",
+        "T84r",
+        "JT9tt",
+        "AT4mono"
+      ],
+      "purpose": "BTN vs BB SRP low-SPR c-bet pilot coverage.",
+      "coverageTags": [
+        "LOW_SPR",
+        "SRP_BTN_VS_BB",
+        "SINGLE_RAISED_POT_CBET"
+      ]
+    },
+    {
+      "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+      "templateFile": "01_MTT9_50BB_BTN_BB_SRP_A72r.txt",
+      "pot": 50,
+      "effectiveStack": 500,
+      "boards": [
+        "A72r",
+        "T84r",
+        "QJ2tt",
+        "Q76mono"
+      ],
+      "purpose": "BTN vs BB SRP high-SPR c-bet pilot coverage.",
+      "coverageTags": [
+        "HIGH_SPR",
+        "SRP_BTN_VS_BB",
+        "SINGLE_RAISED_POT_CBET"
+      ]
+    },
+    {
+      "familyId": "MTT9_40BB_UTG_BB_SRP",
+      "templateFile": "09_MTT9_40BB_UTG_BB_SRP_Q72r.txt",
+      "pot": 50,
+      "effectiveStack": 160,
+      "boards": [
+        "K83r",
+        "T84r",
+        "JT9tt",
+        "AT4mono",
+        "883r",
+        "Q76mono"
+      ],
+      "purpose": "UTG vs BB SRP texture coverage using the existing UTG/BB range template.",
+      "coverageTags": [
+        "MID_SPR",
+        "SRP_UTG_VS_BB",
+        "SINGLE_RAISED_POT_CBET"
+      ]
+    },
+    {
+      "familyId": "MTT9_35BB_CO_BTN_3BP",
+      "templateFile": "10_MTT9_35BB_CO_BTN_3BP_K83r.txt",
+      "pot": 157,
+      "effectiveStack": 286,
+      "boards": [
+        "A72r",
+        "T84r",
+        "QJ2tt",
+        "JT9tt",
+        "AT4mono",
+        "Q76mono",
+        "883r"
+      ],
+      "purpose": "CO vs BTN 3bet-pot c-bet texture coverage using the existing 3BP range template.",
+      "coverageTags": [
+        "LOW_SPR",
+        "3BP_BTN_VS_CO",
+        "THREE_BET_POT_CBET"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "01_MTT9_20BB_BTN_BB_SRP_LOWSPR_A72r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/01_MTT9_20BB_BTN_BB_SRP_LOWSPR_A72r.txt",
+      "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "boardId": "A72r",
+      "written": true
+    },
+    {
+      "fileName": "02_MTT9_20BB_BTN_BB_SRP_LOWSPR_T84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/02_MTT9_20BB_BTN_BB_SRP_LOWSPR_T84r.txt",
+      "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "boardId": "T84r",
+      "written": true
+    },
+    {
+      "fileName": "03_MTT9_20BB_BTN_BB_SRP_LOWSPR_JT9tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/03_MTT9_20BB_BTN_BB_SRP_LOWSPR_JT9tt.txt",
+      "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "boardId": "JT9tt",
+      "written": true
+    },
+    {
+      "fileName": "04_MTT9_20BB_BTN_BB_SRP_LOWSPR_AT4mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/04_MTT9_20BB_BTN_BB_SRP_LOWSPR_AT4mono.txt",
+      "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "boardId": "AT4mono",
+      "written": true
+    },
+    {
+      "fileName": "21_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A72r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/21_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A72r.txt",
+      "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+      "boardId": "A72r",
+      "written": true
+    },
+    {
+      "fileName": "22_MTT9_80BB_BTN_BB_SRP_HIGHSPR_T84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/22_MTT9_80BB_BTN_BB_SRP_HIGHSPR_T84r.txt",
+      "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+      "boardId": "T84r",
+      "written": true
+    },
+    {
+      "fileName": "23_MTT9_80BB_BTN_BB_SRP_HIGHSPR_QJ2tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/23_MTT9_80BB_BTN_BB_SRP_HIGHSPR_QJ2tt.txt",
+      "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+      "boardId": "QJ2tt",
+      "written": true
+    },
+    {
+      "fileName": "24_MTT9_80BB_BTN_BB_SRP_HIGHSPR_Q76mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/24_MTT9_80BB_BTN_BB_SRP_HIGHSPR_Q76mono.txt",
+      "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+      "boardId": "Q76mono",
+      "written": true
+    },
+    {
+      "fileName": "41_MTT9_40BB_UTG_BB_SRP_K83r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/41_MTT9_40BB_UTG_BB_SRP_K83r.txt",
+      "familyId": "MTT9_40BB_UTG_BB_SRP",
+      "boardId": "K83r",
+      "written": true
+    },
+    {
+      "fileName": "42_MTT9_40BB_UTG_BB_SRP_T84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/42_MTT9_40BB_UTG_BB_SRP_T84r.txt",
+      "familyId": "MTT9_40BB_UTG_BB_SRP",
+      "boardId": "T84r",
+      "written": true
+    },
+    {
+      "fileName": "43_MTT9_40BB_UTG_BB_SRP_JT9tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/43_MTT9_40BB_UTG_BB_SRP_JT9tt.txt",
+      "familyId": "MTT9_40BB_UTG_BB_SRP",
+      "boardId": "JT9tt",
+      "written": true
+    },
+    {
+      "fileName": "44_MTT9_40BB_UTG_BB_SRP_AT4mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/44_MTT9_40BB_UTG_BB_SRP_AT4mono.txt",
+      "familyId": "MTT9_40BB_UTG_BB_SRP",
+      "boardId": "AT4mono",
+      "written": true
+    },
+    {
+      "fileName": "45_MTT9_40BB_UTG_BB_SRP_883r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/45_MTT9_40BB_UTG_BB_SRP_883r.txt",
+      "familyId": "MTT9_40BB_UTG_BB_SRP",
+      "boardId": "883r",
+      "written": true
+    },
+    {
+      "fileName": "46_MTT9_40BB_UTG_BB_SRP_Q76mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/46_MTT9_40BB_UTG_BB_SRP_Q76mono.txt",
+      "familyId": "MTT9_40BB_UTG_BB_SRP",
+      "boardId": "Q76mono",
+      "written": true
+    },
+    {
+      "fileName": "61_MTT9_35BB_CO_BTN_3BP_A72r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/61_MTT9_35BB_CO_BTN_3BP_A72r.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP",
+      "boardId": "A72r",
+      "written": true
+    },
+    {
+      "fileName": "62_MTT9_35BB_CO_BTN_3BP_T84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/62_MTT9_35BB_CO_BTN_3BP_T84r.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP",
+      "boardId": "T84r",
+      "written": true
+    },
+    {
+      "fileName": "63_MTT9_35BB_CO_BTN_3BP_QJ2tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/63_MTT9_35BB_CO_BTN_3BP_QJ2tt.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP",
+      "boardId": "QJ2tt",
+      "written": true
+    },
+    {
+      "fileName": "64_MTT9_35BB_CO_BTN_3BP_JT9tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/64_MTT9_35BB_CO_BTN_3BP_JT9tt.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP",
+      "boardId": "JT9tt",
+      "written": true
+    },
+    {
+      "fileName": "65_MTT9_35BB_CO_BTN_3BP_AT4mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/65_MTT9_35BB_CO_BTN_3BP_AT4mono.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP",
+      "boardId": "AT4mono",
+      "written": true
+    },
+    {
+      "fileName": "66_MTT9_35BB_CO_BTN_3BP_Q76mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/66_MTT9_35BB_CO_BTN_3BP_Q76mono.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP",
+      "boardId": "Q76mono",
+      "written": true
+    },
+    {
+      "fileName": "67_MTT9_35BB_CO_BTN_3BP_883r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/67_MTT9_35BB_CO_BTN_3BP_883r.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP",
+      "boardId": "883r",
+      "written": true
+    }
+  ],
+  "notes": [
+    "Expanded background solve batch for pilot coverage gaps.",
+    "Generated from existing local TexasSolver templates and range assumptions.",
+    "This batch is not full MTT production coverage; it is input evidence for review and pilot-pack promotion only.",
+    "Uncovered full-ring position families still require reviewed range templates before solving."
+  ],
+  "commands": [
+    "npm run mtt:texas-solver-coverage-batch -- --write",
+    ".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_coverage_v2\" -Limit 999 -ListOnly",
+    "Start-Job -Name PKRTrainerTexasSolverCoverageV2 -ScriptBlock { Set-Location \"C:\\Users\\stachal\\PKRTrainer\\PKRTrainer\"; .\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_coverage_v2\" -Limit 999 }",
+    "Get-Job PKRTrainerTexasSolverCoverageV2 | Receive-Job -Keep"
+  ]
+}

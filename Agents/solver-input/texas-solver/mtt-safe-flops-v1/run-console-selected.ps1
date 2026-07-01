@@ -2,14 +2,17 @@ param(
   [int]$Limit = 1,
   [switch]$Force,
   [switch]$ListOnly,
-  [string]$Family = ""
+  [string]$Family = "",
+  [string]$SolverRoot = "C:\Users\stachal\Downloads\TexasSolver-v0.2.0-Windows\TexasSolver-v0.2.0-Windows",
+  [string]$ParameterRoot = "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_safe_flops_v1",
+  [string]$OutputBase = "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver"
 )
 
 $ErrorActionPreference = "Stop"
 
-$solverRoot = "C:\Users\stachal\Downloads\TexasSolver-v0.2.0-Windows\TexasSolver-v0.2.0-Windows"
-$parameterRoot = "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_safe_flops_v1"
-$outputBase = "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver"
+$solverRoot = $SolverRoot
+$parameterRoot = $ParameterRoot
+$outputBase = $OutputBase
 
 function Get-FamilyIdFromParameterFile($file) {
   $name = $file.BaseName -replace '^\d+_', ''

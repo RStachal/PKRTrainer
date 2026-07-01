@@ -227,4 +227,84 @@ One BTN vs BB SRP node does not cover all required positions, 3bet pots, facing-
 bucket. Copy candidates into `Agents/range-intake/raw/.../normalized.json` only after human poker review and an explicit
 promotion decision for that slot.
 
+## Coverage-v2 background batch
+
+To prepare a wider background solve batch for the current pilot gaps:
+
+```powershell
+npm run mtt:texas-solver-coverage-batch -- --write
+```
+
+This creates 21 additional TexasSolver parameter files under:
+
+```text
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/
+```
+
+and a manifest:
+
+```text
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-v2-manifest.json
+```
+
+The batch currently covers additional BTN vs BB SRP LOW/HIGH SPR boards, wider UTG vs BB SRP texture samples and wider
+CO vs BTN 3bet-pot texture samples. It still does not claim full MTT postflop production coverage; missing full-ring
+position families need reviewed range templates before they can be solved honestly.
+
+Preflight:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -ParameterRoot "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_coverage_v2" -Limit 999 -ListOnly
+```
+
+Run in a PowerShell background job:
+
+```powershell
+Start-Job -Name PKRTrainerTexasSolverCoverageV2 -ScriptBlock {
+  Set-Location "C:\Users\stachal\PKRTrainer\PKRTrainer"
+  .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -ParameterRoot "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_coverage_v2" -Limit 999
+}
+```
+
+Monitor:
+
+```powershell
+Get-Job PKRTrainerTexasSolverCoverageV2
+Get-Job PKRTrainerTexasSolverCoverageV2 | Receive-Job -Keep
+```
+
+Stop if needed:
+
+```powershell
+Stop-Job PKRTrainerTexasSolverCoverageV2
+```
+
+After solving, stage/review only the families that now have raw JSON outputs. Example:
+
+```powershell
+npm run mtt:stage-texas-solver -- --family=MTT9_20BB_BTN_BB_SRP_LOWSPR --write --review-template
+npm run mtt:texas-solver-review -- --family=MTT9_20BB_BTN_BB_SRP_LOWSPR --node-history=CHECK --write --summary
+```
+
+## Pilot gate
+
+The narrow BTN vs BB SRP candidate can be checked with:
+
+```powershell
+npm run mtt:postflop-pilot-gate -- --summary
+```
+
+Expected state for the current pilot:
+
+```text
+valid: true
+fullProductionReady: false
+permissionReady: true
+legalImportSlot: true
+runtimeSmokeValid: true
+```
+
+This gate is intentionally different from `mtt:postflop-release`: it allows a reviewed narrow pilot pack for a specific
+training mode, but keeps full production release blocked until the broad coverage gate is green.
+
 `mtt:stage-texas-solver` pouze vytvoří review artefakty pro solver-verification. Nevyrábí produkční `normalized.json`; ten vznikne až po ruční kontrole a mapování strategií do PKRTrainer formátu.
