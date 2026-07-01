@@ -305,6 +305,16 @@ Get-Job PKRTrainerTexasSolverCoverageV2
 Get-Job PKRTrainerTexasSolverCoverageV2 | Receive-Job -Keep
 ```
 
+PowerShell jobs are session-local. If the original shell is gone, check progress from the filesystem instead:
+
+```powershell
+npm run mtt:texas-solver-coverage-status -- --summary
+npm run mtt:texas-solver-coverage-status -- --output=artifacts/texas-solver-coverage-v2-status/report.json
+```
+
+This status command reads `coverage-v2-manifest.json`, counts solved raw JSON boards per family and prints the exact
+stage/review/normalize commands for families that are complete.
+
 Stop if needed:
 
 ```powershell

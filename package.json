@@ -24,6 +24,7 @@
     "mtt:texas-solver-pack": "vite-node scripts/checkTexasSolverParameterPack.mts",
     "mtt:texas-solver-review": "vite-node scripts/extractTexasSolverReview.mts",
     "mtt:texas-solver-coverage-batch": "vite-node scripts/buildTexasSolverCoverageBatch.mts",
+    "mtt:texas-solver-coverage-status": "vite-node scripts/checkTexasSolverCoverageBatchStatus.mts",
     "mtt:texas-solver-normalize-draft": "vite-node scripts/buildTexasSolverNormalizedDraft.mts",
     "mtt:texas-solver-merge-pilot-drafts": "vite-node scripts/mergeTexasSolverPilotDrafts.mts",
     "mtt:texas-solver-viewer": "vite-node scripts/buildTexasSolverReviewViewer.mts",
