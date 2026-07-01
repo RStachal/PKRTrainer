@@ -247,6 +247,8 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:stage-texas-solver -- --summary");
     expect(operatorGuide).toContain("npm run mtt:stage-texas-solver -- --write");
     expect(operatorGuide).toContain("npm run mtt:stage-texas-solver -- --write --review-template");
+    expect(operatorGuide).toContain("npm run mtt:stage-texas-solver -- --family=MTT9_40BB_UTG_BB_SRP --write --review-template");
+    expect(operatorGuide).toContain("npm run mtt:stage-texas-solver -- --family=MTT9_35BB_CO_BTN_3BP --write --review-template");
     expect(operatorGuide).toContain("maps the current GTO+/TexasSolver source families");
     expect(operatorGuide).toContain("strategy-export.json");
     expect(operatorGuide).toContain("fails release while any FLOP/TURN/RIVER slot still uses fallback runtime");

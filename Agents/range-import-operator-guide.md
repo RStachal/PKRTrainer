@@ -231,6 +231,8 @@ npm run mtt:solver-verification -- --output=artifacts/mtt-solver-verification/re
 npm run mtt:stage-texas-solver -- --summary
 npm run mtt:stage-texas-solver -- --write
 npm run mtt:stage-texas-solver -- --write --review-template
+npm run mtt:stage-texas-solver -- --family=MTT9_40BB_UTG_BB_SRP --write --review-template
+npm run mtt:stage-texas-solver -- --family=MTT9_35BB_CO_BTN_3BP --write --review-template
 ```
 
 The blocker report includes priority counts matching the intake plan buckets, so the summary can route work directly
@@ -249,6 +251,9 @@ without being mistaken for production-ready normalized imports.
 After the TexasSolver console batch writes raw JSON files, `mtt:stage-texas-solver` checks that exports are present
 and parseable, then stages only review artifacts. It does not create production `normalized.json`; that remains a
 separate reviewed conversion step.
+Use `--family=<familyId>` to stage a non-default TexasSolver family; the command derives
+`output/texas-solver/<familyId>/raw` and `output/texas-solver/<familyId>` automatically unless explicit paths are
+provided.
 
 For the prioritized import queue aligned to the current MTT completion goal:
 

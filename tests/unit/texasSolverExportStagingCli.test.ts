@@ -68,6 +68,27 @@ describe("mtt:stage-texas-solver CLI", () => {
     }
   });
 
+  it("odvodi default raw a output cestu z family filtru", () => {
+    const result = runStage("--family=MTT9_40BB_UTG_BB_SRP", "--json");
+
+    expect(result.status).toBe(1);
+    const report = parseJsonStdout(result.stdout) as {
+      familyId: string;
+      rawDir: string;
+      solverOutputDir: string;
+      blockers: string[];
+    };
+
+    expect(report.familyId).toBe("MTT9_40BB_UTG_BB_SRP");
+    expect(report.rawDir.split("\\").join("/")).toContain(
+      "output/texas-solver/MTT9_40BB_UTG_BB_SRP/raw",
+    );
+    expect(report.solverOutputDir.split("\\").join("/")).toContain(
+      "output/texas-solver/MTT9_40BB_UTG_BB_SRP",
+    );
+    expect(report.blockers.join("\n")).toContain("No raw TexasSolver JSON exports found");
+  });
+
   it("umi volitelne vytvorit review template", () => {
     const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-review-"));
     const rawDir = join(directory, "raw");
@@ -103,6 +124,12 @@ function runStage(...args: string[]) {
     maxBuffer: 2 * 1024 * 1024,
     shell: false,
   });
+}
+
+function parseJsonStdout(stdout: string): unknown {
+  const jsonStart = stdout.indexOf("{");
+  if (jsonStart < 0) throw new Error(`No JSON object found in stdout:\n${stdout}`);
+  return JSON.parse(stdout.slice(jsonStart));
 }
 
 function command(): string {

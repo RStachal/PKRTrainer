@@ -1,6 +1,9 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
+const DEFAULT_FAMILY_ID = "MTT9_50BB_BTN_BB_SRP";
+const DEFAULT_TEXAS_SOLVER_OUTPUT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
+
 interface CliArgs {
   familyId: string;
   json: boolean;
@@ -48,6 +51,7 @@ function usage(): string {
     "  npm run mtt:stage-texas-solver -- --json",
     "  npm run mtt:stage-texas-solver -- --write",
     "  npm run mtt:stage-texas-solver -- --write --review-template",
+    "  npm run mtt:stage-texas-solver -- --family=MTT9_40BB_UTG_BB_SRP --write",
     "  npm run mtt:stage-texas-solver -- --raw-dir=<path> --solver-output-dir=<path>",
     "",
     "Notes:",
@@ -75,12 +79,12 @@ try {
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
-  let familyId = "MTT9_50BB_BTN_BB_SRP";
+  let familyId = DEFAULT_FAMILY_ID;
   let json = false;
   let outputPath: string | null = null;
-  let rawDir = resolve("Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/MTT9_50BB_BTN_BB_SRP/raw");
+  let rawDir: string | null = null;
   let reviewTemplate = false;
-  let solverOutputDir = resolve("Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/MTT9_50BB_BTN_BB_SRP");
+  let solverOutputDir: string | null = null;
   let summary = false;
   let write = false;
 
@@ -150,7 +154,23 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { familyId, json, outputPath, rawDir, reviewTemplate, solverOutputDir, summary, write };
+  const resolvedSolverOutputDir = solverOutputDir ?? defaultSolverOutputDir(familyId);
+  const resolvedRawDir = rawDir ?? join(resolvedSolverOutputDir, "raw");
+
+  return {
+    familyId,
+    json,
+    outputPath,
+    rawDir: resolvedRawDir,
+    reviewTemplate,
+    solverOutputDir: resolvedSolverOutputDir,
+    summary,
+    write,
+  };
+}
+
+function defaultSolverOutputDir(familyId: string): string {
+  return resolve(DEFAULT_TEXAS_SOLVER_OUTPUT_ROOT, familyId);
 }
 
 function nextArgValue(argv: readonly string[], index: number, flag: string): string {
