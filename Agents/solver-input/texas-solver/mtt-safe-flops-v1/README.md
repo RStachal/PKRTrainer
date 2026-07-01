@@ -101,6 +101,17 @@ Pokud výstup už existuje, přeskočí ho. Přepočet vynutíš:
 .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 8 -Force
 ```
 
+Po doběhu zkontroluj a zaveď raw exporty do review pipeline:
+
+```powershell
+npm run mtt:stage-texas-solver -- --summary
+npm run mtt:stage-texas-solver -- --write
+npm run mtt:stage-texas-solver -- --write --review-template
+```
+
+`mtt:stage-texas-solver` pouze vytvoří review artefakty pro solver-verification. Nevyrábí produkční
+`normalized.json`; ten vznikne až po ruční kontrole a mapování strategií do PKRTrainer formátu.
+
 ## Po doběhu
 
 Pro PKRTrainer solver-verification čekáme pro family:

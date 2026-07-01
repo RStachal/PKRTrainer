@@ -228,6 +228,9 @@ npm run mtt:postflop-release -- --json
 npm run mtt:solver-verification
 npm run mtt:solver-verification -- --solver=texas-solver --json
 npm run mtt:solver-verification -- --output=artifacts/mtt-solver-verification/report.json
+npm run mtt:stage-texas-solver -- --summary
+npm run mtt:stage-texas-solver -- --write
+npm run mtt:stage-texas-solver -- --write --review-template
 ```
 
 The blocker report includes priority counts matching the intake plan buckets, so the summary can route work directly
@@ -243,6 +246,9 @@ coverage, lacks `permission.json`, contains placeholder text, has LOW confidence
 The solver verification report maps the current GTO+/TexasSolver source families to expected solver exports
 (`strategy-export.json`, `accuracy-report.json`, `review-notes.md`) so raw solver output can be staged for review
 without being mistaken for production-ready normalized imports.
+After the TexasSolver console batch writes raw JSON files, `mtt:stage-texas-solver` checks that exports are present
+and parseable, then stages only review artifacts. It does not create production `normalized.json`; that remains a
+separate reviewed conversion step.
 
 For the prioritized import queue aligned to the current MTT completion goal:
 
