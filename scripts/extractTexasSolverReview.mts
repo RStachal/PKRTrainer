@@ -8,6 +8,7 @@ const RANK_ORDER = "AKQJT98765432";
 interface CliArgs {
   familyId: string;
   json: boolean;
+  nodeHistory: string[];
   outputPath: string | null;
   rawDir: string;
   solverOutputDir: string;
@@ -17,6 +18,7 @@ interface CliArgs {
 
 interface TexasSolverNode {
   actions?: unknown;
+  childrens?: unknown;
   node_type?: unknown;
   player?: unknown;
   strategy?: unknown;
@@ -45,9 +47,12 @@ interface ReviewFile {
   fileName: string;
   path: string;
   boardId: string;
+  nodeHistory: string[];
+  selectedNodePath: string[];
   nodeType: string;
   player: number | null;
   actions: ReviewAction[];
+  availableChildActions: string[];
   comboCount: number;
   invalidCombos: string[];
   handClassCount: number;
@@ -60,6 +65,7 @@ interface ReviewReport {
   status: "NEEDS_REVIEW";
   productionReady: false;
   familyId: string;
+  nodeHistory: string[];
   rawDir: string;
   solverOutputDir: string;
   counts: {
@@ -83,6 +89,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP",
     "  npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --summary",
     "  npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --write",
+    "  npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --node-history=CHECK",
     "  npm run mtt:texas-solver-review -- --raw-dir=<path> --solver-output-dir=<path>",
     "",
     "Extracts source-safe review summaries from raw TexasSolver JSON exports.",
@@ -109,6 +116,7 @@ try {
 function parseArgs(argv: readonly string[]): CliArgs {
   let familyId = DEFAULT_FAMILY_ID;
   let json = false;
+  let nodeHistory: string[] = [];
   let outputPath: string | null = null;
   let rawDir: string | null = null;
   let solverOutputDir: string | null = null;
@@ -128,6 +136,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (item === "--write") {
       write = true;
+      continue;
+    }
+    if (item.startsWith("--node-history=")) {
+      nodeHistory = parseNodeHistory(requiredInlineValue(item, "--node-history"));
+      continue;
+    }
+    if (item === "--node-history") {
+      nodeHistory = parseNodeHistory(nextArgValue(argv, index, "--node-history"));
+      index += 1;
       continue;
     }
     if (item.startsWith("--family=")) {
@@ -173,12 +190,22 @@ function parseArgs(argv: readonly string[]): CliArgs {
   return {
     familyId,
     json,
+    nodeHistory,
     outputPath,
     rawDir: rawDir ?? join(resolvedSolverOutputDir, "raw"),
     solverOutputDir: resolvedSolverOutputDir,
     summary,
     write,
   };
+}
+
+function parseNodeHistory(value: string): string[] {
+  const actions = value
+    .split(">")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  if (actions.length === 0) throw new Error(`--node-history requires at least one action.\n\n${usage()}`);
+  return actions;
 }
 
 function requiredInlineValue(item: string, flag: string): string {
@@ -207,6 +234,7 @@ function buildReviewReport(args: CliArgs): ReviewReport {
     status: "NEEDS_REVIEW",
     productionReady: false,
     familyId: args.familyId,
+    nodeHistory: args.nodeHistory,
     rawDir: args.rawDir,
     solverOutputDir: args.solverOutputDir,
     counts: {
@@ -223,6 +251,7 @@ function buildReviewReport(args: CliArgs): ReviewReport {
     blockers,
     nextSteps: [
       "Human-review the extracted root strategies and solver assumptions.",
+      "Use --node-history=<ACTION>[>ACTION...] when reviewing a non-root decision node.",
       "Confirm tree sizing, player mapping, board coverage and exploitability evidence.",
       "Only after review, map approved strategy data into canonical normalized.json + permission.json.",
       "Run validate:range-import and build:range-module --dry-run before any production promotion.",
@@ -235,23 +264,28 @@ function readReviewFiles(args: CliArgs): ReviewFile[] {
   return readdirSync(args.rawDir, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith(".json"))
     .sort((a, b) => a.name.localeCompare(b.name, "en"))
-    .map((entry) => reviewFile(join(args.rawDir, entry.name), entry.name, args.familyId));
+    .map((entry) => reviewFile(join(args.rawDir, entry.name), entry.name, args));
 }
 
-function reviewFile(path: string, fileName: string, familyId: string): ReviewFile {
+function reviewFile(path: string, fileName: string, args: CliArgs): ReviewFile {
+  const familyId = args.familyId;
   try {
     const root = JSON.parse(readFileSync(path, "utf8")) as TexasSolverNode;
     const blockers: string[] = [];
-    if (root.node_type !== "action_node") blockers.push(`Root node_type must be action_node; got ${String(root.node_type)}.`);
-    const rootActions = parseStringArray(root.actions);
-    if (rootActions.length === 0) blockers.push("Root actions are missing or empty.");
+    const selected = selectActionNode(root, args.nodeHistory);
+    blockers.push(...selected.blockers);
+    const node = selected.node ?? root;
+    const nodeLabel = args.nodeHistory.length === 0 ? "Root" : `Selected node ${selected.path.join(" > ")}`;
+    const rootActions = parseStringArray(node.actions);
+    if (node.node_type !== "action_node") blockers.push(`${nodeLabel} node_type must be action_node; got ${String(node.node_type)}.`);
+    if (rootActions.length === 0) blockers.push(`${nodeLabel} actions are missing or empty.`);
     const parsedActions = rootActions.map(parseAction);
-    const player = typeof root.player === "number" ? root.player : null;
-    if (player === null) blockers.push("Root player index is missing.");
-    const strategy = parseStrategy(root.strategy);
+    const player = typeof node.player === "number" ? node.player : null;
+    if (player === null) blockers.push(`${nodeLabel} player index is missing.`);
+    const strategy = parseStrategy(node.strategy);
     if (strategy === null) {
-      blockers.push("Root strategy is missing or malformed.");
-      return emptyReviewFile(path, fileName, familyId, root, parsedActions, player, blockers);
+      blockers.push(`${nodeLabel} strategy is missing or malformed.`);
+      return emptyReviewFile(path, fileName, familyId, node, parsedActions, player, selected.path, args.nodeHistory, blockers);
     }
     if (strategy.actions.length !== rootActions.length) {
       blockers.push(`Strategy action count ${strategy.actions.length} does not match root action count ${rootActions.length}.`);
@@ -261,9 +295,12 @@ function reviewFile(path: string, fileName: string, familyId: string): ReviewFil
       fileName,
       path,
       boardId: boardIdFromFileName(fileName, familyId),
-      nodeType: typeof root.node_type === "string" ? root.node_type : "UNKNOWN",
+      nodeHistory: args.nodeHistory,
+      selectedNodePath: selected.path,
+      nodeType: typeof node.node_type === "string" ? node.node_type : "UNKNOWN",
       player,
       actions: parsedActions,
+      availableChildActions: childActionKeys(node),
       comboCount: extracted.comboCount,
       invalidCombos: extracted.invalidCombos,
       handClassCount: Object.keys(extracted.handClasses).length,
@@ -275,9 +312,12 @@ function reviewFile(path: string, fileName: string, familyId: string): ReviewFil
       fileName,
       path,
       boardId: boardIdFromFileName(fileName, familyId),
+      nodeHistory: args.nodeHistory,
+      selectedNodePath: [],
       nodeType: "UNPARSEABLE",
       player: null,
       actions: [],
+      availableChildActions: [],
       comboCount: 0,
       invalidCombos: [],
       handClassCount: 0,
@@ -294,21 +334,73 @@ function emptyReviewFile(
   root: TexasSolverNode,
   actions: ReviewAction[],
   player: number | null,
+  selectedNodePath: string[],
+  nodeHistory: string[],
   blockers: string[],
 ): ReviewFile {
   return {
     fileName,
     path,
     boardId: boardIdFromFileName(fileName, familyId),
+    nodeHistory,
+    selectedNodePath,
     nodeType: typeof root.node_type === "string" ? root.node_type : "UNKNOWN",
     player,
     actions,
+    availableChildActions: childActionKeys(root),
     comboCount: 0,
     invalidCombos: [],
     handClassCount: 0,
     handClasses: {},
     blockers,
   };
+}
+
+function selectActionNode(root: TexasSolverNode, nodeHistory: readonly string[]): {
+  node: TexasSolverNode | null;
+  path: string[];
+  blockers: string[];
+} {
+  let current: TexasSolverNode = root;
+  const path: string[] = [];
+  const blockers: string[] = [];
+  for (const requestedAction of nodeHistory) {
+    const childrens = childNodes(current);
+    const selectedKey = findChildActionKey(childrens, requestedAction);
+    if (selectedKey === null) {
+      const available = Object.keys(childrens);
+      blockers.push(
+        `Cannot select node-history action ${requestedAction}; available child actions: ${available.length > 0 ? available.join(", ") : "none"}.`,
+      );
+      return { node: null, path, blockers };
+    }
+    path.push(selectedKey);
+    current = childrens[selectedKey] as TexasSolverNode;
+  }
+  return { node: current, path, blockers };
+}
+
+function childNodes(node: TexasSolverNode): Record<string, unknown> {
+  return node.childrens !== null && typeof node.childrens === "object" && !Array.isArray(node.childrens)
+    ? node.childrens as Record<string, unknown>
+    : {};
+}
+
+function childActionKeys(node: TexasSolverNode): string[] {
+  return Object.keys(childNodes(node)).sort((a, b) => a.localeCompare(b, "en"));
+}
+
+function findChildActionKey(childrens: Record<string, unknown>, requestedAction: string): string | null {
+  if (Object.prototype.hasOwnProperty.call(childrens, requestedAction)) return requestedAction;
+  const normalizedRequested = normalizeActionSelector(requestedAction);
+  return Object.keys(childrens).find((key) => normalizeActionSelector(key) === normalizedRequested) ?? null;
+}
+
+function normalizeActionSelector(action: string): string {
+  const trimmed = action.trim();
+  if (/^(?:BET|RAISE)_\d+(?:\.\d+)?$/i.test(trimmed)) return trimmed.toUpperCase();
+  if (/^(?:CHECK|CALL|FOLD)$/i.test(trimmed)) return trimmed.toUpperCase();
+  return parseAction(trimmed).normalized.toUpperCase();
 }
 
 function parseStringArray(value: unknown): string[] {
@@ -430,7 +522,7 @@ function boardIdFromFileName(fileName: string, familyId: string): string {
 }
 
 function plannedReviewFiles(args: CliArgs): ReviewReport["plannedFiles"] {
-  const path = join(args.solverOutputDir, "strategy-export.review.json");
+  const path = join(args.solverOutputDir, reviewFileName(args));
   return [{
     path,
     written: existsSync(path),
@@ -440,7 +532,13 @@ function plannedReviewFiles(args: CliArgs): ReviewReport["plannedFiles"] {
 
 function writeReviewFiles(args: CliArgs, report: ReviewReport): void {
   mkdirSync(args.solverOutputDir, { recursive: true });
-  writeFileSync(join(args.solverOutputDir, "strategy-export.review.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  writeFileSync(join(args.solverOutputDir, reviewFileName(args)), `${JSON.stringify(report, null, 2)}\n`, "utf8");
+}
+
+function reviewFileName(args: CliArgs): string {
+  if (args.nodeHistory.length === 0) return "strategy-export.review.json";
+  const suffix = args.nodeHistory.map((action) => normalizeActionSelector(action).replace(/[^A-Z0-9_-]/g, "_")).join("-");
+  return `strategy-export.${suffix}.review.json`;
 }
 
 function renderReport(report: ReviewReport, summaryOnly: boolean): string {
@@ -450,6 +548,7 @@ function renderReport(report: ReviewReport, summaryOnly: boolean): string {
     `status: ${report.status}`,
     `productionReady: ${report.productionReady}`,
     `family: ${report.familyId}`,
+    `node history: ${report.nodeHistory.length > 0 ? report.nodeHistory.join(" > ") : "ROOT"}`,
     `raw files: ${report.counts.rawFiles}`,
     `parsed files: ${report.counts.parsedFiles}`,
     `blocked files: ${report.counts.blockedFiles}`,
@@ -461,7 +560,7 @@ function renderReport(report: ReviewReport, summaryOnly: boolean): string {
   if (summaryOnly) return lines.join("\n");
 
   for (const file of report.files) {
-    lines.push(`${file.blockers.length === 0 ? "OK" : "BLOCKED"} ${file.fileName}: board=${file.boardId}, player=${file.player ?? "?"}, actions=${file.actions.map((action) => action.normalized).join("/")}, handClasses=${file.handClassCount}`);
+    lines.push(`${file.blockers.length === 0 ? "OK" : "BLOCKED"} ${file.fileName}: board=${file.boardId}, node=${file.selectedNodePath.length > 0 ? file.selectedNodePath.join(">") : "ROOT"}, player=${file.player ?? "?"}, actions=${file.actions.map((action) => action.normalized).join("/")}, handClasses=${file.handClassCount}`);
   }
   for (const file of report.plannedFiles) {
     lines.push(`${file.written ? "OK" : "PENDING"} ${file.purpose}: ${file.path}`);

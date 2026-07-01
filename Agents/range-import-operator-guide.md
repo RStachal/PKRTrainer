@@ -232,6 +232,7 @@ npm run mtt:texas-solver-pack
 npm run mtt:texas-solver-pack -- --summary
 npm run mtt:texas-solver-pack -- --output=artifacts/texas-solver-parameter-pack/report.json
 npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --write --summary
+npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --node-history=CHECK --summary
 npm run mtt:texas-solver-review -- --family=MTT9_40BB_UTG_BB_SRP --write --summary
 npm run mtt:texas-solver-review -- --family=MTT9_35BB_CO_BTN_3BP --write --summary
 .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-nightly-verification.ps1
@@ -262,9 +263,12 @@ After the TexasSolver console batch writes raw JSON files, `mtt:stage-texas-solv
 and parseable, then stages only review artifacts. It does not create production `normalized.json`; that remains a
 separate reviewed conversion step.
 `mtt:texas-solver-review` extracts a source-safe root strategy review summary from local raw TexasSolver JSON exports
-and writes `strategy-export.review.json` beside the staged solver artifacts. This file is for poker review and adapter
-development only: it is marked `NEEDS_REVIEW`, keeps `productionReady: false`, and must not be treated as a
-`normalized.json` substitute.
+and writes `strategy-export.review.json` beside the staged solver artifacts. Non-root action histories write
+node-specific files such as `strategy-export.CHECK.review.json`, so root and branch reviews can live side by side.
+These files are for poker review and adapter development only: they are marked `NEEDS_REVIEW`, keep
+`productionReady: false`, and must not be treated as a `normalized.json` substitute.
+For non-root review, pass `--node-history=<ACTION>[>ACTION...]`; action selectors accept either the raw TexasSolver
+label such as `BET 25.000000` or the normalized PKRTrainer label such as `BET_25`.
 Use `--family=<familyId>` to stage a non-default TexasSolver family; the command derives
 `output/texas-solver/<familyId>/raw` and `output/texas-solver/<familyId>` automatically unless explicit paths are
 provided.

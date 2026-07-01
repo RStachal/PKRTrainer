@@ -252,7 +252,10 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:texas-solver-pack -- --summary");
     expect(operatorGuide).toContain("npm run mtt:texas-solver-pack -- --output=artifacts/texas-solver-parameter-pack/report.json");
     expect(operatorGuide).toContain("npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --write --summary");
+    expect(operatorGuide).toContain("npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --node-history=CHECK --summary");
+    expect(operatorGuide).toContain("--node-history=<ACTION>[>ACTION...]");
     expect(operatorGuide).toContain("strategy-export.review.json");
+    expect(operatorGuide).toContain("strategy-export.CHECK.review.json");
     expect(operatorGuide).toContain("source-safe root strategy review summary");
     expect(operatorGuide).toContain(".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-nightly-verification.ps1");
     expect(operatorGuide).toContain(".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-nightly-verification.ps1 -RunSolve -ReviewTemplate");
