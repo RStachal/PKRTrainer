@@ -231,6 +231,8 @@ npm run mtt:solver-verification -- --output=artifacts/mtt-solver-verification/re
 npm run mtt:texas-solver-pack
 npm run mtt:texas-solver-pack -- --summary
 npm run mtt:texas-solver-pack -- --output=artifacts/texas-solver-parameter-pack/report.json
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-nightly-verification.ps1
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-nightly-verification.ps1 -RunSolve -ReviewTemplate
 npm run mtt:stage-texas-solver -- --summary
 npm run mtt:stage-texas-solver -- --write
 npm run mtt:stage-texas-solver -- --write --review-template

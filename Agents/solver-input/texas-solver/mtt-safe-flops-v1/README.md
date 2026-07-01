@@ -115,6 +115,26 @@ Pokud výstup už existuje, přeskočí ho. Přepočet vynutíš:
 .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 10 -Force
 ```
 
+## Nightly orchestration
+
+Bezpečný preflight/list-only režim:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-nightly-verification.ps1
+```
+
+Skutečný noční solve + staging všech family:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-nightly-verification.ps1 -RunSolve -ReviewTemplate
+```
+
+Stage už existujících raw JSON exportů bez nového solvingu:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-nightly-verification.ps1 -StageExisting -ReviewTemplate
+```
+
 ## Po doběhu
 
 Zkontroluj a zaveď raw exporty do review pipeline:
