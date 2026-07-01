@@ -94,6 +94,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:postflop-release"]).toBe("vite-node scripts/checkMttPostflopReleaseGate.mts");
     expect(pkg.scripts["mtt:solver-verification"]).toBe("vite-node scripts/checkMttSolverVerification.mts");
     expect(pkg.scripts["mtt:stage-texas-solver"]).toBe("vite-node scripts/stageTexasSolverExports.mts");
+    expect(pkg.scripts["mtt:texas-solver-pack"]).toBe("vite-node scripts/checkTexasSolverParameterPack.mts");
     expect(pkg.scripts["mtt:release-gates"]).toBe("vite-node scripts/checkMttReleaseGates.mts");
     expect(pkg.scripts["mtt:acceptance"]).toBe("vite-node scripts/checkMttAcceptance.mts");
     expect(pkg.scripts["mtt:technical-acceptance"])
@@ -244,6 +245,9 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:solver-verification");
     expect(operatorGuide).toContain("npm run mtt:solver-verification -- --solver=texas-solver --json");
     expect(operatorGuide).toContain("npm run mtt:solver-verification -- --output=artifacts/mtt-solver-verification/report.json");
+    expect(operatorGuide).toContain("npm run mtt:texas-solver-pack");
+    expect(operatorGuide).toContain("npm run mtt:texas-solver-pack -- --summary");
+    expect(operatorGuide).toContain("npm run mtt:texas-solver-pack -- --output=artifacts/texas-solver-parameter-pack/report.json");
     expect(operatorGuide).toContain("npm run mtt:stage-texas-solver -- --summary");
     expect(operatorGuide).toContain("npm run mtt:stage-texas-solver -- --write");
     expect(operatorGuide).toContain("npm run mtt:stage-texas-solver -- --write --review-template");
