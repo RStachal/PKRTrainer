@@ -214,6 +214,13 @@ LOW/HIGH SPR candidates can override the rule SPR band:
 npm run mtt:texas-solver-normalize-draft -- --review .\Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver\MTT9_20BB_BTN_BB_SRP_LOWSPR\strategy-export.CHECK.review.json --output-dir .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK --spr-min=0 --spr-max=3 --write
 ```
 
+Non-default families must also declare their strategy dimensions explicitly:
+
+```powershell
+npm run mtt:texas-solver-normalize-draft -- --review .\Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver\MTT9_40BB_UTG_BB_SRP\strategy-export.CHECK.review.json --output-dir .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_40BB_UTG_BB_SRP-CHECK --spr-min=3 --spr-max=8 --pot-type=SINGLE_RAISED --action-node=SINGLE_RAISED_POT_CBET --position-pattern=SRP_UTG_VS_BB --write
+npm run mtt:texas-solver-normalize-draft -- --review .\Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver\MTT9_35BB_CO_BTN_3BP\strategy-export.CHECK.review.json --output-dir .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_35BB_CO_BTN_3BP-CHECK --spr-min=0 --spr-max=3 --pot-type=THREE_BET_POT --action-node=THREE_BET_POT_CBET --position-pattern=3BP_BTN_VS_CO --write
+```
+
 The default output is:
 
 ```text

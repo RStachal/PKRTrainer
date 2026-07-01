@@ -1,6 +1,13 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { classifyBoard, type BoardTexture, type PostflopAction } from "../src/core/postflopGenerator.ts";
+import {
+  classifyBoard,
+  type BoardTexture,
+  type PostflopAction,
+  type PostflopPositionPattern,
+  type PostflopPotType,
+} from "../src/core/postflopGenerator.ts";
+import type { PostflopActionNode } from "../src/core/postflopTrainingSpot.ts";
 import type { Card, HandLabel, Rank, Suit } from "../src/core/types.ts";
 
 const DEFAULT_REVIEW =
@@ -12,11 +19,14 @@ const RANKS = "AKQJT98765432";
 const STRONG_RANKS = new Set(["A", "K", "Q", "J", "T"]);
 
 interface CliArgs {
+  actionNode: Extract<PostflopActionNode, "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET" | "FLOP_FACING_BET">;
   blindSpeeds: string[];
   evModel: "CHIP_EV" | "DOLAR_EV";
   antes: string[];
   outputDir: string;
   packId: string;
+  positionPattern: PostflopPositionPattern;
+  potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">;
   reviewPath: string;
   sprMax: number;
   sprMin: number;
@@ -82,11 +92,14 @@ try {
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
+  let actionNode: CliArgs["actionNode"] = "SINGLE_RAISED_POT_CBET";
   let blindSpeeds = ["REGULAR"];
   let evModel: "CHIP_EV" | "DOLAR_EV" = "CHIP_EV";
   let antes = ["OFF"];
   let outputDir = resolve(DEFAULT_OUTPUT_DIR);
   let packId = DEFAULT_PACK_ID;
+  let positionPattern: PostflopPositionPattern = "SRP_BTN_VS_BB";
+  let potType: CliArgs["potType"] = "SINGLE_RAISED";
   let reviewPath = resolve(DEFAULT_REVIEW);
   let sprMax = 8;
   let sprMin = 3;
@@ -115,6 +128,33 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (item.startsWith("--spr-max=")) {
       sprMax = parseNumber(requiredInlineValue(item, "--spr-max"), "--spr-max");
+      continue;
+    }
+    if (item === "--action-node") {
+      actionNode = parseActionNode(nextArg(argv, index, "--action-node"));
+      index += 1;
+      continue;
+    }
+    if (item.startsWith("--action-node=")) {
+      actionNode = parseActionNode(requiredInlineValue(item, "--action-node"));
+      continue;
+    }
+    if (item === "--pot-type") {
+      potType = parsePotType(nextArg(argv, index, "--pot-type"));
+      index += 1;
+      continue;
+    }
+    if (item.startsWith("--pot-type=")) {
+      potType = parsePotType(requiredInlineValue(item, "--pot-type"));
+      continue;
+    }
+    if (item === "--position-pattern") {
+      positionPattern = parsePositionPattern(nextArg(argv, index, "--position-pattern"));
+      index += 1;
+      continue;
+    }
+    if (item.startsWith("--position-pattern=")) {
+      positionPattern = parsePositionPattern(requiredInlineValue(item, "--position-pattern"));
       continue;
     }
     if (item === "--review") {
@@ -175,8 +215,24 @@ function parseArgs(argv: readonly string[]): CliArgs {
   }
 
   if (sprMin < 0 || sprMax < sprMin) throw new Error(`Invalid SPR range: ${sprMin}-${sprMax}`);
+  if (!potTypeMatchesActionNode(potType, actionNode)) {
+    throw new Error(`Invalid mapping: ${potType} cannot use ${actionNode}`);
+  }
 
-  return { blindSpeeds, evModel, antes, outputDir, packId, reviewPath, sprMax, sprMin, write };
+  return {
+    actionNode,
+    blindSpeeds,
+    evModel,
+    antes,
+    outputDir,
+    packId,
+    positionPattern,
+    potType,
+    reviewPath,
+    sprMax,
+    sprMin,
+    write,
+  };
 }
 
 function usage(): string {
@@ -186,6 +242,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-normalize-draft -- --write",
     "  npm run mtt:texas-solver-normalize-draft -- --review artifacts/.../CHECK.review-report.json --pack-id mtt-full-ring-9-regular-flop-chip-ev-ante-off-production-v1 --write",
     "  npm run mtt:texas-solver-normalize-draft -- --review artifacts/.../LOWSPR/CHECK.review-report.json --spr-min=0 --spr-max=3 --output-dir artifacts/.../LOWSPR --write",
+    "  npm run mtt:texas-solver-normalize-draft -- --review artifacts/.../3BP/CHECK.review.json --pot-type=THREE_BET_POT --action-node=THREE_BET_POT_CBET --position-pattern=3BP_BTN_VS_CO --write",
     "",
     "Builds a review-only canonical flop-production draft from a TexasSolver review report.",
     "The output is written to artifacts/ by default and must still pass human poker review before promotion.",
@@ -213,6 +270,52 @@ function parseList(value: string): string[] {
 function parseEv(value: string): "CHIP_EV" | "DOLAR_EV" {
   if (value === "CHIP_EV" || value === "DOLAR_EV") return value;
   throw new Error(`Unsupported --ev value: ${value}`);
+}
+
+function parseActionNode(value: string): CliArgs["actionNode"] {
+  if (
+    value === "SINGLE_RAISED_POT_CBET" ||
+    value === "THREE_BET_POT_CBET" ||
+    value === "FLOP_FACING_BET"
+  ) {
+    return value;
+  }
+  throw new Error(`Unsupported --action-node value: ${value}`);
+}
+
+function parsePotType(value: string): CliArgs["potType"] {
+  if (value === "SINGLE_RAISED" || value === "THREE_BET_POT") return value;
+  throw new Error(`Unsupported --pot-type value: ${value}`);
+}
+
+function parsePositionPattern(value: string): PostflopPositionPattern {
+  if (/^(SRP|3BP)_(UTG|UTG_1|UTG_2|LJ|HJ|CO|BTN|SB|BB)_VS_(UTG|UTG_1|UTG_2|LJ|HJ|CO|BTN|SB|BB)$/.test(value)) {
+    return value as PostflopPositionPattern;
+  }
+  if (
+    value === "EP_VS_BB" ||
+    value === "BTN_VS_BB" ||
+    value === "SB_VS_BB" ||
+    value === "OOP_RAISER_VS_IP_CALLER" ||
+    value === "OOP_CALLER_VS_IP_3BETTOR"
+  ) {
+    return value;
+  }
+  throw new Error(`Unsupported --position-pattern value: ${value}`);
+}
+
+function potTypeMatchesActionNode(
+  potType: CliArgs["potType"],
+  actionNode: CliArgs["actionNode"],
+): boolean {
+  switch (actionNode) {
+    case "SINGLE_RAISED_POT_CBET":
+      return potType === "SINGLE_RAISED";
+    case "THREE_BET_POT_CBET":
+      return potType === "THREE_BET_POT";
+    case "FLOP_FACING_BET":
+      return potType === "SINGLE_RAISED" || potType === "THREE_BET_POT";
+  }
 }
 
 function parseNumber(value: string, flag: string): number {
@@ -283,7 +386,7 @@ function buildDraft(args: CliArgs): DraftResult {
       },
     ],
     assumptions: [
-      `${familyId} is mapped to FULL_RING_9 BTN vs BB single-raised pot c-bet training context.`,
+      `${familyId} is mapped to FULL_RING_9 ${args.positionPattern} ${args.potType} ${args.actionNode} training context.`,
       `${nodeHistory.join(" > ") || "ROOT"} node is treated as the hero decision node selected for review.`,
       "TexasSolver BET 25 is mapped to BET_SMALL; larger/all-in bet labels are mapped to BET_BIG.",
       "Board ids from the review file are converted to representative physical cards only for texture/card-removal validation.",
@@ -457,9 +560,9 @@ function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string
 
   return {
     id: `${familyId.toLowerCase()}-${nodeHistory.join("-").toLowerCase() || "root"}-aggregate`,
-    actionNode: "SINGLE_RAISED_POT_CBET",
-    potType: "SINGLE_RAISED",
-    positionPattern: "SRP_BTN_VS_BB",
+    actionNode: args.actionNode,
+    potType: args.potType,
+    positionPattern: args.positionPattern,
     boardTextures,
     sprMin: args.sprMin,
     sprMax: args.sprMax,
