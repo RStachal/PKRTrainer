@@ -2287,6 +2287,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Automatizovat diff mezi verzemi strategie, anomalie, regression corpus a approval workflow.
     - Raw solver data a permission evidence zustavaji mimo runtime/Git podle licence; runtime artefakt obsahuje jen potrebna source-free audit metadata.
     - Acceptance: nova varianta projde jednim reprodukovatelnym pipeline od scenario definition po lazy production pack a release gate.
+    - Hotovo 2026-07-01: pridan `mtt:texas-solver-viewer`, ktery generuje lokalni HTML hand-matrix review nad TexasSolver review JSONy bez produkcniho importu.
+    - Hotovo 2026-07-01: pridan `mtt:texas-solver-normalize-draft`, ktery z pilotniho TexasSolver `CHECK.review-report.json` vytvori canonical `flop-production` kandidata a permission manifest do `artifacts/`; validace potvrzuje legalni slot/permission a zaroven nechava `productionReady=false`, dokud chybi sirsi pozice, 3bet/facing-bet nody, LOW/HIGH SPR a dalsi texture coverage.
+    - Dalsi krok: po poker review bud rozsirime TexasSolver scenario batch tak, aby pokryl chybejici coverage dimenze, nebo pridame explicitni pilot-release gate pro uzsi BTN vs BB SRP pack bez maskovani jako plny FLOP production coverage.
   - [ ] 137.18 Rozsirit HH import na hlavni herny a turnajova metadata
     - Vedle PokerStars-like pridat adaptery podle priorit realnych vstupu; kazdy provider ma fixture corpus a verzovany parser.
     - Parsovat tournament id, level, ante typ, table size, payouts/bounty pokud jsou dostupne, side poty, showdowns a all-in runouty.

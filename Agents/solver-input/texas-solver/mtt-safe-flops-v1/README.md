@@ -189,4 +189,42 @@ It intentionally does not create production `normalized.json` or `permission.jso
 handoff: it tells us which TexasSolver node is the best first pilot and which canonical range-intake files must be
 created after human poker review.
 
+## Local review viewer and normalized draft
+
+After `review-compare-integrate.ps1` finishes, build a local HTML viewer for poker review:
+
+```powershell
+npm run mtt:texas-solver-viewer
+Invoke-Item .\artifacts\texas-solver-review-integration\viewer\index.html
+```
+
+The viewer is for checking hand matrices, dominant actions, frequencies and boards. It is not a production import.
+
+To create the first canonical import candidate from the recommended pilot:
+
+```powershell
+npm run mtt:texas-solver-normalize-draft -- --write
+```
+
+The default output is:
+
+```text
+artifacts/texas-solver-review-integration/normalized-drafts/MTT9_50BB_BTN_BB_SRP-CHECK/
+  normalized.candidate.json
+  permission.candidate.json
+  draft-report.json
+```
+
+Validate the candidate:
+
+```powershell
+npm run validate:range-import -- --kind=flop-production --permission-manifest .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_50BB_BTN_BB_SRP-CHECK\permission.candidate.json .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_50BB_BTN_BB_SRP-CHECK\normalized.candidate.json
+npm run build:range-module -- --kind=flop-production --dry-run --permission-manifest .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_50BB_BTN_BB_SRP-CHECK\permission.candidate.json .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_50BB_BTN_BB_SRP-CHECK\normalized.candidate.json
+```
+
+Expected first-draft state: the legal slot and permission manifest are valid, but `productionReady` remains `false`.
+One BTN vs BB SRP node does not cover all required positions, 3bet pots, facing-bet nodes, LOW/HIGH SPR and every texture
+bucket. Copy candidates into `Agents/range-intake/raw/.../normalized.json` only after human poker review and an explicit
+promotion decision for that slot.
+
 `mtt:stage-texas-solver` pouze vytvoří review artefakty pro solver-verification. Nevyrábí produkční `normalized.json`; ten vznikne až po ruční kontrole a mapování strategií do PKRTrainer formátu.

@@ -23,6 +23,7 @@
     "mtt:stage-texas-solver": "vite-node scripts/stageTexasSolverExports.mts",
     "mtt:texas-solver-pack": "vite-node scripts/checkTexasSolverParameterPack.mts",
     "mtt:texas-solver-review": "vite-node scripts/extractTexasSolverReview.mts",
+    "mtt:texas-solver-normalize-draft": "vite-node scripts/buildTexasSolverNormalizedDraft.mts",
     "mtt:texas-solver-viewer": "vite-node scripts/buildTexasSolverReviewViewer.mts",
     "mtt:release-gates": "vite-node scripts/checkMttReleaseGates.mts",
     "mtt:acceptance": "vite-node scripts/checkMttAcceptance.mts",
