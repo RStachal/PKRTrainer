@@ -2294,7 +2294,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo 2026-07-01: pridan `mtt:postflop-pilot-gate`, ktery validuje uzky `BTN_vs_BB_SRP_FLOP_CBET` pilot jako scoped pack: permission/slot/runtime smoke musi byt green, ale `fullProductionReady=false` zustava explicitni a nezamenuje se za plny MTT postflop release.
     - Hotovo 2026-07-01: pilot gate logika je presunuta do sdileneho `src/data/ranges/mttPostflopPilotGate.ts` modulu a kryta unit testem; CLI uz neni jediny zdroj pravdy pro scoped pilot pravidla.
     - Hotovo 2026-07-01: LOWSPR TexasSolver raw vystupy byly staged/reviewed (`MTT9_20BB_BTN_BB_SRP_LOWSPR`, 4 raw, 890 combos, 50 hand classes), viewer defaultne nacita aktualni staged output a `mtt:texas-solver-normalize-draft` umi `--spr-min/--spr-max` pro LOW/HIGH SPR kandidaty.
-    - Dalsi krok: po dobehnuti coverage-v2 raw JSON spustit stage + `mtt:texas-solver-review --node-history=CHECK` pro nove LOW/HIGH/3BP families, regenerovat viewer a rozhodnout, zda pilot pack povysit pod samostatnym UI capability flag.
+    - Hotovo 2026-07-01: pridan `mtt:texas-solver-merge-pilot-drafts`, ktery slouci vice reviewed normalized draftu do jednoho uzkeho BTN vs BB SRP FLOP c-bet pilot kandidata vcetne permission manifestu a merge reportu. Vystup zustava v `artifacts/`, prochazi pilot gate a stale explicitne nechava `fullProductionReady=false`.
+    - Dalsi krok: po dobehnuti coverage-v2 raw JSON spustit stage + `mtt:texas-solver-review --node-history=CHECK` pro nove HIGH/3BP families, regenerovat viewer, normalizovat HIGHSPR a znovu sloucit LOW+MID+HIGH pilot pack.
   - [ ] 137.18 Rozsirit HH import na hlavni herny a turnajova metadata
     - Vedle PokerStars-like pridat adaptery podle priorit realnych vstupu; kazdy provider ma fixture corpus a verzovany parser.
     - Parsovat tournament id, level, ante typ, table size, payouts/bounty pokud jsou dostupne, side poty, showdowns a all-in runouty.

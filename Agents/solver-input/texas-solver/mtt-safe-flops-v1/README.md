@@ -223,6 +223,30 @@ artifacts/texas-solver-review-integration/normalized-drafts/MTT9_50BB_BTN_BB_SRP
   draft-report.json
 ```
 
+After at least two SPR candidates exist, merge them into one scoped pilot pack:
+
+```powershell
+npm run mtt:texas-solver-merge-pilot-drafts -- --write --summary
+```
+
+The default merge reads the current LOWSPR and MIDSPR BTN vs BB SRP drafts and writes:
+
+```text
+artifacts/texas-solver-review-integration/normalized-drafts/BTN_BB_SRP_FLOP_CBET_PILOT-CHECK/
+  normalized.candidate.json
+  permission.candidate.json
+  merge-report.json
+```
+
+Custom inputs are supported:
+
+```powershell
+npm run mtt:texas-solver-merge-pilot-drafts -- --input-dir .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK --input-dir .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_50BB_BTN_BB_SRP-CHECK --output-dir .\artifacts\texas-solver-review-integration\normalized-drafts\BTN_BB_SRP_FLOP_CBET_PILOT-CHECK --write
+```
+
+The merged pilot should improve the scoped training evidence, for example LOW+MID SPR coverage, while still reporting
+`fullProductionReady: false` until the broader FLOP production matrix is actually solved and reviewed.
+
 Validate the candidate:
 
 ```powershell
