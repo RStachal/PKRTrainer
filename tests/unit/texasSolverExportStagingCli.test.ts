@@ -69,7 +69,8 @@ describe("mtt:stage-texas-solver CLI", () => {
   });
 
   it("odvodi default raw a output cestu z family filtru", () => {
-    const result = runStage("--family=MTT9_40BB_UTG_BB_SRP", "--json");
+    const familyId = "TEST_NO_LOCAL_RAW_EXPORTS_0001";
+    const result = runStage(`--family=${familyId}`, "--json");
 
     expect(result.status).toBe(1);
     const report = parseJsonStdout(result.stdout) as {
@@ -79,12 +80,12 @@ describe("mtt:stage-texas-solver CLI", () => {
       blockers: string[];
     };
 
-    expect(report.familyId).toBe("MTT9_40BB_UTG_BB_SRP");
+    expect(report.familyId).toBe(familyId);
     expect(report.rawDir.split("\\").join("/")).toContain(
-      "output/texas-solver/MTT9_40BB_UTG_BB_SRP/raw",
+      `output/texas-solver/${familyId}/raw`,
     );
     expect(report.solverOutputDir.split("\\").join("/")).toContain(
-      "output/texas-solver/MTT9_40BB_UTG_BB_SRP",
+      `output/texas-solver/${familyId}`,
     );
     expect(report.blockers.join("\n")).toContain("No raw TexasSolver JSON exports found");
   });

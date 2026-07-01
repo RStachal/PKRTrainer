@@ -7,6 +7,12 @@ dist-ssr/
 dist-e2e-*/
 artifacts/
 
+# Local solver workspaces / raw exports
+# Keep generated solver outputs local until they are reviewed and converted
+# through the canonical range-intake pipeline.
+Agents/solver-input/gto-plus/sample-postflop-v1/output/gto-plus/
+Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/
+
 # Logs
 *.log
 npm-debug.log*

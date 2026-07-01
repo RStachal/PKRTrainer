@@ -1674,6 +1674,12 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Preflop i postflop runtime a HH review jsou profile-bound a fail-closed; bez legalniho production packu zobrazi blokujici source-free stav.
     - `Agents/requirements.md` a `Agents/design.md` jsou nove oznacene jako historicky preflop-only baseline s odkazem na 64radkovy release kontrakt; navazujici plny MTT variant scope je v sekci 137.
   - Kriticka zasada: produkcni MTT doporuceni nesmi vzniknout z public heuristic fallbacku, metadata-only reuse ani rucne domyslenych chart hodnot. Kazdy povyseny slot potrebuje legalni `normalized.json`, `permission.json`, production-ready validaci, legal-slot match a source-free runtime vystup.
+  - Aktualizace 2026-07-01:
+    - Hlavni produktovy stav: kod a tooling jsou pripraveny na import/promotion, ale MTT release zustava blokovany daty. `mtt:handoff` je `valid: true`, `releaseReady: false`, ma 18 prikazu, 6 failed commands a 5 release-blocking failures.
+    - Intake stav: `mtt:next-action -- --json` je `WAITING_FOR_FILES`, 64 blocker rows, 0 readyForValidation, chybi 64x `normalized.json` a 64x `permission.json`. Prvni blokujici slot zustava `FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF`.
+    - TexasSolver stav: parameter pack je zeleny pro 3 solver-verification family a 10 parameter files (`mtt:texas-solver-pack valid: true`). Lokalne existuje 10/10 raw JSON exportu, stage artefakty jsou `READY_FOR_REVIEW` pro 3/3 family a `mtt:solver-verification -- --solver=texas-solver --summary` je `valid: true`.
+    - Lokalni solver workspace obsahuje raw TexasSolver JSON exporty i `strategy-export.review.json` souhrny. Tyto artefakty se nesmi commitovat ani povazovat za production; nejdrive musi projit poker review a mapovanim do canonical `normalized.json` + `permission.json`.
+    - Aktualni nejvetsi riziko neni typovani/UI, ale strategicka kvalita a auditovatelnost dat: presne oddelit CHIP_EV od DOLAR_EV, regular od turbo, preview od production a raw solver vystup od reviewed runtime artefaktu.
   - Primary execution order:
     - P0-A: obnovit zeleny working tree (135.29), uzavrit specifikaci (135.23), capability matrix (135.30), identitu spotu/statistik (135.31), registry (135.25) a profile-bound fail-closed runtime (135.26).
     - P0-B: uzavrit legalni status legacy dat (135.24), korektnost postflop state machine (135.32), HH parity (135.33), lokalizaci/a11y (135.34), lazy/offline pack delivery (135.35), semanticke data gate (135.36), CI (135.37) a browser/device E2E (135.38).
@@ -1684,6 +1690,13 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - P4: importovat TURN production StrategyPacky.
     - P5: importovat RIVER production StrategyPacky.
     - P6: spustit end-to-end app QA, performance/mobile/source-free a release kandidat.
+  - Aktualni priority pro dalsi autonomni behy:
+    - A1 Data hygiene: necommitovat raw solver exporty, privatni range evidence ani permission detaily; vsechny raw vystupy drzet v lokanim workspace a do gitu davat jen source-safe tooling/docs/tests.
+    - A2 TexasSolver verification: dokoncit noční solve pres `run-nightly-verification.ps1 -RunSolve -ReviewTemplate`, stageovat vsechny family a ziskat `READY_FOR_REVIEW` solver-verification stav bez rucniho klikani.
+    - A3 Solver adapter: po existenci raw exportu napsat parser/adapter, ktery z TexasSolver JSON vytahne relevantni root/node strategie, action mixy a hand-class agregace do review artefaktu; neprodukovat `normalized.json` bez lidske kontroly.
+    - A4 Postflop pilot: z reviewed solver vystupu vyrobit jeden minimalni FLOP pilot StrategyPack pro presny profile/pot/position/node, validovat coverage a zkontrolovat UI/stat parity.
+    - A5 P1 preflop pilot: jakmile jsou dodana legalni preflop data, zpracovat prvni `FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF` slot pres canonical import -> dry-run -> promote -> registry -> targeted smoke.
+    - A6 Release hardening: po kazde import vlně obnovit `mtt:handoff`, drzet `tasks.md` a release notes ve shode s reporty, a az na konci resit finalni polish/FTP balicek.
   - Definition of done pro kazdy jednotlive povyseny slot:
     - Legalni raw evidence je ulozena lokalne mimo Git.
     - `normalized.json` a `permission.json` maji shodny `packId` a projdou workspace guardem.
@@ -2100,6 +2113,64 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - V release notes uvest presne pocty production rows, import vlny, zname limity, Android device evidence a FTP/staging balicek.
     - Pred final tag/zip zkontrolovat cisty git stav bez nechtenych raw dat a bez legacy lokalnich zmen ve stagingu.
     - Acceptance: finalni release commit obsahuje pouze source-safe artefakty/kod/docs, `release:check` je zeleny a MTT complete v1 je oznacen az po splneni vsech vyse uvedenych gate.
+  - [x] 135.52 Udrzet solver/data hygiene pri dalsi praci
+    - Raw TexasSolver/GTO+ exporty, licence evidence a privatni range vstupy nesmi byt commitnuty do gitu ani zobrazeny v user-facing UI.
+    - Lokalne existujici `Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/.../raw/*.json` brat jako workspace artefakty; pred commitem je ignorovat nebo explicitne vycistit podle domluveneho workflow.
+    - Kazdy commit pred push musi projit kontrolou `git status --short --branch` a staged diff musi obsahovat jen source-safe kod/docs/tests.
+    - Acceptance: zadny raw solver JSON ani realna permission evidence neni staged; tooling umi s raw vystupy pracovat jen jako s lokalnim vstupem.
+    - Hotovo 2026-07-01: `.gitignore` ignoruje lokalni `output/gto-plus/` a `output/texas-solver/` workspace, `output/README.md` vysvetluje canonical intake cestu a `git status` uz nezobrazuje raw solver JSONy.
+  - [x] 135.53 Dokoncit TexasSolver overnight verification batch
+    - Spustit bezpecny preflight `run-nightly-verification.ps1`, pak realny solve pres `run-nightly-verification.ps1 -RunSolve -ReviewTemplate`.
+    - Dokoncit vsech 10 pripravenych parameter files nebo zapsat presny duvod, proc nektery spot nedobehnul.
+    - Po dobehu stageovat vsechny family pres `mtt:stage-texas-solver -- --family=<familyId> --write --review-template`.
+    - `mtt:solver-verification -- --solver=texas-solver` ma prejit z `WAITING_FOR_SOLVER_OUTPUT` minimalne na `PARTIAL`, idealne `READY_FOR_REVIEW` pro 3/3 family.
+    - Acceptance: pro `MTT9_50BB_BTN_BB_SRP`, `MTT9_40BB_UTG_BB_SRP` a `MTT9_35BB_CO_BTN_3BP` existuji review artefakty, zadny raw JSON neni commitnuty a report jasne ukazuje dalsi review blocker.
+    - Hotovo 2026-07-01: 10/10 TexasSolver raw JSON exportu existuje lokalne, `run-nightly-verification.ps1 -StageExisting -ReviewTemplate` stageoval 3/3 family a `mtt:solver-verification -- --solver=texas-solver` je lokalne `valid: true`, `READY_FOR_REVIEW` 3/3. Review artefakty zustavaji ignorovane v lokalnim solver workspace.
+  - [ ] 135.54 Napsat TexasSolver export adapter pro review artefakty
+    - Prozkoumat strukturu TexasSolver JSON (`actions`, `strategy`, `childrens`, `player`, chance/action nodes) a definovat stabilni interní intermediate format.
+    - Adapter musi umet najit cilovy decision node podle family/board/action history, prelozit solver akce na PKRTrainer action taxonomy a agregovat suit-combo strategie do 169 hand classes.
+    - Zaznamenat ztraty informace: rounding, mixed frequencies, missing combos, all-in sizing, player index mapping a board blockers.
+    - Vystupem zatim nesmi byt production `normalized.json`; nejdrive jen source-free `strategy-export.review.json` nebo rozsireny `strategy-export.json` se statusem `NEEDS_REVIEW`.
+    - Acceptance: unit fixture nad malym vyrezem TexasSolver JSON overi action mapping, hand-class aggregation a fail-closed chovani pri necekanem stromu.
+    - Rozpracovano 2026-07-01: pridany `scripts/extractTexasSolverReview.mts`, npm prikaz `mtt:texas-solver-review`, unit testy a operator guide. Lokalni beh zapsal `strategy-export.review.json` pro 3/3 family: `MTT9_50BB_BTN_BB_SRP` 8 files / 2516 combos / 65 hand classes, `MTT9_40BB_UTG_BB_SRP` 1 file / 340 combos / 63 hand classes, `MTT9_35BB_CO_BTN_3BP` 1 file / 104 combos / 23 hand classes. Zbyva doplnit selector pro nerootove decision nody/action history.
+  - [ ] 135.55 Zavezt solver review protocol pro pokerovou kvalitu
+    - Pro kazdy solver family evidovat tree settings, ranges, stack/pot scaling, iterations/accuracy, exploitability/log evidence, board set a reviewer sign-off.
+    - Overit, ze smoke tree sizingy nejsou omylem interpretovane jako finalni production poker strategie; pro release packy rozhodnout finalni sizing model pred importem.
+    - Porovnat minimalne vybrane root strategie proti GTO+/nezavislemu sanity checku nebo pokerovemu review, zejmena u monotone/paired/connected boardu.
+    - Acceptance: `review-notes.md` pro kazdou family nese `Status: REVIEWED` az po skutecne kontrole a obsahuje explicitni "usable for production: yes/no/scope" rozhodnuti.
+  - [ ] 135.56 Prevest prvni reviewed postflop pilot do production StrategyPacku
+    - Vybrat nejmensi hodnotny pilot: doporuceni pro `MTT9_50BB_BTN_BB_SRP` na A72r/JT9tt nebo jinou family podle kvality solve.
+    - Namapovat solver vystup na presny MTT postflop slot, profile dimensions, pot type, position pattern, board texture, SPR, action node a legal actions.
+    - Vytvorit legalni `normalized.json` + `permission.json` jen pokud review potvrdi, ze data lze pouzit v runtime a ze assumptions odpovidaji slotu.
+    - Spustit `validate:range-import`, `build:range-module --dry-run`, `mtt:validate-ready-intake`, `mtt:promote-ready --dry-run`, potom write/promotion jen pri zelenem reportu.
+    - Acceptance: jeden FLOP/TURN/RIVER nebo minimalni FLOP pilot je productionReady bez heuristic fallbacku, se source-free UI a s registry integrity green.
+  - [ ] 135.57 Rozhodnout produkcni solver strategii: TexasSolver vs GTO+ vs mixed validation
+    - TexasSolver preferovat pro batch automation a JSON export, GTO+ ponechat jako manualni/nezavisly sanity check tam, kde je potreba duvera ve vystup.
+    - Definovat, kdy je TexasSolver output dostatecny pro production: verze solveru, command file, tree, accuracy, reviewer, board coverage a diff/anomaly report.
+    - Pokud GTO+ zustane v procesu, nepokouset se o hromadny import neexistujicim formatem; pouzit ho jen pro ruční kontrolu vybranych spotu nebo exporty, ktere opravdu umi nacist.
+    - Acceptance: tasks/operator guide jasne rikaji, ktery solver je source of truth pro kterou vlnu a jak se resi odchylky.
+  - [ ] 135.58 Pripravit P1 preflop data intake mimo solver postflop workflow
+    - P1 preflop CHIP_EV nelze odvodit z postflop solveru; potrebuje samostatne legalni preflop ranges nebo reviewed reuse policy.
+    - Pripravit vstupni checklist pro 8 P1 slotu: format, speed, ante, stack buckets, positions, action contexts, 169 hand classes, action keys a sizing.
+    - Jakmile jsou data dodana, nejdrive validovat prvni pilot `mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1`.
+    - Acceptance: preflop P1 pilot projde canonical import workflow a blocker count klesne o 1 bez jakehokoli metadata-only klonu.
+  - [ ] 135.59 Zavezt pravidlo "no false green" pro dalsi autonomni behy
+    - Pokud chybi legalni data nebo solver review, agent smi zlepsovat tooling, testy, dokumentaci, adaptery a QA, ale nesmi vyrabet falesne produkcni strategicke hodnoty.
+    - Kazdy novy gate musi rozlisit `READY`, `PARTIAL`, `WAITING_FOR_FILES`, `NEEDS_REVIEW` a `PRODUCTION`, aby operator neprehlédl rozdil mezi technickou pripravenosti a pokerovou validitou.
+    - Acceptance: zadny CLI/report nema exit 0 nebo copy text, ktery by implikoval hotovou MTT cast, dokud `mtt:handoff -- --strict` neni zeleny.
+  - [ ] 135.60 Prioritni poradi dalsi implementace
+    - 1. Aktualizovat a udrzovat tasks/handoff podle realnych reportu.
+    - 2. Dokoncit TexasSolver solve/staging/review pipeline a adapter pro review vystupy.
+    - 3. Zpracovat prvni reviewed postflop pilot do legalniho production importu.
+    - 4. Paralelne cekat na/dodat legalni preflop P1 data a zpracovat prvni preflop pilot.
+    - 5. Po uspesnych pilotech skálovat po vlnach P1 -> P2 -> P3 -> P4 -> P5.
+    - 6. Teprve po datech delat finalni Android, performance, UX polish, release governance a FTP/staging balicek.
+    - Acceptance: dalsi autonomni prace vzdy zacina nejvyssi nesplnenou polozkou v tomto poradi, pokud uzivatel explicitne nezmeni prioritu.
+  - [ ] 135.61 Dopracovat TexasSolver node selector a review diff
+    - Pridat do `mtt:texas-solver-review` vyber decision node podle action history (`--node-history`/family default), ne jen root node.
+    - Zachytit a reportovat cestu stromem, dostupne child akce, player mapping IP/OOP a fail-closed stav, pokud pozadovany node v exportu neni.
+    - Vytvorit jednoduchy anomaly/diff report mezi boardy v jedne family: extremni bet frequency, chybejici hand classes, podezrele action labels, all-in sizing a exploitability/log evidence navazujici na `review-notes.md`.
+    - Acceptance: unit test kryje nested `childrens` strom, neexistujici action history a diff/anomaly summary; operator guide popisuje, jak reviewer vybere node pro prvni FLOP pilot.
 
 - [ ] 136. Password-protected FORPSI staging deployment
   - Cil: umet nahrat aktualni staticky build na FORPSI FTP a zamknout ho heslem, aby slo prakticky zkouset aplikaci mimo lokalni stroj bez verejneho zverejneni.

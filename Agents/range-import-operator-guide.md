@@ -231,6 +231,9 @@ npm run mtt:solver-verification -- --output=artifacts/mtt-solver-verification/re
 npm run mtt:texas-solver-pack
 npm run mtt:texas-solver-pack -- --summary
 npm run mtt:texas-solver-pack -- --output=artifacts/texas-solver-parameter-pack/report.json
+npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --write --summary
+npm run mtt:texas-solver-review -- --family=MTT9_40BB_UTG_BB_SRP --write --summary
+npm run mtt:texas-solver-review -- --family=MTT9_35BB_CO_BTN_3BP --write --summary
 .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-nightly-verification.ps1
 .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-nightly-verification.ps1 -RunSolve -ReviewTemplate
 npm run mtt:stage-texas-solver -- --summary
@@ -258,6 +261,10 @@ pack contains files for every database family and that each file has a `dump_res
 After the TexasSolver console batch writes raw JSON files, `mtt:stage-texas-solver` checks that exports are present
 and parseable, then stages only review artifacts. It does not create production `normalized.json`; that remains a
 separate reviewed conversion step.
+`mtt:texas-solver-review` extracts a source-safe root strategy review summary from local raw TexasSolver JSON exports
+and writes `strategy-export.review.json` beside the staged solver artifacts. This file is for poker review and adapter
+development only: it is marked `NEEDS_REVIEW`, keeps `productionReady: false`, and must not be treated as a
+`normalized.json` substitute.
 Use `--family=<familyId>` to stage a non-default TexasSolver family; the command derives
 `output/texas-solver/<familyId>/raw` and `output/texas-solver/<familyId>` automatically unless explicit paths are
 provided.

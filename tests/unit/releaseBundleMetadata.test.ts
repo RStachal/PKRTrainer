@@ -95,6 +95,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:solver-verification"]).toBe("vite-node scripts/checkMttSolverVerification.mts");
     expect(pkg.scripts["mtt:stage-texas-solver"]).toBe("vite-node scripts/stageTexasSolverExports.mts");
     expect(pkg.scripts["mtt:texas-solver-pack"]).toBe("vite-node scripts/checkTexasSolverParameterPack.mts");
+    expect(pkg.scripts["mtt:texas-solver-review"]).toBe("vite-node scripts/extractTexasSolverReview.mts");
     expect(pkg.scripts["mtt:release-gates"]).toBe("vite-node scripts/checkMttReleaseGates.mts");
     expect(pkg.scripts["mtt:acceptance"]).toBe("vite-node scripts/checkMttAcceptance.mts");
     expect(pkg.scripts["mtt:technical-acceptance"])
@@ -250,6 +251,9 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:texas-solver-pack");
     expect(operatorGuide).toContain("npm run mtt:texas-solver-pack -- --summary");
     expect(operatorGuide).toContain("npm run mtt:texas-solver-pack -- --output=artifacts/texas-solver-parameter-pack/report.json");
+    expect(operatorGuide).toContain("npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --write --summary");
+    expect(operatorGuide).toContain("strategy-export.review.json");
+    expect(operatorGuide).toContain("source-safe root strategy review summary");
     expect(operatorGuide).toContain(".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-nightly-verification.ps1");
     expect(operatorGuide).toContain(".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-nightly-verification.ps1 -RunSolve -ReviewTemplate");
     expect(operatorGuide).toContain("npm run mtt:stage-texas-solver -- --summary");

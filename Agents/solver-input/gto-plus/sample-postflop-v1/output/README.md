@@ -1,13 +1,20 @@
-# Output folder placeholder
+# Solver output workspace
 
-Sem ukládej exporty z GTO+ po doběhnutí solve batch.
+This folder is a local workspace for solver exports produced while validating MTT postflop ranges.
 
-Doporučený minimální naming:
+Do not commit raw solver output. TexasSolver/GTO+/Pio-style raw trees, raw strategy dumps, logs, and intermediate
+review files should stay local until they are reviewed and converted through the canonical intake pipeline:
 
 ```text
-<spot-id>.strategy.csv
-<spot-id>.tree.txt
-<spot-id>.solver-notes.md
+Agents/range-intake/raw/<packId>/normalized.json
+Agents/range-intake/raw/<packId>/permission.json
 ```
 
-Exporty se do gitu commitují až ve chvíli, kdy neobsahují proprietární/raw data, která nechceme šířit. Pro lokální předání do PKRTrainer importu je můžeš nechat jen v pracovní kopii.
+Current local output folders are intentionally ignored by `.gitignore`:
+
+```text
+output/gto-plus/
+output/texas-solver/
+```
+
+Only source-safe tooling, tests, documentation, and final reviewed runtime modules belong in git.
