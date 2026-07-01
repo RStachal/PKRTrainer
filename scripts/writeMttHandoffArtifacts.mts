@@ -133,6 +133,12 @@ const handoffCommands: readonly HandoffCommand[] = [
     releaseBlocking: false,
   },
   {
+    label: "TexasSolver parameter pack preflight",
+    npmArgs: ["run", "mtt:texas-solver-pack", "--", "--output=artifacts/texas-solver-parameter-pack/report.json"],
+    outputPath: "artifacts/texas-solver-parameter-pack/report.json",
+    releaseBlocking: false,
+  },
+  {
     label: "Ready MTT intake validation",
     npmArgs: ["run", "mtt:validate-ready-intake", "--", "--output=artifacts/mtt-validate-ready-intake-report.json"],
     outputPath: "artifacts/mtt-validate-ready-intake-report.json",

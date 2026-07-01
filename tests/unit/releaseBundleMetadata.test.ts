@@ -160,6 +160,8 @@ describe("release bundle metadata", () => {
     expect(handoffScript).toContain("--board-dir=artifacts/mtt-intake-board");
     expect(handoffScript).toContain("mtt:solver-verification");
     expect(handoffScript).toContain("artifacts/mtt-solver-verification/report.json");
+    expect(handoffScript).toContain("mtt:texas-solver-pack");
+    expect(handoffScript).toContain("artifacts/texas-solver-parameter-pack/report.json");
     expect(handoffScript).toContain("expected-paths.json");
     expect(handoffScript).toContain("NORMALIZED_JSON_REQUIREMENTS.md");
     expect(handoffScript).toContain("PERMISSION_JSON_REQUIREMENTS.md");
