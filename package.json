@@ -23,6 +23,7 @@
     "mtt:stage-texas-solver": "vite-node scripts/stageTexasSolverExports.mts",
     "mtt:texas-solver-pack": "vite-node scripts/checkTexasSolverParameterPack.mts",
     "mtt:texas-solver-review": "vite-node scripts/extractTexasSolverReview.mts",
+    "mtt:texas-solver-scenario-audit": "vite-node scripts/auditTexasSolverScenarioBatch.mts",
     "mtt:texas-solver-coverage-batch": "vite-node scripts/buildTexasSolverCoverageBatch.mts",
     "mtt:texas-solver-coverage-status": "vite-node scripts/checkTexasSolverCoverageBatchStatus.mts",
     "mtt:texas-solver-ingest-completed": "vite-node scripts/ingestTexasSolverCompletedCoverage.mts",

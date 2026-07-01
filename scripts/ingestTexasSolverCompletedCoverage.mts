@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
@@ -245,10 +245,8 @@ function mergeCommands(): string[] {
 }
 
 function runNpmCommand(command: string, errors: string[]): void {
-  const [script, ...args] = command.split(" ");
-  const npmExecutable = process.platform === "win32" ? "npm.cmd" : "npm";
   try {
-    execFileSync(npmExecutable, ["run", script, ...args], {
+    execSync(`npm run ${command}`, {
       cwd: process.cwd(),
       stdio: "inherit",
     });

@@ -283,6 +283,16 @@ The batch currently covers additional BTN vs BB SRP LOW/HIGH SPR boards, wider U
 CO vs BTN 3bet-pot texture samples. It still does not claim full MTT postflop production coverage; missing full-ring
 position families need reviewed range templates before they can be solved honestly.
 
+Audit the generated scenario format before starting a long solve:
+
+```powershell
+npm run mtt:texas-solver-scenario-audit -- --summary
+npm run mtt:texas-solver-scenario-audit -- --output=artifacts/texas-solver-scenario-audit/report.json
+```
+
+The audit checks pot, effective stack, inferred SPR band, board syntax/textures, IP/OOP ranges, flop bet/raise sizing
+tree, `build_tree`, `start_solve`, `set_dump_rounds` and `dump_result` consistency against the coverage manifest.
+
 Preflight:
 
 ```powershell
