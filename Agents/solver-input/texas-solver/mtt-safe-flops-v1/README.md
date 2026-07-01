@@ -253,6 +253,8 @@ npm run mtt:texas-solver-merge-pilot-drafts -- --input-dir .\artifacts\texas-sol
 
 The merged pilot should improve the scoped training evidence, for example LOW+MID SPR coverage, while still reporting
 `fullProductionReady: false` until the broader FLOP production matrix is actually solved and reviewed.
+Draft and merge reports include a deterministic `provenanceFingerprint` SHA-256 hash over the reviewed inputs,
+normalized candidate and permission manifest, so poker review can detect silent candidate changes.
 
 Validate the candidate:
 

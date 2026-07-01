@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import {
@@ -73,6 +74,7 @@ interface DraftResult {
     files: number;
     rules: number;
     buckets: number;
+    provenanceFingerprint: string;
     blockers: string[];
     warnings: string[];
     plannedFiles: Array<{ path: string; written: boolean }>;
@@ -425,6 +427,11 @@ function buildDraft(args: CliArgs): DraftResult {
       "Promote to Agents/range-intake/raw only after poker review confirms mappings and assumptions.",
     ],
   };
+  const provenanceFingerprint = fingerprint({
+    reviewPath: args.reviewPath,
+    normalized,
+    permission,
+  });
 
   return {
     normalized,
@@ -439,6 +446,7 @@ function buildDraft(args: CliArgs): DraftResult {
       files: files.length,
       rules: rules.length,
       buckets: bucketCount,
+      provenanceFingerprint,
       blockers,
       warnings,
       plannedFiles: [
@@ -728,4 +736,17 @@ function stringArray(value: unknown): string[] {
 
 function numberValue(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function fingerprint(value: unknown): string {
+  return createHash("sha256").update(stableStringify(value)).digest("hex");
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record).sort().map((key) => (
+    `${JSON.stringify(key)}:${stableStringify(record[key])}`
+  )).join(",")}}`;
 }

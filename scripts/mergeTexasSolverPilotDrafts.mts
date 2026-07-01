@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
@@ -45,6 +46,7 @@ interface MergeReport {
   inputs: readonly string[];
   packId: string;
   version: string;
+  provenanceFingerprint: string;
   rules: number;
   rangeBuckets: number;
   sprBands: readonly string[];
@@ -168,6 +170,15 @@ function mergeDrafts(args: CliArgs): { report: MergeReport; pack: FlopProduction
   const normalizedPath = resolve(args.outputDir, "normalized.candidate.json");
   const permissionPath = resolve(args.outputDir, "permission.candidate.json");
   const reportPath = resolve(args.outputDir, "merge-report.json");
+  const provenanceFingerprint = fingerprint({
+    inputs: inputs.map((input) => ({
+      inputDir: input.inputDir,
+      normalizedPath: input.normalizedPath,
+      permissionPath: input.permissionPath,
+    })),
+    pack,
+    permission,
+  });
   const report: MergeReport = {
     valid: errors.length === 0 && pilotGate.valid,
     written: args.write,
@@ -178,6 +189,7 @@ function mergeDrafts(args: CliArgs): { report: MergeReport; pack: FlopProduction
     inputs: inputs.map((input) => input.inputDir),
     packId: pack.id,
     version: pack.version,
+    provenanceFingerprint,
     rules: pack.rules.length,
     rangeBuckets: pack.rules.reduce((count, rule) => count + rule.rangeBuckets.length, 0),
     sprBands: coverage.sprBands,
@@ -420,6 +432,7 @@ function renderReport(report: MergeReport, summaryOnly: boolean): string {
     `written: ${report.written}`,
     `packId: ${report.packId}`,
     `version: ${report.version}`,
+    `provenance: ${report.provenanceFingerprint}`,
     `rules: ${report.rules}`,
     `range buckets: ${report.rangeBuckets}`,
     `SPR bands: ${report.sprBands.join(",") || "none"}`,
@@ -445,4 +458,17 @@ function renderReport(report: MergeReport, summaryOnly: boolean): string {
     for (const file of report.plannedFiles) lines.push(`- ${file.written ? "wrote" : "would write"} ${file.path}`);
   }
   return lines.join("\n");
+}
+
+function fingerprint(value: unknown): string {
+  return createHash("sha256").update(stableStringify(value)).digest("hex");
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record).sort().map((key) => (
+    `${JSON.stringify(key)}:${stableStringify(record[key])}`
+  )).join(",")}}`;
 }
