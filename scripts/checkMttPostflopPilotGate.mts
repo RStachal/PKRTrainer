@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import type { FlopProductionStrategyPack } from "../src/data/ranges/flopProductionStrategyPack.ts";
 import {
   buildMttPostflopPilotGateReport,
+  type MttPostflopPilotScope,
   type MttPostflopPilotGateReport,
 } from "../src/data/ranges/mttPostflopPilotGate.ts";
 import type { ProductionPermissionManifest } from "../src/data/ranges/productionPermissionManifest.ts";
@@ -15,6 +16,7 @@ interface CliArgs {
   json: boolean;
   normalizedPath: string;
   permissionPath: string;
+  scope: MttPostflopPilotScope;
   summary: boolean;
 }
 
@@ -32,6 +34,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
   let normalizedPath = DEFAULT_NORMALIZED;
   let permissionPath = DEFAULT_PERMISSION;
+  let scope: MttPostflopPilotScope = "BTN_vs_BB_SRP_FLOP_CBET";
   let summary = false;
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -63,10 +66,19 @@ function parseArgs(argv: readonly string[]): CliArgs {
       permissionPath = inlineValue(item, "--permission-manifest");
       continue;
     }
+    if (item === "--scope") {
+      scope = parseScope(requiredValue(argv, index, "--scope"));
+      index += 1;
+      continue;
+    }
+    if (item.startsWith("--scope=")) {
+      scope = parseScope(inlineValue(item, "--scope"));
+      continue;
+    }
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { json, normalizedPath, permissionPath, summary };
+  return { json, normalizedPath, permissionPath, scope, summary };
 }
 
 function usage(): string {
@@ -76,8 +88,10 @@ function usage(): string {
     "  npm run mtt:postflop-pilot-gate -- --summary",
     "  npm run mtt:postflop-pilot-gate -- --json",
     "  npm run mtt:postflop-pilot-gate -- --normalized <normalized.candidate.json> --permission-manifest <permission.candidate.json>",
+    "  npm run mtt:postflop-pilot-gate -- --scope=BTN_vs_CO_3BP_FLOP_CBET --normalized <normalized.candidate.json> --permission-manifest <permission.candidate.json>",
     "",
-    "Validates the narrow BTN vs BB SRP flop pilot pack without pretending it is full production coverage.",
+    "Validates a narrow MTT postflop pilot pack without pretending it is full production coverage.",
+    "Scopes: BTN_vs_BB_SRP_FLOP_CBET, UTG_vs_BB_SRP_FLOP_CBET, BTN_vs_CO_3BP_FLOP_CBET.",
   ].join("\n");
 }
 
@@ -91,6 +105,17 @@ function inlineValue(item: string, flag: string): string {
   const value = item.slice(`${flag}=`.length).trim();
   if (value.length === 0) throw new Error(`${flag} requires a value.\n\n${usage()}`);
   return value;
+}
+
+function parseScope(value: string): MttPostflopPilotScope {
+  if (
+    value === "BTN_vs_BB_SRP_FLOP_CBET" ||
+    value === "UTG_vs_BB_SRP_FLOP_CBET" ||
+    value === "BTN_vs_CO_3BP_FLOP_CBET"
+  ) {
+    return value;
+  }
+  throw new Error(`Unsupported --scope value: ${value}\n\n${usage()}`);
 }
 
 function readJson<T>(path: string): T {
@@ -107,7 +132,7 @@ function buildPilotGateReport(args: CliArgs) {
       valid: false,
       normalizedPath: args.normalizedPath,
       permissionPath: args.permissionPath,
-      pilotScope: "BTN_vs_BB_SRP_FLOP_CBET",
+      pilotScope: args.scope,
       fullProductionReady: false,
       permissionReady: false,
       legalImportSlot: false,
@@ -121,7 +146,7 @@ function buildPilotGateReport(args: CliArgs) {
   const pack = readJson<FlopProductionStrategyPack>(args.normalizedPath);
   const permission = readJson<ProductionPermissionManifest>(args.permissionPath);
   return {
-    ...buildMttPostflopPilotGateReport(pack, permission),
+    ...buildMttPostflopPilotGateReport(pack, permission, args.scope),
     normalizedPath: args.normalizedPath,
     permissionPath: args.permissionPath,
   };

@@ -39,7 +39,41 @@ describe("MTT postflop pilot gate", () => {
     const report = buildMttPostflopPilotGateReport(pack, permissionFor(pack.id));
 
     expect(report.valid).toBe(false);
-    expect(report.errors).toContain("pilot-btn-bb-srp: pilot only allows SRP_BTN_VS_BB.");
+    expect(report.errors).toContain("pilot-btn-bb-srp: BTN vs BB SRP pilot only allows SRP_BTN_VS_BB.");
+  });
+
+  it("pusti UTG vs BB SRP scoped pilot s explicitnim scopem", () => {
+    const pack = {
+      ...pilotPack(),
+      rules: [{
+        ...pilotPack().rules[0],
+        id: "pilot-utg-bb-srp",
+        positionPattern: "SRP_UTG_VS_BB",
+      }],
+    } satisfies FlopProductionStrategyPack;
+    const report = buildMttPostflopPilotGateReport(pack, permissionFor(pack.id), "UTG_vs_BB_SRP_FLOP_CBET");
+
+    expect(report.valid).toBe(true);
+    expect(report.pilotScope).toBe("UTG_vs_BB_SRP_FLOP_CBET");
+    expect(report.fullProductionReady).toBe(false);
+  });
+
+  it("pusti BTN vs CO 3BP scoped pilot s explicitnim scopem", () => {
+    const pack = {
+      ...pilotPack(),
+      rules: [{
+        ...pilotPack().rules[0],
+        id: "pilot-btn-co-3bp",
+        actionNode: "THREE_BET_POT_CBET",
+        potType: "THREE_BET_POT",
+        positionPattern: "3BP_BTN_VS_CO",
+      }],
+    } satisfies FlopProductionStrategyPack;
+    const report = buildMttPostflopPilotGateReport(pack, permissionFor(pack.id), "BTN_vs_CO_3BP_FLOP_CBET");
+
+    expect(report.valid).toBe(true);
+    expect(report.pilotScope).toBe("BTN_vs_CO_3BP_FLOP_CBET");
+    expect(report.fullProductionReady).toBe(false);
   });
 });
 

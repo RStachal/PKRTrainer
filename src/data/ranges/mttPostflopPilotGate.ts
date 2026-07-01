@@ -9,7 +9,10 @@ import { buildProductionPermissionManifestReport } from "./productionPermissionM
 import { validateProductionStrategySemantics } from "./productionStrategySemanticValidation";
 import { buildProductionStrategyRuntimeSmokeReport } from "./productionStrategyRuntimeSmoke";
 
-export type MttPostflopPilotScope = "BTN_vs_BB_SRP_FLOP_CBET";
+export type MttPostflopPilotScope =
+  | "BTN_vs_BB_SRP_FLOP_CBET"
+  | "UTG_vs_BB_SRP_FLOP_CBET"
+  | "BTN_vs_CO_3BP_FLOP_CBET";
 
 export interface MttPostflopPilotGateReport {
   valid: boolean;
@@ -81,11 +84,42 @@ function pilotScopeErrors(
 ): string[] {
   switch (pilotScope) {
     case "BTN_vs_BB_SRP_FLOP_CBET":
-      return btnVsBbSrpFlopCbetErrors(pack);
+      return scopedFlopCbetErrors(pack, {
+        potType: "SINGLE_RAISED",
+        actionNode: "SINGLE_RAISED_POT_CBET",
+        positionPattern: "SRP_BTN_VS_BB",
+        label: "BTN vs BB SRP",
+        minBuckets: 30,
+      });
+    case "UTG_vs_BB_SRP_FLOP_CBET":
+      return scopedFlopCbetErrors(pack, {
+        potType: "SINGLE_RAISED",
+        actionNode: "SINGLE_RAISED_POT_CBET",
+        positionPattern: "SRP_UTG_VS_BB",
+        label: "UTG vs BB SRP",
+        minBuckets: 30,
+      });
+    case "BTN_vs_CO_3BP_FLOP_CBET":
+      return scopedFlopCbetErrors(pack, {
+        potType: "THREE_BET_POT",
+        actionNode: "THREE_BET_POT_CBET",
+        positionPattern: "3BP_BTN_VS_CO",
+        label: "BTN vs CO 3BP",
+        minBuckets: 20,
+      });
   }
 }
 
-function btnVsBbSrpFlopCbetErrors(pack: FlopProductionStrategyPack): string[] {
+function scopedFlopCbetErrors(
+  pack: FlopProductionStrategyPack,
+  scope: {
+    potType: "SINGLE_RAISED" | "THREE_BET_POT";
+    actionNode: "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET";
+    positionPattern: "SRP_BTN_VS_BB" | "SRP_UTG_VS_BB" | "3BP_BTN_VS_CO";
+    label: string;
+    minBuckets: number;
+  },
+): string[] {
   const errors: string[] = [];
   if (pack.dimensions.gameVariant !== "MTT") errors.push("Pilot pack must be MTT.");
   if (pack.dimensions.tableFormat !== "FULL_RING_9") errors.push("Pilot pack must be FULL_RING_9.");
@@ -95,18 +129,20 @@ function btnVsBbSrpFlopCbetErrors(pack: FlopProductionStrategyPack): string[] {
   if (pack.rules.length < 1) errors.push("Pilot pack must contain at least one rule.");
 
   for (const rule of pack.rules) {
-    if (rule.potType !== "SINGLE_RAISED") errors.push(`${rule.id}: pilot only allows SINGLE_RAISED pot.`);
-    if (rule.actionNode !== "SINGLE_RAISED_POT_CBET") {
-      errors.push(`${rule.id}: pilot only allows SINGLE_RAISED_POT_CBET.`);
+    if (rule.potType !== scope.potType) errors.push(`${rule.id}: ${scope.label} pilot only allows ${scope.potType} pot.`);
+    if (rule.actionNode !== scope.actionNode) {
+      errors.push(`${rule.id}: ${scope.label} pilot only allows ${scope.actionNode}.`);
     }
-    if (rule.positionPattern !== "SRP_BTN_VS_BB") {
-      errors.push(`${rule.id}: pilot only allows SRP_BTN_VS_BB.`);
+    if (rule.positionPattern !== scope.positionPattern) {
+      errors.push(`${rule.id}: ${scope.label} pilot only allows ${scope.positionPattern}.`);
     }
     const lanes = new Set(rule.rangeBuckets.map((bucket) => bucket.lane));
     for (const lane of ["VALUE", "BLUFF", "CHECK"] as const) {
       if (!lanes.has(lane)) errors.push(`${rule.id}: missing ${lane} lane.`);
     }
-    if (rule.rangeBuckets.length < 30) errors.push(`${rule.id}: pilot needs at least 30 hand-class buckets.`);
+    if (rule.rangeBuckets.length < scope.minBuckets) {
+      errors.push(`${rule.id}: ${scope.label} pilot needs at least ${scope.minBuckets} hand-class buckets.`);
+    }
   }
   return errors;
 }
