@@ -2292,6 +2292,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Dalsi krok: po poker review bud rozsirime TexasSolver scenario batch tak, aby pokryl chybejici coverage dimenze, nebo pridame explicitni pilot-release gate pro uzsi BTN vs BB SRP pack bez maskovani jako plny FLOP production coverage.
     - Hotovo 2026-07-01: pridan `mtt:texas-solver-coverage-batch`, ktery generuje 21 coverage-v2 TexasSolver parameter souboru pro BTN vs BB SRP LOW/HIGH SPR, UTG vs BB SRP texture samples a CO vs BTN 3BP texture samples; `run-console-selected.ps1` umi `-ParameterRoot`, takze batch lze pustit jako PowerShell background job.
     - Hotovo 2026-07-01: pridan `mtt:postflop-pilot-gate`, ktery validuje uzky `BTN_vs_BB_SRP_FLOP_CBET` pilot jako scoped pack: permission/slot/runtime smoke musi byt green, ale `fullProductionReady=false` zustava explicitni a nezamenuje se za plny MTT postflop release.
+    - Hotovo 2026-07-01: pilot gate logika je presunuta do sdileneho `src/data/ranges/mttPostflopPilotGate.ts` modulu a kryta unit testem; CLI uz neni jediny zdroj pravdy pro scoped pilot pravidla.
     - Dalsi krok: po dobehnuti coverage-v2 raw JSON spustit stage + `mtt:texas-solver-review --node-history=CHECK` pro nove LOW/HIGH/3BP families, regenerovat viewer a rozhodnout, zda pilot pack povysit pod samostatnym UI capability flag.
   - [ ] 137.18 Rozsirit HH import na hlavni herny a turnajova metadata
     - Vedle PokerStars-like pridat adaptery podle priorit realnych vstupu; kazdy provider ma fixture corpus a verzovany parser.
