@@ -1,5 +1,7 @@
 As,7d,2c
+Qs,7d,2c
 Ks,8h,3d
+Ks,8d,3c
 Qs,Jh,2h
 Jd,Ts,9d
 8s,8d,3c

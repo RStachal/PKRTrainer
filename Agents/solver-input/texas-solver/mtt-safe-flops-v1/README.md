@@ -2,18 +2,7 @@
 
 Účel: první bezpečný balíček flopů pro ověření TexasSolver workflow a následný export strategií pro PKRTrainer.
 
-Balíček řeší jednu family:
-
-- `MTT9_50BB_BTN_BB_SRP`
-- IP: BTN
-- OOP: BB
-- model: testovací chipEV postflop sanity-check
-- pot: `50`
-- effective stack: `200`
-- sizing: jednoduchý `50%` bet, `60%` raise, all-in povolený
-- solver: `200` iterací, `0.5%` exploitability target, `8` threadů
-
-Toto není finální produkční solve. Je to malý smoke/validation set, aby šlo ověřit:
+Toto není finální produkční solve. Je to malý smoke/verification set, aby šlo ověřit:
 
 1. že TexasSolver načte parameter files,
 2. že postaví strom,
@@ -21,12 +10,30 @@ Toto není finální produkční solve. Je to malý smoke/validation set, aby š
 4. že exportuje JSON,
 5. že výstup půjde převést do PKRTrainer solver-verification pipeline.
 
+## Family
+
+Balíček pokrývá celý aktuální TexasSolver verification set:
+
+- `MTT9_50BB_BTN_BB_SRP`
+- `MTT9_40BB_UTG_BB_SRP`
+- `MTT9_35BB_CO_BTN_3BP`
+
+Původní BTN-BB soubory zůstávají jako rychlý smoke pack. Nové verification-only soubory pro UTG-BB a CO-BTN používají pot/stack škálované z existujících `.spot.json` zadání, aby SPR lépe odpovídalo připraveným spotům.
+
+Společné nastavení:
+
+- model: testovací chipEV postflop sanity-check,
+- sizing: jednoduché `25%`/`50%` c-bety podle spotu, raise/all-in povolený,
+- solver: `200` iterací, `0.5%` exploitability target, `8` threadů.
+
 ## Flop set
 
 | ID | Board | Typ |
 | --- | --- | --- |
 | `A72r` | `As,7d,2c` | dry A-high rainbow |
+| `Q72r` | `Qs,7d,2c` | dry Q-high rainbow |
 | `K83r` | `Ks,8h,3d` | dry K-high rainbow |
+| `K83r-3BP` | `Ks,8d,3c` | dry K-high rainbow, 3bet pot verification |
 | `QJ2tt` | `Qs,Jh,2h` | broadway two-tone |
 | `JT9tt` | `Jd,Ts,9d` | connected broadway two-tone |
 | `883r` | `8s,8d,3c` | paired dry |
@@ -51,11 +58,11 @@ pkrtrainer_mtt_safe_flops_v1
 ```
 
 5. Klikni/loadni parametr, potom:
-   - `Build Tree`
-   - `Start solving`
+   - `Build Tree`,
+   - `Start solving`,
    - po doběhu exportuj/show result podle GUI.
 
-Pokud parameter file po načtení rovnou obsahuje `start_solve`/`dump_result`, GUI může solve spustit automatizovaně podle aktuální verze. Pokud ne, použij soubor jako nastavení a klikni ručně.
+GUI je vhodné spíš na ruční kontrolu jednoho spotu. Pro zpracování celé složky použij console runner níže.
 
 ## Console run
 
@@ -79,29 +86,38 @@ Připravený runner s limitem:
 Nejdřív si můžeš jen vypsat, co by se spustilo:
 
 ```powershell
-.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 8 -ListOnly
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 10 -ListOnly
 ```
 
 Po ověření spusť více flopů:
 
 ```powershell
 .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 2
-.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 8
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 10
 ```
 
-Runner spouští soubory sekvenčně přes `console_solver.exe`, přesouvá JSON výstupy do:
+Můžeš spustit i jen jednu family:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Family MTT9_40BB_UTG_BB_SRP -Limit 1
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Family MTT9_35BB_CO_BTN_3BP -Limit 1
+```
+
+Runner spouští soubory sekvenčně přes `console_solver.exe`, odvodí family z názvu parameter file a přesouvá JSON výstupy do:
 
 ```text
-Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/MTT9_50BB_BTN_BB_SRP/raw
+Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/<family>/raw
 ```
 
 Pokud výstup už existuje, přeskočí ho. Přepočet vynutíš:
 
 ```powershell
-.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 8 -Force
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -Limit 10 -Force
 ```
 
-Po doběhu zkontroluj a zaveď raw exporty do review pipeline:
+## Po doběhu
+
+Zkontroluj a zaveď raw exporty do review pipeline:
 
 ```powershell
 npm run mtt:stage-texas-solver -- --summary
@@ -109,18 +125,13 @@ npm run mtt:stage-texas-solver -- --write
 npm run mtt:stage-texas-solver -- --write --review-template
 ```
 
-`mtt:stage-texas-solver` pouze vytvoří review artefakty pro solver-verification. Nevyrábí produkční
-`normalized.json`; ten vznikne až po ruční kontrole a mapování strategií do PKRTrainer formátu.
-
-## Po doběhu
-
-Pro PKRTrainer solver-verification čekáme pro family:
+Pro PKRTrainer solver-verification čekáme pro každou family:
 
 ```text
-Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/MTT9_50BB_BTN_BB_SRP/
+Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/<family>/
   strategy-export.json
   accuracy-report.json
   review-notes.md
 ```
 
-První raw solver exporty zatím nepřepisuj ručně do production `normalized.json`; nejdřív je zvalidujeme.
+`mtt:stage-texas-solver` pouze vytvoří review artefakty pro solver-verification. Nevyrábí produkční `normalized.json`; ten vznikne až po ruční kontrole a mapování strategií do PKRTrainer formátu.
