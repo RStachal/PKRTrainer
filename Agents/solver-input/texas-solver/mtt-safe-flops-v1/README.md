@@ -154,4 +154,39 @@ Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/<family>/
   review-notes.md
 ```
 
+## Review, compare and integration handoff
+
+After raw TexasSolver exports exist, run the integration handoff script from the repository root:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\review-compare-integrate.ps1
+```
+
+Fast mode without production build:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\review-compare-integrate.ps1 -SkipBuild
+```
+
+Useful options:
+
+- `-NoWriteReview` keeps the local solver workspace unchanged and writes only `artifacts/` reports.
+- `-RunFullTest` also runs the full Vitest suite.
+- `-OpenReport` opens the generated Markdown report.
+- `-MaxConsoleOutputLines 30` keeps PowerShell output compact.
+
+The script verifies the TexasSolver parameter pack, stages all solver families, extracts root and `CHECK` node review
+summaries, compares them against the current PKRTrainer MTT postflop production gate, lists legal full-ring FLOP import
+slots and writes:
+
+```text
+artifacts/texas-solver-review-integration/TEXAS_SOLVER_INTEGRATION_REPORT.md
+artifacts/texas-solver-review-integration/texas-solver-integration-report.json
+artifacts/texas-solver-review-integration/command-log.json
+```
+
+It intentionally does not create production `normalized.json` or `permission.json`. The output is a reviewed integration
+handoff: it tells us which TexasSolver node is the best first pilot and which canonical range-intake files must be
+created after human poker review.
+
 `mtt:stage-texas-solver` pouze vytvoří review artefakty pro solver-verification. Nevyrábí produkční `normalized.json`; ten vznikne až po ruční kontrole a mapování strategií do PKRTrainer formátu.

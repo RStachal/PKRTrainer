@@ -2172,6 +2172,11 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Vytvorit jednoduchy anomaly/diff report mezi boardy v jedne family: extremni bet frequency, chybejici hand classes, podezrele action labels, all-in sizing a exploitability/log evidence navazujici na `review-notes.md`.
     - Acceptance: unit test kryje nested `childrens` strom, neexistujici action history a diff/anomaly summary; operator guide popisuje, jak reviewer vybere node pro prvni FLOP pilot.
     - Rozpracovano 2026-07-01: `--node-history=<ACTION>[>ACTION...]` umi vybrat nested `childrens` node, podporuje raw TexasSolver labels i normalized labels typu `BET_25` a fail-closed reportuje dostupne child akce. Report doplnuje non-blocking `anomalies` pro low hand-class/combo coverage, invalid combo labels a action-set diff mezi boardy. Zbyva napojeni na review-notes evidence a explicitni reviewer sign-off workflow.
+  - [x] 135.62 Pripravit komplexni PowerShell workflow pro TexasSolver review/compare/integration
+    - Hotovo 2026-07-01: `Agents/solver-input/texas-solver/mtt-safe-flops-v1/review-compare-integrate.ps1` overuje TexasSolver parameter pack, stageuje 3 family, generuje root/CHECK review reporty, porovnava je s aktualnim PKRTrainer postflop release gate a vypisuje legalni full-ring FLOP import sloty.
+    - Vystupy jsou v `artifacts/texas-solver-review-integration/TEXAS_SOLVER_INTEGRATION_REPORT.md`, `texas-solver-integration-report.json` a `command-log.json`.
+    - Bezpecnost: skript nevytvari production `normalized.json` ani `permission.json`; pouze ukazuje nejlepsi pilot a dalsi canonical import kroky po lidskem poker review.
+    - Posledni beh doporucil `MTT9_50BB_BTN_BB_SRP` / `CHECK` jako prvni pilot: 8 raw files, 1792 combo rows, 50 hand classes, 0 anomalies; soucasny PKRTrainer baseline zustava 0/48 postflop production-ready a 48 fallback runtime rows.
 
 - [ ] 136. Password-protected FORPSI staging deployment
   - Cil: umet nahrat aktualni staticky build na FORPSI FTP a zamknout ho heslem, aby slo prakticky zkouset aplikaci mimo lokalni stroj bez verejneho zverejneni.

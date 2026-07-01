@@ -235,6 +235,8 @@ npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --write --summa
 npm run mtt:texas-solver-review -- --family=MTT9_50BB_BTN_BB_SRP --node-history=CHECK --summary
 npm run mtt:texas-solver-review -- --family=MTT9_40BB_UTG_BB_SRP --write --summary
 npm run mtt:texas-solver-review -- --family=MTT9_35BB_CO_BTN_3BP --write --summary
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\review-compare-integrate.ps1
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\review-compare-integrate.ps1 -SkipBuild -OpenReport
 .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-nightly-verification.ps1
 .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-nightly-verification.ps1 -RunSolve -ReviewTemplate
 npm run mtt:stage-texas-solver -- --summary
@@ -271,6 +273,10 @@ For non-root review, pass `--node-history=<ACTION>[>ACTION...]`; action selector
 label such as `BET 25.000000` or the normalized PKRTrainer label such as `BET_25`.
 The review report includes non-blocking `anomalies` for poker review, for example low hand-class coverage, low combo
 coverage, invalid combo labels, or action-set differences across boards in one family.
+`review-compare-integrate.ps1` is the higher-level handoff workflow. It reruns the TexasSolver preflight/staging/review
+checks, compares reviewed solver candidates against the current PKRTrainer MTT postflop production gate, lists legal
+FLOP import slots and writes a Markdown + JSON integration report under
+`artifacts/texas-solver-review-integration/`. It does not create production `normalized.json` or `permission.json`.
 Use `--family=<familyId>` to stage a non-default TexasSolver family; the command derives
 `output/texas-solver/<familyId>/raw` and `output/texas-solver/<familyId>` automatically unless explicit paths are
 provided.
