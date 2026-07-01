@@ -198,12 +198,20 @@ npm run mtt:texas-solver-viewer
 Invoke-Item .\artifacts\texas-solver-review-integration\viewer\index.html
 ```
 
-The viewer is for checking hand matrices, dominant actions, frequencies and boards. It is not a production import.
+The viewer is for checking hand matrices, dominant actions, frequencies and boards. It scans the current staged
+TexasSolver output folder by default, so newly reviewed LOW/HIGH SPR families appear after `mtt:texas-solver-review`.
+It is not a production import.
 
 To create the first canonical import candidate from the recommended pilot:
 
 ```powershell
 npm run mtt:texas-solver-normalize-draft -- --write
+```
+
+LOW/HIGH SPR candidates can override the rule SPR band:
+
+```powershell
+npm run mtt:texas-solver-normalize-draft -- --review .\Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver\MTT9_20BB_BTN_BB_SRP_LOWSPR\strategy-export.CHECK.review.json --output-dir .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK --spr-min=0 --spr-max=3 --write
 ```
 
 The default output is:

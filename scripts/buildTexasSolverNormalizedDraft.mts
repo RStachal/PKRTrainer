@@ -18,6 +18,8 @@ interface CliArgs {
   outputDir: string;
   packId: string;
   reviewPath: string;
+  sprMax: number;
+  sprMin: number;
   write: boolean;
 }
 
@@ -86,6 +88,8 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let outputDir = resolve(DEFAULT_OUTPUT_DIR);
   let packId = DEFAULT_PACK_ID;
   let reviewPath = resolve(DEFAULT_REVIEW);
+  let sprMax = 8;
+  let sprMin = 3;
   let write = false;
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -93,6 +97,24 @@ function parseArgs(argv: readonly string[]): CliArgs {
     if (item === "--help" || item === "-h") throw new Error(usage());
     if (item === "--write") {
       write = true;
+      continue;
+    }
+    if (item === "--spr-min") {
+      sprMin = parseNumber(nextArg(argv, index, "--spr-min"), "--spr-min");
+      index += 1;
+      continue;
+    }
+    if (item.startsWith("--spr-min=")) {
+      sprMin = parseNumber(requiredInlineValue(item, "--spr-min"), "--spr-min");
+      continue;
+    }
+    if (item === "--spr-max") {
+      sprMax = parseNumber(nextArg(argv, index, "--spr-max"), "--spr-max");
+      index += 1;
+      continue;
+    }
+    if (item.startsWith("--spr-max=")) {
+      sprMax = parseNumber(requiredInlineValue(item, "--spr-max"), "--spr-max");
       continue;
     }
     if (item === "--review") {
@@ -152,7 +174,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { blindSpeeds, evModel, antes, outputDir, packId, reviewPath, write };
+  if (sprMin < 0 || sprMax < sprMin) throw new Error(`Invalid SPR range: ${sprMin}-${sprMax}`);
+
+  return { blindSpeeds, evModel, antes, outputDir, packId, reviewPath, sprMax, sprMin, write };
 }
 
 function usage(): string {
@@ -161,6 +185,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-normalize-draft",
     "  npm run mtt:texas-solver-normalize-draft -- --write",
     "  npm run mtt:texas-solver-normalize-draft -- --review artifacts/.../CHECK.review-report.json --pack-id mtt-full-ring-9-regular-flop-chip-ev-ante-off-production-v1 --write",
+    "  npm run mtt:texas-solver-normalize-draft -- --review artifacts/.../LOWSPR/CHECK.review-report.json --spr-min=0 --spr-max=3 --output-dir artifacts/.../LOWSPR --write",
     "",
     "Builds a review-only canonical flop-production draft from a TexasSolver review report.",
     "The output is written to artifacts/ by default and must still pass human poker review before promotion.",
@@ -190,6 +215,12 @@ function parseEv(value: string): "CHIP_EV" | "DOLAR_EV" {
   throw new Error(`Unsupported --ev value: ${value}`);
 }
 
+function parseNumber(value: string, flag: string): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) throw new Error(`${flag} must be a finite number.`);
+  return parsed;
+}
+
 function buildDraft(args: CliArgs): DraftResult {
   const review = JSON.parse(readFileSync(args.reviewPath, "utf8")) as ReviewReport;
   const familyId = stringValue(review.familyId, "UNKNOWN_FAMILY");
@@ -204,7 +235,7 @@ function buildDraft(args: CliArgs): DraftResult {
     "Draft was generated from solver review aggregation and still needs human poker review.",
     "Draft intentionally covers one family/node only, so production coverage is expected to remain incomplete.",
   ];
-  const rules = [buildRule(familyId, nodeHistory, aggregateFiles(files))];
+  const rules = [buildRule(args, familyId, nodeHistory, aggregateFiles(files))];
   const bucketCount = rules.reduce((count, rule) => count + rule.rangeBuckets.length, 0);
   const normalizedPath = resolve(args.outputDir, "normalized.candidate.json");
   const permissionPath = resolve(args.outputDir, "permission.candidate.json");
@@ -415,7 +446,7 @@ function aggregateFiles(files: readonly ReviewFile[]): DraftRuleFile {
   };
 }
 
-function buildRule(familyId: string, nodeHistory: readonly string[], file: DraftRuleFile) {
+function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string[], file: DraftRuleFile) {
   const board = file.board;
   const boardTextures = file.boardTextures;
   const buckets = Object.entries(file.handClasses)
@@ -430,8 +461,8 @@ function buildRule(familyId: string, nodeHistory: readonly string[], file: Draft
     potType: "SINGLE_RAISED",
     positionPattern: "SRP_BTN_VS_BB",
     boardTextures,
-    sprMin: 3,
-    sprMax: 8,
+    sprMin: args.sprMin,
+    sprMax: args.sprMax,
     actions: ["CHECK", "BET_SMALL", "BET_BIG"],
     recommendedAction,
     rangeBuckets: buckets,

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
-const DEFAULT_REVIEWS_DIR = "artifacts/texas-solver-review-integration/reviews";
+const DEFAULT_REVIEWS_DIR = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 const DEFAULT_OUTPUT = "artifacts/texas-solver-review-integration/viewer/index.html";
 const RANK_ORDER = "AKQJT98765432".split("");
 
@@ -156,7 +156,10 @@ function requiredInlineValue(item: string, flag: string): string {
 
 function findReviewReports(reviewsDir: string): string[] {
   if (!existsSync(reviewsDir)) return [];
-  return walkFiles(reviewsDir).filter((filePath) => filePath.endsWith(".review-report.json"));
+  return walkFiles(reviewsDir).filter((filePath) => (
+    filePath.endsWith(".review-report.json") ||
+    filePath.endsWith(".review.json")
+  ));
 }
 
 function walkFiles(root: string): string[] {
