@@ -315,6 +315,17 @@ npm run mtt:texas-solver-coverage-status -- --output=artifacts/texas-solver-cove
 This status command reads `coverage-v2-manifest.json`, counts solved raw JSON boards per family and prints the exact
 stage/review/normalize commands for families that are complete.
 
+To let PKRTrainer pick up completed families automatically from the filesystem:
+
+```powershell
+npm run mtt:texas-solver-ingest-completed -- --dry-run --summary
+npm run mtt:texas-solver-ingest-completed -- --summary
+```
+
+The ingest command processes only `RAW_COMPLETE` families. It stages TexasSolver output, creates `CHECK` review files,
+normalizes supported LOW/HIGH SPR BTN vs BB SRP pilot candidates and re-merges available pilot drafts. It does not copy
+anything into production `src/data` and it does not promote a full release pack.
+
 Stop if needed:
 
 ```powershell
