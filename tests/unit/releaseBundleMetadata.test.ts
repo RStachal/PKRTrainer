@@ -104,6 +104,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:texas-solver-merge-pilot-drafts"]).toBe("vite-node scripts/mergeTexasSolverPilotDrafts.mts");
     expect(pkg.scripts["mtt:texas-solver-viewer"]).toBe("vite-node scripts/buildTexasSolverReviewViewer.mts");
     expect(pkg.scripts["mtt:postflop-pilot-gate"]).toBe("vite-node scripts/checkMttPostflopPilotGate.mts");
+    expect(pkg.scripts["mtt:postflop-pilot-suite"]).toBe("vite-node scripts/checkMttPostflopPilotSuite.mts");
     expect(pkg.scripts["mtt:release-gates"]).toBe("vite-node scripts/checkMttReleaseGates.mts");
     expect(pkg.scripts["mtt:acceptance"]).toBe("vite-node scripts/checkMttAcceptance.mts");
     expect(pkg.scripts["mtt:technical-acceptance"])

@@ -371,6 +371,15 @@ npm run mtt:postflop-pilot-gate -- --scope=UTG_vs_BB_SRP_FLOP_CBET --normalized 
 npm run mtt:postflop-pilot-gate -- --scope=BTN_vs_CO_3BP_FLOP_CBET --normalized .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_35BB_CO_BTN_3BP-CHECK\normalized.candidate.json --permission-manifest .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_35BB_CO_BTN_3BP-CHECK\permission.candidate.json --summary
 ```
 
+Run all known scoped pilots at once:
+
+```powershell
+npm run mtt:postflop-pilot-suite -- --summary
+npm run mtt:postflop-pilot-suite -- --output=artifacts/mtt-postflop-pilot-suite/report.json
+```
+
+Missing UTG/3BP candidates are reported as `WAITING`, not as production failures.
+
 Expected state for the current pilot:
 
 ```text
