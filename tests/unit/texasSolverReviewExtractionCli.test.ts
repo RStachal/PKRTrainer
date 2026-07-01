@@ -44,6 +44,7 @@ describe("mtt:texas-solver-review CLI", () => {
         status: string;
         productionReady: boolean;
         counts: { rawFiles: number; parsedFiles: number; handClasses: number; writtenFiles: number };
+        anomalies: string[];
         files: Array<{
           boardId: string;
           handClasses: Record<string, {
@@ -64,6 +65,8 @@ describe("mtt:texas-solver-review CLI", () => {
         handClasses: 3,
         writtenFiles: 1,
       });
+      expect(report.anomalies.join("\n")).toContain("low hand-class coverage");
+      expect(report.anomalies.join("\n")).toContain("low combo coverage");
       expect(report.files[0]?.boardId).toBe("A72r");
       expect(report.files[0]?.handClasses.AJs).toMatchObject({
         comboCount: 1,

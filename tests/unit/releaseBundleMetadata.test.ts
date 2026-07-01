@@ -257,6 +257,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("strategy-export.review.json");
     expect(operatorGuide).toContain("strategy-export.CHECK.review.json");
     expect(operatorGuide).toContain("source-safe root strategy review summary");
+    expect(operatorGuide).toContain("non-blocking `anomalies` for poker review");
     expect(operatorGuide).toContain(".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-nightly-verification.ps1");
     expect(operatorGuide).toContain(".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-nightly-verification.ps1 -RunSolve -ReviewTemplate");
     expect(operatorGuide).toContain("npm run mtt:stage-texas-solver -- --summary");

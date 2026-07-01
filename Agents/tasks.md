@@ -2171,7 +2171,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Zachytit a reportovat cestu stromem, dostupne child akce, player mapping IP/OOP a fail-closed stav, pokud pozadovany node v exportu neni.
     - Vytvorit jednoduchy anomaly/diff report mezi boardy v jedne family: extremni bet frequency, chybejici hand classes, podezrele action labels, all-in sizing a exploitability/log evidence navazujici na `review-notes.md`.
     - Acceptance: unit test kryje nested `childrens` strom, neexistujici action history a diff/anomaly summary; operator guide popisuje, jak reviewer vybere node pro prvni FLOP pilot.
-    - Rozpracovano 2026-07-01: `--node-history=<ACTION>[>ACTION...]` umi vybrat nested `childrens` node, podporuje raw TexasSolver labels i normalized labels typu `BET_25` a fail-closed reportuje dostupne child akce. Zbyva anomaly/diff summary a napojeni na review-notes evidence.
+    - Rozpracovano 2026-07-01: `--node-history=<ACTION>[>ACTION...]` umi vybrat nested `childrens` node, podporuje raw TexasSolver labels i normalized labels typu `BET_25` a fail-closed reportuje dostupne child akce. Report doplnuje non-blocking `anomalies` pro low hand-class/combo coverage, invalid combo labels a action-set diff mezi boardy. Zbyva napojeni na review-notes evidence a explicitni reviewer sign-off workflow.
 
 - [ ] 136. Password-protected FORPSI staging deployment
   - Cil: umet nahrat aktualni staticky build na FORPSI FTP a zamknout ho heslem, aby slo prakticky zkouset aplikaci mimo lokalni stroj bez verejneho zverejneni.

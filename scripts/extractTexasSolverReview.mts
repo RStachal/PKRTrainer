@@ -79,6 +79,7 @@ interface ReviewReport {
   };
   files: ReviewFile[];
   plannedFiles: Array<{ path: string; written: boolean; purpose: string }>;
+  anomalies: string[];
   blockers: string[];
   nextSteps: string[];
 }
@@ -229,6 +230,7 @@ function buildReviewReport(args: CliArgs): ReviewReport {
     ...files.flatMap((file) => file.blockers.map((blocker) => `${file.fileName}: ${blocker}`)),
   ];
   const uniqueHandClasses = new Set(files.flatMap((file) => Object.keys(file.handClasses)));
+  const anomalies = buildReviewAnomalies(files);
   return {
     valid: blockers.length === 0,
     status: "NEEDS_REVIEW",
@@ -248,15 +250,54 @@ function buildReviewReport(args: CliArgs): ReviewReport {
     },
     files,
     plannedFiles,
+    anomalies,
     blockers,
     nextSteps: [
       "Human-review the extracted root strategies and solver assumptions.",
       "Use --node-history=<ACTION>[>ACTION...] when reviewing a non-root decision node.",
+      "Inspect anomalies before promoting any solver output into canonical range imports.",
       "Confirm tree sizing, player mapping, board coverage and exploitability evidence.",
       "Only after review, map approved strategy data into canonical normalized.json + permission.json.",
       "Run validate:range-import and build:range-module --dry-run before any production promotion.",
     ],
   };
+}
+
+function buildReviewAnomalies(files: readonly ReviewFile[]): string[] {
+  const anomalies: string[] = [];
+  const parseableFiles = files.filter((file) => file.blockers.length === 0);
+  for (const file of parseableFiles) {
+    if (file.invalidCombos.length > 0) {
+      anomalies.push(`${file.fileName}: ${file.invalidCombos.length} invalid combo labels skipped.`);
+    }
+    if (file.handClassCount > 0 && file.handClassCount < 30) {
+      anomalies.push(`${file.fileName}: low hand-class coverage (${file.handClassCount}); review range filters and board blockers.`);
+    }
+    if (file.comboCount > 0 && file.comboCount < 100) {
+      anomalies.push(`${file.fileName}: low combo coverage (${file.comboCount}); confirm this is expected for the selected node/range.`);
+    }
+  }
+
+  if (parseableFiles.length > 1) {
+    const reference = actionSignature(parseableFiles[0]);
+    for (const file of parseableFiles.slice(1)) {
+      const signature = actionSignature(file);
+      if (signature !== reference) {
+        anomalies.push(`${file.fileName}: action set differs from first parsed file (${signature || "none"} vs ${reference || "none"}).`);
+      }
+    }
+    const counts = parseableFiles.map((file) => file.handClassCount).filter((count) => count > 0);
+    const min = Math.min(...counts);
+    const max = Math.max(...counts);
+    if (Number.isFinite(min) && Number.isFinite(max) && min > 0 && max / min >= 2) {
+      anomalies.push(`Family hand-class coverage varies strongly across boards (${min}-${max}); review board/range assumptions.`);
+    }
+  }
+  return anomalies;
+}
+
+function actionSignature(file: ReviewFile): string {
+  return file.actions.map((action) => action.normalized).join("/");
 }
 
 function readReviewFiles(args: CliArgs): ReviewFile[] {
@@ -566,6 +607,7 @@ function renderReport(report: ReviewReport, summaryOnly: boolean): string {
     lines.push(`${file.written ? "OK" : "PENDING"} ${file.purpose}: ${file.path}`);
   }
   for (const blocker of report.blockers) lines.push(`blocker: ${blocker}`);
+  for (const anomaly of report.anomalies) lines.push(`anomaly: ${anomaly}`);
   lines.push("next steps:");
   for (const step of report.nextSteps) lines.push(`  - ${step}`);
   return lines.join("\n");

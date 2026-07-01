@@ -269,6 +269,8 @@ These files are for poker review and adapter development only: they are marked `
 `productionReady: false`, and must not be treated as a `normalized.json` substitute.
 For non-root review, pass `--node-history=<ACTION>[>ACTION...]`; action selectors accept either the raw TexasSolver
 label such as `BET 25.000000` or the normalized PKRTrainer label such as `BET_25`.
+The review report includes non-blocking `anomalies` for poker review, for example low hand-class coverage, low combo
+coverage, invalid combo labels, or action-set differences across boards in one family.
 Use `--family=<familyId>` to stage a non-default TexasSolver family; the command derives
 `output/texas-solver/<familyId>/raw` and `output/texas-solver/<familyId>` automatically unless explicit paths are
 provided.
