@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 const DEFAULT_MANIFEST =
@@ -222,26 +222,48 @@ function buildFamilyRow(outputBase: string, familyId: string, expectedBoards: st
 
 function missingCommandsForFamily(outputBase: string, familyId: string): string[] {
   const familyDir = join(outputBase, familyId);
+  const rawDir = join(familyDir, "raw");
+  const rawSources = rawJsonPaths(rawDir);
   const commands: string[] = [];
-  if (!existsSync(join(familyDir, "strategy-export.json")) || !existsSync(join(familyDir, "review-notes.md"))) {
+  const shouldStage =
+    isMissingOrOlder(join(familyDir, "strategy-export.json"), rawSources) ||
+    isMissingOrOlder(join(familyDir, "review-notes.md"), rawSources);
+  if (shouldStage) {
     commands.push(`mtt:stage-texas-solver -- --family=${familyId} --write --review-template --summary`);
   }
-  if (!existsSync(join(familyDir, "strategy-export.CHECK.review.json"))) {
+  const reviewPath = join(familyDir, "strategy-export.CHECK.review.json");
+  const shouldReview = shouldStage || isMissingOrOlder(reviewPath, rawSources);
+  if (shouldReview) {
     commands.push(`mtt:texas-solver-review -- --family=${familyId} --node-history=CHECK --write --summary`);
   }
-  if (familyId.includes("LOWSPR") && !existsSync(join(LOWSPR_DRAFT_DIR, "normalized.candidate.json"))) {
+  const draftSources = [reviewPath, ...rawSources].filter((path) => existsSync(path));
+  if (familyId.includes("LOWSPR") && (shouldReview || isMissingOrOlder(join(LOWSPR_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${LOWSPR_DRAFT_DIR} --spr-min=0 --spr-max=3 --write`);
   }
-  if (familyId.includes("HIGHSPR") && !existsSync(join(HIGHSPR_DRAFT_DIR, "normalized.candidate.json"))) {
+  if (familyId.includes("HIGHSPR") && (shouldReview || isMissingOrOlder(join(HIGHSPR_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${HIGHSPR_DRAFT_DIR} --spr-min=8 --spr-max=20 --write`);
   }
-  if (familyId === "MTT9_40BB_UTG_BB_SRP" && !existsSync(join(UTG_BB_SRP_DRAFT_DIR, "normalized.candidate.json"))) {
+  if (familyId === "MTT9_40BB_UTG_BB_SRP" && (shouldReview || isMissingOrOlder(join(UTG_BB_SRP_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${UTG_BB_SRP_DRAFT_DIR} --spr-min=3 --spr-max=8 --pot-type=SINGLE_RAISED --action-node=SINGLE_RAISED_POT_CBET --position-pattern=SRP_UTG_VS_BB --write`);
   }
-  if (familyId === "MTT9_35BB_CO_BTN_3BP" && !existsSync(join(CO_BTN_3BP_DRAFT_DIR, "normalized.candidate.json"))) {
+  if (familyId === "MTT9_35BB_CO_BTN_3BP" && (shouldReview || isMissingOrOlder(join(CO_BTN_3BP_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${CO_BTN_3BP_DRAFT_DIR} --spr-min=0 --spr-max=3 --pot-type=THREE_BET_POT --action-node=THREE_BET_POT_CBET --position-pattern=3BP_BTN_VS_CO --write`);
   }
   return commands;
+}
+
+function rawJsonPaths(rawDir: string): string[] {
+  if (!existsSync(rawDir)) return [];
+  return readdirSync(rawDir)
+    .filter((name) => name.toLowerCase().endsWith(".json"))
+    .map((name) => join(rawDir, name));
+}
+
+function isMissingOrOlder(targetPath: string, sourcePaths: readonly string[]): boolean {
+  if (!existsSync(targetPath)) return true;
+  if (sourcePaths.length === 0) return false;
+  const targetMtime = statSync(targetPath).mtimeMs;
+  return sourcePaths.some((sourcePath) => existsSync(sourcePath) && statSync(sourcePath).mtimeMs > targetMtime);
 }
 
 function mergeCommands(): string[] {
