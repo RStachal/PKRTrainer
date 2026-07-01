@@ -178,9 +178,9 @@ function renderReport(report: WorkflowReport, args: CliArgs): string {
   ];
   for (const step of report.steps) {
     lines.push(`${step.valid ? "OK" : "FAIL"} ${step.id}${step.skipped ? " (skipped)" : ""}`);
-    if (!args.summary) {
+    if (!args.summary || !step.valid) {
       const trimmedOutput = step.output.trim();
-      if (trimmedOutput.length > 0) lines.push(indent(trimmedOutput));
+      if (trimmedOutput.length > 0) lines.push(indent(args.summary ? tailLines(trimmedOutput, 12) : trimmedOutput));
       if (step.error !== null) lines.push(indent(step.error));
     }
   }
@@ -192,4 +192,9 @@ function indent(text: string): string {
     .split(/\r?\n/u)
     .map((line) => `  ${line}`)
     .join("\n");
+}
+
+function tailLines(text: string, limit: number): string {
+  const lines = text.split(/\r?\n/u);
+  return lines.slice(Math.max(0, lines.length - limit)).join("\n");
 }

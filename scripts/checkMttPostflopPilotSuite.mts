@@ -220,7 +220,7 @@ function renderReport(report: PilotSuiteReport, summaryOnly: boolean): string {
   ];
   for (const row of report.rows) {
     lines.push(`${row.status} ${row.id}: ${row.scope}`);
-    if (!summaryOnly && row.blockers.length > 0) {
+    if ((row.status === "INVALID" || !summaryOnly) && row.blockers.length > 0) {
       for (const blocker of row.blockers) lines.push(`  - ${blocker}`);
     }
   }
