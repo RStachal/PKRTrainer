@@ -75,6 +75,18 @@ describe("MTT postflop pilot gate", () => {
     expect(report.pilotScope).toBe("BTN_vs_CO_3BP_FLOP_CBET");
     expect(report.fullProductionReady).toBe(false);
   });
+
+  it("pusti BTN vs CO 3BP flop facing-bet scoped pilot s explicitnim scopem", () => {
+    const pack = {
+      ...pilotPack(),
+      rules: [facingBetRule()],
+    } satisfies FlopProductionStrategyPack;
+    const report = buildMttPostflopPilotGateReport(pack, permissionFor(pack.id), "BTN_vs_CO_3BP_FLOP_FACING_BET");
+
+    expect(report.valid).toBe(true);
+    expect(report.pilotScope).toBe("BTN_vs_CO_3BP_FLOP_FACING_BET");
+    expect(report.fullProductionReady).toBe(false);
+  });
 });
 
 function pilotPack(): FlopProductionStrategyPack {
@@ -178,5 +190,38 @@ function permissionFor(packId: string): ProductionPermissionManifest {
       containsRangeValues: true,
     }],
     notes: ["Synthetic pilot gate fixture."],
+  };
+}
+
+function facingBetRule(): FlopProductionStrategyPack["rules"][number] {
+  return {
+    ...pilotPack().rules[0],
+    id: "pilot-btn-co-3bp-facing-bet",
+    actionNode: "FLOP_FACING_BET",
+    potType: "THREE_BET_POT",
+    positionPattern: "3BP_BTN_VS_CO",
+    actions: ["FOLD", "CALL", "RAISE"],
+    recommendedAction: "CALL",
+    rangeBuckets: HANDS.map((hand, index) => ({
+      lane: index < 10 ? "VALUE" : index < 20 ? "BLUFF" : "CHECK",
+      label: `${hand} facing-bet pilot bucket`,
+      action: index < 10 ? "CALL" : index < 20 ? "RAISE" : "FOLD",
+      handClasses: [hand],
+      features: [index < 10 ? "value-continue" : index < 20 ? "raise-bluff" : "fold-candidate"],
+      actionMix: index < 10
+        ? [
+            { action: "CALL", frequencyPct: 70, visibility: "EXACT" },
+            { action: "RAISE", frequencyPct: 30, visibility: "EXACT" },
+          ]
+        : index < 20
+          ? [
+              { action: "RAISE", frequencyPct: 60, visibility: "EXACT" },
+              { action: "CALL", frequencyPct: 40, visibility: "EXACT" },
+            ]
+          : [
+              { action: "FOLD", frequencyPct: 80, visibility: "EXACT" },
+              { action: "CALL", frequencyPct: 20, visibility: "EXACT" },
+            ],
+    })),
   };
 }

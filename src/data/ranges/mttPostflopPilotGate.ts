@@ -12,7 +12,8 @@ import { buildProductionStrategyRuntimeSmokeReport } from "./productionStrategyR
 export type MttPostflopPilotScope =
   | "BTN_vs_BB_SRP_FLOP_CBET"
   | "UTG_vs_BB_SRP_FLOP_CBET"
-  | "BTN_vs_CO_3BP_FLOP_CBET";
+  | "BTN_vs_CO_3BP_FLOP_CBET"
+  | "BTN_vs_CO_3BP_FLOP_FACING_BET";
 
 export interface MttPostflopPilotGateReport {
   valid: boolean;
@@ -107,6 +108,14 @@ function pilotScopeErrors(
         label: "BTN vs CO 3BP",
         minBuckets: 20,
       });
+    case "BTN_vs_CO_3BP_FLOP_FACING_BET":
+      return scopedFlopDecisionErrors(pack, {
+        potType: "THREE_BET_POT",
+        actionNode: "FLOP_FACING_BET",
+        positionPattern: "3BP_BTN_VS_CO",
+        label: "BTN vs CO 3BP facing flop bet",
+        minBuckets: 20,
+      });
   }
 }
 
@@ -115,6 +124,19 @@ function scopedFlopCbetErrors(
   scope: {
     potType: "SINGLE_RAISED" | "THREE_BET_POT";
     actionNode: "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET";
+    positionPattern: "SRP_BTN_VS_BB" | "SRP_UTG_VS_BB" | "3BP_BTN_VS_CO";
+    label: string;
+    minBuckets: number;
+  },
+): string[] {
+  return scopedFlopDecisionErrors(pack, scope);
+}
+
+function scopedFlopDecisionErrors(
+  pack: FlopProductionStrategyPack,
+  scope: {
+    potType: "SINGLE_RAISED" | "THREE_BET_POT";
+    actionNode: "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET" | "FLOP_FACING_BET";
     positionPattern: "SRP_BTN_VS_BB" | "SRP_UTG_VS_BB" | "3BP_BTN_VS_CO";
     label: string;
     minBuckets: number;
