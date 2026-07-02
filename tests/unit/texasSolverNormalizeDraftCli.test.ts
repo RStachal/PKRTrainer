@@ -35,6 +35,11 @@ describe("mtt:texas-solver-normalize-draft CLI", () => {
                 dominantAction: "FOLD",
                 dominantFrequency: 1,
               },
+              "76s": {
+                averageByAction: { CALL: 0.55, RAISE_75: 0.3, FOLD: 0.15 },
+                dominantAction: "CALL",
+                dominantFrequency: 0.55,
+              },
             },
           },
         ],
@@ -76,8 +81,9 @@ describe("mtt:texas-solver-normalize-draft CLI", () => {
       expect(["FOLD", "CALL", "RAISE"]).toContain(rule?.recommendedAction);
       expect(rule?.rangeBuckets.map((bucket) => [bucket.label, bucket.lane, bucket.action])).toEqual([
         ["32s · FOLD", "CHECK", "FOLD"],
+        ["76s · RAISE", "BLUFF", "RAISE"],
         ["AA · RAISE", "VALUE", "RAISE"],
-        ["KQo · CALL", "VALUE", "CALL"],
+        ["KQo · CALL", "CHECK", "CALL"],
       ]);
       expect([...allMixActions].sort()).toEqual(["CALL", "FOLD", "RAISE"]);
       expect([...allMixActions]).not.toContain("CHECK");

@@ -663,7 +663,13 @@ function primaryBucketAction(
   actionMix: Record<PostflopAction, number>,
 ): PostflopAction {
   const dominantAction = mappedDominantAction(actionMix);
-  if (actionNode === "FLOP_FACING_BET") return dominantAction;
+  if (actionNode === "FLOP_FACING_BET") {
+    const raiseFrequency = actionMix.RAISE ?? 0;
+    if (dominantAction !== "RAISE" && raiseFrequency >= MIN_MIXED_BET_FREQUENCY_FOR_ACTIVE_BUCKET) {
+      return "RAISE";
+    }
+    return dominantAction;
+  }
   const betFrequency = (actionMix.BET_SMALL ?? 0) + (actionMix.BET_BIG ?? 0);
   const isNaturalBluffCandidate = !isPair(handClass) && !STRONG_RANKS.has(handClass[0]);
   if (
@@ -707,9 +713,9 @@ function laneForHand(
   action: PostflopAction,
 ): "VALUE" | "BLUFF" | "CHECK" {
   if (actionNode === "FLOP_FACING_BET") {
-    if (action === "FOLD") return "CHECK";
+    if (action !== "RAISE") return "CHECK";
     if (isPair(handClass) || STRONG_RANKS.has(handClass[0])) return "VALUE";
-    return action === "RAISE" ? "BLUFF" : "CHECK";
+    return "BLUFF";
   }
   if (action === "CHECK") return "CHECK";
   if (isPair(handClass) || STRONG_RANKS.has(handClass[0])) return "VALUE";
