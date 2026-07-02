@@ -63,6 +63,7 @@ describe("mtt:texas-solver-normalize-draft CLI", () => {
           recommendedAction: string;
           rangeBuckets: Array<{
             label: string;
+            lane: string;
             action: string;
             actionMix: Array<{ action: string; frequencyPct: number }>;
           }>;
@@ -73,7 +74,11 @@ describe("mtt:texas-solver-normalize-draft CLI", () => {
 
       expect(rule?.actions).toEqual(["FOLD", "CALL", "RAISE"]);
       expect(["FOLD", "CALL", "RAISE"]).toContain(rule?.recommendedAction);
-      expect(rule?.rangeBuckets.map((bucket) => bucket.action)).toEqual(["FOLD", "RAISE", "CALL"]);
+      expect(rule?.rangeBuckets.map((bucket) => [bucket.label, bucket.lane, bucket.action])).toEqual([
+        ["32s · FOLD", "CHECK", "FOLD"],
+        ["AA · RAISE", "VALUE", "RAISE"],
+        ["KQo · CALL", "VALUE", "CALL"],
+      ]);
       expect([...allMixActions].sort()).toEqual(["CALL", "FOLD", "RAISE"]);
       expect([...allMixActions]).not.toContain("CHECK");
       expect([...allMixActions]).not.toContain("BET_SMALL");

@@ -598,7 +598,7 @@ function buildBucket(actionNode: CliArgs["actionNode"], handClass: HandLabel, st
   const actionMix = normalizeMappedActionMix(actionNode, strategy.averageByAction);
   const dominantAction = primaryBucketAction(actionNode, handClass, actionMix);
   return {
-    lane: laneForHand(handClass, dominantAction),
+    lane: laneForHand(actionNode, handClass, dominantAction),
     label: `${handClass} · ${dominantAction}`,
     action: dominantAction,
     handClasses: [handClass],
@@ -701,8 +701,17 @@ function mostCommonBucketAction(buckets: Array<{ action: PostflopAction }>): Pos
   return [...counts.entries()].sort((left, right) => right[1] - left[1])[0]?.[0] ?? "CHECK";
 }
 
-function laneForHand(handClass: string, action: PostflopAction): "VALUE" | "BLUFF" | "CHECK" {
-  if (action === "CHECK" || action === "CALL" || action === "FOLD") return "CHECK";
+function laneForHand(
+  actionNode: CliArgs["actionNode"],
+  handClass: string,
+  action: PostflopAction,
+): "VALUE" | "BLUFF" | "CHECK" {
+  if (actionNode === "FLOP_FACING_BET") {
+    if (action === "FOLD") return "CHECK";
+    if (isPair(handClass) || STRONG_RANKS.has(handClass[0])) return "VALUE";
+    return action === "RAISE" ? "BLUFF" : "CHECK";
+  }
+  if (action === "CHECK") return "CHECK";
   if (isPair(handClass) || STRONG_RANKS.has(handClass[0])) return "VALUE";
   return "BLUFF";
 }
