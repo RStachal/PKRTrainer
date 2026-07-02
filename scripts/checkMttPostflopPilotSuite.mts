@@ -104,13 +104,13 @@ const TARGETS: readonly PilotTarget[] = [
     ],
   },
   {
-    id: "btn-co-3bp-flop-facing-bet-low-high",
+    id: "btn-co-3bp-flop-facing-bet-low-mid-high",
     scope: "BTN_vs_CO_3BP_FLOP_FACING_BET",
     normalizedPath:
       "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_FACING_BET_PILOT/normalized.candidate.json",
     permissionPath:
       "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_FACING_BET_PILOT/permission.candidate.json",
-    description: "Merged BTN vs CO 3bet-pot flop facing-bet response pilot across available SPR bands.",
+    description: "Merged BTN vs CO 3bet-pot flop facing-bet response pilot across LOW/MID/HIGH SPR bands.",
     alternatives: [
       {
         id: "btn-co-3bp-flop-facing-bet-highspr",

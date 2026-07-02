@@ -83,6 +83,7 @@ const MERGE_PROFILES: Record<MttPostflopPilotScope, MergeProfile> = {
     label: "BTN vs CO 3bet-pot flop facing-bet response",
     defaultInputDirs: [
       "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR-FACING-BET_39",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR-FACING-BET_79",
       "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_150BB_CO_BTN_3BP_HIGHSPR-FACING-BET_39",
     ],
     defaultOutputDir:
@@ -90,8 +91,8 @@ const MERGE_PROFILES: Record<MttPostflopPilotScope, MergeProfile> = {
     packVersion: "btn-co-3bp-flop-facing-bet-pilot-merged-draft-v1",
     permissionVersion: "btn-co-3bp-flop-facing-bet-pilot-permission-merged-draft-v1",
     assumptions: [
-      "Merged LOW/HIGH SPR candidates are still scoped to BTN vs CO 3bet-pot flop facing-bet response training only.",
-      "This merged draft must stay behind the pilot gate until MID SPR response coverage and full postflop production coverage are imported.",
+      "Merged LOW/MID/HIGH SPR candidates are still scoped to BTN vs CO 3bet-pot flop facing-bet response training only.",
+      "This merged draft must stay behind the pilot gate until broader position/node coverage and full postflop production coverage are imported.",
     ],
   },
 };
