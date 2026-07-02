@@ -341,7 +341,7 @@ function buildDraft(args: CliArgs): DraftResult {
     "Draft was generated from solver review aggregation and still needs human poker review.",
     "Draft intentionally covers one family/node only, so production coverage is expected to remain incomplete.",
   ];
-  const rules = [buildRule(args, familyId, nodeHistory, aggregateFiles(files))];
+  const rules = [buildRule(args, familyId, nodeHistory, aggregateFiles(args.actionNode, files))];
   const bucketCount = rules.reduce((count, rule) => count + rule.rangeBuckets.length, 0);
   const normalizedPath = resolve(args.outputDir, "normalized.candidate.json");
   const permissionPath = resolve(args.outputDir, "permission.candidate.json");
@@ -391,7 +391,9 @@ function buildDraft(args: CliArgs): DraftResult {
     assumptions: [
       `${familyId} is mapped to FULL_RING_9 ${args.positionPattern} ${args.potType} ${args.actionNode} training context.`,
       `${nodeHistory.join(" > ") || "ROOT"} node is treated as the hero decision node selected for review.`,
-      "TexasSolver BET 25 is mapped to BET_SMALL; larger/all-in bet labels are mapped to BET_BIG.",
+    args.actionNode === "FLOP_FACING_BET"
+      ? "TexasSolver FOLD/CALL/RAISE labels are mapped to the facing-bet action space."
+      : "TexasSolver BET 25 is mapped to BET_SMALL; larger/all-in bet labels are mapped to BET_BIG.",
       "Board ids from the review file are converted to representative physical cards only for texture/card-removal validation.",
       "This draft is not sufficient production coverage by itself.",
     ],
@@ -507,7 +509,7 @@ function normalizeActionMix(value: unknown): Record<string, number> {
   return result;
 }
 
-function aggregateFiles(files: readonly ReviewFile[]): DraftRuleFile {
+function aggregateFiles(actionNode: CliArgs["actionNode"], files: readonly ReviewFile[]): DraftRuleFile {
   if (files.length === 0) {
     return {
       boardId: "empty",
@@ -541,7 +543,7 @@ function aggregateFiles(files: readonly ReviewFile[]): DraftRuleFile {
         sum + (strategy.averageByAction[action] ?? 0)
       ), 0) / strategies.length;
     }
-    const actionMix = normalizeMappedActionMix(averageByAction);
+    const actionMix = normalizeMappedActionMix(actionNode, averageByAction);
     const dominantAction = mappedDominantAction(actionMix);
     handClasses[handClass] = {
       averageByAction,
@@ -563,7 +565,7 @@ function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string
   const boardTextures = file.boardTextures;
   const buckets = Object.entries(file.handClasses)
     .sort(([left], [right]) => left.localeCompare(right))
-    .map(([handClass, strategy]) => buildBucket(handClass as HandLabel, strategy));
+    .map(([handClass, strategy]) => buildBucket(args.actionNode, handClass as HandLabel, strategy));
   const recommendedAction = mostCommonBucketAction(buckets);
   const sampleHand = buckets[0]?.handClasses[0] as HandLabel | undefined;
 
@@ -575,7 +577,7 @@ function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string
     boardTextures,
     sprMin: args.sprMin,
     sprMax: args.sprMax,
-    actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+    actions: actionsForActionNode(args.actionNode),
     recommendedAction,
     rangeBuckets: buckets,
     cardRemovalSamples: sampleHand
@@ -592,9 +594,9 @@ function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string
   };
 }
 
-function buildBucket(handClass: HandLabel, strategy: ReviewHandClassStrategy) {
-  const actionMix = normalizeMappedActionMix(strategy.averageByAction);
-  const dominantAction = primaryBucketAction(handClass, actionMix);
+function buildBucket(actionNode: CliArgs["actionNode"], handClass: HandLabel, strategy: ReviewHandClassStrategy) {
+  const actionMix = normalizeMappedActionMix(actionNode, strategy.averageByAction);
+  const dominantAction = primaryBucketAction(actionNode, handClass, actionMix);
   return {
     lane: laneForHand(handClass, dominantAction),
     label: `${handClass} · ${dominantAction}`,
@@ -609,7 +611,21 @@ function buildBucket(handClass: HandLabel, strategy: ReviewHandClassStrategy) {
   };
 }
 
-function normalizeMappedActionMix(source: Record<string, number>): Record<PostflopAction, number> {
+function actionsForActionNode(actionNode: CliArgs["actionNode"]): PostflopAction[] {
+  return actionNode === "FLOP_FACING_BET"
+    ? ["FOLD", "CALL", "RAISE"]
+    : ["CHECK", "BET_SMALL", "BET_BIG"];
+}
+
+function fallbackActionForNode(actionNode: CliArgs["actionNode"]): PostflopAction {
+  return actionNode === "FLOP_FACING_BET" ? "CALL" : "CHECK";
+}
+
+function normalizeMappedActionMix(
+  actionNode: CliArgs["actionNode"],
+  source: Record<string, number>,
+): Record<PostflopAction, number> {
+  const legalActions = actionsForActionNode(actionNode);
   const mapped: Record<PostflopAction, number> = {
     CHECK: 0,
     BET_SMALL: 0,
@@ -619,30 +635,35 @@ function normalizeMappedActionMix(source: Record<string, number>): Record<Postfl
     FOLD: 0,
   };
   for (const [action, frequency] of Object.entries(source)) {
-    const mappedAction = mapSolverAction(action);
+    const mappedAction = mapSolverAction(actionNode, action);
     if (mappedAction === null) continue;
     mapped[mappedAction] += Math.max(0, frequency);
   }
-  const relevant = {
-    CHECK: mapped.CHECK,
-    BET_SMALL: mapped.BET_SMALL,
-    BET_BIG: mapped.BET_BIG,
-  };
+  const relevant = Object.fromEntries(legalActions.map((action) => [action, mapped[action]])) as Record<PostflopAction, number>;
   const total = Object.values(relevant).reduce((sum, value) => sum + value, 0);
-  if (total <= 0) return { CHECK: 100, BET_SMALL: 0, BET_BIG: 0 };
-  const result = {
-    CHECK: roundPct((relevant.CHECK / total) * 100),
-    BET_SMALL: roundPct((relevant.BET_SMALL / total) * 100),
-    BET_BIG: roundPct((relevant.BET_BIG / total) * 100),
-  };
-  const delta = roundPct(100 - result.CHECK - result.BET_SMALL - result.BET_BIG);
+  if (total <= 0) {
+    return Object.fromEntries(legalActions.map((action) => [
+      action,
+      action === fallbackActionForNode(actionNode) ? 100 : 0,
+    ])) as Record<PostflopAction, number>;
+  }
+  const result = Object.fromEntries(legalActions.map((action) => [
+    action,
+    roundPct((relevant[action] / total) * 100),
+  ])) as Record<PostflopAction, number>;
+  const delta = roundPct(100 - legalActions.reduce((sum, action) => sum + (result[action] ?? 0), 0));
   const dominant = mappedDominantAction(result);
   result[dominant] = roundPct(result[dominant] + delta);
   return result;
 }
 
-function primaryBucketAction(handClass: string, actionMix: Record<PostflopAction, number>): PostflopAction {
+function primaryBucketAction(
+  actionNode: CliArgs["actionNode"],
+  handClass: string,
+  actionMix: Record<PostflopAction, number>,
+): PostflopAction {
   const dominantAction = mappedDominantAction(actionMix);
+  if (actionNode === "FLOP_FACING_BET") return dominantAction;
   const betFrequency = (actionMix.BET_SMALL ?? 0) + (actionMix.BET_BIG ?? 0);
   const isNaturalBluffCandidate = !isPair(handClass) && !STRONG_RANKS.has(handClass[0]);
   if (
@@ -655,7 +676,13 @@ function primaryBucketAction(handClass: string, actionMix: Record<PostflopAction
   return (actionMix.BET_BIG ?? 0) > (actionMix.BET_SMALL ?? 0) ? "BET_BIG" : "BET_SMALL";
 }
 
-function mapSolverAction(action: string): PostflopAction | null {
+function mapSolverAction(actionNode: CliArgs["actionNode"], action: string): PostflopAction | null {
+  if (actionNode === "FLOP_FACING_BET") {
+    if (action === "FOLD") return "FOLD";
+    if (action === "CALL") return "CALL";
+    if (action === "RAISE" || action.startsWith("RAISE_")) return "RAISE";
+    return null;
+  }
   if (action === "CHECK") return "CHECK";
   if (action.startsWith("BET_")) {
     const amount = Number(action.slice("BET_".length));
@@ -675,18 +702,34 @@ function mostCommonBucketAction(buckets: Array<{ action: PostflopAction }>): Pos
 }
 
 function laneForHand(handClass: string, action: PostflopAction): "VALUE" | "BLUFF" | "CHECK" {
-  if (action === "CHECK") return "CHECK";
+  if (action === "CHECK" || action === "CALL" || action === "FOLD") return "CHECK";
   if (isPair(handClass) || STRONG_RANKS.has(handClass[0])) return "VALUE";
   return "BLUFF";
 }
 
 function featuresForHand(handClass: string, action: PostflopAction): string[] {
-  const features = [action === "CHECK" ? "solver-check-frequency" : "solver-bet-frequency"];
+  const features = [featureForAction(action)];
   if (isPair(handClass)) features.push("pocket-pair");
   if (handClass.endsWith("s")) features.push("suited");
   if (handClass.endsWith("o")) features.push("offsuit");
   if (STRONG_RANKS.has(handClass[0])) features.push("high-card-density");
   return features;
+}
+
+function featureForAction(action: PostflopAction): string {
+  switch (action) {
+    case "CHECK":
+      return "solver-check-frequency";
+    case "CALL":
+      return "solver-call-frequency";
+    case "FOLD":
+      return "solver-fold-frequency";
+    case "RAISE":
+      return "solver-raise-frequency";
+    case "BET_SMALL":
+    case "BET_BIG":
+      return "solver-bet-frequency";
+  }
 }
 
 function isPair(handClass: string): boolean {
