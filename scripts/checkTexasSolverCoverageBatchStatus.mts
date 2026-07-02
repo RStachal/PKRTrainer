@@ -56,6 +56,13 @@ interface CoverageFamilyRow {
     reviewNotes: boolean;
   };
   normalizedDraft: boolean;
+  facingBetBest: {
+    present: boolean;
+    aliasDir: string | null;
+    nodeHistory: string | null;
+    betAction: string | null;
+    gateValid: boolean | null;
+  };
   nextCommands: readonly string[];
 }
 
@@ -222,6 +229,7 @@ function buildRow(
     `${scenario.familyId}-CHECK`,
     "normalized.candidate.json",
   ));
+  const facingBetBest = bestFacingBetCandidate(scenario.familyId);
 
   return {
     familyId: scenario.familyId,
@@ -236,7 +244,33 @@ function buildRow(
     latestRawWrite: rawFiles[0]?.lastWriteTime ?? null,
     staged,
     normalizedDraft,
+    facingBetBest,
     nextCommands: nextCommandsForFamily(scenario.familyId, status, staged, normalizedDraft),
+  };
+}
+
+function bestFacingBetCandidate(familyId: string): CoverageFamilyRow["facingBetBest"] {
+  const aliasDir = join(
+    "artifacts",
+    "texas-solver-review-integration",
+    "normalized-drafts",
+    `${familyId}-FACING-BET-BEST`,
+  );
+  const bestPath = join(aliasDir, "best-candidate.json");
+  if (!existsSync(bestPath)) {
+    return { present: false, aliasDir: null, nodeHistory: null, betAction: null, gateValid: null };
+  }
+  const best = readJson<{
+    nodeHistory?: string;
+    betAction?: string;
+    gateValid?: boolean;
+  }>(bestPath);
+  return {
+    present: true,
+    aliasDir,
+    nodeHistory: best.nodeHistory ?? null,
+    betAction: best.betAction ?? null,
+    gateValid: best.gateValid ?? null,
   };
 }
 
@@ -318,6 +352,9 @@ function renderReport(report: CoverageStatusReport, summaryOnly: boolean): strin
   ];
   for (const row of report.rows) {
     lines.push(`${row.familyId}: ${row.status} (${row.solvedBoards.length}/${row.expectedBoards.length})`);
+    if (row.facingBetBest.present) {
+      lines.push(`  facing-bet best: ${row.facingBetBest.nodeHistory ?? "?"} gate=${row.facingBetBest.gateValid ?? "?"}`);
+    }
     if (!summaryOnly && row.missingBoards.length > 0) lines.push(`  missing boards: ${row.missingBoards.join(",")}`);
     if (!summaryOnly && row.nextCommands.length > 0) {
       lines.push("  next:");
@@ -329,4 +366,8 @@ function renderReport(report: CoverageStatusReport, summaryOnly: boolean): strin
     for (const command of report.nextCommands) lines.push(`- ${command}`);
   }
   return lines.join("\n");
+}
+
+function readJson<T>(path: string): T {
+  return JSON.parse(readFileSync(path, "utf8")) as T;
 }
