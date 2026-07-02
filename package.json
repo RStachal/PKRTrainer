@@ -31,6 +31,7 @@
     "mtt:texas-solver-ingest-completed": "vite-node scripts/ingestTexasSolverCompletedCoverage.mts",
     "mtt:texas-solver-pilot-refresh": "vite-node scripts/refreshTexasSolverPilotWorkflow.mts",
     "mtt:texas-solver-normalize-draft": "vite-node scripts/buildTexasSolverNormalizedDraft.mts",
+    "mtt:texas-solver-facing-bet-candidates": "vite-node scripts/buildTexasSolverFacingBetCandidates.mts",
     "mtt:texas-solver-merge-pilot-drafts": "vite-node scripts/mergeTexasSolverPilotDrafts.mts",
     "mtt:texas-solver-viewer": "vite-node scripts/buildTexasSolverReviewViewer.mts",
     "mtt:postflop-pilot-gate": "vite-node scripts/checkMttPostflopPilotGate.mts",
