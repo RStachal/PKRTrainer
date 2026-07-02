@@ -301,6 +301,9 @@ function mergeDrafts(args: CliArgs): { report: MergeReport; pack: FlopProduction
     warnings: [
       `Merged ${profile.label} pilot pack is a scoped training candidate, not a full FLOP production pack.`,
       "Promotion still requires poker review of every included solver family and node.",
+      ...(inputs.length < 2
+        ? ["Only one input draft is available; output is a scoped pilot wrapper rather than a true multi-SPR merge."]
+        : []),
       ...skippedDefaultInputs.map((inputDir) => `Default input skipped because candidate files are not available yet: ${inputDir}`),
       ...pilotGate.warnings,
     ],
@@ -348,7 +351,6 @@ function inputErrorsFor(input: DraftInput): string[] {
 
 function compatibleInputErrors(inputs: readonly DraftInput[]): string[] {
   const errors: string[] = [];
-  if (inputs.length < 2) errors.push("Merge needs at least two input drafts to be useful.");
   const packId = inputs[0]?.pack.id;
   const dimensions = JSON.stringify(inputs[0]?.pack.dimensions ?? {});
   const permissionPackId = inputs[0]?.permission.packId;
