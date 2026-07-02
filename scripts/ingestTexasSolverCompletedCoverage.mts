@@ -279,11 +279,10 @@ function isMissingOrOlder(targetPath: string, sourcePaths: readonly string[]): b
 }
 
 function mergeCommands(): string[] {
-  const dirs = [LOWSPR_DRAFT_DIR, MIDSPR_DRAFT_DIR, HIGHSPR_DRAFT_DIR]
-    .filter((dir) => existsSync(join(dir, "normalized.candidate.json")));
-  if (dirs.length < 2) return [];
-  const inputArgs = dirs.map((dir) => `--input-dir .\\${dir}`).join(" ");
-  return [`mtt:texas-solver-merge-pilot-drafts -- ${inputArgs} --write --summary`];
+  return [
+    "mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_BB_SRP_FLOP_CBET --write --summary",
+    "mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_CBET --write --summary",
+  ];
 }
 
 function runNpmCommand(command: string, errors: string[]): void {
