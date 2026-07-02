@@ -78,6 +78,22 @@ const MERGE_PROFILES: Record<MttPostflopPilotScope, MergeProfile> = {
       "This merged draft must stay behind the pilot gate until full postflop production coverage is imported.",
     ],
   },
+  BTN_vs_CO_3BP_FLOP_FACING_BET: {
+    scope: "BTN_vs_CO_3BP_FLOP_FACING_BET",
+    label: "BTN vs CO 3bet-pot flop facing-bet response",
+    defaultInputDirs: [
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR-FACING-BET_39",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_150BB_CO_BTN_3BP_HIGHSPR-FACING-BET_39",
+    ],
+    defaultOutputDir:
+      "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_FACING_BET_PILOT",
+    packVersion: "btn-co-3bp-flop-facing-bet-pilot-merged-draft-v1",
+    permissionVersion: "btn-co-3bp-flop-facing-bet-pilot-permission-merged-draft-v1",
+    assumptions: [
+      "Merged LOW/HIGH SPR candidates are still scoped to BTN vs CO 3bet-pot flop facing-bet response training only.",
+      "This merged draft must stay behind the pilot gate until MID SPR response coverage and full postflop production coverage are imported.",
+    ],
+  },
 };
 
 interface CliArgs {
@@ -212,6 +228,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-merge-pilot-drafts",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --write --summary",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_CBET --write --summary",
+    "  npm run mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_FACING_BET --write --summary",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --input-dir artifacts/.../LOWSPR --input-dir artifacts/.../MIDSPR --output-dir artifacts/.../PILOT --write",
     "",
     `Supported scopes: ${Object.keys(MERGE_PROFILES).join(", ")}`,

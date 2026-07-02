@@ -104,22 +104,31 @@ const TARGETS: readonly PilotTarget[] = [
     ],
   },
   {
-    id: "btn-co-3bp-flop-facing-bet-highspr",
+    id: "btn-co-3bp-flop-facing-bet-low-high",
     scope: "BTN_vs_CO_3BP_FLOP_FACING_BET",
     normalizedPath:
-      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_150BB_CO_BTN_3BP_HIGHSPR-FACING-BET_39/normalized.candidate.json",
+      "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_FACING_BET_PILOT/normalized.candidate.json",
     permissionPath:
-      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_150BB_CO_BTN_3BP_HIGHSPR-FACING-BET_39/permission.candidate.json",
-    description: "BTN vs CO 3bet-pot high-SPR flop facing-bet response pilot from CHECK>BET_39 TexasSolver node.",
-  },
-  {
-    id: "btn-co-3bp-flop-facing-bet-lowspr",
-    scope: "BTN_vs_CO_3BP_FLOP_FACING_BET",
-    normalizedPath:
-      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR-FACING-BET_39/normalized.candidate.json",
-    permissionPath:
-      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR-FACING-BET_39/permission.candidate.json",
-    description: "BTN vs CO 3bet-pot low-SPR flop facing-bet response pilot from expansion-v1 CHECK>BET_39 node.",
+      "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_FACING_BET_PILOT/permission.candidate.json",
+    description: "Merged BTN vs CO 3bet-pot flop facing-bet response pilot across available SPR bands.",
+    alternatives: [
+      {
+        id: "btn-co-3bp-flop-facing-bet-highspr",
+        normalizedPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_150BB_CO_BTN_3BP_HIGHSPR-FACING-BET_39/normalized.candidate.json",
+        permissionPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_150BB_CO_BTN_3BP_HIGHSPR-FACING-BET_39/permission.candidate.json",
+        description: "BTN vs CO 3bet-pot high-SPR flop facing-bet response pilot from CHECK>BET_39 TexasSolver node.",
+      },
+      {
+        id: "btn-co-3bp-flop-facing-bet-lowspr",
+        normalizedPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR-FACING-BET_39/normalized.candidate.json",
+        permissionPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR-FACING-BET_39/permission.candidate.json",
+        description: "BTN vs CO 3bet-pot low-SPR flop facing-bet response pilot from expansion-v1 CHECK>BET_39 node.",
+      },
+    ],
   },
 ];
 

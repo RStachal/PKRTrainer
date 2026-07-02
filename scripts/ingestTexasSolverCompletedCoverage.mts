@@ -301,6 +301,9 @@ function mergeCommands(manifest: CoverageManifest): string[] {
   if (tags.has("THREE_BET_POT_CBET")) {
     commands.push("mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_CBET --write --summary");
   }
+  if (tags.has("FLOP_FACING_BET")) {
+    commands.push("mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_FACING_BET --write --summary");
+  }
   return commands;
 }
 
