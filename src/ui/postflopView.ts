@@ -1630,10 +1630,15 @@ function styles(doc: Document): HTMLStyleElement {
   .postflop-range-summary__lanes{grid-template-columns:1fr;}
   .postflop-flopzilla{padding:9px;margin-left:-2px;margin-right:-2px;border-radius:10px;}
   .postflop-flopzilla__header,.postflop-flopzilla__hint,
-  .postflop-flopzilla__matrix,.postflop-flopzilla__legend,.postflop-flopzilla__detail{min-width:560px;}
+  .postflop-flopzilla__matrix,.postflop-flopzilla__legend,.postflop-flopzilla__detail{min-width:476px;}
   .postflop-flopzilla__header{gap:8px;}
   .postflop-flopzilla__meta{font-size:10px;}
-  .postflop-flopzilla__cell{min-height:25px;font-size:9px;}
+  .postflop-flopzilla__hint{font-size:10px;}
+  .postflop-flopzilla__matrix{gap:1px;padding:4px;}
+  .postflop-flopzilla__header-cell{min-height:19px;font-size:9px;}
+  .postflop-flopzilla__cell{min-height:21px;border-radius:4px;font-size:8px;}
+  .postflop-flopzilla__legend{gap:5px;margin-top:8px;}
+  .postflop-flopzilla__legend-item{font-size:10px;padding:4px 6px;}
   .postflop-flopzilla__detail-line{grid-template-columns:1fr;}
 }
 @media (prefers-reduced-motion:reduce){

@@ -1,0 +1,144 @@
+{
+  "packId": "pkrtrainer-mtt-texas-solver-3bp-expansion-v1",
+  "generatedAt": "2026-07-02",
+  "parameterDir": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1",
+  "outputBase": "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
+  "scenarios": [
+    {
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "pot": 157,
+      "effectiveStack": 600,
+      "boards": [
+        "A72r",
+        "KQ5r",
+        "T84r",
+        "883r",
+        "AT4mono",
+        "986tt"
+      ],
+      "purpose": "CO vs BTN 3bet-pot c-bet MID-SPR expansion with paired-board coverage.",
+      "coverageTags": [
+        "MID_SPR",
+        "3BP_BTN_VS_CO",
+        "THREE_BET_POT_CBET",
+        "PAIRED_BOARD_EXPANSION"
+      ]
+    },
+    {
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "pot": 157,
+      "effectiveStack": 1500,
+      "boards": [
+        "A72r",
+        "KQ5r",
+        "QQ7r",
+        "Q76mono",
+        "AT4mono",
+        "986tt"
+      ],
+      "purpose": "CO vs BTN 3bet-pot c-bet HIGH-SPR expansion with paired-board coverage.",
+      "coverageTags": [
+        "HIGH_SPR",
+        "3BP_BTN_VS_CO",
+        "THREE_BET_POT_CBET",
+        "PAIRED_BOARD_EXPANSION"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "01_MTT9_80BB_CO_BTN_3BP_MIDSPR_A72r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/01_MTT9_80BB_CO_BTN_3BP_MIDSPR_A72r.txt",
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "boardId": "A72r",
+      "written": true
+    },
+    {
+      "fileName": "02_MTT9_80BB_CO_BTN_3BP_MIDSPR_KQ5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/02_MTT9_80BB_CO_BTN_3BP_MIDSPR_KQ5r.txt",
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "boardId": "KQ5r",
+      "written": true
+    },
+    {
+      "fileName": "03_MTT9_80BB_CO_BTN_3BP_MIDSPR_T84r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/03_MTT9_80BB_CO_BTN_3BP_MIDSPR_T84r.txt",
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "boardId": "T84r",
+      "written": true
+    },
+    {
+      "fileName": "04_MTT9_80BB_CO_BTN_3BP_MIDSPR_883r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/04_MTT9_80BB_CO_BTN_3BP_MIDSPR_883r.txt",
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "boardId": "883r",
+      "written": true
+    },
+    {
+      "fileName": "05_MTT9_80BB_CO_BTN_3BP_MIDSPR_AT4mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/05_MTT9_80BB_CO_BTN_3BP_MIDSPR_AT4mono.txt",
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "boardId": "AT4mono",
+      "written": true
+    },
+    {
+      "fileName": "06_MTT9_80BB_CO_BTN_3BP_MIDSPR_986tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/06_MTT9_80BB_CO_BTN_3BP_MIDSPR_986tt.txt",
+      "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      "boardId": "986tt",
+      "written": true
+    },
+    {
+      "fileName": "21_MTT9_150BB_CO_BTN_3BP_HIGHSPR_A72r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/21_MTT9_150BB_CO_BTN_3BP_HIGHSPR_A72r.txt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "boardId": "A72r",
+      "written": true
+    },
+    {
+      "fileName": "22_MTT9_150BB_CO_BTN_3BP_HIGHSPR_KQ5r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/22_MTT9_150BB_CO_BTN_3BP_HIGHSPR_KQ5r.txt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "boardId": "KQ5r",
+      "written": true
+    },
+    {
+      "fileName": "23_MTT9_150BB_CO_BTN_3BP_HIGHSPR_QQ7r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/23_MTT9_150BB_CO_BTN_3BP_HIGHSPR_QQ7r.txt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "boardId": "QQ7r",
+      "written": true
+    },
+    {
+      "fileName": "24_MTT9_150BB_CO_BTN_3BP_HIGHSPR_Q76mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/24_MTT9_150BB_CO_BTN_3BP_HIGHSPR_Q76mono.txt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "boardId": "Q76mono",
+      "written": true
+    },
+    {
+      "fileName": "25_MTT9_150BB_CO_BTN_3BP_HIGHSPR_AT4mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/25_MTT9_150BB_CO_BTN_3BP_HIGHSPR_AT4mono.txt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "boardId": "AT4mono",
+      "written": true
+    },
+    {
+      "fileName": "26_MTT9_150BB_CO_BTN_3BP_HIGHSPR_986tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/26_MTT9_150BB_CO_BTN_3BP_HIGHSPR_986tt.txt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "boardId": "986tt",
+      "written": true
+    }
+  ],
+  "notes": [
+    "Review-only TexasSolver expansion for BTN vs CO 3bet-pot MID/HIGH SPR and paired-board gaps.",
+    "Generated after the LOW-SPR repair pilot passed scoped validation.",
+    "Do not treat this as full production coverage; facing-bet nodes and wider position matrix remain separate blockers."
+  ],
+  "commands": [
+    "npm run mtt:texas-solver-3bp-expansion-batch -- --write",
+    ".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_3bp_expansion_v1\" -Limit 999 -ListOnly",
+    "npm run mtt:texas-solver-coverage-status -- --manifest \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-3bp-expansion-v1-manifest.json\" --summary"
+  ]
+}

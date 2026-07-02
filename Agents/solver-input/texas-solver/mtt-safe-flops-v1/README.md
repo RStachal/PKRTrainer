@@ -421,6 +421,55 @@ mislabelled just to satisfy a lane requirement.
 candidate because it is not full flop-production coverage. The green signal for training use is the scoped pilot suite,
 not full production promotion.
 
+## 3BP MID/HIGH SPR expansion batch
+
+After the LOW-SPR 3BP repair pilot is green, the next full-coverage gap is higher SPR and paired boards. Generate the
+next review-only batch with:
+
+```powershell
+npm run mtt:texas-solver-3bp-expansion-batch -- --write
+```
+
+This creates:
+
+```text
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-3bp-expansion-v1-manifest.json
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_expansion_v1/
+```
+
+The batch contains 12 spots:
+
+```text
+MTT9_80BB_CO_BTN_3BP_MIDSPR: 6 boards, SPR ~3.82, includes paired 883r
+MTT9_150BB_CO_BTN_3BP_HIGHSPR: 6 boards, SPR ~9.55, includes paired QQ7r
+```
+
+Preflight before a long run:
+
+```powershell
+npm run mtt:texas-solver-scenario-audit -- --manifest .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-3bp-expansion-v1-manifest.json --summary
+npm run mtt:texas-solver-coverage-status -- --manifest .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-3bp-expansion-v1-manifest.json --summary
+```
+
+Expected pre-solve state:
+
+```text
+scenario audit: valid true, 12/12 valid files, 0 errors
+coverage status: valid true, 0/12 solved, two WAITING_FOR_RAW families
+```
+
+Run:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -ParameterRoot ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_3bp_expansion_v1" -Limit 999
+```
+
+When complete, ingest only this manifest:
+
+```powershell
+npm run mtt:texas-solver-pilot-refresh -- --manifest .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-3bp-expansion-v1-manifest.json --summary
+```
+
 Stop if needed:
 
 ```powershell
