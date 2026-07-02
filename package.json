@@ -26,6 +26,7 @@
     "mtt:texas-solver-scenario-audit": "vite-node scripts/auditTexasSolverScenarioBatch.mts",
     "mtt:texas-solver-3bp-repair-batch": "vite-node scripts/buildTexasSolver3bpRepairBatch.mts",
     "mtt:texas-solver-3bp-expansion-batch": "vite-node scripts/buildTexasSolver3bpExpansionBatch.mts",
+    "mtt:texas-solver-facing-bet-expansion-batch": "vite-node scripts/buildTexasSolverFacingBetExpansionBatch.mts",
     "mtt:texas-solver-coverage-batch": "vite-node scripts/buildTexasSolverCoverageBatch.mts",
     "mtt:texas-solver-coverage-status": "vite-node scripts/checkTexasSolverCoverageBatchStatus.mts",
     "mtt:texas-solver-ingest-completed": "vite-node scripts/ingestTexasSolverCompletedCoverage.mts",

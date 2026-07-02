@@ -1,0 +1,195 @@
+{
+  "packId": "pkrtrainer-mtt-texas-solver-facing-bet-expansion-v1",
+  "generatedAt": "2026-07-02",
+  "parameterDir": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1",
+  "outputBase": "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
+  "scenarios": [
+    {
+      "familyId": "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
+      "pot": 157,
+      "effectiveStack": 280,
+      "boards": [
+        "A76tt",
+        "K98tt",
+        "T76tt",
+        "654r"
+      ],
+      "purpose": "CO vs BTN 3bet-pot LOW-SPR facing flop bet response probe with dynamic boards.",
+      "coverageTags": [
+        "LOW_SPR",
+        "THREE_BET_POT",
+        "3BP_BTN_VS_CO",
+        "FLOP_FACING_BET",
+        "XR_BLUFF_PROBE"
+      ]
+    },
+    {
+      "familyId": "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
+      "pot": 157,
+      "effectiveStack": 520,
+      "boards": [
+        "J87r",
+        "T76tt",
+        "985mono",
+        "654r",
+        "QJ9tt",
+        "876tt"
+      ],
+      "purpose": "CO vs BTN 3bet-pot MID-SPR facing flop bet response probe for natural check-raise bluffs.",
+      "coverageTags": [
+        "MID_SPR",
+        "THREE_BET_POT",
+        "3BP_BTN_VS_CO",
+        "FLOP_FACING_BET",
+        "XR_BLUFF_PROBE"
+      ]
+    },
+    {
+      "familyId": "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
+      "pot": 157,
+      "effectiveStack": 900,
+      "boards": [
+        "K98tt",
+        "J87r",
+        "T76tt",
+        "985mono",
+        "QJ9tt",
+        "876tt"
+      ],
+      "purpose": "CO vs BTN 3bet-pot upper-MID SPR facing flop bet response probe to bridge MID and HIGH pilots.",
+      "coverageTags": [
+        "MID_SPR",
+        "THREE_BET_POT",
+        "3BP_BTN_VS_CO",
+        "FLOP_FACING_BET",
+        "XR_BLUFF_PROBE"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "01_MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR_A76tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/01_MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR_A76tt.txt",
+      "familyId": "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
+      "boardId": "A76tt",
+      "written": true
+    },
+    {
+      "fileName": "02_MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR_K98tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/02_MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR_K98tt.txt",
+      "familyId": "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
+      "boardId": "K98tt",
+      "written": true
+    },
+    {
+      "fileName": "03_MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR_T76tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/03_MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR_T76tt.txt",
+      "familyId": "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
+      "boardId": "T76tt",
+      "written": true
+    },
+    {
+      "fileName": "04_MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR_654r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/04_MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR_654r.txt",
+      "familyId": "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
+      "boardId": "654r",
+      "written": true
+    },
+    {
+      "fileName": "21_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_J87r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/21_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_J87r.txt",
+      "familyId": "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
+      "boardId": "J87r",
+      "written": true
+    },
+    {
+      "fileName": "22_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_T76tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/22_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_T76tt.txt",
+      "familyId": "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
+      "boardId": "T76tt",
+      "written": true
+    },
+    {
+      "fileName": "23_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_985mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/23_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_985mono.txt",
+      "familyId": "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
+      "boardId": "985mono",
+      "written": true
+    },
+    {
+      "fileName": "24_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_654r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/24_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_654r.txt",
+      "familyId": "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
+      "boardId": "654r",
+      "written": true
+    },
+    {
+      "fileName": "25_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_QJ9tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/25_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_QJ9tt.txt",
+      "familyId": "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
+      "boardId": "QJ9tt",
+      "written": true
+    },
+    {
+      "fileName": "26_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_876tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/26_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_876tt.txt",
+      "familyId": "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
+      "boardId": "876tt",
+      "written": true
+    },
+    {
+      "fileName": "41_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_K98tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/41_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_K98tt.txt",
+      "familyId": "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
+      "boardId": "K98tt",
+      "written": true
+    },
+    {
+      "fileName": "42_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_J87r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/42_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_J87r.txt",
+      "familyId": "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
+      "boardId": "J87r",
+      "written": true
+    },
+    {
+      "fileName": "43_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_T76tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/43_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_T76tt.txt",
+      "familyId": "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
+      "boardId": "T76tt",
+      "written": true
+    },
+    {
+      "fileName": "44_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_985mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/44_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_985mono.txt",
+      "familyId": "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
+      "boardId": "985mono",
+      "written": true
+    },
+    {
+      "fileName": "45_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_QJ9tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/45_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_QJ9tt.txt",
+      "familyId": "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
+      "boardId": "QJ9tt",
+      "written": true
+    },
+    {
+      "fileName": "46_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_876tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/46_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_876tt.txt",
+      "familyId": "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
+      "boardId": "876tt",
+      "written": true
+    }
+  ],
+  "notes": [
+    "Review-only TexasSolver expansion for BTN vs CO 3bet-pot flop facing-bet response nodes.",
+    "Generated after HIGH-SPR CHECK>BET_39 passed the scoped facing-bet pilot gate.",
+    "Ranges intentionally include more suited connectors/gappers in the OOP caller range to test real check-raise bluff frequencies; do not promote without gate validation."
+  ],
+  "commands": [
+    "npm run mtt:texas-solver-facing-bet-expansion-batch -- --write",
+    "npm run mtt:texas-solver-scenario-audit -- --manifest \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-facing-bet-expansion-v1-manifest.json\" --summary",
+    ".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_facing_bet_expansion_v1\" -Limit 999 -ListOnly",
+    ".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_facing_bet_expansion_v1\" -Limit 999",
+    "npm run mtt:texas-solver-coverage-status -- --manifest \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-facing-bet-expansion-v1-manifest.json\" --summary"
+  ]
+}

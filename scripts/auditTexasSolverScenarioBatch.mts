@@ -285,17 +285,17 @@ function emptyRow(
 }
 
 function expectedFromTags(tags: readonly string[]): ScenarioAuditRow["expected"] {
-  const potType: PotType | null = tags.includes("THREE_BET_POT_CBET")
+  const potType: PotType | null = tags.includes("THREE_BET_POT") || tags.includes("THREE_BET_POT_CBET")
     ? "THREE_BET_POT"
-    : tags.includes("SINGLE_RAISED_POT_CBET")
+    : tags.includes("SINGLE_RAISED") || tags.includes("SINGLE_RAISED_POT_CBET")
       ? "SINGLE_RAISED"
       : null;
-  const actionNode: ActionNode | null = tags.includes("THREE_BET_POT_CBET")
-    ? "THREE_BET_POT_CBET"
-    : tags.includes("SINGLE_RAISED_POT_CBET")
-      ? "SINGLE_RAISED_POT_CBET"
-      : tags.includes("FLOP_FACING_BET")
-        ? "FLOP_FACING_BET"
+  const actionNode: ActionNode | null = tags.includes("FLOP_FACING_BET")
+    ? "FLOP_FACING_BET"
+    : tags.includes("THREE_BET_POT_CBET")
+      ? "THREE_BET_POT_CBET"
+      : tags.includes("SINGLE_RAISED_POT_CBET")
+        ? "SINGLE_RAISED_POT_CBET"
         : null;
   const positionPattern = tags.find((tag) => tag.startsWith("SRP_") || tag.startsWith("3BP_")) ?? null;
   const sprBand: SprBand | null = tags.includes("LOW_SPR")
@@ -390,6 +390,10 @@ function actionTreeErrors(
     if (actual.flopIpRaiseSizes.length === 0 || actual.flopOopRaiseSizes.length === 0) {
       errors.push("3BP tree needs flop raise sizes for both players.");
     }
+  }
+  if (expected.actionNode === "FLOP_FACING_BET") {
+    if (actual.flopIpBetSizes.length === 0) errors.push("Facing-bet solve needs IP flop bet sizes.");
+    if (actual.flopOopRaiseSizes.length === 0) errors.push("Facing-bet solve needs OOP flop raise sizes.");
   }
   return errors;
 }
