@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 const DEFAULT_FAMILY = "MTT9_80BB_CO_BTN_3BP_MIDSPR";
@@ -57,6 +57,7 @@ interface CandidateReport {
   candidateActions: string[];
   rows: CandidateRow[];
   bestCandidate: CandidateRow | null;
+  bestAliasDir: string | null;
   nextCommands: string[];
 }
 
@@ -227,6 +228,9 @@ function buildCandidates(args: CliArgs): CandidateReport {
     : discoverBetActions(sourceReview);
   const rows = candidateActions.map((betAction) => buildCandidate(args, betAction));
   const bestCandidate = [...rows].sort(compareCandidates)[0] ?? null;
+  const bestAliasDir = args.write && bestCandidate?.gateValid === true
+    ? writeBestAlias(args, bestCandidate)
+    : null;
   return {
     valid: rows.some((row) => row.gateValid),
     write: args.write,
@@ -235,13 +239,26 @@ function buildCandidates(args: CliArgs): CandidateReport {
     candidateActions,
     rows,
     bestCandidate,
+    bestAliasDir,
     nextCommands: [
       `npm run mtt:texas-solver-facing-bet-candidates -- --family=${args.familyId} --spr-min=${args.sprMin} --spr-max=${args.sprMax} --write --summary`,
       bestCandidate === null
         ? "No candidate generated."
         : `npm run mtt:postflop-pilot-gate -- --scope=${args.scope} --normalized ${quoteArg(bestCandidate.normalizedPath)} --permission-manifest ${quoteArg(bestCandidate.permissionPath)}`,
+      bestAliasDir === null
+        ? "No READY best alias written."
+        : `Best alias: ${quoteArg(bestAliasDir)}`,
     ],
   };
+}
+
+function writeBestAlias(args: CliArgs, bestCandidate: CandidateRow): string {
+  const aliasDir = resolve(args.outputRoot, `${args.familyId}-FACING-BET-BEST`);
+  mkdirSync(aliasDir, { recursive: true });
+  copyFileSync(bestCandidate.normalizedPath, resolve(aliasDir, "normalized.candidate.json"));
+  copyFileSync(bestCandidate.permissionPath, resolve(aliasDir, "permission.candidate.json"));
+  writeFileSync(resolve(aliasDir, "best-candidate.json"), `${JSON.stringify(bestCandidate, null, 2)}\n`, "utf8");
+  return aliasDir;
 }
 
 function buildCandidate(args: CliArgs, betAction: string): CandidateRow {
@@ -451,5 +468,6 @@ function renderReport(report: CandidateReport, summaryOnly: boolean): string {
   if (report.bestCandidate !== null) {
     lines.push(`best: ${report.bestCandidate.nodeHistory} (${report.bestCandidate.gateValid ? "READY" : "BLOCKED"})`);
   }
+  if (report.bestAliasDir !== null) lines.push(`best alias: ${report.bestAliasDir}`);
   return lines.join("\n");
 }

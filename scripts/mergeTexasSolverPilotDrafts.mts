@@ -82,9 +82,10 @@ const MERGE_PROFILES: Record<MttPostflopPilotScope, MergeProfile> = {
     scope: "BTN_vs_CO_3BP_FLOP_FACING_BET",
     label: "BTN vs CO 3bet-pot flop facing-bet response",
     defaultInputDirs: [
-      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR-FACING-BET_39",
-      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR-FACING-BET_79",
-      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_150BB_CO_BTN_3BP_HIGHSPR-FACING-BET_39",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR-FACING-BET-BEST",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR-FACING-BET-BEST",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH-FACING-BET-BEST",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_150BB_CO_BTN_3BP_HIGHSPR-FACING-BET-BEST",
     ],
     defaultOutputDir:
       "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_FACING_BET_PILOT",
