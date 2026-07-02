@@ -13,6 +13,7 @@ const LOWSPR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_20BB_BTN_BB_SRP_LOWSP
 const HIGHSPR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_80BB_BTN_BB_SRP_HIGHSPR-CHECK");
 const UTG_BB_SRP_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_40BB_UTG_BB_SRP-CHECK");
 const CO_BTN_3BP_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_35BB_CO_BTN_3BP-CHECK");
+const CO_BTN_3BP_REPAIR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK");
 
 type FamilyStatus = "RAW_COMPLETE" | "RAW_PARTIAL" | "WAITING_FOR_RAW";
 
@@ -248,6 +249,9 @@ function missingCommandsForFamily(outputBase: string, familyId: string): string[
   }
   if (familyId === "MTT9_35BB_CO_BTN_3BP" && (shouldReview || isMissingOrOlder(join(CO_BTN_3BP_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${CO_BTN_3BP_DRAFT_DIR} --spr-min=0 --spr-max=3 --pot-type=THREE_BET_POT --action-node=THREE_BET_POT_CBET --position-pattern=3BP_BTN_VS_CO --write`);
+  }
+  if (familyId === "MTT9_35BB_CO_BTN_3BP_REPAIR" && (shouldReview || isMissingOrOlder(join(CO_BTN_3BP_REPAIR_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
+    commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${CO_BTN_3BP_REPAIR_DRAFT_DIR} --spr-min=0 --spr-max=3 --pot-type=THREE_BET_POT --action-node=THREE_BET_POT_CBET --position-pattern=3BP_BTN_VS_CO --write`);
   }
   return commands;
 }

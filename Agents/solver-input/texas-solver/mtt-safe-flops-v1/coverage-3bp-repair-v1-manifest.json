@@ -1,0 +1,99 @@
+{
+  "packId": "pkrtrainer-mtt-texas-solver-3bp-repair-v1",
+  "generatedAt": "2026-07-02",
+  "parameterDir": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1",
+  "outputBase": "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
+  "scenarios": [
+    {
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "pot": 157,
+      "effectiveStack": 286,
+      "boards": [
+        "A72r",
+        "K83r",
+        "QJ2tt",
+        "JT9tt",
+        "AT4mono",
+        "Q76mono",
+        "765tt",
+        "986tt"
+      ],
+      "purpose": "CO vs BTN 3bet-pot c-bet repair probe with wider IP 3bet bluff candidates.",
+      "coverageTags": [
+        "LOW_SPR",
+        "3BP_BTN_VS_CO",
+        "THREE_BET_POT_CBET",
+        "REPAIR_PROBE",
+        "WIDER_IP_3BET_RANGE"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "01_MTT9_35BB_CO_BTN_3BP_REPAIR_A72r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1/01_MTT9_35BB_CO_BTN_3BP_REPAIR_A72r.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "A72r",
+      "written": true
+    },
+    {
+      "fileName": "02_MTT9_35BB_CO_BTN_3BP_REPAIR_K83r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1/02_MTT9_35BB_CO_BTN_3BP_REPAIR_K83r.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "K83r",
+      "written": true
+    },
+    {
+      "fileName": "03_MTT9_35BB_CO_BTN_3BP_REPAIR_QJ2tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1/03_MTT9_35BB_CO_BTN_3BP_REPAIR_QJ2tt.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "QJ2tt",
+      "written": true
+    },
+    {
+      "fileName": "04_MTT9_35BB_CO_BTN_3BP_REPAIR_JT9tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1/04_MTT9_35BB_CO_BTN_3BP_REPAIR_JT9tt.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "JT9tt",
+      "written": true
+    },
+    {
+      "fileName": "05_MTT9_35BB_CO_BTN_3BP_REPAIR_AT4mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1/05_MTT9_35BB_CO_BTN_3BP_REPAIR_AT4mono.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "AT4mono",
+      "written": true
+    },
+    {
+      "fileName": "06_MTT9_35BB_CO_BTN_3BP_REPAIR_Q76mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1/06_MTT9_35BB_CO_BTN_3BP_REPAIR_Q76mono.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "Q76mono",
+      "written": true
+    },
+    {
+      "fileName": "07_MTT9_35BB_CO_BTN_3BP_REPAIR_765tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1/07_MTT9_35BB_CO_BTN_3BP_REPAIR_765tt.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "765tt",
+      "written": true
+    },
+    {
+      "fileName": "08_MTT9_35BB_CO_BTN_3BP_REPAIR_986tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1/08_MTT9_35BB_CO_BTN_3BP_REPAIR_986tt.txt",
+      "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "boardId": "986tt",
+      "written": true
+    }
+  ],
+  "notes": [
+    "Review-only TexasSolver repair probe.",
+    "This intentionally widens the IP 3bet range to include suited connector/gapper bluff candidates.",
+    "It must not be treated as production poker data without review and no-false-green pilot validation."
+  ],
+  "commands": [
+    "npm run mtt:texas-solver-3bp-repair-batch -- --write",
+    ".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_3bp_repair_v1\" -Limit 999 -ListOnly",
+    "npm run mtt:texas-solver-coverage-status -- --manifest \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-3bp-repair-v1-manifest.json\" --summary"
+  ]
+}

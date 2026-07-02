@@ -7,6 +7,7 @@ const NPM_BIN = "npm";
 
 interface CliArgs {
   dryRun: boolean;
+  manifestPath: string | null;
   outputPath: string;
   skipViewer: boolean;
   summary: boolean;
@@ -43,6 +44,7 @@ try {
 
 function parseArgs(argv: readonly string[]): CliArgs {
   let dryRun = false;
+  let manifestPath: string | null = null;
   let outputPath = resolve(DEFAULT_OUTPUT);
   let skipViewer = false;
   let summary = false;
@@ -62,6 +64,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
       summary = true;
       continue;
     }
+    if (item === "--manifest") {
+      manifestPath = nextArg(argv, index, "--manifest");
+      index += 1;
+      continue;
+    }
+    if (item.startsWith("--manifest=")) {
+      manifestPath = inlineValue(item, "--manifest");
+      continue;
+    }
     if (item === "--output") {
       outputPath = resolve(nextArg(argv, index, "--output"));
       index += 1;
@@ -74,7 +85,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { dryRun, outputPath, skipViewer, summary };
+  return { dryRun, manifestPath, outputPath, skipViewer, summary };
 }
 
 function usage(): string {
@@ -82,6 +93,7 @@ function usage(): string {
     "Usage:",
     "  npm run mtt:texas-solver-pilot-refresh -- --summary",
     "  npm run mtt:texas-solver-pilot-refresh -- --dry-run --summary",
+    "  npm run mtt:texas-solver-pilot-refresh -- --manifest .\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-3bp-repair-v1-manifest.json --summary",
     "  npm run mtt:texas-solver-pilot-refresh -- --skip-viewer",
     "",
     "Refreshes the local TexasSolver pilot workflow without promoting production data:",
@@ -103,12 +115,14 @@ function inlineValue(item: string, flag: string): string {
 
 function runWorkflow(args: CliArgs): WorkflowReport {
   const steps: WorkflowStep[] = [];
-  steps.push(runStep("coverage-status", ["run", "mtt:texas-solver-coverage-status", "--", "--summary"]));
+  const manifestArgs = args.manifestPath === null ? [] : ["--manifest", quoteArg(args.manifestPath)];
+  steps.push(runStep("coverage-status", ["run", "mtt:texas-solver-coverage-status", "--", ...manifestArgs, "--summary"]));
   steps.push(
     runStep("ingest-completed", [
       "run",
       "mtt:texas-solver-ingest-completed",
       "--",
+      ...manifestArgs,
       ...(args.dryRun ? ["--dry-run"] : []),
       "--summary",
     ]),
@@ -133,8 +147,12 @@ function runWorkflow(args: CliArgs): WorkflowReport {
     dryRun: args.dryRun,
     steps,
     nextCommands: [
-      "npm run mtt:texas-solver-coverage-status -- --summary",
-      "npm run mtt:texas-solver-pilot-refresh -- --summary",
+      args.manifestPath === null
+        ? "npm run mtt:texas-solver-coverage-status -- --summary"
+        : `npm run mtt:texas-solver-coverage-status -- --manifest ${quoteArg(args.manifestPath)} --summary`,
+      args.manifestPath === null
+        ? "npm run mtt:texas-solver-pilot-refresh -- --summary"
+        : `npm run mtt:texas-solver-pilot-refresh -- --manifest ${quoteArg(args.manifestPath)} --summary`,
       "npm run mtt:postflop-pilot-suite -- --summary",
     ],
   };
@@ -197,4 +215,8 @@ function indent(text: string): string {
 function tailLines(text: string, limit: number): string {
   const lines = text.split(/\r?\n/u);
   return lines.slice(Math.max(0, lines.length - limit)).join("\n");
+}
+
+function quoteArg(value: string): string {
+  return `"${value.replaceAll('"', '\\"')}"`;
 }

@@ -289,14 +289,14 @@ function nextCommandsForReport(rows: readonly CoverageFamilyRow[]): string[] {
     commands.push("npm run mtt:texas-solver-merge-pilot-drafts -- --input-dir .\\artifacts\\texas-solver-review-integration\\normalized-drafts\\MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK --input-dir .\\artifacts\\texas-solver-review-integration\\normalized-drafts\\MTT9_50BB_BTN_BB_SRP-CHECK --input-dir .\\artifacts\\texas-solver-review-integration\\normalized-drafts\\MTT9_80BB_BTN_BB_SRP_HIGHSPR-CHECK --write --summary");
   }
   if (commands.length === 0) {
-    commands.push("Continue or restart the TexasSolver coverage-v2 background batch, then rerun this status command.");
+    commands.push("Continue or restart the TexasSolver background batch for this manifest, then rerun this status command.");
   }
   return commands;
 }
 
 function renderReport(report: CoverageStatusReport, summaryOnly: boolean): string {
   const lines = [
-    "TexasSolver coverage-v2 status",
+    "TexasSolver coverage manifest status",
     `valid: ${report.valid}`,
     `complete: ${report.complete}`,
     `families: ${report.counts.families}`,

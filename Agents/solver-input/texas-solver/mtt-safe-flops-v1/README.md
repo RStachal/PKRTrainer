@@ -345,6 +345,82 @@ The ingest command processes only `RAW_COMPLETE` families. It stages TexasSolver
 normalizes supported LOW/HIGH SPR BTN vs BB SRP pilot candidates and re-merges available pilot drafts. It does not copy
 anything into production `src/data` and it does not promote a full release pack.
 
+## 3BP repair batch
+
+The first CO vs BTN 3bet-pot candidate solved correctly, but the pilot gate rejected it because the normalized strategy
+had no `BLUFF` range lane. For a professional trainer this is the right failure mode: do not mark a 3bet c-bet spot as
+usable when the input range/tree creates only a narrow value/check candidate.
+
+Generate the review-only repair batch:
+
+```powershell
+npm run mtt:texas-solver-3bp-repair-batch -- --write
+```
+
+This writes 8 TexasSolver parameter files under:
+
+```text
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1/
+```
+
+and the manifest:
+
+```text
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-3bp-repair-v1-manifest.json
+```
+
+The repair scenario keeps the same pilot scope, `BTN_vs_CO_3BP_FLOP_CBET`, but widens the IP 3bet range with suited
+connector and suited gapper bluff candidates. It is not production data; it is a controlled test for whether the missing
+`BLUFF` lane was caused by a too value-heavy scenario definition.
+
+Run the repair batch from a normal PowerShell window:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -ParameterRoot ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_3bp_repair_v1" -Limit 999
+```
+
+Or launch it as an independent hidden process and keep a filesystem log:
+
+```powershell
+Start-Process powershell -WindowStyle Hidden -ArgumentList @(
+  '-NoProfile',
+  '-ExecutionPolicy',
+  'Bypass',
+  '-Command',
+  "Set-Location 'C:\Users\stachal\PKRTrainer\PKRTrainer'; .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -ParameterRoot '.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_3bp_repair_v1' -Limit 999 *>&1 | Tee-Object -FilePath '.\artifacts\texas-solver-3bp-repair-run\solver-run.log'"
+)
+```
+
+Monitor and ingest only this repair manifest:
+
+```powershell
+npm run mtt:texas-solver-coverage-status -- --manifest .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-3bp-repair-v1-manifest.json --summary
+npm run mtt:texas-solver-pilot-refresh -- --manifest .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-3bp-repair-v1-manifest.json --summary
+npm run mtt:postflop-pilot-suite -- --summary
+```
+
+The suite will prefer `MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK` for the 3BP pilot once that normalized draft exists. If the
+repair candidate still fails, keep the pilot blocked and adjust the scenario/range/tree instead of weakening the gate.
+
+Current repair outcome:
+
+```text
+coverage: 8/8 raw JSON
+pilot suite: valid, 3 READY / 0 WAITING / 0 INVALID
+3BP repair fingerprint: d8e5dd1a325f4cf8f8d3dd9d9991fee98a812f34f0b9e8c2c3e92aa0b8b3d1aa
+3BP repair buckets: 34 total, VALUE/BLUFF/CHECK = 2/8/24
+```
+
+The normalizer preserves meaningful mixed betting frequencies for natural low-card bluff candidates: if a hand is not a
+pair, does not start with `A/K/Q/J/T`, and has at least 25% combined `BET_SMALL + BET_BIG`, it can be represented as an
+active bluff bucket even when `CHECK` is the single largest action. Strong high-card and pair hands remain CHECK buckets
+when CHECK dominates. This keeps the pilot gate honest: mixed bluffs are visible, but pure/check-control hands are not
+mislabelled just to satisfy a lane requirement.
+
+`validate:range-import` and `build:range-module` are still expected to fail write readiness for this isolated repair
+candidate because it is not full flop-production coverage. The green signal for training use is the scoped pilot suite,
+not full production promotion.
+
 Stop if needed:
 
 ```powershell

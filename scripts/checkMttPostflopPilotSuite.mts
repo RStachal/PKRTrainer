@@ -22,6 +22,12 @@ interface PilotTarget {
   normalizedPath: string;
   permissionPath: string;
   description: string;
+  alternatives?: readonly {
+    id: string;
+    normalizedPath: string;
+    permissionPath: string;
+    description: string;
+  }[];
 }
 
 type PilotTargetStatus = "READY" | "WAITING" | "INVALID";
@@ -78,6 +84,14 @@ const TARGETS: readonly PilotTarget[] = [
     permissionPath:
       "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_35BB_CO_BTN_3BP-CHECK/permission.candidate.json",
     description: "BTN vs CO 3bet-pot flop c-bet pilot from coverage-v2.",
+    alternatives: [{
+      id: "btn-co-3bp-flop-cbet-repair",
+      normalizedPath:
+        "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK/normalized.candidate.json",
+      permissionPath:
+        "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK/permission.candidate.json",
+      description: "BTN vs CO 3bet-pot repair pilot with wider IP bluff-candidate range.",
+    }],
   },
 ];
 
@@ -169,39 +183,52 @@ function buildReport(): PilotSuiteReport {
 }
 
 function buildRow(target: PilotTarget): PilotSuiteRow {
+  const selected = selectAvailableTarget(target);
   const blockers = [
-    ...(existsSync(target.normalizedPath) ? [] : [`Missing normalized candidate: ${target.normalizedPath}`]),
-    ...(existsSync(target.permissionPath) ? [] : [`Missing permission candidate: ${target.permissionPath}`]),
+    ...(existsSync(selected.normalizedPath) ? [] : [`Missing normalized candidate: ${selected.normalizedPath}`]),
+    ...(existsSync(selected.permissionPath) ? [] : [`Missing permission candidate: ${selected.permissionPath}`]),
   ];
   if (blockers.length > 0) {
     return {
-      id: target.id,
+      id: selected.id,
       scope: target.scope,
       status: "WAITING",
-      description: target.description,
-      normalizedPath: target.normalizedPath,
-      permissionPath: target.permissionPath,
+      description: selected.description,
+      normalizedPath: selected.normalizedPath,
+      permissionPath: selected.permissionPath,
       report: null,
       blockers,
     };
   }
 
   const report = buildMttPostflopPilotGateReport(
-    readJson<FlopProductionStrategyPack>(target.normalizedPath),
-    readJson<ProductionPermissionManifest>(target.permissionPath),
+    readJson<FlopProductionStrategyPack>(selected.normalizedPath),
+    readJson<ProductionPermissionManifest>(selected.permissionPath),
     target.scope,
   );
 
   return {
-    id: target.id,
+    id: selected.id,
     scope: target.scope,
     status: report.valid ? "READY" : "INVALID",
-    description: target.description,
-    normalizedPath: target.normalizedPath,
-    permissionPath: target.permissionPath,
+    description: selected.description,
+    normalizedPath: selected.normalizedPath,
+    permissionPath: selected.permissionPath,
     report,
     blockers: report.errors,
   };
+}
+
+function selectAvailableTarget(target: PilotTarget): {
+  id: string;
+  normalizedPath: string;
+  permissionPath: string;
+  description: string;
+} {
+  for (const alternative of target.alternatives ?? []) {
+    if (existsSync(alternative.normalizedPath) || existsSync(alternative.permissionPath)) return alternative;
+  }
+  return target;
 }
 
 function readJson<T>(path: string): T {

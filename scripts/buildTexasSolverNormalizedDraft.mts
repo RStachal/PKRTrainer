@@ -18,6 +18,7 @@ const DEFAULT_PACK_ID = "mtt-full-ring-9-regular-flop-chip-ev-ante-off-productio
 const CREATED_AT = "2026-07-01";
 const RANKS = "AKQJT98765432";
 const STRONG_RANKS = new Set(["A", "K", "Q", "J", "T"]);
+const MIN_MIXED_BET_FREQUENCY_FOR_ACTIVE_BUCKET = 25;
 
 interface CliArgs {
   actionNode: Extract<PostflopActionNode, "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET" | "FLOP_FACING_BET">;
@@ -593,7 +594,7 @@ function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string
 
 function buildBucket(handClass: HandLabel, strategy: ReviewHandClassStrategy) {
   const actionMix = normalizeMappedActionMix(strategy.averageByAction);
-  const dominantAction = mappedDominantAction(actionMix);
+  const dominantAction = primaryBucketAction(handClass, actionMix);
   return {
     lane: laneForHand(handClass, dominantAction),
     label: `${handClass} · ${dominantAction}`,
@@ -638,6 +639,20 @@ function normalizeMappedActionMix(source: Record<string, number>): Record<Postfl
   const dominant = mappedDominantAction(result);
   result[dominant] = roundPct(result[dominant] + delta);
   return result;
+}
+
+function primaryBucketAction(handClass: string, actionMix: Record<PostflopAction, number>): PostflopAction {
+  const dominantAction = mappedDominantAction(actionMix);
+  const betFrequency = (actionMix.BET_SMALL ?? 0) + (actionMix.BET_BIG ?? 0);
+  const isNaturalBluffCandidate = !isPair(handClass) && !STRONG_RANKS.has(handClass[0]);
+  if (
+    dominantAction !== "CHECK" ||
+    !isNaturalBluffCandidate ||
+    betFrequency < MIN_MIXED_BET_FREQUENCY_FOR_ACTIVE_BUCKET
+  ) {
+    return dominantAction;
+  }
+  return (actionMix.BET_BIG ?? 0) > (actionMix.BET_SMALL ?? 0) ? "BET_BIG" : "BET_SMALL";
 }
 
 function mapSolverAction(action: string): PostflopAction | null {
