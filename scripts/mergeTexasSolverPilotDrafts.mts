@@ -6,23 +6,85 @@ import {
   type FlopProductionStrategyPack,
   type FlopProductionStrategyRule,
 } from "../src/data/ranges/flopProductionStrategyPack.ts";
-import { buildMttPostflopPilotGateReport } from "../src/data/ranges/mttPostflopPilotGate.ts";
+import {
+  buildMttPostflopPilotGateReport,
+  type MttPostflopPilotScope,
+} from "../src/data/ranges/mttPostflopPilotGate.ts";
 import type {
   ProductionPermissionEvidence,
   ProductionPermissionManifest,
 } from "../src/data/ranges/productionPermissionManifest.ts";
 
-const DEFAULT_INPUT_DIRS = [
-  "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK",
-  "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_50BB_BTN_BB_SRP-CHECK",
-];
-const DEFAULT_OUTPUT_DIR =
-  "artifacts/texas-solver-review-integration/normalized-drafts/BTN_BB_SRP_FLOP_CBET_PILOT-CHECK";
-const CREATED_AT = "2026-07-01";
+const CREATED_AT = "2026-07-02";
+const DEFAULT_SCOPE = "BTN_vs_BB_SRP_FLOP_CBET" satisfies MttPostflopPilotScope;
+
+interface MergeProfile {
+  scope: MttPostflopPilotScope;
+  label: string;
+  defaultInputDirs: readonly string[];
+  defaultOutputDir: string;
+  packVersion: string;
+  permissionVersion: string;
+  assumptions: readonly string[];
+}
+
+const MERGE_PROFILES: Record<MttPostflopPilotScope, MergeProfile> = {
+  BTN_vs_BB_SRP_FLOP_CBET: {
+    scope: "BTN_vs_BB_SRP_FLOP_CBET",
+    label: "BTN vs BB SRP flop c-bet",
+    defaultInputDirs: [
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_50BB_BTN_BB_SRP-CHECK",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_80BB_BTN_BB_SRP_HIGHSPR-CHECK",
+    ],
+    defaultOutputDir:
+      "artifacts/texas-solver-review-integration/normalized-drafts/BTN_BB_SRP_FLOP_CBET_PILOT-CHECK",
+    packVersion: "btn-bb-srp-flop-cbet-pilot-merged-draft-v1",
+    permissionVersion: "btn-bb-srp-flop-cbet-pilot-permission-merged-draft-v1",
+    assumptions: [
+      "Merged LOW/MID/HIGH SPR candidates are still scoped to BTN vs BB SRP flop c-bet training only.",
+      "This merged draft must stay behind the pilot gate until full postflop production coverage is imported.",
+    ],
+  },
+  UTG_vs_BB_SRP_FLOP_CBET: {
+    scope: "UTG_vs_BB_SRP_FLOP_CBET",
+    label: "UTG vs BB SRP flop c-bet",
+    defaultInputDirs: [
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_40BB_UTG_BB_SRP-CHECK",
+    ],
+    defaultOutputDir:
+      "artifacts/texas-solver-review-integration/normalized-drafts/UTG_BB_SRP_FLOP_CBET_PILOT-CHECK",
+    packVersion: "utg-bb-srp-flop-cbet-pilot-merged-draft-v1",
+    permissionVersion: "utg-bb-srp-flop-cbet-pilot-permission-merged-draft-v1",
+    assumptions: [
+      "Merged candidate is scoped to UTG vs BB SRP flop c-bet training only.",
+      "This merged draft must stay behind the pilot gate until full postflop production coverage is imported.",
+    ],
+  },
+  BTN_vs_CO_3BP_FLOP_CBET: {
+    scope: "BTN_vs_CO_3BP_FLOP_CBET",
+    label: "BTN vs CO 3bet-pot flop c-bet",
+    defaultInputDirs: [
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_80BB_CO_BTN_3BP_MIDSPR-CHECK",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_150BB_CO_BTN_3BP_HIGHSPR-CHECK",
+    ],
+    defaultOutputDir:
+      "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_CBET_PILOT-CHECK",
+    packVersion: "btn-co-3bp-flop-cbet-pilot-merged-draft-v1",
+    permissionVersion: "btn-co-3bp-flop-cbet-pilot-permission-merged-draft-v1",
+    assumptions: [
+      "Merged LOW/MID/HIGH SPR candidates are still scoped to BTN vs CO 3bet-pot flop c-bet training only.",
+      "This merged draft must stay behind the pilot gate until full postflop production coverage is imported.",
+    ],
+  },
+};
 
 interface CliArgs {
   inputDirs: string[];
   outputDir: string;
+  scope: MttPostflopPilotScope;
+  usedDefaultInputs: boolean;
   write: boolean;
   summary: boolean;
   json: boolean;
@@ -46,6 +108,7 @@ interface MergeReport {
   inputs: readonly string[];
   packId: string;
   version: string;
+  pilotScope: MttPostflopPilotScope;
   provenanceFingerprint: string;
   rules: number;
   rangeBuckets: number;
@@ -63,6 +126,7 @@ interface MergeReport {
   };
   errors: readonly string[];
   warnings: readonly string[];
+  skippedDefaultInputs: readonly string[];
   plannedFiles: readonly Array<{ path: string; written: boolean }>;
 }
 
@@ -78,7 +142,8 @@ try {
 
 function parseArgs(argv: readonly string[]): CliArgs {
   const inputDirs: string[] = [];
-  let outputDir = resolve(DEFAULT_OUTPUT_DIR);
+  let outputDir: string | null = null;
+  let scope = DEFAULT_SCOPE;
   let write = false;
   let summary = false;
   let json = false;
@@ -96,6 +161,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (item === "--json") {
       json = true;
+      continue;
+    }
+    if (item === "--scope") {
+      scope = parseScope(nextArg(argv, index, "--scope"));
+      index += 1;
+      continue;
+    }
+    if (item.startsWith("--scope=")) {
+      scope = parseScope(requiredInlineValue(item, "--scope"));
       continue;
     }
     if (item === "--input-dir") {
@@ -119,9 +193,13 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
+  const profile = MERGE_PROFILES[scope];
+  const usedDefaultInputs = inputDirs.length === 0;
   return {
-    inputDirs: inputDirs.length > 0 ? inputDirs : DEFAULT_INPUT_DIRS.map((dir) => resolve(dir)),
-    outputDir,
+    inputDirs: usedDefaultInputs ? profile.defaultInputDirs.map((dir) => resolve(dir)) : inputDirs,
+    outputDir: outputDir ?? resolve(profile.defaultOutputDir),
+    scope,
+    usedDefaultInputs,
     write,
     summary,
     json,
@@ -133,11 +211,18 @@ function usage(): string {
     "Usage:",
     "  npm run mtt:texas-solver-merge-pilot-drafts",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --write --summary",
+    "  npm run mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_CBET --write --summary",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --input-dir artifacts/.../LOWSPR --input-dir artifacts/.../MIDSPR --output-dir artifacts/.../PILOT --write",
     "",
-    "Merges reviewed TexasSolver normalized draft candidates into one narrow BTN vs BB SRP FLOP c-bet pilot pack.",
+    `Supported scopes: ${Object.keys(MERGE_PROFILES).join(", ")}`,
+    "Merges reviewed TexasSolver normalized draft candidates into one narrow MTT FLOP c-bet pilot pack.",
     "The merged output remains an artifacts/ candidate and is still intentionally not full FLOP production coverage.",
   ].join("\n");
+}
+
+function parseScope(value: string): MttPostflopPilotScope {
+  if (value in MERGE_PROFILES) return value as MttPostflopPilotScope;
+  throw new Error(`Unsupported scope: ${value}\n\n${usage()}`);
 }
 
 function nextArg(argv: readonly string[], index: number, flag: string): string {
@@ -153,7 +238,14 @@ function requiredInlineValue(item: string, flag: string): string {
 }
 
 function mergeDrafts(args: CliArgs): { report: MergeReport; pack: FlopProductionStrategyPack; permission: ProductionPermissionManifest } {
-  const inputs = args.inputDirs.map(readDraftInput);
+  const profile = MERGE_PROFILES[args.scope];
+  const skippedDefaultInputs = args.usedDefaultInputs
+    ? args.inputDirs.filter((inputDir) => !draftFilesExist(inputDir))
+    : [];
+  const candidateInputDirs = args.usedDefaultInputs
+    ? args.inputDirs.filter((inputDir) => draftFilesExist(inputDir))
+    : args.inputDirs;
+  const inputs = candidateInputDirs.map(readDraftInput);
   const inputErrors = inputs.flatMap((input) => inputErrorsFor(input));
   const compatibilityErrors = compatibleInputErrors(inputs);
   const errors = [...inputErrors, ...compatibilityErrors];
@@ -163,9 +255,9 @@ function mergeDrafts(args: CliArgs): { report: MergeReport; pack: FlopProduction
     throw new Error("At least one input draft is required.");
   }
 
-  const pack = buildMergedPack(inputs, firstPack);
-  const permission = buildMergedPermission(inputs, firstPermission, pack.id);
-  const pilotGate = buildMttPostflopPilotGateReport(pack, permission);
+  const pack = buildMergedPack(inputs, firstPack, profile);
+  const permission = buildMergedPermission(inputs, firstPermission, pack.id, profile);
+  const pilotGate = buildMttPostflopPilotGateReport(pack, permission, args.scope);
   const coverage = buildFlopProductionCoverageReport(pack);
   const normalizedPath = resolve(args.outputDir, "normalized.candidate.json");
   const permissionPath = resolve(args.outputDir, "permission.candidate.json");
@@ -189,6 +281,7 @@ function mergeDrafts(args: CliArgs): { report: MergeReport; pack: FlopProduction
     inputs: inputs.map((input) => input.inputDir),
     packId: pack.id,
     version: pack.version,
+    pilotScope: args.scope,
     provenanceFingerprint,
     rules: pack.rules.length,
     rangeBuckets: pack.rules.reduce((count, rule) => count + rule.rangeBuckets.length, 0),
@@ -206,10 +299,12 @@ function mergeDrafts(args: CliArgs): { report: MergeReport; pack: FlopProduction
     },
     errors: [...errors, ...pilotGate.errors],
     warnings: [
-      "Merged pilot pack is a scoped training candidate, not a full FLOP production pack.",
+      `Merged ${profile.label} pilot pack is a scoped training candidate, not a full FLOP production pack.`,
       "Promotion still requires poker review of every included solver family and node.",
+      ...skippedDefaultInputs.map((inputDir) => `Default input skipped because candidate files are not available yet: ${inputDir}`),
       ...pilotGate.warnings,
     ],
+    skippedDefaultInputs,
     plannedFiles: [
       { path: normalizedPath, written: args.write },
       { path: permissionPath, written: args.write },
@@ -225,6 +320,11 @@ function mergeDrafts(args: CliArgs): { report: MergeReport; pack: FlopProduction
   }
 
   return { report, pack, permission };
+}
+
+function draftFilesExist(inputDir: string): boolean {
+  return existsSync(resolve(inputDir, "normalized.candidate.json")) &&
+    existsSync(resolve(inputDir, "permission.candidate.json"));
 }
 
 function readDraftInput(inputDir: string): DraftInput {
@@ -270,11 +370,12 @@ function compatibleInputErrors(inputs: readonly DraftInput[]): string[] {
 function buildMergedPack(
   inputs: readonly DraftInput[],
   firstPack: FlopProductionStrategyPack,
+  profile: MergeProfile,
 ): FlopProductionStrategyPack {
   const rules = normalizeAdjacentSprRules(uniqueRules(inputs.flatMap((input) => [...input.pack.rules])));
   return {
     ...firstPack,
-    version: "btn-bb-srp-flop-cbet-pilot-merged-draft-v1",
+    version: profile.packVersion,
     createdAt: CREATED_AT,
     verifiedAt: CREATED_AT,
     sourceEvidence: uniqueBy(
@@ -283,8 +384,7 @@ function buildMergedPack(
     ),
     assumptions: uniqueStrings([
       ...inputs.flatMap((input) => [...input.pack.assumptions]),
-      "Merged LOW/MID/HIGH SPR candidates are still scoped to BTN vs BB SRP flop c-bet training only.",
-      "This merged draft must stay behind the pilot gate until full postflop production coverage is imported.",
+      ...profile.assumptions,
     ]),
     rules,
   };
@@ -294,6 +394,7 @@ function buildMergedPermission(
   inputs: readonly DraftInput[],
   firstPermission: ProductionPermissionManifest,
   packId: string,
+  profile: MergeProfile,
 ): ProductionPermissionManifest {
   const evidence = uniqueBy(
     inputs.flatMap((input) => [...input.permission.evidence]),
@@ -302,13 +403,13 @@ function buildMergedPermission(
   return {
     ...firstPermission,
     packId,
-    version: "btn-bb-srp-flop-cbet-pilot-permission-merged-draft-v1",
+    version: profile.permissionVersion,
     reviewedAt: CREATED_AT,
     sourceMaterialLocation: inputs.map((input) => input.normalizedPath).join("; "),
     evidence,
     notes: uniqueStrings([
       ...inputs.flatMap((input) => [...input.permission.notes]),
-      "Merged permission manifest for a scoped TexasSolver pilot candidate.",
+      `Merged permission manifest for a scoped ${profile.label} TexasSolver pilot candidate.`,
       "Do not promote beyond pilot scope until poker review and full production coverage pass.",
     ]),
   };
@@ -432,6 +533,7 @@ function renderReport(report: MergeReport, summaryOnly: boolean): string {
     `written: ${report.written}`,
     `packId: ${report.packId}`,
     `version: ${report.version}`,
+    `pilotScope: ${report.pilotScope}`,
     `provenance: ${report.provenanceFingerprint}`,
     `rules: ${report.rules}`,
     `range buckets: ${report.rangeBuckets}`,
@@ -443,6 +545,9 @@ function renderReport(report: MergeReport, summaryOnly: boolean): string {
   ];
   if (!summaryOnly) {
     lines.push(`inputs: ${report.inputs.join(" | ")}`);
+    if (report.skippedDefaultInputs.length > 0) {
+      lines.push(`skipped default inputs: ${report.skippedDefaultInputs.join(" | ")}`);
+    }
     lines.push(`missing SPR bands: ${report.missingProductionCoverage.sprBands.join(",") || "none"}`);
     lines.push(`missing pot types: ${report.missingProductionCoverage.potTypes.join(",") || "none"}`);
     lines.push(`missing action nodes: ${report.missingProductionCoverage.actionNodes.join(",") || "none"}`);

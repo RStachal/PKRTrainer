@@ -230,13 +230,14 @@ artifacts/texas-solver-review-integration/normalized-drafts/MTT9_50BB_BTN_BB_SRP
   draft-report.json
 ```
 
-After at least two SPR candidates exist, merge them into one scoped pilot pack:
+After at least two SPR candidates exist, merge them into one scoped pilot pack. The default scope is
+`BTN_vs_BB_SRP_FLOP_CBET`:
 
 ```powershell
 npm run mtt:texas-solver-merge-pilot-drafts -- --write --summary
 ```
 
-The default merge reads the current LOWSPR and MIDSPR BTN vs BB SRP drafts and writes:
+The default BTN vs BB SRP merge reads the available LOW/MID/HIGH BTN vs BB SRP drafts and writes:
 
 ```text
 artifacts/texas-solver-review-integration/normalized-drafts/BTN_BB_SRP_FLOP_CBET_PILOT-CHECK/
@@ -245,13 +246,32 @@ artifacts/texas-solver-review-integration/normalized-drafts/BTN_BB_SRP_FLOP_CBET
   merge-report.json
 ```
 
+For the BTN vs CO 3bet-pot pilot, use:
+
+```powershell
+npm run mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_CBET --write --summary
+```
+
+This writes:
+
+```text
+artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_CBET_PILOT-CHECK/
+  normalized.candidate.json
+  permission.candidate.json
+  merge-report.json
+```
+
+Default scope merges skip not-yet-available default candidates. For example, while 3BP HIGHSPR is still solving, the
+3BP pilot can be a valid LOW+MID scoped training candidate and will automatically expand to LOW/MID/HIGH after the
+HIGHSPR normalized draft exists and the refresh/merge workflow is re-run.
+
 Custom inputs are supported:
 
 ```powershell
 npm run mtt:texas-solver-merge-pilot-drafts -- --input-dir .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK --input-dir .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_50BB_BTN_BB_SRP-CHECK --output-dir .\artifacts\texas-solver-review-integration\normalized-drafts\BTN_BB_SRP_FLOP_CBET_PILOT-CHECK --write
 ```
 
-The merged pilot should improve the scoped training evidence, for example LOW+MID SPR coverage, while still reporting
+The merged pilot should improve the scoped training evidence, for example LOW/MID/HIGH SPR coverage, while still reporting
 `fullProductionReady: false` until the broader FLOP production matrix is actually solved and reviewed.
 Draft and merge reports include a deterministic `provenanceFingerprint` SHA-256 hash over the reviewed inputs,
 normalized candidate and permission manifest, so poker review can detect silent candidate changes.
@@ -399,8 +419,9 @@ npm run mtt:texas-solver-pilot-refresh -- --manifest .\Agents\solver-input\texas
 npm run mtt:postflop-pilot-suite -- --summary
 ```
 
-The suite will prefer `MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK` for the 3BP pilot once that normalized draft exists. If the
-repair candidate still fails, keep the pilot blocked and adjust the scenario/range/tree instead of weakening the gate.
+The suite now prefers the merged `BTN_CO_3BP_FLOP_CBET_PILOT-CHECK` pack for the 3BP pilot once it exists, and falls
+back to `MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK` only when the merged pack has not been written yet. If the repair candidate
+still fails, keep the pilot blocked and adjust the scenario/range/tree instead of weakening the gate.
 
 Current repair outcome:
 
@@ -470,6 +491,18 @@ When complete, ingest only this manifest:
 npm run mtt:texas-solver-pilot-refresh -- --manifest .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-3bp-expansion-v1-manifest.json --summary
 ```
 
+`mtt:texas-solver-pilot-refresh` now also re-runs the scoped merges after ingest. Current expected partial state while
+HIGHSPR is still solving:
+
+```text
+MTT9_80BB_CO_BTN_3BP_MIDSPR: RAW_COMPLETE (6/6)
+MTT9_150BB_CO_BTN_3BP_HIGHSPR: WAITING_FOR_RAW or RAW_PARTIAL
+BTN_CO_3BP_FLOP_CBET_PILOT-CHECK: valid LOW+MID scoped pilot, fullProductionReady=false
+```
+
+After `MTT9_150BB_CO_BTN_3BP_HIGHSPR` reaches 6/6 raw JSON, run the same refresh command again. The merged 3BP pilot
+will then include LOW/MID/HIGH SPR, still as a scoped pilot rather than full FLOP production coverage.
+
 Stop if needed:
 
 ```powershell
@@ -495,7 +528,7 @@ Other scoped pilots use an explicit scope:
 
 ```powershell
 npm run mtt:postflop-pilot-gate -- --scope=UTG_vs_BB_SRP_FLOP_CBET --normalized .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_40BB_UTG_BB_SRP-CHECK\normalized.candidate.json --permission-manifest .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_40BB_UTG_BB_SRP-CHECK\permission.candidate.json --summary
-npm run mtt:postflop-pilot-gate -- --scope=BTN_vs_CO_3BP_FLOP_CBET --normalized .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_35BB_CO_BTN_3BP-CHECK\normalized.candidate.json --permission-manifest .\artifacts\texas-solver-review-integration\normalized-drafts\MTT9_35BB_CO_BTN_3BP-CHECK\permission.candidate.json --summary
+npm run mtt:postflop-pilot-gate -- --scope=BTN_vs_CO_3BP_FLOP_CBET --normalized .\artifacts\texas-solver-review-integration\normalized-drafts\BTN_CO_3BP_FLOP_CBET_PILOT-CHECK\normalized.candidate.json --permission-manifest .\artifacts\texas-solver-review-integration\normalized-drafts\BTN_CO_3BP_FLOP_CBET_PILOT-CHECK\permission.candidate.json --summary
 ```
 
 Run all known scoped pilots at once:

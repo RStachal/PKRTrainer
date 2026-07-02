@@ -97,7 +97,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-pilot-refresh -- --skip-viewer",
     "",
     "Refreshes the local TexasSolver pilot workflow without promoting production data:",
-    "coverage status -> ingest completed families -> pilot suite -> review viewer.",
+    "coverage status -> ingest completed families -> merge scoped pilot packs -> pilot suite -> review viewer.",
   ].join("\n");
 }
 
@@ -127,6 +127,26 @@ function runWorkflow(args: CliArgs): WorkflowReport {
       "--summary",
     ]),
   );
+  steps.push(
+    runStep("merge-btn-bb-srp-pilot", [
+      "run",
+      "mtt:texas-solver-merge-pilot-drafts",
+      "--",
+      "--scope=BTN_vs_BB_SRP_FLOP_CBET",
+      ...(args.dryRun ? [] : ["--write"]),
+      "--summary",
+    ]),
+  );
+  steps.push(
+    runStep("merge-btn-co-3bp-pilot", [
+      "run",
+      "mtt:texas-solver-merge-pilot-drafts",
+      "--",
+      "--scope=BTN_vs_CO_3BP_FLOP_CBET",
+      ...(args.dryRun ? [] : ["--write"]),
+      "--summary",
+    ]),
+  );
   steps.push(runStep("pilot-suite", ["run", "mtt:postflop-pilot-suite", "--", "--summary"]));
   steps.push(
     args.skipViewer
@@ -153,6 +173,7 @@ function runWorkflow(args: CliArgs): WorkflowReport {
       args.manifestPath === null
         ? "npm run mtt:texas-solver-pilot-refresh -- --summary"
         : `npm run mtt:texas-solver-pilot-refresh -- --manifest ${quoteArg(args.manifestPath)} --summary`,
+      "npm run mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_CBET --write --summary",
       "npm run mtt:postflop-pilot-suite -- --summary",
     ],
   };

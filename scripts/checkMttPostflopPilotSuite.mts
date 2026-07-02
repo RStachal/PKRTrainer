@@ -80,18 +80,28 @@ const TARGETS: readonly PilotTarget[] = [
     id: "btn-co-3bp-flop-cbet",
     scope: "BTN_vs_CO_3BP_FLOP_CBET",
     normalizedPath:
-      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_35BB_CO_BTN_3BP-CHECK/normalized.candidate.json",
+      "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_CBET_PILOT-CHECK/normalized.candidate.json",
     permissionPath:
-      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_35BB_CO_BTN_3BP-CHECK/permission.candidate.json",
-    description: "BTN vs CO 3bet-pot flop c-bet pilot from coverage-v2.",
-    alternatives: [{
-      id: "btn-co-3bp-flop-cbet-repair",
-      normalizedPath:
-        "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK/normalized.candidate.json",
-      permissionPath:
-        "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK/permission.candidate.json",
-      description: "BTN vs CO 3bet-pot repair pilot with wider IP bluff-candidate range.",
-    }],
+      "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_CBET_PILOT-CHECK/permission.candidate.json",
+    description: "Merged BTN vs CO 3bet-pot flop c-bet pilot across available SPR bands.",
+    alternatives: [
+      {
+        id: "btn-co-3bp-flop-cbet-repair",
+        normalizedPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK/normalized.candidate.json",
+        permissionPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK/permission.candidate.json",
+        description: "BTN vs CO 3bet-pot repair pilot with wider IP bluff-candidate range.",
+      },
+      {
+        id: "btn-co-3bp-flop-cbet-coverage-v2",
+        normalizedPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_35BB_CO_BTN_3BP-CHECK/normalized.candidate.json",
+        permissionPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_35BB_CO_BTN_3BP-CHECK/permission.candidate.json",
+        description: "BTN vs CO 3bet-pot flop c-bet pilot from coverage-v2.",
+      },
+    ],
   },
 ];
 
@@ -225,6 +235,9 @@ function selectAvailableTarget(target: PilotTarget): {
   permissionPath: string;
   description: string;
 } {
+  if (existsSync(target.normalizedPath) || existsSync(target.permissionPath)) {
+    return target;
+  }
   for (const alternative of target.alternatives ?? []) {
     if (existsSync(alternative.normalizedPath) || existsSync(alternative.permissionPath)) return alternative;
   }
