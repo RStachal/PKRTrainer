@@ -175,7 +175,7 @@ function ingestCompletedCoverage(args: CliArgs): IngestReport {
     row.processed = !args.dryRun && errors.length === 0;
   }
 
-  const mergePilotCommands = mergeCommands();
+  const mergePilotCommands = mergeCommands(manifest);
   if (mergePilotCommands.length > 0 && !args.dryRun && errors.length === 0) {
     for (const command of mergePilotCommands) runNpmCommand(command, errors);
   }
@@ -240,11 +240,15 @@ function missingCommandsForFamily(outputBase: string, familyId: string): string[
     commands.push(`mtt:texas-solver-review -- --family=${familyId} --node-history=CHECK --write --summary`);
   }
   const draftSources = [reviewPath, ...rawSources].filter((path) => existsSync(path));
-  if (familyId.includes("LOWSPR") && (shouldReview || isMissingOrOlder(join(LOWSPR_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
+  if (familyId === "MTT9_20BB_BTN_BB_SRP_LOWSPR" && (shouldReview || isMissingOrOlder(join(LOWSPR_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${LOWSPR_DRAFT_DIR} --spr-min=0 --spr-max=3 --write`);
   }
-  if (familyId.includes("HIGHSPR") && (shouldReview || isMissingOrOlder(join(HIGHSPR_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
+  if (familyId === "MTT9_80BB_BTN_BB_SRP_HIGHSPR" && (shouldReview || isMissingOrOlder(join(HIGHSPR_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${HIGHSPR_DRAFT_DIR} --spr-min=8 --spr-max=20 --write`);
+  }
+  if (isFacingBetExpansionFamily(familyId)) {
+    const sprRange = sprRangeForFacingBetFamily(familyId);
+    commands.push(`mtt:texas-solver-facing-bet-candidates -- --family=${familyId} --spr-min=${sprRange.min} --spr-max=${sprRange.max} --write --summary`);
   }
   if (familyId === "MTT9_40BB_UTG_BB_SRP" && (shouldReview || isMissingOrOlder(join(UTG_BB_SRP_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${UTG_BB_SRP_DRAFT_DIR} --spr-min=3 --spr-max=8 --pot-type=SINGLE_RAISED --action-node=SINGLE_RAISED_POT_CBET --position-pattern=SRP_UTG_VS_BB --write`);
@@ -278,11 +282,26 @@ function isMissingOrOlder(targetPath: string, sourcePaths: readonly string[]): b
   return sourcePaths.some((sourcePath) => existsSync(sourcePath) && statSync(sourcePath).mtimeMs > targetMtime);
 }
 
-function mergeCommands(): string[] {
-  return [
-    "mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_BB_SRP_FLOP_CBET --write --summary",
-    "mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_CBET --write --summary",
-  ];
+function isFacingBetExpansionFamily(familyId: string): boolean {
+  return familyId.includes("_3BP_FACING_");
+}
+
+function sprRangeForFacingBetFamily(familyId: string): { min: number; max: number } {
+  if (familyId.includes("LOWSPR")) return { min: 0, max: 3 };
+  if (familyId.includes("HIGHSPR")) return { min: 8, max: 20 };
+  return { min: 3, max: 8 };
+}
+
+function mergeCommands(manifest: CoverageManifest): string[] {
+  const tags = new Set(manifest.scenarios.flatMap((scenario) => scenario.coverageTags));
+  const commands: string[] = [];
+  if (tags.has("SINGLE_RAISED_POT_CBET")) {
+    commands.push("mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_BB_SRP_FLOP_CBET --write --summary");
+  }
+  if (tags.has("THREE_BET_POT_CBET")) {
+    commands.push("mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_CBET --write --summary");
+  }
+  return commands;
 }
 
 function runNpmCommand(command: string, errors: string[]): void {

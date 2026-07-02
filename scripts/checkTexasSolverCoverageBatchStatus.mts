@@ -268,7 +268,12 @@ function nextCommandsForFamily(
   if (!staged.checkReview) {
     commands.push(`npm run mtt:texas-solver-review -- --family=${familyId} --node-history=CHECK --write --summary`);
   }
-  if (familyId.includes("LOWSPR") && !normalizedDraft) {
+  if (familyId.includes("_3BP_FACING_")) {
+    const sprRange = sprRangeForFacingBetFamily(familyId);
+    commands.push(
+      `npm run mtt:texas-solver-facing-bet-candidates -- --family=${familyId} --spr-min=${sprRange.min} --spr-max=${sprRange.max} --write --summary`,
+    );
+  } else if (familyId.includes("LOWSPR") && !normalizedDraft) {
     commands.push(
       `npm run mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\artifacts\\texas-solver-review-integration\\normalized-drafts\\${familyId}-CHECK --spr-min=0 --spr-max=3 --write`,
     );
@@ -279,6 +284,12 @@ function nextCommandsForFamily(
     );
   }
   return commands;
+}
+
+function sprRangeForFacingBetFamily(familyId: string): { min: number; max: number } {
+  if (familyId.includes("LOWSPR")) return { min: 0, max: 3 };
+  if (familyId.includes("HIGHSPR")) return { min: 8, max: 20 };
+  return { min: 3, max: 8 };
 }
 
 function nextCommandsForReport(rows: readonly CoverageFamilyRow[]): string[] {

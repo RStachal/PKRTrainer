@@ -112,6 +112,15 @@ const TARGETS: readonly PilotTarget[] = [
       "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_150BB_CO_BTN_3BP_HIGHSPR-FACING-BET_39/permission.candidate.json",
     description: "BTN vs CO 3bet-pot high-SPR flop facing-bet response pilot from CHECK>BET_39 TexasSolver node.",
   },
+  {
+    id: "btn-co-3bp-flop-facing-bet-lowspr",
+    scope: "BTN_vs_CO_3BP_FLOP_FACING_BET",
+    normalizedPath:
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR-FACING-BET_39/normalized.candidate.json",
+    permissionPath:
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR-FACING-BET_39/permission.candidate.json",
+    description: "BTN vs CO 3bet-pot low-SPR flop facing-bet response pilot from expansion-v1 CHECK>BET_39 node.",
+  },
 ];
 
 try {
