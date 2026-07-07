@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import type { FlopProductionStrategyPack } from "../src/data/ranges/flopProductionStrategyPack.ts";
 import {
   buildMttPostflopPilotGateReport,
@@ -40,7 +40,16 @@ interface PilotSuiteRow {
   normalizedPath: string;
   permissionPath: string;
   report: MttPostflopPilotGateReport | null;
+  selectedCandidate: PilotSuiteSelectedCandidate | null;
   blockers: readonly string[];
+}
+
+interface PilotSuiteSelectedCandidate {
+  source: "BEST_CANDIDATE" | "MERGE_REPORT";
+  nodeHistory: string | null;
+  betAction: string | null;
+  provenanceFingerprint: string | null;
+  inputCount: number | null;
 }
 
 interface PilotSuiteReport {
@@ -261,6 +270,7 @@ function buildRow(target: PilotTarget): PilotSuiteRow {
       normalizedPath: selected.normalizedPath,
       permissionPath: selected.permissionPath,
       report: null,
+      selectedCandidate: selectedCandidateFor(selected.normalizedPath),
       blockers,
     };
   }
@@ -279,8 +289,43 @@ function buildRow(target: PilotTarget): PilotSuiteRow {
     normalizedPath: selected.normalizedPath,
     permissionPath: selected.permissionPath,
     report,
+    selectedCandidate: selectedCandidateFor(selected.normalizedPath),
     blockers: report.errors,
   };
+}
+
+function selectedCandidateFor(normalizedPath: string): PilotSuiteSelectedCandidate | null {
+  const dir = dirname(normalizedPath);
+  const bestCandidatePath = join(dir, "best-candidate.json");
+  if (existsSync(bestCandidatePath)) {
+    const best = readJson<{
+      nodeHistory?: string;
+      betAction?: string;
+    }>(bestCandidatePath);
+    return {
+      source: "BEST_CANDIDATE",
+      nodeHistory: best.nodeHistory ?? null,
+      betAction: best.betAction ?? null,
+      provenanceFingerprint: null,
+      inputCount: null,
+    };
+  }
+
+  const mergeReportPath = join(dir, "merge-report.json");
+  if (existsSync(mergeReportPath)) {
+    const merge = readJson<{
+      provenanceFingerprint?: string;
+      inputs?: unknown[];
+    }>(mergeReportPath);
+    return {
+      source: "MERGE_REPORT",
+      nodeHistory: null,
+      betAction: null,
+      provenanceFingerprint: merge.provenanceFingerprint ?? null,
+      inputCount: Array.isArray(merge.inputs) ? merge.inputs.length : null,
+    };
+  }
+  return null;
 }
 
 function selectAvailableTarget(target: PilotTarget): {
@@ -313,7 +358,15 @@ function renderReport(report: PilotSuiteReport, summaryOnly: boolean): string {
     `range buckets: ${report.counts.rangeBuckets}`,
   ];
   for (const row of report.rows) {
-    lines.push(`${row.status} ${row.id}: ${row.scope}`);
+    const counts = row.report === null
+      ? ""
+      : ` rules=${row.report.counts.rules} buckets=${row.report.counts.rangeBuckets}`;
+    const candidate = row.selectedCandidate?.nodeHistory
+      ? ` node=${row.selectedCandidate.nodeHistory}`
+      : row.selectedCandidate?.inputCount !== null && row.selectedCandidate?.inputCount !== undefined
+        ? ` inputs=${row.selectedCandidate.inputCount}`
+        : "";
+    lines.push(`${row.status} ${row.id}: ${row.scope}${counts}${candidate}`);
     if ((row.status === "INVALID" || !summaryOnly) && row.blockers.length > 0) {
       for (const blocker of row.blockers) lines.push(`  - ${blocker}`);
     }
