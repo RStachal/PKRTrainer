@@ -1,0 +1,68 @@
+{
+  "packId": "pkrtrainer-mtt-texas-solver-srp-facing-bet-lowspr-v1",
+  "generatedAt": "2026-07-07",
+  "parameterDir": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_facing_bet_lowspr_v1",
+  "outputBase": "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
+  "scenarios": [
+    {
+      "familyId": "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
+      "pot": 50,
+      "effectiveStack": 125,
+      "boards": [
+        "A72r",
+        "T76tt",
+        "QJ9tt",
+        "654r"
+      ],
+      "purpose": "BTN vs BB single-raised-pot LOW-SPR facing flop c-bet response probe.",
+      "coverageTags": [
+        "LOW_SPR",
+        "SINGLE_RAISED",
+        "SRP_BTN_VS_BB",
+        "FLOP_FACING_BET",
+        "XR_BLUFF_PROBE"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "01_MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR_A72r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_facing_bet_lowspr_v1/01_MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR_A72r.txt",
+      "familyId": "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
+      "boardId": "A72r",
+      "written": true
+    },
+    {
+      "fileName": "02_MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR_T76tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_facing_bet_lowspr_v1/02_MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR_T76tt.txt",
+      "familyId": "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
+      "boardId": "T76tt",
+      "written": true
+    },
+    {
+      "fileName": "03_MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR_QJ9tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_facing_bet_lowspr_v1/03_MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR_QJ9tt.txt",
+      "familyId": "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
+      "boardId": "QJ9tt",
+      "written": true
+    },
+    {
+      "fileName": "04_MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR_654r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_facing_bet_lowspr_v1/04_MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR_654r.txt",
+      "familyId": "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
+      "boardId": "654r",
+      "written": true
+    }
+  ],
+  "notes": [
+    "Review-only TexasSolver expansion for BTN vs BB SRP flop facing-bet response nodes.",
+    "This complements the BTN vs CO 3bet-pot facing-bet pilot; do not promote without scoped gate support."
+  ],
+  "commands": [
+    "npm run mtt:texas-solver-srp-facing-bet-batch -- --variant=lowspr --write",
+    "npm run mtt:texas-solver-scenario-audit -- --manifest \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-srp-facing-bet-lowspr-v1-manifest.json\" --summary",
+    ".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_srp_facing_bet_lowspr_v1\" -Limit 999 -ListOnly",
+    ".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_srp_facing_bet_lowspr_v1\" -Limit 999",
+    "npm run mtt:texas-solver-coverage-status -- --manifest \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-srp-facing-bet-lowspr-v1-manifest.json\" --summary"
+  ]
+}

@@ -5,6 +5,10 @@ const DEFAULT_OUTPUT_DIR =
   "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_facing_bet_v1";
 const DEFAULT_MANIFEST =
   "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-srp-facing-bet-v1-manifest.json";
+const LOWSPR_OUTPUT_DIR =
+  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_facing_bet_lowspr_v1";
+const LOWSPR_MANIFEST =
+  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-srp-facing-bet-lowspr-v1-manifest.json";
 const OUTPUT_BASE = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 
 const BOARD_TO_TEXAS_SOLVER: Record<string, string> = {
@@ -44,9 +48,22 @@ const SCENARIOS: readonly Scenario[] = [
   },
 ];
 
+const LOWSPR_SCENARIOS: readonly Scenario[] = [
+  {
+    familyId: "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
+    pot: 50,
+    effectiveStack: 125,
+    boards: ["A72r", "T76tt", "QJ9tt", "654r"],
+    purpose: "BTN vs BB single-raised-pot LOW-SPR facing flop c-bet response probe.",
+    coverageTags: ["LOW_SPR", "SINGLE_RAISED", "SRP_BTN_VS_BB", "FLOP_FACING_BET", "XR_BLUFF_PROBE"],
+  },
+];
+
 interface CliArgs {
   manifestPath: string;
   outputDir: string;
+  scenarios: readonly Scenario[];
+  variant: "default" | "lowspr";
   write: boolean;
 }
 
@@ -65,8 +82,8 @@ try {
     valid: true,
     outputDir: args.outputDir,
     manifestPath: args.manifestPath,
-    scenarios: SCENARIOS,
-    counts: { scenarios: SCENARIOS.length, files: files.length },
+    scenarios: args.scenarios,
+    counts: { scenarios: args.scenarios.length, files: files.length },
     files: files.map((file) => ({ ...file, written: args.write })),
     nextCommands: nextCommands(args),
   };
@@ -80,12 +97,30 @@ try {
 function parseArgs(argv: readonly string[]): CliArgs {
   let manifestPath = resolve(DEFAULT_MANIFEST);
   let outputDir = resolve(DEFAULT_OUTPUT_DIR);
+  let variant: CliArgs["variant"] = "default";
   let write = false;
   for (let index = 0; index < argv.length; index += 1) {
     const item = argv[index];
     if (item === "--help" || item === "-h") throw new Error(usage());
     if (item === "--write") {
       write = true;
+      continue;
+    }
+    if (item === "--variant") {
+      variant = parseVariant(requiredValue(argv, index, "--variant"));
+      index += 1;
+      if (variant === "lowspr") {
+        manifestPath = resolve(LOWSPR_MANIFEST);
+        outputDir = resolve(LOWSPR_OUTPUT_DIR);
+      }
+      continue;
+    }
+    if (item.startsWith("--variant=")) {
+      variant = parseVariant(inlineValue(item, "--variant"));
+      if (variant === "lowspr") {
+        manifestPath = resolve(LOWSPR_MANIFEST);
+        outputDir = resolve(LOWSPR_OUTPUT_DIR);
+      }
       continue;
     }
     if (item === "--output-dir") {
@@ -108,7 +143,13 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
-  return { manifestPath, outputDir, write };
+  return {
+    manifestPath,
+    outputDir,
+    scenarios: variant === "lowspr" ? LOWSPR_SCENARIOS : SCENARIOS,
+    variant,
+    write,
+  };
 }
 
 function usage(): string {
@@ -116,9 +157,15 @@ function usage(): string {
     "Usage:",
     "  npm run mtt:texas-solver-srp-facing-bet-batch",
     "  npm run mtt:texas-solver-srp-facing-bet-batch -- --write",
+    "  npm run mtt:texas-solver-srp-facing-bet-batch -- --variant=lowspr --write",
     "",
     "Generates review-only BTN vs BB SRP FLOP_FACING_BET TexasSolver inputs.",
   ].join("\n");
+}
+
+function parseVariant(value: string): CliArgs["variant"] {
+  if (value === "default" || value === "lowspr") return value;
+  throw new Error(`Unsupported --variant value: ${value}\n\n${usage()}`);
 }
 
 function requiredValue(argv: readonly string[], index: number, flag: string): string {
@@ -134,7 +181,7 @@ function inlineValue(item: string, flag: string): string {
 }
 
 function buildFiles(args: CliArgs): GeneratedFile[] {
-  return SCENARIOS.flatMap((scenario, scenarioIndex) => scenario.boards.map((boardId, boardIndex) => {
+  return args.scenarios.flatMap((scenario, scenarioIndex) => scenario.boards.map((boardId, boardIndex) => {
     const sequence = String(scenarioIndex * 20 + boardIndex + 1).padStart(2, "0");
     const fileName = `${sequence}_${scenario.familyId}_${boardId}.txt`;
     return {
@@ -150,7 +197,7 @@ function buildFiles(args: CliArgs): GeneratedFile[] {
 function writeBatch(args: CliArgs, files: readonly GeneratedFile[]): void {
   mkdirSync(args.outputDir, { recursive: true });
   mkdirSync(dirname(args.manifestPath), { recursive: true });
-  for (const scenario of SCENARIOS) {
+  for (const scenario of args.scenarios) {
     for (const boardId of scenario.boards) {
       const file = files.find((item) => item.familyId === scenario.familyId && item.boardId === boardId);
       if (file === undefined) throw new Error(`Missing generated file for ${scenario.familyId}/${boardId}.`);
@@ -158,11 +205,13 @@ function writeBatch(args: CliArgs, files: readonly GeneratedFile[]): void {
     }
   }
   writeFileSync(args.manifestPath, `${JSON.stringify({
-    packId: "pkrtrainer-mtt-texas-solver-srp-facing-bet-v1",
+    packId: args.variant === "lowspr"
+      ? "pkrtrainer-mtt-texas-solver-srp-facing-bet-lowspr-v1"
+      : "pkrtrainer-mtt-texas-solver-srp-facing-bet-v1",
     generatedAt: "2026-07-07",
     parameterDir: repoRelativePath(args.outputDir),
     outputBase: OUTPUT_BASE,
-    scenarios: SCENARIOS,
+    scenarios: args.scenarios,
     files: files.map((file) => ({ ...file, path: repoRelativePath(file.path), written: true })),
     notes: [
       "Review-only TexasSolver expansion for BTN vs BB SRP flop facing-bet response nodes.",
@@ -220,7 +269,9 @@ function nextCommands(args: CliArgs): string[] {
   const parameterRoot = repoPowerShellPath(args.outputDir);
   const manifest = repoPowerShellPath(args.manifestPath);
   return [
-    "npm run mtt:texas-solver-srp-facing-bet-batch -- --write",
+    args.variant === "lowspr"
+      ? "npm run mtt:texas-solver-srp-facing-bet-batch -- --variant=lowspr --write"
+      : "npm run mtt:texas-solver-srp-facing-bet-batch -- --write",
     `npm run mtt:texas-solver-scenario-audit -- --manifest "${manifest}" --summary`,
     `.\u005cAgents\u005csolver-input\u005ctexas-solver\u005cmtt-safe-flops-v1\u005crun-console-selected.ps1 -ParameterRoot "${parameterRoot}" -Limit 999 -ListOnly`,
     `.\u005cAgents\u005csolver-input\u005ctexas-solver\u005cmtt-safe-flops-v1\u005crun-console-selected.ps1 -ParameterRoot "${parameterRoot}" -Limit 999`,

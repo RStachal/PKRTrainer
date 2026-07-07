@@ -355,6 +355,7 @@ function defaultMergeInputDirs(scope: string): string[] {
   }
   if (scope === "BTN_vs_BB_SRP_FLOP_FACING_BET") {
     return [
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR-FACING-BET-BEST"),
       join(NORMALIZED_DRAFT_ROOT, "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR-FACING-BET-BEST"),
       join(NORMALIZED_DRAFT_ROOT, "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR-FACING-BET-BEST"),
     ];
