@@ -2126,13 +2126,14 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - `mtt:solver-verification -- --solver=texas-solver` ma prejit z `WAITING_FOR_SOLVER_OUTPUT` minimalne na `PARTIAL`, idealne `READY_FOR_REVIEW` pro 3/3 family.
     - Acceptance: pro `MTT9_50BB_BTN_BB_SRP`, `MTT9_40BB_UTG_BB_SRP` a `MTT9_35BB_CO_BTN_3BP` existuji review artefakty, zadny raw JSON neni commitnuty a report jasne ukazuje dalsi review blocker.
     - Hotovo 2026-07-01: 10/10 TexasSolver raw JSON exportu existuje lokalne, `run-nightly-verification.ps1 -StageExisting -ReviewTemplate` stageoval 3/3 family a `mtt:solver-verification -- --solver=texas-solver` je lokalne `valid: true`, `READY_FOR_REVIEW` 3/3. Review artefakty zustavaji ignorovane v lokalnim solver workspace.
-  - [ ] 135.54 Napsat TexasSolver export adapter pro review artefakty
+  - [x] 135.54 Napsat TexasSolver export adapter pro review artefakty
     - Prozkoumat strukturu TexasSolver JSON (`actions`, `strategy`, `childrens`, `player`, chance/action nodes) a definovat stabilni interní intermediate format.
     - Adapter musi umet najit cilovy decision node podle family/board/action history, prelozit solver akce na PKRTrainer action taxonomy a agregovat suit-combo strategie do 169 hand classes.
     - Zaznamenat ztraty informace: rounding, mixed frequencies, missing combos, all-in sizing, player index mapping a board blockers.
     - Vystupem zatim nesmi byt production `normalized.json`; nejdrive jen source-free `strategy-export.review.json` nebo rozsireny `strategy-export.json` se statusem `NEEDS_REVIEW`.
     - Acceptance: unit fixture nad malym vyrezem TexasSolver JSON overi action mapping, hand-class aggregation a fail-closed chovani pri necekanem stromu.
-    - Rozpracovano 2026-07-01: pridany `scripts/extractTexasSolverReview.mts`, npm prikaz `mtt:texas-solver-review`, unit testy a operator guide. Lokalni beh zapsal `strategy-export.review.json` pro 3/3 family: `MTT9_50BB_BTN_BB_SRP` 8 files / 2516 combos / 65 hand classes, `MTT9_40BB_UTG_BB_SRP` 1 file / 340 combos / 63 hand classes, `MTT9_35BB_CO_BTN_3BP` 1 file / 104 combos / 23 hand classes. Zbyva doplnit selector pro nerootove decision nody/action history.
+    - Rozpracovano 2026-07-01: pridany `scripts/extractTexasSolverReview.mts`, npm prikaz `mtt:texas-solver-review`, unit testy a operator guide. Lokalni beh zapsal `strategy-export.review.json` pro 3/3 family: `MTT9_50BB_BTN_BB_SRP` 8 files / 2516 combos / 65 hand classes, `MTT9_40BB_UTG_BB_SRP` 1 file / 340 combos / 63 hand classes, `MTT9_35BB_CO_BTN_3BP` 1 file / 104 combos / 23 hand classes.
+    - Hotovo 2026-07-07: adapter podporuje root i nested action-history (`--node-history`), normalizuje TexasSolver akce vcetne `BET_25` selectoru, agreguje combo strategie do 169 hand classes, fail-closed hlasi chybejici nody/akce/player/strategy a vystup zustava `productionReady=false`.
   - [ ] 135.55 Zavezt solver review protocol pro pokerovou kvalitu
     - Pro kazdy solver family evidovat tree settings, ranges, stack/pot scaling, iterations/accuracy, exploitability/log evidence, board set a reviewer sign-off.
     - Overit, ze smoke tree sizingy nejsou omylem interpretovane jako finalni production poker strategie; pro release packy rozhodnout finalni sizing model pred importem.
@@ -2166,17 +2167,32 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - 5. Po uspesnych pilotech skálovat po vlnach P1 -> P2 -> P3 -> P4 -> P5.
     - 6. Teprve po datech delat finalni Android, performance, UX polish, release governance a FTP/staging balicek.
     - Acceptance: dalsi autonomni prace vzdy zacina nejvyssi nesplnenou polozkou v tomto poradi, pokud uzivatel explicitne nezmeni prioritu.
-  - [ ] 135.61 Dopracovat TexasSolver node selector a review diff
+  - [x] 135.61 Dopracovat TexasSolver node selector a review diff
     - Pridat do `mtt:texas-solver-review` vyber decision node podle action history (`--node-history`/family default), ne jen root node.
     - Zachytit a reportovat cestu stromem, dostupne child akce, player mapping IP/OOP a fail-closed stav, pokud pozadovany node v exportu neni.
     - Vytvorit jednoduchy anomaly/diff report mezi boardy v jedne family: extremni bet frequency, chybejici hand classes, podezrele action labels, all-in sizing a exploitability/log evidence navazujici na `review-notes.md`.
     - Acceptance: unit test kryje nested `childrens` strom, neexistujici action history a diff/anomaly summary; operator guide popisuje, jak reviewer vybere node pro prvni FLOP pilot.
-    - Rozpracovano 2026-07-01: `--node-history=<ACTION>[>ACTION...]` umi vybrat nested `childrens` node, podporuje raw TexasSolver labels i normalized labels typu `BET_25` a fail-closed reportuje dostupne child akce. Report doplnuje non-blocking `anomalies` pro low hand-class/combo coverage, invalid combo labels a action-set diff mezi boardy. Zbyva napojeni na review-notes evidence a explicitni reviewer sign-off workflow.
+    - Rozpracovano 2026-07-01: `--node-history=<ACTION>[>ACTION...]` umi vybrat nested `childrens` node, podporuje raw TexasSolver labels i normalized labels typu `BET_25` a fail-closed reportuje dostupne child akce. Report doplnuje non-blocking `anomalies` pro low hand-class/combo coverage, invalid combo labels a action-set diff mezi boardy.
+    - Hotovo 2026-07-07: `mtt:texas-solver-review` cte rodinne `review-notes.md` a do JSON/text reportu pridava `reviewNotes` stav: missing/status/reviewer/reviewedAt/usableForProduction/scope/blockers. Stage template vyzaduje Reviewer, Reviewed at, Usable for production, Usable scope a Production caveats. Operator guide popisuje, ze bez `Status: REVIEWED` a explicitniho usable rozhodnuti zustava vystup jen review validni, ne production-ready.
   - [x] 135.62 Pripravit komplexni PowerShell workflow pro TexasSolver review/compare/integration
     - Hotovo 2026-07-01: `Agents/solver-input/texas-solver/mtt-safe-flops-v1/review-compare-integrate.ps1` overuje TexasSolver parameter pack, stageuje 3 family, generuje root/CHECK review reporty, porovnava je s aktualnim PKRTrainer postflop release gate a vypisuje legalni full-ring FLOP import sloty.
     - Vystupy jsou v `artifacts/texas-solver-review-integration/TEXAS_SOLVER_INTEGRATION_REPORT.md`, `texas-solver-integration-report.json` a `command-log.json`.
     - Bezpecnost: skript nevytvari production `normalized.json` ani `permission.json`; pouze ukazuje nejlepsi pilot a dalsi canonical import kroky po lidskem poker review.
     - Posledni beh doporucil `MTT9_50BB_BTN_BB_SRP` / `CHECK` jako prvni pilot: 8 raw files, 1792 combo rows, 50 hand classes, 0 anomalies; soucasny PKRTrainer baseline zustava 0/48 postflop production-ready a 48 fallback runtime rows.
+  - [x] 135.63 Upresnit vyznam `permission.json` jako technickeho provenance manifestu
+    - Rozhodnuti: `permission.json` zustava kompatibilni nazev souboru pro import tooling, slot paths a testy, ale v PKRTrainer workflow znamena source-free production provenance/audit manifest.
+    - Nejde o uzivatelska opravneni, placeny pristup ani obchodni entitlement; ty resi samostatne payment/entitlement vrstva.
+    - Manifest musi dal nest packId, reviewer, reviewedAt, source-free evidence references, licenseKind/reuse policy a runtime-bundle rozhodnuti, aby production gate nebyl jen metadata-only klon.
+    - Hotovo 2026-07-07: `Agents/production-range-intake-manifest.md` vysvetluje kompatibilni nazev `permission.json` a jeho skutecnou funkci jako provenance/audit manifestu.
+  - [x] 135.64 Aktualni prioritni plan pro korektni dokonceni plnohodnotneho MTT traineru
+    - Reality check 2026-07-07: `mtt:completion -- --summary` je cerveny: 64 rows, 0 productionReady, 54 preview/candidate, 10 blocked/missing; `mtt:blockers -- --summary` hlasi 64 blocker rows a 0 ready-for-validation slotu.
+    - Reality check 2026-07-07: postflop pilot delivery je zeleny jen jako scoped pilot: `mtt:postflop-pilot-suite -- --summary` READY 5/5, 13 rules, 557 buckets; full postflop production coverage stale 0/9600 targetu.
+    - P1 nejdrive: dodat nebo importovat 8 preflop CHIP_EV production slotu pro FULL_RING_9/SIX_MAX x REGULAR/TURBO x ante ON/OFF; bez toho nemuze byt MTT v1 oznacen jako produkcni.
+    - P2 potom: rozhodnout DOLAR_EV/ICM strategii; pokud nejsou data, ponechat mimo release nebo jasne jako planned/blocked, nikdy ne jako implicitni chipEV reuse.
+    - P3 paralelne: rozsirovat TexasSolver postflop piloty pres review-only workflow, ale do production povysovat az po review, provenance manifestu, coverage gate a source-free runtime smoke.
+    - P4 produktove: entitlement/payment model napojit na obsahove baliky az po odliseni production vs scoped pilot, aby uzivatel nikdy nekupoval "full" obsah, ktery je fakticky jen pilot.
+    - P5 release: finalni zip/tag az po zelenem release scope; pokud scope zustane "MTT Preflop Production + Postflop Solver Pilot", musi to byt explicitne v UI, release notes i gatech.
+    - Acceptance: dalsi autonomni beh zacina 135.54/135.55/135.58 podle toho, zda jsou dostupna data; bez dat se zlepsuje tooling/review/QA, ne strategicke hodnoty.
 
 - [ ] 136. Password-protected FORPSI staging deployment
   - Cil: umet nahrat aktualni staticky build na FORPSI FTP a zamknout ho heslem, aby slo prakticky zkouset aplikaci mimo lokalni stroj bez verejneho zverejneni.

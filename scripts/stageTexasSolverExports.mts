@@ -330,7 +330,15 @@ function renderReviewTemplate(args: CliArgs, report: StageReport): string {
     "- [ ] Confirm solver accuracy / exploitability is acceptable.",
     "- [ ] Confirm no raw export is a partial/truncated file.",
     "- [ ] Confirm first-node strategy can be mapped to PKRTrainer action taxonomy.",
+    "- [ ] Confirm board coverage, player mapping, tree sizing and range assumptions match the intended PKRTrainer slot.",
+    "- [ ] Record exact scope below before any normalized.json/permission.json promotion.",
     "- [ ] Replace this status with `Status: REVIEWED` only after human review.",
+    "",
+    "Reviewer:",
+    "Reviewed at:",
+    "Usable for production: no",
+    "Usable scope:",
+    "Production caveats:",
     "",
   ].join("\n");
 }

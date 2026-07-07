@@ -79,9 +79,22 @@ interface ReviewReport {
   };
   files: ReviewFile[];
   plannedFiles: Array<{ path: string; written: boolean; purpose: string }>;
+  reviewNotes: ReviewNotesStatus;
   anomalies: string[];
   blockers: string[];
   nextSteps: string[];
+}
+
+interface ReviewNotesStatus {
+  path: string;
+  present: boolean;
+  status: string;
+  reviewed: boolean;
+  usableForProduction: "YES" | "NO" | "SCOPED" | "UNKNOWN";
+  usableScope: string;
+  reviewer: string;
+  reviewedAt: string;
+  blockers: string[];
 }
 
 function usage(): string {
@@ -231,6 +244,7 @@ function buildReviewReport(args: CliArgs): ReviewReport {
   ];
   const uniqueHandClasses = new Set(files.flatMap((file) => Object.keys(file.handClasses)));
   const anomalies = buildReviewAnomalies(files);
+  const reviewNotes = readReviewNotesStatus(args);
   return {
     valid: blockers.length === 0,
     status: "NEEDS_REVIEW",
@@ -250,12 +264,14 @@ function buildReviewReport(args: CliArgs): ReviewReport {
     },
     files,
     plannedFiles,
+    reviewNotes,
     anomalies,
     blockers,
     nextSteps: [
       "Human-review the extracted root strategies and solver assumptions.",
       "Use --node-history=<ACTION>[>ACTION...] when reviewing a non-root decision node.",
       "Inspect anomalies before promoting any solver output into canonical range imports.",
+      "Complete review-notes.md with Status: REVIEWED and an explicit Usable for production decision.",
       "Confirm tree sizing, player mapping, board coverage and exploitability evidence.",
       "Only after review, map approved strategy data into canonical normalized.json + permission.json.",
       "Run validate:range-import and build:range-module --dry-run before any production promotion.",
@@ -294,6 +310,72 @@ function buildReviewAnomalies(files: readonly ReviewFile[]): string[] {
     }
   }
   return anomalies;
+}
+
+function readReviewNotesStatus(args: CliArgs): ReviewNotesStatus {
+  const path = join(args.solverOutputDir, "review-notes.md");
+  if (!existsSync(path)) {
+    return {
+      path,
+      present: false,
+      status: "MISSING",
+      reviewed: false,
+      usableForProduction: "UNKNOWN",
+      usableScope: "",
+      reviewer: "",
+      reviewedAt: "",
+      blockers: ["review-notes.md is missing; solver output still needs human poker review."],
+    };
+  }
+
+  const text = readFileSync(path, "utf8");
+  const status = fieldValue(text, "Status") || "UNKNOWN";
+  const reviewer = fieldValue(text, "Reviewer");
+  const reviewedAt = fieldValue(text, "Reviewed at") || fieldValue(text, "ReviewedAt");
+  const usableRaw = fieldValue(text, "Usable for production") || fieldValue(text, "Production usable");
+  const usableForProduction = parseUsableForProduction(usableRaw);
+  const usableScope = usableRaw;
+  const blockers: string[] = [];
+
+  if (status.toUpperCase() !== "REVIEWED") {
+    blockers.push(`review-notes.md status must be REVIEWED before production promotion; got ${status}.`);
+  }
+  if (usableForProduction === "UNKNOWN") {
+    blockers.push("review-notes.md must include `Usable for production: yes/no/scope`.");
+  }
+  if (reviewer.length === 0) {
+    blockers.push("review-notes.md must include Reviewer before production promotion.");
+  }
+  if (reviewedAt.length === 0) {
+    blockers.push("review-notes.md must include Reviewed at before production promotion.");
+  }
+
+  return {
+    path,
+    present: true,
+    status,
+    reviewed: status.toUpperCase() === "REVIEWED",
+    usableForProduction,
+    usableScope,
+    reviewer,
+    reviewedAt,
+    blockers,
+  };
+}
+
+function fieldValue(text: string, label: string): string {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = text.match(new RegExp(`^\\s*${escaped}\\s*:\\s*(.+?)\\s*$`, "im"));
+  return match?.[1]?.trim() ?? "";
+}
+
+function parseUsableForProduction(value: string): ReviewNotesStatus["usableForProduction"] {
+  const normalized = value.trim().toLowerCase();
+  if (normalized.length === 0) return "UNKNOWN";
+  if (/^(yes|y|true)\b/.test(normalized)) return "YES";
+  if (/^(no|n|false)\b/.test(normalized)) return "NO";
+  if (/^(scope|scoped|pilot)\b/.test(normalized) || normalized.includes("scope")) return "SCOPED";
+  return "UNKNOWN";
 }
 
 function actionSignature(file: ReviewFile): string {
@@ -564,11 +646,19 @@ function boardIdFromFileName(fileName: string, familyId: string): string {
 
 function plannedReviewFiles(args: CliArgs): ReviewReport["plannedFiles"] {
   const path = join(args.solverOutputDir, reviewFileName(args));
-  return [{
-    path,
-    written: existsSync(path),
-    purpose: "source-safe TexasSolver root strategy review summary",
-  }];
+  const reviewNotesPath = join(args.solverOutputDir, "review-notes.md");
+  return [
+    {
+      path,
+      written: existsSync(path),
+      purpose: "source-safe TexasSolver root strategy review summary",
+    },
+    {
+      path: reviewNotesPath,
+      written: existsSync(reviewNotesPath),
+      purpose: "human poker review notes and sign-off",
+    },
+  ];
 }
 
 function writeReviewFiles(args: CliArgs, report: ReviewReport): void {
@@ -597,6 +687,8 @@ function renderReport(report: ReviewReport, summaryOnly: boolean): string {
     `hand classes: ${report.counts.handClasses}`,
     `planned writes: ${report.counts.plannedWrites}`,
     `written files: ${report.counts.writtenFiles}`,
+    `review notes: ${report.reviewNotes.present ? report.reviewNotes.status : "MISSING"}`,
+    `usable for production: ${report.reviewNotes.usableForProduction}`,
   ];
   if (summaryOnly) return lines.join("\n");
 
@@ -606,6 +698,7 @@ function renderReport(report: ReviewReport, summaryOnly: boolean): string {
   for (const file of report.plannedFiles) {
     lines.push(`${file.written ? "OK" : "PENDING"} ${file.purpose}: ${file.path}`);
   }
+  for (const blocker of report.reviewNotes.blockers) lines.push(`review-note: ${blocker}`);
   for (const blocker of report.blockers) lines.push(`blocker: ${blocker}`);
   for (const anomaly of report.anomalies) lines.push(`anomaly: ${anomaly}`);
   lines.push("next steps:");

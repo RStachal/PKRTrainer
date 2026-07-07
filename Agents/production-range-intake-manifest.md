@@ -182,7 +182,16 @@ Validator:
 - `buildMttPostflopImportSlots` for concrete MTT postflop import slot paths
 - `npm run validate:range-import -- --kind=river-production --permission-manifest <manifest.json> <input.json>`
 
-## Permission Manifest
+## Permission / Provenance Manifest
+
+Compatibility note: the file is still named `permission.json` because the import
+tooling, slot paths and tests already use that stable name. In the PKRTrainer
+workflow this file is not user-access control and it is not the payment model.
+Treat it as a source-free production provenance/audit manifest: it proves which
+reviewed input created a pack, who reviewed it, whether the data may be bundled
+in the PKRTrainer runtime, and whether any reuse across blind speed or EV model
+was explicitly reviewed. User access is handled separately by entitlements and
+payments.
 
 Every production promotion must include a separate permission manifest. The import can be technically valid, but the CLI must still fail unless the permission report says `permissionReady: true`.
 
@@ -229,9 +238,9 @@ Raw legal inputs belong under `Agents/range-intake/raw/<pack-id>/`; that folder 
 
 ## Operator Workflow
 
-1. Store the raw legal export and permission evidence under `Agents/range-intake/raw/<pack-id>/`.
+1. Store the raw owned/reviewed export and private provenance evidence under `Agents/range-intake/raw/<pack-id>/`.
 2. Normalize the export into the target JSON schema.
-3. Add a permission manifest with the same `packId` and matching `licenseKind`.
+3. Add `permission.json` as the source-free provenance/audit manifest with the same `packId` and matching `licenseKind`.
 4. Run `npm run validate:range-import` with `--permission-manifest`.
 5. Dry-run module generation with `npm run build:range-module -- --dry-run`.
 6. Promote only when both `productionReady: true`, `permissionReady: true` and `writeReady: true`.

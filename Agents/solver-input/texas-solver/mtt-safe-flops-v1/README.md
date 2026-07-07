@@ -516,6 +516,26 @@ npm run mtt:stage-texas-solver -- --family=MTT9_20BB_BTN_BB_SRP_LOWSPR --write -
 npm run mtt:texas-solver-review -- --family=MTT9_20BB_BTN_BB_SRP_LOWSPR --node-history=CHECK --write --summary
 ```
 
+## Review notes sign-off
+
+`mtt:texas-solver-review` now reads the family `review-notes.md` and includes a `reviewNotes` block in the JSON report.
+This does not make the strategy production-ready; it only exposes whether a human poker review has signed the output.
+
+Before any `normalized.json` + `permission.json` promotion, the family notes must contain at least:
+
+```text
+Status: REVIEWED
+Reviewer: <name or internal reviewer id>
+Reviewed at: <YYYY-MM-DD>
+Usable for production: yes | no | scoped: <exact scope>
+Usable scope: <spot family, node, SPR/board/position limitations>
+Production caveats: <tree sizing, accuracy, range and validation caveats>
+```
+
+If the notes are missing, still say `Status: NEEDS_REVIEW`, or omit the usable decision, the review report stays
+source-safe but shows `reviewNotes.blockers`. That is intentional: TexasSolver extraction can be technically valid while
+the poker/content decision is still not approved for production.
+
 ## Pilot gate
 
 The narrow BTN vs BB SRP candidate can be checked with:

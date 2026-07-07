@@ -45,6 +45,12 @@ describe("mtt:texas-solver-review CLI", () => {
         productionReady: boolean;
         counts: { rawFiles: number; parsedFiles: number; handClasses: number; writtenFiles: number };
         anomalies: string[];
+        reviewNotes: {
+          present: boolean;
+          status: string;
+          usableForProduction: string;
+          blockers: string[];
+        };
         files: Array<{
           boardId: string;
           handClasses: Record<string, {
@@ -59,6 +65,12 @@ describe("mtt:texas-solver-review CLI", () => {
       expect(report.valid).toBe(true);
       expect(report.status).toBe("NEEDS_REVIEW");
       expect(report.productionReady).toBe(false);
+      expect(report.reviewNotes).toMatchObject({
+        present: false,
+        status: "MISSING",
+        usableForProduction: "UNKNOWN",
+      });
+      expect(report.reviewNotes.blockers.join("\n")).toContain("review-notes.md is missing");
       expect(report.counts).toMatchObject({
         rawFiles: 1,
         parsedFiles: 1,
@@ -86,6 +98,84 @@ describe("mtt:texas-solver-review CLI", () => {
         valid: true,
         productionReady: false,
       });
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("cte review-notes.md sign-off bez povyseni solver vystupu na production", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-review-notes-"));
+    const rawDir = join(directory, "raw");
+    const outputDir = join(directory, "review");
+    mkdirSync(rawDir, { recursive: true });
+    mkdirSync(outputDir, { recursive: true });
+    writeFileSync(
+      join(rawDir, "pkrtrainer_TEST_FAMILY_A72r.json"),
+      JSON.stringify({
+        node_type: "action_node",
+        player: 1,
+        actions: ["CHECK", "BET 25.000000"],
+        strategy: {
+          actions: ["CHECK", "BET 25.000000"],
+          strategy: {
+            AcJc: [0.1, 0.9],
+            AdJh: [0.4, 0.6],
+          },
+        },
+        childrens: {},
+      }),
+      "utf8",
+    );
+    writeFileSync(
+      join(outputDir, "review-notes.md"),
+      [
+        "# TexasSolver review notes: TEST_FAMILY",
+        "",
+        "Status: REVIEWED",
+        "Reviewer: PKRTrainer QA",
+        "Reviewed at: 2026-07-07",
+        "Usable for production: scoped: A72r c-bet smoke only",
+        "Usable scope: TEST_FAMILY root node, A72r smoke fixture",
+        "Production caveats: not broad coverage",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    try {
+      const result = runReview(
+        "--family=TEST_FAMILY",
+        `--raw-dir=${rawDir}`,
+        `--solver-output-dir=${outputDir}`,
+        "--json",
+      );
+
+      expect(result.status).toBe(0);
+      const report = parseJsonStdout(result.stdout) as {
+        productionReady: boolean;
+        reviewNotes: {
+          present: boolean;
+          status: string;
+          reviewed: boolean;
+          reviewer: string;
+          reviewedAt: string;
+          usableForProduction: string;
+          usableScope: string;
+          blockers: string[];
+        };
+      };
+
+      expect(report.productionReady).toBe(false);
+      expect(report.reviewNotes).toMatchObject({
+        present: true,
+        status: "REVIEWED",
+        reviewed: true,
+        reviewer: "PKRTrainer QA",
+        reviewedAt: "2026-07-07",
+        usableForProduction: "SCOPED",
+      });
+      expect(report.reviewNotes.usableScope).toContain("A72r c-bet smoke only");
+      expect(report.reviewNotes.blockers).toEqual([]);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
