@@ -2346,6 +2346,9 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo 2026-07-07: SRP facing MIDSPR family dobehla 4/4 raw a watcher ji odeslal pres ingest/candidate harvest; best je `CHECK>BET_17`, gate `BTN_vs_BB_SRP_FLOP_FACING_BET` je `valid: true`, 1 rule, 58 bucketu, lane VALUE/CHECK/BLUFF = 12/39/7, akce RAISE/CALL/FOLD = 19/33/6.
     - Hotovo 2026-07-07: `mtt:postflop-pilot-suite` nyni hlasi READY 5/5, 11 rules, 441 range bucketu vcetne noveho `BTN_vs_BB_SRP_FLOP_FACING_BET` pilotu; `mtt:texas-solver-pilot-refresh` byl rozsiren o merge kroky pro `BTN_vs_CO_3BP_FLOP_FACING_BET` a `BTN_vs_BB_SRP_FLOP_FACING_BET`.
     - Dalsi krok: nechat dobehnout `MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR` (zatim 0/4 raw), watcher jej nasledne ingestuje a merge rozšíří `BTN_BB_SRP_FLOP_FACING_BET_PILOT` z MID-only wrapperu na MID/HIGH pilot.
+    - Hotovo 2026-07-07: pridan range cross-check workflow (`range:cross-check-sample`, `range:cross-check-compare`) vcetne operator navodu `Agents/range-cross-check.md`; lze vygenerovat nahodny sample nasich range bucketu, doplnit vystup z jineho SW a dostat diff report akci/frekvenci.
+    - Hotovo 2026-07-07: pridan payment/entitlement navrh `Agents/payment-model.md` a typovy model `src/core/paymentEntitlements.ts`; platebni pristup uz je konceptualne oddelen od strategicke validity range dat a od range provenance/permission manifestu.
+    - Hotovo 2026-07-07: vytvoren FTP build balicek `deploy/pkrtrainer-ftp-20260707-111216-22714a8.zip` z produkcniho `npm run build`; obsah ZIPu je urcen k rozbaleni do FTP webrootu.
   - [ ] 137.18 Rozsirit HH import na hlavni herny a turnajova metadata
     - Vedle PokerStars-like pridat adaptery podle priorit realnych vstupu; kazdy provider ma fixture corpus a verzovany parser.
     - Parsovat tournament id, level, ante typ, table size, payouts/bounty pokud jsou dostupne, side poty, showdowns a all-in runouty.
