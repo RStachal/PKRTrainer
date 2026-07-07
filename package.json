@@ -50,6 +50,8 @@
     "mtt:slots": "vite-node scripts/listMttImportSlots.mts",
     "range:intake": "vite-node scripts/checkRangeIntakeStatus.mts",
     "range:intake:guard": "vite-node scripts/checkRangeIntakeWorkspace.mts",
+    "range:cross-check-sample": "vite-node scripts/buildRangeCrossCheckSample.mts",
+    "range:cross-check-compare": "vite-node scripts/compareRangeCrossCheckSample.mts",
     "bundle:budget": "vite-node scripts/checkBundleBudget.mts",
     "verify:precache": "vite-node scripts/checkDistPrecache.mts",
     "profile:render": "vite-node scripts/profileRenderPerformance.mts",
