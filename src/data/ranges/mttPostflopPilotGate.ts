@@ -13,6 +13,7 @@ export type MttPostflopPilotScope =
   | "BTN_vs_BB_SRP_FLOP_CBET"
   | "UTG_vs_BB_SRP_FLOP_CBET"
   | "BTN_vs_CO_3BP_FLOP_CBET"
+  | "BTN_vs_BB_SRP_FLOP_FACING_BET"
   | "BTN_vs_CO_3BP_FLOP_FACING_BET";
 
 export interface MttPostflopPilotGateReport {
@@ -107,6 +108,14 @@ function pilotScopeErrors(
         positionPattern: "3BP_BTN_VS_CO",
         label: "BTN vs CO 3BP",
         minBuckets: 20,
+      });
+    case "BTN_vs_BB_SRP_FLOP_FACING_BET":
+      return scopedFlopDecisionErrors(pack, {
+        potType: "SINGLE_RAISED",
+        actionNode: "FLOP_FACING_BET",
+        positionPattern: "SRP_BTN_VS_BB",
+        label: "BTN vs BB SRP facing flop bet",
+        minBuckets: 30,
       });
     case "BTN_vs_CO_3BP_FLOP_FACING_BET":
       return scopedFlopDecisionErrors(pack, {

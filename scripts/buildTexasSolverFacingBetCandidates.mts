@@ -241,7 +241,7 @@ function buildCandidates(args: CliArgs): CandidateReport {
     bestCandidate,
     bestAliasDir,
     nextCommands: [
-      `npm run mtt:texas-solver-facing-bet-candidates -- --family=${args.familyId} --spr-min=${args.sprMin} --spr-max=${args.sprMax} --write --summary`,
+      `npm run mtt:texas-solver-facing-bet-candidates -- --family=${args.familyId} --spr-min=${args.sprMin} --spr-max=${args.sprMax} --pot-type=${args.potType} --position-pattern=${args.positionPattern} --scope=${args.scope} --write --summary`,
       bestCandidate === null
         ? "No candidate generated."
         : `npm run mtt:postflop-pilot-gate -- --scope=${args.scope} --normalized ${quoteArg(bestCandidate.normalizedPath)} --permission-manifest ${quoteArg(bestCandidate.permissionPath)}`,

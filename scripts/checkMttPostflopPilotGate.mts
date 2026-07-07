@@ -89,10 +89,11 @@ function usage(): string {
     "  npm run mtt:postflop-pilot-gate -- --json",
     "  npm run mtt:postflop-pilot-gate -- --normalized <normalized.candidate.json> --permission-manifest <permission.candidate.json>",
     "  npm run mtt:postflop-pilot-gate -- --scope=BTN_vs_CO_3BP_FLOP_CBET --normalized <normalized.candidate.json> --permission-manifest <permission.candidate.json>",
+    "  npm run mtt:postflop-pilot-gate -- --scope=BTN_vs_BB_SRP_FLOP_FACING_BET --normalized <normalized.candidate.json> --permission-manifest <permission.candidate.json>",
     "  npm run mtt:postflop-pilot-gate -- --scope=BTN_vs_CO_3BP_FLOP_FACING_BET --normalized <normalized.candidate.json> --permission-manifest <permission.candidate.json>",
     "",
     "Validates a narrow MTT postflop pilot pack without pretending it is full production coverage.",
-    "Scopes: BTN_vs_BB_SRP_FLOP_CBET, UTG_vs_BB_SRP_FLOP_CBET, BTN_vs_CO_3BP_FLOP_CBET, BTN_vs_CO_3BP_FLOP_FACING_BET.",
+    "Scopes: BTN_vs_BB_SRP_FLOP_CBET, UTG_vs_BB_SRP_FLOP_CBET, BTN_vs_CO_3BP_FLOP_CBET, BTN_vs_BB_SRP_FLOP_FACING_BET, BTN_vs_CO_3BP_FLOP_FACING_BET.",
   ].join("\n");
 }
 
@@ -113,6 +114,7 @@ function parseScope(value: string): MttPostflopPilotScope {
     value === "BTN_vs_BB_SRP_FLOP_CBET" ||
     value === "UTG_vs_BB_SRP_FLOP_CBET" ||
     value === "BTN_vs_CO_3BP_FLOP_CBET" ||
+    value === "BTN_vs_BB_SRP_FLOP_FACING_BET" ||
     value === "BTN_vs_CO_3BP_FLOP_FACING_BET"
   ) {
     return value;

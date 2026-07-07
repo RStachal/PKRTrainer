@@ -247,10 +247,10 @@ function missingCommandsForFamily(outputBase: string, familyId: string): string[
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${HIGHSPR_DRAFT_DIR} --spr-min=8 --spr-max=20 --write`);
   }
   if (isFacingBetExpansionFamily(familyId)) {
-    const sprRange = sprRangeForFacingBetFamily(familyId);
+    const facingBet = facingBetOptionsForFamily(familyId);
     const bestAliasPath = join(NORMALIZED_DRAFT_ROOT, `${familyId}-FACING-BET-BEST`, "best-candidate.json");
     if (shouldReview || isMissingOrOlder(bestAliasPath, draftSources)) {
-      commands.push(`mtt:texas-solver-facing-bet-candidates -- --family=${familyId} --spr-min=${sprRange.min} --spr-max=${sprRange.max} --write --summary`);
+      commands.push(`mtt:texas-solver-facing-bet-candidates -- --family=${familyId} --spr-min=${facingBet.sprMin} --spr-max=${facingBet.sprMax} --pot-type=${facingBet.potType} --position-pattern=${facingBet.positionPattern} --scope=${facingBet.scope} --write --summary`);
     }
   }
   if (familyId === "MTT9_40BB_UTG_BB_SRP" && (shouldReview || isMissingOrOlder(join(UTG_BB_SRP_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
@@ -286,28 +286,87 @@ function isMissingOrOlder(targetPath: string, sourcePaths: readonly string[]): b
 }
 
 function isFacingBetExpansionFamily(familyId: string): boolean {
-  return familyId.includes("_3BP_FACING_");
+  return familyId.includes("_3BP_FACING_") || familyId.includes("_SRP_FACING_");
 }
 
-function sprRangeForFacingBetFamily(familyId: string): { min: number; max: number } {
-  if (familyId.includes("LOWSPR")) return { min: 0, max: 3 };
-  if (familyId.includes("HIGHSPR")) return { min: 8, max: 20 };
-  return { min: 3, max: 8 };
+function facingBetOptionsForFamily(familyId: string): {
+  potType: "SINGLE_RAISED" | "THREE_BET_POT";
+  positionPattern: "SRP_BTN_VS_BB" | "3BP_BTN_VS_CO";
+  scope: "BTN_vs_BB_SRP_FLOP_FACING_BET" | "BTN_vs_CO_3BP_FLOP_FACING_BET";
+  sprMin: number;
+  sprMax: number;
+} {
+  const isSrp = familyId.includes("_SRP_FACING_");
+  return {
+    potType: isSrp ? "SINGLE_RAISED" : "THREE_BET_POT",
+    positionPattern: isSrp ? "SRP_BTN_VS_BB" : "3BP_BTN_VS_CO",
+    scope: isSrp ? "BTN_vs_BB_SRP_FLOP_FACING_BET" : "BTN_vs_CO_3BP_FLOP_FACING_BET",
+    ...sprRangeForFacingBetFamily(familyId),
+  };
+}
+
+function sprRangeForFacingBetFamily(familyId: string): { sprMin: number; sprMax: number } {
+  if (familyId.includes("LOWSPR")) return { sprMin: 0, sprMax: 3 };
+  if (familyId.includes("HIGHSPR")) return { sprMin: 8, sprMax: 20 };
+  return { sprMin: 3, sprMax: 8 };
 }
 
 function mergeCommands(manifest: CoverageManifest): string[] {
   const tags = new Set(manifest.scenarios.flatMap((scenario) => scenario.coverageTags));
   const commands: string[] = [];
   if (tags.has("SINGLE_RAISED_POT_CBET")) {
-    commands.push("mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_BB_SRP_FLOP_CBET --write --summary");
+    pushMergeCommandIfInputsExist(commands, "BTN_vs_BB_SRP_FLOP_CBET");
   }
   if (tags.has("THREE_BET_POT_CBET")) {
-    commands.push("mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_CBET --write --summary");
+    pushMergeCommandIfInputsExist(commands, "BTN_vs_CO_3BP_FLOP_CBET");
   }
-  if (tags.has("FLOP_FACING_BET")) {
-    commands.push("mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_FACING_BET --write --summary");
+  if (tags.has("FLOP_FACING_BET") && tags.has("SINGLE_RAISED")) {
+    pushMergeCommandIfInputsExist(commands, "BTN_vs_BB_SRP_FLOP_FACING_BET");
+  }
+  if (tags.has("FLOP_FACING_BET") && tags.has("THREE_BET_POT")) {
+    pushMergeCommandIfInputsExist(commands, "BTN_vs_CO_3BP_FLOP_FACING_BET");
   }
   return commands;
+}
+
+function pushMergeCommandIfInputsExist(commands: string[], scope: string): void {
+  if (!defaultMergeInputDirs(scope).some(draftFilesExist)) return;
+  commands.push(`mtt:texas-solver-merge-pilot-drafts -- --scope=${scope} --write --summary`);
+}
+
+function draftFilesExist(inputDir: string): boolean {
+  return existsSync(join(inputDir, "normalized.candidate.json")) && existsSync(join(inputDir, "permission.candidate.json"));
+}
+
+function defaultMergeInputDirs(scope: string): string[] {
+  if (scope === "BTN_vs_BB_SRP_FLOP_CBET") {
+    return [
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK"),
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_50BB_BTN_BB_SRP-CHECK"),
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_80BB_BTN_BB_SRP_HIGHSPR-CHECK"),
+    ];
+  }
+  if (scope === "BTN_vs_CO_3BP_FLOP_CBET") {
+    return [
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK"),
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_80BB_CO_BTN_3BP_MIDSPR-CHECK"),
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_150BB_CO_BTN_3BP_HIGHSPR-CHECK"),
+    ];
+  }
+  if (scope === "BTN_vs_BB_SRP_FLOP_FACING_BET") {
+    return [
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR-FACING-BET-BEST"),
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR-FACING-BET-BEST"),
+    ];
+  }
+  if (scope === "BTN_vs_CO_3BP_FLOP_FACING_BET") {
+    return [
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR-FACING-BET-BEST"),
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR-FACING-BET-BEST"),
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_150BB_CO_BTN_3BP_HIGHSPR-FACING-BET-BEST"),
+    ];
+  }
+  return [];
 }
 
 function runNpmCommand(command: string, errors: string[]): void {
