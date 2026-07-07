@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { grantsForTier } from "../../src/core/paymentEntitlements";
 import {
+  createMttPostflopPilotAwareResolver,
   createMttPostflopPilotResolverForInput,
   createMttPostflopPilotResolver,
   findMttPostflopPilotRuntimeEntry,
@@ -108,4 +109,66 @@ describe("MTT postflop pilot runtime", () => {
     expect(report.resolver).toBeNull();
     expect(report.reason).toContain("No scoped postflop pilot matches");
   });
+
+  it("pilot-aware resolver prefers production before entitled pilot", () => {
+    const input = supportedFacingBetInput();
+    const resolver = createMttPostflopPilotAwareResolver({
+      grants: grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" }),
+      now: "2026-07-07T00:00:00.000Z",
+      productionResolver: () => ({
+        action: "CALL",
+        explanation: "Production has priority.",
+      }),
+    });
+
+    expect(resolver(input)).toEqual({
+      action: "CALL",
+      explanation: "Production has priority.",
+    });
+  });
+
+  it("pilot-aware resolver uses entitled pilot before heuristic fallback", () => {
+    const input = supportedFacingBetInput();
+    const resolver = createMttPostflopPilotAwareResolver({
+      grants: grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" }),
+      now: "2026-07-07T00:00:00.000Z",
+      heuristicFallbackResolver: () => ({
+        action: "CHECK",
+        explanation: "Fallback should not win over pilot.",
+      }),
+    });
+
+    const recommendation = resolver(input);
+    expect(recommendation?.source?.kind).toBe("STRATEGY_PACK");
+    expect(recommendation?.explanation).not.toBe("Fallback should not win over pilot.");
+  });
+
+  it("pilot-aware resolver falls back only when entitlement is missing", () => {
+    const input = supportedFacingBetInput();
+    const resolver = createMttPostflopPilotAwareResolver({
+      grants: grantsForTier("FREE", { startsAt: "2026-07-01T00:00:00.000Z" }),
+      now: "2026-07-07T00:00:00.000Z",
+      heuristicFallbackResolver: () => ({
+        action: "CHECK",
+        explanation: "Fallback after locked pilot.",
+      }),
+    });
+
+    expect(resolver(input)).toEqual({
+      action: "CHECK",
+      explanation: "Fallback after locked pilot.",
+    });
+  });
 });
+
+function supportedFacingBetInput() {
+  return {
+    street: "FLOP",
+    textures: ["ace-high", "dry", "rainbow", "disconnected"],
+    potType: "SINGLE_RAISED",
+    potBB: 50,
+    effectiveStackBB: 125,
+    positionPattern: "SRP_BTN_VS_BB",
+    actionNode: "FLOP_FACING_BET",
+  } as const;
+}

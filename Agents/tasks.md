@@ -2361,6 +2361,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo 2026-07-07: profile selector pouziva `readyMttPostflopPilotsForProfile` a u MTT 9-max regular FLOP chipEV bez ante zobrazi source-free info, ze je dostupnych 5 scoped solver pilotu, stale s explicitnim upozornenim, ze nejde o plnou produkcni coverage.
     - Hotovo 2026-07-07: pridan `mtt:postflop-pilot-modules`, ktery z reviewed TexasSolver normalized draftu generuje oddelene source-free pilot TS moduly a `mttPostflopPilotRuntime`; runtime resolver vyzaduje prislusny entitlement a neregistruje pilot packy do full production registry.
     - Hotovo 2026-07-07: `mttPostflopPilotRuntime` umi namapovat `PostflopStrategyInput` na odpovidajici pilot scope a vytvorit entitlement-gated resolver bez fallbacku, pokud scope neexistuje.
+    - Hotovo 2026-07-07: pridan pilot-aware resolver factory s jasnym poradim `production -> entitled scoped pilot -> optional heuristic fallback`, aby slo piloty zapojit do UI/licencni vrstvy bez obejiti full production gates.
   - [ ] 137.18 Rozsirit HH import na hlavni herny a turnajova metadata
     - Vedle PokerStars-like pridat adaptery podle priorit realnych vstupu; kazdy provider ma fixture corpus a verzovany parser.
     - Parsovat tournament id, level, ante typ, table size, payouts/bounty pokud jsou dostupne, side poty, showdowns a all-in runouty.

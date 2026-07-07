@@ -27,6 +27,14 @@ export interface MttPostflopPilotResolverReport {
   reason: string | null;
 }
 
+export interface MttPostflopPilotAwareResolverOptions {
+  grants: readonly EntitlementGrant[];
+  productionResolver?: PostflopStrategyResolver | null;
+  heuristicFallbackResolver?: PostflopStrategyResolver | null;
+  now?: string | Date;
+  allowGrace?: boolean;
+}
+
 export function mttPostflopPilotRuntimeEntries(
   packEntries: readonly GeneratedMttPostflopPilotPackEntry[] = generatedMttPostflopPilotPacks,
 ): readonly MttPostflopPilotRuntimeEntry[] {
@@ -142,4 +150,22 @@ export function createMttPostflopPilotResolverForInput(
     };
   }
   return createMttPostflopPilotResolver(scope, grants, options);
+}
+
+export function createMttPostflopPilotAwareResolver(
+  options: MttPostflopPilotAwareResolverOptions,
+): PostflopStrategyResolver {
+  return (input) => {
+    const production = options.productionResolver?.(input) ?? null;
+    if (production !== null) return production;
+
+    const pilotReport = createMttPostflopPilotResolverForInput(input, options.grants, {
+      now: options.now,
+      allowGrace: options.allowGrace,
+    });
+    const pilot = pilotReport.resolver?.(input) ?? null;
+    if (pilot !== null) return pilot;
+
+    return options.heuristicFallbackResolver?.(input) ?? null;
+  };
 }
