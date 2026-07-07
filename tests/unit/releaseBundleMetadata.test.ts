@@ -198,6 +198,7 @@ describe("release bundle metadata", () => {
     const forpsiHtaccess = readFileSync("deploy/forpsi/.htaccess.example", "utf8");
     const mttDoneChecklist = readFileSync("Agents/mtt-done-checklist.md", "utf8");
     const mttCoverageAudit = readFileSync("Agents/mtt-production-coverage-audit.md", "utf8");
+    const p1PreflopIntake = readFileSync("Agents/mtt-p1-preflop-chip-ev-intake.md", "utf8");
     const productionIntakeManifest = readFileSync("Agents/production-range-intake-manifest.md", "utf8");
     const releaseTemplate = readFileSync("Agents/release-notes-template.md", "utf8");
 
@@ -371,6 +372,10 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:validate-ready-intake -- --priority=P2_PREFLOP_DOLAR_EV --json");
     expect(mttCoverageAudit).toContain("regular-vs-turbo diff audit");
     expect(mttCoverageAudit).toContain("FLOP, TURN and RIVER production StrategyPacks are not registered");
+    expect(p1PreflopIntake).toContain("MTT P1 preflop CHIP_EV intake checklist");
+    expect(p1PreflopIntake).toContain("mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1");
+    expect(p1PreflopIntake).toContain("Turbo slots must not become production by copying regular-speed metadata");
+    expect(p1PreflopIntake).toContain("Do not use postflop TexasSolver outputs for P1 preflop ranges");
     expect(productionIntakeManifest).toContain("npm run mtt:release-gates");
     expect(productionIntakeManifest).toContain("npm run mtt:release-gates -- --json");
     expect(productionIntakeManifest).not.toContain("mtt:completion -- --summary` and `npm run mtt:postflop-release");

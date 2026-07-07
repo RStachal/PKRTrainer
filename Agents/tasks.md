@@ -2157,6 +2157,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Pripravit vstupni checklist pro 8 P1 slotu: format, speed, ante, stack buckets, positions, action contexts, 169 hand classes, action keys a sizing.
     - Jakmile jsou data dodana, nejdrive validovat prvni pilot `mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1`.
     - Acceptance: preflop P1 pilot projde canonical import workflow a blocker count klesne o 1 bez jakehokoli metadata-only klonu.
+    - Hotovo 2026-07-07: pridan source-safe operator checklist `Agents/mtt-p1-preflop-chip-ev-intake.md` pro vsech 8 P1 slotu vcetne packId, souborovych cest, normalized/provenance pozadavku, validacni sekvence a no-false-green pravidel. Realne range hodnoty stale musi byt dodane nebo importovane zvenci.
   - [ ] 135.59 Zavezt pravidlo "no false green" pro dalsi autonomni behy
     - Pokud chybi legalni data nebo solver review, agent smi zlepsovat tooling, testy, dokumentaci, adaptery a QA, ale nesmi vyrabet falesne produkcni strategicke hodnoty.
     - Kazdy novy gate musi rozlisit `READY`, `PARTIAL`, `WAITING_FOR_FILES`, `NEEDS_REVIEW` a `PRODUCTION`, aby operator neprehlédl rozdil mezi technickou pripravenosti a pokerovou validitou.
