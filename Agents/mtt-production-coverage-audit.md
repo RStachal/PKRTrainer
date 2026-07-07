@@ -82,6 +82,8 @@ use `--preview` only for queue inspection.
 It currently remains red until the missing production data and permissions are imported.
 `mtt:handoff` regenerates the full source-free MTT/range/Android JSON bundle for operator handoff; use `--strict`
 for final RC evidence because it returns non-zero until `releaseReady` is true.
+The handoff bundle also includes `artifacts/texas-solver-review-protocol/report.json`, which shows whether staged
+TexasSolver families have human poker sign-off or are still only technically reviewed solver outputs.
 `mtt:release-gates` prints completion, blocker, intake priority, postflop release, intake workspace and ready-validation summaries before
 returning a failing exit code; `--json` returns the same command list, statuses and captured outputs for operator tooling.
 `mtt:postflop-matrix` freezes the 48 FLOP/TURN/RIVER production targets and records whether each target is waiting for
@@ -136,6 +138,7 @@ The preflop intake subset currently has 16 rows and 0 rows ready for validation.
 - `npm run mtt:blockers`
 - `npm run mtt:intake-plan`
 - `npm run mtt:postflop-release`
+- `npm run mtt:texas-solver-review-protocol`
 - `npm run mtt:validate-ready-intake`
 - `npm run mtt:slots`
 - `npm run range:intake`

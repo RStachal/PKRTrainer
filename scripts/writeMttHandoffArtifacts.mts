@@ -133,6 +133,17 @@ const handoffCommands: readonly HandoffCommand[] = [
     releaseBlocking: false,
   },
   {
+    label: "TexasSolver human review protocol",
+    npmArgs: [
+      "run",
+      "mtt:texas-solver-review-protocol",
+      "--",
+      "--output=artifacts/texas-solver-review-protocol/report.json",
+    ],
+    outputPath: "artifacts/texas-solver-review-protocol/report.json",
+    releaseBlocking: false,
+  },
+  {
     label: "TexasSolver parameter pack preflight",
     npmArgs: ["run", "mtt:texas-solver-pack", "--", "--output=artifacts/texas-solver-parameter-pack/report.json"],
     outputPath: "artifacts/texas-solver-parameter-pack/report.json",

@@ -173,6 +173,8 @@ describe("release bundle metadata", () => {
     expect(handoffScript).toContain("--board-dir=artifacts/mtt-intake-board");
     expect(handoffScript).toContain("mtt:solver-verification");
     expect(handoffScript).toContain("artifacts/mtt-solver-verification/report.json");
+    expect(handoffScript).toContain("mtt:texas-solver-review-protocol");
+    expect(handoffScript).toContain("artifacts/texas-solver-review-protocol/report.json");
     expect(handoffScript).toContain("mtt:texas-solver-pack");
     expect(handoffScript).toContain("artifacts/texas-solver-parameter-pack/report.json");
     expect(handoffScript).toContain("expected-paths.json");
@@ -261,6 +263,11 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:solver-verification");
     expect(operatorGuide).toContain("npm run mtt:solver-verification -- --solver=texas-solver --json");
     expect(operatorGuide).toContain("npm run mtt:solver-verification -- --output=artifacts/mtt-solver-verification/report.json");
+    expect(operatorGuide).toContain("npm run mtt:texas-solver-review-protocol");
+    expect(operatorGuide).toContain("npm run mtt:texas-solver-review-protocol -- --summary");
+    expect(operatorGuide).toContain("npm run mtt:texas-solver-review-protocol -- --output=artifacts/texas-solver-review-protocol/report.json");
+    expect(operatorGuide).toContain("separates");
+    expect(operatorGuide).toContain("technical solver readiness from poker/content approval");
     expect(operatorGuide).toContain("npm run mtt:texas-solver-pack");
     expect(operatorGuide).toContain("npm run mtt:texas-solver-pack -- --summary");
     expect(operatorGuide).toContain("npm run mtt:texas-solver-pack -- --output=artifacts/texas-solver-parameter-pack/report.json");
@@ -360,6 +367,8 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:postflop-coverage");
     expect(mttCoverageAudit).toContain("expands the 48 profile targets into 9,600 concrete street/pot/action/position targets");
     expect(mttCoverageAudit).toContain("npm run mtt:postflop-release");
+    expect(mttCoverageAudit).toContain("npm run mtt:texas-solver-review-protocol");
+    expect(mttCoverageAudit).toContain("artifacts/texas-solver-review-protocol/report.json");
     expect(mttCoverageAudit).toContain("npm run mtt:postflop-release -- --summary");
     expect(mttCoverageAudit).toContain("final postflop release gate currently fails");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan");
