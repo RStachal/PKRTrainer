@@ -39,6 +39,7 @@
     "mtt:postflop-pilot-gate": "vite-node scripts/checkMttPostflopPilotGate.mts",
     "mtt:postflop-pilot-suite": "vite-node scripts/checkMttPostflopPilotSuite.mts",
     "mtt:postflop-pilot-catalog": "vite-node scripts/checkMttPostflopPilotCatalog.mts",
+    "mtt:postflop-pilot-modules": "vite-node scripts/buildMttPostflopPilotModules.mts",
     "mtt:release-gates": "vite-node scripts/checkMttReleaseGates.mts",
     "mtt:acceptance": "vite-node scripts/checkMttAcceptance.mts",
     "mtt:technical-acceptance": "vite-node scripts/checkMttTechnicalAcceptance.mts",
