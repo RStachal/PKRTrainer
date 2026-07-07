@@ -41,6 +41,8 @@ export const CS = {
     productionOffline: "Trénink používá ověřená data z offline balíčku.",
     postflopPreview:
       "Náhled postflop tréninku otevře konkrétní spot, stůl a praktické předpoklady.",
+    postflopPilotAvailable: (count: number) =>
+      `Dostupné scoped solver piloty: ${count}. Nejde o plnou produkční coverage.`,
     mttPreflopPreview:
       "Náhled preflop tréninku je hratelný z historických dat; produkční release gate zůstává vypnutý do dokončení importu.",
     candidatePreview:

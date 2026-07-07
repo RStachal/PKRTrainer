@@ -6,6 +6,7 @@ import {
 } from "../../core/paymentEntitlements";
 import type { PostflopPositionPattern, PostflopPotType } from "../../core/postflopGenerator";
 import type { PostflopActionNode } from "../../core/postflopTrainingSpot";
+import type { TrainingProfile } from "../../core/trainingProfile";
 import type { MttPostflopPilotScope } from "./mttPostflopPilotGate";
 
 export type MttPostflopPilotStatus = "READY" | "WAITING" | "INVALID";
@@ -146,6 +147,24 @@ export function readyMttPostflopPilots(
   catalog: readonly MttPostflopPilotCatalogEntry[] = MTT_POSTFLOP_PILOT_CATALOG,
 ): readonly MttPostflopPilotCatalogEntry[] {
   return catalog.filter((entry) => entry.status === "READY");
+}
+
+export function readyMttPostflopPilotsForProfile(
+  profile: TrainingProfile,
+  catalog: readonly MttPostflopPilotCatalogEntry[] = MTT_POSTFLOP_PILOT_CATALOG,
+): readonly MttPostflopPilotCatalogEntry[] {
+  if (
+    profile.gameVariant !== "MTT" ||
+    profile.tableFormat !== "FULL_RING_9" ||
+    profile.blindSpeed !== "REGULAR" ||
+    profile.street !== "FLOP" ||
+    profile.evModel !== "CHIP_EV" ||
+    profile.ante !== "OFF" ||
+    profile.rakeMode !== "NONE"
+  ) {
+    return [];
+  }
+  return readyMttPostflopPilots(catalog);
 }
 
 export function findMttPostflopPilotByScope(

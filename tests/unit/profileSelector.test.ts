@@ -120,6 +120,24 @@ describe("profileSelector", () => {
     }
   });
 
+  it("u MTT 9-max regular flop chipEV bez ante zobrazi dostupne scoped piloty", () => {
+    const root = document.createElement("div");
+    const view = renderProfileSelector(root);
+
+    view.setProfile(profileWith(DEFAULT_TRAINING_PROFILE, {
+      street: "FLOP",
+      ante: "OFF",
+    }));
+
+    const note = root.querySelector<HTMLElement>(".profile-selector__note");
+    expect(note?.dataset.status).toBe("preview");
+    expect(note?.textContent).toContain("Dostupné scoped solver piloty: 5");
+    expect(note?.textContent).toContain("Nejde o plnou produkční coverage");
+    expect(note?.textContent).not.toContain("mtt.postflop");
+    expect(note?.textContent).not.toContain("RangePack");
+    expect(note?.textContent).not.toContain("StrategyPack");
+  });
+
   it("rozlisi SNG chipEV preview a SNG ICM preview", () => {
     const root = document.createElement("div");
     renderProfileSelector(root);

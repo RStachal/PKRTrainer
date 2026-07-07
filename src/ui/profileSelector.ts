@@ -10,6 +10,7 @@ import {
   type TrainingStreet,
 } from "../core/trainingProfile";
 import type { AnteMode } from "../core/types";
+import { readyMttPostflopPilotsForProfile } from "../data/ranges/mttPostflopPilotCatalog";
 import { trainingCapabilityForProfile } from "../data/ranges/trainingCapability";
 import { CS } from "./cs";
 
@@ -213,9 +214,13 @@ function describeProfileStatus(profile: TrainingProfile): {
   }
   if (capability.status === "PREVIEW") {
     if (profile.gameVariant === "MTT") {
+      const pilots = readyMttPostflopPilotsForProfile(profile);
+      const pilotNote = pilots.length > 0
+        ? ` ${CS.profile.postflopPilotAvailable(pilots.length)}`
+        : "";
       return {
         status: "preview",
-        text: `Náhled: ${mttProfileLabel(profile)}. ${CS.profile.postflopPreview}`,
+        text: `Náhled: ${mttProfileLabel(profile)}. ${CS.profile.postflopPreview}${pilotNote}`,
       };
     }
     return {
