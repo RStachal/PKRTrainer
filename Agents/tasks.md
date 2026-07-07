@@ -2355,6 +2355,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo 2026-07-07: LOWSPR SRP facing-bet manifest prosel `mtt:texas-solver-scenario-audit` jako `valid: true`, 4/4 souboru validnich, 0 errors; warningy jsou jen implicitni Texas Hold'em mode stejne jako u predchozich console batchu.
     - Hotovo 2026-07-07: LOWSPR SRP facing-bet solving dobehl 4/4 raw; ingest/candidate harvest vybral best `CHECK>BET_17`, gate `valid: true`, 58 bucketu, lane CHECK/BLUFF/VALUE = 37/5/16, akce CALL/RAISE/FOLD = 33/21/4.
     - Hotovo 2026-07-07: merged `BTN_BB_SRP_FLOP_FACING_BET_PILOT` je nyni LOW+MID+HIGH (3 rules, 174 bucketu, provenance `2ef77b69f94c10fdc8e018a2cf0043645e0c0a527887b1fcbd06d66bcfb5298b`) a `mtt:postflop-pilot-suite` hlasi READY 5/5, 13 rules, 557 range bucketu.
+    - Priorita dalsiho zpracovani: zavest explicitni scoped pilot runtime delivery pro READY pilot packy, oddelenou od `mttProductionRegistry.generated.ts`, nebo definovat dalsi source-free promotion gate do produkcniho registry. Pilot nesmi byt maskovan jako full production, ale ma byt pouzitelny v treninku se zretelnym omezenim scenare.
   - [ ] 137.18 Rozsirit HH import na hlavni herny a turnajova metadata
     - Vedle PokerStars-like pridat adaptery podle priorit realnych vstupu; kazdy provider ma fixture corpus a verzovany parser.
     - Parsovat tournament id, level, ante typ, table size, payouts/bounty pokud jsou dostupne, side poty, showdowns a all-in runouty.
