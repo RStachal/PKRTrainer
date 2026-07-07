@@ -93,6 +93,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:postflop-positions"]).toBe("vite-node scripts/checkMttPostflopPositions.mts");
     expect(pkg.scripts["mtt:postflop-release"]).toBe("vite-node scripts/checkMttPostflopReleaseGate.mts");
     expect(pkg.scripts["mtt:solver-verification"]).toBe("vite-node scripts/checkMttSolverVerification.mts");
+    expect(pkg.scripts["mtt:texas-solver-review-protocol"]).toBe("vite-node scripts/checkTexasSolverReviewProtocol.mts");
     expect(pkg.scripts["mtt:stage-texas-solver"]).toBe("vite-node scripts/stageTexasSolverExports.mts");
     expect(pkg.scripts["mtt:texas-solver-pack"]).toBe("vite-node scripts/checkTexasSolverParameterPack.mts");
     expect(pkg.scripts["mtt:texas-solver-review"]).toBe("vite-node scripts/extractTexasSolverReview.mts");

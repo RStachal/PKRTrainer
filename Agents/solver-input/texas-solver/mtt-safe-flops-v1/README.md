@@ -536,6 +536,22 @@ If the notes are missing, still say `Status: NEEDS_REVIEW`, or omit the usable d
 source-safe but shows `reviewNotes.blockers`. That is intentional: TexasSolver extraction can be technically valid while
 the poker/content decision is still not approved for production.
 
+Run the protocol gate across all staged TexasSolver families:
+
+```powershell
+npm run mtt:texas-solver-review-protocol -- --summary
+```
+
+Before a production promotion dry-run, require a production-usable or explicitly scoped sign-off plus parsed accuracy
+evidence:
+
+```powershell
+npm run mtt:texas-solver-review-protocol -- --family=MTT9_50BB_BTN_BB_SRP --require-production-usable --summary
+```
+
+`valid: true` without `--require-production-usable` means the family has a completed human review decision. It does not
+mean the family is broad enough for full production coverage.
+
 ## Pilot gate
 
 The narrow BTN vs BB SRP candidate can be checked with:
