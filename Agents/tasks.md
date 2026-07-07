@@ -2349,6 +2349,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo 2026-07-07: pridan range cross-check workflow (`range:cross-check-sample`, `range:cross-check-compare`) vcetne operator navodu `Agents/range-cross-check.md`; lze vygenerovat nahodny sample nasich range bucketu, doplnit vystup z jineho SW a dostat diff report akci/frekvenci.
     - Hotovo 2026-07-07: pridan payment/entitlement navrh `Agents/payment-model.md` a typovy model `src/core/paymentEntitlements.ts`; platebni pristup uz je konceptualne oddelen od strategicke validity range dat a od range provenance/permission manifestu.
     - Hotovo 2026-07-07: vytvoren FTP build balicek `deploy/pkrtrainer-ftp-20260707-111216-22714a8.zip` z produkcniho `npm run build`; obsah ZIPu je urcen k rozbaleni do FTP webrootu.
+    - Hotovo 2026-07-07: SRP facing-bet HIGHSPR family `MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR` dobehla 4/4 raw; best kandidat je `CHECK>BET_17`, gate `valid: true`, 58 bucketu, lane CHECK/VALUE/BLUFF = 39/15/4, akce FOLD/CALL/RAISE = 9/30/19.
+    - Hotovo 2026-07-07: merged `BTN_BB_SRP_FLOP_FACING_BET_PILOT` je nyni MID+HIGH (2 rules, 116 bucketu, provenance `9def604ef70d10b8843cbe6730f2c77062d8f645b4dbd753809f61e8c5ac41da`) a `mtt:postflop-pilot-suite` hlasi READY 5/5, 12 rules, 499 range bucketu.
   - [ ] 137.18 Rozsirit HH import na hlavni herny a turnajova metadata
     - Vedle PokerStars-like pridat adaptery podle priorit realnych vstupu; kazdy provider ma fixture corpus a verzovany parser.
     - Parsovat tournament id, level, ante typ, table size, payouts/bounty pokud jsou dostupne, side poty, showdowns a all-in runouty.
