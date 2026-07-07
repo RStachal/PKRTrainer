@@ -140,14 +140,22 @@ const TARGETS: readonly PilotTarget[] = [
     ],
   },
   {
-    id: "btn-bb-srp-flop-facing-bet-mid-high",
+    id: "btn-bb-srp-flop-facing-bet-low-mid-high",
     scope: "BTN_vs_BB_SRP_FLOP_FACING_BET",
     normalizedPath:
       "artifacts/texas-solver-review-integration/normalized-drafts/BTN_BB_SRP_FLOP_FACING_BET_PILOT/normalized.candidate.json",
     permissionPath:
       "artifacts/texas-solver-review-integration/normalized-drafts/BTN_BB_SRP_FLOP_FACING_BET_PILOT/permission.candidate.json",
-    description: "Merged BTN vs BB SRP flop facing-bet response pilot across MID/HIGH SPR bands.",
+    description: "Merged BTN vs BB SRP flop facing-bet response pilot across LOW/MID/HIGH SPR bands.",
     alternatives: [
+      {
+        id: "btn-bb-srp-flop-facing-bet-lowspr",
+        normalizedPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR-FACING-BET-BEST/normalized.candidate.json",
+        permissionPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR-FACING-BET-BEST/permission.candidate.json",
+        description: "BTN vs BB SRP low-SPR flop facing-bet response pilot from SRP lowspr-v1.",
+      },
       {
         id: "btn-bb-srp-flop-facing-bet-midspr",
         normalizedPath:
