@@ -147,6 +147,26 @@ function runWorkflow(args: CliArgs): WorkflowReport {
       "--summary",
     ]),
   );
+  steps.push(
+    runStep("merge-btn-co-3bp-facing-bet-pilot", [
+      "run",
+      "mtt:texas-solver-merge-pilot-drafts",
+      "--",
+      "--scope=BTN_vs_CO_3BP_FLOP_FACING_BET",
+      ...(args.dryRun ? [] : ["--write"]),
+      "--summary",
+    ]),
+  );
+  steps.push(
+    runStep("merge-btn-bb-srp-facing-bet-pilot", [
+      "run",
+      "mtt:texas-solver-merge-pilot-drafts",
+      "--",
+      "--scope=BTN_vs_BB_SRP_FLOP_FACING_BET",
+      ...(args.dryRun ? [] : ["--write"]),
+      "--summary",
+    ]),
+  );
   steps.push(runStep("pilot-suite", ["run", "mtt:postflop-pilot-suite", "--", "--summary"]));
   steps.push(
     args.skipViewer
@@ -174,6 +194,8 @@ function runWorkflow(args: CliArgs): WorkflowReport {
         ? "npm run mtt:texas-solver-pilot-refresh -- --summary"
         : `npm run mtt:texas-solver-pilot-refresh -- --manifest ${quoteArg(args.manifestPath)} --summary`,
       "npm run mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_CBET --write --summary",
+      "npm run mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_FACING_BET --write --summary",
+      "npm run mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_BB_SRP_FLOP_FACING_BET --write --summary",
       "npm run mtt:postflop-pilot-suite -- --summary",
     ],
   };
