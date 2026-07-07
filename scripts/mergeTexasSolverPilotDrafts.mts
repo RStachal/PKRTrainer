@@ -84,7 +84,6 @@ const MERGE_PROFILES: Record<MttPostflopPilotScope, MergeProfile> = {
     defaultInputDirs: [
       "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR-FACING-BET-BEST",
       "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR-FACING-BET-BEST",
-      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH-FACING-BET-BEST",
       "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_150BB_CO_BTN_3BP_HIGHSPR-FACING-BET-BEST",
     ],
     defaultOutputDir:

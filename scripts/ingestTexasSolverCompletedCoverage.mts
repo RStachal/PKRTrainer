@@ -248,7 +248,10 @@ function missingCommandsForFamily(outputBase: string, familyId: string): string[
   }
   if (isFacingBetExpansionFamily(familyId)) {
     const sprRange = sprRangeForFacingBetFamily(familyId);
-    commands.push(`mtt:texas-solver-facing-bet-candidates -- --family=${familyId} --spr-min=${sprRange.min} --spr-max=${sprRange.max} --write --summary`);
+    const bestAliasPath = join(NORMALIZED_DRAFT_ROOT, `${familyId}-FACING-BET-BEST`, "best-candidate.json");
+    if (shouldReview || isMissingOrOlder(bestAliasPath, draftSources)) {
+      commands.push(`mtt:texas-solver-facing-bet-candidates -- --family=${familyId} --spr-min=${sprRange.min} --spr-max=${sprRange.max} --write --summary`);
+    }
   }
   if (familyId === "MTT9_40BB_UTG_BB_SRP" && (shouldReview || isMissingOrOlder(join(UTG_BB_SRP_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${UTG_BB_SRP_DRAFT_DIR} --spr-min=3 --spr-max=8 --pot-type=SINGLE_RAISED --action-node=SINGLE_RAISED_POT_CBET --position-pattern=SRP_UTG_VS_BB --write`);

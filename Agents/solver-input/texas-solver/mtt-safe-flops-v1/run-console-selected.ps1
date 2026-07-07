@@ -3,14 +3,18 @@ param(
   [switch]$Force,
   [switch]$ListOnly,
   [string]$Family = "",
-  [string]$SolverRoot = "C:\Users\stachal\Downloads\TexasSolver-v0.2.0-Windows\TexasSolver-v0.2.0-Windows",
+  [string]$SolverRoot = "C:\Users\stachal\PKRTrainer\tools\TexasSolver-v0.2.0-Windows\TexasSolver-v0.2.0-Windows",
   [string]$ParameterRoot = "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_safe_flops_v1",
   [string]$OutputBase = "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver"
 )
 
 $ErrorActionPreference = "Stop"
 
-$solverRoot = $SolverRoot
+$solverRoot = if (-not [string]::IsNullOrWhiteSpace($env:PKRTRAINER_TEXAS_SOLVER_ROOT)) {
+  $env:PKRTRAINER_TEXAS_SOLVER_ROOT
+} else {
+  $SolverRoot
+}
 $parameterRoot = $ParameterRoot
 $outputBase = $OutputBase
 
