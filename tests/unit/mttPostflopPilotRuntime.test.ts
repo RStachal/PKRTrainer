@@ -8,6 +8,8 @@ import {
   findMttPostflopPilotRuntimeEntry,
   mttPostflopPilotScopeForInput,
   mttPostflopPilotRuntimeEntries,
+  normalizePilotPositionPattern,
+  normalizePilotStrategyInput,
 } from "../../src/data/ranges/mttPostflopPilotRuntime";
 
 describe("MTT postflop pilot runtime", () => {
@@ -137,6 +139,27 @@ describe("MTT postflop pilot runtime", () => {
     expect(directScopeReport.entry?.catalog.fullProductionReady).toBe(false);
     expect(inputReport.allowed).toBe(true);
     expect(inputReport.entry?.catalog.id).toBe("sb-bb-srp-oop-flop-cbet-low-mid-high");
+  });
+
+  it("normalizuje legacy UI position patterny pro BTN/SB SRP scoped piloty", () => {
+    const legacySbInput = {
+      street: "FLOP",
+      textures: ["ace-high", "dry", "rainbow", "disconnected"],
+      potType: "SINGLE_RAISED",
+      potBB: 6,
+      effectiveStackBB: 25,
+      positionPattern: "SB_VS_BB",
+      actionNode: "SINGLE_RAISED_POT_CBET",
+    } as const;
+    const legacyBtnInput = {
+      ...legacySbInput,
+      positionPattern: "BTN_VS_BB",
+    } as const;
+
+    expect(normalizePilotPositionPattern("SB_VS_BB", "SINGLE_RAISED")).toBe("SRP_SB_VS_BB");
+    expect(normalizePilotStrategyInput(legacySbInput).positionPattern).toBe("SRP_SB_VS_BB");
+    expect(mttPostflopPilotScopeForInput(legacySbInput)).toBe("SB_vs_BB_SRP_OOP_FLOP_CBET");
+    expect(mttPostflopPilotScopeForInput(legacyBtnInput)).toBe("BTN_vs_BB_SRP_FLOP_CBET");
   });
 
   it("pilot-aware resolver prefers production before entitled pilot", () => {

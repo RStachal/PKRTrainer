@@ -3,9 +3,11 @@ import { grantsForTier } from "../../core/paymentEntitlements";
 import { buildMttLearningPathCatalogReport } from "./mttScenarioCatalog";
 import {
   createMttPostflopPilotResolverForInput,
+  findMttPostflopPilotRuntimeEntry,
   mttPostflopPilotRuntimeEntries,
   mttPostflopPilotScopeForInput,
 } from "./mttPostflopPilotRuntime";
+import { buildMttPostflopTrainingRuntime } from "./mttPostflopTrainingRuntime";
 
 export type MttVariantQaStatus = "PASS" | "FAIL";
 
@@ -33,6 +35,13 @@ export interface MttVariantQaReport {
     errors: number;
   };
   runtimeSmokes: readonly MttVariantQaRuntimeSmokeRow[];
+  trainingRuntime: {
+    mode: string;
+    allowFallback: boolean;
+    proPlusPilotResolver: boolean;
+    freeLocked: boolean;
+    legacySbInputRecommendationKind: string | null;
+  };
   errors: readonly string[];
 }
 
@@ -42,12 +51,41 @@ export function buildMttVariantQaReport(): MttVariantQaReport {
     row.id === "mtt-9max-regular-chip-ev-flop-pilots"
   ));
   const runtimeSmokes = mttPostflopPilotRuntimeEntries().map(buildRuntimeSmokeRow);
+  const proPlusTrainingRuntime = buildMttPostflopTrainingRuntime({
+    profile: scenario?.profile ?? MTT_FLOP_PILOT_PROFILE,
+    grants: grantsForTier("PRO_PLUS", { startsAt: "2026-07-08T00:00:00.000Z" }),
+    now: "2026-07-08T12:00:00.000Z",
+  });
+  const freeTrainingRuntime = buildMttPostflopTrainingRuntime({
+    profile: scenario?.profile ?? MTT_FLOP_PILOT_PROFILE,
+    grants: grantsForTier("FREE", { startsAt: "2026-07-08T00:00:00.000Z" }),
+    now: "2026-07-08T12:00:00.000Z",
+  });
+  const legacySbInput = legacySbCbetInput();
+  const legacySbInputRecommendationKind = legacySbInput === null
+    ? null
+    : proPlusTrainingRuntime.resolver?.(legacySbInput)?.source?.kind ?? null;
   const errors = [
     ...(scenario === undefined ? ["Missing MTT flop pilot lab scenario row."] : []),
     ...(scenario !== undefined && scenario.status !== "PREVIEW"
       ? [`MTT flop pilot lab scenario must be PREVIEW, got ${scenario.status}.`]
       : []),
     ...runtimeSmokes.flatMap((row) => row.errors.map((error) => `${row.catalogId}: ${error}`)),
+    ...(proPlusTrainingRuntime.mode !== "SCOPED_PILOT"
+      ? [`Training runtime should expose SCOPED_PILOT mode, got ${proPlusTrainingRuntime.mode}.`]
+      : []),
+    ...(proPlusTrainingRuntime.allowFallback
+      ? ["Scoped pilot training runtime must not allow heuristic fallback."]
+      : []),
+    ...(proPlusTrainingRuntime.resolver === null
+      ? ["Scoped pilot training runtime did not provide a resolver for PRO_PLUS."]
+      : []),
+    ...(freeTrainingRuntime.mode !== "LOCKED_PILOT"
+      ? [`FREE training runtime should be LOCKED_PILOT, got ${freeTrainingRuntime.mode}.`]
+      : []),
+    ...(legacySbInputRecommendationKind !== "STRATEGY_PACK"
+      ? [`Legacy SB vs BB UI input returned ${legacySbInputRecommendationKind ?? "null"} instead of STRATEGY_PACK.`]
+      : []),
   ];
 
   return {
@@ -61,7 +99,39 @@ export function buildMttVariantQaReport(): MttVariantQaReport {
       errors: errors.length,
     },
     runtimeSmokes,
+    trainingRuntime: {
+      mode: proPlusTrainingRuntime.mode,
+      allowFallback: proPlusTrainingRuntime.allowFallback,
+      proPlusPilotResolver: proPlusTrainingRuntime.resolver !== null,
+      freeLocked: freeTrainingRuntime.mode === "LOCKED_PILOT",
+      legacySbInputRecommendationKind,
+    },
     errors,
+  };
+}
+
+const MTT_FLOP_PILOT_PROFILE = {
+  gameVariant: "MTT",
+  tableFormat: "FULL_RING_9",
+  blindSpeed: "REGULAR",
+  street: "FLOP",
+  evModel: "CHIP_EV",
+  ante: "OFF",
+  rakeMode: "NONE",
+} as const;
+
+function legacySbCbetInput(): PostflopStrategyInput | null {
+  const rule = findMttPostflopPilotRuntimeEntry("SB_vs_BB_SRP_OOP_FLOP_CBET")
+    ?.packEntry.pack.rules[0];
+  if (!rule) return null;
+  return {
+    street: "FLOP",
+    textures: rule.boardTextures,
+    potType: rule.potType,
+    potBB: 6,
+    effectiveStackBB: ((rule.sprMin + rule.sprMax) / 2) * 6,
+    positionPattern: "SB_VS_BB",
+    actionNode: rule.actionNode,
   };
 }
 

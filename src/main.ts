@@ -53,6 +53,8 @@ import { resolveSeed, spotSequence } from "./core/drillEngine";
 import { postflopIntentFromFilters } from "./core/postflopIntent";
 import { grade } from "./core/scoring";
 import type { PostflopStreet } from "./core/postflopGenerator";
+import { runtimeEntitlementGrants } from "./core/runtimeEntitlements";
+import { evaluateEntitlementAccess } from "./core/paymentEntitlements";
 import {
   createRangeStoreFromRangePack,
   rangeStore,
@@ -81,9 +83,13 @@ import { mttProductionImportSlotId } from "./data/ranges/mttImportSlotNaming";
 import { mttProductionLazyLoader } from "./data/ranges/mttProductionLazyLoader";
 import type { RangePack } from "./data/ranges/rangePack";
 import {
-  createMttProductionPostflopFamilyResolver,
   createMttProductionPostflopStrategyResolver,
 } from "./data/ranges/postflopStrategyRegistry";
+import type { MttPostflopTrainingRuntimeReport } from "./data/ranges/mttPostflopTrainingRuntime";
+import {
+  readyMttPostflopPilotsForProfile,
+  requiredEntitlementsForMttPostflopPilotScopes,
+} from "./data/ranges/mttPostflopPilotCatalog";
 import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
 import { renderMatrix } from "./ui/rangeMatrixView";
@@ -390,26 +396,33 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       : selectedProfile;
     currentPostflopProfile = resolvedProfile;
     const postflopIntent = options.filters ? postflopIntentFromFilters(options.filters) : null;
-    const readiness = resolvedProfile && options.filters
-      ? productionMttReadiness(resolvedProfile, options.filters)
-      : null;
     const capability = resolvedProfile
       ? trainingCapabilityForProfile(resolvedProfile)
       : null;
-    const productionResolver = (
+    const hasScopedPilotCoverage = resolvedProfile
+      ? readyMttPostflopPilotsForProfile(resolvedProfile).length > 0
+      : false;
+    const grants = runtimeEntitlementGrants();
+    const pilotEntitlements = resolvedProfile
+      ? requiredEntitlementsForMttPostflopPilotScopes(
+        readyMttPostflopPilotsForProfile(resolvedProfile).map((pilot) => pilot.scope),
+      )
+      : [];
+    const hasActivePilotEntitlement = evaluateEntitlementAccess({
+      required: [],
+      grants,
+    }).active.some((entitlement) => pilotEntitlements.includes(entitlement));
+    const requiresExactRuntime = (
+      (hasScopedPilotCoverage && hasActivePilotEntitlement) ||
+      capability?.status === "PRODUCTION"
+    );
+    let postflopRuntime: MttPostflopTrainingRuntimeReport | null = null;
+    const runtimeProfileForView = (
+      requiresExactRuntime &&
       resolvedProfile &&
       isPostflopStreet(resolvedProfile.street) &&
-      readiness?.productionReady === true
-    )
-      ? createMttProductionPostflopFamilyResolver({
-        gameVariant: resolvedProfile.gameVariant,
-        tableFormat: resolvedProfile.tableFormat,
-        blindSpeed: resolvedProfile.blindSpeed,
-        evModel: resolvedProfile.evModel,
-        ante: resolvedProfile.ante,
-        rakeMode: resolvedProfile.rakeMode,
-      })
-      : undefined;
+      options.filters
+    ) ? resolvedProfile : null;
     renderPostflopView(shell.postflopPanel, {
       initialStreet: options.initialStreet ?? "FLOP",
       initialSeed: options.initialSeed,
@@ -418,18 +431,26 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       initialPotBB: postflopIntent?.potBB,
       initialEffectiveStackBB: postflopIntent?.effectiveStackBB,
       autoGenerate: options.autoGenerate === true,
-      strategyResolver: productionResolver,
-      allowFallback: capability?.allowHeuristicFallback ?? true,
-      beforeGenerate: productionResolver && resolvedProfile
+      strategyResolver: runtimeProfileForView
+        ? (input) => postflopRuntime?.resolver?.(input) ?? null
+        : undefined,
+      allowFallback: requiresExactRuntime ? false : capability?.allowHeuristicFallback ?? true,
+      beforeGenerate: runtimeProfileForView
         ? async (mode) => {
-          if (mode !== "line") return;
-          const profileKeys = (["FLOP", "TURN", "RIVER"] as const)
-            .map((street) => mttProductionProfileKey({
-              ...resolvedProfile,
-              street,
-            }))
-            .filter((profileKey): profileKey is string => profileKey !== null);
-          await mttProductionLazyLoader.loadProfiles(profileKeys);
+          const { buildMttPostflopTrainingRuntime } = await import("./data/ranges/mttPostflopTrainingRuntime");
+          postflopRuntime = buildMttPostflopTrainingRuntime({
+            profile: runtimeProfileForView,
+            grants,
+          });
+          if (postflopRuntime.mode === "PRODUCTION" && mode === "line") {
+            const profileKeys = (["FLOP", "TURN", "RIVER"] as const)
+              .map((street) => mttProductionProfileKey({
+                ...runtimeProfileForView,
+                street,
+              }))
+              .filter((profileKey): profileKey is string => profileKey !== null);
+            await mttProductionLazyLoader.loadProfiles(profileKeys);
+          }
         }
         : undefined,
       onAnswered: (spot, chosen, responseMs) => {
@@ -736,14 +757,6 @@ function runtimeProfile(profile: TrainingProfile, filters: Filters): TrainingPro
     ...profile,
     ante: profile.gameVariant === "CASH" ? "OFF" : filters.ante,
   };
-}
-
-function productionMttReadiness(
-  profile: TrainingProfile,
-  filters: Filters,
-) {
-  const resolvedProfile = runtimeProfile(profile, filters);
-  return trainingCapabilityForProfile(resolvedProfile).mttReadiness;
 }
 
 function candidateProfileLabel(profile: TrainingProfile): string {

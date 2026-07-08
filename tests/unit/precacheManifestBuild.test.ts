@@ -46,16 +46,20 @@ describe("precache build manifest", () => {
 
   it("neprecachuje profilove MTT production chunky", () => {
     const lazyPack = "assets/mtt-full-ring-9-turbo-flop-chip-ev-ante-off-production-v1-AbCd1234.js";
+    const lazyPilotRuntime = "assets/mtt-postflop-pilot-runtime-AbCd1234.js";
     const manifest = buildPrecacheManifest([
       "assets/main-AbCd1234.js",
       lazyPack,
+      lazyPilotRuntime,
       `${lazyPack}.map`,
     ]);
 
     expect(isLazyMttProductionAsset(lazyPack)).toBe(true);
+    expect(isLazyMttProductionAsset(lazyPilotRuntime)).toBe(true);
     expect(isLazyMttProductionAsset("assets/postflop-line-AbCd1234.js")).toBe(false);
     expect(manifest.entries).toContain("./assets/main-AbCd1234.js");
     expect(manifest.entries).not.toContain(`./${lazyPack}`);
+    expect(manifest.entries).not.toContain(`./${lazyPilotRuntime}`);
   });
 
   it("odvozuje deterministicky chunk name z production module path", () => {
@@ -69,6 +73,9 @@ describe("precache build manifest", () => {
     expect(mttProductionChunkNameForModuleId(
       "/repo/src/data/ranges/mttProductionRuntimeRegistry.ts",
     )).toBeNull();
+    expect(mttProductionChunkNameForModuleId(
+      "/repo/src/data/ranges/mttPostflopTrainingRuntime.ts",
+    )).toBe("mtt-postflop-pilot-runtime");
     expect(mttProductionChunkNameForModuleId(
       "/repo/src/data/ranges/flopProductionStrategyPack.ts",
     )).toBeNull();

@@ -54,6 +54,7 @@ const validHh = [
 describe("mobile / Android WebView smoke", () => {
   afterEach(() => {
     document.body.innerHTML = "";
+    window.localStorage.clear();
     vi.restoreAllMocks();
     vi.resetModules();
   });

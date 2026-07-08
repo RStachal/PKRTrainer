@@ -26,6 +26,13 @@ describe("MTT variant QA", () => {
       row.recommendationKind === "STRATEGY_PACK" &&
       row.fullProductionReady === false
     ))).toBe(true);
+    expect(report.trainingRuntime).toMatchObject({
+      mode: "SCOPED_PILOT",
+      allowFallback: false,
+      proPlusPilotResolver: true,
+      freeLocked: true,
+      legacySbInputRecommendationKind: "STRATEGY_PACK",
+    });
   });
 
   it("CLI umi zapsat variant-specific QA artefakt", () => {

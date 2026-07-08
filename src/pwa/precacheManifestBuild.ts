@@ -10,7 +10,7 @@ export function isLazyMttProductionAsset(fileName: string): boolean {
   const baseName = normalized.split("/").pop() ?? "";
   return (
     baseName.startsWith("mtt-") &&
-    baseName.includes("-production-") &&
+    (baseName.includes("-production-") || baseName.includes("-pilot-")) &&
     /-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName)
   );
 }
@@ -18,6 +18,9 @@ export function isLazyMttProductionAsset(fileName: string): boolean {
 export function mttProductionChunkNameForModuleId(moduleId: string): string | null {
   const normalized = moduleId.replace(/\\/g, "/");
   const fileName = normalized.split("/").pop() ?? "";
+  if (fileName === "mttPostflopTrainingRuntime.ts") {
+    return "mtt-postflop-pilot-runtime";
+  }
   if (
     !fileName.endsWith(".ts") ||
     !fileName.startsWith("mtt-") ||

@@ -1,4 +1,8 @@
-import type { PostflopStrategyInput, PostflopStrategyResolver } from "../../core/postflopGenerator";
+import type {
+  PostflopPositionPattern,
+  PostflopStrategyInput,
+  PostflopStrategyResolver,
+} from "../../core/postflopGenerator";
 import {
   evaluateEntitlementAccess,
   type EntitlementGrant,
@@ -96,49 +100,69 @@ export function mttPostflopPilotScopeForInput(
   input: PostflopStrategyInput,
 ): MttPostflopPilotScope | null {
   if (input.street !== "FLOP") return null;
+  const positionPattern = normalizePilotPositionPattern(input.positionPattern, input.potType);
   if (
     input.potType === "SINGLE_RAISED" &&
-    input.positionPattern === "SRP_BTN_VS_BB" &&
+    positionPattern === "SRP_BTN_VS_BB" &&
     input.actionNode === "SINGLE_RAISED_POT_CBET"
   ) {
     return "BTN_vs_BB_SRP_FLOP_CBET";
   }
   if (
     input.potType === "SINGLE_RAISED" &&
-    input.positionPattern === "SRP_UTG_VS_BB" &&
+    positionPattern === "SRP_UTG_VS_BB" &&
     input.actionNode === "SINGLE_RAISED_POT_CBET"
   ) {
     return "UTG_vs_BB_SRP_FLOP_CBET";
   }
   if (
     input.potType === "SINGLE_RAISED" &&
-    input.positionPattern === "SRP_SB_VS_BB" &&
+    positionPattern === "SRP_SB_VS_BB" &&
     input.actionNode === "SINGLE_RAISED_POT_CBET"
   ) {
     return "SB_vs_BB_SRP_OOP_FLOP_CBET";
   }
   if (
     input.potType === "THREE_BET_POT" &&
-    input.positionPattern === "3BP_BTN_VS_CO" &&
+    positionPattern === "3BP_BTN_VS_CO" &&
     input.actionNode === "THREE_BET_POT_CBET"
   ) {
     return "BTN_vs_CO_3BP_FLOP_CBET";
   }
   if (
     input.potType === "SINGLE_RAISED" &&
-    input.positionPattern === "SRP_BTN_VS_BB" &&
+    positionPattern === "SRP_BTN_VS_BB" &&
     input.actionNode === "FLOP_FACING_BET"
   ) {
     return "BTN_vs_BB_SRP_FLOP_FACING_BET";
   }
   if (
     input.potType === "THREE_BET_POT" &&
-    input.positionPattern === "3BP_BTN_VS_CO" &&
+    positionPattern === "3BP_BTN_VS_CO" &&
     input.actionNode === "FLOP_FACING_BET"
   ) {
     return "BTN_vs_CO_3BP_FLOP_FACING_BET";
   }
   return null;
+}
+
+export function normalizePilotPositionPattern(
+  positionPattern: PostflopPositionPattern,
+  potType: PostflopStrategyInput["potType"],
+): PostflopPositionPattern {
+  if (potType !== "SINGLE_RAISED") return positionPattern;
+  if (positionPattern === "BTN_VS_BB") return "SRP_BTN_VS_BB";
+  if (positionPattern === "SB_VS_BB") return "SRP_SB_VS_BB";
+  return positionPattern;
+}
+
+export function normalizePilotStrategyInput(
+  input: PostflopStrategyInput,
+): PostflopStrategyInput {
+  const positionPattern = normalizePilotPositionPattern(input.positionPattern, input.potType);
+  return positionPattern === input.positionPattern
+    ? input
+    : { ...input, positionPattern };
 }
 
 export function createMttPostflopPilotResolverForInput(
@@ -156,7 +180,13 @@ export function createMttPostflopPilotResolverForInput(
       reason: "No scoped postflop pilot matches this strategy input.",
     };
   }
-  return createMttPostflopPilotResolver(scope, grants, options);
+  const report = createMttPostflopPilotResolver(scope, grants, options);
+  if (report.resolver === null) return report;
+  const resolver = report.resolver;
+  return {
+    ...report,
+    resolver: (nextInput) => resolver(normalizePilotStrategyInput(nextInput)),
+  };
 }
 
 export function createMttPostflopPilotAwareResolver(
