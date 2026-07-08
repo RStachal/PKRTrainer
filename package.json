@@ -48,6 +48,8 @@
     "mtt:technical-acceptance": "vite-node scripts/checkMttTechnicalAcceptance.mts",
     "mtt:handoff": "vite-node scripts/writeMttHandoffArtifacts.mts",
     "mtt:scenario-catalog": "vite-node scripts/checkMttScenarioCatalog.mts",
+    "mtt:utility-stats": "vite-node scripts/checkMttUtilityStats.mts",
+    "mtt:content-packs": "vite-node scripts/checkMttContentPacks.mts",
     "mtt:next-action": "vite-node scripts/reportNextMttAction.mts",
     "mtt:promote-ready": "vite-node scripts/promoteReadyMttIntake.mts",
     "mtt:refresh-registry": "vite-node scripts/refreshMttProductionRegistry.mts",

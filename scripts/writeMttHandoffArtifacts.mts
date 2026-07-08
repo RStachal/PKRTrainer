@@ -145,6 +145,18 @@ const handoffCommands: readonly HandoffCommand[] = [
     releaseBlocking: false,
   },
   {
+    label: "MTT utility stats contract",
+    npmArgs: ["run", "mtt:utility-stats", "--", "--output=artifacts/mtt-utility-stats/report.json"],
+    outputPath: "artifacts/mtt-utility-stats/report.json",
+    releaseBlocking: false,
+  },
+  {
+    label: "MTT offline content pack manifest",
+    npmArgs: ["run", "mtt:content-packs", "--", "--output=artifacts/mtt-content-packs/report.json"],
+    outputPath: "artifacts/mtt-content-packs/report.json",
+    releaseBlocking: false,
+  },
+  {
     label: "MTT solver verification plan",
     npmArgs: ["run", "mtt:solver-verification", "--", "--output=artifacts/mtt-solver-verification/report.json"],
     outputPath: "artifacts/mtt-solver-verification/report.json",

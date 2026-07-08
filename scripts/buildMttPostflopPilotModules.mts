@@ -54,6 +54,15 @@ const PILOT_MODULE_SOURCES: readonly PilotModuleSource[] = [
     exportName: "btnCo3bpFlopCbetPilotPack",
   },
   {
+    catalogId: "sb-bb-srp-oop-flop-cbet-low-mid-high",
+    normalizedPath:
+      "artifacts/texas-solver-review-integration/normalized-drafts/SB_BB_SRP_OOP_FLOP_CBET_PILOT-ROOT/normalized.candidate.json",
+    permissionPath:
+      "artifacts/texas-solver-review-integration/normalized-drafts/SB_BB_SRP_OOP_FLOP_CBET_PILOT-ROOT/permission.candidate.json",
+    modulePath: "src/data/ranges/pilots/sbBbSrpOopFlopCbetPilot.generated.ts",
+    exportName: "sbBbSrpOopFlopCbetPilotPack",
+  },
+  {
     catalogId: "btn-co-3bp-flop-facing-bet-low-mid-high",
     normalizedPath:
       "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_FACING_BET_PILOT/normalized.candidate.json",

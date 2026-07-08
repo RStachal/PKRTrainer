@@ -164,9 +164,10 @@ function reportRowForPreset(preset: MttLearningPathPreset): MttLearningPathRepor
   const readyPilots = readyMttPostflopPilotsForProfile(preset.profile);
   const readyPilotScopes = readyPilots.map((pilot) => pilot.scope);
   const requiredScopes = preset.requiredPilotScopes ?? [];
+  const pilotCatalog: readonly MttPostflopPilotCatalogEntry[] = MTT_POSTFLOP_PILOT_CATALOG;
   const waitingPilotScopes = requiredScopes.filter((scope) => (
     !readyPilotScopes.includes(scope) &&
-    MTT_POSTFLOP_PILOT_CATALOG.some((pilot) => pilot.scope === scope && pilot.status === "WAITING")
+    pilotCatalog.some((pilot) => pilot.scope === scope && pilot.status === "WAITING")
   ));
   const missingPilotScopes = requiredScopes.filter((scope) => (
     !readyPilotScopes.includes(scope) &&

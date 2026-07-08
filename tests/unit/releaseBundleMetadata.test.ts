@@ -117,6 +117,8 @@ describe("release bundle metadata", () => {
       .toBe("vite-node scripts/checkMttTechnicalAcceptance.mts");
     expect(pkg.scripts["mtt:handoff"]).toBe("vite-node scripts/writeMttHandoffArtifacts.mts");
     expect(pkg.scripts["mtt:scenario-catalog"]).toBe("vite-node scripts/checkMttScenarioCatalog.mts");
+    expect(pkg.scripts["mtt:utility-stats"]).toBe("vite-node scripts/checkMttUtilityStats.mts");
+    expect(pkg.scripts["mtt:content-packs"]).toBe("vite-node scripts/checkMttContentPacks.mts");
     expect(pkg.scripts["mtt:next-action"]).toBe("vite-node scripts/reportNextMttAction.mts");
     expect(pkg.scripts["mtt:promote-ready"]).toBe("vite-node scripts/promoteReadyMttIntake.mts");
     expect(pkg.scripts["mtt:registry-integrity"]).toBe("vite-node scripts/checkMttProductionRegistryIntegrity.mts");
@@ -188,6 +190,10 @@ describe("release bundle metadata", () => {
     expect(handoffScript).toContain("artifacts/mtt-postflop-pilot-catalog/report.json");
     expect(handoffScript).toContain("mtt:scenario-catalog");
     expect(handoffScript).toContain("artifacts/mtt-scenario-catalog/report.json");
+    expect(handoffScript).toContain("mtt:utility-stats");
+    expect(handoffScript).toContain("artifacts/mtt-utility-stats/report.json");
+    expect(handoffScript).toContain("mtt:content-packs");
+    expect(handoffScript).toContain("artifacts/mtt-content-packs/report.json");
     expect(postflopPilotCatalogScript).toContain("npm run mtt:postflop-pilot-catalog -- --output=artifacts/mtt-postflop-pilot-catalog/report.json");
     expect(handoffScript).toContain("mtt:texas-solver-pack");
     expect(handoffScript).toContain("artifacts/texas-solver-parameter-pack/report.json");

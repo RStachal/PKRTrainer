@@ -14,8 +14,9 @@ describe("MTT postflop pilot runtime", () => {
   it("exposes all generated scoped pilot packs without registering them as production", () => {
     const entries = mttPostflopPilotRuntimeEntries();
 
-    expect(entries).toHaveLength(5);
+    expect(entries).toHaveLength(6);
     expect(entries.map((entry) => entry.catalog.fullProductionReady)).toEqual([
+      false,
       false,
       false,
       false,
@@ -110,7 +111,7 @@ describe("MTT postflop pilot runtime", () => {
     expect(report.reason).toContain("No scoped postflop pilot matches");
   });
 
-  it("keeps SB vs BB OOP c-bet candidate out of runtime until explicitly cataloged", () => {
+  it("maps SB vs BB OOP c-bet to explicit paid scoped pilot runtime", () => {
     const input = {
       street: "FLOP",
       textures: ["ace-high", "dry", "rainbow", "disconnected"],
@@ -125,16 +126,17 @@ describe("MTT postflop pilot runtime", () => {
       grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" }),
       { now: "2026-07-08T00:00:00.000Z" },
     );
-
-    expect(mttPostflopPilotScopeForInput(input)).toBeNull();
-    expect(createMttPostflopPilotResolverForInput(
+    const inputReport = createMttPostflopPilotResolverForInput(
       input,
       grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" }),
       { now: "2026-07-08T00:00:00.000Z" },
-    ).reason).toContain("No scoped postflop pilot matches");
-    expect(directScopeReport.allowed).toBe(false);
-    expect(directScopeReport.resolver).toBeNull();
-    expect(directScopeReport.reason).toContain("not available in the runtime bundle");
+    );
+
+    expect(mttPostflopPilotScopeForInput(input)).toBe("SB_vs_BB_SRP_OOP_FLOP_CBET");
+    expect(directScopeReport.allowed).toBe(true);
+    expect(directScopeReport.entry?.catalog.fullProductionReady).toBe(false);
+    expect(inputReport.allowed).toBe(true);
+    expect(inputReport.entry?.catalog.id).toBe("sb-bb-srp-oop-flop-cbet-low-mid-high");
   });
 
   it("pilot-aware resolver prefers production before entitled pilot", () => {

@@ -131,7 +131,7 @@ describe("profileSelector", () => {
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("preview");
-    expect(note?.textContent).toContain("Dostupné scoped solver piloty: 5");
+    expect(note?.textContent).toContain("Dostupné scoped solver piloty: 6");
     expect(note?.textContent).toContain("Nejde o plnou produkční coverage");
     expect(note?.textContent).not.toContain("mtt.postflop");
     expect(note?.textContent).not.toContain("RangePack");

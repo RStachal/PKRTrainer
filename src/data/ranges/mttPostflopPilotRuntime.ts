@@ -111,6 +111,13 @@ export function mttPostflopPilotScopeForInput(
     return "UTG_vs_BB_SRP_FLOP_CBET";
   }
   if (
+    input.potType === "SINGLE_RAISED" &&
+    input.positionPattern === "SRP_SB_VS_BB" &&
+    input.actionNode === "SINGLE_RAISED_POT_CBET"
+  ) {
+    return "SB_vs_BB_SRP_OOP_FLOP_CBET";
+  }
+  if (
     input.potType === "THREE_BET_POT" &&
     input.positionPattern === "3BP_BTN_VS_CO" &&
     input.actionNode === "THREE_BET_POT_CBET"

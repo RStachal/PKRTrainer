@@ -18,27 +18,28 @@ describe("MTT scenario / learning path catalog", () => {
     expect(report.counts).toMatchObject({
       total: 4,
       ready: 0,
-      preview: 1,
-      waiting: 2,
+      preview: 2,
+      waiting: 1,
       unsupported: 1,
-      estimatedPlayableSpots: 13 * 9 * 169,
+      estimatedPlayableSpots: 13 * 9 * 169 + 715,
     });
   });
 
-  it("drzi postflop solver lab jako WAITING dokud chybi SB OOP pilot promotion", () => {
+  it("povoli postflop solver lab jako PREVIEW, kdyz jsou vsechny scoped piloty v katalogu ready", () => {
     const report = buildMttLearningPathCatalogReport();
     const row = report.rows.find((item) => item.id === "mtt-9max-regular-chip-ev-flop-pilots");
 
-    expect(row?.status).toBe("WAITING");
+    expect(row?.status).toBe("PREVIEW");
     expect(row?.readyPilotScopes).toEqual([
       "BTN_vs_BB_SRP_FLOP_CBET",
       "UTG_vs_BB_SRP_FLOP_CBET",
+      "SB_vs_BB_SRP_OOP_FLOP_CBET",
       "BTN_vs_CO_3BP_FLOP_CBET",
       "BTN_vs_CO_3BP_FLOP_FACING_BET",
       "BTN_vs_BB_SRP_FLOP_FACING_BET",
     ]);
-    expect(row?.waitingPilotScopes).toEqual(["SB_vs_BB_SRP_OOP_FLOP_CBET"]);
-    expect(row?.blockers.join("\n")).toContain("waiting for complete reviewed solver coverage");
+    expect(row?.waitingPilotScopes).toEqual([]);
+    expect(row?.blockers).toEqual([]);
   });
 
   it("CLI umi zapsat scenario catalog report", () => {
@@ -60,7 +61,7 @@ describe("MTT scenario / learning path catalog", () => {
       expect(existsSync(output)).toBe(true);
       const report = JSON.parse(readFileSync(output, "utf8")) as ReturnType<typeof buildMttLearningPathCatalogReport>;
       expect(report.valid).toBe(true);
-      expect(report.counts.waiting).toBe(2);
+      expect(report.counts.waiting).toBe(1);
       expect(report.rows.some((row) => row.id === "mtt-9max-icm-bubble" && row.status === "UNSUPPORTED"))
         .toBe(true);
     } finally {

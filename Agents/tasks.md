@@ -2403,7 +2403,10 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo 2026-07-08: `mtt:postflop-pilot-suite` nově pocita soft warningy pro LOW/MID/HIGH merged targety, pokud maji mene vstupu nez ocekavane SPR family; validita zustava zelena, ale report nemaskuje nekompletni pilot coverage.
     - Hotovo 2026-07-08: source-free pilot katalog eviduje `SB_vs_BB_SRP_OOP_FLOP_CBET` jako `WAITING` s rezervovanym entitlementem `mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot`; neni v `PRO_PLUS`, neni v ready entitlements a neni v runtime bundle, dokud nebude kompletni HIGHSPR + poker review + explicitni promotion.
     - Hotovo 2026-07-08: `mtt:texas-solver-background-status` vypisuje i konkretni chybejici boardy; aktualni HIGHSPR stav je `RAW_PARTIAL (3/4) missing=985mono`, takze je jasne, ze cekame jen na posledni monotone high-SPR spot.
-    - Dalsi postflop krok: po dobehnuti SB vs BB OOP raw exportu spustit coverage status, stage/review pro tri nove family, navrhnout samostatnou normalizacni politiku pro OOP-aggressor c-bet nody a teprve pote rozhodnout, zda vznikne novy scoped pilot scope `SB_vs_BB_SRP_OOP_FLOP_CBET`.
+    - Hotovo 2026-07-08: superseding update - SB vs BB OOP HIGHSPR dobehl 4/4 raw a manifest je kompletni 12/12; `mtt:texas-solver-ingest-completed` vytvoril HIGHSPR ROOT draft a merge `SB_BB_SRP_OOP_FLOP_CBET_PILOT-ROOT` je kompletni LOW/MID/HIGH (`rules=3`, `rangeBuckets=237`, provenance `ecf6d77647346484fc77d511d4bb7c16847c3fb6f669b24b1c4d1ce516445082`, `fullProductionReady=false`).
+    - Hotovo 2026-07-08: superseding update - `SB_vs_BB_SRP_OOP_FLOP_CBET` byl explicitne povysen pouze jako placeny scoped pilot, ne full production: katalog je `READY 6/6`, runtime mapuje `SRP_SB_VS_BB + SINGLE_RAISED_POT_CBET`, `mtt:postflop-pilot-modules -- --write` vygeneroval `sbBbSrpOopFlopCbetPilot.generated.ts` a PRO_PLUS/TEAM obsahuje entitlement `mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot`.
+    - Hotovo 2026-07-08: superseding update - `mtt:postflop-pilot-suite` je nyni `valid: true`, `ready: 6`, `waiting: 0`, `warnings: 0`, `rules: 16`, `range buckets: 794`; scenario katalog oznacuje `mtt-9max-regular-chip-ev-flop-pilots` jako `PREVIEW`, stale s omezenim, ze nejde o plnou FLOP production coverage.
+    - Dalsi postflop krok: pro scoped pilot runtime doplnit UI/UX smoke nad konkretnim SB vs BB OOP inputem a potom pokracovat dalsi coverage vlnou mimo uz hotove FLOP pilot lab scope; full production FLOP/TURN/RIVER zustava samostatny release gate.
     - Dalsi preflop krok: po dodani realne vyplnene CSV kopie spustit konvertor nad P1 slotem, doplnit production provenance, projit `validate:range-import`, `build:range-module --dry-run` a az pote povysit ready slot pres `mtt:promote-ready`.
   - [ ] 137.18 Rozsirit HH import na hlavni herny a turnajova metadata
     - Vedle PokerStars-like pridat adaptery podle priorit realnych vstupu; kazdy provider ma fixture corpus a verzovany parser.
@@ -2422,11 +2425,17 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Oddelit strategickou chybu od varianty po zmene pack verze; umoznit before/after porovnani.
     - Spaced repetition ma prioritizovat EV loss a kriticke bubble/final-table chyby, ne jen binarni accuracy.
     - Acceptance: export/import a dashboard umi filtrovat kazdou release variantu bez michani nekompatibilnich modelu.
+    - Hotovo 2026-07-08: pridan source-free `mttUtilityStats` kontrakt pro MTT KPI podle profilu/scenare/pack verze, tournament phase, payout/bounty/covering metadat, action node, sizingu a source quality; `mtt:utility-stats` umi z validnich `ResultRecordV2` exportu vytvorit auditovatelny report.
+    - Hotovo 2026-07-08: EV-loss-aware spaced repetition queue prioritizuje chyby podle miss rate, explicitniho `evLossBb`, bubble/final-table/satellite/PKO kriticnosti a stale oddeluje `scenarioId`, `profileId` a `rangePackVersion`, aby se nemichalo before/after po zmene packu.
+    - Hotovo 2026-07-08: `mtt:handoff` generuje neblokujici `artifacts/mtt-utility-stats/report.json`; bez vstupniho user exportu je report prazdny/validni, ale kontrakt je testovany a pripraveny pro dashboard/export integraci.
   - [ ] 137.21 Udrzet rozsirenou variantovou knihovnu rychlou a offline
     - Lazy manifest delit podle release trainu/scenare; umoznit uzivateli stahnout/odstranit volitelne offline content baliky.
     - Pridat storage quota management, integrity hash, resumable update a rollback na posledni validni pack.
     - Android WebView nesmi nacitat vsechny ICM/PKO/multiway packy pri startu.
     - Acceptance: zakladni app shell zustane maly a kazdy instalovany content balik je overitelny a plne offline.
+    - Hotovo 2026-07-08: pridan typovany `contentPackManifest` kontrakt pro offline MTT baliky delene podle `releaseTrain` a `scenarioId`; manifest eviduje relativni asset path, `sha256`, byte size, dependencies, install mode, resumable chunk size a rollback verzi.
+    - Hotovo 2026-07-08: `buildContentPackUpdatePlan` rozlisuje `KEEP/INSTALL/UPDATE/REMOVE/BLOCKED`, kontroluje optional resumable instalace, self/unknown dependencies a zakazuje absolutni nebo remote asset URL, aby Android/WebView nemusel pri startu nacitat budouci velke packy.
+    - Hotovo 2026-07-08: pridan operator gate `mtt:content-packs`, ktery umi validovat manifest i realne soubory pres `--asset-root` porovnanim `bytes` a `sha256`; `mtt:handoff` uklada neblokujici `artifacts/mtt-content-packs/report.json`.
   - [ ] 137.22 Zavest variant-specific QA a release gates
     - Kazdy release train ma completion matrix, legal intake gate, runtime no-fallback test, browser E2E, mobile/offline smoke a user acceptance scenare.
     - Property testy: chip conservation, seat/position order, payout equity, bounty utility, side-pot eligibility, deterministic replay a mixed-frequency sums.
