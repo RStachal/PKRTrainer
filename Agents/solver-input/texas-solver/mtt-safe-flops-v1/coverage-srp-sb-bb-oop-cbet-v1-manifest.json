@@ -1,0 +1,163 @@
+{
+  "packId": "pkrtrainer-mtt-texas-solver-srp-sb-bb-oop-cbet-v1",
+  "generatedAt": "2026-07-08",
+  "parameterDir": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1",
+  "outputBase": "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
+  "scenarios": [
+    {
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "pot": 50,
+      "effectiveStack": 125,
+      "boards": [
+        "A72r",
+        "K98tt",
+        "T76tt",
+        "654r"
+      ],
+      "purpose": "SB vs BB single-raised-pot LOW-SPR OOP flop c-bet probe.",
+      "coverageTags": [
+        "LOW_SPR",
+        "SINGLE_RAISED",
+        "SRP_SB_VS_BB",
+        "SINGLE_RAISED_POT_CBET",
+        "OOP_AGGRESSOR"
+      ]
+    },
+    {
+      "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+      "pot": 50,
+      "effectiveStack": 300,
+      "boards": [
+        "A72r",
+        "K98tt",
+        "QJ9tt",
+        "985mono"
+      ],
+      "purpose": "SB vs BB single-raised-pot MID-SPR OOP flop c-bet probe.",
+      "coverageTags": [
+        "MID_SPR",
+        "SINGLE_RAISED",
+        "SRP_SB_VS_BB",
+        "SINGLE_RAISED_POT_CBET",
+        "OOP_AGGRESSOR"
+      ]
+    },
+    {
+      "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+      "pot": 50,
+      "effectiveStack": 650,
+      "boards": [
+        "K98tt",
+        "T76tt",
+        "QJ9tt",
+        "985mono"
+      ],
+      "purpose": "SB vs BB single-raised-pot HIGH-SPR OOP flop c-bet probe.",
+      "coverageTags": [
+        "HIGH_SPR",
+        "SINGLE_RAISED",
+        "SRP_SB_VS_BB",
+        "SINGLE_RAISED_POT_CBET",
+        "OOP_AGGRESSOR"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "01_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_A72r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/01_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_A72r.txt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "boardId": "A72r",
+      "written": true
+    },
+    {
+      "fileName": "02_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_K98tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/02_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_K98tt.txt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "boardId": "K98tt",
+      "written": true
+    },
+    {
+      "fileName": "03_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_T76tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/03_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_T76tt.txt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "boardId": "T76tt",
+      "written": true
+    },
+    {
+      "fileName": "04_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_654r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/04_MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR_654r.txt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "boardId": "654r",
+      "written": true
+    },
+    {
+      "fileName": "21_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_A72r.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/21_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_A72r.txt",
+      "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+      "boardId": "A72r",
+      "written": true
+    },
+    {
+      "fileName": "22_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_K98tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/22_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_K98tt.txt",
+      "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+      "boardId": "K98tt",
+      "written": true
+    },
+    {
+      "fileName": "23_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_QJ9tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/23_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_QJ9tt.txt",
+      "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+      "boardId": "QJ9tt",
+      "written": true
+    },
+    {
+      "fileName": "24_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_985mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/24_MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR_985mono.txt",
+      "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+      "boardId": "985mono",
+      "written": true
+    },
+    {
+      "fileName": "41_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_K98tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/41_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_K98tt.txt",
+      "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+      "boardId": "K98tt",
+      "written": true
+    },
+    {
+      "fileName": "42_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_T76tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/42_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_T76tt.txt",
+      "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+      "boardId": "T76tt",
+      "written": true
+    },
+    {
+      "fileName": "43_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_QJ9tt.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/43_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_QJ9tt.txt",
+      "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+      "boardId": "QJ9tt",
+      "written": true
+    },
+    {
+      "fileName": "44_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_985mono.txt",
+      "path": "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1/44_MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR_985mono.txt",
+      "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
+      "boardId": "985mono",
+      "written": true
+    }
+  ],
+  "notes": [
+    "Review-only TexasSolver expansion for SB vs BB single-raised-pot OOP flop c-bet nodes.",
+    "SB is the preflop aggressor but acts OOP postflop, so this batch intentionally differs from BTN vs BB SRP c-bet pilots.",
+    "Generated from source-free operator assumptions; poker review and normalization policy are required before any production promotion."
+  ],
+  "commands": [
+    "npm run mtt:texas-solver-srp-sb-bb-cbet-batch -- --write",
+    "npm run mtt:texas-solver-scenario-audit -- --manifest \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-srp-sb-bb-oop-cbet-v1-manifest.json\" --summary",
+    ".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1\" -Limit 999 -ListOnly",
+    ".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_srp_sb_bb_oop_cbet_v1\" -Limit 999",
+    "npm run mtt:texas-solver-coverage-status -- --manifest \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-srp-sb-bb-oop-cbet-v1-manifest.json\" --summary"
+  ]
+}

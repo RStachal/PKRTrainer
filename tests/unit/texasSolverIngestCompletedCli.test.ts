@@ -1,0 +1,77 @@
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { afterEach, describe, expect, it } from "vitest";
+
+const TMP_ROOT = join(process.cwd(), "artifacts", "test-texas-solver-ingest");
+
+afterEach(() => {
+  rmSync(TMP_ROOT, { recursive: true, force: true });
+});
+
+describe("mtt:texas-solver-ingest-completed CLI", () => {
+  it("reviewuje SB vs BB OOP c-bet root node misto CHECK vetve", () => {
+    const familyId = "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR";
+    const outputBase = join(TMP_ROOT, "output", "texas-solver");
+    const rawDir = join(outputBase, familyId, "raw");
+    mkdirSync(rawDir, { recursive: true });
+    writeFileSync(join(rawDir, `pkrtrainer_${familyId}_A72r.json`), JSON.stringify({ node: "root" }), "utf8");
+
+    const manifestPath = join(TMP_ROOT, "manifest.json");
+    const reportPath = join(TMP_ROOT, "report.json");
+    writeFileSync(manifestPath, `${JSON.stringify({
+      packId: "test-sb-bb-oop-cbet",
+      generatedAt: "2026-07-08",
+      parameterDir: "unused",
+      outputBase,
+      scenarios: [{
+        familyId,
+        pot: 50,
+        effectiveStack: 125,
+        boards: ["A72r"],
+        purpose: "test",
+        coverageTags: ["LOW_SPR", "SINGLE_RAISED", "SRP_SB_VS_BB", "SINGLE_RAISED_POT_CBET", "OOP_AGGRESSOR"],
+      }],
+      files: [{
+        fileName: `01_${familyId}_A72r.txt`,
+        path: "unused",
+        familyId,
+        boardId: "A72r",
+        written: true,
+      }],
+      notes: [],
+      commands: [],
+    }, null, 2)}\n`, "utf8");
+
+    const result = runIngest("--dry-run", `--manifest=${manifestPath}`, `--output=${reportPath}`);
+    expect(result.status).toBe(0);
+    const report = JSON.parse(readFileSync(reportPath, "utf8")) as {
+      rows: Array<{ commands: string[] }>;
+      counts: { commands: number };
+    };
+    const commands = report.rows.flatMap((row) => row.commands);
+    expect(report.counts.commands).toBe(2);
+    expect(commands).toContain(`mtt:stage-texas-solver -- --family=${familyId} --write --review-template --summary`);
+    expect(commands).toContain(`mtt:texas-solver-review -- --family=${familyId} --write --summary`);
+    expect(commands.join("\n")).not.toContain("--node-history=CHECK");
+    expect(commands.join("\n")).not.toContain("mtt:texas-solver-merge-pilot-drafts");
+  });
+});
+
+function runIngest(...args: string[]) {
+  return spawnSync(command(), commandArgs(args), {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    maxBuffer: 2 * 1024 * 1024,
+    shell: false,
+  });
+}
+
+function command(): string {
+  return process.platform === "win32" ? "cmd" : "npm";
+}
+
+function commandArgs(args: string[]): string[] {
+  const npmArgs = ["run", "mtt:texas-solver-ingest-completed", "--", ...args];
+  return process.platform === "win32" ? ["/c", "npm", ...npmArgs] : npmArgs;
+}

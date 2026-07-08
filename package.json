@@ -29,6 +29,7 @@
     "mtt:texas-solver-3bp-expansion-batch": "vite-node scripts/buildTexasSolver3bpExpansionBatch.mts",
     "mtt:texas-solver-facing-bet-expansion-batch": "vite-node scripts/buildTexasSolverFacingBetExpansionBatch.mts",
     "mtt:texas-solver-srp-facing-bet-batch": "vite-node scripts/buildTexasSolverSrpFacingBetBatch.mts",
+    "mtt:texas-solver-srp-sb-bb-cbet-batch": "vite-node scripts/buildTexasSolverSrpSbBbCbetBatch.mts",
     "mtt:texas-solver-coverage-batch": "vite-node scripts/buildTexasSolverCoverageBatch.mts",
     "mtt:texas-solver-coverage-status": "vite-node scripts/checkTexasSolverCoverageBatchStatus.mts",
     "mtt:texas-solver-ingest-completed": "vite-node scripts/ingestTexasSolverCompletedCoverage.mts",

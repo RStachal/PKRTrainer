@@ -234,10 +234,13 @@ function missingCommandsForFamily(outputBase: string, familyId: string): string[
   if (shouldStage) {
     commands.push(`mtt:stage-texas-solver -- --family=${familyId} --write --review-template --summary`);
   }
-  const reviewPath = join(familyDir, "strategy-export.CHECK.review.json");
+  const isRootDecisionFamily = isRootDecisionCbetFamily(familyId);
+  const reviewPath = join(familyDir, isRootDecisionFamily ? "strategy-export.review.json" : "strategy-export.CHECK.review.json");
   const shouldReview = shouldStage || isMissingOrOlder(reviewPath, rawSources);
   if (shouldReview) {
-    commands.push(`mtt:texas-solver-review -- --family=${familyId} --node-history=CHECK --write --summary`);
+    commands.push(isRootDecisionFamily
+      ? `mtt:texas-solver-review -- --family=${familyId} --write --summary`
+      : `mtt:texas-solver-review -- --family=${familyId} --node-history=CHECK --write --summary`);
   }
   const draftSources = [reviewPath, ...rawSources].filter((path) => existsSync(path));
   if (familyId === "MTT9_20BB_BTN_BB_SRP_LOWSPR" && (shouldReview || isMissingOrOlder(join(LOWSPR_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
@@ -289,6 +292,10 @@ function isFacingBetExpansionFamily(familyId: string): boolean {
   return familyId.includes("_3BP_FACING_") || familyId.includes("_SRP_FACING_");
 }
 
+function isRootDecisionCbetFamily(familyId: string): boolean {
+  return familyId.includes("_SB_BB_SRP_OOP_CBET_");
+}
+
 function facingBetOptionsForFamily(familyId: string): {
   potType: "SINGLE_RAISED" | "THREE_BET_POT";
   positionPattern: "SRP_BTN_VS_BB" | "3BP_BTN_VS_CO";
@@ -314,16 +321,16 @@ function sprRangeForFacingBetFamily(familyId: string): { sprMin: number; sprMax:
 function mergeCommands(manifest: CoverageManifest): string[] {
   const tags = new Set(manifest.scenarios.flatMap((scenario) => scenario.coverageTags));
   const commands: string[] = [];
-  if (tags.has("SINGLE_RAISED_POT_CBET")) {
+  if (tags.has("SINGLE_RAISED_POT_CBET") && tags.has("SRP_BTN_VS_BB")) {
     pushMergeCommandIfInputsExist(commands, "BTN_vs_BB_SRP_FLOP_CBET");
   }
-  if (tags.has("THREE_BET_POT_CBET")) {
+  if (tags.has("THREE_BET_POT_CBET") && tags.has("3BP_BTN_VS_CO")) {
     pushMergeCommandIfInputsExist(commands, "BTN_vs_CO_3BP_FLOP_CBET");
   }
-  if (tags.has("FLOP_FACING_BET") && tags.has("SINGLE_RAISED")) {
+  if (tags.has("FLOP_FACING_BET") && tags.has("SINGLE_RAISED") && tags.has("SRP_BTN_VS_BB")) {
     pushMergeCommandIfInputsExist(commands, "BTN_vs_BB_SRP_FLOP_FACING_BET");
   }
-  if (tags.has("FLOP_FACING_BET") && tags.has("THREE_BET_POT")) {
+  if (tags.has("FLOP_FACING_BET") && tags.has("THREE_BET_POT") && tags.has("3BP_BTN_VS_CO")) {
     pushMergeCommandIfInputsExist(commands, "BTN_vs_CO_3BP_FLOP_FACING_BET");
   }
   return commands;
