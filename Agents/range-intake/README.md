@@ -54,6 +54,7 @@ npm run mtt:intake-plan -- --all
 5. Validate the normalized import:
 
 ```bash
+npm run mtt:preflop-csv-draft -- --csv private-filled-copy.csv --pack-id <pack-id> --out artifacts/mtt-preflop-csv-draft/<pack-id>/normalized.json --json
 npm run validate:range-import -- --kind=mtt-preflop --permission-manifest Agents/range-intake/raw/<pack-id>/permission.json Agents/range-intake/raw/<pack-id>/normalized.json
 ```
 

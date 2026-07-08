@@ -72,10 +72,16 @@ Agents/range-intake/raw/<packId>/permission.json
 Before promotion run:
 
 ```powershell
+npm run mtt:preflop-csv-draft -- --csv private-filled-copy.csv --pack-id <packId> --out artifacts/mtt-preflop-csv-draft/<packId>/normalized.json --json
 npm run validate:range-import -- --kind=mtt-preflop --permission-manifest Agents/range-intake/raw/<packId>/permission.json Agents/range-intake/raw/<packId>/normalized.json
 npm run build:range-module -- --kind=mtt-preflop --dry-run --permission-manifest Agents/range-intake/raw/<packId>/permission.json Agents/range-intake/raw/<packId>/normalized.json
 npm run mtt:validate-ready-intake -- --priority=P1_PREFLOP_CHIP_EV --json
 ```
+
+The converter exits non-zero until the generated draft is complete and
+production-ready. That is intentional: incomplete CSV batches can still be
+inspected in `artifacts/`, but they must not be copied into
+`Agents/range-intake/raw/<packId>/` as production files.
 
 The compatible filename `permission.json` means production provenance/audit
 metadata in this project. It is not the user subscription/payment permission

@@ -117,6 +117,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:promote-ready"]).toBe("vite-node scripts/promoteReadyMttIntake.mts");
     expect(pkg.scripts["mtt:registry-integrity"]).toBe("vite-node scripts/checkMttProductionRegistryIntegrity.mts");
     expect(pkg.scripts["mtt:validate-ready-intake"]).toBe("vite-node scripts/validateMttReadyIntake.mts");
+    expect(pkg.scripts["mtt:preflop-csv-draft"]).toBe("vite-node scripts/buildMttPreflopCsvDraft.mts");
     expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
     expect(pkg.scripts["range:intake:guard"]).toBe("vite-node scripts/checkRangeIntakeWorkspace.mts");
     expect(pkg.scripts["bundle:budget"]).toBe("vite-node scripts/checkBundleBudget.mts");
@@ -413,6 +414,8 @@ describe("release bundle metadata", () => {
     expect(p1PreflopCsvTemplateReadme).toContain("OPEN_2X");
     expect(p1PreflopCsvTemplateReadme).toContain("CALL_JAM");
     expect(p1PreflopCsvTemplateReadme).toContain("permission.json` means production provenance/audit");
+    expect(p1PreflopCsvTemplateReadme).toContain("npm run mtt:preflop-csv-draft");
+    expect(p1PreflopCsvTemplateReadme).toContain("exits non-zero until the generated draft is complete");
     expect(productionIntakeManifest).toContain("npm run mtt:release-gates");
     expect(productionIntakeManifest).toContain("npm run mtt:release-gates -- --json");
     expect(productionIntakeManifest).not.toContain("mtt:completion -- --summary` and `npm run mtt:postflop-release");
