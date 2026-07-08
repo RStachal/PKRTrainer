@@ -4,7 +4,6 @@ import type { ActionContext, ActionKey, HandLabel, Position, StackBucket } from 
 import type { BlindSpeed, EvModel, TableFormat } from "../src/core/trainingProfile.ts";
 import {
   buildMttPreflopImportReadinessReport,
-  renderMttPreflopImportReadinessReport,
   type MttPreflopImportLicenseKind,
   type MttPreflopRangePackImportInput,
   type MttPreflopImportRecord,
@@ -66,6 +65,19 @@ interface DraftResult {
   slotReport: ReturnType<typeof buildMttPreflopImportSlotValidationReport>;
   permissionReport: ReturnType<typeof buildProductionPermissionManifestReport> | null;
 }
+
+type PublicReadinessReport = Omit<
+  ReturnType<typeof buildMttPreflopImportReadinessReport>,
+  "records"
+>;
+
+type PublicDraftResult = Omit<
+  DraftResult,
+  "normalizedInput" | "sourceReferenceIds" | "report"
+> & {
+  sourceReferenceCount: number;
+  report: PublicReadinessReport;
+};
 
 const ACTION_KEYS = new Set<ActionKey>([
   "FOLD",
@@ -568,7 +580,7 @@ function renderText(result: DraftResult): string {
   return [
     renderSummary(result),
     "",
-    renderMttPreflopImportReadinessReport(result.report),
+    renderPublicReadinessReport(publicReadinessReport(result.report)),
     "",
     renderMttImportSlotValidationReport(result.slotReport),
     result.permissionReport ? ["", renderProductionPermissionManifestReport(result.permissionReport)].join("\n") : "",
@@ -591,9 +603,66 @@ function renderSummary(result: DraftResult): string {
   ].join("\n");
 }
 
-function publicResult(result: DraftResult): Omit<DraftResult, "normalizedInput"> {
-  const { normalizedInput: _normalizedInput, ...safe } = result;
+function publicResult(result: DraftResult): PublicDraftResult {
+  const {
+    normalizedInput: _normalizedInput,
+    sourceReferenceIds,
+    report,
+    ...safe
+  } = result;
+  return {
+    ...safe,
+    sourceReferenceCount: sourceReferenceIds.length,
+    report: publicReadinessReport(report),
+  };
+}
+
+function publicReadinessReport(
+  report: ReturnType<typeof buildMttPreflopImportReadinessReport>,
+): PublicReadinessReport {
+  const { records: _records, ...safe } = report;
   return safe;
+}
+
+function renderPublicReadinessReport(report: PublicReadinessReport): string {
+  const lines = [
+    `MTT preflop RangePack import: ${report.packId}`,
+    `valid: ${report.valid}`,
+    `productionReady: ${report.productionReady}`,
+    `model: ${report.dimensions.evModel}`,
+    `format: ${report.dimensions.gameVariant}/${report.dimensions.tableFormat}`,
+    `speed: ${report.dimensions.blindSpeed}`,
+    `ante: ${report.dimensions.ante}`,
+    `legal license: ${report.legalLicense}`,
+    `sources: ${report.sourceCount}`,
+    `searches: ${report.searchQueryCount}`,
+    `records: ${report.recordCount}`,
+    `positions: ${report.positions.join(",") || "none"}`,
+    `contexts: ${report.contexts.join(",") || "none"}`,
+    `buckets: ${report.buckets.join(",") || "none"}`,
+    `missing positions: ${report.missingPositions.join(",") || "none"}`,
+    `missing contexts: ${report.missingContexts.join(",") || "none"}`,
+    `missing buckets: ${report.missingBuckets.join(",") || "none"}`,
+    `stack mapping: ${report.stackBucketMapping
+      .map((item) => `${item.sourceStackBB}->${item.bucket}`)
+      .join(",") || "none"}`,
+  ];
+
+  if (report.duplicateRecordKeys.length > 0) {
+    lines.push(`duplicate keys: ${report.duplicateRecordKeys.join(",")}`);
+  }
+
+  if (report.errors.length > 0) {
+    lines.push("errors:");
+    for (const error of report.errors) lines.push(`- ${error}`);
+  }
+
+  if (report.warnings.length > 0) {
+    lines.push("warnings:");
+    for (const warning of report.warnings) lines.push(`- ${warning}`);
+  }
+
+  return lines.join("\n");
 }
 
 function parseCsv(input: string): Record<string, string>[] {

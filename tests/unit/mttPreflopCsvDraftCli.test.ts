@@ -35,13 +35,23 @@ describe("mtt preflop CSV draft CLI", () => {
       expect(result.status).toBe(1);
       expect(result.stderr).toBe("");
       expect(result.stdout).not.toContain('"normalizedInput":');
+      expect(result.stdout).not.toContain('"sourceReferenceIds":');
+      expect(result.stdout).not.toContain('"strictActionDistribution":');
+      expect(result.stdout).not.toContain('"lenientActionDistribution":');
+      expect(result.stdout).not.toContain('"missingHands":');
       expect(existsSync(out)).toBe(true);
       const report = JSON.parse(result.stdout) as {
         csvReady: boolean;
         productionReady: boolean;
         packId: string;
         records: number;
-        report: { missingPositions: string[]; missingContexts: string[]; missingBuckets: number[] };
+        sourceReferenceCount: number;
+        report: {
+          missingPositions: string[];
+          missingContexts: string[];
+          missingBuckets: number[];
+          records?: unknown;
+        };
       };
       const normalized = JSON.parse(readFileSync(out, "utf8")) as {
         id: string;
@@ -52,6 +62,8 @@ describe("mtt preflop CSV draft CLI", () => {
       expect(report.productionReady).toBe(false);
       expect(report.packId).toBe(packId);
       expect(report.records).toBe(1);
+      expect(report.sourceReferenceCount).toBe(1);
+      expect(report.report.records).toBeUndefined();
       expect(report.report.missingPositions).toContain("UTG");
       expect(report.report.missingContexts).toContain("VS_OPEN");
       expect(report.report.missingBuckets).toContain(5);
