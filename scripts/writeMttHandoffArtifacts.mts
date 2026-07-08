@@ -157,6 +157,12 @@ const handoffCommands: readonly HandoffCommand[] = [
     releaseBlocking: false,
   },
   {
+    label: "MTT variant-specific QA",
+    npmArgs: ["run", "mtt:variant-qa", "--", "--output=artifacts/mtt-variant-qa/report.json"],
+    outputPath: "artifacts/mtt-variant-qa/report.json",
+    releaseBlocking: false,
+  },
+  {
     label: "MTT solver verification plan",
     npmArgs: ["run", "mtt:solver-verification", "--", "--output=artifacts/mtt-solver-verification/report.json"],
     outputPath: "artifacts/mtt-solver-verification/report.json",

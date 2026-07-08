@@ -2441,6 +2441,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Property testy: chip conservation, seat/position order, payout equity, bounty utility, side-pot eligibility, deterministic replay a mixed-frequency sums.
     - Golden corpus musi obsahovat edge cases: 2 BB, 150+ BB, exact bubble, multiple all-ins, dead button, incomplete HH a corrupt pack.
     - Acceptance: varianta se v selectoru oznaci production az po vlastnim zelenem gate, ne jen po existenci libovolneho packu.
+    - Hotovo 2026-07-08: pridan source-free `mttVariantQa` gate pro aktualni `mtt-9max-regular-chip-ev-flop-pilots` release train; overuje, ze scenario katalog zustava `PREVIEW`, kazdy scoped pilot ma runtime smoke, FREE tier je zamcen, PRO_PLUS je povolen a resolver vraci `STRATEGY_PACK`, ne fallback.
+    - Hotovo 2026-07-08: `mtt:variant-qa` zapisuje `artifacts/mtt-variant-qa/report.json` a je soucasti `mtt:handoff` jako neblokujici variant-specific QA artefakt pro pilot lab; full production release gate zustava oddeleny a cerveny, dokud chybi produkcni data.
   - [ ] 137.23 Zavest content governance a pravidelne strategicke aktualizace
     - Definovat ownera, review cadence, semantic versioning, deprecation, rollback a release notes pro kazdy production pack.
     - Zmeny range hodnot musi mit diff summary, reviewer approval, legal provenance a migracni dopad na KPI/scenario identity.
