@@ -110,6 +110,33 @@ describe("MTT postflop pilot runtime", () => {
     expect(report.reason).toContain("No scoped postflop pilot matches");
   });
 
+  it("keeps SB vs BB OOP c-bet candidate out of runtime until explicitly cataloged", () => {
+    const input = {
+      street: "FLOP",
+      textures: ["ace-high", "dry", "rainbow", "disconnected"],
+      potType: "SINGLE_RAISED",
+      potBB: 50,
+      effectiveStackBB: 125,
+      positionPattern: "SRP_SB_VS_BB",
+      actionNode: "SINGLE_RAISED_POT_CBET",
+    } as const;
+    const directScopeReport = createMttPostflopPilotResolver(
+      "SB_vs_BB_SRP_OOP_FLOP_CBET",
+      grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" }),
+      { now: "2026-07-08T00:00:00.000Z" },
+    );
+
+    expect(mttPostflopPilotScopeForInput(input)).toBeNull();
+    expect(createMttPostflopPilotResolverForInput(
+      input,
+      grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" }),
+      { now: "2026-07-08T00:00:00.000Z" },
+    ).reason).toContain("No scoped postflop pilot matches");
+    expect(directScopeReport.allowed).toBe(false);
+    expect(directScopeReport.resolver).toBeNull();
+    expect(directScopeReport.reason).toContain("not available in the runtime bundle");
+  });
+
   it("pilot-aware resolver prefers production before entitled pilot", () => {
     const input = supportedFacingBetInput();
     const resolver = createMttPostflopPilotAwareResolver({
