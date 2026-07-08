@@ -86,6 +86,25 @@ const TARGETS: readonly PilotTarget[] = [
     description: "UTG vs BB SRP flop c-bet pilot from coverage-v2.",
   },
   {
+    id: "sb-bb-srp-oop-flop-cbet-low-mid-high",
+    scope: "SB_vs_BB_SRP_OOP_FLOP_CBET",
+    normalizedPath:
+      "artifacts/texas-solver-review-integration/normalized-drafts/SB_BB_SRP_OOP_FLOP_CBET_PILOT-ROOT/normalized.candidate.json",
+    permissionPath:
+      "artifacts/texas-solver-review-integration/normalized-drafts/SB_BB_SRP_OOP_FLOP_CBET_PILOT-ROOT/permission.candidate.json",
+    description: "Merged SB vs BB SRP OOP flop c-bet pilot across available SPR bands.",
+    alternatives: [
+      {
+        id: "sb-bb-srp-oop-flop-cbet-lowspr",
+        normalizedPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR-ROOT/normalized.candidate.json",
+        permissionPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR-ROOT/permission.candidate.json",
+        description: "SB vs BB SRP OOP low-SPR flop c-bet pilot from ROOT TexasSolver node.",
+      },
+    ],
+  },
+  {
     id: "btn-co-3bp-flop-cbet",
     scope: "BTN_vs_CO_3BP_FLOP_CBET",
     normalizedPath:
