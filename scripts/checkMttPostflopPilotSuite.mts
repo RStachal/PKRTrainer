@@ -22,6 +22,7 @@ interface PilotTarget {
   normalizedPath: string;
   permissionPath: string;
   description: string;
+  expectedInputCount?: number;
   alternatives?: readonly {
     id: string;
     normalizedPath: string;
@@ -42,6 +43,7 @@ interface PilotSuiteRow {
   report: MttPostflopPilotGateReport | null;
   selectedCandidate: PilotSuiteSelectedCandidate | null;
   blockers: readonly string[];
+  warnings: readonly string[];
 }
 
 interface PilotSuiteSelectedCandidate {
@@ -62,6 +64,7 @@ interface PilotSuiteReport {
     invalid: number;
     rules: number;
     rangeBuckets: number;
+    warnings: number;
   };
   rows: readonly PilotSuiteRow[];
 }
@@ -75,6 +78,7 @@ const TARGETS: readonly PilotTarget[] = [
     permissionPath:
       "artifacts/texas-solver-review-integration/normalized-drafts/BTN_BB_SRP_FLOP_CBET_PILOT-CHECK/permission.candidate.json",
     description: "Merged BTN vs BB SRP flop c-bet pilot across available SPR bands.",
+    expectedInputCount: 3,
   },
   {
     id: "utg-bb-srp-flop-cbet",
@@ -93,6 +97,7 @@ const TARGETS: readonly PilotTarget[] = [
     permissionPath:
       "artifacts/texas-solver-review-integration/normalized-drafts/SB_BB_SRP_OOP_FLOP_CBET_PILOT-ROOT/permission.candidate.json",
     description: "Merged SB vs BB SRP OOP flop c-bet pilot across available SPR bands.",
+    expectedInputCount: 3,
     alternatives: [
       {
         id: "sb-bb-srp-oop-flop-cbet-lowspr",
@@ -112,6 +117,7 @@ const TARGETS: readonly PilotTarget[] = [
     permissionPath:
       "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_CBET_PILOT-CHECK/permission.candidate.json",
     description: "Merged BTN vs CO 3bet-pot flop c-bet pilot across available SPR bands.",
+    expectedInputCount: 3,
     alternatives: [
       {
         id: "btn-co-3bp-flop-cbet-repair",
@@ -139,6 +145,7 @@ const TARGETS: readonly PilotTarget[] = [
     permissionPath:
       "artifacts/texas-solver-review-integration/normalized-drafts/BTN_CO_3BP_FLOP_FACING_BET_PILOT/permission.candidate.json",
     description: "Merged BTN vs CO 3bet-pot flop facing-bet response pilot across LOW/MID/HIGH SPR bands.",
+    expectedInputCount: 3,
     alternatives: [
       {
         id: "btn-co-3bp-flop-facing-bet-highspr",
@@ -166,6 +173,7 @@ const TARGETS: readonly PilotTarget[] = [
     permissionPath:
       "artifacts/texas-solver-review-integration/normalized-drafts/BTN_BB_SRP_FLOP_FACING_BET_PILOT/permission.candidate.json",
     description: "Merged BTN vs BB SRP flop facing-bet response pilot across LOW/MID/HIGH SPR bands.",
+    expectedInputCount: 3,
     alternatives: [
       {
         id: "btn-bb-srp-flop-facing-bet-lowspr",
@@ -277,6 +285,7 @@ function buildReport(): PilotSuiteReport {
       invalid: rows.filter((row) => row.status === "INVALID").length,
       rules: rows.reduce((sum, row) => sum + (row.report?.counts.rules ?? 0), 0),
       rangeBuckets: rows.reduce((sum, row) => sum + (row.report?.counts.rangeBuckets ?? 0), 0),
+      warnings: rows.reduce((sum, row) => sum + row.warnings.length, 0),
     },
     rows,
   };
@@ -284,6 +293,8 @@ function buildReport(): PilotSuiteReport {
 
 function buildRow(target: PilotTarget): PilotSuiteRow {
   const selected = selectAvailableTarget(target);
+  const selectedCandidate = selectedCandidateFor(selected.normalizedPath);
+  const warnings = targetWarnings(target, selected.id, selectedCandidate);
   const blockers = [
     ...(existsSync(selected.normalizedPath) ? [] : [`Missing normalized candidate: ${selected.normalizedPath}`]),
     ...(existsSync(selected.permissionPath) ? [] : [`Missing permission candidate: ${selected.permissionPath}`]),
@@ -297,8 +308,9 @@ function buildRow(target: PilotTarget): PilotSuiteRow {
       normalizedPath: selected.normalizedPath,
       permissionPath: selected.permissionPath,
       report: null,
-      selectedCandidate: selectedCandidateFor(selected.normalizedPath),
+      selectedCandidate,
       blockers,
+      warnings,
     };
   }
 
@@ -316,9 +328,26 @@ function buildRow(target: PilotTarget): PilotSuiteRow {
     normalizedPath: selected.normalizedPath,
     permissionPath: selected.permissionPath,
     report,
-    selectedCandidate: selectedCandidateFor(selected.normalizedPath),
+    selectedCandidate,
     blockers: report.errors,
+    warnings,
   };
+}
+
+function targetWarnings(
+  target: PilotTarget,
+  selectedId: string,
+  selectedCandidate: PilotSuiteSelectedCandidate | null,
+): string[] {
+  if (target.expectedInputCount === undefined) return [];
+  if (selectedId !== target.id) {
+    return [`Target is using fallback candidate ${selectedId}; merged ${target.expectedInputCount}-input candidate is not available yet.`];
+  }
+  const inputCount = selectedCandidate?.inputCount;
+  if (typeof inputCount === "number" && inputCount < target.expectedInputCount) {
+    return [`Merged candidate has ${inputCount}/${target.expectedInputCount} expected inputs; keep scoped until remaining SPR families finish.`];
+  }
+  return [];
 }
 
 function selectedCandidateFor(normalizedPath: string): PilotSuiteSelectedCandidate | null {
@@ -383,6 +412,7 @@ function renderReport(report: PilotSuiteReport, summaryOnly: boolean): string {
     `invalid: ${report.counts.invalid}`,
     `rules: ${report.counts.rules}`,
     `range buckets: ${report.counts.rangeBuckets}`,
+    `warnings: ${report.counts.warnings}`,
   ];
   for (const row of report.rows) {
     const counts = row.report === null
@@ -394,6 +424,9 @@ function renderReport(report: PilotSuiteReport, summaryOnly: boolean): string {
         ? ` inputs=${row.selectedCandidate.inputCount}`
         : "";
     lines.push(`${row.status} ${row.id}: ${row.scope}${counts}${candidate}`);
+    if (row.warnings.length > 0) {
+      for (const warning of row.warnings) lines.push(`  warning: ${warning}`);
+    }
     if ((row.status === "INVALID" || !summaryOnly) && row.blockers.length > 0) {
       for (const blocker of row.blockers) lines.push(`  - ${blocker}`);
     }
