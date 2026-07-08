@@ -2415,6 +2415,8 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Nabidnout predvolene curriculum: early-stage chipEV, short-stack, bubble, final table, PKO calls, satellite bubble a heads-up.
     - Zobrazit jen kombinace povolene capability/scenario katalogem a odhad velikosti dostupneho poolu pred startem.
     - Acceptance: uzivatel sestavi validni scenar bez raw enumu a jednim klikem spusti reprodukovatelnou relaci.
+    - Hotovo 2026-07-08: pridan source-free `mttScenarioCatalog` a CLI `mtt:scenario-catalog`, ktery audituje learning path pres capability matrix + pilot katalog: aktualne total 4, preview 1 (`9-max regular chipEV preflop core`), waiting 2 (`flop pilot lab`, `turbo chipEV preflop`) a unsupported 1 (`ICM bubble/final-table`), bez zobrazovani surovych enum kombinaci.
+    - Hotovo 2026-07-08: `mtt:handoff` generuje i `artifacts/mtt-scenario-catalog/report.json`, aby release/handoff mel auditovany seznam povolenych learning path a odhad playable poolu; `flop pilot lab` zustava WAITING, dokud `SB_vs_BB_SRP_OOP_FLOP_CBET` neni kompletne reviewed/promoted.
   - [ ] 137.20 Rozsirit statistiky a spaced repetition pro turnajove utility
     - KPI podle phase, payout, bounty, covering statusu, table size, node, sizing, EV modelu a source quality.
     - Oddelit strategickou chybu od varianty po zmene pack verze; umoznit before/after porovnani.
