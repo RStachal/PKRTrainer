@@ -139,6 +139,7 @@ const handoffCommands: readonly HandoffCommand[] = [
       "mtt:texas-solver-review-protocol",
       "--",
       "--output=artifacts/texas-solver-review-protocol/report.json",
+      "--packet-dir=artifacts/texas-solver-review-protocol/packet",
     ],
     outputPath: "artifacts/texas-solver-review-protocol/report.json",
     releaseBlocking: false,

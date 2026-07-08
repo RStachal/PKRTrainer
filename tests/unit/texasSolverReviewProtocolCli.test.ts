@@ -140,6 +140,49 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  it("umi vygenerovat source-safe review packet pro jednotlive family", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-protocol-packet-"));
+    const packetDir = join(directory, "packet");
+    try {
+      const familyDir = join(directory, "MTT9_50BB_BTN_BB_SRP");
+      mkdirSync(familyDir, { recursive: true });
+      writeFileSync(
+        join(familyDir, "review-notes.md"),
+        [
+          "# TexasSolver review notes: MTT9_50BB_BTN_BB_SRP",
+          "",
+          "Status: NEEDS_REVIEW",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      const result = runProtocol(`--root=${directory}`, `--packet-dir=${packetDir}`, "--summary");
+
+      expect(result.status).toBe(1);
+      const readme = readFileSync(join(packetDir, "README.md"), "utf8");
+      const checklist = readFileSync(
+        join(packetDir, "MTT9_50BB_BTN_BB_SRP", "REVIEW_CHECKLIST.md"),
+        "utf8",
+      );
+      const summary = JSON.parse(readFileSync(join(packetDir, "review-protocol-summary.json"), "utf8")) as {
+        families: number;
+        needsReview: number;
+      };
+
+      expect(summary).toMatchObject({ families: 1, needsReview: 1 });
+      expect(readme).toContain("TexasSolver review protocol packet");
+      expect(readme).toContain("Source-safe checklist packet");
+      expect(checklist).toContain("TexasSolver review checklist: MTT9_50BB_BTN_BB_SRP");
+      expect(checklist).toContain("Status: NEEDS_REVIEW");
+      expect(checklist).toContain("Required review-notes.md fields");
+      expect(checklist).toContain("Confirm intended PKRTrainer spot family");
+      expect(checklist).not.toContain("\"strategy\"");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
 });
 
 function runProtocol(...args: string[]) {

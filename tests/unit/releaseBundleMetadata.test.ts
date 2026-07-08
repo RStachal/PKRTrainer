@@ -175,6 +175,7 @@ describe("release bundle metadata", () => {
     expect(handoffScript).toContain("artifacts/mtt-solver-verification/report.json");
     expect(handoffScript).toContain("mtt:texas-solver-review-protocol");
     expect(handoffScript).toContain("artifacts/texas-solver-review-protocol/report.json");
+    expect(handoffScript).toContain("artifacts/texas-solver-review-protocol/packet");
     expect(handoffScript).toContain("mtt:texas-solver-pack");
     expect(handoffScript).toContain("artifacts/texas-solver-parameter-pack/report.json");
     expect(handoffScript).toContain("expected-paths.json");
@@ -266,6 +267,8 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:texas-solver-review-protocol");
     expect(operatorGuide).toContain("npm run mtt:texas-solver-review-protocol -- --summary");
     expect(operatorGuide).toContain("npm run mtt:texas-solver-review-protocol -- --output=artifacts/texas-solver-review-protocol/report.json");
+    expect(operatorGuide).toContain("npm run mtt:texas-solver-review-protocol -- --packet-dir=artifacts/texas-solver-review-protocol/packet");
+    expect(operatorGuide).toContain("REVIEW_CHECKLIST.md");
     expect(operatorGuide).toContain("separates");
     expect(operatorGuide).toContain("technical solver readiness from poker/content approval");
     expect(operatorGuide).toContain("npm run mtt:texas-solver-pack");

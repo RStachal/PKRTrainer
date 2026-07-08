@@ -13,6 +13,7 @@ interface CliArgs {
   familyId: string | null;
   json: boolean;
   outputPath: string | null;
+  packetDir: string | null;
   requireProductionUsable: boolean;
   rootDir: string;
   summary: boolean;
@@ -67,6 +68,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-review-protocol -- --summary",
     "  npm run mtt:texas-solver-review-protocol -- --json",
     "  npm run mtt:texas-solver-review-protocol -- --family=MTT9_50BB_BTN_BB_SRP",
+    "  npm run mtt:texas-solver-review-protocol -- --packet-dir=artifacts/texas-solver-review-protocol/packet",
     "  npm run mtt:texas-solver-review-protocol -- --require-production-usable",
     "  npm run mtt:texas-solver-review-protocol -- --root=<output/texas-solver>",
     "",
@@ -82,6 +84,7 @@ try {
     mkdirSync(dirname(args.outputPath), { recursive: true });
     writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   }
+  if (args.packetDir !== null) writeReviewPackets(report, args.packetDir);
   console.log(args.json ? JSON.stringify(report, null, 2) : renderReport(report, args.summary));
   process.exitCode = report.valid ? 0 : 1;
 } catch (error) {
@@ -93,6 +96,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let familyId: string | null = null;
   let json = false;
   let outputPath: string | null = null;
+  let packetDir: string | null = null;
   let requireProductionUsable = false;
   let rootDir = resolve("Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver");
   let summary = false;
@@ -123,10 +127,14 @@ function parseArgs(argv: readonly string[]): CliArgs {
       outputPath = resolve(requiredInlineValue(item, "--output"));
       continue;
     }
+    if (item.startsWith("--packet-dir=")) {
+      packetDir = resolve(requiredInlineValue(item, "--packet-dir"));
+      continue;
+    }
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { familyId, json, outputPath, requireProductionUsable, rootDir, summary };
+  return { familyId, json, outputPath, packetDir, requireProductionUsable, rootDir, summary };
 }
 
 function requiredInlineValue(item: string, flag: string): string {
@@ -328,4 +336,90 @@ function renderReport(report: ReviewProtocolReport, summaryOnly: boolean): strin
   lines.push("next steps:");
   for (const step of report.nextSteps) lines.push(`  - ${step}`);
   return lines.join("\n");
+}
+
+function writeReviewPackets(report: ReviewProtocolReport, packetDir: string): void {
+  mkdirSync(packetDir, { recursive: true });
+  writeFileSync(join(packetDir, "README.md"), renderPacketReadme(report), "utf8");
+  writeFileSync(join(packetDir, "review-protocol-summary.json"), `${JSON.stringify(report.counts, null, 2)}\n`, "utf8");
+  for (const row of report.rows) {
+    const dir = join(packetDir, safePathSegment(row.familyId));
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "REVIEW_CHECKLIST.md"), renderFamilyChecklist(row), "utf8");
+  }
+}
+
+function renderPacketReadme(report: ReviewProtocolReport): string {
+  return [
+    "# TexasSolver review protocol packet",
+    "",
+    "Source-safe checklist packet for human poker review. It does not contain raw solver JSON, strategy tables or production range imports.",
+    "",
+    `Families: ${report.counts.families}`,
+    `Protocol ready: ${report.counts.protocolReady}`,
+    `Production eligible: ${report.counts.productionEligible}`,
+    `Needs review: ${report.counts.needsReview}`,
+    `Blockers: ${report.counts.blockers}`,
+    `Warnings: ${report.counts.warnings}`,
+    "",
+    "## How to use",
+    "",
+    "1. Open each family `REVIEW_CHECKLIST.md`.",
+    "2. Inspect the referenced review reports, accuracy report and family `review-notes.md`.",
+    "3. Update `review-notes.md` only after real poker review.",
+    "4. Re-run `npm run mtt:texas-solver-review-protocol -- --summary`.",
+    "5. Use `--require-production-usable` only before production promotion dry-runs.",
+    "",
+  ].join("\n");
+}
+
+function renderFamilyChecklist(row: ReviewProtocolRow): string {
+  return [
+    `# TexasSolver review checklist: ${row.familyId}`,
+    "",
+    `Status: ${row.status}`,
+    `Protocol ready: ${row.protocolReady}`,
+    `Production eligible: ${row.productionEligible}`,
+    `Usable for production: ${row.usableForProduction}`,
+    "",
+    "## Files to inspect",
+    "",
+    `- Review notes: ${row.reviewNotesPath}`,
+    `- Accuracy report: ${row.accuracyReportPath}`,
+    `- Family directory: ${row.familyDir}`,
+    "",
+    "## Required review-notes.md fields",
+    "",
+    "```text",
+    "Status: REVIEWED",
+    "Reviewer: <name or internal reviewer id>",
+    "Reviewed at: <YYYY-MM-DD>",
+    "Usable for production: no | scoped: <exact scope> | yes",
+    "Usable scope: <spot family, node, SPR/board/position limitations>",
+    "Production caveats: <tree sizing, accuracy, range and validation caveats>",
+    "```",
+    "",
+    "## Poker review checklist",
+    "",
+    "- [ ] Confirm intended PKRTrainer spot family, node and player mapping.",
+    "- [ ] Confirm IP/OOP ranges and stack/pot/SPR assumptions match the intended training slot.",
+    "- [ ] Confirm board list and texture coverage are sufficient for the declared scope.",
+    "- [ ] Confirm bet/raise tree and all-in settings are appropriate for the declared scope.",
+    "- [ ] Confirm solver accuracy/exploitability evidence is acceptable and traceable.",
+    "- [ ] Compare at least a small random sample against another tool or manual poker review for sanity.",
+    "- [ ] Decide explicitly: not usable, scoped pilot only, or production candidate.",
+    "",
+    "## Current blockers",
+    "",
+    ...(row.blockers.length > 0 ? row.blockers.map((item) => `- ${item}`) : ["- none"]),
+    "",
+    "## Current warnings",
+    "",
+    ...(row.warnings.length > 0 ? row.warnings.map((item) => `- ${item}`) : ["- none"]),
+    "",
+  ].join("\n");
+}
+
+function safePathSegment(value: string): string {
+  return value.replace(/[^A-Za-z0-9_.-]+/g, "_");
 }
