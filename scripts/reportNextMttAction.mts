@@ -268,11 +268,11 @@ function requiredFilesForSlot(importSlot: MttCompletionImportSlotHint): readonly
     },
     {
       path: importSlot.permissionManifestPath,
-      purpose: "Permission manifest proving runtime redistribution rights for this pack.",
+      purpose: "Source-free provenance/audit manifest for this pack. The compatible filename remains permission.json.",
       acceptance: [
         `Manifest packId must be ${importSlot.packId}.`,
-        "Evidence must permit redistribution inside the PKRTrainer runtime bundle.",
-        "Reviewer, rights owner and evidence references must be explicit.",
+        "Evidence references must support PKRTrainer runtime bundle use and stay source-free.",
+        "Reviewer, provenance owner and evidence reference ids must be explicit.",
       ],
     },
   ];
@@ -319,7 +319,7 @@ function operatorChecklistForSlot(row: MttCompletionReadinessRow): readonly stri
   }
   if (row.evModel === "DOLAR_EV") {
     checklist.unshift(
-      "$EV slot must not reuse chipEV ranges without explicit reviewed reuse permission.",
+      "$EV slot must not reuse chipEV ranges without explicit reviewed reuse policy.",
     );
   }
   return checklist;
@@ -466,7 +466,8 @@ function renderIntakePacketReadme(action: NextMttActionRow): string {
     "",
     "This packet is a checklist only. It must not be used as strategy data.",
     "Do not create placeholder normalized.json or permission.json files.",
-    "The two raw intake files must come from reviewed legal evidence and must match the canonical pack id above.",
+    "The two raw intake files must come from reviewed source-free evidence and must match the canonical pack id above.",
+    "In this workflow permission.json is the backwards-compatible filename for a provenance/audit manifest, not user access control.",
     "",
     "## Required files",
     "",

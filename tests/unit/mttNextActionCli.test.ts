@@ -20,6 +20,7 @@ describe("mtt:next-action CLI", () => {
     expect(result.stdout).toContain("missing file: Agents/range-intake/raw/mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1/permission.json");
     expect(result.stdout).toContain("required files:");
     expect(result.stdout).toContain("Pack id must be mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1.");
+    expect(result.stdout).toContain("provenance/audit manifest");
     expect(result.stdout).toContain("Turbo slot must use dedicated turbo hand recommendations");
     expect(result.stdout).toContain("validate: npm run validate:range-import");
     expect(result.stdout).toContain("build dry-run: npm run build:range-module");
@@ -105,6 +106,8 @@ describe("mtt:next-action CLI", () => {
       "Pack id must be mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1.",
     );
     expect(parsed.nextAction.requiredFiles[1].path).toContain("permission.json");
+    expect(parsed.nextAction.requiredFiles[1].purpose).toContain("provenance/audit manifest");
+    expect(parsed.nextAction.requiredFiles[1].purpose).toContain("compatible filename remains permission.json");
     expect(parsed.nextAction.operatorChecklist.join("\n"))
       .toContain("Turbo slot must use dedicated turbo hand recommendations");
     expect(parsed.followUpCommands).toContain("npm run mtt:acceptance");
@@ -252,6 +255,7 @@ describe("mtt:next-action CLI", () => {
 
       expect(readme).toContain("This packet is a checklist only");
       expect(readme).toContain("Do not create placeholder normalized.json or permission.json files");
+      expect(readme).toContain("permission.json is the backwards-compatible filename for a provenance/audit manifest");
       expect(readme).toContain("Turbo slot must use dedicated turbo hand recommendations");
       expect(expectedPaths.warning).toContain("checklist only");
       expect(expectedPaths.packId).toBe(packId);
