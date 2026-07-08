@@ -17,6 +17,7 @@ import {
 describe("MTT postflop pilot catalog", () => {
   it("drzi vsechny READY piloty oddelene od full production", () => {
     expect(validateMttPostflopPilotCatalog()).toEqual([]);
+    expect(MTT_POSTFLOP_PILOT_CATALOG).toHaveLength(6);
     expect(readyMttPostflopPilots()).toHaveLength(5);
     expect(MTT_POSTFLOP_PILOT_CATALOG.every((entry) => entry.fullProductionReady === false))
       .toBe(true);
@@ -60,6 +61,21 @@ describe("MTT postflop pilot catalog", () => {
       .toBe("mtt.postflop.flop.srp_utg_bb.cbet.pilot");
     expect(report.access.allowed).toBe(false);
     expect(report.access.missing).toEqual(["mtt.postflop.flop.srp_utg_bb.cbet.pilot"]);
+  });
+
+  it("eviduje SB vs BB OOP c-bet jako WAITING bez PRO_PLUS pristupu", () => {
+    const pilot = findMttPostflopPilotByScope("SB_vs_BB_SRP_OOP_FLOP_CBET");
+    const report = buildMttPostflopPilotAccessReport(
+      "SB_vs_BB_SRP_OOP_FLOP_CBET",
+      grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" }),
+      { now: "2026-07-08T00:00:00.000Z" },
+    );
+
+    expect(pilot?.status).toBe("WAITING");
+    expect(pilot?.requiredEntitlement).toBe("mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot");
+    expect(readyMttPostflopPilots().map((entry) => entry.scope)).not.toContain("SB_vs_BB_SRP_OOP_FLOP_CBET");
+    expect(report.access.allowed).toBe(false);
+    expect(report.access.missing).toEqual(["mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot"]);
   });
 
   it("CLI umi zapsat source-free katalog report do artefaktu", () => {

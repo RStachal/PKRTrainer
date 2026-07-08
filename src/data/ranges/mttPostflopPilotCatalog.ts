@@ -20,7 +20,7 @@ export interface MttPostflopPilotCatalogEntry {
   street: "FLOP";
   potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">;
   actionNode: Extract<PostflopActionNode, "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET" | "FLOP_FACING_BET">;
-  positionPattern: Extract<PostflopPositionPattern, "SRP_BTN_VS_BB" | "SRP_UTG_VS_BB" | "3BP_BTN_VS_CO">;
+  positionPattern: Extract<PostflopPositionPattern, "SRP_BTN_VS_BB" | "SRP_UTG_VS_BB" | "SRP_SB_VS_BB" | "3BP_BTN_VS_CO">;
   sprBands: readonly ("LOW" | "MID" | "HIGH")[];
   rules: number;
   rangeBuckets: number;
@@ -71,6 +71,27 @@ export const MTT_POSTFLOP_PILOT_CATALOG = [
     limitations: [
       "Scoped to UTG vs BB single-raised flop c-bet decisions.",
       "Single pilot family only; not complete LOW/MID/HIGH production coverage.",
+    ],
+  },
+  {
+    id: "sb-bb-srp-oop-flop-cbet-low-mid-high",
+    label: "SB vs BB SRP OOP flop c-bet pilot",
+    scope: "SB_vs_BB_SRP_OOP_FLOP_CBET",
+    status: "WAITING",
+    requiredEntitlement: "mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot",
+    street: "FLOP",
+    potType: "SINGLE_RAISED",
+    actionNode: "SINGLE_RAISED_POT_CBET",
+    positionPattern: "SRP_SB_VS_BB",
+    sprBands: ["LOW", "MID", "HIGH"],
+    rules: 0,
+    rangeBuckets: 0,
+    inputDrafts: 0,
+    provenanceFingerprint: "",
+    fullProductionReady: false,
+    limitations: [
+      "Waiting for complete LOW/MID/HIGH SB vs BB OOP c-bet solver coverage and poker review.",
+      "Not available in the runtime bundle and not included in paid tiers until explicitly promoted.",
     ],
   },
   {

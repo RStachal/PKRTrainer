@@ -4,6 +4,7 @@ export const PKR_ENTITLEMENTS = [
   "mtt.preflop.9max.turbo.chip_ev",
   "mtt.postflop.flop.srp_btn_bb.cbet.pilot",
   "mtt.postflop.flop.srp_utg_bb.cbet.pilot",
+  "mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot",
   "mtt.postflop.flop.srp_btn_bb.facing_bet.pilot",
   "mtt.postflop.flop.3bp_btn_co.cbet.pilot",
   "mtt.postflop.flop.3bp_btn_co.facing_bet.pilot",

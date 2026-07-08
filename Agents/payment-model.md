@@ -46,6 +46,7 @@ Entitlement examples:
 - `mtt.preflop.9max.turbo.chip_ev`
 - `mtt.postflop.flop.srp_btn_bb.cbet.pilot`
 - `mtt.postflop.flop.srp_btn_bb.facing_bet.pilot`
+- `mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot` — reserved / WAITING until complete LOW/MID/HIGH solver coverage is reviewed
 - `mtt.postflop.flop.3bp_btn_co.cbet.pilot`
 - `mtt.postflop.flop.3bp_btn_co.facing_bet.pilot`
 - `analytics.advanced`
