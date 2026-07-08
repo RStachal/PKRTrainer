@@ -330,7 +330,7 @@ function run(): void {
   }
 
   if (args.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(JSON.stringify(publicResult(result), null, 2));
   } else if (args.summary) {
     console.log(renderSummary(result));
   } else {
@@ -589,6 +589,11 @@ function renderSummary(result: DraftResult): string {
     ...result.csvErrors.map((error) => `csv error: ${error}`),
     ...result.csvWarnings.map((warning) => `csv warning: ${warning}`),
   ].join("\n");
+}
+
+function publicResult(result: DraftResult): Omit<DraftResult, "normalizedInput"> {
+  const { normalizedInput: _normalizedInput, ...safe } = result;
+  return safe;
 }
 
 function parseCsv(input: string): Record<string, string>[] {

@@ -34,6 +34,7 @@ describe("mtt preflop CSV draft CLI", () => {
 
       expect(result.status).toBe(1);
       expect(result.stderr).toBe("");
+      expect(result.stdout).not.toContain('"normalizedInput":');
       expect(existsSync(out)).toBe(true);
       const report = JSON.parse(result.stdout) as {
         csvReady: boolean;
