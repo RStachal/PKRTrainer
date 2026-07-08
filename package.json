@@ -32,6 +32,7 @@
     "mtt:texas-solver-srp-sb-bb-cbet-batch": "vite-node scripts/buildTexasSolverSrpSbBbCbetBatch.mts",
     "mtt:texas-solver-coverage-batch": "vite-node scripts/buildTexasSolverCoverageBatch.mts",
     "mtt:texas-solver-coverage-status": "vite-node scripts/checkTexasSolverCoverageBatchStatus.mts",
+    "mtt:texas-solver-background-status": "vite-node scripts/checkTexasSolverBackgroundStatus.mts",
     "mtt:texas-solver-ingest-completed": "vite-node scripts/ingestTexasSolverCompletedCoverage.mts",
     "mtt:texas-solver-pilot-refresh": "vite-node scripts/refreshTexasSolverPilotWorkflow.mts",
     "mtt:texas-solver-normalize-draft": "vite-node scripts/buildTexasSolverNormalizedDraft.mts",
