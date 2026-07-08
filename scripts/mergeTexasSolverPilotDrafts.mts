@@ -61,6 +61,23 @@ const MERGE_PROFILES: Record<MttPostflopPilotScope, MergeProfile> = {
       "This merged draft must stay behind the pilot gate until full postflop production coverage is imported.",
     ],
   },
+  SB_vs_BB_SRP_OOP_FLOP_CBET: {
+    scope: "SB_vs_BB_SRP_OOP_FLOP_CBET",
+    label: "SB vs BB SRP OOP flop c-bet",
+    defaultInputDirs: [
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR-ROOT",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR-ROOT",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR-ROOT",
+    ],
+    defaultOutputDir:
+      "artifacts/texas-solver-review-integration/normalized-drafts/SB_BB_SRP_OOP_FLOP_CBET_PILOT-ROOT",
+    packVersion: "sb-bb-srp-oop-flop-cbet-pilot-merged-draft-v1",
+    permissionVersion: "sb-bb-srp-oop-flop-cbet-pilot-permission-merged-draft-v1",
+    assumptions: [
+      "Merged LOW/MID/HIGH SPR candidates are scoped to SB vs BB SRP OOP flop c-bet training only.",
+      "This merged draft must stay behind the pilot gate until poker review and broader postflop production coverage are imported.",
+    ],
+  },
   BTN_vs_CO_3BP_FLOP_CBET: {
     scope: "BTN_vs_CO_3BP_FLOP_CBET",
     label: "BTN vs CO 3bet-pot flop c-bet",
@@ -246,6 +263,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-merge-pilot-drafts",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --write --summary",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_CBET --write --summary",
+    "  npm run mtt:texas-solver-merge-pilot-drafts -- --scope=SB_vs_BB_SRP_OOP_FLOP_CBET --write --summary",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_FACING_BET --write --summary",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --input-dir artifacts/.../LOWSPR --input-dir artifacts/.../MIDSPR --output-dir artifacts/.../PILOT --write",
     "",

@@ -360,6 +360,9 @@ function mergeCommands(manifest: CoverageManifest): string[] {
   if (tags.has("SINGLE_RAISED_POT_CBET") && tags.has("SRP_BTN_VS_BB")) {
     pushMergeCommandIfInputsExist(commands, "BTN_vs_BB_SRP_FLOP_CBET");
   }
+  if (tags.has("SINGLE_RAISED_POT_CBET") && tags.has("SRP_SB_VS_BB") && tags.has("OOP_AGGRESSOR")) {
+    pushMergeCommandIfInputsExist(commands, "SB_vs_BB_SRP_OOP_FLOP_CBET");
+  }
   if (tags.has("THREE_BET_POT_CBET") && tags.has("3BP_BTN_VS_CO")) {
     pushMergeCommandIfInputsExist(commands, "BTN_vs_CO_3BP_FLOP_CBET");
   }
@@ -387,6 +390,13 @@ function defaultMergeInputDirs(scope: string): string[] {
       join(NORMALIZED_DRAFT_ROOT, "MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK"),
       join(NORMALIZED_DRAFT_ROOT, "MTT9_50BB_BTN_BB_SRP-CHECK"),
       join(NORMALIZED_DRAFT_ROOT, "MTT9_80BB_BTN_BB_SRP_HIGHSPR-CHECK"),
+    ];
+  }
+  if (scope === "SB_vs_BB_SRP_OOP_FLOP_CBET") {
+    return [
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR-ROOT"),
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR-ROOT"),
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR-ROOT"),
     ];
   }
   if (scope === "BTN_vs_CO_3BP_FLOP_CBET") {

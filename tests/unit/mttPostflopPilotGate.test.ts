@@ -58,6 +58,22 @@ describe("MTT postflop pilot gate", () => {
     expect(report.fullProductionReady).toBe(false);
   });
 
+  it("pusti SB vs BB SRP OOP flop c-bet scoped pilot s explicitnim scopem", () => {
+    const pack = {
+      ...pilotPack(),
+      rules: [{
+        ...pilotPack().rules[0],
+        id: "pilot-sb-bb-srp-oop",
+        positionPattern: "SRP_SB_VS_BB",
+      }],
+    } satisfies FlopProductionStrategyPack;
+    const report = buildMttPostflopPilotGateReport(pack, permissionFor(pack.id), "SB_vs_BB_SRP_OOP_FLOP_CBET");
+
+    expect(report.valid).toBe(true);
+    expect(report.pilotScope).toBe("SB_vs_BB_SRP_OOP_FLOP_CBET");
+    expect(report.fullProductionReady).toBe(false);
+  });
+
   it("pusti BTN vs CO 3BP scoped pilot s explicitnim scopem", () => {
     const pack = {
       ...pilotPack(),
