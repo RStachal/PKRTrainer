@@ -365,6 +365,21 @@ The ingest command processes only `RAW_COMPLETE` families. It stages TexasSolver
 normalizes supported LOW/HIGH SPR BTN vs BB SRP pilot candidates and re-merges available pilot drafts. It does not copy
 anything into production `src/data` and it does not promote a full release pack.
 
+For long background solves, use the watcher to poll the manifest from the filesystem and ingest completed families:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\watch-ingest-completed.ps1 -Manifest .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-srp-facing-bet-v1-manifest.json
+```
+
+Smoke-test the watcher without waiting for a long solve:
+
+```powershell
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\watch-ingest-completed.ps1 -Manifest .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-srp-facing-bet-v1-manifest.json -Once -IntervalSeconds 1 -MaxMinutes 1
+```
+
+The watcher accepts both relative and absolute manifest paths and writes logs under
+`artifacts/texas-solver-background/`.
+
 ## 3BP repair batch
 
 The first CO vs BTN 3bet-pot candidate solved correctly, but the pilot gate rejected it because the normalized strategy

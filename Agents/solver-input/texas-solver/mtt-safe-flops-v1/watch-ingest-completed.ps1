@@ -14,7 +14,13 @@ if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
   $RepoRoot = (Resolve-Path $RepoRoot).Path
 }
 
-$Manifest = (Resolve-Path -Path (Join-Path $RepoRoot $Manifest)).Path
+if ([System.IO.Path]::IsPathRooted($Manifest)) {
+  $ManifestPath = $Manifest
+} else {
+  $RelativeManifest = $Manifest -replace '^[.][\\/]', ''
+  $ManifestPath = Join-Path $RepoRoot $RelativeManifest
+}
+$Manifest = (Resolve-Path -LiteralPath $ManifestPath).Path
 $ArtifactsDir = Join-Path $RepoRoot "artifacts\texas-solver-background"
 New-Item -ItemType Directory -Force -Path $ArtifactsDir | Out-Null
 
@@ -22,10 +28,18 @@ $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $StatusPath = Join-Path $ArtifactsDir "watch-ingest-status-$Stamp.json"
 $LogPath = Join-Path $ArtifactsDir "watch-ingest-$Stamp.log"
 $Deadline = (Get-Date).AddMinutes($MaxMinutes)
+Set-Content -LiteralPath $LogPath -Value @() -Encoding UTF8
 
-function Write-WatchLog([string]$Message) {
-  $Line = "[{0}] {1}" -f (Get-Date -Format "s"), $Message
-  Add-Content -LiteralPath $LogPath -Value $Line -Encoding UTF8
+function Write-WatchLog($Message) {
+  if ($null -eq $Message) {
+    return
+  }
+  $Text = ($Message | Out-String).TrimEnd()
+  if ([string]::IsNullOrWhiteSpace($Text)) {
+    return
+  }
+  $Line = "[{0}] {1}" -f (Get-Date -Format "s"), $Text
+  [System.IO.File]::AppendAllText($LogPath, "$Line`r`n", [System.Text.Encoding]::UTF8)
   Write-Output $Line
 }
 
