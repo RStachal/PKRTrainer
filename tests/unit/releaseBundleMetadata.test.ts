@@ -67,6 +67,7 @@ describe("release bundle metadata", () => {
       "utf8",
     );
     const handoffScript = readFileSync("scripts/writeMttHandoffArtifacts.mts", "utf8");
+    const postflopPilotCatalogScript = readFileSync("scripts/checkMttPostflopPilotCatalog.mts", "utf8");
     const manifest = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8")) as {
       description: string;
       lang: string;
@@ -177,6 +178,11 @@ describe("release bundle metadata", () => {
     expect(handoffScript).toContain("mtt:texas-solver-review-protocol");
     expect(handoffScript).toContain("artifacts/texas-solver-review-protocol/report.json");
     expect(handoffScript).toContain("artifacts/texas-solver-review-protocol/packet");
+    expect(handoffScript).toContain("mtt:postflop-pilot-suite");
+    expect(handoffScript).toContain("artifacts/mtt-postflop-pilot-suite/report.json");
+    expect(handoffScript).toContain("mtt:postflop-pilot-catalog");
+    expect(handoffScript).toContain("artifacts/mtt-postflop-pilot-catalog/report.json");
+    expect(postflopPilotCatalogScript).toContain("npm run mtt:postflop-pilot-catalog -- --output=artifacts/mtt-postflop-pilot-catalog/report.json");
     expect(handoffScript).toContain("mtt:texas-solver-pack");
     expect(handoffScript).toContain("artifacts/texas-solver-parameter-pack/report.json");
     expect(handoffScript).toContain("expected-paths.json");
@@ -252,6 +258,7 @@ describe("release bundle metadata", () => {
     expect(operatorGuide).toContain("npm run mtt:handoff -- --strict");
     expect(operatorGuide).toContain("npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json");
     expect(operatorGuide).toContain("regenerates every source-free MTT handoff JSON artifact");
+    expect(operatorGuide).toContain("scoped postflop pilot suite/catalog");
     expect(operatorGuide).toContain("solver verification");
     expect(operatorGuide).toContain("also writes the next-action checklist packet");
     expect(operatorGuide).toContain("npm run mtt:acceptance");
@@ -385,6 +392,8 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("npm run mtt:postflop-release");
     expect(mttCoverageAudit).toContain("npm run mtt:texas-solver-review-protocol");
     expect(mttCoverageAudit).toContain("artifacts/texas-solver-review-protocol/report.json");
+    expect(mttCoverageAudit).toContain("artifacts/mtt-postflop-pilot-suite/report.json");
+    expect(mttCoverageAudit).toContain("artifacts/mtt-postflop-pilot-catalog/report.json");
     expect(mttCoverageAudit).toContain("npm run mtt:postflop-release -- --summary");
     expect(mttCoverageAudit).toContain("final postflop release gate currently fails");
     expect(mttCoverageAudit).toContain("npm run mtt:intake-plan");
@@ -443,6 +452,8 @@ describe("release bundle metadata", () => {
     expect(releaseTemplate).toContain("npm run mtt:postflop-coverage -- --output=artifacts/mtt-postflop-coverage-report.json");
     expect(releaseTemplate).toContain("npm run mtt:postflop-release -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json");
+    expect(releaseTemplate).toContain("npm run mtt:postflop-pilot-suite -- --output=artifacts/mtt-postflop-pilot-suite/report.json");
+    expect(releaseTemplate).toContain("npm run mtt:postflop-pilot-catalog -- --output=artifacts/mtt-postflop-pilot-catalog/report.json");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --summary");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json");
     expect(releaseTemplate).toContain("npm run mtt:intake-plan -- --ready-only");

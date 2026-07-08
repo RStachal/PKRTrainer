@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import {
   MTT_POSTFLOP_PILOT_CATALOG,
   readyMttPostflopPilots,
@@ -5,8 +7,11 @@ import {
   validateMttPostflopPilotCatalog,
 } from "../src/data/ranges/mttPostflopPilotCatalog.ts";
 
+const DEFAULT_OUTPUT = "artifacts/mtt-postflop-pilot-catalog/report.json";
+
 interface CliArgs {
   json: boolean;
+  outputPath: string | null;
   summary: boolean;
 }
 
@@ -27,6 +32,10 @@ try {
     errors,
   };
 
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderReport(report, args));
   process.exitCode = report.valid ? 0 : 1;
 } catch (error) {
@@ -36,6 +45,7 @@ try {
 
 function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
+  let outputPath: string | null = null;
   let summary = false;
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
@@ -47,9 +57,19 @@ function parseArgs(argv: readonly string[]): CliArgs {
       summary = true;
       continue;
     }
+    if (item === "--output") {
+      outputPath = resolve(DEFAULT_OUTPUT);
+      continue;
+    }
+    if (item.startsWith("--output=")) {
+      const value = item.slice("--output=".length).trim();
+      if (value.length === 0) throw new Error(`--output requires a path.\n\n${usage()}`);
+      outputPath = resolve(value);
+      continue;
+    }
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
-  return { json, summary };
+  return { json, outputPath, summary };
 }
 
 function usage(): string {
@@ -58,6 +78,7 @@ function usage(): string {
     "  npm run mtt:postflop-pilot-catalog",
     "  npm run mtt:postflop-pilot-catalog -- --summary",
     "  npm run mtt:postflop-pilot-catalog -- --json",
+    "  npm run mtt:postflop-pilot-catalog -- --output=artifacts/mtt-postflop-pilot-catalog/report.json",
     "",
     "Audits source-free scoped MTT postflop pilot catalog metadata and required entitlements.",
   ].join("\n");

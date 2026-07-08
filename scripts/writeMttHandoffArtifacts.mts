@@ -127,6 +127,18 @@ const handoffCommands: readonly HandoffCommand[] = [
     releaseBlocking: true,
   },
   {
+    label: "MTT postflop scoped pilot suite",
+    npmArgs: ["run", "mtt:postflop-pilot-suite", "--", "--output=artifacts/mtt-postflop-pilot-suite/report.json"],
+    outputPath: "artifacts/mtt-postflop-pilot-suite/report.json",
+    releaseBlocking: false,
+  },
+  {
+    label: "MTT postflop scoped pilot catalog",
+    npmArgs: ["run", "mtt:postflop-pilot-catalog", "--", "--output=artifacts/mtt-postflop-pilot-catalog/report.json"],
+    outputPath: "artifacts/mtt-postflop-pilot-catalog/report.json",
+    releaseBlocking: false,
+  },
+  {
     label: "MTT solver verification plan",
     npmArgs: ["run", "mtt:solver-verification", "--", "--output=artifacts/mtt-solver-verification/report.json"],
     outputPath: "artifacts/mtt-solver-verification/report.json",

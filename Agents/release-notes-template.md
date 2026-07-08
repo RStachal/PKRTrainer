@@ -56,6 +56,8 @@
 - `npm run mtt:postflop-coverage -- --output=artifacts/mtt-postflop-coverage-report.json`:
 - `npm run mtt:postflop-release -- --summary`:
 - `npm run mtt:postflop-release -- --output=artifacts/mtt-postflop-release-report.json`:
+- `npm run mtt:postflop-pilot-suite -- --output=artifacts/mtt-postflop-pilot-suite/report.json`:
+- `npm run mtt:postflop-pilot-catalog -- --output=artifacts/mtt-postflop-pilot-catalog/report.json`:
 - `npm run mtt:intake-plan -- --summary`:
 - `npm run mtt:intake-plan -- --output=artifacts/mtt-intake-plan-report.json`:
 - `npm run mtt:intake-plan -- --ready-only`:

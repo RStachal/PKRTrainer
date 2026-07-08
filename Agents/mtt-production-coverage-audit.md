@@ -84,6 +84,9 @@ It currently remains red until the missing production data and permissions are i
 for final RC evidence because it returns non-zero until `releaseReady` is true.
 The handoff bundle also includes `artifacts/texas-solver-review-protocol/report.json`, which shows whether staged
 TexasSolver families have human poker sign-off or are still only technically reviewed solver outputs.
+It also includes `artifacts/mtt-postflop-pilot-suite/report.json` and
+`artifacts/mtt-postflop-pilot-catalog/report.json` so scoped pilot delivery can be audited separately from full
+FLOP/TURN/RIVER production coverage.
 `mtt:release-gates` prints completion, blocker, intake priority, postflop release, intake workspace and ready-validation summaries before
 returning a failing exit code; `--json` returns the same command list, statuses and captured outputs for operator tooling.
 `mtt:postflop-matrix` freezes the 48 FLOP/TURN/RIVER production targets and records whether each target is waiting for

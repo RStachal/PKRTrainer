@@ -1,3 +1,7 @@
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { grantsForTier } from "../../src/core/paymentEntitlements";
@@ -56,5 +60,49 @@ describe("MTT postflop pilot catalog", () => {
       .toBe("mtt.postflop.flop.srp_utg_bb.cbet.pilot");
     expect(report.access.allowed).toBe(false);
     expect(report.access.missing).toEqual(["mtt.postflop.flop.srp_utg_bb.cbet.pilot"]);
+  });
+
+  it("CLI umi zapsat source-free katalog report do artefaktu", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pkrtrainer-pilot-catalog-"));
+    try {
+      const output = join(dir, "report.json");
+      const result = spawnSync(process.execPath, [
+        "node_modules/vite-node/vite-node.mjs",
+        "scripts/checkMttPostflopPilotCatalog.mts",
+        "--output",
+        "--summary",
+      ], {
+        cwd: process.cwd(),
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stderr).toBe("");
+      expect(result.stdout).toContain("MTT postflop pilot catalog");
+
+      const explicit = spawnSync(process.execPath, [
+        "node_modules/vite-node/vite-node.mjs",
+        "scripts/checkMttPostflopPilotCatalog.mts",
+        `--output=${output}`,
+        "--json",
+      ], {
+        cwd: process.cwd(),
+        encoding: "utf8",
+      });
+
+      expect(explicit.status).toBe(0);
+      expect(explicit.stderr).toBe("");
+      expect(existsSync(output)).toBe(true);
+      const report = JSON.parse(readFileSync(output, "utf8")) as {
+        valid: boolean;
+        ready: number;
+        requiredEntitlements: string[];
+      };
+      expect(report.valid).toBe(true);
+      expect(report.ready).toBe(5);
+      expect(report.requiredEntitlements).toContain("mtt.postflop.flop.srp_btn_bb.facing_bet.pilot");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

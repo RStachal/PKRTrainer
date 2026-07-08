@@ -66,7 +66,7 @@ npm run mtt:handoff -- --output=artifacts/mtt-handoff-report.json
 ```
 
 `mtt:handoff` regenerates every source-free MTT handoff JSON artifact, including range intake, legal slots,
-completion, blockers, next action, postflop matrices, solver verification, ready validation, promotion plan,
+completion, blockers, next action, postflop matrices, scoped postflop pilot suite/catalog, solver verification, ready validation, promotion plan,
 Android preflight, acceptance and release gates. It exits successfully when the artifacts were written, even while production-data
 gates remain red before legal imports. Use `--strict` for a final RC handoff check that must fail until
 `releaseReady` is true.
