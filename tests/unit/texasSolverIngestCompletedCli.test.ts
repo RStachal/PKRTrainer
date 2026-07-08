@@ -50,9 +50,11 @@ describe("mtt:texas-solver-ingest-completed CLI", () => {
       counts: { commands: number };
     };
     const commands = report.rows.flatMap((row) => row.commands);
-    expect(report.counts.commands).toBe(2);
+    expect(report.counts.commands).toBe(3);
     expect(commands).toContain(`mtt:stage-texas-solver -- --family=${familyId} --write --review-template --summary`);
     expect(commands).toContain(`mtt:texas-solver-review -- --family=${familyId} --write --summary`);
+    expect(commands.join("\n")).toContain("--review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR\\strategy-export.review.json");
+    expect(commands.join("\n")).toContain("--position-pattern=SRP_SB_VS_BB");
     expect(commands.join("\n")).not.toContain("--node-history=CHECK");
     expect(commands.join("\n")).not.toContain("mtt:texas-solver-merge-pilot-drafts");
   });

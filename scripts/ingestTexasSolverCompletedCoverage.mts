@@ -12,6 +12,18 @@ const MIDSPR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_50BB_BTN_BB_SRP-CHECK
 const LOWSPR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK");
 const HIGHSPR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_80BB_BTN_BB_SRP_HIGHSPR-CHECK");
 const UTG_BB_SRP_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_40BB_UTG_BB_SRP-CHECK");
+const SB_BB_OOP_CBET_LOWSPR_DRAFT_DIR = join(
+  NORMALIZED_DRAFT_ROOT,
+  "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR-ROOT",
+);
+const SB_BB_OOP_CBET_MIDSPR_DRAFT_DIR = join(
+  NORMALIZED_DRAFT_ROOT,
+  "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR-ROOT",
+);
+const SB_BB_OOP_CBET_HIGHSPR_DRAFT_DIR = join(
+  NORMALIZED_DRAFT_ROOT,
+  "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR-ROOT",
+);
 const CO_BTN_3BP_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_35BB_CO_BTN_3BP-CHECK");
 const CO_BTN_3BP_REPAIR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK");
 const CO_BTN_3BP_MIDSPR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_80BB_CO_BTN_3BP_MIDSPR-CHECK");
@@ -259,6 +271,13 @@ function missingCommandsForFamily(outputBase: string, familyId: string): string[
   if (familyId === "MTT9_40BB_UTG_BB_SRP" && (shouldReview || isMissingOrOlder(join(UTG_BB_SRP_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${UTG_BB_SRP_DRAFT_DIR} --spr-min=3 --spr-max=8 --pot-type=SINGLE_RAISED --action-node=SINGLE_RAISED_POT_CBET --position-pattern=SRP_UTG_VS_BB --write`);
   }
+  const sbBbOopCbet = sbBbOopCbetOptionsForFamily(familyId);
+  if (
+    sbBbOopCbet !== null &&
+    (shouldReview || isMissingOrOlder(join(sbBbOopCbet.outputDir, "normalized.candidate.json"), draftSources))
+  ) {
+    commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.review.json --output-dir .\\${sbBbOopCbet.outputDir} --spr-min=${sbBbOopCbet.sprMin} --spr-max=${sbBbOopCbet.sprMax} --pot-type=SINGLE_RAISED --action-node=SINGLE_RAISED_POT_CBET --position-pattern=SRP_SB_VS_BB --write`);
+  }
   if (familyId === "MTT9_35BB_CO_BTN_3BP" && (shouldReview || isMissingOrOlder(join(CO_BTN_3BP_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${CO_BTN_3BP_DRAFT_DIR} --spr-min=0 --spr-max=3 --pot-type=THREE_BET_POT --action-node=THREE_BET_POT_CBET --position-pattern=3BP_BTN_VS_CO --write`);
   }
@@ -294,6 +313,23 @@ function isFacingBetExpansionFamily(familyId: string): boolean {
 
 function isRootDecisionCbetFamily(familyId: string): boolean {
   return familyId.includes("_SB_BB_SRP_OOP_CBET_");
+}
+
+function sbBbOopCbetOptionsForFamily(familyId: string): {
+  outputDir: string;
+  sprMin: number;
+  sprMax: number;
+} | null {
+  if (familyId === "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR") {
+    return { outputDir: SB_BB_OOP_CBET_LOWSPR_DRAFT_DIR, sprMin: 0, sprMax: 3 };
+  }
+  if (familyId === "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR") {
+    return { outputDir: SB_BB_OOP_CBET_MIDSPR_DRAFT_DIR, sprMin: 3, sprMax: 8 };
+  }
+  if (familyId === "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR") {
+    return { outputDir: SB_BB_OOP_CBET_HIGHSPR_DRAFT_DIR, sprMin: 8, sprMax: 20 };
+  }
+  return null;
 }
 
 function facingBetOptionsForFamily(familyId: string): {
