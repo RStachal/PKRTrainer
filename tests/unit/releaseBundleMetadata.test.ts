@@ -202,6 +202,18 @@ describe("release bundle metadata", () => {
     const mttDoneChecklist = readFileSync("Agents/mtt-done-checklist.md", "utf8");
     const mttCoverageAudit = readFileSync("Agents/mtt-production-coverage-audit.md", "utf8");
     const p1PreflopIntake = readFileSync("Agents/mtt-p1-preflop-chip-ev-intake.md", "utf8");
+    const p1PreflopCsvTemplate = readFileSync(
+      "Agents/range-intake/templates/mtt-preflop-records-template.csv",
+      "utf8",
+    );
+    const p1PreflopCoverageCsv = readFileSync(
+      "Agents/range-intake/templates/mtt-p1-preflop-chip-ev-coverage.csv",
+      "utf8",
+    );
+    const p1PreflopCsvTemplateReadme = readFileSync(
+      "Agents/range-intake/templates/mtt-preflop-records-template.README.md",
+      "utf8",
+    );
     const productionIntakeManifest = readFileSync("Agents/production-range-intake-manifest.md", "utf8");
     const releaseTemplate = readFileSync("Agents/release-notes-template.md", "utf8");
 
@@ -386,8 +398,21 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("FLOP, TURN and RIVER production StrategyPacks are not registered");
     expect(p1PreflopIntake).toContain("MTT P1 preflop CHIP_EV intake checklist");
     expect(p1PreflopIntake).toContain("mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1");
+    expect(p1PreflopIntake).toContain("Agents/range-intake/templates/mtt-preflop-records-template.csv");
+    expect(p1PreflopIntake).toContain("Agents/range-intake/templates/mtt-p1-preflop-chip-ev-coverage.csv");
     expect(p1PreflopIntake).toContain("Turbo slots must not become production by copying regular-speed metadata");
     expect(p1PreflopIntake).toContain("Do not use postflop TexasSolver outputs for P1 preflop ranges");
+    expect(p1PreflopCsvTemplate).toContain("rowKind,packId,tableFormat,blindSpeed,ante,evModel");
+    expect(p1PreflopCsvTemplate).toContain("strictActions,lenientActions,sourceReferenceId");
+    expect(p1PreflopCoverageCsv).toContain("P1_PREFLOP_CHIP_EV");
+    expect(p1PreflopCoverageCsv).toContain("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1");
+    expect(p1PreflopCoverageCsv).toContain("mtt-six-max-turbo-preflop-chip-ev-ante-off-production-v1");
+    expect(p1PreflopCoverageCsv).toContain("UTG|UTG+1|UTG+2|LJ|HJ|CO|BTN|SB|BB");
+    expect(p1PreflopCoverageCsv).toContain("RFI|VS_LIMP|VS_OPEN|VS_3BET|VS_4BET|SQUEEZE|BVB|PUSH_FOLD|VS_ALLIN");
+    expect(p1PreflopCsvTemplateReadme).toContain("Do not create placeholder `normalized.json` or `permission.json` files");
+    expect(p1PreflopCsvTemplateReadme).toContain("OPEN_2X");
+    expect(p1PreflopCsvTemplateReadme).toContain("CALL_JAM");
+    expect(p1PreflopCsvTemplateReadme).toContain("permission.json` means production provenance/audit");
     expect(productionIntakeManifest).toContain("npm run mtt:release-gates");
     expect(productionIntakeManifest).toContain("npm run mtt:release-gates -- --json");
     expect(productionIntakeManifest).not.toContain("mtt:completion -- --summary` and `npm run mtt:postflop-release");

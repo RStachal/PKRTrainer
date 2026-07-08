@@ -48,6 +48,18 @@ Agents/range-intake/raw/<packId>/permission.json
 project it means a source-free production provenance/audit manifest, not the
 payment model and not user access rights.
 
+Source-safe preparation helpers live in:
+
+```text
+Agents/range-intake/templates/mtt-preflop-records-template.csv
+Agents/range-intake/templates/mtt-p1-preflop-chip-ev-coverage.csv
+Agents/range-intake/templates/mtt-preflop-records-template.README.md
+```
+
+The CSV template is only an operator preparation format. It must not be treated
+as a production `normalized.json` until converted, reviewed and validated by the
+canonical import pipeline.
+
 ## Normalized data requirements
 
 Each `normalized.json` must be for exactly one target slot and must not silently

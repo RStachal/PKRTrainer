@@ -6,6 +6,7 @@ This folder is the internal staging area for future legal range inputs. Nothing 
 
 - `raw/` is for local solver exports, permission files and review notes. Its contents are ignored by Git.
 - `examples/` contains synthetic JSON examples only. They are shape examples, not poker advice and not production ranges.
+- `templates/` contains source-safe CSV templates and coverage checklists for preparing private reviewed inputs.
 - Runtime production packs must be generated only after validation and explicit permission review.
 
 ## Operator Workflow
