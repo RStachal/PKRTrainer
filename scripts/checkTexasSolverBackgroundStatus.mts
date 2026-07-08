@@ -32,6 +32,7 @@ interface FamilyStatus {
   familyId: string;
   solved: number;
   expected: number;
+  missingBoards: readonly string[];
   status: "RAW_COMPLETE" | "RAW_PARTIAL" | "WAITING_FOR_RAW";
 }
 
@@ -176,11 +177,13 @@ function familyRows(manifest: CoverageManifest): FamilyStatus[] {
     const rawFiles = existsSync(rawDir)
       ? readdirSync(rawDir).filter((name) => name.toLowerCase().endsWith(".json"))
       : [];
-    const solved = scenario.boards.filter((board) => rawFiles.some((name) => name.includes(`_${board}.json`))).length;
+    const solvedBoards = scenario.boards.filter((board) => rawFiles.some((name) => name.includes(`_${board}.json`)));
+    const solved = solvedBoards.length;
     return {
       familyId: scenario.familyId,
       solved,
       expected: scenario.boards.length,
+      missingBoards: scenario.boards.filter((board) => !solvedBoards.includes(board)),
       status: solved === scenario.boards.length
         ? "RAW_COMPLETE"
         : solved > 0
@@ -265,7 +268,8 @@ function renderReport(report: BackgroundStatusReport, summaryOnly: boolean): str
     lines.push(`process ${process.pid}: ${process.name} started=${process.startedAt ?? "unknown"}`);
   }
   for (const row of report.coverage.rows) {
-    lines.push(`${row.familyId}: ${row.status} (${row.solved}/${row.expected})`);
+    const missing = row.missingBoards.length > 0 ? ` missing=${row.missingBoards.join(",")}` : "";
+    lines.push(`${row.familyId}: ${row.status} (${row.solved}/${row.expected})${missing}`);
   }
   if (!summaryOnly) {
     for (const log of report.logs) {
