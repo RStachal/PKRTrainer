@@ -178,7 +178,9 @@ function ingestCompletedCoverage(args: CliArgs): IngestReport {
       continue;
     }
     if (row.commands.length === 0) {
-      row.skippedReason = "Already staged/reviewed/normalized for the supported pilot workflow.";
+      row.skippedReason = isSupportedPilotWorkflowFamily(row.familyId)
+        ? "Already staged/reviewed/normalized for the supported pilot workflow."
+        : "No supported normalization mapping for this review-only family; poker review and explicit mapping are required before ingest.";
       continue;
     }
     if (!args.dryRun) {
@@ -309,6 +311,18 @@ function isMissingOrOlder(targetPath: string, sourcePaths: readonly string[]): b
 
 function isFacingBetExpansionFamily(familyId: string): boolean {
   return familyId.includes("_3BP_FACING_") || familyId.includes("_SRP_FACING_");
+}
+
+function isSupportedPilotWorkflowFamily(familyId: string): boolean {
+  return familyId === "MTT9_20BB_BTN_BB_SRP_LOWSPR" ||
+    familyId === "MTT9_80BB_BTN_BB_SRP_HIGHSPR" ||
+    familyId === "MTT9_40BB_UTG_BB_SRP" ||
+    familyId === "MTT9_35BB_CO_BTN_3BP" ||
+    familyId === "MTT9_35BB_CO_BTN_3BP_REPAIR" ||
+    familyId === "MTT9_80BB_CO_BTN_3BP_MIDSPR" ||
+    familyId === "MTT9_150BB_CO_BTN_3BP_HIGHSPR" ||
+    sbBbOopCbetOptionsForFamily(familyId) !== null ||
+    isFacingBetExpansionFamily(familyId);
 }
 
 function isRootDecisionCbetFamily(familyId: string): boolean {

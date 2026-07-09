@@ -61,6 +61,57 @@ describe("mtt:texas-solver-ingest-completed CLI", () => {
     expect(report.mergePilotCommands).toContain("mtt:texas-solver-merge-pilot-drafts -- --scope=SB_vs_BB_SRP_OOP_FLOP_CBET --write --summary");
     expect(report.mergePilotCommands.join("\n")).not.toContain("BTN_vs_BB_SRP_FLOP_CBET");
   });
+
+  it("u nove review-only family bez mappingu nehlasi falesne already normalized", () => {
+    const familyId = "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR";
+    const outputBase = join(TMP_ROOT, "output", "texas-solver");
+    const familyDir = join(outputBase, familyId);
+    const rawDir = join(outputBase, familyId, "raw");
+    mkdirSync(rawDir, { recursive: true });
+    writeFileSync(join(rawDir, `pkrtrainer_${familyId}_A72r.json`), JSON.stringify({ node: "root" }), "utf8");
+    writeFileSync(join(familyDir, "strategy-export.json"), JSON.stringify({ familyId }), "utf8");
+    writeFileSync(join(familyDir, "strategy-export.CHECK.review.json"), JSON.stringify({ familyId }), "utf8");
+    writeFileSync(join(familyDir, "review-notes.md"), "Status: NEEDS_REVIEW\n", "utf8");
+
+    const manifestPath = join(TMP_ROOT, "co-bb-manifest.json");
+    const reportPath = join(TMP_ROOT, "co-bb-report.json");
+    writeFileSync(manifestPath, `${JSON.stringify({
+      packId: "test-co-bb-cbet",
+      generatedAt: "2026-07-09",
+      parameterDir: "unused",
+      outputBase,
+      scenarios: [{
+        familyId,
+        pot: 50,
+        effectiveStack: 125,
+        boards: ["A72r"],
+        purpose: "test",
+        coverageTags: ["LOW_SPR", "SINGLE_RAISED", "SRP_CO_VS_BB", "SINGLE_RAISED_POT_CBET", "IP_AGGRESSOR"],
+      }],
+      files: [{
+        fileName: `01_${familyId}_A72r.txt`,
+        path: "unused",
+        familyId,
+        boardId: "A72r",
+        written: true,
+      }],
+      notes: [],
+      commands: [],
+    }, null, 2)}\n`, "utf8");
+
+    const result = runIngest("--dry-run", `--manifest=${manifestPath}`, `--output=${reportPath}`);
+    expect(result.status).toBe(0);
+    const report = JSON.parse(readFileSync(reportPath, "utf8")) as {
+      rows: Array<{ commands: string[]; skippedReason: string | null }>;
+      counts: { commands: number; skipped: number };
+    };
+
+    expect(report.counts.commands).toBe(0);
+    expect(report.counts.skipped).toBe(1);
+    expect(report.rows[0].commands).toEqual([]);
+    expect(report.rows[0].skippedReason).toContain("No supported normalization mapping");
+    expect(report.rows[0].skippedReason).not.toContain("Already staged");
+  });
 });
 
 function runIngest(...args: string[]) {
