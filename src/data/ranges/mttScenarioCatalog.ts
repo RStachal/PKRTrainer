@@ -91,7 +91,7 @@ export const MTT_LEARNING_PATH_PRESETS = [
       "BTN_vs_BB_SRP_FLOP_FACING_BET",
       "SB_vs_BB_SRP_OOP_FLOP_CBET",
     ],
-    estimatedSpotPool: 715,
+    estimatedSpotPool: 794,
   },
   {
     id: "mtt-9max-turbo-chip-ev-preflop",

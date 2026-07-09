@@ -21,7 +21,7 @@ describe("MTT scenario / learning path catalog", () => {
       preview: 2,
       waiting: 1,
       unsupported: 1,
-      estimatedPlayableSpots: 13 * 9 * 169 + 715,
+      estimatedPlayableSpots: 13 * 9 * 169 + 794,
     });
   });
 
