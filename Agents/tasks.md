@@ -2415,6 +2415,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo 2026-07-09: pridan `mtt:texas-solver-coverage-overview`, ktery jednim prikazem shrne vsechny coverage manifesty; aktualne 8 manifestu, 7 complete, 1 partial, 84/93 boards solved pri rozbehnute CO vs BB vlne.
     - Update 2026-07-09: `CO vs BB SRP FLOP_CBET` LOWSPR family dobehla 4/4 raw, celkove 4/12; solver pokracuje na MID/HIGH. Scenario katalog byl srovnan s pilot suite na 794 pilot bucketu a `estimated playable spots` je 20567.
     - Hotovo 2026-07-09: `mtt:texas-solver-ingest-completed` uz u novych review-only family bez podporovaneho normalization mappingu nehlasi falesne `Already staged/reviewed/normalized`; misto toho fail-closed rika, ze je potreba poker review a explicitni mapping.
+    - Update 2026-07-09: hotova `MTT9_25BB_CO_BB_SRP_CBET_LOWSPR` family byla staged/reviewed do lokalniho solver workspace: 4 raw files, 1187 combos, 54 hand classes, review status `NEEDS_REVIEW`, `productionReady=false`. Vystup zustava test/review evidence a neni commitnut jako runtime data.
     - Dalsi preflop krok: po dodani realne vyplnene CSV kopie spustit konvertor nad P1 slotem, doplnit production provenance, projit `validate:range-import`, `build:range-module --dry-run` a az pote povysit ready slot pres `mtt:promote-ready`.
   - [ ] 137.18 Rozsirit HH import na hlavni herny a turnajova metadata
     - Vedle PokerStars-like pridat adaptery podle priorit realnych vstupu; kazdy provider ma fixture corpus a verzovany parser.
