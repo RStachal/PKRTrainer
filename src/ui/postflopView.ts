@@ -760,6 +760,7 @@ function postflopSeat(
   const active = isHero || isVillain;
   const actionRole = seatActionRole(spot, position);
   const positionRole = seatPositionRole(spot, position);
+  const decisionState = seatDecisionState(spot, position);
   const seat = doc.createElement("div");
   seat.className = [
     "postflop-seat",
@@ -768,10 +769,12 @@ function postflopSeat(
     active ? "postflop-seat--active" : "postflop-seat--folded",
     actionRole ? `postflop-seat--${actionRole}` : "",
     positionRole ? `postflop-seat--${positionRole.toLowerCase()}` : "",
+    decisionState ? `postflop-seat--${decisionState.kind}` : "",
   ].filter(Boolean).join(" ");
   seat.dataset.position = position;
   seat.dataset.actionRole = actionRole ?? "none";
   seat.dataset.positionRole = positionRole ?? "none";
+  seat.dataset.currentAction = decisionState?.action ?? "none";
 
   const header = doc.createElement("div");
   header.className = "postflop-seat__header";
@@ -805,6 +808,13 @@ function postflopSeat(
     role.appendChild(chip);
   }
   seat.appendChild(role);
+
+  if (decisionState) {
+    const currentAction = doc.createElement("div");
+    currentAction.className = `postflop-seat__current-action postflop-seat__current-action--${decisionState.kind}`;
+    currentAction.textContent = decisionState.label;
+    seat.appendChild(currentAction);
+  }
 
   const stackWrap = doc.createElement("div");
   stackWrap.className = "postflop-seat__stack-wrap";
@@ -854,6 +864,33 @@ function seatPositionRole(spot: PostflopTrainingSpot, position: Position): "IP" 
   if (position === spot.heroPosition) return spot.inPosition ? "IP" : "OOP";
   if (position === spot.villainPosition) return spot.inPosition ? "OOP" : "IP";
   return null;
+}
+
+function seatDecisionState(
+  spot: PostflopTrainingSpot,
+  position: Position,
+): { action: string; kind: "acted" | "to-act"; label: string } | null {
+  if (position === spot.heroPosition) {
+    return { action: "TO_ACT", kind: "to-act", label: "Na tahu" };
+  }
+  const history = inferredActionHistory(spot);
+  if (history.previousActor !== position) return null;
+  switch (history.previousAction) {
+    case "CHECK":
+      return { action: "CHECK", kind: "acted", label: "Check" };
+    case "BET_SMALL":
+    case "BET_BIG":
+      return { action: "BET", kind: "acted", label: "Bet" };
+    case "RAISE":
+      return { action: "RAISE", kind: "acted", label: "Raise" };
+    case "CALL":
+      return { action: "CALL", kind: "acted", label: "Call" };
+    case "FOLD":
+      return { action: "FOLD", kind: "acted", label: "Fold" };
+    case "NONE":
+    case null:
+      return null;
+  }
 }
 
 function seatRoleBadges(
@@ -1569,6 +1606,15 @@ function styles(doc: Document): HTMLStyleElement {
   border-color:rgba(43,213,118,.34);}
 .postflop-seat__role-chip--oop{background:rgba(155,108,240,.16);color:#d7c7ff;
   border-color:rgba(155,108,240,.34);}
+.postflop-seat__current-action{display:inline-flex;align-items:center;justify-content:center;
+  min-height:18px;margin-top:5px;border-radius:999px;padding:2px 8px;font-size:9px;
+  font-weight:950;text-transform:uppercase;letter-spacing:.01em;
+  border:1px solid rgba(255,255,255,.18);}
+.postflop-seat__current-action--acted{background:rgba(123,211,255,.18);color:#c9efff;
+  border-color:rgba(123,211,255,.42);}
+.postflop-seat__current-action--to-act{background:rgba(43,213,118,.2);color:#aaffc8;
+  border-color:rgba(43,213,118,.48);box-shadow:0 0 0 1px rgba(43,213,118,.12),
+  0 8px 18px rgba(43,213,118,.12);}
 .postflop-seat__stack-wrap{display:grid;gap:3px;margin-top:4px;}
 .postflop-seat__stack{font-size:11px;font-weight:900;color:#d8e5f8;}
 .postflop-seat__stack-bar{height:4px;border-radius:999px;background:rgba(255,255,255,.13);overflow:hidden;}

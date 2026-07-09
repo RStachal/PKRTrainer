@@ -160,6 +160,12 @@ describe("postflopView - DOM", () => {
     expect(history?.textContent).toContain("Preflop: BTN open raise, BB call.");
     expect(history?.textContent).toContain("Flop: BB checknul, Hero je na tahu.");
     expect(history?.textContent).toContain("Soupeř checknul.");
+    const villainSeat = root.querySelector<HTMLElement>('.postflop-seat[data-position="BB"]');
+    const heroSeat = root.querySelector<HTMLElement>('.postflop-seat[data-position="BTN"]');
+    expect(villainSeat?.dataset.currentAction).toBe("CHECK");
+    expect(villainSeat?.textContent).toContain("Check");
+    expect(heroSeat?.dataset.currentAction).toBe("TO_ACT");
+    expect(heroSeat?.textContent).toContain("Na tahu");
   });
 
   it("zobrazi predchozi bet soupere ve facing-bet spotu", () => {
@@ -185,6 +191,11 @@ describe("postflopView - DOM", () => {
     expect(history?.dataset.previousAction).toBe("BET_SMALL");
     expect(history?.textContent).toContain("Flop: BB betnul, Hero čelí sázce.");
     expect(history?.textContent).toContain("fold, call nebo raise");
+    const villainSeat = root.querySelector<HTMLElement>('.postflop-seat[data-position="BB"]');
+    const heroSeat = root.querySelector<HTMLElement>('.postflop-seat[data-position="BTN"]');
+    expect(villainSeat?.dataset.currentAction).toBe("BET");
+    expect(villainSeat?.textContent).toContain("Bet");
+    expect(heroSeat?.dataset.currentAction).toBe("TO_ACT");
     expect([...root.querySelectorAll<HTMLButtonElement>(".postflop-action")]
       .map((button) => button.dataset.action))
       .toEqual(["FOLD", "CALL", "RAISE"]);
@@ -213,6 +224,11 @@ describe("postflopView - DOM", () => {
     expect(history?.dataset.previousAction).toBe("NONE");
     expect(history?.textContent).toContain("Flop: Hero je OOP a jedná první.");
     expect(history?.textContent).toContain("Před vámi na této streetě nebyla žádná akce.");
+    const villainSeat = root.querySelector<HTMLElement>('.postflop-seat[data-position="BB"]');
+    const heroSeat = root.querySelector<HTMLElement>('.postflop-seat[data-position="SB"]');
+    expect(villainSeat?.dataset.currentAction).toBe("none");
+    expect(heroSeat?.dataset.currentAction).toBe("TO_ACT");
+    expect(heroSeat?.textContent).toContain("Na tahu");
   });
 
   it("oddeli zadani situace od postflop otazky a umi se vratit", () => {
@@ -556,6 +572,8 @@ describe("postflopView - DOM", () => {
     expect(css).toContain(".postflop-table__bet-geometry--big");
     expect(css).toContain(".postflop-seat__role-chip--aggressor");
     expect(css).toContain(".postflop-seat__role-chip--oop");
+    expect(css).toContain(".postflop-seat__current-action--to-act");
+    expect(css).toContain(".postflop-seat__current-action--acted");
     expect(css).toContain(".postflop-flopzilla__header-cell--row{position:sticky");
     expect(css).toContain(".postflop-flopzilla__header-cell--corner{top:0;z-index:3;}");
     expect(css).toContain(".postflop-flopzilla__header,.postflop-flopzilla__hint");
