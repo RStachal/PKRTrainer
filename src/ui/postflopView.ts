@@ -418,6 +418,7 @@ function renderSpot(
     `(${trainingSpot.inPosition ? "IP" : "OOP"})`;
   root.appendChild(meta);
 
+  root.appendChild(renderActionHistory(doc, trainingSpot));
   root.appendChild(postflopTable(doc, trainingSpot));
 
   const textures = doc.createElement("div");
@@ -455,6 +456,88 @@ function renderSpot(
   result.setAttribute("role", "status");
   result.setAttribute("tabindex", "-1");
   root.appendChild(result);
+}
+
+function renderActionHistory(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
+  const history = inferredActionHistory(spot);
+  const box = doc.createElement("section");
+  box.className = "postflop-action-history";
+  box.dataset.actionNode = spot.actionNode;
+  box.dataset.previousActor = history.previousActor ?? "";
+  box.dataset.previousAction = history.previousAction ?? "NONE";
+  box.setAttribute("aria-label", "Akce před rozhodnutím");
+
+  const title = doc.createElement("div");
+  title.className = "postflop-action-history__title";
+  title.textContent = "Akce před rozhodnutím";
+  box.appendChild(title);
+
+  const list = doc.createElement("ol");
+  list.className = "postflop-action-history__steps";
+  for (const step of history.steps) {
+    const item = doc.createElement("li");
+    item.className = "postflop-action-history__step";
+    item.textContent = step;
+    list.appendChild(item);
+  }
+  box.appendChild(list);
+
+  const prompt = doc.createElement("div");
+  prompt.className = "postflop-action-history__prompt";
+  prompt.textContent = history.prompt;
+  box.appendChild(prompt);
+
+  return box;
+}
+
+function inferredActionHistory(spot: PostflopTrainingSpot): {
+  previousActor: Position | null;
+  previousAction: PostflopAction | "NONE" | null;
+  steps: readonly string[];
+  prompt: string;
+} {
+  const preflop = preflopActionSummary(spot);
+  if (spot.actionNode.endsWith("_FACING_BET")) {
+    return {
+      previousActor: spot.villainPosition,
+      previousAction: "BET_SMALL",
+      steps: [
+        preflop,
+        `${STREET_LABEL[spot.street]}: ${spot.villainPosition} betnul, Hero čelí sázce.`,
+      ],
+      prompt: "Teď jste na tahu: fold, call nebo raise.",
+    };
+  }
+  if (spot.inPosition) {
+    return {
+      previousActor: spot.villainPosition,
+      previousAction: "CHECK",
+      steps: [
+        preflop,
+        `${STREET_LABEL[spot.street]}: ${spot.villainPosition} checknul, Hero je na tahu.`,
+      ],
+      prompt: "Soupeř checknul. Teď zvolte check behind nebo bet.",
+    };
+  }
+  return {
+    previousActor: null,
+    previousAction: "NONE",
+    steps: [
+      preflop,
+      `${STREET_LABEL[spot.street]}: Hero je OOP a jedná první.`,
+    ],
+    prompt: "Před vámi na této streetě nebyla žádná akce. Teď jste na tahu.",
+  };
+}
+
+function preflopActionSummary(spot: PostflopTrainingSpot): string {
+  if (spot.potType === "THREE_BET_POT") {
+    return `Preflop: ${spot.aggressorPosition} je 3bet agresor, ${spot.callerPosition} dorovnal.`;
+  }
+  if (spot.potType === "LIMPED_POT") {
+    return `Preflop: ${spot.aggressorPosition} a ${spot.callerPosition} viděli flop v limped potu.`;
+  }
+  return `Preflop: ${spot.aggressorPosition} open raise, ${spot.callerPosition} call.`;
 }
 
 function wireActionKeyboard(actions: HTMLElement): void {
@@ -1396,6 +1479,15 @@ function styles(doc: Document): HTMLStyleElement {
 .postflop-new-spot:hover,.postflop-change-situation:hover{border-color:#2bd576;}
 .postflop-meta{font-size:13px;color:#9aa6c2;font-weight:700;margin-bottom:12px;
   overflow-wrap:anywhere;}
+.postflop-action-history{margin:0 0 12px;border:1px solid rgba(123,211,255,.22);
+  border-radius:12px;background:linear-gradient(180deg,rgba(123,211,255,.09),rgba(43,213,118,.045));
+  padding:10px 12px;color:#dce5f8;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+.postflop-action-history__title{font-size:11px;font-weight:950;text-transform:uppercase;
+  letter-spacing:.02em;color:#bfe9ff;margin-bottom:6px;}
+.postflop-action-history__steps{display:grid;gap:5px;margin:0;padding-left:18px;}
+.postflop-action-history__step{font-size:12px;font-weight:800;line-height:1.35;}
+.postflop-action-history__prompt{margin-top:8px;border-top:1px solid rgba(255,255,255,.1);
+  padding-top:7px;font-size:13px;font-weight:950;color:#f4f7ff;}
 .postflop-table{position:relative;width:100%;max-width:900px;aspect-ratio:16/9;
   margin:10px auto 14px;min-height:390px;}
 .postflop-table__felt{position:absolute;inset:9% 6%;border-radius:50%/48%;

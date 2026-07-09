@@ -134,6 +134,87 @@ describe("postflopView - DOM", () => {
     expect(bigGeometry?.querySelectorAll(".postflop-table__bet-chip")).toHaveLength(4);
   });
 
+  it("zobrazi explicitni akci predchoziho hrace v IP c-bet spotu", () => {
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: "FLOP",
+      initialActionNode: "SINGLE_RAISED_POT_CBET",
+      initialPositionContext: {
+        heroPosition: "BTN",
+        villainPosition: "BB",
+        aggressorPosition: "BTN",
+        callerPosition: "BB",
+        inPosition: true,
+        callerType: "BIG_BLIND",
+        positionPattern: "BTN_VS_BB",
+      },
+      autoGenerate: true,
+    });
+
+    const history = root.querySelector<HTMLElement>(".postflop-action-history");
+    expect(history).not.toBeNull();
+    expect(history?.dataset.actionNode).toBe("SINGLE_RAISED_POT_CBET");
+    expect(history?.dataset.previousActor).toBe("BB");
+    expect(history?.dataset.previousAction).toBe("CHECK");
+    expect(history?.textContent).toContain("Preflop: BTN open raise, BB call.");
+    expect(history?.textContent).toContain("Flop: BB checknul, Hero je na tahu.");
+    expect(history?.textContent).toContain("Soupeř checknul.");
+  });
+
+  it("zobrazi predchozi bet soupere ve facing-bet spotu", () => {
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: "FLOP",
+      initialActionNode: "FLOP_FACING_BET",
+      initialPositionContext: {
+        heroPosition: "BTN",
+        villainPosition: "BB",
+        aggressorPosition: "BTN",
+        callerPosition: "BB",
+        inPosition: true,
+        callerType: "BIG_BLIND",
+        positionPattern: "BTN_VS_BB",
+      },
+      autoGenerate: true,
+    });
+
+    const history = root.querySelector<HTMLElement>(".postflop-action-history");
+    expect(history?.dataset.previousActor).toBe("BB");
+    expect(history?.dataset.previousAction).toBe("BET_SMALL");
+    expect(history?.textContent).toContain("Flop: BB betnul, Hero čelí sázce.");
+    expect(history?.textContent).toContain("fold, call nebo raise");
+    expect([...root.querySelectorAll<HTMLButtonElement>(".postflop-action")]
+      .map((button) => button.dataset.action))
+      .toEqual(["FOLD", "CALL", "RAISE"]);
+  });
+
+  it("zobrazi ze OOP hero jedna prvni, kdyz pred nim na streetu neni akce", () => {
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 42,
+      initialStreet: "FLOP",
+      initialActionNode: "SINGLE_RAISED_POT_CBET",
+      initialPositionContext: {
+        heroPosition: "SB",
+        villainPosition: "BB",
+        aggressorPosition: "SB",
+        callerPosition: "BB",
+        inPosition: false,
+        callerType: "BIG_BLIND",
+        positionPattern: "SB_VS_BB",
+      },
+      autoGenerate: true,
+    });
+
+    const history = root.querySelector<HTMLElement>(".postflop-action-history");
+    expect(history?.dataset.previousActor).toBe("");
+    expect(history?.dataset.previousAction).toBe("NONE");
+    expect(history?.textContent).toContain("Flop: Hero je OOP a jedná první.");
+    expect(history?.textContent).toContain("Před vámi na této streetě nebyla žádná akce.");
+  });
+
   it("oddeli zadani situace od postflop otazky a umi se vratit", () => {
     const root = document.createElement("div");
     document.body.appendChild(root);
