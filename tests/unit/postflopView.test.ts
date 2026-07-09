@@ -733,6 +733,12 @@ describe("postflopView - DOM", () => {
       .toBe("Hand line 2/3");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("TURN");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.streetIndex).toBe("1");
+    const turnHistory = root.querySelector<HTMLElement>(".postflop-action-history");
+    expect(turnHistory?.dataset.lineHistoryCount).toBe("1");
+    expect(turnHistory?.textContent).toContain("Dosavadní hand line - Flop:");
+    expect(turnHistory?.textContent).toMatch(/Hero|Soupeř/);
+    expect(turnHistory?.textContent).not.toContain("StrategyPack");
+    expect(turnHistory?.textContent).not.toContain("https://");
     root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
     expect(root.querySelector<HTMLButtonElement>(".postflop-line-next")?.textContent)
       .toBe("Další: River");
@@ -742,6 +748,8 @@ describe("postflopView - DOM", () => {
       .toBe("Hand line 3/3");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("RIVER");
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.streetIndex).toBe("2");
+    expect(root.querySelector<HTMLElement>(".postflop-action-history")?.dataset.lineHistoryCount)
+      .toBe("2");
     root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
 
     const complete = root.querySelector<HTMLElement>(".postflop-line-complete");

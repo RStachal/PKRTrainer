@@ -12,6 +12,7 @@ import {
 import {
   generatePostflopLine,
   type PostflopLine,
+  type PostflopLineAction,
   type PostflopLineActionPlan,
 } from "../core/postflopLineSimulator";
 import {
@@ -64,6 +65,13 @@ export interface PostflopViewOptions {
 export interface PostflopRuntimeNotice {
   kind: "SCOPED_PILOT" | "LOCKED_PILOT" | "PRODUCTION" | "PREVIEW";
   text: string;
+}
+
+interface PostflopLineRenderMeta {
+  mode: "line";
+  streetIndex: number;
+  streetTotal: number;
+  priorActions: readonly PostflopLineAction[];
 }
 
 const STREET_LABEL: Record<PostflopStreet, string> = {
@@ -349,6 +357,7 @@ function renderLineSpot(
     mode: "line",
     streetIndex,
     streetTotal: line.streets.length,
+    priorActions: street.actionHistory,
   });
 }
 
@@ -360,11 +369,7 @@ function renderSpot(
     onNewSpot: () => void;
     onChangeSituation: () => void;
   },
-  lineMeta?: {
-    mode: "line";
-    streetIndex: number;
-    streetTotal: number;
-  },
+  lineMeta?: PostflopLineRenderMeta,
 ): void {
   const doc = root.ownerDocument ?? document;
   const trainingSpot = spot.trainingSpot ?? postflopSpotToTrainingSpot(spot);
@@ -418,7 +423,7 @@ function renderSpot(
     `(${trainingSpot.inPosition ? "IP" : "OOP"})`;
   root.appendChild(meta);
 
-  root.appendChild(renderActionHistory(doc, trainingSpot));
+  root.appendChild(renderActionHistory(doc, trainingSpot, lineMeta));
   root.appendChild(postflopTable(doc, trainingSpot));
 
   const textures = doc.createElement("div");
@@ -458,13 +463,22 @@ function renderSpot(
   root.appendChild(result);
 }
 
-function renderActionHistory(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
+function renderActionHistory(
+  doc: Document,
+  spot: PostflopTrainingSpot,
+  lineMeta?: PostflopLineRenderMeta,
+): HTMLElement {
   const history = inferredActionHistory(spot);
+  const priorLineSteps = priorLineActionSteps(lineMeta?.priorActions ?? []);
+  const steps = history.steps.length > 0
+    ? [history.steps[0], ...priorLineSteps, ...history.steps.slice(1)]
+    : priorLineSteps;
   const box = doc.createElement("section");
   box.className = "postflop-action-history";
   box.dataset.actionNode = spot.actionNode;
   box.dataset.previousActor = history.previousActor ?? "";
   box.dataset.previousAction = history.previousAction ?? "NONE";
+  box.dataset.lineHistoryCount = String(lineMeta?.priorActions.length ?? 0);
   box.setAttribute("aria-label", "Akce před rozhodnutím");
 
   const title = doc.createElement("div");
@@ -474,7 +488,7 @@ function renderActionHistory(doc: Document, spot: PostflopTrainingSpot): HTMLEle
 
   const list = doc.createElement("ol");
   list.className = "postflop-action-history__steps";
-  for (const step of history.steps) {
+  for (const step of steps) {
     const item = doc.createElement("li");
     item.className = "postflop-action-history__step";
     item.textContent = step;
@@ -488,6 +502,42 @@ function renderActionHistory(doc: Document, spot: PostflopTrainingSpot): HTMLEle
   box.appendChild(prompt);
 
   return box;
+}
+
+function priorLineActionSteps(actions: readonly PostflopLineAction[]): string[] {
+  return actions.map((action) => {
+    const sequence = action.sequence?.length
+      ? action.sequence.map((entry) => {
+        const amount = entry.amountBB > 0 ? ` ${roundedBetBB(entry.amountBB)} BB` : "";
+        return `${lineActorLabel(entry.actor)} ${linePolicyActionLabel(entry.action)}${amount}`;
+      }).join(" → ")
+      : `Hero ${actionLabel(action.action)}`;
+    return `Dosavadní hand line - ${STREET_LABEL[action.street]}: ${sequence}. Bank po akci ${roundedBetBB(action.potBBAfter)} BB.`;
+  });
+}
+
+function lineActorLabel(actor: "HERO" | "VILLAIN"): string {
+  return actor === "HERO" ? "Hero" : "Soupeř";
+}
+
+function linePolicyActionLabel(action: string): string {
+  switch (action) {
+    case "CHECK":
+      return "check";
+    case "CALL":
+      return "call";
+    case "FOLD":
+      return "fold";
+    case "BET_SMALL":
+    case "BET_BIG":
+      return "bet";
+    case "RAISE":
+      return "raise";
+    case "ALL_IN":
+      return "all-in";
+    default:
+      return action.toLowerCase();
+  }
 }
 
 function inferredActionHistory(spot: PostflopTrainingSpot): {

@@ -2298,6 +2298,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Umoznovat branch replay, alternative-line comparison a fixed-board/fixed-hand study bez zmeny seedu.
     - Vysledek line nesmi hodnotit jen shodu s jednou preferovanou akci, ale EV loss/frequency, pokud jsou legalni exact data dostupna.
     - Acceptance: stejny hero action plan a opponent policy dava deterministickou, legalni a auditovatelnou line.
+    - Hotovo 2026-07-09: postflop hand-line UI v boxu `Akce pred rozhodnutim` zobrazuje i dosavadni street akce z predchozi line historie vcetne poradi Hero/Souper a potu po akci; na turnu/riveru tak hrac vidi, co se stalo pred aktualnim rozhodnutim bez internich source metadat.
   - [ ] 137.16 Podporit mixed strategies, frekvence a randomizer
     - Preflop i postflop pack musi umet exact nebo qualitative action mix; soucty frekvenci a combo weights validovat.
     - Scoring rozlisit pure mistake, acceptable mix a low-frequency deviation; strict mode nesmi trestat legalni mixed action bez definovane tolerance.
