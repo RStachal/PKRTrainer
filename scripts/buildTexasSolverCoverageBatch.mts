@@ -255,11 +255,12 @@ function renderParameterFile(template: string, scenario: Scenario, boardId: stri
 
 function nextCommands(args: CliArgs): string[] {
   const parameterRoot = repoPowerShellPath(args.outputDir);
+  const manifestPath = repoPowerShellPath(args.manifestPath);
   return [
     `npm run mtt:texas-solver-coverage-batch -- --write`,
     `.\u005cAgents\u005csolver-input\u005ctexas-solver\u005cmtt-safe-flops-v1\u005crun-console-selected.ps1 -ParameterRoot "${parameterRoot}" -Limit 999 -ListOnly`,
-    `Start-Job -Name PKRTrainerTexasSolverCoverageV2 -ScriptBlock { Set-Location "${process.cwd()}"; .\u005cAgents\u005csolver-input\u005ctexas-solver\u005cmtt-safe-flops-v1\u005crun-console-selected.ps1 -ParameterRoot "${parameterRoot}" -Limit 999 }`,
-    `Get-Job PKRTrainerTexasSolverCoverageV2 | Receive-Job -Keep`,
+    `.\u005cAgents\u005csolver-input\u005ctexas-solver\u005cmtt-safe-flops-v1\u005cstart-background-solve.ps1 -ParameterRoot "${parameterRoot}" -Manifest "${manifestPath}" -LogName "coverage-v2" -StartWatcher`,
+    `npm run mtt:texas-solver-background-status -- --manifest "${manifestPath}" --summary`,
   ];
 }
 

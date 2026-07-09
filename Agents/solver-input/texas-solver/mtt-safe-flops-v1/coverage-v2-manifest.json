@@ -240,7 +240,7 @@
   "commands": [
     "npm run mtt:texas-solver-coverage-batch -- --write",
     ".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_coverage_v2\" -Limit 999 -ListOnly",
-    "Start-Job -Name PKRTrainerTexasSolverCoverageV2 -ScriptBlock { Set-Location \"C:\\Users\\stachal\\PKRTrainer\\PKRTrainer\"; .\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\run-console-selected.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_coverage_v2\" -Limit 999 }",
-    "Get-Job PKRTrainerTexasSolverCoverageV2 | Receive-Job -Keep"
+    ".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\start-background-solve.ps1 -ParameterRoot \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\parameters\\pkrtrainer_mtt_coverage_v2\" -Manifest \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-v2-manifest.json\" -LogName \"coverage-v2\" -StartWatcher",
+    "npm run mtt:texas-solver-background-status -- --manifest \".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-v2-manifest.json\" --summary"
   ]
 }

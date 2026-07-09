@@ -328,27 +328,33 @@ Preflight:
 .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -ParameterRoot "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_coverage_v2" -Limit 999 -ListOnly
 ```
 
-Run in a PowerShell background job:
+Run as a detached PowerShell background process. Prefer this helper over `Start-Job`, because a detached process keeps
+running even after the original shell session is closed:
 
 ```powershell
-Start-Job -Name PKRTrainerTexasSolverCoverageV2 -ScriptBlock {
-  Set-Location "C:\Users\stachal\PKRTrainer\PKRTrainer"
-  .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\run-console-selected.ps1 -ParameterRoot "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_coverage_v2" -Limit 999
-}
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\start-background-solve.ps1 `
+  -ParameterRoot "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_coverage_v2" `
+  -Manifest ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-v2-manifest.json" `
+  -LogName "coverage-v2" `
+  -StartWatcher
 ```
 
-Monitor:
+Dry-run the wrapper without starting TexasSolver:
 
 ```powershell
-Get-Job PKRTrainerTexasSolverCoverageV2
-Get-Job PKRTrainerTexasSolverCoverageV2 | Receive-Job -Keep
+.\Agents\solver-input\texas-solver\mtt-safe-flops-v1\start-background-solve.ps1 `
+  -ParameterRoot "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_coverage_v2" `
+  -Manifest ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-v2-manifest.json" `
+  -DryRun
 ```
 
-PowerShell jobs are session-local. If the original shell is gone, check progress from the filesystem instead:
+Monitor from the filesystem, not from session-local jobs:
 
 ```powershell
+npm run mtt:texas-solver-background-status -- --manifest .\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-v2-manifest.json --summary
 npm run mtt:texas-solver-coverage-status -- --summary
 npm run mtt:texas-solver-coverage-status -- --output=artifacts/texas-solver-coverage-v2-status/report.json
+npm run mtt:texas-solver-coverage-overview -- --summary
 ```
 
 This status command reads `coverage-v2-manifest.json`, counts solved raw JSON boards per family and prints the exact
