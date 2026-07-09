@@ -177,7 +177,16 @@ function renderReport(report: CoverageOverviewReport, summaryOnly: boolean): str
     `waiting: ${report.counts.waiting}`,
     `boards solved: ${report.counts.solvedBoards}/${report.counts.expectedBoards}`,
   ];
-  if (!summaryOnly) {
+  if (summaryOnly) {
+    const blockingRows = report.rows.filter((row) => !row.complete);
+    if (blockingRows.length > 0) {
+      lines.push(
+        `blocking manifests: ${blockingRows
+          .map((row) => `${row.manifest} ${row.solvedBoards}/${row.expectedBoards}`)
+          .join(", ")}`,
+      );
+    }
+  } else {
     for (const row of report.rows) {
       lines.push(`${row.complete ? "COMPLETE" : row.solvedBoards > 0 ? "PARTIAL" : "WAITING"} ${row.manifest}: boards ${row.solvedBoards}/${row.expectedBoards}, families complete/partial/waiting ${row.rawComplete}/${row.rawPartial}/${row.waitingForRaw}`);
     }
