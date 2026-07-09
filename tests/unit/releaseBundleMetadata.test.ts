@@ -101,8 +101,11 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:texas-solver-scenario-audit"]).toBe("vite-node scripts/auditTexasSolverScenarioBatch.mts");
     expect(pkg.scripts["mtt:texas-solver-srp-sb-bb-cbet-batch"])
       .toBe("vite-node scripts/buildTexasSolverSrpSbBbCbetBatch.mts");
+    expect(pkg.scripts["mtt:texas-solver-srp-co-bb-cbet-batch"])
+      .toBe("vite-node scripts/buildTexasSolverSrpCoBbCbetBatch.mts");
     expect(pkg.scripts["mtt:texas-solver-coverage-batch"]).toBe("vite-node scripts/buildTexasSolverCoverageBatch.mts");
     expect(pkg.scripts["mtt:texas-solver-coverage-status"]).toBe("vite-node scripts/checkTexasSolverCoverageBatchStatus.mts");
+    expect(pkg.scripts["mtt:texas-solver-coverage-overview"]).toBe("vite-node scripts/checkTexasSolverCoverageOverview.mts");
     expect(pkg.scripts["mtt:texas-solver-ingest-completed"]).toBe("vite-node scripts/ingestTexasSolverCompletedCoverage.mts");
     expect(pkg.scripts["mtt:texas-solver-normalize-draft"]).toBe("vite-node scripts/buildTexasSolverNormalizedDraft.mts");
     expect(pkg.scripts["mtt:texas-solver-merge-pilot-drafts"]).toBe("vite-node scripts/mergeTexasSolverPilotDrafts.mts");
