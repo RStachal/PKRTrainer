@@ -203,6 +203,8 @@ describe("release bundle metadata", () => {
     expect(postflopPilotCatalogScript).toContain("npm run mtt:postflop-pilot-catalog -- --output=artifacts/mtt-postflop-pilot-catalog/report.json");
     expect(handoffScript).toContain("mtt:texas-solver-pack");
     expect(handoffScript).toContain("artifacts/texas-solver-parameter-pack/report.json");
+    expect(handoffScript).toContain("mtt:texas-solver-coverage-overview");
+    expect(handoffScript).toContain("artifacts/texas-solver-coverage-overview/report.json");
     expect(handoffScript).toContain("expected-paths.json");
     expect(handoffScript).toContain("NORMALIZED_JSON_REQUIREMENTS.md");
     expect(handoffScript).toContain("PERMISSION_JSON_REQUIREMENTS.md");

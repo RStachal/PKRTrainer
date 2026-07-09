@@ -1,10 +1,12 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
 
 const DEFAULT_ROOT = "Agents/solver-input/texas-solver/mtt-safe-flops-v1";
+const DEFAULT_OUTPUT = "artifacts/texas-solver-coverage-overview/report.json";
 
 interface CliArgs {
   json: boolean;
+  outputPath: string | null;
   rootDir: string;
   summary: boolean;
 }
@@ -47,6 +49,10 @@ interface CoverageOverviewReport {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildReport(args);
+  if (args.outputPath !== null) {
+    mkdirSync(dirname(args.outputPath), { recursive: true });
+    writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderReport(report, args.summary));
   process.exitCode = report.valid ? 0 : 1;
 } catch (error) {
@@ -56,6 +62,7 @@ try {
 
 function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
+  let outputPath: string | null = null;
   let rootDir = resolve(DEFAULT_ROOT);
   let summary = false;
   for (let index = 0; index < argv.length; index += 1) {
@@ -69,6 +76,14 @@ function parseArgs(argv: readonly string[]): CliArgs {
       summary = true;
       continue;
     }
+    if (item === "--output") {
+      outputPath = resolve(DEFAULT_OUTPUT);
+      continue;
+    }
+    if (item.startsWith("--output=")) {
+      outputPath = resolve(inlineValue(item, "--output"));
+      continue;
+    }
     if (item === "--root") {
       rootDir = resolve(requiredValue(argv, index, "--root"));
       index += 1;
@@ -80,7 +95,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
-  return { json, rootDir, summary };
+  return { json, outputPath, rootDir, summary };
 }
 
 function usage(): string {
@@ -89,6 +104,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-coverage-overview",
     "  npm run mtt:texas-solver-coverage-overview -- --summary",
     "  npm run mtt:texas-solver-coverage-overview -- --json",
+    "  npm run mtt:texas-solver-coverage-overview -- --output=artifacts/texas-solver-coverage-overview/report.json",
     "",
     "Prints source-safe solved/missing board counts for all TexasSolver coverage manifests in one pass.",
   ].join("\n");

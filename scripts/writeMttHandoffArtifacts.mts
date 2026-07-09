@@ -187,6 +187,17 @@ const handoffCommands: readonly HandoffCommand[] = [
     releaseBlocking: false,
   },
   {
+    label: "TexasSolver coverage overview",
+    npmArgs: [
+      "run",
+      "mtt:texas-solver-coverage-overview",
+      "--",
+      "--output=artifacts/texas-solver-coverage-overview/report.json",
+    ],
+    outputPath: "artifacts/texas-solver-coverage-overview/report.json",
+    releaseBlocking: false,
+  },
+  {
     label: "Ready MTT intake validation",
     npmArgs: ["run", "mtt:validate-ready-intake", "--", "--output=artifacts/mtt-validate-ready-intake-report.json"],
     outputPath: "artifacts/mtt-validate-ready-intake-report.json",
