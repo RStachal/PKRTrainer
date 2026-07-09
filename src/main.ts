@@ -95,7 +95,7 @@ import { renderTable } from "./ui/tableRenderer";
 import { renderMatrix } from "./ui/rangeMatrixView";
 import { renderRangeModalButton } from "./ui/rangeModal";
 import { renderHHView } from "./ui/hhView";
-import { renderPostflopView } from "./ui/postflopView";
+import { renderPostflopView, type PostflopRuntimeNotice } from "./ui/postflopView";
 import { CS } from "./ui/cs";
 import { registerServiceWorker } from "./pwa/registerSw";
 
@@ -412,6 +412,11 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       required: [],
       grants,
     }).active.some((entitlement) => pilotEntitlements.includes(entitlement));
+    const runtimeNotice = postflopRuntimeNotice({
+      hasScopedPilotCoverage,
+      hasActivePilotEntitlement,
+      productionReady: capability?.status === "PRODUCTION",
+    });
     const requiresExactRuntime = (
       (hasScopedPilotCoverage && hasActivePilotEntitlement) ||
       capability?.status === "PRODUCTION"
@@ -431,6 +436,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       initialPotBB: postflopIntent?.potBB,
       initialEffectiveStackBB: postflopIntent?.effectiveStackBB,
       autoGenerate: options.autoGenerate === true,
+      runtimeNotice,
       strategyResolver: runtimeProfileForView
         ? (input) => postflopRuntime?.resolver?.(input) ?? null
         : undefined,
@@ -756,6 +762,35 @@ function runtimeProfile(profile: TrainingProfile, filters: Filters): TrainingPro
   return {
     ...profile,
     ante: profile.gameVariant === "CASH" ? "OFF" : filters.ante,
+  };
+}
+
+function postflopRuntimeNotice(input: {
+  hasScopedPilotCoverage: boolean;
+  hasActivePilotEntitlement: boolean;
+  productionReady: boolean;
+}): PostflopRuntimeNotice | null {
+  if (input.productionReady) {
+    return {
+      kind: "PRODUCTION",
+      text: "Produkční postflop model je aktivní. Trénink běží bez náhledového fallbacku.",
+    };
+  }
+  if (input.hasScopedPilotCoverage && input.hasActivePilotEntitlement) {
+    return {
+      kind: "SCOPED_PILOT",
+      text: "Solverový pilot je aktivní pro vybrané flop situace. Jde o úzký pilotní režim, ne kompletní postflop production coverage.",
+    };
+  }
+  if (input.hasScopedPilotCoverage) {
+    return {
+      kind: "LOCKED_PILOT",
+      text: "Pro tento profil existují placené solverové piloty. Bez aktivní pilot licence běží pouze náhledový režim, ne plná produkční strategie.",
+    };
+  }
+  return {
+    kind: "PREVIEW",
+    text: "Postflop běží v náhledovém režimu bez kompletní solverové coverage. Spoty jsou použitelné pro trénink flow, ne jako plně ověřený produkční model.",
   };
 }
 

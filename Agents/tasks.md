@@ -2410,6 +2410,7 @@ Testování jádra je **property-based** (fast-check, ≥ 100 iterací na test),
     - Hotovo 2026-07-08: pilot runtime normalizuje legacy UI patterny `BTN_VS_BB` a `SB_VS_BB` na granular `SRP_*` scoped pilot vstupy, takze konkretni SB vs BB OOP c-bet input z filtru umi trefit solver-backed pilot bez prepisu stareho generatoru.
     - Hotovo 2026-07-08: pridan offline entitlement loader `runtimeEntitlementGrants`; bez ulozene licence zustava FREE/locked, validni offline licence v `localStorage` umi odemknout PRO_PLUS piloty bez maskovani na full production.
     - Dalsi postflop krok: zlepsit UI hlasku pro `LOCKED_PILOT`/`SCOPED_PILOT` stav primo v postflop panelu a potom pokracovat dalsi coverage vlnou mimo uz hotove FLOP pilot lab scope; full production FLOP/TURN/RIVER zustava samostatny release gate.
+    - Hotovo 2026-07-09: postflop panel zobrazuje source-free runtime notice pro `PREVIEW`, `LOCKED_PILOT`, `SCOPED_PILOT` a `PRODUCTION`; FREE fallback zustava pouzitelny, ale uzivatel vidi, kdy jde jen o nahled, kdy je solver pilot zamceny licenci a kdy nejde o full production coverage.
     - Dalsi preflop krok: po dodani realne vyplnene CSV kopie spustit konvertor nad P1 slotem, doplnit production provenance, projit `validate:range-import`, `build:range-module --dry-run` a az pote povysit ready slot pres `mtt:promote-ready`.
   - [ ] 137.18 Rozsirit HH import na hlavni herny a turnajova metadata
     - Vedle PokerStars-like pridat adaptery podle priorit realnych vstupu; kazdy provider ma fixture corpus a verzovany parser.

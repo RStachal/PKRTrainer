@@ -88,6 +88,23 @@ describe("postflopView - DOM", () => {
     expect(root.querySelectorAll(".postflop-texture").length).toBeGreaterThan(0);
   });
 
+  it("zobrazi source-free runtime notice pro solver pilot rezim", () => {
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      runtimeNotice: {
+        kind: "SCOPED_PILOT",
+        text: "Solverový pilot je aktivní pro vybrané flop situace. Jde o úzký pilotní režim, ne kompletní postflop production coverage.",
+      },
+    });
+
+    const notice = root.querySelector<HTMLElement>(".postflop-runtime-notice");
+    expect(notice).not.toBeNull();
+    expect(notice?.dataset.kind).toBe("SCOPED_PILOT");
+    expect(notice?.getAttribute("role")).toBe("status");
+    expect(notice?.textContent).toContain("Solverový pilot");
+    expect(notice?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|StrategyPack|mtt-/i);
+  });
+
   it("zobrazi pot geometry pro check, small bet a big bet sizing", () => {
     const checkRoot = renderGeneratedSpot(0, "FLOP");
     const checkGeometry = checkRoot.querySelector<HTMLElement>(".postflop-table__bet-geometry");

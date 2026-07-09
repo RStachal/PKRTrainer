@@ -174,6 +174,10 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector<HTMLButtonElement>('[data-tab="training"]')
       ?.classList.contains("app__tab--active")).toBe(false);
     expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("");
+    const notice = root.querySelector<HTMLElement>(".postflop-runtime-notice");
+    expect(notice?.dataset.kind).toBe("PREVIEW");
+    expect(notice?.textContent).toContain("náhledovém režimu");
+    expect(notice?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|StrategyPack|mtt-/i);
     expect(root.querySelector<HTMLElement>(".postflop-meta")?.dataset.street).toBe("FLOP");
     expect(root.querySelector(".poker-table")).toBeNull();
     expect(document.activeElement).toBe(root.querySelector<HTMLButtonElement>(".postflop-action"));

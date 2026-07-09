@@ -46,6 +46,7 @@ export interface PostflopViewOptions {
   autoGenerate?: boolean;
   strategyResolver?: PostflopStrategyResolver;
   allowFallback?: boolean;
+  runtimeNotice?: PostflopRuntimeNotice | null;
   beforeGenerate?: (mode: "single" | "line") => Promise<void> | void;
   onLineCompleted?: (
     line: PostflopLine,
@@ -58,6 +59,11 @@ export interface PostflopViewOptions {
     chosen: PostflopAction,
     responseMs?: number,
   ) => void;
+}
+
+export interface PostflopRuntimeNotice {
+  kind: "SCOPED_PILOT" | "LOCKED_PILOT" | "PRODUCTION" | "PREVIEW";
+  text: string;
 }
 
 const STREET_LABEL: Record<PostflopStreet, string> = {
@@ -130,6 +136,9 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
 
   const controls = doc.createElement("div");
   controls.className = "postflop-controls";
+
+  const runtimeNotice = renderRuntimeNotice(doc, options.runtimeNotice ?? null);
+  if (runtimeNotice) wrap.appendChild(runtimeNotice);
 
   const streetLabel = doc.createElement("label");
   streetLabel.className = "postflop-field";
@@ -291,6 +300,19 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   if (options.autoGenerate === true) {
     void showNewSpot();
   }
+}
+
+function renderRuntimeNotice(
+  doc: Document,
+  notice: PostflopRuntimeNotice | null,
+): HTMLElement | null {
+  if (notice === null) return null;
+  const element = doc.createElement("div");
+  element.className = "postflop-runtime-notice";
+  element.dataset.kind = notice.kind;
+  element.setAttribute("role", notice.kind === "LOCKED_PILOT" ? "alert" : "status");
+  element.textContent = notice.text;
+  return element;
 }
 
 function renderUnavailable(root: HTMLElement): void {
@@ -1337,6 +1359,15 @@ function styles(doc: Document): HTMLStyleElement {
   style.textContent = `
 .postflop-view{font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;color:#e8ecf7;max-width:960px;
   margin:0 auto;}
+.postflop-runtime-notice{border:1px solid rgba(106,166,255,.34);border-radius:14px;
+  background:rgba(45,91,158,.18);color:#dce9ff;font-size:13px;font-weight:800;
+  line-height:1.35;padding:10px 12px;margin:0 0 12px;overflow-wrap:anywhere;}
+.postflop-runtime-notice[data-kind="LOCKED_PILOT"]{border-color:rgba(255,196,87,.42);
+  background:rgba(126,84,18,.2);color:#ffe5ad;}
+.postflop-runtime-notice[data-kind="SCOPED_PILOT"]{border-color:rgba(83,222,166,.42);
+  background:rgba(22,104,82,.2);color:#c8f7e7;}
+.postflop-runtime-notice[data-kind="PRODUCTION"]{border-color:rgba(123,211,137,.42);
+  background:rgba(33,102,55,.2);color:#d8ffde;}
 .postflop-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
   background:linear-gradient(180deg,rgba(20,28,43,.96),rgba(12,17,27,.98));
   border:1px solid rgba(148,163,184,.18);border-radius:12px;
