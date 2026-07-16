@@ -3,15 +3,19 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 
+import { JSDOM, VirtualConsole } from "jsdom";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:texas-solver-viewer CLI", () => {
   it("builds a source-safe reviewer index with working family and status filters", () => {
     const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-viewer-"));
     const input = join(directory, "review.report.json");
+    const secondInput = join(directory, "review.second.report.json");
+    const otherFamilyInput = join(directory, "review.other-family.report.json");
     const output = join(directory, "viewer.html");
+    const waves = join(directory, "OWNER_REVIEW_WAVES.md");
     try {
-      writeFileSync(input, JSON.stringify({
+      const report = {
         valid: true,
         status: "NEEDS_REVIEW",
         productionReady: false,
@@ -30,22 +34,95 @@ describe("mtt:texas-solver-viewer CLI", () => {
         }],
         anomalies: [],
         blockers: ["Human poker review is required."],
-      }, null, 2), "utf8");
+      };
+      writeFileSync(input, JSON.stringify(report, null, 2), "utf8");
+      writeFileSync(secondInput, JSON.stringify({ ...report, nodeHistory: ["BET_25"] }, null, 2), "utf8");
+      writeFileSync(otherFamilyInput, JSON.stringify({ ...report, familyId: "MTT9_OTHER_FAMILY", nodeHistory: [] }, null, 2), "utf8");
+      writeFileSync(waves, "# Owner review waves\n\n## Wave 2\n\n- MTT9_50BB_BTN_BB_SRP: NEEDS_REVIEW\n\n## Wave 3\n\n- MTT9_OTHER_FAMILY: NEEDS_REVIEW\n", "utf8");
 
-      const result = runViewer(`--input=${input}`, `--output=${output}`);
+      const result = runViewer(`--input=${input}`, `--input=${secondInput}`, `--input=${otherFamilyInput}`, `--output=${output}`, `--waves=${waves}`);
 
       expect(result.status).toBe(0);
       const html = readFileSync(output, "utf8");
       expect(html).toContain('id="family-filter"');
       expect(html).toContain('id="status-filter"');
+      expect(html).toContain('id="wave-filter"');
+      expect(html).toContain('<option value="2" selected>Wave 2 (1)</option>');
+      expect(html).toContain('<option value="3">Wave 3 (1)</option>');
+      expect(html).toContain("<dt>Families</dt><dd>2</dd>");
       expect(html).toContain('id="download-owner-decisions"');
+      expect(html).toContain('id="import-owner-decisions"');
+      expect(html).toContain('id="copy-owner-commands"');
       expect(html).toContain('id="owner-reviewer"');
       expect(html).toContain("pkrtrainer-texas-solver-owner-decisions-v1");
+      expect(html).toContain("RECORD_TEXAS_SOLVER_OWNER_REVIEW_BATCH");
+      expect(html).toContain("localStorage.setItem");
       expect(html).toContain('data-review-card');
       expect(html).toContain('data-status="NEEDS_REVIEW"');
+      expect(html).toContain('data-wave="2"');
       expect(html).toContain("Review evidence only.");
       expect(html).toContain("Human poker review is required.");
       expect(html).not.toContain('"strategy"');
+      const embeddedScript = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+      expect(embeddedScript).toBeDefined();
+      expect(() => new Function(embeddedScript!)).not.toThrow();
+
+      const jsdomErrors: string[] = [];
+      const virtualConsole = new VirtualConsole();
+      virtualConsole.on("jsdomError", (error) => jsdomErrors.push(error.message));
+      const dom = new JSDOM(html, { runScripts: "dangerously", url: "http://localhost/reviewer", virtualConsole });
+      const document = dom.window.document;
+      expect((document.getElementById("wave-filter") as HTMLSelectElement).value).toBe("2");
+      const reviewer = document.getElementById("owner-reviewer") as HTMLInputElement;
+      const row = document.querySelector<HTMLElement>("[data-owner-row]")!;
+      reviewer.value = "Owner";
+      reviewer.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+      (row.querySelector("[data-owner-decision]") as HTMLSelectElement).value = "yes";
+      (row.querySelector("[data-owner-scope]") as HTMLInputElement).value = "Current reviewed family only";
+      (row.querySelector("[data-owner-caveats]") as HTMLInputElement).value = "None";
+      row.querySelector("[data-owner-caveats]")!.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+      const storageKey = document.querySelector<HTMLElement>("[data-owner-root]")!.dataset.storageKey!;
+      const draft = JSON.parse(dom.window.localStorage.getItem(storageKey)!);
+      expect(draft.schemaVersion).toBe("pkrtrainer-texas-solver-owner-decisions-v1");
+      expect(draft.decisions.find((decision: { familyId: string }) => decision.familyId === "MTT9_50BB_BTN_BB_SRP")).toMatchObject({
+        familyId: "MTT9_50BB_BTN_BB_SRP",
+        reviewer: "Owner",
+        decision: "yes",
+        scope: "Current reviewed family only",
+        caveats: "None",
+      });
+      const exported = JSON.parse((dom.window as unknown as { serializeOwnerDecisions(): string }).serializeOwnerDecisions());
+      expect(exported.decisions).toHaveLength(1);
+      expect(exported.decisions[0].familyId).toBe("MTT9_50BB_BTN_BB_SRP");
+      expect(jsdomErrors).toEqual([]);
+      dom.window.close();
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a family assigned to more than one review wave", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-viewer-waves-"));
+    const input = join(directory, "review.report.json");
+    const output = join(directory, "viewer.html");
+    const waves = join(directory, "OWNER_REVIEW_WAVES.md");
+    try {
+      writeFileSync(input, JSON.stringify({
+        valid: true,
+        status: "NEEDS_REVIEW",
+        productionReady: false,
+        familyId: "MTT9_DUPLICATE",
+        counts: {},
+        files: [],
+        anomalies: [],
+        blockers: [],
+      }), "utf8");
+      writeFileSync(waves, "## Wave 1\n- MTT9_DUPLICATE: NEEDS_REVIEW\n## Wave 2\n- MTT9_DUPLICATE: NEEDS_REVIEW\n", "utf8");
+
+      const result = runViewer(`--input=${input}`, `--output=${output}`, `--waves=${waves}`);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("Owner review waves contain duplicate family: MTT9_DUPLICATE");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

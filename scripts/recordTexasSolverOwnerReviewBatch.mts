@@ -130,14 +130,22 @@ function readDecisionFile(path: string): DecisionFile {
   if (!existsSync(path)) throw new Error(`Decision file is missing: ${path}`);
   let parsed: unknown;
   try { parsed = JSON.parse(readFileSync(path, "utf8")); } catch { throw new Error(`Decision file is not valid JSON: ${path}`); }
-  if (!isDecisionFile(parsed)) throw new Error(`Decision file must use schemaVersion ${SCHEMA_VERSION} and a decisions array.`);
+  if (!isDecisionFile(parsed)) throw new Error(`Decision file must use schemaVersion ${SCHEMA_VERSION} and string fields for every decision entry.`);
   return parsed;
 }
 
 function isDecisionFile(value: unknown): value is DecisionFile {
   return typeof value === "object" && value !== null
     && (value as { schemaVersion?: unknown }).schemaVersion === SCHEMA_VERSION
-    && Array.isArray((value as { decisions?: unknown }).decisions);
+    && Array.isArray((value as { decisions?: unknown }).decisions)
+    && (value as { decisions: unknown[] }).decisions.every(isReviewDecision);
+}
+
+function isReviewDecision(value: unknown): value is ReviewDecision {
+  if (typeof value !== "object" || value === null) return false;
+  const entry = value as Record<string, unknown>;
+  return ["familyId", "reviewer", "reviewedAt", "decision", "scope", "caveats"]
+    .every((field) => typeof entry[field] === "string");
 }
 
 function validateSelected(entries: readonly ReviewDecision[], families: readonly string[], rootDir: string): string[] {

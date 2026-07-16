@@ -70,6 +70,26 @@ describe("mtt:texas-solver-owner-review-batch CLI", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("rejects malformed decision entries before previewing any write", () => {
+    const root = fixtureRoot();
+    const decisions = join(root, "decisions.json");
+    const notes = join(root, "MTT9_20BB_BTN_BB_SRP", "review-notes.md");
+    try {
+      writeFileSync(decisions, JSON.stringify({
+        schemaVersion: "pkrtrainer-texas-solver-owner-decisions-v1",
+        decisions: [null],
+      }), "utf8");
+
+      const result = runBatch(`--root=${root}`, `--decisions=${decisions}`, "--write", "--confirm=RECORD_TEXAS_SOLVER_OWNER_REVIEW_BATCH", "--json");
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("string fields for every decision entry");
+      expect(readFileSync(notes, "utf8")).toContain("Status: NEEDS_REVIEW");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 function fixtureRoot(): string {

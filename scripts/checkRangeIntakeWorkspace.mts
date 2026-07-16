@@ -109,24 +109,27 @@ function buildIntakeWorkspaceReport(): IntakeWorkspaceReport {
   if (!existsSync(rawGitignorePath)) {
     errors.push(`${rawGitignorePath} is missing.`);
   } else if (normalizeLineEndings(readFileSync(rawGitignorePath, "utf8").trim()) !== expectedRawGitignore) {
-    errors.push(`${rawGitignorePath} must ignore every raw file except .gitignore and README.md.`);
+    errors.push(`${rawGitignorePath} must ignore strategy files while allowing .gitignore, README.md and exact permission.json manifests.`);
   }
   if (!existsSync(rawReadmePath)) {
     errors.push(`${rawReadmePath} is missing.`);
   }
 
+  const legalSlots = legalImportSlots();
   const trackedRawFiles = gitTrackedRawFiles();
-  const productionPermissionFiles = new Set(generatedMttProductionManifest.map((entry) => (
+  const sourceSafePermissionFiles = new Set(generatedMttProductionManifest.map((entry) => (
     `${rawFolder}/${entry.packId}/permission.json`
   )));
+  for (const slot of legalSlots) {
+    sourceSafePermissionFiles.add(slot.importSlot.permissionManifestPath.replaceAll("\\", "/"));
+  }
   const disallowedTrackedRawFiles = trackedRawFiles.filter((file) => (
-    !allowedTrackedRawFiles.has(file) && !productionPermissionFiles.has(file)
+    !allowedTrackedRawFiles.has(file) && !sourceSafePermissionFiles.has(file)
   ));
   if (disallowedTrackedRawFiles.length > 0) {
     errors.push(`Disallowed tracked raw intake files: ${disallowedTrackedRawFiles.join(", ")}`);
   }
 
-  const legalSlots = legalImportSlots();
   const legalSlotByRawFolder = new Map(legalSlots.map((slot) => [slot.importSlot.rawInputFolder, slot]));
   const productionPackByRawFolder = new Map(generatedMttProductionManifest.map((entry) => [
     `${rawFolder}/${entry.packId}`,

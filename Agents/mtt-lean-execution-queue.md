@@ -299,6 +299,29 @@ The project owner supplies usable yes/no/scope decisions for the first wave.
 The lower-cost model may write those supplied decisions into the templates but
 must not make the poker judgment.
 
+Owner workbench (2026-07-16):
+
+```powershell
+npm run mtt:texas-solver-viewer
+Start-Process "http://127.0.0.1:5173/artifacts/texas-solver-review-integration/viewer/index.html"
+```
+
+The viewer starts on the first pending five-family wave, restores its local
+draft, accepts a previously downloaded decision JSON and exports the exact
+batch-writer schema. It never selects a verdict or edits review notes. Run the
+downloaded wave through dry-run before the explicit write:
+
+```powershell
+npm run mtt:texas-solver-owner-review-batch -- --decisions="$HOME\Downloads\owner-review-decisions-wave-1.json"
+npm run mtt:texas-solver-owner-review-batch -- --decisions="$HOME\Downloads\owner-review-decisions-wave-1.json" --write --confirm=RECORD_TEXAS_SOLVER_OWNER_REVIEW_BATCH
+npm run mtt:texas-solver-review-protocol -- --packet-dir=artifacts/texas-solver-review-protocol/packet --summary
+```
+
+Advance to the next wave only after the refreshed protocol shows the prior
+five explicit owner decisions. A missing dev server does not change the gate;
+the generated `artifacts/texas-solver-review-integration/viewer/index.html` may
+also be opened directly.
+
 ### SOL-00 - Monitor current family
 
 Status: `REPEATING_CHECK`
@@ -760,3 +783,5 @@ Use this exact handoff prompt after changing models:
 | 2026-07-16 | OPS-31 | DONE | Both resource-balanced phases are raw-complete at next 72/72 and followup 72/72. The scheduled task is Ready with last result SUCCESS, no worker/solver process and no recorded failure; its log confirms both phases were skipped as complete. No evidence was automatically staged or promoted. |
 | 2026-07-16 | AEV-02 | DONE | Core release reporting measures action-EV readiness independently from strategy: preflop 0/493818 decisions and scoped FLOP 0/972, with frequencies explicitly excluded. Full regression passed 147 files / 721 tests; build, precache, bundle budget and four-viewport Chrome E2E passed with zero browser errors. |
 | 2026-07-16 | AEV-UX-01 | DONE | Fixed postflop stats bridge v5 to retain chosen/best EV and equivalent-best actions atomically while accepting legacy v4 records. Focused persistence/transfer tests passed 20/20; positive EV production-fixture E2E and four-viewport EN/CZ preview E2E passed; full regression passed 147 files / 723 tests. Synthetic fixture values are test-only and production EV coverage remains zero. |
+| 2026-07-16 | OWNER-REVIEW-05 | DONE | Made the 20-family owner gate wave-driven in the source-safe viewer: first pending wave is selected automatically, unique-family metrics replace report counts, drafts persist locally, prior JSON can be imported, and exported JSON plus copied PowerShell commands match the dry-run-first batch writer. Malformed batch entries and duplicate wave assignments fail closed. Focused viewer/writer tests execute the embedded browser script and passed 6/6; typecheck passed. Human poker verdicts remain 0/20 and were not inferred. |
+| 2026-07-16 | RELEASE-CORE-03 | DONE | Fixed the post-commit intake guard to allow only exact `permission.json` provenance manifests for registered production packs or named legal intake slots while continuing to reject tracked strategy files. The guard is green with 10 source-safe tracked files and no `normalized.json`. Full regression passed 148 files / 729 tests; registry check, Core 4/4 plus 7/7 gate, range verification, production build, precache integrity and bundle budget all passed. Six-max strategy and action-EV coverage remain truthfully zero. |

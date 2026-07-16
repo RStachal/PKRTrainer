@@ -3,12 +3,14 @@ import { dirname, join, relative, resolve } from "node:path";
 
 const DEFAULT_REVIEWS_DIR = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 const DEFAULT_OUTPUT = "artifacts/texas-solver-review-integration/viewer/index.html";
+const DEFAULT_WAVES = "artifacts/texas-solver-review-protocol/packet/OWNER_REVIEW_WAVES.md";
 const RANK_ORDER = "AKQJT98765432".split("");
 
 interface CliArgs {
   inputs: string[];
   outputPath: string;
   reviewsDir: string;
+  wavesPath: string | null;
   title: string;
 }
 
@@ -64,6 +66,8 @@ interface NormalizedReport {
 interface OwnerDecisionFamily {
   familyId: string;
   status: string;
+  anchor: string;
+  wave: number | null;
 }
 
 try {
@@ -74,8 +78,9 @@ try {
   }
 
   const reports = inputPaths.map(readReviewReport).sort(compareReports);
+  const reviewWaves = readReviewWaves(args.wavesPath);
   mkdirSync(dirname(args.outputPath), { recursive: true });
-  writeFileSync(args.outputPath, buildHtml(args.title, reports), "utf8");
+  writeFileSync(args.outputPath, buildHtml(args.title, reports, reviewWaves), "utf8");
 
   console.log(`TexasSolver review viewer written: ${args.outputPath}`);
   console.log(`Reports: ${reports.length}`);
@@ -88,6 +93,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   const inputs: string[] = [];
   let outputPath = resolve(DEFAULT_OUTPUT);
   let reviewsDir = resolve(DEFAULT_REVIEWS_DIR);
+  let wavesPath: string | null = existsSync(resolve(DEFAULT_WAVES)) ? resolve(DEFAULT_WAVES) : null;
   let title = "TexasSolver MTT review viewer";
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -111,6 +117,19 @@ function parseArgs(argv: readonly string[]): CliArgs {
       reviewsDir = resolve(requiredInlineValue(item, "--reviews-dir"));
       continue;
     }
+    if (item === "--waves") {
+      wavesPath = resolve(nextArg(argv, index, "--waves"));
+      index += 1;
+      continue;
+    }
+    if (item.startsWith("--waves=")) {
+      wavesPath = resolve(requiredInlineValue(item, "--waves"));
+      continue;
+    }
+    if (item === "--no-waves") {
+      wavesPath = null;
+      continue;
+    }
     if (item === "--output") {
       outputPath = resolve(nextArg(argv, index, "--output"));
       index += 1;
@@ -132,7 +151,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { inputs, outputPath, reviewsDir, title };
+  return { inputs, outputPath, reviewsDir, wavesPath, title };
 }
 
 function usage(): string {
@@ -141,6 +160,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-viewer",
     "  npm run mtt:texas-solver-viewer -- --input artifacts/.../CHECK.review-report.json",
     "  npm run mtt:texas-solver-viewer -- --reviews-dir artifacts/texas-solver-review-integration/reviews --output artifacts/texas-solver-review-integration/viewer/index.html",
+    "  npm run mtt:texas-solver-viewer -- --waves artifacts/texas-solver-review-protocol/packet/OWNER_REVIEW_WAVES.md",
     "",
     "Builds a local source-safe HTML viewer from TexasSolver review JSON files.",
     "It does not create production normalized.json or permission.json files.",
@@ -176,6 +196,26 @@ function walkFiles(root: string): string[] {
     if (entry.isFile()) files.push(fullPath);
   }
   return files;
+}
+
+function readReviewWaves(wavesPath: string | null): ReadonlyMap<string, number> {
+  const waves = new Map<string, number>();
+  if (wavesPath === null) return waves;
+  if (!existsSync(wavesPath)) throw new Error(`Owner review waves file is missing: ${wavesPath}`);
+
+  let currentWave: number | null = null;
+  for (const line of readFileSync(wavesPath, "utf8").split(/\r?\n/)) {
+    const heading = line.match(/^## Wave (\d+)\s*$/i);
+    if (heading !== null) {
+      currentWave = Number.parseInt(heading[1], 10);
+      continue;
+    }
+    const family = line.match(/^-\s+([A-Za-z0-9_]+):/);
+    if (family === null || currentWave === null) continue;
+    if (waves.has(family[1])) throw new Error(`Owner review waves contain duplicate family: ${family[1]}`);
+    waves.set(family[1], currentWave);
+  }
+  return waves;
 }
 
 function readReviewReport(sourcePath: string): NormalizedReport {
@@ -268,11 +308,12 @@ function compareReports(left: NormalizedReport, right: NormalizedReport): number
   return `${left.familyId} ${left.nodeLabel}`.localeCompare(`${right.familyId} ${right.nodeLabel}`);
 }
 
-function buildHtml(title: string, reports: readonly NormalizedReport[]): string {
+function buildHtml(title: string, reports: readonly NormalizedReport[], reviewWaves: ReadonlyMap<string, number>): string {
   const generatedAt = new Date().toISOString();
   const summary = summarizeReports(reports);
-  const summaryCards = reports.map(renderSummaryCard).join("\n");
-  const reportSections = reports.map(renderReportSection).join("\n");
+  const summaryCards = reports.map((report) => renderSummaryCard(report, reviewWaves)).join("\n");
+  const reportSections = reports.map((report) => renderReportSection(report, reviewWaves)).join("\n");
+  const waveOptions = renderWaveOptions(reports, reviewWaves);
   return `<!doctype html>
 <html lang="cs">
 <head>
@@ -297,9 +338,10 @@ function buildHtml(title: string, reports: readonly NormalizedReport[]): string 
     <section class="toolbar" aria-label="Review filters">
       <label>Family<input id="family-filter" type="search" placeholder="Search family"></label>
       <label>Status<select id="status-filter"><option value="ALL">All statuses</option><option value="NEEDS_REVIEW">Needs review</option><option value="REVIEWED_SCOPED">Reviewed scoped</option><option value="REVIEWED_PRODUCTION">Reviewed production</option><option value="REVIEWED_NOT_USABLE">Reviewed not usable</option><option value="MISSING_REVIEW">Missing review</option></select></label>
+      <label>Wave<select id="wave-filter">${waveOptions}</select></label>
       <output id="filter-count" aria-live="polite">${summary.total} families</output>
     </section>
-    ${renderOwnerDecisionWorkbench(reports)}
+    ${renderOwnerDecisionWorkbench(reports, reviewWaves)}
     <section class="summary-grid">${summaryCards}</section>
     ${reportSections}
   </main>
@@ -309,54 +351,93 @@ function buildHtml(title: string, reports: readonly NormalizedReport[]): string 
 `;
 }
 
-function summarizeReports(reports: readonly NormalizedReport[]) {
-  return reports.reduce((summary, report) => ({
-    total: summary.total + 1,
-    protocolReady: summary.protocolReady + (report.status.startsWith("REVIEWED") ? 1 : 0),
-    pending: summary.pending + (report.status === "NEEDS_REVIEW" || report.status === "MISSING_REVIEW" ? 1 : 0),
-    blockers: summary.blockers + report.blockers.length,
-  }), { total: 0, protocolReady: 0, pending: 0, blockers: 0 });
+function renderWaveOptions(reports: readonly NormalizedReport[], reviewWaves: ReadonlyMap<string, number>): string {
+  const waveNumbers = [...new Set(reports.map((report) => reviewWaves.get(report.familyId)).filter((wave): wave is number => wave !== undefined))]
+    .sort((left, right) => left - right);
+  const firstPending = waveNumbers.find((wave) => reports.some((report) => (
+    reviewWaves.get(report.familyId) === wave && (report.status === "NEEDS_REVIEW" || report.status === "MISSING_REVIEW")
+  ))) ?? null;
+  const options = [`<option value="ALL"${firstPending === null ? " selected" : ""}>All waves</option>`];
+  for (const wave of waveNumbers) {
+    const familyCount = new Set(reports.filter((report) => reviewWaves.get(report.familyId) === wave).map((report) => report.familyId)).size;
+    options.push(`<option value="${wave}"${wave === firstPending ? " selected" : ""}>Wave ${wave} (${familyCount})</option>`);
+  }
+  if (reports.some((report) => !reviewWaves.has(report.familyId))) options.push('<option value="UNASSIGNED">Unassigned</option>');
+  return options.join("");
 }
 
-function renderOwnerDecisionWorkbench(reports: readonly NormalizedReport[]): string {
-  const families = ownerDecisionFamilies(reports);
-  const rows = families.map((family) => `<tr data-owner-row data-family-id="${escapeHtml(family.familyId)}">
-    <td><strong>${escapeHtml(family.familyId)}</strong><small>${escapeHtml(family.status)}</small></td>
+function summarizeReports(reports: readonly NormalizedReport[]) {
+  const familyStatuses = new Map<string, Set<string>>();
+  let blockers = 0;
+  for (const report of reports) {
+    const statuses = familyStatuses.get(report.familyId) ?? new Set<string>();
+    statuses.add(report.status);
+    familyStatuses.set(report.familyId, statuses);
+    blockers += report.blockers.length;
+  }
+  const protocolReady = [...familyStatuses.values()].filter((statuses) => (
+    statuses.size > 0 && [...statuses].every((status) => status.startsWith("REVIEWED"))
+  )).length;
+  return {
+    total: familyStatuses.size,
+    protocolReady,
+    pending: familyStatuses.size - protocolReady,
+    blockers,
+  };
+}
+
+function renderOwnerDecisionWorkbench(reports: readonly NormalizedReport[], reviewWaves: ReadonlyMap<string, number>): string {
+  const families = ownerDecisionFamilies(reports, reviewWaves);
+  const storageKey = `pkrtrainer-texas-solver-owner-review-v1:${families.map((family) => family.familyId).join("|")}`;
+  const rows = families.map((family) => `<tr data-owner-row data-family="${escapeHtml(family.familyId)}" data-family-id="${escapeHtml(family.familyId)}" data-status="${escapeHtml(family.status)}" data-wave="${waveValue(family.wave)}">
+    <td><strong><a href="#${escapeHtml(family.anchor)}">${escapeHtml(family.familyId)}</a></strong><small>${escapeHtml(family.status)}</small></td>
+    <td>${escapeHtml(family.wave === null ? "Unassigned" : `Wave ${family.wave}`)}</td>
     <td><select data-owner-decision aria-label="Decision for ${escapeHtml(family.familyId)}"><option value="">Pending</option><option value="yes">Yes</option><option value="scoped">Scoped</option><option value="no">No</option></select></td>
     <td><input data-owner-scope aria-label="Scope for ${escapeHtml(family.familyId)}" type="text"></td>
     <td><input data-owner-caveats aria-label="Caveats for ${escapeHtml(family.familyId)}" type="text"></td>
   </tr>`).join("");
-  return `<section class="owner-workbench" aria-labelledby="owner-workbench-title">
-    <div class="owner-workbench-head"><div><p class="eyebrow">Human gate</p><h2 id="owner-workbench-title">Owner Decisions</h2></div><output id="owner-decision-status" aria-live="polite"></output></div>
-    <div class="owner-meta"><label>Reviewer<input id="owner-reviewer" type="text"></label><label>Reviewed at<input id="owner-reviewed-at" type="date" value="${today()}"></label><button id="copy-owner-decisions" type="button" title="Copy decision JSON">Copy JSON</button><button id="download-owner-decisions" type="button" title="Download decision JSON">Download JSON</button></div>
-    <div class="owner-table-wrap"><table><thead><tr><th>Family</th><th>Decision</th><th>Scope</th><th>Caveats</th></tr></thead><tbody>${rows}</tbody></table></div>
+  return `<section class="owner-workbench" data-owner-root data-storage-key="${escapeHtml(storageKey)}" aria-labelledby="owner-workbench-title">
+    <div class="owner-workbench-head"><div><p class="eyebrow">Human gate</p><h2 id="owner-workbench-title">Owner Decisions</h2></div><div class="owner-outputs"><output id="owner-progress" aria-live="polite"></output><output id="owner-decision-status" aria-live="polite"></output></div></div>
+    <div class="owner-meta"><label>Reviewer<input id="owner-reviewer" type="text" autocomplete="name"></label><label>Reviewed at<input id="owner-reviewed-at" type="date" value="${today()}"></label><button id="import-owner-decisions" type="button" title="Import a decision JSON draft">Import JSON</button><input id="owner-decisions-file" type="file" accept="application/json,.json" hidden><button id="copy-owner-decisions" type="button" title="Copy decision JSON">Copy JSON</button><button id="download-owner-decisions" type="button" title="Download decision JSON">Download JSON</button><button id="copy-owner-commands" type="button" title="Copy PowerShell dry-run and confirmed write commands">Copy PS commands</button><button id="clear-owner-decisions" type="button" title="Clear the locally stored draft">Clear draft</button></div>
+    <div class="owner-table-wrap"><table><thead><tr><th>Family</th><th>Wave</th><th>Decision</th><th>Scope</th><th>Caveats</th></tr></thead><tbody>${rows}</tbody></table></div>
   </section>`;
 }
 
-function ownerDecisionFamilies(reports: readonly NormalizedReport[]): OwnerDecisionFamily[] {
+function ownerDecisionFamilies(reports: readonly NormalizedReport[], reviewWaves: ReadonlyMap<string, number>): OwnerDecisionFamily[] {
   const families = new Map<string, OwnerDecisionFamily>();
   for (const report of reports) {
     const current = families.get(report.familyId);
     if (current === undefined || current.status === "NEEDS_REVIEW") {
-      families.set(report.familyId, { familyId: report.familyId, status: report.status });
+      families.set(report.familyId, {
+        familyId: report.familyId,
+        status: report.status,
+        anchor: reportAnchor(report),
+        wave: reviewWaves.get(report.familyId) ?? null,
+      });
     }
   }
-  return [...families.values()].sort((left, right) => left.familyId.localeCompare(right.familyId));
+  return [...families.values()].sort((left, right) => (left.wave ?? Number.MAX_SAFE_INTEGER) - (right.wave ?? Number.MAX_SAFE_INTEGER) || left.familyId.localeCompare(right.familyId));
 }
 
-function renderSummaryCard(report: NormalizedReport): string {
+function waveValue(wave: number | null | undefined): string {
+  return wave === null || wave === undefined ? "UNASSIGNED" : String(wave);
+}
+
+function renderSummaryCard(report: NormalizedReport, reviewWaves: ReadonlyMap<string, number>): string {
   const statusClass = statusClassFor(report.status);
-  return `<a class="card ${statusClass}" data-review-card data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" href="#${reportAnchor(report)}">
+  const wave = reviewWaves.get(report.familyId);
+  return `<a class="card ${statusClass}" data-review-card data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" data-wave="${waveValue(wave)}" href="#${reportAnchor(report)}">
     <span>${escapeHtml(report.familyId)}</span>
     <strong>${escapeHtml(report.nodeLabel)}</strong>
-    <small class="review-summary">${escapeHtml(report.status)} / ${report.counts.rawFiles} boards / ${report.blockers.length} blockers</small>
+    <small class="review-summary">${escapeHtml(wave === undefined ? "Unassigned" : `Wave ${wave}`)} / ${escapeHtml(report.status)} / ${report.counts.rawFiles} boards / ${report.blockers.length} blockers</small>
   </a>`;
 }
 
-function renderReportSection(report: NormalizedReport): string {
+function renderReportSection(report: NormalizedReport, reviewWaves: ReadonlyMap<string, number>): string {
   const files = report.files.map((file) => renderBoard(report, file)).join("\n");
   const warnings = [...report.blockers, ...report.anomalies].map((item) => `<li>${escapeHtml(item)}</li>`).join("");
-  return `<section class="report" data-review-report data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" id="${reportAnchor(report)}">
+  const wave = reviewWaves.get(report.familyId);
+  return `<section class="report" data-review-report data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" data-wave="${waveValue(wave)}" id="${reportAnchor(report)}">
     <div class="report-head">
       <div>
         <p class="eyebrow">${escapeHtml(report.familyId)}</p>
@@ -456,29 +537,44 @@ function filterScript(): string {
   return `
 const familyFilter = document.getElementById("family-filter");
 const statusFilter = document.getElementById("status-filter");
+const waveFilter = document.getElementById("wave-filter");
 const count = document.getElementById("filter-count");
 const cards = [...document.querySelectorAll("[data-review-card]")];
 const reports = [...document.querySelectorAll("[data-review-report]")];
+const ownerRows = [...document.querySelectorAll("[data-owner-row]")];
 function applyFilters() {
   const family = familyFilter.value.trim().toLowerCase();
   const status = statusFilter.value;
-  for (const element of [...cards, ...reports]) {
+  const wave = waveFilter.value;
+  for (const element of [...cards, ...reports, ...ownerRows]) {
     const matchesFamily = element.dataset.family.toLowerCase().includes(family);
     const matchesStatus = status === "ALL" || element.dataset.status === status;
-    element.hidden = !(matchesFamily && matchesStatus);
+    const matchesWave = wave === "ALL" || element.dataset.wave === wave;
+    element.hidden = !(matchesFamily && matchesStatus && matchesWave);
   }
-  const visible = reports.filter((report) => !report.hidden).length;
+  const visible = new Set(reports.filter((report) => !report.hidden).map((report) => report.dataset.family)).size;
   count.value = visible + (visible === 1 ? " family" : " families");
   count.textContent = count.value;
+  updateOwnerProgress();
 }
 familyFilter.addEventListener("input", applyFilters);
 statusFilter.addEventListener("change", applyFilters);
+waveFilter.addEventListener("change", applyFilters);
 
+const ownerRoot = document.querySelector("[data-owner-root]");
 const ownerStatus = document.getElementById("owner-decision-status");
-function ownerDecisionDocument() {
+const ownerProgress = document.getElementById("owner-progress");
+const ownerReviewer = document.getElementById("owner-reviewer");
+const ownerReviewedAt = document.getElementById("owner-reviewed-at");
+const ownerFileInput = document.getElementById("owner-decisions-file");
+const ownerStorageKey = ownerRoot.dataset.storageKey;
+const ownerSchemaVersion = "pkrtrainer-texas-solver-owner-decisions-v1";
+const ownerDecisionValues = new Set(["", "yes", "no", "scoped"]);
+
+function ownerDecisionDocument(validate = true, rows = ownerRows) {
   const reviewer = document.getElementById("owner-reviewer").value.trim();
   const reviewedAt = document.getElementById("owner-reviewed-at").value;
-  const decisions = [...document.querySelectorAll("[data-owner-row]")].map((row) => ({
+  const decisions = rows.map((row) => ({
     familyId: row.dataset.familyId,
     reviewer,
     reviewedAt,
@@ -486,14 +582,23 @@ function ownerDecisionDocument() {
     scope: row.querySelector("[data-owner-scope]").value.trim(),
     caveats: row.querySelector("[data-owner-caveats]").value.trim(),
   }));
-  const selected = decisions.filter((decision) => decision.decision !== "");
-  const invalid = selected.find((decision) => !decision.reviewer || !decision.reviewedAt || !decision.caveats || ((decision.decision === "yes" || decision.decision === "scoped") && !decision.scope));
-  if (invalid) throw new Error("Complete reviewer, date, caveats and scope for Yes or Scoped decisions.");
-  return { schemaVersion: "pkrtrainer-texas-solver-owner-decisions-v1", decisions };
+  if (validate) {
+    const selected = decisions.filter((decision) => decision.decision !== "");
+    if (selected.length === 0) throw new Error("Select at least one owner decision.");
+    const invalid = selected.find((decision) => !decision.reviewer || !/^\\d{4}-\\d{2}-\\d{2}$/.test(decision.reviewedAt) || !decision.caveats || ((decision.decision === "yes" || decision.decision === "scoped") && !decision.scope));
+    if (invalid) throw new Error("Complete reviewer, date, caveats and scope for Yes or Scoped decisions.");
+  }
+  return { schemaVersion: ownerSchemaVersion, decisions };
 }
+
+function ownerRowsForExport() {
+  const wave = waveFilter.value;
+  return wave === "ALL" ? ownerRows : ownerRows.filter((row) => row.dataset.wave === wave);
+}
+
 function serializeOwnerDecisions() {
   try {
-    const json = JSON.stringify(ownerDecisionDocument(), null, 2) + "\\n";
+    const json = JSON.stringify(ownerDecisionDocument(true, ownerRowsForExport()), null, 2) + "\\n";
     ownerStatus.textContent = "Decision JSON ready";
     return json;
   } catch (error) {
@@ -501,6 +606,70 @@ function serializeOwnerDecisions() {
     return null;
   }
 }
+
+function ownerDownloadFilename() {
+  const wave = waveFilter.value;
+  return wave === "ALL" ? "owner-review-decisions.json" : "owner-review-decisions-wave-" + wave.toLowerCase() + ".json";
+}
+
+function updateOwnerProgress() {
+  const visibleRows = ownerRows.filter((row) => !row.hidden);
+  const decidedRows = visibleRows.filter((row) => row.querySelector("[data-owner-decision]").value !== "");
+  const label = waveFilter.selectedOptions[0]?.textContent ?? "Review";
+  ownerProgress.textContent = label + ": " + decidedRows.length + "/" + visibleRows.length + " decided";
+}
+
+function saveOwnerDraft() {
+  try {
+    localStorage.setItem(ownerStorageKey, JSON.stringify(ownerDecisionDocument(false)));
+    ownerStatus.textContent = "Draft saved locally";
+  } catch {
+    ownerStatus.textContent = "Local draft storage unavailable";
+  }
+  updateOwnerProgress();
+}
+
+function applyOwnerDocument(documentValue) {
+  if (!documentValue || documentValue.schemaVersion !== ownerSchemaVersion || !Array.isArray(documentValue.decisions)) {
+    throw new Error("Decision JSON uses an unsupported schema.");
+  }
+  const rowsByFamily = new Map(ownerRows.map((row) => [row.dataset.familyId, row]));
+  const seen = new Set();
+  const reviewers = new Set();
+  const reviewDates = new Set();
+  for (const decision of documentValue.decisions) {
+    if (!decision || typeof decision.familyId !== "string" || !rowsByFamily.has(decision.familyId)) throw new Error("Decision JSON contains an unknown family.");
+    if (seen.has(decision.familyId)) throw new Error("Decision JSON contains a duplicate family.");
+    seen.add(decision.familyId);
+    if (!["reviewer", "reviewedAt", "decision", "scope", "caveats"].every((field) => typeof decision[field] === "string")) throw new Error("Decision JSON contains a non-string decision field.");
+    if (!ownerDecisionValues.has(decision.decision ?? "")) throw new Error("Decision JSON contains an invalid decision.");
+    if (decision.reviewer) reviewers.add(decision.reviewer);
+    if (decision.reviewedAt) reviewDates.add(decision.reviewedAt);
+  }
+  if (reviewers.size > 1 || reviewDates.size > 1) throw new Error("Imported decisions must share one reviewer and review date.");
+  ownerReviewer.value = [...reviewers][0] ?? "";
+  ownerReviewedAt.value = [...reviewDates][0] ?? "";
+  for (const row of ownerRows) {
+    const decision = documentValue.decisions.find((entry) => entry.familyId === row.dataset.familyId);
+    if (!decision) continue;
+    row.querySelector("[data-owner-decision]").value = decision.decision ?? "";
+    row.querySelector("[data-owner-scope]").value = typeof decision.scope === "string" ? decision.scope : "";
+    row.querySelector("[data-owner-caveats]").value = typeof decision.caveats === "string" ? decision.caveats : "";
+  }
+  updateOwnerProgress();
+}
+
+function restoreOwnerDraft() {
+  try {
+    const draft = localStorage.getItem(ownerStorageKey);
+    if (!draft) return;
+    applyOwnerDocument(JSON.parse(draft));
+    ownerStatus.textContent = "Local draft restored";
+  } catch {
+    ownerStatus.textContent = "Stored draft could not be restored";
+  }
+}
+
 document.getElementById("copy-owner-decisions").addEventListener("click", async () => {
   const json = serializeOwnerDecisions();
   if (!json) return;
@@ -512,10 +681,59 @@ document.getElementById("download-owner-decisions").addEventListener("click", ()
   if (!json) return;
   const link = document.createElement("a");
   link.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
-  link.download = "owner-review-decisions.json";
+  link.download = ownerDownloadFilename();
   link.click();
   URL.revokeObjectURL(link.href);
 });
+
+document.getElementById("import-owner-decisions").addEventListener("click", () => ownerFileInput.click());
+ownerFileInput.addEventListener("change", async () => {
+  const file = ownerFileInput.files?.[0];
+  if (!file) return;
+  try {
+    applyOwnerDocument(JSON.parse(await file.text()));
+    saveOwnerDraft();
+    ownerStatus.textContent = "Decision JSON imported";
+  } catch (error) {
+    ownerStatus.textContent = error instanceof Error ? error.message : String(error);
+  } finally {
+    ownerFileInput.value = "";
+  }
+});
+
+document.getElementById("copy-owner-commands").addEventListener("click", async () => {
+  if (!serializeOwnerDecisions()) return;
+  const decisionsPath = "$HOME\\\\Downloads\\\\" + ownerDownloadFilename();
+  const dryRun = 'npm run mtt:texas-solver-owner-review-batch -- --decisions="' + decisionsPath + '"';
+  const write = dryRun + " --write --confirm=RECORD_TEXAS_SOLVER_OWNER_REVIEW_BATCH";
+  try {
+    await navigator.clipboard.writeText(dryRun + "\\n" + write + "\\n");
+    ownerStatus.textContent = "Dry-run and confirmed write commands copied";
+  } catch {
+    ownerStatus.textContent = "Command copy unavailable";
+  }
+});
+
+document.getElementById("clear-owner-decisions").addEventListener("click", () => {
+  if (!window.confirm("Clear all owner decision fields and the locally stored draft?")) return;
+  ownerReviewer.value = "";
+  ownerReviewedAt.value = ownerReviewedAt.defaultValue;
+  for (const row of ownerRows) {
+    row.querySelector("[data-owner-decision]").value = "";
+    row.querySelector("[data-owner-scope]").value = "";
+    row.querySelector("[data-owner-caveats]").value = "";
+  }
+  try { localStorage.removeItem(ownerStorageKey); } catch {}
+  ownerStatus.textContent = "Draft cleared";
+  updateOwnerProgress();
+});
+
+ownerRoot.addEventListener("input", saveOwnerDraft);
+ownerRoot.addEventListener("change", (event) => {
+  if (event.target !== ownerFileInput) saveOwnerDraft();
+});
+restoreOwnerDraft();
+applyFilters();
 `;
 }
 
@@ -534,11 +752,11 @@ function css(): string {
 body { margin: 0; }
 header { padding: 32px; background: linear-gradient(135deg, #172033, #111827); border-bottom: 1px solid #2a3448; }
 h1, h2, h3, p { margin-top: 0; }
-h1 { margin-bottom: 10px; font-size: clamp(30px, 4vw, 56px); }
+h1 { margin-bottom: 10px; font-size: 42px; }
 h2 { margin-bottom: 6px; font-size: 30px; }
 h3 { margin-bottom: 4px; font-size: 22px; }
 main { padding: 24px; }
-.eyebrow { margin-bottom: 8px; color: #8fb3ff; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.eyebrow { margin-bottom: 8px; color: #8fb3ff; font-size: 12px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; }
 .summary-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom: 28px; }
 .card { display: grid; gap: 6px; padding: 16px; color: inherit; text-decoration: none; background: #182235; border: 1px solid #2d3a52; border-radius: 16px; }
 .card strong { font-size: 20px; }
@@ -589,16 +807,17 @@ dd { margin: 2px 0 0; font-weight: 800; }
 .owner-workbench { margin: 24px 0 28px; padding: 20px; border: 1px solid #2a3448; border-radius: 6px; background: #131b2a; }
 .owner-workbench-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
 .owner-workbench-head h2 { margin-bottom: 0; font-size: 24px; }
+.owner-outputs { display: grid; gap: 4px; justify-items: end; }
 .owner-meta { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin: 16px 0; }
 .owner-meta label { display: grid; gap: 5px; color: #aab7cf; font-size: 12px; font-weight: 700; }
 .owner-meta input, .owner-table-wrap input, .owner-table-wrap select, .owner-meta button { min-height: 34px; box-sizing: border-box; padding: 6px 8px; color: inherit; background: #0f1623; border: 1px solid #526171; border-radius: 4px; font: inherit; }
 .owner-meta button { cursor: pointer; background: #1a3a57; border-color: #4f89b5; }
 .owner-table-wrap { overflow-x: auto; }
-.owner-table-wrap table { width: 100%; min-width: 860px; border-collapse: collapse; }
+.owner-table-wrap table { width: 100%; min-width: 960px; border-collapse: collapse; }
 .owner-table-wrap th { color: #8ea0bd; font-size: 12px; text-align: left; text-transform: uppercase; }
 .owner-table-wrap th, .owner-table-wrap td { padding: 9px 8px; border-top: 1px solid #263246; vertical-align: middle; }
-.owner-table-wrap td:first-child { min-width: 320px; }.owner-table-wrap td:first-child small { display: block; color: #aab7cf; margin-top: 3px; }.owner-table-wrap input { width: 100%; }.owner-table-wrap select { min-width: 110px; }
-#owner-decision-status { color: #aab7cf; font-size: 13px; }
-@media (max-width: 640px) { .page-header { padding: 20px; } .metrics { grid-template-columns: repeat(2, 1fr); } .report-head dl { grid-template-columns: repeat(2, minmax(100px, 1fr)); } #filter-count { width: 100%; margin-left: 0; } #family-filter { min-width: min(260px, 100%); } }
+.owner-table-wrap td:first-child { min-width: 320px; }.owner-table-wrap td:first-child a { color: #c9dcff; }.owner-table-wrap td:first-child small { display: block; color: #aab7cf; margin-top: 3px; }.owner-table-wrap input { width: 100%; }.owner-table-wrap select { min-width: 110px; }
+#owner-progress, #owner-decision-status { color: #aab7cf; font-size: 13px; }
+@media (max-width: 640px) { h1 { font-size: 30px; } .page-header { padding: 20px; } .metrics { grid-template-columns: repeat(2, 1fr); } .report-head dl { grid-template-columns: repeat(2, minmax(100px, 1fr)); } #filter-count { width: 100%; margin-left: 0; } #family-filter { min-width: min(260px, 100%); } .owner-workbench-head { align-items: start; flex-direction: column; } .owner-outputs { justify-items: start; } }
 `;
 }
