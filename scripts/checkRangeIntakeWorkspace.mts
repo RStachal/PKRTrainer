@@ -6,6 +6,8 @@ import {
   type MttCompletionImportSlotHint,
   type MttCompletionReadinessRow,
 } from "../src/data/ranges/mttProductionReadiness.ts";
+import { generatedMttProductionManifest } from "../src/data/ranges/mttProductionRegistry.generated.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import {
   emptyMttIntakePriorityCounts,
   MTT_INTAKE_PRIORITY_KEYS,
@@ -18,7 +20,13 @@ const allowedTrackedRawFiles = new Set([
   "Agents/range-intake/raw/.gitignore",
   "Agents/range-intake/raw/README.md",
 ]);
-const expectedRawGitignore = ["*", "!.gitignore", "!README.md"].join("\n");
+const expectedRawGitignore = [
+  "*",
+  "!.gitignore",
+  "!README.md",
+  "!*/",
+  "!*/permission.json",
+].join("\n");
 
 interface CliArgs {
   json: boolean;
@@ -44,6 +52,7 @@ interface IntakeWorkspaceReport {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const report = buildIntakeWorkspaceReport();
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
@@ -107,21 +116,35 @@ function buildIntakeWorkspaceReport(): IntakeWorkspaceReport {
   }
 
   const trackedRawFiles = gitTrackedRawFiles();
-  const disallowedTrackedRawFiles = trackedRawFiles.filter((file) => !allowedTrackedRawFiles.has(file));
+  const productionPermissionFiles = new Set(generatedMttProductionManifest.map((entry) => (
+    `${rawFolder}/${entry.packId}/permission.json`
+  )));
+  const disallowedTrackedRawFiles = trackedRawFiles.filter((file) => (
+    !allowedTrackedRawFiles.has(file) && !productionPermissionFiles.has(file)
+  ));
   if (disallowedTrackedRawFiles.length > 0) {
     errors.push(`Disallowed tracked raw intake files: ${disallowedTrackedRawFiles.join(", ")}`);
   }
 
   const legalSlots = legalImportSlots();
   const legalSlotByRawFolder = new Map(legalSlots.map((slot) => [slot.importSlot.rawInputFolder, slot]));
+  const productionPackByRawFolder = new Map(generatedMttProductionManifest.map((entry) => [
+    `${rawFolder}/${entry.packId}`,
+    entry.packId,
+  ]));
   const localRawFolders = listLocalRawFolders();
   for (const folder of localRawFolders) {
     const slot = legalSlotByRawFolder.get(folder);
-    if (slot === undefined) {
-      errors.push(`Unknown raw intake folder: ${folder}`);
+    if (slot !== undefined) {
+      errors.push(...validateLocalManifestPair(slot));
       continue;
     }
-    errors.push(...validateLocalManifestPair(slot));
+    const productionPackId = productionPackByRawFolder.get(folder);
+    if (productionPackId !== undefined) {
+      errors.push(...validatePromotedRawFolder(folder, productionPackId));
+      continue;
+    }
+    errors.push(`Unknown raw intake folder: ${folder}`);
   }
 
   return {
@@ -207,6 +230,29 @@ function validateLocalManifestPair(slot: LegalImportSlotState): string[] {
   return errors;
 }
 
+function validatePromotedRawFolder(folder: string, expectedPackId: string): string[] {
+  const errors: string[] = [];
+  const normalizedPath = `${folder}/normalized.json`;
+  const permissionPath = `${folder}/permission.json`;
+
+  if (existsSync(normalizedPath)) {
+    const normalizedId = readJsonStringField(normalizedPath, "id");
+    if (normalizedId !== expectedPackId) {
+      errors.push(`${normalizedPath} id ${normalizedId ?? "missing"} does not match production packId ${expectedPackId}.`);
+    }
+  }
+  if (!existsSync(permissionPath)) {
+    errors.push(`Promoted production pack is missing source-free manifest: ${permissionPath}`);
+  } else {
+    const permissionPackId = readJsonStringField(permissionPath, "packId");
+    if (permissionPackId !== expectedPackId) {
+      errors.push(`${permissionPath} packId ${permissionPackId ?? "missing"} does not match production packId ${expectedPackId}.`);
+    }
+  }
+
+  return errors;
+}
+
 function readJsonStringField(path: string, fieldName: string): string | null {
   try {
     const parsed = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
@@ -256,5 +302,3 @@ function renderIntakeWorkspaceReport(report: IntakeWorkspaceReport): string {
 function normalizeLineEndings(value: string): string {
   return value.replace(/\r\n/g, "\n");
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

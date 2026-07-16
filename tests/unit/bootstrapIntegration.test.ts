@@ -92,10 +92,10 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
     expect(root.querySelector('[data-tab="postflop"]')).toBeNull();
     expect(Array.from(root.querySelectorAll<HTMLElement>(".app__tab")).map((tab) => tab.textContent))
-      .toEqual(["Trénink", "Statistiky", "Import HH"]);
+      .toEqual(["Training", "Stats", "HH Import"]);
     expect(root.querySelector<HTMLElement>(".app__tabs")?.getAttribute("role")).toBe("tablist");
     expect(root.querySelector<HTMLElement>(".app__tabs")?.getAttribute("aria-label"))
-      .toBe("Hlavní sekce");
+      .toBe("Primary sections");
     expect(root.querySelector<HTMLButtonElement>('[data-tab="training"]')?.getAttribute("role"))
       .toBe("tab");
     expect(root.querySelector<HTMLButtonElement>('[data-tab="training"]')?.getAttribute("aria-controls"))
@@ -107,7 +107,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector<HTMLElement>("#app-panel-training")?.getAttribute("aria-labelledby"))
       .toBe("app-tab-training");
     expect(root.querySelector<HTMLElement>("#app-panel-postflop")?.getAttribute("aria-label"))
-      .toBe("Postflop trénink");
+      .toBe("Postflop training");
     expect(root.querySelector(".postflop-view")).not.toBeNull();
     expect(root.querySelector<HTMLElement>(".postflop-output")?.hidden).toBe(true);
     expect(root.querySelector(".postflop-meta")).toBeNull();
@@ -117,7 +117,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector(".poker-table")).toBeNull();
   });
 
-  it("9-max regular chipEV preflop preview lze spustit bez production promotion", async () => {
+  it("9-max regular chipEV preflop spusti lazy-loaded production pack", async () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
     const storage = new MemoryStorage();
@@ -134,10 +134,16 @@ describe("bootstrap - inicializacni tok", () => {
       .dispatchEvent(new Event("change"));
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
 
+    await waitForPreflopSession(root);
+
     expect(root.querySelector<HTMLElement>(".training__filters")?.hidden).toBe(true);
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
     expect(root.querySelector(".poker-table")).not.toBeNull();
     expect(root.querySelector(".action-btn")).not.toBeNull();
+    expect(root.querySelectorAll(".action-btn .action-ev-bubble")).toHaveLength(
+      root.querySelectorAll(".action-btn").length,
+    );
+    expect(root.querySelectorAll(".action-btn .action-ev-bubble:not([hidden])")).toHaveLength(0);
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(true);
     expect(warning?.textContent).not.toMatch(/https?:|RangePack|mtt-/i);
@@ -151,7 +157,8 @@ describe("bootstrap - inicializacni tok", () => {
     }>;
     expect(events).toHaveLength(1);
     expect(events[0].identity?.profileId).toBe("MTT|FULL_RING_9|REGULAR|PREFLOP|CHIP_EV|ON|NONE");
-    expect(events[0].identity?.rangePackId).toBe("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-v1");
+    expect(events[0].identity?.rangePackId)
+      .toBe("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1");
   });
 
   it("start s FLOP profilem prepne do postflop flow bez rucniho tabovani", async () => {
@@ -222,7 +229,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector(".poker-table")).toBeNull();
   });
 
-  it("9-max regular chipEV preview pri quota selhani zobrazi notice bez ulozeni", async () => {
+  it("9-max regular chipEV production pri quota selhani zobrazi notice bez ulozeni", async () => {
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
     const storage = new QuotaAfterBootstrapStorage();
@@ -231,6 +238,7 @@ describe("bootstrap - inicializacni tok", () => {
     bootstrap({ root, storage, registerSw: false });
     storage.failWrites = true;
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    await waitForPreflopSession(root);
     root.querySelector<HTMLButtonElement>(".action-btn")?.click();
 
     const saveWarning = root.querySelector<HTMLElement>(".result__save-warning");
@@ -283,7 +291,7 @@ describe("bootstrap - inicializacni tok", () => {
 
     await vi.waitFor(() => {
       expect(JSON.parse(storage.getItem(KEY_HH_REVIEWS) ?? "[]")).toHaveLength(1);
-    });
+    }, { timeout: 10000 });
     const reviewRecords = JSON.parse(storage.getItem(KEY_HH_REVIEWS) ?? "[]") as Array<{
       street: string;
       savedToDrillStats: boolean;
@@ -341,7 +349,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(meta?.dataset.potType).toBe("THREE_BET_POT");
     expect(meta?.dataset.positionPattern).toBe("OOP_CALLER_VS_IP_3BETTOR");
     expect(meta?.textContent).toContain("3bet pot");
-    expect(meta?.textContent).toContain("bank 18 BB");
+    expect(meta?.textContent).toContain("pot 18 BB");
     expect(meta?.textContent).toContain("LJ vs HJ");
     expect(meta?.textContent).not.toContain("BTN vs BB");
   });
@@ -423,14 +431,14 @@ describe("bootstrap - inicializacni tok", () => {
         format: "FULL_RING_9",
         speed: "TURBO",
         ante: "ON",
-        playable: false,
+        playable: true,
         warning: "chybí produkční range",
       },
       {
         format: "FULL_RING_9",
         speed: "TURBO",
         ante: "OFF",
-        playable: false,
+        playable: true,
         warning: "chybí produkční range",
       },
       {
@@ -480,6 +488,7 @@ describe("bootstrap - inicializacni tok", () => {
       root.querySelector<HTMLButtonElement>(".filter-start")?.click();
 
       if (scenario.playable) {
+        await waitForPreflopSession(root);
         expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
         expect(root.querySelector(".poker-table")).not.toBeNull();
         expect(root.querySelector<HTMLElement>(".filter-empty-warning")?.hidden).toBe(true);
@@ -491,7 +500,7 @@ describe("bootstrap - inicializacni tok", () => {
         expect(warning?.textContent).toContain(scenario.warning);
       }
     }
-  });
+  }, 180_000);
 
   it("SNG chipEV candidate profil zustane preview a nespusti produkcni scoring", async () => {
     const { bootstrap } = await importFreshMain();
@@ -508,7 +517,7 @@ describe("bootstrap - inicializacni tok", () => {
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
     expect(warning?.textContent).toContain("kandidátní náhled");
-    expect(warning?.textContent).toContain("SNG chipEV náhled");
+    expect(warning?.textContent).toContain("SNG chipEV preview");
     expect(warning?.textContent).not.toContain("https://");
     expect(warning?.textContent).not.toContain("RangePack");
     expect(root.querySelector(".poker-table")).toBeNull();
@@ -530,7 +539,7 @@ describe("bootstrap - inicializacni tok", () => {
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
     expect(warning?.textContent).toContain("kandidátní náhled");
-    expect(warning?.textContent).toContain("Cash rake náhled");
+    expect(warning?.textContent).toContain("Cash rake preview");
     expect(warning?.textContent).not.toContain("https://");
     expect(warning?.textContent).not.toContain("RangePack");
     expect(root.querySelector(".poker-table")).toBeNull();
@@ -568,6 +577,9 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector(".filter-start")).not.toBeNull();
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
 
+    await vi.waitFor(() => {
+      expect(root.querySelector<HTMLElement>(".filter-empty-warning")?.hidden).toBe(false);
+    }, { timeout: 10000 });
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
     expect(warning?.textContent).toContain("Referenční range nejsou dostupné");
@@ -586,4 +598,11 @@ async function waitForDashboard(root: HTMLElement): Promise<void> {
   await vi.waitFor(() => {
     expect(root.querySelector(".dashboard")).not.toBeNull();
   });
+}
+
+async function waitForPreflopSession(root: HTMLElement): Promise<void> {
+  await vi.waitFor(() => {
+    expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
+    expect(root.querySelector(".poker-table")).not.toBeNull();
+  }, { timeout: 10000 });
 }

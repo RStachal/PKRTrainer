@@ -18,7 +18,7 @@ const DEFAULT_PACK_ID = "mtt-full-ring-9-regular-flop-chip-ev-ante-off-productio
 const CREATED_AT = "2026-07-01";
 const RANKS = "AKQJT98765432";
 const STRONG_RANKS = new Set(["A", "K", "Q", "J", "T"]);
-const MIN_MIXED_BET_FREQUENCY_FOR_ACTIVE_BUCKET = 25;
+const MIN_MIXED_RAISE_FREQUENCY_FOR_ACTIVE_BUCKET = 25;
 
 interface CliArgs {
   actionNode: Extract<PostflopActionNode, "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET" | "FLOP_FACING_BET">;
@@ -596,7 +596,7 @@ function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string
 
 function buildBucket(actionNode: CliArgs["actionNode"], handClass: HandLabel, strategy: ReviewHandClassStrategy) {
   const actionMix = normalizeMappedActionMix(actionNode, strategy.averageByAction);
-  const dominantAction = primaryBucketAction(actionNode, handClass, actionMix);
+  const dominantAction = primaryBucketAction(actionNode, actionMix);
   return {
     lane: laneForHand(actionNode, handClass, dominantAction),
     label: `${handClass} · ${dominantAction}`,
@@ -659,27 +659,16 @@ function normalizeMappedActionMix(
 
 function primaryBucketAction(
   actionNode: CliArgs["actionNode"],
-  handClass: string,
   actionMix: Record<PostflopAction, number>,
 ): PostflopAction {
   const dominantAction = mappedDominantAction(actionMix);
   if (actionNode === "FLOP_FACING_BET") {
     const raiseFrequency = actionMix.RAISE ?? 0;
-    if (dominantAction !== "RAISE" && raiseFrequency >= MIN_MIXED_BET_FREQUENCY_FOR_ACTIVE_BUCKET) {
+    if (dominantAction !== "RAISE" && raiseFrequency >= MIN_MIXED_RAISE_FREQUENCY_FOR_ACTIVE_BUCKET) {
       return "RAISE";
     }
-    return dominantAction;
   }
-  const betFrequency = (actionMix.BET_SMALL ?? 0) + (actionMix.BET_BIG ?? 0);
-  const isNaturalBluffCandidate = !isPair(handClass) && !STRONG_RANKS.has(handClass[0]);
-  if (
-    dominantAction !== "CHECK" ||
-    !isNaturalBluffCandidate ||
-    betFrequency < MIN_MIXED_BET_FREQUENCY_FOR_ACTIVE_BUCKET
-  ) {
-    return dominantAction;
-  }
-  return (actionMix.BET_BIG ?? 0) > (actionMix.BET_SMALL ?? 0) ? "BET_BIG" : "BET_SMALL";
+  return dominantAction;
 }
 
 function mapSolverAction(actionNode: CliArgs["actionNode"], action: string): PostflopAction | null {

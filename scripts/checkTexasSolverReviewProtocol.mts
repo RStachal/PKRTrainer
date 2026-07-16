@@ -9,6 +9,8 @@ type ReviewProtocolStatus =
   | "REVIEWED_SCOPED"
   | "REVIEWED_PRODUCTION";
 
+const REVIEW_WAVE_SIZE = 5;
+
 interface CliArgs {
   familyId: string | null;
   json: boolean;
@@ -17,6 +19,7 @@ interface CliArgs {
   requireProductionUsable: boolean;
   rootDir: string;
   summary: boolean;
+  writeReviewTemplates: boolean;
 }
 
 interface ReviewProtocolRow {
@@ -69,22 +72,28 @@ function usage(): string {
     "  npm run mtt:texas-solver-review-protocol -- --json",
     "  npm run mtt:texas-solver-review-protocol -- --family=MTT9_50BB_BTN_BB_SRP",
     "  npm run mtt:texas-solver-review-protocol -- --packet-dir=artifacts/texas-solver-review-protocol/packet",
+    "  npm run mtt:texas-solver-review-protocol -- --write-review-templates --summary",
     "  npm run mtt:texas-solver-review-protocol -- --require-production-usable",
     "  npm run mtt:texas-solver-review-protocol -- --root=<output/texas-solver>",
     "",
     "Checks human poker review sign-off for TexasSolver family outputs.",
+    "--write-review-templates only appends missing blank decision fields to existing review-notes.md files.",
     "It does not read raw solver JSON and does not create production range files.",
   ].join("\n");
 }
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  const preparedTemplates = args.writeReviewTemplates ? prepareReviewTemplates(args) : [];
   const report = buildReviewProtocolReport(args);
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
     writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   }
   if (args.packetDir !== null) writeReviewPackets(report, args.packetDir);
+  if (preparedTemplates.length > 0) {
+    console.log(`Prepared blank owner decision fields: ${preparedTemplates.length}`);
+  }
   console.log(args.json ? JSON.stringify(report, null, 2) : renderReport(report, args.summary));
   process.exitCode = report.valid ? 0 : 1;
 } catch (error) {
@@ -100,6 +109,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let requireProductionUsable = false;
   let rootDir = resolve("Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver");
   let summary = false;
+  let writeReviewTemplates = false;
 
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
@@ -113,6 +123,10 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (item === "--require-production-usable") {
       requireProductionUsable = true;
+      continue;
+    }
+    if (item === "--write-review-templates") {
+      writeReviewTemplates = true;
       continue;
     }
     if (item.startsWith("--family=")) {
@@ -134,7 +148,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { familyId, json, outputPath, packetDir, requireProductionUsable, rootDir, summary };
+  return { familyId, json, outputPath, packetDir, requireProductionUsable, rootDir, summary, writeReviewTemplates };
 }
 
 function requiredInlineValue(item: string, flag: string): string {
@@ -188,6 +202,41 @@ function familyDirs(args: CliArgs): string[] {
     .sort((a, b) => a.localeCompare(b, "en"));
 }
 
+function prepareReviewTemplates(args: CliArgs): string[] {
+  const prepared: string[] = [];
+  for (const familyDir of familyDirs(args)) {
+    const reviewNotesPath = join(familyDir, "review-notes.md");
+    if (!existsSync(reviewNotesPath)) continue;
+    const current = readFileSync(reviewNotesPath, "utf8");
+    const requiredFields: Array<[string, string]> = [
+      ["Reviewer", ""],
+      ["Reviewed at", ""],
+      ["Usable for production", ""],
+      ["Usable scope", ""],
+      ["Production caveats", ""],
+    ];
+    const missing = requiredFields.filter(([label]) => !hasField(current, label));
+    if (missing.length === 0) continue;
+
+    const section = [
+      "",
+      "## Owner decision",
+      "",
+      "<!-- Leave these fields blank until the human poker review is complete. -->",
+      ...missing.map(([label, value]) => `${label}: ${value}`),
+      "",
+    ].join("\n");
+    writeFileSync(reviewNotesPath, `${current.replace(/\s*$/, "")}\n${section}`, "utf8");
+    prepared.push(familyDir.replace(/\\/g, "/").split("/").at(-1) ?? familyDir);
+  }
+  return prepared;
+}
+
+function hasField(text: string, label: string): boolean {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`^[\\t ]*${escaped}[\\t ]*:`, "im").test(text);
+}
+
 function reviewProtocolRow(familyDir: string): ReviewProtocolRow {
   const familyId = familyDir.replace(/\\/g, "/").split("/").at(-1) ?? familyDir;
   const reviewNotesPath = join(familyDir, "review-notes.md");
@@ -202,7 +251,8 @@ function reviewProtocolRow(familyDir: string): ReviewProtocolRow {
   const usableForProduction = parseUsableForProduction(usableRaw);
   const usableScope = fieldValue(text, "Usable scope") || usableRaw;
   const productionCaveats = fieldValue(text, "Production caveats");
-  const accuracyEvidence = accuracyEvidenceText(accuracyReportPath);
+  const accuracy = accuracyEvidenceSummary(accuracyReportPath);
+  const accuracyEvidence = accuracy.text;
   const blockers: string[] = [];
   const warnings: string[] = [];
 
@@ -223,7 +273,7 @@ function reviewProtocolRow(familyDir: string): ReviewProtocolRow {
   if (productionCaveats.length === 0) warnings.push("Production caveats are empty.");
   if (!accuracyReportPresent) {
     warnings.push("accuracy-report.json is missing; production promotion must provide solver accuracy evidence.");
-  } else if (accuracyEvidence.length === 0 || /not parsed|needs_review/i.test(accuracyEvidence)) {
+  } else if (!accuracy.hasParsedEvidence) {
     warnings.push("accuracy-report.json does not contain parsed production-grade accuracy evidence.");
   }
 
@@ -235,8 +285,7 @@ function reviewProtocolRow(familyDir: string): ReviewProtocolRow {
   const productionEligible = protocolReady
     && (usableForProduction === "YES" || usableForProduction === "SCOPED")
     && accuracyReportPresent
-    && accuracyEvidence.length > 0
-    && !/not parsed|needs_review/i.test(accuracyEvidence);
+    && accuracy.hasParsedEvidence;
 
   return {
     familyId,
@@ -274,7 +323,9 @@ function rowStatus(
 
 function fieldValue(text: string, label: string): string {
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = text.match(new RegExp(`^\\s*${escaped}\\s*:\\s*(.+?)\\s*$`, "im"));
+  // Use horizontal whitespace only. \s can consume a line break and make an
+  // intentionally empty field borrow the next checklist label as its value.
+  const match = text.match(new RegExp(`^[\\t ]*${escaped}[\\t ]*:[\\t ]*([^\\r\\n]*)$`, "im"));
   return match?.[1]?.trim() ?? "";
 }
 
@@ -287,19 +338,57 @@ function parseUsableForProduction(value: string): UsableForProduction {
   return "UNKNOWN";
 }
 
-function accuracyEvidenceText(path: string): string {
-  if (!existsSync(path)) return "";
+interface AccuracyEvidenceSummary {
+  hasParsedEvidence: boolean;
+  text: string;
+}
+
+function accuracyEvidenceSummary(path: string): AccuracyEvidenceSummary {
+  if (!existsSync(path)) return { hasParsedEvidence: false, text: "" };
   try {
     const parsed = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
-    return [
-      stringValue(parsed.status),
-      stringValue(parsed.accuracySource),
-      stringValue(parsed.exploitability),
-      stringValue(parsed.warning),
-    ].filter(Boolean).join(" | ");
+    const accuracySource = stringValue(parsed.accuracySource);
+    const exploitability = stringValue(parsed.exploitability);
+    const warning = stringValue(parsed.warning);
+    const perRawEvidence = parsedSolverLogEvidence(parsed.solverLogCoverage);
+    const legacyParsedEvidence = exploitability.length > 0
+      && !/not parsed|needs_review|no per-board/i.test(accuracySource);
+    return {
+      hasParsedEvidence: perRawEvidence.length > 0 || legacyParsedEvidence,
+      text: [
+        accuracySource,
+        exploitability,
+        ...perRawEvidence.map((item) => `${item.rawFileName}: ${item.value}`),
+        warning,
+      ].filter(Boolean).join(" | "),
+    };
   } catch {
-    return "";
+    return { hasParsedEvidence: false, text: "" };
   }
+}
+
+function parsedSolverLogEvidence(value: unknown): Array<{ rawFileName: string; value: string }> {
+  if (typeof value !== "object" || value === null) return [];
+  const evidence = (value as Record<string, unknown>).evidence;
+  if (!Array.isArray(evidence)) return [];
+  return evidence.flatMap((item) => {
+    if (typeof item !== "object" || item === null) return [];
+    const rawFileName = stringValue((item as Record<string, unknown>).rawFileName);
+    const source = stringValue((item as Record<string, unknown>).source);
+    const capturedValue = finiteNumberText((item as Record<string, unknown>).value);
+    const knownSource = source === "PER_BOARD_LOG" || source === "QUEUE_LOG";
+    return rawFileName.length > 0 && capturedValue.length > 0 && knownSource
+      ? [{ rawFileName, value: capturedValue }]
+      : [];
+  });
+}
+
+function finiteNumberText(value: unknown): string {
+  if (typeof value === "number") return Number.isFinite(value) ? String(value) : "";
+  if (typeof value !== "string") return "";
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || !Number.isFinite(Number(trimmed))) return "";
+  return trimmed;
 }
 
 function stringValue(value: unknown): string {
@@ -342,6 +431,7 @@ function writeReviewPackets(report: ReviewProtocolReport, packetDir: string): vo
   mkdirSync(packetDir, { recursive: true });
   writeFileSync(join(packetDir, "README.md"), renderPacketReadme(report), "utf8");
   writeFileSync(join(packetDir, "review-protocol-summary.json"), `${JSON.stringify(report.counts, null, 2)}\n`, "utf8");
+  writeFileSync(join(packetDir, "OWNER_REVIEW_WAVES.md"), renderReviewWaves(report), "utf8");
   for (const row of report.rows) {
     const dir = join(packetDir, safePathSegment(row.familyId));
     mkdirSync(dir, { recursive: true });
@@ -364,13 +454,38 @@ function renderPacketReadme(report: ReviewProtocolReport): string {
     "",
     "## How to use",
     "",
-    "1. Open each family `REVIEW_CHECKLIST.md`.",
-    "2. Inspect the referenced review reports, accuracy report and family `review-notes.md`.",
-    "3. Update `review-notes.md` only after real poker review.",
-    "4. Re-run `npm run mtt:texas-solver-review-protocol -- --summary`.",
-    "5. Use `--require-production-usable` only before production promotion dry-runs.",
+    "1. Open `OWNER_REVIEW_WAVES.md` and take one logistical wave at a time.",
+    "2. Open each family `REVIEW_CHECKLIST.md`.",
+    "3. Inspect the referenced review reports, accuracy report and family `review-notes.md`.",
+    "4. Update `review-notes.md` only after real poker review.",
+    "5. Re-run `npm run mtt:texas-solver-review-protocol -- --summary`.",
+    "6. Use `--require-production-usable` only before production promotion dry-runs.",
     "",
   ].join("\n");
+}
+
+function renderReviewWaves(report: ReviewProtocolReport): string {
+  const rows = [...report.rows].sort((left, right) => left.familyId.localeCompare(right.familyId));
+  const lines = [
+    "# Owner review waves",
+    "",
+    "Logistical order for the current source-safe packet. Alphabetical grouping is deterministic and does not rank poker quality, evidence strength or production priority.",
+    "",
+    `Families: ${rows.length}`,
+    `Wave size: ${REVIEW_WAVE_SIZE}`,
+    "",
+  ];
+  for (let index = 0; index < rows.length; index += REVIEW_WAVE_SIZE) {
+    const wave = rows.slice(index, index + REVIEW_WAVE_SIZE);
+    lines.push(`## Wave ${(index / REVIEW_WAVE_SIZE) + 1}`);
+    lines.push("");
+    for (const row of wave) {
+      lines.push(`- ${row.familyId}: ${row.status}; blockers=${row.blockers.length}; warnings=${row.warnings.length}`);
+    }
+    lines.push("");
+  }
+  lines.push("After each wave, update only the reviewed families' `review-notes.md` and re-run the review protocol. No strategy value is implied by this order.", "");
+  return lines.join("\n");
 }
 
 function renderFamilyChecklist(row: ReviewProtocolRow): string {
@@ -387,6 +502,10 @@ function renderFamilyChecklist(row: ReviewProtocolRow): string {
     `- Review notes: ${row.reviewNotesPath}`,
     `- Accuracy report: ${row.accuracyReportPath}`,
     `- Family directory: ${row.familyDir}`,
+    "",
+    "## Current accuracy evidence",
+    "",
+    ...(row.accuracyEvidence.length > 0 ? [`- ${row.accuracyEvidence}`] : ["- No parsed solver accuracy evidence recorded."]),
     "",
     "## Required review-notes.md fields",
     "",

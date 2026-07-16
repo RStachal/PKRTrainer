@@ -11,6 +11,7 @@ import {
 } from "./postflopGenerator";
 import {
   postflopSpotToTrainingSpot,
+  type PostflopExplanationLanguage,
   type PostflopTrainingSpot,
 } from "./postflopTrainingSpot";
 import type { Card, Spot } from "./types";
@@ -26,6 +27,7 @@ export function buildImportedFlopTrainingSpot(
 
 export interface ImportedPostflopStrategyOptions {
   allowFallback?: boolean;
+  language?: PostflopExplanationLanguage;
 }
 
 export function buildImportedPostflopTrainingSpots(
@@ -55,6 +57,7 @@ export function buildImportedPostflopTrainingSpots(
     board: result.fields.flop,
     strategyResolver,
     allowFallback: options.allowFallback,
+    language: options.language,
   }));
 
   if (result.fields.turn) {
@@ -67,6 +70,7 @@ export function buildImportedPostflopTrainingSpots(
       board: result.fields.turn,
       strategyResolver,
       allowFallback: options.allowFallback,
+      language: options.language,
     }));
   }
 
@@ -80,6 +84,7 @@ export function buildImportedPostflopTrainingSpots(
       board: result.fields.river,
       strategyResolver,
       allowFallback: options.allowFallback,
+      language: options.language,
     }));
   }
 
@@ -95,6 +100,7 @@ function buildImportedPostflopTrainingSpot(input: {
   positionContext: PostflopPositionContext;
   strategyResolver?: PostflopStrategyResolver;
   allowFallback?: boolean;
+  language?: PostflopExplanationLanguage;
 }): PostflopTrainingSpot {
   const {
     result,
@@ -105,6 +111,7 @@ function buildImportedPostflopTrainingSpot(input: {
     positionContext,
     strategyResolver,
     allowFallback,
+    language,
   } = input;
   const history = historyForStreet(result, street);
   const financial = financialStateForStreet(result, street);
@@ -130,7 +137,7 @@ function buildImportedPostflopTrainingSpot(input: {
     ) : undefined,
     strategyResolver,
     allowFallback,
-  }));
+  }), language);
 }
 
 function financialStateForStreet(result: HHResult, street: PostflopStreet) {

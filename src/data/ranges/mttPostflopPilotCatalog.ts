@@ -20,7 +20,7 @@ export interface MttPostflopPilotCatalogEntry {
   street: "FLOP";
   potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">;
   actionNode: Extract<PostflopActionNode, "SINGLE_RAISED_POT_CBET" | "THREE_BET_POT_CBET" | "FLOP_FACING_BET">;
-  positionPattern: Extract<PostflopPositionPattern, "SRP_BTN_VS_BB" | "SRP_UTG_VS_BB" | "SRP_SB_VS_BB" | "3BP_BTN_VS_CO">;
+  positionPattern: Extract<PostflopPositionPattern, "SRP_BTN_VS_BB" | "SRP_UTG_VS_BB" | "SRP_CO_VS_BB" | "SRP_SB_VS_BB" | "3BP_BTN_VS_CO">;
   sprBands: readonly ("LOW" | "MID" | "HIGH")[];
   rules: number;
   rangeBuckets: number;
@@ -43,9 +43,9 @@ export const MTT_POSTFLOP_PILOT_CATALOG = [
     positionPattern: "SRP_BTN_VS_BB",
     sprBands: ["LOW", "MID", "HIGH"],
     rules: 3,
-    rangeBuckets: 134,
+    rangeBuckets: 150,
     inputDrafts: 3,
-    provenanceFingerprint: "3d58cc5f519bd9c739e492615f3d2fb0714deac5312acaf70561e46542064b16",
+    provenanceFingerprint: "2e18c010bbe639dcc3624d4941179b589a45db48cb2bb6923c8cd5e6ae40b0cd",
     fullProductionReady: false,
     limitations: [
       "Scoped to BTN vs BB single-raised flop c-bet decisions.",
@@ -91,6 +91,27 @@ export const MTT_POSTFLOP_PILOT_CATALOG = [
     fullProductionReady: false,
     limitations: [
       "Scoped to SB vs BB single-raised flop c-bet decisions where SB is the OOP aggressor.",
+      "LOW/MID/HIGH SPR solver coverage is available, but this remains a pilot and not full flop production coverage.",
+    ],
+  },
+  {
+    id: "co-bb-srp-flop-cbet-low-mid-high",
+    label: "CO vs BB SRP flop c-bet pilot",
+    scope: "CO_vs_BB_SRP_FLOP_CBET",
+    status: "READY",
+    requiredEntitlement: "mtt.postflop.flop.srp_co_bb.cbet.pilot",
+    street: "FLOP",
+    potType: "SINGLE_RAISED",
+    actionNode: "SINGLE_RAISED_POT_CBET",
+    positionPattern: "SRP_CO_VS_BB",
+    sprBands: ["LOW", "MID", "HIGH"],
+    rules: 3,
+    rangeBuckets: 162,
+    inputDrafts: 3,
+    provenanceFingerprint: "1b6f35ced5d50bc0753e804c879219ef546bacc86849386e9bb025a0ab8fe3f1",
+    fullProductionReady: false,
+    limitations: [
+      "Scoped to CO vs BB single-raised flop c-bet decisions.",
       "LOW/MID/HIGH SPR solver coverage is available, but this remains a pilot and not full flop production coverage.",
     ],
   },

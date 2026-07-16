@@ -24,9 +24,9 @@ describe("profileSelector", () => {
 
     expect(root.querySelector(".profile-selector")).not.toBeNull();
     expect(view.getProfile()).toEqual(DEFAULT_TRAINING_PROFILE);
-    expect(note?.dataset.status).toBe("preview");
+    expect(note?.dataset.status).toBe("production");
+    expect(note?.textContent).toContain("MTT ChipEV Core");
     expect(note?.textContent).toContain("MTT 9-max regular preflop chipEV");
-    expect(note?.textContent).toContain("Náhled");
   });
 
   it("umi zmenit profil a zavola onChange", () => {
@@ -82,7 +82,7 @@ describe("profileSelector", () => {
     expect(note?.textContent).not.toContain("mtt-");
   });
 
-  it("oznaci MTT 9-max turbo preflop jako missing readiness stav", () => {
+  it("oznaci MTT 9-max turbo preflop jako MTT ChipEV Core production", () => {
     const root = document.createElement("div");
     renderProfileSelector(root);
 
@@ -93,9 +93,9 @@ describe("profileSelector", () => {
     speed!.dispatchEvent(new Event("change"));
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
-    expect(note?.dataset.status).toBe("blocked");
+    expect(note?.dataset.status).toBe("production");
+    expect(note?.textContent).toContain("MTT ChipEV Core");
     expect(note?.textContent).toContain("MTT 9-max turbo preflop chipEV");
-    expect(note?.textContent).toContain("Chybí produkční range");
     expect(note?.textContent).not.toContain("RangePack");
     expect(note?.textContent).not.toContain("mtt-");
   });
@@ -112,7 +112,7 @@ describe("profileSelector", () => {
 
       const note = root.querySelector<HTMLElement>(".profile-selector__note");
       expect(note?.dataset.status).toBe("preview");
-      expect(note?.textContent).toContain(`MTT 9-max regular ${value.toLowerCase()} chipEV ante zapnuto`);
+      expect(note?.textContent).toContain(`MTT 9-max regular ${value.toLowerCase()} chipEV ante on`);
       expect(note?.textContent).toContain("postflop tréninku");
       expect(note?.textContent).toContain("konkrétní spot");
       expect(note?.textContent).not.toContain("preflop chipEV");
@@ -131,7 +131,7 @@ describe("profileSelector", () => {
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("preview");
-    expect(note?.textContent).toContain("Dostupné scoped solver piloty: 6");
+    expect(note?.textContent).toContain("Dostupné scoped solver piloty: 7");
     expect(note?.textContent).toContain("Nejde o plnou produkční coverage");
     expect(note?.textContent).not.toContain("mtt.postflop");
     expect(note?.textContent).not.toContain("RangePack");
@@ -149,7 +149,7 @@ describe("profileSelector", () => {
 
     let note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("preview");
-    expect(note?.textContent).toContain("SNG chipEV náhled");
+    expect(note?.textContent).toContain("SNG chipEV preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent).not.toContain("RangePack");
 
@@ -158,7 +158,7 @@ describe("profileSelector", () => {
 
     note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("preview");
-    expect(note?.textContent).toContain("SNG ICM náhled");
+    expect(note?.textContent).toContain("SNG ICM preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent).not.toContain("payout");
     expect(note?.textContent).not.toContain("RangePack");
@@ -208,7 +208,7 @@ describe("profileSelector", () => {
     expect(optionLabels(".profile-speed")).toEqual(["Regular", "Turbo"]);
     expect(optionLabels(".profile-street")).toEqual(["Preflop", "Flop", "Turn", "River"]);
     expect(optionLabels(".profile-ev-model")).toEqual(["chipEV", "$EV", "ICM"]);
-    expect(optionLabels(".profile-ante")).toEqual(["Ante zapnuto", "Bez ante"]);
+    expect(optionLabels(".profile-ante")).toEqual(["Ante on", "Ante off"]);
 
     for (const tableFormat of tableFormats) {
       for (const blindSpeed of blindSpeeds) {
@@ -235,7 +235,7 @@ describe("profileSelector", () => {
               expect(note?.textContent).toContain(blindSpeed === "REGULAR" ? "regular" : "turbo");
               expect(note?.textContent).toContain(street.toLowerCase());
               expect(note?.textContent).toContain(evModel === "CHIP_EV" ? "chipEV" : "$EV");
-              expect(note?.textContent).toContain(ante === "ON" ? "ante zapnuto" : "bez ante");
+              expect(note?.textContent).toContain(ante === "ON" ? "ante on" : "ante off");
               expect(note?.textContent).not.toMatch(/\b(?:FULL_RING_9|SIX_MAX|REGULAR|TURBO|PREFLOP|FLOP|TURN|RIVER|CHIP_EV|DOLAR_EV)\b/);
               expect(note?.textContent).not.toMatch(/\b(?:RangePack|StrategyPack)\b/);
               expect(note?.textContent).not.toMatch(/\bmtt-[a-z0-9-]+/i);
@@ -267,10 +267,10 @@ describe("profileSelector", () => {
     expect(Array.from(rakeMode?.options ?? []).map((option) => option.textContent)).toEqual([
       "N/A",
       "Rake",
-      "Bez rake",
+      "No rake",
     ]);
     expect(note?.dataset.status).toBe("preview");
-    expect(note?.textContent).toContain("Cash rake náhled");
+    expect(note?.textContent).toContain("Cash rake preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent?.toLowerCase()).not.toContain("zdroj");
     expect(note?.textContent).not.toContain("RangePack");
@@ -280,7 +280,7 @@ describe("profileSelector", () => {
 
     note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("preview");
-    expect(note?.textContent).toContain("Cash bez rake náhled");
+    expect(note?.textContent).toContain("Cash no rake preview");
     expect(note?.textContent).not.toContain("https://");
     expect(note?.textContent?.toLowerCase()).not.toContain("zdroj");
     expect(note?.textContent).not.toContain("RangePack");
@@ -293,7 +293,7 @@ describe("profileSelector", () => {
     const root = document.createElement("div");
     renderProfileSelector(root);
 
-    expect(root.textContent).toContain("Tréninkový profil");
+    expect(root.textContent).toContain("Training profile");
     expect(root.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
     expect(fetchSpy).not.toHaveBeenCalled();
   });

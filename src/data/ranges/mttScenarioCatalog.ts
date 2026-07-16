@@ -54,7 +54,7 @@ export const MTT_LEARNING_PATH_PRESETS = [
   {
     id: "mtt-9max-regular-chip-ev-preflop-core",
     label: "9-max regular chipEV preflop core",
-    description: "Core early-stage/full-ring preflop decisions with the current playable preview pack.",
+    description: "Production full-ring chipEV preflop decisions for the MTT ChipEV Core release.",
     profile: {
       gameVariant: "MTT",
       tableFormat: "FULL_RING_9",
@@ -86,6 +86,7 @@ export const MTT_LEARNING_PATH_PRESETS = [
     requiredPilotScopes: [
       "BTN_vs_BB_SRP_FLOP_CBET",
       "UTG_vs_BB_SRP_FLOP_CBET",
+      "CO_vs_BB_SRP_FLOP_CBET",
       "BTN_vs_CO_3BP_FLOP_CBET",
       "BTN_vs_CO_3BP_FLOP_FACING_BET",
       "BTN_vs_BB_SRP_FLOP_FACING_BET",
@@ -96,7 +97,7 @@ export const MTT_LEARNING_PATH_PRESETS = [
   {
     id: "mtt-9max-turbo-chip-ev-preflop",
     label: "9-max turbo chipEV preflop",
-    description: "Turbo preflop path reserved for production import; currently blocked until a reviewed pack exists.",
+    description: "Production full-ring turbo chipEV preflop decisions for the MTT ChipEV Core release.",
     profile: {
       gameVariant: "MTT",
       tableFormat: "FULL_RING_9",
@@ -108,7 +109,7 @@ export const MTT_LEARNING_PATH_PRESETS = [
     },
     preferredFlow: "PREFLOP_DRILL",
     curriculumTags: ["turbo", "short-stack", "chip-ev"],
-    estimatedSpotPool: 0,
+    estimatedSpotPool: 13 * 9 * 169,
   },
   {
     id: "mtt-9max-icm-bubble",
@@ -140,6 +141,9 @@ export function buildMttLearningPathCatalogReport(
     ids.add(row.id);
     if (row.blockers.length === 0 && (row.status === "WAITING" || row.status === "UNSUPPORTED")) {
       errors.push(`${row.id}: non-playable status requires at least one blocker.`);
+    }
+    if (row.status === "READY" && row.estimatedSpotPool <= 0) {
+      errors.push(`${row.id}: ready learning path requires a positive estimated spot pool.`);
     }
   }
   return {

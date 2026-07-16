@@ -17,11 +17,11 @@ describe("MTT scenario / learning path catalog", () => {
     expect(MTT_LEARNING_PATH_PRESETS).toHaveLength(4);
     expect(report.counts).toMatchObject({
       total: 4,
-      ready: 0,
-      preview: 2,
-      waiting: 1,
+      ready: 2,
+      preview: 1,
+      waiting: 0,
       unsupported: 1,
-      estimatedPlayableSpots: 13 * 9 * 169 + 794,
+      estimatedPlayableSpots: 2 * 13 * 9 * 169 + 794,
     });
   });
 
@@ -34,6 +34,7 @@ describe("MTT scenario / learning path catalog", () => {
       "BTN_vs_BB_SRP_FLOP_CBET",
       "UTG_vs_BB_SRP_FLOP_CBET",
       "SB_vs_BB_SRP_OOP_FLOP_CBET",
+      "CO_vs_BB_SRP_FLOP_CBET",
       "BTN_vs_CO_3BP_FLOP_CBET",
       "BTN_vs_CO_3BP_FLOP_FACING_BET",
       "BTN_vs_BB_SRP_FLOP_FACING_BET",
@@ -61,7 +62,7 @@ describe("MTT scenario / learning path catalog", () => {
       expect(existsSync(output)).toBe(true);
       const report = JSON.parse(readFileSync(output, "utf8")) as ReturnType<typeof buildMttLearningPathCatalogReport>;
       expect(report.valid).toBe(true);
-      expect(report.counts.waiting).toBe(1);
+      expect(report.counts.waiting).toBe(0);
       expect(report.rows.some((row) => row.id === "mtt-9max-icm-bubble" && row.status === "UNSUPPORTED"))
         .toBe(true);
     } finally {

@@ -10,10 +10,10 @@ describe("range:intake CLI", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("Range intake status");
-    expect(result.stdout).toContain("slots: 64");
+    expect(result.stdout).toContain("slots: 60");
     expect(result.stdout).toContain("ready for validation: 0");
-    expect(result.stdout).toContain("missing normalized.json: 64");
-    expect(result.stdout).toContain("missing permission.json: 64");
+    expect(result.stdout).toContain("missing normalized.json: 60");
+    expect(result.stdout).toContain("missing permission.json: 56");
     expect(result.stdout).toContain("preflop | SIX_MAX|TURBO|DOLAR_EV|PREFLOP|OFF");
     expect(result.stdout).toContain("postflop | SIX_MAX|TURBO|DOLAR_EV|RIVER|OFF");
     expect(result.stdout).not.toContain("https://");
@@ -107,12 +107,12 @@ describe("range:intake CLI", () => {
         rows: unknown[];
       };
       expect(parsed.counts).toEqual({
-        total: 64,
+        total: 60,
         readyForValidation: 0,
-        missingNormalized: 64,
-        missingPermission: 64,
+        missingNormalized: 60,
+        missingPermission: 56,
       });
-      expect(parsed.rows).toHaveLength(64);
+      expect(parsed.rows).toHaveLength(60);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

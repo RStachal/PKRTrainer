@@ -7,6 +7,11 @@ dist-ssr/
 dist-e2e-*/
 artifacts/
 
+# Generated FTP release packages
+deploy/pkrtrainer-ftp-*/
+deploy/pkrtrainer-ftp-*.zip
+deploy/pkrtrainer-ftp-*.manifest.txt
+
 # Local solver workspaces / raw exports
 # Keep generated solver outputs local until they are reviewed and converted
 # through the canonical range-intake pipeline.

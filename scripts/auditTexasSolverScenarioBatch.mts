@@ -65,6 +65,7 @@ interface ScenarioAuditRow {
     hasBuildTree: boolean;
     hasStartSolve: boolean;
     hasUseIsomorphism: boolean;
+    unsupportedConsoleDirectives: readonly string[];
     flopIpBetSizes: readonly number[];
     flopOopBetSizes: readonly number[];
     flopIpRaiseSizes: readonly number[];
@@ -232,6 +233,9 @@ function auditFile(
   const warnings = [
     "TexasSolver console parameters do not declare game mode explicitly; audit infers Texas Hold'em from two-range holdem syntax and 52-card board ranks.",
     ...(actual.hasUseIsomorphism ? [] : ["set_use_isomorphism 1 is recommended for board coverage batches."]),
+    ...actual.unsupportedConsoleDirectives.map((directive) => (
+      `${directive} is not recognized by the installed TexasSolver v0.2.0 console and will be ignored.`
+    )),
   ];
 
   return {
@@ -274,6 +278,7 @@ function emptyRow(
       hasBuildTree: false,
       hasStartSolve: false,
       hasUseIsomorphism: false,
+      unsupportedConsoleDirectives: [],
       flopIpBetSizes: [],
       flopOopBetSizes: [],
       flopIpRaiseSizes: [],
@@ -330,11 +335,17 @@ function parseParameterFile(text: string): ScenarioAuditRow["actual"] {
     hasBuildTree: /^build_tree\s*$/m.test(text),
     hasStartSolve: /^start_solve\s*$/m.test(text),
     hasUseIsomorphism: /^set_use_isomorphism\s+1\s*$/m.test(text),
+    unsupportedConsoleDirectives: unsupportedConsoleDirectives(text),
     flopIpBetSizes: betSizes(text, "ip", "bet"),
     flopOopBetSizes: betSizes(text, "oop", "bet"),
     flopIpRaiseSizes: betSizes(text, "ip", "raise"),
     flopOopRaiseSizes: betSizes(text, "oop", "raise"),
   };
+}
+
+function unsupportedConsoleDirectives(text: string): string[] {
+  // Confirmed against the bundled v0.2.0 command-line sample and local solver logs.
+  return /^set_raise_limit\b/m.test(text) ? ["set_raise_limit"] : [];
 }
 
 function numberLine(text: string, command: string): number | null {

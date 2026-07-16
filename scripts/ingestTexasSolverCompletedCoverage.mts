@@ -12,6 +12,18 @@ const MIDSPR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_50BB_BTN_BB_SRP-CHECK
 const LOWSPR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK");
 const HIGHSPR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_80BB_BTN_BB_SRP_HIGHSPR-CHECK");
 const UTG_BB_SRP_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_40BB_UTG_BB_SRP-CHECK");
+const CO_BB_SRP_CBET_LOWSPR_DRAFT_DIR = join(
+  NORMALIZED_DRAFT_ROOT,
+  "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR-CHECK",
+);
+const CO_BB_SRP_CBET_MIDSPR_DRAFT_DIR = join(
+  NORMALIZED_DRAFT_ROOT,
+  "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR-CHECK",
+);
+const CO_BB_SRP_CBET_HIGHSPR_DRAFT_DIR = join(
+  NORMALIZED_DRAFT_ROOT,
+  "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR-CHECK",
+);
 const SB_BB_OOP_CBET_LOWSPR_DRAFT_DIR = join(
   NORMALIZED_DRAFT_ROOT,
   "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR-ROOT",
@@ -41,6 +53,9 @@ interface CliArgs {
 
 interface CoverageManifest {
   outputBase: string;
+  executionProfile?: {
+    treeProfile?: string;
+  };
   scenarios: Array<{
     familyId: string;
     boards: string[];
@@ -64,6 +79,7 @@ interface IngestReport {
   dryRun: boolean;
   manifestPath: string;
   outputPath: string;
+  reviewOnlyTreeProfile: string | null;
   rows: FamilyRow[];
   counts: {
     families: number;
@@ -167,6 +183,9 @@ function ingestCompletedCoverage(args: CliArgs): IngestReport {
   if (!existsSync(args.manifestPath)) throw new Error(`Missing coverage manifest: ${args.manifestPath}`);
   const manifest = JSON.parse(readFileSync(args.manifestPath, "utf8")) as CoverageManifest;
   const outputBase = resolve(manifest.outputBase);
+  const reviewOnlyTreeProfile = manifest.executionProfile?.treeProfile === "MEMORY_SAFE_REVIEW_ONLY"
+    ? "MEMORY_SAFE_REVIEW_ONLY"
+    : null;
   const rows = manifest.scenarios
     .filter((scenario) => args.familyFilter === null || scenario.familyId === args.familyFilter)
     .map((scenario) => buildFamilyRow(outputBase, scenario.familyId, scenario.boards));
@@ -175,6 +194,11 @@ function ingestCompletedCoverage(args: CliArgs): IngestReport {
   for (const row of rows) {
     if (row.status !== "RAW_COMPLETE") {
       row.skippedReason = `Not complete yet (${row.solvedBoards.length}/${row.expectedBoards.length}).`;
+      continue;
+    }
+    if (reviewOnlyTreeProfile !== null) {
+      row.commands = [];
+      row.skippedReason = `${reviewOnlyTreeProfile} output is retained for explicit human review only; automatic staging and normalization are disabled.`;
       continue;
     }
     if (row.commands.length === 0) {
@@ -189,9 +213,9 @@ function ingestCompletedCoverage(args: CliArgs): IngestReport {
     row.processed = !args.dryRun && errors.length === 0;
   }
 
-  const mergePilotCommands = mergeCommands(manifest);
+  const mergePilotCommands = reviewOnlyTreeProfile === null ? mergeCommands(manifest) : [];
   if (mergePilotCommands.length > 0 && !args.dryRun && errors.length === 0) {
-    for (const command of mergePilotCommands) runNpmCommand(command, errors);
+    for (const command of mergePilotCommands) runNpmCommand(command, errors, { allowReviewOnlyMerge: true });
   }
 
   return {
@@ -199,6 +223,7 @@ function ingestCompletedCoverage(args: CliArgs): IngestReport {
     dryRun: args.dryRun,
     manifestPath: args.manifestPath,
     outputPath: args.outputPath,
+    reviewOnlyTreeProfile,
     rows,
     counts: {
       families: rows.length,
@@ -273,6 +298,13 @@ function missingCommandsForFamily(outputBase: string, familyId: string): string[
   if (familyId === "MTT9_40BB_UTG_BB_SRP" && (shouldReview || isMissingOrOlder(join(UTG_BB_SRP_DRAFT_DIR, "normalized.candidate.json"), draftSources))) {
     commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${UTG_BB_SRP_DRAFT_DIR} --spr-min=3 --spr-max=8 --pot-type=SINGLE_RAISED --action-node=SINGLE_RAISED_POT_CBET --position-pattern=SRP_UTG_VS_BB --write`);
   }
+  const coBbSrpCbet = coBbSrpCbetOptionsForFamily(familyId);
+  if (
+    coBbSrpCbet !== null &&
+    (shouldReview || isMissingOrOlder(join(coBbSrpCbet.outputDir, "normalized.candidate.json"), draftSources))
+  ) {
+    commands.push(`mtt:texas-solver-normalize-draft -- --review .\\Agents\\solver-input\\gto-plus\\sample-postflop-v1\\output\\texas-solver\\${familyId}\\strategy-export.CHECK.review.json --output-dir .\\${coBbSrpCbet.outputDir} --spr-min=${coBbSrpCbet.sprMin} --spr-max=${coBbSrpCbet.sprMax} --pot-type=SINGLE_RAISED --action-node=SINGLE_RAISED_POT_CBET --position-pattern=SRP_CO_VS_BB --write`);
+  }
   const sbBbOopCbet = sbBbOopCbetOptionsForFamily(familyId);
   if (
     sbBbOopCbet !== null &&
@@ -321,6 +353,7 @@ function isSupportedPilotWorkflowFamily(familyId: string): boolean {
     familyId === "MTT9_35BB_CO_BTN_3BP_REPAIR" ||
     familyId === "MTT9_80BB_CO_BTN_3BP_MIDSPR" ||
     familyId === "MTT9_150BB_CO_BTN_3BP_HIGHSPR" ||
+    coBbSrpCbetOptionsForFamily(familyId) !== null ||
     sbBbOopCbetOptionsForFamily(familyId) !== null ||
     isFacingBetExpansionFamily(familyId);
 }
@@ -342,6 +375,23 @@ function sbBbOopCbetOptionsForFamily(familyId: string): {
   }
   if (familyId === "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR") {
     return { outputDir: SB_BB_OOP_CBET_HIGHSPR_DRAFT_DIR, sprMin: 8, sprMax: 20 };
+  }
+  return null;
+}
+
+function coBbSrpCbetOptionsForFamily(familyId: string): {
+  outputDir: string;
+  sprMin: number;
+  sprMax: number;
+} | null {
+  if (familyId === "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR") {
+    return { outputDir: CO_BB_SRP_CBET_LOWSPR_DRAFT_DIR, sprMin: 0, sprMax: 3 };
+  }
+  if (familyId === "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR") {
+    return { outputDir: CO_BB_SRP_CBET_MIDSPR_DRAFT_DIR, sprMin: 3, sprMax: 8 };
+  }
+  if (familyId === "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR") {
+    return { outputDir: CO_BB_SRP_CBET_HIGHSPR_DRAFT_DIR, sprMin: 8, sprMax: 20 };
   }
   return null;
 }
@@ -373,6 +423,13 @@ function mergeCommands(manifest: CoverageManifest): string[] {
   const commands: string[] = [];
   if (tags.has("SINGLE_RAISED_POT_CBET") && tags.has("SRP_BTN_VS_BB")) {
     pushMergeCommandIfInputsExist(commands, "BTN_vs_BB_SRP_FLOP_CBET");
+  }
+  if (
+    tags.has("SINGLE_RAISED_POT_CBET") &&
+    tags.has("SRP_CO_VS_BB") &&
+    manifest.scenarios.some((scenario) => coBbSrpCbetOptionsForFamily(scenario.familyId) !== null)
+  ) {
+    pushMergeCommandIfInputsExist(commands, "CO_vs_BB_SRP_FLOP_CBET");
   }
   if (tags.has("SINGLE_RAISED_POT_CBET") && tags.has("SRP_SB_VS_BB") && tags.has("OOP_AGGRESSOR")) {
     pushMergeCommandIfInputsExist(commands, "SB_vs_BB_SRP_OOP_FLOP_CBET");
@@ -413,6 +470,13 @@ function defaultMergeInputDirs(scope: string): string[] {
       join(NORMALIZED_DRAFT_ROOT, "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR-ROOT"),
     ];
   }
+  if (scope === "CO_vs_BB_SRP_FLOP_CBET") {
+    return [
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR-CHECK"),
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR-CHECK"),
+      join(NORMALIZED_DRAFT_ROOT, "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR-CHECK"),
+    ];
+  }
   if (scope === "BTN_vs_CO_3BP_FLOP_CBET") {
     return [
       join(NORMALIZED_DRAFT_ROOT, "MTT9_35BB_CO_BTN_3BP_REPAIR-CHECK"),
@@ -437,15 +501,44 @@ function defaultMergeInputDirs(scope: string): string[] {
   return [];
 }
 
-function runNpmCommand(command: string, errors: string[]): void {
+function runNpmCommand(
+  command: string,
+  errors: string[],
+  options: { allowReviewOnlyMerge?: boolean } = {},
+): void {
   try {
-    execSync(`npm run ${command}`, {
+    const output = execSync(`npm run ${command}`, {
       cwd: process.cwd(),
-      stdio: "inherit",
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
     });
+    if (output.length > 0) process.stdout.write(output);
   } catch (error) {
-    errors.push(error instanceof Error ? error.message : String(error));
+    const output = commandOutput(error);
+    if (output.length > 0) process.stdout.write(output);
+    if (options.allowReviewOnlyMerge && isWrittenReviewOnlyMerge(output)) return;
+    errors.push(`Command failed: npm run ${command}`);
   }
+}
+
+function commandOutput(error: unknown): string {
+  if (typeof error !== "object" || error === null) return String(error);
+  const value = error as { stdout?: unknown; stderr?: unknown; message?: unknown };
+  const captured = [value.stdout, value.stderr]
+    .filter((item): item is string | Buffer => typeof item === "string" || Buffer.isBuffer(item))
+    .map((item) => item.toString())
+    .filter(Boolean)
+    .join("\n");
+  if (captured.length > 0) return captured;
+  return typeof value.message === "string" ? value.message : String(error);
+}
+
+function isWrittenReviewOnlyMerge(output: string): boolean {
+  return output.includes("TexasSolver merged postflop pilot draft") &&
+    output.includes("written: true") &&
+    output.includes("valid: false") &&
+    output.includes("pilotGate.valid: false") &&
+    output.includes("fullProductionReady: false");
 }
 
 function renderReport(report: IngestReport, summaryOnly: boolean): string {
@@ -453,6 +546,7 @@ function renderReport(report: IngestReport, summaryOnly: boolean): string {
     "TexasSolver completed coverage ingest",
     `valid: ${report.valid}`,
     `dryRun: ${report.dryRun}`,
+    `review-only tree profile: ${report.reviewOnlyTreeProfile ?? "none"}`,
     `families: ${report.counts.families}`,
     `raw complete: ${report.counts.rawComplete}`,
     `processed: ${report.counts.processed}`,

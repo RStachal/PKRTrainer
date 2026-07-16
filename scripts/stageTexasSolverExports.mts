@@ -8,6 +8,7 @@ interface CliArgs {
   familyId: string;
   json: boolean;
   outputPath: string | null;
+  queueLogDir: string;
   rawDir: string;
   reviewTemplate: boolean;
   solverOutputDir: string;
@@ -53,6 +54,7 @@ function usage(): string {
     "  npm run mtt:stage-texas-solver -- --write --review-template",
     "  npm run mtt:stage-texas-solver -- --family=MTT9_40BB_UTG_BB_SRP --write",
     "  npm run mtt:stage-texas-solver -- --raw-dir=<path> --solver-output-dir=<path>",
+    "  npm run mtt:stage-texas-solver -- --queue-log-dir=artifacts/texas-solver-autostart",
     "",
     "Notes:",
     "  This command stages raw TexasSolver JSON exports for review.",
@@ -82,6 +84,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let familyId = DEFAULT_FAMILY_ID;
   let json = false;
   let outputPath: string | null = null;
+  let queueLogDir = resolve("artifacts/texas-solver-autostart");
   let rawDir: string | null = null;
   let reviewTemplate = false;
   let solverOutputDir: string | null = null;
@@ -146,6 +149,17 @@ function parseArgs(argv: readonly string[]): CliArgs {
       outputPath = resolve(value);
       continue;
     }
+    if (item.startsWith("--queue-log-dir=")) {
+      const value = item.slice("--queue-log-dir=".length).trim();
+      if (value.length === 0) throw new Error(`--queue-log-dir requires a path.\n\n${usage()}`);
+      queueLogDir = resolve(value);
+      continue;
+    }
+    if (item === "--queue-log-dir") {
+      queueLogDir = resolve(nextArgValue(argv, index, "--queue-log-dir"));
+      index += 1;
+      continue;
+    }
     if (item === "--output") {
       outputPath = resolve(nextArgValue(argv, index, "--output"));
       index += 1;
@@ -161,6 +175,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     familyId,
     json,
     outputPath,
+    queueLogDir,
     rawDir: resolvedRawDir,
     reviewTemplate,
     solverOutputDir: resolvedSolverOutputDir,
@@ -279,6 +294,7 @@ function plannedStageFiles(args: CliArgs, hasRawExports: boolean): StageReport["
 
 function writeStageFiles(args: CliArgs, report: StageReport): void {
   mkdirSync(args.solverOutputDir, { recursive: true });
+  const logSummary = summarizeSolverLogs(args, report.rawExports);
   writeFileSync(
     join(args.solverOutputDir, "strategy-export.json"),
     `${JSON.stringify({
@@ -300,8 +316,12 @@ function writeStageFiles(args: CliArgs, report: StageReport): void {
       rawExportCount: report.rawExports.length,
       parseableJson: report.counts.parseableJson,
       invalidJson: report.counts.invalidJson,
-      accuracySource: "Not parsed from TexasSolver logs yet; reviewer must inspect raw run output.",
-      warning: "This file is a staging summary, not a production accuracy certificate.",
+      solverLogCoverage: logSummary,
+      accuracySource: logSummary.parsedLogs > 0
+        ? "Parsed from local TexasSolver console evidence; human review still decides adequacy."
+        : "No per-board TexasSolver console evidence is available yet; reviewer must inspect raw run output.",
+      exploitability: report.rawExports.length === 1 ? logSummary.lastTotalExploitability : null,
+      warning: "This file is a staging summary, not a production accuracy certificate. Multi-board families retain exploitability only per raw export in solverLogCoverage.evidence.",
     }, null, 2)}\n`,
     "utf8",
   );
@@ -312,6 +332,125 @@ function writeStageFiles(args: CliArgs, report: StageReport): void {
       "utf8",
     );
   }
+}
+
+interface SolverLogEvidence {
+  rawFileName: string;
+  source: "PER_BOARD_LOG" | "QUEUE_LOG";
+  sourceName: string;
+  value: number;
+}
+
+function summarizeSolverLogs(args: CliArgs, rawExports: readonly RawExportInfo[]) {
+  const logRoot = join(args.solverOutputDir, "solver-logs");
+  const expectedLogs = rawExports.map((item) => item.fileName.replace(/\.json$/i, ".log"));
+  const perBoardEvidence = expectedLogs.flatMap((name) => {
+    const path = join(logRoot, name);
+    if (!existsSync(path)) return [];
+    const value = lastExploitability(readFileSync(path, "utf8"));
+    return value === null ? [] : [{
+      rawFileName: name.replace(/\.log$/i, ".json"),
+      source: "PER_BOARD_LOG" as const,
+      sourceName: name,
+      value,
+    }];
+  });
+  const perBoardByRaw = new Map(perBoardEvidence.map((item) => [item.rawFileName, item]));
+  const queueEvidence = queueLogEvidence(args.queueLogDir, rawExports)
+    .filter((item) => !perBoardByRaw.has(item.rawFileName));
+  const evidence = [...perBoardEvidence, ...queueEvidence];
+  return {
+    expectedLogs: expectedLogs.length,
+    parsedLogs: evidence.length,
+    perBoardLogs: perBoardEvidence.length,
+    queueLogEntries: queueEvidence.length,
+    missingLogs: expectedLogs.filter((name) => !evidence.some((item) => item.rawFileName === name.replace(/\.log$/i, ".json"))),
+    evidence,
+    lastTotalExploitability: evidence.at(-1)?.value ?? null,
+  };
+}
+
+function queueLogEvidence(
+  queueLogDir: string,
+  rawExports: readonly RawExportInfo[],
+): SolverLogEvidence[] {
+  if (!existsSync(queueLogDir)) return [];
+  const entries = readdirSync(queueLogDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /^queue-.*\.log$/i.test(entry.name))
+    .map((entry) => entry.name)
+    .sort((a, b) => a.localeCompare(b, "en"));
+  const attempts = new Map<string, Array<{
+    parameter: string;
+    rawFileName: string;
+    sourceName: string;
+    value: number;
+  }>>();
+
+  for (const name of entries) {
+    let active: {
+      parameter: string;
+      rawFileName: string;
+      exploitability: number | null;
+    } | null = null;
+    for (const line of readFileSync(join(queueLogDir, name), "utf8").split(/\r?\n/)) {
+      const begin = line.match(/\bPKRTRAINER_SOLVER_BEGIN\s+parameter=([^\s]+\.txt)\s+raw=([^\s]+\.json)\b/i);
+      if (begin !== null) {
+        active = {
+          parameter: markerFileName(begin[1]),
+          rawFileName: markerFileName(begin[2]),
+          exploitability: null,
+        };
+      }
+      const value = lastExploitability(line);
+      if (active !== null && value !== null) active.exploitability = value;
+      const end = line.match(/\bPKRTRAINER_SOLVER_END\s+parameter=([^\s]+\.txt)\s+raw=([^\s]+\.json)\s+exit=0\b/i);
+      if (end === null) continue;
+      const parameter = markerFileName(end[1]);
+      const rawFileName = markerFileName(end[2]);
+      if (
+        active !== null
+        && active.parameter === parameter
+        && active.rawFileName === rawFileName
+        && active.exploitability !== null
+      ) {
+        const key = rawFileName.toLowerCase();
+        const values = attempts.get(key) ?? [];
+        values.push({
+          parameter,
+          rawFileName,
+          sourceName: name,
+          value: active.exploitability,
+        });
+        attempts.set(key, values);
+      }
+      active = null;
+    }
+  }
+
+  return rawExports.flatMap((raw) => {
+    const expectedParameter = raw.fileName
+      .replace(/^pkrtrainer_/i, "")
+      .replace(/\.json$/i, ".txt");
+    const matches = (attempts.get(raw.fileName.toLowerCase()) ?? [])
+      .filter((evidence) => evidence.parameter.replace(/^\d+_/, "") === expectedParameter);
+    if (matches.length !== 1) return [];
+    return [{
+      rawFileName: raw.fileName,
+      source: "QUEUE_LOG" as const,
+      sourceName: matches[0].sourceName,
+      value: matches[0].value,
+    }];
+  });
+}
+
+function markerFileName(value: string): string {
+  return value.trim().replace(/^.*[\\/]/, "");
+}
+
+function lastExploitability(text: string): number | null {
+  const matches = [...text.matchAll(/Total exploitability\s+(-?\d+(?:\.\d+)?)\s+(?:precent|percent)/gi)];
+  const value = matches.at(-1)?.[1];
+  return value === undefined ? null : Number(value);
 }
 
 function renderReviewTemplate(args: CliArgs, report: StageReport): string {

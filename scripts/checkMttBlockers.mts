@@ -8,6 +8,7 @@ import {
   type MttCompletionReadinessRow,
 } from "../src/data/ranges/mttProductionReadiness.ts";
 import { parseMttFilterArg } from "../src/data/ranges/mttCliFilterParsing.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import {
   emptyMttIntakePriorityCounts,
   MTT_INTAKE_PRIORITY_KEYS,
@@ -76,6 +77,7 @@ function usage(): string {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const report = buildMttBlockerReport(args);
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
@@ -215,5 +217,3 @@ function renderMttBlockerReport(report: MttBlockerReport, summaryOnly = false): 
 
   return lines.join("\n");
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

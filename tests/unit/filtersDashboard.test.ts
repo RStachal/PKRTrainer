@@ -123,23 +123,23 @@ describe("filters - DOM start gate", () => {
       onStart: (filters, seed, profile) => starts.push({ filters, seed, profile }),
     });
 
-    expect(root.querySelector(".filters")?.textContent).toContain("Tréninkový profil");
-    expect(root.querySelector(".filters")?.textContent).toContain("Pozice");
-    expect(root.querySelector(".filters")?.textContent).toContain("Hloubky stacku (BB)");
-    expect(root.querySelector(".filters")?.textContent).toContain("Kontext akce");
-    expect(root.querySelector(".filters")?.textContent).toContain("Spustit trénink");
+    expect(root.querySelector(".filters")?.textContent).toContain("Training profile");
+    expect(root.querySelector(".filters")?.textContent).toContain("Positions");
+    expect(root.querySelector(".filters")?.textContent).toContain("Stack depths (BB)");
+    expect(root.querySelector(".filters")?.textContent).toContain("Action context");
+    expect(root.querySelector(".filters")?.textContent).toContain("Start training");
     expect(root.querySelector(".filters")?.textContent).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
     expect(Array.from(root.querySelectorAll<HTMLButtonElement>(".filter-bulk-all"))
       .map((button) => button.getAttribute("aria-label"))).toEqual([
-        "Vybrat vše: pozice",
-        "Vybrat vše: hloubky stacku (bb)",
-        "Vybrat vše: kontext akce",
+        "Select all: positions",
+        "Select all: stack depths (bb)",
+        "Select all: action context",
       ]);
     expect(Array.from(root.querySelectorAll<HTMLButtonElement>(".filter-bulk-none"))
       .map((button) => button.getAttribute("aria-label"))).toEqual([
-        "Zrušit výběr: pozice",
-        "Zrušit výběr: hloubky stacku (bb)",
-        "Zrušit výběr: kontext akce",
+        "Clear all: positions",
+        "Clear all: stack depths (bb)",
+        "Clear all: action context",
       ]);
     expect(root.querySelectorAll(".filter-position")).toHaveLength(9);
     expect(root.querySelectorAll(".filter-bucket")).toHaveLength(13);
@@ -270,11 +270,11 @@ describe("dashboard - DOM statistiky", () => {
     expect(css).toContain(".preflop-curriculum__recommendation");
     expect(css).toContain(".preflop-leak-charts");
     expect(css).not.toContain("background:#fff");
-    expect(root.textContent ?? "").toContain("Souhrn");
+    expect(root.textContent ?? "").toContain("Summary");
     expect(root.textContent ?? "").toContain("KPI");
-    expect(root.textContent ?? "").toContain("Tréninkové zaměření");
-    expect(root.textContent ?? "").toContain("Aktuální relace");
-    expect(root.textContent ?? "").toContain("Export / import statistik");
+    expect(root.textContent ?? "").toContain("Training focus");
+    expect(root.textContent ?? "").toContain("Current session");
+    expect(root.textContent ?? "").toContain("Stats export / import");
     expect(root.textContent ?? "").not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
 
     expect(root.querySelector<HTMLElement>(".summary-total")?.dataset.total).toBe("1");
@@ -390,7 +390,7 @@ describe("dashboard - DOM statistiky", () => {
       root.querySelector<HTMLElement>(
         '.profile-breakdown--ante .profile-breakdown-row[data-group="OFF"] .profile-breakdown-row__name',
       )?.textContent,
-    ).toBe("Bez ante");
+    ).toBe("Ante off");
     expect(
       root.querySelector<HTMLElement>(
         '.profile-breakdown--rangePackId .profile-breakdown-row[data-group="LEGACY_UNKNOWN_STRATEGY"]',
@@ -431,7 +431,7 @@ describe("dashboard - DOM statistiky", () => {
     expect(kpi?.dataset.avgResponseMs).toBe("1500");
     expect(kpi?.dataset.decisionTrendAvailable).toBe("false");
     expect(kpi?.dataset.decisionTrendSamples).toBe("2");
-    expect(card?.textContent).toContain("Průměrné rozhodnutí");
+    expect(card?.textContent).toContain("Average decision time");
     expect(card?.textContent).toContain("1.5 s");
     expect(root.querySelector<HTMLElement>(".dashboard-kpi-card[data-kpi='decisionTrend']"))
       .toBeNull();
@@ -470,7 +470,7 @@ describe("dashboard - DOM statistiky", () => {
     expect(root.querySelector<HTMLElement>(".dashboard-kpi")?.dataset.trendWindows).toBe("2");
     expect(root.querySelector<HTMLElement>(".dashboard-accuracy-trend")?.dataset.windows)
       .toBe("2");
-    expect(root.textContent).toContain("Vývoj nedávné úspěšnosti");
+    expect(root.textContent).toContain("Recent accuracy trend");
     expect(bars).toHaveLength(2);
     expect(bars[0].dataset.total).toBe("5");
     expect(bars[0].dataset.correct).toBe("2");
@@ -567,7 +567,7 @@ describe("dashboard - DOM statistiky", () => {
     expect(kpi?.dataset.decisionTrendAvailable).toBe("true");
     expect(kpi?.dataset.decisionTrendSamples).toBe("6");
     expect(kpi?.dataset.decisionTrendDeltaMs).toBe("-1000");
-    expect(card?.textContent).toContain("Rychlejší o 1.0 s");
+    expect(card?.textContent).toContain("Faster by 1.0 s");
     expect(trend?.dataset.available).toBe("true");
     expect(trend?.dataset.direction).toBe("faster");
     expect(trend?.dataset.deltaMs).toBe("-1000");
@@ -623,7 +623,7 @@ describe("dashboard - DOM statistiky", () => {
     expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.textContent)
       .toContain("Stack: 15 BB");
     expect(root.querySelector<HTMLElement>(".preflop-curriculum")?.textContent)
-      .toContain("Další studijní priorita");
+      .toContain("Next study focus");
     expect(root.querySelectorAll(".preflop-curriculum__recommendation")).toHaveLength(3);
     expect(root.querySelectorAll(".preflop-curriculum__recommendation-train")).toHaveLength(3);
     expect(root.querySelector<HTMLElement>(".preflop-curriculum__recommendation")
@@ -686,7 +686,7 @@ describe("dashboard - DOM statistiky", () => {
       root.querySelector<HTMLElement>(
         '.postflop-breakdown--boardTextureKey .postflop-breakdown-row[data-group="dry|ace-high|disconnected"] .postflop-breakdown-row__name',
       )?.textContent,
-    ).toBe("suchý, A-high, nepropojený");
+    ).toBe("dry, A-high, disconnected");
     expect(
       root.querySelector<HTMLElement>(
         '.postflop-breakdown--strategyPackId .postflop-breakdown-row[data-group="mtt-full-ring-9-flop-single-raised-chip-ev-public-heuristic-v1"]',
@@ -701,7 +701,7 @@ describe("dashboard - DOM statistiky", () => {
       root.querySelector<HTMLElement>(
         '.postflop-breakdown--confidence .postflop-breakdown-row[data-group="LOW"] .postflop-breakdown-row__name',
       )?.textContent,
-    ).toBe("nízká");
+    ).toBe("Low");
     expect(
       root.querySelector<HTMLElement>(
         '.postflop-breakdown--potType .postflop-breakdown-row[data-group="SINGLE_RAISED"] .postflop-breakdown-row__name',
@@ -721,9 +721,9 @@ describe("dashboard - DOM statistiky", () => {
       root.querySelector<HTMLElement>(
         '.postflop-breakdown--sourceQuality .postflop-breakdown-row[data-group="PREVIEW"] .postflop-breakdown-row__name',
       )?.textContent,
-    ).toBe("Náhled / nízká spolehlivost");
+    ).toBe("Preview / low confidence");
     expect(root.querySelector<HTMLElement>(".postflop-breakdown--actionNode")?.textContent)
-      .toContain("Flop c-bet v SRP");
+      .toContain("Flop c-bet in SRP");
     expect(root.querySelector<HTMLElement>(".postflop-breakdown--actionNode")?.textContent)
       .not.toContain("SINGLE_RAISED_POT_CBET");
     expect(
@@ -735,22 +735,22 @@ describe("dashboard - DOM statistiky", () => {
       root.querySelector<HTMLElement>(
         '.postflop-kpi-chart--actionNode .postflop-kpi-chart-row[data-group="SINGLE_RAISED_POT_CBET"] .dashboard-kpi-chart-row__label',
       )?.textContent,
-    ).toBe("Flop c-bet v SRP");
+    ).toBe("Flop c-bet in SRP");
     expect(
       root.querySelector<HTMLElement>(
         '.postflop-kpi-chart--boardTextureKey .postflop-kpi-chart-row[data-group="dry|ace-high|disconnected"] .dashboard-kpi-chart-row__label',
       )?.textContent,
-    ).toBe("suchý, A-high, nepropojený");
+    ).toBe("dry, A-high, disconnected");
     expect(
       root.querySelector<HTMLElement>(
         '.postflop-kpi-chart--confidence .postflop-kpi-chart-row[data-group="LOW"] .dashboard-kpi-chart-row__label',
       )?.textContent,
-    ).toBe("nízká");
+    ).toBe("Low");
     expect(
       root.querySelector<HTMLElement>(
         '.postflop-kpi-chart--sourceQuality .postflop-kpi-chart-row[data-group="PREVIEW"] .dashboard-kpi-chart-row__label',
       )?.textContent,
-    ).toBe("Náhled / nízká spolehlivost");
+    ).toBe("Preview / low confidence");
   });
 
   it("oddeluje single-spot a hand-line postflop KPI flow", () => {
@@ -873,7 +873,7 @@ describe("dashboard - DOM statistiky", () => {
       root.querySelector<HTMLElement>(
         '.postflop-breakdown--ante .postflop-breakdown-row[data-group="OFF"] .postflop-breakdown-row__name',
       )?.textContent,
-    ).toBe("Bez ante");
+    ).toBe("Ante off");
     expect(
       root.querySelector<HTMLElement>(
         '.postflop-breakdown--sourceQuality .postflop-breakdown-row[data-group="PRODUCTION"]',
@@ -893,7 +893,7 @@ describe("dashboard - DOM statistiky", () => {
       root.querySelector<HTMLElement>(
         '.postflop-breakdown--actionNode .postflop-breakdown-row[data-group="RIVER_FACING_BET"] .postflop-breakdown-row__name',
       )?.textContent,
-    ).toBe("River proti betu");
+    ).toBe("River facing bet");
     expect(root.textContent).not.toContain("DOLAR_EV");
     expect(root.textContent).not.toContain("SIX_MAX");
     expect(root.textContent).not.toContain("RIVER_FACING_BET");

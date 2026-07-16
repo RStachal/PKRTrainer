@@ -85,9 +85,11 @@ import {
 } from "./types";
 import { ALL_HAND_CLASSES, SUITS, isPair, isSuited } from "./poker";
 import { offeredActions } from "./actionTree";
+import { preflopActionKindToKey } from "./preflopActionOptions";
 import { questionId } from "./questionId";
 import { mulberry32, hashStr } from "./rng";
 import { buildPreflopExplanation } from "./preflopExplanation";
+import { cloneActionEvSet, isActionEvSetComplete } from "./actionEv";
 import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
 
 // ---------------------------------------------------------------------------
@@ -344,67 +346,6 @@ function pickCallsBefore(rng: () => number, heroPos: Position): number {
 }
 
 // ---------------------------------------------------------------------------
-// Mapování ActionKind → ActionKey (Req 3.12, Property 8)
-// ---------------------------------------------------------------------------
-
-/** Výchozí open sizing dle hloubky (mimo range hrdinovy ruky). */
-function defaultOpenKey(bucket: StackBucket): ActionKey {
-  return bucket <= 25 ? "OPEN_2X" : "OPEN_25X";
-}
-
-/**
- * Reprezentativní raise-sizing klíč pro daný prefix (OPEN/ISO):
- * přednostně sizing doporučený pro konkrétní ruku hrdiny ve STRICT sadě,
- * jinak výchozí sizing dle hloubky.
- */
-function pickSizingKey(
-  prefix: "OPEN" | "ISO",
-  handStrict: ActionKey[] | undefined,
-  bucket: StackBucket,
-): ActionKey {
-  const found = handStrict?.find((k) => k.startsWith(`${prefix}_`));
-  if (found) return found;
-  return prefix === "OPEN" ? defaultOpenKey(bucket) : "ISO_25X";
-}
-
-/**
- * Přeloží druh akce (`ActionKind`) na konkrétní Akční_klíč. Raise akce s
- * variantním sizingem (OPEN/ISO) získají reprezentativní sizing dle ruky.
- */
-function actionKindToKey(
-  kind: ActionKind,
-  handStrict: ActionKey[] | undefined,
-  bucket: StackBucket,
-): ActionKey {
-  switch (kind) {
-    case "FOLD":
-      return "FOLD";
-    case "CALL":
-      return "CALL";
-    case "LIMP":
-      return "LIMP";
-    case "OVERLIMP":
-      return "OVERLIMP";
-    case "3BET":
-      return "3BET";
-    case "4BET":
-      return "4BET";
-    case "SQUEEZE":
-      return "SQUEEZE";
-    case "JAM":
-      return "JAM";
-    case "CALL_JAM":
-      return "CALL_JAM";
-    case "OPEN":
-      return pickSizingKey("OPEN", handStrict, bucket);
-    case "ISO":
-      return pickSizingKey("ISO", handStrict, bucket);
-    default:
-      return assertNeverKind(kind);
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Startovní pot (Req 5.3, Property 13)
 // ---------------------------------------------------------------------------
 
@@ -522,7 +463,7 @@ export function generateSpot(
     : offeredKinds.includes("LIMP")
       ? "LIMP"
       : offeredKinds[0];
-  const defaultKey = actionKindToKey(defaultKind, handStrict, effStack);
+  const defaultKey = preflopActionKindToKey(defaultKind, handStrict, effStack);
 
   const strictCorrect: ActionKey[] =
     handStrict && handStrict.length > 0 ? [...handStrict] : [defaultKey];
@@ -531,9 +472,14 @@ export function generateSpot(
 
   // answers: bijekce nabízená akce → právě jeden Akční_klíč (Property 8).
   const answers: Answer[] = offeredKinds.map((kind) => {
-    const akey = actionKindToKey(kind, handStrict, effStack);
+    const akey = preflopActionKindToKey(kind, handStrict, effStack);
     return { key: akey, label: ACTION_KEY_LABEL[akey] };
   });
+  const candidateActionEvs = entry.actionEvs?.[hand];
+  const offeredActionKeys = answers.map((answer) => answer.key);
+  const actionEvs = isActionEvSetComplete(candidateActionEvs, offeredActionKeys)
+    ? cloneActionEvSet(candidateActionEvs)
+    : undefined;
 
   const id = questionId({ context, heroPos, effStack, hand, ante });
   const startingPot = startingPotFor(ante);
@@ -559,6 +505,7 @@ export function generateSpot(
     answers,
     correctKeys,
     strictCorrect,
+    ...(actionEvs ? { actionEvs } : {}),
     explanation,
     startingPot,
   };
@@ -911,8 +858,4 @@ export function spotSequence(
 
 function assertNever(x: never): never {
   throw new Error(`Unexpected action context: ${String(x)}`);
-}
-
-function assertNeverKind(x: never): never {
-  throw new Error(`Unexpected action kind: ${String(x)}`);
 }

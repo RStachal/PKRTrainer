@@ -8,6 +8,7 @@ import {
   type MttCompletionReadinessRow,
 } from "../src/data/ranges/mttProductionReadiness.ts";
 import { parseMttFilterArg } from "../src/data/ranges/mttCliFilterParsing.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import {
   emptyMttIntakePriorityCounts,
   MTT_INTAKE_PRIORITY_KEYS,
@@ -26,7 +27,9 @@ interface CliArgs {
   json: boolean;
   outputPath: string | null;
   packetDir: string | null;
+  allPackets: boolean;
   priority: MttIntakePriorityKey | null;
+  summary: boolean;
 }
 
 interface NextMttActionRow {
@@ -51,6 +54,8 @@ interface NextMttActionRow {
     registryIntegrity: string;
     technicalAcceptance: string;
     androidPreflight: string;
+    ownedSolverCsvDraft: string | null;
+    stageReviewedOwnedSolverCsv: string | null;
   };
   operatorChecklist: readonly string[];
 }
@@ -80,15 +85,21 @@ interface RequiredIntakeFile {
 
 try {
   const args = parseArgs(process.argv.slice(2));
-  const report = buildNextMttActionReport(args);
+  await loadCompleteMttProductionRegistry();
+  const rows = buildNextMttActionRows(args);
+  const report = buildNextMttActionReport(args, rows);
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
     writeFileSync(args.outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   }
   if (args.packetDir !== null) {
-    writeNextActionIntakePacket(report, args.packetDir);
+    if (args.allPackets) {
+      writeAllActionIntakePackets(rows, args.packetDir);
+    } else {
+      writeNextActionIntakePacket(report, args.packetDir);
+    }
   }
-  console.log(args.json ? JSON.stringify(report, null, 2) : renderNextMttActionReport(report));
+  console.log(args.json ? JSON.stringify(report, null, 2) : args.summary ? renderNextMttActionSummary(report) : renderNextMttActionReport(report));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
@@ -106,6 +117,8 @@ function usage(): string {
     "  --json",
     "  --output=artifacts/mtt-next-action/report.json",
     "  --packet-dir=artifacts/mtt-next-action/packet",
+    "  --all-packets",
+    "  --summary",
     `  --priority=${MTT_INTAKE_PRIORITY_KEYS.join("|")}`,
     "",
     "Filters:",
@@ -123,12 +136,22 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
   let outputPath: string | null = null;
   let packetDir: string | null = null;
+  let allPackets = false;
   let priority: MttIntakePriorityKey | null = null;
+  let summary = false;
 
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
     if (item === "--json") {
       json = true;
+      continue;
+    }
+    if (item === "--all-packets") {
+      allPackets = true;
+      continue;
+    }
+    if (item === "--summary") {
+      summary = true;
       continue;
     }
     if (item.startsWith("--priority=")) {
@@ -151,16 +174,23 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { filters, json, outputPath, packetDir, priority };
+  if (allPackets && packetDir === null) {
+    throw new Error(`--all-packets requires --packet-dir.\n\n${usage()}`);
+  }
+
+  return { filters, json, outputPath, packetDir, allPackets, priority, summary };
 }
 
-function buildNextMttActionReport(args: CliArgs): NextMttActionReport {
+function buildNextMttActionRows(args: CliArgs): NextMttActionRow[] {
   const filtered = filterMttCompletionReadinessReport(buildMttCompletionReadinessReport(), args.filters);
-  const rows = filtered.rows
+  return filtered.rows
     .filter((row) => !row.productionReady && row.importSlot !== null)
     .map((row) => nextMttActionRow(row, row.importSlot as MttCompletionImportSlotHint))
     .filter((row) => args.priority === null || row.priority === args.priority)
     .sort(compareRows);
+}
+
+function buildNextMttActionReport(args: CliArgs, rows: readonly NextMttActionRow[]): NextMttActionReport {
   const nextAction = rows.find((row) => row.missingFiles.length === 0) ?? rows[0] ?? null;
   const readyForValidation = rows.filter((row) => row.missingFiles.length === 0).length;
 
@@ -221,6 +251,7 @@ function nextMttActionRow(
     existsSync(importSlot.normalizedInputPath) ? null : importSlot.normalizedInputPath,
     existsSync(importSlot.permissionManifestPath) ? null : importSlot.permissionManifestPath,
   ].filter((path): path is string => path !== null);
+  const ownedSolverCsvWorkflow = p1OwnedSolverCsvWorkflow(row, importSlot.packId);
 
   return {
     priority: mttIntakePriorityForProfile(row, missingFiles.length === 0),
@@ -250,8 +281,42 @@ function nextMttActionRow(
       registryIntegrity: "npm run mtt:registry-integrity",
       technicalAcceptance: "npm run mtt:technical-acceptance",
       androidPreflight: "npm run e2e:android:preflight",
+      ownedSolverCsvDraft: ownedSolverCsvWorkflow?.draft ?? null,
+      stageReviewedOwnedSolverCsv: ownedSolverCsvWorkflow?.stage ?? null,
     },
     operatorChecklist: operatorChecklistForSlot(row),
+  };
+}
+
+function p1OwnedSolverCsvWorkflow(
+  row: MttCompletionReadinessRow,
+  packId: string,
+): { draft: string; stage: string } | null {
+  if (row.street !== "PREFLOP" || row.evModel !== "CHIP_EV" || row.tableFormat !== "SIX_MAX") {
+    return null;
+  }
+
+  const artifactFolder = `artifacts/mtt-preflop-csv-draft/${packId}`;
+  return {
+    draft: [
+      "npm run mtt:preflop-csv-draft --",
+      "--csv <exact-owned-solver-export.csv>",
+      `--pack-id ${packId}`,
+      `--out ${artifactFolder}/normalized.candidate.json`,
+      `--permission-out ${artifactFolder}/permission.candidate.json`,
+      "--reviewer \"<owner-name>\"",
+      "--rights-owner \"<owner-name>\"",
+      "--license-kind OWNED_SOLVER_EXPORT",
+      "--source-location \"local owned solver export\"",
+      "--confidence MEDIUM --summary",
+    ].join(" "),
+    stage: [
+      "npm run mtt:p1-stage-reviewed-preflop --",
+      `--pack-id ${packId}`,
+      "--draft-dir artifacts/mtt-preflop-csv-draft",
+      `--permission ${artifactFolder}/permission.candidate.json`,
+      "--write --confirm=STAGE_REVIEWED_MTT_P1_PREFLOP",
+    ].join(" "),
   };
 }
 
@@ -271,8 +336,8 @@ function requiredFilesForSlot(importSlot: MttCompletionImportSlotHint): readonly
       purpose: "Source-free provenance/audit manifest for this pack. The compatible filename remains permission.json.",
       acceptance: [
         `Manifest packId must be ${importSlot.packId}.`,
-        "Evidence references must support PKRTrainer runtime bundle use and stay source-free.",
-        "Reviewer, provenance owner and evidence reference ids must be explicit.",
+        "Reviewer, rights owner and PKRTrainer runtime-bundle permission must be explicit.",
+        "Owned solver exports need no external evidence references; third-party/public-permission inputs still do.",
       ],
     },
   ];
@@ -389,6 +454,10 @@ function renderNextMttActionReport(report: NextMttActionReport): string {
     lines.push(`registry integrity: ${action.commands.registryIntegrity}`);
     lines.push(`technical acceptance: ${action.commands.technicalAcceptance}`);
     lines.push(`android preflight: ${action.commands.androidPreflight}`);
+    if (action.commands.ownedSolverCsvDraft !== null) {
+      lines.push(`owned solver CSV draft: ${action.commands.ownedSolverCsvDraft}`);
+      lines.push(`stage reviewed owned solver CSV: ${action.commands.stageReviewedOwnedSolverCsv}`);
+    }
     for (const blocker of action.blockers) lines.push(`blocker: ${blocker}`);
     lines.push("operator checklist:");
     for (const item of action.operatorChecklist) lines.push(`  - ${item}`);
@@ -399,6 +468,26 @@ function renderNextMttActionReport(report: NextMttActionReport): string {
   lines.push("source reports:");
   for (const command of report.sourceReports) lines.push(`  ${command}`);
 
+  return lines.join("\n");
+}
+
+function renderNextMttActionSummary(report: NextMttActionReport): string {
+  const lines = [
+    "Next MTT action",
+    `priority filter: ${report.priority ?? "all"}`,
+    `valid: ${report.valid}`,
+    `state: ${report.state}`,
+    `blocker rows: ${report.counts.blockerRows}`,
+    `ready for validation: ${report.counts.readyForValidation}`,
+    `missing normalized.json: ${report.counts.missingNormalized}`,
+    `missing permission.json: ${report.counts.missingPermission}`,
+  ];
+  if (report.nextAction === null) {
+    lines.push("next action: none");
+  } else {
+    lines.push(`next slot: ${report.nextAction.slotId}`);
+    lines.push(`next pack: ${report.nextAction.packId}`);
+  }
   return lines.join("\n");
 }
 
@@ -455,6 +544,75 @@ function writeNextActionIntakePacket(report: NextMttActionReport, packetRoot: st
   );
 }
 
+function writeAllActionIntakePackets(rows: readonly NextMttActionRow[], packetRoot: string): void {
+  mkdirSync(packetRoot, { recursive: true });
+  const summary = {
+    warning: "Do not copy these packets into raw intake as data. They are checklists only.",
+    generatedAt: new Date().toISOString(),
+    pendingSlots: rows.length,
+    countsByPriority: countByPriority(rows),
+    packets: rows.map((row) => ({
+      priority: row.priority,
+      slotId: row.slotId,
+      packId: row.packId,
+      packetFolder: row.packId,
+      rawInputFolder: row.rawInputFolder,
+      missingFiles: row.missingFiles,
+    })),
+  };
+
+  writeFileSync(join(packetRoot, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`, "utf8");
+  writeFileSync(join(packetRoot, "README.md"), renderAllPacketsReadme(rows), "utf8");
+
+  for (const row of rows) {
+    writeActionIntakePacket(row, packetRoot);
+  }
+}
+
+function writeActionIntakePacket(action: NextMttActionRow, packetRoot: string): void {
+  const report: NextMttActionReport = {
+    valid: false,
+    state: action.missingFiles.length === 0 ? "READY_FOR_VALIDATION" : "WAITING_FOR_FILES",
+    filters: {},
+    priority: action.priority,
+    counts: {
+      blockerRows: 1,
+      readyForValidation: action.missingFiles.length === 0 ? 1 : 0,
+      missingNormalized: action.missingFiles.includes(action.normalizedInputPath) ? 1 : 0,
+      missingPermission: action.missingFiles.includes(action.permissionManifestPath) ? 1 : 0,
+      byPriority: {
+        ...emptyMttIntakePriorityCounts(),
+        [action.priority]: 1,
+      },
+    },
+    nextAction: action,
+    followUpCommands: [],
+    sourceReports: [],
+  };
+  writeNextActionIntakePacket(report, packetRoot);
+}
+
+function renderAllPacketsReadme(rows: readonly NextMttActionRow[]): string {
+  const byPriority = countByPriority(rows);
+  return [
+    "# MTT intake packets",
+    "",
+    "This folder contains source-safe checklists for every pending MTT production intake slot.",
+    "They are not strategy data and must not be copied into raw intake as normalized.json or permission.json.",
+    "",
+    "## Counts",
+    "",
+    `- Pending slots: ${rows.length}`,
+    ...MTT_INTAKE_PRIORITY_KEYS.map((priority) => `- ${priority}: ${byPriority[priority]}`),
+    "",
+    "## Raw intake rule",
+    "",
+    "Only reviewed production range data may be placed at `Agents/range-intake/raw/<packId>/normalized.json`.",
+    "Only explicit source-free provenance with reviewer, rights owner, runtime permission, and any needed reuse policy may be placed at `Agents/range-intake/raw/<packId>/permission.json`.",
+    "",
+  ].join("\n");
+}
+
 function renderIntakePacketReadme(action: NextMttActionRow): string {
   return [
     "# MTT intake packet",
@@ -466,7 +624,7 @@ function renderIntakePacketReadme(action: NextMttActionRow): string {
     "",
     "This packet is a checklist only. It must not be used as strategy data.",
     "Do not create placeholder normalized.json or permission.json files.",
-    "The two raw intake files must come from reviewed source-free evidence and must match the canonical pack id above.",
+    "The two raw intake files must come from a reviewed legal input and must match the canonical pack id above.",
     "In this workflow permission.json is the backwards-compatible filename for a provenance/audit manifest, not user access control.",
     "",
     "## Required files",
@@ -487,6 +645,15 @@ function renderIntakePacketReadme(action: NextMttActionRow): string {
     `- Registry integrity: ${action.commands.registryIntegrity}`,
     `- Technical acceptance: ${action.commands.technicalAcceptance}`,
     `- Android preflight: ${action.commands.androidPreflight}`,
+    ...(action.commands.ownedSolverCsvDraft === null ? [] : [
+      "",
+      "## Owned solver CSV workflow",
+      "",
+      "Use this only with an exact owned solver export in the documented CSV schema.",
+      "It creates review artifacts, not range data in the raw intake folder.",
+      `- Create candidate: ${action.commands.ownedSolverCsvDraft}`,
+      `- Stage after review: ${action.commands.stageReviewedOwnedSolverCsv}`,
+    ]),
     "",
     "## Operator checklist",
     "",
@@ -515,5 +682,3 @@ function renderRequiredFileNotes(file: RequiredIntakeFile): string {
     "",
   ].join("\n");
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

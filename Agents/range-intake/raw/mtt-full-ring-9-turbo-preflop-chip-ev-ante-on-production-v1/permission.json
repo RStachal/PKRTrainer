@@ -1,0 +1,25 @@
+{
+  "packId": "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1",
+  "version": "permission-user-confirmed-v1",
+  "reviewedAt": "2026-07-10",
+  "reviewer": "PKRTrainer owner (user-confirmed)",
+  "rightsOwner": "PKRTrainer owner (user-confirmed owned solver export)",
+  "licenseKind": "OWNED_SOLVER_EXPORT",
+  "allowedRedistributionScope": "PKRTRAINER_RUNTIME_BUNDLE",
+  "sourceMaterialLocation": "artifacts/mtt-p1-preflop-drafts/mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1/normalized.candidate.json",
+  "evidence": [],
+  "notes": [
+    "User confirmed: source is owned solver export.",
+    "User confirmed right to distribute in PKRTrainer runtime bundle.",
+    "No third-party chart values are claimed or required for this permission manifest."
+  ],
+  "reusePolicy": {
+    "allowedDimensions": [
+      "BLIND_SPEED"
+    ],
+    "reviewedAt": "2026-07-10",
+    "reviewer": "PKRTrainer owner (user-confirmed)",
+    "rationale": "User confirmed regular and turbo P1 full-ring chipEV preflop candidates may use the owned solver export/reuse decision for blind speed production staging.",
+    "sourceMaterialReferenceIds": []
+  }
+}

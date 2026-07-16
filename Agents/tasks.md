@@ -1,5 +1,12 @@
 # Implementation Plan: MTT Preflop Trainer
 
+> Active execution order: `Agents/mtt-completion-priorities.md`. This large
+> file remains implementation history and the long-term backlog; when priority
+> order conflicts, follow the active completion contract.
+> Lower-cost continuation tasks are ordered in
+> `Agents/mtt-lean-execution-queue.md`; do not select an old unchecked item
+> directly from this historical file.
+
 ## Overview
 
 Implementační plán portuje ověřené koncepty z legacy baseline do nového, typovaného a modulárního buildu na **Vanilla TypeScript + Vite**. Postupuje odspodu nahoru: nejdříve čisté jádro (deterministická primitiva, typy, akční strom, Range_Store, generování spotů, scoring, perzistence/migrace), poté UI vrstvy (stůl, range matice, filtry, dashboard, HH import), nakonec offline/PWA a propojení v `main.ts`. Každý krok staví na předchozích a končí integrací; žádný kód nezůstává osamocený.

@@ -110,6 +110,26 @@ const TARGETS: readonly PilotTarget[] = [
     ],
   },
   {
+    id: "co-bb-srp-flop-cbet-low-mid-high",
+    scope: "CO_vs_BB_SRP_FLOP_CBET",
+    normalizedPath:
+      "artifacts/texas-solver-review-integration/normalized-drafts/CO_BB_SRP_FLOP_CBET_PILOT-CHECK/normalized.candidate.json",
+    permissionPath:
+      "artifacts/texas-solver-review-integration/normalized-drafts/CO_BB_SRP_FLOP_CBET_PILOT-CHECK/permission.candidate.json",
+    description: "Merged CO vs BB SRP flop c-bet pilot across available SPR bands.",
+    expectedInputCount: 3,
+    alternatives: [
+      {
+        id: "co-bb-srp-flop-cbet-lowspr",
+        normalizedPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_25BB_CO_BB_SRP_CBET_LOWSPR-CHECK/normalized.candidate.json",
+        permissionPath:
+          "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_25BB_CO_BB_SRP_CBET_LOWSPR-CHECK/permission.candidate.json",
+        description: "CO vs BB SRP low-SPR flop c-bet pilot.",
+      },
+    ],
+  },
+  {
     id: "btn-co-3bp-flop-cbet",
     scope: "BTN_vs_CO_3BP_FLOP_CBET",
     normalizedPath:

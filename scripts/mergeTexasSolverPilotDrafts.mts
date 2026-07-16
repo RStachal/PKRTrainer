@@ -61,6 +61,23 @@ const MERGE_PROFILES: Record<MttPostflopPilotScope, MergeProfile> = {
       "This merged draft must stay behind the pilot gate until full postflop production coverage is imported.",
     ],
   },
+  CO_vs_BB_SRP_FLOP_CBET: {
+    scope: "CO_vs_BB_SRP_FLOP_CBET",
+    label: "CO vs BB SRP flop c-bet",
+    defaultInputDirs: [
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_25BB_CO_BB_SRP_CBET_LOWSPR-CHECK",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_50BB_CO_BB_SRP_CBET_MIDSPR-CHECK",
+      "artifacts/texas-solver-review-integration/normalized-drafts/MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR-CHECK",
+    ],
+    defaultOutputDir:
+      "artifacts/texas-solver-review-integration/normalized-drafts/CO_BB_SRP_FLOP_CBET_PILOT-CHECK",
+    packVersion: "co-bb-srp-flop-cbet-pilot-merged-draft-v1",
+    permissionVersion: "co-bb-srp-flop-cbet-pilot-permission-merged-draft-v1",
+    assumptions: [
+      "Merged LOW/MID/HIGH SPR candidates are scoped to CO vs BB SRP flop c-bet training only.",
+      "This merged draft must stay behind the pilot gate until full postflop production coverage is imported.",
+    ],
+  },
   SB_vs_BB_SRP_OOP_FLOP_CBET: {
     scope: "SB_vs_BB_SRP_OOP_FLOP_CBET",
     label: "SB vs BB SRP OOP flop c-bet",
@@ -263,6 +280,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-merge-pilot-drafts",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --write --summary",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_CBET --write --summary",
+    "  npm run mtt:texas-solver-merge-pilot-drafts -- --scope=CO_vs_BB_SRP_FLOP_CBET --write --summary",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --scope=SB_vs_BB_SRP_OOP_FLOP_CBET --write --summary",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --scope=BTN_vs_CO_3BP_FLOP_FACING_BET --write --summary",
     "  npm run mtt:texas-solver-merge-pilot-drafts -- --input-dir artifacts/.../LOWSPR --input-dir artifacts/.../MIDSPR --output-dir artifacts/.../PILOT --write",

@@ -21,6 +21,39 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
     }
   });
 
+  it("nenecha prazdne review pole pohltit nasledujici checklistovy radek", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-protocol-empty-field-"));
+    try {
+      const familyDir = join(directory, "MTT9_50BB_BTN_BB_SRP");
+      mkdirSync(familyDir, { recursive: true });
+      writeFileSync(
+        join(familyDir, "review-notes.md"),
+        [
+          "Status: NEEDS_REVIEW",
+          "Reviewer:",
+          "Reviewed at:",
+          "Usable for production: no",
+          "Production caveats:",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      const result = runProtocol(`--root=${directory}`, "--json");
+      expect(result.status).toBe(1);
+      const parsed = parseJsonStdout(result.stdout) as {
+        rows: Array<{ reviewer: string; reviewedAt: string; usableForProduction: string; blockers: string[] }>;
+      };
+      expect(parsed.rows[0]).toMatchObject({ reviewer: "", reviewedAt: "", usableForProduction: "NO" });
+      expect(parsed.rows[0].blockers).toEqual(expect.arrayContaining([
+        "Reviewer is required.",
+        "Reviewed at is required.",
+      ]));
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("cte scoped human sign-off jako protocol-ready, ale ne jako production eligible bez accuracy evidence", () => {
     const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-protocol-scoped-"));
     try {
@@ -141,6 +174,111 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
     }
   });
 
+  it("uzna traceable per-board evidence bez falešne family-wide exploitability hodnoty", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-protocol-per-board-"));
+    try {
+      const familyDir = join(directory, "MTT9_80BB_BTN_BB_SRP_HIGHSPR");
+      mkdirSync(familyDir, { recursive: true });
+      writeFileSync(
+        join(familyDir, "review-notes.md"),
+        [
+          "Status: REVIEWED",
+          "Reviewer: PKRTrainer QA",
+          "Reviewed at: 2026-07-14",
+          "Usable for production: scoped: high-SPR pilot only",
+          "Usable scope: high-SPR pilot only",
+          "Production caveats: narrow reviewed scope",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      writeFileSync(
+        join(familyDir, "accuracy-report.json"),
+        JSON.stringify({
+          solver: "texas-solver",
+          status: "NEEDS_REVIEW",
+          exploitability: null,
+          accuracySource: "Parsed from local TexasSolver console evidence; human review still decides adequacy.",
+          solverLogCoverage: {
+            evidence: [
+              { rawFileName: "pkrtrainer_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A72r.json", source: "QUEUE_LOG", value: 0.42 },
+              { rawFileName: "pkrtrainer_MTT9_80BB_BTN_BB_SRP_HIGHSPR_K83r.json", source: "QUEUE_LOG", value: 0.21 },
+            ],
+          },
+        }),
+        "utf8",
+      );
+
+      const packetDir = join(directory, "packet");
+      const result = runProtocol(
+        `--root=${directory}`,
+        "--require-production-usable",
+        "--json",
+        `--packet-dir=${packetDir}`,
+      );
+
+      expect(result.status).toBe(0);
+      const parsed = parseJsonStdout(result.stdout) as {
+        counts: { productionEligible: number; reviewedScoped: number };
+        rows: Array<{ accuracyEvidence: string; productionEligible: boolean }>;
+      };
+      expect(parsed.counts).toMatchObject({ productionEligible: 1, reviewedScoped: 1 });
+      expect(parsed.rows[0]).toMatchObject({ productionEligible: true });
+      expect(parsed.rows[0].accuracyEvidence).toContain("pkrtrainer_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A72r.json: 0.42");
+      const checklist = readFileSync(
+        join(packetDir, "MTT9_80BB_BTN_BB_SRP_HIGHSPR", "REVIEW_CHECKLIST.md"),
+        "utf8",
+      );
+      expect(checklist).toContain("## Current accuracy evidence");
+      expect(checklist).toContain("pkrtrainer_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A72r.json: 0.42");
+      expect(checklist).not.toContain("\"strategy\"");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("neuzna nečíselnou per-board hodnotu jako parsed solver evidence", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-protocol-invalid-evidence-"));
+    try {
+      const familyDir = join(directory, "MTT9_80BB_BTN_BB_SRP_HIGHSPR");
+      mkdirSync(familyDir, { recursive: true });
+      writeFileSync(
+        join(familyDir, "review-notes.md"),
+        [
+          "Status: REVIEWED",
+          "Reviewer: PKRTrainer QA",
+          "Reviewed at: 2026-07-14",
+          "Usable for production: scoped: high-SPR pilot only",
+          "Usable scope: high-SPR pilot only",
+          "Production caveats: narrow reviewed scope",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      writeFileSync(
+        join(familyDir, "accuracy-report.json"),
+        JSON.stringify({
+          accuracySource: "Parsed from local TexasSolver console evidence; human review still decides adequacy.",
+          solverLogCoverage: {
+            evidence: [{ rawFileName: "pkrtrainer_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A72r.json", source: "QUEUE_LOG", value: true }],
+          },
+        }),
+        "utf8",
+      );
+
+      const result = runProtocol(`--root=${directory}`, "--require-production-usable", "--json");
+
+      expect(result.status).toBe(1);
+      const parsed = parseJsonStdout(result.stdout) as {
+        rows: Array<{ productionEligible: boolean; warnings: string[] }>;
+      };
+      expect(parsed.rows[0]).toMatchObject({ productionEligible: false });
+      expect(parsed.rows[0].warnings.join("\n")).toContain("does not contain parsed production-grade accuracy evidence");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("umi vygenerovat source-safe review packet pro jednotlive family", () => {
     const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-protocol-packet-"));
     const packetDir = join(directory, "packet");
@@ -166,6 +304,7 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
         join(packetDir, "MTT9_50BB_BTN_BB_SRP", "REVIEW_CHECKLIST.md"),
         "utf8",
       );
+      const waves = readFileSync(join(packetDir, "OWNER_REVIEW_WAVES.md"), "utf8");
       const summary = JSON.parse(readFileSync(join(packetDir, "review-protocol-summary.json"), "utf8")) as {
         families: number;
         needsReview: number;
@@ -174,11 +313,39 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
       expect(summary).toMatchObject({ families: 1, needsReview: 1 });
       expect(readme).toContain("TexasSolver review protocol packet");
       expect(readme).toContain("Source-safe checklist packet");
+      expect(readme).toContain("OWNER_REVIEW_WAVES.md");
+      expect(waves).toContain("## Wave 1");
+      expect(waves).toContain("MTT9_50BB_BTN_BB_SRP: NEEDS_REVIEW");
       expect(checklist).toContain("TexasSolver review checklist: MTT9_50BB_BTN_BB_SRP");
       expect(checklist).toContain("Status: NEEDS_REVIEW");
       expect(checklist).toContain("Required review-notes.md fields");
       expect(checklist).toContain("Confirm intended PKRTrainer spot family");
       expect(checklist).not.toContain("\"strategy\"");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("doplni pouze chybejici prazdna owner rozhodovaci pole bez falesneho sign-off", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-protocol-template-"));
+    try {
+      const familyDir = join(directory, "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR");
+      mkdirSync(familyDir, { recursive: true });
+      writeFileSync(join(familyDir, "review-notes.md"), "Status: NEEDS_REVIEW\n", "utf8");
+
+      const result = runProtocol(`--root=${directory}`, "--write-review-templates", "--summary");
+
+      expect(result.status).toBe(1);
+      expect(result.stdout).toContain("Prepared blank owner decision fields: 1");
+      const notes = readFileSync(join(familyDir, "review-notes.md"), "utf8");
+      expect(notes).toContain("## Owner decision");
+      expect(notes).toContain("Reviewer:");
+      expect(notes).toContain("Reviewed at:");
+      expect(notes).toContain("Usable for production:");
+      expect(notes).toContain("Usable scope:");
+      expect(notes).toContain("Production caveats:");
+      expect(notes).toContain("Status: NEEDS_REVIEW");
+      expect(notes).not.toContain("Status: REVIEWED");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

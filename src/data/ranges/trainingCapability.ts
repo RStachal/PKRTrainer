@@ -8,6 +8,11 @@ import {
   mttCompletionReadinessRowForTrainingProfile,
   type MttCompletionReadinessRow,
 } from "./mttProductionReadiness";
+import {
+  mttProductionImportSlotId,
+  mttProductionImportSlotKind,
+} from "./mttImportSlotNaming";
+import { generatedMttProductionManifest } from "./mttProductionRegistry.generated";
 
 export interface TrainingCapability {
   status: TrainingCapabilityStatus;
@@ -39,7 +44,9 @@ export function trainingCapabilityForProfile(
     };
   }
 
-  const readiness = mttCompletionReadinessRowForTrainingProfile(profile);
+  const readiness = bundledProductionReadiness(
+    mttCompletionReadinessRowForTrainingProfile(profile),
+  );
   if (readiness?.productionReady === true) {
     return {
       status: "PRODUCTION",
@@ -78,6 +85,31 @@ export function trainingCapabilityForProfile(
     reason: readiness?.missingReasons[0] ??
       "Production preflop range is missing for this MTT v1 profile.",
     mttReadiness: readiness,
+  };
+}
+
+function bundledProductionReadiness(
+  readiness: MttCompletionReadinessRow | null,
+): MttCompletionReadinessRow | null {
+  if (readiness === null || readiness.productionReady) return readiness;
+
+  const kind = mttProductionImportSlotKind(readiness.street);
+  const profileKey = mttProductionImportSlotId(readiness);
+  const entry = generatedMttProductionManifest.find((candidate) => (
+    candidate.kind === kind && candidate.profileKey === profileKey
+  ));
+  if (entry === undefined) return readiness;
+
+  return {
+    ...readiness,
+    status: "PRODUCTION",
+    productionReady: true,
+    coverageKind: entry.kind === "mtt-preflop"
+      ? "PREFLOP_RANGE_PACK"
+      : "POSTFLOP_PRODUCTION_PACK",
+    packId: entry.packId,
+    importSlot: null,
+    missingReasons: [],
   };
 }
 

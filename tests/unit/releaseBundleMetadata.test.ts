@@ -87,6 +87,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["build:range-module"]).toBe("vite-node scripts/buildRangeModule.mts");
     expect(pkg.scripts["mtt:slots"]).toBe("vite-node scripts/listMttImportSlots.mts");
     expect(pkg.scripts["mtt:completion"]).toBe("vite-node scripts/checkMttCompletion.mts");
+    expect(pkg.scripts["mtt:core-release"]).toBe("vite-node scripts/checkMttCoreRelease.mts");
     expect(pkg.scripts["mtt:blockers"]).toBe("vite-node scripts/checkMttBlockers.mts");
     expect(pkg.scripts["mtt:intake-plan"]).toBe("vite-node scripts/checkMttIntakePlan.mts");
     expect(pkg.scripts["mtt:postflop-matrix"]).toBe("vite-node scripts/checkMttPostflopMatrix.mts");
@@ -95,6 +96,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:postflop-release"]).toBe("vite-node scripts/checkMttPostflopReleaseGate.mts");
     expect(pkg.scripts["mtt:solver-verification"]).toBe("vite-node scripts/checkMttSolverVerification.mts");
     expect(pkg.scripts["mtt:texas-solver-review-protocol"]).toBe("vite-node scripts/checkTexasSolverReviewProtocol.mts");
+    expect(pkg.scripts["mtt:texas-solver-owner-review"]).toBe("vite-node scripts/recordTexasSolverOwnerReview.mts");
     expect(pkg.scripts["mtt:stage-texas-solver"]).toBe("vite-node scripts/stageTexasSolverExports.mts");
     expect(pkg.scripts["mtt:texas-solver-pack"]).toBe("vite-node scripts/checkTexasSolverParameterPack.mts");
     expect(pkg.scripts["mtt:texas-solver-review"]).toBe("vite-node scripts/extractTexasSolverReview.mts");
@@ -135,10 +137,14 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["verify:precache"]).toBe("vite-node scripts/checkDistPrecache.mts");
     expect(pkg.scripts["profile:render"]).toBe("vite-node scripts/profileRenderPerformance.mts");
     expect(pkg.scripts["e2e:chrome"]).toBe("vite-node scripts/runChromeE2e.mts");
+    expect(pkg.scripts["e2e:chrome:preview"])
+      .toBe("vite-node scripts/runChromePreviewE2e.mts");
     expect(pkg.scripts["e2e:chrome:production-fixture"])
       .toBe("vite-node scripts/runChromeProductionFixtureE2e.mts");
     expect(pkg.scripts["e2e:android:preflight"])
       .toBe("vite-node scripts/checkAndroidDeviceAvailability.mts");
+    expect(pkg.scripts["release:mtt-core"])
+      .toBe("npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:core-release && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget");
     expect(chromeE2eScript).toContain('"mobile-360"');
     expect(chromeE2eScript).toContain('"mobile-390"');
     expect(chromeE2eScript).toContain('"mobile-412"');
@@ -227,7 +233,13 @@ describe("release bundle metadata", () => {
     const forpsiDeployment = readFileSync("Agents/forpsi-ftp-deployment.md", "utf8");
     const forpsiHtaccess = readFileSync("deploy/forpsi/.htaccess.example", "utf8");
     const mttDoneChecklist = readFileSync("Agents/mtt-done-checklist.md", "utf8");
+    const mttCompletionPriorities = readFileSync("Agents/mtt-completion-priorities.md", "utf8");
     const mttCoverageAudit = readFileSync("Agents/mtt-production-coverage-audit.md", "utf8");
+    const mttCoreReleaseNotes = readFileSync(
+      "Agents/release-notes-mtt-core-v1-2026-07-10.md",
+      "utf8",
+    );
+    const paymentModel = readFileSync("Agents/payment-model.md", "utf8");
     const p1PreflopIntake = readFileSync("Agents/mtt-p1-preflop-chip-ev-intake.md", "utf8");
     const p1PreflopCsvTemplate = readFileSync(
       "Agents/range-intake/templates/mtt-preflop-records-template.csv",
@@ -248,6 +260,8 @@ describe("release bundle metadata", () => {
     expect(quickStart).toContain("Statistiky");
     expect(quickStart).toContain("Import HH");
     expect(quickStart).toContain("Postflop");
+    expect(quickStart).toContain("MTT ChipEV Core");
+    expect(quickStart).toContain("sedm scoped FLOP pilotů");
     expect(quickStart).not.toMatch(/\bhttps?:\/\//i);
     expect(quickStart).not.toMatch(/\b(?:RangePack|StrategyPack)\b/);
     expect(quickStart).not.toMatch(/\b(?:mtt|sng|cash)-(?:full-ring|six-max|6max)[a-z0-9-]*/i);
@@ -369,6 +383,18 @@ describe("release bundle metadata", () => {
     expect(mttDoneChecklist).toContain("npm run mtt:registry-integrity");
     expect(mttDoneChecklist).toContain("No production promotion uses public heuristic fallback");
     expect(mttDoneChecklist).toContain("Start and answer representative 9-max turbo DOLAR_EV preflop training");
+    expect(mttCompletionPriorities).toContain("Status: ACTIVE EXECUTION CONTRACT");
+    expect(mttCompletionPriorities).toContain("MTT_CORE_V1");
+    expect(mttCompletionPriorities).toContain("P0 - Restore Truthful Gates");
+    expect(mttCompletionPriorities).toContain("seven scoped FLOP pilots");
+    expect(mttCoreReleaseNotes).toContain("4/4 scoped production profiles");
+    expect(mttCoreReleaseNotes).toContain("7/7 `READY`");
+    expect(mttCoreReleaseNotes).toContain("current state is 4/64");
+    expect(mttCoreReleaseNotes).toContain("It is not a paid-user license");
+    expect(mttCoreReleaseNotes).toContain("npm run release:mtt-core");
+    expect(paymentModel).toContain("all seven scoped FLOP pilots are `READY`");
+    expect(paymentModel).toContain("`permission.json` never grants a customer access");
+    expect(paymentModel).not.toContain("reserved / WAITING");
     expect(forpsiDeployment).toContain("FORPSI FTP Deployment");
     expect(forpsiDeployment).toContain("dist/index.html");
     expect(forpsiDeployment).toContain("deploy/forpsi/.htaccess.example");
@@ -379,7 +405,7 @@ describe("release bundle metadata", () => {
     expect(forpsiHtaccess).toContain("AuthType Basic");
     expect(forpsiHtaccess).toContain("Require valid-user");
     expect(forpsiHtaccess).toContain(".htpasswd-pkrtrainer");
-    expect(mttCoverageAudit).toContain("Updated: 2026-06-22");
+    expect(mttCoverageAudit).toContain("Updated: 2026-07-10");
     expect(mttCoverageAudit).toContain("DOLAR_EV");
     expect(mttCoverageAudit).toContain("Completion matrix");
     expect(mttCoverageAudit).toContain("npm run mtt:completion -- --summary");
@@ -396,9 +422,9 @@ describe("release bundle metadata", () => {
     expect(mttCoverageAudit).toContain("captured outputs for operator tooling");
     expect(mttCoverageAudit).toContain("defaults to a production gate");
     expect(mttCoverageAudit).toContain("total MTT rows: 64");
-    expect(mttCoverageAudit).toContain("production-ready rows: 0");
-    expect(mttCoverageAudit).toContain("candidate/preview rows: 54");
-    expect(mttCoverageAudit).toContain("blocked/missing rows: 10");
+    expect(mttCoverageAudit).toContain("production-ready rows: 4");
+    expect(mttCoverageAudit).toContain("candidate/preview rows: 52");
+    expect(mttCoverageAudit).toContain("blocked/missing rows: 8");
     expect(mttCoverageAudit).toContain("npm run range:intake -- --ready-only --json");
     expect(mttCoverageAudit).toContain("npm run mtt:blockers");
     expect(mttCoverageAudit).toContain("npm run mtt:blockers -- --summary");
@@ -430,10 +456,12 @@ describe("release bundle metadata", () => {
     expect(p1PreflopIntake).toContain("mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1");
     expect(p1PreflopIntake).toContain("Agents/range-intake/templates/mtt-preflop-records-template.csv");
     expect(p1PreflopIntake).toContain("Agents/range-intake/templates/mtt-p1-preflop-chip-ev-coverage.csv");
-    expect(p1PreflopIntake).toContain("Turbo slots must not become production by copying regular-speed metadata");
+    expect(p1PreflopIntake).toContain("Turbo slots must not become production by changing regular-speed metadata only");
     expect(p1PreflopIntake).toContain("Do not use postflop TexasSolver outputs for P1 preflop ranges");
     expect(p1PreflopCsvTemplate).toContain("rowKind,packId,tableFormat,blindSpeed,ante,evModel");
-    expect(p1PreflopCsvTemplate).toContain("strictActions,lenientActions,sourceReferenceId");
+    expect(p1PreflopCsvTemplate).toContain(
+      "strictActions,lenientActions,actionEvsBb,equivalentThresholdBb,acceptableThresholdBb,sourceReferenceId",
+    );
     expect(p1PreflopCoverageCsv).toContain("P1_PREFLOP_CHIP_EV");
     expect(p1PreflopCoverageCsv).toContain("mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1");
     expect(p1PreflopCoverageCsv).toContain("mtt-six-max-turbo-preflop-chip-ev-ante-off-production-v1");

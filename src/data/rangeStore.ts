@@ -32,6 +32,7 @@ import type {
   Position,
   StackBucket,
 } from "../core/types";
+import type { ActionEvSet } from "../core/actionEv";
 import {
   getRangeRecord,
   isRangeDataLoaded,
@@ -69,6 +70,7 @@ export interface RangeEntry {
   actions: Record<HandLabel, ActionKey[]>;
   /** Přesné doporučené akce vč. sizingu (mapování ruka → akce) — STRICT množina. */
   strict: Record<HandLabel, ActionKey[]>;
+  actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
 }
 
 /** Lookup API nad referenčními ranges (čtení; žádné I/O). */
@@ -101,6 +103,7 @@ function toRangeEntry(record: RangeRecord): RangeEntry {
   return {
     actions: record.lenient,
     strict: record.strict,
+    ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
   };
 }
 
@@ -175,6 +178,7 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
       context: record.context,
       lenient: record.lenient,
       strict: record.strict,
+      ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
     });
   }
 

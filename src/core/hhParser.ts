@@ -73,8 +73,12 @@ import {
 } from "./types";
 import { RANKS } from "./poker";
 import { offeredActions } from "./actionTree";
+import { preflopActionKindToKey } from "./preflopActionOptions";
 import { questionId } from "./questionId";
-import { buildPreflopExplanation } from "./preflopExplanation";
+import {
+  buildPreflopExplanation,
+  type PreflopExplanationLanguage,
+} from "./preflopExplanation";
 import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
 import {
   positionsForFormat,
@@ -179,6 +183,7 @@ export interface HHParseOptions {
   profile?: TrainingProfile;
   rangeStore?: RangeStore;
   requireLoadedStrategy?: boolean;
+  language?: PreflopExplanationLanguage;
   rangePack?: {
     id: string;
     version: string;
@@ -926,59 +931,6 @@ function deriveContext(
 // Sestavení zobrazitelného Spotu (Req 11.4)
 // ---------------------------------------------------------------------------
 
-/** Výchozí raise-sizing klíč dle hloubky (mimo range hrdinovy ruky). */
-function defaultOpenKey(bucket: StackBucket): ActionKey {
-  return bucket <= 25 ? "OPEN_2X" : "OPEN_25X";
-}
-
-/**
- * Reprezentativní raise-sizing klíč pro daný prefix (OPEN/ISO): přednostně
- * sizing doporučený pro konkrétní ruku ve STRICT sadě, jinak výchozí dle hloubky.
- */
-function pickSizingKey(
-  prefix: "OPEN" | "ISO",
-  handStrict: ActionKey[] | undefined,
-  bucket: StackBucket,
-): ActionKey {
-  const found = handStrict?.find((k) => k.startsWith(`${prefix}_`));
-  if (found) return found;
-  return prefix === "OPEN" ? defaultOpenKey(bucket) : "ISO_25X";
-}
-
-/** Přeloží druh akce (`ActionKind`) na konkrétní Akční_klíč. */
-function actionKindToKey(
-  kind: ActionKind,
-  handStrict: ActionKey[] | undefined,
-  bucket: StackBucket,
-): ActionKey {
-  switch (kind) {
-    case "OPEN":
-      return pickSizingKey("OPEN", handStrict, bucket);
-    case "ISO":
-      return pickSizingKey("ISO", handStrict, bucket);
-    case "FOLD":
-      return "FOLD";
-    case "CALL":
-      return "CALL";
-    case "LIMP":
-      return "LIMP";
-    case "OVERLIMP":
-      return "OVERLIMP";
-    case "3BET":
-      return "3BET";
-    case "4BET":
-      return "4BET";
-    case "SQUEEZE":
-      return "SQUEEZE";
-    case "JAM":
-      return "JAM";
-    case "CALL_JAM":
-      return "CALL_JAM";
-    default:
-      return "FOLD";
-  }
-}
-
 /** Startovní pot v BB dle ante. */
 function startingPotFor(ante: AnteMode): number {
   return ante === "ON" ? 2.5 : 1.5;
@@ -1000,6 +952,7 @@ function buildSpot(
   ctx: { context: ActionContext; facing: FacingAction; limps: number; calls: number; isBvB: boolean },
   store: RangeStore,
   requireRangeRecord = false,
+  language: PreflopExplanationLanguage = "CZ",
 ): Spot | undefined {
   const hand = handLabelFromCards(heroCards);
   const pushFold = bucket <= PUSH_FOLD_MAX;
@@ -1027,7 +980,7 @@ function buildSpot(
     : offeredKinds.includes("LIMP")
       ? "LIMP"
       : offeredKinds[0];
-  const defaultKey = actionKindToKey(defaultKind, handStrict, bucket);
+  const defaultKey = preflopActionKindToKey(defaultKind, handStrict, bucket);
 
   const strictCorrect: ActionKey[] =
     handStrict && handStrict.length > 0 ? [...handStrict] : [defaultKey];
@@ -1035,7 +988,7 @@ function buildSpot(
     handLenient && handLenient.length > 0 ? [...handLenient] : strictCorrect.slice();
 
   const answers: Answer[] = offeredKinds.map((kind) => {
-    const akey = actionKindToKey(kind, handStrict, bucket);
+    const akey = preflopActionKindToKey(kind, handStrict, bucket);
     return { key: akey, label: ACTION_KEY_LABEL[akey] };
   });
 
@@ -1048,7 +1001,7 @@ function buildSpot(
     recommended: strictCorrect,
     tableState,
     importedFromHandHistory: true,
-  });
+  }, "STANDARD", language);
 
   return {
     id,
@@ -1085,6 +1038,7 @@ function resolveParseOptions(
   profile?: TrainingProfile;
   rangeStore: RangeStore;
   requireLoadedStrategy: boolean;
+  language: PreflopExplanationLanguage;
   rangePack?: {
     id: string;
     version: string;
@@ -1095,6 +1049,7 @@ function resolveParseOptions(
     return {
       rangeStore: value,
       requireLoadedStrategy: false,
+      language: "CZ",
     };
   }
   return {
@@ -1102,7 +1057,16 @@ function resolveParseOptions(
     rangePack: value.rangePack,
     rangeStore: value.rangeStore ?? rangeStore,
     requireLoadedStrategy: value.requireLoadedStrategy ?? false,
+    language: value.language ?? "CZ",
   };
+}
+
+function hhText(
+  language: PreflopExplanationLanguage,
+  english: string,
+  czech: string,
+): string {
+  return language === "EN" ? english : czech;
 }
 
 // ---------------------------------------------------------------------------
@@ -1135,14 +1099,22 @@ export function parseHandHistory(
   // Req 11.6 — kontrola délky jako úplně první krok, ještě před jakoukoli prací.
   // Defenzivně i pro nestringový vstup.
   const raw = typeof text === "string" ? text : "";
+  const language = isRangeStore(storeOrOptions)
+    ? "CZ"
+    : (storeOrOptions.language ?? "CZ");
   if (typeof text === "string" && text.length > MAX_INPUT_LENGTH) {
     return {
       ok: false,
       fields: {},
       unreadableFields: ["position", "actions", "stack", "cards"],
       errors: [
-        `Vstup překračuje maximální délku ${MAX_INPUT_LENGTH} znaků ` +
-          `(přijato ${text.length}). Zpracování bylo odmítnuto.`,
+        hhText(
+          language,
+          `Input exceeds the maximum length of ${MAX_INPUT_LENGTH} characters ` +
+            `(${text.length} received). Processing was rejected.`,
+          `Vstup překračuje maximální délku ${MAX_INPUT_LENGTH} znaků ` +
+            `(přijato ${text.length}). Zpracování bylo odmítnuto.`,
+        ),
       ],
     };
   }
@@ -1155,7 +1127,11 @@ export function parseHandHistory(
         ok: false,
         fields: {},
         unreadableFields: ["position", "actions", "stack", "cards"],
-        errors: ["Vstup je prázdný nebo obsahuje pouze mezery."],
+        errors: [hhText(
+          options.language,
+          "Input is empty or contains only whitespace.",
+          "Vstup je prázdný nebo obsahuje pouze mezery.",
+        )],
       };
     }
 
@@ -1221,7 +1197,11 @@ export function parseHandHistory(
 
     if (hasDuplicateKnownCards(fields)) {
       errors.push(
-        "Hand history obsahuje duplicitní karty mezi kartami hráče a boardem.",
+        hhText(
+          options.language,
+          "The hand history contains duplicate cards between the player's cards and the board.",
+          "Hand history obsahuje duplicitní karty mezi kartami hráče a boardem.",
+        ),
       );
       return {
         ok: false,
@@ -1256,8 +1236,13 @@ export function parseHandHistory(
 
     if (unreadable.length > 0) {
       errors.push(
-        `Vstup je neúplný nebo v nepodporovaném formátu. Nepodařilo se načíst: ` +
-          `${unreadable.join(", ")}.`,
+        hhText(
+          options.language,
+          `The input is incomplete or uses an unsupported format. Could not read: ` +
+            `${unreadable.join(", ")}.`,
+          `Vstup je neúplný nebo v nepodporovaném formátu. Nepodařilo se načíst: ` +
+            `${unreadable.join(", ")}.`,
+        ),
       );
     }
 
@@ -1279,7 +1264,11 @@ export function parseHandHistory(
 
     if (options.requireLoadedStrategy && !options.rangeStore.isLoaded()) {
       errors.push(
-        "Pro vybraný tréninkový profil není dostupná produkční preflop strategie.",
+        hhText(
+          options.language,
+          "No production preflop strategy is available for the selected training profile.",
+          "Pro vybraný tréninkový profil není dostupná produkční preflop strategie.",
+        ),
       );
       return {
         ok: false,
@@ -1310,10 +1299,15 @@ export function parseHandHistory(
         ctx,
         options.rangeStore,
         options.requireLoadedStrategy,
+        options.language,
       );
       if (!spot) {
         errors.push(
-          "Produkční preflop strategie nepokrývá tuto importovanou situaci.",
+          hhText(
+            options.language,
+            "The production preflop strategy does not cover this imported situation.",
+            "Produkční preflop strategie nepokrývá tuto importovanou situaci.",
+          ),
         );
         return {
           ok: false,
@@ -1342,28 +1336,53 @@ export function parseHandHistory(
       const reasons: string[] = [];
       if (!tableOk) {
         reasons.push(detectedTableFormat === "SIX_MAX"
-          ? "formát stolu 6-max musí potvrdit vybraný tréninkový profil"
-          : `velikost stolu ${hand.seats.length} není podporována (podporováno: ${SUPPORTED_TABLE_SIZES.join(" nebo ")})`);
+          ? hhText(
+            options.language,
+            "the selected training profile must confirm the 6-max table format",
+            "formát stolu 6-max musí potvrdit vybraný tréninkový profil",
+          )
+          : hhText(
+            options.language,
+            `table size ${hand.seats.length} is not supported (supported: ${SUPPORTED_TABLE_SIZES.join(" or ")})`,
+            `velikost stolu ${hand.seats.length} není podporována (podporováno: ${SUPPORTED_TABLE_SIZES.join(" nebo ")})`,
+          ));
       }
       if (!profileTableMatches) {
         reasons.push(
-          `zjištěný formát stolu ${detectedTableFormat ?? "neznámý"} neodpovídá vybranému profilu ${options.profile?.tableFormat}`,
+          hhText(
+            options.language,
+            `detected table format ${detectedTableFormat ?? "unknown"} does not match selected profile ${options.profile?.tableFormat}`,
+            `zjištěný formát stolu ${detectedTableFormat ?? "neznámý"} neodpovídá vybranému profilu ${options.profile?.tableFormat}`,
+          ),
         );
       }
       if (!profileAnteMatches) {
         reasons.push(
-          `zjištěný režim ante ${ante} neodpovídá vybranému profilu ${options.profile?.ante}`,
+          hhText(
+            options.language,
+            `detected ante mode ${ante} does not match selected profile ${options.profile?.ante}`,
+            `zjištěný režim ante ${ante} neodpovídá vybranému profilu ${options.profile?.ante}`,
+          ),
         );
       }
       if (effBB !== undefined && !depthInRange) {
         reasons.push(
-          `efektivní stack ${effBB} BB je mimo rozsah ${MIN_BB}-${MAX_BB} BB`,
+          hhText(
+            options.language,
+            `effective stack ${effBB} BB is outside the ${MIN_BB}-${MAX_BB} BB range`,
+            `efektivní stack ${effBB} BB je mimo rozsah ${MIN_BB}-${MAX_BB} BB`,
+          ),
         );
       }
       if (reasons.length > 0) {
         errors.push(
-          `Data nejsou kompatibilní s modelem tréninku: ${reasons.join("; ")}. ` +
-            `Spot nebyl vytvořen.`,
+          hhText(
+            options.language,
+            `The data is not compatible with the training model: ${reasons.join("; ")}. ` +
+              `No spot was created.`,
+            `Data nejsou kompatibilní s modelem tréninku: ${reasons.join("; ")}. ` +
+              `Spot nebyl vytvořen.`,
+          ),
         );
         return {
           ok: false,
@@ -1389,7 +1408,11 @@ export function parseHandHistory(
       ok: false,
       fields: {},
       unreadableFields: ["position", "actions", "stack", "cards"],
-      errors: [`Chyba při zpracování hand history: ${msg}`],
+      errors: [hhText(
+        language,
+        `Error while processing hand history: ${msg}`,
+        `Chyba při zpracování hand history: ${msg}`,
+      )],
     };
   }
 }

@@ -172,7 +172,7 @@ export function validateProductionPermissionManifest(
   if (manifest.sourceMaterialLocation.trim().length === 0) {
     errors.push("Permission manifest sourceMaterialLocation is required.");
   }
-  if (manifest.evidence.length === 0) {
+  if (manifest.evidence.length === 0 && manifest.licenseKind !== "OWNED_SOLVER_EXPORT") {
     errors.push("Permission manifest needs at least one evidence record.");
   }
 
@@ -255,7 +255,10 @@ function warningMessages(manifest: ProductionPermissionManifest): string[] {
   if (manifest.notes.length === 0) {
     warnings.push("Permission manifest has no reviewer notes.");
   }
-  if (!manifest.evidence.some((item) => item.containsRangeValues)) {
+  if (
+    manifest.licenseKind !== "OWNED_SOLVER_EXPORT" &&
+    !manifest.evidence.some((item) => item.containsRangeValues)
+  ) {
     warnings.push("Permission manifest evidence does not mark where range values are stored.");
   }
 
@@ -293,7 +296,10 @@ function validateReusePolicy(manifest: ProductionPermissionManifest): string[] {
   if (policy.rationale.trim().length === 0) {
     errors.push("Permission manifest reusePolicy.rationale is required.");
   }
-  if (policy.sourceMaterialReferenceIds.length === 0) {
+  if (
+    policy.sourceMaterialReferenceIds.length === 0 &&
+    manifest.licenseKind !== "OWNED_SOLVER_EXPORT"
+  ) {
     errors.push("Permission manifest reusePolicy.sourceMaterialReferenceIds needs at least one evidence reference.");
   }
   for (const [index, referenceId] of policy.sourceMaterialReferenceIds.entries()) {

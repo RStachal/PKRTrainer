@@ -52,6 +52,7 @@ import { isFlowAllowed } from "./core/trainingCapability";
 import { resolveSeed, spotSequence } from "./core/drillEngine";
 import { postflopIntentFromFilters } from "./core/postflopIntent";
 import { grade } from "./core/scoring";
+import { buildPreflopExplanationForSpot } from "./core/preflopExplanation";
 import type { PostflopStreet } from "./core/postflopGenerator";
 import { runtimeEntitlementGrants } from "./core/runtimeEntitlements";
 import { evaluateEntitlementAccess } from "./core/paymentEntitlements";
@@ -96,7 +97,19 @@ import { renderMatrix } from "./ui/rangeMatrixView";
 import { renderRangeModalButton } from "./ui/rangeModal";
 import { renderHHView } from "./ui/hhView";
 import { renderPostflopView, type PostflopRuntimeNotice } from "./ui/postflopView";
-import { CS } from "./ui/cs";
+import {
+  formatActionEvBb,
+  revealActionEvButtonBubbles,
+  setActionEvButtonContent,
+} from "./ui/actionEvButtonBubbles";
+import {
+  CS,
+  getAppLanguage,
+  initializeAppLanguage,
+  localizedText,
+  setAppLanguage,
+  type AppLanguage,
+} from "./ui/cs";
 import { registerServiceWorker } from "./pwa/registerSw";
 
 // ---------------------------------------------------------------------------
@@ -299,9 +312,17 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
 
   const storage: Storage | null =
     options.storage ?? (typeof localStorage !== "undefined" ? localStorage : null);
+  initializeAppLanguage(storage);
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = getAppLanguage() === "EN" ? "en" : "cs";
+  }
 
   // --- App shell: hlaviÄŤka, zĂˇloĹľky, panely, banner upozornÄ›nĂ­ ---
-  const shell = buildAppShell(root);
+  const shell = buildAppShell(root, (language) => {
+    if (language === getAppLanguage()) return;
+    setAppLanguage(language, storage);
+    renderApp(root, options);
+  });
 
   // --- Krok 1â€“2: migrace + ovÄ›Ĺ™enĂ­ stavu (Req 14) ---
   if (!storage) {
@@ -557,13 +578,22 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       const profile = getSelectedTrainingProfile();
       const capability = trainingCapabilityForProfile(profile);
       if (!isFlowAllowed(capability, "HH_REVIEW")) {
-        return "Produkční HH review vyžaduje tréninkový profil MTT.";
+        return localizedText(
+          "Production HH review requires an MTT training profile.",
+          "Produkční HH review vyžaduje tréninkový profil MTT.",
+        );
       }
       if (result.fields.tableFormat !== profile.tableFormat) {
-        return "Importovaná handa a vybraný profil používají jiný formát stolu.";
+        return localizedText(
+          "The imported hand and selected profile use different table formats.",
+          "Importovaná handa a vybraný profil používají jiný formát stolu.",
+        );
       }
       if (profile.ante !== (result.fields.ante ?? "OFF")) {
-        return "Importovaná handa a vybraný profil používají jiný režim ante.";
+        return localizedText(
+          "The imported hand and selected profile use different ante modes.",
+          "Importovaná handa a vybraný profil používají jiný režim ante.",
+        );
       }
       return null;
     },
@@ -572,7 +602,10 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       if (!save.ok) {
         showNotice(
           shell.notice,
-          "HH review se nepodařilo uložit. Statistiky tréninku nebyly změněny.",
+          localizedText(
+            "The HH review could not be saved. Training stats were not changed.",
+            "HH review se nepodařilo uložit. Statistiky tréninku nebyly změněny.",
+          ),
         );
       }
       return save.ok;
@@ -631,21 +664,42 @@ type TabId = "training" | "stats" | "hh" | "postflop";
  * tĹ™i panely (TrĂ©nink / Statistiky / Import HH) a banner pro nenĂˇsilnĂˇ
  * upozornÄ›nĂ­. VrĂˇtĂ­ reference na panely a banner.
  */
-function buildAppShell(root: HTMLElement): AppShell {
+function buildAppShell(
+  root: HTMLElement,
+  onLanguageChange: (language: AppLanguage) => void,
+): AppShell {
   root.appendChild(appStyles());
 
   const app = el("div", "app");
 
   // HlaviÄŤka.
   const header = el("header", "app__header");
-  header.appendChild(el("h1", "app__title", CS.app.title));
-  header.appendChild(
+  const headerCopy = el("div", "app__header-copy");
+  headerCopy.appendChild(el("h1", "app__title", CS.app.title));
+  headerCopy.appendChild(
     el(
       "p",
       "app__subtitle",
       CS.app.subtitle,
     ),
   );
+  header.appendChild(headerCopy);
+
+  const languageSwitch = el("div", "language-switch");
+  languageSwitch.setAttribute("role", "group");
+  languageSwitch.setAttribute("aria-label", "Language");
+  for (const language of ["EN", "CZ"] as const) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "language-switch__option";
+    button.textContent = language;
+    const selected = getAppLanguage() === language;
+    button.classList.toggle("language-switch__option--active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+    button.addEventListener("click", () => onLanguageChange(language));
+    languageSwitch.appendChild(button);
+  }
+  header.appendChild(languageSwitch);
   app.appendChild(header);
 
   // Banner upozornÄ›nĂ­ (Req 12.4, 14.3) â€” nenĂˇsilnĂ˝, skrytĂ˝ dokud nenĂ­ potĹ™eba.
@@ -773,35 +827,47 @@ function postflopRuntimeNotice(input: {
   if (input.productionReady) {
     return {
       kind: "PRODUCTION",
-      text: "Produkční postflop model je aktivní. Trénink běží bez náhledového fallbacku.",
+      text: localizedText(
+        "The production postflop model is active. Training runs without preview fallback.",
+        "Produkční postflop model je aktivní. Trénink běží bez náhledového fallbacku.",
+      ),
     };
   }
   if (input.hasScopedPilotCoverage && input.hasActivePilotEntitlement) {
     return {
       kind: "SCOPED_PILOT",
-      text: "Solverový pilot je aktivní pro vybrané flop situace. Jde o úzký pilotní režim, ne kompletní postflop production coverage.",
+      text: localizedText(
+        "A solver pilot is active for selected flop situations. This is a narrow pilot, not complete postflop production coverage.",
+        "Solverový pilot je aktivní pro vybrané flop situace. Jde o úzký pilotní režim, ne kompletní postflop production coverage.",
+      ),
     };
   }
   if (input.hasScopedPilotCoverage) {
     return {
       kind: "LOCKED_PILOT",
-      text: "Pro tento profil existují placené solverové piloty. Bez aktivní pilot licence běží pouze náhledový režim, ne plná produkční strategie.",
+      text: localizedText(
+        "Paid solver pilots exist for this profile. Without an active pilot license, only preview mode is available, not the full production strategy.",
+        "Pro tento profil existují placené solverové piloty. Bez aktivní pilot licence běží pouze náhledový režim, ne plná produkční strategie.",
+      ),
     };
   }
   return {
     kind: "PREVIEW",
-    text: "Postflop běží v náhledovém režimu bez kompletní solverové coverage. Spoty jsou použitelné pro trénink flow, ne jako plně ověřený produkční model.",
+    text: localizedText(
+      "Postflop runs in preview mode without complete solver coverage. Spots support training flow but are not a fully reviewed production model.",
+      "Postflop běží v náhledovém režimu bez kompletní solverové coverage. Spoty jsou použitelné pro trénink flow, ne jako plně ověřený produkční model.",
+    ),
   };
 }
 
 function candidateProfileLabel(profile: TrainingProfile): string {
   if (profile.gameVariant === "SNG") {
-    return `SNG ${evModelLabel(profile.evModel)} náhled`;
+    return `SNG ${evModelLabel(profile.evModel)} preview`;
   }
   if (profile.gameVariant === "CASH") {
-    return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "bez rake"} náhled`;
+    return `Cash ${profile.rakeMode === "RAKE" ? "rake" : "no rake"} preview`;
   }
-  return `${profile.gameVariant} ${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} preflop ${evModelLabel(profile.evModel)} náhled`;
+  return `${profile.gameVariant} ${profile.tableFormat === "FULL_RING_9" ? "9-max" : "6-max"} preflop ${evModelLabel(profile.evModel)} preview`;
 }
 
 function profileGateMessage(profile: TrainingProfile, filters: Filters): string {
@@ -980,9 +1046,11 @@ function setupTraining(
 
       mttProductionLazyLoader.cancelPendingProfileLoads();
       const profileKey = mttProductionProfileKey(resolvedProfile);
+      const initialCapability = trainingCapabilityForProfile(resolvedProfile);
       if (
         (
-          profile.street === "PREFLOP" &&
+          resolvedProfile.street === "PREFLOP" &&
+          initialCapability.status === "PREVIEW" &&
           isPlayableMttPreflopPreview(resolvedProfile)
         ) ||
         profileKey === null ||
@@ -1138,7 +1206,7 @@ function setupTraining(
       btn.type = "button";
       btn.className = "action-btn";
       btn.dataset.action = answer.key;
-      btn.textContent = answer.label;
+      setActionEvButtonContent(btn, answer.label);
       btn.addEventListener("click", () => handleAnswer(spot, answer.key, mode));
       row.appendChild(btn);
     }
@@ -1153,16 +1221,20 @@ function setupTraining(
   function handleAnswer(spot: Spot, chosen: ActionKey, mode: ScoringMode): void {
     if (answered) return; // jedna odpovÄ›ÄŹ na spot.
     answered = true;
+    const result = grade(spot, chosen, mode);
 
     // Zablokuj tlaÄŤĂ­tka akcĂ­ a zvĂ˝razni zvolenĂ©.
     const buttons = actionsContainer.querySelectorAll<HTMLButtonElement>(".action-btn");
     buttons.forEach((b) => {
       b.disabled = true;
       if (b.dataset.action === chosen) b.classList.add("action-btn--chosen");
+      if (result.recommended.includes(b.dataset.action as ActionKey)) {
+        b.classList.add("action-btn--recommended");
+      }
     });
+    revealActionEvButtonBubbles(buttons, spot.actionEvs, result.actionEv);
 
     // VyhodnocenĂ­ (ÄŤistĂ© jĂˇdro).
-    const result = grade(spot, chosen, mode);
     const responseMs = elapsedMs(activeQuestionStartedAt);
 
     // ZĂˇznam vĂ˝sledku PĹED dalĹˇĂ­m spotem (Req 9.1); selhĂˇnĂ­ â‡’ upozornÄ›nĂ­ (Req 9.6).
@@ -1207,10 +1279,17 @@ function setupTraining(
     const box = el("div", "result");
     box.classList.add(result.correct ? "result--correct" : "result--wrong");
 
+    const verdictText = result.actionEv?.outcome === "EQUIVALENT"
+      ? CS.training.equivalent
+      : result.actionEv?.outcome === "ACCEPTABLE"
+        ? CS.training.acceptable
+        : result.correct
+          ? CS.training.correct
+          : CS.training.incorrect;
     const verdict = el(
       "div",
       "result__verdict",
-      result.correct ? CS.training.correct : CS.training.incorrect,
+      verdictText,
     );
     box.appendChild(verdict);
 
@@ -1223,11 +1302,12 @@ function setupTraining(
       );
       box.appendChild(rec);
     }
+    box.appendChild(renderPreflopActionEv(spot, result));
 
     // ZdĹŻvodnÄ›nĂ­ (Req 7.4); pĹ™i nedostupnosti zobraz nĂˇhradnĂ­ text (Req 7.5).
     const explanation = el("div", "result__explanation");
     if (result.explanationAvailable) {
-      explanation.textContent = spot.explanation;
+      explanation.textContent = buildPreflopExplanationForSpot(spot, getAppLanguage());
     } else {
       explanation.textContent = CS.training.explanationUnavailable;
       explanation.classList.add("result__explanation--unavailable");
@@ -1257,6 +1337,44 @@ function setupTraining(
   }
 
   /** Posune sekvenci na dalĹˇĂ­ spot (Req 6.6 â€” sekvence cyklĂ­ deterministicky). */
+  function renderPreflopActionEv(
+    spot: Spot,
+    result: ReturnType<typeof grade>,
+  ): HTMLElement {
+    const section = el("section", "action-ev");
+    section.dataset.available = result.actionEv ? "true" : "false";
+    section.appendChild(el("div", "action-ev__title", CS.training.actionEv.title));
+
+    if (!result.actionEv || !spot.actionEvs) {
+      section.appendChild(el("p", "action-ev__unavailable", CS.training.actionEv.unavailable));
+      return section;
+    }
+
+    const list = el("div", "action-ev__list");
+    const sorted = [...spot.actionEvs.values].sort((left, right) => right.evBb - left.evBb);
+    for (const item of sorted) {
+      const lossBb = Math.max(0, result.actionEv.bestEvBb - item.evBb);
+      const row = el("div", "action-ev__row");
+      row.classList.toggle("action-ev__row--chosen", item.action === result.actionEv.chosenAction);
+      row.classList.toggle("action-ev__row--best", result.actionEv.bestActions.includes(item.action));
+      row.dataset.action = item.action;
+      row.dataset.evBb = String(item.evBb);
+      row.append(
+        el("span", "action-ev__action", actionKeyLabel(item.action)),
+        el("span", "action-ev__value", `${formatActionEvBb(item.evBb)} BB`),
+        el(
+          "span",
+          "action-ev__delta",
+          lossBb <= 1e-9 ? CS.training.actionEv.best : `${formatActionEvBb(-lossBb)} BB`,
+        ),
+      );
+      list.appendChild(row);
+    }
+    section.appendChild(list);
+    section.appendChild(el("p", "action-ev__note", CS.training.actionEv.note));
+    return section;
+  }
+
   function advance(): void {
     if (!iterator) return;
     const next = iterator.next();
@@ -1395,10 +1513,18 @@ body{margin:0;background:
   linear-gradient(180deg,#090f18,#060a11 58%,#05080e);
   color:#e8ecf7;font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;}
 .app{width:min(100% - 32px,1120px);margin:0 auto;padding:28px 0 56px;}
-.app__header{margin-bottom:18px;padding:4px 0 2px;}
+.app__header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+  margin-bottom:18px;padding:4px 0 2px;}
+.app__header-copy{min-width:0;}
 .app__title{margin:0;font-size:28px;font-weight:950;letter-spacing:0;color:#f8fbff;
   text-shadow:0 10px 30px rgba(0,0,0,.35);}
 .app__subtitle{margin:6px 0 0;font-size:14px;color:#a8b7d5;}
+.language-switch{display:grid;grid-template-columns:repeat(2,40px);flex:0 0 auto;
+  border:1px solid rgba(148,163,184,.28);border-radius:7px;background:#111827;padding:2px;}
+.language-switch__option{appearance:none;border:0;border-radius:5px;background:transparent;color:#a8b7d5;
+  min-height:30px;padding:4px 7px;font-size:12px;font-weight:900;cursor:pointer;}
+.language-switch__option:hover{color:#f8fbff;background:rgba(255,255,255,.06);}
+.language-switch__option--active{background:#2bd576;color:#082817;}
 .app__notice{margin:10px 0;padding:10px 12px;border-radius:10px;
   background:rgba(255,209,91,.14);border:1px solid rgba(255,209,91,.45);
   color:#ffd15b;font-size:13px;}
@@ -1461,16 +1587,40 @@ body{margin:0;background:
 .training__actions-row{display:flex;flex-wrap:wrap;gap:8px;}
 .action-btn{appearance:none;border:1px solid rgba(148,163,184,.24);
   background:linear-gradient(180deg,#202a3f,#141d2f);color:#e8ecf7;font-size:14px;font-weight:900;
-  padding:10px 16px;border-radius:10px;cursor:pointer;box-shadow:0 10px 20px rgba(0,0,0,.18),
-  inset 0 1px 0 rgba(255,255,255,.06);}
+  display:grid;grid-template-rows:minmax(18px,auto) 20px;place-items:center;gap:5px;
+  min-width:116px;min-height:62px;padding:8px 12px;border-radius:10px;cursor:pointer;
+  box-shadow:0 10px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.06);}
 .action-btn:hover:not(:disabled){border-color:#2bd576;}
 .action-btn:disabled{opacity:.55;cursor:default;}
+.action-btn[data-ev-available="true"]:disabled{opacity:1;}
 .action-btn--chosen{outline:2px solid #2bd576;outline-offset:1px;}
+.action-btn--recommended{border-color:#2bd576;background:linear-gradient(180deg,rgba(43,213,118,.28),rgba(43,213,118,.14));}
+.action-button__label{line-height:1.15;text-align:center;overflow-wrap:anywhere;}
+.action-ev-bubble{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;
+  min-width:92px;min-height:20px;border:1px solid rgba(123,211,255,.42);border-radius:999px;
+  background:#202e44;color:#ddecff;font-size:10px;font-weight:950;font-variant-numeric:tabular-nums;
+  line-height:1;white-space:nowrap;padding:3px 7px;}
+.action-ev-bubble[hidden]{display:inline-flex!important;visibility:hidden;}
+.action-ev-bubble--best{border-color:rgba(43,213,118,.72);background:#123a2a;color:#a8f2c3;}
+.action-ev-bubble--chosen{box-shadow:0 0 0 1px #7bd3ff;}
 .result{border-radius:12px;padding:14px 16px;}
 .result--correct{background:rgba(43,213,118,.12);border:1px solid rgba(43,213,118,.5);}
 .result--wrong{background:rgba(226,59,59,.12);border:1px solid rgba(226,59,59,.5);}
 .result__verdict{font-size:18px;font-weight:900;margin-bottom:6px;}
 .result__recommended{font-size:14px;font-weight:700;margin-bottom:6px;}
+.action-ev{margin:8px 0 10px;border-top:1px solid rgba(255,255,255,.12);padding-top:10px;}
+.action-ev__title{margin-bottom:6px;color:#e8ecf7;font-size:11px;font-weight:950;text-transform:uppercase;}
+.action-ev__list{display:grid;gap:4px;}
+.action-ev__row{display:grid;grid-template-columns:minmax(88px,1fr) minmax(72px,auto) minmax(64px,auto);
+  gap:8px;align-items:center;border:1px solid rgba(255,255,255,.1);border-radius:6px;
+  background:rgba(255,255,255,.035);padding:6px 8px;}
+.action-ev__row--best{border-color:rgba(43,213,118,.5);background:rgba(43,213,118,.1);}
+.action-ev__row--chosen{box-shadow:inset 3px 0 0 #7bd3ff;}
+.action-ev__action{font-weight:900;color:#f8fbff;}
+.action-ev__value,.action-ev__delta{font-variant-numeric:tabular-nums;text-align:right;}
+.action-ev__value{color:#e8ecf7;}.action-ev__delta{color:#aebbd3;}
+.action-ev__row--best .action-ev__delta{color:#9ff0bd;font-weight:900;}
+.action-ev__note,.action-ev__unavailable{margin:6px 0 0;color:#aebbd3;font-size:11px;font-weight:650;}
 .result__explanation{font-size:13px;color:#cdd5e6;}
 .result__explanation--unavailable{font-style:italic;color:#9aa6c2;}
 .result__save-warning{margin-top:8px;font-size:12px;color:#ffd15b;}
@@ -1487,6 +1637,7 @@ body{margin:0;background:
 .filter-start:hover{filter:brightness(1.04);transform:translateY(-1px);}
 @media (max-width:720px){
   .app{width:min(100% - 20px,1120px);padding:18px 0 40px;}
+  .app__header{align-items:center;gap:10px;}
   .app__title{font-size:25px;}
   .app__subtitle{font-size:13px;}
   .app__tabs{gap:4px;margin-left:-2px;margin-right:-2px;}

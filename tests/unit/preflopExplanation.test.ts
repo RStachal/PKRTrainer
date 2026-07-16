@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildPreflopExplanation,
+  buildPreflopExplanationForSpot,
   type PreflopExplanationMode,
 } from "../../src/core/preflopExplanation";
 import type { TableState } from "../../src/core/types";
@@ -77,5 +78,56 @@ describe("preflopExplanation", () => {
     expect(text).toContain("Proti 3-betu HH spot");
     expect(text).toContain("Doporučení: 4-bet");
     expect(text).toContain("4-betujte nejsilnější pokračování");
+  });
+
+  it("v EN rezimu prelozi cely vysvetlujici text a ponecha pokerove terminy", () => {
+    const text = buildPreflopExplanation({
+      context: "VS_3BET",
+      heroPos: "CO",
+      effStack: 25,
+      hand: "AQo",
+      recommended: ["4BET"],
+      tableState: {
+        ...tableState,
+        heroPos: "CO",
+        facing: "3BET",
+      },
+      importedFromHandHistory: true,
+    }, "ADVANCED", "EN");
+
+    expect(text).toContain("Versus 3-bet HH spot");
+    expect(text).toContain("Recommended: 4-bet");
+    expect(text).toContain("Position:");
+    expect(text).toContain("Hand class:");
+    expect(text).toContain("Range note:");
+    expect(text).not.toMatch(/[áčďéěíňóřšťúůýž]/i);
+  });
+
+  it("ve vysvetleni uvede vsechny EV-equivalent best akce", () => {
+    const text = buildPreflopExplanationForSpot({
+      context: "VS_OPEN",
+      heroPos: "BTN",
+      effStack: 40,
+      hand: "AQs",
+      strictCorrect: ["3BET"],
+      tableState: {
+        ...tableState,
+        facing: "OPEN",
+      },
+      actionEvs: {
+        source: "SOLVER",
+        unit: "BB",
+        equivalentThresholdBb: 0.01,
+        acceptableThresholdBb: 0.05,
+        values: [
+          { action: "FOLD", evBb: 0 },
+          { action: "CALL", evBb: 0.204 },
+          { action: "3BET", evBb: 0.21 },
+        ],
+      },
+    }, "EN");
+
+    expect(text).toContain("Recommended: Call / 3-bet");
+    expect(text).not.toContain("Recommended: 3-bet.");
   });
 });

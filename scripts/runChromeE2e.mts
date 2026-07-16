@@ -138,14 +138,15 @@ class CdpClient {
 const targetUrl = process.env.MTT_E2E_URL ?? "http://127.0.0.1:4173/";
 const artifactDirectory = resolve(process.env.MTT_E2E_ARTIFACTS ?? "artifacts/e2e-chrome");
 const buildDirectory = resolve(process.env.MTT_E2E_DIST ?? "dist");
-const expectedPreflop = process.env.MTT_E2E_EXPECT_PREFLOP === "production"
-  ? "production"
-  : process.env.MTT_E2E_EXPECT_PREFLOP === "blocked"
-    ? "blocked"
-    : "preview";
+const expectedPreflop = process.env.MTT_E2E_EXPECT_PREFLOP === "blocked"
+  ? "blocked"
+  : process.env.MTT_E2E_EXPECT_PREFLOP === "preview"
+    ? "preview"
+    : "production";
 const expectedPostflopPackId = process.env.MTT_E2E_EXPECT_POSTFLOP_PACK_ID ?? "";
 const expectedTurnPackId = process.env.MTT_E2E_EXPECT_TURN_PACK_ID ?? "";
 const expectedRiverPackId = process.env.MTT_E2E_EXPECT_RIVER_PACK_ID ?? "";
+const expectActionEv = process.env.MTT_E2E_EXPECT_ACTION_EV === "true";
 const expectedPostflopPackIds = [
   expectedPostflopPackId,
   expectedTurnPackId,
@@ -212,7 +213,7 @@ try {
   }> = [];
   for (const viewport of activeViewports) {
     if (expectedPreflop === "production") {
-      console.log(`Production fixture viewport: ${viewport.name}`);
+      console.log(`Production preflop viewport: ${viewport.name}`);
     }
     browserErrors.length = 0;
     await cdp.send("Emulation.setDeviceMetricsOverride", {
@@ -232,6 +233,37 @@ try {
     await waitForSelector(cdp, ".filter-start");
     await ensureServiceWorkerControl(cdp);
 
+    await activate(cdp, ".language-switch__option:nth-child(1)", viewport.mobile ? "touch" : "keyboard");
+    await waitForSelector(cdp, ".filter-start");
+    const englishLanguage = await evaluate(cdp, `(() => ({
+      lang: document.documentElement.lang,
+      stored: localStorage.getItem("pkrtrainer.ui.language.v1"),
+      start: document.querySelector(".filter-start")?.textContent ?? "",
+      subtitle: document.querySelector(".app__subtitle")?.textContent ?? ""
+    }))()`);
+    assert(englishLanguage.lang === "en", `${viewport.name}: EN language did not update document.lang`);
+    assert(englishLanguage.stored === "EN", `${viewport.name}: EN language was not persisted`);
+    assert(englishLanguage.start === "Start training", `${viewport.name}: EN control label is incorrect`);
+    assert(
+      englishLanguage.subtitle === "Poker decision trainer for tournament play.",
+      `${viewport.name}: EN explanatory copy is incorrect`,
+    );
+    await activate(cdp, ".language-switch__option:nth-child(2)", viewport.mobile ? "touch" : "keyboard");
+    await waitForSelector(cdp, ".filter-start");
+    const czechLanguage = await evaluate(cdp, `(() => ({
+      lang: document.documentElement.lang,
+      stored: localStorage.getItem("pkrtrainer.ui.language.v1"),
+      start: document.querySelector(".filter-start")?.textContent ?? "",
+      subtitle: document.querySelector(".app__subtitle")?.textContent ?? ""
+    }))()`);
+    assert(czechLanguage.lang === "cs", `${viewport.name}: CZ language did not update document.lang`);
+    assert(czechLanguage.stored === "CZ", `${viewport.name}: CZ language was not persisted`);
+    assert(czechLanguage.start === "Start training", `${viewport.name}: CZ mode translated a control label`);
+    assert(
+      czechLanguage.subtitle !== englishLanguage.subtitle,
+      `${viewport.name}: CZ explanatory copy did not change`,
+    );
+
     const initial = await evaluate(cdp, `(() => ({
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       fatal: document.querySelector(".fatal")?.textContent ?? "",
@@ -244,8 +276,12 @@ try {
       assert(initial.profileStatus === "blocked", `${viewport.name}: unloaded preflop must fail closed`);
     } else if (expectedPreflop === "production") {
       assert(
-        initial.profileStatus === "production" || initial.profileStatus === "preview",
-        `${viewport.name}: production preflop is not marked ready or preview before lazy activation`,
+        initial.profileStatus === "production",
+        `${viewport.name}: bundled production preflop is not marked production before lazy activation`,
+      );
+      assert(
+        initial.profileText.includes("MTT ChipEV Core"),
+        `${viewport.name}: production preflop release label is missing`,
       );
     } else {
       assert(initial.profileStatus === "preview", `${viewport.name}: playable preflop preview is not marked preview`);
@@ -394,6 +430,29 @@ try {
 
     await activate(cdp, ".postflop-action", viewport.mobile ? "touch" : "keyboard");
     await waitForSelector(cdp, ".postflop-result");
+    if (expectActionEv) {
+      const actionEv = await evaluate(cdp, `(() => ({
+        available: document.querySelector(".postflop-result .action-ev")?.getAttribute("data-available"),
+        rows: document.querySelectorAll(".postflop-result .action-ev__row").length,
+        bestRows: document.querySelectorAll(".postflop-result .action-ev__row--best").length,
+        chosenRows: document.querySelectorAll(".postflop-result .action-ev__row--chosen").length,
+        bubbles: document.querySelectorAll(".postflop-action .action-ev-bubble:not([hidden])").length,
+        bestBubbles: document.querySelectorAll(".postflop-action .action-ev-bubble--best").length,
+        chosenBubbles: document.querySelectorAll(".postflop-action .action-ev-bubble--chosen").length,
+        bubbleText: document.querySelector(".postflop-action .action-ev-bubble")?.textContent ?? "",
+        text: document.querySelector(".postflop-result .action-ev")?.textContent ?? ""
+      }))()`);
+      assert(actionEv.available === "true", `${viewport.name}: solver action EV is unavailable`);
+      assert(actionEv.rows === postflop.actions, `${viewport.name}: not every offered action has an EV row`);
+      assert(actionEv.bestRows === 2, `${viewport.name}: equivalent best actions were not both marked`);
+      assert(actionEv.chosenRows === 1, `${viewport.name}: chosen EV action was not marked exactly once`);
+      assert(actionEv.bubbles === postflop.actions, `${viewport.name}: not every action button has an EV bubble`);
+      assert(actionEv.bestBubbles === 2, `${viewport.name}: equivalent best EV bubbles were not both marked`);
+      assert(actionEv.chosenBubbles === 1, `${viewport.name}: chosen EV bubble was not marked exactly once`);
+      assert(actionEv.bubbleText.includes("EV") && actionEv.bubbleText.includes("BB"),
+        `${viewport.name}: action-button EV bubble has the wrong label`);
+      assert(actionEv.text.includes("BB"), `${viewport.name}: action EV values do not show the BB unit`);
+    }
     contrastAudits.push({
       viewport: viewport.name,
       surface: "postflop-result",
@@ -577,6 +636,11 @@ try {
       `document.querySelector(".stats-json-box")?.value ?? ""`,
     );
     assert(exportedStats.includes('"postflopRecords"'), `${viewport.name}: stats export is incomplete`);
+    if (expectActionEv) {
+      assert(exportedStats.includes('"actionEvOutcome"'), `${viewport.name}: action EV outcome was not persisted`);
+      assert(exportedStats.includes('"equivalentBestActions"'), `${viewport.name}: equivalent best actions were not persisted`);
+      assert(exportedStats.includes('"evLossBb"'), `${viewport.name}: action EV loss was not persisted`);
+    }
     if (productionHandLine) {
       assert(
         exportedStats.includes('"postflopLineRecords"'),
@@ -906,10 +970,19 @@ async function evaluate<T = any>(client: CdpClient, expression: string): Promise
     returnByValue: true,
   }) as {
     result?: { value?: T };
-    exceptionDetails?: { text?: string };
+    exceptionDetails?: {
+      text?: string;
+      exception?: { description?: string; value?: unknown };
+    };
   };
   if (response.exceptionDetails) {
-    throw new Error(response.exceptionDetails.text ?? `Browser evaluation failed: ${expression}`);
+    const detail = response.exceptionDetails.exception?.description
+      ?? response.exceptionDetails.exception?.value;
+    throw new Error(
+      detail === undefined
+        ? response.exceptionDetails.text ?? `Browser evaluation failed: ${expression}`
+        : String(detail),
+    );
   }
   return response.result?.value as T;
 }

@@ -3,6 +3,13 @@ import { RANKS, SUITS, rankValue } from "./poker";
 import { mulberry32 } from "./rng";
 import type { PostflopActionNode, PostflopTrainingSpot } from "./postflopTrainingSpot";
 import { positionsForFormat, type TableFormat } from "./trainingProfile";
+import type { ActionEvSet } from "./actionEv";
+import {
+  bestActionsForActionEv,
+  cloneActionEvSet,
+  highestEvAction,
+  isActionEvSetComplete,
+} from "./actionEv";
 
 export type PostflopStreet = "FLOP" | "TURN" | "RIVER";
 export const POSTFLOP_ACTIONS = [
@@ -133,6 +140,7 @@ export interface PostflopSpot {
   textures: BoardTexture[];
   actions: readonly PostflopAction[];
   recommendedAction: PostflopAction;
+  actionEvs?: ActionEvSet<PostflopAction>;
   explanation: string;
   strategySource: PostflopRecommendationSource;
   trainingSpot?: PostflopTrainingSpot;
@@ -156,6 +164,7 @@ export interface PostflopStrategyInput {
 
 export interface PostflopRecommendation {
   action: PostflopAction;
+  actionEvs?: ActionEvSet<PostflopAction>;
   explanation: string;
   source?: PostflopRecommendationSource;
 }
@@ -211,6 +220,7 @@ export interface PostflopRangeBucket {
   handClasses: readonly HandLabel[];
   features: readonly string[];
   actionMix?: readonly PostflopActionFrequency[];
+  actionEvs?: ActionEvSet<PostflopAction>;
 }
 
 export interface PostflopHeroRangeBucket {
@@ -220,6 +230,7 @@ export interface PostflopHeroRangeBucket {
   handClass: HandLabel;
   features: readonly string[];
   actionMix?: readonly PostflopActionFrequency[];
+  actionEvs?: ActionEvSet<PostflopAction>;
 }
 
 export interface PostflopConfig {
@@ -410,6 +421,13 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
     throw new PostflopStrategyUnavailableError();
   }
   const recommendation = validResolvedRecommendation ?? fallbackRecommendation;
+  const actionEvs = isActionEvSetComplete(recommendation.actionEvs, actions)
+    ? cloneActionEvSet(recommendation.actionEvs)
+    : undefined;
+  const equivalentBestActions = actionEvs ? bestActionsForActionEv(actionEvs) : [];
+  const recommendedAction = actionEvs && !equivalentBestActions.includes(recommendation.action)
+    ? (highestEvAction(actionEvs) ?? recommendation.action)
+    : recommendation.action;
 
   return {
     seed: config.seed >>> 0,
@@ -429,7 +447,8 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
     actionNode,
     textures,
     actions,
-    recommendedAction: recommendation.action,
+    recommendedAction,
+    ...(actionEvs ? { actionEvs } : {}),
     explanation: recommendation.explanation,
     strategySource: recommendation.source ?? fallbackStrategySource(),
   };

@@ -1,5 +1,12 @@
 import { ALL_HAND_CLASSES } from "../../core/poker";
 import {
+  cloneActionEvSet,
+  isActionEvSetComplete,
+  validateActionEvSet,
+  type ActionEvSet,
+} from "../../core/actionEv";
+import { offeredPreflopActionKeysForContext } from "../../core/preflopActionOptions";
+import {
   POSITION_ORDER,
   STACK_BUCKETS,
   type ActionContext,
@@ -32,6 +39,7 @@ export interface MttPreflopImportRecord {
   context: ActionContext;
   lenient: Partial<Record<HandLabel, readonly ActionKey[]>>;
   strict: Partial<Record<HandLabel, readonly ActionKey[]>>;
+  actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
 }
 
 export interface MttPreflopRangePackImportInput {
@@ -56,6 +64,7 @@ export interface MttPreflopImportRecordReport {
   bucket: StackBucket;
   context: ActionContext;
   explicitHands: number;
+  actionEvHands: number;
   missingHands: readonly HandLabel[];
   strictActionDistribution: readonly MttPreflopImportActionCount[];
   lenientActionDistribution: readonly MttPreflopImportActionCount[];
@@ -78,6 +87,9 @@ export interface MttPreflopImportReadinessReport {
   sourceCount: number;
   searchQueryCount: number;
   recordCount: number;
+  actionEvHands: number;
+  actionEvCoveragePct: number;
+  evReady: boolean;
   positions: readonly Position[];
   contexts: readonly ActionContext[];
   buckets: readonly StackBucket[];
@@ -120,13 +132,13 @@ const ACTION_KEYS: readonly ActionKey[] = [
 ];
 
 const EXPECTED_NON_FOLD_ACTIONS_BY_CONTEXT: Record<ActionContext, readonly ActionKey[]> = {
-  RFI: ["OPEN_2X", "OPEN_25X", "OPEN_3X"],
-  VS_LIMP: ["ISO_2X", "ISO_25X", "ISO_3X", "OVERLIMP", "CALL"],
+  RFI: ["OPEN_2X", "OPEN_25X", "OPEN_3X", "LIMP"],
+  VS_LIMP: ["ISO_2X", "ISO_25X", "ISO_3X", "OVERLIMP", "LIMP", "CALL"],
   VS_OPEN: ["CALL", "3BET", "JAM"],
   VS_3BET: ["CALL", "4BET", "JAM"],
   VS_4BET: ["CALL", "CALL_JAM", "JAM"],
   SQUEEZE: ["SQUEEZE", "3BET", "CALL", "JAM"],
-  BVB: ["OPEN_2X", "OPEN_25X", "OPEN_3X", "LIMP", "CALL", "JAM"],
+  BVB: ["OPEN_2X", "OPEN_25X", "OPEN_3X", "LIMP", "CALL", "3BET", "JAM"],
   PUSH_FOLD: ["JAM", "CALL_JAM"],
   VS_ALLIN: ["CALL", "CALL_JAM"],
 };
@@ -189,6 +201,8 @@ export function buildMttPreflopImportReadinessReport(
     missingBuckets,
   });
   const legalLicense = LEGAL_LICENSE_KINDS.includes(input.licenseKind);
+  const actionEvHands = records.reduce((sum, record) => sum + record.actionEvHands, 0);
+  const totalHands = records.length * ALL_HAND_CLASSES.length;
 
   return {
     packId: input.id,
@@ -201,6 +215,9 @@ export function buildMttPreflopImportReadinessReport(
     sourceCount: input.sourceEvidence.length,
     searchQueryCount: input.searchQueries.length,
     recordCount: input.records.length,
+    actionEvHands,
+    actionEvCoveragePct: totalHands === 0 ? 0 : roundPct(actionEvHands, totalHands),
+    evReady: totalHands > 0 && actionEvHands === totalHands,
     positions,
     contexts,
     buckets,
@@ -228,6 +245,7 @@ export function renderMttPreflopImportReadinessReport(
     `sources: ${report.sourceCount}`,
     `searches: ${report.searchQueryCount}`,
     `records: ${report.recordCount}`,
+    `action EV: ${report.actionEvHands} hands (${report.actionEvCoveragePct}%), ready=${report.evReady}`,
     `positions: ${report.positions.join(",") || "none"}`,
     `contexts: ${report.contexts.join(",") || "none"}`,
     `buckets: ${report.buckets.join(",") || "none"}`,
@@ -274,7 +292,19 @@ function normalizeRecord(record: MttPreflopImportRecord): RangePackRecord {
     context: record.context,
     lenient: normalizeActionMap(record.lenient),
     strict: normalizeActionMap(record.strict),
+    ...(record.actionEvs ? { actionEvs: normalizeActionEvMap(record.actionEvs) } : {}),
   };
+}
+
+function normalizeActionEvMap(
+  map: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>,
+): Partial<Record<HandLabel, ActionEvSet<ActionKey>>> {
+  const out: Partial<Record<HandLabel, ActionEvSet<ActionKey>>> = {};
+  for (const hand of ALL_HAND_CLASSES) {
+    const set = map[hand];
+    if (set !== undefined) out[hand] = cloneActionEvSet(set);
+  }
+  return out;
 }
 
 function normalizeActionMap(
@@ -378,6 +408,32 @@ function validateMttPreflopInput(input: MttPreflopRangePackImportInput): string[
           errors.push(`${tag}.strict.${hand} action ${action} is missing from lenient.`);
         }
       }
+
+      const actionEvs = record.actionEvs?.[hand];
+      if (actionEvs !== undefined) {
+        const evActions = actionEvs.values.map((item) => item.action);
+        const offeredActions = offeredPreflopActionKeysForContext(
+          record.context,
+          record.position,
+          record.bucket,
+          strict,
+        );
+        for (const error of validateActionEvSet(actionEvs, offeredActions)) {
+          errors.push(`${tag}.actionEvs.${hand}: ${error}.`);
+        }
+        for (const action of evActions) {
+          if (!ACTION_KEYS.includes(action)) {
+            errors.push(`${tag}.actionEvs.${hand} contains unsupported action ${action}.`);
+          } else if (!LEGAL_ACTIONS_BY_CONTEXT[record.context].has(action)) {
+            errors.push(`${tag}.actionEvs.${hand} contains action ${action} illegal for ${record.context}.`);
+          }
+        }
+        for (const action of new Set<ActionKey>([...strict, ...lenient])) {
+          if (!evActions.includes(action)) {
+            errors.push(`${tag}.actionEvs.${hand} is missing accepted action ${action}.`);
+          }
+        }
+      }
     }
   }
 
@@ -440,6 +496,17 @@ function reportRecord(record: MttPreflopImportRecord): MttPreflopImportRecordRep
     bucket: record.bucket,
     context: record.context,
     explicitHands: ALL_HAND_CLASSES.length - missingHands.length,
+    actionEvHands: ALL_HAND_CLASSES.filter((hand) => {
+      const set = record.actionEvs?.[hand];
+      const strict = record.strict[hand] ?? [];
+      const offeredActions = offeredPreflopActionKeysForContext(
+        record.context,
+        record.position,
+        record.bucket,
+        strict,
+      );
+      return isActionEvSetComplete(set, offeredActions);
+    }).length,
     missingHands,
     strictActionDistribution: actionDistribution(record.strict),
     lenientActionDistribution: actionDistribution(record.lenient),
@@ -523,6 +590,10 @@ function actionDistribution(
       pct: Math.round(((counts.get(action) ?? 0) / ALL_HAND_CLASSES.length) * 1000) / 10,
     }))
     .filter((item) => item.count > 0);
+}
+
+function roundPct(value: number, total: number): number {
+  return Math.round((value / total) * 1000) / 10;
 }
 
 function renderActionDistribution(distribution: readonly MttPreflopImportActionCount[]): string {

@@ -12,9 +12,9 @@ describe("mtt preflop CSV draft CLI", () => {
       const out = join(dir, "normalized.json");
       const packId = "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1";
       writeFileSync(csv, [
-        "rowKind,packId,tableFormat,blindSpeed,ante,evModel,position,sourceStackBB,bucket,context,handClass,strictActions,lenientActions,sourceReferenceId,reviewer,reviewedAt,notes",
-        `HAND_CLASS_DECISION,${packId},FULL_RING_9,REGULAR,ON,CHIP_EV,BTN,40,40,RFI,AA,OPEN_2X,OPEN_2X,owned-export-a,QA,2026-07-08,synthetic test row`,
-        `HAND_CLASS_DECISION,${packId},FULL_RING_9,REGULAR,ON,CHIP_EV,BTN,40,40,RFI,72o,FOLD,FOLD,owned-export-a,QA,2026-07-08,synthetic test row`,
+        "rowKind,packId,tableFormat,blindSpeed,ante,evModel,position,sourceStackBB,bucket,context,handClass,strictActions,lenientActions,actionEvsBb,equivalentThresholdBb,acceptableThresholdBb,sourceReferenceId,reviewer,reviewedAt,notes",
+        `HAND_CLASS_DECISION,${packId},FULL_RING_9,REGULAR,ON,CHIP_EV,BTN,40,40,RFI,AA,OPEN_2X,OPEN_2X,FOLD=0|LIMP=-0.20|OPEN_2X=0.21,0.01,0.05,owned-export-a,QA,2026-07-08,synthetic test row`,
+        `HAND_CLASS_DECISION,${packId},FULL_RING_9,REGULAR,ON,CHIP_EV,BTN,40,40,RFI,72o,FOLD,FOLD,,,,owned-export-a,QA,2026-07-08,synthetic test row`,
       ].join("\n"), "utf8");
 
       const result = spawnSync(process.execPath, [
@@ -55,7 +55,17 @@ describe("mtt preflop CSV draft CLI", () => {
       };
       const normalized = JSON.parse(readFileSync(out, "utf8")) as {
         id: string;
-        records: Array<{ position: string; bucket: number; context: string; strict: Record<string, string[]> }>;
+        records: Array<{
+          position: string;
+          bucket: number;
+          context: string;
+          strict: Record<string, string[]>;
+          actionEvs?: Record<string, {
+            values: Array<{ action: string; evBb: number }>;
+            equivalentThresholdBb: number;
+            acceptableThresholdBb: number;
+          }>;
+        }>;
       };
 
       expect(report.csvReady).toBe(true);
@@ -75,6 +85,15 @@ describe("mtt preflop CSV draft CLI", () => {
       });
       expect(normalized.records[0].strict.AA).toEqual(["OPEN_2X"]);
       expect(normalized.records[0].strict["72o"]).toEqual(["FOLD"]);
+      expect(normalized.records[0].actionEvs?.AA).toMatchObject({
+        equivalentThresholdBb: 0.01,
+        acceptableThresholdBb: 0.05,
+        values: [
+          { action: "FOLD", evBb: 0 },
+          { action: "LIMP", evBb: -0.2 },
+          { action: "OPEN_2X", evBb: 0.21 },
+        ],
+      });
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

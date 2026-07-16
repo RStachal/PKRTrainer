@@ -29,6 +29,7 @@ import {
   buildTurnProductionCoverageReport,
   type TurnProductionStrategyPack,
 } from "../src/data/ranges/turnProductionStrategyPack.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import {
   turnProductionStrategyPacks,
 } from "../src/data/ranges/turnProductionStrategyResolver.ts";
@@ -104,6 +105,7 @@ function usage(): string {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const report = buildPostflopProductionCoverageReport();
   if (args.outputPath !== null) {
     mkdirSync(dirname(args.outputPath), { recursive: true });
@@ -448,5 +450,3 @@ function renderPostflopProductionCoverageReport(
 function formatCount(count: { total: number; covered: number; blocked: number }): string {
   return `${count.covered}/${count.total} covered, ${count.blocked} blocked`;
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

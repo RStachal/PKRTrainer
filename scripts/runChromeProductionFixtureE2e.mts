@@ -9,11 +9,12 @@ import { createServer } from "node:net";
 import { resolve, sep } from "node:path";
 
 const root = resolve(".");
+// The current Core preflop pack is deliberately real. This fixture supplements
+// only the unshipped FLOP/TURN/RIVER slots, then restores the generated registry.
 const packId = "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1";
 const flopPackId = "mtt-full-ring-9-regular-flop-chip-ev-ante-on-production-v1";
 const turnPackId = "mtt-full-ring-9-regular-turn-chip-ev-ante-on-production-v1";
 const riverPackId = "mtt-full-ring-9-regular-river-chip-ev-ante-on-production-v1";
-const modulePath = resolve("src/data/ranges", `${packId}.ts`);
 const flopModulePath = resolve("src/data/ranges", `${flopPackId}.ts`);
 const turnModulePath = resolve("src/data/ranges", `${turnPackId}.ts`);
 const riverModulePath = resolve("src/data/ranges", `${riverPackId}.ts`);
@@ -28,7 +29,6 @@ const viteCli = resolve("node_modules/vite/bin/vite.js");
 const tscCli = resolve("node_modules/typescript/bin/tsc");
 let preview: ChildProcess | null = null;
 
-assertInsideWorkspace(modulePath);
 assertInsideWorkspace(flopModulePath);
 assertInsideWorkspace(turnModulePath);
 assertInsideWorkspace(riverModulePath);
@@ -36,9 +36,6 @@ assertInsideWorkspace(validationPath);
 assertInsideWorkspace(registryPath);
 assertInsideWorkspace(fixtureDist);
 assertInsideWorkspace(fixtureArtifacts);
-if (existsSync(modulePath)) {
-  throw new Error(`Synthetic fixture refuses to overwrite existing module: ${modulePath}`);
-}
 if (existsSync(flopModulePath)) {
   throw new Error(`Synthetic fixture refuses to overwrite existing module: ${flopModulePath}`);
 }
@@ -55,7 +52,6 @@ if (existsSync(validationPath)) {
 const registryBackup = readFileSync(registryPath, "utf8");
 
 try {
-  writeFileSync(modulePath, renderFixtureModule(packId), "utf8");
   writeFileSync(flopModulePath, renderFlopFixtureModule(flopPackId), "utf8");
   writeFileSync(turnModulePath, renderTurnFixtureModule(turnPackId), "utf8");
   writeFileSync(riverModulePath, renderRiverFixtureModule(riverPackId), "utf8");
@@ -94,13 +90,13 @@ try {
     MTT_E2E_EXPECT_POSTFLOP_PACK_ID: flopPackId,
     MTT_E2E_EXPECT_TURN_PACK_ID: turnPackId,
     MTT_E2E_EXPECT_RIVER_PACK_ID: riverPackId,
+    MTT_E2E_EXPECT_ACTION_EV: "true",
     MTT_E2E_VIEWPORTS: "desktop",
   });
   console.log("Synthetic production fixture E2E passed.");
 } finally {
   stopProcessTree(preview);
   writeFileSync(registryPath, registryBackup, "utf8");
-  rmSync(modulePath, { force: true });
   rmSync(flopModulePath, { force: true });
   rmSync(turnModulePath, { force: true });
   rmSync(riverModulePath, { force: true });
@@ -108,28 +104,10 @@ try {
   rmSync(fixtureDist, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 }
 
-function renderFixtureModule(id: string): string {
-  return [
-    "// Synthetic source-free browser fixture. Never ship this module.",
-    'import type { RangePack } from "./rangePack";',
-    'import { mttPreflopAnteOnRangePack } from "./mttPreflopRangePacks";',
-    "",
-    "export const browserE2eProductionRangePack = {",
-    "  ...mttPreflopAnteOnRangePack,",
-    `  "id": ${JSON.stringify(id)},`,
-    '  version: "browser-e2e-production-v1",',
-    '  createdAt: "2026-06-23",',
-    '  verifiedAt: "2026-06-23",',
-    '  assumptions: ["Synthetic source-free production routing fixture."],',
-    "} satisfies RangePack;",
-    "",
-  ].join("\n");
-}
-
 function renderFlopFixtureModule(id: string): string {
   return [
     "// Synthetic source-free browser fixture. Never ship this module.",
-    'import { LEGACY_POSTFLOP_POSITION_PATTERNS, type BoardTexture, type PostflopPositionPattern, type PostflopPotType } from "../../core/postflopGenerator";',
+    'import { LEGACY_POSTFLOP_POSITION_PATTERNS, type BoardTexture, type PostflopAction, type PostflopPositionPattern, type PostflopPotType } from "../../core/postflopGenerator";',
     'import { ALL_HAND_CLASSES } from "../../core/poker";',
     "import {",
     "  FLOP_PRODUCTION_REQUIRED_POSITION_PATTERNS,",
@@ -229,9 +207,9 @@ function renderFlopFixtureModule(id: string): string {
     '    actions: ["FOLD", "CALL", "RAISE"],',
     '    recommendedAction: "CALL",',
     "    rangeBuckets: [",
-    '      { lane: "VALUE", label: "value", action: "RAISE", handClasses: ALL_HAND_CLASSES.slice(0, 57), features: ["value"] },',
-    '      { lane: "BLUFF", label: "bluff", action: "CALL", handClasses: ALL_HAND_CLASSES.slice(57, 113), features: ["draw"] },',
-    '      { lane: "CHECK", label: "fold", action: "FOLD", handClasses: ALL_HAND_CLASSES.slice(113), features: ["air"] },',
+    '      { lane: "VALUE", label: "value", action: "RAISE", handClasses: ALL_HAND_CLASSES.slice(0, 57), features: ["value"], actionEvs: actionEvs(["FOLD", "CALL", "RAISE"], ["CALL", "RAISE"]) },',
+    '      { lane: "BLUFF", label: "bluff", action: "CALL", handClasses: ALL_HAND_CLASSES.slice(57, 113), features: ["draw"], actionEvs: actionEvs(["FOLD", "CALL", "RAISE"], ["CALL", "RAISE"]) },',
+    '      { lane: "CHECK", label: "fold", action: "FOLD", handClasses: ALL_HAND_CLASSES.slice(113), features: ["air"], actionEvs: actionEvs(["FOLD", "CALL", "RAISE"], ["CALL", "RAISE"]) },',
     "    ],",
     '    explanation: "Synthetic production facing-bet fixture.",',
     "  };",
@@ -239,10 +217,23 @@ function renderFlopFixtureModule(id: string): string {
     "",
     "function rangeBuckets(): FlopProductionStrategyRule['rangeBuckets'] {",
     "  return [",
-    '    { lane: "VALUE", label: "value", action: "BET_SMALL", handClasses: ALL_HAND_CLASSES.slice(0, 57), features: ["value"] },',
-    '    { lane: "BLUFF", label: "bluff", action: "BET_SMALL", handClasses: ALL_HAND_CLASSES.slice(57, 113), features: ["draw"] },',
-    '    { lane: "CHECK", label: "check", action: "CHECK", handClasses: ALL_HAND_CLASSES.slice(113), features: ["air"] },',
+    '    { lane: "VALUE", label: "value", action: "BET_SMALL", handClasses: ALL_HAND_CLASSES.slice(0, 57), features: ["value"], actionEvs: actionEvs(["CHECK", "BET_SMALL", "BET_BIG"], ["CHECK", "BET_SMALL"]) },',
+    '    { lane: "BLUFF", label: "bluff", action: "BET_SMALL", handClasses: ALL_HAND_CLASSES.slice(57, 113), features: ["draw"], actionEvs: actionEvs(["CHECK", "BET_SMALL", "BET_BIG"], ["CHECK", "BET_SMALL"]) },',
+    '    { lane: "CHECK", label: "check", action: "CHECK", handClasses: ALL_HAND_CLASSES.slice(113), features: ["air"], actionEvs: actionEvs(["CHECK", "BET_SMALL", "BET_BIG"], ["CHECK", "BET_SMALL"]) },',
     "  ];",
+    "}",
+    "",
+    "function actionEvs(actions: readonly PostflopAction[], bestActions: readonly PostflopAction[]) {",
+    "  return {",
+    '    source: "SOLVER" as const,',
+    '    unit: "BB" as const,',
+    "    values: actions.map((action) => ({",
+    "      action,",
+    "      evBb: bestActions.includes(action) ? 2 : 1.8,",
+    "    })),",
+    "    equivalentThresholdBb: 0.01,",
+    "    acceptableThresholdBb: 0.05,",
+    "  };",
     "}",
     "",
   ].join("\n");

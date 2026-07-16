@@ -16,8 +16,9 @@ describe("MTT postflop pilot runtime", () => {
   it("exposes all generated scoped pilot packs without registering them as production", () => {
     const entries = mttPostflopPilotRuntimeEntries();
 
-    expect(entries).toHaveLength(6);
+    expect(entries).toHaveLength(7);
     expect(entries.map((entry) => entry.catalog.fullProductionReady)).toEqual([
+      false,
       false,
       false,
       false,
@@ -27,6 +28,35 @@ describe("MTT postflop pilot runtime", () => {
     ]);
     expect(findMttPostflopPilotRuntimeEntry("BTN_vs_BB_SRP_FLOP_FACING_BET")?.catalog.rangeBuckets)
       .toBe(174);
+    expect(findMttPostflopPilotRuntimeEntry("CO_vs_BB_SRP_FLOP_CBET")?.catalog.rangeBuckets)
+      .toBe(162);
+  });
+
+  it("starts every scoped pilot through an entitled strategy-pack resolver", () => {
+    const grants = grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" });
+    const entries = mttPostflopPilotRuntimeEntries();
+
+    expect(entries).toHaveLength(7);
+    for (const entry of entries) {
+      const report = createMttPostflopPilotResolver(entry.catalog.scope, grants, {
+        now: "2026-07-10T00:00:00.000Z",
+      });
+      const rule = entry.packEntry.pack.rules[0];
+      expect(rule, entry.catalog.scope).toBeDefined();
+      expect(report.allowed, entry.catalog.scope).toBe(true);
+      expect(report.resolver, entry.catalog.scope).not.toBeNull();
+
+      const recommendation = report.resolver?.({
+        street: "FLOP",
+        textures: rule.boardTextures,
+        potType: rule.potType,
+        potBB: 10,
+        effectiveStackBB: ((rule.sprMin + rule.sprMax) / 2) * 10,
+        positionPattern: rule.positionPattern,
+        actionNode: rule.actionNode,
+      });
+      expect(recommendation?.source?.kind, entry.catalog.scope).toBe("STRATEGY_PACK");
+    }
   });
 
   it("requires paid pilot entitlement before creating a resolver", () => {
@@ -139,6 +169,27 @@ describe("MTT postflop pilot runtime", () => {
     expect(directScopeReport.entry?.catalog.fullProductionReady).toBe(false);
     expect(inputReport.allowed).toBe(true);
     expect(inputReport.entry?.catalog.id).toBe("sb-bb-srp-oop-flop-cbet-low-mid-high");
+  });
+
+  it("maps CO vs BB SRP c-bet to explicit paid scoped pilot runtime", () => {
+    const input = {
+      street: "FLOP",
+      textures: ["ace-high", "dry", "rainbow", "disconnected"],
+      potType: "SINGLE_RAISED",
+      potBB: 50,
+      effectiveStackBB: 125,
+      positionPattern: "SRP_CO_VS_BB",
+      actionNode: "SINGLE_RAISED_POT_CBET",
+    } as const;
+    const report = createMttPostflopPilotResolverForInput(
+      input,
+      grantsForTier("PRO_PLUS", { startsAt: "2026-07-01T00:00:00.000Z" }),
+      { now: "2026-07-08T00:00:00.000Z" },
+    );
+
+    expect(mttPostflopPilotScopeForInput(input)).toBe("CO_vs_BB_SRP_FLOP_CBET");
+    expect(report.allowed).toBe(true);
+    expect(report.entry?.catalog.id).toBe("co-bb-srp-flop-cbet-low-mid-high");
   });
 
   it("normalizuje legacy UI position patterny pro BTN/SB SRP scoped piloty", () => {

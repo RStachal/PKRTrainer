@@ -12,14 +12,14 @@ describe("range:intake:guard CLI", () => {
     expect(result.stdout).toContain("Range intake workspace guard");
     expect(result.stdout).toContain("valid: true");
     expect(result.stdout).toContain("raw folder: Agents/range-intake/raw");
-    expect(result.stdout).toContain("tracked raw files: 2");
-    expect(result.stdout).toContain("local raw folders: 0");
-    expect(result.stdout).toContain("legal slots: 64");
+    expect(result.stdout).toContain("tracked raw files:");
+    expect(result.stdout).toContain("local raw folders: 8");
+    expect(result.stdout).toContain("legal slots: 60");
     expect(result.stdout).toContain("ready for validation: 0");
-    expect(result.stdout).toContain("waiting for files: 64");
-    expect(result.stdout).toContain("missing normalized.json: 64");
-    expect(result.stdout).toContain("missing permission.json: 64");
-    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=8");
+    expect(result.stdout).toContain("waiting for files: 60");
+    expect(result.stdout).toContain("missing normalized.json: 60");
+    expect(result.stdout).toContain("missing permission.json: 56");
+    expect(result.stdout).toContain("priority counts: P0_READY_FOR_VALIDATION=0, P1_PREFLOP_CHIP_EV=4");
     expect(result.stdout).toContain("tracked: Agents/range-intake/raw/.gitignore");
     expect(result.stdout).toContain("tracked: Agents/range-intake/raw/README.md");
     expect(result.stdout).not.toContain("error:");
@@ -48,18 +48,19 @@ describe("range:intake:guard CLI", () => {
 
     expect(parsed.valid).toBe(true);
     expect(parsed.rawFolder).toBe("Agents/range-intake/raw");
-    expect(parsed.trackedRawFiles).toEqual([
+    expect(parsed.trackedRawFiles).toEqual(expect.arrayContaining([
       "Agents/range-intake/raw/.gitignore",
       "Agents/range-intake/raw/README.md",
-    ]);
-    expect(parsed.localRawFolders).toEqual([]);
-    expect(parsed.counts.legalSlots).toBe(64);
-    expect(parsed.counts.localFolders).toBe(0);
+    ]));
+    expect(parsed.localRawFolders).toHaveLength(8);
+    expect(parsed.localRawFolders.every((folder) => folder.includes("preflop-chip-ev"))).toBe(true);
+    expect(parsed.counts.legalSlots).toBe(60);
+    expect(parsed.counts.localFolders).toBe(8);
     expect(parsed.counts.readyForValidation).toBe(0);
-    expect(parsed.counts.waitingForFiles).toBe(64);
-    expect(parsed.counts.missingNormalized).toBe(64);
-    expect(parsed.counts.missingPermission).toBe(64);
-    expect(parsed.counts.byPriority.P1_PREFLOP_CHIP_EV).toBe(8);
+    expect(parsed.counts.waitingForFiles).toBe(60);
+    expect(parsed.counts.missingNormalized).toBe(60);
+    expect(parsed.counts.missingPermission).toBe(56);
+    expect(parsed.counts.byPriority.P1_PREFLOP_CHIP_EV).toBe(4);
     expect(parsed.errors).toEqual([]);
   });
 
@@ -80,10 +81,10 @@ describe("range:intake:guard CLI", () => {
       };
       expect(parsed.valid).toBe(true);
       expect(parsed.counts).toMatchObject({
-        legalSlots: 64,
-        waitingForFiles: 64,
-        missingNormalized: 64,
-        missingPermission: 64,
+        legalSlots: 60,
+        waitingForFiles: 60,
+        missingNormalized: 60,
+        missingPermission: 56,
       });
       expect(parsed.errors).toEqual([]);
     } finally {

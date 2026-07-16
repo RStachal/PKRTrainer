@@ -6,6 +6,7 @@ import type {
   Position,
   StackBucket,
 } from "../../core/types";
+import type { ActionEvSet } from "../../core/actionEv";
 import type {
   BlindSpeed,
   EvModel,
@@ -46,6 +47,7 @@ export interface RangePackRecord {
   context: ActionContext;
   lenient: Record<HandLabel, ActionKey[]>;
   strict: Record<HandLabel, ActionKey[]>;
+  actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
 }
 
 export interface RangePack {
@@ -102,6 +104,7 @@ export function rangePackRecordToRangeRecord(record: RangePackRecord): RangeReco
     context: record.context,
     lenient: record.lenient,
     strict: record.strict,
+    ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
   };
 }
 

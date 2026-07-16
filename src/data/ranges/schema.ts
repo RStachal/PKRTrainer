@@ -21,6 +21,9 @@ import type {
   Position,
   StackBucket,
 } from "../../core/types";
+import type { ActionEvSet } from "../../core/actionEv";
+import { validateActionEvSet } from "../../core/actionEv";
+import { offeredPreflopActionKeysForContext } from "../../core/preflopActionOptions";
 
 // ---------------------------------------------------------------------------
 // Datový tvar (Req 4.1, 4.2)
@@ -56,6 +59,8 @@ export interface RangeRecord {
   lenient: Record<HandLabel, ActionKey[]>;
   /** ruka → přesné Akční_klíče vč. sizingu (STRICT). */
   strict: Record<HandLabel, ActionKey[]>;
+  /** Hand → reviewed solver EV for every legal action at this node. */
+  actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
 }
 
 // ---------------------------------------------------------------------------
@@ -182,6 +187,19 @@ export function validateRangeRecord(r: RangeRecord): string[] {
   const tag = recordTag(r);
   validateHandMap(errors, tag, "lenient", r.lenient);
   validateHandMap(errors, tag, "strict", r.strict);
+  for (const [hand, set] of Object.entries(r.actionEvs ?? {})) {
+    if (!set) continue;
+    const actionErrors = validateActionEvSet(
+      set,
+      offeredPreflopActionKeysForContext(
+        r.context,
+        r.position,
+        r.bucket,
+        r.strict[hand],
+      ),
+    );
+    for (const error of actionErrors) errors.push(`[${tag}] actionEvs[${hand}]: ${error}.`);
+  }
   return errors;
 }
 

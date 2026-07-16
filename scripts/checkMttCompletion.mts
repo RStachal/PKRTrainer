@@ -9,6 +9,7 @@ import {
   renderMttCompletionReleaseGateReport,
 } from "../src/data/ranges/mttProductionReadiness.ts";
 import { parseMttFilterArg } from "../src/data/ranges/mttCliFilterParsing.ts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 
 interface CliArgs {
   details: boolean;
@@ -90,6 +91,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
 
 try {
   const args = parseArgs(process.argv.slice(2));
+  await loadCompleteMttProductionRegistry();
   const fullReadiness = buildMttCompletionReadinessReport();
   const readiness = filterMttCompletionReadinessReport(fullReadiness, args.filters);
   const gateReadiness = hasFilters(args.filters) ? fullReadiness : readiness;
@@ -119,5 +121,3 @@ try {
 function hasFilters(filters: MttCompletionReadinessFilters): boolean {
   return Object.keys(filters).length > 0;
 }
-import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-await loadCompleteMttProductionRegistry();

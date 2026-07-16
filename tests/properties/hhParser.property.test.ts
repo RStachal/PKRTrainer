@@ -248,6 +248,24 @@ describe("hhParser - total parser properties", () => {
     expect(result.errors.join(" ")).toContain(String(MAX_INPUT_LENGTH));
   });
 
+  it("vraci podrobne EN chyby a EN vysvetleni importovaneho spotu", () => {
+    const empty = parseHandHistory("", { language: "EN" });
+    expect(empty.errors).toEqual(["Input is empty or contains only whitespace."]);
+
+    const incompatible = parseHandHistory(incompatibleTableText(5), { language: "EN" });
+    expect(incompatible.errors.join(" ")).toContain("not compatible with the training model");
+    expect(incompatible.errors.join(" ")).not.toContain("Data nejsou kompatibilní");
+
+    const valid = parseHandHistory(validNineHandedText("BTN", [
+      { rank: "A", suit: "s" },
+      { rank: "K", suit: "d" },
+    ]), { language: "EN" });
+    expect(valid.ok).toBe(true);
+    expect(valid.spot?.explanation).toContain("Recommended:");
+    expect(valid.spot?.explanation).toContain("Position:");
+    expect(valid.spot?.explanation).not.toContain("Doporučení:");
+  });
+
   it("podporuje bezne odchylky HH: currency stacks, unicode karty, header blindy a alternativni button", () => {
     const seats = Array.from({ length: 9 }, (_, i) => {
       const seat = i + 1;

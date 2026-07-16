@@ -26,6 +26,7 @@ import {
 import type { ResultRecord } from "./statsStore";
 import { PREFLOP_RESULT_IDENTITY_SCHEMA } from "./statsStore";
 import type { RangePack } from "../data/ranges/rangePack";
+import { evaluateActionEv, type ActionEvOutcome } from "../core/actionEv";
 
 export const RESULT_RECORD_V2_SCHEMA = "result_record_v2";
 export const LEGACY_UNKNOWN_PROFILE_ID = "LEGACY_UNKNOWN_PROFILE";
@@ -55,6 +56,11 @@ export interface ResultRecordV2 {
   sourceVerifiedAt: string;
   scoringMode: ScoringMode | "UNKNOWN";
   responseMs?: number;
+  actionEvOutcome?: ActionEvOutcome;
+  chosenEvBb?: number;
+  bestEvBb?: number;
+  evLossBb?: number;
+  equivalentBestActions?: readonly ActionKey[];
 }
 
 export interface UpgradeResultRecordOptions {
@@ -90,6 +96,7 @@ export function upgradeResultRecordToV2(
       sourceVerifiedAt: record.identity.sourceVerifiedAt,
       scoringMode: record.identity.scoringMode,
       ...(isValidResponseMs(record.responseMs) ? { responseMs: record.responseMs } : {}),
+      ...actionEvFields(record),
     };
   }
 
@@ -128,6 +135,7 @@ export function upgradeResultRecordToV2(
     sourceVerifiedAt: pack?.verifiedAt ?? "unknown",
     scoringMode: "UNKNOWN",
     ...(isValidResponseMs(record.responseMs) ? { responseMs: record.responseMs } : {}),
+    ...actionEvFields(record),
   };
 }
 
@@ -145,6 +153,9 @@ export interface BuildPreflopResultRecordOptions {
 export function buildProfileAwarePreflopResultRecord(
   options: BuildPreflopResultRecordOptions,
 ): ResultRecord {
+  const actionEv = options.spot.actionEvs
+    ? evaluateActionEv(options.spot.actionEvs, options.chosen)
+    : null;
   return {
     qid: options.spot.id,
     chosen: options.chosen,
@@ -154,6 +165,15 @@ export function buildProfileAwarePreflopResultRecord(
     bucket: options.spot.effStack,
     ts: options.ts,
     ...(isValidResponseMs(options.responseMs) ? { responseMs: options.responseMs } : {}),
+    ...(actionEv
+      ? {
+          actionEvOutcome: actionEv.outcome,
+          chosenEvBb: actionEv.chosenEvBb,
+          bestEvBb: actionEv.bestEvBb,
+          evLossBb: actionEv.evLossBb,
+          equivalentBestActions: [...actionEv.bestActions],
+        }
+      : {}),
     identity: {
       schema: PREFLOP_RESULT_IDENTITY_SCHEMA,
       scenarioId: preflopScenarioId(options.profile, options.spot),
@@ -282,7 +302,58 @@ export function isResultRecordV2(value: unknown): value is ResultRecordV2 {
       record.scoringMode === "STRICT" ||
       record.scoringMode === "UNKNOWN"
     ) &&
-    isOptionalResponseMs(record.responseMs)
+    isOptionalResponseMs(record.responseMs) &&
+    isOptionalActionEvOutcome(record.actionEvOutcome) &&
+    isOptionalFiniteNumber(record.chosenEvBb) &&
+    isOptionalFiniteNumber(record.bestEvBb) &&
+    isOptionalNonNegativeFiniteNumber(record.evLossBb) &&
+    isOptionalActionKeys(record.equivalentBestActions)
+  );
+}
+
+function actionEvFields(record: ResultRecord): Partial<ResultRecordV2> {
+  return {
+    ...(isOptionalActionEvOutcome(record.actionEvOutcome) && record.actionEvOutcome
+      ? { actionEvOutcome: record.actionEvOutcome }
+      : {}),
+    ...(isOptionalFiniteNumber(record.chosenEvBb) && record.chosenEvBb !== undefined
+      ? { chosenEvBb: record.chosenEvBb }
+      : {}),
+    ...(isOptionalFiniteNumber(record.bestEvBb) && record.bestEvBb !== undefined
+      ? { bestEvBb: record.bestEvBb }
+      : {}),
+    ...(isOptionalNonNegativeFiniteNumber(record.evLossBb) && record.evLossBb !== undefined
+      ? { evLossBb: record.evLossBb }
+      : {}),
+    ...(isOptionalActionKeys(record.equivalentBestActions) && record.equivalentBestActions
+      ? { equivalentBestActions: [...record.equivalentBestActions] }
+      : {}),
+  };
+}
+
+function isOptionalActionEvOutcome(value: unknown): value is ActionEvOutcome | undefined {
+  return value === undefined ||
+    value === "BEST" ||
+    value === "EQUIVALENT" ||
+    value === "ACCEPTABLE" ||
+    value === "MISTAKE";
+}
+
+function isOptionalFiniteNumber(value: unknown): value is number | undefined {
+  return value === undefined || (typeof value === "number" && Number.isFinite(value));
+}
+
+function isOptionalNonNegativeFiniteNumber(value: unknown): value is number | undefined {
+  return value === undefined || (
+    typeof value === "number" && Number.isFinite(value) && value >= 0
+  );
+}
+
+function isOptionalActionKeys(value: unknown): value is readonly ActionKey[] | undefined {
+  return value === undefined || (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every((item) => typeof item === "string")
   );
 }
 

@@ -21,7 +21,7 @@ describe("mtt:release-gates CLI", () => {
     expect(result.stdout).toContain("MTT intake priority plan");
     expect(result.stdout).toContain("## MTT next action");
     expect(result.stdout).toContain("Next MTT action");
-    expect(result.stdout).toContain("slot: FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF");
+    expect(result.stdout).toContain("slot: SIX_MAX|REGULAR|CHIP_EV|PREFLOP|OFF");
     expect(result.stdout).toContain("## MTT postflop final release gate");
     expect(result.stdout).toContain("MTT postflop final release gate");
     expect(result.stdout).toContain("## Range intake workspace guard");

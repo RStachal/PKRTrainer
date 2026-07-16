@@ -6,6 +6,11 @@ import type {
   PostflopStrategyResolver,
 } from "../../core/postflopGenerator";
 import {
+  cloneActionEvSet,
+  highestEvAction,
+  isActionEvSetComplete,
+} from "../../core/actionEv";
+import {
   type TurnProductionStrategyPack,
   type TurnProductionStrategyRule,
   validateTurnProductionStrategyPack,
@@ -26,9 +31,17 @@ export function createTurnProductionStrategyResolver(
 
     const rule = selectBestTurnProductionRule(matchingTurnProductionRules(pack, input), input);
     if (!rule) return null;
+    const matchedHeroBucket = heroRangeBucket(rule, input);
+    const actionEvs = isActionEvSetComplete(matchedHeroBucket?.actionEvs, rule.actions)
+      ? cloneActionEvSet(matchedHeroBucket.actionEvs)
+      : undefined;
+    const action = actionEvs
+      ? highestEvAction(actionEvs) ?? rule.recommendedAction
+      : rule.recommendedAction;
 
     return {
-      action: rule.recommendedAction,
+      action,
+      ...(actionEvs ? { actionEvs } : {}),
       explanation: rule.explanation,
       source: {
         kind: "STRATEGY_PACK",
@@ -46,7 +59,7 @@ export function createTurnProductionStrategyResolver(
         selectionScore: ruleScore(rule, input),
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
         rangeBuckets: rangeBuckets(rule),
-        heroRangeBucket: heroRangeBucket(rule, input),
+        heroRangeBucket: matchedHeroBucket,
         ...(rule.opponentPolicy
           ? { opponentPolicy: { ...rule.opponentPolicy } }
           : {}),
@@ -155,6 +168,7 @@ function heroRangeBucket(
     handClass: input.heroHand,
     features: [...bucket.features],
     actionMix: bucket.actionMix?.map((item) => ({ ...item })),
+    ...(bucket.actionEvs ? { actionEvs: cloneActionEvSet(bucket.actionEvs) } : {}),
   };
 }
 
@@ -166,6 +180,7 @@ function rangeBuckets(rule: TurnProductionStrategyRule): PostflopRangeBucket[] {
     handClasses: [...bucket.handClasses],
     features: [...bucket.features],
     actionMix: bucket.actionMix?.map((item) => ({ ...item })),
+    ...(bucket.actionEvs ? { actionEvs: cloneActionEvSet(bucket.actionEvs) } : {}),
   }));
 }
 

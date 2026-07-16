@@ -487,9 +487,14 @@ describe("rangeModuleBuilder", () => {
       slotId: "FULL_RING_9|TURBO|CHIP_EV|PREFLOP|ON",
       packId: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1",
     });
-    expect(result.moduleText).toContain("satisfies RangePack");
+    expect(result.moduleText).toContain("as RangePack");
     expect(result.moduleText).toContain("export const builderFixtureRangePack");
-    expect(result.moduleText).toContain('"records"');
+    expect(result.moduleText).toContain("const encodedActions");
+    expect(result.moduleText).toContain("const encodedHandMaps");
+    expect(result.moduleText).toContain("const encodedRecords");
+    expect(result.moduleText).toContain('"AA"');
+    expect(result.moduleText).not.toContain('"22":["FOLD"]');
+    expect(result.moduleText?.length).toBeLessThan(20_000);
     expect(result.moduleText).toMatch(
       /^\/\/ provenance-fingerprint: sha256:[a-f0-9]{64}$/m,
     );

@@ -26,6 +26,7 @@
  */
 
 import type { ActionKey, ScoringMode, Spot } from "./types";
+import { evaluateActionEv, type ActionEvEvaluation } from "./actionEv";
 
 /**
  * Výsledek vyhodnocení jedné odpovědi.
@@ -45,6 +46,7 @@ export interface Grade {
   strict: ActionKey[]; // STRICT sada (spot.strictCorrect)
   recommended: ActionKey[]; // z Range_Store, k zobrazení
   explanationAvailable: boolean;
+  actionEv?: ActionEvEvaluation<ActionKey>;
 }
 
 /**
@@ -102,8 +104,13 @@ function hasExplanation(explanation: Spot["explanation"]): boolean {
  * @returns Výsledek vyhodnocení (`Grade`).
  */
 export function grade(spot: Spot, chosen: ActionKey, mode: ScoringMode): Grade {
-  const acceptable = spot.correctKeys;
-  const strict = spot.strictCorrect;
+  const actionEv = spot.actionEvs ? evaluateActionEv(spot.actionEvs, chosen) : null;
+  const strict = actionEv ? [...actionEv.bestActions] : spot.strictCorrect;
+  const acceptable = actionEv
+    ? spot.actionEvs!.values
+      .filter((item) => actionEv.bestEvBb - item.evBb <= spot.actionEvs!.acceptableThresholdBb + 1e-9)
+      .map((item) => item.action)
+    : spot.correctKeys;
 
   // Členství v příslušné sadě dle režimu (Property 19 / 20).
   const correct =
@@ -113,7 +120,8 @@ export function grade(spot: Spot, chosen: ActionKey, mode: ScoringMode): Grade {
     correct,
     acceptable: acceptable.slice(),
     strict: strict.slice(),
-    recommended: buildRecommended(strict, acceptable),
+    recommended: actionEv ? [...actionEv.bestActions] : buildRecommended(strict, acceptable),
     explanationAvailable: hasExplanation(spot.explanation),
+    ...(actionEv ? { actionEv } : {}),
   };
 }

@@ -1,0 +1,17 @@
+{
+  "packId": "mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1",
+  "version": "permission-user-confirmed-v1",
+  "reviewedAt": "2026-07-13",
+  "reviewer": "PKRTrainer owner (user-confirmed)",
+  "rightsOwner": "PKRTrainer owner (user-confirmed owned solver export)",
+  "licenseKind": "OWNED_SOLVER_EXPORT",
+  "allowedRedistributionScope": "PKRTRAINER_RUNTIME_BUNDLE",
+  "sourceMaterialLocation": "Agents/range-intake/raw/mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1/normalized.json",
+  "evidence": [],
+  "notes": [
+    "User confirmed: source is an owned solver export.",
+    "User confirmed right to distribute in PKRTrainer runtime bundle.",
+    "No third-party chart values are claimed or required for this permission manifest.",
+    "This manifest does not approve inferred, full-ring-derived, or placeholder strategy values."
+  ]
+}

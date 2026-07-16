@@ -117,6 +117,13 @@ export function mttPostflopPilotScopeForInput(
   }
   if (
     input.potType === "SINGLE_RAISED" &&
+    positionPattern === "SRP_CO_VS_BB" &&
+    input.actionNode === "SINGLE_RAISED_POT_CBET"
+  ) {
+    return "CO_vs_BB_SRP_FLOP_CBET";
+  }
+  if (
+    input.potType === "SINGLE_RAISED" &&
     positionPattern === "SRP_SB_VS_BB" &&
     input.actionNode === "SINGLE_RAISED_POT_CBET"
   ) {

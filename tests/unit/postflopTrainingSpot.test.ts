@@ -55,7 +55,7 @@ describe("postflopTrainingSpot", () => {
       "BET_SMALL",
       "BET_BIG",
     ]);
-    expect(trainingSpot.explanation.summary).toBe(spot.explanation);
+    expect(trainingSpot.explanation.summary).toContain("Kontrolovaná strategie");
     expect(trainingSpot.explanation.nextStreetPlan.length).toBeGreaterThan(0);
     expect(trainingSpot.explanation.source).toEqual({
       kind: "FALLBACK",
@@ -129,5 +129,59 @@ describe("postflopTrainingSpot", () => {
     expect(trainingSpot.actions.map((action) => action.action)).toEqual(["FOLD", "CALL", "RAISE"]);
     expect(trainingSpot.actions.map((action) => action.label)).toEqual(["Fold", "Call", "Raise"]);
     expect(trainingSpot.explanation.nextStreetPlan).toContain("River je poslední street");
+  });
+
+  it("v EN rezimu prelozi vsechny vysvetlujici casti spotu", () => {
+    const spot = generatePostflopSpot({
+      seed: 1788246284,
+      street: "FLOP",
+      heroCards,
+      potType: "THREE_BET_POT",
+    });
+    const trainingSpot = postflopSpotToTrainingSpot(spot, "EN");
+    const visibleExplanation = [
+      trainingSpot.explanation.summary,
+      ...trainingSpot.explanation.valueHands,
+      ...trainingSpot.explanation.bluffHands,
+      ...trainingSpot.explanation.checkHands,
+      trainingSpot.explanation.nextStreetPlan,
+    ].join(" ");
+
+    expect(trainingSpot.explanation.summary).toContain("The reviewed strategy");
+    expect(trainingSpot.explanation.summary).toContain("Compare the EV of the other actions");
+    expect(trainingSpot.explanation.valueHands).toContain("overpairs with pot control");
+    expect(trainingSpot.explanation.bluffHands).toContain("ace-high backdoor blockers");
+    expect(trainingSpot.explanation.checkHands).toContain("underpairs without backdoors");
+    expect(visibleExplanation).not.toMatch(/[áčďéěíňóřšťúůýž]/i);
+  });
+
+  it("srovna resolver recommendation s EV a popise vsechny rovnocenne best akce", () => {
+    const spot = generatePostflopSpot({
+      seed: 42,
+      street: "FLOP",
+      heroCards,
+      strategyResolver: () => ({
+        action: "CHECK",
+        actionEvs: {
+          source: "SOLVER",
+          unit: "BB",
+          equivalentThresholdBb: 0.01,
+          acceptableThresholdBb: 0.05,
+          values: [
+            { action: "CHECK", evBb: 0.1 },
+            { action: "BET_SMALL", evBb: 0.204 },
+            { action: "BET_BIG", evBb: 0.21 },
+          ],
+        },
+        explanation: "Deliberately inconsistent recommendation fixture.",
+      }),
+    });
+    const trainingSpot = postflopSpotToTrainingSpot(spot, "EN");
+
+    expect(spot.recommendedAction).toBe("BET_BIG");
+    expect(trainingSpot.explanation.summary)
+      .toContain("Bet small / Bet big");
+    expect(trainingSpot.explanation.summary)
+      .toContain("equivalent within the configured EV threshold");
   });
 });

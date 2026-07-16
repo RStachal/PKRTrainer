@@ -109,6 +109,133 @@ describe("mtt:stage-texas-solver CLI", () => {
     }
   });
 
+  it("fail-closed priradi exploitability z jednoznacneho queue-log segmentu", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-queue-evidence-"));
+    const rawDir = join(directory, "raw");
+    const outputDir = join(directory, "out");
+    const queueDir = join(directory, "queue");
+    mkdirSync(rawDir, { recursive: true });
+    mkdirSync(queueDir, { recursive: true });
+    writeFileSync(join(rawDir, "pkrtrainer_TEST_FAMILY_A72r.json"), JSON.stringify({ ok: true }), "utf8");
+    writeFileSync(
+      join(queueDir, "queue-20260714-120000.log"),
+      [
+        "[2026-07-14T12:00:00] PKRTRAINER_SOLVER_BEGIN parameter=001_TEST_FAMILY_A72r.txt raw=pkrtrainer_TEST_FAMILY_A72r.json",
+        "[2026-07-14T12:01:00] Total exploitability 0.42 precent",
+        "[2026-07-14T12:01:01] PKRTRAINER_SOLVER_END parameter=001_TEST_FAMILY_A72r.txt raw=pkrtrainer_TEST_FAMILY_A72r.json exit=0",
+      ].join("\n"),
+      "utf8",
+    );
+    try {
+      const result = runStage(
+        "--write",
+        "--family=TEST_FAMILY",
+        `--raw-dir=${rawDir}`,
+        `--solver-output-dir=${outputDir}`,
+        `--queue-log-dir=${queueDir}`,
+      );
+
+      expect(result.status).toBe(0);
+      const accuracy = JSON.parse(readFileSync(join(outputDir, "accuracy-report.json"), "utf8")) as {
+        exploitability: number | null;
+        accuracySource: string;
+        solverLogCoverage: { parsedLogs: number; queueLogEntries: number; evidence: Array<{ source: string }> };
+      };
+      expect(accuracy.exploitability).toBe(0.42);
+      expect(accuracy.accuracySource).toContain("console evidence");
+      expect(accuracy.solverLogCoverage).toMatchObject({ parsedLogs: 1, queueLogEntries: 1 });
+      expect(accuracy.solverLogCoverage.evidence).toEqual([
+        expect.objectContaining({ source: "QUEUE_LOG" }),
+      ]);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("odmitne queue-log evidenci, kdyz BEGIN a END marker odkazuji na jiny raw export", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-queue-mismatch-"));
+    const rawDir = join(directory, "raw");
+    const outputDir = join(directory, "out");
+    const queueDir = join(directory, "queue");
+    mkdirSync(rawDir, { recursive: true });
+    mkdirSync(queueDir, { recursive: true });
+    writeFileSync(join(rawDir, "pkrtrainer_TEST_FAMILY_A72r.json"), JSON.stringify({ ok: true }), "utf8");
+    writeFileSync(
+      join(queueDir, "queue-20260714-120000.log"),
+      [
+        "PKRTRAINER_SOLVER_BEGIN parameter=001_TEST_FAMILY_A72r.txt raw=pkrtrainer_TEST_FAMILY_A72r.json",
+        "Total exploitability 0.42 precent",
+        "PKRTRAINER_SOLVER_END parameter=001_TEST_FAMILY_A72r.txt raw=pkrtrainer_OTHER_FAMILY_A72r.json exit=0",
+      ].join("\n"),
+      "utf8",
+    );
+    try {
+      const result = runStage(
+        "--write",
+        "--family=TEST_FAMILY",
+        `--raw-dir=${rawDir}`,
+        `--solver-output-dir=${outputDir}`,
+        `--queue-log-dir=${queueDir}`,
+      );
+
+      expect(result.status).toBe(0);
+      const accuracy = JSON.parse(readFileSync(join(outputDir, "accuracy-report.json"), "utf8")) as {
+        exploitability: number | null;
+        solverLogCoverage: { parsedLogs: number; queueLogEntries: number };
+      };
+      expect(accuracy.exploitability).toBeNull();
+      expect(accuracy.solverLogCoverage).toMatchObject({ parsedLogs: 0, queueLogEntries: 0 });
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("neprezentuje jeden exploitability udaj jako presnost viceboardove family", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-family-evidence-"));
+    const rawDir = join(directory, "raw");
+    const outputDir = join(directory, "out");
+    const queueDir = join(directory, "queue");
+    mkdirSync(rawDir, { recursive: true });
+    mkdirSync(queueDir, { recursive: true });
+    writeFileSync(join(rawDir, "pkrtrainer_TEST_FAMILY_A72r.json"), JSON.stringify({ ok: true }), "utf8");
+    writeFileSync(join(rawDir, "pkrtrainer_TEST_FAMILY_K83r.json"), JSON.stringify({ ok: true }), "utf8");
+    writeFileSync(
+      join(queueDir, "queue-20260714-120000.log"),
+      [
+        "PKRTRAINER_SOLVER_BEGIN parameter=001_TEST_FAMILY_A72r.txt raw=pkrtrainer_TEST_FAMILY_A72r.json",
+        "Total exploitability 0.42 precent",
+        "PKRTRAINER_SOLVER_END parameter=001_TEST_FAMILY_A72r.txt raw=pkrtrainer_TEST_FAMILY_A72r.json exit=0",
+        "PKRTRAINER_SOLVER_BEGIN parameter=002_TEST_FAMILY_K83r.txt raw=pkrtrainer_TEST_FAMILY_K83r.json",
+        "Total exploitability 0.21 precent",
+        "PKRTRAINER_SOLVER_END parameter=002_TEST_FAMILY_K83r.txt raw=pkrtrainer_TEST_FAMILY_K83r.json exit=0",
+      ].join("\n"),
+      "utf8",
+    );
+    try {
+      const result = runStage(
+        "--write",
+        "--family=TEST_FAMILY",
+        `--raw-dir=${rawDir}`,
+        `--solver-output-dir=${outputDir}`,
+        `--queue-log-dir=${queueDir}`,
+      );
+
+      expect(result.status).toBe(0);
+      const accuracy = JSON.parse(readFileSync(join(outputDir, "accuracy-report.json"), "utf8")) as {
+        exploitability: number | null;
+        solverLogCoverage: { parsedLogs: number; evidence: Array<{ rawFileName: string; value: number }> };
+      };
+      expect(accuracy.exploitability).toBeNull();
+      expect(accuracy.solverLogCoverage.parsedLogs).toBe(2);
+      expect(accuracy.solverLogCoverage.evidence).toEqual(expect.arrayContaining([
+        expect.objectContaining({ rawFileName: "pkrtrainer_TEST_FAMILY_A72r.json", value: 0.42 }),
+        expect.objectContaining({ rawFileName: "pkrtrainer_TEST_FAMILY_K83r.json", value: 0.21 }),
+      ]));
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("odmitne neplatny argument", () => {
     const result = runStage("--wat");
 

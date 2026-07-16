@@ -55,6 +55,7 @@ import {
 import type { PostflopTrainingSpot } from "../core/postflopTrainingSpot";
 import { positionsForFormat } from "../core/trainingProfile";
 import { grade } from "../core/scoring";
+import { buildPreflopExplanationForSpot } from "../core/preflopExplanation";
 import { rangeStore } from "../data/rangeStore";
 import type { RangeStore } from "../data/rangeStore";
 import { createDefaultPostflopStrategyResolver } from "../data/ranges/postflopStrategyRegistry";
@@ -65,7 +66,7 @@ import {
 } from "../persistence/hhReviewStore";
 import { renderMatrix } from "./rangeMatrixView";
 import { renderTable } from "./tableRenderer";
-import { CS } from "./cs";
+import { CS, getAppLanguage, localizedText } from "./cs";
 
 const POSTFLOP_STRATEGY_RESOLVER = createDefaultPostflopStrategyResolver();
 
@@ -304,7 +305,10 @@ function renderAnalysis(
     [
       CS.hh.facts.stack,
       result.fields.effStackBB !== undefined
-        ? `${result.fields.effStackBB} BB → nejbližší úroveň ${spot.effStack} BB`
+        ? localizedText(
+            `${result.fields.effStackBB} BB -> nearest bucket ${spot.effStack} BB`,
+            `${result.fields.effStackBB} BB -> nejbližší úroveň ${spot.effStack} BB`,
+          )
         : `${spot.effStack} BB`,
     ],
     [CS.hh.facts.node, spot.context],
@@ -331,7 +335,7 @@ function renderAnalysis(
   container.appendChild(facts);
 
   const explanation = el(doc, "p", "hh-analysis__explanation");
-  explanation.textContent = spot.explanation;
+  explanation.textContent = buildPreflopExplanationForSpot(spot, getAppLanguage());
   container.appendChild(explanation);
 
   const matrix = el(doc, "div", "hh-analysis__matrix");
@@ -345,6 +349,7 @@ function renderAnalysis(
     try {
       const postflopSpots = buildImportedPostflopTrainingSpots(result, strategyResolver, {
         allowFallback,
+        language: getAppLanguage(),
       });
       for (const postflopSpot of postflopSpots) {
         container.appendChild(renderImportedPostflopAnalysis(doc, postflopSpot));
@@ -391,7 +396,7 @@ function renderImportedPostflopAnalysis(doc: Document, spot: PostflopTrainingSpo
   section.dataset.board = spot.board.map(cardLabel).join("-");
 
   const title = el(doc, "h3", "hh-postflop-analysis__title");
-  title.textContent = `${streetLabel(spot.street)} – rozbor`;
+  title.textContent = `${streetLabel(spot.street)} review`;
   section.appendChild(title);
 
   const facts = el(doc, "div", "hh-postflop-analysis__facts");
@@ -453,7 +458,11 @@ function applyResult(
   callbacks?: HHViewCallbacks,
   parseOptions?: HHParseOptions,
 ): void {
-  renderErrors(doc, regions.errors, result.errors);
+  renderErrors(
+    doc,
+    regions.errors,
+    result.errors,
+  );
   renderUnreadable(doc, regions.unreadable, result.unreadableFields);
   renderIncompatible(regions.incompatible, result.incompatible === true);
 
@@ -660,10 +669,11 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
   // Obsluha kliknutí — totální parser + ochrana proti pádu při vykreslování.
   const analyze = (): void => {
     try {
-      const parseOptions = callbacks?.parseOptions?.();
-      const result = parseOptions
-        ? parseHandHistory(textarea.value, parseOptions)
-        : parseHandHistory(textarea.value);
+      const parseOptions: HHParseOptions = {
+        ...(callbacks?.parseOptions?.() ?? {}),
+        language: getAppLanguage(),
+      };
+      const result = parseHandHistory(textarea.value, parseOptions);
       applyResult(doc, result, regions, callbacks, parseOptions);
       if (result.ok && result.spot) {
         analysis.focus();
@@ -677,7 +687,7 @@ export function renderHHView(root: HTMLElement, callbacks?: HHViewCallbacks): vo
       // nesmí shodit view (Req 11.2 — bez pádu aplikace).
       const msg = err instanceof Error ? err.message : String(err);
       renderErrors(doc, regions.errors, [
-        `Neočekávaná chyba při zpracování hand history: ${msg}`,
+        CS.hh.unexpectedError(msg),
       ]);
       renderUnreadable(doc, regions.unreadable, []);
       renderIncompatible(regions.incompatible, false);

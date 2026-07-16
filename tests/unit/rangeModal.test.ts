@@ -67,7 +67,7 @@ describe("rangeModal - DOM", () => {
 
     expect(document.querySelector(".range-modal")).not.toBeNull();
     expect(root.querySelector<HTMLButtonElement>(".range-modal-open")?.textContent)
-      .toContain("Zobrazit range");
+      .toContain("Show range");
     expect(document.querySelectorAll(".range-modal .matrix-cell")).toHaveLength(169);
     expect(document.querySelector<HTMLElement>(".range-modal .matrix-cell--hero")?.dataset.hand)
       .toBe("AKs");
@@ -75,7 +75,7 @@ describe("rangeModal - DOM", () => {
     expect(model?.textContent).toContain("chipEV");
     expect(model?.textContent).toContain("Předpoklady:");
     expect(document.querySelector<HTMLElement>(".range-modal .range-matrix-title")?.textContent)
-      .toBe("Preflop matice range");
+      .toBe("Preflop range matrix");
     expect(document.querySelectorAll(".range-modal .legend-count").length)
       .toBeGreaterThan(1);
     expect(document.querySelector<HTMLElement>(".range-modal .legend-item")?.dataset.count)
@@ -109,7 +109,7 @@ describe("rangeModal - DOM", () => {
     expect(document.querySelector<HTMLElement>(".range-modal__matrix")?.textContent)
       .toContain("AKs");
     expect(document.querySelector<HTMLButtonElement>(".range-modal__close")?.textContent)
-      .toBe("Zavřít");
+      .toBe("Close");
 
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
 

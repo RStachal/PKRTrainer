@@ -281,4 +281,64 @@ describe("mttPreflopRangePackImport", () => {
       "records[0].strict.AA action CALL is missing from lenient.",
     ]));
   });
+
+  it("pocita EV coverage jen kdyz export obsahuje kazdou nabizenou akci", () => {
+    const input = fullRingTurboInput();
+    const record = input.records[2];
+    expect(record.context).toBe("VS_OPEN");
+    expect(record.bucket).toBe(15);
+
+    const completeReport = buildMttPreflopImportReadinessReport({
+      ...input,
+      records: input.records.map((item, index) => index === 2
+        ? {
+            ...item,
+            actionEvs: {
+              AA: {
+                source: "SOLVER" as const,
+                unit: "BB" as const,
+                equivalentThresholdBb: 0.01,
+                acceptableThresholdBb: 0.05,
+                values: [
+                  { action: "FOLD" as const, evBb: 0 },
+                  { action: "CALL" as const, evBb: 0.204 },
+                  { action: "3BET" as const, evBb: 0.21 },
+                ],
+              },
+            },
+          }
+        : item),
+    });
+
+    expect(completeReport.valid).toBe(true);
+    expect(completeReport.actionEvHands).toBe(1);
+    expect(completeReport.evReady).toBe(false);
+
+    const partialReport = buildMttPreflopImportReadinessReport({
+      ...input,
+      records: input.records.map((item, index) => index === 2
+        ? {
+            ...item,
+            actionEvs: {
+              AA: {
+                source: "SOLVER" as const,
+                unit: "BB" as const,
+                equivalentThresholdBb: 0.01,
+                acceptableThresholdBb: 0.05,
+                values: [
+                  { action: "CALL" as const, evBb: 0.204 },
+                  { action: "3BET" as const, evBb: 0.21 },
+                ],
+              },
+            },
+          }
+        : item),
+    });
+
+    expect(partialReport.valid).toBe(false);
+    expect(partialReport.actionEvHands).toBe(0);
+    expect(partialReport.errors).toContain(
+      "records[2].actionEvs.AA: action FOLD is missing an EV.",
+    );
+  });
 });

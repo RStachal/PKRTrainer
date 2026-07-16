@@ -63,7 +63,7 @@ describe("mtt:texas-solver-ingest-completed CLI", () => {
   });
 
   it("u nove review-only family bez mappingu nehlasi falesne already normalized", () => {
-    const familyId = "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR";
+    const familyId = "MTT9_30BB_CO_BB_SRP_CBET_REVIEW_ONLY";
     const outputBase = join(TMP_ROOT, "output", "texas-solver");
     const familyDir = join(outputBase, familyId);
     const rawDir = join(outputBase, familyId, "raw");
@@ -111,6 +111,33 @@ describe("mtt:texas-solver-ingest-completed CLI", () => {
     expect(report.rows[0].commands).toEqual([]);
     expect(report.rows[0].skippedReason).toContain("No supported normalization mapping");
     expect(report.rows[0].skippedReason).not.toContain("Already staged");
+  });
+
+  it("u memory-safe tree profilu zakaze automaticky staging a pilot merge", () => {
+    const familyId = "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR";
+    const outputBase = join(TMP_ROOT, "memory-safe", "texas-solver");
+    const rawDir = join(outputBase, familyId, "raw");
+    mkdirSync(rawDir, { recursive: true });
+    writeFileSync(join(rawDir, `pkrtrainer_${familyId}_A72r.json`), JSON.stringify({ node: "root" }), "utf8");
+    const manifestPath = join(TMP_ROOT, "memory-safe-manifest.json");
+    const reportPath = join(TMP_ROOT, "memory-safe-report.json");
+    writeFileSync(manifestPath, `${JSON.stringify({
+      outputBase,
+      executionProfile: { treeProfile: "MEMORY_SAFE_REVIEW_ONLY" },
+      scenarios: [{ familyId, boards: ["A72r"], coverageTags: ["SINGLE_RAISED_POT_CBET", "SRP_SB_VS_BB", "OOP_AGGRESSOR"] }],
+    }, null, 2)}\n`, "utf8");
+
+    const result = runIngest("--dry-run", `--manifest=${manifestPath}`, `--output=${reportPath}`);
+    expect(result.status).toBe(0);
+    const report = JSON.parse(readFileSync(reportPath, "utf8")) as {
+      reviewOnlyTreeProfile: string | null;
+      mergePilotCommands: string[];
+      rows: Array<{ commands: string[]; skippedReason: string | null }>;
+    };
+    expect(report.reviewOnlyTreeProfile).toBe("MEMORY_SAFE_REVIEW_ONLY");
+    expect(report.mergePilotCommands).toEqual([]);
+    expect(report.rows[0].commands).toEqual([]);
+    expect(report.rows[0].skippedReason).toContain("automatic staging and normalization are disabled");
   });
 });
 

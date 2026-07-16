@@ -1,4 +1,6 @@
 import type { Card, Position } from "./types";
+import type { ActionEvSet } from "./actionEv";
+import { bestActionsForActionEv, cloneActionEvSet } from "./actionEv";
 import type {
   BoardTexture,
   PostflopAction,
@@ -18,6 +20,8 @@ export type PostflopActionNode =
   | "TURN_FACING_BET"
   | "RIVER_PRESSURE"
   | "RIVER_FACING_BET";
+
+export type PostflopExplanationLanguage = "CZ" | "EN";
 
 export type PostflopSizing =
   | "CHECK"
@@ -63,6 +67,7 @@ export interface PostflopTrainingSpot {
   positionPattern: PostflopPositionPattern;
   actions: readonly PostflopActionOption[];
   recommendedAction: PostflopAction;
+  actionEvs?: ActionEvSet<PostflopAction>;
   explanation: PostflopExplanation;
 }
 
@@ -75,7 +80,10 @@ const ACTION_LABEL: Record<PostflopAction, string> = {
   FOLD: "Fold",
 };
 
-export function postflopSpotToTrainingSpot(spot: PostflopSpot): PostflopTrainingSpot {
+export function postflopSpotToTrainingSpot(
+  spot: PostflopSpot,
+  language: PostflopExplanationLanguage = "CZ",
+): PostflopTrainingSpot {
   return {
     id: postflopTrainingSpotId(spot),
     seed: spot.seed,
@@ -101,7 +109,8 @@ export function postflopSpotToTrainingSpot(spot: PostflopSpot): PostflopTraining
       label: ACTION_LABEL[action],
     })),
     recommendedAction: spot.recommendedAction,
-    explanation: buildExplanation(spot),
+    ...(spot.actionEvs ? { actionEvs: cloneActionEvSet(spot.actionEvs) } : {}),
+    explanation: buildExplanation(spot, language),
   };
 }
 
@@ -136,15 +145,40 @@ function roundedSpr(effectiveStackBB: number, potBB: number): number {
   return Math.round((effectiveStackBB / potBB) * 10) / 10;
 }
 
-function buildExplanation(spot: PostflopSpot): PostflopExplanation {
+function buildExplanation(
+  spot: PostflopSpot,
+  language: PostflopExplanationLanguage,
+): PostflopExplanation {
   return {
-    summary: spot.explanation,
-    valueHands: valueHandsForSpot(spot),
-    bluffHands: bluffHandsForSpot(spot),
-    checkHands: checkHandsForSpot(spot),
-    nextStreetPlan: nextStreetPlanForStreet(spot.street, spot.recommendedAction),
+    summary: language === "EN" ? postflopSummaryEn(spot) : postflopSummaryCs(spot),
+    valueHands: language === "EN" ? valueHandsForSpotEn(spot) : valueHandsForSpot(spot),
+    bluffHands: language === "EN" ? bluffHandsForSpotEn(spot) : bluffHandsForSpot(spot),
+    checkHands: language === "EN" ? checkHandsForSpotEn(spot) : checkHandsForSpot(spot),
+    nextStreetPlan: language === "EN"
+      ? nextStreetPlanForStreetEn(spot.street, spot.recommendedAction)
+      : nextStreetPlanForStreet(spot.street, spot.recommendedAction),
     source: spot.strategySource,
   };
+}
+
+function postflopSummaryEn(spot: PostflopSpot): string {
+  const bestActions = spot.actionEvs ? bestActionsForActionEv(spot.actionEvs) : [];
+  if (bestActions.length > 0) {
+    const actions = bestActions.map((action) => ACTION_LABEL[action]).join(" / ");
+    return `Reviewed best actions for this hand and node: ${actions}. The values are equivalent within the configured EV threshold.`;
+  }
+  const action = ACTION_LABEL[spot.recommendedAction];
+  return `The reviewed strategy for this hand and node recommends ${action}. Compare the EV of the other actions when the solver export provides them.`;
+}
+
+function postflopSummaryCs(spot: PostflopSpot): string {
+  const bestActions = spot.actionEvs ? bestActionsForActionEv(spot.actionEvs) : [];
+  if (bestActions.length > 0) {
+    const actions = bestActions.map((action) => ACTION_LABEL[action]).join(" / ");
+    return `Kontrolované nejlepší akce pro tuto handu a tento node: ${actions}. Hodnoty jsou rovnocenné v nastaveném EV prahu.`;
+  }
+  const action = ACTION_LABEL[spot.recommendedAction];
+  return `Kontrolovaná strategie pro tuto handu a tento node doporučuje ${action}. Porovnejte také EV ostatních akcí, pokud je solverový export obsahuje.`;
 }
 
 function valueHandsForSpot(spot: PostflopSpot): readonly string[] {
@@ -259,4 +293,113 @@ function nextStreetPlanForStreet(
     return "Fold ukončí tuto větev; ověřte, zda equity, blockery nebo pot odds opravňovaly pokračování.";
   }
   return "Na blank runoutech můžete pokračovat v tlaku; na dynamických kartách zpomalte.";
+}
+
+function valueHandsForSpotEn(spot: PostflopSpot): readonly string[] {
+  if (spot.street === "FLOP") {
+    if (spot.potType === "THREE_BET_POT") {
+      return spot.recommendedAction === "CHECK"
+        ? ["overpairs with pot control", "top pair with a good kicker", "medium pairs with backdoors"]
+        : ["overpairs", "top pair top kicker", "strong combo draws"];
+    }
+    if (spot.positionPattern === "BTN_VS_BB" || spot.positionPattern === "EP_VS_BB") {
+      if (spot.textures.includes("ace-high") || spot.textures.includes("dry")) {
+        return ["top pair", "second pair", "overpairs from the preflop range"];
+      }
+      return ["top pair with a good kicker", "overpairs", "strong pair plus draw"];
+    }
+    if (spot.positionPattern === "OOP_RAISER_VS_IP_CALLER") {
+      return spot.recommendedAction === "CHECK"
+        ? ["top pair with a weak kicker", "second pair", "check-call portion of overpairs"]
+        : ["top pair or better", "overpairs", "strong made hands"];
+    }
+    if (spot.positionPattern === "SB_VS_BB") {
+      return ["top pair or better", "good second pairs", "draws with strong equity"];
+    }
+  }
+
+  switch (spot.recommendedAction) {
+    case "BET_BIG":
+      return ["top pair or better", "overpairs", "strong made hands"];
+    case "BET_SMALL":
+      return ["top pair", "middle pair", "hands supported by range advantage"];
+    case "CALL":
+      return ["showdown value", "pairs supported by blockers", "draws with the right price"];
+    case "RAISE":
+      return ["strong value", "hands supported by nut advantage", "premium blockers"];
+    case "FOLD":
+      return ["hands without enough equity or relevant blockers"];
+    case "CHECK":
+      return ["marginal showdown value", "pot-control hands"];
+  }
+}
+
+function bluffHandsForSpotEn(spot: PostflopSpot): readonly string[] {
+  if (spot.recommendedAction === "CHECK") {
+    if (spot.street === "FLOP" && spot.potType === "THREE_BET_POT") {
+      return ["ace-high backdoor blockers", "gutshots with overcards"];
+    }
+    return [];
+  }
+  if (spot.recommendedAction === "CALL" || spot.recommendedAction === "FOLD") return [];
+  if (spot.recommendedAction === "RAISE") {
+    return ["nut blockers", "combo draws", "low-showdown-value bluffs with removal"];
+  }
+  if (spot.street === "FLOP") {
+    if (spot.potType === "THREE_BET_POT") {
+      return ["nut flush draws", "ace-high blocker hands", "gutshot plus overcards"];
+    }
+    if (spot.positionPattern === "BTN_VS_BB") {
+      return spot.textures.includes("connected") || spot.textures.includes("two-tone")
+        ? ["open-ended draws", "flush draws", "overcards with backdoor equity"]
+        : ["backdoor flush draws", "BDFD plus overcard", "blocker hands"];
+    }
+    if (spot.positionPattern === "OOP_RAISER_VS_IP_CALLER") {
+      return ["strong draws without showdown value", "overcards with backdoor equity", "top-pair blockers"];
+    }
+  }
+  if (spot.textures.includes("connected") || spot.textures.includes("two-tone")) {
+    return ["open-ended draws", "flush draws", "overcards"];
+  }
+  return ["backdoor draws", "blocker hands"];
+}
+
+function checkHandsForSpotEn(spot: PostflopSpot): readonly string[] {
+  if (spot.street === "FLOP") {
+    if (spot.potType === "THREE_BET_POT") {
+      return ["underpairs without backdoors", "ace-high showdown value", "air without blockers"];
+    }
+    if (!spot.inPosition || spot.textures.includes("connected") || spot.textures.includes("monotone")) {
+      return ["weaker pairs", "medium showdown value", "air without useful backdoors"];
+    }
+    if (spot.textures.includes("ace-high") || spot.textures.includes("dry")) {
+      return ["the weakest air", "slowplays", "weak backdoor combinations"];
+    }
+  }
+  if (spot.textures.includes("monotone") || spot.textures.includes("connected")) {
+    return ["weak pairs", "air without blockers", "medium showdown value"];
+  }
+  return ["the weakest air", "slowplays"];
+}
+
+function nextStreetPlanForStreetEn(
+  street: PostflopStreet,
+  action: PostflopAction,
+): string {
+  if (street === "RIVER") {
+    return "The river is the final street; evaluate showdown value and sizing.";
+  }
+  if (action === "CHECK") {
+    return "Reassess texture, range advantage, and SPR on the next street.";
+  }
+  if (action === "CALL") {
+    return "After the next card, reassess pot odds, blockers, and showdown value.";
+  }
+  if (action === "RAISE") {
+    return "After raising, plan turn or river barrels around nut advantage and blocker quality.";
+  }
+  if (action === "FOLD") {
+    return "Folding ends this branch; verify whether equity, blockers, or pot odds justified continuing.";
+  }
+  return "Keep applying pressure on blank runouts and slow down on dynamic cards.";
 }

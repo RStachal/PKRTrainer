@@ -14,12 +14,13 @@ describe("MTT variant QA", () => {
     expect(report.releaseTrain).toBe("mtt-9max-regular-chip-ev-flop-pilots");
     expect(report.scenarioStatus).toBe("PREVIEW");
     expect(report.counts).toEqual({
-      runtimeSmokes: 6,
-      passed: 6,
+      runtimeSmokes: 7,
+      passed: 7,
       failed: 0,
       errors: 0,
     });
     expect(report.runtimeSmokes.map((row) => row.scope)).toContain("SB_vs_BB_SRP_OOP_FLOP_CBET");
+    expect(report.runtimeSmokes.map((row) => row.scope)).toContain("CO_vs_BB_SRP_FLOP_CBET");
     expect(report.runtimeSmokes.every((row) => (
       row.freeLocked &&
       row.proPlusAllowed &&
@@ -54,7 +55,7 @@ describe("MTT variant QA", () => {
       expect(result.stdout).toContain('"valid": true');
       expect(existsSync(output)).toBe(true);
       const report = JSON.parse(readFileSync(output, "utf8")) as ReturnType<typeof buildMttVariantQaReport>;
-      expect(report.counts.runtimeSmokes).toBe(6);
+      expect(report.counts.runtimeSmokes).toBe(7);
       expect(report.runtimeSmokes.find((row) => row.scope === "SB_vs_BB_SRP_OOP_FLOP_CBET"))
         .toMatchObject({ status: "PASS", proPlusAllowed: true, freeLocked: true });
     } finally {

@@ -31,7 +31,13 @@ import {
   renderPostflopRangeMatrix,
   type FlopzillaLane,
 } from "./postflopRangeMatrixView";
-import { CS } from "./cs";
+import { CS, getAppLanguage, localizedText } from "./cs";
+import { gradePostflopAction, type PostflopGrade } from "../core/postflopScoring";
+import {
+  formatActionEvBb,
+  revealActionEvButtonBubbles,
+  setActionEvButtonContent,
+} from "./actionEvButtonBubbles";
 
 const SEED_MAX = 0xffffffff;
 const POSTFLOP_STRATEGY_RESOLVER = createDefaultPostflopStrategyResolver();
@@ -87,19 +93,19 @@ const POT_TYPE_LABEL: Record<PostflopPotType, string> = {
 };
 
 const TEXTURE_LABEL: Record<BoardTexture, string> = {
-  paired: "Párovaný",
-  monotone: "Monotónní",
-  "two-tone": "Dvoubarevný",
+  paired: "Paired",
+  monotone: "Monotone",
+  "two-tone": "Two-tone",
   rainbow: "Rainbow",
-  connected: "Propojený",
-  dry: "Suchý",
+  connected: "Connected",
+  dry: "Dry",
   "ace-high": "A-high",
   "broadway-high": "Broadway-high",
-  low: "Nízký",
-  medium: "Střední",
-  "straight-possible": "Možná straight",
-  "flush-draw-heavy": "Flush draw",
-  disconnected: "Nepropojený",
+  low: "Low",
+  medium: "Medium",
+  "straight-possible": "Straight possible",
+  "flush-draw-heavy": "Flush-draw heavy",
+  disconnected: "Disconnected",
 };
 
 const SUIT_SYMBOL: Record<Suit, string> = {
@@ -372,7 +378,7 @@ function renderSpot(
   lineMeta?: PostflopLineRenderMeta,
 ): void {
   const doc = root.ownerDocument ?? document;
-  const trainingSpot = spot.trainingSpot ?? postflopSpotToTrainingSpot(spot);
+  const trainingSpot = spot.trainingSpot ?? postflopSpotToTrainingSpot(spot, getAppLanguage());
   root.innerHTML = "";
 
   const questionBar = doc.createElement("div");
@@ -417,8 +423,8 @@ function renderSpot(
   }
   meta.textContent =
     `${STREET_LABEL[spot.street]} - seed ${spot.seed} - ${POT_TYPE_LABEL[trainingSpot.potType]} - ` +
-    `bank ${spot.potBB} BB - ` +
-    `efektivní stack ${spot.effectiveStackBB} BB - SPR ${trainingSpot.spr} - ` +
+    `pot ${spot.potBB} BB - ` +
+    `effective stack ${spot.effectiveStackBB} BB - SPR ${trainingSpot.spr} - ` +
     `${trainingSpot.heroPosition} vs ${trainingSpot.villainPosition} ` +
     `(${trainingSpot.inPosition ? "IP" : "OOP"})`;
   root.appendChild(meta);
@@ -445,7 +451,7 @@ function renderSpot(
     btn.type = "button";
     btn.className = "postflop-action";
     btn.dataset.action = action;
-    btn.textContent = actionLabel(action);
+    setActionEvButtonContent(btn, actionLabel(action));
     btn.addEventListener("click", () => (
       showResult(root, trainingSpot, action, questionStartedAt, options)
     ));
@@ -479,11 +485,11 @@ function renderActionHistory(
   box.dataset.previousActor = history.previousActor ?? "";
   box.dataset.previousAction = history.previousAction ?? "NONE";
   box.dataset.lineHistoryCount = String(lineMeta?.priorActions.length ?? 0);
-  box.setAttribute("aria-label", "Akce před rozhodnutím");
+  box.setAttribute("aria-label", "Action before the decision");
 
   const title = doc.createElement("div");
   title.className = "postflop-action-history__title";
-  title.textContent = "Akce před rozhodnutím";
+  title.textContent = "Action before the decision";
   box.appendChild(title);
 
   const list = doc.createElement("ol");
@@ -512,12 +518,15 @@ function priorLineActionSteps(actions: readonly PostflopLineAction[]): string[] 
         return `${lineActorLabel(entry.actor)} ${linePolicyActionLabel(entry.action)}${amount}`;
       }).join(" → ")
       : `Hero ${actionLabel(action.action)}`;
-    return `Dosavadní hand line - ${STREET_LABEL[action.street]}: ${sequence}. Bank po akci ${roundedBetBB(action.potBBAfter)} BB.`;
+    return localizedText(
+      `Hand line so far - ${STREET_LABEL[action.street]}: ${sequence}. Pot after action ${roundedBetBB(action.potBBAfter)} BB.`,
+      `Dosavadní hand line - ${STREET_LABEL[action.street]}: ${sequence}. Bank po akci ${roundedBetBB(action.potBBAfter)} BB.`,
+    );
   });
 }
 
 function lineActorLabel(actor: "HERO" | "VILLAIN"): string {
-  return actor === "HERO" ? "Hero" : "Soupeř";
+  return actor === "HERO" ? "Hero" : "Villain";
 }
 
 function linePolicyActionLabel(action: string): string {
@@ -553,9 +562,15 @@ function inferredActionHistory(spot: PostflopTrainingSpot): {
       previousAction: "BET_SMALL",
       steps: [
         preflop,
-        `${STREET_LABEL[spot.street]}: ${spot.villainPosition} betnul, Hero čelí sázce.`,
+        localizedText(
+          `${STREET_LABEL[spot.street]}: ${spot.villainPosition} bet, Hero is facing the bet.`,
+          `${STREET_LABEL[spot.street]}: ${spot.villainPosition} betnul, Hero čelí sázce.`,
+        ),
       ],
-      prompt: "Teď jste na tahu: fold, call nebo raise.",
+      prompt: localizedText(
+        "Your turn: fold, call, or raise.",
+        "Teď jste na tahu: fold, call nebo raise.",
+      ),
     };
   }
   if (spot.inPosition) {
@@ -564,9 +579,15 @@ function inferredActionHistory(spot: PostflopTrainingSpot): {
       previousAction: "CHECK",
       steps: [
         preflop,
-        `${STREET_LABEL[spot.street]}: ${spot.villainPosition} checknul, Hero je na tahu.`,
+        localizedText(
+          `${STREET_LABEL[spot.street]}: ${spot.villainPosition} checked, Hero is next to act.`,
+          `${STREET_LABEL[spot.street]}: ${spot.villainPosition} checknul, Hero je na tahu.`,
+        ),
       ],
-      prompt: "Soupeř checknul. Teď zvolte check behind nebo bet.",
+      prompt: localizedText(
+        "Villain checked. Choose check behind or bet.",
+        "Soupeř checknul. Teď zvolte check behind nebo bet.",
+      ),
     };
   }
   return {
@@ -574,20 +595,35 @@ function inferredActionHistory(spot: PostflopTrainingSpot): {
     previousAction: "NONE",
     steps: [
       preflop,
-      `${STREET_LABEL[spot.street]}: Hero je OOP a jedná první.`,
+      localizedText(
+        `${STREET_LABEL[spot.street]}: Hero is OOP and acts first.`,
+        `${STREET_LABEL[spot.street]}: Hero je OOP a jedná první.`,
+      ),
     ],
-    prompt: "Před vámi na této streetě nebyla žádná akce. Teď jste na tahu.",
+    prompt: localizedText(
+      "No action occurred before you on this street. You are first to act.",
+      "Před vámi na této streetě nebyla žádná akce. Teď jste na tahu.",
+    ),
   };
 }
 
 function preflopActionSummary(spot: PostflopTrainingSpot): string {
   if (spot.potType === "THREE_BET_POT") {
-    return `Preflop: ${spot.aggressorPosition} je 3bet agresor, ${spot.callerPosition} dorovnal.`;
+    return localizedText(
+      `Preflop: ${spot.aggressorPosition} is the 3-bet aggressor, ${spot.callerPosition} called.`,
+      `Preflop: ${spot.aggressorPosition} je 3bet agresor, ${spot.callerPosition} dorovnal.`,
+    );
   }
   if (spot.potType === "LIMPED_POT") {
-    return `Preflop: ${spot.aggressorPosition} a ${spot.callerPosition} viděli flop v limped potu.`;
+    return localizedText(
+      `Preflop: ${spot.aggressorPosition} and ${spot.callerPosition} saw the flop in a limped pot.`,
+      `Preflop: ${spot.aggressorPosition} a ${spot.callerPosition} viděli flop v limped potu.`,
+    );
   }
-  return `Preflop: ${spot.aggressorPosition} open raise, ${spot.callerPosition} call.`;
+  return localizedText(
+    `Preflop: ${spot.aggressorPosition} open-raised, ${spot.callerPosition} called.`,
+    `Preflop: ${spot.aggressorPosition} open raise, ${spot.callerPosition} call.`,
+  );
 }
 
 function wireActionKeyboard(actions: HTMLElement): void {
@@ -649,7 +685,7 @@ function postflopTable(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
 
   const pot = doc.createElement("div");
   pot.className = "postflop-table__pot";
-  pot.textContent = `Bank ${spot.potBB} BB`;
+  pot.textContent = `Pot ${spot.potBB} BB`;
   center.appendChild(pot);
   center.appendChild(betGeometry(doc, spot));
 
@@ -921,7 +957,7 @@ function seatDecisionState(
   position: Position,
 ): { action: string; kind: "acted" | "to-act"; label: string } | null {
   if (position === spot.heroPosition) {
-    return { action: "TO_ACT", kind: "to-act", label: "Na tahu" };
+    return { action: "TO_ACT", kind: "to-act", label: "To act" };
   }
   const history = inferredActionHistory(spot);
   if (history.previousActor !== position) return null;
@@ -1005,22 +1041,24 @@ function showResult(
   questionStartedAt: number,
   options: PostflopViewOptions,
 ): void {
+  const grade = gradePostflopAction(spot, chosen);
   const buttons = root.querySelectorAll<HTMLButtonElement>(".postflop-action");
   buttons.forEach((button) => {
     button.disabled = true;
     button.classList.toggle("postflop-action--chosen", button.dataset.action === chosen);
     button.classList.toggle(
       "postflop-action--recommended",
-      button.dataset.action === spot.recommendedAction,
+      grade.recommended.includes(button.dataset.action as PostflopAction),
     );
   });
+  revealActionEvButtonBubbles(buttons, spot.actionEvs, grade.actionEv);
 
   const result = root.querySelector<HTMLElement>(".postflop-result");
   if (!result) return;
-  const correct = chosen === spot.recommendedAction;
+  const correct = grade.correct;
   result.hidden = false;
   result.className = `postflop-result ${correct ? "postflop-result--correct" : "postflop-result--wrong"}`;
-  renderPracticalExplanation(result, spot, correct, chosen);
+  renderPracticalExplanation(result, spot, grade, chosen);
   options.onAnswered?.(spot, chosen, elapsedMs(questionStartedAt));
   focusElement(result);
 }
@@ -1067,7 +1105,10 @@ function appendLineControls(
     const done = doc.createElement("div");
     done.className = "postflop-line-complete";
     const correct = line.streets.filter((street) => (
-      chosenByStreet[street.street] === postflopSpotToTrainingSpot(street.spot).recommendedAction
+      gradePostflopAction(
+        postflopSpotToTrainingSpot(street.spot, getAppLanguage()),
+        chosenByStreet[street.street]!,
+      ).correct
     )).length;
     done.dataset.correctStreets = String(correct);
     done.dataset.totalStreets = String(line.streets.length);
@@ -1115,7 +1156,7 @@ function positionContextFromSpot(spot: PostflopSpot): PostflopPositionContext {
 function renderPracticalExplanation(
   root: HTMLElement,
   spot: PostflopTrainingSpot,
-  correct: boolean,
+  grade: PostflopGrade,
   chosen: PostflopAction,
 ): void {
   const doc = root.ownerDocument ?? document;
@@ -1123,10 +1164,18 @@ function renderPracticalExplanation(
 
   const summary = doc.createElement("p");
   summary.className = "postflop-result__summary";
+  const resultLabel = grade.actionEv?.outcome === "EQUIVALENT"
+    ? CS.postflop.equivalent
+    : grade.actionEv?.outcome === "ACCEPTABLE"
+      ? CS.postflop.acceptable
+      : grade.correct
+        ? CS.postflop.correct
+        : CS.postflop.incorrect;
   summary.textContent =
-    `${correct ? CS.postflop.correct : CS.postflop.incorrect} ${CS.postflop.recommended}: ` +
-    `${actionLabel(spot.recommendedAction)}. ${spot.explanation.summary}`;
+    `${resultLabel} ${CS.postflop.recommended}: ` +
+    `${grade.recommended.map(actionLabel).join(" / ")}. ${spot.explanation.summary}`;
   root.appendChild(summary);
+  root.appendChild(renderPostflopActionEv(doc, spot, chosen, grade));
 
   const grid = doc.createElement("div");
   grid.className = "postflop-practical";
@@ -1151,6 +1200,65 @@ function renderPracticalExplanation(
   if (spot.street === "FLOP") {
     root.appendChild(renderFlopRangeSummary(doc, spot, chosen));
   }
+}
+
+function renderPostflopActionEv(
+  doc: Document,
+  spot: PostflopTrainingSpot,
+  chosen: PostflopAction,
+  grade: PostflopGrade,
+): HTMLElement {
+  const section = doc.createElement("section");
+  section.className = "action-ev";
+  section.dataset.available = grade.actionEv ? "true" : "false";
+
+  const title = doc.createElement("div");
+  title.className = "action-ev__title";
+  title.textContent = CS.postflop.actionEv.title;
+  section.appendChild(title);
+
+  if (!grade.actionEv || !spot.actionEvs) {
+    const unavailable = doc.createElement("p");
+    unavailable.className = "action-ev__unavailable";
+    unavailable.textContent = CS.postflop.actionEv.unavailable;
+    section.appendChild(unavailable);
+    return section;
+  }
+
+  const list = doc.createElement("div");
+  list.className = "action-ev__list";
+  const sorted = [...spot.actionEvs.values].sort((left, right) => right.evBb - left.evBb);
+  for (const item of sorted) {
+    const row = doc.createElement("div");
+    const lossBb = Math.max(0, grade.actionEv.bestEvBb - item.evBb);
+    row.className = "action-ev__row";
+    row.classList.toggle("action-ev__row--chosen", item.action === chosen);
+    row.classList.toggle("action-ev__row--best", grade.actionEv.bestActions.includes(item.action));
+    row.dataset.action = item.action;
+    row.dataset.evBb = String(item.evBb);
+
+    const action = doc.createElement("span");
+    action.className = "action-ev__action";
+    action.textContent = actionLabel(item.action);
+    const value = doc.createElement("span");
+    value.className = "action-ev__value";
+    value.textContent = `${formatActionEvBb(item.evBb)} BB`;
+    const delta = doc.createElement("span");
+    delta.className = "action-ev__delta";
+    delta.textContent = lossBb <= 1e-9
+      ? CS.postflop.actionEv.best
+      : `${formatActionEvBb(-lossBb)} BB`;
+
+    row.append(action, value, delta);
+    list.appendChild(row);
+  }
+  section.appendChild(list);
+
+  const note = doc.createElement("p");
+  note.className = "action-ev__note";
+  note.textContent = CS.postflop.actionEv.note;
+  section.appendChild(note);
+  return section;
 }
 
 function explanationBlock(
@@ -1263,8 +1371,12 @@ function heroBucketInsight(
   text.className = "postflop-range-summary__hero-bucket-text";
   text.textContent = sourceBucket
     ? sourceBucketFeedback(heroHand, heroCategoryLabel, sourceBucket, chosen)
-    : `${heroHand} je na tomto flopu kategorie ${heroCategoryLabel} a obvykle patří do části ` +
-      `${flopzillaLaneLabel(heroLane).toLowerCase()}. Porovnejte ji s value, bluff a check částí range.`;
+    : localizedText(
+        `${heroHand} is ${heroCategoryLabel} on this flop and usually belongs to the ` +
+          `${flopzillaLaneLabel(heroLane).toLowerCase()} section. Compare it with the value, bluff, and check ranges.`,
+        `${heroHand} je na tomto flopu kategorie ${heroCategoryLabel} a obvykle patří do části ` +
+          `${flopzillaLaneLabel(heroLane).toLowerCase()}. Porovnejte ji s value, bluff a check částí range.`,
+      );
   insight.appendChild(text);
 
   return insight;
@@ -1277,29 +1389,51 @@ function sourceBucketFeedback(
   chosen: PostflopAction,
 ): string {
   const mix = bucket.actionMix;
-  const choiceText = mix?.some((item) => item.action === chosen)
+  const inMix = mix?.some((item) => item.action === chosen) === true;
+  const featureTextEn = bucket.features.length > 0
+    ? ` Main features: ${bucket.features.join(", ")}.`
+    : "";
+  const featureTextCs = bucket.features.length > 0
+    ? ` Hlavní vlastnosti: ${bucket.features.join(", ")}.`
+    : "";
+  const choiceTextEn = inMix
+    ? "Your action is part of this bucket's mix."
+    : chosen === bucket.action
+      ? "Your action matches the bucket's primary action."
+      : `Your action is outside this bucket's primary ${actionLabel(bucket.action).toLowerCase()} line.`;
+  const choiceTextCs = inMix
     ? "Vaše akce je součástí mixu tohoto bucketu."
     : chosen === bucket.action
       ? "Vaše akce odpovídá primární akci bucketu."
       : `Vaše akce je mimo primární ${actionLabel(bucket.action).toLowerCase()} line tohoto bucketu.`;
-  const featureText = bucket.features.length > 0
-    ? ` Hlavní vlastnosti: ${bucket.features.join(", ")}.`
-    : "";
-  return `${heroHand} je kategorie ${heroCategoryLabel} v range bucketu ${bucket.label}. ` +
-    `Část bucketu: ${bucket.lane.toLowerCase()}. Primární akce: ${actionLabel(bucket.action)}. ` +
-    `${actionMixText(bucket)} ${choiceText}${featureText}`;
+  return localizedText(
+    `${heroHand} is ${heroCategoryLabel} in range bucket ${bucket.label}. ` +
+      `Bucket section: ${bucket.lane.toLowerCase()}. Primary action: ${actionLabel(bucket.action)}. ` +
+      `${actionMixText(bucket)} ${choiceTextEn}${featureTextEn}`,
+    `${heroHand} je kategorie ${heroCategoryLabel} v range bucketu ${bucket.label}. ` +
+      `Část bucketu: ${bucket.lane.toLowerCase()}. Primární akce: ${actionLabel(bucket.action)}. ` +
+      `${actionMixText(bucket)} ${choiceTextCs}${featureTextCs}`,
+  );
 }
 
 function actionMixText(bucket: PostflopHeroRangeBucket): string {
   const mix = bucket.actionMix;
-  if (!mix || mix.length === 0) return "Není připojen explicitní mixed-action poměr.";
+  if (!mix || mix.length === 0) {
+    return localizedText(
+      "No explicit mixed-action ratio is attached.",
+      "Není připojen explicitní mixed-action poměr.",
+    );
+  }
   const exact = mix.every((item) => item.visibility === "EXACT");
   const items = mix.map((item) => (
     exact ? `${actionLabel(item.action)} ${formatPct(item.frequencyPct)}` : actionLabel(item.action)
   ));
   return exact
-    ? `Mix akcí: ${items.join(" / ")}.`
-    : `Mix akcí: ${items.join(" / ")}. Přesné frekvence jsou pro tento bucket skryté.`;
+    ? localizedText(`Action mix: ${items.join(" / ")}.`, `Mix akcí: ${items.join(" / ")}.`)
+    : localizedText(
+        `Action mix: ${items.join(" / ")}. Exact frequencies are hidden for this bucket.`,
+        `Mix akcí: ${items.join(" / ")}. Přesné frekvence jsou pro tento bucket skryté.`,
+      );
 }
 
 function formatPct(value: number): string {
@@ -1385,17 +1519,35 @@ function actionBelongsToLane(action: PostflopAction, laneAction: "BET" | "CHECK"
 function rangeFocusText(spot: PostflopTrainingSpot): string {
   switch (spot.recommendedAction) {
     case "BET_SMALL":
-      return "Range malého c-betu kombinuje value s přirozenými bluffy; check range si ponechává slabší showdown a trapy.";
+      return localizedText(
+        "The small c-bet range combines value with natural bluffs; the check range retains weaker showdown value and traps.",
+        "Range malého c-betu kombinuje value s přirozenými bluffy; check range si ponechává slabší showdown a trapy.",
+      );
     case "BET_BIG":
-      return "Range velkého betu je polarizovanější: silná value a nejlepší draw nebo blockery.";
+      return localizedText(
+        "The big-bet range is more polarized: strong value and the best draws or blockers.",
+        "Range velkého betu je polarizovanější: silná value a nejlepší draw nebo blockery.",
+      );
     case "CALL":
-      return "Call range pokračuje s handami, které mají dost equity, blockerů nebo showdown value.";
+      return localizedText(
+        "The calling range continues with hands that have enough equity, blockers, or showdown value.",
+        "Call range pokračuje s handami, které mají dost equity, blockerů nebo showdown value.",
+      );
     case "RAISE":
-      return "Raise range je polarizovaná: silná value a bluffy s blockery vytvářejí maximální tlak.";
+      return localizedText(
+        "The raising range is polarized: strong value and blocker-driven bluffs apply maximum pressure.",
+        "Raise range je polarizovaná: silná value a bluffy s blockery vytvářejí maximální tlak.",
+      );
     case "FOLD":
-      return "Fold range zahazuje handy bez dostatečné equity, blockerů nebo pot odds.";
+      return localizedText(
+        "The folding range releases hands without sufficient equity, blockers, or pot odds.",
+        "Fold range zahazuje handy bez dostatečné equity, blockerů nebo pot odds.",
+      );
     case "CHECK":
-      return "Check chrání realizaci equity: slabší showdown, pot-control a handy pro check-call nebo check-back plán.";
+      return localizedText(
+        "Checking protects equity realization: weaker showdown value, pot control, and hands for check-call or check-back plans.",
+        "Check chrání realizaci equity: slabší showdown, pot-control a handy pro check-call nebo check-back plán.",
+      );
   }
 }
 
@@ -1403,16 +1555,25 @@ function modelItems(spot: PostflopTrainingSpot): readonly string[] {
   const source = spot.explanation.source;
   if (source.kind === "STRATEGY_PACK") {
     return [
-      isPublicHeuristicStrategySource(source) ? "Heuristický model" : "Produkční model",
-      `Spolehlivost: ${confidenceLabel(source.confidence)}`,
-      `Shoda textury: ${source.matchedTextures.map(textureLabel).join(", ")}`,
-      `Rozsah SPR: ${source.sprMin}-${source.sprMax}`,
+      localizedText(
+        isPublicHeuristicStrategySource(source) ? "Heuristic model" : "Production model",
+        isPublicHeuristicStrategySource(source) ? "Heuristický model" : "Produkční model",
+      ),
+      localizedText(`Confidence: ${confidenceLabel(source.confidence)}`, `Spolehlivost: ${confidenceLabel(source.confidence)}`),
+      localizedText(
+        `Texture match: ${source.matchedTextures.map(textureLabel).join(", ")}`,
+        `Shoda textury: ${source.matchedTextures.map(textureLabel).join(", ")}`,
+      ),
+      localizedText(`SPR range: ${source.sprMin}-${source.sprMax}`, `Rozsah SPR: ${source.sprMin}-${source.sprMax}`),
       ...source.assumptions.map(
-        (assumption, index) => `Předpoklad ${index + 1}: ${userFacingAssumption(assumption)}`,
+        (assumption, index) => localizedText(
+          `Assumption ${index + 1}: ${userFacingAssumption(assumption)}`,
+          `Předpoklad ${index + 1}: ${userFacingAssumption(assumption)}`,
+        ),
       ),
     ];
   }
-  return ["Základní heuristika"];
+  return [localizedText("Basic heuristic", "Základní heuristika")];
 }
 
 function isPublicHeuristicStrategySource(
@@ -1422,6 +1583,11 @@ function isPublicHeuristicStrategySource(
 }
 
 function userFacingAssumption(assumption: string): string {
+  if (getAppLanguage() === "EN") {
+    return assumption
+      .replace(/\bStrategyPack\b/g, "strategy model")
+      .replace(/\bRangePack\b/g, "strategy model");
+  }
   return assumption
     .replace(
       /^Public heuristic(?: .*?)? StrategyPack only; no paid chart values or exact solver frequencies are copied\.$/,
@@ -1455,11 +1621,11 @@ function userFacingAssumption(assumption: string): string {
 function confidenceLabel(confidence: "LOW" | "MEDIUM" | "HIGH"): string {
   switch (confidence) {
     case "LOW":
-      return "nízká";
+      return localizedText("low", "nízká");
     case "MEDIUM":
-      return "střední";
+      return localizedText("medium", "střední");
     case "HIGH":
-      return "vysoká";
+      return localizedText("high", "vysoká");
     default:
       return confidence;
   }
@@ -1698,15 +1864,39 @@ function styles(doc: Document): HTMLStyleElement {
 .postflop-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
 .postflop-action{appearance:none;border:1px solid rgba(148,163,184,.26);
   border-radius:10px;background:linear-gradient(180deg,#202a3f,#141d2f);
-  color:#e8ecf7;font-size:14px;font-weight:950;padding:10px 16px;min-width:96px;
+  color:#e8ecf7;font-size:14px;font-weight:950;display:grid;
+  grid-template-rows:minmax(18px,auto) 20px;place-items:center;gap:5px;
+  padding:8px 12px;min-width:116px;min-height:62px;
   box-shadow:0 10px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.06);}
 .postflop-action:hover{border-color:#7bd3ff;transform:translateY(-1px);}
 .postflop-action:disabled{opacity:.72;cursor:default;}
+.postflop-action[data-ev-available="true"]:disabled{opacity:1;}
 .postflop-action--chosen{outline:2px solid #e8ecf7;outline-offset:2px;}
 .postflop-action--recommended{border-color:#2bd576;background:linear-gradient(180deg,rgba(43,213,118,.28),rgba(43,213,118,.14));}
+.action-button__label{line-height:1.15;text-align:center;overflow-wrap:anywhere;}
+.action-ev-bubble{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;
+  min-width:92px;min-height:20px;border:1px solid rgba(123,211,255,.42);border-radius:999px;
+  background:#202e44;color:#ddecff;font-size:10px;font-weight:950;font-variant-numeric:tabular-nums;
+  line-height:1;white-space:nowrap;padding:3px 7px;}
+.action-ev-bubble[hidden]{display:inline-flex!important;visibility:hidden;}
+.action-ev-bubble--best{border-color:rgba(43,213,118,.72);background:#123a2a;color:#a8f2c3;}
+.action-ev-bubble--chosen{box-shadow:0 0 0 1px #7bd3ff;}
 .postflop-result{margin-top:12px;border-radius:12px;padding:12px 14px;font-size:13px;
   font-weight:700;line-height:1.45;}
 .postflop-result__summary{margin:0 0 10px;overflow-wrap:anywhere;}
+.action-ev{margin:0 0 10px;border-top:1px solid rgba(255,255,255,.12);padding-top:10px;}
+.action-ev__title{margin-bottom:6px;color:#e8ecf7;font-size:11px;font-weight:950;text-transform:uppercase;}
+.action-ev__list{display:grid;gap:4px;}
+.action-ev__row{display:grid;grid-template-columns:minmax(88px,1fr) minmax(72px,auto) minmax(64px,auto);
+  gap:8px;align-items:center;border:1px solid rgba(255,255,255,.1);border-radius:6px;
+  background:rgba(255,255,255,.035);padding:6px 8px;}
+.action-ev__row--best{border-color:rgba(43,213,118,.5);background:rgba(43,213,118,.1);}
+.action-ev__row--chosen{box-shadow:inset 3px 0 0 #7bd3ff;}
+.action-ev__action{font-weight:900;color:#f8fbff;}
+.action-ev__value{font-variant-numeric:tabular-nums;text-align:right;color:#e8ecf7;}
+.action-ev__delta{font-variant-numeric:tabular-nums;text-align:right;color:#aebbd3;}
+.action-ev__row--best .action-ev__delta{color:#9ff0bd;font-weight:900;}
+.action-ev__note,.action-ev__unavailable{margin:6px 0 0;color:#aebbd3;font-size:11px;font-weight:650;}
 .postflop-line-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;
   border-top:1px solid rgba(255,255,255,.12);padding-top:10px;}
 .postflop-line-next{appearance:none;border:1px solid rgba(43,213,118,.48);border-radius:10px;

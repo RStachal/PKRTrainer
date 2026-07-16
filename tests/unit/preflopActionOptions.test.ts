@@ -1,0 +1,29 @@
+import { describe, expect, it } from "vitest";
+
+import { offeredPreflopActionKeysForContext } from "../../src/core/preflopActionOptions";
+
+describe("preflop action options", () => {
+  it("returns the counterfactual actions actually offered for each common node", () => {
+    expect(offeredPreflopActionKeysForContext("RFI", "BTN", 25, ["OPEN_2X"]))
+      .toEqual(["OPEN_2X", "LIMP", "FOLD"]);
+    expect(offeredPreflopActionKeysForContext("VS_LIMP", "CO", 25, ["ISO_3X"]))
+      .toEqual(["ISO_3X", "OVERLIMP", "FOLD"]);
+    expect(offeredPreflopActionKeysForContext("VS_LIMP", "BB", 25, ["ISO_3X"]))
+      .toEqual(["LIMP", "ISO_3X"]);
+    expect(offeredPreflopActionKeysForContext("VS_OPEN", "BTN", 25, ["3BET"]))
+      .toEqual(["FOLD", "CALL", "3BET"]);
+    expect(offeredPreflopActionKeysForContext("SQUEEZE", "BTN", 25, ["SQUEEZE"]))
+      .toEqual(["FOLD", "CALL", "3BET", "SQUEEZE"]);
+  });
+
+  it("uses stack and BvB state guards before the normal context branch", () => {
+    expect(offeredPreflopActionKeysForContext("PUSH_FOLD", "BTN", 10, ["JAM"]))
+      .toEqual(["JAM", "FOLD"]);
+    expect(offeredPreflopActionKeysForContext("VS_ALLIN", "BB", 10, ["CALL_JAM"]))
+      .toEqual(["CALL_JAM", "FOLD"]);
+    expect(offeredPreflopActionKeysForContext("BVB", "SB", 25, ["OPEN_25X"]))
+      .toEqual(["OPEN_25X", "LIMP", "FOLD"]);
+    expect(offeredPreflopActionKeysForContext("BVB", "BB", 25, ["3BET"]))
+      .toEqual(["FOLD", "CALL", "3BET"]);
+  });
+});

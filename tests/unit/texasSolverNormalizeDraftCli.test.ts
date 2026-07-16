@@ -93,6 +93,83 @@ describe("mtt:texas-solver-normalize-draft CLI", () => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  it("zachovava dominantni CHECK u mixed c-bet bucketu bez vymysleni bet akce", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-normalize-cbet-"));
+    const reviewPath = join(directory, "strategy-export.review.json");
+    const outputDir = join(directory, "draft");
+    mkdirSync(outputDir, { recursive: true });
+    writeFileSync(
+      reviewPath,
+      JSON.stringify({
+        valid: true,
+        familyId: "TEST_SB_BB_CBET",
+        nodeHistory: [],
+        files: [
+          {
+            boardId: "A72r",
+            handClasses: {
+              "43s": {
+                averageByAction: { CHECK: 0.602, BET_25: 0.394, BET_100: 0.004 },
+                dominantAction: "CHECK",
+                dominantFrequency: 0.602,
+              },
+              "65s": {
+                averageByAction: { CHECK: 0.2, BET_25: 0.7, BET_100: 0.1 },
+                dominantAction: "BET_25",
+                dominantFrequency: 0.7,
+              },
+              QJo: {
+                averageByAction: { CHECK: 0.3, BET_25: 0.7 },
+                dominantAction: "BET_25",
+                dominantFrequency: 0.7,
+              },
+            },
+          },
+        ],
+        anomalies: [],
+        blockers: [],
+      }),
+      "utf8",
+    );
+
+    try {
+      const result = runNormalize(
+        `--review=${reviewPath}`,
+        `--output-dir=${outputDir}`,
+        "--action-node=SINGLE_RAISED_POT_CBET",
+        "--pot-type=SINGLE_RAISED",
+        "--position-pattern=SRP_SB_VS_BB",
+        "--write",
+      );
+
+      expect(result.status).toBe(0);
+      const normalized = JSON.parse(readFileSync(join(outputDir, "normalized.candidate.json"), "utf8")) as {
+        rules: Array<{
+          rangeBuckets: Array<{
+            lane: string;
+            action: string;
+            handClasses: string[];
+            actionMix: Array<{ action: string; frequencyPct: number }>;
+          }>;
+        }>;
+      };
+      const buckets = normalized.rules[0]?.rangeBuckets ?? [];
+      const checkBucket = buckets.find((bucket) => bucket.handClasses.includes("43s"));
+
+      expect(checkBucket).toMatchObject({ lane: "CHECK", action: "CHECK" });
+      expect(checkBucket?.actionMix).toEqual([
+        { action: "CHECK", frequencyPct: 60.2, visibility: "EXACT" },
+        { action: "BET_SMALL", frequencyPct: 39.4, visibility: "EXACT" },
+        { action: "BET_BIG", frequencyPct: 0.4, visibility: "EXACT" },
+      ]);
+      expect(new Set(buckets.map((bucket) => bucket.lane))).toEqual(
+        new Set(["CHECK", "BLUFF", "VALUE"]),
+      );
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
 });
 
 function runNormalize(...args: string[]) {

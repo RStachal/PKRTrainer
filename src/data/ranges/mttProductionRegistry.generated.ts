@@ -18,4 +18,29 @@ export interface GeneratedMttProductionManifestEntry {
   profileKey: string;
   load(): Promise<GeneratedMttProductionPack>;
 }
-export const generatedMttProductionManifest: readonly GeneratedMttProductionManifestEntry[] = [];
+export const generatedMttProductionManifest: readonly GeneratedMttProductionManifestEntry[] = [
+  {
+    kind: "mtt-preflop",
+    packId: "mtt-full-ring-9-regular-preflop-chip-ev-ante-off-production-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|PREFLOP|OFF",
+    load: () => import("./mtt-full-ring-9-regular-preflop-chip-ev-ante-off-production-v1").then((module) => module.mttFullRing9RegularPreflopChipEvAnteOffProductionV1RangePack),
+  },
+  {
+    kind: "mtt-preflop",
+    packId: "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|PREFLOP|ON",
+    load: () => import("./mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1").then((module) => module.mttFullRing9RegularPreflopChipEvAnteOnProductionV1RangePack),
+  },
+  {
+    kind: "mtt-preflop",
+    packId: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1",
+    profileKey: "FULL_RING_9|TURBO|CHIP_EV|PREFLOP|OFF",
+    load: () => import("./mtt-full-ring-9-turbo-preflop-chip-ev-ante-off-production-v1").then((module) => module.mttFullRing9TurboPreflopChipEvAnteOffProductionV1RangePack),
+  },
+  {
+    kind: "mtt-preflop",
+    packId: "mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1",
+    profileKey: "FULL_RING_9|TURBO|CHIP_EV|PREFLOP|ON",
+    load: () => import("./mtt-full-ring-9-turbo-preflop-chip-ev-ante-on-production-v1").then((module) => module.mttFullRing9TurboPreflopChipEvAnteOnProductionV1RangePack),
+  },
+];

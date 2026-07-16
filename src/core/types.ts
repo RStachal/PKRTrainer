@@ -143,7 +143,9 @@ export interface TableState {
 // Spot a odpovědi (Req 3.12, 7)
 // ---------------------------------------------------------------------------
 
-/** Jedna nabízená odpověď: 1 Akční_klíč + český popisek. */
+import type { ActionEvSet } from "./actionEv";
+
+/** Jedna nabízená odpověď: 1 Akční_klíč + popisek. */
 export interface Answer {
   key: ActionKey;
   label: string; // český text
@@ -162,6 +164,8 @@ export interface Spot {
   answers: Answer[]; // nabízené možnosti (1 ActionKey každá)
   correctKeys: ActionKey[]; // LENIENT (Req 7.3)
   strictCorrect: ActionKey[]; // STRICT (Req 7.2)
+  /** Solver EV for every offered action; absent until a reviewed export provides it. */
+  actionEvs?: ActionEvSet<ActionKey>;
   explanation: string; // české zdůvodnění
   hint?: string;
   /**

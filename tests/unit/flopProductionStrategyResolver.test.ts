@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { generatePostflopSpot } from "../../src/core/postflopGenerator";
+import { gradePostflopAction } from "../../src/core/postflopScoring";
+import { postflopSpotToTrainingSpot } from "../../src/core/postflopTrainingSpot";
 import {
   createFlopProductionStrategyResolver,
 } from "../../src/data/ranges/flopProductionStrategyResolver";
@@ -80,6 +82,17 @@ function productionPack(confidence: "LOW" | "MEDIUM" = "MEDIUM"): FlopProduction
               { action: "BET_BIG", frequencyPct: 65, visibility: "EXACT" },
               { action: "CHECK", frequencyPct: 35, visibility: "EXACT" },
             ],
+            actionEvs: {
+              source: "SOLVER",
+              unit: "BB",
+              equivalentThresholdBb: 0.01,
+              acceptableThresholdBb: 0.05,
+              values: [
+                { action: "CHECK", evBb: 0.2 },
+                { action: "BET_SMALL", evBb: 0.12 },
+                { action: "BET_BIG", evBb: 0.205 },
+              ],
+            },
           },
           {
             lane: "BLUFF",
@@ -222,7 +235,9 @@ describe("flopProductionStrategyResolver", () => {
         { action: "BET_BIG", frequencyPct: 65, visibility: "EXACT" },
         { action: "CHECK", frequencyPct: 35, visibility: "EXACT" },
       ]);
+      expect(result.source.heroRangeBucket?.actionEvs?.values).toHaveLength(3);
     }
+    expect(result?.actionEvs?.values).toHaveLength(3);
   });
 
   it("production fallback registry preferuje production pack pred public heuristic packem", () => {
@@ -273,6 +288,13 @@ describe("flopProductionStrategyResolver", () => {
     });
 
     expect(spot.recommendedAction).toBe("BET_BIG");
+    const checkGrade = gradePostflopAction(postflopSpotToTrainingSpot(spot), "CHECK");
+    expect(checkGrade).toMatchObject({
+      correct: true,
+      recommended: ["CHECK", "BET_BIG"],
+      actionEv: { outcome: "EQUIVALENT" },
+    });
+    expect(checkGrade.actionEv?.evLossBb).toBeCloseTo(0.005, 9);
     expect(spot.strategySource.kind).toBe("STRATEGY_PACK");
     if (spot.strategySource.kind === "STRATEGY_PACK") {
       expect(spot.strategySource.packId).toBe("mtt-full-ring-9-flop-srp-production-test-v1");

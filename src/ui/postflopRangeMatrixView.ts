@@ -1,6 +1,7 @@
 import { GRID_SIZE, R2V, RANKS, handLabel, isPair, isSuited } from "../core/poker";
 import type { Card, HandLabel, Rank } from "../core/types";
 import type { PostflopTrainingSpot } from "../core/postflopTrainingSpot";
+import { localizedText } from "./cs";
 
 export type FlopzillaCategory =
   | "SET_PLUS"
@@ -26,17 +27,17 @@ interface CategoryDef {
 
 const CATEGORY_DEFS: Record<FlopzillaCategory, CategoryDef> = {
   SET_PLUS: { label: "Set+", color: "#d83b3b" },
-  MADE_STRAIGHT: { label: "Hotová postupka", color: "#ef6f2e" },
-  TWO_PAIR: { label: "Dva páry", color: "#f59f32" },
+  MADE_STRAIGHT: { label: "Made straight", color: "#ef6f2e" },
+  TWO_PAIR: { label: "Two pair", color: "#f59f32" },
   OVERPAIR: { label: "Overpair", color: "#ffd15b" },
-  TOP_PAIR: { label: "Top pár", color: "#3ddc84" },
-  PAIR: { label: "Pár", color: "#2dbd6e" },
-  UNDERPAIR: { label: "Underpár", color: "#1f8f63" },
+  TOP_PAIR: { label: "Top pair", color: "#3ddc84" },
+  PAIR: { label: "Pair", color: "#2dbd6e" },
+  UNDERPAIR: { label: "Underpair", color: "#1f8f63" },
   FLUSH_DRAW: { label: "Flush draw", color: "#3399ff" },
   OESD: { label: "OESD", color: "#7c83ff" },
   GUTSHOT: { label: "Gutshot", color: "#9b6cf0" },
   BACKDOOR_DRAW: { label: "Backdoor draw", color: "#6e7891" },
-  OVERCARDS: { label: "Overkarty", color: "#607d8b" },
+  OVERCARDS: { label: "Overcards", color: "#607d8b" },
   AIR: { label: "Air", color: "#343b49" },
 };
 
@@ -89,25 +90,25 @@ export function renderPostflopRangeMatrix(
 
   const title = doc.createElement("div");
   title.className = "postflop-flopzilla__title";
-  title.textContent = "Flopzilla matice range";
+  title.textContent = "Flopzilla range matrix";
   header.appendChild(title);
 
   const meta = doc.createElement("div");
   meta.className = "postflop-flopzilla__meta";
-  meta.textContent = `Společné karty ${boardText} | Hero ${heroHand}: ${heroCategoryLabel}`;
+  meta.textContent = `Board ${boardText} | Hero ${heroHand}: ${heroCategoryLabel}`;
   header.appendChild(meta);
 
   wrap.appendChild(header);
 
   const hint = doc.createElement("div");
   hint.className = "postflop-flopzilla__hint";
-  hint.textContent = "Na mobilu posouvejte vodorovně";
+  hint.textContent = "Scroll horizontally on mobile";
   wrap.appendChild(hint);
 
   const matrix = doc.createElement("div");
   matrix.className = "postflop-flopzilla__matrix";
   matrix.setAttribute("role", "grid");
-  matrix.setAttribute("aria-label", `Flopzilla matice range pro společné karty ${boardText}`);
+  matrix.setAttribute("aria-label", `Flopzilla range matrix for board ${boardText}`);
   matrix.style.gridTemplateColumns = `repeat(${GRID_SIZE + 1}, minmax(0, 1fr))`;
   matrix.appendChild(headerCell(doc, "", "corner"));
   const detail = detailPanel(doc);
@@ -244,7 +245,7 @@ function matrixCell(
   cell.setAttribute("role", "gridcell");
   cell.setAttribute("tabindex", "0");
   cell.setAttribute("aria-selected", "false");
-  cell.setAttribute("aria-label", `${hand}: ${flopzillaCategoryLabel(category)}${hero ? ", handa Hero" : ""}`);
+  cell.setAttribute("aria-label", `${hand}: ${flopzillaCategoryLabel(category)}${hero ? ", Hero hand" : ""}`);
   cell.dataset.hand = hand;
   cell.dataset.category = category;
   cell.dataset.categoryLabel = flopzillaCategoryLabel(category);
@@ -310,14 +311,14 @@ function showCellDetail(
 
   const title = doc.createElement("div");
   title.className = "postflop-flopzilla__detail-title";
-  title.textContent = `${hand}${hero ? " – handa Hero" : ""}`;
+  title.textContent = `${hand}${hero ? " - Hero hand" : ""}`;
   detail.appendChild(title);
 
   const grid = doc.createElement("div");
   grid.className = "postflop-flopzilla__detail-grid";
-  grid.appendChild(detailLine(doc, "Kategorie", categoryLabel));
-  grid.appendChild(detailLine(doc, "Větev", laneLabel));
-  grid.appendChild(detailLine(doc, "Plán", laneExplanation(lane)));
+  grid.appendChild(detailLine(doc, "Category", categoryLabel));
+  grid.appendChild(detailLine(doc, "Lane", laneLabel));
+  grid.appendChild(detailLine(doc, "Plan", laneExplanation(lane)));
   detail.appendChild(grid);
   detail.focus();
 }
@@ -342,11 +343,20 @@ function detailLine(doc: Document, label: string, value: string): HTMLElement {
 function laneExplanation(lane: FlopzillaLane): string {
   switch (lane) {
     case "VALUE":
-      return "Sázejte primárně pro value a ochranu; tyto handy mohou budovat pot.";
+      return localizedText(
+        "Bet primarily for value and protection; these hands can build the pot.",
+        "Sázejte primárně pro value a ochranu; tyto handy mohou budovat pot.",
+      );
     case "BLUFF":
-      return "Použijte jako přirozené bluffy s equity, blockery nebo backdoory, když line vyžaduje tlak.";
+      return localizedText(
+        "Use natural bluffs with equity, blockers, or backdoors when the line requires pressure.",
+        "Použijte jako přirozené bluffy s equity, blockery nebo backdoory, když line vyžaduje tlak.",
+      );
     case "CHECK":
-      return "Ponechte v check range pro showdown value, trapy nebo give-up bez dostatečné equity.";
+      return localizedText(
+        "Keep these in the check range for showdown value, traps, or give-ups without sufficient equity.",
+        "Ponechte v check range pro showdown value, trapy nebo give-up bez dostatečné equity.",
+      );
   }
 }
 
@@ -379,7 +389,7 @@ function legend(
     item.setAttribute("role", "button");
     item.setAttribute("tabindex", "0");
     item.setAttribute("aria-pressed", "false");
-    item.setAttribute("aria-label", `Zvýraznit handy kategorie ${flopzillaCategoryLabel(category)}`);
+    item.setAttribute("aria-label", `Highlight hands in category ${flopzillaCategoryLabel(category)}`);
     item.dataset.category = category;
     item.dataset.count = String(counts[category] ?? 0);
     item.dataset.share = categoryShare(counts[category] ?? 0);

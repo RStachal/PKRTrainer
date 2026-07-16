@@ -98,14 +98,14 @@ const CONTEXT_ORDER: ActionContext[] = [
 /** Český popisek akčního kontextu pro UI (Req 13.3, 12.3). */
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
-  VS_LIMP: "Proti limpu (iso-raise)",
-  VS_OPEN: "Proti openu",
-  VS_3BET: "Proti 3-betu",
-  VS_4BET: "Proti 4-betu",
+  VS_LIMP: "Vs limp (iso-raise)",
+  VS_OPEN: "Vs open",
+  VS_3BET: "Vs 3-bet",
+  VS_4BET: "Vs 4-bet",
   SQUEEZE: "Squeeze",
   BVB: "Blind vs blind",
   PUSH_FOLD: "Push / Fold",
-  VS_ALLIN: "Proti all-inu (call-jam)",
+  VS_ALLIN: "Vs all-in (call-jam)",
 };
 
 /** Mez 32-bit unsigned seedu (4 294 967 295), tj. 2^32 − 1 (Req 6.1). */
