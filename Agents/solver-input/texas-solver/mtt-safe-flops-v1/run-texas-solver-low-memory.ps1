@@ -18,23 +18,7 @@ $FailureReportPath = Join-Path $ArtifactsDir "solver-failures.ndjson"
 $LogPath = Join-Path $ArtifactsDir ("worker-{0}.log" -f (Get-Date -Format "yyyyMMdd-HHmmss"))
 $MutexName = "Local\PKRTrainerTexasSolverLowMemoryV1"
 $TreeProfile = "MEMORY_SAFE_REVIEW_ONLY"
-$Phases = @(
-  [pscustomobject]@{
-    Name = "next"
-    SourceRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_next_flop_review_v1"
-    ParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_review_v1"
-    SourceManifestPath = Join-Path $PSScriptRoot "coverage-next-flop-review-v1-manifest.json"
-    ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-flop-review-v1-manifest.json"
-  },
-  [pscustomobject]@{
-    Name = "followup"
-    SourceRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_followup_flop_review_v1"
-    ParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_followup_review_v1"
-    SourceManifestPath = Join-Path $PSScriptRoot "coverage-followup-flop-review-v1-manifest.json"
-    ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-followup-flop-review-v1-manifest.json"
-  }
-)
-$LowMemoryFamilies = @(
+$RootReviewFamilies = @(
   "MTT9_20BB_BTN_BB_SRP_LOWSPR",
   "MTT9_50BB_BTN_BB_SRP",
   "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
@@ -47,6 +31,51 @@ $LowMemoryFamilies = @(
   "MTT9_35BB_CO_BTN_3BP_REPAIR",
   "MTT9_80BB_CO_BTN_3BP_MIDSPR",
   "MTT9_150BB_CO_BTN_3BP_HIGHSPR"
+)
+$OwnerDepthFamilies = @(
+  "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
+  "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR",
+  "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR",
+  "MTT9_40BB_UTG_BB_SRP",
+  "MTT9_35BB_CO_BTN_3BP",
+  "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
+  "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
+  "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH"
+)
+$AllReviewFamilies = @($RootReviewFamilies + $OwnerDepthFamilies)
+$Phases = @(
+  [pscustomobject]@{
+    Name = "next"
+    SourceRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_next_flop_review_v1"
+    ParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_review_v1"
+    SourceManifestPath = Join-Path $PSScriptRoot "coverage-next-flop-review-v1-manifest.json"
+    ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-flop-review-v1-manifest.json"
+    Families = $RootReviewFamilies
+  },
+  [pscustomobject]@{
+    Name = "followup"
+    SourceRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_followup_flop_review_v1"
+    ParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_followup_review_v1"
+    SourceManifestPath = Join-Path $PSScriptRoot "coverage-followup-flop-review-v1-manifest.json"
+    ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-followup-flop-review-v1-manifest.json"
+    Families = $RootReviewFamilies
+  },
+  [pscustomobject]@{
+    Name = "owner-depth"
+    SourceRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_owner_depth_review_v1"
+    ParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_owner_depth_review_v1"
+    SourceManifestPath = Join-Path $PSScriptRoot "coverage-owner-depth-flop-review-v1-manifest.json"
+    ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-owner-depth-flop-review-v1-manifest.json"
+    Families = $OwnerDepthFamilies
+  },
+  [pscustomobject]@{
+    Name = "beta-min"
+    SourceRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_beta_min_board_review_v1"
+    ParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_beta_min_board_review_v1"
+    SourceManifestPath = Join-Path $PSScriptRoot "coverage-beta-min-board-review-v1-manifest.json"
+    ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-beta-min-board-review-v1-manifest.json"
+    Families = $AllReviewFamilies
+  }
 )
 
 if ($ThreadCount -lt 1 -or $ThreadCount -gt 4) {
@@ -84,7 +113,7 @@ function Test-PhaseRawComplete($Phase) {
     }
     return $true
   } catch {
-    Write-WorkerLog "Could not inspect phase '$($Phase.Name)' checkpoints; keeping it active. $($_.Exception.Message)"
+    Write-WorkerLog "Could not inspect phase '$($Phase.Name)' checkpoints; keeping it active. $($_.Exception.Message)" | Out-Null
     return $false
   }
 }
@@ -92,7 +121,7 @@ function Test-PhaseRawComplete($Phase) {
 function Select-Phase {
   foreach ($phase in $Phases) {
     if (-not (Test-PhaseRawComplete $phase)) { return $phase }
-    Write-WorkerLog "Phase '$($phase.Name)' has all raw checkpoints; selecting the next phase."
+    Write-WorkerLog "Phase '$($phase.Name)' has all raw checkpoints; selecting the next phase." | Out-Null
   }
   return $Phases[-1]
 }
@@ -102,22 +131,24 @@ $SourceRoot = $ActivePhase.SourceRoot
 $ParameterRoot = $ActivePhase.ParameterRoot
 $SourceManifestPath = $ActivePhase.SourceManifestPath
 $ManifestPath = $ActivePhase.ManifestPath
+$ActiveFamilies = @($ActivePhase.Families)
 
 function Build-LowMemoryBatch {
   if (-not (Test-Path -LiteralPath $SourceRoot)) { throw "Missing source parameter root: $SourceRoot" }
   if (-not (Test-Path -LiteralPath $SourceManifestPath)) { throw "Missing source manifest: $SourceManifestPath" }
   $parameterDirRelative = ($ParameterRoot.Substring($RepoRoot.Length).TrimStart('\') -replace '\\', '/')
+  $manifestRelative = ($ManifestPath.Substring($RepoRoot.Length).TrimStart('\') -replace '\\', '/')
   $sourceManifest = Get-Content -LiteralPath $SourceManifestPath -Raw | ConvertFrom-Json
-  $scenarios = @($sourceManifest.scenarios | Where-Object { $LowMemoryFamilies -contains [string]$_.familyId })
-  if ($scenarios.Count -ne $LowMemoryFamilies.Count) { throw "Low-memory manifest is missing an expected next-review family." }
+  $scenarios = @($sourceManifest.scenarios | Where-Object { $ActiveFamilies -contains [string]$_.familyId })
+  if ($scenarios.Count -ne $ActiveFamilies.Count) { throw "Low-memory phase is missing an expected family." }
   $files = @(Get-ChildItem -LiteralPath $SourceRoot -Filter "*.txt" | Where-Object {
     $name = $_.BaseName -replace '^\d+_', ''
     $lastUnderscore = $name.LastIndexOf('_')
-    $lastUnderscore -gt 0 -and $LowMemoryFamilies -contains $name.Substring(0, $lastUnderscore)
+    $lastUnderscore -gt 0 -and $ActiveFamilies -contains $name.Substring(0, $lastUnderscore)
   } | Sort-Object Name)
   $expectedFileCount = @($scenarios | ForEach-Object { @($_.boards).Count } | Measure-Object -Sum).Sum
   if ($files.Count -ne $expectedFileCount) { throw "Expected $expectedFileCount resource-balanced parameter files, found $($files.Count)." }
-  $manifestFiles = @($sourceManifest.files | Where-Object { $LowMemoryFamilies -contains [string]$_.familyId } | ForEach-Object {
+  $manifestFiles = @($sourceManifest.files | Where-Object { $ActiveFamilies -contains [string]$_.familyId } | ForEach-Object {
     [ordered]@{
       fileName = [string]$_.fileName
       path = "$parameterDirRelative/$($_.fileName)"
@@ -161,7 +192,7 @@ function Build-LowMemoryBatch {
       )
       commands = @(
         "npm run mtt:texas-solver-low-memory-status",
-        "npm run mtt:texas-solver-coverage-status -- --manifest Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-low-memory-flop-review-v1-manifest.json --summary"
+        "npm run mtt:texas-solver-coverage-status -- --manifest $manifestRelative --summary"
       )
       executionProfile = [ordered]@{
         threads = $ThreadCount
@@ -204,7 +235,7 @@ function Start-ResourceGuard {
     "-StopBelowFreeMemoryPercent", "$StopBelowFreeMemoryPercent",
     "-LogPath", $guardLogPath
   ) -WorkingDirectory $RepoRoot -WindowStyle Hidden -PassThru
-  Write-WorkerLog "Started solver resource guard PID $($process.Id); emergency threshold $StopBelowFreeMemoryPercent% free RAM."
+  Write-WorkerLog "Started solver resource guard PID $($process.Id); emergency threshold $StopBelowFreeMemoryPercent% free RAM." | Out-Null
   return $process
 }
 

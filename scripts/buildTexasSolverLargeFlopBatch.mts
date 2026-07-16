@@ -1,7 +1,22 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
+import {
+  buildSolverBoardCoveragePlan,
+  isSupportedSolverBoardId,
+  LEGACY_TEXAS_SOLVER_BOARDS,
+  texasSolverBoardForId,
+} from "../src/core/texasSolverBoardCatalog.ts";
+
 const OUTPUT_BASE = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
+type BatchPreset =
+  | "active"
+  | "next"
+  | "followup"
+  | "owner-depth"
+  | "beta-min"
+  | "beta-depth"
+  | "growth";
 const ACTIVE_BATCH = {
   outputDir: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_large_flop_review_v1",
   manifest: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-large-flop-review-v1-manifest.json",
@@ -20,34 +35,33 @@ const FOLLOWUP_BATCH = {
   packId: "pkrtrainer-mtt-texas-solver-followup-flop-review-v1",
   generatedAt: "2026-07-16",
 } as const;
+const OWNER_DEPTH_BATCH = {
+  outputDir: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_owner_depth_review_v1",
+  manifest: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-owner-depth-flop-review-v1-manifest.json",
+  packId: "pkrtrainer-mtt-texas-solver-owner-depth-flop-review-v1",
+  generatedAt: "2026-07-16",
+} as const;
+const BETA_MIN_BATCH = {
+  outputDir: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_beta_min_board_review_v1",
+  manifest: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-beta-min-board-review-v1-manifest.json",
+  packId: "pkrtrainer-mtt-texas-solver-beta-min-board-review-v1",
+  generatedAt: "2026-07-16",
+} as const;
+const BETA_DEPTH_BATCH = {
+  outputDir: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_beta_depth_board_review_v1",
+  manifest: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-beta-depth-board-review-v1-manifest.json",
+  packId: "pkrtrainer-mtt-texas-solver-beta-depth-board-review-v1",
+  generatedAt: "2026-07-16",
+} as const;
+const GROWTH_BATCH = {
+  outputDir: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_growth_board_review_v1",
+  manifest: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-growth-board-review-v1-manifest.json",
+  packId: "pkrtrainer-mtt-texas-solver-growth-board-review-v1",
+  generatedAt: "2026-07-16",
+} as const;
 
 const SRP_EXPANSION_BOARDS = ["A95r", "KQ5r", "Q84r", "J73r", "976tt", "A85mono"] as const;
 const THREE_BET_EXPANSION_BOARDS = ["AK5r", "KJ4tt", "J73r", "997r", "875tt", "A85mono"] as const;
-
-const BOARD_TO_TEXAS_SOLVER: Record<string, string> = {
-  A95r: "As,9d,5c",
-  KQ5r: "Ks,Qd,5c",
-  Q84r: "Qs,8d,4c",
-  J73r: "Js,7d,3c",
-  "976tt": "9s,7s,6d",
-  A85mono: "As,8s,5s",
-  AK5r: "As,Kd,5c",
-  KJ4tt: "Ks,Js,4d",
-  "997r": "9s,9d,7c",
-  "875tt": "8s,7s,5d",
-  A72r: "As,7d,2c",
-  T84r: "Ts,8d,4c",
-  QJ2tt: "Qs,Jh,2h",
-  JT9tt: "Js,Th,9h",
-  "883r": "8s,8d,3c",
-  "765tt": "7s,6s,5d",
-  Q76mono: "Qs,7s,6s",
-  K83r: "Ks,8d,3c",
-  Q72r: "Qs,7d,2c",
-  AT4mono: "As,Ts,4s",
-  "986tt": "9s,8s,6d",
-  "742r": "7s,4d,2c",
-};
 
 interface Scenario {
   familyId: string;
@@ -58,7 +72,7 @@ interface Scenario {
 }
 
 interface CliArgs {
-  preset: "active" | "next" | "followup";
+  preset: BatchPreset;
   manifestPath: string;
   outputDir: string;
   write: boolean;
@@ -175,6 +189,111 @@ const NEXT_SRP_BOARDS = ["A72r", "T84r", "QJ2tt", "883r", "765tt", "Q76mono"] as
 const NEXT_THREE_BET_BOARDS = ["A72r", "T84r", "QJ2tt", "JT9tt", "883r", "Q76mono"] as const;
 const FOLLOWUP_SRP_BOARDS = ["K83r", "Q72r", "JT9tt", "AT4mono", "986tt", "742r"] as const;
 const FOLLOWUP_THREE_BET_BOARDS = ["K83r", "Q72r", "JT9tt", "AT4mono", "986tt", "742r"] as const;
+const OWNER_DEPTH_BOARDS = ["AKQtt", "K72r", "J85tt", "T97r", "664r", "432mono", "AQ6r", "KJTmono", "955tt"] as const;
+
+const OWNER_DEPTH_SCENARIOS: readonly Scenario[] = [
+  {
+    familyId: "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
+    templatePath: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_facing_bet_lowspr_v1/01_MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR_A72r.txt",
+    boards: OWNER_DEPTH_BOARDS,
+    purpose: "BTN vs BB SRP facing-bet LOW-SPR owner-review depth.",
+    coverageTags: ["LOW_SPR", "SINGLE_RAISED", "SRP_BTN_VS_BB", "FACING_BET", "OWNER_REVIEW_DEPTH"],
+  },
+  {
+    familyId: "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR",
+    templatePath: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_facing_bet_v1/01_MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR_A72r.txt",
+    boards: OWNER_DEPTH_BOARDS,
+    purpose: "BTN vs BB SRP facing-bet MID-SPR owner-review depth.",
+    coverageTags: ["MID_SPR", "SINGLE_RAISED", "SRP_BTN_VS_BB", "FACING_BET", "OWNER_REVIEW_DEPTH"],
+  },
+  {
+    familyId: "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR",
+    templatePath: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_srp_facing_bet_v1/21_MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR_K98tt.txt",
+    boards: OWNER_DEPTH_BOARDS,
+    purpose: "BTN vs BB SRP facing-bet HIGH-SPR owner-review depth.",
+    coverageTags: ["HIGH_SPR", "SINGLE_RAISED", "SRP_BTN_VS_BB", "FACING_BET", "OWNER_REVIEW_DEPTH"],
+  },
+  {
+    familyId: "MTT9_40BB_UTG_BB_SRP",
+    templatePath: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/41_MTT9_40BB_UTG_BB_SRP_K83r.txt",
+    boards: OWNER_DEPTH_BOARDS,
+    purpose: "UTG vs BB SRP owner-review depth across underrepresented textures.",
+    coverageTags: ["MID_SPR", "SINGLE_RAISED", "SRP_UTG_VS_BB", "SINGLE_RAISED_POT_CBET", "OWNER_REVIEW_DEPTH"],
+  },
+  {
+    familyId: "MTT9_35BB_CO_BTN_3BP",
+    templatePath: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_coverage_v2/61_MTT9_35BB_CO_BTN_3BP_A72r.txt",
+    boards: OWNER_DEPTH_BOARDS,
+    purpose: "BTN vs CO 3bet-pot LOW-SPR owner-review depth.",
+    coverageTags: ["LOW_SPR", "THREE_BET_POT", "3BP_BTN_VS_CO", "THREE_BET_POT_CBET", "OWNER_REVIEW_DEPTH"],
+  },
+  {
+    familyId: "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
+    templatePath: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/01_MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR_A76tt.txt",
+    boards: OWNER_DEPTH_BOARDS,
+    purpose: "BTN vs CO 3bet-pot facing-bet LOW-SPR owner-review depth.",
+    coverageTags: ["LOW_SPR", "THREE_BET_POT", "3BP_BTN_VS_CO", "FACING_BET", "OWNER_REVIEW_DEPTH"],
+  },
+  {
+    familyId: "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
+    templatePath: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/21_MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR_J87r.txt",
+    boards: OWNER_DEPTH_BOARDS,
+    purpose: "BTN vs CO 3bet-pot facing-bet MID-SPR owner-review depth.",
+    coverageTags: ["MID_SPR", "THREE_BET_POT", "3BP_BTN_VS_CO", "FACING_BET", "OWNER_REVIEW_DEPTH"],
+  },
+  {
+    familyId: "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
+    templatePath: "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_facing_bet_expansion_v1/41_MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH_K98tt.txt",
+    boards: OWNER_DEPTH_BOARDS,
+    purpose: "BTN vs CO 3bet-pot facing-bet MID/HIGH-SPR owner-review depth.",
+    coverageTags: ["MID_SPR", "THREE_BET_POT", "3BP_BTN_VS_CO", "FACING_BET", "OWNER_REVIEW_DEPTH"],
+  },
+];
+
+const BOARD_COVERAGE_PLAN = buildSolverBoardCoveragePlan();
+const BETA_MIN_MISSING_BOARDS = BOARD_COVERAGE_PLAN
+  .flatMap((row) => row.betaMinimumBoardIds)
+  .filter((boardId) => !(boardId in LEGACY_TEXAS_SOLVER_BOARDS));
+const BETA_DEPTH_INCREMENT_BOARDS = BOARD_COVERAGE_PLAN
+  .flatMap((row) => row.betaDepthBoardIds.filter(
+    (boardId) => !row.betaMinimumBoardIds.includes(boardId),
+  ));
+const GROWTH_INCREMENT_BOARDS = BOARD_COVERAGE_PLAN
+  .flatMap((row) => row.growthBoardIds.filter(
+    (boardId) => !row.betaDepthBoardIds.includes(boardId),
+  ));
+
+const BOARD_COVERAGE_SCENARIOS = [...SCENARIOS, ...OWNER_DEPTH_SCENARIOS] as const;
+const BETA_MIN_SCENARIOS = boardCoverageScenarios(
+  BETA_MIN_MISSING_BOARDS,
+  "BETA_MIN_BOARD_COVERAGE",
+  "Canonical beta-minimum board cohort completion.",
+);
+const BETA_DEPTH_SCENARIOS = boardCoverageScenarios(
+  BETA_DEPTH_INCREMENT_BOARDS,
+  "BETA_DEPTH_BOARD_COVERAGE",
+  "Canonical 12-board-per-cohort depth expansion.",
+);
+const GROWTH_SCENARIOS = boardCoverageScenarios(
+  GROWTH_INCREMENT_BOARDS,
+  "GROWTH_BOARD_COVERAGE",
+  "Long-term canonical board evidence expansion.",
+);
+
+function boardCoverageScenarios(
+  boards: readonly string[],
+  coverageTag: string,
+  purpose: string,
+): readonly Scenario[] {
+  return BOARD_COVERAGE_SCENARIOS.map((scenario, scenarioIndex, scenarios) => ({
+    ...scenario,
+    boards: boards.filter(
+      (_boardId, boardIndex) => boardIndex % scenarios.length === scenarioIndex,
+    ),
+    purpose: `${scenario.purpose} ${purpose}`,
+    coverageTags: unique([...scenario.coverageTags, coverageTag]),
+  }));
+}
 
 try {
   const args = parseArgs(process.argv.slice(2));
@@ -256,6 +375,10 @@ function usage(): string {
     "  npm run mtt:texas-solver-large-flop-batch -- --write",
     "  npm run mtt:texas-solver-large-flop-batch -- --preset=next --write",
     "  npm run mtt:texas-solver-large-flop-batch -- --preset=followup --write",
+    "  npm run mtt:texas-solver-large-flop-batch -- --preset=owner-depth --write",
+    "  npm run mtt:texas-solver-large-flop-batch -- --preset=beta-min --write",
+    "  npm run mtt:texas-solver-large-flop-batch -- --preset=beta-depth --write",
+    "  npm run mtt:texas-solver-large-flop-batch -- --preset=growth --write",
     "  npm run mtt:texas-solver-large-flop-batch -- --preset=next --summary",
     "",
     "Generates an isolated review-only TexasSolver flop board expansion batch.",
@@ -282,7 +405,7 @@ function buildReport(args: CliArgs): {
         : [`Missing template file for ${scenario.familyId}: ${scenario.templatePath}`]
     )),
     ...unique(scenarios.flatMap((scenario) => scenario.boards)).flatMap((boardId) => (
-      BOARD_TO_TEXAS_SOLVER[boardId] === undefined ? [`Missing board mapping for ${boardId}.`] : []
+      !isSupportedSolverBoardId(boardId) ? [`Missing board mapping for ${boardId}.`] : []
     )),
   ];
   const files = scenarios.flatMap((scenario, scenarioIndex) => scenario.boards.map((boardId, boardIndex) => {
@@ -296,6 +419,12 @@ function buildReport(args: CliArgs): {
       written: false,
     };
   }));
+  if (
+    args.preset === "owner-depth" || args.preset === "beta-min" ||
+    args.preset === "beta-depth" || args.preset === "growth"
+  ) {
+    blockers.push(...familyBoardDuplicateBlockers(args, files, args.preset));
+  }
 
   return {
     valid: blockers.length === 0,
@@ -335,7 +464,7 @@ function writeBatch(args: CliArgs, report: ReturnType<typeof buildReport>): void
     })),
     files: report.files.map((file) => ({ ...file, path: repoRelativePath(file.path), written: true })),
     notes: [
-      `${args.preset === "active" ? "Large" : args.preset === "next" ? "Next" : "Follow-up"} review-only TexasSolver flop expansion batch across existing validated pilot families.`,
+      `${batchLabel(args.preset)} review-only TexasSolver flop expansion batch across existing validated pilot families.`,
       "This batch intentionally deepens board-texture evidence without inventing new position/range identities.",
       "It is not full MTT production coverage and must not be promoted without source-free review, normalization and gate validation.",
       "MTT_CORE_V1 preflop scope is complete; this batch is non-blocking P4 evidence expansion.",
@@ -350,8 +479,7 @@ function writeBatch(args: CliArgs, report: ReturnType<typeof buildReport>): void
 }
 
 function renderParameter(template: string, familyId: string, boardId: string, preset: CliArgs["preset"]): string {
-  const board = BOARD_TO_TEXAS_SOLVER[boardId];
-  if (board === undefined) throw new Error(`Unsupported board id: ${boardId}`);
+  const board = texasSolverBoardForId(boardId);
   const compatibleTemplate = preset !== "active"
     // TexasSolver v0.2.0 logs this directive as unrecognized. Keep the active batch frozen;
     // only the isolated next batch omits a command that the installed console already ignores.
@@ -383,6 +511,32 @@ function nextCommands(args: CliArgs): string[] {
       "The resource-balanced low-memory worker starts this follow-up only after the next-review manifest is raw-complete.",
     ];
   }
+  if (args.preset === "owner-depth") {
+    return [
+      ...commands,
+      "npm run mtt:texas-solver-low-memory-install",
+      "The resource-balanced low-memory worker starts this owner-depth phase only after the follow-up manifest is raw-complete.",
+    ];
+  }
+  if (args.preset === "beta-min") {
+    return [
+      ...commands,
+      "This isolated 45-board wave starts only after owner-depth is raw-complete.",
+      "It completes global six-board cohort calibration without multiplying every board by every family.",
+    ];
+  }
+  if (args.preset === "beta-depth") {
+    return [
+      ...commands,
+      "Keep this 83-board wave outside every active worker until beta-minimum solving and review are complete.",
+    ];
+  }
+  if (args.preset === "growth") {
+    return [
+      ...commands,
+      "Keep this 98-board long-term wave outside every active worker until beta-depth review is complete.",
+    ];
+  }
   return [
     ...commands,
     "npm run mtt:texas-solver-autostart-install",
@@ -392,8 +546,12 @@ function nextCommands(args: CliArgs): string[] {
 }
 
 function parsePreset(value: string): CliArgs["preset"] {
-  if (value === "active" || value === "next" || value === "followup") return value;
-  throw new Error(`--preset must be active, next or followup, received: ${value}`);
+  if (
+    value === "active" || value === "next" || value === "followup" ||
+    value === "owner-depth" || value === "beta-min" ||
+    value === "beta-depth" || value === "growth"
+  ) return value;
+  throw new Error(`--preset must be active, next, followup, owner-depth, beta-min, beta-depth or growth, received: ${value}`);
 }
 
 function batchFor(preset: CliArgs["preset"]): {
@@ -404,11 +562,19 @@ function batchFor(preset: CliArgs["preset"]): {
 } {
   if (preset === "next") return NEXT_BATCH;
   if (preset === "followup") return FOLLOWUP_BATCH;
+  if (preset === "owner-depth") return OWNER_DEPTH_BATCH;
+  if (preset === "beta-min") return BETA_MIN_BATCH;
+  if (preset === "beta-depth") return BETA_DEPTH_BATCH;
+  if (preset === "growth") return GROWTH_BATCH;
   return ACTIVE_BATCH;
 }
 
 function scenariosFor(preset: CliArgs["preset"]): readonly Scenario[] {
   if (preset === "active") return SCENARIOS;
+  if (preset === "owner-depth") return OWNER_DEPTH_SCENARIOS;
+  if (preset === "beta-min") return BETA_MIN_SCENARIOS;
+  if (preset === "beta-depth") return BETA_DEPTH_SCENARIOS;
+  if (preset === "growth") return GROWTH_SCENARIOS;
   const boards = preset === "next"
     ? { srp: NEXT_SRP_BOARDS, threeBet: NEXT_THREE_BET_BOARDS }
     : { srp: FOLLOWUP_SRP_BOARDS, threeBet: FOLLOWUP_THREE_BET_BOARDS };
@@ -416,6 +582,78 @@ function scenariosFor(preset: CliArgs["preset"]): readonly Scenario[] {
     ...scenario,
     boards: scenario.coverageTags.includes("THREE_BET_POT") ? boards.threeBet : boards.srp,
   }));
+}
+
+function batchLabel(preset: BatchPreset): string {
+  if (preset === "active") return "Large";
+  if (preset === "next") return "Next";
+  if (preset === "followup") return "Follow-up";
+  if (preset === "owner-depth") return "Owner-depth";
+  if (preset === "beta-min") return "Beta-minimum";
+  if (preset === "beta-depth") return "Beta-depth";
+  return "Growth";
+}
+
+function familyBoardDuplicateBlockers(
+  args: CliArgs,
+  files: readonly GeneratedFile[],
+  label: "owner-depth" | "beta-min" | "beta-depth" | "growth",
+): string[] {
+  const manifestDir = dirname(args.manifestPath);
+  const targetManifest = resolve(args.manifestPath);
+  const existing = new Map<string, string[]>();
+  const blockers: string[] = [];
+  let manifestNames: string[];
+
+  try {
+    manifestNames = readdirSync(manifestDir)
+      .filter((name) => /^coverage-.*-manifest\.json$/i.test(name))
+      .sort();
+  } catch (error) {
+    return [`Could not inspect existing coverage manifests in ${manifestDir}: ${error instanceof Error ? error.message : String(error)}`];
+  }
+
+  for (const manifestName of manifestNames) {
+    const manifestPath = resolve(manifestDir, manifestName);
+    if (manifestPath === targetManifest) continue;
+
+    let manifest: {
+      executionProfile?: { treeProfile?: unknown };
+      files?: unknown;
+    };
+    try {
+      manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as typeof manifest;
+    } catch (error) {
+      blockers.push(`Could not parse existing coverage manifest ${manifestName}: ${error instanceof Error ? error.message : String(error)}`);
+      continue;
+    }
+    if (manifest.executionProfile?.treeProfile === "MEMORY_SAFE_REVIEW_ONLY") continue;
+    if (!Array.isArray(manifest.files)) {
+      blockers.push(`Existing coverage manifest ${manifestName} has no files array.`);
+      continue;
+    }
+    for (const entry of manifest.files) {
+      const item = entry as { familyId?: unknown; boardId?: unknown };
+      if (typeof item.familyId !== "string" || typeof item.boardId !== "string") {
+        blockers.push(`Existing coverage manifest ${manifestName} contains a file without familyId/boardId.`);
+        continue;
+      }
+      const key = `${item.familyId}/${item.boardId}`;
+      existing.set(key, [...(existing.get(key) ?? []), manifestName]);
+    }
+  }
+
+  const generated = new Set<string>();
+  for (const file of files) {
+    const key = `${file.familyId}/${file.boardId}`;
+    if (generated.has(key)) blockers.push(`${label} batch repeats generated family/board ${key}.`);
+    generated.add(key);
+    const sources = existing.get(key);
+    if (sources !== undefined) {
+      blockers.push(`${label} family/board ${key} already exists in ${sources.join(", ")}.`);
+    }
+  }
+  return blockers;
 }
 
 function writeIfChanged(path: string, content: string): void {

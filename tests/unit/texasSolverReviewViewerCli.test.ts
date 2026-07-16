@@ -127,6 +127,54 @@ describe("mtt:texas-solver-viewer CLI", () => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  it("renders memory-safe evidence without owner decision controls", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-viewer-evidence-"));
+    const input = join(directory, "review.evidence.json");
+    const output = join(directory, "viewer.html");
+    try {
+      writeFileSync(input, JSON.stringify({
+        valid: true,
+        status: "REVIEW_ONLY_EVIDENCE",
+        productionReady: false,
+        reviewOnlyTreeProfile: "MEMORY_SAFE_REVIEW_ONLY",
+        familyId: "MTT9_REVIEW_ONLY",
+        nodeHistory: [],
+        counts: { rawFiles: 1, parsedFiles: 1, blockedFiles: 0, combos: 1, handClasses: 1 },
+        files: [{
+          boardId: "AKQtt",
+          comboCount: 1,
+          handClassCount: 1,
+          nodeType: "action_node",
+          player: 1,
+          handClasses: {
+            AJs: { comboCount: 1, averageByAction: { CHECK: 0.25, BET_25: 0.75 }, dominantAction: "BET_25", dominantFrequency: 0.75 },
+          },
+        }],
+        anomalies: [],
+        blockers: [],
+      }, null, 2), "utf8");
+
+      const result = runViewer(`--input=${input}`, `--output=${output}`, "--no-waves");
+      expect(result.status).toBe(0);
+      const html = readFileSync(output, "utf8");
+      expect(html).toContain("Owner Decisions Disabled");
+      expect(html).toContain("MEMORY_SAFE_REVIEW_ONLY");
+      expect(html).toContain("REVIEW_ONLY_EVIDENCE");
+      expect(html).not.toContain('id="owner-reviewer"');
+
+      const jsdomErrors: string[] = [];
+      const virtualConsole = new VirtualConsole();
+      virtualConsole.on("jsdomError", (error) => jsdomErrors.push(error.message));
+      const dom = new JSDOM(html, { runScripts: "dangerously", url: "http://localhost/evidence", virtualConsole });
+      expect(dom.window.document.querySelectorAll("[data-owner-row]")).toHaveLength(0);
+      expect(dom.window.document.querySelectorAll("[data-review-report]")).toHaveLength(1);
+      expect(jsdomErrors).toEqual([]);
+      dom.window.close();
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
 });
 
 function runViewer(...args: string[]) {

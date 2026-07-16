@@ -75,4 +75,71 @@ describe("mtt:texas-solver-scenario-audit CLI", () => {
       rmSync(temporary, { recursive: true, force: true });
     }
   });
+
+  it("treats the established FACING_BET tag as a facing-bet action-tree contract", () => {
+    const temporary = mkdtempSync(join(tmpdir(), "pkrtrainer-solver-facing-audit-"));
+    try {
+      const parameterPath = join(temporary, "spot.txt");
+      const manifestPath = join(temporary, "manifest.json");
+      const reportPath = join(temporary, "report.json");
+      writeFileSync(parameterPath, [
+        "set_pot 10",
+        "set_effective_stack 20",
+        "set_board As,7h,2d",
+        "set_range_ip AA",
+        "set_range_oop KK",
+        "set_bet_sizes ip,flop,bet,50",
+        "build_tree",
+        "start_solve",
+        "set_dump_rounds 2",
+        "dump_result pkrtrainer_TEST_A72r.json",
+        "set_use_isomorphism 1",
+        "",
+      ].join("\n"), "utf8");
+      writeFileSync(manifestPath, JSON.stringify({
+        packId: "scenario-audit-facing-test",
+        generatedAt: "2026-07-16",
+        parameterDir: temporary,
+        outputBase: temporary,
+        scenarios: [{
+          familyId: "TEST",
+          boards: ["A72r"],
+          purpose: "Facing-bet alias test.",
+          coverageTags: ["FACING_BET", "LOW_SPR"],
+        }],
+        files: [{
+          fileName: "spot.txt",
+          path: parameterPath,
+          familyId: "TEST",
+          boardId: "A72r",
+          written: true,
+        }],
+      }, null, 2), "utf8");
+
+      let failed = false;
+      try {
+        execFileSync(process.execPath, [
+          VITE_NODE,
+          AUDIT_SCRIPT,
+          "--manifest",
+          manifestPath,
+          "--output",
+          reportPath,
+        ], { cwd: ROOT, encoding: "utf8" });
+      } catch {
+        failed = true;
+      }
+
+      const report = JSON.parse(readFileSync(reportPath, "utf8")) as {
+        valid: boolean;
+        rows: Array<{ expected: { actionNode: string | null }; errors: string[] }>;
+      };
+      expect(failed).toBe(true);
+      expect(report.valid).toBe(false);
+      expect(report.rows[0].expected.actionNode).toBe("FLOP_FACING_BET");
+      expect(report.rows[0].errors.join("\n")).toContain("OOP flop raise sizes");
+    } finally {
+      rmSync(temporary, { recursive: true, force: true });
+    }
+  });
 });

@@ -295,7 +295,7 @@ function expectedFromTags(tags: readonly string[]): ScenarioAuditRow["expected"]
     : tags.includes("SINGLE_RAISED") || tags.includes("SINGLE_RAISED_POT_CBET")
       ? "SINGLE_RAISED"
       : null;
-  const actionNode: ActionNode | null = tags.includes("FLOP_FACING_BET")
+  const actionNode: ActionNode | null = tags.includes("FLOP_FACING_BET") || tags.includes("FACING_BET")
     ? "FLOP_FACING_BET"
     : tags.includes("THREE_BET_POT_CBET")
       ? "THREE_BET_POT_CBET"

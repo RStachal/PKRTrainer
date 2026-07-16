@@ -281,6 +281,22 @@ For non-root review, pass `--node-history=<ACTION>[>ACTION...]`; action selector
 label such as `BET 25.000000` or the normalized PKRTrainer label such as `BET_25`.
 The review report includes non-blocking `anomalies` for poker review, for example low hand-class coverage, low combo
 coverage, invalid combo labels, or action-set differences across boards in one family.
+TexasSolver `dump_result` is a strategy/frequency export and is not action EV. Use the separate
+`mtt:postflop-action-ev-intake` path only for an owned exporter payload containing finite BB EV for every offered
+action at each exact pilot decision. The command never converts frequencies to EV and never writes runtime strategy:
+
+```powershell
+npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
+npm run mtt:postflop-action-ev-intake -- --input=<completed-template.json> --summary
+npm run mtt:postflop-action-ev-intake -- --input=<completed-template.json> --write-candidate --confirm=WRITE_MTT_POSTFLOP_ACTION_EV_CANDIDATE --summary
+```
+
+Template generation preserves existing work by default. Replacing one intentionally requires
+`--overwrite-template --confirm=OVERWRITE_MTT_POSTFLOP_ACTION_EV_TEMPLATE`.
+The preservation check covers the full immutable pilot/row/action structure. A malformed or stale
+file is left untouched and returns a failing report. Candidate and audit paths are kept distinct,
+and neither may overwrite the reviewed intake file. The recorded candidate SHA-256 covers the exact
+bytes of the candidate file written to disk.
 `review-compare-integrate.ps1` is the higher-level handoff workflow. It reruns the TexasSolver preflight/staging/review
 checks, compares reviewed solver candidates against the current PKRTrainer MTT postflop production gate, lists legal
 FLOP import slots and writes a Markdown + JSON integration report under

@@ -26,6 +26,9 @@ Work rules:
 9. Alternative-action EV and EN/CZ behavior follows
    `Agents/mtt-action-ev-and-language-contract.md`; frequencies never substitute
    for action EV.
+10. Canonical flop cohorts and beta/growth coverage follow
+    `Agents/mtt-board-coverage-beta-plan.md`; cosmetic suit permutations never
+    become separate solves.
 
 ## Owner And Provenance Decisions
 
@@ -66,14 +69,24 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
 - Remaining P1 full-matrix queue: 4 six-max CHIP_EV preflop slots.
 - Scoped postflop suite: 7/7 READY, 19 rules, 972 range buckets.
 - Full postflop production: 0/48 profiles; this is not the core-v1 release target.
-- TexasSolver evidence queue: phases `next` and `followup` are both raw-complete
-  (`72/72` each). The worker exits successfully with no solver process because
-  every prepared checkpoint exists.
+- TexasSolver evidence queue: phases `next` and `followup` are raw-complete
+  (`72/72` each). The approved `owner-depth` phase is also raw-complete at
+  `72/72`, covering nine new textures in each of eight underrepresented review
+  families.
+- Canonical board baseline was 40 unique rank boards and 350 family/board pairs.
+  The audited 45-board `beta-min` source wave raised declared input coverage to
+  85 unique boards and 395 family/board pairs, closing every six-per-cohort gap.
+  It became the active guarded phase only after `owner-depth` completed and
+  reached 14/45 at the 17:15 snapshot.
+- Cumulative reduced-tree extraction now contains 86 solved family/board
+  checkpoints across 12 families. All 12 reports are valid with zero missing
+  boards; partial beta families are consumed without overwriting prior-phase
+  evidence.
 - Windows low-memory task: `PKRTrainer-TexasSolver-LowMemory` runs two solver
   threads at `BelowNormal`, starts only below the CPU/RAM guard, resumes after
   sign-in, and selects the first incomplete phase. It never interrupts an
   already solving board merely because the machine becomes busy.
-- Both solver phases are `MEMORY_SAFE_REVIEW_ONLY`: raw exports may be audited
+- Every low-memory solver phase is `MEMORY_SAFE_REVIEW_ONLY`: raw exports may be audited
   and packaged for review, but cannot be automatically staged, normalized,
   merged or promoted to runtime content.
 - Scoped core release gate: green; Full MTT NLHE remains intentionally red at 4/64.
@@ -126,14 +139,17 @@ Status: COMPLETED 2026-07-10
 
 ### P4 - Solver Evidence Expansion
 
-Status: RAW COVERAGE COMPLETE / HUMAN REVIEW
+Status: BETA-MIN ACTIVE / HUMAN REVIEW
 
-- Both prepared manifests are raw-complete (`72/72` each). Inspect only
-  complete raw exports and refresh the existing review-only workflow.
+- The first three manifests are raw-complete (`72/72` each). Consume changed
+  `beta-min` checkpoints incrementally and refresh only source-safe coverage.
+  For its memory-safe tree, suppress unrelated older staging/draft artefacts and
+  skip downstream pilot refresh; those checks belong only to comparable full-tree
+  evidence.
 - Promote no solver output beyond scoped pilot status without poker review and a provenance manifest.
-- Do not restart the completed queue merely because no `console_solver` process
-  is visible. Start another batch only after the existing evidence yield and
-  owner-review decisions are recorded.
+- The 45-board `beta-min` phase is prepared, audited 45/45 with 0 errors and
+  active under the existing checkpoint-aware task. Do not activate `beta-depth`
+  or `growth`; they remain disjoint future generator waves outside Windows tasks.
 
 ### P4.1 - Professional Action-EV Feedback
 
@@ -150,6 +166,10 @@ Status: IMPLEMENTATION COMPLETE / EXTERNAL EV DATA
 - Remaining blocker: an owned reviewed exporter payload with counterfactual EV
   for every offered action. Current TexasSolver dumps contain frequencies but
   no validated action-EV field consumed by this pipeline.
+- The exact blank intake workbench now covers all seven pilots, 972 decisions and
+  2,916 action-value slots. It is fingerprinted against current pilot structure,
+  rejects partial/stale input and writes only a non-production candidate after
+  an explicit confirmation token.
 
 ### P5 - Full MTT NLHE Library
 
@@ -193,10 +213,22 @@ For professional EV comparison, obtain one EV-enabled owned solver pilot export
 under `Agents/mtt-action-ev-and-language-contract.md`. Do not restart or reinterpret
 the frequency-only TexasSolver queue as an EV source.
 
+```powershell
+npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
+```
+
 ## Progress Log
 
 | Date | Priority | Result | Evidence |
 | --- | --- | --- | --- |
+| 2026-07-16 | P4 | Owner-depth evidence phase complete | Duplicate-safe 72-board batch passed 72/72 scenario audit and reached 72/72 raw checkpoints at 16:46, two threads and `MEMORY_SAFE_REVIEW_ONLY` |
+| 2026-07-16 | P4 | Canonical beta-minimum solving active | Source generation and hardened audit passed 45/45 with 0 errors; declared coverage is 85 boards / 395 family-board pairs, all 14 cohorts meet six boards, and the guarded worker reached 14/45 at 17:15 with no recorded solver failure |
+| 2026-07-16 | P4 | Incremental cumulative review-only intake | Every solved checkpoint, including a partial family, is unioned per family across memory-safe phases. Live cycle produced 86 board reports across 12 families; 12/12 valid, 0 missing, 0 extraction failures and no production promotion |
+| 2026-07-16 | Verification | Current broad MTT release regression | 150/150 Vitest files and 746/746 tests, typecheck, production build, precache integrity, bundle budget and scoped Core 4/4 preflop plus 7/7 FLOP pilots passed; exact action EV remains truthfully 0/493818 preflop and 0/972 FLOP |
+| 2026-07-16 | Control | Single beta input owner and PowerShell value safety | The ten-minute MTT cycle is read-only for solver inputs; the isolated prep script is their sole generator/auditor. Boolean and native-exit helpers suppress log output so a successful resource check or command cannot be coerced into a false deferral/failure; parser, live one-shot cycles, 86 focused tests and typecheck passed |
+| 2026-07-16 | P4.1 | Exact action-EV intake ready | Seven blank fingerprinted templates cover 972 decisions / 2,916 action slots; complete-candidate and fail-closed regression tests passed 3/3 |
+| 2026-07-16 | Control | Memory-safe watcher isolation | Reduced-tree coverage now hides unrelated historical staging/draft aliases, records changed raw coverage once and skips downstream review/pilot refresh; the autonomous Core report persists exact action-EV readiness counts |
+| 2026-07-16 | P4.2 | Action-EV intake write safety | Existing workbenches now require the complete immutable pilot structure to count as current; malformed files remain untouched and fail closed. Candidate and audit paths are distinct even without a `.json` suffix, and neither may overwrite the reviewed input |
 | 2026-07-16 | Release | Post-commit permission guard and Core gate green | Guard permits only exact source-safe permission manifests for legal slots; full regression 148 files / 729 tests, registry, Core, ranges, build, precache and budget passed |
 | 2026-07-16 | Owner review | Five-family review workflow hardened | Viewer defaults to the first pending wave, counts 20 unique families instead of 53 node reports, persists/imports batch-compatible drafts and fails closed on malformed decisions; no poker verdict inferred |
 | 2026-07-10 | Baseline | Full-ring P1 intake promoted | 4 modules, 4 manifests, registry integrity valid |
@@ -223,7 +255,7 @@ the frequency-only TexasSolver queue as an EV source.
 | 2026-07-14 | P2 | Production fixture regression | real Core preflop plus isolated synthetic FLOP/TURN/RIVER production slots passed lazy-chunk, postflop, HH, stats, offline, resilience, contrast and service-worker checks; registry restored and clean |
 | 2026-07-14 | Control | Long-running solver intake | active watcher replaced without stopping solver; it polls for up to seven days and runs idempotent intake only when coverage changes |
 | 2026-07-14 | P0 | Full regression baseline | `npm test` passed: 136 files / 670 tests while the active TexasSolver process and AtLogOn queue remained live |
-| 2026-07-14 | Control | Change-driven intake retry | watcher skips unchanged coverage and retries it after a technical ingest, final-audit or pilot-suite failure; raw checkpoints and review fail-closed behavior remain intact |
+| 2026-07-14 | Control | Change-driven intake retry | watcher skips unchanged coverage and retries after a technical ingest or final-audit failure; a downstream pilot blocker remains fail-closed but does not reprocess the same successful raw checkpoint |
 | 2026-07-14 | P1 | Source-safe handoff refreshed | 26 expected artifacts present; the P1 packet has exactly 4 missing six-max CHIP_EV normalized exports and no missing permission manifests |
 | 2026-07-14 | P1 | Solver status fidelity | SB vs BB OOP root reviews and `-ROOT` drafts now report as present; no false CHECK-review or redundant merge action remains in coverage status |
 | 2026-07-14 | Control | Raw-export freshness | change-driven watcher signature includes the latest raw write per family, so corrected/repeated exports re-enter source-safe intake without requiring a board-count change |

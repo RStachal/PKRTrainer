@@ -1,7 +1,9 @@
 param(
   [string[]]$Manifest = @(
     ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-next-flop-review-v1-manifest.json",
-    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-followup-flop-review-v1-manifest.json"
+    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-followup-flop-review-v1-manifest.json",
+    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-owner-depth-flop-review-v1-manifest.json",
+    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-beta-min-board-review-v1-manifest.json"
   ),
   [int]$IntervalMinutes = 10,
   [ValidateRange(20, 90)]
@@ -15,10 +17,15 @@ param(
 $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
 $ManifestPaths = @($Manifest | ForEach-Object {
-  if ([System.IO.Path]::IsPathRooted($_)) {
-    (Resolve-Path -LiteralPath $_).Path
+  $candidate = if ([System.IO.Path]::IsPathRooted($_)) {
+    $_
   } else {
-    (Resolve-Path -LiteralPath (Join-Path $RepoRoot ($_ -replace '^[.][\\/]', ''))).Path
+    Join-Path $RepoRoot ($_ -replace '^[.][\\/]', '')
+  }
+  if (Test-Path -LiteralPath $candidate) {
+    (Resolve-Path -LiteralPath $candidate).Path
+  } elseif ([System.IO.Path]::GetFileName($candidate) -ne "coverage-low-memory-beta-min-board-review-v1-manifest.json") {
+    throw "Coverage manifest does not exist: $candidate"
   }
 })
 if ($ManifestPaths.Count -eq 0) { throw "At least one coverage manifest is required." }
@@ -28,6 +35,11 @@ $LogPath = Join-Path $ArtifactsDir "cycle-$Stamp.log"
 $LatestSummaryPath = Join-Path $ArtifactsDir "latest-cycle-summary.json"
 $LastCoverageSignaturePath = Join-Path $ArtifactsDir "last-coverage-signature.txt"
 $P1ReadyValidationReportPath = Join-Path $ArtifactsDir "p1-ready-intake-$Stamp.json"
+$CoreGateReportPath = Join-Path $ArtifactsDir "core-gate-latest.json"
+$BoardCatalogReportPath = Join-Path $ArtifactsDir "board-catalog-latest.json"
+$ReviewOnlyEvidenceDir = Join-Path $RepoRoot "artifacts\texas-solver-review-only-owner-depth"
+$ReviewOnlyEvidenceReportsDir = Join-Path $ReviewOnlyEvidenceDir "reviews"
+$ReviewOnlyEvidenceViewerPath = Join-Path $ReviewOnlyEvidenceDir "viewer\index.html"
 $MutexName = "Local\PKRTrainerMttAutonomousCycleV1"
 $Deadline = (Get-Date).AddMinutes($MaxMinutes)
 $LastCoverageSignature = if (Test-Path -LiteralPath $LastCoverageSignaturePath) {
@@ -46,14 +58,16 @@ function Write-CycleLog([string]$Message) {
   Write-Output $Line
 }
 
-function Write-LatestCycleSummary($Statuses, [string]$CoverageSignature, $P1, $Review, $CoreGate) {
+function Write-LatestCycleSummary($Statuses, [string]$CoverageSignature, $BoardCatalog, $P1, $Review, $ReviewOnlyEvidence, $CoreGate) {
   $summary = [ordered]@{
     schemaVersion = 1
     generatedAt = (Get-Date -Format "o")
     sourceSafe = $true
     coverageSignature = $CoverageSignature
+    boardCatalog = $BoardCatalog
     p1 = $P1
     review = $Review
+    reviewOnlyEvidence = $ReviewOnlyEvidence
     coreGate = $CoreGate
     manifests = @($Statuses | Sort-Object packId | ForEach-Object {
       [ordered]@{
@@ -70,6 +84,40 @@ function Write-LatestCycleSummary($Statuses, [string]$CoverageSignature, $P1, $R
   [System.IO.File]::WriteAllText($LatestSummaryPath, "$summary`r`n", (New-Object System.Text.UTF8Encoding($false)))
 }
 
+function Get-BoardCatalogSummary([int]$ExitCode) {
+  $summary = [ordered]@{
+    exitCode = $ExitCode
+    valid = $false
+    coverageBasis = $null
+    uniqueBoards = $null
+    uniqueFamilyBoardPairs = $null
+    families = $null
+    declaredBetaShapeFamilies = $null
+    cohorts = $null
+    betaMinimumTarget = $null
+    betaMinimumGap = $null
+    betaDepthTarget = $null
+    betaDepthGap = $null
+  }
+  if ($ExitCode -eq 0 -and (Test-Path -LiteralPath $BoardCatalogReportPath -PathType Leaf)) {
+    try {
+      $report = Get-Content -LiteralPath $BoardCatalogReportPath -Raw | ConvertFrom-Json
+      $summary.valid = [bool]$report.valid
+      $summary.coverageBasis = [string]$report.coverageBasis
+      $summary.uniqueBoards = [int]$report.counts.uniqueBoards
+      $summary.uniqueFamilyBoardPairs = [int]$report.counts.uniqueFamilyBoardPairs
+      $summary.families = [int]$report.counts.families
+      $summary.declaredBetaShapeFamilies = [int]$report.counts.declaredBetaShapeFamilies
+      $summary.cohorts = [int]$report.counts.cohorts
+      $summary.betaMinimumTarget = [int]$report.counts.betaMinimumTarget
+      $summary.betaMinimumGap = [int]$report.counts.betaMinimumGap
+      $summary.betaDepthTarget = [int]$report.counts.betaDepthTarget
+      $summary.betaDepthGap = [int]$report.counts.betaDepthGap
+    } catch { Write-CycleLog "Could not read canonical board catalog summary. $($_.Exception.Message)" | Out-Null }
+  }
+  return $summary
+}
+
 function Get-P1Summary([int]$PacketExitCode, [int]$ValidationExitCode) {
   $summary = [ordered]@{ packetExitCode = $PacketExitCode; validationExitCode = $ValidationExitCode; readyRows = $null; waitingRows = $null; missingNormalized = $null; missingPermission = $null }
   if ($ValidationExitCode -eq 0 -and (Test-Path -LiteralPath $P1ReadyValidationReportPath)) {
@@ -79,7 +127,7 @@ function Get-P1Summary([int]$PacketExitCode, [int]$ValidationExitCode) {
       $summary.waitingRows = [int]$report.counts.waitingRows
       $summary.missingNormalized = [int]$report.counts.missingNormalized
       $summary.missingPermission = [int]$report.counts.missingPermission
-    } catch { Write-CycleLog "Could not read P1 validation summary. $($_.Exception.Message)" }
+    } catch { Write-CycleLog "Could not read P1 validation summary. $($_.Exception.Message)" | Out-Null }
   }
   return $summary
 }
@@ -95,7 +143,38 @@ function Get-ReviewSummary([int]$ExitCode) {
       $summary.needsReview = [int]$report.counts.needsReview
       $summary.blockers = [int]$report.counts.blockers
       $summary.warnings = [int]$report.counts.warnings
-    } catch { Write-CycleLog "Could not read TexasSolver review summary. $($_.Exception.Message)" }
+    } catch { Write-CycleLog "Could not read TexasSolver review summary. $($_.Exception.Message)" | Out-Null }
+  }
+  return $summary
+}
+
+function Get-CoreSummary([bool]$Evaluated, $ExitCode, [bool]$SignaturePersisted) {
+  $summary = [ordered]@{
+    evaluated = $Evaluated
+    exitCode = $ExitCode
+    signaturePersisted = $SignaturePersisted
+    actionEv = [ordered]@{
+      comparisonReady = $null
+      preflopCompleteDecisions = $null
+      preflopTotalDecisions = $null
+      preflopReadyPacks = $null
+      postflopCompleteDecisions = $null
+      postflopTotalDecisions = $null
+      postflopReadyPacks = $null
+    }
+  }
+  if (Test-Path -LiteralPath $CoreGateReportPath) {
+    try {
+      $report = Get-Content -LiteralPath $CoreGateReportPath -Raw | ConvertFrom-Json
+      if ($null -eq $report.actionEv) { throw "Core report has no actionEv section." }
+      $summary.actionEv.comparisonReady = [bool]$report.actionEv.comparisonReady
+      $summary.actionEv.preflopCompleteDecisions = [int]$report.actionEv.preflopCompleteDecisions
+      $summary.actionEv.preflopTotalDecisions = [int]$report.actionEv.preflopTotalDecisions
+      $summary.actionEv.preflopReadyPacks = [int]$report.actionEv.preflopReadyPacks
+      $summary.actionEv.postflopCompleteDecisions = [int]$report.actionEv.postflopCompleteDecisions
+      $summary.actionEv.postflopTotalDecisions = [int]$report.actionEv.postflopTotalDecisions
+      $summary.actionEv.postflopReadyPacks = [int]$report.actionEv.postflopReadyPacks
+    } catch { Write-CycleLog "Could not read Core action-EV summary. $($_.Exception.Message)" | Out-Null }
   }
   return $summary
 }
@@ -113,6 +192,120 @@ function Invoke-LoggedNpm([string]$Label, [string[]]$Arguments) {
   return $exitCode
 }
 
+function Update-ReviewOnlyEvidence($Statuses) {
+  New-Item -ItemType Directory -Force -Path $ReviewOnlyEvidenceReportsDir | Out-Null
+  $summary = [ordered]@{
+    eligibleFamilies = 0
+    evidenceBoards = 0
+    reports = 0
+    refreshed = 0
+    failures = 0
+    viewerWritten = $false
+    viewerPath = $ReviewOnlyEvidenceViewerPath
+  }
+
+  $evidenceRows = @(
+    foreach ($status in @($Statuses | Where-Object { $_.reviewOnlyTreeProfile -eq "MEMORY_SAFE_REVIEW_ONLY" })) {
+      foreach ($row in @($status.rows)) {
+        $solvedBoards = @($row.solvedBoards | ForEach-Object { [string]$_ } | Where-Object { $_.Length -gt 0 })
+        if ($solvedBoards.Count -gt 0) {
+          [pscustomobject]@{
+            familyId = [string]$row.familyId
+            rawDir = [string]$row.rawDir
+            solvedBoards = $solvedBoards
+          }
+        }
+      }
+    }
+  )
+
+  $familyIds = @($evidenceRows | ForEach-Object { $_.familyId } | Sort-Object -Unique)
+  foreach ($familyId in $familyIds) {
+    $summary.eligibleFamilies++
+    if ($familyId -notmatch '^[A-Za-z0-9_]+$') {
+      $summary.failures++
+      Write-CycleLog "Review-only evidence rejected unsafe family ID: $familyId" | Out-Null
+      continue
+    }
+    $familyRows = @($evidenceRows | Where-Object { $_.familyId -eq $familyId })
+    $rawDirs = @($familyRows | ForEach-Object { $_.rawDir } | Where-Object { $_.Length -gt 0 } | Sort-Object -Unique)
+    if ($rawDirs.Count -ne 1) {
+      $summary.failures++
+      Write-CycleLog "Review-only evidence requires one raw directory for $familyId; found $($rawDirs.Count)." | Out-Null
+      continue
+    }
+    $boards = @($familyRows | ForEach-Object { $_.solvedBoards } | Sort-Object -Unique)
+    if ($boards.Count -eq 0 -or @($boards | Where-Object { $_ -notmatch '^[A-Za-z0-9_-]+$' }).Count -gt 0) {
+      $summary.failures++
+      Write-CycleLog "Review-only evidence rejected invalid board allowlist for $familyId." | Out-Null
+      continue
+    }
+    $rawPaths = @($boards | ForEach-Object { Join-Path $rawDirs[0] ("pkrtrainer_{0}_{1}.json" -f $familyId, $_) })
+    if (@($rawPaths | Where-Object { -not (Test-Path -LiteralPath $_ -PathType Leaf) }).Count -gt 0) {
+      $summary.failures++
+      Write-CycleLog "Review-only evidence found solved-board metadata with missing files for $familyId; retrying next cycle." | Out-Null
+      continue
+    }
+    $summary.evidenceBoards += $boards.Count
+    $reportPath = Join-Path $ReviewOnlyEvidenceReportsDir "$familyId.review.json"
+    $latestRawWrite = ($rawPaths | ForEach-Object { (Get-Item -LiteralPath $_).LastWriteTimeUtc } | Sort-Object -Descending | Select-Object -First 1)
+    $reportIsFresh = $false
+    if ((Test-Path -LiteralPath $reportPath -PathType Leaf) -and ((Get-Item -LiteralPath $reportPath).LastWriteTimeUtc -ge $latestRawWrite)) {
+      try {
+        $existingReport = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
+        $existingBoards = @($existingReport.requestedBoards | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+        $reportIsFresh = [bool]$existingReport.valid -and
+          $existingReport.status -eq "REVIEW_ONLY_EVIDENCE" -and
+          $existingReport.reviewOnlyTreeProfile -eq "MEMORY_SAFE_REVIEW_ONLY" -and
+          $existingReport.familyId -eq $familyId -and
+          (($existingBoards -join '|') -eq ($boards -join '|'))
+      } catch {
+        Write-CycleLog "Review-only evidence could not validate the existing report for $familyId; rebuilding it. $($_.Exception.Message)" | Out-Null
+      }
+    }
+    if (-not $reportIsFresh) {
+      $extractExit = Invoke-LoggedNpm "review-only evidence $familyId" @(
+        "run", "mtt:texas-solver-review", "--",
+        "--family=$familyId",
+        "--boards=$($boards -join ',')",
+        "--review-only-tree-profile=MEMORY_SAFE_REVIEW_ONLY",
+        "--output=$reportPath",
+        "--summary"
+      )
+      if ($extractExit -ne 0) {
+        $summary.failures++
+        Write-CycleLog "Review-only evidence extraction failed for $familyId; no production workflow was touched." | Out-Null
+        continue
+      }
+      $summary.refreshed++
+    }
+  }
+
+  $reports = @(Get-ChildItem -LiteralPath $ReviewOnlyEvidenceReportsDir -Filter "*.review.json" -File -ErrorAction SilentlyContinue | Sort-Object Name)
+  $summary.reports = $reports.Count
+  if ($reports.Count -gt 0) {
+    $viewerNeedsRefresh = -not (Test-Path -LiteralPath $ReviewOnlyEvidenceViewerPath -PathType Leaf)
+    if (-not $viewerNeedsRefresh) {
+      $viewerWrite = (Get-Item -LiteralPath $ReviewOnlyEvidenceViewerPath).LastWriteTimeUtc
+      $viewerNeedsRefresh = @($reports | Where-Object { $_.LastWriteTimeUtc -gt $viewerWrite }).Count -gt 0
+    }
+    if ($viewerNeedsRefresh) {
+      $viewerArgs = @("run", "mtt:texas-solver-viewer", "--")
+      foreach ($report in $reports) { $viewerArgs += "--input=$($report.FullName)" }
+      $viewerArgs += "--no-waves"
+      $viewerArgs += "--title=TexasSolver cumulative review-only evidence"
+      $viewerArgs += "--output=$ReviewOnlyEvidenceViewerPath"
+      $viewerExit = Invoke-LoggedNpm "review-only evidence viewer" $viewerArgs
+      if ($viewerExit -eq 0) {
+        $summary.viewerWritten = $true
+      } else {
+        $summary.failures++
+      }
+    }
+  }
+  return $summary
+}
+
 function Should-DeferForResourcePressure {
   try {
     $os = Get-CimInstance Win32_OperatingSystem
@@ -127,10 +320,10 @@ function Should-DeferForResourcePressure {
     if ($null -eq $cpu) { throw "Could not read total CPU utilization." }
     $cpuPercent = [double]$cpu.PercentProcessorTime
     if ($freePercent -ge $MinimumFreeMemoryPercent -and $cpuPercent -le $MaximumCpuPercent) { return $false }
-    Write-CycleLog ("Resource pressure (CPU {0:N1}% / max {1}%, RAM {2:N2}GB free, {3:N1}% / min {4}%); deferring Node-based MTT work without touching TexasSolver." -f $cpuPercent, $MaximumCpuPercent, ($freeBytes / 1GB), $freePercent, $MinimumFreeMemoryPercent)
+    Write-CycleLog ("Resource pressure (CPU {0:N1}% / max {1}%, RAM {2:N2}GB free, {3:N1}% / min {4}%); deferring Node-based MTT work without touching TexasSolver." -f $cpuPercent, $MaximumCpuPercent, ($freeBytes / 1GB), $freePercent, $MinimumFreeMemoryPercent) | Out-Null
     return $true
   } catch {
-    Write-CycleLog "Could not inspect CPU/RAM start limits; deferring this MTT cycle. $($_.Exception.Message)"
+    Write-CycleLog "Could not inspect CPU/RAM start limits; deferring this MTT cycle. $($_.Exception.Message)" | Out-Null
     return $true
   }
 }
@@ -188,6 +381,19 @@ try {
         $signature = "$signature|latest=$LatestRawWrites"
         Write-CycleLog "coverage signature=$signature"
 
+        # Reduced memory-safe trees are useful for visual frequency review but
+        # are never eligible for normal review-notes or production promotion.
+        # Aggregate every solved checkpoint across memory-safe phases and bind
+        # extraction to the exact cumulative board allowlist for each family.
+        $reviewOnlyEvidenceSummary = Update-ReviewOnlyEvidence $statuses
+
+        # Board taxonomy is read-only here. The separate solver-batch prep task
+        # is the sole writer and auditor of the beta-minimum parameter wave.
+        $boardCatalogExit = Invoke-LoggedNpm "canonical board catalog" @(
+          "run", "mtt:texas-solver-board-catalog", "--",
+          "--output=$BoardCatalogReportPath"
+        )
+
         # Keep the external-data intake packet fresh. A WAITING_FOR_FILES exit is
         # expected and is never treated as permission to manufacture range data.
         $p1PacketExit = Invoke-LoggedNpm "P1 intake packet" @("run", "mtt:p1-intake-packets")
@@ -217,7 +423,11 @@ try {
         if ($signature -ne $LastCoverageSignature) {
           Write-CycleLog "Coverage changed; running the scoped Core gate. The ingest watcher owns review staging."
           $coreGateEvaluated = $true
-          $coreExit = Invoke-LoggedNpm "MTT Core gate" @("run", "mtt:core-release")
+          $coreExit = Invoke-LoggedNpm "MTT Core gate" @(
+            "run", "mtt:core-release", "--",
+            "--output=$CoreGateReportPath",
+            "--summary"
+          )
           if ($coreExit -eq 0) {
             [System.IO.File]::WriteAllText($LastCoverageSignaturePath, "$signature`r`n", (New-Object System.Text.UTF8Encoding($false)))
             $LastCoverageSignature = $signature
@@ -230,9 +440,10 @@ try {
           Write-CycleLog "No coverage change since the last successful Core gate; watcher remains the sole ingest owner."
         }
         $p1Summary = Get-P1Summary $p1PacketExit $p1ReadyExit
+        $boardCatalogSummary = Get-BoardCatalogSummary $boardCatalogExit
         $reviewSummary = Get-ReviewSummary $reviewExit
-        $coreSummary = [ordered]@{ evaluated = $coreGateEvaluated; exitCode = $coreExit; signaturePersisted = $signaturePersisted }
-        Write-LatestCycleSummary $statuses $signature $p1Summary $reviewSummary $coreSummary
+        $coreSummary = Get-CoreSummary $coreGateEvaluated $coreExit $signaturePersisted
+        Write-LatestCycleSummary $statuses $signature $boardCatalogSummary $p1Summary $reviewSummary $reviewOnlyEvidenceSummary $coreSummary
       }
 
       if ($Once) {

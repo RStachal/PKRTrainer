@@ -72,6 +72,91 @@ describe("next TexasSolver review batch", () => {
     expect(report.nextCommands.join("\n")).toContain("only after the next-review manifest is raw-complete");
   });
 
+  it("prepares a duplicate-safe 72-board owner-depth phase for underrepresented families", () => {
+    const result = runBatch("--preset=owner-depth");
+    expect(result.status).toBe(0);
+    const report = parseJsonStdout(result.stdout) as {
+      valid: boolean;
+      preset: string;
+      outputDir: string;
+      manifestPath: string;
+      counts: { scenarios: number; files: number; blockers: number };
+      files: Array<{ familyId: string; boardId: string }>;
+      blockers: string[];
+      nextCommands: string[];
+    };
+
+    expect(report).toMatchObject({
+      valid: true,
+      preset: "owner-depth",
+      counts: { scenarios: 8, files: 72, blockers: 0 },
+    });
+    expect(report.outputDir).toContain("pkrtrainer_mtt_owner_depth_review_v1");
+    expect(report.manifestPath).toContain("coverage-owner-depth-flop-review-v1-manifest.json");
+    expect(report.blockers).toEqual([]);
+    expect(new Set(report.files.map((file) => `${file.familyId}/${file.boardId}`)).size).toBe(72);
+    expect(new Set(report.files.map((file) => file.boardId))).toEqual(new Set([
+      "AKQtt", "K72r", "J85tt", "T97r", "664r", "432mono", "AQ6r", "KJTmono", "955tt",
+    ]));
+    expect(report.nextCommands).toContain("npm run mtt:texas-solver-low-memory-install");
+    expect(report.nextCommands.join("\n")).toContain("only after the follow-up manifest is raw-complete");
+  });
+
+  it("prepares a duplicate-safe 45-board beta-minimum wave across all 20 families", () => {
+    const result = runBatch("--preset=beta-min");
+    expect(result.status).toBe(0);
+    const report = parseJsonStdout(result.stdout) as {
+      valid: boolean;
+      preset: string;
+      outputDir: string;
+      manifestPath: string;
+      counts: { scenarios: number; files: number; blockers: number };
+      files: Array<{ familyId: string; boardId: string }>;
+      blockers: string[];
+      nextCommands: string[];
+    };
+
+    expect(report).toMatchObject({
+      valid: true,
+      preset: "beta-min",
+      counts: { scenarios: 20, files: 45, blockers: 0 },
+    });
+    expect(report.outputDir).toContain("pkrtrainer_mtt_beta_min_board_review_v1");
+    expect(report.manifestPath).toContain("coverage-beta-min-board-review-v1-manifest.json");
+    expect(report.blockers).toEqual([]);
+    expect(new Set(report.files.map((file) => file.familyId)).size).toBe(20);
+    expect(new Set(report.files.map((file) => file.boardId)).size).toBe(45);
+    expect(new Set(report.files.map((file) => `${file.familyId}/${file.boardId}`)).size).toBe(45);
+    expect(report.nextCommands.join("\n")).toContain("only after owner-depth is raw-complete");
+  });
+
+  it.each([
+    ["beta-depth", 83, "pkrtrainer_mtt_beta_depth_board_review_v1"],
+    ["growth", 98, "pkrtrainer_mtt_growth_board_review_v1"],
+  ] as const)("prepares the non-active %s expansion wave", (preset, fileCount, outputName) => {
+    const result = runBatch(`--preset=${preset}`);
+    expect(result.status).toBe(0);
+    const report = parseJsonStdout(result.stdout) as {
+      valid: boolean;
+      preset: string;
+      outputDir: string;
+      counts: { scenarios: number; files: number; blockers: number };
+      files: Array<{ familyId: string; boardId: string }>;
+      nextCommands: string[];
+    };
+
+    expect(report).toMatchObject({
+      valid: true,
+      preset,
+      counts: { scenarios: 20, files: fileCount, blockers: 0 },
+    });
+    expect(report.outputDir).toContain(outputName);
+    expect(new Set(report.files.map((file) => file.boardId)).size).toBe(fileCount);
+    expect(new Set(report.files.map((file) => `${file.familyId}/${file.boardId}`)).size)
+      .toBe(fileCount);
+    expect(report.nextCommands.join("\n")).toContain("outside every active worker");
+  });
+
   it("keeps the active batch frozen while removing an ignored console directive from next parameters", () => {
     const result = runBatch("--preset=next", "--write");
 

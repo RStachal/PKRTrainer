@@ -99,15 +99,38 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).toContain("$MinimumFreeMemoryPercent = 35");
     expect(cycle).toContain("$MaximumCpuPercent = 40");
     expect(cycle).toContain("deferring Node-based MTT work without touching TexasSolver");
+    expect(cycle).toMatch(/Resource pressure[^\r\n]*\| Out-Null/);
     expect(cycle).toContain("LatestRawWrites");
     expect(cycle).toContain("coverage-next-flop-review-v1-manifest.json");
     expect(cycle).toContain("coverage-followup-flop-review-v1-manifest.json");
+    expect(cycle).toContain("coverage-low-memory-owner-depth-flop-review-v1-manifest.json");
+    expect(cycle).toContain("coverage-low-memory-beta-min-board-review-v1-manifest.json");
     expect(cycle).toContain("foreach ($coverageManifestPath in $ManifestPaths)");
     expect(cycle).toContain("$statuses.Count -eq $ManifestPaths.Count");
     expect(cycle).toContain("latest-cycle-summary.json");
     expect(cycle).toContain("Write-LatestCycleSummary $statuses $signature");
+    expect(cycle).toContain("Update-ReviewOnlyEvidence $statuses");
+    expect(cycle).toContain("--review-only-tree-profile=MEMORY_SAFE_REVIEW_ONLY");
+    expect(cycle).toContain('"mtt:texas-solver-board-catalog"');
+    expect(cycle).toContain("board-catalog-latest.json");
+    expect(cycle).toContain("solver-batch prep task");
+    expect(cycle).not.toContain('"--preset=beta-min"');
+    expect(cycle).not.toContain("coverage-beta-min-board-review-v1-manifest.json");
+    expect(cycle).toContain("boardCatalog = $BoardCatalog");
+    expect(manager).toContain("Declared board catalog:");
+    expect(cycle).toContain("$row.solvedBoards");
+    expect(cycle).toContain("$familyIds = @($evidenceRows");
+    expect(cycle).toContain("$existingReport.requestedBoards");
+    expect(cycle).toContain("TexasSolver cumulative review-only evidence");
+    expect(cycle).toContain("--boards=$($boards -join ',')");
+    expect(cycle).toContain("review-only evidence viewer");
+    expect(cycle).toContain("reviewOnlyEvidence = $ReviewOnlyEvidence");
     expect(cycle).toContain("Get-P1Summary $p1PacketExit $p1ReadyExit");
     expect(cycle).toContain("Get-ReviewSummary $reviewExit");
+    expect(cycle).toContain("Get-CoreSummary $coreGateEvaluated $coreExit $signaturePersisted");
+    expect(cycle).toContain("core-gate-latest.json");
+    expect(cycle).toContain("postflopCompleteDecisions");
+    expect(cycle).toContain('"--output=$CoreGateReportPath"');
     expect(cycle).toContain("last-coverage-signature.txt");
     expect(cycle).toContain("Persisted successful coverage signature for the next scheduled cycle.");
     expect(cycle).toContain("Core gate failed; coverage signature was not persisted");
@@ -126,6 +149,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(manager).toContain("coverage snapshot:");
     expect(manager).toContain("P1 intake:");
     expect(manager).toContain("TexasSolver review:");
+    expect(manager).toContain("Review-only evidence:");
     expect(manager).toContain("Core gate:");
 
     const packageJson = JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8")) as {
@@ -139,7 +163,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(packageJson.scripts["mtt:autonomous-cycle-uninstall"]).toContain("-Action Uninstall");
   });
 
-  windowsIt("dry-runs the isolated next solver-batch preparation task", () => {
+  windowsIt("dry-runs the isolated beta-minimum solver-batch preparation task", () => {
     const output = runPowerShell(
       SOLVER_BATCH_PREP_MANAGER_PATH,
       "-Action",
@@ -151,11 +175,12 @@ describe("TexasSolver Windows autostart queue", () => {
 
     expect(output).toContain("PKRTrainer-MTT-Solver-Batch-Prep");
     expect(prep).toContain("PKRTrainerMttSolverBatchPrepV1");
-    expect(prep).toContain("--preset=next");
+    expect(prep).toContain("--preset=beta-min");
     expect(prep).toContain("mtt:texas-solver-scenario-audit");
     expect(prep).toContain("Should-DeferForLowMemory");
     expect(prep).toContain("deferring next-batch preparation without touching TexasSolver");
-    expect(prep).toContain("outside the active solver queue");
+    expect(prep).toMatch(/deferring next-batch preparation[^\r\n]*\| Out-Null/);
+    expect(prep).toContain("only after owner-depth is raw-complete");
     expect(prep).not.toContain("run-console-selected.ps1");
     expect(prep).not.toContain("mtt:texas-solver-autostart");
     expect(manager).toContain('TaskName = "PKRTrainer-MTT-Solver-Batch-Prep"');
@@ -208,8 +233,11 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(watcher).toContain("[int]$MinimumFreeMemoryPercent = 10");
     expect(watcher).toContain("watcher threshold {2}%");
     expect(watcher).toContain("deferring coverage polling without touching TexasSolver");
+    expect(watcher).toMatch(/watcher threshold[^\r\n]*\| Out-Null/);
     expect(watcher).toContain("No coverage change; skipping redundant ingest and pilot refresh.");
     expect(watcher).toContain("Coverage changed; running source-safe ingest and review checks.");
+    expect(watcher).toContain("recording MEMORY_SAFE_REVIEW_ONLY evidence without downstream staging or pilot refresh");
+    expect(watcher).toContain("review protocol and pilot refresh are intentionally skipped for this reduced tree");
     expect(watcher).toContain("Processing did not complete cleanly; coverage will be retried.");
     expect(watcher).toContain("mtt:texas-solver-scenario-audit -- --manifest");
     expect(watcher).toContain("scenario audit exit code");
@@ -284,6 +312,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(worker).toContain("PKRTrainerTexasSolverLowMemoryV1");
     expect(worker).toContain("Leaving it untouched");
     expect(worker).toContain("Started solver resource guard PID");
+    expect(worker).toMatch(/Started solver resource guard PID[^\r\n]*\| Out-Null/);
     expect(worker).toContain("$StopBelowFreeMemoryPercent = 25");
     expect(readFileSync(LOW_MEMORY_MANAGER_PATH, "utf8")).toContain(
       "-RepetitionInterval (New-TimeSpan -Minutes $RepetitionMinutes)",
@@ -300,10 +329,20 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(worker).toContain("-ContinueOnSolverFailure -FailureReportPath $FailureReportPath");
     expect(worker).toContain("$runnerExitCode = if ($null -eq $LASTEXITCODE) { 0 }");
     expect(worker).toContain("coverage-followup-flop-review-v1-manifest.json");
+    expect(worker).toContain("coverage-owner-depth-flop-review-v1-manifest.json");
+    expect(worker).toContain("coverage-beta-min-board-review-v1-manifest.json");
     expect(worker).toContain('Name = "next"');
     expect(worker).toContain('Name = "followup"');
+    expect(worker).toContain('Name = "owner-depth"');
+    expect(worker).toContain('Name = "beta-min"');
+    expect(worker).toContain("Families = $OwnerDepthFamilies");
+    expect(worker).toContain("Families = $AllReviewFamilies");
+    expect(worker).toContain("$ActiveFamilies = @($ActivePhase.Families)");
+    expect(worker).toContain("--manifest $manifestRelative --summary");
+    expect(worker).toContain("MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH");
     expect(worker).toContain("Test-PhaseRawComplete");
     expect(worker).toContain("Phase '$($phase.Name)' has all raw checkpoints; selecting the next phase.");
+    expect(worker).toMatch(/has all raw checkpoints; selecting the next phase[^\r\n]*\| Out-Null/);
     expect(worker).toContain("if (-not (Test-PhaseRawComplete $phase)) { return $phase }");
     expect(worker).toContain("return $Phases[-1]");
 
@@ -324,7 +363,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(priorities).toContain("Agents/mtt-lean-execution-queue.md");
     expect(leanQueue).toContain("Status: `HUMAN_GATE`");
     expect(leanQueue).toContain("Status: `EXTERNAL_DATA`");
-    expect(leanQueue).toContain("Do not create a third solver phase");
+    expect(leanQueue).toContain("owner-depth");
     expect(manifest).toContain("npm run mtt:texas-solver-autostart-install");
     expect(manifest).not.toContain("Preflop production intake remains the release-critical MTT blocker");
   });

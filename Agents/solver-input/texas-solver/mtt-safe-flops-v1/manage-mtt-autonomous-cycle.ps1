@@ -43,6 +43,15 @@ function Show-LatestCycleSummary {
         $manifest.packId, $manifest.solvedBoards, $manifest.expectedBoards, `
         $manifest.rawCompleteFamilies, $manifest.totalFamilies, $manifest.complete, $manifest.reviewOnlyTreeProfile)
     }
+    if ($null -ne $summary.boardCatalog) {
+      Write-Host ("Declared board catalog: valid={0}, boards={1}, family/board pairs={2}, family shape={3}/{4}, cohorts={5}, beta-min gap={6}/{7}, beta-depth gap={8}/{9}, exit={10}" -f `
+        $summary.boardCatalog.valid, $summary.boardCatalog.uniqueBoards, `
+        $summary.boardCatalog.uniqueFamilyBoardPairs, $summary.boardCatalog.declaredBetaShapeFamilies, `
+        $summary.boardCatalog.families, $summary.boardCatalog.cohorts, `
+        $summary.boardCatalog.betaMinimumGap, $summary.boardCatalog.betaMinimumTarget, `
+        $summary.boardCatalog.betaDepthGap, $summary.boardCatalog.betaDepthTarget, `
+        $summary.boardCatalog.exitCode)
+    }
     if ($null -ne $summary.p1) {
       Write-Host ("P1 intake: ready={0}, waiting={1}, missing normalized={2}, missing permission={3}, validation exit={4}" -f `
         $summary.p1.readyRows, $summary.p1.waitingRows, $summary.p1.missingNormalized, `
@@ -52,6 +61,12 @@ function Show-LatestCycleSummary {
       Write-Host ("TexasSolver review: ready={0}/{1}, needs review={2}, blockers={3}, warnings={4}, exit={5}" -f `
         $summary.review.protocolReady, $summary.review.families, $summary.review.needsReview, `
         $summary.review.blockers, $summary.review.warnings, $summary.review.exitCode)
+    }
+    if ($null -ne $summary.reviewOnlyEvidence) {
+      Write-Host ("Review-only evidence: eligible={0}, reports={1}, refreshed={2}, failures={3}, viewer={4}" -f `
+        $summary.reviewOnlyEvidence.eligibleFamilies, $summary.reviewOnlyEvidence.reports, `
+        $summary.reviewOnlyEvidence.refreshed, $summary.reviewOnlyEvidence.failures, `
+        $summary.reviewOnlyEvidence.viewerPath)
     }
     if ($null -ne $summary.coreGate) {
       Write-Host ("Core gate: evaluated={0}, exit={1}, coverage signature persisted={2}" -f `
@@ -123,7 +138,7 @@ if ($Action -eq "Uninstall") {
   exit 0
 }
 
-$description = "Run safe PKRTrainer MTT status, intake-packet and Core-gate cycles after Windows sign-in without VS Code."
+$description = "Run safe PKRTrainer MTT coverage, canonical-board, review-only evidence, intake-packet and Core-gate cycles after Windows sign-in without VS Code."
 if ($DryRun) {
   Write-Host "Dry run install: task=$TaskName"
   Write-Host "user: $CurrentUser"

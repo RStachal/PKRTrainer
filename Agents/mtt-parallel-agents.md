@@ -13,10 +13,13 @@ an earlier iteration is active, it exits and waits for the next scheduled window
 
 - Task: `PKRTrainer-TexasSolver-LowMemory`
 - Worker: `run-texas-solver-low-memory.ps1`
-- Scope: a two-phase 144-board queue across the isolated next-review and
-  follow-up manifests. Both phases are raw-complete at `72/72`. Existing raw
-  checkpoints are skipped on restart, so the installed task now exits SUCCESS
-  without a solver process until a new owner-approved phase is configured.
+- Scope: a four-phase checkpoint queue. `next` and `followup` are raw-complete
+  at `72/72`; `owner-depth` also completed 72/72 across eight underrepresented
+  review families. The final isolated `beta-min` phase adds 45 globally new rank
+  boards across all 14 canonical cohorts, passed audit 45/45 with 0 errors and
+  is now active. Existing checkpoints are skipped on restart.
+- Current measured progress: `beta-min` reached 14/45 at the 17:15 status check;
+  the scheduled task was running and reported no solver failures.
 - Runtime limits: 2 solver threads, `BelowNormal` priority.
 - Start guard: no new board starts unless total CPU is at most 40% and physical
   RAM has at least 35% free (at most 65% used).
@@ -31,7 +34,12 @@ an earlier iteration is active, it exits and waits for the next scheduled window
   boards; the failed board remains missing and cannot be mistaken for coverage.
 - An ingest watcher refreshes source-safe coverage and review artifacts for
   completed evidence. For `MEMORY_SAFE_REVIEW_ONLY` manifests it cannot stage,
-  normalize, merge, mark poker review complete or promote runtime strategy.
+  normalize, merge, mark poker review complete or promote runtime strategy. It
+  records changed reduced-tree coverage once, suppresses unrelated historical
+  staging/draft state and skips the downstream pilot refresh.
+- The mechanical cycle aggregates every solved checkpoint, including a partial
+  family, into one cumulative report per family. Current evidence is 86 boards
+  across 12 families, 12/12 valid reports and zero missing boards.
 
 Controls:
 
@@ -42,6 +50,12 @@ npm run mtt:texas-solver-low-memory-install
 npm run mtt:texas-solver-low-memory-uninstall
 ```
 
+Solver-input ownership is separate from solving. The script
+`run-mtt-solver-batch-prep-cycle.ps1` is the sole generator and scenario-auditor
+for an approved beta source wave. Its `PKRTrainer-MTT-Solver-Batch-Prep` task is
+currently disabled because the active 45-file source wave already passed audit;
+the ten-minute MTT agent never writes or regenerates solver input.
+
 ## Branch 2 - Mechanical MTT Task Agent
 
 - Task: `PKRTrainer-MTT-Task-Agent-10m`
@@ -49,15 +63,17 @@ npm run mtt:texas-solver-low-memory-uninstall
 - Concurrency: every trigger performs a mutex preflight. A busy agent is never
   queued or duplicated; the next 10-minute trigger retries after the running
   iteration has released the mutex.
-- Each run refreshes the active `next` and prepared `followup` coverage
-  manifests, the four-slot six-max CHIP_EV intake packet, ready-intake
-  validation and the source-safe 20-family review packet. Their combined
+- Each run refreshes active solver coverage, records canonical declared board
+  coverage, extracts read-only evidence for newly raw-complete reduced-tree
+  families, and refreshes the four-slot six-max CHIP_EV intake packet,
+  ready-intake validation and the source-safe 20-family review packet. Their combined
   coverage signature, rather than the completed legacy manifest, decides when
   the scoped Core gate is rechecked.
 - Start guard: each ten-minute run requires total CPU at most 40% and at least
   35% free physical RAM. A pressured run exits and waits for the next window.
 - The scoped MTT Core gate runs when the observed solver coverage signature
-  changes.
+  changes. Its persisted report feeds exact preflop and postflop action-EV
+  readiness counts into `artifacts/mtt-autonomous-cycle/latest-cycle-summary.json`.
 - The worker never creates poker strategy, signs human review, uploads FTP data
   or promotes an unreviewed pack.
 - This is a deterministic PowerShell/Node agent. It does not invoke Codex, use
@@ -81,14 +97,16 @@ npm run mtt:autonomous-cycle-uninstall
   `artifacts/texas-solver-review-protocol/packet/OWNER_REVIEW_WAVES.md`.
 - Professional action-EV feedback needs a reviewed owned export with EV in BB
   for every offered action. Current TexasSolver frequency dumps do not satisfy
-  that contract.
+  that contract. Seven exact blank workbench templates are available under
+  `artifacts/mtt-action-ev-intake/`; they cover 972 decisions and deliberately
+  contain no EV values.
 - The verified MTT Core FTP archive is ready, but upload and staging credentials
   remain owner-operated external state.
 
 ## Legacy Tasks
 
-`PKRTrainer-TexasSolver-Autostart` and
-`PKRTrainer-MTT-Solver-Batch-Prep` are disabled. The older protected
+`PKRTrainer-TexasSolver-Autostart` is disabled. The isolated solver-batch prep
+task is intentionally disabled after preparing the active source wave. The older protected
 `PKRTrainer-MTT-Autonomous-Cycle` entry could not be disabled from the current
 Windows token; its shared script defaults to one-shot mode and the same mutex,
 so it cannot run a second concurrent MTT cycle.

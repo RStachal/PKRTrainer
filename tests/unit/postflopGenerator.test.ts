@@ -115,6 +115,12 @@ describe("postflopGenerator", () => {
       "ace-high",
       "straight-possible",
     ]));
+
+    expect(classifyBoard([
+      { rank: "A", suit: "s" },
+      { rank: "5", suit: "h" },
+      { rank: "3", suit: "d" },
+    ])).toEqual(expect.arrayContaining(["ace-high", "connected", "straight-possible"]));
   });
 
   it("klasifikuje turn kartu pro production turn resolver", () => {

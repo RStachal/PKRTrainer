@@ -15,6 +15,8 @@ defines the permanent solver-intake and sequential-completion lanes.
 recurring background branches.
 `Agents/mtt-action-ev-and-language-contract.md` is the authority for action EV,
 equivalent optimal actions and EN/CZ behavior.
+`Agents/mtt-board-coverage-beta-plan.md` is the authority for canonical flop
+cohorts, beta coverage targets and future solver expansion.
 
 Execution protocol:
 
@@ -24,8 +26,9 @@ Execution protocol:
 3. Run the listed evidence commands and record the result in this file.
 4. Never create poker strategy values, review decisions or provenance facts.
 5. Stop at `HUMAN_GATE` or `EXTERNAL_DATA` until the named input exists.
-6. Do not create a third solver phase before the two prepared phases complete
-   their review lifecycle or the owner changes scope.
+6. `next`, `followup` and `owner-depth` are raw-complete. Only the audited
+   `beta-min` phase may run now; keep `beta-depth`, `growth` and every unapproved
+   wave outside the worker until the current evidence and review gate is closed.
 7. Keep raw solver output local and ignored. Ship only reviewed source-safe artifacts.
 8. `permission.json` records provenance/review rights; it is never a customer entitlement.
 9. After recording a completed dependency, change only the next eligible
@@ -36,7 +39,7 @@ Execution protocol:
 The reasonable near-term MTT finish is:
 
 - `MTT_CORE_V1` deployed and staging-smoked behind Basic Auth;
-- the current two-phase TexasSolver queue completed and reduced to reviewed,
+- the ordered TexasSolver queue completed and reduced to reviewed,
   explicitly scoped evidence decisions;
 - no regression in the 4/4 production preflop profiles or seven FLOP pilots;
 - unsupported six-max, DOLAR_EV and full postflop content remains visibly locked.
@@ -64,11 +67,12 @@ attempt fail, or when a task explicitly changes strategy meaning or release scop
 - Full library: intentionally red, 4/64 production rows and 60 waiting rows.
 - TexasSolver legacy large review batch: 72/72 raw boards complete across all
   12 families. No result has been promoted into runtime content without review.
-- Resource-balanced queue: phases `next` and `followup` are both raw-complete at
-  `72/72`. With no pending checkpoint, the scheduled worker exits successfully
-  and no `console_solver` process is expected. Both phases used two solver
-  threads, `BelowNormal`,
-  a 35% free-physical-memory start guard and `MEMORY_SAFE_REVIEW_ONLY` trees.
+- Resource-balanced queue: phases `next` and `followup` are raw-complete at
+  `72/72`. The duplicate-safe `owner-depth` phase also reached `72/72`. The
+  audited 45-board `beta-min` phase became active at 16:51 and reached 14/45 at
+  the 17:15 status check under the same two-thread,
+  `BelowNormal`, 35% free-memory guarded worker. Every phase remains
+  `MEMORY_SAFE_REVIEW_ONLY`.
 - Review protocol: 20 families need human review; 0 protocol-ready.
 - Action-EV comparison: implementation complete, data not ready. Core preflop is
   `0/493818` complete decisions across `0/4` packs; scoped FLOP pilots are
@@ -110,7 +114,7 @@ After the next normal Windows restart and sign-in, do not open VS Code first.
 Wait two minutes, then run the `OPS-00` evidence command from any PowerShell.
 
 Acceptance: the scheduled task has a new LastRunTime, one solver process is
-active unless both phases are complete, and the newest worker log records either
+active unless all phases are complete, and the newest worker log records either
 a resume or an all-phases-complete result.
 
 ### OPS-02 - Session health check
@@ -119,9 +123,15 @@ Status: `REPEATING_CHECK`
 Depends on: `OPS-00`
 Lane: `REPEATABLE`
 
-Last measured: 2026-07-16 local time, phases `next` and `followup` are complete
-at 72/72. The task is `Ready`, its last result is `SUCCESS (0)`, and no solver
-process is expected while every prepared checkpoint exists.
+Last measured: 2026-07-16 17:15 local time, phases `next`, `followup` and
+`owner-depth` are complete at 72/72. The recurring task selected the audited
+`beta-min` phase without revisiting any completed phase and reached 14/45 with
+no recorded solver failure.
+
+The same live cycle aggregated every solved memory-safe checkpoint, including
+partial-family boards, into 12 cumulative reports covering 86 family/board
+pairs. All reports are valid, none has a missing board, and no strategy was
+staged or promoted.
 
 Run once per AI work session, not in a tight loop:
 
@@ -146,7 +156,7 @@ If the task is `Ready`, a phase is incomplete and no solver process exists, run
 `Start-ScheduledTask -TaskName PKRTrainer-TexasSolver-LowMemory` once. If it
 stops again, inspect the newest `artifacts/texas-solver-low-memory/worker-*.log`
 and escalate; do not repeatedly restart it.
-If both phases are complete, do not restart it; a successful no-op at sign-in is
+If all phases are complete, do not restart it; a successful no-op at sign-in is
 the intended behavior.
 
 To halt the current local queue deliberately without deleting raw checkpoints,
@@ -158,11 +168,12 @@ starts, run `npm run mtt:texas-solver-low-memory-uninstall` afterwards.
 Status: `ACTIVE_GUARDRAIL`
 Lane: `REPEATABLE`
 
-Do not add a third batch while either prepared phase is partial. The worker may
-advance from `next` to the already prepared `followup` phase, but it may not
-stage, normalize, merge or promote either phase automatically.
-Acceptance: exactly the two approved manifests are selectable and both retain
-their `MEMORY_SAFE_REVIEW_ONLY` boundary.
+The isolated 45-board `beta-min` phase is the only active solver wave. Do not
+activate `beta-depth`, `growth` or another batch while it is running or before
+its review boundary is explicitly decided.
+No memory-safe phase may stage, normalize, merge or promote strategy.
+Acceptance: one solver phase runs at a time and every derived manifest retains
+its `MEMORY_SAFE_REVIEW_ONLY` boundary.
 
 ### OPS-04 - Keep the recurring mechanical cycle active
 
@@ -171,8 +182,10 @@ Depends on: `OPS-00`
 Lane: `REPEATABLE`
 
 Install under the actual signed-in Windows owner, then verify it records a new
-cycle log after sign-in. Its work is intentionally limited to coverage status,
-the source-safe P1 intake packet and a scoped Core gate when coverage changes.
+cycle log after sign-in. Its work is limited to coverage status, canonical board
+coverage, read-only reduced-tree evidence, the source-safe P1 intake packet and
+a scoped Core gate when raw coverage changes. It never writes solver inputs;
+`run-mtt-solver-batch-prep-cycle.ps1` is their sole generator and auditor.
 
 ```powershell
 npm run mtt:autonomous-cycle-install
@@ -183,14 +196,15 @@ To interrupt only a current cycle, use `npm run mtt:autonomous-cycle-stop`; to
 remove future sign-in starts too, use `npm run mtt:autonomous-cycle-uninstall`.
 Neither command is allowed to stop the solver or its watcher.
 
-### OPS-13 - Run the owner-directed two-phase low-memory review queue
+### OPS-13 - Run the owner-directed low-memory review queue
 
-Status: `RAW_COMPLETE 2026-07-16`
+Status: `ACTIVE 2026-07-16 - BETA-MIN`
 Lane: `REPEATABLE`
 
 The former high-memory autostart queue is disabled. The low-memory task completed
-both prepared phases under the same resource guard. It remains installed for
-restart-safe status/no-op behavior and does not promote runtime strategy.
+the first three prepared phases under the same resource guard. It remains
+installed for restart-safe execution of `beta-min` and does not promote runtime
+strategy.
 
 ```powershell
 npm run mtt:texas-solver-low-memory-status
@@ -199,6 +213,85 @@ npm run mtt:texas-solver-low-memory-status
 To halt the current worker without deleting raw checkpoints, run
 `npm run mtt:texas-solver-low-memory-stop`. To remove its future sign-in start,
 run `npm run mtt:texas-solver-low-memory-uninstall`.
+
+### OPS-32 - Deepen underrepresented owner-review families
+
+Status: `DONE 2026-07-16 - 72/72`
+Depends on: `OPS-31`
+Lane: `REPEATABLE`
+
+The source batch contains eight underrepresented families and nine new textures
+per family, 72 unique family/board pairs total. The generator fails closed if a
+pair already exists in any source coverage manifest. Scenario audit is 72/72
+valid with 0 errors. The low-memory worker starts this phase only after confirming
+both earlier phases are raw-complete and keeps incremental ingest coverage-only.
+
+```powershell
+npm run mtt:texas-solver-low-memory-install
+npm run mtt:texas-solver-low-memory-status
+```
+
+Acceptance: met. One guarded worker completed `owner-depth` at 72/72 without
+automatic staging or promotion; the next phase started only after this checkpoint.
+
+### OPS-36 - Queue canonical beta-minimum board coverage
+
+Status: `ACTIVE 2026-07-16 - 14/45 AT 17:15`
+Depends on: `OPS-32`
+Lane: `REPEATABLE`
+
+The generator produced 45 globally new rank boards across all 14 canonical
+cohorts and distributed them over the 20 existing families, 2-3 boards per
+family. It rejected duplicate family/board pairs and the source batch passed its
+45/45 scenario audit with 0 errors. This is declared input coverage only;
+solving and owner review remain separate evidence gates. The low-memory worker
+selected this phase only after `owner-depth` reached 72/72.
+The same generator freezes disjoint future waves of 83 `beta-depth` and 98
+`growth` boards, but neither is part of the active Windows worker.
+
+```powershell
+npm run mtt:texas-solver-large-flop-batch -- --preset=beta-min --summary
+npm run mtt:texas-solver-board-catalog
+```
+
+### OPS-37 - Keep beta generation single-owner and fail-closed
+
+Status: `DONE 2026-07-16`
+Depends on: `OPS-36`
+Lane: `JUDGMENT`
+
+The ten-minute MTT cycle no longer regenerates or audits the same beta source
+files as the isolated prep script. PowerShell helpers that return booleans,
+processes or native exit codes suppress their log output before returning, so a
+message cannot become an extra success-stream value and change control flow.
+
+Acceptance: PowerShell parser checks pass, the isolated one-shot prep exits 0
+with a 45/45 audit, the recurring MTT cycle exits 0, and focused autostart tests
+lock both ownership and output-suppression contracts.
+
+Evidence: all six edited PowerShell files parsed without errors; the one-shot
+prep and recurring cycle exited 0; the 13-file focused MTT suite passed 86/86
+tests and `npm run typecheck` passed while TexasSolver remained active.
+
+### OPS-38 - Consume solved checkpoints cumulatively
+
+Status: `DONE 2026-07-16`
+Depends on: `OPS-37`
+Lane: `JUDGMENT`
+
+The recurring cycle unions solved board IDs per family across every
+`MEMORY_SAFE_REVIEW_ONLY` phase. It includes already solved boards from a
+partial family, validates the exact requested-board set before treating an
+existing report as fresh, and rebuilds only a stale or incomplete report.
+
+Acceptance: live beta coverage is reflected without waiting for the full
+45-board wave; prior owner-depth boards remain present when the same family
+receives beta boards; all reports stay read-only and production-ineligible.
+
+Evidence: at beta 14/45 the cycle produced 12 reports over 86 cumulative
+family/board checkpoints. All 12 reports are valid, missing-board count and
+extraction failures are zero, and focused autostart/extraction/viewer tests
+passed 18/18.
 
 ## Phase DEP - Core Deployment Closeout
 
@@ -607,6 +700,29 @@ action offered at one exact preflop or postflop node, plus explicit equivalence
 and acceptable-loss thresholds. Current TexasSolver `dump_result` data contains
 strategy frequencies but no validated action-EV field; do not derive EV from it.
 
+Exact blank workbench:
+
+```powershell
+npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
+```
+
+It covers seven pilots, 972 decisions and 2,916 action values. The templates
+contain no EV; AEV-03 remains an external-data gate. Re-running this command
+preserves any existing file. Intentional replacement additionally requires
+`--overwrite-template` and confirmation token
+`OVERWRITE_MTT_POSTFLOP_ACTION_EV_TEMPLATE`.
+
+### AEV-03A - Prepare fail-closed FLOP action-EV intake
+
+Status: `DONE 2026-07-16`
+Depends on: `AEV-02`
+Lane: `JUDGMENT`
+
+The intake binds every row to the current pilot fingerprint, exact rule, bucket
+and ordered legal actions. It rejects partial, stale, duplicate, non-finite or
+unreviewed input. A valid completed export writes only an unpromoted normalized
+candidate and source-safe audit sidecar after the explicit confirmation token.
+
 ### AEV-04 - Validate and promote one EV pilot
 
 Status: `BLOCKED_BY AEV-03`
@@ -785,3 +901,14 @@ Use this exact handoff prompt after changing models:
 | 2026-07-16 | AEV-UX-01 | DONE | Fixed postflop stats bridge v5 to retain chosen/best EV and equivalent-best actions atomically while accepting legacy v4 records. Focused persistence/transfer tests passed 20/20; positive EV production-fixture E2E and four-viewport EN/CZ preview E2E passed; full regression passed 147 files / 723 tests. Synthetic fixture values are test-only and production EV coverage remains zero. |
 | 2026-07-16 | OWNER-REVIEW-05 | DONE | Made the 20-family owner gate wave-driven in the source-safe viewer: first pending wave is selected automatically, unique-family metrics replace report counts, drafts persist locally, prior JSON can be imported, and exported JSON plus copied PowerShell commands match the dry-run-first batch writer. Malformed batch entries and duplicate wave assignments fail closed. Focused viewer/writer tests execute the embedded browser script and passed 6/6; typecheck passed. Human poker verdicts remain 0/20 and were not inferred. |
 | 2026-07-16 | RELEASE-CORE-03 | DONE | Fixed the post-commit intake guard to allow only exact `permission.json` provenance manifests for registered production packs or named legal intake slots while continuing to reject tracked strategy files. The guard is green with 10 source-safe tracked files and no `normalized.json`. Full regression passed 148 files / 729 tests; registry check, Core 4/4 plus 7/7 gate, range verification, production build, precache integrity and bundle budget all passed. Six-max strategy and action-EV coverage remain truthfully zero. |
+| 2026-07-16 | OPS-32 | DONE | The duplicate-safe 72-board `owner-depth` phase passed its 72/72 scenario audit and reached 72/72 raw checkpoints at 16:46. Its watcher remained coverage-only under `MEMORY_SAFE_REVIEW_ONLY`; nothing was staged or promoted automatically. |
+| 2026-07-16 | AEV-03A | DONE | Added exact fingerprinted action-EV intake for all seven FLOP pilots: 972 decisions and 2,916 action slots. It rejects stale, partial, duplicate, non-finite or unreviewed input and writes only an unpromoted candidate plus audit sidecar after explicit confirmation. Existing workbench files are preserved unless a separate overwrite token is supplied. Initial focused tests passed 3/3; the new preserve-on-rerun case is pending regression execution. |
+| 2026-07-16 | OPS-33 | IMPLEMENTED | Isolated reduced-tree coverage from historical staging/draft aliases and skipped downstream pilot refresh for `MEMORY_SAFE_REVIEW_ONLY`; successful raw checkpoints no longer repeat because an expected pilot gate is red. The recurring Core report now stores exact preflop/postflop action-EV readiness in `latest-cycle-summary.json`. PowerShell syntax and JSON/manifest structure passed static validation; focused regression rerun remains pending. |
+| 2026-07-16 | OPS-34 | IMPLEMENTED | Hardened action-EV workbench writes: preservation now validates the complete immutable pilot/row/action structure, malformed work remains untouched but stale, extensionless candidates receive a distinct `.report.json` sidecar, candidate/report paths cannot overwrite the reviewed input, and the audit SHA-256 now covers the exact candidate bytes on disk. Expanded focused regression execution remains pending. |
+| 2026-07-16 | OPS-35 | IMPLEMENTED | Replaced eight private TexasSolver board maps with one pinned 40-board catalog and a deterministic 14-cohort planner. The new report separates 6-per-cohort beta minimum, 12-per-cohort beta depth and 20-per-cohort growth (all 13 possible low-dry and trip rank boards), while preserving every legacy physical board and labeling manifest counts as declared input rather than solved evidence. Focused regression execution remains pending. |
+| 2026-07-16 | AEV-UX-02 | IMPLEMENTED | Action EV now renders as an absolute BB value plus a normalized comparison meter inside every legal action button after grading. Equivalent-best and chosen states remain independent; incomplete EV sets still reveal nothing. Shared styles keep preflop and postflop behavior aligned. Focused regression execution remains pending. |
+| 2026-07-16 | TABLE-UX-01 | IMPLEMENTED | Corrected rail/felt stacking in both table renderers and upgraded seat hierarchy with active/folded status, stack chips, clearer hero/villain treatment and stable compact geometry. Scoring and position logic are unchanged; browser visual regression remains pending. |
+| 2026-07-16 | OPS-36 | ACTIVE | Generated 45/45 disjoint `beta-min` source parameters, passed the hardened scenario audit with 45 valid files and 0 errors, and raised declared coverage to 85 unique boards / 395 family-board pairs with all 14 cohorts at the six-board minimum. The low-memory derivative contains 45 files; after `owner-depth` completed 72/72, the guarded worker selected it and reached 14/45 at 17:15 with no recorded failure. Solved and owner-reviewed coverage remain separate gates. |
+| 2026-07-16 | OPS-37 | DONE | Removed beta source generation/audit from the ten-minute read-only MTT cycle so the isolated prep script is the sole writer. Suppressed log output inside PowerShell value-returning helpers to prevent false low-memory deferrals and false command failures. Six PowerShell parser checks, one-shot prep, recurring cycle, 86 focused tests and typecheck passed. |
+| 2026-07-16 | OPS-38 | DONE | Replaced per-phase report overwrites with cumulative per-family board unions and included solved checkpoints from partial families. Live cycle at beta 14/45 produced 12 valid reports over 86 family/board pairs, 0 missing boards and 0 failures; focused extraction/viewer/autostart tests passed 18/18. |
+| 2026-07-16 | RELEASE-CORE-04 | DONE | Current broad regression passed 150/150 files and 746/746 tests, typecheck, production build, precache integrity, bundle budget and scoped Core gate. Core remains 4/4 preflop plus 7/7 FLOP pilots; exact action-EV data remains honestly incomplete. |

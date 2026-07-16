@@ -1,6 +1,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
+import { texasSolverBoardForId } from "../src/core/texasSolverBoardCatalog.ts";
+
 const DEFAULT_OUTPUT_DIR =
   "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_3bp_repair_v1";
 const DEFAULT_MANIFEST =
@@ -8,17 +10,6 @@ const DEFAULT_MANIFEST =
 
 const FAMILY_ID = "MTT9_35BB_CO_BTN_3BP_REPAIR";
 const OUTPUT_BASE = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
-
-const BOARD_TO_TEXAS_SOLVER: Record<string, string> = {
-  A72r: "As,7d,2c",
-  K83r: "Ks,8d,3c",
-  QJ2tt: "Qs,Jh,2h",
-  JT9tt: "Js,Th,9h",
-  "765tt": "7s,6s,5d",
-  AT4mono: "As,Ts,4s",
-  Q76mono: "Qs,7s,6s",
-  "986tt": "9s,8s,6d",
-};
 
 const BOARDS = ["A72r", "K83r", "QJ2tt", "JT9tt", "AT4mono", "Q76mono", "765tt", "986tt"] as const;
 
@@ -145,8 +136,7 @@ function writeBatch(
 }
 
 function renderParameter(boardId: string): string {
-  const board = BOARD_TO_TEXAS_SOLVER[boardId];
-  if (board === undefined) throw new Error(`Unsupported board id: ${boardId}`);
+  const board = texasSolverBoardForId(boardId);
   return [
     "set_pot 157",
     "set_effective_stack 286",

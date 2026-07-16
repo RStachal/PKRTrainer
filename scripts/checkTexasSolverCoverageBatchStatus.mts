@@ -232,25 +232,28 @@ function buildRow(
   const familyDir = join(outputBase, scenario.familyId);
   const rootDecision = isRootDecisionFamily(scenario.familyId);
   const reviewKind = rootDecision ? "ROOT" : "CHECK";
-  const review = existsSync(join(
+  const exposeDownstreamArtifacts = reviewOnlyTreeProfile === null;
+  const review = exposeDownstreamArtifacts && existsSync(join(
     familyDir,
     rootDecision ? "strategy-export.review.json" : "strategy-export.CHECK.review.json",
   ));
   const staged = {
-    strategyExport: existsSync(join(familyDir, "strategy-export.json")),
+    strategyExport: exposeDownstreamArtifacts && existsSync(join(familyDir, "strategy-export.json")),
     review,
     reviewKind,
     checkReview: review,
-    reviewNotes: existsSync(join(familyDir, "review-notes.md")),
+    reviewNotes: exposeDownstreamArtifacts && existsSync(join(familyDir, "review-notes.md")),
   };
-  const normalizedDraft = existsSync(join(
+  const normalizedDraft = exposeDownstreamArtifacts && existsSync(join(
     "artifacts",
     "texas-solver-review-integration",
     "normalized-drafts",
     `${scenario.familyId}-${rootDecision ? "ROOT" : "CHECK"}`,
     "normalized.candidate.json",
   ));
-  const facingBetBest = bestFacingBetCandidate(scenario.familyId);
+  const facingBetBest = reviewOnlyTreeProfile === null
+    ? bestFacingBetCandidate(scenario.familyId)
+    : { present: false, aliasDir: null, nodeHistory: null, betAction: null, gateValid: null };
 
   return {
     familyId: scenario.familyId,

@@ -9,6 +9,9 @@ import {
   type PostflopPotType,
 } from "../src/core/postflopGenerator.ts";
 import type { PostflopActionNode } from "../src/core/postflopTrainingSpot.ts";
+import {
+  representativeFlopForBoardId as representativeBoard,
+} from "../src/core/texasSolverBoardCatalog.ts";
 import type { Card, HandLabel, Rank, Suit } from "../src/core/types.ts";
 
 const DEFAULT_REVIEW =
@@ -738,19 +741,6 @@ function featureForAction(action: PostflopAction): string {
 
 function isPair(handClass: string): boolean {
   return handClass.length === 2 && handClass[0] === handClass[1];
-}
-
-function representativeBoard(boardId: string): [Card, Card, Card] {
-  const match = /^([AKQJT98765432])([AKQJT98765432])([AKQJT98765432])(mono|tt|r)?$/i.exec(boardId);
-  if (match === null) throw new Error(`Unsupported board id: ${boardId}`);
-  const ranks = [match[1], match[2], match[3]].map((rank) => rank.toUpperCase() as Rank);
-  const texture = match[4] ?? "r";
-  const suits: Suit[] = texture === "mono"
-    ? ["s", "s", "s"]
-    : texture === "tt"
-      ? ["s", "s", "h"]
-      : ["s", "h", "d"];
-  return ranks.map((rank, index) => ({ rank, suit: suits[index] })) as [Card, Card, Card];
 }
 
 function representativeHeroCards(handClass: HandLabel, board: readonly Card[]): [Card, Card] {

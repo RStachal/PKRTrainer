@@ -58,7 +58,7 @@ $taskAction = New-ScheduledTaskAction -Execute $PowerShell -Argument $arguments 
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $CurrentUser
 $principal = New-ScheduledTaskPrincipal -UserId $CurrentUser -LogonType Interactive -RunLevel Limited
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5) -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew
-$task = New-ScheduledTask -Action $taskAction -Trigger $trigger -Principal $principal -Settings $settings -Description "Prepares and audits the next isolated TexasSolver review batch; never starts solver or modifies the active queue."
+$task = New-ScheduledTask -Action $taskAction -Trigger $trigger -Principal $principal -Settings $settings -Description "Prepares and audits the isolated 45-board beta-minimum TexasSolver wave; the worker starts it only after owner-depth."
 Register-ScheduledTask -TaskName $TaskName -InputObject $task -Force | Out-Null
 Write-Host "Installed MTT solver-batch prep task: $TaskName"
 if ($StartNow) { Start-ScheduledTask -TaskName $TaskName; Start-Sleep -Seconds 2; Write-Host "Started MTT solver-batch prep task now." }

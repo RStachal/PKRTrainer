@@ -24,6 +24,7 @@ interface ReviewReport {
   files?: unknown;
   anomalies?: unknown;
   blockers?: unknown;
+  reviewOnlyTreeProfile?: unknown;
 }
 
 interface ReviewCounts {
@@ -61,6 +62,7 @@ interface NormalizedReport {
   files: ReviewFile[];
   anomalies: string[];
   blockers: string[];
+  reviewOnlyTreeProfile: string | null;
 }
 
 interface OwnerDecisionFamily {
@@ -231,6 +233,9 @@ function readReviewReport(sourcePath: string): NormalizedReport {
     files: normalizeFiles(parsed.files),
     anomalies: asStringArray(parsed.anomalies),
     blockers: asStringArray(parsed.blockers),
+    reviewOnlyTreeProfile: typeof parsed.reviewOnlyTreeProfile === "string"
+      ? parsed.reviewOnlyTreeProfile
+      : null,
   };
 }
 
@@ -331,13 +336,14 @@ function buildHtml(title: string, reports: readonly NormalizedReport[], reviewWa
       <div><dt>Families</dt><dd>${summary.total}</dd></div>
       <div><dt>Ready</dt><dd>${summary.protocolReady}</dd></div>
       <div><dt>Pending</dt><dd>${summary.pending}</dd></div>
+      <div><dt>Evidence</dt><dd>${summary.evidenceOnly}</dd></div>
       <div><dt>Blockers</dt><dd>${summary.blockers}</dd></div>
     </dl>
   </header>
   <main>
     <section class="toolbar" aria-label="Review filters">
       <label>Family<input id="family-filter" type="search" placeholder="Search family"></label>
-      <label>Status<select id="status-filter"><option value="ALL">All statuses</option><option value="NEEDS_REVIEW">Needs review</option><option value="REVIEWED_SCOPED">Reviewed scoped</option><option value="REVIEWED_PRODUCTION">Reviewed production</option><option value="REVIEWED_NOT_USABLE">Reviewed not usable</option><option value="MISSING_REVIEW">Missing review</option></select></label>
+      <label>Status<select id="status-filter"><option value="ALL">All statuses</option><option value="REVIEW_ONLY_EVIDENCE">Review-only evidence</option><option value="NEEDS_REVIEW">Needs review</option><option value="REVIEWED_SCOPED">Reviewed scoped</option><option value="REVIEWED_PRODUCTION">Reviewed production</option><option value="REVIEWED_NOT_USABLE">Reviewed not usable</option><option value="MISSING_REVIEW">Missing review</option></select></label>
       <label>Wave<select id="wave-filter">${waveOptions}</select></label>
       <output id="filter-count" aria-live="polite">${summary.total} families</output>
     </section>
@@ -368,26 +374,33 @@ function renderWaveOptions(reports: readonly NormalizedReport[], reviewWaves: Re
 
 function summarizeReports(reports: readonly NormalizedReport[]) {
   const familyStatuses = new Map<string, Set<string>>();
+  const ownerEligibleFamilies = new Set<string>();
   let blockers = 0;
   for (const report of reports) {
     const statuses = familyStatuses.get(report.familyId) ?? new Set<string>();
     statuses.add(report.status);
     familyStatuses.set(report.familyId, statuses);
+    if (report.reviewOnlyTreeProfile === null) ownerEligibleFamilies.add(report.familyId);
     blockers += report.blockers.length;
   }
   const protocolReady = [...familyStatuses.values()].filter((statuses) => (
     statuses.size > 0 && [...statuses].every((status) => status.startsWith("REVIEWED"))
   )).length;
+  const evidenceOnly = [...familyStatuses.keys()].filter((familyId) => !ownerEligibleFamilies.has(familyId)).length;
   return {
     total: familyStatuses.size,
     protocolReady,
-    pending: familyStatuses.size - protocolReady,
+    pending: familyStatuses.size - protocolReady - evidenceOnly,
+    evidenceOnly,
     blockers,
   };
 }
 
 function renderOwnerDecisionWorkbench(reports: readonly NormalizedReport[], reviewWaves: ReadonlyMap<string, number>): string {
   const families = ownerDecisionFamilies(reports, reviewWaves);
+  if (families.length === 0) {
+    return `<section class="evidence-boundary" aria-labelledby="evidence-boundary-title"><p class="eyebrow">Read-only boundary</p><h2 id="evidence-boundary-title">Owner Decisions Disabled</h2><p>These reports use a reduced review-only tree. Inspect frequencies here, but record no production usability decision from this viewer.</p></section>`;
+  }
   const storageKey = `pkrtrainer-texas-solver-owner-review-v1:${families.map((family) => family.familyId).join("|")}`;
   const rows = families.map((family) => `<tr data-owner-row data-family="${escapeHtml(family.familyId)}" data-family-id="${escapeHtml(family.familyId)}" data-status="${escapeHtml(family.status)}" data-wave="${waveValue(family.wave)}">
     <td><strong><a href="#${escapeHtml(family.anchor)}">${escapeHtml(family.familyId)}</a></strong><small>${escapeHtml(family.status)}</small></td>
@@ -406,6 +419,7 @@ function renderOwnerDecisionWorkbench(reports: readonly NormalizedReport[], revi
 function ownerDecisionFamilies(reports: readonly NormalizedReport[], reviewWaves: ReadonlyMap<string, number>): OwnerDecisionFamily[] {
   const families = new Map<string, OwnerDecisionFamily>();
   for (const report of reports) {
+    if (report.reviewOnlyTreeProfile !== null) continue;
     const current = families.get(report.familyId);
     if (current === undefined || current.status === "NEEDS_REVIEW") {
       families.set(report.familyId, {
@@ -429,7 +443,7 @@ function renderSummaryCard(report: NormalizedReport, reviewWaves: ReadonlyMap<st
   return `<a class="card ${statusClass}" data-review-card data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" data-wave="${waveValue(wave)}" href="#${reportAnchor(report)}">
     <span>${escapeHtml(report.familyId)}</span>
     <strong>${escapeHtml(report.nodeLabel)}</strong>
-    <small class="review-summary">${escapeHtml(wave === undefined ? "Unassigned" : `Wave ${wave}`)} / ${escapeHtml(report.status)} / ${report.counts.rawFiles} boards / ${report.blockers.length} blockers</small>
+    <small class="review-summary">${escapeHtml(report.reviewOnlyTreeProfile ?? (wave === undefined ? "Unassigned" : `Wave ${wave}`))} / ${escapeHtml(report.status)} / ${report.counts.rawFiles} boards / ${report.blockers.length} blockers</small>
   </a>`;
 }
 
@@ -448,6 +462,7 @@ function renderReportSection(report: NormalizedReport, reviewWaves: ReadonlyMap<
         <div><dt>Valid</dt><dd>${report.valid ? "yes" : "no"}</dd></div>
         <div><dt>Status</dt><dd>${escapeHtml(report.status)}</dd></div>
         <div><dt>Production</dt><dd>${report.productionReady ? "ready" : "no"}</dd></div>
+        <div><dt>Tree</dt><dd>${escapeHtml(report.reviewOnlyTreeProfile ?? "full")}</dd></div>
         <div><dt>Raw</dt><dd>${report.counts.rawFiles}</dd></div>
         <div><dt>Combos</dt><dd>${report.counts.combos}</dd></div>
       </dl>
@@ -530,6 +545,7 @@ function statusClassFor(status: string): string {
   if (status === "REVIEWED_PRODUCTION") return "status-production";
   if (status === "REVIEWED_SCOPED") return "status-scoped";
   if (status === "REVIEWED_NOT_USABLE" || status === "MISSING_REVIEW") return "status-blocked";
+  if (status === "REVIEW_ONLY_EVIDENCE") return "status-evidence";
   return "status-pending";
 }
 
@@ -567,7 +583,7 @@ const ownerProgress = document.getElementById("owner-progress");
 const ownerReviewer = document.getElementById("owner-reviewer");
 const ownerReviewedAt = document.getElementById("owner-reviewed-at");
 const ownerFileInput = document.getElementById("owner-decisions-file");
-const ownerStorageKey = ownerRoot.dataset.storageKey;
+const ownerStorageKey = ownerRoot?.dataset.storageKey ?? "";
 const ownerSchemaVersion = "pkrtrainer-texas-solver-owner-decisions-v1";
 const ownerDecisionValues = new Set(["", "yes", "no", "scoped"]);
 
@@ -613,6 +629,7 @@ function ownerDownloadFilename() {
 }
 
 function updateOwnerProgress() {
+  if (!ownerProgress) return;
   const visibleRows = ownerRows.filter((row) => !row.hidden);
   const decidedRows = visibleRows.filter((row) => row.querySelector("[data-owner-decision]").value !== "");
   const label = waveFilter.selectedOptions[0]?.textContent ?? "Review";
@@ -670,6 +687,7 @@ function restoreOwnerDraft() {
   }
 }
 
+if (ownerRoot && ownerStatus && ownerProgress && ownerReviewer && ownerReviewedAt && ownerFileInput) {
 document.getElementById("copy-owner-decisions").addEventListener("click", async () => {
   const json = serializeOwnerDecisions();
   if (!json) return;
@@ -733,6 +751,7 @@ ownerRoot.addEventListener("change", (event) => {
   if (event.target !== ownerFileInput) saveOwnerDraft();
 });
 restoreOwnerDraft();
+}
 applyFilters();
 `;
 }
@@ -804,7 +823,9 @@ dd { margin: 2px 0 0; font-weight: 800; }
 .card.status-scoped { border-left: 4px solid #56b4d3; }
 .card.status-production { border-left: 4px solid #56b37f; }
 .card.status-blocked { border-left: 4px solid #d96767; }
+.card.status-evidence { border-left: 4px solid #4cb6a6; }
 .owner-workbench { margin: 24px 0 28px; padding: 20px; border: 1px solid #2a3448; border-radius: 6px; background: #131b2a; }
+.evidence-boundary { margin: 24px 0 28px; padding: 20px; border-left: 4px solid #4cb6a6; background: #152627; }
 .owner-workbench-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
 .owner-workbench-head h2 { margin-bottom: 0; font-size: 24px; }
 .owner-outputs { display: grid; gap: 4px; justify-items: end; }

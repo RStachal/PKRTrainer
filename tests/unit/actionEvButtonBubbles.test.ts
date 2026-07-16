@@ -47,7 +47,39 @@ describe("action EV button bubbles", () => {
       button.querySelector(".action-ev-bubble--chosen") !== null
     ))).toHaveLength(1);
     expect(buttons[1].querySelector(".action-ev-bubble")?.textContent).toBe("EV +0.204 BB");
+    expect(buttons[0].querySelector<HTMLElement>(".action-ev-bubble")?.dataset.evStrengthPct)
+      .toBe("8");
+    expect(buttons[1].querySelector<HTMLElement>(".action-ev-bubble")?.dataset.evStrengthPct)
+      .toBe("100");
+    expect(buttons[2].querySelector<HTMLElement>(".action-ev-bubble")?.dataset.evStrengthPct)
+      .toBe("100");
+    expect(buttons[1].querySelector(".action-ev-bubble__meter")).not.toBeNull();
+    expect(buttons[1].querySelector(".action-ev-bubble__fill")).not.toBeNull();
     expect(buttons[1].getAttribute("aria-label")).toBe("CALL, EV +0.204 BB");
+  });
+
+  it("zobrazi vsechny ekvivalentne nejlepsi akce stejne plnym metrem", () => {
+    const equivalent: ActionEvSet<TestAction> = {
+      ...actionEvs,
+      values: [
+        { action: "FOLD", evBb: 0.201 },
+        { action: "CALL", evBb: 0.204 },
+        { action: "3BET", evBb: 0.21 },
+      ],
+    };
+    const buttons = equivalent.values.map(({ action }) => {
+      const button = document.createElement("button");
+      button.dataset.action = action;
+      setActionEvButtonContent(button, action);
+      return button;
+    });
+    const evaluation = evaluateActionEv(equivalent, "CALL");
+
+    expect(evaluation?.bestActions).toEqual(["FOLD", "CALL", "3BET"]);
+    expect(revealActionEvButtonBubbles(buttons, equivalent, evaluation ?? undefined)).toBe(3);
+    expect(buttons.map((button) => (
+      button.querySelector<HTMLElement>(".action-ev-bubble")?.dataset.evStrengthPct
+    ))).toEqual(["100", "100", "100"]);
   });
 
   it("zustane fail-closed pri neuplnem EV setu", () => {
@@ -64,6 +96,9 @@ describe("action EV button bubbles", () => {
     expect(buttons.every((button) => button.dataset.evAvailable === "false")).toBe(true);
     expect(buttons.every((button) => (
       button.querySelector<HTMLElement>(".action-ev-bubble")?.hidden === true
+    ))).toBe(true);
+    expect(buttons.every((button) => (
+      button.querySelector<HTMLElement>(".action-ev-bubble")?.dataset.evStrengthPct === undefined
     ))).toBe(true);
   });
 

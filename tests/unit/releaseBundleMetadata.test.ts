@@ -106,6 +106,8 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:texas-solver-srp-co-bb-cbet-batch"])
       .toBe("vite-node scripts/buildTexasSolverSrpCoBbCbetBatch.mts");
     expect(pkg.scripts["mtt:texas-solver-coverage-batch"]).toBe("vite-node scripts/buildTexasSolverCoverageBatch.mts");
+    expect(pkg.scripts["mtt:texas-solver-board-catalog"])
+      .toBe("vite-node scripts/checkTexasSolverBoardCatalog.mts");
     expect(pkg.scripts["mtt:texas-solver-coverage-status"]).toBe("vite-node scripts/checkTexasSolverCoverageBatchStatus.mts");
     expect(pkg.scripts["mtt:texas-solver-coverage-overview"]).toBe("vite-node scripts/checkTexasSolverCoverageOverview.mts");
     expect(pkg.scripts["mtt:texas-solver-ingest-completed"]).toBe("vite-node scripts/ingestTexasSolverCompletedCoverage.mts");
@@ -116,6 +118,8 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:postflop-pilot-suite"]).toBe("vite-node scripts/checkMttPostflopPilotSuite.mts");
     expect(pkg.scripts["mtt:postflop-pilot-catalog"]).toBe("vite-node scripts/checkMttPostflopPilotCatalog.mts");
     expect(pkg.scripts["mtt:postflop-pilot-modules"]).toBe("vite-node scripts/buildMttPostflopPilotModules.mts");
+    expect(pkg.scripts["mtt:postflop-action-ev-intake"])
+      .toBe("vite-node scripts/prepareMttPostflopActionEvIntake.mts");
     expect(pkg.scripts["mtt:release-gates"]).toBe("vite-node scripts/checkMttReleaseGates.mts");
     expect(pkg.scripts["mtt:acceptance"]).toBe("vite-node scripts/checkMttAcceptance.mts");
     expect(pkg.scripts["mtt:technical-acceptance"])

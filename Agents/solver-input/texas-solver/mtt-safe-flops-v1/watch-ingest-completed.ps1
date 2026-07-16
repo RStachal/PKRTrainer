@@ -71,10 +71,10 @@ function Should-DeferForLowMemory {
     if ($totalBytes -le 0) { return $false }
     $freePercent = ($freeBytes / $totalBytes) * 100
     if ($freePercent -ge $MinimumFreeMemoryPercent) { return $false }
-    Write-WatchLog ("Low physical memory ({0:N2}GB, {1:N1}% free; watcher threshold {2}%); deferring coverage polling without touching TexasSolver." -f ($freeBytes / 1GB), $freePercent, $MinimumFreeMemoryPercent)
+    Write-WatchLog ("Low physical memory ({0:N2}GB, {1:N1}% free; watcher threshold {2}%); deferring coverage polling without touching TexasSolver." -f ($freeBytes / 1GB), $freePercent, $MinimumFreeMemoryPercent) | Out-Null
     return $true
   } catch {
-    Write-WatchLog "Could not inspect physical memory; continuing fail-closed coverage polling."
+    Write-WatchLog "Could not inspect physical memory; continuing fail-closed coverage polling." | Out-Null
     return $false
   }
 }
@@ -147,7 +147,11 @@ try {
     if ($CoverageSignature -eq $LastProcessedCoverageSignature) {
       Write-WatchLog "No coverage change; skipping redundant ingest and pilot refresh."
     } else {
-      Write-WatchLog "Coverage changed; running source-safe ingest and review checks."
+      if ($MemorySafeReviewOnly) {
+        Write-WatchLog "Coverage changed; recording MEMORY_SAFE_REVIEW_ONLY evidence without downstream staging or pilot refresh."
+      } else {
+        Write-WatchLog "Coverage changed; running source-safe ingest and review checks."
+      }
       $ProcessingSucceeded = $true
 
       Write-PartialCoverageCheckpoints $Status.rows
@@ -172,19 +176,22 @@ try {
         $ProcessingSucceeded = $false
       }
 
-      # Both checks are intentionally fail-closed until human poker review; record their
-      # state without stopping the safe ingestion loop.
-      npm run mtt:texas-solver-review-protocol -- "--packet-dir=$ReviewPacketDir" "--output=$ReviewProtocolReportPath" --summary 2>&1 |
-        ForEach-Object { Write-WatchLog ([string]$_) }
-      Write-WatchLog "review protocol exit code=$LASTEXITCODE (nonzero is expected before human review)."
-
-      npm run mtt:postflop-pilot-suite -- --output "$PilotSuiteReportPath" --summary 2>&1 |
-        ForEach-Object { Write-WatchLog ([string]$_) }
-      if ($LASTEXITCODE -ne 0) {
-        Write-WatchLog "pilot suite exit code=$LASTEXITCODE (candidate remains fail-closed; safe ingestion continues)."
-        $ProcessingSucceeded = $false
+      if ($MemorySafeReviewOnly) {
+        Write-WatchLog "MEMORY_SAFE_REVIEW_ONLY evidence recorded; review protocol and pilot refresh are intentionally skipped for this reduced tree."
       } else {
-        Write-WatchLog "pilot suite exit code=0."
+        # Both checks are intentionally fail-closed until human poker review; record their
+        # state without treating an expected downstream blocker as a failed raw ingest.
+        npm run mtt:texas-solver-review-protocol -- "--packet-dir=$ReviewPacketDir" "--output=$ReviewProtocolReportPath" --summary 2>&1 |
+          ForEach-Object { Write-WatchLog ([string]$_) }
+        Write-WatchLog "review protocol exit code=$LASTEXITCODE (nonzero is expected before human review)."
+
+        npm run mtt:postflop-pilot-suite -- --output "$PilotSuiteReportPath" --summary 2>&1 |
+          ForEach-Object { Write-WatchLog ([string]$_) }
+        if ($LASTEXITCODE -ne 0) {
+          Write-WatchLog "pilot suite exit code=$LASTEXITCODE (candidate remains fail-closed; coverage checkpoint remains processed)."
+        } else {
+          Write-WatchLog "pilot suite exit code=0."
+        }
       }
       if ($ProcessingSucceeded) {
         $LastProcessedCoverageSignature = $CoverageSignature

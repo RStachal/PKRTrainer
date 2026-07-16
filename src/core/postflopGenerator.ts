@@ -555,7 +555,8 @@ export function classifyTurnCard(board: readonly Card[]): PostflopTurnCardClass 
   if (flopRanks.includes(turn.rank)) return "BOARD_PAIRING";
 
   const flushCompleting = flop.filter((card) => card.suit === turn.suit).length >= 2;
-  const straightCompleting = isStraightPossible(allValues) && !isStraightPossible(flopValues);
+  const straightCompleting = isRunoutStraightPossible(allValues)
+    && !isRunoutStraightPossible(flopValues);
   if (flushCompleting && straightCompleting) return "DYNAMIC";
   if (flushCompleting) return "FLUSH_COMPLETING";
   if (straightCompleting) return "STRAIGHT_COMPLETING";
@@ -585,7 +586,8 @@ export function classifyRiverRunout(board: readonly Card[]): PostflopRiverRunout
   const riverSuitCountAfter = suitsAfter.get(river.suit) ?? 0;
   const flushCompleting = riverSuitCountBefore === 2 && riverSuitCountAfter >= 3;
   const fourFlush = riverSuitCountAfter >= 4;
-  const straightCompleting = isStraightPossible(allValues) && !isStraightPossible(priorValues);
+  const straightCompleting = isRunoutStraightPossible(allValues)
+    && !isRunoutStraightPossible(priorValues);
   const fourStraight = maxStraightWindowCount(allValues) >= 4;
 
   if ((flushCompleting || fourFlush) && (straightCompleting || fourStraight)) return "DYNAMIC";
@@ -873,17 +875,18 @@ function postflopHandClassFromCards(cards: readonly [Card, Card]): HandLabel {
 function isConnected(ranks: readonly Rank[]): boolean {
   const values = [...new Set(ranks.map(rankValue))].sort((a, b) => b - a);
   if (values.length < 3) return false;
-  for (let i = 0; i <= values.length - 3; i += 1) {
-    if (values[i] - values[i + 2] <= 4) return true;
-  }
-  if (values.includes(14) && values.includes(5) && values.includes(4)) return true;
-  return false;
+  return maxStraightWindowCount(values) >= 3;
 }
 
 function isStraightPossible(values: readonly number[]): boolean {
   if (values.length < 3) return false;
-  for (let i = 0; i <= values.length - 3; i += 1) {
-    if (values[i] - values[i + 2] <= 4) return true;
+  return maxStraightWindowCount(values) >= 3;
+}
+
+function isRunoutStraightPossible(values: readonly number[]): boolean {
+  if (values.length < 3) return false;
+  for (let index = 0; index <= values.length - 3; index += 1) {
+    if (values[index] - values[index + 2] <= 4) return true;
   }
   return values.includes(14) && values.includes(5) && values.includes(4);
 }

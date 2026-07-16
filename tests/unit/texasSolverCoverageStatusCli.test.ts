@@ -19,12 +19,27 @@ const DRAFT_ROOT = resolve(ROOT, "artifacts/texas-solver-review-integration/norm
 describe("mtt:texas-solver-coverage-status CLI", () => {
   it("oznaci memory-safe manifest jako review-only a nevystavi staging prikazy", () => {
     const temporary = mkdtempSync(join(tmpdir(), "pkrtrainer-coverage-memory-safe-"));
+    let aliasDir = "";
+    let normalizedDir = "";
     try {
       const outputBase = join(temporary, "output");
-      const familyId = "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR";
+      const familyId = "TEST_MEMORY_SAFE_FACING_BET_FAMILY";
+      aliasDir = join(DRAFT_ROOT, `${familyId}-FACING-BET-BEST`);
+      normalizedDir = join(DRAFT_ROOT, `${familyId}-CHECK`);
+      mkdirSync(aliasDir, { recursive: true });
+      mkdirSync(normalizedDir, { recursive: true });
+      writeFileSync(join(aliasDir, "best-candidate.json"), JSON.stringify({
+        nodeHistory: "CHECK>BET_50",
+        betAction: "BET_50",
+        gateValid: true,
+      }), "utf8");
       const rawDir = join(outputBase, familyId, "raw");
       mkdirSync(rawDir, { recursive: true });
       writeFileSync(join(rawDir, `pkrtrainer_${familyId}_A72r.json`), "{}", "utf8");
+      writeFileSync(join(outputBase, familyId, "strategy-export.json"), "{}", "utf8");
+      writeFileSync(join(outputBase, familyId, "strategy-export.CHECK.review.json"), "{}", "utf8");
+      writeFileSync(join(outputBase, familyId, "review-notes.md"), "stale fixture", "utf8");
+      writeFileSync(join(normalizedDir, "normalized.candidate.json"), "{}", "utf8");
       const manifestPath = join(temporary, "manifest.json");
       writeFileSync(manifestPath, `${JSON.stringify({
         packId: "memory-safe-status-fixture",
@@ -44,13 +59,23 @@ describe("mtt:texas-solver-coverage-status CLI", () => {
       ], { cwd: ROOT, encoding: "utf8" });
       const report = JSON.parse(output) as {
         reviewOnlyTreeProfile: string | null;
-        rows: Array<{ nextCommands: string[] }>;
+        rows: Array<{
+          nextCommands: string[];
+          normalizedDraft: boolean;
+          staged: { strategyExport: boolean; review: boolean; reviewNotes: boolean };
+          facingBetBest: { present: boolean; nodeHistory: string | null };
+        }>;
         nextCommands: string[];
       };
       expect(report.reviewOnlyTreeProfile).toBe("MEMORY_SAFE_REVIEW_ONLY");
       expect(report.rows[0].nextCommands).toEqual([]);
+      expect(report.rows[0].staged).toMatchObject({ strategyExport: false, review: false, reviewNotes: false });
+      expect(report.rows[0].normalizedDraft).toBe(false);
+      expect(report.rows[0].facingBetBest).toMatchObject({ present: false, nodeHistory: null });
       expect(report.nextCommands.join("\n")).toContain("Automatic staging and normalization remain disabled");
     } finally {
+      if (aliasDir.length > 0) rmSync(aliasDir, { recursive: true, force: true });
+      if (normalizedDir.length > 0) rmSync(normalizedDir, { recursive: true, force: true });
       rmSync(temporary, { recursive: true, force: true });
     }
   });

@@ -38,10 +38,10 @@ function Should-DeferForLowMemory {
     if ($totalBytes -le 0) { return $false }
     $freePercent = ($freeBytes / $totalBytes) * 100
     if ($freePercent -ge 10) { return $false }
-    Write-PrepLog ("Low physical memory ({0:N2}GB, {1:N1}% free); deferring next-batch preparation without touching TexasSolver." -f ($freeBytes / 1GB), $freePercent)
+    Write-PrepLog ("Low physical memory ({0:N2}GB, {1:N1}% free); deferring next-batch preparation without touching TexasSolver." -f ($freeBytes / 1GB), $freePercent) | Out-Null
     return $true
   } catch {
-    Write-PrepLog "Could not inspect physical memory; continuing isolated batch preparation."
+    Write-PrepLog "Could not inspect physical memory; continuing isolated batch preparation." | Out-Null
     return $false
   }
 }
@@ -66,20 +66,20 @@ try {
         Start-Sleep -Seconds ([Math]::Max(60, $IntervalMinutes * 60))
         continue
       }
-      $prepareExit = Invoke-LoggedNpm "Prepare next review batch" @(
-        "run", "mtt:texas-solver-large-flop-batch", "--", "--preset=next", "--write", "--summary"
+      $prepareExit = Invoke-LoggedNpm "Prepare beta-minimum board batch" @(
+        "run", "mtt:texas-solver-large-flop-batch", "--", "--preset=beta-min", "--write", "--summary"
       )
       $auditExit = if ($prepareExit -eq 0) {
-        Invoke-LoggedNpm "Audit next review batch" @(
+        Invoke-LoggedNpm "Audit beta-minimum board batch" @(
           "run", "mtt:texas-solver-scenario-audit", "--", "--manifest",
-          "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-next-flop-review-v1-manifest.json", "--summary"
+          "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-beta-min-board-review-v1-manifest.json", "--summary"
         )
       } else {
         -1
       }
 
       if ($prepareExit -eq 0 -and $auditExit -eq 0) {
-        Write-PrepLog "Next 72-board review batch is prepared and audited. It remains outside the active solver queue."
+        Write-PrepLog "Beta-minimum 45-board review batch is prepared and audited. The low-memory worker selects it only after owner-depth is raw-complete."
       } else {
         Write-PrepLog "Preparation or audit failed; the next cycle will retry without changing the active solver queue."
       }

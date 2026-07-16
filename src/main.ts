@@ -98,6 +98,7 @@ import { renderRangeModalButton } from "./ui/rangeModal";
 import { renderHHView } from "./ui/hhView";
 import { renderPostflopView, type PostflopRuntimeNotice } from "./ui/postflopView";
 import {
+  ACTION_EV_BUTTON_STYLES,
   formatActionEvBb,
   revealActionEvButtonBubbles,
   setActionEvButtonContent,
@@ -1587,22 +1588,15 @@ body{margin:0;background:
 .training__actions-row{display:flex;flex-wrap:wrap;gap:8px;}
 .action-btn{appearance:none;border:1px solid rgba(148,163,184,.24);
   background:linear-gradient(180deg,#202a3f,#141d2f);color:#e8ecf7;font-size:14px;font-weight:900;
-  display:grid;grid-template-rows:minmax(18px,auto) 20px;place-items:center;gap:5px;
-  min-width:116px;min-height:62px;padding:8px 12px;border-radius:10px;cursor:pointer;
+  display:grid;grid-template-rows:minmax(20px,auto) 24px;place-items:center;gap:5px;
+  min-width:156px;min-height:68px;padding:9px 12px;border-radius:8px;cursor:pointer;
   box-shadow:0 10px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.06);}
 .action-btn:hover:not(:disabled){border-color:#2bd576;}
 .action-btn:disabled{opacity:.55;cursor:default;}
 .action-btn[data-ev-available="true"]:disabled{opacity:1;}
 .action-btn--chosen{outline:2px solid #2bd576;outline-offset:1px;}
 .action-btn--recommended{border-color:#2bd576;background:linear-gradient(180deg,rgba(43,213,118,.28),rgba(43,213,118,.14));}
-.action-button__label{line-height:1.15;text-align:center;overflow-wrap:anywhere;}
-.action-ev-bubble{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;
-  min-width:92px;min-height:20px;border:1px solid rgba(123,211,255,.42);border-radius:999px;
-  background:#202e44;color:#ddecff;font-size:10px;font-weight:950;font-variant-numeric:tabular-nums;
-  line-height:1;white-space:nowrap;padding:3px 7px;}
-.action-ev-bubble[hidden]{display:inline-flex!important;visibility:hidden;}
-.action-ev-bubble--best{border-color:rgba(43,213,118,.72);background:#123a2a;color:#a8f2c3;}
-.action-ev-bubble--chosen{box-shadow:0 0 0 1px #7bd3ff;}
+${ACTION_EV_BUTTON_STYLES}
 .result{border-radius:12px;padding:14px 16px;}
 .result--correct{background:rgba(43,213,118,.12);border:1px solid rgba(43,213,118,.5);}
 .result--wrong{background:rgba(226,59,59,.12);border:1px solid rgba(226,59,59,.5);}

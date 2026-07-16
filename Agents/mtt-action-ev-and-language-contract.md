@@ -61,7 +61,12 @@ acceptable threshold cannot be smaller than the equivalent threshold.
 ## 3. Grading And Feedback
 
 After an answer, the trainer displays every offered action EV, the selected
-action, the best EV and the EV loss in BB.
+action, the best EV and the EV loss in BB. Each legal action button contains
+the absolute BB value plus a relative meter scaled only against the other legal
+actions at that decision. Every action inside the equivalent-best threshold uses
+the same full meter so the graphic never invents an ordering between equally
+valid choices. Before the answer the EV row remains visually hidden, and an
+incomplete set reveals no button value or meter.
 
 - `BEST`: exact highest exported EV;
 - `EQUIVALENT`: within `equivalentThresholdBb` of the highest EV;
@@ -87,6 +92,18 @@ intake uses `actionEvsBb`, `equivalentThresholdBb` and
 Validation is fail-closed for missing, duplicate, unsupported or non-finite
 action values. Runtime code never derives EV from dominant action, mixed
 frequency, hand strength or heuristics.
+
+Generate the exact blank FLOP-pilot workbench with:
+
+```powershell
+npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
+```
+
+The seven templates are fingerprinted against the current 972 range buckets and
+2,916 offered-action slots. Validation requires every EV, both thresholds,
+reviewer/date and explicit approval. A completed input can write only an
+unpromoted candidate plus audit sidecar, and only with
+`--confirm=WRITE_MTT_POSTFLOP_ACTION_EV_CANDIDATE`.
 
 Run the source-safe release measurement with:
 
@@ -118,11 +135,30 @@ As of 2026-07-16:
 - MTT Core preflop action EV: `0/493818` decisions, `0/4` packs ready;
 - scoped FLOP pilot action EV: `0/972` decisions, `0/7` packs ready;
 - current TexasSolver `dump_result` payload consumed by this repository exposes
-  action strategy frequencies, not validated counterfactual action EV;
+  action strategy frequencies, not validated counterfactual action EV. A raw
+  owner-depth export was checked for `ev`, `value`, `payoff`, `utility` and
+  `equity` properties and exposed none; the
+  [official TexasSolver console documentation](https://github.com/bupticybee/TexasSolver/tree/console#usage)
+  also describes `dump_result` as an optimal-strategy JSON export;
+- exact blank action-EV templates exist for 7/7 scoped FLOP pilots, but contain
+  `0/972` completed decisions until owned reviewed values are supplied;
+- template generation preserves an existing workbench by default. Replacing one
+  requires `--overwrite-template` plus the explicit
+  `OVERWRITE_MTT_POSTFLOP_ACTION_EV_TEMPLATE` confirmation token;
+- preservation checks the complete immutable pilot, rule, bucket and ordered
+  action structure. A malformed or stale workbench is never silently replaced;
+  it is retained and reported invalid until an explicitly confirmed overwrite;
+- candidate and audit outputs always use distinct paths and neither is allowed
+  to overwrite the reviewed intake input;
+- the audit sidecar hashes the exact candidate document bytes written to disk,
+  not a differently formatted in-memory representation;
 - a schema-valid synthetic production fixture has verified the complete browser
   path: all offered EV rows, two equivalent-best actions, selected-action state,
   BB units, local persistence and JSON export/import. This is pipeline evidence,
   not production poker data;
+- preflop and postflop action buttons share one inline EV component; equivalent
+  best and chosen states are separate, so more than one action may remain green
+  while the selected action is still identifiable;
 - therefore the UI truthfully reports EV comparison unavailable for current
   production content. No EV value has been fabricated.
 

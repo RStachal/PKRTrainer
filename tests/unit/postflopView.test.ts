@@ -65,6 +65,7 @@ describe("postflopView - DOM", () => {
     expect(root.querySelectorAll(".postflop-table__chip-stack span")).toHaveLength(3);
     expect(root.querySelectorAll(".postflop-seat")).toHaveLength(9);
     expect(root.querySelectorAll(".postflop-seat--active")).toHaveLength(2);
+    expect(root.querySelectorAll(".postflop-seat__status")).toHaveLength(9);
     expect(root.querySelectorAll(".postflop-seat__badge")).toHaveLength(2);
     expect(root.querySelectorAll(".postflop-seat__role-chip")).toHaveLength(4);
     expect(root.querySelector<HTMLElement>(".postflop-seat--aggressor")?.dataset.actionRole)
@@ -80,6 +81,7 @@ describe("postflopView - DOM", () => {
     expect(root.querySelector(".postflop-seat__role-chip--caller")?.textContent)
       .toBe("Caller");
     expect(root.querySelectorAll(".postflop-seat__stack-bar")).toHaveLength(2);
+    expect(root.querySelectorAll(".postflop-seat__stack-chip")).toHaveLength(2);
     const heroSeat = root.querySelector<HTMLElement>(".postflop-seat--hero");
     expect(heroSeat?.style.getPropertyValue("--seat-left")).toMatch(/%$/);
     expect(heroSeat?.style.getPropertyValue("--seat-mobile-left")).toMatch(/%$/);
@@ -124,7 +126,7 @@ describe("postflopView - DOM", () => {
     expect(smallGeometry?.textContent).toContain("Small bet 2 BB");
     expect(smallGeometry?.querySelectorAll(".postflop-table__bet-chip")).toHaveLength(2);
 
-    const bigRoot = renderGeneratedSpot(12, "RIVER");
+    const bigRoot = renderGeneratedSpot(3, "RIVER");
     const bigGeometry = bigRoot.querySelector<HTMLElement>(".postflop-table__bet-geometry");
     expect(bigGeometry?.dataset.recommendedAction).toBe("BET_BIG");
     expect(bigGeometry?.dataset.betSizing).toBe("big");
@@ -642,7 +644,7 @@ describe("postflopView - DOM", () => {
     expect(css).toContain(".postflop-flopzilla__header,.postflop-flopzilla__hint");
     expect(css).toContain(".postflop-range-summary__hero-bucket{align-items:flex-start;flex-direction:column;}");
     expect(css).toContain("@media (max-width:640px)");
-    expect(css).toContain(".postflop-table{aspect-ratio:auto;min-height:560px;max-width:390px;}");
+    expect(css).toContain(".postflop-table{aspect-ratio:auto;min-height:560px;max-width:390px;margin-bottom:54px;}");
     expect(css).toContain(".postflop-seat{left:var(--seat-mobile-left);top:var(--seat-mobile-top)");
     expect(css).toContain(".postflop-table__board .postflop-card{width:36px;height:48px;font-size:16px;}");
     expect(css).toContain(".postflop-flopzilla__matrix,.postflop-flopzilla__legend,.postflop-flopzilla__detail{min-width:476px;}");
