@@ -81,7 +81,9 @@ does not interrupt the current step unless it exposes a production regression.
    each checkpoint incrementally, but never treat this reduced tree as production
    strategy or proof of review. `growth` remains inactive.
 8. **P1 - Owner review waves.** Review the four prepared waves of five families in
-   `interim-packet/MECHANICAL_AUDIT.md`. Record only supplied human decisions with
+   `artifacts/texas-solver-review-protocol/viewer/index.html`; the ten-minute
+   cycle refreshes it from canonical full-tree reports only. Record only supplied
+   human decisions with
    `mtt:texas-solver-owner-review`; it defaults to dry-run and requires reviewer,
    date, usable decision, exact scope when applicable, caveats and an explicit
    write token. It cannot infer a poker verdict.
@@ -129,6 +131,9 @@ does not interrupt the current step unless it exposes a production regression.
   mechanical gate is 12/20 family shapes; owner review remains separately 0/20.
 - Review protocol: 20 families awaiting human poker review, 0 reviewed and 68
   concrete pending fields/evidence items; no automatic promotion.
+- Owner workbench: the recurring cycle refreshes the canonical 20-family,
+  four-wave dashboard at `artifacts/texas-solver-review-protocol/viewer/index.html`.
+  Its decision controls are never populated from reduced-tree evidence.
 - Candidate normalizer regression: resolved. The low-SPR SB vs BB source retained
   five exact `CHECK`-dominant buckets; the scoped pilot suite is now 7/7 READY.
   This remains review-only evidence and has not promoted runtime content.

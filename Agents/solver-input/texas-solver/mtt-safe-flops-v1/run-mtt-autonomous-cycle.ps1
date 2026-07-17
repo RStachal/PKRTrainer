@@ -50,6 +50,9 @@ $ReviewOnlyEvidenceReportsDir = Join-Path $ReviewOnlyEvidenceDir "reviews"
 $ReviewOnlyEvidenceViewerPath = Join-Path $ReviewOnlyEvidenceDir "viewer\index.html"
 $ReviewReadinessReportPath = Join-Path $RepoRoot "artifacts\texas-solver-review-readiness\report.json"
 $ReviewReadinessMarkdownPath = Join-Path $RepoRoot "artifacts\texas-solver-review-readiness\MECHANICAL_READINESS.md"
+$CanonicalReviewReportsDir = Join-Path $RepoRoot "Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver"
+$OwnerReviewWavesPath = Join-Path $RepoRoot "artifacts\texas-solver-review-protocol\packet\OWNER_REVIEW_WAVES.md"
+$OwnerReviewViewerPath = Join-Path $RepoRoot "artifacts\texas-solver-review-protocol\viewer\index.html"
 $MutexName = "Local\PKRTrainerMttAutonomousCycleV1"
 $Deadline = (Get-Date).AddMinutes($MaxMinutes)
 $LastCoverageSignature = if (Test-Path -LiteralPath $LastCoverageSignaturePath) {
@@ -143,8 +146,19 @@ function Get-P1Summary([int]$PacketExitCode, [int]$ValidationExitCode) {
   return $summary
 }
 
-function Get-ReviewSummary([int]$ExitCode) {
-  $summary = [ordered]@{ exitCode = $ExitCode; families = $null; protocolReady = $null; needsReview = $null; blockers = $null; warnings = $null }
+function Get-ReviewSummary([int]$ExitCode, [int]$ViewerExitCode) {
+  $summary = [ordered]@{
+    exitCode = $ExitCode
+    families = $null
+    protocolReady = $null
+    needsReview = $null
+    blockers = $null
+    warnings = $null
+    viewerExitCode = $ViewerExitCode
+    viewerReady = $false
+    viewerPath = $OwnerReviewViewerPath
+    viewerUpdatedAt = $null
+  }
   $reportPath = Join-Path $RepoRoot "artifacts\texas-solver-review-protocol\report.json"
   if (Test-Path -LiteralPath $reportPath) {
     try {
@@ -155,6 +169,10 @@ function Get-ReviewSummary([int]$ExitCode) {
       $summary.blockers = [int]$report.counts.blockers
       $summary.warnings = [int]$report.counts.warnings
     } catch { Write-CycleLog "Could not read TexasSolver review summary. $($_.Exception.Message)" | Out-Null }
+  }
+  if (Test-Path -LiteralPath $OwnerReviewViewerPath -PathType Leaf) {
+    $summary.viewerReady = $ViewerExitCode -eq 0
+    $summary.viewerUpdatedAt = (Get-Item -LiteralPath $OwnerReviewViewerPath).LastWriteTimeUtc.ToString("o")
   }
   return $summary
 }
@@ -458,6 +476,16 @@ try {
           "--summary"
         )
 
+        # Keep the human decision workbench separate from reduced-tree evidence.
+        # Only canonical full-tree reports are selectable for owner approval.
+        $reviewViewerExit = Invoke-LoggedNpm "TexasSolver owner review dashboard" @(
+          "run", "mtt:texas-solver-viewer", "--",
+          "--reviews-dir=$CanonicalReviewReportsDir",
+          "--waves=$OwnerReviewWavesPath",
+          "--output=$OwnerReviewViewerPath",
+          "--title=TexasSolver owner review"
+        )
+
         # Join board-diversity evidence to the separate owner protocol without
         # turning either signal into a poker verdict or a promotion command.
         $reviewReadinessExit = Invoke-LoggedNpm "TexasSolver mechanical review readiness" @(
@@ -491,7 +519,7 @@ try {
         }
         $p1Summary = Get-P1Summary $p1PacketExit $p1ReadyExit
         $boardCatalogSummary = Get-BoardCatalogSummary $boardCatalogExit
-        $reviewSummary = Get-ReviewSummary $reviewExit
+        $reviewSummary = Get-ReviewSummary $reviewExit $reviewViewerExit
         $reviewReadinessSummary = Get-ReviewReadinessSummary $reviewReadinessExit
         $coreSummary = Get-CoreSummary $coreGateEvaluated $coreExit $signaturePersisted
         Write-LatestCycleSummary $statuses $signature $boardCatalogSummary $p1Summary $reviewSummary $reviewOnlyEvidenceSummary $reviewReadinessSummary $coreSummary

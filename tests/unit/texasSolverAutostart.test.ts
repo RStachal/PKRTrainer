@@ -94,6 +94,11 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).toContain("--priority=P1_PREFLOP_CHIP_EV");
     expect(cycle).toContain("TexasSolver review packet");
     expect(cycle).toContain("mtt:texas-solver-review-protocol");
+    expect(cycle).toContain("TexasSolver owner review dashboard");
+    expect(cycle).toContain('"--reviews-dir=$CanonicalReviewReportsDir"');
+    expect(cycle).toContain('"--waves=$OwnerReviewWavesPath"');
+    expect(cycle).toContain('"--output=$OwnerReviewViewerPath"');
+    expect(cycle).toContain("Only canonical full-tree reports are selectable for owner approval");
     expect(cycle).toContain("mtt:core-release");
     expect(cycle).toContain("Should-DeferForResourcePressure");
     expect(cycle).toContain("$MinimumFreeMemoryPercent = 35");
@@ -133,7 +138,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).toContain('"mtt:texas-solver-review-readiness"');
     expect(cycle).toContain("MECHANICAL_READINESS.md");
     expect(cycle).toContain("Get-P1Summary $p1PacketExit $p1ReadyExit");
-    expect(cycle).toContain("Get-ReviewSummary $reviewExit");
+    expect(cycle).toContain("Get-ReviewSummary $reviewExit $reviewViewerExit");
     expect(cycle).toContain("Get-CoreSummary $coreGateEvaluated $coreExit $signaturePersisted");
     expect(cycle).toContain("core-gate-latest.json");
     expect(cycle).toContain("postflopCompleteDecisions");
@@ -156,6 +161,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(manager).toContain("coverage snapshot:");
     expect(manager).toContain("P1 intake:");
     expect(manager).toContain("TexasSolver review:");
+    expect(manager).toContain("TexasSolver owner dashboard:");
     expect(manager).toContain("Review-only evidence:");
     expect(manager).toContain("Mechanical readiness:");
     expect(manager).toContain("Core gate:");

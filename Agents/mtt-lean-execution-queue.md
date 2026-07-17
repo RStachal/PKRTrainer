@@ -384,6 +384,23 @@ pairs, emits JSON plus `MECHANICAL_READINESS.md`, retains 0/20 owner decisions,
 keeps Core green and exposes no staging/normalization command. Focused readiness,
 review-protocol and Windows automation tests pass.
 
+### OPS-43 - Auto-refresh the canonical owner review dashboard
+
+Status: `DONE 2026-07-17`
+Depends on: `OPS-42`, `SOL-PRE-02`
+Lane: `MECHANICAL`
+
+Every ten-minute MTT cycle now rebuilds a separate owner workbench from only the
+canonical full-tree review-report directory and the current four-wave packet.
+The reduced-tree evidence viewer remains read-only and cannot expose owner
+decision controls. Cycle status records the owner dashboard path, update time
+and builder exit code.
+
+Acceptance: the generated owner workbench contains exactly 20 unique families
+in four five-family waves; the reduced-tree viewer still has no decision
+controls; a live cycle exits 0 and reports the owner dashboard ready without
+changing any review verdict or strategy file.
+
 ## Phase DEP - Core Deployment Closeout
 
 ### DEP-00 - Preserve verified FTP artifact
@@ -490,8 +507,8 @@ must not make the poker judgment.
 Owner workbench (2026-07-16):
 
 ```powershell
-npm run mtt:texas-solver-viewer
-Start-Process "http://127.0.0.1:5173/artifacts/texas-solver-review-integration/viewer/index.html"
+npm run mtt:autonomous-cycle-status
+Start-Process "http://127.0.0.1:5173/artifacts/texas-solver-review-protocol/viewer/index.html"
 ```
 
 The viewer starts on the first pending five-family wave, restores its local
@@ -507,7 +524,7 @@ npm run mtt:texas-solver-review-protocol -- --packet-dir=artifacts/texas-solver-
 
 Advance to the next wave only after the refreshed protocol shows the prior
 five explicit owner decisions. A missing dev server does not change the gate;
-the generated `artifacts/texas-solver-review-integration/viewer/index.html` may
+the generated `artifacts/texas-solver-review-protocol/viewer/index.html` may
 also be opened directly.
 
 ### SOL-00 - Monitor current family
@@ -1012,3 +1029,4 @@ Use this exact handoff prompt after changing models:
 | 2026-07-16 | OPS-40 | DONE | Closed the approved solver queue at beta-min 45/45. The worker returned `SUCCESS` with no active process or recorded failure; final intake produced 20/20 valid cumulative reports over 117 checkpoints, Core stayed green and frozen beta-depth was not activated. Full regression passed 150 files / 747 tests. |
 | 2026-07-17 | OPS-41 | ACTIVE | Explicit owner instruction activated the audited 83-board beta-depth supply only as guarded `MEMORY_SAFE_REVIEW_ONLY` evidence. At 08:58 it was 11/83 with no recorded solver failure; `growth`, automatic normalization and promotion remain disabled. |
 | 2026-07-17 | OPS-42 | DONE | Switched recurring intake from the two unlabeled source manifests to all five derived memory-safe manifests, restoring 144 completed review-only checkpoints to cumulative evidence. The live cycle observed 272/344 physical and 269 unique family/board pairs, wrote 20/20 valid reports and measured 12/20 mechanical shapes while owner review remained 0/20. Pilot-first reviewer waves, 42/42 related tests, typecheck and Core passed. |
+| 2026-07-17 | OPS-43 | DONE | The ten-minute cycle now rebuilds a dedicated canonical owner dashboard separately from the reduced-tree evidence viewer. A live cycle exited 0 at beta-depth 24/83, the owner workbench contained exactly 20 families in four waves, focused tests passed 12/12 and typecheck passed; no owner verdict or strategy data was inferred. |
