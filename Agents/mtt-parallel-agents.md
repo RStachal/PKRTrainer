@@ -1,6 +1,6 @@
 # MTT Parallel Background Agents
 
-Updated: 2026-07-16
+Updated: 2026-07-17
 Status: ACTIVE
 
 This is the operating contract for the two Windows background branches. Both
@@ -13,13 +13,15 @@ an earlier iteration is active, it exits and waits for the next scheduled window
 
 - Task: `PKRTrainer-TexasSolver-LowMemory`
 - Worker: `run-texas-solver-low-memory.ps1`
-- Scope: a four-phase checkpoint queue. `next` and `followup` are raw-complete
+- Scope: a five-phase checkpoint queue. `next` and `followup` are raw-complete
   at `72/72`; `owner-depth` also completed 72/72 across eight underrepresented
   review families. The final isolated `beta-min` phase adds 45 globally new rank
   boards across all 14 canonical cohorts, passed audit 45/45 with 0 errors and
-  is now active. Existing checkpoints are skipped on restart.
-- Current measured progress: `beta-min` reached 14/45 at the 17:15 status check;
-  the scheduled task was running and reported no solver failures.
+  is now raw-complete. Existing checkpoints are skipped on restart.
+- The fifth `beta-depth` supply contains 83/83 audited inputs and closes the
+  twelve-board cohort target. The owner explicitly authorized it for guarded
+  background solving on 2026-07-17. It is `AUTHORIZED_REVIEW_ONLY_WORKER_PHASE`,
+  not reviewed strategy and not eligible for automatic promotion.
 - Runtime limits: 2 solver threads, `BelowNormal` priority.
 - Start guard: no new board starts unless total CPU is at most 40% and physical
   RAM has at least 35% free (at most 65% used).
@@ -37,9 +39,12 @@ an earlier iteration is active, it exits and waits for the next scheduled window
   normalize, merge, mark poker review complete or promote runtime strategy. It
   records changed reduced-tree coverage once, suppresses unrelated historical
   staging/draft state and skips the downstream pilot refresh.
-- The mechanical cycle aggregates every solved checkpoint, including a partial
-  family, into one cumulative report per family. Current evidence is 86 boards
-  across 12 families, 12/12 valid reports and zero missing boards.
+- The mechanical cycle aggregates every solved checkpoint from all five derived
+  memory-safe manifests, including a partial family, into one cumulative report
+  per family. The 2026-07-17 08:58 snapshot contains 272 physical checkpoints,
+  269 unique family/board pairs, 20/20 valid reports and zero extraction failures.
+  Its separate readiness matrix reports 12/20 mechanical shapes and 0/20 human
+  owner decisions.
 
 Controls:
 
@@ -53,8 +58,8 @@ npm run mtt:texas-solver-low-memory-uninstall
 Solver-input ownership is separate from solving. The script
 `run-mtt-solver-batch-prep-cycle.ps1` is the sole generator and scenario-auditor
 for an approved beta source wave. Its `PKRTrainer-MTT-Solver-Batch-Prep` task is
-currently disabled because the active 45-file source wave already passed audit;
-the ten-minute MTT agent never writes or regenerates solver input.
+currently disabled because all 128 beta-min and beta-depth source files passed
+audit; the ten-minute MTT agent never writes or regenerates solver input.
 
 ## Branch 2 - Mechanical MTT Task Agent
 
@@ -66,9 +71,9 @@ the ten-minute MTT agent never writes or regenerates solver input.
 - Each run refreshes active solver coverage, records canonical declared board
   coverage, extracts read-only evidence for newly raw-complete reduced-tree
   families, and refreshes the four-slot six-max CHIP_EV intake packet,
-  ready-intake validation and the source-safe 20-family review packet. Their combined
-  coverage signature, rather than the completed legacy manifest, decides when
-  the scoped Core gate is rechecked.
+  ready-intake validation, pilot-first owner waves and the source-safe 20-family
+  mechanical readiness matrix. Their combined coverage signature, rather than a
+  completed legacy manifest, decides when the scoped Core gate is rechecked.
 - Start guard: each ten-minute run requires total CPU at most 40% and at least
   35% free physical RAM. A pressured run exits and waits for the next window.
 - The scoped MTT Core gate runs when the observed solver coverage signature

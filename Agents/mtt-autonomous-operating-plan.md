@@ -1,6 +1,6 @@
 # MTT Autonomous Operating Plan
 
-Updated: 2026-07-16
+Updated: 2026-07-17
 Status: ACTIVE
 
 This is the sole operational sequence for turning the current scoped MTT core
@@ -29,11 +29,13 @@ reuse policies.
 
 ### Lane A - Autonomous Solver Evidence
 
-The Windows AtLogOn queue, `PKRTrainer-TexasSolver-LowMemory`, owns four isolated
+The Windows AtLogOn queue, `PKRTrainer-TexasSolver-LowMemory`, owns five isolated
 review-only phases. `next`, `followup` and the duplicate-safe `owner-depth` phase
-are raw-complete at `72/72`; the audited `beta-min` phase adds 45 globally new
-rank boards across all 14 cohorts. Each phase is separate in parameters and
-coverage artifacts, and every existing checkpoint is skipped on restart.
+are raw-complete at `72/72`; `beta-min` is raw-complete at `45/45`. Each phase is
+separate in parameters and coverage artifacts, and every existing checkpoint is
+skipped on restart. The additional 83-board `beta-depth` source wave is prepared,
+audited and explicitly authorized by the owner for speculative background
+solving. It is the fifth worker phase and remains `MEMORY_SAFE_REVIEW_ONLY`.
 
 The hidden worker uses two solver threads at `BelowNormal` priority. It starts a
 new input only when the CPU/RAM guard permits it, but never terminates an input
@@ -71,36 +73,40 @@ does not interrupt the current step unless it exposes a production regression.
 5. **P1 - Complete owner-depth evidence. DONE 2026-07-16.** All 72 unique
    prepared boards completed under the same guards. Eight eligible families now
    have complete read-only evidence reports; nothing was staged or promoted.
-6. **P1 - Complete beta-min evidence. ACTIVE.** Solve the audited 45-board wave
-   checkpoint by checkpoint under the two-thread guard. Consume each changed
-   checkpoint as review-only evidence and keep `beta-depth` and `growth` inactive.
-7. **P1 - Owner review waves.** Review the four prepared waves of five families in
+6. **P1 - Complete beta-min evidence. DONE 2026-07-16.** The audited 45-board
+   wave reached 45/45 under the two-thread guard. Every changed checkpoint was
+   consumed as review-only evidence.
+7. **P1 - Compute beta-depth evidence. ACTIVE 2026-07-17.** The owner explicitly
+   authorized the audited 83-board wave for guarded background solving. Consume
+   each checkpoint incrementally, but never treat this reduced tree as production
+   strategy or proof of review. `growth` remains inactive.
+8. **P1 - Owner review waves.** Review the four prepared waves of five families in
    `interim-packet/MECHANICAL_AUDIT.md`. Record only supplied human decisions with
    `mtt:texas-solver-owner-review`; it defaults to dry-run and requires reviewer,
    date, usable decision, exact scope when applicable, caveats and an explicit
    write token. It cannot infer a poker verdict.
-8. **P1 - Promote reviewed scoped evidence only.** For a reviewed usable family,
+9. **P1 - Promote reviewed scoped evidence only.** For a reviewed usable family,
    validate its candidate, merge its exact pilot scope, inspect the diff and run
    pilot suite plus core release. No full-production flag is allowed here.
-9. **P1 - Release MTT ChipEV Core staging.** Upload the verified core ZIP, configure
+10. **P1 - Release MTT ChipEV Core staging.** Upload the verified core ZIP, configure
    Basic Auth, run browser/mobile/offline/HH/stats smoke and record deployed hash.
-10. **P2 - Close six-max CHIP_EV preflop.** Permissions are staged. Obtain four exact
+11. **P2 - Close six-max CHIP_EV preflop.** Permissions are staged. Obtain four exact
    reviewed six-max `normalized.json` exports, validate each slot, promote one,
    smoke it, then promote the remaining three. Full-ring mapping is forbidden.
-11. **P2 - Add professional action-EV feedback data.** The code, validation, UI,
+12. **P2 - Add professional action-EV feedback data.** The code, validation, UI,
    stats and EN/CZ contract are complete. Obtain one reviewed owned export with
    counterfactual BB EV for every offered action, validate one pilot, then scale.
    Never treat TexasSolver strategy frequencies as EV.
-12. **P3 - Commercial hardening.** Recheck entitlement boundaries, locked-content
+13. **P3 - Commercial hardening.** Recheck entitlement boundaries, locked-content
    wording, purchase-state restoration, error handling, accessibility and mobile
    viewport coverage against the actually shipped core scope.
-13. **P4 - DOLAR_EV/ICM product decision.** Either supply exact model assumptions
+14. **P4 - DOLAR_EV/ICM product decision.** Either supply exact model assumptions
     and reviewed DOLAR_EV data, or explicitly keep it out of sale and UI selection.
     CHIP_EV reuse is forbidden.
-14. **P5 - Fund and scope full postflop separately.** FLOP/TURN/RIVER production
+15. **P5 - Fund and scope full postflop separately.** FLOP/TURN/RIVER production
     needs per-position, pot, node, SPR, texture and runout contracts. Existing
     pilots and the 72-board batch do not satisfy this release.
-15. **P6 - Final commercial release.** Rebuild a timestamped FTP artifact only after
+16. **P6 - Final commercial release.** Rebuild a timestamped FTP artifact only after
     runtime change, run scoped release chain, archive hashes/release notes and let
     the owner choose production publication.
 
@@ -109,13 +115,18 @@ does not interrupt the current step unless it exposes a production regression.
 - MTT Core release gate: green, 4/4 production preflop and 7 scoped pilots.
 - Full MTT production matrix: 4/64; it is intentionally not the current sales claim.
 - TexasSolver queue: `next`, `followup` and `owner-depth` are complete at 72/72.
-  The 45-board `beta-min` wave passed source audit 45/45 with 0 errors, became
-  active only after that checkpoint and reached 14/45 at the 17:15 snapshot. The
-  task and solver run under the existing two-thread CPU/RAM guards.
-- Cumulative reduced-tree intake: 86 solved family/board checkpoints across 12
-  families are represented by 12 valid read-only reports with zero missing
-  boards. Partial families are consumed immediately and reports retain evidence
-  from every completed memory-safe phase instead of overwriting older boards.
+  The 45-board `beta-min` wave also completed 45/45 with 0 source-audit errors.
+  No failure was recorded.
+- Active review-only supply: the disjoint beta-depth wave passed 83/83 scenario
+  audit with 0 errors. Declared source coverage is now 168 unique boards and 478
+  family/board pairs, all 14 cohorts at the twelve-board target. Owner-directed
+  background solving is authorized, but these inputs and resulting checkpoints
+  are not reviewed or production evidence.
+- Cumulative reduced-tree intake at 08:58 on 2026-07-17: five derived manifests
+  report 272/344 physical checkpoints. After de-duplicating three repeated
+  family/board pairs, 269 exact checkpoints across 20 families are represented by
+  20 valid read-only reports with zero extraction failures. The source-safe
+  mechanical gate is 12/20 family shapes; owner review remains separately 0/20.
 - Review protocol: 20 families awaiting human poker review, 0 reviewed and 68
   concrete pending fields/evidence items; no automatic promotion.
 - Candidate normalizer regression: resolved. The low-SPR SB vs BB source retained
@@ -141,7 +152,8 @@ does not interrupt the current step unless it exposes a production regression.
 2. Keep `PKRTrainer-MTT-Task-Agent-10m` installed for the signed-in Windows
    owner. Every 10 minutes it records TexasSolver coverage, regenerates the
    source-safe P1 packet, dry-validates any newly present P1 six-max export,
-   records canonical board coverage, refreshes read-only TexasSolver evidence
+   records canonical board coverage, refreshes cumulative evidence from all five
+   derived memory-safe manifests, writes the mechanical review-readiness matrix
    and the source-safe review packet, and runs the scoped Core gate when raw
    coverage changes.
    Its latest summary retains the exact Core action-EV readiness counts. A
@@ -150,11 +162,12 @@ does not interrupt the current step unless it exposes a production regression.
    It never starts or stops TexasSolver, stages raw exports, promotes runtime
    content, creates range data, writes solver input or substitutes for owner
    poker review. `run-mtt-solver-batch-prep-cycle.ps1` is the sole writer and
-   auditor of an explicitly approved source wave; its scheduled task remains
-   disabled after the current 45/45 source audit.
-3. `next`, `followup` and `owner-depth` are complete. `beta-min` is the only
-   active solver phase; keep the disjoint `beta-depth` and `growth` waves outside
-   every Windows worker until a later explicit release decision.
+   auditor of the beta-min and beta-depth source waves; its scheduled task
+   remains disabled after all 128 source inputs passed audit.
+3. The four earlier worker phases are complete. Run owner-authorized beta-depth
+   as the fifth review-only phase under the same two-thread CPU/RAM guard. Keep
+   `growth` outside every Windows worker until its review boundary is explicitly
+   decided.
 4. Read `mtt:texas-solver-low-memory-status`; act only on a new complete export
    or a gate change.
 5. Execute one eligible Lane-B step completely, including its focused verification.

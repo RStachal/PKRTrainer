@@ -1,6 +1,6 @@
 # MTT Completion Priorities
 
-Updated: 2026-07-16
+Updated: 2026-07-17
 Status: ACTIVE EXECUTION CONTRACT
 Core release state: COMPLETE 2026-07-10
 
@@ -76,12 +76,18 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
 - Canonical board baseline was 40 unique rank boards and 350 family/board pairs.
   The audited 45-board `beta-min` source wave raised declared input coverage to
   85 unique boards and 395 family/board pairs, closing every six-per-cohort gap.
-  It became the active guarded phase only after `owner-depth` completed and
-  reached 14/45 at the 17:15 snapshot.
-- Cumulative reduced-tree extraction now contains 86 solved family/board
-  checkpoints across 12 families. All 12 reports are valid with zero missing
-  boards; partial beta families are consumed without overwriting prior-phase
-  evidence.
+  It became active only after `owner-depth` completed and is now raw-complete at
+  45/45; the worker exited `SUCCESS` with no recorded failure.
+- The isolated 83-board beta-depth source wave passed 83/83 scenario audit with
+  0 errors. Declared input coverage is now 168 unique boards and 478
+  family/board pairs with every cohort at twelve boards. The owner explicitly
+  authorized guarded review-only solving on 2026-07-17; this does not satisfy
+  poker review or production readiness.
+- Cumulative reduced-tree extraction now observes all five derived memory-safe
+  manifests. At the 08:58 checkpoint it contains 269 unique solved family/board
+  pairs across 20 families; 20/20 reports are valid, extraction failures are zero
+  and 12/20 families meet the mechanical 12-board/6-cohort shape. Human review
+  remains independently 0/20.
 - Windows low-memory task: `PKRTrainer-TexasSolver-LowMemory` runs two solver
   threads at `BelowNormal`, starts only below the CPU/RAM guard, resumes after
   sign-in, and selects the first incomplete phase. It never interrupts an
@@ -139,17 +145,18 @@ Status: COMPLETED 2026-07-10
 
 ### P4 - Solver Evidence Expansion
 
-Status: BETA-MIN ACTIVE / HUMAN REVIEW
+Status: BETA-DEPTH REVIEW-ONLY SOLVING / HUMAN REVIEW
 
-- The first three manifests are raw-complete (`72/72` each). Consume changed
-  `beta-min` checkpoints incrementally and refresh only source-safe coverage.
+- The first three manifests are raw-complete (`72/72` each) and `beta-min` is
+  raw-complete at 45/45. Consume changed `beta-depth` checkpoints incrementally
+  and refresh only source-safe coverage.
   For its memory-safe tree, suppress unrelated older staging/draft artefacts and
   skip downstream pilot refresh; those checks belong only to comparable full-tree
   evidence.
 - Promote no solver output beyond scoped pilot status without poker review and a provenance manifest.
-- The 45-board `beta-min` phase is prepared, audited 45/45 with 0 errors and
-  active under the existing checkpoint-aware task. Do not activate `beta-depth`
-  or `growth`; they remain disjoint future generator waves outside Windows tasks.
+- The 83-board `beta-depth` phase is prepared, audited 83/83 with 0 errors and
+  explicitly owner-authorized for the existing checkpoint-aware review-only
+  task. Keep `growth` inactive until its owner-review boundary is decided.
 
 ### P4.1 - Professional Action-EV Feedback
 
@@ -221,10 +228,13 @@ npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
 
 | Date | Priority | Result | Evidence |
 | --- | --- | --- | --- |
+| 2026-07-17 | P4 | Complete memory-safe intake and review-readiness matrix | The cycle now consumes all five derived manifests rather than mislabeling the first two source manifests. A live cycle observed 272/344 physical and 269 unique family/board checkpoints, produced 20/20 valid reports, measured 12/20 mechanical family shapes, kept owner review at 0/20 and Core green |
+| 2026-07-17 | P4 | Beta-depth computation authorized | Owner instruction activates the audited 83-board supply only as guarded `MEMORY_SAFE_REVIEW_ONLY` evidence. Owner poker review and explicit promotion remain unchanged gates; `growth` stays frozen |
 | 2026-07-16 | P4 | Owner-depth evidence phase complete | Duplicate-safe 72-board batch passed 72/72 scenario audit and reached 72/72 raw checkpoints at 16:46, two threads and `MEMORY_SAFE_REVIEW_ONLY` |
-| 2026-07-16 | P4 | Canonical beta-minimum solving active | Source generation and hardened audit passed 45/45 with 0 errors; declared coverage is 85 boards / 395 family-board pairs, all 14 cohorts meet six boards, and the guarded worker reached 15/45 at 17:23 with no recorded solver failure |
-| 2026-07-16 | P4 | Incremental cumulative review-only intake | Every solved checkpoint, including a partial family, is unioned per family across memory-safe phases. Live cycle produced 87 board checkpoints across 12 families; 12/12 reports are valid, 0 extraction failures and no production promotion |
-| 2026-07-16 | Verification | Current broad MTT release regression | 150/150 Vitest files and 746/746 tests, typecheck, production build, precache integrity, bundle budget and scoped Core 4/4 preflop plus 7/7 FLOP pilots passed; exact action EV remains truthfully 0/493818 preflop and 0/972 FLOP |
+| 2026-07-16 | P4 | Canonical beta-minimum solving complete | Source generation and hardened audit passed 45/45 with 0 errors; the guarded worker completed 45/45, exited `SUCCESS` and recorded no solver failure |
+| 2026-07-16 | P4 | Frozen beta-depth supply ready | The disjoint 83-file wave passed 83/83 scenario audit with 0 errors and raises declared coverage to 168 boards / 478 family-board pairs with all 14 cohorts at twelve boards; status remains `FROZEN_PENDING_OWNER_REVIEW` |
+| 2026-07-16 | P4 | Incremental cumulative review-only intake | Every solved checkpoint is unioned per family across memory-safe phases. Final beta-min intake produced 117 board checkpoints across 20 families; 20/20 reports are valid, 0 extraction failures and no production promotion |
+| 2026-07-16 | Verification | Current broad MTT release regression | 150/150 Vitest files and 747/747 tests, typecheck and scoped Core 4/4 preflop plus 7/7 FLOP pilots passed; exact action EV remains truthfully 0/493818 preflop and 0/972 FLOP |
 | 2026-07-16 | Release | Current verified FTP artifact | Clean commit `9b81ae29` packaged after desktop/mobile and positive action-EV fixture browser QA; ZIP reconciliation passed 22/22 with SHA-256 `568A11EDF85B687C7AAAEA834910E64A2955983E099CCF1E14887F5FC99E0FFE` |
 | 2026-07-16 | Control | Single beta input owner and PowerShell value safety | The ten-minute MTT cycle is read-only for solver inputs; the isolated prep script is their sole generator/auditor. Boolean and native-exit helpers suppress log output so a successful resource check or command cannot be coerced into a false deferral/failure; parser, live one-shot cycles, 86 focused tests and typecheck passed |
 | 2026-07-16 | P4.1 | Exact action-EV intake ready | Seven blank fingerprinted templates cover 972 decisions / 2,916 action slots; complete-candidate and fail-closed regression tests passed 3/3 |

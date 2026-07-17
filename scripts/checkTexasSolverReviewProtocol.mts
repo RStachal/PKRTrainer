@@ -10,6 +10,31 @@ type ReviewProtocolStatus =
   | "REVIEWED_PRODUCTION";
 
 const REVIEW_WAVE_SIZE = 5;
+const OWNER_REVIEW_PRIORITY = [
+  ["MTT9_50BB_BTN_BB_SRP", "current BTN vs BB SRP pilot source"],
+  ["MTT9_40BB_UTG_BB_SRP", "current UTG vs BB SRP pilot source"],
+  ["MTT9_35BB_CO_BTN_3BP_REPAIR", "current BTN vs CO 3bet pilot repair source"],
+  ["MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR", "current BTN vs BB facing-bet pilot source"],
+  ["MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR", "current BTN vs CO 3bet facing-bet candidate"],
+  ["MTT9_20BB_BTN_BB_SRP_LOWSPR", "BTN vs BB SRP low-SPR companion"],
+  ["MTT9_80BB_BTN_BB_SRP_HIGHSPR", "BTN vs BB SRP high-SPR companion"],
+  ["MTT9_25BB_CO_BB_SRP_CBET_LOWSPR", "CO vs BB SRP low-SPR companion"],
+  ["MTT9_50BB_CO_BB_SRP_CBET_MIDSPR", "CO vs BB SRP mid-SPR companion"],
+  ["MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR", "SB vs BB OOP low-SPR companion"],
+  ["MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR", "SB vs BB OOP mid-SPR companion"],
+  ["MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR", "SB vs BB OOP high-SPR companion"],
+  ["MTT9_80BB_CO_BTN_3BP_MIDSPR", "BTN vs CO 3bet mid-SPR companion"],
+  ["MTT9_150BB_CO_BTN_3BP_HIGHSPR", "BTN vs CO 3bet high-SPR companion"],
+  ["MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR", "BTN vs CO 3bet facing-bet low-SPR companion"],
+  ["MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR", "BTN vs BB facing-bet low-SPR companion"],
+  ["MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR", "BTN vs BB facing-bet high-SPR companion"],
+  ["MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH", "BTN vs CO 3bet facing-bet high-SPR companion"],
+  ["MTT9_35BB_CO_BTN_3BP", "legacy 3bet family after its repair source"],
+  ["MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR", "CO vs BB SRP high-SPR companion"],
+] as const;
+const OWNER_REVIEW_PRIORITY_BY_FAMILY = new Map<string, { index: number; focus: string }>(
+  OWNER_REVIEW_PRIORITY.map(([familyId, focus], index) => [familyId, { index, focus }]),
+);
 
 interface CliArgs {
   familyId: string | null;
@@ -465,11 +490,15 @@ function renderPacketReadme(report: ReviewProtocolReport): string {
 }
 
 function renderReviewWaves(report: ReviewProtocolReport): string {
-  const rows = [...report.rows].sort((left, right) => left.familyId.localeCompare(right.familyId));
+  const rows = [...report.rows].sort((left, right) => {
+    const leftPriority = OWNER_REVIEW_PRIORITY_BY_FAMILY.get(left.familyId)?.index ?? Number.MAX_SAFE_INTEGER;
+    const rightPriority = OWNER_REVIEW_PRIORITY_BY_FAMILY.get(right.familyId)?.index ?? Number.MAX_SAFE_INTEGER;
+    return leftPriority - rightPriority || left.familyId.localeCompare(right.familyId);
+  });
   const lines = [
     "# Owner review waves",
     "",
-    "Logistical order for the current source-safe packet. Alphabetical grouping is deterministic and does not rank poker quality, evidence strength or production priority.",
+    "Logistical order for the current source-safe packet. Existing MTT Core pilot sources come first, followed by their missing SPR companions. This order does not imply poker quality, evidence strength or a usability decision.",
     "",
     `Families: ${rows.length}`,
     `Wave size: ${REVIEW_WAVE_SIZE}`,
@@ -480,7 +509,8 @@ function renderReviewWaves(report: ReviewProtocolReport): string {
     lines.push(`## Wave ${(index / REVIEW_WAVE_SIZE) + 1}`);
     lines.push("");
     for (const row of wave) {
-      lines.push(`- ${row.familyId}: ${row.status}; blockers=${row.blockers.length}; warnings=${row.warnings.length}`);
+      const focus = OWNER_REVIEW_PRIORITY_BY_FAMILY.get(row.familyId)?.focus ?? "unmapped family; deterministic alphabetical fallback";
+      lines.push(`- ${row.familyId}: ${row.status}; blockers=${row.blockers.length}; warnings=${row.warnings.length}; focus=${focus}`);
     }
     lines.push("");
   }

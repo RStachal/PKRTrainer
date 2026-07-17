@@ -75,6 +75,14 @@ $Phases = @(
     SourceManifestPath = Join-Path $PSScriptRoot "coverage-beta-min-board-review-v1-manifest.json"
     ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-beta-min-board-review-v1-manifest.json"
     Families = $AllReviewFamilies
+  },
+  [pscustomobject]@{
+    Name = "beta-depth"
+    SourceRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_beta_depth_board_review_v1"
+    ParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_beta_depth_board_review_v1"
+    SourceManifestPath = Join-Path $PSScriptRoot "coverage-beta-depth-board-review-v1-manifest.json"
+    ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-beta-depth-board-review-v1-manifest.json"
+    Families = $AllReviewFamilies
   }
 )
 
@@ -133,22 +141,29 @@ $SourceManifestPath = $ActivePhase.SourceManifestPath
 $ManifestPath = $ActivePhase.ManifestPath
 $ActiveFamilies = @($ActivePhase.Families)
 
-function Build-LowMemoryBatch {
-  if (-not (Test-Path -LiteralPath $SourceRoot)) { throw "Missing source parameter root: $SourceRoot" }
-  if (-not (Test-Path -LiteralPath $SourceManifestPath)) { throw "Missing source manifest: $SourceManifestPath" }
-  $parameterDirRelative = ($ParameterRoot.Substring($RepoRoot.Length).TrimStart('\') -replace '\\', '/')
-  $manifestRelative = ($ManifestPath.Substring($RepoRoot.Length).TrimStart('\') -replace '\\', '/')
-  $sourceManifest = Get-Content -LiteralPath $SourceManifestPath -Raw | ConvertFrom-Json
-  $scenarios = @($sourceManifest.scenarios | Where-Object { $ActiveFamilies -contains [string]$_.familyId })
-  if ($scenarios.Count -ne $ActiveFamilies.Count) { throw "Low-memory phase is missing an expected family." }
-  $files = @(Get-ChildItem -LiteralPath $SourceRoot -Filter "*.txt" | Where-Object {
+function Build-LowMemoryBatch($Phase) {
+  $phaseSourceRoot = $Phase.SourceRoot
+  $phaseParameterRoot = $Phase.ParameterRoot
+  $phaseSourceManifestPath = $Phase.SourceManifestPath
+  $phaseManifestPath = $Phase.ManifestPath
+  $phaseFamilies = @($Phase.Families)
+  if (-not (Test-Path -LiteralPath $phaseSourceRoot)) { throw "Missing source parameter root: $phaseSourceRoot" }
+  if (-not (Test-Path -LiteralPath $phaseSourceManifestPath)) { throw "Missing source manifest: $phaseSourceManifestPath" }
+  $parameterDirRelative = ($phaseParameterRoot.Substring($RepoRoot.Length).TrimStart('\') -replace '\\', '/')
+  $manifestRelative = ($phaseManifestPath.Substring($RepoRoot.Length).TrimStart('\') -replace '\\', '/')
+  $sourceManifest = Get-Content -LiteralPath $phaseSourceManifestPath -Raw | ConvertFrom-Json
+  $sourceGeneratedAt = [string]$sourceManifest.generatedAt
+  if ([string]::IsNullOrWhiteSpace($sourceGeneratedAt)) { throw "Low-memory phase '$($Phase.Name)' source manifest has no generatedAt date." }
+  $scenarios = @($sourceManifest.scenarios | Where-Object { $phaseFamilies -contains [string]$_.familyId })
+  if ($scenarios.Count -ne $phaseFamilies.Count) { throw "Low-memory phase '$($Phase.Name)' is missing an expected family." }
+  $files = @(Get-ChildItem -LiteralPath $phaseSourceRoot -Filter "*.txt" | Where-Object {
     $name = $_.BaseName -replace '^\d+_', ''
     $lastUnderscore = $name.LastIndexOf('_')
-    $lastUnderscore -gt 0 -and $ActiveFamilies -contains $name.Substring(0, $lastUnderscore)
+    $lastUnderscore -gt 0 -and $phaseFamilies -contains $name.Substring(0, $lastUnderscore)
   } | Sort-Object Name)
   $expectedFileCount = @($scenarios | ForEach-Object { @($_.boards).Count } | Measure-Object -Sum).Sum
-  if ($files.Count -ne $expectedFileCount) { throw "Expected $expectedFileCount resource-balanced parameter files, found $($files.Count)." }
-  $manifestFiles = @($sourceManifest.files | Where-Object { $ActiveFamilies -contains [string]$_.familyId } | ForEach-Object {
+  if ($files.Count -ne $expectedFileCount) { throw "Expected $expectedFileCount resource-balanced parameter files for '$($Phase.Name)', found $($files.Count)." }
+  $manifestFiles = @($sourceManifest.files | Where-Object { $phaseFamilies -contains [string]$_.familyId } | ForEach-Object {
     [ordered]@{
       fileName = [string]$_.fileName
       path = "$parameterDirRelative/$($_.fileName)"
@@ -159,7 +174,7 @@ function Build-LowMemoryBatch {
   })
   if ($manifestFiles.Count -ne $files.Count) { throw "Low-memory manifest files do not match the generated parameter count." }
   if (-not $DryRun) {
-    New-Item -ItemType Directory -Force -Path $ParameterRoot | Out-Null
+    New-Item -ItemType Directory -Force -Path $phaseParameterRoot | Out-Null
     foreach ($file in $files) {
       $content = Get-Content -LiteralPath $file.FullName -Raw
       $updated = [regex]::Replace($content, '(?m)^set_thread_num\s+\d+\s*$', "set_thread_num $ThreadCount")
@@ -173,20 +188,20 @@ function Build-LowMemoryBatch {
       $updated = [regex]::Replace($updated, '(?m)^set_max_iteration\s+\d+\s*$', 'set_max_iteration 100')
       $normalized = $updated.TrimEnd("`r", "`n") + "`n"
       [System.IO.File]::WriteAllText(
-        (Join-Path $ParameterRoot $file.Name),
+        (Join-Path $phaseParameterRoot $file.Name),
         $normalized,
         [System.Text.Encoding]::ASCII
       )
     }
     $manifestJson = [ordered]@{
-      packId = "pkrtrainer-mtt-texas-solver-low-memory-$($ActivePhase.Name)-flop-review-v1"
-      generatedAt = (Get-Date -Format "yyyy-MM-dd")
+      packId = "pkrtrainer-mtt-texas-solver-low-memory-$($Phase.Name)-flop-review-v1"
+      generatedAt = $sourceGeneratedAt
       parameterDir = $parameterDirRelative
       outputBase = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver"
       scenarios = $scenarios
       files = $manifestFiles
       notes = @(
-        "Owner-directed resource-balanced $($ActivePhase.Name) review batch. Generated from an isolated batch without changing the legacy queue.",
+        "Owner-directed resource-balanced $($Phase.Name) review batch. Generated from an isolated batch without changing the legacy queue.",
         "MEMORY_SAFE_REVIEW_ONLY tree: reduced sizing branches and iterations after the full tree exceeded the RAM guard. It is not comparable to a full-tree production solve.",
         "Review-only evidence: no raw export or derived draft is runtime strategy until the separate review protocol is complete."
       )
@@ -203,7 +218,7 @@ function Build-LowMemoryBatch {
         processPriority = "BelowNormal"
       }
     } | ConvertTo-Json -Depth 12
-    [System.IO.File]::WriteAllText($ManifestPath, $manifestJson, (New-Object System.Text.UTF8Encoding($false)))
+    [System.IO.File]::WriteAllText($phaseManifestPath, $manifestJson, (New-Object System.Text.UTF8Encoding($false)))
   }
   return $files.Count
 }
@@ -246,7 +261,11 @@ $hasMutex = $false
 try {
   $hasMutex = $mutex.WaitOne(0, $false)
   if (-not $hasMutex) { Write-WorkerLog "Low-memory worker already owns the mutex; exiting without duplication."; exit 0 }
-  $count = Build-LowMemoryBatch
+  $phaseCounts = @{}
+  foreach ($phase in $Phases) {
+    $phaseCounts[$phase.Name] = Build-LowMemoryBatch $phase
+  }
+  $count = [int]$phaseCounts[$ActivePhase.Name]
   Write-WorkerLog "Resource-balanced $($ActivePhase.Name) batch ready: $count boards, $ThreadCount threads, tree profile $TreeProfile, start limits CPU <= $MaximumCpuPercent% and RAM >= $MinimumFreeMemoryPercent% free; emergency threshold $StopBelowFreeMemoryPercent% free memory."
   $activeSolver = @(Get-Process -Name "console_solver" -ErrorAction SilentlyContinue)
   if ($activeSolver.Count -gt 0) { Write-WorkerLog "A TexasSolver process is already active (PID $($activeSolver.Id -join ',')). Leaving it untouched."; exit 0 }

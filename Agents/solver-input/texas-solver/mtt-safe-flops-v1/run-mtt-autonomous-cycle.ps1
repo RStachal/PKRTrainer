@@ -1,9 +1,10 @@
 param(
   [string[]]$Manifest = @(
-    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-next-flop-review-v1-manifest.json",
-    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-followup-flop-review-v1-manifest.json",
+    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-flop-review-v1-manifest.json",
+    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-followup-flop-review-v1-manifest.json",
     ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-owner-depth-flop-review-v1-manifest.json",
-    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-beta-min-board-review-v1-manifest.json"
+    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-beta-min-board-review-v1-manifest.json",
+    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-beta-depth-board-review-v1-manifest.json"
   ),
   [int]$IntervalMinutes = 10,
   [ValidateRange(20, 90)]
@@ -16,6 +17,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
+$OptionalGeneratedManifestNames = @(
+  "coverage-low-memory-flop-review-v1-manifest.json",
+  "coverage-low-memory-followup-flop-review-v1-manifest.json",
+  "coverage-low-memory-owner-depth-flop-review-v1-manifest.json",
+  "coverage-low-memory-beta-min-board-review-v1-manifest.json",
+  "coverage-low-memory-beta-depth-board-review-v1-manifest.json"
+)
 $ManifestPaths = @($Manifest | ForEach-Object {
   $candidate = if ([System.IO.Path]::IsPathRooted($_)) {
     $_
@@ -24,7 +32,7 @@ $ManifestPaths = @($Manifest | ForEach-Object {
   }
   if (Test-Path -LiteralPath $candidate) {
     (Resolve-Path -LiteralPath $candidate).Path
-  } elseif ([System.IO.Path]::GetFileName($candidate) -ne "coverage-low-memory-beta-min-board-review-v1-manifest.json") {
+  } elseif ($OptionalGeneratedManifestNames -notcontains [System.IO.Path]::GetFileName($candidate)) {
     throw "Coverage manifest does not exist: $candidate"
   }
 })
@@ -40,6 +48,8 @@ $BoardCatalogReportPath = Join-Path $ArtifactsDir "board-catalog-latest.json"
 $ReviewOnlyEvidenceDir = Join-Path $RepoRoot "artifacts\texas-solver-review-only-owner-depth"
 $ReviewOnlyEvidenceReportsDir = Join-Path $ReviewOnlyEvidenceDir "reviews"
 $ReviewOnlyEvidenceViewerPath = Join-Path $ReviewOnlyEvidenceDir "viewer\index.html"
+$ReviewReadinessReportPath = Join-Path $RepoRoot "artifacts\texas-solver-review-readiness\report.json"
+$ReviewReadinessMarkdownPath = Join-Path $RepoRoot "artifacts\texas-solver-review-readiness\MECHANICAL_READINESS.md"
 $MutexName = "Local\PKRTrainerMttAutonomousCycleV1"
 $Deadline = (Get-Date).AddMinutes($MaxMinutes)
 $LastCoverageSignature = if (Test-Path -LiteralPath $LastCoverageSignaturePath) {
@@ -58,7 +68,7 @@ function Write-CycleLog([string]$Message) {
   Write-Output $Line
 }
 
-function Write-LatestCycleSummary($Statuses, [string]$CoverageSignature, $BoardCatalog, $P1, $Review, $ReviewOnlyEvidence, $CoreGate) {
+function Write-LatestCycleSummary($Statuses, [string]$CoverageSignature, $BoardCatalog, $P1, $Review, $ReviewOnlyEvidence, $ReviewReadiness, $CoreGate) {
   $summary = [ordered]@{
     schemaVersion = 1
     generatedAt = (Get-Date -Format "o")
@@ -68,6 +78,7 @@ function Write-LatestCycleSummary($Statuses, [string]$CoverageSignature, $BoardC
     p1 = $P1
     review = $Review
     reviewOnlyEvidence = $ReviewOnlyEvidence
+    reviewReadiness = $ReviewReadiness
     coreGate = $CoreGate
     manifests = @($Statuses | Sort-Object packId | ForEach-Object {
       [ordered]@{
@@ -144,6 +155,36 @@ function Get-ReviewSummary([int]$ExitCode) {
       $summary.blockers = [int]$report.counts.blockers
       $summary.warnings = [int]$report.counts.warnings
     } catch { Write-CycleLog "Could not read TexasSolver review summary. $($_.Exception.Message)" | Out-Null }
+  }
+  return $summary
+}
+
+function Get-ReviewReadinessSummary([int]$ExitCode) {
+  $summary = [ordered]@{
+    exitCode = $ExitCode
+    valid = $false
+    families = $null
+    validEvidenceReports = $null
+    evidenceReports = $null
+    mechanicalShapeReady = $null
+    needsMoreEvidence = $null
+    ownerProtocolReady = $null
+    productionEligible = $null
+    reportPath = $ReviewReadinessReportPath
+    markdownPath = $ReviewReadinessMarkdownPath
+  }
+  if (Test-Path -LiteralPath $ReviewReadinessReportPath) {
+    try {
+      $report = Get-Content -LiteralPath $ReviewReadinessReportPath -Raw | ConvertFrom-Json
+      $summary.valid = [bool]$report.valid
+      $summary.families = [int]$report.counts.families
+      $summary.validEvidenceReports = [int]$report.counts.validEvidenceReports
+      $summary.evidenceReports = [int]$report.counts.evidenceReports
+      $summary.mechanicalShapeReady = [int]$report.counts.mechanicalShapeReady
+      $summary.needsMoreEvidence = [int]$report.counts.needsMoreEvidence
+      $summary.ownerProtocolReady = [int]$report.counts.ownerProtocolReady
+      $summary.productionEligible = [int]$report.counts.productionEligible
+    } catch { Write-CycleLog "Could not read mechanical review-readiness summary. $($_.Exception.Message)" | Out-Null }
   }
   return $summary
 }
@@ -417,6 +458,15 @@ try {
           "--summary"
         )
 
+        # Join board-diversity evidence to the separate owner protocol without
+        # turning either signal into a poker verdict or a promotion command.
+        $reviewReadinessExit = Invoke-LoggedNpm "TexasSolver mechanical review readiness" @(
+          "run", "mtt:texas-solver-review-readiness", "--",
+          "--output=$ReviewReadinessReportPath",
+          "--markdown-output=$ReviewReadinessMarkdownPath",
+          "--summary"
+        )
+
         $coreGateEvaluated = $false
         $coreExit = $null
         $signaturePersisted = $signature -eq $LastCoverageSignature
@@ -442,8 +492,9 @@ try {
         $p1Summary = Get-P1Summary $p1PacketExit $p1ReadyExit
         $boardCatalogSummary = Get-BoardCatalogSummary $boardCatalogExit
         $reviewSummary = Get-ReviewSummary $reviewExit
+        $reviewReadinessSummary = Get-ReviewReadinessSummary $reviewReadinessExit
         $coreSummary = Get-CoreSummary $coreGateEvaluated $coreExit $signaturePersisted
-        Write-LatestCycleSummary $statuses $signature $boardCatalogSummary $p1Summary $reviewSummary $reviewOnlyEvidenceSummary $coreSummary
+        Write-LatestCycleSummary $statuses $signature $boardCatalogSummary $p1Summary $reviewSummary $reviewOnlyEvidenceSummary $reviewReadinessSummary $coreSummary
       }
 
       if ($Once) {

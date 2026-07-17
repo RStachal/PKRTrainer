@@ -66,10 +66,10 @@ try {
         Start-Sleep -Seconds ([Math]::Max(60, $IntervalMinutes * 60))
         continue
       }
-      $prepareExit = Invoke-LoggedNpm "Prepare beta-minimum board batch" @(
+      $betaMinPrepareExit = Invoke-LoggedNpm "Prepare beta-minimum board batch" @(
         "run", "mtt:texas-solver-large-flop-batch", "--", "--preset=beta-min", "--write", "--summary"
       )
-      $auditExit = if ($prepareExit -eq 0) {
+      $betaMinAuditExit = if ($betaMinPrepareExit -eq 0) {
         Invoke-LoggedNpm "Audit beta-minimum board batch" @(
           "run", "mtt:texas-solver-scenario-audit", "--", "--manifest",
           "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-beta-min-board-review-v1-manifest.json", "--summary"
@@ -78,10 +78,29 @@ try {
         -1
       }
 
-      if ($prepareExit -eq 0 -and $auditExit -eq 0) {
-        Write-PrepLog "Beta-minimum 45-board review batch is prepared and audited. The low-memory worker selects it only after owner-depth is raw-complete."
+      $betaDepthPrepareExit = if ($betaMinPrepareExit -eq 0 -and $betaMinAuditExit -eq 0) {
+        Invoke-LoggedNpm "Prepare owner-authorized beta-depth board batch" @(
+          "run", "mtt:texas-solver-large-flop-batch", "--", "--preset=beta-depth", "--write", "--summary"
+        )
       } else {
-        Write-PrepLog "Preparation or audit failed; the next cycle will retry without changing the active solver queue."
+        -1
+      }
+      $betaDepthAuditExit = if ($betaDepthPrepareExit -eq 0) {
+        Invoke-LoggedNpm "Audit owner-authorized beta-depth board batch" @(
+          "run", "mtt:texas-solver-scenario-audit", "--", "--manifest",
+          "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-beta-depth-board-review-v1-manifest.json", "--summary"
+        )
+      } else {
+        -1
+      }
+
+      if (
+        $betaMinPrepareExit -eq 0 -and $betaMinAuditExit -eq 0 -and
+        $betaDepthPrepareExit -eq 0 -and $betaDepthAuditExit -eq 0
+      ) {
+        Write-PrepLog "Beta-minimum 45-board and owner-authorized beta-depth 83-board review batches are prepared and audited. The low-memory worker may solve beta-depth after beta-minimum only as MEMORY_SAFE_REVIEW_ONLY evidence; owner review still gates every production use."
+      } else {
+        Write-PrepLog "Board-batch preparation or audit failed; the next cycle will retry without changing the active solver queue."
       }
 
       if ($Once) {

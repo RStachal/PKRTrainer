@@ -101,10 +101,14 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).toContain("deferring Node-based MTT work without touching TexasSolver");
     expect(cycle).toMatch(/Resource pressure[^\r\n]*\| Out-Null/);
     expect(cycle).toContain("LatestRawWrites");
-    expect(cycle).toContain("coverage-next-flop-review-v1-manifest.json");
-    expect(cycle).toContain("coverage-followup-flop-review-v1-manifest.json");
+    expect(cycle).toContain("coverage-low-memory-flop-review-v1-manifest.json");
+    expect(cycle).toContain("coverage-low-memory-followup-flop-review-v1-manifest.json");
     expect(cycle).toContain("coverage-low-memory-owner-depth-flop-review-v1-manifest.json");
     expect(cycle).toContain("coverage-low-memory-beta-min-board-review-v1-manifest.json");
+    expect(cycle).toContain("coverage-low-memory-beta-depth-board-review-v1-manifest.json");
+    expect(cycle).toContain("$OptionalGeneratedManifestNames");
+    expect(cycle).not.toContain('".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-next-flop-review-v1-manifest.json"');
+    expect(cycle).not.toContain('".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-followup-flop-review-v1-manifest.json"');
     expect(cycle).toContain("foreach ($coverageManifestPath in $ManifestPaths)");
     expect(cycle).toContain("$statuses.Count -eq $ManifestPaths.Count");
     expect(cycle).toContain("latest-cycle-summary.json");
@@ -125,6 +129,9 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).toContain("--boards=$($boards -join ',')");
     expect(cycle).toContain("review-only evidence viewer");
     expect(cycle).toContain("reviewOnlyEvidence = $ReviewOnlyEvidence");
+    expect(cycle).toContain("reviewReadiness = $ReviewReadiness");
+    expect(cycle).toContain('"mtt:texas-solver-review-readiness"');
+    expect(cycle).toContain("MECHANICAL_READINESS.md");
     expect(cycle).toContain("Get-P1Summary $p1PacketExit $p1ReadyExit");
     expect(cycle).toContain("Get-ReviewSummary $reviewExit");
     expect(cycle).toContain("Get-CoreSummary $coreGateEvaluated $coreExit $signaturePersisted");
@@ -150,6 +157,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(manager).toContain("P1 intake:");
     expect(manager).toContain("TexasSolver review:");
     expect(manager).toContain("Review-only evidence:");
+    expect(manager).toContain("Mechanical readiness:");
     expect(manager).toContain("Core gate:");
 
     const packageJson = JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8")) as {
@@ -163,7 +171,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(packageJson.scripts["mtt:autonomous-cycle-uninstall"]).toContain("-Action Uninstall");
   });
 
-  windowsIt("dry-runs the isolated beta-minimum solver-batch preparation task", () => {
+  windowsIt("dry-runs the isolated beta-minimum and review-only beta-depth preparation task", () => {
     const output = runPowerShell(
       SOLVER_BATCH_PREP_MANAGER_PATH,
       "-Action",
@@ -176,14 +184,21 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(output).toContain("PKRTrainer-MTT-Solver-Batch-Prep");
     expect(prep).toContain("PKRTrainerMttSolverBatchPrepV1");
     expect(prep).toContain("--preset=beta-min");
+    expect(prep).toContain("--preset=beta-depth");
+    expect(prep).toContain("coverage-beta-depth-board-review-v1-manifest.json");
     expect(prep).toContain("mtt:texas-solver-scenario-audit");
     expect(prep).toContain("Should-DeferForLowMemory");
     expect(prep).toContain("deferring next-batch preparation without touching TexasSolver");
     expect(prep).toMatch(/deferring next-batch preparation[^\r\n]*\| Out-Null/);
-    expect(prep).toContain("only after owner-depth is raw-complete");
+    expect(prep).toContain("may solve beta-depth after beta-minimum only as MEMORY_SAFE_REVIEW_ONLY evidence");
+    expect(prep).toContain("owner review still gates every production use");
     expect(prep).not.toContain("run-console-selected.ps1");
     expect(prep).not.toContain("mtt:texas-solver-autostart");
     expect(manager).toContain('TaskName = "PKRTrainer-MTT-Solver-Batch-Prep"');
+    expect(manager).toContain("owner-authorized 83-board beta-depth");
+    expect(manager).toContain("Show-PreparedWaveStatus");
+    expect(manager).toContain("APPROVED_WORKER_PHASE");
+    expect(manager).toContain("AUTHORIZED_REVIEW_ONLY_WORKER_PHASE");
 
     const packageJson = JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8")) as {
       scripts: Record<string, string>;
@@ -331,10 +346,12 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(worker).toContain("coverage-followup-flop-review-v1-manifest.json");
     expect(worker).toContain("coverage-owner-depth-flop-review-v1-manifest.json");
     expect(worker).toContain("coverage-beta-min-board-review-v1-manifest.json");
+    expect(worker).toContain("coverage-beta-depth-board-review-v1-manifest.json");
     expect(worker).toContain('Name = "next"');
     expect(worker).toContain('Name = "followup"');
     expect(worker).toContain('Name = "owner-depth"');
     expect(worker).toContain('Name = "beta-min"');
+    expect(worker).toContain('Name = "beta-depth"');
     expect(worker).toContain("Families = $OwnerDepthFamilies");
     expect(worker).toContain("Families = $AllReviewFamilies");
     expect(worker).toContain("$ActiveFamilies = @($ActivePhase.Families)");
@@ -345,6 +362,9 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(worker).toMatch(/has all raw checkpoints; selecting the next phase[^\r\n]*\| Out-Null/);
     expect(worker).toContain("if (-not (Test-PhaseRawComplete $phase)) { return $phase }");
     expect(worker).toContain("return $Phases[-1]");
+    expect(worker).toContain("foreach ($phase in $Phases)");
+    expect(worker).toContain("Build-LowMemoryBatch $phase");
+    expect(worker).toContain("generatedAt = $sourceGeneratedAt");
 
     const packageJson = JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8")) as {
       scripts: Record<string, string>;

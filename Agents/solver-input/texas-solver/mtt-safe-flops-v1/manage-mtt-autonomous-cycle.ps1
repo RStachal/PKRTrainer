@@ -68,6 +68,13 @@ function Show-LatestCycleSummary {
         $summary.reviewOnlyEvidence.refreshed, $summary.reviewOnlyEvidence.failures, `
         $summary.reviewOnlyEvidence.viewerPath)
     }
+    if ($null -ne $summary.reviewReadiness) {
+      Write-Host ("Mechanical readiness: shape={0}/{1}, evidence={2}/{3}, owner ready={4}, production eligible={5}, exit={6}" -f `
+        $summary.reviewReadiness.mechanicalShapeReady, $summary.reviewReadiness.families, `
+        $summary.reviewReadiness.validEvidenceReports, $summary.reviewReadiness.evidenceReports, `
+        $summary.reviewReadiness.ownerProtocolReady, $summary.reviewReadiness.productionEligible, `
+        $summary.reviewReadiness.exitCode)
+    }
     if ($null -ne $summary.coreGate) {
       Write-Host ("Core gate: evaluated={0}, exit={1}, coverage signature persisted={2}" -f `
         $summary.coreGate.evaluated, $summary.coreGate.exitCode, $summary.coreGate.signaturePersisted)

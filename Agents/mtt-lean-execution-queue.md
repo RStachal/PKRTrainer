@@ -1,6 +1,6 @@
 # MTT Lean Execution Queue
 
-Updated: 2026-07-16
+Updated: 2026-07-17
 Status: ACTIVE AFTER MTT_CORE_V1
 Default execution setting: GPT-5.6 Terra, Medium reasoning
 
@@ -26,9 +26,10 @@ Execution protocol:
 3. Run the listed evidence commands and record the result in this file.
 4. Never create poker strategy values, review decisions or provenance facts.
 5. Stop at `HUMAN_GATE` or `EXTERNAL_DATA` until the named input exists.
-6. `next`, `followup` and `owner-depth` are raw-complete. Only the audited
-   `beta-min` phase may run now; keep `beta-depth`, `growth` and every unapproved
-   wave outside the worker until the current evidence and review gate is closed.
+6. `next`, `followup`, `owner-depth` and `beta-min` are raw-complete. The owner
+   explicitly authorized the audited `beta-depth` phase for guarded review-only
+   solving on 2026-07-17. Keep `growth` and every unapproved wave outside the
+   worker until its review boundary is explicitly decided.
 7. Keep raw solver output local and ignored. Ship only reviewed source-safe artifacts.
 8. `permission.json` records provenance/review rights; it is never a customer entitlement.
 9. After recording a completed dependency, change only the next eligible
@@ -69,15 +70,19 @@ attempt fail, or when a task explicitly changes strategy meaning or release scop
   12 families. No result has been promoted into runtime content without review.
 - Resource-balanced queue: phases `next` and `followup` are raw-complete at
   `72/72`. The duplicate-safe `owner-depth` phase also reached `72/72`. The
-  audited 45-board `beta-min` phase became active at 16:51 and reached 14/45 at
-  the 17:15 status check under the same two-thread,
-  `BelowNormal`, 35% free-memory guarded worker. Every phase remains
+  audited 45-board `beta-min` phase reached 45/45 under the same two-thread,
+  `BelowNormal`, 35% free-memory guarded worker. The audited 83-board
+  `beta-depth` wave is now the fifth owner-authorized phase. Every phase remains
   `MEMORY_SAFE_REVIEW_ONLY`.
 - Review protocol: 20 families need human review; 0 protocol-ready.
+- Complete memory-safe intake: all five derived manifests are observed. The
+  2026-07-17 08:58 snapshot has 272/344 physical checkpoints, 269 unique
+  family/board pairs, 20/20 valid cumulative reports and 12/20 mechanical family
+  shapes. These counts do not substitute for the 0/20 owner decisions.
 - Action-EV comparison: implementation complete, data not ready. Core preflop is
   `0/493818` complete decisions across `0/4` packs; scoped FLOP pilots are
   `0/972` across `0/7`. Frequency-only solver output is excluded.
-- TexasSolver v0.2.0 compatibility: the active queue remains frozen even though
+- TexasSolver v0.2.0 compatibility: the reduced-tree contract remains frozen even though
   its inherited `set_raise_limit 3` line is logged as unrecognized. The isolated
   next batch removes only that ignored directive; its resulting tree still uses
   the same console default until an owner-approved tree policy replaces it.
@@ -123,14 +128,13 @@ Status: `REPEATING_CHECK`
 Depends on: `OPS-00`
 Lane: `REPEATABLE`
 
-Last measured: 2026-07-16 17:15 local time, phases `next`, `followup` and
-`owner-depth` are complete at 72/72. The recurring task selected the audited
-`beta-min` phase without revisiting any completed phase and reached 14/45 with
-no recorded solver failure.
+Last measured: 2026-07-16 18:10 local time. `next`, `followup` and `owner-depth`
+are complete at 72/72 and `beta-min` is complete at 45/45. The task is `Ready`,
+last result is `SUCCESS`, no worker process remains and no solver failure exists.
 
-The same live cycle aggregated every solved memory-safe checkpoint, including
-partial-family boards, into 12 cumulative reports covering 86 family/board
-pairs. All reports are valid, none has a missing board, and no strategy was
+The 18:10 live cycle aggregated every solved memory-safe checkpoint into 20
+cumulative reports covering 117 family/board
+pairs. All reports are valid, extraction failures are zero, and no strategy was
 staged or promoted.
 
 Run once per AI work session, not in a tight loop:
@@ -163,14 +167,15 @@ To halt the current local queue deliberately without deleting raw checkpoints,
 run `npm run mtt:texas-solver-low-memory-stop`. To also disable future sign-in
 starts, run `npm run mtt:texas-solver-low-memory-uninstall` afterwards.
 
-### OPS-03 - Keep batch scope frozen
+### OPS-03 - Keep batch scope explicit
 
 Status: `ACTIVE_GUARDRAIL`
 Lane: `REPEATABLE`
 
-The isolated 45-board `beta-min` phase is the only active solver wave. Do not
-activate `beta-depth`, `growth` or another batch while it is running or before
-its review boundary is explicitly decided.
+Only explicitly owner-authorized phases may enter the worker. Beta-depth received
+that authorization on 2026-07-17 and may run after beta-min as review-only
+evidence. Do not activate `growth` or another batch before its review boundary is
+explicitly decided. Presence in a source manifest alone never activates a phase.
 No memory-safe phase may stage, normalize, merge or promote strategy.
 Acceptance: one solver phase runs at a time and every derived manifest retains
 its `MEMORY_SAFE_REVIEW_ONLY` boundary.
@@ -198,13 +203,14 @@ Neither command is allowed to stop the solver or its watcher.
 
 ### OPS-13 - Run the owner-directed low-memory review queue
 
-Status: `ACTIVE 2026-07-16 - BETA-MIN`
+Status: `DONE 2026-07-16 - ALL APPROVED PHASES COMPLETE`
 Lane: `REPEATABLE`
 
 The former high-memory autostart queue is disabled. The low-memory task completed
 the first three prepared phases under the same resource guard. It remains
-installed for restart-safe execution of `beta-min` and does not promote runtime
-strategy.
+installed for restart-safe checkpoint verification and does not promote runtime
+strategy. With all approved phases complete, repeated triggers exit successfully
+without starting TexasSolver.
 
 ```powershell
 npm run mtt:texas-solver-low-memory-status
@@ -236,7 +242,7 @@ automatic staging or promotion; the next phase started only after this checkpoin
 
 ### OPS-36 - Queue canonical beta-minimum board coverage
 
-Status: `ACTIVE 2026-07-16 - 14/45 AT 17:15`
+Status: `DONE 2026-07-16 - 45/45`
 Depends on: `OPS-32`
 Lane: `REPEATABLE`
 
@@ -247,12 +253,36 @@ family. It rejected duplicate family/board pairs and the source batch passed its
 solving and owner review remain separate evidence gates. The low-memory worker
 selected this phase only after `owner-depth` reached 72/72.
 The same generator freezes disjoint future waves of 83 `beta-depth` and 98
-`growth` boards, but neither is part of the active Windows worker.
+`growth` boards. Beta-depth is now physically prepared and audited, but neither
+future wave was part of the active Windows worker at completion of this task;
+the later owner authorization is recorded in `OPS-41`.
 
 ```powershell
 npm run mtt:texas-solver-large-flop-batch -- --preset=beta-min --summary
 npm run mtt:texas-solver-board-catalog
 ```
+
+### OPS-39 - Prepare beta-depth without activating it
+
+Status: `DONE 2026-07-16`
+Depends on: `OPS-36`
+Lane: `REPEATABLE`
+
+The isolated prep owner now generates and audits both the active-eligible
+45-board beta-min wave and the frozen 83-board beta-depth wave. Status reports
+physical input completeness separately from activation state. Beta-depth is
+hard-labeled `FROZEN_PENDING_OWNER_REVIEW` and remains absent from the low-memory
+worker phase list.
+
+Acceptance: source generation produces 83/83 beta-depth parameter files with no
+duplicate family/board pairs; scenario audit returns 83 valid files and 0
+errors; the catalog reports 168 unique boards, 478 family/board pairs and zero
+beta-depth cohort gap; a one-shot prep cycle exits 0 without changing the active
+solver queue.
+
+Evidence: PowerShell parser checks passed, the live prep cycle audited both
+45 + 83 waves, focused board/solver/Windows automation tests passed 24/24 and
+`npm run typecheck` passed while beta-min continued in the background.
 
 ### OPS-37 - Keep beta generation single-owner and fail-closed
 
@@ -288,10 +318,71 @@ Acceptance: live beta coverage is reflected without waiting for the full
 45-board wave; prior owner-depth boards remain present when the same family
 receives beta boards; all reports stay read-only and production-ineligible.
 
-Evidence: at beta 14/45 the cycle produced 12 reports over 86 cumulative
-family/board checkpoints. All 12 reports are valid, missing-board count and
-extraction failures are zero, and focused autostart/extraction/viewer tests
-passed 18/18.
+Evidence: final beta intake produced 20 reports over 117 cumulative family/board
+checkpoints. All 20 reports are valid, extraction failures are
+zero, and focused autostart/extraction/viewer tests passed 18/18.
+
+### OPS-40 - Close the approved solver queue at the review gate
+
+Status: `DONE 2026-07-16`
+Depends on: `OPS-38`, `OPS-39`
+Lane: `JUDGMENT`
+
+All four approved low-memory phases are raw-complete: `next`, `followup` and
+`owner-depth` are 72/72, and `beta-min` is 45/45. The scheduled worker returned
+`SUCCESS`, owns no process and recorded no solver failure. It did not select the
+prepared beta-depth source wave because that wave is not in the worker phase
+list.
+
+Acceptance: the final recurring intake sees beta-min 45/45 and 20/20 complete
+families, writes 20 valid cumulative reports over 117 checkpoints, records zero
+extraction failures, keeps Core green and promotes no strategy.
+
+Evidence: the 18:10 cycle exited 0; full regression passed 150/150 files and
+747/747 tests. The next executable transition is human owner review, not another
+automatic solver phase.
+
+### OPS-41 - Activate owner-authorized beta-depth evidence
+
+Status: `ACTIVE 2026-07-17`
+Depends on: `OPS-39`, `OPS-40`
+Lane: `REPEATABLE`
+
+The owner explicitly requested another background TexasSolver run. Add the
+audited 83-board `beta-depth` supply as the fifth checkpoint-safe phase, retain
+two threads, `BelowNormal` priority, CPU <= 40%, at least 35% free RAM and the
+25% emergency stop. Observe every new checkpoint through cumulative
+`MEMORY_SAFE_REVIEW_ONLY` intake. This work may improve the review packet but
+never supplies a human verdict, production strategy or action EV.
+
+Acceptance: the Windows task is enabled and running or waiting on its resource
+guard; the derived 83-board manifest passes scenario audit; the recurring MTT
+cycle includes it when present; no `normalized.json`, `permission.json` or
+runtime strategy file is generated; `growth` remains inactive.
+
+Evidence at 08:58: task `Running`, no recorded solver failures, beta-depth 11/83
+with two complete and one partial family. The first updated intake cycle exited
+0 and Core stayed green.
+
+### OPS-42 - Join all memory-safe evidence to mechanical review readiness
+
+Status: `DONE 2026-07-17`
+Depends on: `OPS-38`, `OPS-41`
+Lane: `JUDGMENT`
+
+The recurring cycle now consumes the derived `MEMORY_SAFE_REVIEW_ONLY` manifests
+for `next` and `followup` as well as owner-depth, beta-min and beta-depth. This
+restores 144 completed checkpoints that the source-manifest view could not
+safely classify as reduced-tree evidence. A new source-safe report joins board
+count, cohort diversity and largest-cohort share to the separate owner protocol.
+It reports the next gate but never writes a poker verdict or promotion command.
+Owner waves are ordered by current MTT Core pilot relationship before SPR
+companions; unknown families fall back to deterministic alphabetical order.
+
+Acceptance: a live cycle reads five manifests, unions duplicate family/board
+pairs, emits JSON plus `MECHANICAL_READINESS.md`, retains 0/20 owner decisions,
+keeps Core green and exposes no staging/normalization command. Focused readiness,
+review-protocol and Windows automation tests pass.
 
 ## Phase DEP - Core Deployment Closeout
 
@@ -912,8 +1003,12 @@ Use this exact handoff prompt after changing models:
 | 2026-07-16 | OPS-35 | DONE | Replaced eight private TexasSolver board maps with one pinned 40-board catalog and a deterministic 14-cohort planner. The report separates 6-per-cohort beta minimum, 12-per-cohort beta depth and 20-per-cohort growth, while preserving every legacy physical board and labeling manifest counts as declared input rather than solved evidence. The 45-file beta-min audit and broad regression passed. |
 | 2026-07-16 | AEV-UX-02 | DONE | Action EV renders as an absolute BB value plus a normalized comparison meter inside every legal action button after grading. Equivalent-best and chosen states remain independent; incomplete EV sets still reveal nothing. Positive production-fixture E2E passed on FLOP/TURN/RIVER with zero browser errors and 12 contrast checks. |
 | 2026-07-16 | TABLE-UX-01 | DONE | Corrected rail/felt stacking in both table renderers and upgraded seat hierarchy with active/folded status, stack chips, clearer hero/villain treatment and stable compact geometry. Production preview E2E passed desktop plus 360/390/412 px with zero browser errors and 48 contrast checks. |
-| 2026-07-16 | OPS-36 | ACTIVE | Generated 45/45 disjoint `beta-min` source parameters, passed the hardened scenario audit with 45 valid files and 0 errors, and raised declared coverage to 85 unique boards / 395 family-board pairs with all 14 cohorts at the six-board minimum. The low-memory derivative contains 45 files; after `owner-depth` completed 72/72, the guarded worker selected it and reached 15/45 at 17:23 with no recorded failure. Solved and owner-reviewed coverage remain separate gates. |
+| 2026-07-16 | OPS-36 | DONE | Generated and solved 45/45 disjoint `beta-min` parameters after a 45/45 source audit with 0 errors. The guarded worker exited `SUCCESS` with no failure; solved and owner-reviewed coverage remain separate gates. |
 | 2026-07-16 | OPS-37 | DONE | Removed beta source generation/audit from the ten-minute read-only MTT cycle so the isolated prep script is the sole writer. Suppressed log output inside PowerShell value-returning helpers to prevent false low-memory deferrals and false command failures. Six PowerShell parser checks, one-shot prep, recurring cycle, 86 focused tests and typecheck passed. |
-| 2026-07-16 | OPS-38 | DONE | Replaced per-phase report overwrites with cumulative per-family board unions and included solved checkpoints from partial families. The next live cycle at beta 15/45 refreshed one affected report and produced 12 valid reports over 87 family/board pairs with 0 extraction failures; focused extraction/viewer/autostart tests passed 18/18. |
-| 2026-07-16 | RELEASE-CORE-04 | DONE | Current broad regression passed 150/150 files and 746/746 tests, typecheck, production build, precache integrity, bundle budget and scoped Core gate. Core remains 4/4 preflop plus 7/7 FLOP pilots; exact action-EV data remains honestly incomplete. |
+| 2026-07-16 | OPS-38 | DONE | Replaced per-phase report overwrites with cumulative per-family board unions and included solved checkpoints from partial families. Final beta intake produced 20 valid reports over 117 family/board pairs with 0 extraction failures; focused extraction/viewer/autostart tests passed 18/18. |
+| 2026-07-16 | RELEASE-CORE-04 | DONE | Current broad regression passed 150/150 files and 747/747 tests, typecheck and scoped Core gate. Core remains 4/4 preflop plus 7/7 FLOP pilots; exact action-EV data remains honestly incomplete. |
 | 2026-07-16 | RELEASE-FTP-01 | DONE | Built the clean `9b81ae29` MTT Core solver-beta FTP archive after browser QA. ZIP reconciliation passed 22/22 files with 0 missing, 0 extra and 0 hash mismatches; SHA-256 is `568A11EDF85B687C7AAAEA834910E64A2955983E099CCF1E14887F5FC99E0FFE`. |
+| 2026-07-16 | OPS-39 | DONE | Prepared the disjoint 83-file beta-depth source wave without adding it to the worker. Scenario audit passed 83/83 with 0 errors; the catalog now reports 168 unique boards, 478 family/board pairs and zero twelve-board cohort gap. Prep status labels it `FROZEN_PENDING_OWNER_REVIEW`; parser checks, a live 45 + 83 one-shot prep, focused tests 24/24 and typecheck passed while beta-min kept solving. |
+| 2026-07-16 | OPS-40 | DONE | Closed the approved solver queue at beta-min 45/45. The worker returned `SUCCESS` with no active process or recorded failure; final intake produced 20/20 valid cumulative reports over 117 checkpoints, Core stayed green and frozen beta-depth was not activated. Full regression passed 150 files / 747 tests. |
+| 2026-07-17 | OPS-41 | ACTIVE | Explicit owner instruction activated the audited 83-board beta-depth supply only as guarded `MEMORY_SAFE_REVIEW_ONLY` evidence. At 08:58 it was 11/83 with no recorded solver failure; `growth`, automatic normalization and promotion remain disabled. |
+| 2026-07-17 | OPS-42 | DONE | Switched recurring intake from the two unlabeled source manifests to all five derived memory-safe manifests, restoring 144 completed review-only checkpoints to cumulative evidence. The live cycle observed 272/344 physical and 269 unique family/board pairs, wrote 20/20 valid reports and measured 12/20 mechanical shapes while owner review remained 0/20. Pilot-first reviewer waves, 42/42 related tests, typecheck and Core passed. |

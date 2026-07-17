@@ -326,6 +326,44 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
     }
   });
 
+  it("radi owner waves podle vazby na soucasne piloty a neznamou family az nakonec", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-protocol-priority-"));
+    const packetDir = join(directory, "packet");
+    const familyIds = [
+      "ZZZ_UNMAPPED_REVIEW_FAMILY",
+      "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+      "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+      "MTT9_35BB_CO_BTN_3BP_REPAIR",
+      "MTT9_40BB_UTG_BB_SRP",
+      "MTT9_50BB_BTN_BB_SRP",
+    ];
+    try {
+      for (const familyId of familyIds) {
+        const familyDir = join(directory, familyId);
+        mkdirSync(familyDir, { recursive: true });
+        writeFileSync(join(familyDir, "review-notes.md"), `# ${familyId}\n\nStatus: NEEDS_REVIEW\n`, "utf8");
+      }
+
+      const result = runProtocol(`--root=${directory}`, `--packet-dir=${packetDir}`, "--summary");
+
+      expect(result.status).toBe(1);
+      const waves = readFileSync(join(packetDir, "OWNER_REVIEW_WAVES.md"), "utf8");
+      const orderedFamilies = [...waves.matchAll(/^- ([A-Za-z0-9_]+):/gm)].map((match) => match[1]);
+      expect(orderedFamilies).toEqual([
+        "MTT9_50BB_BTN_BB_SRP",
+        "MTT9_40BB_UTG_BB_SRP",
+        "MTT9_35BB_CO_BTN_3BP_REPAIR",
+        "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+        "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+        "ZZZ_UNMAPPED_REVIEW_FAMILY",
+      ]);
+      expect(waves).toContain("focus=current BTN vs BB SRP pilot source");
+      expect(waves).toContain("focus=unmapped family; deterministic alphabetical fallback");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("doplni pouze chybejici prazdna owner rozhodovaci pole bez falesneho sign-off", () => {
     const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-protocol-template-"));
     try {

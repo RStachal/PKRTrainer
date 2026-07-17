@@ -1,7 +1,7 @@
 # MTT Canonical Board Coverage Plan
 
-Updated: 2026-07-16
-Status: BETA-MIN SOLVING / DEPTH AND GROWTH FROZEN
+Updated: 2026-07-17
+Status: BETA-MIN COMPLETE / DEPTH AUTHORIZED REVIEW-ONLY / GROWTH FROZEN
 Authority: board selection, solver expansion and exact-board EV scope
 
 ## Decision
@@ -74,9 +74,12 @@ product of every board with every family:
 | Growth | 20 rank boards per cohort | Long-term evidence library. Low dry rainbow and trips stop at their complete 13-rank-board universes. |
 
 The generator exposes the stages as disjoint waves: 45 new boards for
-`beta-min`, another 83 for `beta-depth`, and another 98 for `growth`. Only the
-45-board wave is eligible to follow `owner-depth`; the later two presets are
-prepared architecture, not active work.
+`beta-min`, another 83 for `beta-depth`, and another 98 for `growth`. The
+83-board beta-depth source wave is now generated and passed its 83/83 scenario
+audit with 0 errors. It raises declared coverage to 168 unique boards and 478
+family/board pairs, with all 14 cohorts at the twelve-board depth target. The
+owner explicitly authorized this beta-depth supply for speculative background
+solving on 2026-07-17. `growth` remains outside every active worker.
 
 TexasSolver `set_use_isomorphism 1` remains enabled inside each solve. It saves
 work across equivalent suit runouts in that tree; it does not make A72 and K83
@@ -93,32 +96,42 @@ Do not wait for 20 boards in every family. A beta family is eligible only when:
 5. its UI exposes source quality honestly;
 6. exact action EV remains hidden for decisions without complete EV input.
 
-This gate makes the 395 declared family/board pairs useful without pretending
+This gate makes the 478 declared family/board pairs useful without pretending
 that all 14 cohorts must be crossed with all 20 families before beta.
 
 Current declaration audit: `20/20` families already meet the 12-board,
 6-cohort and no-majority shape. This is good scheduling coverage, not owner
 approval and not exact action-EV readiness.
 
-Measured 2026-07-16: `owner-depth` is raw-complete at 72/72. The isolated
-`beta-min` source wave passed 45/45 scenario audit, is the only active solver
-wave and reached 14/45 under the guarded two-thread worker at 17:15. The
-incremental reader currently preserves 86 solved family/board checkpoints in
-12 cumulative valid reports, including boards from a partial family.
+Measured before beta-depth activation: `owner-depth` and `beta-min` are
+raw-complete at 72/72 and 45/45 respectively. The beta-depth source wave passed
+83/83 audit before worker activation. Its checkpoints may now be computed with
+the guarded two-thread reduced tree; they remain discardable review evidence.
+The 2026-07-17 intake includes all five derived memory-safe manifests. Its 272
+physical checkpoints reduce to 269 unique family/board pairs across 20 valid
+read-only reports, 12/20 families meet the mechanical shape threshold, and it
+promoted nothing.
 
 ## Ordered Solver Routine
 
 1. Preserve the completed 72/72 `owner-depth` checkpoints and their read-only
    evidence reports.
-2. Keep the audited 45-board `BETA_MIN` wave as the only active solver phase.
-   Its source files are owned solely by the isolated prep script; the recurring
-   MTT cycle only observes coverage and never rewrites them.
+2. Preserve the completed 45-board `BETA_MIN` wave, then let the explicitly
+   authorized 83-board `BETA_DEPTH` phase run under the same review-only guard.
+   Source files are owned solely by the isolated prep script; the recurring MTT
+   cycle only observes coverage and never rewrites them.
 3. Solve one checkpoint-safe board at a time under the existing CPU/RAM guard.
 4. Refresh read-only review evidence for each newly raw-complete family.
 5. Complete owner review over the accumulated family evidence; never promote
    `MEMORY_SAFE_REVIEW_ONLY` output automatically.
 6. Freeze the first beta when the family gate passes. Continue `BETA_DEPTH` and
    `GROWTH` as non-blocking background programs.
+
+The isolated prep agent owns deterministic generation and scenario audit for
+both beta-min and beta-depth. Preparing a wave never activates it by itself. The
+2026-07-17 owner instruction separately authorized beta-depth computation, so
+`run-texas-solver-low-memory.ps1` now selects it only after every earlier phase
+is raw-complete.
 
 ## UI Contract
 
@@ -151,5 +164,6 @@ npm run mtt:texas-solver-scenario-audit -- --manifest <manifest> --summary
 - Never make beta wait for the long-term growth target.
 - Never activate `BETA_MIN` while `owner-depth` is running; preparation and
   scenario audit may run in parallel because they do not start TexasSolver.
-- Never activate `BETA_DEPTH` before beta-minimum review, or `GROWTH` before
-  beta-depth review.
+- `BETA_DEPTH` may run before owner review only after explicit owner
+  authorization and only as `MEMORY_SAFE_REVIEW_ONLY` evidence. Never activate
+  `GROWTH` before the beta-depth review boundary is explicitly decided.
