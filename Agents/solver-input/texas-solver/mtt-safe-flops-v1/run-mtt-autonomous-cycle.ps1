@@ -408,7 +408,7 @@ try {
     do {
       if (Should-DeferForResourcePressure) {
         if ($Once) {
-          Write-CycleLog "Once mode; cycle deferred for low memory."
+          Write-CycleLog "Once mode; cycle deferred for resource pressure."
           break
         }
         Start-Sleep -Seconds ([Math]::Max(60, $IntervalMinutes * 60))
@@ -476,16 +476,6 @@ try {
           "--summary"
         )
 
-        # Keep the human decision workbench separate from reduced-tree evidence.
-        # Only canonical full-tree reports are selectable for owner approval.
-        $reviewViewerExit = Invoke-LoggedNpm "TexasSolver owner review dashboard" @(
-          "run", "mtt:texas-solver-viewer", "--",
-          "--reviews-dir=$CanonicalReviewReportsDir",
-          "--waves=$OwnerReviewWavesPath",
-          "--output=$OwnerReviewViewerPath",
-          "--title=TexasSolver owner review"
-        )
-
         # Join board-diversity evidence to the separate owner protocol without
         # turning either signal into a poker verdict or a promotion command.
         $reviewReadinessExit = Invoke-LoggedNpm "TexasSolver mechanical review readiness" @(
@@ -494,6 +484,24 @@ try {
           "--markdown-output=$ReviewReadinessMarkdownPath",
           "--summary"
         )
+
+        # Keep the human decision workbench separate from reduced-tree evidence.
+        # Only canonical full-tree reports are selectable for owner approval;
+        # mechanical readiness is displayed as read-only context after its
+        # current snapshot has passed validation.
+        $reviewViewerExit = -1
+        if ($reviewReadinessExit -eq 0) {
+          $reviewViewerExit = Invoke-LoggedNpm "TexasSolver owner review dashboard" @(
+            "run", "mtt:texas-solver-viewer", "--",
+            "--reviews-dir=$CanonicalReviewReportsDir",
+            "--waves=$OwnerReviewWavesPath",
+            "--readiness=$ReviewReadinessReportPath",
+            "--output=$OwnerReviewViewerPath",
+            "--title=TexasSolver owner review"
+          )
+        } else {
+          Write-CycleLog "Mechanical readiness failed; canonical owner dashboard was not refreshed." | Out-Null
+        }
 
         $coreGateEvaluated = $false
         $coreExit = $null

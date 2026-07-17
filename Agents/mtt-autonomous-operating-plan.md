@@ -37,7 +37,8 @@ skipped on restart. The additional 83-board `beta-depth` source wave is prepared
 audited and explicitly authorized by the owner for speculative background
 solving. It is the fifth worker phase and remains `MEMORY_SAFE_REVIEW_ONLY`.
 
-The hidden worker uses two solver threads at `BelowNormal` priority. It starts a
+The next hidden worker uses three solver threads at `BelowNormal` priority. The
+currently solving board is not interrupted to apply this tuning. It starts a
 new input only when the CPU/RAM guard permits it, but never terminates an input
 that is already solving. Its mutex and Task Scheduler `IgnoreNew` policy prevent
 overlap after sign-in or a scheduled retry. Use
@@ -124,16 +125,18 @@ does not interrupt the current step unless it exposes a production regression.
   family/board pairs, all 14 cohorts at the twelve-board target. Owner-directed
   background solving is authorized, but these inputs and resulting checkpoints
   are not reviewed or production evidence.
-- Cumulative reduced-tree intake at 08:58 on 2026-07-17: five derived manifests
-  report 272/344 physical checkpoints. After de-duplicating three repeated
-  family/board pairs, 269 exact checkpoints across 20 families are represented by
+- Cumulative reduced-tree intake at 09:42 on 2026-07-17: five derived manifests
+  report 289/344 physical checkpoints. After de-duplicating three repeated
+  family/board pairs, 286 exact checkpoints across 20 families are represented by
   20 valid read-only reports with zero extraction failures. The source-safe
-  mechanical gate is 12/20 family shapes; owner review remains separately 0/20.
+  mechanical gate is 15/20 family shapes; owner review remains separately 0/20.
 - Review protocol: 20 families awaiting human poker review, 0 reviewed and 68
   concrete pending fields/evidence items; no automatic promotion.
 - Owner workbench: the recurring cycle refreshes the canonical 20-family,
   four-wave dashboard at `artifacts/texas-solver-review-protocol/viewer/index.html`.
-  Its decision controls are never populated from reduced-tree evidence.
+  Its decision controls are never populated from reduced-tree evidence. A
+  fail-closed filter exposes `Shape ready` versus `Needs evidence` only as
+  review-order context.
 - Candidate normalizer regression: resolved. The low-SPR SB vs BB source retained
   five exact `CHECK`-dominant buckets; the scoped pilot suite is now 7/7 READY.
   This remains review-only evidence and has not promoted runtime content.
@@ -170,7 +173,7 @@ does not interrupt the current step unless it exposes a production regression.
    auditor of the beta-min and beta-depth source waves; its scheduled task
    remains disabled after all 128 source inputs passed audit.
 3. The four earlier worker phases are complete. Run owner-authorized beta-depth
-   as the fifth review-only phase under the same two-thread CPU/RAM guard. Keep
+   as the fifth review-only phase under the guarded three-thread profile. Keep
    `growth` outside every Windows worker until its review boundary is explicitly
    decided.
 4. Read `mtt:texas-solver-low-memory-status`; act only on a new complete export

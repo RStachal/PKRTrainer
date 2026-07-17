@@ -97,13 +97,17 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).toContain("TexasSolver owner review dashboard");
     expect(cycle).toContain('"--reviews-dir=$CanonicalReviewReportsDir"');
     expect(cycle).toContain('"--waves=$OwnerReviewWavesPath"');
+    expect(cycle).toContain('"--readiness=$ReviewReadinessReportPath"');
     expect(cycle).toContain('"--output=$OwnerReviewViewerPath"');
     expect(cycle).toContain("Only canonical full-tree reports are selectable for owner approval");
+    expect(cycle).toContain("Mechanical readiness failed; canonical owner dashboard was not refreshed.");
+    expect(cycle.indexOf("TexasSolver mechanical review readiness")).toBeLessThan(cycle.indexOf("TexasSolver owner review dashboard"));
     expect(cycle).toContain("mtt:core-release");
     expect(cycle).toContain("Should-DeferForResourcePressure");
     expect(cycle).toContain("$MinimumFreeMemoryPercent = 35");
     expect(cycle).toContain("$MaximumCpuPercent = 40");
     expect(cycle).toContain("deferring Node-based MTT work without touching TexasSolver");
+    expect(cycle).toContain("Once mode; cycle deferred for resource pressure.");
     expect(cycle).toMatch(/Resource pressure[^\r\n]*\| Out-Null/);
     expect(cycle).toContain("LatestRawWrites");
     expect(cycle).toContain("coverage-low-memory-flop-review-v1-manifest.json");
@@ -321,7 +325,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(worker).toContain("$MinimumFreeMemoryPercent = 35");
     expect(worker).toContain("$MaximumCpuPercent = 40");
     expect(worker).toContain("-MaximumCpuPercent $MaximumCpuPercent");
-    expect(worker).toContain("$ThreadCount = 2");
+    expect(worker).toContain("$ThreadCount = 3");
     expect(worker).toContain('$TreeProfile = "MEMORY_SAFE_REVIEW_ONLY"');
     expect(worker).toContain("set_bet_sizes $1,flop,bet,33");
     expect(worker).toContain("set_bet_sizes $1,$2,bet,50");

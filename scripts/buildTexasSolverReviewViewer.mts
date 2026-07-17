@@ -11,6 +11,7 @@ interface CliArgs {
   outputPath: string;
   reviewsDir: string;
   wavesPath: string | null;
+  readinessPath: string | null;
   title: string;
 }
 
@@ -72,6 +73,16 @@ interface OwnerDecisionFamily {
   wave: number | null;
 }
 
+interface MechanicalReadinessRow {
+  familyId: string;
+  evidenceValid: boolean;
+  boardCount: number;
+  cohortCount: number;
+  largestCohortShare: number;
+  mechanicalShapeReady: boolean;
+  nextGate: string;
+}
+
 try {
   const args = parseArgs(process.argv.slice(2));
   const inputPaths = args.inputs.length > 0 ? args.inputs : findReviewReports(args.reviewsDir);
@@ -81,8 +92,9 @@ try {
 
   const reports = inputPaths.map(readReviewReport).sort(compareReports);
   const reviewWaves = readReviewWaves(args.wavesPath);
+  const mechanicalReadiness = readMechanicalReadiness(args.readinessPath);
   mkdirSync(dirname(args.outputPath), { recursive: true });
-  writeFileSync(args.outputPath, buildHtml(args.title, reports, reviewWaves), "utf8");
+  writeFileSync(args.outputPath, buildHtml(args.title, reports, reviewWaves, mechanicalReadiness), "utf8");
 
   console.log(`TexasSolver review viewer written: ${args.outputPath}`);
   console.log(`Reports: ${reports.length}`);
@@ -96,6 +108,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let outputPath = resolve(DEFAULT_OUTPUT);
   let reviewsDir = resolve(DEFAULT_REVIEWS_DIR);
   let wavesPath: string | null = existsSync(resolve(DEFAULT_WAVES)) ? resolve(DEFAULT_WAVES) : null;
+  let readinessPath: string | null = null;
   let title = "TexasSolver MTT review viewer";
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -132,6 +145,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
       wavesPath = null;
       continue;
     }
+    if (item === "--readiness") {
+      readinessPath = resolve(nextArg(argv, index, "--readiness"));
+      index += 1;
+      continue;
+    }
+    if (item.startsWith("--readiness=")) {
+      readinessPath = resolve(requiredInlineValue(item, "--readiness"));
+      continue;
+    }
     if (item === "--output") {
       outputPath = resolve(nextArg(argv, index, "--output"));
       index += 1;
@@ -153,7 +175,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { inputs, outputPath, reviewsDir, wavesPath, title };
+  return { inputs, outputPath, reviewsDir, wavesPath, readinessPath, title };
 }
 
 function usage(): string {
@@ -163,6 +185,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-viewer -- --input artifacts/.../CHECK.review-report.json",
     "  npm run mtt:texas-solver-viewer -- --reviews-dir artifacts/texas-solver-review-integration/reviews --output artifacts/texas-solver-review-integration/viewer/index.html",
     "  npm run mtt:texas-solver-viewer -- --waves artifacts/texas-solver-review-protocol/packet/OWNER_REVIEW_WAVES.md",
+    "  npm run mtt:texas-solver-viewer -- --readiness artifacts/texas-solver-review-readiness/report.json",
     "",
     "Builds a local source-safe HTML viewer from TexasSolver review JSON files.",
     "It does not create production normalized.json or permission.json files.",
@@ -218,6 +241,47 @@ function readReviewWaves(wavesPath: string | null): ReadonlyMap<string, number> 
     waves.set(family[1], currentWave);
   }
   return waves;
+}
+
+function readMechanicalReadiness(readinessPath: string | null): ReadonlyMap<string, MechanicalReadinessRow> {
+  const rows = new Map<string, MechanicalReadinessRow>();
+  if (readinessPath === null) return rows;
+  if (!existsSync(readinessPath)) throw new Error(`Mechanical readiness report is missing: ${readinessPath}`);
+
+  const parsed = JSON.parse(readFileSync(readinessPath, "utf8")) as unknown;
+  if (!isRecord(parsed) || parsed.basis !== "REVIEW_ONLY_EVIDENCE_NOT_POKER_APPROVAL" || !Array.isArray(parsed.rows)) {
+    throw new Error("Mechanical readiness report must use REVIEW_ONLY_EVIDENCE_NOT_POKER_APPROVAL basis and contain rows.");
+  }
+  for (const rawRow of parsed.rows) {
+    if (!isRecord(rawRow)) throw new Error("Mechanical readiness report contains a malformed row.");
+    const familyId = typeof rawRow.familyId === "string" ? rawRow.familyId.trim() : "";
+    const boardCount = rawRow.boardCount;
+    const cohortCount = rawRow.cohortCount;
+    const largestCohortShare = rawRow.largestCohortShare;
+    if (!/^[A-Za-z0-9_]+$/.test(familyId)) throw new Error("Mechanical readiness row has an invalid familyId.");
+    if (typeof boardCount !== "number" || !Number.isInteger(boardCount) || boardCount < 0) throw new Error(`Mechanical readiness boardCount is invalid for ${familyId}.`);
+    if (typeof cohortCount !== "number" || !Number.isInteger(cohortCount) || cohortCount < 0) throw new Error(`Mechanical readiness cohortCount is invalid for ${familyId}.`);
+    if (typeof largestCohortShare !== "number" || !Number.isFinite(largestCohortShare) || largestCohortShare < 0 || largestCohortShare > 1) {
+      throw new Error(`Mechanical readiness largestCohortShare is invalid for ${familyId}.`);
+    }
+    if (typeof rawRow.evidenceValid !== "boolean" || typeof rawRow.mechanicalShapeReady !== "boolean") {
+      throw new Error(`Mechanical readiness flags are invalid for ${familyId}.`);
+    }
+    if (typeof rawRow.nextGate !== "string" || rawRow.nextGate.trim().length === 0) {
+      throw new Error(`Mechanical readiness nextGate is invalid for ${familyId}.`);
+    }
+    if (rows.has(familyId)) throw new Error(`Mechanical readiness report contains duplicate family: ${familyId}`);
+    rows.set(familyId, {
+      familyId,
+      evidenceValid: rawRow.evidenceValid,
+      boardCount,
+      cohortCount,
+      largestCohortShare,
+      mechanicalShapeReady: rawRow.mechanicalShapeReady,
+      nextGate: rawRow.nextGate,
+    });
+  }
+  return rows;
 }
 
 function readReviewReport(sourcePath: string): NormalizedReport {
@@ -313,12 +377,18 @@ function compareReports(left: NormalizedReport, right: NormalizedReport): number
   return `${left.familyId} ${left.nodeLabel}`.localeCompare(`${right.familyId} ${right.nodeLabel}`);
 }
 
-function buildHtml(title: string, reports: readonly NormalizedReport[], reviewWaves: ReadonlyMap<string, number>): string {
+function buildHtml(
+  title: string,
+  reports: readonly NormalizedReport[],
+  reviewWaves: ReadonlyMap<string, number>,
+  mechanicalReadiness: ReadonlyMap<string, MechanicalReadinessRow>,
+): string {
   const generatedAt = new Date().toISOString();
   const summary = summarizeReports(reports);
-  const summaryCards = reports.map((report) => renderSummaryCard(report, reviewWaves)).join("\n");
-  const reportSections = reports.map((report) => renderReportSection(report, reviewWaves)).join("\n");
+  const summaryCards = reports.map((report) => renderSummaryCard(report, reviewWaves, mechanicalReadiness)).join("\n");
+  const reportSections = reports.map((report) => renderReportSection(report, reviewWaves, mechanicalReadiness)).join("\n");
   const waveOptions = renderWaveOptions(reports, reviewWaves);
+  const mechanicalFilter = mechanicalReadiness.size === 0 ? "" : '<label>Evidence<select id="mechanical-filter"><option value="ALL">All evidence</option><option value="READY">Shape ready</option><option value="NEEDS_EVIDENCE">Needs evidence</option><option value="UNAVAILABLE">Unavailable</option></select></label>';
   return `<!doctype html>
 <html lang="cs">
 <head>
@@ -345,9 +415,10 @@ function buildHtml(title: string, reports: readonly NormalizedReport[], reviewWa
       <label>Family<input id="family-filter" type="search" placeholder="Search family"></label>
       <label>Status<select id="status-filter"><option value="ALL">All statuses</option><option value="REVIEW_ONLY_EVIDENCE">Review-only evidence</option><option value="NEEDS_REVIEW">Needs review</option><option value="REVIEWED_SCOPED">Reviewed scoped</option><option value="REVIEWED_PRODUCTION">Reviewed production</option><option value="REVIEWED_NOT_USABLE">Reviewed not usable</option><option value="MISSING_REVIEW">Missing review</option></select></label>
       <label>Wave<select id="wave-filter">${waveOptions}</select></label>
+      ${mechanicalFilter}
       <output id="filter-count" aria-live="polite">${summary.total} families</output>
     </section>
-    ${renderOwnerDecisionWorkbench(reports, reviewWaves)}
+    ${renderOwnerDecisionWorkbench(reports, reviewWaves, mechanicalReadiness)}
     <section class="summary-grid">${summaryCards}</section>
     ${reportSections}
   </main>
@@ -396,24 +467,56 @@ function summarizeReports(reports: readonly NormalizedReport[]) {
   };
 }
 
-function renderOwnerDecisionWorkbench(reports: readonly NormalizedReport[], reviewWaves: ReadonlyMap<string, number>): string {
+function renderOwnerDecisionWorkbench(
+  reports: readonly NormalizedReport[],
+  reviewWaves: ReadonlyMap<string, number>,
+  mechanicalReadiness: ReadonlyMap<string, MechanicalReadinessRow>,
+): string {
   const families = ownerDecisionFamilies(reports, reviewWaves);
   if (families.length === 0) {
     return `<section class="evidence-boundary" aria-labelledby="evidence-boundary-title"><p class="eyebrow">Read-only boundary</p><h2 id="evidence-boundary-title">Owner Decisions Disabled</h2><p>These reports use a reduced review-only tree. Inspect frequencies here, but record no production usability decision from this viewer.</p></section>`;
   }
   const storageKey = `pkrtrainer-texas-solver-owner-review-v1:${families.map((family) => family.familyId).join("|")}`;
-  const rows = families.map((family) => `<tr data-owner-row data-family="${escapeHtml(family.familyId)}" data-family-id="${escapeHtml(family.familyId)}" data-status="${escapeHtml(family.status)}" data-wave="${waveValue(family.wave)}">
+  const mechanicallyReady = families.filter((family) => mechanicalValue(mechanicalReadiness.get(family.familyId)) === "READY").length;
+  const rows = families.map((family) => {
+    const readiness = mechanicalReadiness.get(family.familyId);
+    return `<tr data-owner-row data-family="${escapeHtml(family.familyId)}" data-family-id="${escapeHtml(family.familyId)}" data-status="${escapeHtml(family.status)}" data-wave="${waveValue(family.wave)}" data-mechanical="${mechanicalValue(readiness)}" data-mechanical-ready="${mechanicalValue(readiness) === "READY" ? "true" : "false"}">
     <td><strong><a href="#${escapeHtml(family.anchor)}">${escapeHtml(family.familyId)}</a></strong><small>${escapeHtml(family.status)}</small></td>
     <td>${escapeHtml(family.wave === null ? "Unassigned" : `Wave ${family.wave}`)}</td>
+    <td>${renderMechanicalReadiness(readiness)}</td>
     <td><select data-owner-decision aria-label="Decision for ${escapeHtml(family.familyId)}"><option value="">Pending</option><option value="yes">Yes</option><option value="scoped">Scoped</option><option value="no">No</option></select></td>
     <td><input data-owner-scope aria-label="Scope for ${escapeHtml(family.familyId)}" type="text"></td>
     <td><input data-owner-caveats aria-label="Caveats for ${escapeHtml(family.familyId)}" type="text"></td>
-  </tr>`).join("");
+  </tr>`;
+  }).join("");
   return `<section class="owner-workbench" data-owner-root data-storage-key="${escapeHtml(storageKey)}" aria-labelledby="owner-workbench-title">
-    <div class="owner-workbench-head"><div><p class="eyebrow">Human gate</p><h2 id="owner-workbench-title">Owner Decisions</h2></div><div class="owner-outputs"><output id="owner-progress" aria-live="polite"></output><output id="owner-decision-status" aria-live="polite"></output></div></div>
+    <div class="owner-workbench-head"><div><p class="eyebrow">Human gate</p><h2 id="owner-workbench-title">Owner Decisions</h2></div><div class="owner-outputs"><span>Mechanical context ${mechanicallyReady}/${families.length}</span><output id="owner-progress" aria-live="polite"></output><output id="owner-decision-status" aria-live="polite"></output></div></div>
+    <p class="owner-boundary">Mechanical readiness is reduced-tree, review-only context. It never selects, validates or recommends an owner decision.</p>
     <div class="owner-meta"><label>Reviewer<input id="owner-reviewer" type="text" autocomplete="name"></label><label>Reviewed at<input id="owner-reviewed-at" type="date" value="${today()}"></label><button id="import-owner-decisions" type="button" title="Import a decision JSON draft">Import JSON</button><input id="owner-decisions-file" type="file" accept="application/json,.json" hidden><button id="copy-owner-decisions" type="button" title="Copy decision JSON">Copy JSON</button><button id="download-owner-decisions" type="button" title="Download decision JSON">Download JSON</button><button id="copy-owner-commands" type="button" title="Copy PowerShell dry-run and confirmed write commands">Copy PS commands</button><button id="clear-owner-decisions" type="button" title="Clear the locally stored draft">Clear draft</button></div>
-    <div class="owner-table-wrap"><table><thead><tr><th>Family</th><th>Wave</th><th>Decision</th><th>Scope</th><th>Caveats</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="owner-table-wrap"><table><thead><tr><th>Family</th><th>Wave</th><th>Evidence context</th><th>Decision</th><th>Scope</th><th>Caveats</th></tr></thead><tbody>${rows}</tbody></table></div>
   </section>`;
+}
+
+function renderMechanicalReadiness(readiness: MechanicalReadinessRow | undefined): string {
+  if (readiness === undefined) {
+    return '<span class="evidence-state evidence-missing">Unavailable</span><small>Read-only snapshot not supplied</small>';
+  }
+  const state = readiness.mechanicalShapeReady && readiness.evidenceValid ? "Shape ready" : "Needs evidence";
+  const stateClass = readiness.mechanicalShapeReady && readiness.evidenceValid ? "evidence-ready" : "evidence-pending";
+  const largestShare = `${(readiness.largestCohortShare * 100).toFixed(1)}% max cohort`;
+  return `<span class="evidence-state ${stateClass}">${state}</span><small>${readiness.boardCount} boards / ${readiness.cohortCount} cohorts / ${largestShare}</small><small>Next: ${escapeHtml(readiness.nextGate)}</small>`;
+}
+
+function mechanicalValue(readiness: MechanicalReadinessRow | undefined): "READY" | "NEEDS_EVIDENCE" | "UNAVAILABLE" {
+  if (readiness === undefined) return "UNAVAILABLE";
+  return readiness.evidenceValid && readiness.mechanicalShapeReady ? "READY" : "NEEDS_EVIDENCE";
+}
+
+function mechanicalLabel(readiness: MechanicalReadinessRow | undefined): string {
+  const value = mechanicalValue(readiness);
+  if (value === "READY") return "shape ready";
+  if (value === "NEEDS_EVIDENCE") return "needs evidence";
+  return "evidence unavailable";
 }
 
 function ownerDecisionFamilies(reports: readonly NormalizedReport[], reviewWaves: ReadonlyMap<string, number>): OwnerDecisionFamily[] {
@@ -437,21 +540,30 @@ function waveValue(wave: number | null | undefined): string {
   return wave === null || wave === undefined ? "UNASSIGNED" : String(wave);
 }
 
-function renderSummaryCard(report: NormalizedReport, reviewWaves: ReadonlyMap<string, number>): string {
+function renderSummaryCard(
+  report: NormalizedReport,
+  reviewWaves: ReadonlyMap<string, number>,
+  mechanicalReadiness: ReadonlyMap<string, MechanicalReadinessRow>,
+): string {
   const statusClass = statusClassFor(report.status);
   const wave = reviewWaves.get(report.familyId);
-  return `<a class="card ${statusClass}" data-review-card data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" data-wave="${waveValue(wave)}" href="#${reportAnchor(report)}">
+  const mechanical = mechanicalReadiness.get(report.familyId);
+  return `<a class="card ${statusClass}" data-review-card data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" data-wave="${waveValue(wave)}" data-mechanical="${mechanicalValue(mechanical)}" href="#${reportAnchor(report)}">
     <span>${escapeHtml(report.familyId)}</span>
     <strong>${escapeHtml(report.nodeLabel)}</strong>
-    <small class="review-summary">${escapeHtml(report.reviewOnlyTreeProfile ?? (wave === undefined ? "Unassigned" : `Wave ${wave}`))} / ${escapeHtml(report.status)} / ${report.counts.rawFiles} boards / ${report.blockers.length} blockers</small>
+    <small class="review-summary">${escapeHtml(report.reviewOnlyTreeProfile ?? (wave === undefined ? "Unassigned" : `Wave ${wave}`))} / ${escapeHtml(report.status)} / ${report.counts.rawFiles} boards / ${report.blockers.length} blockers / ${mechanicalLabel(mechanical)}</small>
   </a>`;
 }
 
-function renderReportSection(report: NormalizedReport, reviewWaves: ReadonlyMap<string, number>): string {
+function renderReportSection(
+  report: NormalizedReport,
+  reviewWaves: ReadonlyMap<string, number>,
+  mechanicalReadiness: ReadonlyMap<string, MechanicalReadinessRow>,
+): string {
   const files = report.files.map((file) => renderBoard(report, file)).join("\n");
   const warnings = [...report.blockers, ...report.anomalies].map((item) => `<li>${escapeHtml(item)}</li>`).join("");
   const wave = reviewWaves.get(report.familyId);
-  return `<section class="report" data-review-report data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" data-wave="${waveValue(wave)}" id="${reportAnchor(report)}">
+  return `<section class="report" data-review-report data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" data-wave="${waveValue(wave)}" data-mechanical="${mechanicalValue(mechanicalReadiness.get(report.familyId))}" id="${reportAnchor(report)}">
     <div class="report-head">
       <div>
         <p class="eyebrow">${escapeHtml(report.familyId)}</p>
@@ -554,6 +666,7 @@ function filterScript(): string {
 const familyFilter = document.getElementById("family-filter");
 const statusFilter = document.getElementById("status-filter");
 const waveFilter = document.getElementById("wave-filter");
+const mechanicalFilter = document.getElementById("mechanical-filter");
 const count = document.getElementById("filter-count");
 const cards = [...document.querySelectorAll("[data-review-card]")];
 const reports = [...document.querySelectorAll("[data-review-report]")];
@@ -562,11 +675,13 @@ function applyFilters() {
   const family = familyFilter.value.trim().toLowerCase();
   const status = statusFilter.value;
   const wave = waveFilter.value;
+  const mechanical = mechanicalFilter?.value ?? "ALL";
   for (const element of [...cards, ...reports, ...ownerRows]) {
     const matchesFamily = element.dataset.family.toLowerCase().includes(family);
     const matchesStatus = status === "ALL" || element.dataset.status === status;
     const matchesWave = wave === "ALL" || element.dataset.wave === wave;
-    element.hidden = !(matchesFamily && matchesStatus && matchesWave);
+    const matchesMechanical = mechanical === "ALL" || element.dataset.mechanical === mechanical;
+    element.hidden = !(matchesFamily && matchesStatus && matchesWave && matchesMechanical);
   }
   const visible = new Set(reports.filter((report) => !report.hidden).map((report) => report.dataset.family)).size;
   count.value = visible + (visible === 1 ? " family" : " families");
@@ -576,6 +691,7 @@ function applyFilters() {
 familyFilter.addEventListener("input", applyFilters);
 statusFilter.addEventListener("change", applyFilters);
 waveFilter.addEventListener("change", applyFilters);
+mechanicalFilter?.addEventListener("change", applyFilters);
 
 const ownerRoot = document.querySelector("[data-owner-root]");
 const ownerStatus = document.getElementById("owner-decision-status");
@@ -829,15 +945,18 @@ dd { margin: 2px 0 0; font-weight: 800; }
 .owner-workbench-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
 .owner-workbench-head h2 { margin-bottom: 0; font-size: 24px; }
 .owner-outputs { display: grid; gap: 4px; justify-items: end; }
+.owner-outputs span, .owner-boundary { color: #aab7cf; font-size: 13px; }
+.owner-boundary { margin: 12px 0 0; padding-left: 10px; border-left: 3px solid #4cb6a6; }
 .owner-meta { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin: 16px 0; }
 .owner-meta label { display: grid; gap: 5px; color: #aab7cf; font-size: 12px; font-weight: 700; }
 .owner-meta input, .owner-table-wrap input, .owner-table-wrap select, .owner-meta button { min-height: 34px; box-sizing: border-box; padding: 6px 8px; color: inherit; background: #0f1623; border: 1px solid #526171; border-radius: 4px; font: inherit; }
 .owner-meta button { cursor: pointer; background: #1a3a57; border-color: #4f89b5; }
 .owner-table-wrap { overflow-x: auto; }
-.owner-table-wrap table { width: 100%; min-width: 960px; border-collapse: collapse; }
+.owner-table-wrap table { width: 100%; min-width: 1160px; border-collapse: collapse; }
 .owner-table-wrap th { color: #8ea0bd; font-size: 12px; text-align: left; text-transform: uppercase; }
 .owner-table-wrap th, .owner-table-wrap td { padding: 9px 8px; border-top: 1px solid #263246; vertical-align: middle; }
 .owner-table-wrap td:first-child { min-width: 320px; }.owner-table-wrap td:first-child a { color: #c9dcff; }.owner-table-wrap td:first-child small { display: block; color: #aab7cf; margin-top: 3px; }.owner-table-wrap input { width: 100%; }.owner-table-wrap select { min-width: 110px; }
+.owner-table-wrap td:nth-child(3) { min-width: 210px; }.owner-table-wrap td:nth-child(3) small { display: block; color: #aab7cf; margin-top: 3px; }.evidence-state { font-weight: 700; }.evidence-ready { color: #72c995; }.evidence-pending { color: #e0b95b; }.evidence-missing { color: #aab7cf; }
 #owner-progress, #owner-decision-status { color: #aab7cf; font-size: 13px; }
 @media (max-width: 640px) { h1 { font-size: 30px; } .page-header { padding: 20px; } .metrics { grid-template-columns: repeat(2, 1fr); } .report-head dl { grid-template-columns: repeat(2, minmax(100px, 1fr)); } #filter-count { width: 100%; margin-left: 0; } #family-filter { min-width: min(260px, 100%); } .owner-workbench-head { align-items: start; flex-direction: column; } .owner-outputs { justify-items: start; } }
 `;

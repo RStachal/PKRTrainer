@@ -3,7 +3,7 @@ param(
   [ValidateRange(1, 100)]
   [int]$MaximumCpuPercent = 40,
   [int]$StopBelowFreeMemoryPercent = 25,
-  [int]$ThreadCount = 2,
+  [int]$ThreadCount = 3,
   [switch]$DryRun
 )
 

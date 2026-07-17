@@ -76,8 +76,8 @@ attempt fail, or when a task explicitly changes strategy meaning or release scop
   `MEMORY_SAFE_REVIEW_ONLY`.
 - Review protocol: 20 families need human review; 0 protocol-ready.
 - Complete memory-safe intake: all five derived manifests are observed. The
-  2026-07-17 08:58 snapshot has 272/344 physical checkpoints, 269 unique
-  family/board pairs, 20/20 valid cumulative reports and 12/20 mechanical family
+  2026-07-17 09:42 snapshot has 289/344 physical checkpoints, 286 unique
+  family/board pairs, 20/20 valid cumulative reports and 15/20 mechanical family
   shapes. These counts do not substitute for the 0/20 owner decisions.
 - Action-EV comparison: implementation complete, data not ready. Core preflop is
   `0/493818` complete decisions across `0/4` packs; scoped FLOP pilots are
@@ -349,8 +349,8 @@ Depends on: `OPS-39`, `OPS-40`
 Lane: `REPEATABLE`
 
 The owner explicitly requested another background TexasSolver run. Add the
-audited 83-board `beta-depth` supply as the fifth checkpoint-safe phase, retain
-two threads, `BelowNormal` priority, CPU <= 40%, at least 35% free RAM and the
+audited 83-board `beta-depth` supply as the fifth checkpoint-safe phase, use
+three threads on the next worker, `BelowNormal` priority, CPU <= 40%, at least 35% free RAM and the
 25% emergency stop. Observe every new checkpoint through cumulative
 `MEMORY_SAFE_REVIEW_ONLY` intake. This work may improve the review packet but
 never supplies a human verdict, production strategy or action EV.
@@ -393,13 +393,31 @@ Lane: `MECHANICAL`
 Every ten-minute MTT cycle now rebuilds a separate owner workbench from only the
 canonical full-tree review-report directory and the current four-wave packet.
 The reduced-tree evidence viewer remains read-only and cannot expose owner
-decision controls. Cycle status records the owner dashboard path, update time
-and builder exit code.
+decision controls. The workbench joins only a validated
+`REVIEW_ONLY_EVIDENCE_NOT_POKER_APPROVAL` snapshot and can filter `Shape ready`
+from `Needs evidence`; neither state selects a verdict. Cycle status records the
+owner dashboard path, update time and builder exit code.
 
 Acceptance: the generated owner workbench contains exactly 20 unique families
 in four five-family waves; the reduced-tree viewer still has no decision
 controls; a live cycle exits 0 and reports the owner dashboard ready without
 changing any review verdict or strategy file.
+
+### OPS-44 - Keep development first while modestly tuning solver throughput
+
+Status: `DONE 2026-07-17`
+Depends on: `OPS-41`, `OPS-43`
+Lane: `JUDGMENT`
+
+The next low-memory worker defaults to three solver threads while retaining
+`BelowNormal`, CPU <= 40%, at least 35% free RAM and the 25% emergency stop. The
+active board is not interrupted, so the current worker may finish with its
+loaded two-thread setting. MTT Node work keeps the same strict resource preflight.
+
+Acceptance: thread tuning changes no tree shape or strategy data; a busy CPU
+defers MTT automation without touching TexasSolver; the canonical dashboard
+accepts only the explicit review-only readiness basis and shows 20 unique owner
+families without preselecting a decision.
 
 ## Phase DEP - Core Deployment Closeout
 
@@ -1030,3 +1048,4 @@ Use this exact handoff prompt after changing models:
 | 2026-07-17 | OPS-41 | ACTIVE | Explicit owner instruction activated the audited 83-board beta-depth supply only as guarded `MEMORY_SAFE_REVIEW_ONLY` evidence. At 08:58 it was 11/83 with no recorded solver failure; `growth`, automatic normalization and promotion remain disabled. |
 | 2026-07-17 | OPS-42 | DONE | Switched recurring intake from the two unlabeled source manifests to all five derived memory-safe manifests, restoring 144 completed review-only checkpoints to cumulative evidence. The live cycle observed 272/344 physical and 269 unique family/board pairs, wrote 20/20 valid reports and measured 12/20 mechanical shapes while owner review remained 0/20. Pilot-first reviewer waves, 42/42 related tests, typecheck and Core passed. |
 | 2026-07-17 | OPS-43 | DONE | The ten-minute cycle now rebuilds a dedicated canonical owner dashboard separately from the reduced-tree evidence viewer. A live cycle exited 0 at beta-depth 24/83, the owner workbench contained exactly 20 families in four waves, focused tests passed 12/12 and typecheck passed; no owner verdict or strategy data was inferred. |
+| 2026-07-17 | OPS-44 | DONE | Prepared a conservative three-thread `BelowNormal` profile for the next worker without interrupting the active board. The owner dashboard now joins fail-closed mechanical context and filters 15 shape-ready from 5 evidence-pending families. Reviewer/readiness/protocol/Windows tests passed 24/24 and typecheck passed; a live attempt correctly deferred at 46% CPU against the 40% development guard. |

@@ -14,6 +14,7 @@ describe("mtt:texas-solver-viewer CLI", () => {
     const otherFamilyInput = join(directory, "review.other-family.report.json");
     const output = join(directory, "viewer.html");
     const waves = join(directory, "OWNER_REVIEW_WAVES.md");
+    const readiness = join(directory, "mechanical-readiness.json");
     try {
       const report = {
         valid: true,
@@ -39,14 +40,38 @@ describe("mtt:texas-solver-viewer CLI", () => {
       writeFileSync(secondInput, JSON.stringify({ ...report, nodeHistory: ["BET_25"] }, null, 2), "utf8");
       writeFileSync(otherFamilyInput, JSON.stringify({ ...report, familyId: "MTT9_OTHER_FAMILY", nodeHistory: [] }, null, 2), "utf8");
       writeFileSync(waves, "# Owner review waves\n\n## Wave 2\n\n- MTT9_50BB_BTN_BB_SRP: NEEDS_REVIEW\n\n## Wave 3\n\n- MTT9_OTHER_FAMILY: NEEDS_REVIEW\n", "utf8");
+      writeFileSync(readiness, JSON.stringify({
+        basis: "REVIEW_ONLY_EVIDENCE_NOT_POKER_APPROVAL",
+        rows: [
+          {
+            familyId: "MTT9_50BB_BTN_BB_SRP",
+            evidenceValid: true,
+            boardCount: 12,
+            cohortCount: 6,
+            largestCohortShare: 0.25,
+            mechanicalShapeReady: true,
+            nextGate: "HUMAN_POKER_REVIEW",
+          },
+          {
+            familyId: "MTT9_OTHER_FAMILY",
+            evidenceValid: true,
+            boardCount: 8,
+            cohortCount: 5,
+            largestCohortShare: 0.375,
+            mechanicalShapeReady: false,
+            nextGate: "MORE_EVIDENCE_REQUIRED",
+          },
+        ],
+      }, null, 2), "utf8");
 
-      const result = runViewer(`--input=${input}`, `--input=${secondInput}`, `--input=${otherFamilyInput}`, `--output=${output}`, `--waves=${waves}`);
+      const result = runViewer(`--input=${input}`, `--input=${secondInput}`, `--input=${otherFamilyInput}`, `--output=${output}`, `--waves=${waves}`, `--readiness=${readiness}`);
 
       expect(result.status).toBe(0);
       const html = readFileSync(output, "utf8");
       expect(html).toContain('id="family-filter"');
       expect(html).toContain('id="status-filter"');
       expect(html).toContain('id="wave-filter"');
+      expect(html).toContain('id="mechanical-filter"');
       expect(html).toContain('<option value="2" selected>Wave 2 (1)</option>');
       expect(html).toContain('<option value="3">Wave 3 (1)</option>');
       expect(html).toContain("<dt>Families</dt><dd>2</dd>");
@@ -54,6 +79,12 @@ describe("mtt:texas-solver-viewer CLI", () => {
       expect(html).toContain('id="import-owner-decisions"');
       expect(html).toContain('id="copy-owner-commands"');
       expect(html).toContain('id="owner-reviewer"');
+      expect(html).toContain("Mechanical context 1/2");
+      expect(html).toContain("Mechanical readiness is reduced-tree, review-only context.");
+      expect(html).toContain('data-mechanical-ready="true"');
+      expect(html).toContain('data-mechanical-ready="false"');
+      expect(html).toContain("12 boards / 6 cohorts / 25.0% max cohort");
+      expect(html).toContain("Next: HUMAN_POKER_REVIEW");
       expect(html).toContain("pkrtrainer-texas-solver-owner-decisions-v1");
       expect(html).toContain("RECORD_TEXAS_SOLVER_OWNER_REVIEW_BATCH");
       expect(html).toContain("localStorage.setItem");
@@ -73,6 +104,15 @@ describe("mtt:texas-solver-viewer CLI", () => {
       const dom = new JSDOM(html, { runScripts: "dangerously", url: "http://localhost/reviewer", virtualConsole });
       const document = dom.window.document;
       expect((document.getElementById("wave-filter") as HTMLSelectElement).value).toBe("2");
+      const waveFilter = document.getElementById("wave-filter") as HTMLSelectElement;
+      const mechanicalFilter = document.getElementById("mechanical-filter") as HTMLSelectElement;
+      waveFilter.value = "ALL";
+      mechanicalFilter.value = "NEEDS_EVIDENCE";
+      mechanicalFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
+      expect([...document.querySelectorAll<HTMLElement>("[data-owner-row]")].filter((candidate) => !candidate.hidden).map((candidate) => candidate.dataset.family)).toEqual(["MTT9_OTHER_FAMILY"]);
+      mechanicalFilter.value = "ALL";
+      waveFilter.value = "2";
+      waveFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
       const reviewer = document.getElementById("owner-reviewer") as HTMLInputElement;
       const row = document.querySelector<HTMLElement>("[data-owner-row]")!;
       reviewer.value = "Owner";
@@ -128,6 +168,33 @@ describe("mtt:texas-solver-viewer CLI", () => {
     }
   });
 
+  it("rejects mechanical context that could be mistaken for poker approval", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-viewer-readiness-"));
+    const input = join(directory, "review.report.json");
+    const output = join(directory, "viewer.html");
+    const readiness = join(directory, "mechanical-readiness.json");
+    try {
+      writeFileSync(input, JSON.stringify({
+        valid: true,
+        status: "NEEDS_REVIEW",
+        productionReady: false,
+        familyId: "MTT9_READINESS_BOUNDARY",
+        counts: {},
+        files: [],
+        anomalies: [],
+        blockers: [],
+      }), "utf8");
+      writeFileSync(readiness, JSON.stringify({ basis: "POKER_APPROVAL", rows: [] }), "utf8");
+
+      const result = runViewer(`--input=${input}`, `--output=${output}`, `--readiness=${readiness}`, "--no-waves");
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("must use REVIEW_ONLY_EVIDENCE_NOT_POKER_APPROVAL basis");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("renders memory-safe evidence without owner decision controls", () => {
     const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-viewer-evidence-"));
     const input = join(directory, "review.evidence.json");
@@ -162,6 +229,7 @@ describe("mtt:texas-solver-viewer CLI", () => {
       expect(html).toContain("MEMORY_SAFE_REVIEW_ONLY");
       expect(html).toContain("REVIEW_ONLY_EVIDENCE");
       expect(html).not.toContain('id="owner-reviewer"');
+      expect(html).not.toContain('id="mechanical-filter"');
 
       const jsdomErrors: string[] = [];
       const virtualConsole = new VirtualConsole();
