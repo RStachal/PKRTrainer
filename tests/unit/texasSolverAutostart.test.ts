@@ -79,11 +79,18 @@ describe("TexasSolver Windows autostart queue", () => {
       "Install",
       "-DryRun",
     );
+    const ensureOutput = runPowerShell(
+      AUTONOMOUS_CYCLE_MANAGER_PATH,
+      "-Action",
+      "Ensure",
+      "-DryRun",
+    );
     const cycle = readFileSync(AUTONOMOUS_CYCLE_PATH, "utf8");
     const manager = readFileSync(AUTONOMOUS_CYCLE_MANAGER_PATH, "utf8");
 
     expect(output).toContain("PKRTrainer-MTT-Task-Agent-10m");
     expect(output).toContain("-WindowStyle Hidden");
+    expect(ensureOutput).toContain("Dry run ensure: task=PKRTrainer-MTT-Task-Agent-10m");
     expect(cycle).toContain("PKRTrainerMttAutonomousCycleV1");
     expect(cycle).toContain("$IntervalMinutes = 10");
     expect(cycle).toContain("Preflight found an active MTT autonomous cycle");
@@ -157,6 +164,8 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).not.toContain("mtt:texas-solver-ingest-completed");
     expect(cycle).not.toContain("mtt:promote-ready");
     expect(manager).toContain('TaskName = "PKRTrainer-MTT-Task-Agent-10m"');
+    expect(manager).toContain('ValidateSet("Install", "Ensure", "Status", "Stop", "Uninstall")');
+    expect(manager).toContain("Enable-ScheduledTask");
     expect(manager).toContain("-AtLogOn");
     expect(manager).toContain("-RepetitionInterval (New-TimeSpan -Minutes $RepetitionMinutes)");
     expect(manager).toContain("-Once -IntervalMinutes $RepetitionMinutes");
@@ -164,6 +173,12 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(manager).toContain("-MultipleInstances IgnoreNew");
     expect(manager).toContain("Show-LatestCycleSummary");
     expect(manager).toContain("coverage snapshot:");
+    expect(manager).toContain("snapshot freshness:");
+    expect(manager).toContain("live checkpoints may be newer");
+    expect(manager).toContain("task health:");
+    expect(manager).toContain("next run:");
+    expect(manager).toContain("Show-LatestCycleOutcome");
+    expect(manager).toContain("latest cycle outcome:");
     expect(manager).toContain("P1 intake:");
     expect(manager).toContain("TexasSolver review:");
     expect(manager).toContain("TexasSolver owner dashboard:");
@@ -177,6 +192,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(packageJson.scripts["mtt:autonomous-cycle-install"]).toContain(
       "manage-mtt-autonomous-cycle.ps1 -Action Install -StartNow",
     );
+    expect(packageJson.scripts["mtt:autonomous-cycle-ensure"]).toContain("-Action Ensure -StartNow");
     expect(packageJson.scripts["mtt:autonomous-cycle-status"]).toContain("-Action Status");
     expect(packageJson.scripts["mtt:autonomous-cycle-stop"]).toContain("-Action Stop");
     expect(packageJson.scripts["mtt:autonomous-cycle-uninstall"]).toContain("-Action Uninstall");

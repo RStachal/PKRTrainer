@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Install", "Status", "Stop", "Uninstall")]
+  [ValidateSet("Install", "Ensure", "Status", "Stop", "Uninstall")]
   [string]$Action = "Status",
   [string]$TaskName = "PKRTrainer-MTT-Task-Agent-10m",
   [ValidateRange(1, 1440)]
@@ -15,7 +15,8 @@ param(
 $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
 $Cycle = Join-Path $PSScriptRoot "run-mtt-autonomous-cycle.ps1"
-$LatestSummaryPath = Join-Path $RepoRoot "artifacts\mtt-autonomous-cycle\latest-cycle-summary.json"
+$CycleArtifactsDir = Join-Path $RepoRoot "artifacts\mtt-autonomous-cycle"
+$LatestSummaryPath = Join-Path $CycleArtifactsDir "latest-cycle-summary.json"
 $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 $PowerShell = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
 $Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$Cycle`" -Once -IntervalMinutes $RepetitionMinutes -MinimumFreeMemoryPercent $MinimumFreeMemoryPercent -MaximumCpuPercent $MaximumCpuPercent"
@@ -38,6 +39,13 @@ function Show-LatestCycleSummary {
     $summary = Get-Content -LiteralPath $LatestSummaryPath -Raw | ConvertFrom-Json
     if ($summary.schemaVersion -ne 1 -or $null -eq $summary.manifests) { throw "Unsupported summary format." }
     Write-Host "coverage snapshot: $($summary.generatedAt) source-safe=$($summary.sourceSafe)"
+    $generatedAt = [DateTimeOffset]::Parse([string]$summary.generatedAt).ToUniversalTime()
+    $ageMinutes = [Math]::Max(0, [Math]::Round(([DateTimeOffset]::UtcNow - $generatedAt).TotalMinutes, 1))
+    $staleAfterMinutes = [Math]::Max(30, $RepetitionMinutes * 3)
+    $freshness = if ($ageMinutes -gt $staleAfterMinutes) { "STALE" } else { "CURRENT" }
+    $freshnessSuffix = if ($freshness -eq "STALE") { " (live checkpoints may be newer)" } else { "" }
+    Write-Host ("snapshot freshness: {0} age={1}m threshold={2}m{3}" -f `
+      $freshness, $ageMinutes, $staleAfterMinutes, $freshnessSuffix)
     foreach ($manifest in @($summary.manifests)) {
       Write-Host ("coverage: {0} {1}/{2}, raw-complete families {3}/{4}, complete={5}, profile={6}" -f `
         $manifest.packId, $manifest.solvedBoards, $manifest.expectedBoards, `
@@ -87,6 +95,21 @@ function Show-LatestCycleSummary {
   }
 }
 
+function Show-LatestCycleOutcome {
+  $latestLog = Get-ChildItem -LiteralPath $CycleArtifactsDir -Filter "cycle-*.log" -File -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTimeUtc -Descending |
+    Select-Object -First 1
+  if ($null -eq $latestLog) {
+    Write-Host "latest cycle outcome: no cycle log"
+    return
+  }
+  $lastLine = Get-Content -LiteralPath $latestLog.FullName -Tail 20 |
+    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+    Select-Object -Last 1
+  Write-Host "latest cycle log: $($latestLog.FullName)"
+  Write-Host "latest cycle outcome: $(if ($null -ne $lastLine) { $lastLine } else { 'empty log' })"
+}
+
 function Show-TaskStatus {
   $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
   if ($null -eq $task) {
@@ -95,13 +118,19 @@ function Show-TaskStatus {
   }
   $info = Get-ScheduledTaskInfo -TaskName $TaskName
   $processes = @(Get-CycleProcesses)
+  $enabled = $task.State -ne "Disabled"
+  $nextRun = if ($info.NextRunTime -gt [DateTime]::MinValue) { $info.NextRunTime } else { "none" }
   Write-Host "MTT autonomous cycle task"
   Write-Host "name: $TaskName"
   Write-Host "state: $($task.State)"
+  Write-Host "enabled: $($enabled.ToString().ToLowerInvariant())"
+  Write-Host "task health: $(if ($enabled) { 'ENABLED' } else { 'DISABLED (run npm run mtt:autonomous-cycle-ensure)' })"
+  Write-Host "next run: $nextRun"
   Write-Host "last run: $($info.LastRunTime)"
   Write-Host "last result: $($info.LastTaskResult)"
   Write-Host "cycle PIDs: $(if ($processes.Count) { $processes.ProcessId -join ',' } else { 'none' })"
   Write-Host "cycle: $Cycle"
+  Show-LatestCycleOutcome
   Show-LatestCycleSummary
   return $true
 }
@@ -117,6 +146,32 @@ if ($Action -eq "Status") {
   }
   $exists = Show-TaskStatus
   exit $(if ($exists) { 0 } else { 1 })
+}
+
+if ($Action -eq "Ensure") {
+  if ($DryRun) {
+    Write-Host "Dry run ensure: task=$TaskName; enable an existing disabled task or install it when missing"
+    exit 0
+  }
+  $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+  if ($null -ne $task) {
+    if ($task.State -eq "Disabled") {
+      Enable-ScheduledTask -TaskName $TaskName | Out-Null
+      Write-Host "Enabled MTT autonomous cycle task: $TaskName"
+      Start-Sleep -Milliseconds 250
+    } else {
+      Write-Host "MTT autonomous cycle task is already enabled: $TaskName"
+    }
+    $task = Get-ScheduledTask -TaskName $TaskName
+    if ($StartNow -and $task.State -ne "Running") {
+      Start-ScheduledTask -TaskName $TaskName
+      Start-Sleep -Seconds 2
+      Write-Host "Started MTT autonomous cycle task now."
+    }
+    Show-TaskStatus | Out-Null
+    exit 0
+  }
+  Write-Host "MTT autonomous cycle task is missing; installing it: $TaskName"
 }
 
 if ($Action -eq "Stop") {

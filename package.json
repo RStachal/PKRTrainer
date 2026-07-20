@@ -53,6 +53,7 @@
     "mtt:texas-solver-low-memory-stop": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/manage-texas-solver-low-memory.ps1 -Action Stop",
     "mtt:texas-solver-low-memory-uninstall": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/manage-texas-solver-low-memory.ps1 -Action Uninstall",
     "mtt:autonomous-cycle-install": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/manage-mtt-autonomous-cycle.ps1 -Action Install -StartNow",
+    "mtt:autonomous-cycle-ensure": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/manage-mtt-autonomous-cycle.ps1 -Action Ensure -StartNow",
     "mtt:autonomous-cycle-status": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/manage-mtt-autonomous-cycle.ps1 -Action Status",
     "mtt:autonomous-cycle-stop": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/manage-mtt-autonomous-cycle.ps1 -Action Stop",
     "mtt:autonomous-cycle-uninstall": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/manage-mtt-autonomous-cycle.ps1 -Action Uninstall",

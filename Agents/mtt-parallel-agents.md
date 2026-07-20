@@ -87,11 +87,19 @@ audit; the ten-minute MTT agent never writes or regenerates solver input.
 Controls:
 
 ```powershell
+npm run mtt:autonomous-cycle-ensure
 npm run mtt:autonomous-cycle-status
 npm run mtt:autonomous-cycle-stop
 npm run mtt:autonomous-cycle-install
 npm run mtt:autonomous-cycle-uninstall
 ```
+
+`ensure` is the routine idempotent repair command. It enables the existing task
+without replacing healthy triggers, installs it only when missing and requests
+one guarded catch-up cycle. Status
+reports task health, next run, latest logged outcome and whether its persisted
+snapshot is current or stale; a stale snapshot never overrides live raw-file
+coverage.
 
 ## Current External And Human Gates
 

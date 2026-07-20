@@ -187,10 +187,17 @@ does not interrupt the current step unless it exposes a production regression.
 
 ```powershell
 npm run mtt:autonomous-cycle-install
+npm run mtt:autonomous-cycle-ensure
 npm run mtt:autonomous-cycle-status
 ```
 
 It starts after Windows sign-in and uses a local mutex to avoid concurrent cycles.
+Use `ensure` for routine health repair: it enables a disabled existing task
+without replacing its triggers, installs it only when missing and requests one
+guarded catch-up cycle. Status prints
+the enabled state, next run, latest logged outcome and snapshot age; `STALE`
+means resource guards deferred recent cycles and live solver coverage must be
+checked separately.
 `last result: 267009` (`0x00041301`) is the normal Task Scheduler state while
 the long-running cycle is active, not a failed run. Start the existing task when
 needed; do not reinstall it merely because it is already running.

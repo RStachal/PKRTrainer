@@ -130,14 +130,14 @@ Status: `REPEATING_CHECK`
 Depends on: `OPS-00`
 Lane: `REPEATABLE`
 
-Last measured: 2026-07-20 11:27 local time. `next`, `followup` and `owner-depth`
+Last measured: 2026-07-20 13:04 local time. `next`, `followup` and `owner-depth`
 are complete at 72/72, `beta-min` is 45/45, `growth` is 98/98 and `beta-depth`
-is 42/83. The scheduled worker is alive but no `console_solver` process is active:
-it reports `WAITING_FOR_RESOURCES (RAM)` because free memory is 9%, below its
-35% start gate. One historical native failure remains recorded and visible.
+is 49/83. The scheduled worker resumed when RAM recovered, completed seven more
+checkpoints and returned to its CPU/RAM guard with no duplicate solver process.
+One historical native failure remains recorded and visible.
 
 The current cumulative intake aggregates solved memory-safe checkpoints into 20
-valid reports covering 390 unique family/board pairs. Extraction failures are
+valid reports covering 405 unique family/board pairs. Extraction failures are
 zero, and no strategy was staged or promoted.
 
 Run once per AI work session, not in a tight loop:
@@ -197,8 +197,18 @@ a scoped Core gate when raw coverage changes. It never writes solver inputs;
 
 ```powershell
 npm run mtt:autonomous-cycle-install
+npm run mtt:autonomous-cycle-ensure
 npm run mtt:autonomous-cycle-status
 ```
+
+Use `install` to create or intentionally replace the schedule. Use the
+idempotent `ensure` command for routine repair: it enables an existing disabled
+task without rewriting its triggers, installs it only when missing and requests
+one guarded cycle immediately so a re-enabled stale schedule catches up. Status
+labels the task health and marks a cycle snapshot stale after three missed
+windows, because live raw checkpoints can be newer than a resource-deferred
+snapshot. The latest cycle outcome is printed from the newest log so a CPU/RAM
+deferral is visible without opening artifacts manually.
 
 To interrupt only a current cycle, use `npm run mtt:autonomous-cycle-stop`; to
 remove future sign-in starts too, use `npm run mtt:autonomous-cycle-uninstall`.
@@ -364,10 +374,10 @@ cycle includes it when present; no `normalized.json`, `permission.json` or
 runtime strategy file is generated. Completed growth output remains an
 explicitly bounded `MEMORY_SAFE_REVIEW_ONLY` intake item.
 
-Evidence at 2026-07-20 11:27: beta-depth is 42/83 with nine complete, two partial
-and nine waiting families. Growth is independently raw-complete at 98/98. The
-resource-guarded worker is waiting for RAM and owns no solver process; Core stays
-green at 4/4 preflop plus 7/7 scoped FLOP pilots.
+Evidence at 2026-07-20 13:04: beta-depth is 49/83 with eleven complete, one
+partial and eight waiting families. Growth is independently raw-complete at
+98/98. The resource-guarded worker resumed without a duplicate process; Core
+stays green at 4/4 preflop plus 7/7 scoped FLOP pilots.
 
 ### OPS-42 - Join all memory-safe evidence to mechanical review readiness
 
@@ -423,6 +433,25 @@ Acceptance: thread tuning changes no tree shape or strategy data; a busy CPU
 defers MTT automation without touching TexasSolver; the canonical dashboard
 accepts only the explicit review-only readiness basis and shows 20 unique owner
 families without preselecting a decision.
+
+### OPS-46 - Self-heal and diagnose the recurring MTT agent
+
+Status: `DONE 2026-07-20`
+Depends on: `OPS-04`
+Lane: `REPEATABLE`
+
+The task manager now has an idempotent `Ensure` action. It enables an existing
+disabled ten-minute task without replacing its triggers, installs a missing
+task, and starts once when `-StartNow` is requested. The npm repair command uses
+that guarded start so a re-enabled stale trigger catches up. Status exposes
+enabled health, next run, latest logged outcome and snapshot age; a summary
+older than three recurring windows is labeled `STALE` instead of being
+presented as current solver truth.
+
+Acceptance: `npm run mtt:autonomous-cycle-ensure` exits 0 for an already enabled
+task, status reports `task health: ENABLED`, the old snapshot is visibly stale,
+and focused Windows automation tests pass without starting or stopping
+TexasSolver.
 
 ## Phase DEP - Core Deployment Closeout
 
@@ -1055,6 +1084,7 @@ Use this exact handoff prompt after changing models:
 | 2026-07-17 | OPS-43 | DONE | The ten-minute cycle now rebuilds a dedicated canonical owner dashboard separately from the reduced-tree evidence viewer. A live cycle exited 0 at beta-depth 24/83, the owner workbench contained exactly 20 families in four waves, focused tests passed 12/12 and typecheck passed; no owner verdict or strategy data was inferred. |
 | 2026-07-17 | OPS-44 | DONE | Prepared a conservative three-thread `BelowNormal` profile for the next worker without interrupting the active board. The owner dashboard now joins fail-closed mechanical context and filters 15 shape-ready from 5 evidence-pending families. Reviewer/readiness/protocol/Windows tests passed 24/24 and typecheck passed; a live attempt correctly deferred at 46% CPU against the 40% development guard. |
 | 2026-07-20 | OPS-45 | DONE | Low-memory task status now distinguishes a live solver from a worker waiting on its resource gate and reports current CPU, free RAM and solver PIDs. Live status truthfully showed `WAITING_FOR_RESOURCES (RAM)`, no solver PID, CPU 40% and free RAM 9%; autostart tests 9/9 and typecheck passed. |
+| 2026-07-20 | OPS-46 | DONE | Added idempotent repair for the ten-minute MTT task plus enabled/next-run/latest-outcome/snapshot-freshness diagnostics. The real task was repaired from Disabled to Ready, then confirmed enabled with a future trigger. Incremental review-only intake refreshed four changed families through the latest `J88r` checkpoint: beta-depth reached 49/83 and cumulative valid evidence reached 405 unique family/board pairs without staging or promotion. |
 | 2026-07-20 | OWNER-REVIEW-06 | DONE | Owner dashboard progress now counts only export-valid decisions, marks missing reviewer/date/scope/caveats, and focuses the next incomplete visible row without selecting a poker verdict. Current dashboard regenerated over 53 reports with 20/20 mechanical family context and 0 preselected decisions. Focused reviewer/writer/autostart tests passed 17/17, typecheck passed, and browser QA removed the 390px global horizontal overflow. |
 | 2026-07-20 | RELEASE-I18N-01 | DONE | Global runtime and asynchronous errors now follow the live EN/CZ catalog, while range metadata uses the stable poker label `ante ON/OFF`. Vitest parent concurrency is capped at four to prevent nested CLI processes from timing out under solver/development memory pressure. Stable full regression passed 151/151 files and 753/753 tests; registry, scoped Core, ranges, production build, precache and bundle budget all passed. Production Chrome E2E passed desktop plus 360/390/412 px with zero browser errors and 48 contrast checks. |
 | 2026-07-20 | RELEASE-FTP-02 | DONE | Packaged the verified production output with the tracked `deploy/forpsi/.htaccess.example` staging template as `deploy/pkrtrainer-ftp-20260720-124211-25ee34a01488-mtt-core-i18n-final.zip`. ZIP reconciliation passed 22/22 files with 0 missing, 0 extra and 0 hash mismatches; SHA-256 is `D85B7AA2B6578C8979871A5D9FD697FAB7928AD694DC195ABC2A9E2CB58616E5`. |
