@@ -42,8 +42,8 @@ an earlier iteration is active, it exits and waits for the next scheduled window
   skips the downstream pilot refresh.
 - The watcher and mechanical cycle use the same refresh CLI to aggregate every
   solved checkpoint from all six derived memory-safe manifests, including a
-  partial family, into one cumulative report per family. The 2026-07-20 13:22
-  snapshot contains 411 unique family/board pairs, 20/20 valid reports, 20/20
+  partial family, into one cumulative report per family. The 2026-07-20 13:30
+  snapshot contains 415 unique family/board pairs, 20/20 valid reports, 20/20
   mechanical shapes and 0/20 human owner decisions.
 
 Controls:
