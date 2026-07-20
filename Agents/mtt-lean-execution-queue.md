@@ -1,6 +1,6 @@
 # MTT Lean Execution Queue
 
-Updated: 2026-07-17
+Updated: 2026-07-20
 Status: ACTIVE AFTER MTT_CORE_V1
 Default execution setting: GPT-5.6 Terra, Medium reasoning
 
@@ -78,10 +78,9 @@ attempt fail, or when a task explicitly changes strategy meaning or release scop
   `MEMORY_SAFE_REVIEW_ONLY`.
 - Review protocol: 20 families need human review; 0 protocol-ready.
 - Complete memory-safe intake: six derived manifests are observed, including the
-  completed 98-board growth evidence wrapper. The
-  2026-07-17 09:42 snapshot has 289/344 physical checkpoints, 286 unique
-  family/board pairs, 20/20 valid cumulative reports and 15/20 mechanical family
-  shapes. These counts do not substitute for the 0/20 owner decisions.
+  completed 98-board growth evidence wrapper. The 2026-07-20 snapshot has 390
+  unique family/board pairs, 20/20 valid cumulative reports and 20/20 mechanical
+  family shapes. These counts do not substitute for the 0/20 owner decisions.
 - Action-EV comparison: implementation complete, data not ready. Core preflop is
   `0/493818` complete decisions across `0/4` packs; scoped FLOP pilots are
   `0/972` across `0/7`. Frequency-only solver output is excluded.
@@ -131,14 +130,15 @@ Status: `REPEATING_CHECK`
 Depends on: `OPS-00`
 Lane: `REPEATABLE`
 
-Last measured: 2026-07-16 18:10 local time. `next`, `followup` and `owner-depth`
-are complete at 72/72 and `beta-min` is complete at 45/45. The task is `Ready`,
-last result is `SUCCESS`, no worker process remains and no solver failure exists.
+Last measured: 2026-07-20 11:27 local time. `next`, `followup` and `owner-depth`
+are complete at 72/72, `beta-min` is 45/45, `growth` is 98/98 and `beta-depth`
+is 42/83. The scheduled worker is alive but no `console_solver` process is active:
+it reports `WAITING_FOR_RESOURCES (RAM)` because free memory is 9%, below its
+35% start gate. One historical native failure remains recorded and visible.
 
-The 18:10 live cycle aggregated every solved memory-safe checkpoint into 20
-cumulative reports covering 117 family/board
-pairs. All reports are valid, extraction failures are zero, and no strategy was
-staged or promoted.
+The current cumulative intake aggregates solved memory-safe checkpoints into 20
+valid reports covering 390 unique family/board pairs. Extraction failures are
+zero, and no strategy was staged or promoted.
 
 Run once per AI work session, not in a tight loop:
 
@@ -364,9 +364,10 @@ cycle includes it when present; no `normalized.json`, `permission.json` or
 runtime strategy file is generated. Completed growth output remains an
 explicitly bounded `MEMORY_SAFE_REVIEW_ONLY` intake item.
 
-Evidence at 08:58: task `Running`, no recorded solver failures, beta-depth 11/83
-with two complete and one partial family. The first updated intake cycle exited
-0 and Core stayed green.
+Evidence at 2026-07-20 11:27: beta-depth is 42/83 with nine complete, two partial
+and nine waiting families. Growth is independently raw-complete at 98/98. The
+resource-guarded worker is waiting for RAM and owns no solver process; Core stays
+green at 4/4 preflop plus 7/7 scoped FLOP pilots.
 
 ### OPS-42 - Join all memory-safe evidence to mechanical review readiness
 
@@ -1053,3 +1054,5 @@ Use this exact handoff prompt after changing models:
 | 2026-07-17 | OPS-42 | DONE | Switched recurring intake from the two unlabeled source manifests to all five derived memory-safe manifests, restoring 144 completed review-only checkpoints to cumulative evidence. The live cycle observed 272/344 physical and 269 unique family/board pairs, wrote 20/20 valid reports and measured 12/20 mechanical shapes while owner review remained 0/20. Pilot-first reviewer waves, 42/42 related tests, typecheck and Core passed. |
 | 2026-07-17 | OPS-43 | DONE | The ten-minute cycle now rebuilds a dedicated canonical owner dashboard separately from the reduced-tree evidence viewer. A live cycle exited 0 at beta-depth 24/83, the owner workbench contained exactly 20 families in four waves, focused tests passed 12/12 and typecheck passed; no owner verdict or strategy data was inferred. |
 | 2026-07-17 | OPS-44 | DONE | Prepared a conservative three-thread `BelowNormal` profile for the next worker without interrupting the active board. The owner dashboard now joins fail-closed mechanical context and filters 15 shape-ready from 5 evidence-pending families. Reviewer/readiness/protocol/Windows tests passed 24/24 and typecheck passed; a live attempt correctly deferred at 46% CPU against the 40% development guard. |
+| 2026-07-20 | OPS-45 | DONE | Low-memory task status now distinguishes a live solver from a worker waiting on its resource gate and reports current CPU, free RAM and solver PIDs. Live status truthfully showed `WAITING_FOR_RESOURCES (RAM)`, no solver PID, CPU 40% and free RAM 9%; autostart tests 9/9 and typecheck passed. |
+| 2026-07-20 | OWNER-REVIEW-06 | DONE | Owner dashboard progress now counts only export-valid decisions, marks missing reviewer/date/scope/caveats, and focuses the next incomplete visible row without selecting a poker verdict. Current dashboard regenerated over 53 reports with 20/20 mechanical family context and 0 preselected decisions. Focused reviewer/writer/autostart tests passed 17/17, typecheck passed, and browser QA removed the 390px global horizontal overflow. |

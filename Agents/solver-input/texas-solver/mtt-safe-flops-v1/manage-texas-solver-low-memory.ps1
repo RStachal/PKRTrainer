@@ -13,8 +13,38 @@ $Worker = Join-Path $PSScriptRoot "run-texas-solver-low-memory.ps1"
 $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 $PowerShell = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
 $Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$Worker`""
+$StatusMinimumFreeMemoryPercent = 35
+$StatusMaximumCpuPercent = 40
 
 function Get-Workers { return @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.Name -ieq "powershell.exe" -and $_.CommandLine -match [regex]::Escape($Worker) }) }
+function Get-ResourceSnapshot {
+  $operatingSystem = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+  $processors = @(Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue)
+  $solverProcesses = @(Get-Process -Name "console_solver" -ErrorAction SilentlyContinue)
+  $cpuPercent = if ($processors.Count) {
+    [math]::Round([double](($processors | Measure-Object -Property LoadPercentage -Average).Average), 1)
+  } else { $null }
+  $freeMemoryPercent = if ($null -ne $operatingSystem -and [double]$operatingSystem.TotalVisibleMemorySize -gt 0) {
+    [math]::Round(100 * [double]$operatingSystem.FreePhysicalMemory / [double]$operatingSystem.TotalVisibleMemorySize, 1)
+  } else { $null }
+  return [pscustomobject]@{
+    CpuPercent = $cpuPercent
+    FreeMemoryPercent = $freeMemoryPercent
+    SolverProcesses = $solverProcesses
+  }
+}
+function Get-ExecutionState($Workers, $Resources, $TaskState) {
+  if ($Resources.SolverProcesses.Count -gt 0) { return "SOLVING" }
+  if ($Workers.Count -gt 0) {
+    $blockedBy = @()
+    if ($null -ne $Resources.CpuPercent -and $Resources.CpuPercent -gt $StatusMaximumCpuPercent) { $blockedBy += "CPU" }
+    if ($null -ne $Resources.FreeMemoryPercent -and $Resources.FreeMemoryPercent -lt $StatusMinimumFreeMemoryPercent) { $blockedBy += "RAM" }
+    if ($blockedBy.Count -gt 0) { return "WAITING_FOR_RESOURCES ($($blockedBy -join '+'))" }
+    return "STARTING_OR_SCANNING_CHECKPOINTS"
+  }
+  if ($TaskState -eq "Running") { return "TASK_STARTING" }
+  return "IDLE"
+}
 function Get-LatestSolverActivity {
   $artifactsDir = Join-Path $RepoRoot "artifacts\texas-solver-low-memory"
   if (-not (Test-Path -LiteralPath $artifactsDir)) { return $null }
@@ -53,17 +83,23 @@ function Show-Status {
   } else {
     "$($info.LastTaskResult)"
   }
+  $resources = Get-ResourceSnapshot
+  $executionState = Get-ExecutionState $workers $resources $task.State
   Write-Host "Low-memory TexasSolver task"
   Write-Host "name: $TaskName"
   Write-Host "state: $($task.State)"
   Write-Host "last run: $($info.LastRunTime)"
   Write-Host "last result: $result"
   Write-Host "worker PIDs: $(if ($workers.Count) { $workers.ProcessId -join ',' } else { 'none' })"
+  Write-Host "solver PIDs: $(if ($resources.SolverProcesses.Count) { $resources.SolverProcesses.Id -join ',' } else { 'none' })"
+  Write-Host "resources: CPU $(if ($null -eq $resources.CpuPercent) { 'unknown' } else { "$($resources.CpuPercent)%" }) (start <= $StatusMaximumCpuPercent%); free RAM $(if ($null -eq $resources.FreeMemoryPercent) { 'unknown' } else { "$($resources.FreeMemoryPercent)%" }) (start >= $StatusMinimumFreeMemoryPercent%)"
+  Write-Host "execution state: $executionState"
   Write-Host "worker: $Worker"
   $activity = Get-LatestSolverActivity
   if ($null -ne $activity) {
     Write-Host "latest worker log: $($activity.Log)"
-    Write-Host "active parameter: $(if ([string]::IsNullOrWhiteSpace($activity.Begin)) { 'none recorded in recent log tail' } else { $activity.Begin })"
+    $activityLabel = if ($resources.SolverProcesses.Count -gt 0) { "active parameter" } else { "latest solver begin" }
+    Write-Host "${activityLabel}: $(if ([string]::IsNullOrWhiteSpace($activity.Begin)) { 'none recorded in recent log tail' } else { $activity.Begin })"
   }
   $failures = Get-SolverFailureSummary
   if ($failures.Count -eq 0) {

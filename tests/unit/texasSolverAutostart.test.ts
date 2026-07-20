@@ -347,6 +347,11 @@ describe("TexasSolver Windows autostart queue", () => {
       "repeated triggers are ignored while the worker owns the queue",
     );
     expect(readFileSync(LOW_MEMORY_MANAGER_PATH, "utf8")).toContain("Get-LatestSolverActivity");
+    expect(readFileSync(LOW_MEMORY_MANAGER_PATH, "utf8")).toContain("Get-ResourceSnapshot");
+    expect(readFileSync(LOW_MEMORY_MANAGER_PATH, "utf8")).toContain("WAITING_FOR_RESOURCES");
+    expect(readFileSync(LOW_MEMORY_MANAGER_PATH, "utf8")).toContain("execution state:");
+    expect(readFileSync(LOW_MEMORY_MANAGER_PATH, "utf8")).toContain("solver PIDs:");
+    expect(readFileSync(LOW_MEMORY_MANAGER_PATH, "utf8")).toContain("latest solver begin");
     expect(readFileSync(LOW_MEMORY_MANAGER_PATH, "utf8")).toContain("Get-SolverFailureSummary");
     expect(readFileSync(LOW_MEMORY_MANAGER_PATH, "utf8")).toContain("solver-failures.ndjson");
     expect(readFileSync(LOW_MEMORY_MANAGER_PATH, "utf8")).toContain("solver failures: none recorded");

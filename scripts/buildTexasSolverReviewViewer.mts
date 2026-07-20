@@ -492,7 +492,7 @@ function renderOwnerDecisionWorkbench(
   return `<section class="owner-workbench" data-owner-root data-storage-key="${escapeHtml(storageKey)}" aria-labelledby="owner-workbench-title">
     <div class="owner-workbench-head"><div><p class="eyebrow">Human gate</p><h2 id="owner-workbench-title">Owner Decisions</h2></div><div class="owner-outputs"><span>Mechanical context ${mechanicallyReady}/${families.length}</span><output id="owner-progress" aria-live="polite"></output><output id="owner-decision-status" aria-live="polite"></output></div></div>
     <p class="owner-boundary">Mechanical readiness is reduced-tree, review-only context. It never selects, validates or recommends an owner decision.</p>
-    <div class="owner-meta"><label>Reviewer<input id="owner-reviewer" type="text" autocomplete="name"></label><label>Reviewed at<input id="owner-reviewed-at" type="date" value="${today()}"></label><button id="import-owner-decisions" type="button" title="Import a decision JSON draft">Import JSON</button><input id="owner-decisions-file" type="file" accept="application/json,.json" hidden><button id="copy-owner-decisions" type="button" title="Copy decision JSON">Copy JSON</button><button id="download-owner-decisions" type="button" title="Download decision JSON">Download JSON</button><button id="copy-owner-commands" type="button" title="Copy PowerShell dry-run and confirmed write commands">Copy PS commands</button><button id="clear-owner-decisions" type="button" title="Clear the locally stored draft">Clear draft</button></div>
+    <div class="owner-meta"><label>Reviewer<input id="owner-reviewer" type="text" autocomplete="name"></label><label>Reviewed at<input id="owner-reviewed-at" type="date" value="${today()}"></label><button id="next-incomplete-decision" type="button" title="Focus the next incomplete visible decision">Next incomplete</button><button id="import-owner-decisions" type="button" title="Import a decision JSON draft">Import JSON</button><input id="owner-decisions-file" type="file" accept="application/json,.json" hidden><button id="copy-owner-decisions" type="button" title="Copy decision JSON">Copy JSON</button><button id="download-owner-decisions" type="button" title="Download decision JSON">Download JSON</button><button id="copy-owner-commands" type="button" title="Copy PowerShell dry-run and confirmed write commands">Copy PS commands</button><button id="clear-owner-decisions" type="button" title="Clear the locally stored draft">Clear draft</button></div>
     <div class="owner-table-wrap"><table><thead><tr><th>Family</th><th>Wave</th><th>Evidence context</th><th>Decision</th><th>Scope</th><th>Caveats</th></tr></thead><tbody>${rows}</tbody></table></div>
   </section>`;
 }
@@ -703,21 +703,31 @@ const ownerStorageKey = ownerRoot?.dataset.storageKey ?? "";
 const ownerSchemaVersion = "pkrtrainer-texas-solver-owner-decisions-v1";
 const ownerDecisionValues = new Set(["", "yes", "no", "scoped"]);
 
-function ownerDecisionDocument(validate = true, rows = ownerRows) {
-  const reviewer = document.getElementById("owner-reviewer").value.trim();
-  const reviewedAt = document.getElementById("owner-reviewed-at").value;
-  const decisions = rows.map((row) => ({
+function ownerDecisionForRow(row) {
+  return {
     familyId: row.dataset.familyId,
-    reviewer,
-    reviewedAt,
+    reviewer: ownerReviewer.value.trim(),
+    reviewedAt: ownerReviewedAt.value,
     decision: row.querySelector("[data-owner-decision]").value,
     scope: row.querySelector("[data-owner-scope]").value.trim(),
     caveats: row.querySelector("[data-owner-caveats]").value.trim(),
-  }));
+  };
+}
+
+function ownerDecisionIsComplete(decision) {
+  return decision.decision !== ""
+    && Boolean(decision.reviewer)
+    && /^\\d{4}-\\d{2}-\\d{2}$/.test(decision.reviewedAt)
+    && Boolean(decision.caveats)
+    && (decision.decision === "no" || Boolean(decision.scope));
+}
+
+function ownerDecisionDocument(validate = true, rows = ownerRows) {
+  const decisions = rows.map(ownerDecisionForRow);
   if (validate) {
     const selected = decisions.filter((decision) => decision.decision !== "");
     if (selected.length === 0) throw new Error("Select at least one owner decision.");
-    const invalid = selected.find((decision) => !decision.reviewer || !/^\\d{4}-\\d{2}-\\d{2}$/.test(decision.reviewedAt) || !decision.caveats || ((decision.decision === "yes" || decision.decision === "scoped") && !decision.scope));
+    const invalid = selected.find((decision) => !ownerDecisionIsComplete(decision));
     if (invalid) throw new Error("Complete reviewer, date, caveats and scope for Yes or Scoped decisions.");
   }
   return { schemaVersion: ownerSchemaVersion, decisions };
@@ -747,9 +757,50 @@ function ownerDownloadFilename() {
 function updateOwnerProgress() {
   if (!ownerProgress) return;
   const visibleRows = ownerRows.filter((row) => !row.hidden);
-  const decidedRows = visibleRows.filter((row) => row.querySelector("[data-owner-decision]").value !== "");
+  const decisions = visibleRows.map((row) => ({ row, decision: ownerDecisionForRow(row) }));
+  const selectedRows = decisions.filter(({ decision }) => decision.decision !== "");
+  const completeRows = decisions.filter(({ decision }) => ownerDecisionIsComplete(decision));
+  const needsDetails = selectedRows.length - completeRows.length;
+  const anySelected = ownerRows.some((row) => ownerDecisionForRow(row).decision !== "");
+  ownerReviewer.setAttribute("aria-invalid", String(anySelected && !ownerReviewer.value.trim()));
+  ownerReviewedAt.setAttribute("aria-invalid", String(anySelected && !/^\\d{4}-\\d{2}-\\d{2}$/.test(ownerReviewedAt.value)));
+  for (const { row, decision } of decisions) {
+    const selected = decision.decision !== "";
+    const complete = ownerDecisionIsComplete(decision);
+    const scope = row.querySelector("[data-owner-scope]");
+    const caveats = row.querySelector("[data-owner-caveats]");
+    scope.setAttribute("aria-invalid", String(selected && decision.decision !== "no" && !decision.scope));
+    caveats.setAttribute("aria-invalid", String(selected && !decision.caveats));
+    row.classList.toggle("owner-row--complete", complete);
+    row.classList.toggle("owner-row--needs-details", selected && !complete);
+  }
   const label = waveFilter.selectedOptions[0]?.textContent ?? "Review";
-  ownerProgress.textContent = label + ": " + decidedRows.length + "/" + visibleRows.length + " decided";
+  ownerProgress.textContent = label + ": " + completeRows.length + "/" + visibleRows.length + " complete" + (needsDetails > 0 ? ", " + needsDetails + " needs details" : "");
+}
+
+function focusNextIncompleteOwnerDecision() {
+  const visibleRows = ownerRows.filter((row) => !row.hidden);
+  const target = visibleRows.find((row) => !ownerDecisionIsComplete(ownerDecisionForRow(row)));
+  if (!target) {
+    ownerStatus.textContent = "All visible decisions are complete";
+    return;
+  }
+  const decision = ownerDecisionForRow(target);
+  const decisionControl = target.querySelector("[data-owner-decision]");
+  const scope = target.querySelector("[data-owner-scope]");
+  const caveats = target.querySelector("[data-owner-caveats]");
+  const focusTarget = decision.decision === ""
+    ? decisionControl
+    : !decision.reviewer
+      ? ownerReviewer
+      : !/^\\d{4}-\\d{2}-\\d{2}$/.test(decision.reviewedAt)
+        ? ownerReviewedAt
+        : decision.decision !== "no" && !decision.scope
+          ? scope
+          : caveats;
+  target.scrollIntoView?.({ block: "center" });
+  focusTarget.focus();
+  ownerStatus.textContent = "Focused next incomplete decision";
 }
 
 function saveOwnerDraft() {
@@ -804,6 +855,7 @@ function restoreOwnerDraft() {
 }
 
 if (ownerRoot && ownerStatus && ownerProgress && ownerReviewer && ownerReviewedAt && ownerFileInput) {
+document.getElementById("next-incomplete-decision").addEventListener("click", focusNextIncompleteOwnerDecision);
 document.getElementById("copy-owner-decisions").addEventListener("click", async () => {
   const json = serializeOwnerDecisions();
   if (!json) return;
@@ -892,14 +944,16 @@ h2 { margin-bottom: 6px; font-size: 30px; }
 h3 { margin-bottom: 4px; font-size: 22px; }
 main { padding: 24px; }
 .eyebrow { margin-bottom: 8px; color: #8fb3ff; font-size: 12px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; }
-.summary-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom: 28px; }
-.card { display: grid; gap: 6px; padding: 16px; color: inherit; text-decoration: none; background: #182235; border: 1px solid #2d3a52; border-radius: 16px; }
+.summary-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); min-width: 0; margin-bottom: 28px; }
+.card { display: grid; gap: 6px; min-width: 0; padding: 16px; color: inherit; text-decoration: none; background: #182235; border: 1px solid #2d3a52; border-radius: 16px; }
+.card span, .card strong, .review-summary { overflow-wrap: anywhere; }
 .card strong { font-size: 20px; }
 .card small, .path, .board p { color: #aab7cf; }
 .card.ok { border-color: #2d9f73; }
 .card.warn { border-color: #b9842b; }
-.report { margin: 28px 0; padding: 22px; background: #131b2a; border: 1px solid #2a3448; border-radius: 20px; }
+.report { min-width: 0; margin: 28px 0; padding: 22px; overflow: hidden; background: #131b2a; border: 1px solid #2a3448; border-radius: 20px; }
 .report-head { display: flex; gap: 20px; justify-content: space-between; align-items: start; flex-wrap: wrap; }
+.report-head > div { min-width: 0; max-width: 100%; }.report-head h2, .report-head .eyebrow, .path { overflow-wrap: anywhere; }
 dl { display: grid; gap: 8px; grid-template-columns: repeat(5, minmax(86px, 1fr)); margin: 0; }
 dl div { padding: 10px; background: #0f1623; border-radius: 12px; }
 dt { color: #8ea0bd; font-size: 12px; text-transform: uppercase; }
@@ -957,6 +1011,7 @@ dd { margin: 2px 0 0; font-weight: 800; }
 .owner-table-wrap th, .owner-table-wrap td { padding: 9px 8px; border-top: 1px solid #263246; vertical-align: middle; }
 .owner-table-wrap td:first-child { min-width: 320px; }.owner-table-wrap td:first-child a { color: #c9dcff; }.owner-table-wrap td:first-child small { display: block; color: #aab7cf; margin-top: 3px; }.owner-table-wrap input { width: 100%; }.owner-table-wrap select { min-width: 110px; }
 .owner-table-wrap td:nth-child(3) { min-width: 210px; }.owner-table-wrap td:nth-child(3) small { display: block; color: #aab7cf; margin-top: 3px; }.evidence-state { font-weight: 700; }.evidence-ready { color: #72c995; }.evidence-pending { color: #e0b95b; }.evidence-missing { color: #aab7cf; }
+.owner-table-wrap tr.owner-row--complete { background: rgba(43,213,118,.06); }.owner-table-wrap tr.owner-row--needs-details { background: rgba(217,103,103,.08); }.owner-workbench [aria-invalid="true"] { border-color: #d96767; outline: 1px solid rgba(217,103,103,.35); }
 #owner-progress, #owner-decision-status { color: #aab7cf; font-size: 13px; }
 @media (max-width: 640px) { h1 { font-size: 30px; } .page-header { padding: 20px; } .metrics { grid-template-columns: repeat(2, 1fr); } .report-head dl { grid-template-columns: repeat(2, minmax(100px, 1fr)); } #filter-count { width: 100%; margin-left: 0; } #family-filter { min-width: min(260px, 100%); } .owner-workbench-head { align-items: start; flex-direction: column; } .owner-outputs { justify-items: start; } }
 `;

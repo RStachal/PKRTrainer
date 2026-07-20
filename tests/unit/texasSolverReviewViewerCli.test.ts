@@ -78,6 +78,7 @@ describe("mtt:texas-solver-viewer CLI", () => {
       expect(html).toContain('id="download-owner-decisions"');
       expect(html).toContain('id="import-owner-decisions"');
       expect(html).toContain('id="copy-owner-commands"');
+      expect(html).toContain('id="next-incomplete-decision"');
       expect(html).toContain('id="owner-reviewer"');
       expect(html).toContain("Mechanical context 1/2");
       expect(html).toContain("Mechanical readiness is reduced-tree, review-only context.");
@@ -92,6 +93,8 @@ describe("mtt:texas-solver-viewer CLI", () => {
       expect(html).toContain('data-status="NEEDS_REVIEW"');
       expect(html).toContain('data-wave="2"');
       expect(html).toContain("Review evidence only.");
+      expect(html).toContain("overflow-wrap: anywhere");
+      expect(html).toContain("minmax(min(260px, 100%), 1fr)");
       expect(html).toContain("Human poker review is required.");
       expect(html).not.toContain('"strategy"');
       const embeddedScript = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
@@ -115,12 +118,18 @@ describe("mtt:texas-solver-viewer CLI", () => {
       waveFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
       const reviewer = document.getElementById("owner-reviewer") as HTMLInputElement;
       const row = document.querySelector<HTMLElement>("[data-owner-row]")!;
+      expect(document.getElementById("owner-progress")?.textContent).toContain("0/1 complete");
       reviewer.value = "Owner";
       reviewer.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
       (row.querySelector("[data-owner-decision]") as HTMLSelectElement).value = "yes";
       (row.querySelector("[data-owner-scope]") as HTMLInputElement).value = "Current reviewed family only";
+      row.querySelector("[data-owner-scope]")!.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+      expect(document.getElementById("owner-progress")?.textContent).toContain("0/1 complete, 1 needs details");
+      expect(row.querySelector("[data-owner-caveats]")?.getAttribute("aria-invalid")).toBe("true");
       (row.querySelector("[data-owner-caveats]") as HTMLInputElement).value = "None";
       row.querySelector("[data-owner-caveats]")!.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+      expect(document.getElementById("owner-progress")?.textContent).toContain("1/1 complete");
+      expect(row.classList.contains("owner-row--complete")).toBe(true);
       const storageKey = document.querySelector<HTMLElement>("[data-owner-root]")!.dataset.storageKey!;
       const draft = JSON.parse(dom.window.localStorage.getItem(storageKey)!);
       expect(draft.schemaVersion).toBe("pkrtrainer-texas-solver-owner-decisions-v1");
