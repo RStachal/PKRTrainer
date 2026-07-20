@@ -45,6 +45,36 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
     }
   });
 
+  it("reuses staged canonical provenance instead of requiring duplicate owner metadata", () => {
+    const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-provenance-"));
+    try {
+      const result = spawnSync(process.execPath, [
+        "node_modules/vite-node/vite-node.mjs",
+        "scripts/runMttSixMaxPreflopIntakeBatch.mts",
+        `--source-dir=${sourceDir}`,
+        "--incremental",
+        "--write",
+        "--confidence=HIGH",
+        "--confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES",
+        "--json",
+      ], { cwd: process.cwd(), encoding: "utf8" });
+      expect(result.status).toBe(0);
+      expect(result.stderr).toBe("");
+      const parsed = JSON.parse(result.stdout) as {
+        permissionMode: string;
+        writePerformed: boolean;
+        counts: { waiting: number };
+      };
+      expect(parsed).toMatchObject({
+        permissionMode: "CANONICAL_STAGED_MANIFEST",
+        writePerformed: false,
+        counts: { waiting: 4 },
+      });
+    } finally {
+      rmSync(sourceDir, { recursive: true, force: true });
+    }
+  });
+
   it("accepts a read-only summary request without enabling writes", () => {
     const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-summary-"));
     try {
@@ -112,14 +142,18 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
       const parsed = JSON.parse(result.stdout) as {
         valid: boolean;
         counts: { ready: number; waiting: number; invalid: number };
-        rows: Array<{ packId: string; status: string; records: number | null }>;
+        rows: Array<{ packId: string; status: string; records: number | null; preflightConfidence: string; errors: string[] }>;
       };
       expect(parsed.valid).toBe(false);
       expect(parsed.counts).toEqual({ ready: 0, waiting: 3, invalid: 1 });
       expect(parsed.rows.find((row) => row.packId === packId)).toMatchObject({
         status: "INVALID",
         records: 1,
+        preflightConfidence: "MEDIUM",
       });
+      const errors = parsed.rows.find((row) => row.packId === packId)?.errors.join("\n") ?? "";
+      expect(errors).not.toContain("confidence is LOW");
+      expect(errors).not.toContain("legal production licenseKind");
     } finally {
       rmSync(sourceDir, { recursive: true, force: true });
     }

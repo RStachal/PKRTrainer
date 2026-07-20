@@ -11,7 +11,7 @@ const PACK_IDS = [
 const CONFIRM_TOKEN = "STAGE_REVIEWED_MTT_SIXMAX_P1_BATCH";
 
 interface CliArgs { draftDir: string; rawRoot: string; incremental: boolean; write: boolean; confirm: string | null; json: boolean; }
-interface StageRow { packId: string; candidatePath: string; permissionPath: string; status: "READY" | "WAITING" | "INVALID"; valid: boolean; errors: string[]; }
+interface StageRow { packId: string; candidatePath: string; permissionPath: string; permissionSource: "CANONICAL" | "CANDIDATE" | "MISSING"; status: "READY" | "WAITING" | "INVALID"; valid: boolean; errors: string[]; }
 
 try {
   const args = parseArgs(process.argv.slice(2));
@@ -73,7 +73,7 @@ function run(args: CliArgs) {
     ? invalidRows.length === 0
     : readyRows.length === PACK_IDS.length;
   const selectedRows = args.incremental ? readyRows : rows;
-  const writes = preflightValid && args.write ? selectedRows.map((row) => writeOne(row.packId, args)) : [];
+  const writes = preflightValid && args.write ? selectedRows.map((row) => writeOne(row, args)) : [];
   const writeValid = !args.write || writes.every((write) => write.valid && write.writePerformed);
   const result = {
     valid: preflightValid && writeValid,
@@ -96,32 +96,40 @@ function run(args: CliArgs) {
 
 function preflight(packId: string, args: CliArgs): StageRow {
   const candidatePath = join(args.draftDir, packId, "normalized.candidate.json");
-  const permissionPath = join(args.draftDir, packId, "permission.candidate.json");
+  const candidatePermissionPath = join(args.draftDir, packId, "permission.candidate.json");
+  const canonicalPermissionPath = join(args.rawRoot, packId, "permission.json");
   const candidateExists = existsSync(candidatePath);
-  const permissionExists = existsSync(permissionPath);
+  const permissionSource = existsSync(canonicalPermissionPath)
+    ? "CANONICAL"
+    : existsSync(candidatePermissionPath) ? "CANDIDATE" : "MISSING";
+  const permissionPath = permissionSource === "CANONICAL" ? canonicalPermissionPath : candidatePermissionPath;
+  const permissionExists = permissionSource !== "MISSING";
   if (!candidateExists && !permissionExists) {
-    return { packId, candidatePath, permissionPath, status: "WAITING", valid: false, errors: ["Candidate is missing.", "Permission manifest is missing."] };
+    return { packId, candidatePath, permissionPath, permissionSource, status: "WAITING", valid: false, errors: ["Candidate is missing.", "Permission manifest is missing."] };
   }
-  if (!candidateExists || !permissionExists) {
-    return { packId, candidatePath, permissionPath, status: "INVALID", valid: false, errors: [!candidateExists ? "Candidate is missing." : "", !permissionExists ? "Permission manifest is missing." : ""].filter(Boolean) };
+  if (!candidateExists) {
+    return { packId, candidatePath, permissionPath, permissionSource, status: "WAITING", valid: false, errors: ["Candidate is missing."] };
   }
-  const result = invokeStage(packId, args, false);
-  return { packId, candidatePath, permissionPath, status: result.valid ? "READY" : "INVALID", valid: result.valid, errors: result.errors };
+  if (!permissionExists) {
+    return { packId, candidatePath, permissionPath, permissionSource, status: "INVALID", valid: false, errors: ["Permission manifest is missing."] };
+  }
+  const row = { packId, candidatePath, permissionPath, permissionSource };
+  const result = invokeStage(row, args, false);
+  return { ...row, status: result.valid ? "READY" : "INVALID", valid: result.valid, errors: result.errors };
 }
 
-function writeOne(packId: string, args: CliArgs) { return invokeStage(packId, args, true); }
+function writeOne(row: StageRow, args: CliArgs) { return invokeStage(row, args, true); }
 
-function invokeStage(packId: string, args: CliArgs, write: boolean) {
-  const permissionPath = join(args.draftDir, packId, "permission.candidate.json");
+function invokeStage(row: Pick<StageRow, "packId" | "permissionPath">, args: CliArgs, write: boolean) {
   const commandArgs = [
     "node_modules/vite-node/vite-node.mjs", "scripts/stageMttP1ReviewedPreflopIntake.mts",
-    `--pack-id=${packId}`, `--draft-dir=${args.draftDir}`, `--raw-root=${args.rawRoot}`, `--permission=${permissionPath}`, "--json",
+    `--pack-id=${row.packId}`, `--draft-dir=${args.draftDir}`, `--raw-root=${args.rawRoot}`, `--permission=${row.permissionPath}`, "--json",
   ];
   if (write) commandArgs.push("--write", "--confirm=STAGE_REVIEWED_MTT_P1_PREFLOP");
   const child = spawnSync(process.execPath, commandArgs, { cwd: process.cwd(), encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
   const report = parseJson(child.stdout);
   const errors = Array.isArray(report?.errors) ? report.errors.filter((entry): entry is string => typeof entry === "string") : [compact(child.stderr || "No readable staging report.")];
-  return { packId, valid: report?.valid === true, writePerformed: report?.writePerformed === true, exitCode: child.status, errors, report };
+  return { packId: row.packId, valid: report?.valid === true, writePerformed: report?.writePerformed === true, exitCode: child.status, errors, report };
 }
 
 function parseJson(value: string): Record<string, unknown> | null {
@@ -129,5 +137,5 @@ function parseJson(value: string): Record<string, unknown> | null {
 }
 function compact(value: string): string { return value.trim().slice(0, 500); }
 function render(result: ReturnType<typeof run>): string {
-  return ["MTT six-max preflop staging batch", `mode: ${result.mode}`, `valid: ${result.valid}`, `preflight valid: ${result.preflightValid}`, `write valid: ${result.writeValid}`, `write performed: ${result.writePerformed}`, `ready: ${result.counts.ready}`, `waiting: ${result.counts.waiting}`, `invalid: ${result.counts.invalid}`, ...result.rows.map((row) => `- ${row.packId}: ${row.status}${row.errors.length > 0 ? ` ${row.errors.join(" ")}` : ""}`)].join("\n");
+  return ["MTT six-max preflop staging batch", `mode: ${result.mode}`, `valid: ${result.valid}`, `preflight valid: ${result.preflightValid}`, `write valid: ${result.writeValid}`, `write performed: ${result.writePerformed}`, `ready: ${result.counts.ready}`, `waiting: ${result.counts.waiting}`, `invalid: ${result.counts.invalid}`, ...result.rows.map((row) => `- ${row.packId}: ${row.status} permission=${row.permissionSource}${row.errors.length > 0 ? ` ${row.errors.join(" ")}` : ""}`)].join("\n");
 }

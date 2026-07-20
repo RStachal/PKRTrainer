@@ -84,14 +84,17 @@ command does not create any missing hand decisions; it rejects incomplete CSV
 coverage.
 
 ```powershell
-npm run mtt:preflop-csv-draft -- --csv <six-max-export.csv> --pack-id <packId> --out artifacts/mtt-preflop-csv-draft/<packId>/normalized.candidate.json --permission-out artifacts/mtt-preflop-csv-draft/<packId>/permission.candidate.json --reviewer "project owner" --rights-owner "project owner" --license-kind OWNED_SOLVER_EXPORT --source-location "local owned solver export" --summary
+npm run mtt:preflop-csv-draft -- --csv <six-max-export.csv> --pack-id <packId> --out artifacts/mtt-preflop-csv-draft/<packId>/normalized.candidate.json --license-kind OWNED_SOLVER_EXPORT --license-note "Owner-confirmed canonical permission manifest is staged separately." --confidence HIGH --summary
 ```
 
-For a valid reviewed draft, use the existing explicit staging command to write
-the final two raw intake files. Do not copy the candidate manually:
+The owner-confirmed redistribution and review facts already live in the
+canonical `Agents/range-intake/raw/<packId>/permission.json`; do not create a
+second candidate permission manifest. For a valid reviewed draft, use the
+existing explicit staging command to validate that canonical manifest and write
+the normalized raw intake file. Do not copy the candidate manually:
 
 ```powershell
-npm run mtt:p1-stage-reviewed-preflop -- --pack-id <packId> --draft-dir artifacts/mtt-preflop-csv-draft --permission artifacts/mtt-preflop-csv-draft/<packId>/permission.candidate.json --write --confirm=STAGE_REVIEWED_MTT_P1_PREFLOP
+npm run mtt:p1-stage-reviewed-preflop -- --pack-id <packId> --draft-dir artifacts/mtt-preflop-csv-draft --permission Agents/range-intake/raw/<packId>/permission.json --write --confirm=STAGE_REVIEWED_MTT_P1_PREFLOP
 ```
 
 ## Four-pack batch preflight
@@ -104,24 +107,26 @@ present but invalid CSV still blocks the write.
 
 ```powershell
 npm run mtt:sixmax-preflop-intake-batch -- --json
-npm run mtt:sixmax-preflop-intake-batch -- --write --reviewer="project owner" --rights-owner="project owner" --source-location="local owned solver export" --confidence=HIGH --confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES
+npm run mtt:sixmax-preflop-intake-batch -- --write --confidence=HIGH --confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES
 ```
 
 For progressive intake as each export arrives:
 
 ```powershell
 npm run mtt:sixmax-preflop-intake-progress
-npm run mtt:sixmax-preflop-intake-batch -- --incremental --write --reviewer="project owner" --rights-owner="project owner" --source-location="local owned solver export" --confidence=HIGH --confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES
+npm run mtt:sixmax-preflop-intake-batch -- --incremental --write --confidence=HIGH --confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES
 ```
 
 Its output stays under `artifacts/mtt-sixmax-preflop-intake/`. It writes only
-`normalized.candidate.json`, `permission.candidate.json` and a concise
-`BATCH_REPORT.md`; reviewed staging
-to `Agents/range-intake/raw/` remains a separate explicit action.
+`normalized.candidate.json` and a concise `BATCH_REPORT.md`; permission mode
+`CANONICAL_STAGED_MANIFEST` means the owner-confirmed manifest remains in its
+canonical raw slot. Reviewed normalized-data staging to
+`Agents/range-intake/raw/` remains a separate explicit action.
 
 Candidates may be staged atomically as one set or incrementally as reviewed
-pairs arrive. In incremental mode, an absent pair waits, while a partial or
-invalid pair blocks the write. Promotion remains a later explicit gate:
+exports arrive. In incremental mode, a canonical permission awaiting its
+candidate is `WAITING`; a candidate without permission or any invalid pair is
+`INVALID` and blocks the write. Promotion remains a later explicit gate:
 
 ```powershell
 npm run mtt:sixmax-preflop-stage-batch -- --draft-dir=artifacts/mtt-sixmax-preflop-intake

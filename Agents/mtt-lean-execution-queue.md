@@ -481,17 +481,19 @@ Lane: `MECHANICAL`
 
 The four-pack candidate and staging CLIs now support an explicit
 `--incremental` mode. An absent export or untouched blank scaffold remains
-`WAITING`; a present partial/malformed export or one-sided candidate/permission
-pair is `INVALID` and blocks writes. Every currently complete reviewed slot can
-advance without waiting for the other three, while candidate and raw staging
-writes retain their existing confirmation tokens and promotion remains a
-separate gate.
+`WAITING`; a present partial/malformed export or candidate without a permission
+manifest is `INVALID` and blocks writes. A canonical permission awaiting its
+candidate remains `WAITING`. Every currently complete reviewed slot can advance
+without waiting for the other three, while candidate and raw staging writes
+retain their existing confirmation tokens and promotion remains a separate
+gate.
 
 Filtered intake-packet refreshes now remove stale generated folders only when
 their ownership marker and exact generated file set match. Unknown folders and
 owner-added files are preserved. Owned solver review requests also follow the
 confirmed provenance rule: reviewer, rights owner, source location and runtime
-redistribution are required, but external evidence references are not.
+redistribution stay recorded in the canonical manifest, while external evidence
+references and duplicate candidate manifests are not required.
 
 Acceptance: the live 90 MB four-scaffold workbench reports `0 ready / 4 waiting /
 0 invalid` without writes; the live P1 packet folder contains exactly four
@@ -516,6 +518,31 @@ Acceptance: live status distinguishes both snapshots, reports each current
 manifest count and keeps the full-cycle stale warning; the refresh remains
 review-only, writes no strategy or owner decision, and the complete MTT Core
 release chain passes.
+
+### OPS-50 - Reuse canonical six-max provenance during candidate staging
+
+Status: `DONE 2026-07-20`
+Depends on: `OPS-48`
+Lane: `MECHANICAL`
+
+The six-max candidate builder now reuses the four owner-confirmed canonical
+`permission.json` manifests instead of requiring duplicate reviewer, rights and
+source metadata. Read-only preflight uses the same effective confidence and
+owned-export license class as an eventual write, removing false `LOW` and
+unknown-license failures. Candidate creation still requires explicit
+`MEDIUM|HIGH` confidence plus its confirmation token, writes only normalized
+review data and cannot stage or promote production content.
+
+The staging batch prefers the canonical manifest, falls back to a legacy
+candidate manifest and sends the exact selected file through the existing full
+validator before any write. A canonical manifest without normalized candidate
+data is now correctly `WAITING`, not falsely reported missing or invalid.
+
+Acceptance: live candidate and staging progress both report `0 ready / 4 waiting
+/ 0 invalid`; every staging row reports `permission=CANONICAL` and only
+`Candidate is missing.` Focused intake/staging/P1/metadata tests pass `18/18`,
+typecheck passes, and the registry, source intake and scoped Core gates remain
+green at 8 valid manifests, 0 ready raw imports and Core 4/4 plus 7/7.
 
 ## Phase DEP - Core Deployment Closeout
 
@@ -1152,6 +1179,7 @@ Use this exact handoff prompt after changing models:
 | 2026-07-20 | OPS-47 | DONE | Replaced manual and cycle-private board unions with the locked `mtt:texas-solver-review-only-refresh` path shared by the incremental watcher and ten-minute cycle. The live watcher was replaced without touching the active solver and immediately confirmed beta-depth 59/83 with 415 unique family/board pairs; 20/20 reports and 20/20 mechanical shapes are valid, owner/production remain 0/20, and no strategy was staged or promoted. Related regression passed 28/28, typecheck, production build and scoped Core gate passed. |
 | 2026-07-20 | OPS-48 | DONE | Added fail-closed incremental candidate/staging for the four six-max P1 exports, reconciled the live filtered packet folder to exactly four current six-max slots while preserving owner files, and aligned owned-export review requests with the confirmed no-external-evidence rule. The live 90 MB blank workbench reports 0 ready, 4 waiting and 0 invalid in 4.7 seconds; no candidate, raw intake, owner decision or production strategy was written. |
 | 2026-07-20 | OPS-49 | DONE | Split live review-only intake truth from the resource-gated full-cycle snapshot. Status now shows timestamped cumulative evidence and exact per-manifest coverage even while the ten-minute cycle defers; it tracked beta-depth through 81/83 and then final 83/83 with 439 cumulative family/board checkpoints while the correctly stale full snapshot still showed 65/83. Focused tests passed 12/12 and the complete release passed 152 files / 762 tests, registry, Core, ranges, build, precache and budget without staging or promotion. |
+| 2026-07-20 | OPS-50 | DONE | Removed the false duplicate-permission blocker from six-max P1 intake. All four owner-confirmed canonical manifests are reused and fully validated during staging; read-only preflight now uses the eventual owned-export license and confidence. Live candidate/staging progress is 0 ready, 4 waiting, 0 invalid and each row waits only for `normalized.candidate.json`; 18/18 focused tests, typecheck, registry, intake guard and Core 4/4 plus 7/7 passed. |
 | 2026-07-20 | RELEASE-FTP-03 | DONE | Packaged source commit `c44efebdad96` after the complete 152-file / 762-test MTT Core release gate and four-viewport Chrome QA as `deploy/pkrtrainer-ftp-20260720-141237-c44efebdad96-mtt-core-p1-incremental.zip`. Portable forward-slash ZIP reconciliation passed 22/22 files with 0 missing, 0 extra and 0 hash mismatches; SHA-256 is `2374090EBAB10A4E2E38D9CD04D03C4457E0C6E561561F01C7A18093CC192F67`. |
 | 2026-07-20 | OWNER-REVIEW-06 | DONE | Owner dashboard progress now counts only export-valid decisions, marks missing reviewer/date/scope/caveats, and focuses the next incomplete visible row without selecting a poker verdict. Current dashboard regenerated over 53 reports with 20/20 mechanical family context and 0 preselected decisions. Focused reviewer/writer/autostart tests passed 17/17, typecheck passed, and browser QA removed the 390px global horizontal overflow. |
 | 2026-07-20 | RELEASE-I18N-01 | DONE | Global runtime and asynchronous errors now follow the live EN/CZ catalog, while range metadata uses the stable poker label `ante ON/OFF`. Vitest parent concurrency is capped at four to prevent nested CLI processes from timing out under solver/development memory pressure. Stable full regression passed 151/151 files and 753/753 tests; registry, scoped Core, ranges, production build, precache and bundle budget all passed. Production Chrome E2E passed desktop plus 360/390/412 px with zero browser errors and 48 contrast checks. |

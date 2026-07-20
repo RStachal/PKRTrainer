@@ -469,6 +469,9 @@ describe("release bundle metadata", () => {
     expect(p1PreflopIntake).toContain("Turbo slots must not become production by changing regular-speed metadata only");
     expect(p1PreflopIntake).toContain("npm run mtt:sixmax-preflop-intake-progress");
     expect(p1PreflopIntake).toContain("npm run mtt:sixmax-preflop-stage-progress");
+    expect(p1PreflopIntake).toContain("Agents/range-intake/raw/<packId>/permission.json");
+    expect(p1PreflopIntake).toContain("CANONICAL_STAGED_MANIFEST");
+    expect(p1PreflopIntake).not.toContain("permission.candidate.json");
     expect(p1PreflopIntake).toContain("Do not use postflop TexasSolver outputs for P1 preflop ranges");
     expect(p1PreflopCsvTemplate).toContain("rowKind,packId,tableFormat,blindSpeed,ante,evModel");
     expect(p1PreflopCsvTemplate).toContain(

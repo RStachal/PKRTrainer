@@ -13,7 +13,7 @@ const CONFIRM_TOKEN = "BUILD_MTT_SIXMAX_P1_CANDIDATES";
 type Confidence = "MEDIUM" | "HIGH";
 
 interface CliArgs { sourceDir: string; outDir: string; reviewer: string; rightsOwner: string; sourceLocation: string; reviewedAt: string; confidence: Confidence | null; incremental: boolean; write: boolean; confirm: string | null; json: boolean; }
-interface PreflightRow { packId: string; csvPath: string; exists: boolean; records: number | null; csvReady: boolean | null; productionReady: boolean | null; legalSlot: boolean | null; status: "READY" | "WAITING" | "INVALID"; errors: string[]; }
+interface PreflightRow { packId: string; csvPath: string; exists: boolean; records: number | null; csvReady: boolean | null; productionReady: boolean | null; legalSlot: boolean | null; preflightConfidence: Confidence; status: "READY" | "WAITING" | "INVALID"; errors: string[]; }
 
 try {
   const args = parseArgs(process.argv.slice(2));
@@ -55,7 +55,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(reviewedAt)) throw new Error("--reviewed-at must use YYYY-MM-DD.");
   if (write && confirm !== CONFIRM_TOKEN) throw new Error(`--write requires --confirm=${CONFIRM_TOKEN}.`);
-  if (write && (!reviewer || !rightsOwner || !sourceLocation || confidence === null)) throw new Error("--write requires --reviewer, --rights-owner, --source-location and --confidence=MEDIUM|HIGH.");
+  if (write && confidence === null) throw new Error("--write requires --confidence=MEDIUM|HIGH.");
   return { sourceDir, outDir, reviewer, rightsOwner, sourceLocation, reviewedAt, confidence, incremental, write, confirm, json };
 }
 
@@ -64,11 +64,12 @@ function usage(): string {
     "Usage:",
     "  npm run mtt:sixmax-preflop-intake-batch -- --source-dir=<csv-folder> [--summary]",
     "  npm run mtt:sixmax-preflop-intake-batch -- --source-dir=<csv-folder> --incremental [--summary]",
-    "  npm run mtt:sixmax-preflop-intake-batch -- --write --reviewer=<owner> --rights-owner=<owner> --source-location=<owned solver export> --confidence=HIGH --confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES",
+    "  npm run mtt:sixmax-preflop-intake-batch -- --write --confidence=HIGH --confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES",
     "",
     "Preflights all four exact six-max CHIP_EV CSV files before writing any candidate.",
     "--incremental allows each currently ready CSV to advance without waiting for the other slots.",
-    "It writes review candidates only; raw intake and production promotion stay explicit separate steps.",
+    "It writes normalized review candidates only and reuses the separately staged canonical permission manifest.",
+    "Raw intake and production promotion stay explicit separate steps.",
   ].join("\n");
 }
 
@@ -84,7 +85,7 @@ function value(item: string, flag: string): string {
 }
 
 function run(args: CliArgs) {
-  const rows = PACK_IDS.map((packId) => preflight(packId, args.sourceDir));
+  const rows = PACK_IDS.map((packId) => preflight(packId, args));
   const readyRows = rows.filter((row) => row.status === "READY");
   const waitingRows = rows.filter((row) => row.status === "WAITING");
   const invalidRows = rows.filter((row) => row.status === "INVALID");
@@ -103,6 +104,7 @@ function run(args: CliArgs) {
     counts: { ready: readyRows.length, waiting: waitingRows.length, invalid: invalidRows.length },
     sourceDir: args.sourceDir,
     outDir: args.outDir,
+    permissionMode: "CANONICAL_STAGED_MANIFEST",
     rows,
     writes,
   };
@@ -114,17 +116,24 @@ function run(args: CliArgs) {
   return result;
 }
 
-function preflight(packId: string, sourceDir: string): PreflightRow {
-  const csvPath = join(sourceDir, `${packId}.csv`);
-  if (!existsSync(csvPath)) return { packId, csvPath, exists: false, records: null, csvReady: null, productionReady: null, legalSlot: null, status: "WAITING", errors: ["CSV is missing."] };
+function preflight(packId: string, args: CliArgs): PreflightRow {
+  const csvPath = join(args.sourceDir, `${packId}.csv`);
+  const preflightConfidence = args.confidence ?? "MEDIUM";
+  if (!existsSync(csvPath)) return { packId, csvPath, exists: false, records: null, csvReady: null, productionReady: null, legalSlot: null, preflightConfidence, status: "WAITING", errors: ["CSV is missing."] };
   if (!csvNeedsFullPreflight(readFileSync(csvPath, "utf8"), ["strictActions", "lenientActions"])) {
-    return { packId, csvPath, exists: true, records: 0, csvReady: null, productionReady: null, legalSlot: null, status: "WAITING", errors: ["CSV contains no reviewed strategy records yet."] };
+    return { packId, csvPath, exists: true, records: 0, csvReady: null, productionReady: null, legalSlot: null, preflightConfidence, status: "WAITING", errors: ["CSV contains no reviewed strategy records yet."] };
   }
-  const child = spawnSync(process.execPath, ["node_modules/vite-node/vite-node.mjs", "scripts/buildMttPreflopCsvDraft.mts", `--csv=${csvPath}`, `--pack-id=${packId}`, "--json"], {
+  const child = spawnSync(process.execPath, [
+    "node_modules/vite-node/vite-node.mjs", "scripts/buildMttPreflopCsvDraft.mts",
+    `--csv=${csvPath}`, `--pack-id=${packId}`, `--confidence=${preflightConfidence}`,
+    "--license-kind=OWNED_SOLVER_EXPORT",
+    "--license-note=Owner-confirmed canonical permission manifest is staged separately.",
+    "--json",
+  ], {
     cwd: process.cwd(), encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
   });
   const parsed = parseJson(child.stdout);
-  if (parsed === null) return { packId, csvPath, exists: true, records: null, csvReady: false, productionReady: false, legalSlot: false, status: "INVALID", errors: [compact(child.stderr || "CSV preflight produced no readable report.")] };
+  if (parsed === null) return { packId, csvPath, exists: true, records: null, csvReady: false, productionReady: false, legalSlot: false, preflightConfidence, status: "INVALID", errors: [compact(child.stderr || "CSV preflight produced no readable report.")] };
   const csvErrors = Array.isArray(parsed.csvErrors) ? parsed.csvErrors.filter((entry): entry is string => typeof entry === "string") : [];
   const slotReport = parsed.slotReport;
   const readinessReport = parsed.report;
@@ -137,7 +146,7 @@ function preflight(packId: string, sourceDir: string): PreflightRow {
   const legalSlot = typeof slotReport === "object" && slotReport !== null && (slotReport as { valid?: unknown }).valid === true;
   const status = csvReady && productionReady && legalSlot ? "READY" : "INVALID";
   const errors = [...csvErrors, ...readinessErrors].slice(0, 20);
-  return { packId, csvPath, exists: true, records, csvReady, productionReady, legalSlot, status, errors };
+  return { packId, csvPath, exists: true, records, csvReady, productionReady, legalSlot, preflightConfidence, status, errors };
 }
 
 function csvNeedsFullPreflight(input: string, columnNames: readonly string[]): boolean {
@@ -198,9 +207,9 @@ function writeCandidates(args: CliArgs, rows: readonly PreflightRow[]) {
     mkdirSync(packDir, { recursive: true });
     const child = spawnSync(process.execPath, [
       "node_modules/vite-node/vite-node.mjs", "scripts/buildMttPreflopCsvDraft.mts", `--csv=${row.csvPath}`, `--pack-id=${row.packId}`,
-      `--out=${join(packDir, "normalized.candidate.json")}`, `--permission-out=${join(packDir, "permission.candidate.json")}`,
-      `--reviewer=${args.reviewer}`, `--rights-owner=${args.rightsOwner}`, "--license-kind=OWNED_SOLVER_EXPORT",
-      `--source-location=${args.sourceLocation}`, `--verified-at=${args.reviewedAt}`, `--confidence=${args.confidence}`, "--json",
+      `--out=${join(packDir, "normalized.candidate.json")}`, "--license-kind=OWNED_SOLVER_EXPORT",
+      "--license-note=Owner-confirmed canonical permission manifest is staged separately.",
+      `--verified-at=${args.reviewedAt}`, `--confidence=${args.confidence}`, "--json",
     ], { cwd: process.cwd(), encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
     const report = parseJson(child.stdout);
     return { packId: row.packId, exitCode: child.status, candidateValid: child.status === 0 && report?.valid === true && report.productionReady === true, report, stderr: compact(child.stderr) };
@@ -213,7 +222,7 @@ function parseJson(value: string): Record<string, unknown> | null {
 function compact(value: string): string { return value.trim().slice(0, 500); }
 function today(): string { return new Date().toISOString().slice(0, 10); }
 function render(result: ReturnType<typeof run>): string {
-  return ["MTT six-max preflop intake batch", `mode: ${result.mode}`, `valid: ${result.valid}`, `preflight valid: ${result.preflightValid}`, `candidate valid: ${result.candidateValid}`, `write performed: ${result.writePerformed}`, `ready: ${result.counts.ready}`, `waiting: ${result.counts.waiting}`, `invalid: ${result.counts.invalid}`, `source: ${result.sourceDir}`, ...result.rows.map((row) => `- ${row.packId}: status=${row.status} records=${row.records} csvReady=${row.csvReady} productionReady=${row.productionReady} legalSlot=${row.legalSlot} errors=${row.errors.length}`)].join("\n");
+  return ["MTT six-max preflop intake batch", `mode: ${result.mode}`, `valid: ${result.valid}`, `preflight valid: ${result.preflightValid}`, `candidate valid: ${result.candidateValid}`, `write performed: ${result.writePerformed}`, `permission mode: ${result.permissionMode}`, `ready: ${result.counts.ready}`, `waiting: ${result.counts.waiting}`, `invalid: ${result.counts.invalid}`, `source: ${result.sourceDir}`, ...result.rows.map((row) => `- ${row.packId}: status=${row.status} records=${row.records} csvReady=${row.csvReady} productionReady=${row.productionReady} legalSlot=${row.legalSlot} confidence=${row.preflightConfidence} errors=${row.errors.length}`)].join("\n");
 }
 
 function renderBatchReport(result: ReturnType<typeof run>): string {
@@ -224,6 +233,7 @@ function renderBatchReport(result: ReturnType<typeof run>): string {
     `- Preflight valid: ${result.preflightValid}`,
     `- Candidate validation valid: ${result.candidateValid}`,
     `- Candidates written: ${result.writePerformed}`,
+    `- Permission mode: ${result.permissionMode}`,
     "",
     "## Results",
     "",

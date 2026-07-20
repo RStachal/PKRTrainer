@@ -46,11 +46,13 @@ describe("mtt:sixmax-preflop-stage-batch CLI", () => {
 
   it("treats absent reviewed pairs as waiting in incremental mode", () => {
     const draftDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-stage-incremental-"));
+    const rawRoot = join(draftDir, "raw");
     try {
       const result = spawnSync(process.execPath, [
         "node_modules/vite-node/vite-node.mjs",
         "scripts/stageMttSixMaxPreflopIntakeBatch.mts",
         `--draft-dir=${draftDir}`,
+        `--raw-root=${rawRoot}`,
         "--incremental",
         "--json",
       ], { cwd: process.cwd(), encoding: "utf8" });
@@ -70,8 +72,39 @@ describe("mtt:sixmax-preflop-stage-batch CLI", () => {
     }
   });
 
+  it("recognizes the already staged canonical permission while waiting for normalized data", () => {
+    const draftDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-stage-canonical-"));
+    const rawRoot = join(draftDir, "raw");
+    try {
+      const packId = "mtt-six-max-regular-preflop-chip-ev-ante-off-production-v1";
+      const rawPackDir = join(rawRoot, packId);
+      mkdirSync(rawPackDir, { recursive: true });
+      writeFileSync(join(rawPackDir, "permission.json"), "{}\n", "utf8");
+      const result = spawnSync(process.execPath, [
+        "node_modules/vite-node/vite-node.mjs",
+        "scripts/stageMttSixMaxPreflopIntakeBatch.mts",
+        `--draft-dir=${draftDir}`,
+        `--raw-root=${rawRoot}`,
+        "--incremental",
+        "--json",
+      ], { cwd: process.cwd(), encoding: "utf8" });
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout) as {
+        rows: Array<{ packId: string; status: string; permissionSource: string; errors: string[] }>;
+      };
+      expect(parsed.rows.find((row) => row.packId === packId)).toMatchObject({
+        status: "WAITING",
+        permissionSource: "CANONICAL",
+        errors: ["Candidate is missing."],
+      });
+    } finally {
+      rmSync(draftDir, { recursive: true, force: true });
+    }
+  });
+
   it("fails closed on a partial reviewed pair in incremental mode", () => {
     const draftDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-stage-partial-"));
+    const rawRoot = join(draftDir, "raw");
     try {
       const packId = "mtt-six-max-regular-preflop-chip-ev-ante-off-production-v1";
       const packDir = join(draftDir, packId);
@@ -81,6 +114,7 @@ describe("mtt:sixmax-preflop-stage-batch CLI", () => {
         "node_modules/vite-node/vite-node.mjs",
         "scripts/stageMttSixMaxPreflopIntakeBatch.mts",
         `--draft-dir=${draftDir}`,
+        `--raw-root=${rawRoot}`,
         "--incremental",
         "--json",
       ], { cwd: process.cwd(), encoding: "utf8" });
