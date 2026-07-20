@@ -10,8 +10,8 @@ const PACK_IDS = [
 ] as const;
 const CONFIRM_TOKEN = "STAGE_REVIEWED_MTT_SIXMAX_P1_BATCH";
 
-interface CliArgs { draftDir: string; rawRoot: string; write: boolean; confirm: string | null; json: boolean; }
-interface StageRow { packId: string; candidatePath: string; permissionPath: string; valid: boolean; errors: string[]; }
+interface CliArgs { draftDir: string; rawRoot: string; incremental: boolean; write: boolean; confirm: string | null; json: boolean; }
+interface StageRow { packId: string; candidatePath: string; permissionPath: string; status: "READY" | "WAITING" | "INVALID"; valid: boolean; errors: string[]; }
 
 try {
   const args = parseArgs(process.argv.slice(2));
@@ -26,12 +26,14 @@ try {
 function parseArgs(argv: readonly string[]): CliArgs {
   let draftDir = resolve("artifacts/mtt-sixmax-preflop-intake");
   let rawRoot = resolve("Agents/range-intake/raw");
+  let incremental = false;
   let write = false;
   let confirm: string | null = null;
   let json = false;
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
     if (item === "--write") { write = true; continue; }
+    if (item === "--incremental") { incremental = true; continue; }
     if (item === "--json") { json = true; continue; }
     if (item === "--summary") continue;
     if (item.startsWith("--draft-dir=")) { draftDir = resolve(value(item, "--draft-dir")); continue; }
@@ -40,16 +42,18 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
   if (write && confirm !== CONFIRM_TOKEN) throw new Error(`--write requires --confirm=${CONFIRM_TOKEN}.`);
-  return { draftDir, rawRoot, write, confirm, json };
+  return { draftDir, rawRoot, incremental, write, confirm, json };
 }
 
 function usage(): string {
   return [
     "Usage:",
     "  npm run mtt:sixmax-preflop-stage-batch -- --draft-dir=artifacts/mtt-sixmax-preflop-intake [--summary]",
+    "  npm run mtt:sixmax-preflop-stage-batch -- --draft-dir=artifacts/mtt-sixmax-preflop-intake --incremental [--summary]",
     "  npm run mtt:sixmax-preflop-stage-batch -- --write --confirm=STAGE_REVIEWED_MTT_SIXMAX_P1_BATCH",
     "",
     "Preflights all four six-max candidates and matching permission manifests before staging any raw intake file.",
+    "--incremental stages every currently ready reviewed pair without waiting for absent pairs.",
     "Promotion remains a separate explicit action.",
   ].join("\n");
 }
@@ -62,10 +66,27 @@ function value(item: string, flag: string): string {
 
 function run(args: CliArgs) {
   const rows = PACK_IDS.map((packId) => preflight(packId, args));
-  const preflightValid = rows.every((row) => row.valid);
-  const writes = preflightValid && args.write ? rows.map((row) => writeOne(row.packId, args)) : [];
+  const readyRows = rows.filter((row) => row.status === "READY");
+  const waitingRows = rows.filter((row) => row.status === "WAITING");
+  const invalidRows = rows.filter((row) => row.status === "INVALID");
+  const preflightValid = args.incremental
+    ? invalidRows.length === 0
+    : readyRows.length === PACK_IDS.length;
+  const selectedRows = args.incremental ? readyRows : rows;
+  const writes = preflightValid && args.write ? selectedRows.map((row) => writeOne(row.packId, args)) : [];
   const writeValid = !args.write || writes.every((write) => write.valid && write.writePerformed);
-  const result = { valid: preflightValid && writeValid, preflightValid, writeValid, writePerformed: writes.length > 0 && writeValid, draftDir: args.draftDir, rawRoot: args.rawRoot, rows, writes };
+  const result = {
+    valid: preflightValid && writeValid,
+    mode: args.incremental ? "INCREMENTAL" : "ATOMIC_ALL_FOUR",
+    preflightValid,
+    writeValid,
+    writePerformed: writes.length > 0 && writeValid,
+    counts: { ready: readyRows.length, waiting: waitingRows.length, invalid: invalidRows.length },
+    draftDir: args.draftDir,
+    rawRoot: args.rawRoot,
+    rows,
+    writes,
+  };
   if (args.write) {
     mkdirSync(args.draftDir, { recursive: true });
     writeFileSync(join(args.draftDir, "STAGING_BATCH_REPORT.json"), `${JSON.stringify(result, null, 2)}\n`, "utf8");
@@ -76,11 +97,16 @@ function run(args: CliArgs) {
 function preflight(packId: string, args: CliArgs): StageRow {
   const candidatePath = join(args.draftDir, packId, "normalized.candidate.json");
   const permissionPath = join(args.draftDir, packId, "permission.candidate.json");
-  if (!existsSync(candidatePath) || !existsSync(permissionPath)) {
-    return { packId, candidatePath, permissionPath, valid: false, errors: [!existsSync(candidatePath) ? "Candidate is missing." : "", !existsSync(permissionPath) ? "Permission manifest is missing." : ""].filter(Boolean) };
+  const candidateExists = existsSync(candidatePath);
+  const permissionExists = existsSync(permissionPath);
+  if (!candidateExists && !permissionExists) {
+    return { packId, candidatePath, permissionPath, status: "WAITING", valid: false, errors: ["Candidate is missing.", "Permission manifest is missing."] };
+  }
+  if (!candidateExists || !permissionExists) {
+    return { packId, candidatePath, permissionPath, status: "INVALID", valid: false, errors: [!candidateExists ? "Candidate is missing." : "", !permissionExists ? "Permission manifest is missing." : ""].filter(Boolean) };
   }
   const result = invokeStage(packId, args, false);
-  return { packId, candidatePath, permissionPath, valid: result.valid, errors: result.errors };
+  return { packId, candidatePath, permissionPath, status: result.valid ? "READY" : "INVALID", valid: result.valid, errors: result.errors };
 }
 
 function writeOne(packId: string, args: CliArgs) { return invokeStage(packId, args, true); }
@@ -103,5 +129,5 @@ function parseJson(value: string): Record<string, unknown> | null {
 }
 function compact(value: string): string { return value.trim().slice(0, 500); }
 function render(result: ReturnType<typeof run>): string {
-  return ["MTT six-max preflop staging batch", `valid: ${result.valid}`, `preflight valid: ${result.preflightValid}`, `write valid: ${result.writeValid}`, `write performed: ${result.writePerformed}`, ...result.rows.map((row) => `- ${row.packId}: ${row.valid ? "ready" : row.errors.join(" ")}`)].join("\n");
+  return ["MTT six-max preflop staging batch", `mode: ${result.mode}`, `valid: ${result.valid}`, `preflight valid: ${result.preflightValid}`, `write valid: ${result.writeValid}`, `write performed: ${result.writePerformed}`, `ready: ${result.counts.ready}`, `waiting: ${result.counts.waiting}`, `invalid: ${result.counts.invalid}`, ...result.rows.map((row) => `- ${row.packId}: ${row.status}${row.errors.length > 0 ? ` ${row.errors.join(" ")}` : ""}`)].join("\n");
 }

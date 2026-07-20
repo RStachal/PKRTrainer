@@ -136,6 +136,10 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:validate-ready-intake"]).toBe("vite-node scripts/validateMttReadyIntake.mts");
     expect(pkg.scripts["mtt:preflop-csv-scaffold"]).toBe("vite-node scripts/buildMttPreflopCsvScaffold.mts");
     expect(pkg.scripts["mtt:preflop-csv-draft"]).toBe("vite-node scripts/buildMttPreflopCsvDraft.mts");
+    expect(pkg.scripts["mtt:sixmax-preflop-intake-progress"])
+      .toBe("vite-node scripts/runMttSixMaxPreflopIntakeBatch.mts --incremental --summary");
+    expect(pkg.scripts["mtt:sixmax-preflop-stage-progress"])
+      .toBe("vite-node scripts/stageMttSixMaxPreflopIntakeBatch.mts --incremental --summary");
     expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
     expect(pkg.scripts["range:intake:guard"]).toBe("vite-node scripts/checkRangeIntakeWorkspace.mts");
     expect(pkg.scripts["bundle:budget"]).toBe("vite-node scripts/checkBundleBudget.mts");
@@ -463,6 +467,8 @@ describe("release bundle metadata", () => {
     expect(p1PreflopIntake).toContain("Agents/range-intake/templates/mtt-preflop-records-template.csv");
     expect(p1PreflopIntake).toContain("Agents/range-intake/templates/mtt-p1-preflop-chip-ev-coverage.csv");
     expect(p1PreflopIntake).toContain("Turbo slots must not become production by changing regular-speed metadata only");
+    expect(p1PreflopIntake).toContain("npm run mtt:sixmax-preflop-intake-progress");
+    expect(p1PreflopIntake).toContain("npm run mtt:sixmax-preflop-stage-progress");
     expect(p1PreflopIntake).toContain("Do not use postflop TexasSolver outputs for P1 preflop ranges");
     expect(p1PreflopCsvTemplate).toContain("rowKind,packId,tableFormat,blindSpeed,ante,evModel");
     expect(p1PreflopCsvTemplate).toContain(

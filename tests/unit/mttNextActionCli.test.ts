@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -328,6 +328,46 @@ describe("mtt:next-action CLI", () => {
       expect(existsSync(join(packetDir, "normalized.json"))).toBe(false);
       expect(existsSync(join(packetDir, "permission.json"))).toBe(false);
       expect(JSON.stringify(summary)).not.toContain("https://");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("odstrani jen zastarale generovane packety a zachova rucni soubory", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-next-action-reconcile-"));
+    try {
+      const first = runNextAction(
+        "--priority=P3_FLOP_PRODUCTION",
+        "--all-packets",
+        `--packet-dir=${directory}`,
+      );
+      expect(first.status).toBe(0);
+
+      const stalePack = "mtt-full-ring-9-regular-flop-chip-ev-ante-off-production-v1";
+      const protectedStalePack = "mtt-full-ring-9-regular-flop-chip-ev-ante-on-production-v1";
+      expect(existsSync(join(directory, stalePack, "expected-paths.json"))).toBe(true);
+      writeFileSync(join(directory, protectedStalePack, "OWNER_NOTE.txt"), "preserve this packet\n", "utf8");
+      const manualDir = join(directory, "owner-notes");
+      mkdirSync(manualDir);
+      writeFileSync(join(manualDir, "README.md"), "preserve me\n", "utf8");
+
+      const second = runNextAction(
+        "--priority=P1_PREFLOP_CHIP_EV",
+        "--all-packets",
+        `--packet-dir=${directory}`,
+      );
+      expect(second.status).toBe(0);
+      expect(existsSync(join(directory, stalePack))).toBe(false);
+      expect(readFileSync(join(directory, protectedStalePack, "OWNER_NOTE.txt"), "utf8"))
+        .toBe("preserve this packet\n");
+      expect(readFileSync(join(manualDir, "README.md"), "utf8")).toBe("preserve me\n");
+
+      const packetDirs = readdirSync(directory, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => entry.name);
+      expect(packetDirs).toHaveLength(6);
+      expect(packetDirs).toContain("owner-notes");
+      expect(packetDirs).toContain("mtt-six-max-regular-preflop-chip-ev-ante-off-production-v1");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

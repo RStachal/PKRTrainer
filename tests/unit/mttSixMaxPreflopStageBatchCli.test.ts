@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -39,6 +39,63 @@ describe("mtt:sixmax-preflop-stage-batch CLI", () => {
       expect(result.status).toBe(1);
       expect(result.stderr).not.toContain("Unsupported argument");
       expect(result.stdout).toContain("write performed: false");
+    } finally {
+      rmSync(draftDir, { recursive: true, force: true });
+    }
+  });
+
+  it("treats absent reviewed pairs as waiting in incremental mode", () => {
+    const draftDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-stage-incremental-"));
+    try {
+      const result = spawnSync(process.execPath, [
+        "node_modules/vite-node/vite-node.mjs",
+        "scripts/stageMttSixMaxPreflopIntakeBatch.mts",
+        `--draft-dir=${draftDir}`,
+        "--incremental",
+        "--json",
+      ], { cwd: process.cwd(), encoding: "utf8" });
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout) as {
+        valid: boolean;
+        mode: string;
+        counts: { ready: number; waiting: number; invalid: number };
+      };
+      expect(parsed).toMatchObject({
+        valid: true,
+        mode: "INCREMENTAL",
+        counts: { ready: 0, waiting: 4, invalid: 0 },
+      });
+    } finally {
+      rmSync(draftDir, { recursive: true, force: true });
+    }
+  });
+
+  it("fails closed on a partial reviewed pair in incremental mode", () => {
+    const draftDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-stage-partial-"));
+    try {
+      const packId = "mtt-six-max-regular-preflop-chip-ev-ante-off-production-v1";
+      const packDir = join(draftDir, packId);
+      mkdirSync(packDir);
+      writeFileSync(join(packDir, "normalized.candidate.json"), "{}\n", "utf8");
+      const result = spawnSync(process.execPath, [
+        "node_modules/vite-node/vite-node.mjs",
+        "scripts/stageMttSixMaxPreflopIntakeBatch.mts",
+        `--draft-dir=${draftDir}`,
+        "--incremental",
+        "--json",
+      ], { cwd: process.cwd(), encoding: "utf8" });
+      expect(result.status).toBe(1);
+      const parsed = JSON.parse(result.stdout) as {
+        valid: boolean;
+        counts: { ready: number; waiting: number; invalid: number };
+        rows: Array<{ packId: string; status: string; errors: string[] }>;
+      };
+      expect(parsed.valid).toBe(false);
+      expect(parsed.counts).toEqual({ ready: 0, waiting: 3, invalid: 1 });
+      expect(parsed.rows.find((row) => row.packId === packId)).toMatchObject({
+        status: "INVALID",
+        errors: ["Permission manifest is missing."],
+      });
     } finally {
       rmSync(draftDir, { recursive: true, force: true });
     }

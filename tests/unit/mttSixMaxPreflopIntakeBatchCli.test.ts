@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -57,6 +57,100 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
       expect(result.status).toBe(1);
       expect(result.stderr).not.toContain("Unsupported argument");
       expect(result.stdout).toContain("write performed: false");
+    } finally {
+      rmSync(sourceDir, { recursive: true, force: true });
+    }
+  });
+
+  it("treats absent exports as waiting in incremental mode", () => {
+    const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-incremental-"));
+    try {
+      const result = spawnSync(process.execPath, [
+        "node_modules/vite-node/vite-node.mjs",
+        "scripts/runMttSixMaxPreflopIntakeBatch.mts",
+        `--source-dir=${sourceDir}`,
+        "--incremental",
+        "--json",
+      ], { cwd: process.cwd(), encoding: "utf8" });
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout) as {
+        valid: boolean;
+        mode: string;
+        writePerformed: boolean;
+        counts: { ready: number; waiting: number; invalid: number };
+        rows: Array<{ status: string }>;
+      };
+      expect(parsed).toMatchObject({
+        valid: true,
+        mode: "INCREMENTAL",
+        writePerformed: false,
+        counts: { ready: 0, waiting: 4, invalid: 0 },
+      });
+      expect(parsed.rows.every((row) => row.status === "WAITING")).toBe(true);
+    } finally {
+      rmSync(sourceDir, { recursive: true, force: true });
+    }
+  });
+
+  it("blocks a partially filled export in incremental mode", () => {
+    const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-partial-"));
+    try {
+      const packId = "mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1";
+      writeFileSync(join(sourceDir, `${packId}.csv`), [
+        "rowKind,packId,tableFormat,blindSpeed,ante,evModel,position,sourceStackBB,bucket,context,handClass,strictActions,lenientActions,actionEvsBb,equivalentThresholdBb,acceptableThresholdBb,sourceReferenceId,reviewer,reviewedAt,notes",
+        `HAND_CLASS_DECISION,${packId},SIX_MAX,REGULAR,ON,CHIP_EV,BTN,40,40,RFI,AA,OPEN_2X,OPEN_2X,,,,owned-a,owner,2026-07-20,partial fixture`,
+      ].join("\n"), "utf8");
+
+      const result = spawnSync(process.execPath, [
+        "node_modules/vite-node/vite-node.mjs",
+        "scripts/runMttSixMaxPreflopIntakeBatch.mts",
+        `--source-dir=${sourceDir}`,
+        "--incremental",
+        "--json",
+      ], { cwd: process.cwd(), encoding: "utf8" });
+      expect(result.status).toBe(1);
+      const parsed = JSON.parse(result.stdout) as {
+        valid: boolean;
+        counts: { ready: number; waiting: number; invalid: number };
+        rows: Array<{ packId: string; status: string; records: number | null }>;
+      };
+      expect(parsed.valid).toBe(false);
+      expect(parsed.counts).toEqual({ ready: 0, waiting: 3, invalid: 1 });
+      expect(parsed.rows.find((row) => row.packId === packId)).toMatchObject({
+        status: "INVALID",
+        records: 1,
+      });
+    } finally {
+      rmSync(sourceDir, { recursive: true, force: true });
+    }
+  });
+
+  it("treats an untouched blank scaffold as waiting", () => {
+    const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-scaffold-"));
+    try {
+      const packId = "mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1";
+      writeFileSync(join(sourceDir, `${packId}.csv`), [
+        "rowKind,packId,tableFormat,blindSpeed,ante,evModel,position,sourceStackBB,bucket,context,handClass,strictActions,lenientActions,actionEvsBb,equivalentThresholdBb,acceptableThresholdBb,sourceReferenceId,reviewer,reviewedAt,notes",
+        `HAND_CLASS_DECISION,${packId},SIX_MAX,REGULAR,ON,CHIP_EV,BTN,40,40,RFI,AA,,,,,,,,,fill from reviewed source`,
+      ].join("\n"), "utf8");
+
+      const result = spawnSync(process.execPath, [
+        "node_modules/vite-node/vite-node.mjs",
+        "scripts/runMttSixMaxPreflopIntakeBatch.mts",
+        `--source-dir=${sourceDir}`,
+        "--incremental",
+        "--json",
+      ], { cwd: process.cwd(), encoding: "utf8" });
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout) as {
+        counts: { ready: number; waiting: number; invalid: number };
+        rows: Array<{ packId: string; status: string; records: number | null }>;
+      };
+      expect(parsed.counts).toEqual({ ready: 0, waiting: 4, invalid: 0 });
+      expect(parsed.rows.find((row) => row.packId === packId)).toMatchObject({
+        status: "WAITING",
+        records: 0,
+      });
     } finally {
       rmSync(sourceDir, { recursive: true, force: true });
     }

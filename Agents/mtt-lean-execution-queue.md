@@ -474,6 +474,31 @@ Acceptance: dry-run reports exact cumulative coverage without writing evidence;
 a live watcher refresh exits 0; a concurrent live lock exits 0 without writes;
 20/20 reports remain valid and production eligibility remains 0/20.
 
+### OPS-48 - Advance reviewed six-max P1 exports independently
+
+Status: `DONE 2026-07-20`
+Depends on: `P1-PRE-02`, `SOL-PRE-02`
+Lane: `MECHANICAL`
+
+The four-pack candidate and staging CLIs now support an explicit
+`--incremental` mode. An absent export or untouched blank scaffold remains
+`WAITING`; a present partial/malformed export or one-sided candidate/permission
+pair is `INVALID` and blocks writes. Every currently complete reviewed slot can
+advance without waiting for the other three, while candidate and raw staging
+writes retain their existing confirmation tokens and promotion remains a
+separate gate.
+
+Filtered intake-packet refreshes now remove stale generated folders only when
+their ownership marker and exact generated file set match. Unknown folders and
+owner-added files are preserved. Owned solver review requests also follow the
+confirmed provenance rule: reviewer, rights owner, source location and runtime
+redistribution are required, but external evidence references are not.
+
+Acceptance: the live 90 MB four-scaffold workbench reports `0 ready / 4 waiting /
+0 invalid` without writes; the live P1 packet folder contains exactly four
+six-max slots; partial data fails closed; manual notes survive reconciliation;
+focused tests and the complete MTT Core release gate pass.
+
 ## Phase DEP - Core Deployment Closeout
 
 ### DEP-00 - Preserve verified FTP artifact
@@ -1107,6 +1132,7 @@ Use this exact handoff prompt after changing models:
 | 2026-07-20 | OPS-45 | DONE | Low-memory task status now distinguishes a live solver from a worker waiting on its resource gate and reports current CPU, free RAM and solver PIDs. Live status truthfully showed `WAITING_FOR_RESOURCES (RAM)`, no solver PID, CPU 40% and free RAM 9%; autostart tests 9/9 and typecheck passed. |
 | 2026-07-20 | OPS-46 | DONE | Added idempotent repair for the ten-minute MTT task plus enabled/next-run/latest-outcome/snapshot-freshness diagnostics. The real task was repaired from Disabled to Ready, then confirmed enabled with a future trigger. Incremental review-only intake refreshed four changed families through the latest `J88r` checkpoint: beta-depth reached 49/83 and cumulative valid evidence reached 405 unique family/board pairs without staging or promotion. |
 | 2026-07-20 | OPS-47 | DONE | Replaced manual and cycle-private board unions with the locked `mtt:texas-solver-review-only-refresh` path shared by the incremental watcher and ten-minute cycle. The live watcher was replaced without touching the active solver and immediately confirmed beta-depth 59/83 with 415 unique family/board pairs; 20/20 reports and 20/20 mechanical shapes are valid, owner/production remain 0/20, and no strategy was staged or promoted. Related regression passed 28/28, typecheck, production build and scoped Core gate passed. |
+| 2026-07-20 | OPS-48 | DONE | Added fail-closed incremental candidate/staging for the four six-max P1 exports, reconciled the live filtered packet folder to exactly four current six-max slots while preserving owner files, and aligned owned-export review requests with the confirmed no-external-evidence rule. The live 90 MB blank workbench reports 0 ready, 4 waiting and 0 invalid in 4.7 seconds; no candidate, raw intake, owner decision or production strategy was written. |
 | 2026-07-20 | OWNER-REVIEW-06 | DONE | Owner dashboard progress now counts only export-valid decisions, marks missing reviewer/date/scope/caveats, and focuses the next incomplete visible row without selecting a poker verdict. Current dashboard regenerated over 53 reports with 20/20 mechanical family context and 0 preselected decisions. Focused reviewer/writer/autostart tests passed 17/17, typecheck passed, and browser QA removed the 390px global horizontal overflow. |
 | 2026-07-20 | RELEASE-I18N-01 | DONE | Global runtime and asynchronous errors now follow the live EN/CZ catalog, while range metadata uses the stable poker label `ante ON/OFF`. Vitest parent concurrency is capped at four to prevent nested CLI processes from timing out under solver/development memory pressure. Stable full regression passed 151/151 files and 753/753 tests; registry, scoped Core, ranges, production build, precache and bundle budget all passed. Production Chrome E2E passed desktop plus 360/390/412 px with zero browser errors and 48 contrast checks. |
 | 2026-07-20 | RELEASE-FTP-02 | DONE | Packaged the verified production output with the tracked `deploy/forpsi/.htaccess.example` staging template as `deploy/pkrtrainer-ftp-20260720-124211-25ee34a01488-mtt-core-i18n-final.zip`. ZIP reconciliation passed 22/22 files with 0 missing, 0 extra and 0 hash mismatches; SHA-256 is `D85B7AA2B6578C8979871A5D9FD697FAB7928AD694DC195ABC2A9E2CB58616E5`. |

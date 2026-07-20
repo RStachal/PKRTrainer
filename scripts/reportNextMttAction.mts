@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import {
   buildMttCompletionReadinessReport,
@@ -546,6 +546,7 @@ function writeNextActionIntakePacket(report: NextMttActionReport, packetRoot: st
 
 function writeAllActionIntakePackets(rows: readonly NextMttActionRow[], packetRoot: string): void {
   mkdirSync(packetRoot, { recursive: true });
+  removeStaleManagedPacketFolders(rows, packetRoot);
   const summary = {
     warning: "Do not copy these packets into raw intake as data. They are checklists only.",
     generatedAt: new Date().toISOString(),
@@ -566,6 +567,43 @@ function writeAllActionIntakePackets(rows: readonly NextMttActionRow[], packetRo
 
   for (const row of rows) {
     writeActionIntakePacket(row, packetRoot);
+  }
+}
+
+function removeStaleManagedPacketFolders(
+  rows: readonly NextMttActionRow[],
+  packetRoot: string,
+): void {
+  const currentPackIds = new Set(rows.map((row) => row.packId));
+  for (const entry of readdirSync(packetRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory() || currentPackIds.has(entry.name)) continue;
+
+    const packetDir = join(packetRoot, entry.name);
+    const markerPath = join(packetDir, "expected-paths.json");
+    if (!existsSync(markerPath)) continue;
+
+    try {
+      const marker = JSON.parse(readFileSync(markerPath, "utf8")) as {
+        packId?: unknown;
+        warning?: unknown;
+      };
+      const generatedChecklist = marker.packId === entry.name &&
+        typeof marker.warning === "string" &&
+        marker.warning.includes("checklist only");
+      const generatedFileNames = new Set([
+        "expected-paths.json",
+        "README.md",
+        "NORMALIZED_JSON_REQUIREMENTS.md",
+        "PERMISSION_JSON_REQUIREMENTS.md",
+      ]);
+      const containsOnlyGeneratedFiles = readdirSync(packetDir, { withFileTypes: true })
+        .every((child) => child.isFile() && generatedFileNames.has(child.name));
+      if (generatedChecklist && containsOnlyGeneratedFiles) {
+        rmSync(packetDir, { recursive: true, force: true });
+      }
+    } catch {
+      // A malformed marker is not proof of generator ownership, so preserve the folder.
+    }
   }
 }
 

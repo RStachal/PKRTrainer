@@ -97,13 +97,21 @@ npm run mtt:p1-stage-reviewed-preflop -- --pack-id <packId> --draft-dir artifact
 ## Four-pack batch preflight
 
 The four prepared six-max workbench files can be checked together. The command
-does not write anything by default. It refuses the whole write if even one CSV
-is incomplete or mapped to the wrong slot, so mixed partial candidate sets do
-not appear in the workbench.
+does not write anything by default. Atomic mode refuses the whole write if even
+one CSV is incomplete or mapped to the wrong slot. Incremental mode treats
+absent CSV files as waiting and advances every currently complete export; a
+present but invalid CSV still blocks the write.
 
 ```powershell
 npm run mtt:sixmax-preflop-intake-batch -- --json
 npm run mtt:sixmax-preflop-intake-batch -- --write --reviewer="project owner" --rights-owner="project owner" --source-location="local owned solver export" --confidence=HIGH --confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES
+```
+
+For progressive intake as each export arrives:
+
+```powershell
+npm run mtt:sixmax-preflop-intake-progress
+npm run mtt:sixmax-preflop-intake-batch -- --incremental --write --reviewer="project owner" --rights-owner="project owner" --source-location="local owned solver export" --confidence=HIGH --confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES
 ```
 
 Its output stays under `artifacts/mtt-sixmax-preflop-intake/`. It writes only
@@ -111,13 +119,15 @@ Its output stays under `artifacts/mtt-sixmax-preflop-intake/`. It writes only
 `BATCH_REPORT.md`; reviewed staging
 to `Agents/range-intake/raw/` remains a separate explicit action.
 
-After all four candidates are valid, preflight and stage them as one set. The
-batch writes no raw file unless every candidate and matching permission manifest
-passes its individual staging preflight:
+Candidates may be staged atomically as one set or incrementally as reviewed
+pairs arrive. In incremental mode, an absent pair waits, while a partial or
+invalid pair blocks the write. Promotion remains a later explicit gate:
 
 ```powershell
 npm run mtt:sixmax-preflop-stage-batch -- --draft-dir=artifacts/mtt-sixmax-preflop-intake
 npm run mtt:sixmax-preflop-stage-batch -- --draft-dir=artifacts/mtt-sixmax-preflop-intake --write --confirm=STAGE_REVIEWED_MTT_SIXMAX_P1_BATCH
+npm run mtt:sixmax-preflop-stage-progress
+npm run mtt:sixmax-preflop-stage-batch -- --draft-dir=artifacts/mtt-sixmax-preflop-intake --incremental --write --confirm=STAGE_REVIEWED_MTT_SIXMAX_P1_BATCH
 ```
 
 ## Normalized data requirements

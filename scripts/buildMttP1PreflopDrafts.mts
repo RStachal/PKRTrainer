@@ -75,7 +75,8 @@ interface PermissionReviewRequest {
       "EXPLICIT_WRITTEN_PERMISSION",
     ];
     requiredRedistributionScope: "PKRTRAINER_RUNTIME_BUNDLE";
-    requiredEvidence: readonly string[];
+    requiredFields: readonly string[];
+    externalEvidenceRule: string;
   };
   sourcePackSummary: {
     confidence: RangePack["confidence"];
@@ -450,14 +451,15 @@ function permissionReviewRequest(input: {
         "EXPLICIT_WRITTEN_PERMISSION",
       ],
       requiredRedistributionScope: "PKRTRAINER_RUNTIME_BUNDLE",
-      requiredEvidence: [
+      requiredFields: [
         "reviewer",
         "rightsOwner",
         "reviewedAt",
         "sourceMaterialLocation",
-        "at least one source-free evidence reference",
         "confirmation that range values may be redistributed in the PKRTrainer runtime bundle",
       ],
+      externalEvidenceRule:
+        "OWNED_SOLVER_EXPORT needs no external evidence reference; third-party/public-permission input requires source-free evidence references.",
     },
     sourcePackSummary: {
       confidence: input.sourcePack.confidence,
@@ -517,7 +519,8 @@ function renderUnblockMatrix(summary: ReturnType<typeof writeP1Drafts>): string 
     "## Raw intake rule",
     "",
     "Do not write `Agents/range-intake/raw/<packId>/normalized.json` until the candidate has a matching reviewed `permission.json`.",
-    "Do not write `permission.json` from this folder; it must be created from explicit reviewer, rights-owner, and source-free evidence decisions.",
+    "Do not write `permission.json` from this folder; it must be created from explicit reviewer, rights-owner, source ownership, and runtime redistribution decisions.",
+    "An owned solver export needs no external evidence reference; third-party/public-permission input still does.",
     "",
   ].join("\n");
 }

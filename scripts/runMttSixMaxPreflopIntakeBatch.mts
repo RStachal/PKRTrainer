@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join, resolve } from "node:path";
 
@@ -12,8 +12,8 @@ const CONFIRM_TOKEN = "BUILD_MTT_SIXMAX_P1_CANDIDATES";
 
 type Confidence = "MEDIUM" | "HIGH";
 
-interface CliArgs { sourceDir: string; outDir: string; reviewer: string; rightsOwner: string; sourceLocation: string; reviewedAt: string; confidence: Confidence | null; write: boolean; confirm: string | null; json: boolean; }
-interface PreflightRow { packId: string; csvPath: string; exists: boolean; csvReady: boolean | null; legalSlot: boolean | null; errors: string[]; }
+interface CliArgs { sourceDir: string; outDir: string; reviewer: string; rightsOwner: string; sourceLocation: string; reviewedAt: string; confidence: Confidence | null; incremental: boolean; write: boolean; confirm: string | null; json: boolean; }
+interface PreflightRow { packId: string; csvPath: string; exists: boolean; records: number | null; csvReady: boolean | null; productionReady: boolean | null; legalSlot: boolean | null; status: "READY" | "WAITING" | "INVALID"; errors: string[]; }
 
 try {
   const args = parseArgs(process.argv.slice(2));
@@ -33,12 +33,14 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let sourceLocation = "";
   let reviewedAt = today();
   let confidence: Confidence | null = null;
+  let incremental = false;
   let write = false;
   let confirm: string | null = null;
   let json = false;
   for (const item of argv) {
     if (item === "--help" || item === "-h") throw new Error(usage());
     if (item === "--write") { write = true; continue; }
+    if (item === "--incremental") { incremental = true; continue; }
     if (item === "--json") { json = true; continue; }
     if (item === "--summary") continue;
     if (item.startsWith("--source-dir=")) { sourceDir = resolve(value(item, "--source-dir")); continue; }
@@ -54,16 +56,18 @@ function parseArgs(argv: readonly string[]): CliArgs {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(reviewedAt)) throw new Error("--reviewed-at must use YYYY-MM-DD.");
   if (write && confirm !== CONFIRM_TOKEN) throw new Error(`--write requires --confirm=${CONFIRM_TOKEN}.`);
   if (write && (!reviewer || !rightsOwner || !sourceLocation || confidence === null)) throw new Error("--write requires --reviewer, --rights-owner, --source-location and --confidence=MEDIUM|HIGH.");
-  return { sourceDir, outDir, reviewer, rightsOwner, sourceLocation, reviewedAt, confidence, write, confirm, json };
+  return { sourceDir, outDir, reviewer, rightsOwner, sourceLocation, reviewedAt, confidence, incremental, write, confirm, json };
 }
 
 function usage(): string {
   return [
     "Usage:",
     "  npm run mtt:sixmax-preflop-intake-batch -- --source-dir=<csv-folder> [--summary]",
+    "  npm run mtt:sixmax-preflop-intake-batch -- --source-dir=<csv-folder> --incremental [--summary]",
     "  npm run mtt:sixmax-preflop-intake-batch -- --write --reviewer=<owner> --rights-owner=<owner> --source-location=<owned solver export> --confidence=HIGH --confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES",
     "",
     "Preflights all four exact six-max CHIP_EV CSV files before writing any candidate.",
+    "--incremental allows each currently ready CSV to advance without waiting for the other slots.",
     "It writes review candidates only; raw intake and production promotion stay explicit separate steps.",
   ].join("\n");
 }
@@ -81,10 +85,27 @@ function value(item: string, flag: string): string {
 
 function run(args: CliArgs) {
   const rows = PACK_IDS.map((packId) => preflight(packId, args.sourceDir));
-  const preflightValid = rows.every((row) => row.csvReady === true && row.legalSlot === true);
-  const writes = preflightValid && args.write ? writeCandidates(args, rows) : [];
+  const readyRows = rows.filter((row) => row.status === "READY");
+  const waitingRows = rows.filter((row) => row.status === "WAITING");
+  const invalidRows = rows.filter((row) => row.status === "INVALID");
+  const preflightValid = args.incremental
+    ? invalidRows.length === 0
+    : readyRows.length === PACK_IDS.length;
+  const selectedRows = args.incremental ? readyRows : rows;
+  const writes = preflightValid && args.write ? writeCandidates(args, selectedRows) : [];
   const candidateValid = !args.write || writes.every((write) => write.candidateValid);
-  const result = { valid: preflightValid && candidateValid, preflightValid, candidateValid, writePerformed: writes.length > 0, sourceDir: args.sourceDir, outDir: args.outDir, rows, writes };
+  const result = {
+    valid: preflightValid && candidateValid,
+    mode: args.incremental ? "INCREMENTAL" : "ATOMIC_ALL_FOUR",
+    preflightValid,
+    candidateValid,
+    writePerformed: writes.length > 0,
+    counts: { ready: readyRows.length, waiting: waitingRows.length, invalid: invalidRows.length },
+    sourceDir: args.sourceDir,
+    outDir: args.outDir,
+    rows,
+    writes,
+  };
   if (args.write) {
     mkdirSync(args.outDir, { recursive: true });
     writeFileSync(join(args.outDir, "batch-report.json"), `${JSON.stringify(result, null, 2)}\n`, "utf8");
@@ -95,15 +116,80 @@ function run(args: CliArgs) {
 
 function preflight(packId: string, sourceDir: string): PreflightRow {
   const csvPath = join(sourceDir, `${packId}.csv`);
-  if (!existsSync(csvPath)) return { packId, csvPath, exists: false, csvReady: null, legalSlot: null, errors: ["CSV is missing."] };
+  if (!existsSync(csvPath)) return { packId, csvPath, exists: false, records: null, csvReady: null, productionReady: null, legalSlot: null, status: "WAITING", errors: ["CSV is missing."] };
+  if (!csvNeedsFullPreflight(readFileSync(csvPath, "utf8"), ["strictActions", "lenientActions"])) {
+    return { packId, csvPath, exists: true, records: 0, csvReady: null, productionReady: null, legalSlot: null, status: "WAITING", errors: ["CSV contains no reviewed strategy records yet."] };
+  }
   const child = spawnSync(process.execPath, ["node_modules/vite-node/vite-node.mjs", "scripts/buildMttPreflopCsvDraft.mts", `--csv=${csvPath}`, `--pack-id=${packId}`, "--json"], {
     cwd: process.cwd(), encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
   });
   const parsed = parseJson(child.stdout);
-  if (parsed === null) return { packId, csvPath, exists: true, csvReady: false, legalSlot: false, errors: [compact(child.stderr || "CSV preflight produced no readable report.")] };
+  if (parsed === null) return { packId, csvPath, exists: true, records: null, csvReady: false, productionReady: false, legalSlot: false, status: "INVALID", errors: [compact(child.stderr || "CSV preflight produced no readable report.")] };
   const csvErrors = Array.isArray(parsed.csvErrors) ? parsed.csvErrors.filter((entry): entry is string => typeof entry === "string") : [];
   const slotReport = parsed.slotReport;
-  return { packId, csvPath, exists: true, csvReady: parsed.csvReady === true, legalSlot: typeof slotReport === "object" && slotReport !== null && (slotReport as { valid?: unknown }).valid === true, errors: csvErrors.slice(0, 20) };
+  const readinessReport = parsed.report;
+  const readinessErrors = typeof readinessReport === "object" && readinessReport !== null && Array.isArray((readinessReport as { errors?: unknown }).errors)
+    ? ((readinessReport as { errors: unknown[] }).errors).filter((entry): entry is string => typeof entry === "string")
+    : [];
+  const csvReady = parsed.csvReady === true;
+  const productionReady = parsed.productionReady === true;
+  const records = typeof parsed.records === "number" ? parsed.records : null;
+  const legalSlot = typeof slotReport === "object" && slotReport !== null && (slotReport as { valid?: unknown }).valid === true;
+  const status = csvReady && productionReady && legalSlot ? "READY" : "INVALID";
+  const errors = [...csvErrors, ...readinessErrors].slice(0, 20);
+  return { packId, csvPath, exists: true, records, csvReady, productionReady, legalSlot, status, errors };
+}
+
+function csvNeedsFullPreflight(input: string, columnNames: readonly string[]): boolean {
+  let row: string[] = [];
+  let cellValue = "";
+  let quoted = false;
+  let targetIndexes: number[] | null = null;
+
+  const finishRow = (): boolean => {
+    row.push(cellValue);
+    cellValue = "";
+    if (row.every((cell) => cell.trim().length === 0)) {
+      row = [];
+      return false;
+    }
+    if (targetIndexes === null) {
+      targetIndexes = columnNames
+        .map((column) => row.findIndex((cell) => cell.trim() === column))
+        .filter((index) => index >= 0);
+      row = [];
+      return targetIndexes.length !== columnNames.length;
+    }
+    const populated = targetIndexes.some((index) => (row[index] ?? "").trim().length > 0);
+    row = [];
+    return populated;
+  };
+
+  for (let index = 0; index < input.length; index += 1) {
+    const char = input[index];
+    const next = input[index + 1];
+    if (quoted && char === '"' && next === '"') {
+      cellValue += '"';
+      index += 1;
+      continue;
+    }
+    if (char === '"') {
+      quoted = !quoted;
+      continue;
+    }
+    if (!quoted && char === ",") {
+      row.push(cellValue);
+      cellValue = "";
+      continue;
+    }
+    if (!quoted && (char === "\n" || char === "\r")) {
+      if (char === "\r" && next === "\n") index += 1;
+      if (finishRow()) return true;
+      continue;
+    }
+    cellValue += char;
+  }
+  return finishRow() || targetIndexes === null;
 }
 
 function writeCandidates(args: CliArgs, rows: readonly PreflightRow[]) {
@@ -127,24 +213,25 @@ function parseJson(value: string): Record<string, unknown> | null {
 function compact(value: string): string { return value.trim().slice(0, 500); }
 function today(): string { return new Date().toISOString().slice(0, 10); }
 function render(result: ReturnType<typeof run>): string {
-  return ["MTT six-max preflop intake batch", `valid: ${result.valid}`, `preflight valid: ${result.preflightValid}`, `candidate valid: ${result.candidateValid}`, `write performed: ${result.writePerformed}`, `source: ${result.sourceDir}`, ...result.rows.map((row) => `- ${row.packId}: csvReady=${row.csvReady} legalSlot=${row.legalSlot} errors=${row.errors.length}`)].join("\n");
+  return ["MTT six-max preflop intake batch", `mode: ${result.mode}`, `valid: ${result.valid}`, `preflight valid: ${result.preflightValid}`, `candidate valid: ${result.candidateValid}`, `write performed: ${result.writePerformed}`, `ready: ${result.counts.ready}`, `waiting: ${result.counts.waiting}`, `invalid: ${result.counts.invalid}`, `source: ${result.sourceDir}`, ...result.rows.map((row) => `- ${row.packId}: status=${row.status} records=${row.records} csvReady=${row.csvReady} productionReady=${row.productionReady} legalSlot=${row.legalSlot} errors=${row.errors.length}`)].join("\n");
 }
 
 function renderBatchReport(result: ReturnType<typeof run>): string {
   return [
     "# Six-Max P1 Candidate Batch",
     "",
+    `- Mode: ${result.mode}`,
     `- Preflight valid: ${result.preflightValid}`,
     `- Candidate validation valid: ${result.candidateValid}`,
     `- Candidates written: ${result.writePerformed}`,
     "",
     "## Results",
     "",
-    "| Pack | CSV ready | Legal slot | Candidate valid |",
+    "| Pack | Status | Legal slot | Candidate valid |",
     "| --- | --- | --- | --- |",
     ...result.rows.map((row) => {
       const write = result.writes.find((candidate) => candidate.packId === row.packId);
-      return `| ${row.packId} | ${row.csvReady} | ${row.legalSlot} | ${write?.candidateValid ?? "not written"} |`;
+      return `| ${row.packId} | ${row.status} | ${row.legalSlot} | ${write?.candidateValid ?? "not written"} |`;
     }),
     "",
     "## Next Gate",

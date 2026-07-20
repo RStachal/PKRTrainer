@@ -94,6 +94,8 @@ describe("mtt:p1-preflop-drafts CLI", () => {
         warning: string;
         requiredPermissionDecision: {
           requiredRedistributionScope: string;
+          requiredFields: string[];
+          externalEvidenceRule: string;
         };
       };
 
@@ -103,6 +105,12 @@ describe("mtt:p1-preflop-drafts CLI", () => {
       expect(permissionReview.warning).toContain("Do not rename or copy");
       expect(permissionReview.requiredPermissionDecision.requiredRedistributionScope).toBe(
         "PKRTRAINER_RUNTIME_BUNDLE",
+      );
+      expect(permissionReview.requiredPermissionDecision.requiredFields).not.toContain(
+        "at least one source-free evidence reference",
+      );
+      expect(permissionReview.requiredPermissionDecision.externalEvidenceRule).toContain(
+        "OWNED_SOLVER_EXPORT needs no external evidence reference",
       );
     } finally {
       rmSync(dir, { recursive: true, force: true });
