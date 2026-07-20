@@ -115,6 +115,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).toContain("coverage-low-memory-owner-depth-flop-review-v1-manifest.json");
     expect(cycle).toContain("coverage-low-memory-beta-min-board-review-v1-manifest.json");
     expect(cycle).toContain("coverage-low-memory-beta-depth-board-review-v1-manifest.json");
+    expect(cycle).toContain("coverage-low-memory-growth-board-review-v1-manifest.json");
     expect(cycle).toContain("$OptionalGeneratedManifestNames");
     expect(cycle).not.toContain('".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-next-flop-review-v1-manifest.json"');
     expect(cycle).not.toContain('".\\Agents\\solver-input\\texas-solver\\mtt-safe-flops-v1\\coverage-followup-flop-review-v1-manifest.json"');

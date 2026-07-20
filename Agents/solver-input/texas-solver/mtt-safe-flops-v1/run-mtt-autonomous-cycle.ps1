@@ -4,7 +4,8 @@ param(
     ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-followup-flop-review-v1-manifest.json",
     ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-owner-depth-flop-review-v1-manifest.json",
     ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-beta-min-board-review-v1-manifest.json",
-    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-beta-depth-board-review-v1-manifest.json"
+    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-beta-depth-board-review-v1-manifest.json",
+    ".\Agents\solver-input\texas-solver\mtt-safe-flops-v1\coverage-low-memory-growth-board-review-v1-manifest.json"
   ),
   [int]$IntervalMinutes = 10,
   [ValidateRange(20, 90)]
@@ -22,7 +23,8 @@ $OptionalGeneratedManifestNames = @(
   "coverage-low-memory-followup-flop-review-v1-manifest.json",
   "coverage-low-memory-owner-depth-flop-review-v1-manifest.json",
   "coverage-low-memory-beta-min-board-review-v1-manifest.json",
-  "coverage-low-memory-beta-depth-board-review-v1-manifest.json"
+  "coverage-low-memory-beta-depth-board-review-v1-manifest.json",
+  "coverage-low-memory-growth-board-review-v1-manifest.json"
 )
 $ManifestPaths = @($Manifest | ForEach-Object {
   $candidate = if ([System.IO.Path]::IsPathRooted($_)) {

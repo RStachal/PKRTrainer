@@ -28,8 +28,10 @@ Execution protocol:
 5. Stop at `HUMAN_GATE` or `EXTERNAL_DATA` until the named input exists.
 6. `next`, `followup`, `owner-depth` and `beta-min` are raw-complete. The owner
    explicitly authorized the audited `beta-depth` phase for guarded review-only
-   solving on 2026-07-17. Keep `growth` and every unapproved wave outside the
-   worker until its review boundary is explicitly decided.
+   solving on 2026-07-17. The completed `growth` exports enter the intake cycle
+   only through their `MEMORY_SAFE_REVIEW_ONLY` manifest; this does not authorize
+   further growth solving, staging or normalization. Keep every unapproved wave
+   outside the worker until its review boundary is explicitly decided.
 7. Keep raw solver output local and ignored. Ship only reviewed source-safe artifacts.
 8. `permission.json` records provenance/review rights; it is never a customer entitlement.
 9. After recording a completed dependency, change only the next eligible
@@ -75,7 +77,8 @@ attempt fail, or when a task explicitly changes strategy meaning or release scop
   `beta-depth` wave is now the fifth owner-authorized phase. Every phase remains
   `MEMORY_SAFE_REVIEW_ONLY`.
 - Review protocol: 20 families need human review; 0 protocol-ready.
-- Complete memory-safe intake: all five derived manifests are observed. The
+- Complete memory-safe intake: six derived manifests are observed, including the
+  completed 98-board growth evidence wrapper. The
   2026-07-17 09:42 snapshot has 289/344 physical checkpoints, 286 unique
   family/board pairs, 20/20 valid cumulative reports and 15/20 mechanical family
   shapes. These counts do not substitute for the 0/20 owner decisions.
@@ -358,7 +361,8 @@ never supplies a human verdict, production strategy or action EV.
 Acceptance: the Windows task is enabled and running or waiting on its resource
 guard; the derived 83-board manifest passes scenario audit; the recurring MTT
 cycle includes it when present; no `normalized.json`, `permission.json` or
-runtime strategy file is generated; `growth` remains inactive.
+runtime strategy file is generated. Completed growth output remains an
+explicitly bounded `MEMORY_SAFE_REVIEW_ONLY` intake item.
 
 Evidence at 08:58: task `Running`, no recorded solver failures, beta-depth 11/83
 with two complete and one partial family. The first updated intake cycle exited
@@ -379,7 +383,7 @@ It reports the next gate but never writes a poker verdict or promotion command.
 Owner waves are ordered by current MTT Core pilot relationship before SPR
 companions; unknown families fall back to deterministic alphabetical order.
 
-Acceptance: a live cycle reads five manifests, unions duplicate family/board
+Acceptance: a live cycle reads the derived manifests, unions duplicate family/board
 pairs, emits JSON plus `MECHANICAL_READINESS.md`, retains 0/20 owner decisions,
 keeps Core green and exposes no staging/normalization command. Focused readiness,
 review-protocol and Windows automation tests pass.
