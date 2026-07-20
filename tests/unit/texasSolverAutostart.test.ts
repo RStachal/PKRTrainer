@@ -13,6 +13,7 @@ const QUEUE_PATH = resolve(SOLVER_DIR, "texas-solver-autostart-queue.json");
 const WORKER_PATH = resolve(SOLVER_DIR, "resume-texas-solver-queue.ps1");
 const MANAGER_PATH = resolve(SOLVER_DIR, "manage-texas-solver-autostart.ps1");
 const AUTONOMOUS_CYCLE_PATH = resolve(SOLVER_DIR, "run-mtt-autonomous-cycle.ps1");
+const REVIEW_ONLY_REFRESH_PATH = resolve(ROOT, "scripts/refreshTexasSolverReviewOnlyEvidence.mts");
 const AUTONOMOUS_CYCLE_MANAGER_PATH = resolve(
   SOLVER_DIR,
   "manage-mtt-autonomous-cycle.ps1",
@@ -87,6 +88,7 @@ describe("TexasSolver Windows autostart queue", () => {
     );
     const cycle = readFileSync(AUTONOMOUS_CYCLE_PATH, "utf8");
     const manager = readFileSync(AUTONOMOUS_CYCLE_MANAGER_PATH, "utf8");
+    const reviewOnlyRefresh = readFileSync(REVIEW_ONLY_REFRESH_PATH, "utf8");
 
     expect(output).toContain("PKRTrainer-MTT-Task-Agent-10m");
     expect(output).toContain("-WindowStyle Hidden");
@@ -131,7 +133,9 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).toContain("latest-cycle-summary.json");
     expect(cycle).toContain("Write-LatestCycleSummary $statuses $signature");
     expect(cycle).toContain("Update-ReviewOnlyEvidence $statuses");
-    expect(cycle).toContain("--review-only-tree-profile=MEMORY_SAFE_REVIEW_ONLY");
+    expect(cycle).toContain("mtt:texas-solver-review-only-refresh");
+    expect(cycle).toContain("ignoring any older successful refresh report");
+    expect(reviewOnlyRefresh).toContain("--review-only-tree-profile=${TREE_PROFILE}");
     expect(cycle).toContain('"mtt:texas-solver-board-catalog"');
     expect(cycle).toContain("board-catalog-latest.json");
     expect(cycle).toContain("solver-batch prep task");
@@ -139,12 +143,12 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).not.toContain("coverage-beta-min-board-review-v1-manifest.json");
     expect(cycle).toContain("boardCatalog = $BoardCatalog");
     expect(manager).toContain("Declared board catalog:");
-    expect(cycle).toContain("$row.solvedBoards");
-    expect(cycle).toContain("$familyIds = @($evidenceRows");
-    expect(cycle).toContain("$existingReport.requestedBoards");
-    expect(cycle).toContain("TexasSolver cumulative review-only evidence");
-    expect(cycle).toContain("--boards=$($boards -join ',')");
-    expect(cycle).toContain("review-only evidence viewer");
+    expect(reviewOnlyRefresh).toContain("collectEvidence");
+    expect(reviewOnlyRefresh).toContain("reportIsFresh");
+    expect(reviewOnlyRefresh).toContain("requestedBoards");
+    expect(reviewOnlyRefresh).toContain("TexasSolver cumulative review-only evidence");
+    expect(reviewOnlyRefresh).toContain('`--boards=${boards.join(",")}`');
+    expect(reviewOnlyRefresh).toContain("refresh.lock");
     expect(cycle).toContain("reviewOnlyEvidence = $ReviewOnlyEvidence");
     expect(cycle).toContain("reviewReadiness = $ReviewReadiness");
     expect(cycle).toContain('"mtt:texas-solver-review-readiness"');
@@ -179,6 +183,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(manager).toContain("next run:");
     expect(manager).toContain("Show-LatestCycleOutcome");
     expect(manager).toContain("latest cycle outcome:");
+    expect(manager).toContain("coverage signature=");
     expect(manager).toContain("P1 intake:");
     expect(manager).toContain("TexasSolver review:");
     expect(manager).toContain("TexasSolver owner dashboard:");
@@ -279,7 +284,8 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(watcher).toContain("No coverage change; skipping redundant ingest and pilot refresh.");
     expect(watcher).toContain("Coverage changed; running source-safe ingest and review checks.");
     expect(watcher).toContain("recording MEMORY_SAFE_REVIEW_ONLY evidence without downstream staging or pilot refresh");
-    expect(watcher).toContain("review protocol and pilot refresh are intentionally skipped for this reduced tree");
+    expect(watcher).toContain("mtt:texas-solver-review-only-refresh");
+    expect(watcher).toContain("cumulative reports refreshed");
     expect(watcher).toContain("Processing did not complete cleanly; coverage will be retried.");
     expect(watcher).toContain("mtt:texas-solver-scenario-audit -- --manifest");
     expect(watcher).toContain("scenario audit exit code");

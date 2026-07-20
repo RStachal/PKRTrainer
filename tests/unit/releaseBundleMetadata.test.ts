@@ -100,6 +100,7 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:stage-texas-solver"]).toBe("vite-node scripts/stageTexasSolverExports.mts");
     expect(pkg.scripts["mtt:texas-solver-pack"]).toBe("vite-node scripts/checkTexasSolverParameterPack.mts");
     expect(pkg.scripts["mtt:texas-solver-review"]).toBe("vite-node scripts/extractTexasSolverReview.mts");
+    expect(pkg.scripts["mtt:texas-solver-review-only-refresh"]).toBe("vite-node scripts/refreshTexasSolverReviewOnlyEvidence.mts");
     expect(pkg.scripts["mtt:texas-solver-scenario-audit"]).toBe("vite-node scripts/auditTexasSolverScenarioBatch.mts");
     expect(pkg.scripts["mtt:texas-solver-srp-sb-bb-cbet-batch"])
       .toBe("vite-node scripts/buildTexasSolverSrpSbBbCbetBatch.mts");

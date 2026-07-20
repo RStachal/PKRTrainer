@@ -28,6 +28,7 @@
     "mtt:stage-texas-solver": "vite-node scripts/stageTexasSolverExports.mts",
     "mtt:texas-solver-pack": "vite-node scripts/checkTexasSolverParameterPack.mts",
     "mtt:texas-solver-review": "vite-node scripts/extractTexasSolverReview.mts",
+    "mtt:texas-solver-review-only-refresh": "vite-node scripts/refreshTexasSolverReviewOnlyEvidence.mts",
     "mtt:texas-solver-scenario-audit": "vite-node scripts/auditTexasSolverScenarioBatch.mts",
     "mtt:texas-solver-3bp-repair-batch": "vite-node scripts/buildTexasSolver3bpRepairBatch.mts",
     "mtt:texas-solver-3bp-expansion-batch": "vite-node scripts/buildTexasSolver3bpExpansionBatch.mts",

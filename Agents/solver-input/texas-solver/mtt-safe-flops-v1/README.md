@@ -493,6 +493,20 @@ audit under `artifacts/texas-solver-scenario-audit/` before final ingest and
 review staging. An audit failure remains fail-closed for review but never deletes
 raw checkpoints.
 
+For `MEMORY_SAFE_REVIEW_ONLY` phases, the watcher and recurring MTT cycle share
+one locked cumulative refresh instead of staging or normalizing strategy:
+
+```powershell
+npm run mtt:texas-solver-review-only-refresh -- --dry-run --summary
+npm run mtt:texas-solver-review-only-refresh -- --summary
+```
+
+The command unions solved boards across the six approved derived manifests,
+refreshes only stale family evidence and rebuilds its read-only viewer when
+needed. Its PID lock prevents the watcher and scheduled cycle from writing the
+same report concurrently. It cannot write production strategy, owner decisions
+or `normalized.json`.
+
 ## 3BP repair batch
 
 The first CO vs BTN 3bet-pot candidate solved correctly, but the pilot gate rejected it because the normalized strategy

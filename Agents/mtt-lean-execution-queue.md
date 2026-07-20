@@ -78,7 +78,7 @@ attempt fail, or when a task explicitly changes strategy meaning or release scop
   `MEMORY_SAFE_REVIEW_ONLY`.
 - Review protocol: 20 families need human review; 0 protocol-ready.
 - Complete memory-safe intake: six derived manifests are observed, including the
-  completed 98-board growth evidence wrapper. The 2026-07-20 snapshot has 390
+  completed 98-board growth evidence wrapper. The 2026-07-20 13:22 snapshot has 411
   unique family/board pairs, 20/20 valid cumulative reports and 20/20 mechanical
   family shapes. These counts do not substitute for the 0/20 owner decisions.
 - Action-EV comparison: implementation complete, data not ready. Core preflop is
@@ -130,14 +130,14 @@ Status: `REPEATING_CHECK`
 Depends on: `OPS-00`
 Lane: `REPEATABLE`
 
-Last measured: 2026-07-20 13:04 local time. `next`, `followup` and `owner-depth`
+Last measured: 2026-07-20 13:22 local time. `next`, `followup` and `owner-depth`
 are complete at 72/72, `beta-min` is 45/45, `growth` is 98/98 and `beta-depth`
-is 49/83. The scheduled worker resumed when RAM recovered, completed seven more
-checkpoints and returned to its CPU/RAM guard with no duplicate solver process.
+is 55/83. The scheduled worker resumed when resources recovered, completed six
+more checkpoints and returned to its CPU/RAM guard with no duplicate solver process.
 One historical native failure remains recorded and visible.
 
 The current cumulative intake aggregates solved memory-safe checkpoints into 20
-valid reports covering 405 unique family/board pairs. Extraction failures are
+valid reports covering 411 unique family/board pairs. Extraction failures are
 zero, and no strategy was staged or promoted.
 
 Run once per AI work session, not in a tight loop:
@@ -374,8 +374,8 @@ cycle includes it when present; no `normalized.json`, `permission.json` or
 runtime strategy file is generated. Completed growth output remains an
 explicitly bounded `MEMORY_SAFE_REVIEW_ONLY` intake item.
 
-Evidence at 2026-07-20 13:04: beta-depth is 49/83 with eleven complete, one
-partial and eight waiting families. Growth is independently raw-complete at
+Evidence at 2026-07-20 13:22: beta-depth is 55/83 with thirteen complete, zero
+partial and seven waiting families. Growth is independently raw-complete at
 98/98. The resource-guarded worker resumed without a duplicate process; Core
 stays green at 4/4 preflop plus 7/7 scoped FLOP pilots.
 
@@ -452,6 +452,27 @@ Acceptance: `npm run mtt:autonomous-cycle-ensure` exits 0 for an already enabled
 task, status reports `task health: ENABLED`, the old snapshot is visibly stale,
 and focused Windows automation tests pass without starting or stopping
 TexasSolver.
+
+### OPS-47 - Refresh every solved review-only checkpoint without manual board lists
+
+Status: `DONE 2026-07-20`
+Depends on: `OPS-38`, `OPS-41`, `OPS-46`
+Lane: `REPEATABLE`
+
+One CLI now unions solved boards across all six approved derived memory-safe
+manifests, validates the exact `MEMORY_SAFE_REVIEW_ONLY` profile and refreshes
+only stale family reports. An exclusive PID lock serializes the solver watcher
+and the ten-minute MTT cycle; stale locks recover automatically. Writes remain
+limited to review evidence, its viewer and an atomic refresh report. The command
+cannot write normalized strategy, owner decisions or runtime content.
+
+The incremental watcher invokes this refresh immediately after changed
+memory-safe coverage. The MTT cycle uses the same command before readiness and
+owner-dashboard checks, replacing its private PowerShell board-union logic.
+
+Acceptance: dry-run reports exact cumulative coverage without writing evidence;
+a live watcher refresh exits 0; a concurrent live lock exits 0 without writes;
+20/20 reports remain valid and production eligibility remains 0/20.
 
 ## Phase DEP - Core Deployment Closeout
 
@@ -1085,6 +1106,7 @@ Use this exact handoff prompt after changing models:
 | 2026-07-17 | OPS-44 | DONE | Prepared a conservative three-thread `BelowNormal` profile for the next worker without interrupting the active board. The owner dashboard now joins fail-closed mechanical context and filters 15 shape-ready from 5 evidence-pending families. Reviewer/readiness/protocol/Windows tests passed 24/24 and typecheck passed; a live attempt correctly deferred at 46% CPU against the 40% development guard. |
 | 2026-07-20 | OPS-45 | DONE | Low-memory task status now distinguishes a live solver from a worker waiting on its resource gate and reports current CPU, free RAM and solver PIDs. Live status truthfully showed `WAITING_FOR_RESOURCES (RAM)`, no solver PID, CPU 40% and free RAM 9%; autostart tests 9/9 and typecheck passed. |
 | 2026-07-20 | OPS-46 | DONE | Added idempotent repair for the ten-minute MTT task plus enabled/next-run/latest-outcome/snapshot-freshness diagnostics. The real task was repaired from Disabled to Ready, then confirmed enabled with a future trigger. Incremental review-only intake refreshed four changed families through the latest `J88r` checkpoint: beta-depth reached 49/83 and cumulative valid evidence reached 405 unique family/board pairs without staging or promotion. |
+| 2026-07-20 | OPS-47 | DONE | Replaced manual and cycle-private board unions with the locked `mtt:texas-solver-review-only-refresh` path shared by the incremental watcher and ten-minute cycle. Live watcher evidence reached beta-depth 55/83 and 411 unique family/board pairs; 20/20 reports and 20/20 mechanical shapes are valid, owner/production remain 0/20, and no strategy was staged or promoted. Related regression passed 28/28, typecheck, production build and scoped Core gate passed. |
 | 2026-07-20 | OWNER-REVIEW-06 | DONE | Owner dashboard progress now counts only export-valid decisions, marks missing reviewer/date/scope/caveats, and focuses the next incomplete visible row without selecting a poker verdict. Current dashboard regenerated over 53 reports with 20/20 mechanical family context and 0 preselected decisions. Focused reviewer/writer/autostart tests passed 17/17, typecheck passed, and browser QA removed the 390px global horizontal overflow. |
 | 2026-07-20 | RELEASE-I18N-01 | DONE | Global runtime and asynchronous errors now follow the live EN/CZ catalog, while range metadata uses the stable poker label `ante ON/OFF`. Vitest parent concurrency is capped at four to prevent nested CLI processes from timing out under solver/development memory pressure. Stable full regression passed 151/151 files and 753/753 tests; registry, scoped Core, ranges, production build, precache and bundle budget all passed. Production Chrome E2E passed desktop plus 360/390/412 px with zero browser errors and 48 contrast checks. |
 | 2026-07-20 | RELEASE-FTP-02 | DONE | Packaged the verified production output with the tracked `deploy/forpsi/.htaccess.example` staging template as `deploy/pkrtrainer-ftp-20260720-124211-25ee34a01488-mtt-core-i18n-final.zip`. ZIP reconciliation passed 22/22 files with 0 missing, 0 extra and 0 hash mismatches; SHA-256 is `D85B7AA2B6578C8979871A5D9FD697FAB7928AD694DC195ABC2A9E2CB58616E5`. |

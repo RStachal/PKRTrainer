@@ -22,7 +22,7 @@ an earlier iteration is active, it exits and waits for the next scheduled window
   twelve-board cohort target. The owner explicitly authorized it for guarded
   background solving on 2026-07-17. It is `AUTHORIZED_REVIEW_ONLY_WORKER_PHASE`,
   not reviewed strategy and not eligible for automatic promotion.
-- Runtime limits: 2 solver threads, `BelowNormal` priority.
+- Runtime limits: 3 solver threads, `BelowNormal` priority.
 - Start guard: no new board starts unless total CPU is at most 40% and physical
   RAM has at least 35% free (at most 65% used).
 - Emergency guard: after three 15-second samples below 25% free RAM, only the
@@ -37,14 +37,14 @@ an earlier iteration is active, it exits and waits for the next scheduled window
 - An ingest watcher refreshes source-safe coverage and review artifacts for
   completed evidence. For `MEMORY_SAFE_REVIEW_ONLY` manifests it cannot stage,
   normalize, merge, mark poker review complete or promote runtime strategy. It
-  records changed reduced-tree coverage once, suppresses unrelated historical
-  staging/draft state and skips the downstream pilot refresh.
-- The mechanical cycle aggregates every solved checkpoint from all five derived
-  memory-safe manifests, including a partial family, into one cumulative report
-  per family. The 2026-07-17 08:58 snapshot contains 272 physical checkpoints,
-  269 unique family/board pairs, 20/20 valid reports and zero extraction failures.
-  Its separate readiness matrix reports 12/20 mechanical shapes and 0/20 human
-  owner decisions.
+  records changed reduced-tree coverage once, invokes the shared PID-locked
+  cumulative refresh, suppresses unrelated historical staging/draft state and
+  skips the downstream pilot refresh.
+- The watcher and mechanical cycle use the same refresh CLI to aggregate every
+  solved checkpoint from all six derived memory-safe manifests, including a
+  partial family, into one cumulative report per family. The 2026-07-20 13:22
+  snapshot contains 411 unique family/board pairs, 20/20 valid reports, 20/20
+  mechanical shapes and 0/20 human owner decisions.
 
 Controls:
 

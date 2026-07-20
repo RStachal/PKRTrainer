@@ -177,7 +177,14 @@ try {
       }
 
       if ($MemorySafeReviewOnly) {
-        Write-WatchLog "MEMORY_SAFE_REVIEW_ONLY evidence recorded; review protocol and pilot refresh are intentionally skipped for this reduced tree."
+        npm run mtt:texas-solver-review-only-refresh -- --summary 2>&1 |
+          ForEach-Object { Write-WatchLog ([string]$_) }
+        if ($LASTEXITCODE -ne 0) {
+          Write-WatchLog "cumulative review-only refresh exit code=$LASTEXITCODE (coverage will be retried)."
+          $ProcessingSucceeded = $false
+        } else {
+          Write-WatchLog "MEMORY_SAFE_REVIEW_ONLY evidence and cumulative reports refreshed; review protocol and pilot refresh remain intentionally skipped for this reduced tree."
+        }
       } else {
         # Both checks are intentionally fail-closed until human poker review; record their
         # state without treating an expected downstream blocker as a failed raw ingest.

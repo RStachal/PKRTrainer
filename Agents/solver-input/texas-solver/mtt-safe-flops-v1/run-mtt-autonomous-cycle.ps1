@@ -50,6 +50,7 @@ $BoardCatalogReportPath = Join-Path $ArtifactsDir "board-catalog-latest.json"
 $ReviewOnlyEvidenceDir = Join-Path $RepoRoot "artifacts\texas-solver-review-only-owner-depth"
 $ReviewOnlyEvidenceReportsDir = Join-Path $ReviewOnlyEvidenceDir "reviews"
 $ReviewOnlyEvidenceViewerPath = Join-Path $ReviewOnlyEvidenceDir "viewer\index.html"
+$ReviewOnlyEvidenceRefreshReportPath = Join-Path $ReviewOnlyEvidenceDir "refresh-report.json"
 $ReviewReadinessReportPath = Join-Path $RepoRoot "artifacts\texas-solver-review-readiness\report.json"
 $ReviewReadinessMarkdownPath = Join-Path $RepoRoot "artifacts\texas-solver-review-readiness\MECHANICAL_READINESS.md"
 $CanonicalReviewReportsDir = Join-Path $RepoRoot "Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver"
@@ -254,117 +255,45 @@ function Invoke-LoggedNpm([string]$Label, [string[]]$Arguments) {
 }
 
 function Update-ReviewOnlyEvidence($Statuses) {
-  New-Item -ItemType Directory -Force -Path $ReviewOnlyEvidenceReportsDir | Out-Null
-  $summary = [ordered]@{
+  if (@($Statuses).Count -ne $ManifestPaths.Count) {
+    return [ordered]@{
+      eligibleFamilies = 0
+      evidenceBoards = 0
+      reports = 0
+      refreshed = 0
+      failures = 1
+      viewerWritten = $false
+      viewerPath = $ReviewOnlyEvidenceViewerPath
+    }
+  }
+  $refreshArgs = @(
+    "run", "mtt:texas-solver-review-only-refresh", "--",
+    "--reports-dir=$ReviewOnlyEvidenceReportsDir",
+    "--viewer-output=$ReviewOnlyEvidenceViewerPath",
+    "--output=$ReviewOnlyEvidenceRefreshReportPath",
+    "--summary"
+  )
+  foreach ($manifestPath in $ManifestPaths) { $refreshArgs += "--manifest=$manifestPath" }
+  $refreshExit = Invoke-LoggedNpm "cumulative review-only evidence refresh" $refreshArgs
+  if ($refreshExit -eq 0 -and (Test-Path -LiteralPath $ReviewOnlyEvidenceRefreshReportPath -PathType Leaf)) {
+    try {
+      return Get-Content -LiteralPath $ReviewOnlyEvidenceRefreshReportPath -Raw | ConvertFrom-Json
+    } catch {
+      Write-CycleLog "Review-only refresh report is unreadable; the next cycle will retry. $($_.Exception.Message)" | Out-Null
+    }
+  }
+  if ($refreshExit -ne 0) {
+    Write-CycleLog "Review-only refresh failed; ignoring any older successful refresh report and retrying next cycle." | Out-Null
+  }
+  return [ordered]@{
     eligibleFamilies = 0
     evidenceBoards = 0
-    reports = 0
+    reports = @(Get-ChildItem -LiteralPath $ReviewOnlyEvidenceReportsDir -Filter "*.review.json" -File -ErrorAction SilentlyContinue).Count
     refreshed = 0
-    failures = 0
+    failures = $(if ($refreshExit -eq 0) { 0 } else { 1 })
     viewerWritten = $false
     viewerPath = $ReviewOnlyEvidenceViewerPath
   }
-
-  $evidenceRows = @(
-    foreach ($status in @($Statuses | Where-Object { $_.reviewOnlyTreeProfile -eq "MEMORY_SAFE_REVIEW_ONLY" })) {
-      foreach ($row in @($status.rows)) {
-        $solvedBoards = @($row.solvedBoards | ForEach-Object { [string]$_ } | Where-Object { $_.Length -gt 0 })
-        if ($solvedBoards.Count -gt 0) {
-          [pscustomobject]@{
-            familyId = [string]$row.familyId
-            rawDir = [string]$row.rawDir
-            solvedBoards = $solvedBoards
-          }
-        }
-      }
-    }
-  )
-
-  $familyIds = @($evidenceRows | ForEach-Object { $_.familyId } | Sort-Object -Unique)
-  foreach ($familyId in $familyIds) {
-    $summary.eligibleFamilies++
-    if ($familyId -notmatch '^[A-Za-z0-9_]+$') {
-      $summary.failures++
-      Write-CycleLog "Review-only evidence rejected unsafe family ID: $familyId" | Out-Null
-      continue
-    }
-    $familyRows = @($evidenceRows | Where-Object { $_.familyId -eq $familyId })
-    $rawDirs = @($familyRows | ForEach-Object { $_.rawDir } | Where-Object { $_.Length -gt 0 } | Sort-Object -Unique)
-    if ($rawDirs.Count -ne 1) {
-      $summary.failures++
-      Write-CycleLog "Review-only evidence requires one raw directory for $familyId; found $($rawDirs.Count)." | Out-Null
-      continue
-    }
-    $boards = @($familyRows | ForEach-Object { $_.solvedBoards } | Sort-Object -Unique)
-    if ($boards.Count -eq 0 -or @($boards | Where-Object { $_ -notmatch '^[A-Za-z0-9_-]+$' }).Count -gt 0) {
-      $summary.failures++
-      Write-CycleLog "Review-only evidence rejected invalid board allowlist for $familyId." | Out-Null
-      continue
-    }
-    $rawPaths = @($boards | ForEach-Object { Join-Path $rawDirs[0] ("pkrtrainer_{0}_{1}.json" -f $familyId, $_) })
-    if (@($rawPaths | Where-Object { -not (Test-Path -LiteralPath $_ -PathType Leaf) }).Count -gt 0) {
-      $summary.failures++
-      Write-CycleLog "Review-only evidence found solved-board metadata with missing files for $familyId; retrying next cycle." | Out-Null
-      continue
-    }
-    $summary.evidenceBoards += $boards.Count
-    $reportPath = Join-Path $ReviewOnlyEvidenceReportsDir "$familyId.review.json"
-    $latestRawWrite = ($rawPaths | ForEach-Object { (Get-Item -LiteralPath $_).LastWriteTimeUtc } | Sort-Object -Descending | Select-Object -First 1)
-    $reportIsFresh = $false
-    if ((Test-Path -LiteralPath $reportPath -PathType Leaf) -and ((Get-Item -LiteralPath $reportPath).LastWriteTimeUtc -ge $latestRawWrite)) {
-      try {
-        $existingReport = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
-        $existingBoards = @($existingReport.requestedBoards | ForEach-Object { [string]$_ } | Sort-Object -Unique)
-        $reportIsFresh = [bool]$existingReport.valid -and
-          $existingReport.status -eq "REVIEW_ONLY_EVIDENCE" -and
-          $existingReport.reviewOnlyTreeProfile -eq "MEMORY_SAFE_REVIEW_ONLY" -and
-          $existingReport.familyId -eq $familyId -and
-          (($existingBoards -join '|') -eq ($boards -join '|'))
-      } catch {
-        Write-CycleLog "Review-only evidence could not validate the existing report for $familyId; rebuilding it. $($_.Exception.Message)" | Out-Null
-      }
-    }
-    if (-not $reportIsFresh) {
-      $extractExit = Invoke-LoggedNpm "review-only evidence $familyId" @(
-        "run", "mtt:texas-solver-review", "--",
-        "--family=$familyId",
-        "--boards=$($boards -join ',')",
-        "--review-only-tree-profile=MEMORY_SAFE_REVIEW_ONLY",
-        "--output=$reportPath",
-        "--summary"
-      )
-      if ($extractExit -ne 0) {
-        $summary.failures++
-        Write-CycleLog "Review-only evidence extraction failed for $familyId; no production workflow was touched." | Out-Null
-        continue
-      }
-      $summary.refreshed++
-    }
-  }
-
-  $reports = @(Get-ChildItem -LiteralPath $ReviewOnlyEvidenceReportsDir -Filter "*.review.json" -File -ErrorAction SilentlyContinue | Sort-Object Name)
-  $summary.reports = $reports.Count
-  if ($reports.Count -gt 0) {
-    $viewerNeedsRefresh = -not (Test-Path -LiteralPath $ReviewOnlyEvidenceViewerPath -PathType Leaf)
-    if (-not $viewerNeedsRefresh) {
-      $viewerWrite = (Get-Item -LiteralPath $ReviewOnlyEvidenceViewerPath).LastWriteTimeUtc
-      $viewerNeedsRefresh = @($reports | Where-Object { $_.LastWriteTimeUtc -gt $viewerWrite }).Count -gt 0
-    }
-    if ($viewerNeedsRefresh) {
-      $viewerArgs = @("run", "mtt:texas-solver-viewer", "--")
-      foreach ($report in $reports) { $viewerArgs += "--input=$($report.FullName)" }
-      $viewerArgs += "--no-waves"
-      $viewerArgs += "--title=TexasSolver cumulative review-only evidence"
-      $viewerArgs += "--output=$ReviewOnlyEvidenceViewerPath"
-      $viewerExit = Invoke-LoggedNpm "review-only evidence viewer" $viewerArgs
-      if ($viewerExit -eq 0) {
-        $summary.viewerWritten = $true
-      } else {
-        $summary.failures++
-      }
-    }
-  }
-  return $summary
 }
 
 function Should-DeferForResourcePressure {

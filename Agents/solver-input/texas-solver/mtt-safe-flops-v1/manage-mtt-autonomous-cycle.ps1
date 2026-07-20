@@ -103,9 +103,12 @@ function Show-LatestCycleOutcome {
     Write-Host "latest cycle outcome: no cycle log"
     return
   }
-  $lastLine = Get-Content -LiteralPath $latestLog.FullName -Tail 20 |
-    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+  $lastLine = Get-Content -LiteralPath $latestLog.FullName -Tail 50 |
+    Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and $_ -notmatch 'coverage signature=' } |
     Select-Object -Last 1
+  if ($null -ne $lastLine -and $lastLine.Length -gt 360) {
+    $lastLine = $lastLine.Substring(0, 357) + "..."
+  }
   Write-Host "latest cycle log: $($latestLog.FullName)"
   Write-Host "latest cycle outcome: $(if ($null -ne $lastLine) { $lastLine } else { 'empty log' })"
 }

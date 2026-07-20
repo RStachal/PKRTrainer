@@ -160,13 +160,15 @@ does not interrupt the current step unless it exposes a production regression.
 2. Keep `PKRTrainer-MTT-Task-Agent-10m` installed for the signed-in Windows
    owner. Every 10 minutes it records TexasSolver coverage, regenerates the
    source-safe P1 packet, dry-validates any newly present P1 six-max export,
-   records canonical board coverage, refreshes cumulative evidence from all five
+   records canonical board coverage, refreshes cumulative evidence from all six
    derived memory-safe manifests, writes the mechanical review-readiness matrix
    and the source-safe review packet, and runs the scoped Core gate when raw
    coverage changes.
    Its latest summary retains the exact Core action-EV readiness counts. A
-   `MEMORY_SAFE_REVIEW_ONLY` watcher records coverage without downstream pilot
-   refresh or exposure of unrelated historical staged artefacts.
+   `MEMORY_SAFE_REVIEW_ONLY` watcher uses the same PID-locked cumulative refresh
+   without downstream pilot refresh or exposure of unrelated historical staged
+   artefacts. This lets new boards enter review evidence before the next full
+   cycle while serializing report writes.
    It never starts or stops TexasSolver, stages raw exports, promotes runtime
    content, creates range data, writes solver input or substitutes for owner
    poker review. `run-mtt-solver-batch-prep-cycle.ps1` is the sole writer and
