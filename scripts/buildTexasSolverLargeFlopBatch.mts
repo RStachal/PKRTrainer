@@ -75,6 +75,7 @@ interface CliArgs {
   preset: BatchPreset;
   manifestPath: string;
   outputDir: string;
+  reviewOnlyManifest: boolean;
   write: boolean;
   summary: boolean;
 }
@@ -314,6 +315,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let preset: CliArgs["preset"] = "active";
   let manifestPath: string | undefined;
   let outputDir: string | undefined;
+  let reviewOnlyManifest = false;
   let write = false;
   let summary = false;
 
@@ -326,6 +328,10 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (item === "--summary") {
       summary = true;
+      continue;
+    }
+    if (item === "--review-only-manifest") {
+      reviewOnlyManifest = true;
       continue;
     }
     if (item === "--preset") {
@@ -359,10 +365,18 @@ function parseArgs(argv: readonly string[]): CliArgs {
   }
 
   const defaults = batchFor(preset);
+  if (reviewOnlyManifest && preset !== "growth") {
+    throw new Error("--review-only-manifest is currently supported only with --preset=growth.");
+  }
   return {
     preset,
-    manifestPath: manifestPath ?? resolve(defaults.manifest),
+    manifestPath: manifestPath ?? resolve(
+      reviewOnlyManifest
+        ? "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-low-memory-growth-board-review-v1-manifest.json"
+        : defaults.manifest,
+    ),
     outputDir: outputDir ?? resolve(defaults.outputDir),
+    reviewOnlyManifest,
     write,
     summary,
   };
@@ -379,6 +393,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-large-flop-batch -- --preset=beta-min --write",
     "  npm run mtt:texas-solver-large-flop-batch -- --preset=beta-depth --write",
     "  npm run mtt:texas-solver-large-flop-batch -- --preset=growth --write",
+    "  npm run mtt:texas-solver-large-flop-batch -- --preset=growth --review-only-manifest --write",
     "  npm run mtt:texas-solver-large-flop-batch -- --preset=next --summary",
     "",
     "Generates an isolated review-only TexasSolver flop board expansion batch.",
@@ -419,10 +434,10 @@ function buildReport(args: CliArgs): {
       written: false,
     };
   }));
-  if (
+  if (!args.reviewOnlyManifest && (
     args.preset === "owner-depth" || args.preset === "beta-min" ||
     args.preset === "beta-depth" || args.preset === "growth"
-  ) {
+  )) {
     blockers.push(...familyBoardDuplicateBlockers(args, files, args.preset));
   }
 
@@ -472,8 +487,21 @@ function writeBatch(args: CliArgs, report: ReturnType<typeof buildReport>): void
         "This prepared batch is intentionally outside the active autostart queue and cannot start TexasSolver by itself.",
         "It removes set_raise_limit 3 because the installed TexasSolver v0.2.0 console reports that directive as unrecognized; removal preserves the console default used by the active batch.",
       ] : []),
+      ...(args.reviewOnlyManifest ? [
+        "MEMORY_SAFE_REVIEW_ONLY tree: this manifest records raw exports created by the bounded manual day/night runners. It is not comparable to a full-tree production solve.",
+        "Review-only evidence: automatic staging, normalization, pilot refresh and action-EV publication are disabled.",
+      ] : []),
     ],
     commands: nextCommands(args),
+    ...(args.reviewOnlyManifest ? {
+      executionProfile: {
+        treeProfile: "MEMORY_SAFE_REVIEW_ONLY",
+        minimumFreeMemoryPercent: 35,
+        maximumCpuPercent: 40,
+        stopBelowFreeMemoryPercent: 25,
+        processPriority: "BelowNormal",
+      },
+    } : {}),
   };
   writeIfChanged(args.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 }
@@ -498,6 +526,12 @@ function nextCommands(args: CliArgs): string[] {
     `npm run mtt:texas-solver-scenario-audit -- --manifest "${manifest}" --summary`,
     `.\u005cAgents\u005csolver-input\u005ctexas-solver\u005cmtt-safe-flops-v1\u005crun-console-selected.ps1 -ParameterRoot "${parameterRoot}" -Limit 999 -ListOnly`,
   ];
+  if (args.reviewOnlyManifest) {
+    return [
+      `npm run mtt:texas-solver-coverage-status -- --manifest "${manifest}" --summary`,
+      "MEMORY_SAFE_REVIEW_ONLY evidence is intentionally excluded from automatic staging and normalization.",
+    ];
+  }
   if (args.preset === "next") {
     return [
       ...commands,

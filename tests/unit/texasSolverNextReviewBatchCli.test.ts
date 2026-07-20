@@ -157,6 +157,23 @@ describe("next TexasSolver review batch", () => {
     expect(report.nextCommands.join("\n")).toContain("outside every active worker");
   });
 
+  it("creates a separate review-only manifest for bounded manual growth exports", () => {
+    const result = runBatch("--preset=growth", "--review-only-manifest", "--write");
+    expect(result.status).toBe(0);
+
+    const report = parseJsonStdout(result.stdout) as { manifestPath: string; nextCommands: string[] };
+    expect(report.manifestPath).toContain("coverage-low-memory-growth-board-review-v1-manifest.json");
+    expect(report.nextCommands.join("\n")).toContain("excluded from automatic staging");
+
+    const manifest = JSON.parse(readFileSync(resolve(
+      ROOT,
+      SOLVER_DIR,
+      "coverage-low-memory-growth-board-review-v1-manifest.json",
+    ), "utf8")) as { executionProfile?: { treeProfile?: string }; files: unknown[] };
+    expect(manifest.executionProfile?.treeProfile).toBe("MEMORY_SAFE_REVIEW_ONLY");
+    expect(manifest.files).toHaveLength(98);
+  });
+
   it("keeps the active batch frozen while removing an ignored console directive from next parameters", () => {
     const result = runBatch("--preset=next", "--write");
 
