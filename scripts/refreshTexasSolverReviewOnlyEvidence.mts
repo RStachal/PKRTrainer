@@ -54,6 +54,8 @@ interface FamilyEvidence {
 
 interface ExistingReviewReport {
   familyId?: unknown;
+  files?: unknown;
+  productionReady?: unknown;
   requestedBoards?: unknown;
   reviewOnlyTreeProfile?: unknown;
   status?: unknown;
@@ -75,6 +77,10 @@ interface RefreshReport {
   reports: number;
   plannedRefresh: number;
   refreshed: number;
+  plannedStagingRefresh: number;
+  stagingRefreshed: number;
+  accuracyEvidenceBoards: number;
+  accuracyEvidenceFamilies: number;
   failures: number;
   viewerWritten: boolean;
   viewerPath: string;
@@ -187,6 +193,8 @@ function refreshEvidence(args: CliArgs): RefreshReport {
   const familyIds = [...evidence.keys()].sort();
   let plannedRefresh = 0;
   let refreshed = 0;
+  let plannedStagingRefresh = 0;
+  let stagingRefreshed = 0;
   let failures = 0;
 
   mkdirSync(args.reportsDir, { recursive: true });
@@ -217,6 +225,30 @@ function refreshEvidence(args: CliArgs): RefreshReport {
   const reportPaths = familyIds
     .map((familyId) => join(args.reportsDir, `${familyId}.review.json`))
     .filter((path) => existsSync(path));
+  for (const familyId of familyIds) {
+    const family = evidence.get(familyId);
+    const reportPath = join(args.reportsDir, `${familyId}.review.json`);
+    if (family === undefined || !existsSync(reportPath)) continue;
+    const familyDir = dirname(family.rawDir);
+    if (stagedEvidenceIsFresh(familyId, familyDir, reportPath)) continue;
+    plannedStagingRefresh += 1;
+    if (args.dryRun) continue;
+    const result = runViteNode("scripts/stageTexasSolverExports.mts", [
+      `--family=${familyId}`,
+      `--raw-dir=${family.rawDir}`,
+      `--solver-output-dir=${familyDir}`,
+      `--review-evidence=${reportPath}`,
+      "--write",
+      "--summary",
+    ]);
+    if (!result.ok) {
+      failures += 1;
+      errors.push(`${familyId} staged evidence: ${result.error}`);
+      continue;
+    }
+    stagingRefreshed += 1;
+  }
+  const accuracyCoverage = stagedAccuracyCoverage(familyIds, evidence);
   let viewerWritten = false;
   if (!args.dryRun && args.viewerEnabled && reportPaths.length > 0 && viewerNeedsRefresh(args.viewerOutput, reportPaths)) {
     const result = runViteNode("scripts/buildTexasSolverReviewViewer.mts", [
@@ -247,11 +279,78 @@ function refreshEvidence(args: CliArgs): RefreshReport {
     reports: reportPaths.length,
     plannedRefresh,
     refreshed,
+    plannedStagingRefresh,
+    stagingRefreshed,
+    accuracyEvidenceBoards: accuracyCoverage.boards,
+    accuracyEvidenceFamilies: accuracyCoverage.families,
     failures,
     viewerWritten,
     viewerPath: args.viewerOutput,
     errors,
   };
+}
+
+function stagedEvidenceIsFresh(familyId: string, familyDir: string, reviewPath: string): boolean {
+  const strategyPath = join(familyDir, "strategy-export.json");
+  const accuracyPath = join(familyDir, "accuracy-report.json");
+  if (!existsSync(strategyPath) || !existsSync(accuracyPath)) return false;
+  try {
+    const review = JSON.parse(readFileSync(reviewPath, "utf8")) as ExistingReviewReport;
+    const strategy = JSON.parse(readFileSync(strategyPath, "utf8")) as Record<string, unknown>;
+    const accuracy = JSON.parse(readFileSync(accuracyPath, "utf8")) as Record<string, unknown>;
+    const files = Array.isArray(review.files) ? review.files : [];
+    const rawFileNames = files.flatMap((value) => {
+      if (typeof value !== "object" || value === null) return [];
+      const fileName = (value as Record<string, unknown>).fileName;
+      return typeof fileName === "string" ? [fileName] : [];
+    });
+    if (rawFileNames.length === 0) return false;
+    const latestSourceWrite = Math.max(
+      statSync(reviewPath).mtimeMs,
+      ...rawFileNames.flatMap((fileName) => {
+        const logPath = join(familyDir, "solver-logs", fileName.replace(/\.json$/i, ".log"));
+        return existsSync(logPath) ? [statSync(logPath).mtimeMs] : [];
+      }),
+    );
+    const expectedEvidencePath = resolve(reviewPath);
+    return strategy.familyId === familyId
+      && strategy.rawExportCount === rawFileNames.length
+      && strategy.reviewEvidencePath === expectedEvidencePath
+      && accuracy.familyId === familyId
+      && accuracy.rawExportCount === rawFileNames.length
+      && accuracy.reviewEvidencePath === expectedEvidencePath
+      && accuracy.evidenceScope === "APPROVED_MEMORY_SAFE_REVIEW_ONLY_MANIFEST_UNION"
+      && statSync(strategyPath).mtimeMs >= latestSourceWrite
+      && statSync(accuracyPath).mtimeMs >= latestSourceWrite;
+  } catch {
+    return false;
+  }
+}
+
+function stagedAccuracyCoverage(
+  familyIds: readonly string[],
+  evidence: ReadonlyMap<string, FamilyEvidence>,
+): { boards: number; families: number } {
+  let boards = 0;
+  let families = 0;
+  for (const familyId of familyIds) {
+    const family = evidence.get(familyId);
+    if (family === undefined) continue;
+    const path = join(dirname(family.rawDir), "accuracy-report.json");
+    if (!existsSync(path)) continue;
+    try {
+      const parsed = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
+      const coverage = parsed.solverLogCoverage;
+      if (typeof coverage !== "object" || coverage === null) continue;
+      const parsedLogs = (coverage as Record<string, unknown>).parsedLogs;
+      if (typeof parsedLogs !== "number" || !Number.isInteger(parsedLogs) || parsedLogs <= 0) continue;
+      boards += parsedLogs;
+      families += 1;
+    } catch {
+      // Invalid accuracy evidence remains absent from the measured total.
+    }
+  }
+  return { boards, families };
 }
 
 function latestRawWriteAt(evidence: ReadonlyMap<string, FamilyEvidence>): string | null {
@@ -444,6 +543,9 @@ function renderReport(report: RefreshReport, summary: boolean): string {
     `reports: ${report.reports}`,
     `planned refresh: ${report.plannedRefresh}`,
     `refreshed: ${report.refreshed}`,
+    `planned staging refresh: ${report.plannedStagingRefresh}`,
+    `staging refreshed: ${report.stagingRefreshed}`,
+    `accuracy evidence: ${report.accuracyEvidenceBoards} boards across ${report.accuracyEvidenceFamilies} families`,
     `failures: ${report.failures}`,
     `viewer written: ${report.viewerWritten}`,
   ];

@@ -152,6 +152,93 @@ describe("mtt:stage-texas-solver CLI", () => {
     }
   });
 
+  it("cte Windows UTF-16LE per-board log a zachova traceable exploitability", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-utf16-log-"));
+    const rawDir = join(directory, "raw");
+    const outputDir = join(directory, "out");
+    const logDir = join(outputDir, "solver-logs");
+    mkdirSync(rawDir, { recursive: true });
+    mkdirSync(logDir, { recursive: true });
+    writeFileSync(join(rawDir, "pkrtrainer_TEST_FAMILY_A72r.json"), JSON.stringify({ ok: true }), "utf8");
+    writeFileSync(
+      join(logDir, "pkrtrainer_TEST_FAMILY_A72r.log"),
+      Buffer.from("\uFEFFIter: 61\r\nTotal exploitability 0.37 precent\r\n", "utf16le"),
+    );
+    try {
+      const result = runStage(
+        "--write",
+        "--family=TEST_FAMILY",
+        `--raw-dir=${rawDir}`,
+        `--solver-output-dir=${outputDir}`,
+      );
+
+      expect(result.status).toBe(0);
+      const accuracy = JSON.parse(readFileSync(join(outputDir, "accuracy-report.json"), "utf8")) as {
+        exploitability: number | null;
+        solverLogCoverage: { parsedLogs: number; perBoardLogs: number; evidence: Array<{ source: string; value: number }> };
+      };
+      expect(accuracy.exploitability).toBe(0.37);
+      expect(accuracy.solverLogCoverage).toMatchObject({ parsedLogs: 1, perBoardLogs: 1 });
+      expect(accuracy.solverLogCoverage.evidence).toEqual([
+        expect.objectContaining({ source: "PER_BOARD_LOG", value: 0.37 }),
+      ]);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rychle obnovi staging z cerstveho validovaneho review reportu bez reparsovani raw JSON", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-reviewed-stage-"));
+    const rawDir = join(directory, "raw");
+    const outputDir = join(directory, "out");
+    const logDir = join(outputDir, "solver-logs");
+    const reviewPath = join(directory, "TEST_FAMILY.review.json");
+    const rawPath = join(rawDir, "pkrtrainer_TEST_FAMILY_A72r.json");
+    mkdirSync(rawDir, { recursive: true });
+    mkdirSync(logDir, { recursive: true });
+    writeFileSync(rawPath, "review report already proved this raw export parseable\n", "utf8");
+    writeFileSync(
+      join(logDir, "pkrtrainer_TEST_FAMILY_A72r.log"),
+      Buffer.from("\uFEFFTotal exploitability 0.19 precent\r\n", "utf16le"),
+    );
+    writeFileSync(reviewPath, `${JSON.stringify({
+      valid: true,
+      status: "REVIEW_ONLY_EVIDENCE",
+      productionReady: false,
+      familyId: "TEST_FAMILY",
+      reviewOnlyTreeProfile: "MEMORY_SAFE_REVIEW_ONLY",
+      requestedBoards: ["A72r"],
+      blockers: [],
+      files: [{ fileName: "pkrtrainer_TEST_FAMILY_A72r.json", path: rawPath, blockers: [] }],
+    })}\n`, "utf8");
+    try {
+      const result = runStage(
+        "--write",
+        "--family=TEST_FAMILY",
+        `--raw-dir=${rawDir}`,
+        `--solver-output-dir=${outputDir}`,
+        `--review-evidence=${reviewPath}`,
+      );
+
+      expect(result.status).toBe(0);
+      const strategy = JSON.parse(readFileSync(join(outputDir, "strategy-export.json"), "utf8")) as {
+        rawExportCount: number;
+        reviewEvidencePath: string;
+      };
+      const accuracy = JSON.parse(readFileSync(join(outputDir, "accuracy-report.json"), "utf8")) as {
+        evidenceScope: string;
+        solverLogCoverage: { parsedLogs: number };
+      };
+      expect(strategy).toMatchObject({ rawExportCount: 1, reviewEvidencePath: reviewPath });
+      expect(accuracy).toMatchObject({
+        evidenceScope: "APPROVED_MEMORY_SAFE_REVIEW_ONLY_MANIFEST_UNION",
+        solverLogCoverage: { parsedLogs: 1 },
+      });
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("odmitne queue-log evidenci, kdyz BEGIN a END marker odkazuji na jiny raw export", () => {
     const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-queue-mismatch-"));
     const rawDir = join(directory, "raw");

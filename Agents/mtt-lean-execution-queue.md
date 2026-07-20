@@ -544,6 +544,33 @@ Acceptance: live candidate and staging progress both report `0 ready / 4 waiting
 typecheck passes, and the registry, source intake and scoped Core gates remain
 green at 8 valid manifests, 0 ready raw imports and Core 4/4 plus 7/7.
 
+### OPS-51 - Preserve per-board solver accuracy during incremental intake
+
+Status: `DONE 2026-07-20`
+Depends on: `OPS-47`
+Lane: `REPEATABLE`
+
+TexasSolver per-board console logs written by Windows are UTF-16LE. The staging
+parser previously read them as UTF-8, silently losing current exploitability
+evidence and leaving old family accuracy summaries behind. Staging now decodes
+UTF-8, UTF-16LE and UTF-16BE logs explicitly and can reuse a fresh, validated
+`MEMORY_SAFE_REVIEW_ONLY` cumulative report instead of reparsing tens of
+gigabytes of raw solver JSON.
+
+The locked cumulative refresh now updates stale `strategy-export.json` and
+`accuracy-report.json` review metadata for every solved family. It verifies the
+family, profile, production-false status, exact raw paths, empty blockers and
+report freshness before writing. It cannot write owner decisions, normalized
+strategy or production runtime content. The recurring task status exposes the
+separate staged-accuracy count.
+
+Acceptance: the first live pass refreshed 20/20 family summaries and recovered
+traceable exploitability for 403/439 approved board reports across all 20
+families; the immediate second pass planned and wrote zero files. Review
+protocol accuracy warnings fell from 18 to zero while human caveat warnings and
+all 20 owner poker decisions remain explicit gates. Focused regression passes
+38/38 and typecheck passes; the scoped Core gate and production build pass.
+
 ## Phase DEP - Core Deployment Closeout
 
 ### DEP-00 - Preserve verified FTP artifact
@@ -1180,6 +1207,7 @@ Use this exact handoff prompt after changing models:
 | 2026-07-20 | OPS-48 | DONE | Added fail-closed incremental candidate/staging for the four six-max P1 exports, reconciled the live filtered packet folder to exactly four current six-max slots while preserving owner files, and aligned owned-export review requests with the confirmed no-external-evidence rule. The live 90 MB blank workbench reports 0 ready, 4 waiting and 0 invalid in 4.7 seconds; no candidate, raw intake, owner decision or production strategy was written. |
 | 2026-07-20 | OPS-49 | DONE | Split live review-only intake truth from the resource-gated full-cycle snapshot. Status now shows timestamped cumulative evidence and exact per-manifest coverage even while the ten-minute cycle defers; it tracked beta-depth through 81/83 and then final 83/83 with 439 cumulative family/board checkpoints while the correctly stale full snapshot still showed 65/83. Focused tests passed 12/12 and the complete release passed 152 files / 762 tests, registry, Core, ranges, build, precache and budget without staging or promotion. |
 | 2026-07-20 | OPS-50 | DONE | Removed the false duplicate-permission blocker from six-max P1 intake. All four owner-confirmed canonical manifests are reused and fully validated during staging; read-only preflight now uses the eventual owned-export license and confidence. Live candidate/staging progress is 0 ready, 4 waiting, 0 invalid and each row waits only for `normalized.candidate.json`; 18/18 focused tests, typecheck, registry, intake guard and Core 4/4 plus 7/7 passed. |
+| 2026-07-20 | OPS-51 | DONE | Fixed UTF-16LE TexasSolver log intake and added a fast fail-closed staging refresh over already validated cumulative reports. The live pass refreshed 20/20 family summaries and recovered traceable exploitability for 403/439 approved boards across all 20 families; an immediate repeat wrote nothing. Protocol warnings fell from 38 to 20, leaving only human caveats and owner verdicts. Focused tests passed 38/38; typecheck, scoped Core and production build passed. |
 | 2026-07-20 | RELEASE-FTP-03 | DONE | Packaged source commit `c44efebdad96` after the complete 152-file / 762-test MTT Core release gate and four-viewport Chrome QA as `deploy/pkrtrainer-ftp-20260720-141237-c44efebdad96-mtt-core-p1-incremental.zip`. Portable forward-slash ZIP reconciliation passed 22/22 files with 0 missing, 0 extra and 0 hash mismatches; SHA-256 is `2374090EBAB10A4E2E38D9CD04D03C4457E0C6E561561F01C7A18093CC192F67`. |
 | 2026-07-20 | OWNER-REVIEW-06 | DONE | Owner dashboard progress now counts only export-valid decisions, marks missing reviewer/date/scope/caveats, and focuses the next incomplete visible row without selecting a poker verdict. Current dashboard regenerated over 53 reports with 20/20 mechanical family context and 0 preselected decisions. Focused reviewer/writer/autostart tests passed 17/17, typecheck passed, and browser QA removed the 390px global horizontal overflow. |
 | 2026-07-20 | RELEASE-I18N-01 | DONE | Global runtime and asynchronous errors now follow the live EN/CZ catalog, while range metadata uses the stable poker label `ante ON/OFF`. Vitest parent concurrency is capped at four to prevent nested CLI processes from timing out under solver/development memory pressure. Stable full regression passed 151/151 files and 753/753 tests; registry, scoped Core, ranges, production build, precache and bundle budget all passed. Production Chrome E2E passed desktop plus 360/390/412 px with zero browser errors and 48 contrast checks. |

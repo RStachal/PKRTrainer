@@ -112,6 +112,10 @@ function Show-LatestReviewOnlyRefresh {
     $latestRawAtScan = if ($null -ne $report.latestRawWriteAt) { $report.latestRawWriteAt } else { "none" }
     Write-Host ("incremental review-only intake: {0} evidence={1} boards, families={2}, reports={3}, refreshed={4}, failures={5}" -f `
       $health, $report.evidenceBoards, $report.eligibleFamilies, $report.reports, $report.refreshed, $report.failures)
+    if ($null -ne $report.accuracyEvidenceBoards) {
+      Write-Host ("incremental staged accuracy: evidence={0} boards across {1} families, staged refreshed={2}" -f `
+        $report.accuracyEvidenceBoards, $report.accuracyEvidenceFamilies, $report.stagingRefreshed)
+    }
     Write-Host ("incremental intake snapshot: generated={0}, age={1}m, latest raw at scan={2} (independent of full cycle snapshot)" -f `
       $report.generatedAt, $ageMinutes, $latestRawAtScan)
     foreach ($coverage in @($report.manifestCoverage)) {

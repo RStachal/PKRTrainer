@@ -261,6 +261,10 @@ function Update-ReviewOnlyEvidence($Statuses) {
       evidenceBoards = 0
       reports = 0
       refreshed = 0
+      plannedStagingRefresh = 0
+      stagingRefreshed = 0
+      accuracyEvidenceBoards = 0
+      accuracyEvidenceFamilies = 0
       failures = 1
       viewerWritten = $false
       viewerPath = $ReviewOnlyEvidenceViewerPath
@@ -290,6 +294,10 @@ function Update-ReviewOnlyEvidence($Statuses) {
     evidenceBoards = 0
     reports = @(Get-ChildItem -LiteralPath $ReviewOnlyEvidenceReportsDir -Filter "*.review.json" -File -ErrorAction SilentlyContinue).Count
     refreshed = 0
+    plannedStagingRefresh = 0
+    stagingRefreshed = 0
+    accuracyEvidenceBoards = 0
+    accuracyEvidenceFamilies = 0
     failures = $(if ($refreshExit -eq 0) { 0 } else { 1 })
     viewerWritten = $false
     viewerPath = $ReviewOnlyEvidenceViewerPath

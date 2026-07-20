@@ -87,7 +87,9 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
   manifests. The final 2026-07-20 14:49 incremental snapshot contains 439 unique solved family/board
   pairs across 20 families and beta-depth is 83/83; 20/20 reports are valid, extraction failures are zero
   and 20/20 families meet the mechanical shape. Human review and production
-  eligibility remain independently 0/20.
+  eligibility remain independently 0/20. Incremental staged accuracy now retains
+  traceable exploitability for 403/439 approved boards across all 20 families;
+  review-protocol warnings are down to 20 human caveat fields.
 - Windows low-memory task: `PKRTrainer-TexasSolver-LowMemory` returned `SUCCESS`
   with no live worker or solver process after completing every authorized phase.
   It remains checkpoint-safe after sign-in and will not duplicate a live process.
@@ -233,6 +235,7 @@ npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
 
 | Date | Priority | Result | Evidence |
 | --- | --- | --- | --- |
+| 2026-07-20 | P4 / Solver accuracy intake | UTF-16 per-board evidence is retained incrementally | The locked refresh reused validated cumulative reports to update 20/20 staging summaries without reparsing raw solver JSON. Traceable exploitability is now present for 403/439 approved boards across all 20 families; the immediate repeat wrote zero files. Review warnings fell from 38 to 20, leaving only human caveats and owner verdicts. Focused tests passed 38/38; typecheck, scoped Core and production build passed |
 | 2026-07-20 | P1 / Canonical provenance handoff | Duplicate permission intake removed | Candidate generation reuses the four owner-confirmed canonical permission manifests and preflights with the eventual owned-export license/confidence. Live candidate and staging progress is 0 ready, 4 waiting, 0 invalid; every stage row reports `permission=CANONICAL` and waits only for the normalized candidate. Focused tests passed 18/18; typecheck, registry, source intake and Core 4/4 plus 7/7 passed. Confirmation tokens, full staging validation and separate promotion remain mandatory |
 | 2026-07-20 | P4 / Live intake status | Incremental truth no longer waits for the heavy cycle | The locked refresh report now includes scan/raw timestamps and exact counts for all six manifests. It tracked beta-depth beyond the stale 65/83 full-cycle snapshot and confirmed final 83/83 plus 439 cumulative checkpoints. Focused tests passed 12/12 and the full 152-file / 762-test Core release chain passed without strategy or owner-decision writes |
 | 2026-07-20 | P1 / Incremental six-max intake | Each reviewed export can advance independently | Candidate and staging batch tools now support explicit fail-closed incremental mode: absent/blank inputs wait, partial inputs fail, writes keep confirmation tokens and promotion stays separate. Live workbench: 0 ready, 4 waiting, 0 invalid; filtered packet folder: exactly four current six-max slots. Reviewer, owner, source location and runtime permission are already recorded in the canonical manifests; no duplicate manifest or external evidence reference is required |

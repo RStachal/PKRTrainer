@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 const DEFAULT_FAMILY_ID = "MTT9_50BB_BTN_BB_SRP";
@@ -10,6 +10,7 @@ interface CliArgs {
   outputPath: string | null;
   queueLogDir: string;
   rawDir: string;
+  reviewEvidencePath: string | null;
   reviewTemplate: boolean;
   solverOutputDir: string;
   summary: boolean;
@@ -54,12 +55,14 @@ function usage(): string {
     "  npm run mtt:stage-texas-solver -- --write --review-template",
     "  npm run mtt:stage-texas-solver -- --family=MTT9_40BB_UTG_BB_SRP --write",
     "  npm run mtt:stage-texas-solver -- --raw-dir=<path> --solver-output-dir=<path>",
+    "  npm run mtt:stage-texas-solver -- --review-evidence=<validated cumulative review.json> --write",
     "  npm run mtt:stage-texas-solver -- --queue-log-dir=artifacts/texas-solver-autostart",
     "",
     "Notes:",
     "  This command stages raw TexasSolver JSON exports for review.",
     "  It never creates production normalized.json files.",
     "  By default it writes strategy-export.json and accuracy-report.json only.",
+    "  --review-evidence reuses a fresh validated MEMORY_SAFE_REVIEW_ONLY report instead of reparsing raw JSON.",
     "  review-notes.md is created only with --review-template and still requires human review.",
   ].join("\n");
 }
@@ -86,6 +89,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let outputPath: string | null = null;
   let queueLogDir = resolve("artifacts/texas-solver-autostart");
   let rawDir: string | null = null;
+  let reviewEvidencePath: string | null = null;
   let reviewTemplate = false;
   let solverOutputDir: string | null = null;
   let summary = false;
@@ -125,6 +129,17 @@ function parseArgs(argv: readonly string[]): CliArgs {
       const value = item.slice("--raw-dir=".length).trim();
       if (value.length === 0) throw new Error(`--raw-dir requires a path.\n\n${usage()}`);
       rawDir = resolve(value);
+      continue;
+    }
+    if (item.startsWith("--review-evidence=")) {
+      const value = item.slice("--review-evidence=".length).trim();
+      if (value.length === 0) throw new Error(`--review-evidence requires a path.\n\n${usage()}`);
+      reviewEvidencePath = resolve(value);
+      continue;
+    }
+    if (item === "--review-evidence") {
+      reviewEvidencePath = resolve(nextArgValue(argv, index, "--review-evidence"));
+      index += 1;
       continue;
     }
     if (item === "--raw-dir") {
@@ -177,6 +192,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     outputPath,
     queueLogDir,
     rawDir: resolvedRawDir,
+    reviewEvidencePath,
     reviewTemplate,
     solverOutputDir: resolvedSolverOutputDir,
     summary,
@@ -195,7 +211,9 @@ function nextArgValue(argv: readonly string[], index: number, flag: string): str
 }
 
 function buildStageReport(args: CliArgs): StageReport {
-  const rawExports = readRawExports(args.rawDir);
+  const rawExports = args.reviewEvidencePath === null
+    ? readRawExports(args.rawDir)
+    : readRawExportsFromReviewEvidence(args.reviewEvidencePath, args.familyId, args.rawDir);
   const invalidJson = rawExports.filter((item) => !item.parseableJson);
   const plannedFiles = plannedStageFiles(args, rawExports.length > 0);
   const blockers = [
@@ -227,6 +245,57 @@ function buildStageReport(args: CliArgs): StageReport {
       "Run npm run mtt:solver-verification -- --solver=texas-solver to check readiness.",
     ],
   };
+}
+
+function readRawExportsFromReviewEvidence(
+  reviewPath: string,
+  familyId: string,
+  rawDir: string,
+): RawExportInfo[] {
+  if (!existsSync(reviewPath)) throw new Error(`Review evidence report is missing: ${reviewPath}`);
+  const parsed = JSON.parse(readFileSync(reviewPath, "utf8")) as Record<string, unknown>;
+  if (
+    parsed.valid !== true
+    || parsed.status !== "REVIEW_ONLY_EVIDENCE"
+    || parsed.productionReady !== false
+    || parsed.reviewOnlyTreeProfile !== "MEMORY_SAFE_REVIEW_ONLY"
+    || parsed.familyId !== familyId
+  ) {
+    throw new Error(`Review evidence is not a valid MEMORY_SAFE_REVIEW_ONLY report for ${familyId}: ${reviewPath}`);
+  }
+  const reportBlockers = Array.isArray(parsed.blockers) ? parsed.blockers : [];
+  if (reportBlockers.length > 0) throw new Error(`Review evidence contains blockers: ${reviewPath}`);
+  const requestedBoards = Array.isArray(parsed.requestedBoards) ? parsed.requestedBoards : [];
+  const files = Array.isArray(parsed.files) ? parsed.files : [];
+  if (files.length === 0 || requestedBoards.length !== files.length) {
+    throw new Error(`Review evidence board/file coverage is incomplete: ${reviewPath}`);
+  }
+
+  const resolvedRawDir = resolve(rawDir);
+  const reportWrite = statSync(reviewPath).mtimeMs;
+  const seen = new Set<string>();
+  return files.map((value) => {
+    if (typeof value !== "object" || value === null) throw new Error(`Review evidence contains an invalid file row: ${reviewPath}`);
+    const row = value as Record<string, unknown>;
+    const fileName = typeof row.fileName === "string" ? row.fileName : "";
+    const path = typeof row.path === "string" ? resolve(row.path) : "";
+    const blockers = Array.isArray(row.blockers) ? row.blockers : [];
+    const expectedPath = resolve(resolvedRawDir, fileName);
+    if (!/^pkrtrainer_[A-Za-z0-9_-]+\.json$/i.test(fileName) || path !== expectedPath || seen.has(fileName.toLowerCase())) {
+      throw new Error(`Review evidence contains an unsafe or duplicate raw path: ${fileName || "<missing>"}`);
+    }
+    if (blockers.length > 0 || !existsSync(path)) throw new Error(`Reviewed raw export is missing or blocked: ${path}`);
+    if (statSync(path).mtimeMs > reportWrite) throw new Error(`Review evidence is older than raw export: ${path}`);
+    seen.add(fileName.toLowerCase());
+    return {
+      fileName,
+      path,
+      bytes: statSync(path).size,
+      parseableJson: true,
+      topLevelKind: "object" as const,
+      topLevelKeys: [],
+    };
+  }).sort((a, b) => a.fileName.localeCompare(b.fileName, "en"));
 }
 
 function readRawExports(rawDir: string): RawExportInfo[] {
@@ -303,6 +372,7 @@ function writeStageFiles(args: CliArgs, report: StageReport): void {
       status: "RAW_EXPORT_STAGED",
       rawExportCount: report.rawExports.length,
       rawExports: report.rawExports,
+      ...(args.reviewEvidencePath === null ? {} : { reviewEvidencePath: args.reviewEvidencePath }),
       warning: "Raw solver dumps are staged for review only; do not import directly as production normalized.json.",
     }, null, 2)}\n`,
     "utf8",
@@ -316,6 +386,10 @@ function writeStageFiles(args: CliArgs, report: StageReport): void {
       rawExportCount: report.rawExports.length,
       parseableJson: report.counts.parseableJson,
       invalidJson: report.counts.invalidJson,
+      ...(args.reviewEvidencePath === null ? {} : {
+        reviewEvidencePath: args.reviewEvidencePath,
+        evidenceScope: "APPROVED_MEMORY_SAFE_REVIEW_ONLY_MANIFEST_UNION",
+      }),
       solverLogCoverage: logSummary,
       accuracySource: logSummary.parsedLogs > 0
         ? "Parsed from local TexasSolver console evidence; human review still decides adequacy."
@@ -347,7 +421,7 @@ function summarizeSolverLogs(args: CliArgs, rawExports: readonly RawExportInfo[]
   const perBoardEvidence = expectedLogs.flatMap((name) => {
     const path = join(logRoot, name);
     if (!existsSync(path)) return [];
-    const value = lastExploitability(readFileSync(path, "utf8"));
+    const value = lastExploitability(readSolverText(path));
     return value === null ? [] : [{
       rawFileName: name.replace(/\.log$/i, ".json"),
       source: "PER_BOARD_LOG" as const,
@@ -392,7 +466,7 @@ function queueLogEvidence(
       rawFileName: string;
       exploitability: number | null;
     } | null = null;
-    for (const line of readFileSync(join(queueLogDir, name), "utf8").split(/\r?\n/)) {
+    for (const line of readSolverText(join(queueLogDir, name)).split(/\r?\n/)) {
       const begin = line.match(/\bPKRTRAINER_SOLVER_BEGIN\s+parameter=([^\s]+\.txt)\s+raw=([^\s]+\.json)\b/i);
       if (begin !== null) {
         active = {
@@ -441,6 +515,20 @@ function queueLogEvidence(
       value: matches[0].value,
     }];
   });
+}
+
+function readSolverText(path: string): string {
+  const content = readFileSync(path);
+  if (content.length >= 2 && content[0] === 0xff && content[1] === 0xfe) {
+    return content.subarray(2).toString("utf16le");
+  }
+  if (content.length >= 2 && content[0] === 0xfe && content[1] === 0xff) {
+    const body = Buffer.from(content.subarray(2));
+    if (body.length % 2 !== 0) throw new Error(`Invalid UTF-16BE solver log: ${path}`);
+    body.swap16();
+    return body.toString("utf16le");
+  }
+  return content.toString("utf8").replace(/^\uFEFF/, "");
 }
 
 function markerFileName(value: string): string {

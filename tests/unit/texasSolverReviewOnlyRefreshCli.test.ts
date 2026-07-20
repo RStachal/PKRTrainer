@@ -98,6 +98,55 @@ describe("TexasSolver cumulative review-only refresh CLI", () => {
     expect(existsSync(fixture.reviewPath)).toBe(false);
   });
 
+  it("refreshes staged accuracy from validated review evidence and UTF-16LE solver logs", () => {
+    const fixture = createFixture();
+    const familyDir = join(fixture.root, "solver-output", "MTT9_TEST_FAMILY");
+    const rawDir = join(familyDir, "raw");
+    const logDir = join(familyDir, "solver-logs");
+    const files = ["A72r", "Q72r"].map((board) => ({
+      fileName: `pkrtrainer_MTT9_TEST_FAMILY_${board}.json`,
+      path: join(rawDir, `pkrtrainer_MTT9_TEST_FAMILY_${board}.json`),
+      blockers: [],
+    }));
+    mkdirSync(logDir, { recursive: true });
+    for (const file of files) {
+      writeFileSync(
+        join(logDir, file.fileName.replace(/\.json$/i, ".log")),
+        Buffer.from("\uFEFFTotal exploitability 0.25 precent\r\n", "utf16le"),
+      );
+    }
+    writeFileSync(fixture.reviewPath, `${JSON.stringify({
+      valid: true,
+      status: "REVIEW_ONLY_EVIDENCE",
+      productionReady: false,
+      reviewOnlyTreeProfile: "MEMORY_SAFE_REVIEW_ONLY",
+      familyId: "MTT9_TEST_FAMILY",
+      requestedBoards: ["A72r", "Q72r"],
+      rawDir,
+      files,
+      blockers: [],
+    })}\n`, "utf8");
+
+    const first = runCli(fixture, [fixture.firstManifest, fixture.secondManifest], false);
+    expect(first.status).toBe(0);
+    expect(first.stdout).toContain("planned staging refresh: 1");
+    expect(first.stdout).toContain("staging refreshed: 1");
+    expect(first.stdout).toContain("accuracy evidence: 2 boards across 1 families");
+    const accuracy = JSON.parse(readFileSync(join(familyDir, "accuracy-report.json"), "utf8")) as {
+      rawExportCount: number;
+      solverLogCoverage: { parsedLogs: number; perBoardLogs: number };
+    };
+    expect(accuracy).toMatchObject({
+      rawExportCount: 2,
+      solverLogCoverage: { parsedLogs: 2, perBoardLogs: 2 },
+    });
+
+    const second = runCli(fixture, [fixture.firstManifest, fixture.secondManifest], false);
+    expect(second.status).toBe(0);
+    expect(second.stdout).toContain("planned staging refresh: 0");
+    expect(second.stdout).toContain("staging refreshed: 0");
+  });
+
   it("exits cleanly without writes when another live process owns the refresh lock", () => {
     const fixture = createFixture();
     writeFileSync(fixture.lockPath, JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() }), "utf8");
@@ -160,6 +209,7 @@ function createFixture(): {
 function runCli(
   fixture: ReturnType<typeof createFixture>,
   manifests: readonly string[],
+  dryRun = true,
 ): ReturnType<typeof spawnSync> {
   return spawnSync(process.execPath, [
     VITE_NODE,
@@ -169,7 +219,7 @@ function runCli(
     `--viewer-output=${fixture.viewerPath}`,
     `--output=${fixture.outputPath}`,
     `--lock-path=${fixture.lockPath}`,
-    "--dry-run",
+    ...(dryRun ? ["--dry-run"] : []),
     "--no-viewer",
     "--summary",
   ], {
