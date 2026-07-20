@@ -193,6 +193,10 @@ const CZ_CATALOG = {
   system: {
     unexpectedStart:
       "Aplikaci se kvůli neočekávané chybě nepodařilo spustit. Obnovte stránku.",
+    runtimeError:
+      "Došlo k neočekávané chybě aplikace. Část funkcí nemusí fungovat správně.",
+    asyncError:
+      "Došlo k neočekávané chybě při asynchronní operaci. Část funkcí nemusí fungovat správně.",
     migrationFailed:
       "Převod dat z předchozí verze nebyl dokončen. Trénink začíná s prázdnými statistikami; původní data zůstala beze změny.",
     postflopRecordsSave:
@@ -458,6 +462,10 @@ const EN_CATALOG: UiCatalog = {
   },
   system: {
     unexpectedStart: "The app could not start because of an unexpected error. Reload the page.",
+    runtimeError:
+      "An unexpected application error occurred. Some features may not work correctly.",
+    asyncError:
+      "An unexpected error occurred during an asynchronous operation. Some features may not work correctly.",
     migrationFailed:
       "Data migration from the previous version did not complete. Training starts with empty stats; the original data remains unchanged.",
     postflopRecordsSave: "Postflop records could not be saved. The preflop stats export remains intact.",

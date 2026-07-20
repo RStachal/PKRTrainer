@@ -88,6 +88,10 @@ export default defineConfig({
     // přes komentář `// @vitest-environment jsdom` na začátku souboru.
     environment: "node",
     globals: true,
+    // Mnoho integračních testů spouští další Node/PowerShell CLI procesy. Omezení
+    // nadřazených workerů drží jejich souběh a paměť pod kontrolou i při solveru.
+    maxWorkers: 4,
+    minWorkers: 1,
     include: ["tests/**/*.{test,spec}.{ts,js}", "src/**/*.{test,spec}.{ts,js}"],
   },
 });

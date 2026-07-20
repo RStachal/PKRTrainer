@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { KEY_EVENTS, KEY_HH_REVIEWS, KEY_POSTFLOP_EVENTS } from "../../src/persistence/keys";
+import { APP_LANGUAGE_STORAGE_KEY } from "../../src/ui/cs";
 
 vi.setConfig({ testTimeout: 30000 });
 
@@ -556,6 +557,25 @@ describe("bootstrap - inicializacni tok", () => {
     expect(root.querySelector(".fatal")?.textContent).toContain("Úložiště není konzistentní");
     expect(root.querySelector(".filter-start")).toBeNull();
     expect(root.querySelector(".poker-table")).toBeNull();
+  });
+
+  it("globalni error boundary pouzije aktivni EN jazyk", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { bootstrap } = await importFreshMain();
+    const root = document.createElement("div");
+    const storage = new MemoryStorage();
+    storage.setItem(APP_LANGUAGE_STORAGE_KEY, "EN");
+
+    bootstrap({ root, storage, registerSw: false });
+    window.dispatchEvent(new ErrorEvent("error", {
+      error: new Error("simulated runtime failure"),
+      message: "simulated runtime failure",
+    }));
+
+    const notice = root.querySelector<HTMLElement>(".app__notice");
+    expect(notice?.hidden).toBe(false);
+    expect(notice?.textContent).toContain("An unexpected application error occurred");
+    expect(notice?.textContent).not.toContain("Došlo k neočekávané chybě");
   });
 
   it("playable preview stale respektuje nedostupny Range_Store", async () => {

@@ -1485,7 +1485,7 @@ function installGlobalErrorBoundary(root: HTMLElement): void {
   window.addEventListener("error", (event: ErrorEvent) => {
     showFatalError(
       root,
-      "Do\u0161lo k neo\u010dek\u00e1van\u00e9 chyb\u011b aplikace. \u010c\u00e1st funkc\u00ed nemus\u00ed fungovat spr\u00e1vn\u011b.",
+      CS.system.runtimeError,
       event.error ?? event.message,
     );
   });
@@ -1493,8 +1493,7 @@ function installGlobalErrorBoundary(root: HTMLElement): void {
   window.addEventListener("unhandledrejection", (event: PromiseRejectionEvent) => {
     showFatalError(
       root,
-      "Do\u0161lo k neo\u010dek\u00e1van\u00e9 chyb\u011b p\u0159i asynchronn\u00ed operaci. \u010c\u00e1st funkc\u00ed nemus\u00ed " +
-        "fungovat spr\u00e1vn\u011b.",
+      CS.system.asyncError,
       event.reason,
     );
   });

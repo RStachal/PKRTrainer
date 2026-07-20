@@ -96,6 +96,10 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
   and packaged for review, but cannot be automatically staged, normalized,
   merged or promoted to runtime content.
 - Scoped core release gate: green; Full MTT NLHE remains intentionally red at 4/64.
+- Current release regression is green at 151/151 Vitest files and 753/753 tests.
+  Vitest is capped at four parent workers because CLI integration tests spawn
+  their own Node/PowerShell children; this prevents resource-driven false
+  timeouts while the guarded solver worker is installed.
 - Action-EV comparison code is complete, but current reviewed content has no
   complete counterfactual EV payload: preflop `0/493818` decisions (`0/4`
   packs), scoped FLOP `0/972` decisions (`0/7` packs). Strategy frequencies are
@@ -230,6 +234,7 @@ npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
 
 | Date | Priority | Result | Evidence |
 | --- | --- | --- | --- |
+| 2026-07-20 | P4.1 / Verification | EN/CZ error handling and resource-stable release regression | Global runtime and asynchronous failures now use the live EN/CZ catalog; range metadata keeps the poker term `ante ON/OFF`. Four-worker Vitest passed 151/151 files and 753/753 tests; registry, Core 4/4 plus 7/7, ranges, build, precache and bundle budget passed. Production Chrome E2E passed desktop plus 360/390/412 px with zero browser errors and 48 contrast checks. The low-memory worker remains active but truthfully waits with no solver PID while CPU/RAM guards are not met |
 | 2026-07-20 | P4 | Current solver and intake truth | Beta-depth is 42/83, growth is 98/98, cumulative readiness is 20/20 valid and 20/20 mechanical over 390 unique family/board pairs; owner protocol and production eligibility remain 0/20. The scheduled worker reports `WAITING_FOR_RESOURCES (RAM)` with no solver process while free RAM is below its 35% start gate |
 | 2026-07-20 | Owner review | Export-valid progress and mobile QA | Dashboard counts only complete decisions, highlights missing required metadata and focuses the next incomplete row without choosing a verdict. It regenerated over 53 reports with 20 owner rows, 20/20 mechanical context and zero preselected decisions; focused tests, typecheck and 390px browser containment passed |
 | 2026-07-17 | P4 | Complete memory-safe intake and review-readiness matrix | The cycle now consumes all five derived manifests rather than mislabeling the first two source manifests. A live cycle observed 272/344 physical and 269 unique family/board checkpoints, produced 20/20 valid reports, measured 12/20 mechanical family shapes, kept owner review at 0/20 and Core green |

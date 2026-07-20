@@ -149,7 +149,7 @@ function renderRangeModelSummary(doc: Document, pack: RangePack): HTMLElement {
   meta.textContent =
     `${gameVariantLabel(pack.dimensions.gameVariant)} | ` +
     `${tableFormatLabel(pack.dimensions.tableFormat)} | ` +
-    `${evModelLabel(pack.dimensions.evModel)} | ${pack.dimensions.ante === "ON" ? "ante zapnuto" : "bez ante"}`;
+    `${evModelLabel(pack.dimensions.evModel)} | ante ${pack.dimensions.ante}`;
   section.appendChild(meta);
 
   const assumptions = doc.createElement("div");

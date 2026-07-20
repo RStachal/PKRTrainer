@@ -35,6 +35,10 @@ describe("EN/CZ UI language contract", () => {
     expect(czech.profile.productionOffline).toContain("ověřená data");
     expect(english.hh.hint).toContain("Paste a PokerStars hand history");
     expect(czech.hh.hint).toContain("Vložte hand history");
+    expect(english.system.runtimeError).toContain("unexpected application error");
+    expect(english.system.asyncError).toContain("asynchronous operation");
+    expect(czech.system.runtimeError).toContain("neočekávané chybě aplikace");
+    expect(czech.system.asyncError).toContain("asynchronní operaci");
   });
 
   it("persists the selected language and exposes it through the live catalog proxy", () => {

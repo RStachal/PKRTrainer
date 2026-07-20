@@ -73,6 +73,9 @@ describe("rangeModal - DOM", () => {
       .toBe("AKs");
     expect(model?.textContent).toContain("Model range");
     expect(model?.textContent).toContain("chipEV");
+    expect(model?.textContent).toContain("ante OFF");
+    expect(model?.textContent).not.toContain("ante zapnuto");
+    expect(model?.textContent).not.toContain("bez ante");
     expect(model?.textContent).toContain("Předpoklady:");
     expect(document.querySelector<HTMLElement>(".range-modal .range-matrix-title")?.textContent)
       .toBe("Preflop range matrix");
