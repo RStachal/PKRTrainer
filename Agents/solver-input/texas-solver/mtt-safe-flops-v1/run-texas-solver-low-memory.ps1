@@ -47,7 +47,8 @@ $Phases = @(
   [pscustomobject]@{
     Name = "next"
     SourceRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_next_flop_review_v1"
-    ParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_review_v1"
+    ParameterRoot = Join-Path $ArtifactsDir "runtime\pkrtrainer_mtt_low_memory_review_v1"
+    ManifestParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_review_v1"
     SourceManifestPath = Join-Path $PSScriptRoot "coverage-next-flop-review-v1-manifest.json"
     ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-flop-review-v1-manifest.json"
     Families = $RootReviewFamilies
@@ -55,7 +56,8 @@ $Phases = @(
   [pscustomobject]@{
     Name = "followup"
     SourceRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_followup_flop_review_v1"
-    ParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_followup_review_v1"
+    ParameterRoot = Join-Path $ArtifactsDir "runtime\pkrtrainer_mtt_low_memory_followup_review_v1"
+    ManifestParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_followup_review_v1"
     SourceManifestPath = Join-Path $PSScriptRoot "coverage-followup-flop-review-v1-manifest.json"
     ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-followup-flop-review-v1-manifest.json"
     Families = $RootReviewFamilies
@@ -63,7 +65,8 @@ $Phases = @(
   [pscustomobject]@{
     Name = "owner-depth"
     SourceRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_owner_depth_review_v1"
-    ParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_owner_depth_review_v1"
+    ParameterRoot = Join-Path $ArtifactsDir "runtime\pkrtrainer_mtt_low_memory_owner_depth_review_v1"
+    ManifestParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_owner_depth_review_v1"
     SourceManifestPath = Join-Path $PSScriptRoot "coverage-owner-depth-flop-review-v1-manifest.json"
     ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-owner-depth-flop-review-v1-manifest.json"
     Families = $OwnerDepthFamilies
@@ -71,7 +74,8 @@ $Phases = @(
   [pscustomobject]@{
     Name = "beta-min"
     SourceRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_beta_min_board_review_v1"
-    ParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_beta_min_board_review_v1"
+    ParameterRoot = Join-Path $ArtifactsDir "runtime\pkrtrainer_mtt_low_memory_beta_min_board_review_v1"
+    ManifestParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_beta_min_board_review_v1"
     SourceManifestPath = Join-Path $PSScriptRoot "coverage-beta-min-board-review-v1-manifest.json"
     ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-beta-min-board-review-v1-manifest.json"
     Families = $AllReviewFamilies
@@ -79,7 +83,8 @@ $Phases = @(
   [pscustomobject]@{
     Name = "beta-depth"
     SourceRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_beta_depth_board_review_v1"
-    ParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_beta_depth_board_review_v1"
+    ParameterRoot = Join-Path $ArtifactsDir "runtime\pkrtrainer_mtt_low_memory_beta_depth_board_review_v1"
+    ManifestParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_low_memory_beta_depth_board_review_v1"
     SourceManifestPath = Join-Path $PSScriptRoot "coverage-beta-depth-board-review-v1-manifest.json"
     ManifestPath = Join-Path $PSScriptRoot "coverage-low-memory-beta-depth-board-review-v1-manifest.json"
     Families = $AllReviewFamilies
@@ -149,7 +154,8 @@ function Build-LowMemoryBatch($Phase) {
   $phaseFamilies = @($Phase.Families)
   if (-not (Test-Path -LiteralPath $phaseSourceRoot)) { throw "Missing source parameter root: $phaseSourceRoot" }
   if (-not (Test-Path -LiteralPath $phaseSourceManifestPath)) { throw "Missing source manifest: $phaseSourceManifestPath" }
-  $parameterDirRelative = ($phaseParameterRoot.Substring($RepoRoot.Length).TrimStart('\') -replace '\\', '/')
+  $manifestParameterRoot = $Phase.ManifestParameterRoot
+  $parameterDirRelative = ($manifestParameterRoot.Substring($RepoRoot.Length).TrimStart('\') -replace '\\', '/')
   $manifestRelative = ($phaseManifestPath.Substring($RepoRoot.Length).TrimStart('\') -replace '\\', '/')
   $sourceManifest = Get-Content -LiteralPath $phaseSourceManifestPath -Raw | ConvertFrom-Json
   $sourceGeneratedAt = [string]$sourceManifest.generatedAt

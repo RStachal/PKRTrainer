@@ -987,7 +987,7 @@
                      "npm run mtt:texas-solver-coverage-status -- --manifest Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-low-memory-beta-depth-board-review-v1-manifest.json --summary"
                  ],
     "executionProfile":  {
-                             "threads":  2,
+                             "threads":  3,
                              "treeProfile":  "MEMORY_SAFE_REVIEW_ONLY",
                              "minimumFreeMemoryPercent":  35,
                              "maximumCpuPercent":  40,

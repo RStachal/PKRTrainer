@@ -376,6 +376,9 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(worker).toContain("foreach ($phase in $Phases)");
     expect(worker).toContain("Build-LowMemoryBatch $phase");
     expect(worker).toContain("generatedAt = $sourceGeneratedAt");
+    expect(worker).toContain("ManifestParameterRoot = Join-Path $PSScriptRoot");
+    expect(worker).toContain("ParameterRoot = Join-Path $ArtifactsDir \"runtime");
+    expect(worker).toContain("$manifestParameterRoot = $Phase.ManifestParameterRoot");
 
     const packageJson = JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8")) as {
       scripts: Record<string, string>;

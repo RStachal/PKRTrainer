@@ -1,6 +1,6 @@
 {
     "packId":  "pkrtrainer-mtt-texas-solver-low-memory-next-flop-review-v1",
-    "generatedAt":  "2026-07-16",
+    "generatedAt":  "2026-07-14",
     "parameterDir":  "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_low_memory_review_v1",
     "outputBase":  "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
     "scenarios":  [
@@ -767,7 +767,7 @@
                      "npm run mtt:texas-solver-coverage-status -- --manifest Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-low-memory-flop-review-v1-manifest.json --summary"
                  ],
     "executionProfile":  {
-                             "threads":  2,
+                             "threads":  3,
                              "treeProfile":  "MEMORY_SAFE_REVIEW_ONLY",
                              "minimumFreeMemoryPercent":  35,
                              "maximumCpuPercent":  40,
