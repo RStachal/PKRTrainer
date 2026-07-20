@@ -35,6 +35,17 @@ describe("TexasSolver cumulative review-only refresh CLI", () => {
     expect(second.stdout).toContain("planned refresh: 0");
 
     const report = JSON.parse(readFileSync(fixture.outputPath, "utf8")) as {
+      schemaVersion: number;
+      generatedAt: string;
+      latestRawWriteAt: string | null;
+      manifestCoverage: Array<{
+        packId: string;
+        solvedBoards: number;
+        expectedBoards: number;
+        rawCompleteFamilies: number;
+        families: number;
+        complete: boolean;
+      }>;
       dryRun: boolean;
       eligibleFamilies: number;
       evidenceBoards: number;
@@ -42,12 +53,35 @@ describe("TexasSolver cumulative review-only refresh CLI", () => {
       refreshed: number;
     };
     expect(report).toMatchObject({
+      schemaVersion: 1,
       dryRun: true,
       eligibleFamilies: 1,
       evidenceBoards: 2,
       plannedRefresh: 0,
       refreshed: 0,
     });
+    expect(Number.isNaN(Date.parse(report.generatedAt))).toBe(false);
+    expect(report.latestRawWriteAt).not.toBeNull();
+    expect(Number.isNaN(Date.parse(report.latestRawWriteAt ?? ""))).toBe(false);
+    expect(Date.parse(report.generatedAt)).toBeGreaterThanOrEqual(Date.parse(report.latestRawWriteAt ?? ""));
+    expect(report.manifestCoverage).toEqual([
+      expect.objectContaining({
+        packId: "first-manifest",
+        solvedBoards: 1,
+        expectedBoards: 2,
+        rawCompleteFamilies: 0,
+        families: 1,
+        complete: false,
+      }),
+      expect.objectContaining({
+        packId: "second-manifest",
+        solvedBoards: 1,
+        expectedBoards: 1,
+        rawCompleteFamilies: 1,
+        families: 1,
+        complete: true,
+      }),
+    ]);
   });
 
   it("rejects a manifest that is not explicitly memory-safe review-only", () => {

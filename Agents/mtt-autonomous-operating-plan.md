@@ -31,16 +31,17 @@ reuse policies.
 
 The Windows AtLogOn queue, `PKRTrainer-TexasSolver-LowMemory`, owns five isolated
 review-only phases. `next`, `followup` and the duplicate-safe `owner-depth` phase
-are raw-complete at `72/72`; `beta-min` is raw-complete at `45/45`. Each phase is
+are raw-complete at `72/72`; `beta-min` is raw-complete at `45/45` and
+`beta-depth` at `83/83`. Each phase is
 separate in parameters and coverage artifacts, and every existing checkpoint is
-skipped on restart. The additional 83-board `beta-depth` source wave is prepared,
-audited and explicitly authorized by the owner for speculative background
-solving. It is the fifth worker phase and remains `MEMORY_SAFE_REVIEW_ONLY`.
+skipped on restart. The fifth phase was audited and explicitly authorized by the
+owner for speculative background solving; completion does not change its
+`MEMORY_SAFE_REVIEW_ONLY` status.
 
-The next hidden worker uses three solver threads at `BelowNormal` priority. The
-currently solving board is not interrupted to apply this tuning. It starts a
-new input only when the CPU/RAM guard permits it, but never terminates an input
-that is already solving. Its mutex and Task Scheduler `IgnoreNew` policy prevent
+The hidden worker is currently idle after returning `SUCCESS`. Any future
+explicitly authorized input uses three solver threads at `BelowNormal` priority,
+starts only when the CPU/RAM guard permits it and never terminates an input that
+is already solving. Its mutex and Task Scheduler `IgnoreNew` policy prevent
 overlap after sign-in or a scheduled retry. Use
 `npm run mtt:texas-solver-low-memory-status` before manual intervention. To stop
 the current worker while retaining checkpoints use
@@ -77,10 +78,10 @@ does not interrupt the current step unless it exposes a production regression.
 6. **P1 - Complete beta-min evidence. DONE 2026-07-16.** The audited 45-board
    wave reached 45/45 under the two-thread guard. Every changed checkpoint was
    consumed as review-only evidence.
-7. **P1 - Compute beta-depth evidence. ACTIVE 2026-07-17.** The owner explicitly
-   authorized the audited 83-board wave for guarded background solving. Consume
-   each checkpoint incrementally, but never treat this reduced tree as production
-   strategy or proof of review. `growth` remains inactive.
+7. **P1 - Compute beta-depth evidence. DONE 2026-07-20.** The owner-authorized
+   audited wave reached 83/83 and every checkpoint entered cumulative review-only
+   evidence. The worker returned `SUCCESS`; no output became production strategy
+   or proof of review. `growth` remains outside the worker.
 8. **P1 - Owner review waves.** Review the four prepared waves of five families in
    `artifacts/texas-solver-review-protocol/viewer/index.html`; the ten-minute
    cycle refreshes it from canonical full-tree reports only. Record only supplied
@@ -117,19 +118,18 @@ does not interrupt the current step unless it exposes a production regression.
 
 - MTT Core release gate: green, 4/4 production preflop and 7 scoped pilots.
 - Full MTT production matrix: 4/64; it is intentionally not the current sales claim.
-- TexasSolver queue: `next`, `followup` and `owner-depth` are complete at 72/72.
-  The 45-board `beta-min` wave also completed 45/45 with 0 source-audit errors.
-  No failure was recorded.
-- Active review-only supply: the disjoint beta-depth wave passed 83/83 scenario
-  audit with 0 errors. Declared source coverage is now 168 unique boards and 478
-  family/board pairs, all 14 cohorts at the twelve-board target. Owner-directed
-  background solving is authorized, but these inputs and resulting checkpoints
-  are not reviewed or production evidence.
-- Cumulative reduced-tree intake at 09:42 on 2026-07-17: five derived manifests
-  report 289/344 physical checkpoints. After de-duplicating three repeated
-  family/board pairs, 286 exact checkpoints across 20 families are represented by
-  20 valid read-only reports with zero extraction failures. The source-safe
-  mechanical gate is 15/20 family shapes; owner review remains separately 0/20.
+- TexasSolver queue: `next`, `followup` and `owner-depth` are complete at 72/72,
+  `beta-min` at 45/45 and `beta-depth` at 83/83. The worker returned `SUCCESS`
+  with no live solver process. One historical retried native failure remains in
+  local telemetry, but no authorized checkpoint is missing.
+- Completed review-only supply: the disjoint beta-depth wave passed 83/83 scenario
+  audit and raw coverage. Declared source coverage is 168 unique boards and 478
+  family/board pairs, all 14 cohorts at the twelve-board target. These resulting
+  checkpoints are not reviewed or production strategy.
+- Cumulative reduced-tree intake at 14:49 on 2026-07-20: all six derived manifests
+  are raw-complete and produce 439 unique family/board checkpoints across 20
+  valid read-only reports with zero extraction failures. The source-safe
+  mechanical gate is 20/20 family shapes; owner review remains separately 0/20.
 - Review protocol: 20 families awaiting human poker review, 0 reviewed and 68
   concrete pending fields/evidence items; no automatic promotion.
 - Owner workbench: the recurring cycle refreshes the canonical 20-family,
@@ -174,10 +174,9 @@ does not interrupt the current step unless it exposes a production regression.
    poker review. `run-mtt-solver-batch-prep-cycle.ps1` is the sole writer and
    auditor of the beta-min and beta-depth source waves; its scheduled task
    remains disabled after all 128 source inputs passed audit.
-3. The four earlier worker phases are complete. Run owner-authorized beta-depth
-   as the fifth review-only phase under the guarded three-thread profile. Keep
-   `growth` outside every Windows worker until its review boundary is explicitly
-   decided.
+3. All five authorized worker phases are complete. Keep `growth` outside every
+   Windows worker until its review boundary is explicitly decided; do not start
+   another solver wave merely because the task remains installed.
 4. Read `mtt:texas-solver-low-memory-status`; act only on a new complete export
    or a gate change.
 5. Execute one eligible Lane-B step completely, including its focused verification.

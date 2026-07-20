@@ -78,25 +78,24 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
   85 unique boards and 395 family/board pairs, closing every six-per-cohort gap.
   It became active only after `owner-depth` completed and is now raw-complete at
   45/45; the worker exited `SUCCESS` with no recorded failure.
-- The isolated 83-board beta-depth source wave passed 83/83 scenario audit with
-  0 errors. Declared input coverage is now 168 unique boards and 478
-  family/board pairs with every cohort at twelve boards. The owner explicitly
-  authorized guarded review-only solving on 2026-07-17; this does not satisfy
-  poker review or production readiness.
+- The isolated 83-board beta-depth source wave passed its 83/83 scenario audit
+  and reached 83/83 raw checkpoints. Declared input coverage is 168 unique
+  boards and 478 family/board pairs with every cohort at twelve boards. The
+  completed owner-authorized review-only solve does not satisfy poker review or
+  production readiness.
 - Cumulative reduced-tree extraction now observes all six derived memory-safe
-  manifests. The 2026-07-20 13:30 snapshot contains 415 unique solved family/board
-  pairs across 20 families; 20/20 reports are valid, extraction failures are zero
+  manifests. The final 2026-07-20 14:49 incremental snapshot contains 439 unique solved family/board
+  pairs across 20 families and beta-depth is 83/83; 20/20 reports are valid, extraction failures are zero
   and 20/20 families meet the mechanical shape. Human review and production
   eligibility remain independently 0/20.
-- Windows low-memory task: `PKRTrainer-TexasSolver-LowMemory` uses three solver
-  threads on its next worker at `BelowNormal`, starts only below the CPU/RAM
-  guard, resumes after sign-in, and selects the first incomplete phase. It never interrupts an
-  already solving board merely because the machine becomes busy.
+- Windows low-memory task: `PKRTrainer-TexasSolver-LowMemory` returned `SUCCESS`
+  with no live worker or solver process after completing every authorized phase.
+  It remains checkpoint-safe after sign-in and will not duplicate a live process.
 - Every low-memory solver phase is `MEMORY_SAFE_REVIEW_ONLY`: raw exports may be audited
   and packaged for review, but cannot be automatically staged, normalized,
   merged or promoted to runtime content.
 - Scoped core release gate: green; Full MTT NLHE remains intentionally red at 4/64.
-- Current release regression is green at 151/151 Vitest files and 753/753 tests.
+- Current release regression is green at 152/152 Vitest files and 762/762 tests.
   Vitest is capped at four parent workers because CLI integration tests spawn
   their own Node/PowerShell children; this prevents resource-driven false
   timeouts while the guarded solver worker is installed.
@@ -149,18 +148,18 @@ Status: COMPLETED 2026-07-10
 
 ### P4 - Solver Evidence Expansion
 
-Status: BETA-DEPTH REVIEW-ONLY SOLVING / HUMAN REVIEW
+Status: REVIEW-ONLY SOLVING COMPLETE / HUMAN REVIEW
 
-- The first three manifests are raw-complete (`72/72` each) and `beta-min` is
-  raw-complete at 45/45. Consume changed `beta-depth` checkpoints incrementally
-  and refresh only source-safe coverage.
+- The first three manifests are raw-complete (`72/72` each), `beta-min` is
+  45/45, `beta-depth` is 83/83 and growth is 98/98. All six approved manifests
+  are now represented in the source-safe cumulative evidence.
   For its memory-safe tree, suppress unrelated older staging/draft artefacts and
   skip downstream pilot refresh; those checks belong only to comparable full-tree
   evidence.
 - Promote no solver output beyond scoped pilot status without poker review and a provenance manifest.
-- The 83-board `beta-depth` phase is prepared, audited 83/83 with 0 errors and
-  explicitly owner-authorized for the existing checkpoint-aware review-only
-  task. It was measured at 59/83 on 2026-07-20 13:30. The completed 98/98 `growth` export remains
+- The 83-board `beta-depth` phase was audited 83/83, explicitly owner-authorized
+  and completed at 83/83 through the checkpoint-aware review-only task. The
+  completed 98/98 `growth` export remains
   review-only evidence and does not authorize normalization or promotion.
 
 ### P4.1 - Professional Action-EV Feedback
@@ -234,13 +233,14 @@ npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
 
 | Date | Priority | Result | Evidence |
 | --- | --- | --- | --- |
+| 2026-07-20 | P4 / Live intake status | Incremental truth no longer waits for the heavy cycle | The locked refresh report now includes scan/raw timestamps and exact counts for all six manifests. It tracked beta-depth beyond the stale 65/83 full-cycle snapshot and confirmed final 83/83 plus 439 cumulative checkpoints. Focused tests passed 12/12 and the full 152-file / 762-test Core release chain passed without strategy or owner-decision writes |
 | 2026-07-20 | P1 / Incremental six-max intake | Each reviewed export can advance independently | Candidate and staging batch tools now support explicit fail-closed incremental mode: absent/blank inputs wait, partial inputs fail, writes keep confirmation tokens and promotion stays separate. Live workbench: 0 ready, 4 waiting, 0 invalid; filtered packet folder: exactly four current six-max slots. Owned solver exports require reviewer, owner, source location and runtime permission but no external evidence reference |
 | 2026-07-20 | Release | Verified incremental P1 FTP artifact | Source commit `c44efebdad96` passed 152/152 test files and 762/762 tests, MTT Core 4/4 plus 7/7, production build/precache/budget and Chrome desktop plus 360/390/412 px. `deploy/pkrtrainer-ftp-20260720-141237-c44efebdad96-mtt-core-p1-incremental.zip` uses portable forward-slash entries and reconciled 22/22 with no differences; SHA-256 `2374090EBAB10A4E2E38D9CD04D03C4457E0C6E561561F01C7A18093CC192F67` |
 | 2026-07-20 | P4 / Incremental intake | Shared locked review-only refresh | The solver watcher and ten-minute cycle now call one PID-locked CLI that unions all six approved memory-safe manifests and refreshes only stale family reports. The watcher was hot-replaced without touching the active solver and confirmed beta-depth 59/83 with 415 unique family/board pairs; evidence and mechanical readiness remain valid 20/20 while owner protocol and production eligibility remain 0/20. Dry-run, live watcher, 28/28 related tests, typecheck, production build and scoped Core gate passed without strategy promotion |
 | 2026-07-20 | P4 / Automation | Live checkpoint intake and recurring-task repair | The idempotent `mtt:autonomous-cycle-ensure` command repaired the disabled ten-minute task to Ready and now reports enabled health, next run, latest logged outcome and stale snapshot age. Beta-depth resumed from 42/83 to 49/83; four changed review-only family reports through `J88r` were refreshed to 405 unique family/board pairs, 20/20 valid evidence and 20/20 mechanical readiness. No strategy was staged or promoted |
 | 2026-07-20 | Release | Verified EN/CZ FTP artifact | Source commit `25ee34a01488` packaged with the tracked `deploy/forpsi/.htaccess.example` staging template as `deploy/pkrtrainer-ftp-20260720-124211-25ee34a01488-mtt-core-i18n-final.zip`; reconciliation passed 22/22 with 0 missing, 0 extra and 0 hash mismatches. SHA-256 `D85B7AA2B6578C8979871A5D9FD697FAB7928AD694DC195ABC2A9E2CB58616E5` |
 | 2026-07-20 | P4.1 / Verification | EN/CZ error handling and resource-stable release regression | Global runtime and asynchronous failures now use the live EN/CZ catalog; range metadata keeps the poker term `ante ON/OFF`. Four-worker Vitest passed 151/151 files and 753/753 tests; registry, Core 4/4 plus 7/7, ranges, build, precache and bundle budget passed. Production Chrome E2E passed desktop plus 360/390/412 px with zero browser errors and 48 contrast checks. The low-memory worker remains active but truthfully waits with no solver PID while CPU/RAM guards are not met |
-| 2026-07-20 | P4 | Current solver and intake truth | Beta-depth was measured at 59/83, growth is 98/98, cumulative readiness is 20/20 valid and 20/20 mechanical over 415 unique family/board pairs; owner protocol and production eligibility remain 0/20. The guarded worker resumes only when CPU and RAM gates pass and never duplicates a live solver process |
+| 2026-07-20 | P4 | Current solver and intake truth | Beta-depth completed 83/83, growth is 98/98, and cumulative readiness is 20/20 valid plus 20/20 mechanical over 439 unique family/board pairs. The worker returned `SUCCESS` with no live solver process; owner protocol and production eligibility remain independently 0/20 |
 | 2026-07-20 | Owner review | Export-valid progress and mobile QA | Dashboard counts only complete decisions, highlights missing required metadata and focuses the next incomplete row without choosing a verdict. It regenerated over 53 reports with 20 owner rows, 20/20 mechanical context and zero preselected decisions; focused tests, typecheck and 390px browser containment passed |
 | 2026-07-17 | P4 | Complete memory-safe intake and review-readiness matrix | The cycle now consumes all five derived manifests rather than mislabeling the first two source manifests. A live cycle observed 272/344 physical and 269 unique family/board checkpoints, produced 20/20 valid reports, measured 12/20 mechanical family shapes, kept owner review at 0/20 and Core green |
 | 2026-07-17 | P4 | Beta-depth computation authorized | Owner instruction activates the audited 83-board supply only as guarded `MEMORY_SAFE_REVIEW_ONLY` evidence. Owner poker review and explicit promotion remain unchanged gates; `growth` stays frozen |

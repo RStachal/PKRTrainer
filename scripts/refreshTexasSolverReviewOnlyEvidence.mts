@@ -11,7 +11,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 
 const TREE_PROFILE = "MEMORY_SAFE_REVIEW_ONLY";
 const DEFAULT_MANIFESTS = [
@@ -40,6 +40,7 @@ interface CliArgs {
 }
 
 interface CoverageManifest {
+  packId?: string;
   executionProfile?: { treeProfile?: string };
   outputBase?: string;
   scenarios?: Array<{ familyId?: string; boards?: string[] }>;
@@ -60,11 +61,15 @@ interface ExistingReviewReport {
 }
 
 interface RefreshReport {
+  schemaVersion: 1;
+  generatedAt: string;
+  latestRawWriteAt: string | null;
   valid: boolean;
   busy: boolean;
   dryRun: boolean;
   treeProfile: typeof TREE_PROFILE;
   manifests: string[];
+  manifestCoverage: ManifestCoverage[];
   eligibleFamilies: number;
   evidenceBoards: number;
   reports: number;
@@ -74,6 +79,21 @@ interface RefreshReport {
   viewerWritten: boolean;
   viewerPath: string;
   errors: string[];
+}
+
+interface ManifestCoverage {
+  packId: string;
+  manifestPath: string;
+  solvedBoards: number;
+  expectedBoards: number;
+  rawCompleteFamilies: number;
+  families: number;
+  complete: boolean;
+}
+
+interface EvidenceScan {
+  families: Map<string, FamilyEvidence>;
+  manifestCoverage: ManifestCoverage[];
 }
 
 try {
@@ -162,7 +182,8 @@ function inlineValue(item: string, flag: string): string {
 
 function refreshEvidence(args: CliArgs): RefreshReport {
   const errors: string[] = [];
-  const evidence = collectEvidence(args.manifestPaths);
+  const scan = collectEvidence(args.manifestPaths);
+  const evidence = scan.families;
   const familyIds = [...evidence.keys()].sort();
   let plannedRefresh = 0;
   let refreshed = 0;
@@ -212,11 +233,15 @@ function refreshEvidence(args: CliArgs): RefreshReport {
   }
 
   return {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    latestRawWriteAt: latestRawWriteAt(evidence),
     valid: failures === 0,
     busy: false,
     dryRun: args.dryRun,
     treeProfile: TREE_PROFILE,
     manifests: args.manifestPaths,
+    manifestCoverage: scan.manifestCoverage,
     eligibleFamilies: familyIds.length,
     evidenceBoards: familyIds.reduce((sum, familyId) => sum + (evidence.get(familyId)?.boards.size ?? 0), 0),
     reports: reportPaths.length,
@@ -229,8 +254,15 @@ function refreshEvidence(args: CliArgs): RefreshReport {
   };
 }
 
-function collectEvidence(manifestPaths: readonly string[]): Map<string, FamilyEvidence> {
+function latestRawWriteAt(evidence: ReadonlyMap<string, FamilyEvidence>): string | null {
+  const rawPaths = [...evidence.values()].flatMap((family) => [...family.rawPaths.values()]);
+  if (rawPaths.length === 0) return null;
+  return new Date(Math.max(...rawPaths.map((path) => statSync(path).mtimeMs))).toISOString();
+}
+
+function collectEvidence(manifestPaths: readonly string[]): EvidenceScan {
   const evidence = new Map<string, FamilyEvidence>();
+  const manifestCoverage: ManifestCoverage[] = [];
   for (const manifestPath of manifestPaths) {
     if (!existsSync(manifestPath)) throw new Error(`Missing review-only manifest: ${manifestPath}`);
     const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as CoverageManifest;
@@ -241,6 +273,9 @@ function collectEvidence(manifestPaths: readonly string[]): Map<string, FamilyEv
       throw new Error(`Invalid review-only manifest structure: ${manifestPath}`);
     }
     const outputBase = resolve(manifest.outputBase);
+    let solvedBoards = 0;
+    let expectedBoards = 0;
+    let rawCompleteFamilies = 0;
     for (const scenario of manifest.scenarios) {
       const familyId = scenario.familyId ?? "";
       if (!/^[A-Za-z0-9_]+$/.test(familyId) || !Array.isArray(scenario.boards)) {
@@ -250,17 +285,38 @@ function collectEvidence(manifestPaths: readonly string[]): Map<string, FamilyEv
       const family = evidence.get(familyId) ?? { boards: new Set<string>(), rawDir, rawPaths: new Map<string, string>() };
       if (family.rawDir !== rawDir) throw new Error(`Family ${familyId} resolves to multiple raw directories.`);
       const rawNames = existsSync(rawDir) ? readdirSync(rawDir).filter((name) => name.toLowerCase().endsWith(".json")) : [];
+      let solvedInFamily = 0;
       for (const board of scenario.boards) {
+        expectedBoards += 1;
         if (!/^[A-Za-z0-9_-]+$/.test(board)) throw new Error(`Invalid board ID for ${familyId}: ${board}`);
-        const rawName = rawNames.find((name) => name.toLowerCase().endsWith(`_${board.toLowerCase()}.json`));
+        const rawName = findRawName(rawNames, board);
         if (rawName === undefined) continue;
+        solvedBoards += 1;
+        solvedInFamily += 1;
         family.boards.add(board);
         family.rawPaths.set(board, join(rawDir, rawName));
       }
+      if (scenario.boards.length > 0 && solvedInFamily === scenario.boards.length) rawCompleteFamilies += 1;
       evidence.set(familyId, family);
     }
+    manifestCoverage.push({
+      packId: manifest.packId ?? basename(manifestPath, ".json"),
+      manifestPath,
+      solvedBoards,
+      expectedBoards,
+      rawCompleteFamilies,
+      families: manifest.scenarios.length,
+      complete: expectedBoards > 0 && solvedBoards === expectedBoards,
+    });
   }
-  return new Map([...evidence].filter(([, family]) => family.boards.size > 0));
+  return {
+    families: new Map([...evidence].filter(([, family]) => family.boards.size > 0)),
+    manifestCoverage,
+  };
+}
+
+function findRawName(rawNames: readonly string[], board: string): string | undefined {
+  return rawNames.find((name) => name.toLowerCase().endsWith(`_${board.toLowerCase()}.json`));
 }
 
 function reportIsFresh(
@@ -376,10 +432,15 @@ function writeJsonAtomic(path: string, value: unknown): void {
 function renderReport(report: RefreshReport, summary: boolean): string {
   const lines = [
     "TexasSolver cumulative review-only refresh",
+    `generated at: ${report.generatedAt}`,
+    `latest raw at scan: ${report.latestRawWriteAt ?? "none"}`,
     `valid: ${report.valid}`,
     `dry run: ${report.dryRun}`,
     `families: ${report.eligibleFamilies}`,
     `evidence boards: ${report.evidenceBoards}`,
+    ...report.manifestCoverage.map((coverage) => (
+      `coverage: ${coverage.packId} ${coverage.solvedBoards}/${coverage.expectedBoards}, raw-complete families ${coverage.rawCompleteFamilies}/${coverage.families}`
+    )),
     `reports: ${report.reports}`,
     `planned refresh: ${report.plannedRefresh}`,
     `refreshed: ${report.refreshed}`,

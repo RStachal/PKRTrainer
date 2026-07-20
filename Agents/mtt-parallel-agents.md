@@ -1,6 +1,6 @@
 # MTT Parallel Background Agents
 
-Updated: 2026-07-17
+Updated: 2026-07-20
 Status: ACTIVE
 
 This is the operating contract for the two Windows background branches. Both
@@ -20,7 +20,8 @@ an earlier iteration is active, it exits and waits for the next scheduled window
   is now raw-complete. Existing checkpoints are skipped on restart.
 - The fifth `beta-depth` supply contains 83/83 audited inputs and closes the
   twelve-board cohort target. The owner explicitly authorized it for guarded
-  background solving on 2026-07-17. It is `AUTHORIZED_REVIEW_ONLY_WORKER_PHASE`,
+  background solving on 2026-07-17 and it reached 83/83 raw coverage on
+  2026-07-20. It remains `AUTHORIZED_REVIEW_ONLY_WORKER_PHASE`,
   not reviewed strategy and not eligible for automatic promotion.
 - Runtime limits: 3 solver threads, `BelowNormal` priority.
 - Start guard: no new board starts unless total CPU is at most 40% and physical
@@ -42,9 +43,13 @@ an earlier iteration is active, it exits and waits for the next scheduled window
   skips the downstream pilot refresh.
 - The watcher and mechanical cycle use the same refresh CLI to aggregate every
   solved checkpoint from all six derived memory-safe manifests, including a
-  partial family, into one cumulative report per family. The 2026-07-20 13:30
-  snapshot contains 415 unique family/board pairs, 20/20 valid reports, 20/20
+  partial family, into one cumulative report per family. The final 2026-07-20 14:49
+  snapshot contains 439 unique family/board pairs, 20/20 valid reports, 20/20
   mechanical shapes and 0/20 human owner decisions.
+
+Current state: all five authorized phases are complete, the task returned
+`SUCCESS`, and no worker or solver process is live. The installed task remains a
+checkpoint-safe resume mechanism, not authorization for another wave.
 
 Controls:
 

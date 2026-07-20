@@ -79,7 +79,8 @@ The generator exposes the stages as disjoint waves: 45 new boards for
 audit with 0 errors. It raises declared coverage to 168 unique boards and 478
 family/board pairs, with all 14 cohorts at the twelve-board depth target. The
 owner explicitly authorized this beta-depth supply for speculative background
-solving on 2026-07-17. `growth` remains outside every active worker.
+solving on 2026-07-17, and it reached 83/83 raw checkpoints on 2026-07-20.
+`growth` remains outside every active worker.
 
 TexasSolver `set_use_isomorphism 1` remains enabled inside each solve. It saves
 work across equivalent suit runouts in that tree; it does not make A72 and K83
@@ -103,14 +104,13 @@ Current declaration audit: `20/20` families already meet the 12-board,
 6-cohort and no-majority shape. This is good scheduling coverage, not owner
 approval and not exact action-EV readiness.
 
-Measured before beta-depth activation: `owner-depth` and `beta-min` are
-raw-complete at 72/72 and 45/45 respectively. The beta-depth source wave passed
-83/83 audit before worker activation. Its checkpoints may now be computed with
-the guarded two-thread reduced tree; they remain discardable review evidence.
-The 2026-07-17 intake includes all five derived memory-safe manifests. Its 272
-physical checkpoints reduce to 269 unique family/board pairs across 20 valid
-read-only reports, 12/20 families meet the mechanical shape threshold, and it
-promoted nothing.
+Final beta-depth measurement: `owner-depth`, `beta-min` and `beta-depth` are
+raw-complete at 72/72, 45/45 and 83/83 respectively. The beta-depth wave was
+computed with the guarded reduced tree and remains discardable review evidence.
+The 2026-07-20 intake includes all six derived memory-safe manifests and 439
+unique family/board checkpoints across 20 valid read-only reports; 20/20
+families meet the mechanical shape threshold, owner review is 0/20, and nothing
+was promoted.
 
 ## Ordered Solver Routine
 
@@ -124,8 +124,9 @@ promoted nothing.
 4. Refresh read-only review evidence for each newly raw-complete family.
 5. Complete owner review over the accumulated family evidence; never promote
    `MEMORY_SAFE_REVIEW_ONLY` output automatically.
-6. Freeze the first beta when the family gate passes. Continue `BETA_DEPTH` and
-   `GROWTH` as non-blocking background programs.
+6. Freeze the first beta when the family gate and owner review pass. Beta-depth
+   solving is complete; activate any future growth solving only after its own
+   explicit review boundary and owner authorization.
 
 The isolated prep agent owns deterministic generation and scenario audit for
 both beta-min and beta-depth. Preparing a wave never activates it by itself. The

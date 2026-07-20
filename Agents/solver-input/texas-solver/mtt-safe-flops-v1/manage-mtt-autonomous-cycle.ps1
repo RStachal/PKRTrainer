@@ -17,6 +17,7 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
 $Cycle = Join-Path $PSScriptRoot "run-mtt-autonomous-cycle.ps1"
 $CycleArtifactsDir = Join-Path $RepoRoot "artifacts\mtt-autonomous-cycle"
 $LatestSummaryPath = Join-Path $CycleArtifactsDir "latest-cycle-summary.json"
+$ReviewOnlyRefreshPath = Join-Path $RepoRoot "artifacts\texas-solver-review-only-owner-depth\refresh-report.json"
 $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 $PowerShell = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
 $Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$Cycle`" -Once -IntervalMinutes $RepetitionMinutes -MinimumFreeMemoryPercent $MinimumFreeMemoryPercent -MaximumCpuPercent $MaximumCpuPercent"
@@ -95,6 +96,34 @@ function Show-LatestCycleSummary {
   }
 }
 
+function Show-LatestReviewOnlyRefresh {
+  if (-not (Test-Path -LiteralPath $ReviewOnlyRefreshPath)) {
+    Write-Host "incremental review-only intake: not yet written"
+    return
+  }
+  try {
+    $report = Get-Content -LiteralPath $ReviewOnlyRefreshPath -Raw | ConvertFrom-Json
+    if ($report.schemaVersion -ne 1 -or $null -eq $report.evidenceBoards) {
+      throw "Unsupported refresh report format."
+    }
+    $generatedAt = [DateTimeOffset]::Parse([string]$report.generatedAt).ToUniversalTime()
+    $ageMinutes = [Math]::Max(0, [Math]::Round(([DateTimeOffset]::UtcNow - $generatedAt).TotalMinutes, 1))
+    $health = if ($report.valid -eq $true -and [int]$report.failures -eq 0) { "VALID" } else { "ATTENTION" }
+    $latestRawAtScan = if ($null -ne $report.latestRawWriteAt) { $report.latestRawWriteAt } else { "none" }
+    Write-Host ("incremental review-only intake: {0} evidence={1} boards, families={2}, reports={3}, refreshed={4}, failures={5}" -f `
+      $health, $report.evidenceBoards, $report.eligibleFamilies, $report.reports, $report.refreshed, $report.failures)
+    Write-Host ("incremental intake snapshot: generated={0}, age={1}m, latest raw at scan={2} (independent of full cycle snapshot)" -f `
+      $report.generatedAt, $ageMinutes, $latestRawAtScan)
+    foreach ($coverage in @($report.manifestCoverage)) {
+      Write-Host ("incremental coverage: {0} {1}/{2}, raw-complete families {3}/{4}, complete={5}" -f `
+        $coverage.packId, $coverage.solvedBoards, $coverage.expectedBoards, `
+        $coverage.rawCompleteFamilies, $coverage.families, $coverage.complete)
+    }
+  } catch {
+    Write-Host "incremental review-only intake: unreadable ($($_.Exception.Message))"
+  }
+}
+
 function Show-LatestCycleOutcome {
   $latestLog = Get-ChildItem -LiteralPath $CycleArtifactsDir -Filter "cycle-*.log" -File -ErrorAction SilentlyContinue |
     Sort-Object LastWriteTimeUtc -Descending |
@@ -134,6 +163,7 @@ function Show-TaskStatus {
   Write-Host "cycle PIDs: $(if ($processes.Count) { $processes.ProcessId -join ',' } else { 'none' })"
   Write-Host "cycle: $Cycle"
   Show-LatestCycleOutcome
+  Show-LatestReviewOnlyRefresh
   Show-LatestCycleSummary
   return $true
 }

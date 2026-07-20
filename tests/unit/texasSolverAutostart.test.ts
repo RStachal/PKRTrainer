@@ -176,6 +176,11 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(manager).toContain("-MinimumFreeMemoryPercent $MinimumFreeMemoryPercent -MaximumCpuPercent $MaximumCpuPercent");
     expect(manager).toContain("-MultipleInstances IgnoreNew");
     expect(manager).toContain("Show-LatestCycleSummary");
+    expect(manager).toContain("Show-LatestReviewOnlyRefresh");
+    expect(manager).toContain("refresh-report.json");
+    expect(manager).toContain("incremental review-only intake:");
+    expect(manager).toContain("incremental coverage:");
+    expect(manager).toContain("independent of full cycle snapshot");
     expect(manager).toContain("coverage snapshot:");
     expect(manager).toContain("snapshot freshness:");
     expect(manager).toContain("live checkpoints may be newer");
