@@ -109,6 +109,18 @@ function Write-WorkerLog([string]$Message) {
   Write-Host $line
 }
 
+function Get-ConflictingSolverWorkers {
+  return @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+    $_.ProcessId -ne $PID -and
+    $_.Name -ieq "powershell.exe" -and
+    -not [string]::IsNullOrWhiteSpace($_.CommandLine) -and
+    (
+      $_.CommandLine -match 'artifacts[\\/]texas-solver-background[\\/].+[.]run[.]ps1' -or
+      $_.CommandLine -match 'resume-texas-solver-queue[.]ps1'
+    )
+  })
+}
+
 function Test-PhaseRawComplete($Phase) {
   if (-not (Test-Path -LiteralPath $Phase.SourceManifestPath)) { return $false }
   try {
@@ -267,6 +279,11 @@ $hasMutex = $false
 try {
   $hasMutex = $mutex.WaitOne(0, $false)
   if (-not $hasMutex) { Write-WorkerLog "Low-memory worker already owns the mutex; exiting without duplication."; exit 0 }
+  $conflictingWorkers = @(Get-ConflictingSolverWorkers)
+  if ($conflictingWorkers.Count -gt 0) {
+    Write-WorkerLog "Another TexasSolver queue worker is active (PID $($conflictingWorkers.ProcessId -join ',')). Deferring this worker without touching it."
+    exit 0
+  }
   $phaseCounts = @{}
   foreach ($phase in $Phases) {
     $phaseCounts[$phase.Name] = Build-LowMemoryBatch $phase

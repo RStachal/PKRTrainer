@@ -379,6 +379,10 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(worker).toContain("ManifestParameterRoot = Join-Path $PSScriptRoot");
     expect(worker).toContain("ParameterRoot = Join-Path $ArtifactsDir \"runtime");
     expect(worker).toContain("$manifestParameterRoot = $Phase.ManifestParameterRoot");
+    expect(worker).toContain("Get-ConflictingSolverWorkers");
+    expect(worker).toContain("texas-solver-background");
+    expect(worker).toContain("resume-texas-solver-queue[.]ps1");
+    expect(worker).toContain("Deferring this worker without touching it");
 
     const packageJson = JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8")) as {
       scripts: Record<string, string>;
