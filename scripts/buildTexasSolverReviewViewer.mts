@@ -7,6 +7,7 @@ const DEFAULT_WAVES = "artifacts/texas-solver-review-protocol/packet/OWNER_REVIE
 const RANK_ORDER = "AKQJT98765432".split("");
 
 interface CliArgs {
+  accuracyRoot: string | null;
   inputs: string[];
   outputPath: string;
   reviewsDir: string;
@@ -83,6 +84,21 @@ interface MechanicalReadinessRow {
   nextGate: string;
 }
 
+type AccuracyState = "COMPLETE" | "PARTIAL" | "MISSING" | "UNAVAILABLE";
+
+interface AccuracySummary {
+  familyId: string;
+  expectedBoards: number;
+  parsedBoards: number;
+  perBoardLogs: number;
+  queueLogEntries: number;
+  missingLogs: string[];
+  minimum: number | null;
+  median: number | null;
+  maximum: number | null;
+  state: AccuracyState;
+}
+
 try {
   const args = parseArgs(process.argv.slice(2));
   const inputPaths = args.inputs.length > 0 ? args.inputs : findReviewReports(args.reviewsDir);
@@ -93,17 +109,27 @@ try {
   const reports = inputPaths.map(readReviewReport).sort(compareReports);
   const reviewWaves = readReviewWaves(args.wavesPath);
   const mechanicalReadiness = readMechanicalReadiness(args.readinessPath);
+  const accuracyRoot = args.accuracyRoot ?? (args.inputs.length === 0 ? args.reviewsDir : null);
+  const accuracySummaries = readAccuracySummaries(accuracyRoot, reports.map((report) => report.familyId));
   mkdirSync(dirname(args.outputPath), { recursive: true });
-  writeFileSync(args.outputPath, buildHtml(args.title, reports, reviewWaves, mechanicalReadiness), "utf8");
+  writeFileSync(args.outputPath, buildHtml(args.title, reports, reviewWaves, mechanicalReadiness, accuracySummaries), "utf8");
 
   console.log(`TexasSolver review viewer written: ${args.outputPath}`);
   console.log(`Reports: ${reports.length}`);
+  if (accuracySummaries.size > 0) {
+    const accuracy = summarizeAccuracy(accuracySummaries);
+    const complete = [...accuracySummaries.values()].filter((summary) => summary.state === "COMPLETE").length;
+    const partial = [...accuracySummaries.values()].filter((summary) => summary.state === "PARTIAL").length;
+    const missing = [...accuracySummaries.values()].filter((summary) => summary.state === "MISSING").length;
+    console.log(`Accuracy: ${accuracy.parsed}/${accuracy.expected} boards; families ${complete} complete, ${partial} partial, ${missing} missing`);
+  }
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
+  let accuracyRoot: string | null = null;
   const inputs: string[] = [];
   let outputPath = resolve(DEFAULT_OUTPUT);
   let reviewsDir = resolve(DEFAULT_REVIEWS_DIR);
@@ -121,6 +147,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (item.startsWith("--input=")) {
       inputs.push(resolve(requiredInlineValue(item, "--input")));
+      continue;
+    }
+    if (item === "--accuracy-root") {
+      accuracyRoot = resolve(nextArg(argv, index, "--accuracy-root"));
+      index += 1;
+      continue;
+    }
+    if (item.startsWith("--accuracy-root=")) {
+      accuracyRoot = resolve(requiredInlineValue(item, "--accuracy-root"));
       continue;
     }
     if (item === "--reviews-dir") {
@@ -175,7 +210,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
-  return { inputs, outputPath, reviewsDir, wavesPath, readinessPath, title };
+  return { accuracyRoot, inputs, outputPath, reviewsDir, wavesPath, readinessPath, title };
 }
 
 function usage(): string {
@@ -186,6 +221,7 @@ function usage(): string {
     "  npm run mtt:texas-solver-viewer -- --reviews-dir artifacts/texas-solver-review-integration/reviews --output artifacts/texas-solver-review-integration/viewer/index.html",
     "  npm run mtt:texas-solver-viewer -- --waves artifacts/texas-solver-review-protocol/packet/OWNER_REVIEW_WAVES.md",
     "  npm run mtt:texas-solver-viewer -- --readiness artifacts/texas-solver-review-readiness/report.json",
+    "  npm run mtt:texas-solver-viewer -- --accuracy-root Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
     "",
     "Builds a local source-safe HTML viewer from TexasSolver review JSON files.",
     "It does not create production normalized.json or permission.json files.",
@@ -282,6 +318,96 @@ function readMechanicalReadiness(readinessPath: string | null): ReadonlyMap<stri
     });
   }
   return rows;
+}
+
+function readAccuracySummaries(
+  accuracyRoot: string | null,
+  familyIds: readonly string[],
+): ReadonlyMap<string, AccuracySummary> {
+  const summaries = new Map<string, AccuracySummary>();
+  if (accuracyRoot === null) return summaries;
+  for (const familyId of [...new Set(familyIds)].sort()) {
+    if (!/^[A-Za-z0-9_]+$/.test(familyId)) throw new Error(`Accuracy familyId is invalid: ${familyId}`);
+    const path = join(accuracyRoot, familyId, "accuracy-report.json");
+    if (!existsSync(path)) continue;
+    const parsed = JSON.parse(readFileSync(path, "utf8")) as unknown;
+    if (!isRecord(parsed) || parsed.evidenceScope !== "APPROVED_MEMORY_SAFE_REVIEW_ONLY_MANIFEST_UNION") continue;
+    if (parsed.solver !== "texas-solver" || parsed.familyId !== familyId || !isRecord(parsed.solverLogCoverage)) {
+      throw new Error(`Approved accuracy report is malformed for ${familyId}: ${path}`);
+    }
+    const coverage = parsed.solverLogCoverage;
+    const expectedBoards = exactNonNegativeInteger(coverage.expectedLogs, `expectedLogs for ${familyId}`);
+    const parsedBoards = exactNonNegativeInteger(coverage.parsedLogs, `parsedLogs for ${familyId}`);
+    const perBoardLogs = exactNonNegativeInteger(coverage.perBoardLogs, `perBoardLogs for ${familyId}`);
+    const queueLogEntries = exactNonNegativeInteger(coverage.queueLogEntries, `queueLogEntries for ${familyId}`);
+    const missingLogs = asStrictStringArray(coverage.missingLogs, `missingLogs for ${familyId}`);
+    const uniqueMissingLogs = new Set(missingLogs.map((name) => name.toLowerCase()));
+    if (uniqueMissingLogs.size !== missingLogs.length || missingLogs.some((name) => !/^pkrtrainer_[A-Za-z0-9_-]+\.log$/i.test(name))) {
+      throw new Error(`Accuracy missing log names are unsafe or duplicated for ${familyId}.`);
+    }
+    const evidence = Array.isArray(coverage.evidence) ? coverage.evidence : [];
+    const seen = new Set<string>();
+    const values: number[] = [];
+    let measuredPerBoard = 0;
+    let measuredQueue = 0;
+    for (const rawEvidence of evidence) {
+      if (!isRecord(rawEvidence)) throw new Error(`Accuracy evidence row is malformed for ${familyId}.`);
+      const rawFileName = typeof rawEvidence.rawFileName === "string" ? rawEvidence.rawFileName : "";
+      const source = rawEvidence.source;
+      const value = rawEvidence.value;
+      if (!/^pkrtrainer_[A-Za-z0-9_-]+\.json$/i.test(rawFileName) || seen.has(rawFileName.toLowerCase())) {
+        throw new Error(`Accuracy evidence raw file is unsafe or duplicated for ${familyId}.`);
+      }
+      if ((source !== "PER_BOARD_LOG" && source !== "QUEUE_LOG") || typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+        throw new Error(`Accuracy evidence value/source is invalid for ${familyId}.`);
+      }
+      seen.add(rawFileName.toLowerCase());
+      values.push(value);
+      if (source === "PER_BOARD_LOG") measuredPerBoard += 1;
+      else measuredQueue += 1;
+    }
+    if (
+      evidence.length !== parsedBoards
+      || measuredPerBoard !== perBoardLogs
+      || measuredQueue !== queueLogEntries
+      || parsedBoards + missingLogs.length !== expectedBoards
+      || parsedBoards > expectedBoards
+    ) {
+      throw new Error(`Accuracy coverage counts are inconsistent for ${familyId}: ${path}`);
+    }
+    values.sort((left, right) => left - right);
+    summaries.set(familyId, {
+      familyId,
+      expectedBoards,
+      parsedBoards,
+      perBoardLogs,
+      queueLogEntries,
+      missingLogs,
+      minimum: values.at(0) ?? null,
+      median: median(values),
+      maximum: values.at(-1) ?? null,
+      state: expectedBoards > 0 && parsedBoards === expectedBoards
+        ? "COMPLETE"
+        : parsedBoards > 0 ? "PARTIAL" : "MISSING",
+    });
+  }
+  return summaries;
+}
+
+function exactNonNegativeInteger(value: unknown, label: string): number {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) throw new Error(`${label} must be a non-negative integer.`);
+  return value;
+}
+
+function asStrictStringArray(value: unknown, label: string): string[] {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) throw new Error(`${label} must be a string array.`);
+  return value as string[];
+}
+
+function median(values: readonly number[]): number | null {
+  if (values.length === 0) return null;
+  const middle = Math.floor(values.length / 2);
+  return values.length % 2 === 1 ? values[middle] : (values[middle - 1] + values[middle]) / 2;
 }
 
 function readReviewReport(sourcePath: string): NormalizedReport {
@@ -382,13 +508,16 @@ function buildHtml(
   reports: readonly NormalizedReport[],
   reviewWaves: ReadonlyMap<string, number>,
   mechanicalReadiness: ReadonlyMap<string, MechanicalReadinessRow>,
+  accuracySummaries: ReadonlyMap<string, AccuracySummary>,
 ): string {
   const generatedAt = new Date().toISOString();
   const summary = summarizeReports(reports);
-  const summaryCards = reports.map((report) => renderSummaryCard(report, reviewWaves, mechanicalReadiness)).join("\n");
-  const reportSections = reports.map((report) => renderReportSection(report, reviewWaves, mechanicalReadiness)).join("\n");
+  const accuracyTotal = summarizeAccuracy(accuracySummaries);
+  const summaryCards = reports.map((report) => renderSummaryCard(report, reviewWaves, mechanicalReadiness, accuracySummaries)).join("\n");
+  const reportSections = reports.map((report) => renderReportSection(report, reviewWaves, mechanicalReadiness, accuracySummaries)).join("\n");
   const waveOptions = renderWaveOptions(reports, reviewWaves);
   const mechanicalFilter = mechanicalReadiness.size === 0 ? "" : '<label>Evidence<select id="mechanical-filter"><option value="ALL">All evidence</option><option value="READY">Shape ready</option><option value="NEEDS_EVIDENCE">Needs evidence</option><option value="UNAVAILABLE">Unavailable</option></select></label>';
+  const accuracyFilter = accuracySummaries.size === 0 ? "" : '<label>Accuracy<select id="accuracy-filter"><option value="ALL">All accuracy</option><option value="COMPLETE">Complete logs</option><option value="PARTIAL">Partial logs</option><option value="MISSING">Missing logs</option><option value="UNAVAILABLE">Unavailable</option></select></label>';
   return `<!doctype html>
 <html lang="cs">
 <head>
@@ -408,6 +537,7 @@ function buildHtml(
       <div><dt>Pending</dt><dd>${summary.pending}</dd></div>
       <div><dt>Evidence</dt><dd>${summary.evidenceOnly}</dd></div>
       <div><dt>Blockers</dt><dd>${summary.blockers}</dd></div>
+      <div><dt>Accuracy</dt><dd>${accuracyTotal.parsed}/${accuracyTotal.expected}</dd></div>
     </dl>
   </header>
   <main>
@@ -416,9 +546,10 @@ function buildHtml(
       <label>Status<select id="status-filter"><option value="ALL">All statuses</option><option value="REVIEW_ONLY_EVIDENCE">Review-only evidence</option><option value="NEEDS_REVIEW">Needs review</option><option value="REVIEWED_SCOPED">Reviewed scoped</option><option value="REVIEWED_PRODUCTION">Reviewed production</option><option value="REVIEWED_NOT_USABLE">Reviewed not usable</option><option value="MISSING_REVIEW">Missing review</option></select></label>
       <label>Wave<select id="wave-filter">${waveOptions}</select></label>
       ${mechanicalFilter}
+      ${accuracyFilter}
       <output id="filter-count" aria-live="polite">${summary.total} families</output>
     </section>
-    ${renderOwnerDecisionWorkbench(reports, reviewWaves, mechanicalReadiness)}
+    ${renderOwnerDecisionWorkbench(reports, reviewWaves, mechanicalReadiness, accuracySummaries)}
     <section class="summary-grid">${summaryCards}</section>
     ${reportSections}
   </main>
@@ -471,6 +602,7 @@ function renderOwnerDecisionWorkbench(
   reports: readonly NormalizedReport[],
   reviewWaves: ReadonlyMap<string, number>,
   mechanicalReadiness: ReadonlyMap<string, MechanicalReadinessRow>,
+  accuracySummaries: ReadonlyMap<string, AccuracySummary>,
 ): string {
   const families = ownerDecisionFamilies(reports, reviewWaves);
   if (families.length === 0) {
@@ -478,22 +610,25 @@ function renderOwnerDecisionWorkbench(
   }
   const storageKey = `pkrtrainer-texas-solver-owner-review-v1:${families.map((family) => family.familyId).join("|")}`;
   const mechanicallyReady = families.filter((family) => mechanicalValue(mechanicalReadiness.get(family.familyId)) === "READY").length;
+  const accuracyTotal = summarizeAccuracy(accuracySummaries, families.map((family) => family.familyId));
   const rows = families.map((family) => {
     const readiness = mechanicalReadiness.get(family.familyId);
-    return `<tr data-owner-row data-family="${escapeHtml(family.familyId)}" data-family-id="${escapeHtml(family.familyId)}" data-status="${escapeHtml(family.status)}" data-wave="${waveValue(family.wave)}" data-mechanical="${mechanicalValue(readiness)}" data-mechanical-ready="${mechanicalValue(readiness) === "READY" ? "true" : "false"}">
+    const accuracy = accuracySummaries.get(family.familyId);
+    return `<tr data-owner-row data-family="${escapeHtml(family.familyId)}" data-family-id="${escapeHtml(family.familyId)}" data-status="${escapeHtml(family.status)}" data-wave="${waveValue(family.wave)}" data-mechanical="${mechanicalValue(readiness)}" data-mechanical-ready="${mechanicalValue(readiness) === "READY" ? "true" : "false"}" data-accuracy="${accuracyValue(accuracy)}">
     <td><strong><a href="#${escapeHtml(family.anchor)}">${escapeHtml(family.familyId)}</a></strong><small>${escapeHtml(family.status)}</small></td>
     <td>${escapeHtml(family.wave === null ? "Unassigned" : `Wave ${family.wave}`)}</td>
     <td>${renderMechanicalReadiness(readiness)}</td>
+    <td>${renderAccuracySummary(accuracy)}</td>
     <td><select data-owner-decision aria-label="Decision for ${escapeHtml(family.familyId)}"><option value="">Pending</option><option value="yes">Yes</option><option value="scoped">Scoped</option><option value="no">No</option></select></td>
     <td><input data-owner-scope aria-label="Scope for ${escapeHtml(family.familyId)}" type="text"></td>
     <td><input data-owner-caveats aria-label="Caveats for ${escapeHtml(family.familyId)}" type="text"></td>
   </tr>`;
   }).join("");
   return `<section class="owner-workbench" data-owner-root data-storage-key="${escapeHtml(storageKey)}" aria-labelledby="owner-workbench-title">
-    <div class="owner-workbench-head"><div><p class="eyebrow">Human gate</p><h2 id="owner-workbench-title">Owner Decisions</h2></div><div class="owner-outputs"><span>Mechanical context ${mechanicallyReady}/${families.length}</span><output id="owner-progress" aria-live="polite"></output><output id="owner-decision-status" aria-live="polite"></output></div></div>
-    <p class="owner-boundary">Mechanical readiness is reduced-tree, review-only context. It never selects, validates or recommends an owner decision.</p>
+    <div class="owner-workbench-head"><div><p class="eyebrow">Human gate</p><h2 id="owner-workbench-title">Owner Decisions</h2></div><div class="owner-outputs"><span>Mechanical context ${mechanicallyReady}/${families.length}</span><span>Accuracy context ${accuracyTotal.parsed}/${accuracyTotal.expected}</span><output id="owner-progress" aria-live="polite"></output><output id="owner-decision-status" aria-live="polite"></output></div></div>
+    <p class="owner-boundary">Mechanical readiness and solver accuracy are review-only context. They never select, validate or recommend an owner decision.</p>
     <div class="owner-meta"><label>Reviewer<input id="owner-reviewer" type="text" autocomplete="name"></label><label>Reviewed at<input id="owner-reviewed-at" type="date" value="${today()}"></label><button id="next-incomplete-decision" type="button" title="Focus the next incomplete visible decision">Next incomplete</button><button id="import-owner-decisions" type="button" title="Import a decision JSON draft">Import JSON</button><input id="owner-decisions-file" type="file" accept="application/json,.json" hidden><button id="copy-owner-decisions" type="button" title="Copy decision JSON">Copy JSON</button><button id="download-owner-decisions" type="button" title="Download decision JSON">Download JSON</button><button id="copy-owner-commands" type="button" title="Copy PowerShell dry-run and confirmed write commands">Copy PS commands</button><button id="clear-owner-decisions" type="button" title="Clear the locally stored draft">Clear draft</button></div>
-    <div class="owner-table-wrap"><table><thead><tr><th>Family</th><th>Wave</th><th>Evidence context</th><th>Decision</th><th>Scope</th><th>Caveats</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="owner-table-wrap"><table><thead><tr><th>Family</th><th>Wave</th><th>Evidence context</th><th>Accuracy context</th><th>Decision</th><th>Scope</th><th>Caveats</th></tr></thead><tbody>${rows}</tbody></table></div>
   </section>`;
 }
 
@@ -517,6 +652,46 @@ function mechanicalLabel(readiness: MechanicalReadinessRow | undefined): string 
   if (value === "READY") return "shape ready";
   if (value === "NEEDS_EVIDENCE") return "needs evidence";
   return "evidence unavailable";
+}
+
+function accuracyValue(accuracy: AccuracySummary | undefined): AccuracyState {
+  return accuracy?.state ?? "UNAVAILABLE";
+}
+
+function accuracyLabel(accuracy: AccuracySummary | undefined): string {
+  if (accuracy === undefined) return "accuracy unavailable";
+  return `${accuracy.parsedBoards}/${accuracy.expectedBoards} accuracy logs`;
+}
+
+function renderAccuracySummary(accuracy: AccuracySummary | undefined): string {
+  if (accuracy === undefined) {
+    return '<span class="accuracy-state accuracy-unavailable">Unavailable</span><small>No approved staged accuracy report</small>';
+  }
+  const stateClass = accuracy.state === "COMPLETE" ? "accuracy-complete" : accuracy.state === "PARTIAL" ? "accuracy-partial" : "accuracy-missing";
+  const distribution = accuracy.median === null || accuracy.maximum === null
+    ? "No parsed exploitability"
+    : `median ${formatExploitability(accuracy.median)} / max ${formatExploitability(accuracy.maximum)}`;
+  const sources = `${accuracy.perBoardLogs} per-board / ${accuracy.queueLogEntries} queue`;
+  return `<span class="accuracy-state ${stateClass}">${accuracy.parsedBoards}/${accuracy.expectedBoards} logs</span><small>${escapeHtml(distribution)}</small><small>${escapeHtml(sources)} / ${accuracy.missingLogs.length} missing</small>`;
+}
+
+function summarizeAccuracy(
+  summaries: ReadonlyMap<string, AccuracySummary>,
+  familyIds: readonly string[] = [...summaries.keys()],
+): { parsed: number; expected: number } {
+  let parsed = 0;
+  let expected = 0;
+  for (const familyId of new Set(familyIds)) {
+    const summary = summaries.get(familyId);
+    if (summary === undefined) continue;
+    parsed += summary.parsedBoards;
+    expected += summary.expectedBoards;
+  }
+  return { parsed, expected };
+}
+
+function formatExploitability(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
 }
 
 function ownerDecisionFamilies(reports: readonly NormalizedReport[], reviewWaves: ReadonlyMap<string, number>): OwnerDecisionFamily[] {
@@ -544,14 +719,16 @@ function renderSummaryCard(
   report: NormalizedReport,
   reviewWaves: ReadonlyMap<string, number>,
   mechanicalReadiness: ReadonlyMap<string, MechanicalReadinessRow>,
+  accuracySummaries: ReadonlyMap<string, AccuracySummary>,
 ): string {
   const statusClass = statusClassFor(report.status);
   const wave = reviewWaves.get(report.familyId);
   const mechanical = mechanicalReadiness.get(report.familyId);
-  return `<a class="card ${statusClass}" data-review-card data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" data-wave="${waveValue(wave)}" data-mechanical="${mechanicalValue(mechanical)}" href="#${reportAnchor(report)}">
+  const accuracy = accuracySummaries.get(report.familyId);
+  return `<a class="card ${statusClass}" data-review-card data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" data-wave="${waveValue(wave)}" data-mechanical="${mechanicalValue(mechanical)}" data-accuracy="${accuracyValue(accuracy)}" href="#${reportAnchor(report)}">
     <span>${escapeHtml(report.familyId)}</span>
     <strong>${escapeHtml(report.nodeLabel)}</strong>
-    <small class="review-summary">${escapeHtml(report.reviewOnlyTreeProfile ?? (wave === undefined ? "Unassigned" : `Wave ${wave}`))} / ${escapeHtml(report.status)} / ${report.counts.rawFiles} boards / ${report.blockers.length} blockers / ${mechanicalLabel(mechanical)}</small>
+    <small class="review-summary">${escapeHtml(report.reviewOnlyTreeProfile ?? (wave === undefined ? "Unassigned" : `Wave ${wave}`))} / ${escapeHtml(report.status)} / ${report.counts.rawFiles} boards / ${report.blockers.length} blockers / ${mechanicalLabel(mechanical)} / ${accuracyLabel(accuracy)}</small>
   </a>`;
 }
 
@@ -559,11 +736,13 @@ function renderReportSection(
   report: NormalizedReport,
   reviewWaves: ReadonlyMap<string, number>,
   mechanicalReadiness: ReadonlyMap<string, MechanicalReadinessRow>,
+  accuracySummaries: ReadonlyMap<string, AccuracySummary>,
 ): string {
   const files = report.files.map((file) => renderBoard(report, file)).join("\n");
   const warnings = [...report.blockers, ...report.anomalies].map((item) => `<li>${escapeHtml(item)}</li>`).join("");
   const wave = reviewWaves.get(report.familyId);
-  return `<section class="report" data-review-report data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" data-wave="${waveValue(wave)}" data-mechanical="${mechanicalValue(mechanicalReadiness.get(report.familyId))}" id="${reportAnchor(report)}">
+  const accuracy = accuracySummaries.get(report.familyId);
+  return `<section class="report" data-review-report data-family="${escapeHtml(report.familyId)}" data-status="${escapeHtml(report.status)}" data-wave="${waveValue(wave)}" data-mechanical="${mechanicalValue(mechanicalReadiness.get(report.familyId))}" data-accuracy="${accuracyValue(accuracy)}" id="${reportAnchor(report)}">
     <div class="report-head">
       <div>
         <p class="eyebrow">${escapeHtml(report.familyId)}</p>
@@ -577,8 +756,10 @@ function renderReportSection(
         <div><dt>Tree</dt><dd>${escapeHtml(report.reviewOnlyTreeProfile ?? "full")}</dd></div>
         <div><dt>Raw</dt><dd>${report.counts.rawFiles}</dd></div>
         <div><dt>Combos</dt><dd>${report.counts.combos}</dd></div>
+        <div><dt>Accuracy</dt><dd>${escapeHtml(accuracy === undefined ? "unavailable" : `${accuracy.parsedBoards}/${accuracy.expectedBoards}`)}</dd></div>
       </dl>
     </div>
+    ${accuracy !== undefined && accuracy.missingLogs.length > 0 ? `<details class="accuracy-missing-detail"><summary>${accuracy.missingLogs.length} board logs missing from accuracy evidence</summary><p>${escapeHtml(accuracy.missingLogs.join(", "))}</p></details>` : ""}
     ${warnings.length > 0 ? `<ul class="warnings">${warnings}</ul>` : ""}
     <div class="boards">${files}</div>
   </section>`;
@@ -667,6 +848,7 @@ const familyFilter = document.getElementById("family-filter");
 const statusFilter = document.getElementById("status-filter");
 const waveFilter = document.getElementById("wave-filter");
 const mechanicalFilter = document.getElementById("mechanical-filter");
+const accuracyFilter = document.getElementById("accuracy-filter");
 const count = document.getElementById("filter-count");
 const cards = [...document.querySelectorAll("[data-review-card]")];
 const reports = [...document.querySelectorAll("[data-review-report]")];
@@ -676,12 +858,14 @@ function applyFilters() {
   const status = statusFilter.value;
   const wave = waveFilter.value;
   const mechanical = mechanicalFilter?.value ?? "ALL";
+  const accuracy = accuracyFilter?.value ?? "ALL";
   for (const element of [...cards, ...reports, ...ownerRows]) {
     const matchesFamily = element.dataset.family.toLowerCase().includes(family);
     const matchesStatus = status === "ALL" || element.dataset.status === status;
     const matchesWave = wave === "ALL" || element.dataset.wave === wave;
     const matchesMechanical = mechanical === "ALL" || element.dataset.mechanical === mechanical;
-    element.hidden = !(matchesFamily && matchesStatus && matchesWave && matchesMechanical);
+    const matchesAccuracy = accuracy === "ALL" || element.dataset.accuracy === accuracy;
+    element.hidden = !(matchesFamily && matchesStatus && matchesWave && matchesMechanical && matchesAccuracy);
   }
   const visible = new Set(reports.filter((report) => !report.hidden).map((report) => report.dataset.family)).size;
   count.value = visible + (visible === 1 ? " family" : " families");
@@ -692,6 +876,7 @@ familyFilter.addEventListener("input", applyFilters);
 statusFilter.addEventListener("change", applyFilters);
 waveFilter.addEventListener("change", applyFilters);
 mechanicalFilter?.addEventListener("change", applyFilters);
+accuracyFilter?.addEventListener("change", applyFilters);
 
 const ownerRoot = document.querySelector("[data-owner-root]");
 const ownerStatus = document.getElementById("owner-decision-status");
@@ -1006,11 +1191,12 @@ dd { margin: 2px 0 0; font-weight: 800; }
 .owner-meta input, .owner-table-wrap input, .owner-table-wrap select, .owner-meta button { min-height: 34px; box-sizing: border-box; padding: 6px 8px; color: inherit; background: #0f1623; border: 1px solid #526171; border-radius: 4px; font: inherit; }
 .owner-meta button { cursor: pointer; background: #1a3a57; border-color: #4f89b5; }
 .owner-table-wrap { overflow-x: auto; }
-.owner-table-wrap table { width: 100%; min-width: 1160px; border-collapse: collapse; }
+.owner-table-wrap table { width: 100%; min-width: 1360px; border-collapse: collapse; }
 .owner-table-wrap th { color: #8ea0bd; font-size: 12px; text-align: left; text-transform: uppercase; }
 .owner-table-wrap th, .owner-table-wrap td { padding: 9px 8px; border-top: 1px solid #263246; vertical-align: middle; }
 .owner-table-wrap td:first-child { min-width: 320px; }.owner-table-wrap td:first-child a { color: #c9dcff; }.owner-table-wrap td:first-child small { display: block; color: #aab7cf; margin-top: 3px; }.owner-table-wrap input { width: 100%; }.owner-table-wrap select { min-width: 110px; }
-.owner-table-wrap td:nth-child(3) { min-width: 210px; }.owner-table-wrap td:nth-child(3) small { display: block; color: #aab7cf; margin-top: 3px; }.evidence-state { font-weight: 700; }.evidence-ready { color: #72c995; }.evidence-pending { color: #e0b95b; }.evidence-missing { color: #aab7cf; }
+.owner-table-wrap td:nth-child(3), .owner-table-wrap td:nth-child(4) { min-width: 210px; }.owner-table-wrap td:nth-child(3) small, .owner-table-wrap td:nth-child(4) small { display: block; color: #aab7cf; margin-top: 3px; }.evidence-state, .accuracy-state { font-weight: 700; }.evidence-ready, .accuracy-complete { color: #72c995; }.evidence-pending, .accuracy-partial { color: #e0b95b; }.evidence-missing, .accuracy-missing, .accuracy-unavailable { color: #aab7cf; }
+.accuracy-missing-detail { margin: 12px 0; padding: 10px 12px; background: #231f18; border: 1px solid #5d5138; border-radius: 4px; }.accuracy-missing-detail summary { cursor: pointer; color: #e0b95b; font-weight: 700; }.accuracy-missing-detail p { margin: 8px 0 0; color: #aab7cf; overflow-wrap: anywhere; }
 .owner-table-wrap tr.owner-row--complete { background: rgba(43,213,118,.06); }.owner-table-wrap tr.owner-row--needs-details { background: rgba(217,103,103,.08); }.owner-workbench [aria-invalid="true"] { border-color: #d96767; outline: 1px solid rgba(217,103,103,.35); }
 #owner-progress, #owner-decision-status { color: #aab7cf; font-size: 13px; }
 @media (max-width: 640px) { h1 { font-size: 30px; } .page-header { padding: 20px; } .metrics { grid-template-columns: repeat(2, 1fr); } .report-head dl { grid-template-columns: repeat(2, minmax(100px, 1fr)); } #filter-count { width: 100%; margin-left: 0; } #family-filter { min-width: min(260px, 100%); } .owner-workbench-head { align-items: start; flex-direction: column; } .owner-outputs { justify-items: start; } }

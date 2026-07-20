@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -15,6 +15,7 @@ describe("mtt:texas-solver-viewer CLI", () => {
     const output = join(directory, "viewer.html");
     const waves = join(directory, "OWNER_REVIEW_WAVES.md");
     const readiness = join(directory, "mechanical-readiness.json");
+    const accuracyRoot = join(directory, "accuracy");
     try {
       const report = {
         valid: true,
@@ -63,15 +64,37 @@ describe("mtt:texas-solver-viewer CLI", () => {
           },
         ],
       }, null, 2), "utf8");
+      const accuracyFamily = join(accuracyRoot, "MTT9_50BB_BTN_BB_SRP");
+      mkdirSync(accuracyFamily, { recursive: true });
+      writeFileSync(join(accuracyFamily, "accuracy-report.json"), JSON.stringify({
+        solver: "texas-solver",
+        familyId: "MTT9_50BB_BTN_BB_SRP",
+        evidenceScope: "APPROVED_MEMORY_SAFE_REVIEW_ONLY_MANIFEST_UNION",
+        solverLogCoverage: {
+          expectedLogs: 2,
+          parsedLogs: 1,
+          perBoardLogs: 1,
+          queueLogEntries: 0,
+          missingLogs: ["pkrtrainer_MTT9_50BB_BTN_BB_SRP_K83r.log"],
+          evidence: [{
+            rawFileName: "pkrtrainer_MTT9_50BB_BTN_BB_SRP_A72r.json",
+            source: "PER_BOARD_LOG",
+            sourceName: "pkrtrainer_MTT9_50BB_BTN_BB_SRP_A72r.log",
+            value: 0.42,
+          }],
+        },
+      }, null, 2), "utf8");
 
-      const result = runViewer(`--input=${input}`, `--input=${secondInput}`, `--input=${otherFamilyInput}`, `--output=${output}`, `--waves=${waves}`, `--readiness=${readiness}`);
+      const result = runViewer(`--input=${input}`, `--input=${secondInput}`, `--input=${otherFamilyInput}`, `--output=${output}`, `--waves=${waves}`, `--readiness=${readiness}`, `--accuracy-root=${accuracyRoot}`);
 
       expect(result.status).toBe(0);
+      expect(result.stdout).toContain("Accuracy: 1/2 boards; families 0 complete, 1 partial, 0 missing");
       const html = readFileSync(output, "utf8");
       expect(html).toContain('id="family-filter"');
       expect(html).toContain('id="status-filter"');
       expect(html).toContain('id="wave-filter"');
       expect(html).toContain('id="mechanical-filter"');
+      expect(html).toContain('id="accuracy-filter"');
       expect(html).toContain('<option value="2" selected>Wave 2 (1)</option>');
       expect(html).toContain('<option value="3">Wave 3 (1)</option>');
       expect(html).toContain("<dt>Families</dt><dd>2</dd>");
@@ -81,11 +104,18 @@ describe("mtt:texas-solver-viewer CLI", () => {
       expect(html).toContain('id="next-incomplete-decision"');
       expect(html).toContain('id="owner-reviewer"');
       expect(html).toContain("Mechanical context 1/2");
-      expect(html).toContain("Mechanical readiness is reduced-tree, review-only context.");
+      expect(html).toContain("Accuracy context 1/2");
+      expect(html).toContain("Mechanical readiness and solver accuracy are review-only context.");
+      expect(html).toContain("They never select, validate or recommend an owner decision.");
       expect(html).toContain('data-mechanical-ready="true"');
       expect(html).toContain('data-mechanical-ready="false"');
       expect(html).toContain("12 boards / 6 cohorts / 25.0% max cohort");
       expect(html).toContain("Next: HUMAN_POKER_REVIEW");
+      expect(html).toContain('data-accuracy="PARTIAL"');
+      expect(html).toContain("1/2 logs");
+      expect(html).toContain("median 0.42 / max 0.42");
+      expect(html).toContain("1 per-board / 0 queue / 1 missing");
+      expect(html).toContain("pkrtrainer_MTT9_50BB_BTN_BB_SRP_K83r.log");
       expect(html).toContain("pkrtrainer-texas-solver-owner-decisions-v1");
       expect(html).toContain("RECORD_TEXAS_SOLVER_OWNER_REVIEW_BATCH");
       expect(html).toContain("localStorage.setItem");
@@ -109,11 +139,19 @@ describe("mtt:texas-solver-viewer CLI", () => {
       expect((document.getElementById("wave-filter") as HTMLSelectElement).value).toBe("2");
       const waveFilter = document.getElementById("wave-filter") as HTMLSelectElement;
       const mechanicalFilter = document.getElementById("mechanical-filter") as HTMLSelectElement;
+      const accuracyFilter = document.getElementById("accuracy-filter") as HTMLSelectElement;
       waveFilter.value = "ALL";
       mechanicalFilter.value = "NEEDS_EVIDENCE";
       mechanicalFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
       expect([...document.querySelectorAll<HTMLElement>("[data-owner-row]")].filter((candidate) => !candidate.hidden).map((candidate) => candidate.dataset.family)).toEqual(["MTT9_OTHER_FAMILY"]);
       mechanicalFilter.value = "ALL";
+      accuracyFilter.value = "PARTIAL";
+      accuracyFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
+      expect([...document.querySelectorAll<HTMLElement>("[data-owner-row]")].filter((candidate) => !candidate.hidden).map((candidate) => candidate.dataset.family)).toEqual(["MTT9_50BB_BTN_BB_SRP"]);
+      accuracyFilter.value = "UNAVAILABLE";
+      accuracyFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
+      expect([...document.querySelectorAll<HTMLElement>("[data-owner-row]")].filter((candidate) => !candidate.hidden).map((candidate) => candidate.dataset.family)).toEqual(["MTT9_OTHER_FAMILY"]);
+      accuracyFilter.value = "ALL";
       waveFilter.value = "2";
       waveFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
       const reviewer = document.getElementById("owner-reviewer") as HTMLInputElement;
@@ -199,6 +237,93 @@ describe("mtt:texas-solver-viewer CLI", () => {
 
       expect(result.status).toBe(1);
       expect(result.stderr).toContain("must use REVIEW_ONLY_EVIDENCE_NOT_POKER_APPROVAL basis");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects malformed approved accuracy evidence", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-viewer-accuracy-"));
+    const input = join(directory, "review.report.json");
+    const output = join(directory, "viewer.html");
+    const accuracyRoot = join(directory, "accuracy");
+    const accuracyFamily = join(accuracyRoot, "MTT9_ACCURACY_BOUNDARY");
+    try {
+      writeFileSync(input, JSON.stringify({
+        valid: true,
+        status: "NEEDS_REVIEW",
+        productionReady: false,
+        familyId: "MTT9_ACCURACY_BOUNDARY",
+        counts: {},
+        files: [],
+        anomalies: [],
+        blockers: [],
+      }), "utf8");
+      mkdirSync(accuracyFamily, { recursive: true });
+      const validEvidence = {
+        rawFileName: "pkrtrainer_MTT9_ACCURACY_BOUNDARY_A72r.json",
+        source: "PER_BOARD_LOG",
+        value: 0.5,
+      };
+      const cases = [
+        {
+          expectedMessage: "Accuracy coverage counts are inconsistent for MTT9_ACCURACY_BOUNDARY",
+          coverage: {
+            expectedLogs: 2,
+            parsedLogs: 2,
+            perBoardLogs: 1,
+            queueLogEntries: 0,
+            missingLogs: [],
+            evidence: [validEvidence],
+          },
+        },
+        {
+          expectedMessage: "Accuracy evidence value/source is invalid for MTT9_ACCURACY_BOUNDARY",
+          coverage: {
+            expectedLogs: 1,
+            parsedLogs: 1,
+            perBoardLogs: 1,
+            queueLogEntries: 0,
+            missingLogs: [],
+            evidence: [{ ...validEvidence, value: -0.5 }],
+          },
+        },
+        {
+          expectedMessage: "Accuracy evidence value/source is invalid for MTT9_ACCURACY_BOUNDARY",
+          coverage: {
+            expectedLogs: 1,
+            parsedLogs: 1,
+            perBoardLogs: 1,
+            queueLogEntries: 0,
+            missingLogs: [],
+            evidence: [{ ...validEvidence, source: "FAMILY_LOG" }],
+          },
+        },
+        {
+          expectedMessage: "Accuracy missing log names are unsafe or duplicated for MTT9_ACCURACY_BOUNDARY",
+          coverage: {
+            expectedLogs: 1,
+            parsedLogs: 0,
+            perBoardLogs: 0,
+            queueLogEntries: 0,
+            missingLogs: ["../secret.log"],
+            evidence: [],
+          },
+        },
+      ];
+      for (const malformed of cases) {
+        writeFileSync(join(accuracyFamily, "accuracy-report.json"), JSON.stringify({
+          solver: "texas-solver",
+          familyId: "MTT9_ACCURACY_BOUNDARY",
+          evidenceScope: "APPROVED_MEMORY_SAFE_REVIEW_ONLY_MANIFEST_UNION",
+          solverLogCoverage: malformed.coverage,
+        }), "utf8");
+
+        const result = runViewer(`--input=${input}`, `--output=${output}`, `--accuracy-root=${accuracyRoot}`, "--no-waves");
+
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain(malformed.expectedMessage);
+      }
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
