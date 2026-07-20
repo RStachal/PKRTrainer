@@ -168,6 +168,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
   let outputPath = resolve(artifactDirectory, "report.json");
   for (const item of argv) {
+    if (item === "--summary") {
+      continue;
+    }
     if (item === "--json") {
       json = true;
       continue;
@@ -187,6 +190,7 @@ function usage(): string {
   return [
     "Usage:",
     "  npm run mtt:technical-acceptance",
+    "  npm run mtt:technical-acceptance -- --summary",
     "  npm run mtt:technical-acceptance -- --json",
     "  npm run mtt:technical-acceptance -- --output=artifacts/mtt-technical-acceptance/report.json",
   ].join("\n");

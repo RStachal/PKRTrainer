@@ -190,6 +190,7 @@ describe("release bundle metadata", () => {
     expect(technicalAcceptanceScript).toContain("createNpmShim");
     expect(technicalAcceptanceScript).toContain("findAvailablePort");
     expect(technicalAcceptanceScript).toContain("mtt-technical-acceptance");
+    expect(technicalAcceptanceScript).toContain('item === "--summary"');
     expect(handoffScript).toContain("nextActionPacket");
     expect(handoffScript).toContain("--packet-dir=artifacts/mtt-next-action/packet");
     expect(handoffScript).toContain("--board-dir=artifacts/mtt-intake-board");
