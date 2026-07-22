@@ -109,7 +109,7 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
   and packaged for review, but cannot be automatically staged, normalized,
   merged or promoted to runtime content.
 - Scoped core release gate: green; Full MTT NLHE remains intentionally red at 4/64.
-- Current release regression is green at 154/154 Vitest files and 787/787 tests.
+- Current release regression is green at 155/155 Vitest files and 793/793 tests.
   Vitest is capped at four parent workers because CLI integration tests spawn
   their own Node/PowerShell children; this prevents resource-driven false
   timeouts while the guarded solver worker is installed.
@@ -128,6 +128,11 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
   complete/partial action-EV and review metadata before invoking the expensive
   full candidate validator. The current baseline is 4/4 structurally safe,
   0 touched rows and 0/4/0 ready/waiting/invalid.
+- Exact reviewed subsets can now be merged into one canonical workbench with a
+  dry-run-first, fill-only command. Complete strategy pairs and EV triples may
+  arrive independently; duplicate identities, partial groups, immutable drift
+  or conflicting populated values reject the whole write. This removes the
+  one-shot 118,638-row handoff requirement without weakening candidate review.
 
 ## Priority Order
 
@@ -234,9 +239,11 @@ Status: DEFERRED AFTER CORE V1
 
 ## Next Exact Action
 
-Complete the four exact owned six-max CHIP_EV `normalized.json` exports, then
-run the batch candidate and batch-stage commands with their explicit write
-tokens. In parallel, allow the owner-directed solver evidence to proceed through
+Merge each completed reviewed six-max CHIP_EV export chunk with
+`mtt:sixmax-preflop-merge-chunk`, using dry-run before its explicit write token.
+When one exact 118,638-row workbench is complete, run the incremental batch
+candidate and batch-stage commands; it does not need to wait for the other three
+slots. In parallel, allow the owner-directed solver evidence to proceed through
 the mechanical packet audit and owner review. Execute subsequent work strictly
 from `Agents/mtt-lean-execution-queue.md`; do not promote any result or reopen
 full-library intake without its named human/data gate.
@@ -261,6 +268,7 @@ npm run mtt:postflop-action-ev-intake -- --all --write-template --refresh-blank-
 
 | Date | Priority | Result | Evidence |
 | --- | --- | --- | --- |
+| 2026-07-22 | P1 / Progressive reviewed chunk merge | Exact six-max exports no longer require a one-shot full-file handoff | Added a shared atomic fill-only merge contract and dry-run-first CLI. It binds each chunk row to the immutable canonical decision, accepts complete strategy pairs and EV triples independently, preserves blanks, is idempotent and blocks the whole write on conflicts or partial groups. Confirmed writes recheck SHA-256 and use backup replacement; no values, candidates, permissions or production modules are generated. Full regression passed 155/155 files and 793/793 tests; typecheck, registry, Core 4/4 plus 7/7, ranges, raw intake guard, build, precache and bundle budget passed |
 | 2026-07-22 | P4 / Solver recovery resilience | Intentional RAM stops no longer look like native solver crashes | The guard now records a structured parameter-bound stop before terminating its owned solver. Runner failures carry `RESOURCE_GUARD_STOP` or `NATIVE_SOLVER_EXIT`; the worker exits a guarded recovery cycle cleanly and retries later without changing canonical raw data. Live history classifies 2 guarded, 0 explicit native and 1 legacy-unclassified exit; recovery remains 426/439 with 13 pending. Four PowerShell parsers, list-only recovery, typecheck and focused tests 14/14 passed |
 | 2026-07-22 | P1 / Six-max progressive intake | Partial owner work is measurable without premature full validation | Added immutable-structure and editable-field inspection over all 474,552 workbench rows. Whole strategy pairs in a partial chunk remain `WAITING`; structural drift, one-sided strategy and partial EV sets stay `INVALID`. Live status reports 4/4 structurally safe, 0 touched and 0/4/0 ready/waiting/invalid without writes. Full regression passed 154/154 files and 787/787 tests; typecheck, registry, Core 4/4 plus 7/7, ranges, intake guard, build, precache and bundle budget passed |
 | 2026-07-22 | P1 / Six-max action-EV-ready intake | Legacy blank CSVs upgraded without touching owner work | Added a shared exact-row scaffold contract and guarded recurring refresh. The live migration refreshed 4/4 118,638-row legacy blanks; its repeat wrote zero and reports current/action-EV columns/blank 4/4, nonblank 0, protected stale 0 and generated values none. Any strategy, EV, reviewer, source, note or malformed structure is protected. Focused tests passed 29/29; full release passed 154/154 files and 785/785 tests plus the complete integrity chain |

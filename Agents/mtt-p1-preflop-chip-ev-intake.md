@@ -146,6 +146,39 @@ The current live baseline is 4/4 measurable and structurally safe workbenches,
 0/4/0 exports ready/waiting/invalid. No values were generated and no workbench
 CSV was rewritten by the measurement pass.
 
+## Progressive reviewed-chunk merge
+
+A reviewed export does not have to arrive as one 118,638-row file. Prepare a
+smaller CSV containing the exact current 20-column header and only the completed
+decision rows, then preflight it against its canonical workbench:
+
+```powershell
+npm run mtt:sixmax-preflop-merge-chunk -- --pack-id=<packId> --chunk=<reviewed-chunk.csv> --summary
+```
+
+Dry-run is the default and never changes the workbench. After checking the
+matched, changed, unchanged, conflict and progress counts, apply that exact
+chunk explicitly:
+
+```powershell
+npm run mtt:sixmax-preflop-merge-chunk -- --pack-id=<packId> --chunk=<reviewed-chunk.csv> --write --confirm=MERGE_REVIEWED_MTT_SIXMAX_PREFLOP_CHUNK
+```
+
+The first 11 identity cells must match an existing canonical row exactly.
+`strictActions` and `lenientActions` are an atomic pair; `actionEvsBb` and both
+thresholds are an independent atomic triple; reviewer and date are an atomic
+pair. Blank incoming editable cells never delete existing work. An identical
+chunk is an idempotent no-op, while any differing populated value, duplicate
+decision, malformed group or immutable mismatch blocks the entire write.
+Immediately before a backup-based replacement, the command verifies that the
+workbench SHA-256 is unchanged.
+
+This is only a private workbench merge. It generates no poker value, candidate,
+permission or production module. `sourceReferenceId` remains optional for the
+owner-confirmed `OWNED_SOLVER_EXPORT` path. Full 118,638-row coverage must still
+pass the canonical batch candidate validator, explicit staging and separate
+promotion gates below.
+
 Its output stays under `artifacts/mtt-sixmax-preflop-intake/`. It writes only
 `normalized.candidate.json` and a concise `BATCH_REPORT.md`; permission mode
 `CANONICAL_STAGED_MANIFEST` means the owner-confirmed manifest remains in its

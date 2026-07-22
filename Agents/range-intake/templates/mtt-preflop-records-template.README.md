@@ -92,6 +92,19 @@ inspected in `artifacts/`, but they must not be copied into
 The scaffold command creates empty rows only. It intentionally leaves
 `strictActions` and `lenientActions` blank so no strategy values are inferred.
 
+For one of the four exact six-max CHIP_EV workbenches, a reviewed subset can be
+merged without constructing a full-size replacement CSV:
+
+```powershell
+npm run mtt:sixmax-preflop-merge-chunk -- --pack-id=<packId> --chunk=<reviewed-chunk.csv> --summary
+npm run mtt:sixmax-preflop-merge-chunk -- --pack-id=<packId> --chunk=<reviewed-chunk.csv> --write --confirm=MERGE_REVIEWED_MTT_SIXMAX_PREFLOP_CHUNK
+```
+
+The first command is read-only. The confirmed command fills only blank editable
+cells, accepts identical values as already applied and rejects the whole chunk
+on any conflict or immutable-row mismatch. It does not build or promote a
+`normalized.json`.
+
 The compatible filename `permission.json` means production provenance/audit
 metadata in this project. It is not the user subscription/payment permission
 model.

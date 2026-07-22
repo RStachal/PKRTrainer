@@ -79,6 +79,8 @@ interface ScaffoldInspectOptions {
   expectedRows?: number;
 }
 
+type ScaffoldMergeOptions = ScaffoldInspectOptions;
+
 export interface MttPreflopCsvScaffoldDocument {
   completeSlotRows: number;
   document: string;
@@ -111,6 +113,19 @@ export interface MttPreflopCsvScaffoldInspection {
   stale: boolean;
   structuralErrors: string[];
   structureSafe: boolean;
+}
+
+export interface MttPreflopCsvChunkMergeResult {
+  afterProgress: MttPreflopCsvScaffoldProgress | null;
+  beforeProgress: MttPreflopCsvScaffoldProgress;
+  chunkRows: number;
+  conflictRows: number;
+  document: string | null;
+  errors: string[];
+  matchedRows: number;
+  plannedChangedRows: number;
+  unchangedRows: number;
+  valid: boolean;
 }
 
 export function buildMttPreflopCsvScaffoldDocument(
@@ -249,6 +264,127 @@ export function inspectMttPreflopCsvScaffold(
   };
 }
 
+export function mergeMttPreflopCsvScaffoldChunk(
+  workbenchInput: string,
+  chunkInput: string,
+  packId: string,
+  options: ScaffoldMergeOptions = {},
+): MttPreflopCsvChunkMergeResult {
+  const workbenchInspection = inspectMttPreflopCsvScaffold(workbenchInput, packId, options);
+  const result: MttPreflopCsvChunkMergeResult = {
+    afterProgress: null,
+    beforeProgress: workbenchInspection.progress,
+    chunkRows: 0,
+    conflictRows: 0,
+    document: null,
+    errors: [],
+    matchedRows: 0,
+    plannedChangedRows: 0,
+    unchangedRows: 0,
+    valid: false,
+  };
+  if (!workbenchInspection.current) {
+    result.errors.push("Workbench must use the current action-EV scaffold header.");
+  }
+  if (!workbenchInspection.structureSafe) {
+    result.errors.push(...workbenchInspection.structuralErrors);
+  }
+  if (result.errors.length > 0) return result;
+
+  const workbench = parseCsvTable(workbenchInput);
+  const chunk = parseCsvTable(chunkInput);
+  if (workbench.unclosedQuote) result.errors.push("Workbench contains an unclosed quoted cell.");
+  if (chunk.unclosedQuote) result.errors.push("Chunk contains an unclosed quoted cell.");
+  if (chunk.rows.length === 0) result.errors.push("Chunk CSV is empty.");
+  else if (!sameRow(removeBom(chunk.rows[0]), MTT_PREFLOP_CSV_SCAFFOLD_HEADER)) {
+    result.errors.push("Chunk must use the exact current action-EV scaffold header.");
+  }
+  const chunkBody = chunk.rows.slice(1);
+  result.chunkRows = chunkBody.length;
+  if (chunkBody.length === 0) result.errors.push("Chunk has no decision rows.");
+  if (result.errors.length > 0) return result;
+
+  const mergedRows = workbench.rows.map((row) => [...row]);
+  const workbenchRowByKey = new Map<string, number>();
+  for (let index = 1; index < mergedRows.length; index += 1) {
+    workbenchRowByKey.set(immutableRowKey(mergedRows[index]), index);
+  }
+  const seenChunkKeys = new Set<string>();
+
+  for (let chunkIndex = 0; chunkIndex < chunkBody.length; chunkIndex += 1) {
+    const row = chunkBody[chunkIndex];
+    const rowNumber = chunkIndex + 2;
+    if (row.length !== MTT_PREFLOP_CSV_SCAFFOLD_HEADER.length) {
+      addError(result.errors, `chunk row ${rowNumber} has ${row.length} cells; expected ${MTT_PREFLOP_CSV_SCAFFOLD_HEADER.length}.`);
+      continue;
+    }
+    const key = immutableRowKey(row);
+    if (seenChunkKeys.has(key)) {
+      addError(result.errors, `chunk row ${rowNumber} duplicates an immutable decision key.`);
+      continue;
+    }
+    seenChunkKeys.add(key);
+    const workbenchIndex = workbenchRowByKey.get(key);
+    if (workbenchIndex === undefined) {
+      addError(result.errors, `chunk row ${rowNumber} does not match an immutable workbench decision.`);
+      continue;
+    }
+
+    const strategyFields = populatedFields(row, [11, 12]);
+    const actionEvFields = populatedFields(row, [13, 14, 15]);
+    const reviewFields = populatedFields(row, [17, 18]);
+    if (strategyFields === 1) {
+      addError(result.errors, `chunk row ${rowNumber} must populate strictActions and lenientActions together.`);
+      continue;
+    }
+    if (actionEvFields > 0 && actionEvFields < 3) {
+      addError(result.errors, `chunk row ${rowNumber} must populate all three action-EV cells together.`);
+      continue;
+    }
+    if (reviewFields === 1) {
+      addError(result.errors, `chunk row ${rowNumber} must populate reviewer and reviewedAt together.`);
+      continue;
+    }
+    if (strategyFields === 0 && actionEvFields === 0) {
+      addError(result.errors, `chunk row ${rowNumber} has no complete strategy or action-EV payload.`);
+      continue;
+    }
+
+    result.matchedRows += 1;
+    const target = mergedRows[workbenchIndex];
+    let changed = false;
+    let conflict = false;
+    for (let columnIndex = MTT_PREFLOP_CSV_IMMUTABLE_COLUMNS; columnIndex < MTT_PREFLOP_CSV_SCAFFOLD_HEADER.length; columnIndex += 1) {
+      const column = MTT_PREFLOP_CSV_SCAFFOLD_HEADER[columnIndex];
+      const incoming = mergeValue(column, row[columnIndex]);
+      if (incoming.length === 0) continue;
+      const existing = mergeValue(column, target[columnIndex]);
+      if (existing.length === 0) {
+        target[columnIndex] = incoming;
+        changed = true;
+      } else if (existing !== incoming) {
+        conflict = true;
+        addError(result.errors, `chunk row ${rowNumber} conflicts with existing ${column}.`);
+      }
+    }
+    if (conflict) result.conflictRows += 1;
+    else if (changed) result.plannedChangedRows += 1;
+    else result.unchangedRows += 1;
+  }
+
+  if (result.errors.length > 0) return result;
+  const document = serializeCsvRows(mergedRows);
+  const afterInspection = inspectMttPreflopCsvScaffold(document, packId, options);
+  if (!afterInspection.current || !afterInspection.structureSafe) {
+    result.errors.push("Merged workbench failed its immutable current-scaffold invariant.");
+    return result;
+  }
+  result.afterProgress = afterInspection.progress;
+  result.document = document;
+  result.valid = true;
+  return result;
+}
+
 function emptyProgress(): MttPreflopCsvScaffoldProgress {
   return {
     actionEvCompleteRows: 0,
@@ -374,6 +510,38 @@ function requiredPreflopIdentity(packId: string) {
     throw new Error(`Pack id is not a legal MTT preflop production slot: ${packId}`);
   }
   return identity;
+}
+
+interface CsvTable {
+  rows: string[][];
+  unclosedQuote: boolean;
+}
+
+function parseCsvTable(input: string): CsvTable {
+  const rows: string[][] = [];
+  const parser = forEachCsvRow(input, (row) => rows.push(row));
+  if (rows.length > 0) rows[0] = removeBom(rows[0]);
+  return { rows, unclosedQuote: parser.unclosedQuote };
+}
+
+function immutableRowKey(row: readonly string[]): string {
+  return JSON.stringify(row.slice(0, MTT_PREFLOP_CSV_IMMUTABLE_COLUMNS));
+}
+
+function populatedFields(row: readonly string[], indexes: readonly number[]): number {
+  return indexes.filter((index) => (row[index] ?? "").trim().length > 0).length;
+}
+
+function mergeValue(column: string, rawValue: string | undefined): string {
+  const value = (rawValue ?? "").trim();
+  if (column === "notes" && (value.length === 0 || value === MTT_PREFLOP_CSV_SCAFFOLD_NOTE)) {
+    return "";
+  }
+  return value;
+}
+
+function serializeCsvRows(rows: readonly (readonly string[])[]): string {
+  return `${rows.map((row) => row.map(csvCell).join(",")).join("\n")}\n`;
 }
 
 function forEachCsvRow(input: string, visit: (row: string[]) => void): { unclosedQuote: boolean } {

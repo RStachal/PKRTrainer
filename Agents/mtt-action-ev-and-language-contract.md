@@ -104,6 +104,20 @@ This command can replace only an exact full-size legacy scaffold proven to be
 blank. A strategy, EV, reviewer, source or notes edit protects the file. It does
 not generate values, build a candidate or promote a range.
 
+Reviewed strategy and counterfactual-EV rows may be added in bounded chunks
+without waiting for a complete slot:
+
+```powershell
+npm run mtt:sixmax-preflop-merge-chunk -- --pack-id=<packId> --chunk=<reviewed-chunk.csv> --summary
+npm run mtt:sixmax-preflop-merge-chunk -- --pack-id=<packId> --chunk=<reviewed-chunk.csv> --write --confirm=MERGE_REVIEWED_MTT_SIXMAX_PREFLOP_CHUNK
+```
+
+The merge is fill-only and atomic. Strategy columns must arrive together, all
+three EV columns must arrive together, blanks cannot erase prior work and a
+conflicting populated value rejects the complete chunk. This command validates
+transport and scaffold identity only; canonical candidate validation remains
+responsible for poker action syntax and numerical EV rules.
+
 Generate the exact blank FLOP-pilot workbench with:
 
 ```powershell

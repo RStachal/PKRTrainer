@@ -866,6 +866,36 @@ the next pending item is `Q76mono`, proving no repeated-board loop. Four script
 parsers, an accuracy list-only execution, typecheck and focused tests 14/14
 passed. Recovery remains source-safe at 426/439 with 13 logs pending.
 
+### OPS-62 - Merge reviewed six-max preflop chunks atomically
+
+Status: `DONE 2026-07-22`
+Depends on: `OPS-60`
+Lane: `MECHANICAL_WITH_EXPLICIT_WRITE`
+
+The four exact workbenches no longer require an operator to replace one full
+118,638-row CSV in a single handoff. A reviewed subset with the exact current
+header can be preflighted and merged by immutable decision identity. Strategy
+columns form one atomic pair, action EV plus both thresholds form an independent
+atomic triple and reviewer/date form a pair. Empty incoming cells preserve
+existing work. Repeating identical data is a no-op; any conflicting populated
+cell, duplicate key, partial group or changed immutable cell rejects the entire
+merge.
+
+```powershell
+npm run mtt:sixmax-preflop-merge-chunk -- --pack-id=<packId> --chunk=<reviewed-chunk.csv> --summary
+npm run mtt:sixmax-preflop-merge-chunk -- --pack-id=<packId> --chunk=<reviewed-chunk.csv> --write --confirm=MERGE_REVIEWED_MTT_SIXMAX_PREFLOP_CHUNK
+```
+
+Dry-run is mandatory operator practice. The write path rechecks the workbench
+SHA-256 after preflight and uses backup-based replacement. It cannot create
+strategy values, candidates, permissions or production content, and it does not
+replace the canonical full-workbench candidate validator. Focused contract and
+full-size CLI tests pass 12/12 plus typecheck. The live workbenches were not
+modified and remain at the OPS-60 zero-content baseline until an owned reviewed
+chunk actually exists. Full regression passes 155/155 files and 793/793 tests;
+typecheck, registry drift, scoped Core 4/4 plus 7/7, ranges, raw intake guard,
+production build, precache and bundle budget pass.
+
 ## Phase DEP - Core Deployment Closeout
 
 ### DEP-00 - Preserve verified FTP artifact
@@ -1517,6 +1547,7 @@ Use this exact handoff prompt after changing models:
 | 2026-07-22 | OPS-59 | DONE | Upgraded the four exact 118,638-row six-max preflop workbenches from the legacy header to the current optional action-EV columns using a full-structure, fail-closed blank invariant. The first live pass refreshed 4/4 and the repeat wrote 0; current/blank/action-EV columns are 4/4, nonblank/protected stale are 0 and generated values remain none. The ten-minute task now keeps and reports this state. Focused tests passed 29/29; full release passed 154/154 files, 785/785 tests and the complete integrity chain. |
 | 2026-07-22 | OPS-60 | DONE | Added source-safe partial-progress observability for all four six-max preflop workbenches and separated editable owner fields from the immutable 118,638-row scaffold structure. A whole-row chunk now remains `WAITING` without invoking full candidate validation; changed structure, one-sided strategy or partial EV remains `INVALID`. The live pass measured 474,552/474,552 rows, 4/4 structurally safe, 0 touched and 0/4/0 ready/waiting/invalid without writing strategy or EV. The recurring task exposes the same strategy, EV and review counters. Full release passed 154/154 files and 787/787 tests plus the integrity chain. |
 | 2026-07-22 | OPS-61 | DONE | Classified solver termination causes end to end. Future guard events bind RAM, PID and parameter before termination; runner telemetry distinguishes guarded stops from native exits, and accuracy recovery defers cleanly for the next resource-safe trigger. Live legacy correlation identifies 2/3 exits as guard stops, with 1 unclassified historical exit and no explicit native exit. The new worker waits at the RAM gate with 13 logs pending and `Q76mono` next; focused tests passed 14/14. |
+| 2026-07-22 | OPS-62 | DONE | Added dry-run-first atomic merging for reviewed six-max preflop subsets. Exact immutable identities, complete strategy/EV/review field groups, fill-only semantics, idempotence, conflict-wide rejection, pre-write SHA-256 and backup replacement are enforced. The command generates no poker values or production artifacts; full regression passed 155/155 files and 793/793 tests plus the complete integrity chain, and live blank workbenches were not touched. |
 | 2026-07-20 | OPS-51 | DONE | Fixed UTF-16LE TexasSolver log intake and added a fast fail-closed staging refresh over already validated cumulative reports. The live pass refreshed 20/20 family summaries and recovered traceable exploitability for 403/439 approved boards across all 20 families; an immediate repeat wrote nothing. Protocol warnings fell from 38 to 20, leaving only human caveats and owner verdicts. Focused tests passed 38/38; typecheck, scoped Core and production build passed. |
 | 2026-07-20 | RELEASE-FTP-03 | DONE | Packaged source commit `c44efebdad96` after the complete 152-file / 762-test MTT Core release gate and four-viewport Chrome QA as `deploy/pkrtrainer-ftp-20260720-141237-c44efebdad96-mtt-core-p1-incremental.zip`. Portable forward-slash ZIP reconciliation passed 22/22 files with 0 missing, 0 extra and 0 hash mismatches; SHA-256 is `2374090EBAB10A4E2E38D9CD04D03C4457E0C6E561561F01C7A18093CC192F67`. |
 | 2026-07-20 | OWNER-REVIEW-06 | DONE | Owner dashboard progress now counts only export-valid decisions, marks missing reviewer/date/scope/caveats, and focuses the next incomplete visible row without selecting a poker verdict. Current dashboard regenerated over 53 reports with 20/20 mechanical family context and 0 preselected decisions. Focused reviewer/writer/autostart tests passed 17/17, typecheck passed, and browser QA removed the 390px global horizontal overflow. |
