@@ -98,6 +98,8 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:texas-solver-review-protocol"]).toBe("vite-node scripts/checkTexasSolverReviewProtocol.mts");
     expect(pkg.scripts["mtt:texas-solver-owner-review"]).toBe("vite-node scripts/recordTexasSolverOwnerReview.mts");
     expect(pkg.scripts["mtt:texas-solver-accuracy-recovery"]).toBe("vite-node scripts/prepareTexasSolverAccuracyRecovery.mts");
+    expect(pkg.scripts["mtt:texas-solver-accuracy-handoff"])
+      .toContain("finalize-texas-solver-accuracy-recovery.ps1");
     expect(pkg.scripts["mtt:stage-texas-solver"]).toBe("vite-node scripts/stageTexasSolverExports.mts");
     expect(pkg.scripts["mtt:texas-solver-pack"]).toBe("vite-node scripts/checkTexasSolverParameterPack.mts");
     expect(pkg.scripts["mtt:texas-solver-review"]).toBe("vite-node scripts/extractTexasSolverReview.mts");

@@ -12,6 +12,7 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
 $Runner = Join-Path $PSScriptRoot "run-console-selected.ps1"
 $Watcher = Join-Path $PSScriptRoot "watch-ingest-completed.ps1"
 $ResourceGuard = Join-Path $PSScriptRoot "watch-texas-solver-resource-guard.ps1"
+$AccuracyHandoff = Join-Path $PSScriptRoot "finalize-texas-solver-accuracy-recovery.ps1"
 $OutputBase = Join-Path $RepoRoot "Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver"
 $ArtifactsDir = Join-Path $RepoRoot "artifacts\texas-solver-low-memory"
 $FailureReportPath = Join-Path $ArtifactsDir "solver-failures.ndjson"
@@ -310,7 +311,54 @@ function Invoke-AccuracyRefresh {
   if ($exitCode -ne 0) { throw "Incremental staged accuracy refresh failed with exit code $exitCode." }
 }
 
+function Get-RecoveryCanonicalCheckpoint($Recovery) {
+  $files = @($Recovery.files)
+  if ($files.Count -lt 1) { throw "Accuracy recovery reports pending logs but has no next recovery file." }
+  $relativePath = [string]$files[0].canonicalRawPath
+  if ([string]::IsNullOrWhiteSpace($relativePath)) { throw "Next accuracy recovery file has no canonical raw path." }
+  $path = if ([System.IO.Path]::IsPathRooted($relativePath)) {
+    [System.IO.Path]::GetFullPath($relativePath)
+  } else {
+    [System.IO.Path]::GetFullPath((Join-Path $RepoRoot ($relativePath -replace '/', '\')))
+  }
+  $allowedRoot = [System.IO.Path]::GetFullPath($OutputBase).TrimEnd('\') + '\'
+  if (-not $path.StartsWith($allowedRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "Canonical recovery checkpoint is outside the TexasSolver evidence root: $path"
+  }
+  if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Canonical recovery checkpoint is missing: $path" }
+  $item = Get-Item -LiteralPath $path
+  return [pscustomobject]@{
+    Path = $path
+    Length = [long]$item.Length
+    LastWriteUtc = $item.LastWriteTimeUtc.ToString("o")
+    Sha256 = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash
+  }
+}
+
+function Assert-RecoveryCanonicalCheckpoint($Before) {
+  if (-not (Test-Path -LiteralPath $Before.Path -PathType Leaf)) {
+    throw "Accuracy-only solve removed the canonical raw checkpoint: $($Before.Path)"
+  }
+  $item = Get-Item -LiteralPath $Before.Path
+  $hash = (Get-FileHash -LiteralPath $Before.Path -Algorithm SHA256).Hash
+  if ([long]$item.Length -ne [long]$Before.Length -or
+      $item.LastWriteTimeUtc.ToString("o") -ne [string]$Before.LastWriteUtc -or
+      $hash -cne [string]$Before.Sha256) {
+    throw "Accuracy-only solve changed the canonical raw checkpoint: $($Before.Path)"
+  }
+  Write-WorkerLog "Verified canonical raw SHA-256 unchanged: $($Before.Path)"
+}
+
+function Invoke-AccuracyHandoff {
+  $powerShell = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+  & $powerShell -NoProfile -ExecutionPolicy Bypass -File $AccuracyHandoff 2>&1 |
+    ForEach-Object { Write-WorkerLog ([string]$_) }
+  $exitCode = if ($null -eq $LASTEXITCODE) { 0 } else { [int]$LASTEXITCODE }
+  if ($exitCode -ne 0) { throw "Accuracy recovery owner handoff failed with exit code $exitCode." }
+}
+
 if (-not (Test-Path -LiteralPath $Runner)) { throw "TexasSolver runner not found: $Runner" }
+if (-not (Test-Path -LiteralPath $AccuracyHandoff)) { throw "TexasSolver accuracy handoff not found: $AccuracyHandoff" }
 New-Item -ItemType Directory -Force -Path $ArtifactsDir | Out-Null
 $mutex = New-Object System.Threading.Mutex($false, $MutexName)
 $hasMutex = $false
@@ -346,6 +394,7 @@ try {
     Write-WorkerLog "Accuracy recovery ready: $count missing per-board logs across $($initialRecovery.counts.recoveryFamilies) families; canonical raw checkpoints are read-only."
     if ($count -eq 0) {
       Write-WorkerLog "All approved solver accuracy logs are present; no TexasSolver work remains."
+      Invoke-AccuracyHandoff
       exit 0
     }
     & $Npm run mtt:texas-solver-scenario-audit -- "--manifest=$AccuracyRecoveryManifestPath" --summary 2>&1 |
@@ -356,6 +405,7 @@ try {
   }
   if ($DryRun) { exit 0 }
   $guardProcess = Start-ResourceGuard
+  $completedRecovery = $null
   try {
     if ($AllRawPhasesComplete) {
       $previousPending = $null
@@ -367,14 +417,17 @@ try {
         }
         if ($pending -eq 0) { break }
         $previousPending = $pending
+        $canonicalBefore = Get-RecoveryCanonicalCheckpoint $recovery
         & $Runner -ParameterRoot $AccuracyRecoveryParameterRoot -OutputBase $OutputBase -Limit 1 -AccuracyOnly `
           -MinimumFreeMemoryPercent $MinimumFreeMemoryPercent -MaximumCpuPercent $MaximumCpuPercent `
           -ProcessPriority BelowNormal -ContinueOnSolverFailure -FailureReportPath $FailureReportPath 2>&1 |
           ForEach-Object { Write-WorkerLog ([string]$_) }
         $recoveryExitCode = if ($null -eq $LASTEXITCODE) { 0 } else { [int]$LASTEXITCODE }
         if ($recoveryExitCode -ne 0) { throw "Accuracy-only TexasSolver runner failed with exit code $recoveryExitCode." }
+        Assert-RecoveryCanonicalCheckpoint $canonicalBefore
         Invoke-AccuracyRefresh
       } while ($true)
+      $completedRecovery = $recovery
       Write-WorkerLog "Accuracy recovery completed; approved staged evidence is now $($recovery.counts.parsedLogs)/$($recovery.counts.expectedLogs)."
     } else {
       Start-IngestWatcher
@@ -387,6 +440,9 @@ try {
     if ($null -ne $guardProcess -and -not $guardProcess.HasExited) {
       Stop-Process -Id $guardProcess.Id -Force -ErrorAction SilentlyContinue
     }
+  }
+  if ($AllRawPhasesComplete -and $null -ne $completedRecovery) {
+    Invoke-AccuracyHandoff
   }
   # A PowerShell script with only checkpoint skips can leave LASTEXITCODE unset.
   # Treat that as its normal zero exit, while preserving a real native failure.

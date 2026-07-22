@@ -81,7 +81,8 @@ attempt fail, or when a task explicitly changes strategy meaning or release scop
   unique family/board pairs, 20/20 valid cumulative reports and 20/20 mechanical
   family shapes. Approved per-board accuracy is traceable for 403/439 boards;
   `OPS-56` owns the isolated 36-log recovery queue across 10 families. These
-  counts do not substitute for the 0/20 owner decisions.
+  counts do not substitute for the 0/20 owner decisions. `OPS-57` is armed to
+  refresh the final reviewer handoff only after recovery reaches 439/439.
 - Action-EV comparison: implementation complete, data not ready. Core preflop is
   `0/493818` complete decisions across `0/4` packs; scoped FLOP pilots are
   `0/972` across `0/7`. Frequency-only solver output is excluded.
@@ -685,6 +686,13 @@ emergency memory guard make Windows restart or interruption resumable without
 duplicating a worker. This path cannot write review decisions, normalized
 strategy, action EV or production approval.
 
+Each new worker process also fingerprints the exact selected canonical raw JSON
+with SHA-256, length and last-write time before solving and verifies all three
+again before ingest. A mismatch fails the worker before staged accuracy can
+advance. The prior worker was stopped cleanly between boards at 407/439; its
+next scheduled/restart process loads the stronger invariant without repeating a
+completed checkpoint.
+
 ```powershell
 npm run mtt:texas-solver-accuracy-recovery -- --summary
 npm run mtt:texas-solver-low-memory-status
@@ -699,6 +707,43 @@ PowerShell parsing passes for all three changed scripts, focused regression is
 31/31, full regression is 153/153 files and 775/775 tests, and typecheck,
 registry drift, scoped Core, ranges, production build, precache and bundle
 budget are green.
+
+### OPS-57 - Finalize the complete accuracy reviewer handoff
+
+Status: `READY_AFTER_OPS-56`
+Depends on: `OPS-56`, `OPS-54`
+Lane: `REPEATABLE`
+
+The ten-minute cycle can defer while TexasSolver holds memory, so staged
+accuracy may advance while the owner dashboard and blank fingerprint template
+remain on an older snapshot. A separate mutex-protected finalizer now closes
+that gap. It is invoked automatically when recovery reaches zero pending logs,
+or by the next scheduled worker if the prior process ended immediately after
+its last ingest.
+
+The finalizer first revalidates exact 439/439 recovery evidence and refuses to
+run alongside `console_solver.exe`. It then refreshes the source-safe review
+protocol, mechanical readiness, canonical owner dashboard and only the blank v2
+owner template. It writes a local completion report binding the handoff to the
+accuracy evidence timestamp. Status compares that timestamp and all counts, so
+an older completion report is displayed as non-current rather than green.
+
+```powershell
+npm run mtt:texas-solver-accuracy-handoff -- -DryRun
+npm run mtt:texas-solver-low-memory-status
+```
+
+Acceptance before completion: dry-run reports the exact parsed/pending counts
+and writes no reviewer artifact. Acceptance after completion: status reports
+`accuracy handoff: valid=True, current=True`, accuracy 439/439, blank owner
+decisions 0/20 and a completion timestamp. No command in this task records a
+poker verdict, normalized strategy, action EV or production approval.
+
+Implementation baseline: PowerShell parsing passes for the finalizer, worker
+and task manager; focused recovery/reviewer/Windows regression passes 43/43 and
+the complete regression passes 153/153 files and 776/776 tests. Typecheck,
+registry drift, scoped Core 4/4 plus 7/7, ranges, production build, precache and
+bundle budget are green.
 
 ## Phase DEP - Core Deployment Closeout
 
@@ -1341,6 +1386,7 @@ Use this exact handoff prompt after changing models:
 | 2026-07-22 | OPS-54 | DONE | The ten-minute cycle now regenerates only the blank v2 owner template after a successful canonical dashboard refresh and exposes schema, fingerprint, verdict, timestamp and exit health in task status. A real cycle exited 0 and reported template ready with 20/20 fingerprints and 0 selected decisions. PowerShell parser checks and Windows automation tests passed 9/9; no human decision or strategy file was written. |
 | 2026-07-22 | OPS-55 | DONE | Rebaselined the full product after owner workflow hardening: 152/152 Vitest files and 771/771 tests passed, followed by typecheck, registry drift, scoped Core 4/4 plus 7/7, build, ranges, precache and bundle budget. Remaining red states are explicit external data/human gates: six-max 0 records, owner 0/20 and action EV 0/493818 preflop plus 0/972 scoped FLOP. |
 | 2026-07-22 | OPS-56 | ACTIVE | Prepared a fail-closed, restart-safe queue for exactly 36 missing approved per-board accuracy logs across 10 families. It solves one log at a time, preserves all 439 canonical raw checkpoints, refreshes staged accuracy after every success and cannot write poker review or production strategy. Initial preparation and scenario audit are valid at 403/439 with 36/36 recovery inputs; full regression passed 153 files / 775 tests plus the complete release integrity chain. |
+| 2026-07-22 | OPS-57 | READY_AFTER_OPS-56 | Added per-board canonical raw SHA-256/length/time invariants and a mutex-protected finalizer that refreshes protocol, readiness, owner dashboard and only the blank v2 fingerprint template after accuracy reaches 439/439. Live dry-run correctly waited at 407/439 with 32 pending and no reviewer write. Parser and focused regression passed; the full baseline is 153/153 files and 776/776 tests plus the complete green release integrity chain. |
 | 2026-07-20 | OPS-51 | DONE | Fixed UTF-16LE TexasSolver log intake and added a fast fail-closed staging refresh over already validated cumulative reports. The live pass refreshed 20/20 family summaries and recovered traceable exploitability for 403/439 approved boards across all 20 families; an immediate repeat wrote nothing. Protocol warnings fell from 38 to 20, leaving only human caveats and owner verdicts. Focused tests passed 38/38; typecheck, scoped Core and production build passed. |
 | 2026-07-20 | RELEASE-FTP-03 | DONE | Packaged source commit `c44efebdad96` after the complete 152-file / 762-test MTT Core release gate and four-viewport Chrome QA as `deploy/pkrtrainer-ftp-20260720-141237-c44efebdad96-mtt-core-p1-incremental.zip`. Portable forward-slash ZIP reconciliation passed 22/22 files with 0 missing, 0 extra and 0 hash mismatches; SHA-256 is `2374090EBAB10A4E2E38D9CD04D03C4457E0C6E561561F01C7A18093CC192F67`. |
 | 2026-07-20 | OWNER-REVIEW-06 | DONE | Owner dashboard progress now counts only export-valid decisions, marks missing reviewer/date/scope/caveats, and focuses the next incomplete visible row without selecting a poker verdict. Current dashboard regenerated over 53 reports with 20/20 mechanical family context and 0 preselected decisions. Focused reviewer/writer/autostart tests passed 17/17, typecheck passed, and browser QA removed the 390px global horizontal overflow. |

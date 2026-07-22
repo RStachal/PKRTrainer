@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
@@ -25,6 +26,7 @@ const BACKGROUND_START_PATH = resolve(SOLVER_DIR, "start-background-solve.ps1");
 const WATCHER_PATH = resolve(SOLVER_DIR, "watch-ingest-completed.ps1");
 const LOW_MEMORY_WORKER_PATH = resolve(SOLVER_DIR, "run-texas-solver-low-memory.ps1");
 const LOW_MEMORY_MANAGER_PATH = resolve(SOLVER_DIR, "manage-texas-solver-low-memory.ps1");
+const ACCURACY_HANDOFF_PATH = resolve(SOLVER_DIR, "finalize-texas-solver-accuracy-recovery.ps1");
 const LEAN_QUEUE_PATH = resolve(ROOT, "Agents/mtt-lean-execution-queue.md");
 const PRIORITIES_PATH = resolve(ROOT, "Agents/mtt-completion-priorities.md");
 
@@ -431,6 +433,12 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(worker).toContain("-Limit 1 -AccuracyOnly");
     expect(worker).toContain("Accuracy recovery did not advance");
     expect(worker).toContain("canonical raw checkpoints are read-only");
+    expect(worker).toContain("Get-RecoveryCanonicalCheckpoint");
+    expect(worker).toContain("Get-FileHash -LiteralPath $path -Algorithm SHA256");
+    expect(worker).toContain("Assert-RecoveryCanonicalCheckpoint $canonicalBefore");
+    expect(worker).toContain("Verified canonical raw SHA-256 unchanged");
+    expect(worker).toMatch(/Assert-RecoveryCanonicalCheckpoint \$canonicalBefore\s+Invoke-AccuracyRefresh/);
+    expect(worker).toContain("Invoke-AccuracyHandoff");
     const runner = readFileSync(RUNNER_PATH, "utf8");
     expect(runner).toContain("[switch]$AccuracyOnly");
     expect(runner).toContain("AccuracyOnly cannot be combined with Force");
@@ -441,6 +449,28 @@ describe("TexasSolver Windows autostart queue", () => {
     const lowMemoryManager = readFileSync(LOW_MEMORY_MANAGER_PATH, "utf8");
     expect(lowMemoryManager).toContain("Show-AccuracyRecovery");
     expect(lowMemoryManager).toContain("accuracy recovery: valid=");
+    expect(lowMemoryManager).toContain("Show-AccuracyHandoff");
+    expect(lowMemoryManager).toContain("accuracy handoff: valid=");
+    expect(lowMemoryManager).toContain("current={1}");
+    expect(lowMemoryManager).toContain("$report.evidenceGeneratedAt");
+    const handoff = readFileSync(ACCURACY_HANDOFF_PATH, "utf8");
+    expect(handoff).toContain("PKRTrainerTexasSolverAccuracyHandoffV1");
+    expect(handoff).toContain("Owner handoff is waiting for accuracy recovery");
+    expect(handoff).toContain("mtt:texas-solver-review-protocol");
+    expect(handoff).toContain("mtt:texas-solver-review-readiness");
+    expect(handoff).toContain("mtt:texas-solver-viewer");
+    expect(handoff).toContain("mtt:texas-solver-owner-review-batch");
+    expect(handoff.indexOf("mtt:texas-solver-review-protocol"))
+      .toBeLessThan(handoff.indexOf("mtt:texas-solver-review-readiness"));
+    expect(handoff.indexOf("mtt:texas-solver-review-readiness"))
+      .toBeLessThan(handoff.indexOf("mtt:texas-solver-viewer"));
+    expect(handoff.indexOf("mtt:texas-solver-viewer"))
+      .toBeLessThan(handoff.indexOf("mtt:texas-solver-owner-review-batch"));
+    expect(handoff).toContain("--write-template");
+    expect(handoff).not.toContain("RECORD_TEXAS_SOLVER_OWNER_REVIEW_BATCH");
+    expect(handoff).not.toContain("mtt:promote-ready");
+    expect(handoff).toContain("ownerTemplateSelectedDecisions = $selected");
+    expect(handoff).toContain("records no poker verdict");
 
     const packageJson = JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8")) as {
       scripts: Record<string, string>;
@@ -448,8 +478,50 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(packageJson.scripts["mtt:texas-solver-accuracy-recovery"]).toBe(
       "vite-node scripts/prepareTexasSolverAccuracyRecovery.mts",
     );
+    expect(packageJson.scripts["mtt:texas-solver-accuracy-handoff"]).toContain(
+      "finalize-texas-solver-accuracy-recovery.ps1",
+    );
     expect(packageJson.scripts["mtt:texas-solver-low-memory-install"]).toContain("-Action Install -StartNow");
     expect(packageJson.scripts["mtt:texas-solver-low-memory-stop"]).toContain("-Action Stop");
+  });
+
+  windowsIt("dry-runs the accuracy handoff without writing before or after completion", () => {
+    const fixture = mkdtempSync(join(tmpdir(), "pkrtrainer-accuracy-handoff-"));
+    const recoveryReport = join(fixture, "recovery.json");
+    const completionReport = join(fixture, "completion.json");
+    const writeRecovery = (parsedLogs: number, pendingLogs: number) => writeFileSync(
+      recoveryReport,
+      JSON.stringify({
+        valid: true,
+        recoveryOnly: true,
+        generatedAt: "2026-07-22T10:00:00.000Z",
+        counts: { parsedLogs, expectedLogs: 439, pendingLogs },
+      }),
+      "utf8",
+    );
+    try {
+      writeRecovery(407, 32);
+      const pending = runPowerShell(
+        ACCURACY_HANDOFF_PATH,
+        "-DryRun",
+        "-RecoveryReportPath", recoveryReport,
+        "-CompletionReportPath", completionReport,
+      );
+      expect(pending).toContain("407/439 parsed, 32 pending");
+      expect(existsSync(completionReport)).toBe(false);
+
+      writeRecovery(439, 0);
+      const complete = runPowerShell(
+        ACCURACY_HANDOFF_PATH,
+        "-DryRun",
+        "-RecoveryReportPath", recoveryReport,
+        "-CompletionReportPath", completionReport,
+      );
+      expect(complete).toContain("complete 439/439 evidence would refresh protocol, readiness, owner dashboard and blank template");
+      expect(existsSync(completionReport)).toBe(false);
+    } finally {
+      rmSync(fixture, { recursive: true, force: true });
+    }
   });
 
   it("routes lower-cost work through explicit human and external-data gates", () => {

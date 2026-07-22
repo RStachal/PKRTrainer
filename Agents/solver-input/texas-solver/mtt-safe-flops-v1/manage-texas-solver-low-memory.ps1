@@ -16,6 +16,7 @@ $Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$Wo
 $StatusMinimumFreeMemoryPercent = 35
 $StatusMaximumCpuPercent = 40
 $AccuracyRecoveryReportPath = Join-Path $RepoRoot "artifacts\texas-solver-low-memory\accuracy-recovery-latest.json"
+$AccuracyCompletionReportPath = Join-Path $RepoRoot "artifacts\texas-solver-low-memory\accuracy-recovery-completion.json"
 
 function Get-Workers { return @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.Name -ieq "powershell.exe" -and $_.CommandLine -match [regex]::Escape($Worker) }) }
 function Get-ResourceSnapshot {
@@ -88,6 +89,29 @@ function Show-AccuracyRecovery {
     Write-Host "accuracy recovery: unreadable ($($_.Exception.Message))"
   }
 }
+function Show-AccuracyHandoff {
+  if (-not (Test-Path -LiteralPath $AccuracyCompletionReportPath)) {
+    Write-Host "accuracy handoff: pending"
+    return
+  }
+  try {
+    $report = Get-Content -LiteralPath $AccuracyCompletionReportPath -Raw | ConvertFrom-Json
+    if ($report.valid -ne $true -or $null -eq $report.accuracy -or $null -eq $report.review) { throw "Unsupported completion report." }
+    $current = $false
+    if (Test-Path -LiteralPath $AccuracyRecoveryReportPath -PathType Leaf) {
+      $recovery = Get-Content -LiteralPath $AccuracyRecoveryReportPath -Raw | ConvertFrom-Json
+      $current = [int]$recovery.counts.pendingLogs -eq 0 -and
+        [string]$report.evidenceGeneratedAt -eq [string]$recovery.generatedAt -and
+        [int]$report.accuracy.parsedLogs -eq [int]$recovery.counts.parsedLogs -and
+        [int]$report.accuracy.expectedLogs -eq [int]$recovery.counts.expectedLogs
+    }
+    Write-Host ("accuracy handoff: valid={0}, current={1}, accuracy={2}/{3}, owner decisions={4}/{5}, completed={6}" -f `
+      $report.valid, $current, $report.accuracy.parsedLogs, $report.accuracy.expectedLogs, `
+      $report.review.ownerTemplateSelectedDecisions, $report.review.families, $report.completedAt)
+  } catch {
+    Write-Host "accuracy handoff: unreadable ($($_.Exception.Message))"
+  }
+}
 function Show-Status {
   $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
   $workers = @(Get-Workers)
@@ -113,6 +137,7 @@ function Show-Status {
   Write-Host "execution state: $executionState"
   Write-Host "worker: $Worker"
   Show-AccuracyRecovery
+  Show-AccuracyHandoff
   $activity = Get-LatestSolverActivity
   if ($null -ne $activity) {
     Write-Host "latest worker log: $($activity.Log)"
