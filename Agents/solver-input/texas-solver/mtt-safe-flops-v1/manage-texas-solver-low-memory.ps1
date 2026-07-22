@@ -57,10 +57,23 @@ function Get-LatestSolverActivity {
     Where-Object { $_ -match "PKRTRAINER_SOLVER_BEGIN" } | Select-Object -Last 1
   return [pscustomobject]@{ Log = $log.FullName; Begin = $begin }
 }
+function Get-LegacyGuardStopTimes {
+  $artifactsDir = Join-Path $RepoRoot "artifacts\texas-solver-low-memory"
+  if (-not (Test-Path -LiteralPath $artifactsDir)) { return @() }
+  $times = @()
+  foreach ($log in @(Get-ChildItem -LiteralPath $artifactsDir -Filter "resource-guard-*.log" -File -ErrorAction SilentlyContinue)) {
+    foreach ($line in @(Get-Content -LiteralPath $log.FullName -ErrorAction SilentlyContinue)) {
+      if ($line -notmatch '^\[([^]]+)\]\s+Emergency stop:') { continue }
+      $time = [DateTimeOffset]::MinValue
+      if ([DateTimeOffset]::TryParse($Matches[1], [ref]$time)) { $times += $time }
+    }
+  }
+  return @($times)
+}
 function Get-SolverFailureSummary {
   $failureReport = Join-Path $RepoRoot "artifacts\texas-solver-low-memory\solver-failures.ndjson"
   if (-not (Test-Path -LiteralPath $failureReport)) {
-    return [pscustomobject]@{ Count = 0; Latest = $null }
+    return [pscustomobject]@{ Count = 0; Guarded = 0; Native = 0; Unclassified = 0; Latest = $null }
   }
   $entries = @(
     Get-Content -LiteralPath $failureReport -ErrorAction SilentlyContinue |
@@ -70,8 +83,26 @@ function Get-SolverFailureSummary {
       } |
       Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_.occurredAt) }
   )
+  $legacyGuardStops = @(Get-LegacyGuardStopTimes)
+  foreach ($entry in $entries) {
+    if (-not [string]::IsNullOrWhiteSpace([string]$entry.reason)) { continue }
+    $entryTime = [DateTimeOffset]::MinValue
+    if (-not [DateTimeOffset]::TryParse([string]$entry.occurredAt, [ref]$entryTime)) { continue }
+    $guardMatch = @($legacyGuardStops | Where-Object { [Math]::Abs(($_ - $entryTime).TotalSeconds) -le 2 }).Count -gt 0
+    if ($guardMatch) {
+      $entry | Add-Member -NotePropertyName reason -NotePropertyValue "RESOURCE_GUARD_STOP_LEGACY_CORRELATED"
+    }
+  }
   $latest = @($entries | Sort-Object { [datetime]$_.occurredAt } -Descending | Select-Object -First 1)[0]
-  return [pscustomobject]@{ Count = $entries.Count; Latest = $latest }
+  $guarded = @($entries | Where-Object { [string]$_.reason -like "RESOURCE_GUARD_STOP*" }).Count
+  $native = @($entries | Where-Object { [string]$_.reason -eq "NATIVE_SOLVER_EXIT" }).Count
+  return [pscustomobject]@{
+    Count = $entries.Count
+    Guarded = $guarded
+    Native = $native
+    Unclassified = $entries.Count - $guarded - $native
+    Latest = $latest
+  }
 }
 function Show-AccuracyRecovery {
   if (-not (Test-Path -LiteralPath $AccuracyRecoveryReportPath)) {
@@ -149,7 +180,11 @@ function Show-Status {
     Write-Host "solver failures: none recorded"
   } else {
     $latest = $failures.Latest
-    Write-Host "solver failures: $($failures.Count) recorded; latest $($latest.occurredAt) parameter=$($latest.parameter) family=$($latest.familyId) exit=$($latest.exitCode)"
+    $reason = if ([string]::IsNullOrWhiteSpace([string]$latest.reason)) { "UNCLASSIFIED_LEGACY" } else { [string]$latest.reason }
+    $resourceSuffix = if ($reason -eq "RESOURCE_GUARD_STOP") {
+      " RAM=$($latest.freeMemoryPercent)%/threshold=$($latest.thresholdPercent)%"
+    } else { "" }
+    Write-Host "solver failures/stops: total=$($failures.Count), guarded=$($failures.Guarded), native=$($failures.Native), unclassified=$($failures.Unclassified); latest $($latest.occurredAt) reason=$reason parameter=$($latest.parameter) family=$($latest.familyId) exit=$($latest.exitCode)$resourceSuffix"
   }
   return $true
 }

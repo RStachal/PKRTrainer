@@ -101,7 +101,10 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
 - Windows low-memory task: `PKRTrainer-TexasSolver-LowMemory` is installed and
   owns the restart-safe 426/439 accuracy checkpoint with 13 exact logs remaining
   across five families. Resource checks and repeated-trigger suppression keep
-  the development-first queue single-owner and resumable.
+  the development-first queue single-owner and resumable. RAM-guard stops are
+  now recorded separately from native solver exits and leave the unchanged
+  checkpoint pending for a clean later retry; two of three historical exits
+  correlate exactly with recorded emergency RAM stops.
 - Every low-memory solver phase is `MEMORY_SAFE_REVIEW_ONLY`: raw exports may be audited
   and packaged for review, but cannot be automatically staged, normalized,
   merged or promoted to runtime content.
@@ -258,6 +261,7 @@ npm run mtt:postflop-action-ev-intake -- --all --write-template --refresh-blank-
 
 | Date | Priority | Result | Evidence |
 | --- | --- | --- | --- |
+| 2026-07-22 | P4 / Solver recovery resilience | Intentional RAM stops no longer look like native solver crashes | The guard now records a structured parameter-bound stop before terminating its owned solver. Runner failures carry `RESOURCE_GUARD_STOP` or `NATIVE_SOLVER_EXIT`; the worker exits a guarded recovery cycle cleanly and retries later without changing canonical raw data. Live history classifies 2 guarded, 0 explicit native and 1 legacy-unclassified exit; recovery remains 426/439 with 13 pending. Four PowerShell parsers, list-only recovery, typecheck and focused tests 14/14 passed |
 | 2026-07-22 | P1 / Six-max progressive intake | Partial owner work is measurable without premature full validation | Added immutable-structure and editable-field inspection over all 474,552 workbench rows. Whole strategy pairs in a partial chunk remain `WAITING`; structural drift, one-sided strategy and partial EV sets stay `INVALID`. Live status reports 4/4 structurally safe, 0 touched and 0/4/0 ready/waiting/invalid without writes. Full regression passed 154/154 files and 787/787 tests; typecheck, registry, Core 4/4 plus 7/7, ranges, intake guard, build, precache and bundle budget passed |
 | 2026-07-22 | P1 / Six-max action-EV-ready intake | Legacy blank CSVs upgraded without touching owner work | Added a shared exact-row scaffold contract and guarded recurring refresh. The live migration refreshed 4/4 118,638-row legacy blanks; its repeat wrote zero and reports current/action-EV columns/blank 4/4, nonblank 0, protected stale 0 and generated values none. Any strategy, EV, reviewer, source, note or malformed structure is protected. Focused tests passed 29/29; full release passed 154/154 files and 785/785 tests plus the complete integrity chain |
 | 2026-07-22 | P4.1 / External EV intake automation | Blank workbench stays current without overwriting owner work | Added a guarded refresh mode and ten-minute task diagnostics. A live pass refreshed 7/7 stale blank templates covering 972 decisions and 2,916 action slots; the immediate repeat reported blank 7/7, nonblank 0, zero stale and zero writes. Templates containing reviewer text, thresholds or EV remain protected and make blank readiness false; candidate/promotion commands are absent, final focused tests passed 17/17 and the full 153-file / 778-test release integrity chain passed |

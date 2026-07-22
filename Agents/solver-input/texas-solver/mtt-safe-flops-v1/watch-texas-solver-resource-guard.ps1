@@ -5,7 +5,8 @@ param(
   [int]$PollSeconds = 15,
   [int]$ConsecutiveSamples = 3,
   [int]$MaxMinutes = 10080,
-  [string]$LogPath = ""
+  [string]$LogPath = "",
+  [string]$StopReportPath = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -47,6 +48,38 @@ function Get-OwnedSolverProcesses {
   return @($descendants | Where-Object { $_.Name -ieq "console_solver.exe" })
 }
 
+function Get-ParameterPath([string]$CommandLine) {
+  if ([string]::IsNullOrWhiteSpace($CommandLine)) { return $null }
+  if ($CommandLine -match '(?i)(?:^|\s)-i\s+(?:"([^"]+)"|(\S+))') {
+    if (-not [string]::IsNullOrWhiteSpace($Matches[1])) { return $Matches[1] }
+    return $Matches[2]
+  }
+  return $null
+}
+
+function Record-ResourceStop($Process, [double]$FreeMemoryPercent) {
+  if ([string]::IsNullOrWhiteSpace($StopReportPath)) { return }
+  try {
+    $reportDirectory = Split-Path -Parent $StopReportPath
+    if (-not [string]::IsNullOrWhiteSpace($reportDirectory)) {
+      New-Item -ItemType Directory -Force -Path $reportDirectory | Out-Null
+    }
+    $entry = [ordered]@{
+      occurredAt = (Get-Date -Format "o")
+      reason = "RESOURCE_GUARD_STOP"
+      ownerProcessId = $OwnerProcessId
+      solverProcessId = [int]$Process.ProcessId
+      parameterPath = Get-ParameterPath ([string]$Process.CommandLine)
+      freeMemoryPercent = [Math]::Round($FreeMemoryPercent, 2)
+      thresholdPercent = $StopBelowFreeMemoryPercent
+      consecutiveSamples = $ConsecutiveSamples
+    } | ConvertTo-Json -Compress
+    [System.IO.File]::AppendAllText($StopReportPath, "$entry`r`n", (New-Object System.Text.UTF8Encoding($false)))
+  } catch {
+    Write-GuardLog "Could not record structured resource-stop event. $($_.Exception.Message)"
+  }
+}
+
 Write-GuardLog "Resource guard started for worker PID $OwnerProcessId; threshold=$StopBelowFreeMemoryPercent%, samples=$ConsecutiveSamples."
 while ((Get-Date) -lt $Deadline) {
   if ($null -eq (Get-Process -Id $OwnerProcessId -ErrorAction SilentlyContinue)) {
@@ -68,7 +101,10 @@ while ((Get-Date) -lt $Deadline) {
   if ($LowSamples -ge $ConsecutiveSamples) {
     $ids = @($targets | ForEach-Object { [int]$_.ProcessId })
     Write-GuardLog ("Emergency stop: {0:N1}% RAM free for {1} samples; stopping owned console_solver PID(s) {2}." -f $freePercent, $LowSamples, ($ids -join ","))
-    foreach ($id in $ids) { Stop-Process -Id $id -Force -ErrorAction SilentlyContinue }
+    foreach ($target in $targets) {
+      Record-ResourceStop $target $freePercent
+      Stop-Process -Id ([int]$target.ProcessId) -Force -ErrorAction SilentlyContinue
+    }
     $EmergencyStops += 1
     $LowSamples = 0
     Write-GuardLog "Resource guard remains active; the queue may resume only after its start limits pass. Emergency stops=$EmergencyStops."

@@ -16,6 +16,7 @@ $AccuracyHandoff = Join-Path $PSScriptRoot "finalize-texas-solver-accuracy-recov
 $OutputBase = Join-Path $RepoRoot "Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver"
 $ArtifactsDir = Join-Path $RepoRoot "artifacts\texas-solver-low-memory"
 $FailureReportPath = Join-Path $ArtifactsDir "solver-failures.ndjson"
+$ResourceStopReportPath = Join-Path $ArtifactsDir "resource-stops.ndjson"
 $AccuracyRecoveryReportPath = Join-Path $ArtifactsDir "accuracy-recovery-latest.json"
 $AccuracyRecoveryManifestPath = Join-Path $PSScriptRoot "coverage-accuracy-recovery-v1-manifest.json"
 $AccuracyRecoveryParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_accuracy_recovery_v1"
@@ -275,10 +276,19 @@ function Start-ResourceGuard {
     "-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", $ResourceGuard,
     "-OwnerProcessId", "$PID",
     "-StopBelowFreeMemoryPercent", "$StopBelowFreeMemoryPercent",
-    "-LogPath", $guardLogPath
+    "-LogPath", $guardLogPath,
+    "-StopReportPath", $ResourceStopReportPath
   ) -WorkingDirectory $RepoRoot -WindowStyle Hidden -PassThru
   Write-WorkerLog "Started solver resource guard PID $($process.Id); emergency threshold $StopBelowFreeMemoryPercent% free RAM." | Out-Null
   return $process
+}
+
+function Get-ResourceStopCount {
+  if (-not (Test-Path -LiteralPath $ResourceStopReportPath -PathType Leaf)) { return 0 }
+  return @(
+    Get-Content -LiteralPath $ResourceStopReportPath -ErrorAction SilentlyContinue |
+      Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+  ).Count
 }
 
 function Prepare-AccuracyRecovery([switch]$PreviewOnly) {
@@ -406,6 +416,7 @@ try {
   if ($DryRun) { exit 0 }
   $guardProcess = Start-ResourceGuard
   $completedRecovery = $null
+  $accuracyRecoveryPaused = $false
   try {
     if ($AllRawPhasesComplete) {
       $previousPending = $null
@@ -418,22 +429,36 @@ try {
         if ($pending -eq 0) { break }
         $previousPending = $pending
         $canonicalBefore = Get-RecoveryCanonicalCheckpoint $recovery
+        $resourceStopCountBefore = Get-ResourceStopCount
         & $Runner -ParameterRoot $AccuracyRecoveryParameterRoot -OutputBase $OutputBase -Limit 1 -AccuracyOnly `
           -MinimumFreeMemoryPercent $MinimumFreeMemoryPercent -MaximumCpuPercent $MaximumCpuPercent `
-          -ProcessPriority BelowNormal -ContinueOnSolverFailure -FailureReportPath $FailureReportPath 2>&1 |
+          -ProcessPriority BelowNormal -ContinueOnSolverFailure -FailureReportPath $FailureReportPath `
+          -ResourceStopReportPath $ResourceStopReportPath 2>&1 |
           ForEach-Object { Write-WorkerLog ([string]$_) }
         $recoveryExitCode = if ($null -eq $LASTEXITCODE) { 0 } else { [int]$LASTEXITCODE }
-        if ($recoveryExitCode -ne 0) { throw "Accuracy-only TexasSolver runner failed with exit code $recoveryExitCode." }
+        $resourceGuardStoppedRun = (Get-ResourceStopCount) -gt $resourceStopCountBefore
+        if ($recoveryExitCode -ne 0 -and -not $resourceGuardStoppedRun) {
+          throw "Accuracy-only TexasSolver runner failed with exit code $recoveryExitCode."
+        }
         Assert-RecoveryCanonicalCheckpoint $canonicalBefore
         Invoke-AccuracyRefresh
+        if ($resourceGuardStoppedRun) {
+          $accuracyRecoveryPaused = $true
+          $LASTEXITCODE = 0
+          Write-WorkerLog "Accuracy recovery paused after a structured RAM-guard stop; the unchanged checkpoint remains pending for the next scheduled resource-safe retry."
+          break
+        }
       } while ($true)
-      $completedRecovery = $recovery
-      Write-WorkerLog "Accuracy recovery completed; approved staged evidence is now $($recovery.counts.parsedLogs)/$($recovery.counts.expectedLogs)."
+      if (-not $accuracyRecoveryPaused) {
+        $completedRecovery = $recovery
+        Write-WorkerLog "Accuracy recovery completed; approved staged evidence is now $($recovery.counts.parsedLogs)/$($recovery.counts.expectedLogs)."
+      }
     } else {
       Start-IngestWatcher
       & $Runner -ParameterRoot $ParameterRoot -OutputBase $OutputBase -Limit $count `
         -MinimumFreeMemoryPercent $MinimumFreeMemoryPercent -MaximumCpuPercent $MaximumCpuPercent `
-        -ProcessPriority BelowNormal -ContinueOnSolverFailure -FailureReportPath $FailureReportPath 2>&1 |
+        -ProcessPriority BelowNormal -ContinueOnSolverFailure -FailureReportPath $FailureReportPath `
+        -ResourceStopReportPath $ResourceStopReportPath 2>&1 |
         ForEach-Object { Write-WorkerLog ([string]$_) }
     }
   } finally {
@@ -449,7 +474,11 @@ try {
   $runnerExitCode = if ($null -eq $LASTEXITCODE) { 0 } else { [int]$LASTEXITCODE }
   if ($runnerExitCode -ne 0) { throw "Low-memory TexasSolver worker command failed with exit code $runnerExitCode." }
   if ($AllRawPhasesComplete) {
-    Write-WorkerLog "Low-memory accuracy recovery run completed; each solved log was staged incrementally."
+    if ($accuracyRecoveryPaused) {
+      Write-WorkerLog "Low-memory accuracy recovery run deferred cleanly after RAM pressure."
+    } else {
+      Write-WorkerLog "Low-memory accuracy recovery run completed; each solved log was staged incrementally."
+    }
   } else {
     Write-WorkerLog "Low-memory batch run completed; watcher owns source-safe ingest and review refresh."
   }

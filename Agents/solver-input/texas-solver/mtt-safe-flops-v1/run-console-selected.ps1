@@ -11,6 +11,7 @@ param(
   [string]$ProcessPriority = "Normal",
   [switch]$ContinueOnSolverFailure,
   [string]$FailureReportPath = "",
+  [string]$ResourceStopReportPath = "",
   [string]$SolverRoot = "C:\Users\stachal\PKRTrainer\tools\TexasSolver-v0.2.0-Windows\TexasSolver-v0.2.0-Windows",
   [string]$ParameterRoot = "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_safe_flops_v1",
   [string]$OutputBase = "C:\Users\stachal\PKRTrainer\PKRTrainer\Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver"
@@ -91,14 +92,55 @@ function Set-ProcessPriority([string]$Priority) {
   }
 }
 
-function Record-SolverFailure($file, [string]$FamilyId, [string]$DumpName, [int]$ExitCode) {
-  $entry = [ordered]@{
+function Find-ResourceStop($file, [DateTimeOffset]$StartedAt) {
+  if ([string]::IsNullOrWhiteSpace($ResourceStopReportPath) -or
+      -not (Test-Path -LiteralPath $ResourceStopReportPath -PathType Leaf)) {
+    return $null
+  }
+  $targetPath = [System.IO.Path]::GetFullPath($file.FullName)
+  $lines = @(Get-Content -LiteralPath $ResourceStopReportPath -Tail 200 -ErrorAction SilentlyContinue)
+  for ($index = $lines.Count - 1; $index -ge 0; $index -= 1) {
+    try { $candidate = $lines[$index] | ConvertFrom-Json } catch { continue }
+    if ([string]$candidate.reason -ne "RESOURCE_GUARD_STOP" -or
+        [string]::IsNullOrWhiteSpace([string]$candidate.parameterPath)) {
+      continue
+    }
+    $occurredAt = [DateTimeOffset]::MinValue
+    if (-not [DateTimeOffset]::TryParse([string]$candidate.occurredAt, [ref]$occurredAt) -or
+        $occurredAt -lt $StartedAt.AddSeconds(-5)) {
+      continue
+    }
+    try { $candidatePath = [System.IO.Path]::GetFullPath([string]$candidate.parameterPath) } catch { continue }
+    if ($candidatePath.Equals($targetPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+      return $candidate
+    }
+  }
+  return $null
+}
+
+function Record-SolverFailure(
+  $file,
+  [string]$FamilyId,
+  [string]$DumpName,
+  [int]$ExitCode,
+  [string]$Reason,
+  $ResourceStop
+) {
+  $details = [ordered]@{
     occurredAt = (Get-Date -Format "o")
     parameter = $file.Name
     familyId = $FamilyId
     rawExport = $DumpName
     exitCode = $ExitCode
-  } | ConvertTo-Json -Compress
+    reason = $Reason
+  }
+  if ($null -ne $ResourceStop) {
+    $details.resourceStopOccurredAt = [string]$ResourceStop.occurredAt
+    $details.solverProcessId = [int]$ResourceStop.solverProcessId
+    $details.freeMemoryPercent = [double]$ResourceStop.freeMemoryPercent
+    $details.thresholdPercent = [int]$ResourceStop.thresholdPercent
+  }
+  $entry = $details | ConvertTo-Json -Compress
   if (-not [string]::IsNullOrWhiteSpace($FailureReportPath)) {
     $failureDirectory = Split-Path -Parent $FailureReportPath
     if (-not [string]::IsNullOrWhiteSpace($failureDirectory)) {
@@ -106,7 +148,8 @@ function Record-SolverFailure($file, [string]$FamilyId, [string]$DumpName, [int]
     }
     [System.IO.File]::AppendAllText($FailureReportPath, "$entry`r`n", (New-Object System.Text.UTF8Encoding($false)))
   }
-  Write-Output "PKRTRAINER_SOLVER_FAILED parameter=$($file.Name) raw=$DumpName exit=$ExitCode"
+  $marker = if ($Reason -eq "RESOURCE_GUARD_STOP") { "PKRTRAINER_SOLVER_GUARDED_STOP" } else { "PKRTRAINER_SOLVER_FAILED" }
+  Write-Output "$marker parameter=$($file.Name) raw=$DumpName exit=$ExitCode reason=$Reason"
 }
 
 if (-not (Test-Path (Join-Path $solverRoot "console_solver.exe"))) {
@@ -193,12 +236,19 @@ try {
     Write-Output "PKRTRAINER_SOLVER_BEGIN parameter=$($file.Name) raw=$dumpName"
     Write-Host "Solving $($file.Name)..."
     New-Item -ItemType Directory -Force -Path $logRoot | Out-Null
+    $solverStartedAt = [DateTimeOffset]::Now
     & .\console_solver.exe -i $file.FullName 2>&1 | Tee-Object -FilePath $logPath
     $solverExitCode = [int]$LASTEXITCODE
     if ($solverExitCode -ne 0) {
-      Record-SolverFailure $file $familyId $dumpName $solverExitCode
+      $resourceStop = Find-ResourceStop $file $solverStartedAt
+      $failureReason = if ($null -ne $resourceStop) { "RESOURCE_GUARD_STOP" } else { "NATIVE_SOLVER_EXIT" }
+      Record-SolverFailure $file $familyId $dumpName $solverExitCode $failureReason $resourceStop
       if ($ContinueOnSolverFailure) {
-        Write-Warning "TexasSolver failed for $($file.Name); continuing with the next parameter."
+        if ($failureReason -eq "RESOURCE_GUARD_STOP") {
+          Write-Warning "TexasSolver was stopped by the RAM guard for $($file.Name); the checkpoint remains pending for a later resource-safe retry."
+        } else {
+          Write-Warning "TexasSolver failed for $($file.Name); continuing with the next parameter."
+        }
         continue
       }
       throw "TexasSolver exited with code $solverExitCode for $($file.Name)."

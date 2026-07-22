@@ -304,7 +304,10 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(worker).toContain("ForEach-Object { Write-QueueLog ([string]$_) }");
     expect(worker).toContain('"-MaxMinutes", "10080"');
     expect(runner).toContain("TexasSolver exited with code $solverExitCode");
-    expect(runner).toContain("PKRTRAINER_SOLVER_FAILED parameter=$($file.Name) raw=$DumpName exit=$ExitCode");
+    expect(runner).toContain('"PKRTRAINER_SOLVER_FAILED"');
+    expect(runner).toContain('"PKRTRAINER_SOLVER_GUARDED_STOP"');
+    expect(runner).toContain('"NATIVE_SOLVER_EXIT"');
+    expect(runner).toContain("Find-ResourceStop $file $solverStartedAt");
     expect(runner).toContain("$ContinueOnSolverFailure");
     expect(runner).toContain("continuing with the next parameter");
     expect(runner).toContain("Wait-ForStartResources");
@@ -386,6 +389,9 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(wrapper).toContain("-ContinueOnSolverFailure");
     expect(guard).toContain("Resource guard remains active");
     expect(guard).toContain("Emergency stops=$EmergencyStops");
+    expect(guard).toContain('reason = "RESOURCE_GUARD_STOP"');
+    expect(guard).toContain("Record-ResourceStop $target $freePercent");
+    expect(guard).toContain("StopReportPath");
     expect(packageJson.scripts["mtt:texas-solver-overnight"]).toContain(
       "-ProcessPriority AboveNormal",
     );
@@ -433,6 +439,12 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(worker).toContain("A PowerShell script with only checkpoint skips can leave LASTEXITCODE unset.");
     expect(worker).toContain("solver-failures.ndjson");
     expect(worker).toContain("-ContinueOnSolverFailure -FailureReportPath $FailureReportPath");
+    expect(worker).toContain("-ResourceStopReportPath $ResourceStopReportPath");
+    expect(worker).toContain('resource-stops.ndjson');
+    expect(worker).toContain("Get-ResourceStopCount");
+    expect(worker).toContain("$resourceGuardStoppedRun");
+    expect(worker).toContain("Accuracy recovery paused after a structured RAM-guard stop");
+    expect(worker).toContain("Low-memory accuracy recovery run deferred cleanly after RAM pressure");
     expect(worker).toContain("$runnerExitCode = if ($null -eq $LASTEXITCODE) { 0 }");
     expect(worker).toContain("coverage-followup-flop-review-v1-manifest.json");
     expect(worker).toContain("coverage-owner-depth-flop-review-v1-manifest.json");
@@ -490,6 +502,11 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(lowMemoryManager).toContain("accuracy handoff: valid=");
     expect(lowMemoryManager).toContain("current={1}");
     expect(lowMemoryManager).toContain("$report.evidenceGeneratedAt");
+    expect(lowMemoryManager).toContain("solver failures/stops:");
+    expect(lowMemoryManager).toContain("RESOURCE_GUARD_STOP");
+    expect(lowMemoryManager).toContain("NATIVE_SOLVER_EXIT");
+    expect(lowMemoryManager).toContain("Get-LegacyGuardStopTimes");
+    expect(lowMemoryManager).toContain("RESOURCE_GUARD_STOP_LEGACY_CORRELATED");
     const handoff = readFileSync(ACCURACY_HANDOFF_PATH, "utf8");
     expect(handoff).toContain("PKRTrainerTexasSolverAccuracyHandoffV1");
     expect(handoff).toContain("Owner handoff is waiting for accuracy recovery");
