@@ -1,6 +1,7 @@
 param(
   [int]$Limit = 1,
   [switch]$Force,
+  [switch]$AccuracyOnly,
   [switch]$ListOnly,
   [string]$Family = "",
   [int]$MinimumFreeMemoryPercent = 10,
@@ -27,6 +28,9 @@ $outputBase = $OutputBase
 
 if ($MinimumFreeMemoryPercent -lt 0 -or $MinimumFreeMemoryPercent -gt 100) {
   throw "MinimumFreeMemoryPercent must be between 0 and 100."
+}
+if ($AccuracyOnly -and $Force) {
+  throw "AccuracyOnly cannot be combined with Force because canonical raw checkpoints must remain untouched."
 }
 
 function Wait-ForStartResources {
@@ -70,6 +74,9 @@ function Get-DumpName($file) {
     ForEach-Object { $_.Matches[0].Groups[1].Value.Trim() }
   if ([string]::IsNullOrWhiteSpace($dumpName)) {
     throw "Missing dump_result line in $($file.FullName)"
+  }
+  if ([System.IO.Path]::GetFileName($dumpName) -cne $dumpName -or $dumpName -cnotmatch '^[A-Za-z0-9_]+[.]json$') {
+    throw "Unsafe dump_result name in $($file.FullName): $dumpName"
   }
   return $dumpName
 }
@@ -135,7 +142,13 @@ if ($ListOnly) {
     $outputRoot = Join-Path $outputBase (Join-Path $familyId "raw")
     $dumpName = Get-DumpName $file
     $target = Join-Path $outputRoot $dumpName
-    $state = if (Test-Path $target) { "EXISTS" } else { "PENDING" }
+    $logRoot = Join-Path (Split-Path $outputRoot -Parent) "solver-logs"
+    $logPath = Join-Path $logRoot ("{0}.log" -f [System.IO.Path]::GetFileNameWithoutExtension($dumpName))
+    $state = if ($AccuracyOnly) {
+      if (-not (Test-Path $target)) { "MISSING_RAW" }
+      elseif (Test-Path $logPath) { "ACCURACY_LOG_EXISTS" }
+      else { "ACCURACY_LOG_PENDING" }
+    } elseif (Test-Path $target) { "EXISTS" } else { "PENDING" }
     Write-Host "$state [$familyId] $($file.Name) -> $target"
   }
   exit 0
@@ -151,11 +164,14 @@ try {
     $target = Join-Path $outputRoot $dumpName
     $logRoot = Join-Path (Split-Path $outputRoot -Parent) "solver-logs"
     $logPath = Join-Path $logRoot ("{0}.log" -f [System.IO.Path]::GetFileNameWithoutExtension($dumpName))
-    if ((Test-Path $target) -and -not $Force) {
+    if ($AccuracyOnly -and -not (Test-Path $target)) {
+      throw "Accuracy-only recovery requires an existing canonical raw checkpoint: $target"
+    }
+    if (-not $AccuracyOnly -and (Test-Path $target) -and -not $Force) {
       Write-Host "Skipping $($file.Name); output already exists: $target"
       continue
     }
-    if ((Test-Path $target) -and $Force) {
+    if (-not $AccuracyOnly -and (Test-Path $target) -and $Force) {
       Remove-Item -LiteralPath $target -Force
     }
 
@@ -189,6 +205,14 @@ try {
     }
     if (-not (Test-Path $source)) {
       throw "Solve finished but expected dump was not found: $source"
+    }
+    if ($AccuracyOnly) {
+      # The canonical raw checkpoint predates this recovery and remains the
+      # evidence source. Discard only the duplicate solver-root dump.
+      Remove-Item -LiteralPath $source -Force
+      Write-Output "PKRTRAINER_SOLVER_ACCURACY_END parameter=$($file.Name) raw=$dumpName exit=0"
+      Write-Host "Recovered solver accuracy log without replacing $target"
+      continue
     }
     Move-Item -LiteralPath $source -Destination $target -Force
     Write-Output "PKRTRAINER_SOLVER_END parameter=$($file.Name) raw=$dumpName exit=0"

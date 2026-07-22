@@ -18,6 +18,10 @@ deploy/pkrtrainer-ftp-*.manifest.txt
 Agents/solver-input/gto-plus/sample-postflop-v1/output/gto-plus/
 Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/
 
+# Restart-safe accuracy recovery is a shrinking local checkpoint queue.
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-accuracy-recovery-v1-manifest.json
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_accuracy_recovery_v1/
+
 # Logs
 *.log
 npm-debug.log*

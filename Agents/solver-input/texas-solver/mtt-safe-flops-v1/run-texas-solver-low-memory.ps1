@@ -15,6 +15,9 @@ $ResourceGuard = Join-Path $PSScriptRoot "watch-texas-solver-resource-guard.ps1"
 $OutputBase = Join-Path $RepoRoot "Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver"
 $ArtifactsDir = Join-Path $RepoRoot "artifacts\texas-solver-low-memory"
 $FailureReportPath = Join-Path $ArtifactsDir "solver-failures.ndjson"
+$AccuracyRecoveryReportPath = Join-Path $ArtifactsDir "accuracy-recovery-latest.json"
+$AccuracyRecoveryManifestPath = Join-Path $PSScriptRoot "coverage-accuracy-recovery-v1-manifest.json"
+$AccuracyRecoveryParameterRoot = Join-Path $PSScriptRoot "parameters\pkrtrainer_mtt_accuracy_recovery_v1"
 $LogPath = Join-Path $ArtifactsDir ("worker-{0}.log" -f (Get-Date -Format "yyyyMMdd-HHmmss"))
 $MutexName = "Local\PKRTrainerTexasSolverLowMemoryV1"
 $TreeProfile = "MEMORY_SAFE_REVIEW_ONLY"
@@ -43,6 +46,7 @@ $OwnerDepthFamilies = @(
   "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH"
 )
 $AllReviewFamilies = @($RootReviewFamilies + $OwnerDepthFamilies)
+$Npm = (Get-Command npm.cmd -ErrorAction Stop).Source
 $Phases = @(
   [pscustomobject]@{
     Name = "next"
@@ -144,8 +148,12 @@ function Test-PhaseRawComplete($Phase) {
 }
 
 function Select-Phase {
+  $script:AllRawPhasesComplete = $true
   foreach ($phase in $Phases) {
-    if (-not (Test-PhaseRawComplete $phase)) { return $phase }
+    if (-not (Test-PhaseRawComplete $phase)) {
+      $script:AllRawPhasesComplete = $false
+      return $phase
+    }
     Write-WorkerLog "Phase '$($phase.Name)' has all raw checkpoints; selecting the next phase." | Out-Null
   }
   return $Phases[-1]
@@ -272,6 +280,36 @@ function Start-ResourceGuard {
   return $process
 }
 
+function Prepare-AccuracyRecovery([switch]$PreviewOnly) {
+  $arguments = @(
+    "run", "mtt:texas-solver-accuracy-recovery", "--",
+    "--summary"
+  )
+  if (-not $PreviewOnly) {
+    $arguments += "--output=$AccuracyRecoveryReportPath"
+    $arguments += "--write"
+  }
+  & $Npm @arguments 2>&1 | ForEach-Object { Write-WorkerLog ([string]$_) }
+  $exitCode = if ($null -eq $LASTEXITCODE) { 0 } else { [int]$LASTEXITCODE }
+  if ($exitCode -ne 0) { throw "Accuracy recovery preparation failed with exit code $exitCode." }
+  if ($PreviewOnly) { return $null }
+  if (-not (Test-Path -LiteralPath $AccuracyRecoveryReportPath)) {
+    throw "Accuracy recovery report was not written: $AccuracyRecoveryReportPath"
+  }
+  $report = Get-Content -LiteralPath $AccuracyRecoveryReportPath -Raw | ConvertFrom-Json
+  if ($report.valid -ne $true -or $report.recoveryOnly -ne $true) {
+    throw "Accuracy recovery report is not valid recovery-only evidence."
+  }
+  return $report
+}
+
+function Invoke-AccuracyRefresh {
+  & $Npm run mtt:texas-solver-review-only-refresh -- --summary 2>&1 |
+    ForEach-Object { Write-WorkerLog ([string]$_) }
+  $exitCode = if ($null -eq $LASTEXITCODE) { 0 } else { [int]$LASTEXITCODE }
+  if ($exitCode -ne 0) { throw "Incremental staged accuracy refresh failed with exit code $exitCode." }
+}
+
 if (-not (Test-Path -LiteralPath $Runner)) { throw "TexasSolver runner not found: $Runner" }
 New-Item -ItemType Directory -Force -Path $ArtifactsDir | Out-Null
 $mutex = New-Object System.Threading.Mutex($false, $MutexName)
@@ -288,18 +326,63 @@ try {
   foreach ($phase in $Phases) {
     $phaseCounts[$phase.Name] = Build-LowMemoryBatch $phase
   }
-  $count = [int]$phaseCounts[$ActivePhase.Name]
-  Write-WorkerLog "Resource-balanced $($ActivePhase.Name) batch ready: $count boards, $ThreadCount threads, tree profile $TreeProfile, start limits CPU <= $MaximumCpuPercent% and RAM >= $MinimumFreeMemoryPercent% free; emergency threshold $StopBelowFreeMemoryPercent% free memory."
+  if ($AllRawPhasesComplete -and $DryRun) {
+    Prepare-AccuracyRecovery -PreviewOnly | Out-Null
+    Write-WorkerLog "All raw phases are complete; dry-run validated the accuracy recovery preparation without starting TexasSolver."
+    exit 0
+  }
   $activeSolver = @(Get-Process -Name "console_solver" -ErrorAction SilentlyContinue)
-  if ($activeSolver.Count -gt 0) { Write-WorkerLog "A TexasSolver process is already active (PID $($activeSolver.Id -join ',')). Leaving it untouched."; exit 0 }
+  if ($activeSolver.Count -gt 0) {
+    Write-WorkerLog "A TexasSolver process is already active (PID $($activeSolver.Id -join ',')). Leaving it untouched."
+    exit 0
+  }
+  $count = [int]$phaseCounts[$ActivePhase.Name]
+  if ($AllRawPhasesComplete) {
+    # Consume any valid log left by an interrupted prior run before selecting
+    # another recovery parameter.
+    Invoke-AccuracyRefresh
+    $initialRecovery = Prepare-AccuracyRecovery
+    $count = [int]$initialRecovery.counts.pendingLogs
+    Write-WorkerLog "Accuracy recovery ready: $count missing per-board logs across $($initialRecovery.counts.recoveryFamilies) families; canonical raw checkpoints are read-only."
+    if ($count -eq 0) {
+      Write-WorkerLog "All approved solver accuracy logs are present; no TexasSolver work remains."
+      exit 0
+    }
+    & $Npm run mtt:texas-solver-scenario-audit -- "--manifest=$AccuracyRecoveryManifestPath" --summary 2>&1 |
+      ForEach-Object { Write-WorkerLog ([string]$_) }
+    if ($LASTEXITCODE -ne 0) { throw "Accuracy recovery scenario audit failed with exit code $LASTEXITCODE." }
+  } else {
+    Write-WorkerLog "Resource-balanced $($ActivePhase.Name) batch ready: $count boards, $ThreadCount threads, tree profile $TreeProfile, start limits CPU <= $MaximumCpuPercent% and RAM >= $MinimumFreeMemoryPercent% free; emergency threshold $StopBelowFreeMemoryPercent% free memory."
+  }
   if ($DryRun) { exit 0 }
-  Start-IngestWatcher
   $guardProcess = Start-ResourceGuard
   try {
-  & $Runner -ParameterRoot $ParameterRoot -OutputBase $OutputBase -Limit $count `
-      -MinimumFreeMemoryPercent $MinimumFreeMemoryPercent -MaximumCpuPercent $MaximumCpuPercent `
-      -ProcessPriority BelowNormal -ContinueOnSolverFailure -FailureReportPath $FailureReportPath 2>&1 |
-      ForEach-Object { Write-WorkerLog ([string]$_) }
+    if ($AllRawPhasesComplete) {
+      $previousPending = $null
+      do {
+        $recovery = Prepare-AccuracyRecovery
+        $pending = [int]$recovery.counts.pendingLogs
+        if ($null -ne $previousPending -and $pending -ge $previousPending) {
+          throw "Accuracy recovery did not advance after a successful solver run ($pending logs still pending)."
+        }
+        if ($pending -eq 0) { break }
+        $previousPending = $pending
+        & $Runner -ParameterRoot $AccuracyRecoveryParameterRoot -OutputBase $OutputBase -Limit 1 -AccuracyOnly `
+          -MinimumFreeMemoryPercent $MinimumFreeMemoryPercent -MaximumCpuPercent $MaximumCpuPercent `
+          -ProcessPriority BelowNormal -ContinueOnSolverFailure -FailureReportPath $FailureReportPath 2>&1 |
+          ForEach-Object { Write-WorkerLog ([string]$_) }
+        $recoveryExitCode = if ($null -eq $LASTEXITCODE) { 0 } else { [int]$LASTEXITCODE }
+        if ($recoveryExitCode -ne 0) { throw "Accuracy-only TexasSolver runner failed with exit code $recoveryExitCode." }
+        Invoke-AccuracyRefresh
+      } while ($true)
+      Write-WorkerLog "Accuracy recovery completed; approved staged evidence is now $($recovery.counts.parsedLogs)/$($recovery.counts.expectedLogs)."
+    } else {
+      Start-IngestWatcher
+      & $Runner -ParameterRoot $ParameterRoot -OutputBase $OutputBase -Limit $count `
+        -MinimumFreeMemoryPercent $MinimumFreeMemoryPercent -MaximumCpuPercent $MaximumCpuPercent `
+        -ProcessPriority BelowNormal -ContinueOnSolverFailure -FailureReportPath $FailureReportPath 2>&1 |
+        ForEach-Object { Write-WorkerLog ([string]$_) }
+    }
   } finally {
     if ($null -ne $guardProcess -and -not $guardProcess.HasExited) {
       Stop-Process -Id $guardProcess.Id -Force -ErrorAction SilentlyContinue
@@ -308,8 +391,12 @@ try {
   # A PowerShell script with only checkpoint skips can leave LASTEXITCODE unset.
   # Treat that as its normal zero exit, while preserving a real native failure.
   $runnerExitCode = if ($null -eq $LASTEXITCODE) { 0 } else { [int]$LASTEXITCODE }
-  if ($runnerExitCode -ne 0) { throw "Low-memory TexasSolver runner failed with exit code $runnerExitCode." }
-  Write-WorkerLog "Low-memory batch run completed; watcher owns source-safe ingest and review refresh."
+  if ($runnerExitCode -ne 0) { throw "Low-memory TexasSolver worker command failed with exit code $runnerExitCode." }
+  if ($AllRawPhasesComplete) {
+    Write-WorkerLog "Low-memory accuracy recovery run completed; each solved log was staged incrementally."
+  } else {
+    Write-WorkerLog "Low-memory batch run completed; watcher owns source-safe ingest and review refresh."
+  }
 } catch {
   Write-WorkerLog "ERROR: $($_.Exception.Message)"
   exit 1

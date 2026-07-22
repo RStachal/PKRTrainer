@@ -412,7 +412,8 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(worker).toContain("Test-PhaseRawComplete");
     expect(worker).toContain("Phase '$($phase.Name)' has all raw checkpoints; selecting the next phase.");
     expect(worker).toMatch(/has all raw checkpoints; selecting the next phase[^\r\n]*\| Out-Null/);
-    expect(worker).toContain("if (-not (Test-PhaseRawComplete $phase)) { return $phase }");
+    expect(worker).toContain("if (-not (Test-PhaseRawComplete $phase)) {");
+    expect(worker).toContain("$script:AllRawPhasesComplete = $false");
     expect(worker).toContain("return $Phases[-1]");
     expect(worker).toContain("foreach ($phase in $Phases)");
     expect(worker).toContain("Build-LowMemoryBatch $phase");
@@ -424,10 +425,29 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(worker).toContain("texas-solver-background");
     expect(worker).toContain("resume-texas-solver-queue[.]ps1");
     expect(worker).toContain("Deferring this worker without touching it");
+    expect(worker).toContain("mtt:texas-solver-accuracy-recovery");
+    expect(worker).toContain("coverage-accuracy-recovery-v1-manifest.json");
+    expect(worker).toContain("Invoke-AccuracyRefresh");
+    expect(worker).toContain("-Limit 1 -AccuracyOnly");
+    expect(worker).toContain("Accuracy recovery did not advance");
+    expect(worker).toContain("canonical raw checkpoints are read-only");
+    const runner = readFileSync(RUNNER_PATH, "utf8");
+    expect(runner).toContain("[switch]$AccuracyOnly");
+    expect(runner).toContain("AccuracyOnly cannot be combined with Force");
+    expect(runner).toContain("Accuracy-only recovery requires an existing canonical raw checkpoint");
+    expect(runner).toContain("Recovered solver accuracy log without replacing");
+    expect(runner).toContain("PKRTRAINER_SOLVER_ACCURACY_END");
+    expect(runner).toContain("Unsafe dump_result name");
+    const lowMemoryManager = readFileSync(LOW_MEMORY_MANAGER_PATH, "utf8");
+    expect(lowMemoryManager).toContain("Show-AccuracyRecovery");
+    expect(lowMemoryManager).toContain("accuracy recovery: valid=");
 
     const packageJson = JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8")) as {
       scripts: Record<string, string>;
     };
+    expect(packageJson.scripts["mtt:texas-solver-accuracy-recovery"]).toBe(
+      "vite-node scripts/prepareTexasSolverAccuracyRecovery.mts",
+    );
     expect(packageJson.scripts["mtt:texas-solver-low-memory-install"]).toContain("-Action Install -StartNow");
     expect(packageJson.scripts["mtt:texas-solver-low-memory-stop"]).toContain("-Action Stop");
   });

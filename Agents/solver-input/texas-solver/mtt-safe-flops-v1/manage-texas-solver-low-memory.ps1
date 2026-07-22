@@ -15,6 +15,7 @@ $PowerShell = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
 $Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$Worker`""
 $StatusMinimumFreeMemoryPercent = 35
 $StatusMaximumCpuPercent = 40
+$AccuracyRecoveryReportPath = Join-Path $RepoRoot "artifacts\texas-solver-low-memory\accuracy-recovery-latest.json"
 
 function Get-Workers { return @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.Name -ieq "powershell.exe" -and $_.CommandLine -match [regex]::Escape($Worker) }) }
 function Get-ResourceSnapshot {
@@ -71,6 +72,22 @@ function Get-SolverFailureSummary {
   $latest = @($entries | Sort-Object { [datetime]$_.occurredAt } -Descending | Select-Object -First 1)[0]
   return [pscustomobject]@{ Count = $entries.Count; Latest = $latest }
 }
+function Show-AccuracyRecovery {
+  if (-not (Test-Path -LiteralPath $AccuracyRecoveryReportPath)) {
+    Write-Host "accuracy recovery: not prepared"
+    return
+  }
+  try {
+    $report = Get-Content -LiteralPath $AccuracyRecoveryReportPath -Raw | ConvertFrom-Json
+    if ($report.recoveryOnly -ne $true -or $null -eq $report.counts) { throw "Unsupported recovery report." }
+    Write-Host ("accuracy recovery: valid={0}, parsed={1}/{2}, pending={3}, families={4}, files={5}, generated={6}" -f `
+      $report.valid, $report.counts.parsedLogs, $report.counts.expectedLogs, `
+      $report.counts.pendingLogs, $report.counts.recoveryFamilies, `
+      $report.counts.recoveryFiles, $report.generatedAt)
+  } catch {
+    Write-Host "accuracy recovery: unreadable ($($_.Exception.Message))"
+  }
+}
 function Show-Status {
   $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
   $workers = @(Get-Workers)
@@ -95,6 +112,7 @@ function Show-Status {
   Write-Host "resources: CPU $(if ($null -eq $resources.CpuPercent) { 'unknown' } else { "$($resources.CpuPercent)%" }) (start <= $StatusMaximumCpuPercent%); free RAM $(if ($null -eq $resources.FreeMemoryPercent) { 'unknown' } else { "$($resources.FreeMemoryPercent)%" }) (start >= $StatusMinimumFreeMemoryPercent%)"
   Write-Host "execution state: $executionState"
   Write-Host "worker: $Worker"
+  Show-AccuracyRecovery
   $activity = Get-LatestSolverActivity
   if ($null -ne $activity) {
     Write-Host "latest worker log: $($activity.Log)"
