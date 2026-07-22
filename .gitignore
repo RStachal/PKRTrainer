@@ -11,6 +11,7 @@ artifacts/
 deploy/pkrtrainer-ftp-*/
 deploy/pkrtrainer-ftp-*.zip
 deploy/pkrtrainer-ftp-*.manifest.txt
+deploy/pkrtrainer-ftp-*.manifest.json
 
 # Local solver workspaces / raw exports
 # Keep generated solver outputs local until they are reviewed and converted

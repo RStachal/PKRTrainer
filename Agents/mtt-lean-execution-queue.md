@@ -896,6 +896,82 @@ chunk actually exists. Full regression passes 155/155 files and 793/793 tests;
 typecheck, registry drift, scoped Core 4/4 plus 7/7, ranges, raw intake guard,
 production build, precache and bundle budget pass.
 
+### OPS-63 - Freeze extensible beta architecture and exact solver comparison
+
+Status: `DONE 2026-07-22`
+Depends on: `OPS-62`
+Lane: `MECHANICAL`
+
+The active 20-30-working-day contract is
+`Agents/product-architecture-mtt-30-day-plan.md`. Shared infrastructure converts
+solver formats into canonical profile, strategy, EV, review and runtime
+contracts; it never converts MTT poker decisions into SNG or Cash decisions.
+The first SNG/Cash production adapter will reuse these boundaries and add only
+its genuine payout/rake dimensions after MTT v1 stabilizes.
+
+`PKRTRAINER_SOLVER_EXACT_NODE_V1` now binds both solvers to the same profile,
+players and range SHA-256 values, board, pot, node path, action sizes and tree
+SHA-256. The comparator verifies solve accuracy, combo weights, complete action
+frequencies, optional per-action EV and EV-equivalent best-action sets. Any
+setup drift fails before strategy numbers are compared.
+
+```powershell
+npm run range:cross-check-exact -- --left=<texas-canonical.json> --right=<other-canonical.json> --summary
+```
+
+The report is source-safe comparison evidence only: it generates no strategy,
+permission, candidate or production write and cannot overwrite either private
+input. Focused core/CLI tests pass 10/10; full regression passes 159/159 files
+and 809/809 tests. The complete release integrity chain is green. Existing GTO+
+input plans are present, but live verification remains 0/3 ready with nine
+outputs missing.
+
+### OPS-64 - Consolidate the playable-beta and FTP artifact gate
+
+Status: `DONE 2026-07-22`
+Depends on: `OPS-63`
+Lane: `MECHANICAL`
+
+Add one bounded `MTT_PLAYABLE_BETA` report that launches and truthfully labels
+the exact promoted preflop plus reviewed FLOP content selected for beta. After
+the existing release/browser chain passes against one commit, package `dist/`
+and the selected FORPSI template into a deterministic FTP ZIP, reconcile every
+entry by size and SHA-256 and write a manifest containing commit, scope, command
+evidence and known limits. Never package raw solver or intake files.
+
+Acceptance: repeated packaging of unchanged release inputs has identical file
+membership and content hashes; any missing/extra/mismatched entry fails. The
+operator receives ZIP path and SHA-256 before FTP upload.
+
+Implemented as `mtt:playable-beta` and `mtt:ftp-package`. The beta gate keeps
+the currently launchable Core separate from the frozen 8-profile target and
+reports six-max, scoped FLOP and per-action-EV gaps without fallback. The ZIP
+uses fixed metadata and sorted entries; it is expanded and reconciled by path,
+size and SHA-256 before an atomic write. Confirmed writes require a clean commit
+and rerun the complete unit/release/build/Chrome chain. The final milestone can
+be enforced with `--require-target-complete`; its current 4/8 result correctly
+blocks that mode. Focused gate/archive/core/exact-comparison regression passes
+19/19, full regression passes 159/159 files and 809/809 tests, and a live
+13-entry package dry run passes after excluding local-only hidden source maps.
+Typecheck, registry, Core/beta, range/intake,
+build, precache and budget gates pass. Self-hosted production Chrome E2E passes
+desktop plus 360/390/412 px, offline/reload/resilience, 48 contrast checks and
+service-worker rollback with zero browser errors. Its wrapper pins
+`NODE_ENV=production`, keeping browser-tested and normal build hashes equal.
+
+### XSOLVER-01 - Produce the first exact paired second-solver export
+
+Status: `EXTERNAL_DATA`
+Depends on: `OPS-63`
+Lane: `HUMAN_AND_SOLVER_GATE`
+
+Required owner input: confirm GTO+ is installed/licensed or name the available
+alternative. Solve one existing family/board/node with the exact canonical
+ranges and tree used by TexasSolver, meet the pinned accuracy target and provide
+the export. Then implement only that raw-format adapter and run the exact
+comparison over all available combos. A random hand-class report cannot satisfy
+this gate.
+
 ## Phase DEP - Core Deployment Closeout
 
 ### DEP-00 - Preserve verified FTP artifact
@@ -1548,6 +1624,8 @@ Use this exact handoff prompt after changing models:
 | 2026-07-22 | OPS-60 | DONE | Added source-safe partial-progress observability for all four six-max preflop workbenches and separated editable owner fields from the immutable 118,638-row scaffold structure. A whole-row chunk now remains `WAITING` without invoking full candidate validation; changed structure, one-sided strategy or partial EV remains `INVALID`. The live pass measured 474,552/474,552 rows, 4/4 structurally safe, 0 touched and 0/4/0 ready/waiting/invalid without writing strategy or EV. The recurring task exposes the same strategy, EV and review counters. Full release passed 154/154 files and 787/787 tests plus the integrity chain. |
 | 2026-07-22 | OPS-61 | DONE | Classified solver termination causes end to end. Future guard events bind RAM, PID and parameter before termination; runner telemetry distinguishes guarded stops from native exits, and accuracy recovery defers cleanly for the next resource-safe trigger. Live legacy correlation identifies 2/3 exits as guard stops, with 1 unclassified historical exit and no explicit native exit. The new worker waits at the RAM gate with 13 logs pending and `Q76mono` next; focused tests passed 14/14. |
 | 2026-07-22 | OPS-62 | DONE | Added dry-run-first atomic merging for reviewed six-max preflop subsets. Exact immutable identities, complete strategy/EV/review field groups, fill-only semantics, idempotence, conflict-wide rejection, pre-write SHA-256 and backup replacement are enforced. The command generates no poker values or production artifacts; full regression passed 155/155 files and 793/793 tests plus the complete integrity chain, and live blank workbenches were not touched. |
+| 2026-07-22 | OPS-63 | DONE | Froze the reusable MTT-to-SNG/Cash architecture boundary and 20-30-day playable-beta sequence without authorizing cross-variant strategy reuse. Added an exact solver-neutral node contract and comparator for setup/range/tree/economics fingerprints, a shared accuracy target, combo frequencies, per-action EV and range-weighted equivalent best-action sets. It cannot promote or overwrite private inputs; focused tests passed 10/10 and full regression passed 159/159 files and 809/809 tests. GTO+ remains an honest external gate at 0/3 ready with nine outputs missing. |
+| 2026-07-22 | OPS-64 | DONE | Added one source-free `MTT_PLAYABLE_BETA_V1` gate: current Core is a launchable increment at 4/8 preflop, six-max 0/4 and scoped FLOP 7/7 while full-target mode remains blocked. Added a fixed-metadata FTP ZIP builder with path/size/SHA-256 reconciliation, source-map exclusion, atomic writes, clean-commit enforcement and a full test/release/build/self-hosted Chrome chain before confirmed output. Full regression passed 159/159 files and 809/809 tests; all release gates and four-viewport production Chrome QA passed with zero browser errors. The preview wrapper pins production environment so its asset hashes match the normal build; the live dry run reconciled 13 deployable entries. |
 | 2026-07-20 | OPS-51 | DONE | Fixed UTF-16LE TexasSolver log intake and added a fast fail-closed staging refresh over already validated cumulative reports. The live pass refreshed 20/20 family summaries and recovered traceable exploitability for 403/439 approved boards across all 20 families; an immediate repeat wrote nothing. Protocol warnings fell from 38 to 20, leaving only human caveats and owner verdicts. Focused tests passed 38/38; typecheck, scoped Core and production build passed. |
 | 2026-07-20 | RELEASE-FTP-03 | DONE | Packaged source commit `c44efebdad96` after the complete 152-file / 762-test MTT Core release gate and four-viewport Chrome QA as `deploy/pkrtrainer-ftp-20260720-141237-c44efebdad96-mtt-core-p1-incremental.zip`. Portable forward-slash ZIP reconciliation passed 22/22 files with 0 missing, 0 extra and 0 hash mismatches; SHA-256 is `2374090EBAB10A4E2E38D9CD04D03C4457E0C6E561561F01C7A18093CC192F67`. |
 | 2026-07-20 | OWNER-REVIEW-06 | DONE | Owner dashboard progress now counts only export-valid decisions, marks missing reviewer/date/scope/caveats, and focuses the next incomplete visible row without selecting a poker verdict. Current dashboard regenerated over 53 reports with 20/20 mechanical family context and 0 preselected decisions. Focused reviewer/writer/autostart tests passed 17/17, typecheck passed, and browser QA removed the 390px global horizontal overflow. |

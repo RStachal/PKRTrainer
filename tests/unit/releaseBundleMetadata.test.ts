@@ -57,7 +57,10 @@ describe("release bundle metadata", () => {
   it("publikovana app metadata pouzivaji cestinu a platne UTF-8 popisy", () => {
     const html = readFileSync("index.html", "utf8");
     const budgetScript = readFileSync("scripts/checkBundleBudget.mts", "utf8");
+    const viteConfig = readFileSync("vite.config.ts", "utf8");
     const chromeE2eScript = readFileSync("scripts/runChromeE2e.mts", "utf8");
+    const chromePreviewE2eScript = readFileSync("scripts/runChromePreviewE2e.mts", "utf8");
+    const ftpPackageScript = readFileSync("scripts/packageMttPlayableBeta.mts", "utf8");
     const productionFixtureE2eScript = readFileSync(
       "scripts/runChromeProductionFixtureE2e.mts",
       "utf8",
@@ -88,6 +91,8 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:slots"]).toBe("vite-node scripts/listMttImportSlots.mts");
     expect(pkg.scripts["mtt:completion"]).toBe("vite-node scripts/checkMttCompletion.mts");
     expect(pkg.scripts["mtt:core-release"]).toBe("vite-node scripts/checkMttCoreRelease.mts");
+    expect(pkg.scripts["mtt:playable-beta"]).toBe("vite-node scripts/checkMttPlayableBeta.mts");
+    expect(pkg.scripts["mtt:ftp-package"]).toBe("vite-node scripts/packageMttPlayableBeta.mts");
     expect(pkg.scripts["mtt:blockers"]).toBe("vite-node scripts/checkMttBlockers.mts");
     expect(pkg.scripts["mtt:intake-plan"]).toBe("vite-node scripts/checkMttIntakePlan.mts");
     expect(pkg.scripts["mtt:postflop-matrix"]).toBe("vite-node scripts/checkMttPostflopMatrix.mts");
@@ -147,12 +152,18 @@ describe("release bundle metadata", () => {
       .toBe("vite-node scripts/stageMttSixMaxPreflopIntakeBatch.mts --incremental --summary");
     expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
     expect(pkg.scripts["range:intake:guard"]).toBe("vite-node scripts/checkRangeIntakeWorkspace.mts");
+    expect(pkg.scripts["range:cross-check-exact"])
+      .toBe("vite-node scripts/compareSolverExactNodes.mts");
     expect(pkg.scripts["bundle:budget"]).toBe("vite-node scripts/checkBundleBudget.mts");
     expect(pkg.scripts["verify:precache"]).toBe("vite-node scripts/checkDistPrecache.mts");
     expect(pkg.scripts["profile:render"]).toBe("vite-node scripts/profileRenderPerformance.mts");
     expect(pkg.scripts["e2e:chrome"]).toBe("vite-node scripts/runChromeE2e.mts");
     expect(pkg.scripts["e2e:chrome:preview"])
       .toBe("vite-node scripts/runChromePreviewE2e.mts");
+    expect(chromePreviewE2eScript).toContain('NODE_ENV: "production"');
+    expect(chromePreviewE2eScript).toContain('"--strictPort"');
+    expect(ftpPackageScript).toContain('!source.path.endsWith(".map")');
+    expect(ftpPackageScript).toContain("Source map must not enter the FTP package");
     expect(pkg.scripts["e2e:chrome:production-fixture"])
       .toBe("vite-node scripts/runChromeProductionFixtureE2e.mts");
     expect(pkg.scripts["e2e:android:preflight"])
@@ -230,6 +241,7 @@ describe("release bundle metadata", () => {
     expect(handoffScript).toContain("NORMALIZED_JSON_REQUIREMENTS.md");
     expect(handoffScript).toContain("PERMISSION_JSON_REQUIREMENTS.md");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
+    expect(viteConfig).toContain('sourcemap: "hidden"');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_GZIP_KB", 128)');

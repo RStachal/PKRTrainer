@@ -63,7 +63,7 @@ interface CorePermissionRow {
   errors: readonly string[];
 }
 
-interface MttCoreReleaseReport {
+export interface MttCoreReleaseReport {
   valid: boolean;
   scope: typeof CORE_SCOPE;
   releaseLabel: "MTT ChipEV Core";

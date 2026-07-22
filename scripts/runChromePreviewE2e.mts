@@ -10,7 +10,7 @@ const previewPort = await findAvailablePort();
 let preview: ChildProcess | null = null;
 
 try {
-  runNode([viteCli, "build"]);
+  runNode([viteCli, "build"], { NODE_ENV: "production" });
   preview = spawn(nodeExecutable, [
     viteCli,
     "preview",
@@ -21,12 +21,14 @@ try {
     "--strictPort",
   ], {
     cwd: root,
+    env: { ...process.env, NODE_ENV: "production" },
     stdio: ["ignore", "ignore", "pipe"],
     windowsHide: true,
   });
   await waitForUrl(`http://127.0.0.1:${previewPort}/`);
   runNode([viteNodeCli, "scripts/runChromeE2e.mts"], {
     MTT_E2E_URL: `http://127.0.0.1:${previewPort}/`,
+    NODE_ENV: "production",
   });
   console.log("Production preview Chrome E2E passed.");
 } finally {

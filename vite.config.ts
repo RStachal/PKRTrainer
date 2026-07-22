@@ -53,7 +53,7 @@ export default defineConfig({
   build: {
     outDir: "dist",
     target: "es2020",
-    sourcemap: true,
+    sourcemap: "hidden",
     rollupOptions: {
       input: {
         // Hlavní HTML vstup aplikace (JS/CSS bundly zůstávají hashované).
