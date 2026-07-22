@@ -1,10 +1,17 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
+import {
+  OWNER_DECISION_SCHEMA_VERSION,
+  isOwnerEvidenceFingerprint,
+  ownerEvidenceFromFamilyDir,
+} from "./texasSolverOwnerEvidence.mts";
+
 type Decision = "yes" | "no" | "scoped";
 
 interface ReviewDecision {
   familyId: string;
+  evidenceFingerprint: string;
   reviewer: string;
   reviewedAt: string;
   decision: string;
@@ -13,7 +20,7 @@ interface ReviewDecision {
 }
 
 interface DecisionFile {
-  schemaVersion: "pkrtrainer-texas-solver-owner-decisions-v1";
+  schemaVersion: typeof OWNER_DECISION_SCHEMA_VERSION;
   decisions: ReviewDecision[];
 }
 
@@ -27,7 +34,7 @@ interface CliArgs {
 }
 
 const CONFIRM_TOKEN = "RECORD_TEXAS_SOLVER_OWNER_REVIEW_BATCH";
-const SCHEMA_VERSION = "pkrtrainer-texas-solver-owner-decisions-v1";
+const SCHEMA_VERSION = OWNER_DECISION_SCHEMA_VERSION;
 
 try {
   const args = parseArgs(process.argv.slice(2));
@@ -91,7 +98,15 @@ function run(args: CliArgs) {
   if (args.templateOut !== null) {
     const document: DecisionFile = {
       schemaVersion: SCHEMA_VERSION,
-      decisions: families.map((familyId) => ({ familyId, reviewer: "", reviewedAt: "", decision: "", scope: "", caveats: "" })),
+      decisions: families.map((familyId) => ({
+        familyId,
+        evidenceFingerprint: ownerEvidenceFromFamilyDir(join(args.rootDir, familyId), familyId).fingerprint,
+        reviewer: "",
+        reviewedAt: "",
+        decision: "",
+        scope: "",
+        caveats: "",
+      })),
     };
     mkdirSync(resolve(args.templateOut, ".."), { recursive: true });
     writeFileSync(args.templateOut, `${JSON.stringify(document, null, 2)}\n`, "utf8");
@@ -144,7 +159,7 @@ function isDecisionFile(value: unknown): value is DecisionFile {
 function isReviewDecision(value: unknown): value is ReviewDecision {
   if (typeof value !== "object" || value === null) return false;
   const entry = value as Record<string, unknown>;
-  return ["familyId", "reviewer", "reviewedAt", "decision", "scope", "caveats"]
+  return ["familyId", "evidenceFingerprint", "reviewer", "reviewedAt", "decision", "scope", "caveats"]
     .every((field) => typeof entry[field] === "string");
 }
 
@@ -158,6 +173,16 @@ function validateSelected(entries: readonly ReviewDecision[], families: readonly
     else if (ids.has(entry.familyId)) errors.push(`${prefix}: duplicate familyId.`);
     else ids.add(entry.familyId);
     if (!families.includes(entry.familyId)) errors.push(`${prefix}: family does not have an existing review-notes.md.`);
+    if (!isOwnerEvidenceFingerprint(entry.evidenceFingerprint)) {
+      errors.push(`${prefix}: evidenceFingerprint must use sha256:<64 lowercase hex> format.`);
+    } else if (families.includes(entry.familyId)) {
+      try {
+        const current = ownerEvidenceFromFamilyDir(join(rootDir, entry.familyId), entry.familyId).fingerprint;
+        if (entry.evidenceFingerprint !== current) errors.push(`${prefix}: evidenceFingerprint is stale for the current owner evidence.`);
+      } catch (error) {
+        errors.push(`${prefix}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
     if (!isDecision(entry.decision)) errors.push(`${prefix}: decision must be yes, no, or scoped.`);
     if (!entry.reviewer?.trim()) errors.push(`${prefix}: reviewer is required.`);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(entry.reviewedAt?.trim() ?? "")) errors.push(`${prefix}: reviewedAt must use YYYY-MM-DD.`);
@@ -178,13 +203,14 @@ function previewChange(entry: ReviewDecision, rootDir: string) {
   const usable = entry.decision === "scoped" ? `scoped: ${entry.scope.trim()}` : entry.decision;
   const after = upsertFields(before, [
     ["Status", "REVIEWED"],
+    ["Review evidence fingerprint", entry.evidenceFingerprint],
     ["Reviewer", entry.reviewer.trim()],
     ["Reviewed at", entry.reviewedAt.trim()],
     ["Usable for production", usable],
     ["Usable scope", entry.scope.trim()],
     ["Production caveats", entry.caveats.trim()],
   ]);
-  const labels = ["Status", "Reviewer", "Reviewed at", "Usable for production", "Usable scope", "Production caveats"];
+  const labels = ["Status", "Review evidence fingerprint", "Reviewer", "Reviewed at", "Usable for production", "Usable scope", "Production caveats"];
   return { familyId: entry.familyId, notesPath, before, after, changedFields: labels.filter((label) => fieldValue(before, label) !== fieldValue(after, label)) };
 }
 

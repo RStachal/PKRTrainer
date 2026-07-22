@@ -1,6 +1,12 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
+import {
+  OWNER_DECISION_SCHEMA_VERSION,
+  ownerEvidenceFromPaths,
+  type OwnerEvidenceFingerprint,
+} from "./texasSolverOwnerEvidence.mts";
+
 const DEFAULT_REVIEWS_DIR = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 const DEFAULT_OUTPUT = "artifacts/texas-solver-review-integration/viewer/index.html";
 const DEFAULT_WAVES = "artifacts/texas-solver-review-protocol/packet/OWNER_REVIEW_WAVES.md";
@@ -88,6 +94,7 @@ type AccuracyState = "COMPLETE" | "PARTIAL" | "MISSING" | "UNAVAILABLE";
 
 interface AccuracySummary {
   familyId: string;
+  sourcePath: string;
   expectedBoards: number;
   parsedBoards: number;
   perBoardLogs: number;
@@ -111,8 +118,9 @@ try {
   const mechanicalReadiness = readMechanicalReadiness(args.readinessPath);
   const accuracyRoot = args.accuracyRoot ?? (args.inputs.length === 0 ? args.reviewsDir : null);
   const accuracySummaries = readAccuracySummaries(accuracyRoot, reports.map((report) => report.familyId));
+  const ownerEvidence = buildOwnerEvidenceFingerprints(reports, accuracySummaries);
   mkdirSync(dirname(args.outputPath), { recursive: true });
-  writeFileSync(args.outputPath, buildHtml(args.title, reports, reviewWaves, mechanicalReadiness, accuracySummaries), "utf8");
+  writeFileSync(args.outputPath, buildHtml(args.title, reports, reviewWaves, mechanicalReadiness, accuracySummaries, ownerEvidence), "utf8");
 
   console.log(`TexasSolver review viewer written: ${args.outputPath}`);
   console.log(`Reports: ${reports.length}`);
@@ -378,6 +386,7 @@ function readAccuracySummaries(
     values.sort((left, right) => left - right);
     summaries.set(familyId, {
       familyId,
+      sourcePath: path,
       expectedBoards,
       parsedBoards,
       perBoardLogs,
@@ -408,6 +417,23 @@ function median(values: readonly number[]): number | null {
   if (values.length === 0) return null;
   const middle = Math.floor(values.length / 2);
   return values.length % 2 === 1 ? values[middle] : (values[middle - 1] + values[middle]) / 2;
+}
+
+function buildOwnerEvidenceFingerprints(
+  reports: readonly NormalizedReport[],
+  accuracySummaries: ReadonlyMap<string, AccuracySummary>,
+): ReadonlyMap<string, OwnerEvidenceFingerprint> {
+  const reportPaths = new Map<string, string[]>();
+  for (const report of reports) {
+    if (report.reviewOnlyTreeProfile !== null) continue;
+    const paths = reportPaths.get(report.familyId) ?? [];
+    paths.push(report.sourcePath);
+    reportPaths.set(report.familyId, paths);
+  }
+  return new Map([...reportPaths.entries()].map(([familyId, paths]) => {
+    const accuracyPath = accuracySummaries.get(familyId)?.sourcePath ?? null;
+    return [familyId, ownerEvidenceFromPaths(familyId, paths, accuracyPath)];
+  }));
 }
 
 function readReviewReport(sourcePath: string): NormalizedReport {
@@ -509,6 +535,7 @@ function buildHtml(
   reviewWaves: ReadonlyMap<string, number>,
   mechanicalReadiness: ReadonlyMap<string, MechanicalReadinessRow>,
   accuracySummaries: ReadonlyMap<string, AccuracySummary>,
+  ownerEvidence: ReadonlyMap<string, OwnerEvidenceFingerprint>,
 ): string {
   const generatedAt = new Date().toISOString();
   const summary = summarizeReports(reports);
@@ -549,7 +576,7 @@ function buildHtml(
       ${accuracyFilter}
       <output id="filter-count" aria-live="polite">${summary.total} families</output>
     </section>
-    ${renderOwnerDecisionWorkbench(reports, reviewWaves, mechanicalReadiness, accuracySummaries)}
+    ${renderOwnerDecisionWorkbench(reports, reviewWaves, mechanicalReadiness, accuracySummaries, ownerEvidence)}
     <section class="summary-grid">${summaryCards}</section>
     ${reportSections}
   </main>
@@ -603,22 +630,25 @@ function renderOwnerDecisionWorkbench(
   reviewWaves: ReadonlyMap<string, number>,
   mechanicalReadiness: ReadonlyMap<string, MechanicalReadinessRow>,
   accuracySummaries: ReadonlyMap<string, AccuracySummary>,
+  ownerEvidence: ReadonlyMap<string, OwnerEvidenceFingerprint>,
 ): string {
   const families = ownerDecisionFamilies(reports, reviewWaves);
   if (families.length === 0) {
     return `<section class="evidence-boundary" aria-labelledby="evidence-boundary-title"><p class="eyebrow">Read-only boundary</p><h2 id="evidence-boundary-title">Owner Decisions Disabled</h2><p>These reports use a reduced review-only tree. Inspect frequencies here, but record no production usability decision from this viewer.</p></section>`;
   }
-  const storageKey = `pkrtrainer-texas-solver-owner-review-v1:${families.map((family) => family.familyId).join("|")}`;
+  const storageKey = `pkrtrainer-texas-solver-owner-review-v2:${families.map((family) => family.familyId).join("|")}`;
   const mechanicallyReady = families.filter((family) => mechanicalValue(mechanicalReadiness.get(family.familyId)) === "READY").length;
   const accuracyTotal = summarizeAccuracy(accuracySummaries, families.map((family) => family.familyId));
   const rows = families.map((family) => {
     const readiness = mechanicalReadiness.get(family.familyId);
     const accuracy = accuracySummaries.get(family.familyId);
-    return `<tr data-owner-row data-family="${escapeHtml(family.familyId)}" data-family-id="${escapeHtml(family.familyId)}" data-status="${escapeHtml(family.status)}" data-wave="${waveValue(family.wave)}" data-mechanical="${mechanicalValue(readiness)}" data-mechanical-ready="${mechanicalValue(readiness) === "READY" ? "true" : "false"}" data-accuracy="${accuracyValue(accuracy)}">
+    const evidence = ownerEvidence.get(family.familyId);
+    if (evidence === undefined) throw new Error(`Owner evidence fingerprint is unavailable for ${family.familyId}.`);
+    return `<tr data-owner-row data-family="${escapeHtml(family.familyId)}" data-family-id="${escapeHtml(family.familyId)}" data-status="${escapeHtml(family.status)}" data-wave="${waveValue(family.wave)}" data-mechanical="${mechanicalValue(readiness)}" data-mechanical-ready="${mechanicalValue(readiness) === "READY" ? "true" : "false"}" data-accuracy="${accuracyValue(accuracy)}" data-evidence-fingerprint="${evidence.fingerprint}">
     <td><strong><a href="#${escapeHtml(family.anchor)}">${escapeHtml(family.familyId)}</a></strong><small>${escapeHtml(family.status)}</small></td>
     <td>${escapeHtml(family.wave === null ? "Unassigned" : `Wave ${family.wave}`)}</td>
     <td>${renderMechanicalReadiness(readiness)}</td>
-    <td>${renderAccuracySummary(accuracy)}</td>
+    <td>${renderAccuracySummary(accuracy)}<small title="Exact source-safe owner evidence fingerprint">evidence ${evidence.fingerprint.slice(7, 19)}</small></td>
     <td><select data-owner-decision aria-label="Decision for ${escapeHtml(family.familyId)}"><option value="">Pending</option><option value="yes">Yes</option><option value="scoped">Scoped</option><option value="no">No</option></select></td>
     <td><input data-owner-scope aria-label="Scope for ${escapeHtml(family.familyId)}" type="text"></td>
     <td><input data-owner-caveats aria-label="Caveats for ${escapeHtml(family.familyId)}" type="text"></td>
@@ -885,12 +915,13 @@ const ownerReviewer = document.getElementById("owner-reviewer");
 const ownerReviewedAt = document.getElementById("owner-reviewed-at");
 const ownerFileInput = document.getElementById("owner-decisions-file");
 const ownerStorageKey = ownerRoot?.dataset.storageKey ?? "";
-const ownerSchemaVersion = "pkrtrainer-texas-solver-owner-decisions-v1";
+const ownerSchemaVersion = ${JSON.stringify(OWNER_DECISION_SCHEMA_VERSION)};
 const ownerDecisionValues = new Set(["", "yes", "no", "scoped"]);
 
 function ownerDecisionForRow(row) {
   return {
     familyId: row.dataset.familyId,
+    evidenceFingerprint: row.dataset.evidenceFingerprint,
     reviewer: ownerReviewer.value.trim(),
     reviewedAt: ownerReviewedAt.value,
     decision: row.querySelector("[data-owner-decision]").value,
@@ -901,6 +932,7 @@ function ownerDecisionForRow(row) {
 
 function ownerDecisionIsComplete(decision) {
   return decision.decision !== ""
+    && /^sha256:[a-f0-9]{64}$/.test(decision.evidenceFingerprint)
     && Boolean(decision.reviewer)
     && /^\\d{4}-\\d{2}-\\d{2}$/.test(decision.reviewedAt)
     && Boolean(decision.caveats)
@@ -1010,7 +1042,8 @@ function applyOwnerDocument(documentValue) {
     if (!decision || typeof decision.familyId !== "string" || !rowsByFamily.has(decision.familyId)) throw new Error("Decision JSON contains an unknown family.");
     if (seen.has(decision.familyId)) throw new Error("Decision JSON contains a duplicate family.");
     seen.add(decision.familyId);
-    if (!["reviewer", "reviewedAt", "decision", "scope", "caveats"].every((field) => typeof decision[field] === "string")) throw new Error("Decision JSON contains a non-string decision field.");
+    if (!["evidenceFingerprint", "reviewer", "reviewedAt", "decision", "scope", "caveats"].every((field) => typeof decision[field] === "string")) throw new Error("Decision JSON contains a non-string decision field.");
+    if (decision.evidenceFingerprint !== rowsByFamily.get(decision.familyId).dataset.evidenceFingerprint) throw new Error("Decision JSON is stale for the current owner evidence.");
     if (!ownerDecisionValues.has(decision.decision ?? "")) throw new Error("Decision JSON contains an invalid decision.");
     if (decision.reviewer) reviewers.add(decision.reviewer);
     if (decision.reviewedAt) reviewDates.add(decision.reviewedAt);

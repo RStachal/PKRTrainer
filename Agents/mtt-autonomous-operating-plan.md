@@ -136,7 +136,9 @@ does not interrupt the current step unless it exposes a production regression.
   four-wave dashboard at `artifacts/texas-solver-review-protocol/viewer/index.html`.
   Its decision controls are never populated from reduced-tree evidence. A
   fail-closed filter exposes `Shape ready` versus `Needs evidence` only as
-  review-order context.
+  review-order context. Decision schema v2 binds each exported verdict to the
+  exact source-safe family reports and accuracy report; any later evidence
+  change invalidates the old sign-off in the dashboard, writers and protocol.
 - Candidate normalizer regression: resolved. The low-SPR SB vs BB source retained
   five exact `CHECK`-dominant buckets; the scoped pilot suite is now 7/7 READY.
   This remains review-only evidence and has not promoted runtime content.

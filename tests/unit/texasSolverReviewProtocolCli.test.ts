@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { ownerEvidenceFromFamilyDir } from "../../scripts/texasSolverOwnerEvidence.mts";
 
 describe("mtt:texas-solver-review-protocol CLI", () => {
   it("fail-closed reportuje chybejici review-notes bez raw solver JSONu", () => {
@@ -77,12 +78,14 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
       writeFileSync(
         join(familyDir, "accuracy-report.json"),
         JSON.stringify({
+          familyId: "MTT9_50BB_BTN_BB_SRP",
           solver: "texas-solver",
           status: "NEEDS_REVIEW",
           accuracySource: "Not parsed from TexasSolver logs yet.",
         }),
         "utf8",
       );
+      bindReviewedEvidence(familyDir, "MTT9_50BB_BTN_BB_SRP");
 
       const result = runProtocol(`--root=${directory}`, "--json");
 
@@ -141,6 +144,7 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
       writeFileSync(
         join(familyDir, "accuracy-report.json"),
         JSON.stringify({
+          familyId: "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
           solver: "texas-solver",
           status: "REVIEWED",
           exploitability: "0.42%",
@@ -148,6 +152,7 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
         }),
         "utf8",
       );
+      bindReviewedEvidence(familyDir, "MTT9_80BB_BTN_BB_SRP_HIGHSPR");
 
       const result = runProtocol(
         `--root=${directory}`,
@@ -195,6 +200,7 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
       writeFileSync(
         join(familyDir, "accuracy-report.json"),
         JSON.stringify({
+          familyId: "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
           solver: "texas-solver",
           status: "NEEDS_REVIEW",
           exploitability: null,
@@ -208,6 +214,7 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
         }),
         "utf8",
       );
+      bindReviewedEvidence(familyDir, "MTT9_80BB_BTN_BB_SRP_HIGHSPR");
 
       const packetDir = join(directory, "packet");
       const result = runProtocol(
@@ -258,6 +265,7 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
       writeFileSync(
         join(familyDir, "accuracy-report.json"),
         JSON.stringify({
+          familyId: "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
           accuracySource: "Parsed from local TexasSolver console evidence; human review still decides adequacy.",
           solverLogCoverage: {
             evidence: [{ rawFileName: "pkrtrainer_MTT9_80BB_BTN_BB_SRP_HIGHSPR_A72r.json", source: "QUEUE_LOG", value: true }],
@@ -265,6 +273,7 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
         }),
         "utf8",
       );
+      bindReviewedEvidence(familyDir, "MTT9_80BB_BTN_BB_SRP_HIGHSPR");
 
       const result = runProtocol(`--root=${directory}`, "--require-production-usable", "--json");
 
@@ -319,6 +328,7 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
       expect(checklist).toContain("TexasSolver review checklist: MTT9_50BB_BTN_BB_SRP");
       expect(checklist).toContain("Status: NEEDS_REVIEW");
       expect(checklist).toContain("Required review-notes.md fields");
+      expect(checklist).toContain("Review evidence fingerprint: <unavailable>");
       expect(checklist).toContain("Confirm intended PKRTrainer spot family");
       expect(checklist).not.toContain("\"strategy\"");
     } finally {
@@ -379,6 +389,7 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
       expect(notes).toContain("## Owner decision");
       expect(notes).toContain("Reviewer:");
       expect(notes).toContain("Reviewed at:");
+      expect(notes).toContain("Review evidence fingerprint:");
       expect(notes).toContain("Usable for production:");
       expect(notes).toContain("Usable scope:");
       expect(notes).toContain("Production caveats:");
@@ -388,7 +399,69 @@ describe("mtt:texas-solver-review-protocol CLI", () => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  it("odmitne reviewed sign-off po zmene podepsaneho solver reportu", () => {
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-review-protocol-stale-"));
+    try {
+      const familyId = "MTT9_50BB_BTN_BB_SRP";
+      const familyDir = join(directory, familyId);
+      mkdirSync(familyDir, { recursive: true });
+      writeFileSync(
+        join(familyDir, "review-notes.md"),
+        [
+          "Status: REVIEWED",
+          "Reviewer: PKRTrainer QA",
+          "Reviewed at: 2026-07-22",
+          "Usable for production: no",
+          "Usable scope: evidence binding regression fixture",
+          "Production caveats: fixture only",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      writeFileSync(
+        join(familyDir, "accuracy-report.json"),
+        JSON.stringify({ familyId, status: "NEEDS_REVIEW" }),
+        "utf8",
+      );
+      bindReviewedEvidence(familyDir, familyId);
+      writeFileSync(
+        join(familyDir, "strategy-export.review.json"),
+        JSON.stringify({ familyId, status: "UPDATED_AFTER_REVIEW" }),
+        "utf8",
+      );
+
+      const result = runProtocol(`--root=${directory}`, "--json");
+
+      expect(result.status).toBe(1);
+      const parsed = parseJsonStdout(result.stdout) as {
+        rows: Array<{ protocolReady: boolean; blockers: string[] }>;
+      };
+      expect(parsed.rows[0].protocolReady).toBe(false);
+      expect(parsed.rows[0].blockers).toContain(
+        "Review evidence fingerprint is stale for the current owner evidence.",
+      );
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
 });
+
+function bindReviewedEvidence(familyDir: string, familyId: string): string {
+  const reportPath = join(familyDir, "strategy-export.review.json");
+  if (!existsSync(reportPath)) {
+    writeFileSync(reportPath, JSON.stringify({ familyId, status: "NEEDS_REVIEW" }), "utf8");
+  }
+  const fingerprint = ownerEvidenceFromFamilyDir(familyDir, familyId).fingerprint;
+  const notesPath = join(familyDir, "review-notes.md");
+  const notes = readFileSync(notesPath, "utf8");
+  writeFileSync(
+    notesPath,
+    notes.replace(/^Status:[^\r\n]*$/m, (line) => `${line}\nReview evidence fingerprint: ${fingerprint}`),
+    "utf8",
+  );
+  return fingerprint;
+}
 
 function runProtocol(...args: string[]) {
   return spawnSync(command(), commandArgs(args), {

@@ -1,6 +1,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
+import { isOwnerEvidenceFingerprint, ownerEvidenceFromFamilyDir } from "./texasSolverOwnerEvidence.mts";
+
 type UsableForProduction = "YES" | "NO" | "SCOPED" | "UNKNOWN";
 type ReviewProtocolStatus =
   | "MISSING_REVIEW"
@@ -61,6 +63,8 @@ interface ReviewProtocolRow {
   usableForProduction: UsableForProduction;
   usableScope: string;
   productionCaveats: string;
+  reviewEvidenceFingerprint: string;
+  currentEvidenceFingerprint: string;
   accuracyEvidence: string;
   protocolReady: boolean;
   productionEligible: boolean;
@@ -236,6 +240,7 @@ function prepareReviewTemplates(args: CliArgs): string[] {
     const requiredFields: Array<[string, string]> = [
       ["Reviewer", ""],
       ["Reviewed at", ""],
+      ["Review evidence fingerprint", ""],
       ["Usable for production", ""],
       ["Usable scope", ""],
       ["Production caveats", ""],
@@ -276,6 +281,14 @@ function reviewProtocolRow(familyDir: string): ReviewProtocolRow {
   const usableForProduction = parseUsableForProduction(usableRaw);
   const usableScope = fieldValue(text, "Usable scope") || usableRaw;
   const productionCaveats = fieldValue(text, "Production caveats");
+  const reviewEvidenceFingerprint = fieldValue(text, "Review evidence fingerprint");
+  let currentEvidenceFingerprint = "";
+  let evidenceFingerprintError = "";
+  try {
+    currentEvidenceFingerprint = ownerEvidenceFromFamilyDir(familyDir, familyId).fingerprint;
+  } catch (error) {
+    evidenceFingerprintError = error instanceof Error ? error.message : String(error);
+  }
   const accuracy = accuracyEvidenceSummary(accuracyReportPath);
   const accuracyEvidence = accuracy.text;
   const blockers: string[] = [];
@@ -289,6 +302,15 @@ function reviewProtocolRow(familyDir: string): ReviewProtocolRow {
   }
   if (reviewer.length === 0) blockers.push("Reviewer is required.");
   if (reviewedAt.length === 0) blockers.push("Reviewed at is required.");
+  if (statusText.toUpperCase() === "REVIEWED") {
+    if (!isOwnerEvidenceFingerprint(reviewEvidenceFingerprint)) {
+      blockers.push("Review evidence fingerprint is required and must use sha256:<64 lowercase hex> format.");
+    } else if (evidenceFingerprintError.length > 0) {
+      blockers.push(`Current owner evidence fingerprint is unavailable: ${evidenceFingerprintError}`);
+    } else if (reviewEvidenceFingerprint !== currentEvidenceFingerprint) {
+      blockers.push("Review evidence fingerprint is stale for the current owner evidence.");
+    }
+  }
   if (usableForProduction === "UNKNOWN") {
     blockers.push("Usable for production must be yes, no, or scoped:<scope>.");
   }
@@ -303,7 +325,11 @@ function reviewProtocolRow(familyDir: string): ReviewProtocolRow {
   }
 
   const reviewed = reviewNotesPresent && statusText.toUpperCase() === "REVIEWED";
+  const evidenceFingerprintMatches = reviewed
+    && reviewEvidenceFingerprint.length > 0
+    && reviewEvidenceFingerprint === currentEvidenceFingerprint;
   const protocolReady = reviewed
+    && evidenceFingerprintMatches
     && reviewer.length > 0
     && reviewedAt.length > 0
     && usableForProduction !== "UNKNOWN";
@@ -326,6 +352,8 @@ function reviewProtocolRow(familyDir: string): ReviewProtocolRow {
     usableForProduction,
     usableScope,
     productionCaveats,
+    reviewEvidenceFingerprint,
+    currentEvidenceFingerprint,
     accuracyEvidence,
     protocolReady,
     productionEligible,
@@ -541,6 +569,7 @@ function renderFamilyChecklist(row: ReviewProtocolRow): string {
     "",
     "```text",
     "Status: REVIEWED",
+    `Review evidence fingerprint: ${row.currentEvidenceFingerprint || "<unavailable>"}`,
     "Reviewer: <name or internal reviewer id>",
     "Reviewed at: <YYYY-MM-DD>",
     "Usable for production: no | scoped: <exact scope> | yes",

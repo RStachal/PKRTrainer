@@ -1,6 +1,6 @@
 # MTT Lean Execution Queue
 
-Updated: 2026-07-20
+Updated: 2026-07-22
 Status: ACTIVE AFTER MTT_CORE_V1
 Default execution setting: GPT-5.6 Terra, Medium reasoning
 
@@ -595,6 +595,30 @@ Acceptance: the live 53-report dashboard exposes 403/439 traceable boards over
 log filenames visible. Owner decisions remain 0/20. Focused viewer, protocol,
 readiness and Windows automation regression passes 25/25; typecheck, scoped
 Core gate and production build pass.
+
+### OPS-53 - Bind owner decisions to exact review evidence
+
+Status: `DONE 2026-07-22`
+Depends on: `OPS-52`, `OWNER-REVIEW-06`
+Lane: `MECHANICAL`
+
+Every owner decision is now bound to the exact source-safe family review
+reports and approved accuracy report visible at review time. A deterministic
+SHA-256 fingerprint covers file names and file bytes without reading or hashing
+raw solver JSON. The dashboard exports decision schema v2 with that
+fingerprint; the single-family writer, batch writer and review protocol all
+recompute it immediately before accepting a sign-off.
+
+Any later report or accuracy change makes the old decision stale and fail
+closed. This safeguard records no verdict, does not promote strategy and does
+not turn mechanical evidence into poker approval.
+
+Acceptance: the live v2 template contains 20/20 valid evidence fingerprints and
+zero decisions; the canonical dashboard still renders 53 reports, 403/439
+traceable boards, 10 complete plus 10 partial families and 0/20 owner verdicts.
+Dedicated stale-evidence regression is enforced in dashboard import, both
+writers and protocol validation. Focused regression passes 24/24; typecheck,
+scoped Core 4/4 plus 7/7 and the production build pass.
 
 ## Phase DEP - Core Deployment Closeout
 
@@ -1233,6 +1257,7 @@ Use this exact handoff prompt after changing models:
 | 2026-07-20 | OPS-49 | DONE | Split live review-only intake truth from the resource-gated full-cycle snapshot. Status now shows timestamped cumulative evidence and exact per-manifest coverage even while the ten-minute cycle defers; it tracked beta-depth through 81/83 and then final 83/83 with 439 cumulative family/board checkpoints while the correctly stale full snapshot still showed 65/83. Focused tests passed 12/12 and the complete release passed 152 files / 762 tests, registry, Core, ranges, build, precache and budget without staging or promotion. |
 | 2026-07-20 | OPS-50 | DONE | Removed the false duplicate-permission blocker from six-max P1 intake. All four owner-confirmed canonical manifests are reused and fully validated during staging; read-only preflight now uses the eventual owned-export license and confidence. Live candidate/staging progress is 0 ready, 4 waiting, 0 invalid and each row waits only for `normalized.candidate.json`; 18/18 focused tests, typecheck, registry, intake guard and Core 4/4 plus 7/7 passed. |
 | 2026-07-20 | OPS-52 | DONE | Canonical owner dashboard joins only approved staged accuracy context and exposes 403/439 boards, 10 complete plus 10 partial families and the exact 36 missing log names. Filters and summaries remain descriptive and never choose a poker verdict; owner review remains 0/20. Malformed counts, sources, values and filenames fail closed. Focused tests passed 25/25; typecheck, scoped Core and production build passed. |
+| 2026-07-22 | OPS-53 | DONE | Bound every owner decision to a deterministic SHA-256 fingerprint of the exact source-safe family review reports and accuracy report. Dashboard schema v2, single and batch writers, and protocol validation reject stale evidence without inferring a verdict. The live template has 20/20 valid fingerprints and 0 decisions; dashboard remains 53 reports, 403/439 boards and owner 0/20. Focused tests passed 24/24; typecheck, scoped Core 4/4 plus 7/7 and production build passed. |
 | 2026-07-20 | OPS-51 | DONE | Fixed UTF-16LE TexasSolver log intake and added a fast fail-closed staging refresh over already validated cumulative reports. The live pass refreshed 20/20 family summaries and recovered traceable exploitability for 403/439 approved boards across all 20 families; an immediate repeat wrote nothing. Protocol warnings fell from 38 to 20, leaving only human caveats and owner verdicts. Focused tests passed 38/38; typecheck, scoped Core and production build passed. |
 | 2026-07-20 | RELEASE-FTP-03 | DONE | Packaged source commit `c44efebdad96` after the complete 152-file / 762-test MTT Core release gate and four-viewport Chrome QA as `deploy/pkrtrainer-ftp-20260720-141237-c44efebdad96-mtt-core-p1-incremental.zip`. Portable forward-slash ZIP reconciliation passed 22/22 files with 0 missing, 0 extra and 0 hash mismatches; SHA-256 is `2374090EBAB10A4E2E38D9CD04D03C4457E0C6E561561F01C7A18093CC192F67`. |
 | 2026-07-20 | OWNER-REVIEW-06 | DONE | Owner dashboard progress now counts only export-valid decisions, marks missing reviewer/date/scope/caveats, and focuses the next incomplete visible row without selecting a poker verdict. Current dashboard regenerated over 53 reports with 20/20 mechanical family context and 0 preselected decisions. Focused reviewer/writer/autostart tests passed 17/17, typecheck passed, and browser QA removed the 390px global horizontal overflow. |

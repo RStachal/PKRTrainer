@@ -1,6 +1,6 @@
 # MTT Completion Priorities
 
-Updated: 2026-07-20
+Updated: 2026-07-22
 Status: ACTIVE EXECUTION CONTRACT
 Core release state: COMPLETE 2026-07-10
 
@@ -91,7 +91,10 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
   traceable exploitability for 403/439 approved boards across all 20 families;
   review-protocol warnings are down to 20 human caveat fields. The canonical
   owner dashboard separates 10 accuracy-complete from 10 partial families and
-  exposes all 36 missing log filenames without inferring a poker decision.
+  exposes all 36 missing log filenames without inferring a poker decision. Its
+  v2 decision export binds every family to a deterministic SHA-256 fingerprint
+  of the exact source-safe review and accuracy files; changed evidence makes an
+  earlier sign-off stale in the dashboard, both writers and protocol gate.
 - Windows low-memory task: `PKRTrainer-TexasSolver-LowMemory` returned `SUCCESS`
   with no live worker or solver process after completing every authorized phase.
   It remains checkpoint-safe after sign-in and will not duplicate a live process.
@@ -237,6 +240,7 @@ npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
 
 | Date | Priority | Result | Evidence |
 | --- | --- | --- | --- |
+| 2026-07-22 | P4 / Owner evidence binding | Old sign-offs cannot survive changed evidence | Decision schema v2 fingerprints the exact source-safe family reports and accuracy report. Dashboard import, single and batch writers, and protocol validation all fail closed on stale evidence without selecting a verdict. The live template has 20/20 valid fingerprints and zero decisions; dashboard remains 53 reports, 403/439 boards, 10 complete plus 10 partial and owner 0/20. Focused tests passed 24/24; typecheck, scoped Core and production build passed |
 | 2026-07-20 | P4 / Owner accuracy workflow | Approved accuracy is visible at the human gate | The canonical 53-report dashboard joins approved staged evidence across 20 owner families: 403/439 boards, 10 complete and 10 partial families, with all 36 missing log filenames expandable and filterable. It never selects or recommends a verdict; owner decisions remain 0/20. Malformed approved reports fail closed. Focused tests passed 25/25; typecheck, scoped Core and production build passed |
 | 2026-07-20 | P4 / Solver accuracy intake | UTF-16 per-board evidence is retained incrementally | The locked refresh reused validated cumulative reports to update 20/20 staging summaries without reparsing raw solver JSON. Traceable exploitability is now present for 403/439 approved boards across all 20 families; the immediate repeat wrote zero files. Review warnings fell from 38 to 20, leaving only human caveats and owner verdicts. Focused tests passed 38/38; typecheck, scoped Core and production build passed |
 | 2026-07-20 | P1 / Canonical provenance handoff | Duplicate permission intake removed | Candidate generation reuses the four owner-confirmed canonical permission manifests and preflights with the eventual owned-export license/confidence. Live candidate and staging progress is 0 ready, 4 waiting, 0 invalid; every stage row reports `permission=CANONICAL` and waits only for the normalized candidate. Focused tests passed 18/18; typecheck, registry, source intake and Core 4/4 plus 7/7 passed. Confirmation tokens, full staging validation and separate promotion remain mandatory |

@@ -116,7 +116,8 @@ describe("mtt:texas-solver-viewer CLI", () => {
       expect(html).toContain("median 0.42 / max 0.42");
       expect(html).toContain("1 per-board / 0 queue / 1 missing");
       expect(html).toContain("pkrtrainer_MTT9_50BB_BTN_BB_SRP_K83r.log");
-      expect(html).toContain("pkrtrainer-texas-solver-owner-decisions-v1");
+      expect(html).toContain("pkrtrainer-texas-solver-owner-decisions-v2");
+      expect(html).toMatch(/data-evidence-fingerprint="sha256:[a-f0-9]{64}"/);
       expect(html).toContain("RECORD_TEXAS_SOLVER_OWNER_REVIEW_BATCH");
       expect(html).toContain("localStorage.setItem");
       expect(html).toContain('data-review-card');
@@ -170,9 +171,10 @@ describe("mtt:texas-solver-viewer CLI", () => {
       expect(row.classList.contains("owner-row--complete")).toBe(true);
       const storageKey = document.querySelector<HTMLElement>("[data-owner-root]")!.dataset.storageKey!;
       const draft = JSON.parse(dom.window.localStorage.getItem(storageKey)!);
-      expect(draft.schemaVersion).toBe("pkrtrainer-texas-solver-owner-decisions-v1");
+      expect(draft.schemaVersion).toBe("pkrtrainer-texas-solver-owner-decisions-v2");
       expect(draft.decisions.find((decision: { familyId: string }) => decision.familyId === "MTT9_50BB_BTN_BB_SRP")).toMatchObject({
         familyId: "MTT9_50BB_BTN_BB_SRP",
+        evidenceFingerprint: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
         reviewer: "Owner",
         decision: "yes",
         scope: "Current reviewed family only",
@@ -181,6 +183,10 @@ describe("mtt:texas-solver-viewer CLI", () => {
       const exported = JSON.parse((dom.window as unknown as { serializeOwnerDecisions(): string }).serializeOwnerDecisions());
       expect(exported.decisions).toHaveLength(1);
       expect(exported.decisions[0].familyId).toBe("MTT9_50BB_BTN_BB_SRP");
+      expect(exported.decisions[0].evidenceFingerprint).toMatch(/^sha256:[a-f0-9]{64}$/);
+      const stale = structuredClone(exported);
+      stale.decisions[0].evidenceFingerprint = `sha256:${"0".repeat(64)}`;
+      expect(() => (dom.window as unknown as { applyOwnerDocument(value: unknown): void }).applyOwnerDocument(stale)).toThrow("Decision JSON is stale for the current owner evidence.");
       expect(jsdomErrors).toEqual([]);
       dom.window.close();
     } finally {

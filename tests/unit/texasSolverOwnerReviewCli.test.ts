@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
 
+import { ownerEvidenceFromFamilyDir } from "../../scripts/texasSolverOwnerEvidence.mts";
+
 describe("mtt:texas-solver-owner-review CLI", () => {
   it("defaults to a dry run and writes only after explicit confirmation", () => {
     const root = mkdtempSync(join(tmpdir(), "pkrtrainer-owner-review-"));
@@ -23,6 +25,7 @@ describe("mtt:texas-solver-owner-review CLI", () => {
       expect(JSON.parse(write.stdout)).toMatchObject({ valid: true, writePerformed: true, decision: "scoped" });
       const saved = readFileSync(notes, "utf8");
       expect(saved).toContain("Status: REVIEWED");
+      expect(saved).toContain("Review evidence fingerprint: sha256:");
       expect(saved).toContain("Reviewer: project owner");
       expect(saved).toContain("Reviewed at: 2026-07-15");
       expect(saved).toContain("Usable for production: scoped: BTN vs BB pilot");
@@ -65,17 +68,45 @@ describe("mtt:texas-solver-owner-review CLI", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("refuses a stale evidence fingerprint without changing review notes", () => {
+    const root = mkdtempSync(join(tmpdir(), "pkrtrainer-owner-review-stale-"));
+    const family = "MTT9_50BB_BTN_BB_SRP";
+    const notes = join(root, family, "review-notes.md");
+    try {
+      writeFixture(notes);
+      const args = baseArgs(root, family, "--decision=no", "--caveats=not usable");
+      writeFileSync(join(root, family, "strategy-export.review.json"), JSON.stringify({ familyId: family, status: "CHANGED" }), "utf8");
+
+      const result = runOwnerReview(...args, "--write", "--confirm=RECORD_TEXAS_SOLVER_OWNER_REVIEW", "--json");
+
+      expect(result.status).toBe(1);
+      expect(JSON.parse(result.stdout).errors).toContain("Evidence fingerprint is stale for the current owner evidence.");
+      expect(readFileSync(notes, "utf8")).toContain("Status: NEEDS_REVIEW");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 function writeFixture(path: string): void {
-  mkdirSync(dirname(path), { recursive: true });
+  const familyDir = dirname(path);
+  const familyId = familyDir.replace(/\\/g, "/").split("/").at(-1)!;
+  mkdirSync(familyDir, { recursive: true });
   writeFileSync(path, ["# Review", "", "Status: NEEDS_REVIEW", "", "Reviewer:", "Reviewed at:", "Usable for production:", "Usable scope:", "Production caveats:", ""].join("\n"), "utf8");
+  writeFileSync(join(familyDir, "strategy-export.review.json"), JSON.stringify({ familyId, status: "NEEDS_REVIEW" }), "utf8");
+  writeFileSync(join(familyDir, "accuracy-report.json"), JSON.stringify({ familyId, solver: "texas-solver" }), "utf8");
 }
 
 function baseArgs(root: string, family: string, ...extra: string[]): string[] {
+  const familyDir = join(root, family);
+  const evidenceFingerprint = existsSync(familyDir)
+    ? ownerEvidenceFromFamilyDir(familyDir, family).fingerprint
+    : `sha256:${"0".repeat(64)}`;
   return [
     `--root=${root}`,
     `--family=${family}`,
+    `--evidence-fingerprint=${evidenceFingerprint}`,
     "--reviewer=project owner",
     "--reviewed-at=2026-07-15",
     ...extra,

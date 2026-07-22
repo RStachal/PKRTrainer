@@ -1,10 +1,13 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
+import { isOwnerEvidenceFingerprint, ownerEvidenceFromFamilyDir } from "./texasSolverOwnerEvidence.mts";
+
 type Decision = "yes" | "no" | "scoped";
 
 interface CliArgs {
   familyId: string;
+  evidenceFingerprint: string;
   reviewer: string;
   reviewedAt: string;
   decision: Decision;
@@ -21,8 +24,8 @@ const CONFIRM_TOKEN = "RECORD_TEXAS_SOLVER_OWNER_REVIEW";
 function usage(): string {
   return [
     "Usage:",
-    "  npm run mtt:texas-solver-owner-review -- --family=<familyId> --reviewer=<name> --reviewed-at=<YYYY-MM-DD> --decision=no --caveats=<text>",
-    "  npm run mtt:texas-solver-owner-review -- --family=<familyId> --reviewer=<name> --reviewed-at=<YYYY-MM-DD> --decision=scoped --scope=<exact scope> --caveats=<text> --write --confirm=RECORD_TEXAS_SOLVER_OWNER_REVIEW",
+    "  npm run mtt:texas-solver-owner-review -- --family=<familyId> --evidence-fingerprint=sha256:<64 hex> --reviewer=<name> --reviewed-at=<YYYY-MM-DD> --decision=no --caveats=<text>",
+    "  npm run mtt:texas-solver-owner-review -- --family=<familyId> --evidence-fingerprint=sha256:<64 hex> --reviewer=<name> --reviewed-at=<YYYY-MM-DD> --decision=scoped --scope=<exact scope> --caveats=<text> --write --confirm=RECORD_TEXAS_SOLVER_OWNER_REVIEW",
     "",
     "Dry-run is the default. The command records an explicit human decision in one existing review-notes.md file.",
     "It never reads raw solver JSON, creates strategy data, or infers a poker decision.",
@@ -53,7 +56,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     if (item.startsWith("--root=")) { rootDir = resolve(value(item, "--root")); continue; }
     if (item.startsWith("--confirm=")) { confirm = value(item, "--confirm"); continue; }
     let matched = false;
-    for (const flag of ["--family", "--reviewer", "--reviewed-at", "--decision", "--scope", "--caveats"]) {
+    for (const flag of ["--family", "--evidence-fingerprint", "--reviewer", "--reviewed-at", "--decision", "--scope", "--caveats"]) {
       if (item.startsWith(`${flag}=`)) {
         values.set(flag, value(item, flag));
         matched = true;
@@ -64,6 +67,8 @@ function parseArgs(argv: readonly string[]): CliArgs {
   }
 
   const familyId = required(values, "--family");
+  const evidenceFingerprint = required(values, "--evidence-fingerprint");
+  if (!isOwnerEvidenceFingerprint(evidenceFingerprint)) throw new Error("--evidence-fingerprint must use sha256:<64 lowercase hex> format.");
   const reviewer = required(values, "--reviewer");
   const reviewedAt = required(values, "--reviewed-at");
   const decisionRaw = required(values, "--decision").toLowerCase();
@@ -79,7 +84,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   if (write && confirm !== CONFIRM_TOKEN) {
     throw new Error(`--write requires --confirm=${CONFIRM_TOKEN}.`);
   }
-  return { familyId, reviewer, reviewedAt, decision: decisionRaw, scope, caveats, rootDir, write, confirm, json };
+  return { familyId, evidenceFingerprint, reviewer, reviewedAt, decision: decisionRaw, scope, caveats, rootDir, write, confirm, json };
 }
 
 function value(item: string, flag: string): string {
@@ -100,19 +105,28 @@ function recordOwnerReview(args: CliArgs) {
   const errors: string[] = [];
   if (!existsSync(familyDir)) errors.push(`TexasSolver family is missing: ${familyDir}`);
   if (!existsSync(notesPath)) errors.push(`review-notes.md is missing: ${notesPath}`);
+  if (errors.length === 0) {
+    try {
+      const current = ownerEvidenceFromFamilyDir(familyDir, args.familyId).fingerprint;
+      if (args.evidenceFingerprint !== current) errors.push("Evidence fingerprint is stale for the current owner evidence.");
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+    }
+  }
   if (errors.length > 0) return { valid: false, writePerformed: false, notesPath, errors, changedFields: [] as string[] };
 
   const before = readFileSync(notesPath, "utf8");
   const usable = args.decision === "scoped" ? `scoped: ${args.scope}` : args.decision;
   const after = upsertFields(before, [
     ["Status", "REVIEWED"],
+    ["Review evidence fingerprint", args.evidenceFingerprint],
     ["Reviewer", args.reviewer],
     ["Reviewed at", args.reviewedAt],
     ["Usable for production", usable],
     ["Usable scope", args.scope],
     ["Production caveats", args.caveats],
   ]);
-  const changedFields = changedLabels(before, after, ["Status", "Reviewer", "Reviewed at", "Usable for production", "Usable scope", "Production caveats"]);
+  const changedFields = changedLabels(before, after, ["Status", "Review evidence fingerprint", "Reviewer", "Reviewed at", "Usable for production", "Usable scope", "Production caveats"]);
   if (args.write && before !== after) writeFileSync(notesPath, after, "utf8");
   return {
     valid: true,
