@@ -104,7 +104,7 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
   and packaged for review, but cannot be automatically staged, normalized,
   merged or promoted to runtime content.
 - Scoped core release gate: green; Full MTT NLHE remains intentionally red at 4/64.
-- Current release regression is green at 152/152 Vitest files and 762/762 tests.
+- Current release regression is green at 152/152 Vitest files and 771/771 tests.
   Vitest is capped at four parent workers because CLI integration tests spawn
   their own Node/PowerShell children; this prevents resource-driven false
   timeouts while the guarded solver worker is installed.
@@ -242,6 +242,7 @@ npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
 
 | Date | Priority | Result | Evidence |
 | --- | --- | --- | --- |
+| 2026-07-22 | Release / Full regression | Owner workflow hardening is release-clean | The complete suite passed 152/152 files and 771/771 tests. Typecheck, registry drift, scoped Core 4/4 plus 7/7, production build, range verification, precache integrity and bundle budget passed. Remaining blockers are truthful external data/human gates: four six-max exports with zero normalized records, owner 0/20 and action EV 0/493818 preflop plus 0/972 scoped FLOP |
 | 2026-07-22 | P4 / Owner workflow automation | Blank decision template stays synchronized | The recurring cycle refreshes the template only after the canonical dashboard succeeds and never touches the separate human decision file. Status exposes schema, 20/20 fingerprint coverage, zero selected verdicts, timestamp and exit code. PowerShell parser checks and Windows automation tests passed 9/9; a real guarded cycle exited 0 with owner review still 0/20 |
 | 2026-07-22 | P4 / Owner evidence binding | Old sign-offs cannot survive changed evidence | Decision schema v2 fingerprints the exact source-safe family reports and accuracy report. Dashboard import, single and batch writers, and protocol validation all fail closed on stale evidence without selecting a verdict. The live template has 20/20 valid fingerprints and zero decisions; dashboard remains 53 reports, 403/439 boards, 10 complete plus 10 partial and owner 0/20. Focused tests passed 24/24; typecheck, scoped Core and production build passed |
 | 2026-07-20 | P4 / Owner accuracy workflow | Approved accuracy is visible at the human gate | The canonical 53-report dashboard joins approved staged evidence across 20 owner families: 403/439 boards, 10 complete and 10 partial families, with all 36 missing log filenames expandable and filterable. It never selects or recommends a verdict; owner decisions remain 0/20. Malformed approved reports fail closed. Focused tests passed 25/25; typecheck, scoped Core and production build passed |

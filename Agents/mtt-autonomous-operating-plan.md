@@ -151,6 +151,9 @@ does not interrupt the current step unless it exposes a production regression.
 - Action-EV comparison: implementation complete, current content data incomplete
   at preflop 0/493818 and scoped FLOP 0/972 decisions. Seven blank fingerprinted
   intake templates cover all 972 FLOP decisions; frequencies are excluded.
+- Current release baseline after owner evidence binding: 152/152 Vitest files
+  and 771/771 tests, typecheck, registry drift, scoped Core, production build,
+  range verification, precache integrity and bundle budget all pass.
 - Commercial browser smoke: passed on 2026-07-16 against the actual production
   build at desktop plus 360/390/412 px mobile viewports, including scoped FLOP,
   hand-history, stats, reload, offline, storage resilience, contrast and service
