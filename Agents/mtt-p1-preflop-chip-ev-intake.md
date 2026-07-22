@@ -1,6 +1,6 @@
 # MTT P1 preflop CHIP_EV intake checklist
 
-Updated: 2026-07-13
+Updated: 2026-07-22
 Status: full-ring wave promoted; six-max wave pending
 
 This guide covers the original first production data wave of 8 preflop CHIP_EV
@@ -117,6 +117,19 @@ npm run mtt:sixmax-preflop-intake-progress
 npm run mtt:sixmax-preflop-intake-batch -- --incremental --write --confidence=HIGH --confirm=BUILD_MTT_SIXMAX_P1_CANDIDATES
 ```
 
+Keep the four ignored workbench CSVs aligned with the current action-EV schema:
+
+```powershell
+npm run mtt:sixmax-preflop-workbench-refresh
+```
+
+The refresh command recognizes the exact generated 118,638-row structure for
+each slot. It may upgrade only a complete legacy scaffold whose strategy,
+action-EV, reviewer, source and notes cells are still untouched. Any human edit,
+truncated file or unknown header is reported and protected from overwrite. The
+ten-minute MTT task runs the same guard and exposes current/blank/nonblank/stale
+counts in `mtt:autonomous-cycle-status`. The command creates no strategy or EV.
+
 Its output stays under `artifacts/mtt-sixmax-preflop-intake/`. It writes only
 `normalized.candidate.json` and a concise `BATCH_REPORT.md`; permission mode
 `CANONICAL_STAGED_MANIFEST` means the owner-confirmed manifest remains in its
@@ -152,6 +165,8 @@ Minimum required dimensions:
 - stack buckets: `5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 125, 150`
 - action contexts: `RFI, VS_LIMP, VS_OPEN, VS_3BET, VS_4BET, SQUEEZE, BVB, PUSH_FOLD, VS_ALLIN`
 - all 169 hand classes in strict and lenient maps for every covered row
+- `actionEvsBb`, `equivalentThresholdBb` and `acceptableThresholdBb` for every
+  decision where reviewed counterfactual EV is available; partial EV sets are invalid
 - no placeholder strategy values
 
 ## Provenance manifest requirements

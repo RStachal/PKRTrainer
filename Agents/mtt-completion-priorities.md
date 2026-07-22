@@ -88,7 +88,7 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
   pairs across 20 families and beta-depth is 83/83; 20/20 reports are valid, extraction failures are zero
   and 20/20 families meet the mechanical shape. Human review and production
   eligibility remain independently 0/20. Incremental staged accuracy now retains
-  traceable exploitability for 407/439 approved boards across all 20 families;
+  traceable exploitability for 421/439 approved boards across all 20 families;
   review-protocol warnings are down to 20 human caveat fields. The last canonical
   owner dashboard remains the earlier 403/439 snapshot with 36 missing log names;
   `OPS-57` intentionally refreshes that human handoff only after recovery reaches
@@ -99,14 +99,14 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
   ten-minute cycle regenerates only the blank template after a successful
   dashboard build and reports its v2/20-of-20/zero-verdict health explicitly.
 - Windows low-memory task: `PKRTrainer-TexasSolver-LowMemory` is installed and
-  owns the restart-safe 407/439 accuracy checkpoint. Its worker currently waits
-  with no solver process while free RAM is below the 35% development-first gate;
-  repeated triggers cannot duplicate the queue.
+  owns the restart-safe 421/439 accuracy checkpoint with 18 exact logs remaining
+  across five families. Resource checks and repeated-trigger suppression keep
+  the development-first queue single-owner and resumable.
 - Every low-memory solver phase is `MEMORY_SAFE_REVIEW_ONLY`: raw exports may be audited
   and packaged for review, but cannot be automatically staged, normalized,
   merged or promoted to runtime content.
 - Scoped core release gate: green; Full MTT NLHE remains intentionally red at 4/64.
-- Current release regression is green at 153/153 Vitest files and 778/778 tests.
+- Current release regression is green at 154/154 Vitest files and 785/785 tests.
   Vitest is capped at four parent workers because CLI integration tests spawn
   their own Node/PowerShell children; this prevents resource-driven false
   timeouts while the guarded solver worker is installed.
@@ -117,6 +117,10 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
   for 972 decisions and 2,916 action-value slots (`blank=7/7`, `nonblank=0`);
   the recurring cycle may refresh only stale templates proven to contain no
   owner work or EV.
+- All four 118,638-row six-max preflop workbenches now expose the current
+  action-EV columns. They remain provably blank (`4/4` current, `0` generated
+  values); the recurring cycle refreshes only untouched legacy scaffolds and
+  protects every human edit.
 
 ## Priority Order
 
@@ -250,6 +254,7 @@ npm run mtt:postflop-action-ev-intake -- --all --write-template --refresh-blank-
 
 | Date | Priority | Result | Evidence |
 | --- | --- | --- | --- |
+| 2026-07-22 | P1 / Six-max action-EV-ready intake | Legacy blank CSVs upgraded without touching owner work | Added a shared exact-row scaffold contract and guarded recurring refresh. The live migration refreshed 4/4 118,638-row legacy blanks; its repeat wrote zero and reports current/action-EV columns/blank 4/4, nonblank 0, protected stale 0 and generated values none. Any strategy, EV, reviewer, source, note or malformed structure is protected. Focused tests passed 29/29; full release passed 154/154 files and 785/785 tests plus the complete integrity chain |
 | 2026-07-22 | P4.1 / External EV intake automation | Blank workbench stays current without overwriting owner work | Added a guarded refresh mode and ten-minute task diagnostics. A live pass refreshed 7/7 stale blank templates covering 972 decisions and 2,916 action slots; the immediate repeat reported blank 7/7, nonblank 0, zero stale and zero writes. Templates containing reviewer text, thresholds or EV remain protected and make blank readiness false; candidate/promotion commands are absent, final focused tests passed 17/17 and the full 153-file / 778-test release integrity chain passed |
 | 2026-07-22 | Release / Full regression | Owner workflow hardening is release-clean | The complete suite passed 152/152 files and 771/771 tests. Typecheck, registry drift, scoped Core 4/4 plus 7/7, production build, range verification, precache integrity and bundle budget passed. Remaining blockers are truthful external data/human gates: four six-max exports with zero normalized records, owner 0/20 and action EV 0/493818 preflop plus 0/972 scoped FLOP |
 | 2026-07-22 | P4 / Owner workflow automation | Blank decision template stays synchronized | The recurring cycle refreshes the template only after the canonical dashboard succeeds and never touches the separate human decision file. Status exposes schema, 20/20 fingerprint coverage, zero selected verdicts, timestamp and exit code. PowerShell parser checks and Windows automation tests passed 9/9; a real guarded cycle exited 0 with owner review still 0/20 |

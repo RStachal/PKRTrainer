@@ -96,6 +96,7 @@
     "mtt:preflop-csv-draft": "vite-node scripts/buildMttPreflopCsvDraft.mts",
     "mtt:sixmax-preflop-intake-batch": "vite-node scripts/runMttSixMaxPreflopIntakeBatch.mts",
     "mtt:sixmax-preflop-intake-progress": "vite-node scripts/runMttSixMaxPreflopIntakeBatch.mts --incremental --summary",
+    "mtt:sixmax-preflop-workbench-refresh": "vite-node scripts/runMttSixMaxPreflopIntakeBatch.mts --incremental --refresh-blank-scaffolds --output=artifacts/mtt-sixmax-preflop-intake/workbench-refresh-report.json --summary",
     "mtt:sixmax-preflop-stage-batch": "vite-node scripts/stageMttSixMaxPreflopIntakeBatch.mts",
     "mtt:sixmax-preflop-stage-progress": "vite-node scripts/stageMttSixMaxPreflopIntakeBatch.mts --incremental --summary",
     "range:intake": "vite-node scripts/checkRangeIntakeStatus.mts",

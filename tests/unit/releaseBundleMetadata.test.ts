@@ -141,6 +141,8 @@ describe("release bundle metadata", () => {
     expect(pkg.scripts["mtt:preflop-csv-draft"]).toBe("vite-node scripts/buildMttPreflopCsvDraft.mts");
     expect(pkg.scripts["mtt:sixmax-preflop-intake-progress"])
       .toBe("vite-node scripts/runMttSixMaxPreflopIntakeBatch.mts --incremental --summary");
+    expect(pkg.scripts["mtt:sixmax-preflop-workbench-refresh"])
+      .toBe("vite-node scripts/runMttSixMaxPreflopIntakeBatch.mts --incremental --refresh-blank-scaffolds --output=artifacts/mtt-sixmax-preflop-intake/workbench-refresh-report.json --summary");
     expect(pkg.scripts["mtt:sixmax-preflop-stage-progress"])
       .toBe("vite-node scripts/stageMttSixMaxPreflopIntakeBatch.mts --incremental --summary");
     expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");

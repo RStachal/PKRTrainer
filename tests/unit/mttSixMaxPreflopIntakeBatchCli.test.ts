@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -185,6 +185,61 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
         status: "WAITING",
         records: 0,
       });
+    } finally {
+      rmSync(sourceDir, { recursive: true, force: true });
+    }
+  });
+
+  it("does not misclassify an EV-only edit as an untouched blank scaffold", () => {
+    const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-ev-only-"));
+    try {
+      const packId = "mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1";
+      writeFileSync(join(sourceDir, `${packId}.csv`), [
+        "rowKind,packId,tableFormat,blindSpeed,ante,evModel,position,sourceStackBB,bucket,context,handClass,strictActions,lenientActions,actionEvsBb,equivalentThresholdBb,acceptableThresholdBb,sourceReferenceId,reviewer,reviewedAt,notes",
+        `HAND_CLASS_DECISION,${packId},SIX_MAX,REGULAR,ON,CHIP_EV,BTN,40,40,RFI,AA,,,FOLD=0;OPEN_2X=0.2,0.01,0.05,,,,partial EV fixture`,
+      ].join("\n"), "utf8");
+
+      const result = spawnSync(process.execPath, [
+        "node_modules/vite-node/vite-node.mjs",
+        "scripts/runMttSixMaxPreflopIntakeBatch.mts",
+        `--source-dir=${sourceDir}`,
+        "--incremental",
+        "--json",
+      ], { cwd: process.cwd(), encoding: "utf8" });
+      expect(result.status).toBe(1);
+      const parsed = JSON.parse(result.stdout) as {
+        counts: { ready: number; waiting: number; invalid: number };
+        rows: Array<{ packId: string; status: string; sourceSafeBlank: boolean | null }>;
+      };
+      expect(parsed.counts).toEqual({ ready: 0, waiting: 3, invalid: 1 });
+      expect(parsed.rows.find((row) => row.packId === packId)).toMatchObject({
+        status: "INVALID",
+        sourceSafeBlank: false,
+      });
+    } finally {
+      rmSync(sourceDir, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses to overwrite a workbench CSV with its machine-readable report", () => {
+    const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-output-guard-"));
+    try {
+      const packId = "mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1";
+      const csvPath = join(sourceDir, `${packId}.csv`);
+      const original = "owner work must survive\n";
+      writeFileSync(csvPath, original, "utf8");
+
+      const result = spawnSync(process.execPath, [
+        "node_modules/vite-node/vite-node.mjs",
+        "scripts/runMttSixMaxPreflopIntakeBatch.mts",
+        `--source-dir=${sourceDir}`,
+        `--output=${csvPath}`,
+        "--incremental",
+      ], { cwd: process.cwd(), encoding: "utf8" });
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("--output must not overwrite a reviewed six-max workbench CSV");
+      expect(readFileSync(csvPath, "utf8")).toBe(original);
     } finally {
       rmSync(sourceDir, { recursive: true, force: true });
     }

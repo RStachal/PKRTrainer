@@ -93,6 +93,17 @@ Validation is fail-closed for missing, duplicate, unsupported or non-finite
 action values. Runtime code never derives EV from dominant action, mixed
 frequency, hand strength or heuristics.
 
+Keep all four six-max preflop CSV workbenches on the current optional action-EV
+columns with:
+
+```powershell
+npm run mtt:sixmax-preflop-workbench-refresh
+```
+
+This command can replace only an exact full-size legacy scaffold proven to be
+blank. A strategy, EV, reviewer, source or notes edit protects the file. It does
+not generate values, build a candidate or promote a range.
+
 Generate the exact blank FLOP-pilot workbench with:
 
 ```powershell
@@ -132,10 +143,12 @@ it.
 
 ## 6. Current Measured Truth
 
-As of 2026-07-16:
+As of 2026-07-22:
 
 - implementation and validation contract: complete;
 - MTT Core preflop action EV: `0/493818` decisions, `0/4` packs ready;
+- all four 118,638-row six-max preflop workbench CSVs expose the current action-EV
+  columns and remain source-safe blank (`4/4` current, `0` generated values);
 - scoped FLOP pilot action EV: `0/972` decisions, `0/7` packs ready;
 - current TexasSolver `dump_result` payload consumed by this repository exposes
   action strategy frequencies, not validated counterfactual action EV. A raw

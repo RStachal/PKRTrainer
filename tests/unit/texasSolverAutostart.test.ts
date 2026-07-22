@@ -103,6 +103,12 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).toContain("P1 ready intake validation");
     expect(cycle).toContain("mtt:validate-ready-intake");
     expect(cycle).toContain("--priority=P1_PREFLOP_CHIP_EV");
+    expect(cycle).toContain("blank six-max preflop workbench");
+    expect(cycle).toContain('"mtt:sixmax-preflop-workbench-refresh"');
+    expect(cycle).toContain("Get-SixMaxWorkbenchSummary $sixMaxWorkbenchExit");
+    expect(cycle).toContain("sixMaxWorkbench = $SixMaxWorkbench");
+    expect(cycle).toContain("actionEvReadyScaffolds -eq 4");
+    expect(cycle).toContain("strategy, EV, reviewer or notes edit");
     expect(cycle).toContain("blank postflop action-EV intake");
     expect(cycle).toContain('"mtt:postflop-action-ev-intake"');
     expect(cycle).toContain('"--refresh-blank-templates"');
@@ -196,6 +202,8 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(manager).toContain("-MultipleInstances IgnoreNew");
     expect(manager).toContain("Show-LatestCycleSummary");
     expect(manager).toContain("Show-LatestReviewOnlyRefresh");
+    expect(manager).toContain("Show-LatestSixMaxWorkbenchRefresh");
+    expect(manager).toContain("Six-max preflop workbench:");
     expect(manager).toContain("refresh-report.json");
     expect(manager).toContain("incremental review-only intake:");
     expect(manager).toContain("incremental staged accuracy:");

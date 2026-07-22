@@ -58,6 +58,7 @@ $OwnerReviewWavesPath = Join-Path $RepoRoot "artifacts\texas-solver-review-proto
 $OwnerReviewViewerPath = Join-Path $RepoRoot "artifacts\texas-solver-review-protocol\viewer\index.html"
 $OwnerReviewTemplatePath = Join-Path $RepoRoot "artifacts\texas-solver-review-protocol\owner-review-decisions.template.json"
 $ActionEvTemplateReportPath = Join-Path $RepoRoot "artifacts\mtt-action-ev-intake\refresh-report.json"
+$SixMaxWorkbenchReportPath = Join-Path $RepoRoot "artifacts\mtt-sixmax-preflop-intake\workbench-refresh-report.json"
 $MutexName = "Local\PKRTrainerMttAutonomousCycleV1"
 $Deadline = (Get-Date).AddMinutes($MaxMinutes)
 $LastCoverageSignature = if (Test-Path -LiteralPath $LastCoverageSignaturePath) {
@@ -76,7 +77,7 @@ function Write-CycleLog([string]$Message) {
   Write-Output $Line
 }
 
-function Write-LatestCycleSummary($Statuses, [string]$CoverageSignature, $BoardCatalog, $P1, $ActionEvTemplates, $Review, $ReviewOnlyEvidence, $ReviewReadiness, $CoreGate) {
+function Write-LatestCycleSummary($Statuses, [string]$CoverageSignature, $BoardCatalog, $P1, $SixMaxWorkbench, $ActionEvTemplates, $Review, $ReviewOnlyEvidence, $ReviewReadiness, $CoreGate) {
   $summary = [ordered]@{
     schemaVersion = 1
     generatedAt = (Get-Date -Format "o")
@@ -84,6 +85,7 @@ function Write-LatestCycleSummary($Statuses, [string]$CoverageSignature, $BoardC
     coverageSignature = $CoverageSignature
     boardCatalog = $BoardCatalog
     p1 = $P1
+    sixMaxWorkbench = $SixMaxWorkbench
     actionEvTemplates = $ActionEvTemplates
     review = $Review
     reviewOnlyEvidence = $ReviewOnlyEvidence
@@ -148,6 +150,44 @@ function Get-P1Summary([int]$PacketExitCode, [int]$ValidationExitCode) {
       $summary.missingNormalized = [int]$report.counts.missingNormalized
       $summary.missingPermission = [int]$report.counts.missingPermission
     } catch { Write-CycleLog "Could not read P1 validation summary. $($_.Exception.Message)" | Out-Null }
+  }
+  return $summary
+}
+
+function Get-SixMaxWorkbenchSummary([int]$ExitCode) {
+  $summary = [ordered]@{
+    exitCode = $ExitCode
+    current = $false
+    strategyValuesGenerated = $null
+    currentScaffolds = $null
+    actionEvReadyScaffolds = $null
+    blankScaffolds = $null
+    nonBlankScaffolds = $null
+    refreshedBlankScaffolds = $null
+    protectedStaleScaffolds = $null
+    readyExports = $null
+    waitingExports = $null
+    invalidExports = $null
+    reportPath = $SixMaxWorkbenchReportPath
+  }
+  if (Test-Path -LiteralPath $SixMaxWorkbenchReportPath -PathType Leaf) {
+    try {
+      $report = Get-Content -LiteralPath $SixMaxWorkbenchReportPath -Raw | ConvertFrom-Json
+      $summary.strategyValuesGenerated = [string]$report.strategyValuesGenerated
+      $summary.currentScaffolds = [int]$report.workbenchCounts.currentScaffolds
+      $summary.actionEvReadyScaffolds = [int]$report.workbenchCounts.actionEvReadyScaffolds
+      $summary.blankScaffolds = [int]$report.workbenchCounts.blankScaffolds
+      $summary.nonBlankScaffolds = [int]$report.workbenchCounts.nonBlankScaffolds
+      $summary.refreshedBlankScaffolds = [int]$report.workbenchCounts.refreshedBlankScaffolds
+      $summary.protectedStaleScaffolds = [int]$report.workbenchCounts.protectedStaleScaffolds
+      $summary.readyExports = [int]$report.counts.ready
+      $summary.waitingExports = [int]$report.counts.waiting
+      $summary.invalidExports = [int]$report.counts.invalid
+      $summary.current = $ExitCode -eq 0 -and $report.valid -eq $true -and
+        $report.workbenchCurrent -eq $true -and $summary.strategyValuesGenerated -eq "none" -and
+        $summary.currentScaffolds -eq 4 -and $summary.actionEvReadyScaffolds -eq 4 -and
+        $summary.protectedStaleScaffolds -eq 0
+    } catch { Write-CycleLog "Could not read six-max preflop workbench summary. $($_.Exception.Message)" | Out-Null }
   }
   return $summary
 }
@@ -478,6 +518,13 @@ try {
           "--output=$P1ReadyValidationReportPath"
         )
 
+        # Upgrade only complete legacy six-max scaffolds proven byte-for-byte
+        # source-safe after CSV parsing. A strategy, EV, reviewer or notes edit
+        # protects the file and is reported instead of being overwritten.
+        $sixMaxWorkbenchExit = Invoke-LoggedNpm "blank six-max preflop workbench" @(
+          "run", "mtt:sixmax-preflop-workbench-refresh"
+        )
+
         # Keep only the source-safe blank action-EV workbench synchronized with
         # current pilots. The guarded mode refuses to overwrite any template
         # containing reviewer text, thresholds or EV values and cannot write a
@@ -561,12 +608,13 @@ try {
           Write-CycleLog "No coverage change since the last successful Core gate; watcher remains the sole ingest owner."
         }
         $p1Summary = Get-P1Summary $p1PacketExit $p1ReadyExit
+        $sixMaxWorkbenchSummary = Get-SixMaxWorkbenchSummary $sixMaxWorkbenchExit
         $actionEvTemplateSummary = Get-ActionEvTemplateSummary $actionEvTemplateExit
         $boardCatalogSummary = Get-BoardCatalogSummary $boardCatalogExit
         $reviewSummary = Get-ReviewSummary $reviewExit $reviewViewerExit $ownerReviewTemplateExit
         $reviewReadinessSummary = Get-ReviewReadinessSummary $reviewReadinessExit
         $coreSummary = Get-CoreSummary $coreGateEvaluated $coreExit $signaturePersisted
-        Write-LatestCycleSummary $statuses $signature $boardCatalogSummary $p1Summary $actionEvTemplateSummary $reviewSummary $reviewOnlyEvidenceSummary $reviewReadinessSummary $coreSummary
+        Write-LatestCycleSummary $statuses $signature $boardCatalogSummary $p1Summary $sixMaxWorkbenchSummary $actionEvTemplateSummary $reviewSummary $reviewOnlyEvidenceSummary $reviewReadinessSummary $coreSummary
       }
 
       if ($Once) {

@@ -19,6 +19,7 @@ $CycleArtifactsDir = Join-Path $RepoRoot "artifacts\mtt-autonomous-cycle"
 $LatestSummaryPath = Join-Path $CycleArtifactsDir "latest-cycle-summary.json"
 $ReviewOnlyRefreshPath = Join-Path $RepoRoot "artifacts\texas-solver-review-only-owner-depth\refresh-report.json"
 $ActionEvTemplateRefreshPath = Join-Path $RepoRoot "artifacts\mtt-action-ev-intake\refresh-report.json"
+$SixMaxWorkbenchRefreshPath = Join-Path $RepoRoot "artifacts\mtt-sixmax-preflop-intake\workbench-refresh-report.json"
 $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 $PowerShell = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
 $Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$Cycle`" -Once -IntervalMinutes $RepetitionMinutes -MinimumFreeMemoryPercent $MinimumFreeMemoryPercent -MaximumCpuPercent $MaximumCpuPercent"
@@ -66,6 +67,15 @@ function Show-LatestCycleSummary {
       Write-Host ("P1 intake: ready={0}, waiting={1}, missing normalized={2}, missing permission={3}, validation exit={4}" -f `
         $summary.p1.readyRows, $summary.p1.waitingRows, $summary.p1.missingNormalized, `
         $summary.p1.missingPermission, $summary.p1.validationExitCode)
+    }
+    if ($null -ne $summary.sixMaxWorkbench) {
+      Write-Host ("Six-max preflop workbench: current={0}, action-EV columns={1}/4, blank={2}, nonblank={3}, refreshed blank={4}, protected stale={5}, exports ready/waiting/invalid={6}/{7}/{8}, generated values={9}, exit={10}" -f `
+        $summary.sixMaxWorkbench.current, $summary.sixMaxWorkbench.actionEvReadyScaffolds, `
+        $summary.sixMaxWorkbench.blankScaffolds, $summary.sixMaxWorkbench.nonBlankScaffolds, `
+        $summary.sixMaxWorkbench.refreshedBlankScaffolds, $summary.sixMaxWorkbench.protectedStaleScaffolds, `
+        $summary.sixMaxWorkbench.readyExports, $summary.sixMaxWorkbench.waitingExports, `
+        $summary.sixMaxWorkbench.invalidExports, $summary.sixMaxWorkbench.strategyValuesGenerated, `
+        $summary.sixMaxWorkbench.exitCode)
     }
     if ($null -ne $summary.review) {
       Write-Host ("TexasSolver review: ready={0}/{1}, needs review={2}, blockers={3}, warnings={4}, exit={5}" -f `
@@ -131,6 +141,32 @@ function Show-LatestReviewOnlyRefresh {
     }
   } catch {
     Write-Host "incremental review-only intake: unreadable ($($_.Exception.Message))"
+  }
+}
+
+function Show-LatestSixMaxWorkbenchRefresh {
+  if (-not (Test-Path -LiteralPath $SixMaxWorkbenchRefreshPath -PathType Leaf)) {
+    Write-Host "Six-max preflop workbench: not yet written"
+    return
+  }
+  try {
+    $report = Get-Content -LiteralPath $SixMaxWorkbenchRefreshPath -Raw | ConvertFrom-Json
+    if ($null -eq $report.workbenchCounts -or $null -eq $report.counts) {
+      throw "Unsupported six-max workbench report format."
+    }
+    $current = $report.valid -eq $true -and $report.workbenchCurrent -eq $true -and
+      $report.strategyValuesGenerated -eq "none" -and
+      [int]$report.workbenchCounts.currentScaffolds -eq 4 -and
+      [int]$report.workbenchCounts.actionEvReadyScaffolds -eq 4 -and
+      [int]$report.workbenchCounts.protectedStaleScaffolds -eq 0
+    $updatedAt = (Get-Item -LiteralPath $SixMaxWorkbenchRefreshPath).LastWriteTimeUtc.ToString("o")
+    Write-Host ("Six-max preflop workbench: current={0}, action-EV columns={1}/4, blank={2}, nonblank={3}, refreshed blank={4}, protected stale={5}, exports ready/waiting/invalid={6}/{7}/{8}, generated values={9}, updated={10}" -f `
+      $current, $report.workbenchCounts.actionEvReadyScaffolds, $report.workbenchCounts.blankScaffolds, `
+      $report.workbenchCounts.nonBlankScaffolds, $report.workbenchCounts.refreshedBlankScaffolds, `
+      $report.workbenchCounts.protectedStaleScaffolds, $report.counts.ready, $report.counts.waiting, `
+      $report.counts.invalid, $report.strategyValuesGenerated, $updatedAt)
+  } catch {
+    Write-Host "Six-max preflop workbench: unreadable ($($_.Exception.Message))"
   }
 }
 
@@ -201,6 +237,7 @@ function Show-TaskStatus {
   Write-Host "cycle: $Cycle"
   Show-LatestCycleOutcome
   Show-LatestReviewOnlyRefresh
+  Show-LatestSixMaxWorkbenchRefresh
   Show-LatestActionEvTemplateRefresh
   Show-LatestCycleSummary
   return $true
