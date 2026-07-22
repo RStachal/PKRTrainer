@@ -1,6 +1,6 @@
 # MTT Action EV And Language Contract
 
-Updated: 2026-07-16
+Updated: 2026-07-22
 Status: ACTIVE PRODUCT AND DATA CONTRACT
 
 ## Authority
@@ -96,7 +96,7 @@ frequency, hand strength or heuristics.
 Generate the exact blank FLOP-pilot workbench with:
 
 ```powershell
-npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
+npm run mtt:postflop-action-ev-intake -- --all --write-template --refresh-blank-templates --summary
 ```
 
 The seven templates are fingerprinted against the current 972 range buckets and
@@ -104,6 +104,9 @@ The seven templates are fingerprinted against the current 972 range buckets and
 reviewer/date and explicit approval. A completed input can write only an
 unpromoted candidate plus audit sidecar, and only with
 `--confirm=WRITE_MTT_POSTFLOP_ACTION_EV_CANDIDATE`.
+The refresh flag replaces only a stale, provably blank template. Any reviewer
+text, threshold or EV protects the existing file and makes the refresh fail
+closed; intentional replacement still requires the separate overwrite token.
 
 Run the source-safe release measurement with:
 

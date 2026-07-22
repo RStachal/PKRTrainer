@@ -57,6 +57,7 @@ $CanonicalReviewReportsDir = Join-Path $RepoRoot "Agents\solver-input\gto-plus\s
 $OwnerReviewWavesPath = Join-Path $RepoRoot "artifacts\texas-solver-review-protocol\packet\OWNER_REVIEW_WAVES.md"
 $OwnerReviewViewerPath = Join-Path $RepoRoot "artifacts\texas-solver-review-protocol\viewer\index.html"
 $OwnerReviewTemplatePath = Join-Path $RepoRoot "artifacts\texas-solver-review-protocol\owner-review-decisions.template.json"
+$ActionEvTemplateReportPath = Join-Path $RepoRoot "artifacts\mtt-action-ev-intake\refresh-report.json"
 $MutexName = "Local\PKRTrainerMttAutonomousCycleV1"
 $Deadline = (Get-Date).AddMinutes($MaxMinutes)
 $LastCoverageSignature = if (Test-Path -LiteralPath $LastCoverageSignaturePath) {
@@ -75,7 +76,7 @@ function Write-CycleLog([string]$Message) {
   Write-Output $Line
 }
 
-function Write-LatestCycleSummary($Statuses, [string]$CoverageSignature, $BoardCatalog, $P1, $Review, $ReviewOnlyEvidence, $ReviewReadiness, $CoreGate) {
+function Write-LatestCycleSummary($Statuses, [string]$CoverageSignature, $BoardCatalog, $P1, $ActionEvTemplates, $Review, $ReviewOnlyEvidence, $ReviewReadiness, $CoreGate) {
   $summary = [ordered]@{
     schemaVersion = 1
     generatedAt = (Get-Date -Format "o")
@@ -83,6 +84,7 @@ function Write-LatestCycleSummary($Statuses, [string]$CoverageSignature, $BoardC
     coverageSignature = $CoverageSignature
     boardCatalog = $BoardCatalog
     p1 = $P1
+    actionEvTemplates = $ActionEvTemplates
     review = $Review
     reviewOnlyEvidence = $ReviewOnlyEvidence
     reviewReadiness = $ReviewReadiness
@@ -146,6 +148,46 @@ function Get-P1Summary([int]$PacketExitCode, [int]$ValidationExitCode) {
       $summary.missingNormalized = [int]$report.counts.missingNormalized
       $summary.missingPermission = [int]$report.counts.missingPermission
     } catch { Write-CycleLog "Could not read P1 validation summary. $($_.Exception.Message)" | Out-Null }
+  }
+  return $summary
+}
+
+function Get-ActionEvTemplateSummary([int]$ExitCode) {
+  $summary = [ordered]@{
+    exitCode = $ExitCode
+    ready = $false
+    strategyValues = $null
+    pilots = $null
+    decisions = $null
+    actionValueSlots = $null
+    staleTemplates = $null
+    writtenTemplates = $null
+    blankTemplates = $null
+    nonBlankTemplates = $null
+    refreshedBlankTemplates = $null
+    protectedStaleTemplates = $null
+    reportPath = $ActionEvTemplateReportPath
+  }
+  if (Test-Path -LiteralPath $ActionEvTemplateReportPath -PathType Leaf) {
+    try {
+      $report = Get-Content -LiteralPath $ActionEvTemplateReportPath -Raw | ConvertFrom-Json
+      $summary.strategyValues = [string]$report.strategyValues
+      $summary.pilots = [int]$report.counts.pilots
+      $summary.decisions = [int]$report.counts.decisions
+      $summary.actionValueSlots = [int]$report.counts.actionValueSlots
+      $summary.staleTemplates = [int]$report.counts.staleTemplates
+      $summary.writtenTemplates = [int]$report.counts.writtenTemplates
+      $summary.blankTemplates = [int]$report.counts.blankTemplates
+      $summary.nonBlankTemplates = [int]$report.counts.nonBlankTemplates
+      $summary.refreshedBlankTemplates = [int]$report.counts.refreshedBlankTemplates
+      $summary.protectedStaleTemplates = [int]$report.counts.protectedStaleTemplates
+      $summary.ready = $ExitCode -eq 0 -and $report.valid -eq $true -and
+        $report.mode -eq "TEMPLATE" -and $summary.strategyValues -eq "none" -and
+        $summary.pilots -gt 0 -and $summary.decisions -gt 0 -and
+        $summary.actionValueSlots -gt 0 -and $summary.staleTemplates -eq 0 -and
+        $summary.blankTemplates -eq $summary.pilots -and $summary.nonBlankTemplates -eq 0 -and
+        $summary.protectedStaleTemplates -eq 0
+    } catch { Write-CycleLog "Could not read action-EV template refresh summary. $($_.Exception.Message)" | Out-Null }
   }
   return $summary
 }
@@ -436,6 +478,16 @@ try {
           "--output=$P1ReadyValidationReportPath"
         )
 
+        # Keep only the source-safe blank action-EV workbench synchronized with
+        # current pilots. The guarded mode refuses to overwrite any template
+        # containing reviewer text, thresholds or EV values and cannot write a
+        # candidate or production strategy.
+        $actionEvTemplateExit = Invoke-LoggedNpm "blank postflop action-EV intake" @(
+          "run", "mtt:postflop-action-ev-intake", "--",
+          "--all", "--write-template", "--refresh-blank-templates",
+          "--output=$ActionEvTemplateReportPath", "--summary"
+        )
+
         # Human review notes can change without a new raw export. Refresh their
         # source-safe packet independently; a nonzero review status is expected
         # until the owner has actually signed off every family.
@@ -509,11 +561,12 @@ try {
           Write-CycleLog "No coverage change since the last successful Core gate; watcher remains the sole ingest owner."
         }
         $p1Summary = Get-P1Summary $p1PacketExit $p1ReadyExit
+        $actionEvTemplateSummary = Get-ActionEvTemplateSummary $actionEvTemplateExit
         $boardCatalogSummary = Get-BoardCatalogSummary $boardCatalogExit
         $reviewSummary = Get-ReviewSummary $reviewExit $reviewViewerExit $ownerReviewTemplateExit
         $reviewReadinessSummary = Get-ReviewReadinessSummary $reviewReadinessExit
         $coreSummary = Get-CoreSummary $coreGateEvaluated $coreExit $signaturePersisted
-        Write-LatestCycleSummary $statuses $signature $boardCatalogSummary $p1Summary $reviewSummary $reviewOnlyEvidenceSummary $reviewReadinessSummary $coreSummary
+        Write-LatestCycleSummary $statuses $signature $boardCatalogSummary $p1Summary $actionEvTemplateSummary $reviewSummary $reviewOnlyEvidenceSummary $reviewReadinessSummary $coreSummary
       }
 
       if ($Once) {

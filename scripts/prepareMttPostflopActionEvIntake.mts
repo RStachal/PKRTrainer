@@ -27,7 +27,9 @@ interface CliArgs {
   confirm: string;
   inputPath: string | null;
   json: boolean;
+  outputPath: string | null;
   overwriteTemplate: boolean;
+  refreshBlankTemplates: boolean;
   summary: boolean;
   templateDir: string;
   templateOut: string | null;
@@ -78,6 +80,7 @@ try {
   const report = args.inputPath === null
     ? prepareTemplates(args)
     : validateAndBuildCandidate(args);
+  if (args.outputPath !== null) writeJson(args.outputPath, report);
   console.log(args.json ? JSON.stringify(report, null, 2) : renderReport(report, args.summary));
   process.exitCode = report.valid ? 0 : 1;
 } catch (error) {
@@ -92,7 +95,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let confirm = "";
   let inputPath: string | null = null;
   let json = false;
+  let outputPath: string | null = null;
   let overwriteTemplate = false;
+  let refreshBlankTemplates = false;
   let summary = false;
   let templateDir = resolve(DEFAULT_TEMPLATE_DIR);
   let templateOut: string | null = null;
@@ -107,6 +112,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     if (item === "--summary") { summary = true; continue; }
     if (item === "--write-template") { writeTemplate = true; continue; }
     if (item === "--overwrite-template") { overwriteTemplate = true; continue; }
+    if (item === "--refresh-blank-templates") { refreshBlankTemplates = true; continue; }
     if (item === "--write-candidate") { writeCandidate = true; continue; }
     if (item === "--catalog-id") {
       catalogId = requiredValue(argv, index, item); index += 1; continue;
@@ -128,6 +134,10 @@ function parseArgs(argv: readonly string[]): CliArgs {
       candidateOut = resolve(requiredValue(argv, index, item)); index += 1; continue;
     }
     if (item.startsWith("--candidate-out=")) { candidateOut = resolve(inlineValue(item, "--candidate-out")); continue; }
+    if (item === "--output") {
+      outputPath = resolve(requiredValue(argv, index, item)); index += 1; continue;
+    }
+    if (item.startsWith("--output=")) { outputPath = resolve(inlineValue(item, "--output")); continue; }
     if (item === "--confirm") {
       confirm = requiredValue(argv, index, item); index += 1; continue;
     }
@@ -136,9 +146,10 @@ function parseArgs(argv: readonly string[]): CliArgs {
   }
 
   if (inputPath !== null) {
-    if (all || writeTemplate || overwriteTemplate || templateOut !== null) {
+    if (all || writeTemplate || overwriteTemplate || refreshBlankTemplates || templateOut !== null) {
       throw new Error("--input cannot be combined with template-generation flags.");
     }
+    if (outputPath !== null) throw new Error("--output is only valid for template generation.");
     if (writeCandidate && confirm !== CANDIDATE_CONFIRM) {
       throw new Error(`--write-candidate requires --confirm=${CANDIDATE_CONFIRM}.`);
     }
@@ -151,6 +162,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
       throw new Error("Candidate flags require --input.");
     }
     if (overwriteTemplate && !writeTemplate) throw new Error("--overwrite-template requires --write-template.");
+    if (refreshBlankTemplates && !writeTemplate) {
+      throw new Error("--refresh-blank-templates requires --write-template.");
+    }
+    if (refreshBlankTemplates && overwriteTemplate) {
+      throw new Error("--refresh-blank-templates cannot be combined with --overwrite-template.");
+    }
     if (overwriteTemplate && confirm !== TEMPLATE_OVERWRITE_CONFIRM) {
       throw new Error(`--overwrite-template requires --confirm=${TEMPLATE_OVERWRITE_CONFIRM}.`);
     }
@@ -159,7 +176,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
 
   return {
     all, candidateOut, catalogId, confirm, inputPath, json, overwriteTemplate, summary,
-    templateDir, templateOut, writeCandidate, writeTemplate,
+    outputPath, refreshBlankTemplates, templateDir, templateOut, writeCandidate, writeTemplate,
   };
 }
 
@@ -167,6 +184,7 @@ function usage(): string {
   return [
     "Usage:",
     "  npm run mtt:postflop-action-ev-intake -- --all --write-template",
+    "  npm run mtt:postflop-action-ev-intake -- --all --write-template --refresh-blank-templates --output=<report.json>",
     "  npm run mtt:postflop-action-ev-intake -- --catalog-id=<pilot-id> --write-template",
     `  npm run mtt:postflop-action-ev-intake -- --catalog-id=<pilot-id> --write-template --overwrite-template --confirm=${TEMPLATE_OVERWRITE_CONFIRM}`,
     "  npm run mtt:postflop-action-ev-intake -- --input=<completed-template.json> --summary",
@@ -181,22 +199,35 @@ function prepareTemplates(args: CliArgs) {
   const entries = args.all
     ? [...generatedMttPostflopPilotPacks]
     : [requiredEntry(args.catalogId ?? "")];
+  const templatePaths = entries.map((entry) => (
+    args.templateOut ?? resolve(args.templateDir, entry.catalogId, "action-ev-intake.template.json")
+  ));
+  if (args.outputPath !== null && templatePaths.some((path) => samePath(path, args.outputPath ?? ""))) {
+    throw new Error("Template status output must not overwrite an action-EV intake template.");
+  }
   const templates = entries.map((entry) => {
     const template = templateFor(entry);
     const outputPath = args.templateOut ?? resolve(args.templateDir, entry.catalogId, "action-ev-intake.template.json");
     const existing = existsSync(outputPath);
     let stale = false;
+    let sourceSafeBlank = false;
+    let refreshableBlank = false;
     if (existing) {
       try {
-        stale = !isCurrentTemplateStructure(readJson<unknown>(outputPath), template);
+        const existingTemplate = readJson<unknown>(outputPath);
+        stale = !isCurrentTemplateStructure(existingTemplate, template);
+        sourceSafeBlank = isSourceSafeBlankTemplate(existingTemplate);
+        refreshableBlank = stale && sourceSafeBlank;
       } catch {
         stale = true;
       }
     }
-    const written = args.writeTemplate && (!existing || args.overwriteTemplate);
+    const refreshedBlank = args.refreshBlankTemplates && refreshableBlank;
+    const written = args.writeTemplate && (!existing || args.overwriteTemplate || refreshedBlank);
     if (written) {
       writeJson(outputPath, template);
       stale = false;
+      sourceSafeBlank = true;
     }
     return {
       catalogId: entry.catalogId,
@@ -209,6 +240,11 @@ function prepareTemplates(args: CliArgs) {
       existing,
       stale,
       written,
+      refreshableBlank,
+      refreshedBlank,
+      sourceSafeBlank,
+      nonBlank: existing && !sourceSafeBlank,
+      protectedStale: stale && !refreshableBlank,
     };
   });
   return {
@@ -223,6 +259,11 @@ function prepareTemplates(args: CliArgs) {
       existingTemplates: templates.filter((item) => item.existing).length,
       staleTemplates: templates.filter((item) => item.stale).length,
       writtenTemplates: templates.filter((item) => item.written).length,
+      blankTemplates: templates.filter((item) => item.sourceSafeBlank).length,
+      nonBlankTemplates: templates.filter((item) => item.nonBlank).length,
+      refreshableBlankTemplates: templates.filter((item) => item.refreshableBlank).length,
+      refreshedBlankTemplates: templates.filter((item) => item.refreshedBlank).length,
+      protectedStaleTemplates: templates.filter((item) => item.protectedStale).length,
     },
     templates,
     errors: [] as string[],
@@ -558,6 +599,34 @@ function isCurrentTemplateStructure(value: unknown, expected: ActionEvIntake): b
   });
 }
 
+function isSourceSafeBlankTemplate(value: unknown): boolean {
+  if (
+    !isRecord(value) ||
+    value.schemaVersion !== SCHEMA ||
+    !isRecord(value.source) ||
+    value.source.kind !== "OWNED_SOLVER_EXPORT" ||
+    value.source.unit !== "BB" ||
+    value.source.rightsConfirmed !== true ||
+    value.source.sourceReference !== "" ||
+    !isRecord(value.review) ||
+    value.review.reviewer !== "" ||
+    value.review.reviewedAt !== "" ||
+    value.review.decision !== "PENDING" ||
+    !Array.isArray(value.rows) ||
+    value.rows.length === 0
+  ) {
+    return false;
+  }
+  return value.rows.every((row) => (
+    isRecord(row) &&
+    row.equivalentThresholdBb === null &&
+    row.acceptableThresholdBb === null &&
+    Array.isArray(row.values) &&
+    row.values.length > 0 &&
+    row.values.every((candidate) => isRecord(candidate) && candidate.evBb === null)
+  ));
+}
+
 function requiredEntry(catalogId: string): PilotEntry {
   const entry = generatedMttPostflopPilotPacks.find((item) => item.catalogId === catalogId);
   if (entry === undefined) {
@@ -578,6 +647,11 @@ function renderReport(report: ReturnType<typeof prepareTemplates> | ReturnType<t
       `existing templates: ${report.counts.existingTemplates}`,
       `stale templates: ${report.counts.staleTemplates}`,
       `written templates: ${report.counts.writtenTemplates}`,
+      `blank templates: ${report.counts.blankTemplates}`,
+      `nonblank templates: ${report.counts.nonBlankTemplates}`,
+      `refreshable blank templates: ${report.counts.refreshableBlankTemplates}`,
+      `refreshed blank templates: ${report.counts.refreshedBlankTemplates}`,
+      `protected stale templates: ${report.counts.protectedStaleTemplates}`,
       `strategy values: ${report.strategyValues}`,
     ];
     if (!summary) lines.push(...report.templates.map((item) => `${item.catalogId}: ${item.outputPath}`));

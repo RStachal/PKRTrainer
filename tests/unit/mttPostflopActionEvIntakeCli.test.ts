@@ -24,7 +24,13 @@ describe("MTT postflop action-EV intake CLI", () => {
       expect(report).toMatchObject({
         valid: true,
         strategyValues: "none",
-        counts: { pilots: 7, decisions: 972, actionValueSlots: 2916 },
+        counts: {
+          pilots: 7,
+          decisions: 972,
+          actionValueSlots: 2916,
+          blankTemplates: 7,
+          nonBlankTemplates: 0,
+        },
       });
       expect(report.templates).toHaveLength(7);
       for (const item of report.templates) {
@@ -39,6 +45,101 @@ describe("MTT postflop action-EV intake CLI", () => {
         expect(template.review.decision).toBe("PENDING");
         expect(template.rows.flatMap((row) => row.values).every((value) => value.evBb === null)).toBe(true);
       }
+    });
+  });
+
+  it("refreshes a stale blank template and writes a machine-readable status report", () => {
+    withTempDir((dir) => {
+      const templatePath = join(dir, "template.json");
+      const reportPath = join(dir, "refresh-report.json");
+      expect(run(`--catalog-id=${PILOT}`, "--write-template", `--template-out=${templatePath}`).status).toBe(0);
+      const stale = JSON.parse(readFileSync(templatePath, "utf8")) as {
+        baseFingerprint: string;
+        rows: Array<{ values: Array<{ evBb: number | null }> }>;
+      };
+      stale.baseFingerprint = "stale-blank-structure";
+      writeFileSync(templatePath, `${JSON.stringify(stale, null, 2)}\n`, "utf8");
+
+      const result = run(
+        `--catalog-id=${PILOT}`,
+        "--write-template",
+        "--refresh-blank-templates",
+        `--template-out=${templatePath}`,
+        `--output=${reportPath}`,
+        "--json",
+      );
+      expect(result.status).toBe(0);
+      expect(parseJson(result.stdout)).toMatchObject({
+        valid: true,
+        strategyValues: "none",
+        counts: {
+          staleTemplates: 0,
+          writtenTemplates: 1,
+          blankTemplates: 1,
+          nonBlankTemplates: 0,
+          refreshableBlankTemplates: 1,
+          refreshedBlankTemplates: 1,
+          protectedStaleTemplates: 0,
+        },
+        templates: [{ stale: false, written: true, refreshedBlank: true }],
+      });
+      expect(JSON.parse(readFileSync(reportPath, "utf8"))).toMatchObject({
+        valid: true,
+        counts: { refreshedBlankTemplates: 1 },
+      });
+      const refreshed = JSON.parse(readFileSync(templatePath, "utf8")) as {
+        baseFingerprint: string;
+        rows: Array<{ values: Array<{ evBb: number | null }> }>;
+      };
+      expect(refreshed.baseFingerprint).toMatch(/^[a-f0-9]{64}$/);
+      expect(refreshed.baseFingerprint).not.toBe("stale-blank-structure");
+      expect(refreshed.rows.flatMap((row) => row.values).every((value) => value.evBb === null)).toBe(true);
+    });
+  });
+
+  it("protects stale templates containing human work from automatic refresh", () => {
+    withTempDir((dir) => {
+      const templatePath = join(dir, "template.json");
+      const reportPath = join(dir, "refresh-report.json");
+      expect(run(`--catalog-id=${PILOT}`, "--write-template", `--template-out=${templatePath}`).status).toBe(0);
+      const edited = JSON.parse(readFileSync(templatePath, "utf8")) as {
+        baseFingerprint: string;
+        review: { reviewer: string };
+        rows: Array<{ values: Array<{ evBb: number | null }> }>;
+      };
+      edited.baseFingerprint = "stale-owner-work";
+      edited.review.reviewer = "Project owner in progress";
+      edited.rows[0].values[0].evBb = 0;
+      writeFileSync(templatePath, `${JSON.stringify(edited, null, 2)}\n`, "utf8");
+
+      const result = run(
+        `--catalog-id=${PILOT}`,
+        "--write-template",
+        "--refresh-blank-templates",
+        `--template-out=${templatePath}`,
+        `--output=${reportPath}`,
+        "--json",
+      );
+      expect(result.status).toBe(1);
+      expect(parseJson(result.stdout)).toMatchObject({
+        valid: false,
+        counts: {
+          staleTemplates: 1,
+          writtenTemplates: 0,
+          blankTemplates: 0,
+          nonBlankTemplates: 1,
+          refreshableBlankTemplates: 0,
+          refreshedBlankTemplates: 0,
+          protectedStaleTemplates: 1,
+        },
+        templates: [{ stale: true, written: false, protectedStale: true }],
+      });
+      expect(JSON.parse(readFileSync(reportPath, "utf8"))).toMatchObject({
+        valid: false,
+        counts: { protectedStaleTemplates: 1 },
+      });
+      expect(readFileSync(templatePath, "utf8")).toContain("Project owner in progress");
+      expect(readFileSync(templatePath, "utf8")).toContain("stale-owner-work");
     });
   });
 
@@ -120,8 +221,14 @@ describe("MTT postflop action-EV intake CLI", () => {
       );
       expect(preserved.status).toBe(0);
       expect(parseJson(preserved.stdout)).toMatchObject({
-        counts: { existingTemplates: 1, staleTemplates: 0, writtenTemplates: 0 },
-        templates: [{ existing: true, stale: false, written: false }],
+        counts: {
+          existingTemplates: 1,
+          staleTemplates: 0,
+          writtenTemplates: 0,
+          blankTemplates: 0,
+          nonBlankTemplates: 1,
+        },
+        templates: [{ existing: true, stale: false, written: false, nonBlank: true }],
       });
       expect(readFileSync(templatePath, "utf8")).toContain("Owner work in progress");
 

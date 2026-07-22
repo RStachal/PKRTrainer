@@ -79,13 +79,16 @@ attempt fail, or when a task explicitly changes strategy meaning or release scop
 - Complete memory-safe intake: all six derived manifests are raw-complete, including the
   98-board growth evidence wrapper. The 2026-07-20 14:49 snapshot has 439
   unique family/board pairs, 20/20 valid cumulative reports and 20/20 mechanical
-  family shapes. Approved per-board accuracy is traceable for 403/439 boards;
-  `OPS-56` owns the isolated 36-log recovery queue across 10 families. These
+  family shapes. Approved per-board accuracy is traceable for 407/439 boards;
+  `OPS-56` owns the remaining isolated 32-log recovery queue across 9 families.
+  It began at 403/439 across 10 families. These
   counts do not substitute for the 0/20 owner decisions. `OPS-57` is armed to
   refresh the final reviewer handoff only after recovery reaches 439/439.
 - Action-EV comparison: implementation complete, data not ready. Core preflop is
   `0/493818` complete decisions across `0/4` packs; scoped FLOP pilots are
-  `0/972` across `0/7`. Frequency-only solver output is excluded.
+  `0/972` across `0/7`. All seven blank FLOP intake templates are current at
+  972 decisions and 2,916 action-value slots. Frequency-only solver output is
+  excluded.
 - TexasSolver v0.2.0 compatibility: the reduced-tree contract remains frozen even though
   its inherited `set_raise_limit 3` line is logged as unrecognized. The isolated
   next batch removes only that ignored directive; its resulting tree still uses
@@ -667,7 +670,7 @@ scoped FLOP decisions.
 
 ### OPS-56 - Recover missing approved solver accuracy logs
 
-Status: `ACTIVE 2026-07-22 - 403/439`
+Status: `ACTIVE 2026-07-22 - 407/439`
 Depends on: `OPS-51`, `OPS-55`
 Lane: `REPEATABLE`
 
@@ -744,6 +747,32 @@ and task manager; focused recovery/reviewer/Windows regression passes 43/43 and
 the complete regression passes 153/153 files and 776/776 tests. Typecheck,
 registry drift, scoped Core 4/4 plus 7/7, ranges, production build, precache and
 bundle budget are green.
+
+### OPS-58 - Keep blank action-EV intake synchronized
+
+Status: `DONE 2026-07-22`
+Depends on: `OPS-04`, `AEV-03A`
+Lane: `MECHANICAL`
+
+The ten-minute task now refreshes a stale postflop action-EV template only when
+the existing document is provably blank: owner fields are empty, review remains
+pending and every EV and threshold is null. A stale file containing any owner
+work is protected, reported and left byte-for-byte untouched. This path cannot
+write a candidate, solver value or production strategy.
+
+```powershell
+npm run mtt:postflop-action-ev-intake -- --all --write-template --refresh-blank-templates --output=artifacts/mtt-action-ev-intake/refresh-report.json --summary
+npm run mtt:autonomous-cycle-status
+```
+
+Acceptance: the first live pass safely refreshed 7/7 stale blank templates for
+972 decisions and 2,916 action slots; an immediate read-only repeat reported
+blank 7/7, nonblank 0, zero stale, zero written and zero protected files. Focused
+intake/Windows regression passes 17/17; the full regression passes 153/153 files and 778/778
+tests. Typecheck, both PowerShell parser checks, registry drift, scoped Core 4/4
+plus 7/7, ranges, production build, precache and bundle budget pass. The external
+EV-data gate remains `0/972` until a reviewed solver export contains every
+offered action value.
 
 ## Phase DEP - Core Deployment Closeout
 
@@ -1159,7 +1188,7 @@ strategy frequencies but no validated action-EV field; do not derive EV from it.
 Exact blank workbench:
 
 ```powershell
-npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
+npm run mtt:postflop-action-ev-intake -- --all --write-template --refresh-blank-templates --summary
 ```
 
 It covers seven pilots, 972 decisions and 2,916 action values. The templates
@@ -1167,6 +1196,11 @@ contain no EV; AEV-03 remains an external-data gate. Re-running this command
 preserves any existing file. Intentional replacement additionally requires
 `--overwrite-template` and confirmation token
 `OVERWRITE_MTT_POSTFLOP_ACTION_EV_TEMPLATE`.
+
+The recurring source-safe refresh uses `--refresh-blank-templates`: it may
+replace only a structurally stale document with empty owner fields, null
+thresholds and null action EV. Any human work makes the file protected and the
+cycle fail closed.
 
 ### AEV-03A - Prepare fail-closed FLOP action-EV intake
 
@@ -1385,8 +1419,9 @@ Use this exact handoff prompt after changing models:
 | 2026-07-22 | OPS-53 | DONE | Bound every owner decision to a deterministic SHA-256 fingerprint of the exact source-safe family review reports and accuracy report. Dashboard schema v2, single and batch writers, and protocol validation reject stale evidence without inferring a verdict. The live template has 20/20 valid fingerprints and 0 decisions; dashboard remains 53 reports, 403/439 boards and owner 0/20. Focused tests passed 24/24; typecheck, scoped Core 4/4 plus 7/7 and production build passed. |
 | 2026-07-22 | OPS-54 | DONE | The ten-minute cycle now regenerates only the blank v2 owner template after a successful canonical dashboard refresh and exposes schema, fingerprint, verdict, timestamp and exit health in task status. A real cycle exited 0 and reported template ready with 20/20 fingerprints and 0 selected decisions. PowerShell parser checks and Windows automation tests passed 9/9; no human decision or strategy file was written. |
 | 2026-07-22 | OPS-55 | DONE | Rebaselined the full product after owner workflow hardening: 152/152 Vitest files and 771/771 tests passed, followed by typecheck, registry drift, scoped Core 4/4 plus 7/7, build, ranges, precache and bundle budget. Remaining red states are explicit external data/human gates: six-max 0 records, owner 0/20 and action EV 0/493818 preflop plus 0/972 scoped FLOP. |
-| 2026-07-22 | OPS-56 | ACTIVE | Prepared a fail-closed, restart-safe queue for exactly 36 missing approved per-board accuracy logs across 10 families. It solves one log at a time, preserves all 439 canonical raw checkpoints, refreshes staged accuracy after every success and cannot write poker review or production strategy. Initial preparation and scenario audit are valid at 403/439 with 36/36 recovery inputs; full regression passed 153 files / 775 tests plus the complete release integrity chain. |
+| 2026-07-22 | OPS-56 | ACTIVE | Prepared a fail-closed, restart-safe queue for exactly 36 missing approved per-board accuracy logs across 10 families. It solves one log at a time, preserves all 439 canonical raw checkpoints, refreshes staged accuracy after every success and cannot write poker review or production strategy. Initial preparation and scenario audit were valid at 403/439; live progress is now 407/439 with 32 pending across 9 families. Full regression passed 153 files / 775 tests plus the complete release integrity chain. |
 | 2026-07-22 | OPS-57 | READY_AFTER_OPS-56 | Added per-board canonical raw SHA-256/length/time invariants and a mutex-protected finalizer that refreshes protocol, readiness, owner dashboard and only the blank v2 fingerprint template after accuracy reaches 439/439. Live dry-run correctly waited at 407/439 with 32 pending and no reviewer write. Parser and focused regression passed; the full baseline is 153/153 files and 776/776 tests plus the complete green release integrity chain. |
+| 2026-07-22 | OPS-58 | DONE | Added fail-closed refresh for stale but provably blank postflop action-EV templates and exposed its status through the ten-minute task. The live pass refreshed all 7 blank templates covering 972 decisions and 2,916 action slots; an immediate repeat reported blank 7/7, nonblank 0 and zero writes. Edited or EV-bearing templates remain protected and make blank readiness false, candidate and promotion commands are absent, final focused tests passed 17/17 and the full 153-file / 778-test release integrity chain passed. |
 | 2026-07-20 | OPS-51 | DONE | Fixed UTF-16LE TexasSolver log intake and added a fast fail-closed staging refresh over already validated cumulative reports. The live pass refreshed 20/20 family summaries and recovered traceable exploitability for 403/439 approved boards across all 20 families; an immediate repeat wrote nothing. Protocol warnings fell from 38 to 20, leaving only human caveats and owner verdicts. Focused tests passed 38/38; typecheck, scoped Core and production build passed. |
 | 2026-07-20 | RELEASE-FTP-03 | DONE | Packaged source commit `c44efebdad96` after the complete 152-file / 762-test MTT Core release gate and four-viewport Chrome QA as `deploy/pkrtrainer-ftp-20260720-141237-c44efebdad96-mtt-core-p1-incremental.zip`. Portable forward-slash ZIP reconciliation passed 22/22 files with 0 missing, 0 extra and 0 hash mismatches; SHA-256 is `2374090EBAB10A4E2E38D9CD04D03C4457E0C6E561561F01C7A18093CC192F67`. |
 | 2026-07-20 | OWNER-REVIEW-06 | DONE | Owner dashboard progress now counts only export-valid decisions, marks missing reviewer/date/scope/caveats, and focuses the next incomplete visible row without selecting a poker verdict. Current dashboard regenerated over 53 reports with 20/20 mechanical family context and 0 preselected decisions. Focused reviewer/writer/autostart tests passed 17/17, typecheck passed, and browser QA removed the 390px global horizontal overflow. |

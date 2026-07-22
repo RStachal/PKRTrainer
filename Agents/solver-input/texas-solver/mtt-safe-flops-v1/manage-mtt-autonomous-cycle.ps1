@@ -18,6 +18,7 @@ $Cycle = Join-Path $PSScriptRoot "run-mtt-autonomous-cycle.ps1"
 $CycleArtifactsDir = Join-Path $RepoRoot "artifacts\mtt-autonomous-cycle"
 $LatestSummaryPath = Join-Path $CycleArtifactsDir "latest-cycle-summary.json"
 $ReviewOnlyRefreshPath = Join-Path $RepoRoot "artifacts\texas-solver-review-only-owner-depth\refresh-report.json"
+$ActionEvTemplateRefreshPath = Join-Path $RepoRoot "artifacts\mtt-action-ev-intake\refresh-report.json"
 $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 $PowerShell = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
 $Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$Cycle`" -Once -IntervalMinutes $RepetitionMinutes -MinimumFreeMemoryPercent $MinimumFreeMemoryPercent -MaximumCpuPercent $MaximumCpuPercent"
@@ -133,6 +134,33 @@ function Show-LatestReviewOnlyRefresh {
   }
 }
 
+function Show-LatestActionEvTemplateRefresh {
+  if (-not (Test-Path -LiteralPath $ActionEvTemplateRefreshPath -PathType Leaf)) {
+    Write-Host "Action-EV intake templates: not yet written"
+    return
+  }
+  try {
+    $report = Get-Content -LiteralPath $ActionEvTemplateRefreshPath -Raw | ConvertFrom-Json
+    if ($report.mode -ne "TEMPLATE" -or $null -eq $report.counts) {
+      throw "Unsupported action-EV template report format."
+    }
+    $ready = $report.valid -eq $true -and $report.strategyValues -eq "none" -and
+      [int]$report.counts.pilots -gt 0 -and [int]$report.counts.staleTemplates -eq 0 -and
+      [int]$report.counts.blankTemplates -eq [int]$report.counts.pilots -and
+      [int]$report.counts.nonBlankTemplates -eq 0 -and
+      [int]$report.counts.protectedStaleTemplates -eq 0
+    $updatedAt = (Get-Item -LiteralPath $ActionEvTemplateRefreshPath).LastWriteTimeUtc.ToString("o")
+    Write-Host ("Action-EV intake templates: ready={0}, pilots={1}, decisions={2}, action slots={3}, blank={4}/{5}, nonblank={6}, stale={7}, written={8}, refreshed blank={9}, protected stale={10}, generated values={11}, updated={12}" -f `
+      $ready, $report.counts.pilots, $report.counts.decisions, $report.counts.actionValueSlots, `
+      $report.counts.blankTemplates, $report.counts.pilots, $report.counts.nonBlankTemplates, `
+      $report.counts.staleTemplates, $report.counts.writtenTemplates, `
+      $report.counts.refreshedBlankTemplates, $report.counts.protectedStaleTemplates, `
+      $report.strategyValues, $updatedAt)
+  } catch {
+    Write-Host "Action-EV intake templates: unreadable ($($_.Exception.Message))"
+  }
+}
+
 function Show-LatestCycleOutcome {
   $latestLog = Get-ChildItem -LiteralPath $CycleArtifactsDir -Filter "cycle-*.log" -File -ErrorAction SilentlyContinue |
     Sort-Object LastWriteTimeUtc -Descending |
@@ -173,6 +201,7 @@ function Show-TaskStatus {
   Write-Host "cycle: $Cycle"
   Show-LatestCycleOutcome
   Show-LatestReviewOnlyRefresh
+  Show-LatestActionEvTemplateRefresh
   Show-LatestCycleSummary
   return $true
 }
