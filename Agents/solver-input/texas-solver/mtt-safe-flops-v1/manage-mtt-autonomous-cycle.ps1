@@ -73,6 +73,11 @@ function Show-LatestCycleSummary {
       Write-Host ("TexasSolver owner dashboard: ready={0}, updated={1}, exit={2}, path={3}" -f `
         $summary.review.viewerReady, $summary.review.viewerUpdatedAt, `
         $summary.review.viewerExitCode, $summary.review.viewerPath)
+      Write-Host ("TexasSolver owner template: ready={0}, schema={1}, fingerprints={2}/{3}, selected={4}, updated={5}, exit={6}, path={7}" -f `
+        $summary.review.templateReady, $summary.review.templateSchemaVersion, `
+        $summary.review.templateFingerprints, $summary.review.templateFamilies, `
+        $summary.review.templateSelectedDecisions, $summary.review.templateUpdatedAt, `
+        $summary.review.templateExitCode, $summary.review.templatePath)
     }
     if ($null -ne $summary.reviewOnlyEvidence) {
       Write-Host ("Review-only evidence: eligible={0}, reports={1}, refreshed={2}, failures={3}, viewer={4}" -f `

@@ -56,6 +56,7 @@ $ReviewReadinessMarkdownPath = Join-Path $RepoRoot "artifacts\texas-solver-revie
 $CanonicalReviewReportsDir = Join-Path $RepoRoot "Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver"
 $OwnerReviewWavesPath = Join-Path $RepoRoot "artifacts\texas-solver-review-protocol\packet\OWNER_REVIEW_WAVES.md"
 $OwnerReviewViewerPath = Join-Path $RepoRoot "artifacts\texas-solver-review-protocol\viewer\index.html"
+$OwnerReviewTemplatePath = Join-Path $RepoRoot "artifacts\texas-solver-review-protocol\owner-review-decisions.template.json"
 $MutexName = "Local\PKRTrainerMttAutonomousCycleV1"
 $Deadline = (Get-Date).AddMinutes($MaxMinutes)
 $LastCoverageSignature = if (Test-Path -LiteralPath $LastCoverageSignaturePath) {
@@ -149,7 +150,7 @@ function Get-P1Summary([int]$PacketExitCode, [int]$ValidationExitCode) {
   return $summary
 }
 
-function Get-ReviewSummary([int]$ExitCode, [int]$ViewerExitCode) {
+function Get-ReviewSummary([int]$ExitCode, [int]$ViewerExitCode, [int]$TemplateExitCode) {
   $summary = [ordered]@{
     exitCode = $ExitCode
     families = $null
@@ -161,6 +162,14 @@ function Get-ReviewSummary([int]$ExitCode, [int]$ViewerExitCode) {
     viewerReady = $false
     viewerPath = $OwnerReviewViewerPath
     viewerUpdatedAt = $null
+    templateExitCode = $TemplateExitCode
+    templateReady = $false
+    templatePath = $OwnerReviewTemplatePath
+    templateUpdatedAt = $null
+    templateSchemaVersion = $null
+    templateFamilies = $null
+    templateFingerprints = $null
+    templateSelectedDecisions = $null
   }
   $reportPath = Join-Path $RepoRoot "artifacts\texas-solver-review-protocol\report.json"
   if (Test-Path -LiteralPath $reportPath) {
@@ -176,6 +185,28 @@ function Get-ReviewSummary([int]$ExitCode, [int]$ViewerExitCode) {
   if (Test-Path -LiteralPath $OwnerReviewViewerPath -PathType Leaf) {
     $summary.viewerReady = $ViewerExitCode -eq 0
     $summary.viewerUpdatedAt = (Get-Item -LiteralPath $OwnerReviewViewerPath).LastWriteTimeUtc.ToString("o")
+  }
+  if (Test-Path -LiteralPath $OwnerReviewTemplatePath -PathType Leaf) {
+    try {
+      $template = Get-Content -LiteralPath $OwnerReviewTemplatePath -Raw | ConvertFrom-Json
+      $decisions = @($template.decisions)
+      $fingerprints = @($decisions | Where-Object {
+        [string]$_.evidenceFingerprint -cmatch '^sha256:[a-f0-9]{64}$'
+      }).Count
+      $selected = @($decisions | Where-Object {
+        -not [string]::IsNullOrWhiteSpace([string]$_.decision)
+      }).Count
+      $summary.templateUpdatedAt = (Get-Item -LiteralPath $OwnerReviewTemplatePath).LastWriteTimeUtc.ToString("o")
+      $summary.templateSchemaVersion = [string]$template.schemaVersion
+      $summary.templateFamilies = $decisions.Count
+      $summary.templateFingerprints = $fingerprints
+      $summary.templateSelectedDecisions = $selected
+      $summary.templateReady = $TemplateExitCode -eq 0 -and
+        $summary.templateSchemaVersion -eq "pkrtrainer-texas-solver-owner-decisions-v2" -and
+        $summary.templateFamilies -eq $summary.families -and
+        $summary.templateFingerprints -eq $summary.templateFamilies -and
+        $summary.templateSelectedDecisions -eq 0
+    } catch { Write-CycleLog "Could not read TexasSolver owner decision template. $($_.Exception.Message)" | Out-Null }
   }
   return $summary
 }
@@ -429,6 +460,7 @@ try {
         # mechanical readiness is displayed as read-only context after its
         # current snapshot has passed validation.
         $reviewViewerExit = -1
+        $ownerReviewTemplateExit = -1
         if ($reviewReadinessExit -eq 0) {
           $reviewViewerExit = Invoke-LoggedNpm "TexasSolver owner review dashboard" @(
             "run", "mtt:texas-solver-viewer", "--",
@@ -438,6 +470,18 @@ try {
             "--output=$OwnerReviewViewerPath",
             "--title=TexasSolver owner review"
           )
+          if ($reviewViewerExit -eq 0) {
+            # This is always a fresh blank template. Never overwrite the
+            # separate owner-review-decisions.json file containing human work.
+            $ownerReviewTemplateExit = Invoke-LoggedNpm "TexasSolver owner decision template" @(
+              "run", "mtt:texas-solver-owner-review-batch", "--",
+              "--write-template",
+              "--out=$OwnerReviewTemplatePath",
+              "--json"
+            )
+          } else {
+            Write-CycleLog "Owner dashboard failed; owner decision template was not refreshed." | Out-Null
+          }
         } else {
           Write-CycleLog "Mechanical readiness failed; canonical owner dashboard was not refreshed." | Out-Null
         }
@@ -466,7 +510,7 @@ try {
         }
         $p1Summary = Get-P1Summary $p1PacketExit $p1ReadyExit
         $boardCatalogSummary = Get-BoardCatalogSummary $boardCatalogExit
-        $reviewSummary = Get-ReviewSummary $reviewExit $reviewViewerExit
+        $reviewSummary = Get-ReviewSummary $reviewExit $reviewViewerExit $ownerReviewTemplateExit
         $reviewReadinessSummary = Get-ReviewReadinessSummary $reviewReadinessExit
         $coreSummary = Get-CoreSummary $coreGateEvaluated $coreExit $signaturePersisted
         Write-LatestCycleSummary $statuses $signature $boardCatalogSummary $p1Summary $reviewSummary $reviewOnlyEvidenceSummary $reviewReadinessSummary $coreSummary

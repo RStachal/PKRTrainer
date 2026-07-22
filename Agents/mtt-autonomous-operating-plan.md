@@ -139,6 +139,9 @@ does not interrupt the current step unless it exposes a production regression.
   review-order context. Decision schema v2 binds each exported verdict to the
   exact source-safe family reports and accuracy report; any later evidence
   change invalidates the old sign-off in the dashboard, writers and protocol.
+  After a successful dashboard refresh, the cycle also regenerates only the
+  blank v2 decision template and reports its schema/fingerprint/verdict health;
+  it never overwrites the separate file containing human work.
 - Candidate normalizer regression: resolved. The low-SPR SB vs BB source retained
   five exact `CHECK`-dominant buckets; the scoped pilot suite is now 7/7 READY.
   This remains review-only evidence and has not promoted runtime content.

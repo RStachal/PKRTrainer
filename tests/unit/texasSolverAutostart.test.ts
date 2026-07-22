@@ -104,6 +104,12 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).toContain("TexasSolver review packet");
     expect(cycle).toContain("mtt:texas-solver-review-protocol");
     expect(cycle).toContain("TexasSolver owner review dashboard");
+    expect(cycle).toContain("TexasSolver owner decision template");
+    expect(cycle).toContain('"mtt:texas-solver-owner-review-batch"');
+    expect(cycle).toContain('"--out=$OwnerReviewTemplatePath"');
+    expect(cycle).toContain("pkrtrainer-texas-solver-owner-decisions-v2");
+    expect(cycle).toContain("templateSelectedDecisions -eq 0");
+    expect(cycle).toContain("Never overwrite the");
     expect(cycle).toContain('"--reviews-dir=$CanonicalReviewReportsDir"');
     expect(cycle).toContain('"--waves=$OwnerReviewWavesPath"');
     expect(cycle).toContain('"--readiness=$ReviewReadinessReportPath"');
@@ -154,7 +160,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).toContain('"mtt:texas-solver-review-readiness"');
     expect(cycle).toContain("MECHANICAL_READINESS.md");
     expect(cycle).toContain("Get-P1Summary $p1PacketExit $p1ReadyExit");
-    expect(cycle).toContain("Get-ReviewSummary $reviewExit $reviewViewerExit");
+    expect(cycle).toContain("Get-ReviewSummary $reviewExit $reviewViewerExit $ownerReviewTemplateExit");
     expect(cycle).toContain("Get-CoreSummary $coreGateEvaluated $coreExit $signaturePersisted");
     expect(cycle).toContain("core-gate-latest.json");
     expect(cycle).toContain("postflopCompleteDecisions");
@@ -194,6 +200,7 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(manager).toContain("P1 intake:");
     expect(manager).toContain("TexasSolver review:");
     expect(manager).toContain("TexasSolver owner dashboard:");
+    expect(manager).toContain("TexasSolver owner template:");
     expect(manager).toContain("Review-only evidence:");
     expect(manager).toContain("Mechanical readiness:");
     expect(manager).toContain("Core gate:");

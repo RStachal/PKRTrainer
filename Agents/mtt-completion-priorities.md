@@ -94,7 +94,9 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
   exposes all 36 missing log filenames without inferring a poker decision. Its
   v2 decision export binds every family to a deterministic SHA-256 fingerprint
   of the exact source-safe review and accuracy files; changed evidence makes an
-  earlier sign-off stale in the dashboard, both writers and protocol gate.
+  earlier sign-off stale in the dashboard, both writers and protocol gate. The
+  ten-minute cycle regenerates only the blank template after a successful
+  dashboard build and reports its v2/20-of-20/zero-verdict health explicitly.
 - Windows low-memory task: `PKRTrainer-TexasSolver-LowMemory` returned `SUCCESS`
   with no live worker or solver process after completing every authorized phase.
   It remains checkpoint-safe after sign-in and will not duplicate a live process.
@@ -240,6 +242,7 @@ npm run mtt:postflop-action-ev-intake -- --all --write-template --summary
 
 | Date | Priority | Result | Evidence |
 | --- | --- | --- | --- |
+| 2026-07-22 | P4 / Owner workflow automation | Blank decision template stays synchronized | The recurring cycle refreshes the template only after the canonical dashboard succeeds and never touches the separate human decision file. Status exposes schema, 20/20 fingerprint coverage, zero selected verdicts, timestamp and exit code. PowerShell parser checks and Windows automation tests passed 9/9; a real guarded cycle exited 0 with owner review still 0/20 |
 | 2026-07-22 | P4 / Owner evidence binding | Old sign-offs cannot survive changed evidence | Decision schema v2 fingerprints the exact source-safe family reports and accuracy report. Dashboard import, single and batch writers, and protocol validation all fail closed on stale evidence without selecting a verdict. The live template has 20/20 valid fingerprints and zero decisions; dashboard remains 53 reports, 403/439 boards, 10 complete plus 10 partial and owner 0/20. Focused tests passed 24/24; typecheck, scoped Core and production build passed |
 | 2026-07-20 | P4 / Owner accuracy workflow | Approved accuracy is visible at the human gate | The canonical 53-report dashboard joins approved staged evidence across 20 owner families: 403/439 boards, 10 complete and 10 partial families, with all 36 missing log filenames expandable and filterable. It never selects or recommends a verdict; owner decisions remain 0/20. Malformed approved reports fail closed. Focused tests passed 25/25; typecheck, scoped Core and production build passed |
 | 2026-07-20 | P4 / Solver accuracy intake | UTF-16 per-board evidence is retained incrementally | The locked refresh reused validated cumulative reports to update 20/20 staging summaries without reparsing raw solver JSON. Traceable exploitability is now present for 403/439 approved boards across all 20 families; the immediate repeat wrote zero files. Review warnings fell from 38 to 20, leaving only human caveats and owner verdicts. Focused tests passed 38/38; typecheck, scoped Core and production build passed |
