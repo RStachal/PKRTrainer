@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { buildMttPreflopCsvScaffoldDocument } from "../../src/data/ranges/mttPreflopCsvScaffold.ts";
 
 describe("mtt:sixmax-preflop-intake-batch CLI", () => {
   it("fails closed when one or more of the four exact solver CSV files are missing", () => {
@@ -142,13 +143,35 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
       const parsed = JSON.parse(result.stdout) as {
         valid: boolean;
         counts: { ready: number; waiting: number; invalid: number };
+        workbenchCounts: {
+          parsedRows: number;
+          expectedRows: number;
+          contentTouchedRows: number;
+          strategyCompleteRows: number;
+          strategyPartialRows: number;
+          actionEvCompleteRows: number;
+          actionEvPartialRows: number;
+          reviewCompleteRows: number;
+          reviewPartialRows: number;
+        };
         rows: Array<{ packId: string; status: string; records: number | null; preflightConfidence: string; errors: string[] }>;
       };
       expect(parsed.valid).toBe(false);
       expect(parsed.counts).toEqual({ ready: 0, waiting: 3, invalid: 1 });
+      expect(parsed.workbenchCounts).toMatchObject({
+        parsedRows: 1,
+        expectedRows: 118638,
+        contentTouchedRows: 1,
+        strategyCompleteRows: 1,
+        strategyPartialRows: 0,
+        actionEvCompleteRows: 0,
+        actionEvPartialRows: 0,
+        reviewCompleteRows: 1,
+        reviewPartialRows: 0,
+      });
       expect(parsed.rows.find((row) => row.packId === packId)).toMatchObject({
         status: "INVALID",
-        records: 1,
+        records: 0,
         preflightConfidence: "MEDIUM",
       });
       const errors = parsed.rows.find((row) => row.packId === packId)?.errors.join("\n") ?? "";
@@ -159,14 +182,78 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
     }
   });
 
+  it("reports structurally safe chunk progress without running full candidate validation", () => {
+    const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-progress-"));
+    try {
+      const packId = "mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1";
+      const scaffold = buildMttPreflopCsvScaffoldDocument(packId);
+      const headerEnd = scaffold.document.indexOf("\n");
+      const firstRowEnd = scaffold.document.indexOf("\n", headerEnd + 1);
+      const firstRow = scaffold.document.slice(headerEnd + 1, firstRowEnd).split(",");
+      firstRow[11] = "OPEN_2X";
+      firstRow[12] = "OPEN_2X";
+      const inProgress = [
+        scaffold.document.slice(0, headerEnd + 1),
+        firstRow.join(","),
+        scaffold.document.slice(firstRowEnd),
+      ].join("");
+      writeFileSync(join(sourceDir, `${packId}.csv`), inProgress, "utf8");
+
+      const result = spawnSync(process.execPath, [
+        "node_modules/vite-node/vite-node.mjs",
+        "scripts/runMttSixMaxPreflopIntakeBatch.mts",
+        `--source-dir=${sourceDir}`,
+        "--incremental",
+        "--json",
+      ], { cwd: process.cwd(), encoding: "utf8", timeout: 30_000 });
+
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout) as {
+        counts: { ready: number; waiting: number; invalid: number };
+        workbenchCounts: {
+          structurallySafeScaffolds: number;
+          inProgressScaffolds: number;
+          expectedRows: number;
+          parsedRows: number;
+          strategyCompleteRows: number;
+          strategyPartialRows: number;
+        };
+        rows: Array<{
+          packId: string;
+          status: string;
+          csvReady: boolean | null;
+          structureSafe: boolean | null;
+          errors: string[];
+        }>;
+      };
+      expect(parsed.counts).toEqual({ ready: 0, waiting: 4, invalid: 0 });
+      expect(parsed.workbenchCounts).toMatchObject({
+        structurallySafeScaffolds: 1,
+        inProgressScaffolds: 1,
+        expectedRows: 118638,
+        parsedRows: 118638,
+        strategyCompleteRows: 1,
+        strategyPartialRows: 0,
+      });
+      expect(parsed.rows.find((row) => row.packId === packId)).toMatchObject({
+        status: "WAITING",
+        csvReady: null,
+        structureSafe: true,
+      });
+      expect(parsed.rows.find((row) => row.packId === packId)?.errors[0]).toContain(
+        "CSV strategy progress is 1/118638 rows",
+      );
+    } finally {
+      rmSync(sourceDir, { recursive: true, force: true });
+    }
+  }, 40_000);
+
   it("treats an untouched blank scaffold as waiting", () => {
     const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-scaffold-"));
     try {
       const packId = "mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1";
-      writeFileSync(join(sourceDir, `${packId}.csv`), [
-        "rowKind,packId,tableFormat,blindSpeed,ante,evModel,position,sourceStackBB,bucket,context,handClass,strictActions,lenientActions,actionEvsBb,equivalentThresholdBb,acceptableThresholdBb,sourceReferenceId,reviewer,reviewedAt,notes",
-        `HAND_CLASS_DECISION,${packId},SIX_MAX,REGULAR,ON,CHIP_EV,BTN,40,40,RFI,AA,,,,,,,,,fill from reviewed source`,
-      ].join("\n"), "utf8");
+      const scaffold = buildMttPreflopCsvScaffoldDocument(packId);
+      writeFileSync(join(sourceDir, `${packId}.csv`), scaffold.document, "utf8");
 
       const result = spawnSync(process.execPath, [
         "node_modules/vite-node/vite-node.mjs",
@@ -209,9 +296,21 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
       expect(result.status).toBe(1);
       const parsed = JSON.parse(result.stdout) as {
         counts: { ready: number; waiting: number; invalid: number };
+        workbenchCounts: {
+          contentTouchedRows: number;
+          actionEvCompleteRows: number;
+          actionEvPartialRows: number;
+          strategyCompleteRows: number;
+        };
         rows: Array<{ packId: string; status: string; sourceSafeBlank: boolean | null }>;
       };
       expect(parsed.counts).toEqual({ ready: 0, waiting: 3, invalid: 1 });
+      expect(parsed.workbenchCounts).toMatchObject({
+        contentTouchedRows: 1,
+        actionEvCompleteRows: 1,
+        actionEvPartialRows: 0,
+        strategyCompleteRows: 0,
+      });
       expect(parsed.rows.find((row) => row.packId === packId)).toMatchObject({
         status: "INVALID",
         sourceSafeBlank: false,

@@ -161,6 +161,20 @@ function Get-SixMaxWorkbenchSummary([int]$ExitCode) {
     strategyValuesGenerated = $null
     currentScaffolds = $null
     actionEvReadyScaffolds = $null
+    measurableScaffolds = $null
+    structurallySafeScaffolds = $null
+    inProgressScaffolds = $null
+    expectedRows = $null
+    parsedRows = $null
+    contentTouchedRows = $null
+    strategyCompleteRows = $null
+    strategyPartialRows = $null
+    actionEvCompleteRows = $null
+    actionEvPartialRows = $null
+    reviewCompleteRows = $null
+    reviewPartialRows = $null
+    sourceReferenceRows = $null
+    notesEditedRows = $null
     blankScaffolds = $null
     nonBlankScaffolds = $null
     refreshedBlankScaffolds = $null
@@ -176,6 +190,20 @@ function Get-SixMaxWorkbenchSummary([int]$ExitCode) {
       $summary.strategyValuesGenerated = [string]$report.strategyValuesGenerated
       $summary.currentScaffolds = [int]$report.workbenchCounts.currentScaffolds
       $summary.actionEvReadyScaffolds = [int]$report.workbenchCounts.actionEvReadyScaffolds
+      $summary.measurableScaffolds = [int]$report.workbenchCounts.measurableScaffolds
+      $summary.structurallySafeScaffolds = [int]$report.workbenchCounts.structurallySafeScaffolds
+      $summary.inProgressScaffolds = [int]$report.workbenchCounts.inProgressScaffolds
+      $summary.expectedRows = [int]$report.workbenchCounts.expectedRows
+      $summary.parsedRows = [int]$report.workbenchCounts.parsedRows
+      $summary.contentTouchedRows = [int]$report.workbenchCounts.contentTouchedRows
+      $summary.strategyCompleteRows = [int]$report.workbenchCounts.strategyCompleteRows
+      $summary.strategyPartialRows = [int]$report.workbenchCounts.strategyPartialRows
+      $summary.actionEvCompleteRows = [int]$report.workbenchCounts.actionEvCompleteRows
+      $summary.actionEvPartialRows = [int]$report.workbenchCounts.actionEvPartialRows
+      $summary.reviewCompleteRows = [int]$report.workbenchCounts.reviewCompleteRows
+      $summary.reviewPartialRows = [int]$report.workbenchCounts.reviewPartialRows
+      $summary.sourceReferenceRows = [int]$report.workbenchCounts.sourceReferenceRows
+      $summary.notesEditedRows = [int]$report.workbenchCounts.notesEditedRows
       $summary.blankScaffolds = [int]$report.workbenchCounts.blankScaffolds
       $summary.nonBlankScaffolds = [int]$report.workbenchCounts.nonBlankScaffolds
       $summary.refreshedBlankScaffolds = [int]$report.workbenchCounts.refreshedBlankScaffolds
@@ -186,6 +214,8 @@ function Get-SixMaxWorkbenchSummary([int]$ExitCode) {
       $summary.current = $ExitCode -eq 0 -and $report.valid -eq $true -and
         $report.workbenchCurrent -eq $true -and $summary.strategyValuesGenerated -eq "none" -and
         $summary.currentScaffolds -eq 4 -and $summary.actionEvReadyScaffolds -eq 4 -and
+        $summary.measurableScaffolds -eq 4 -and $summary.structurallySafeScaffolds -eq 4 -and
+        $summary.parsedRows -eq $summary.expectedRows -and
         $summary.protectedStaleScaffolds -eq 0
     } catch { Write-CycleLog "Could not read six-max preflop workbench summary. $($_.Exception.Message)" | Out-Null }
   }

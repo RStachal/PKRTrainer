@@ -130,6 +130,22 @@ truncated file or unknown header is reported and protected from overwrite. The
 ten-minute MTT task runs the same guard and exposes current/blank/nonblank/stale
 counts in `mtt:autonomous-cycle-status`. The command creates no strategy or EV.
 
+The same report measures progressive owner work without interpreting it. It
+publishes exact parsed/expected, content-touched, complete/partial strategy,
+complete/partial action-EV and reviewer-metadata row counts per pack and across
+all four workbenches. These are cell-presence counters, not poker validation.
+A structurally exact workbench with whole strategy pairs in only some rows stays
+`WAITING`, and full candidate validation is deferred until all 118,638 strategy
+rows are populated. This prevents a first completed chunk from generating
+hundreds of thousands of expected blank-row errors. A changed immutable cell,
+truncated structure, one-sided strategy pair or partial three-cell EV set is
+still `INVALID` and never advances to a candidate.
+
+The current live baseline is 4/4 measurable and structurally safe workbenches,
+474,552/474,552 parsed rows, zero touched rows, zero strategy or EV rows and
+0/4/0 exports ready/waiting/invalid. No values were generated and no workbench
+CSV was rewritten by the measurement pass.
+
 Its output stays under `artifacts/mtt-sixmax-preflop-intake/`. It writes only
 `normalized.candidate.json` and a concise `BATCH_REPORT.md`; permission mode
 `CANONICAL_STAGED_MANIFEST` means the owner-confirmed manifest remains in its

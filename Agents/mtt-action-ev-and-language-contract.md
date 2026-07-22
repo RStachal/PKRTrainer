@@ -149,6 +149,10 @@ As of 2026-07-22:
 - MTT Core preflop action EV: `0/493818` decisions, `0/4` packs ready;
 - all four 118,638-row six-max preflop workbench CSVs expose the current action-EV
   columns and remain source-safe blank (`4/4` current, `0` generated values);
+- progressive six-max intake is measured over exactly 474,552 rows: 4/4
+  structures are measurable and immutable-safe, with zero touched, strategy,
+  action-EV or reviewer rows at the current baseline. Complete/partial counters
+  describe populated cells only and never certify poker correctness;
 - scoped FLOP pilot action EV: `0/972` decisions, `0/7` packs ready;
 - current TexasSolver `dump_result` payload consumed by this repository exposes
   action strategy frequencies, not validated counterfactual action EV. A raw

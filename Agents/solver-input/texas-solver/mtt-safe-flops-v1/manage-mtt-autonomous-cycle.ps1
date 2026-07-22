@@ -76,6 +76,16 @@ function Show-LatestCycleSummary {
         $summary.sixMaxWorkbench.readyExports, $summary.sixMaxWorkbench.waitingExports, `
         $summary.sixMaxWorkbench.invalidExports, $summary.sixMaxWorkbench.strategyValuesGenerated, `
         $summary.sixMaxWorkbench.exitCode)
+      if ($null -ne $summary.sixMaxWorkbench.measurableScaffolds) {
+        Write-Host ("Six-max workbench progress: measurable/structural={0}/{1}/4, in progress={2}, rows={3}/{4}, touched={5}, strategy complete/partial={6}/{7}, action-EV complete/partial={8}/{9}, review complete/partial={10}/{11}, source refs={12}, notes edited={13}" -f `
+          $summary.sixMaxWorkbench.measurableScaffolds, $summary.sixMaxWorkbench.structurallySafeScaffolds, `
+          $summary.sixMaxWorkbench.inProgressScaffolds, $summary.sixMaxWorkbench.parsedRows, `
+          $summary.sixMaxWorkbench.expectedRows, $summary.sixMaxWorkbench.contentTouchedRows, `
+          $summary.sixMaxWorkbench.strategyCompleteRows, $summary.sixMaxWorkbench.strategyPartialRows, `
+          $summary.sixMaxWorkbench.actionEvCompleteRows, $summary.sixMaxWorkbench.actionEvPartialRows, `
+          $summary.sixMaxWorkbench.reviewCompleteRows, $summary.sixMaxWorkbench.reviewPartialRows, `
+          $summary.sixMaxWorkbench.sourceReferenceRows, $summary.sixMaxWorkbench.notesEditedRows)
+      }
     }
     if ($null -ne $summary.review) {
       Write-Host ("TexasSolver review: ready={0}/{1}, needs review={2}, blockers={3}, warnings={4}, exit={5}" -f `
@@ -158,6 +168,9 @@ function Show-LatestSixMaxWorkbenchRefresh {
       $report.strategyValuesGenerated -eq "none" -and
       [int]$report.workbenchCounts.currentScaffolds -eq 4 -and
       [int]$report.workbenchCounts.actionEvReadyScaffolds -eq 4 -and
+      [int]$report.workbenchCounts.measurableScaffolds -eq 4 -and
+      [int]$report.workbenchCounts.structurallySafeScaffolds -eq 4 -and
+      [int]$report.workbenchCounts.parsedRows -eq [int]$report.workbenchCounts.expectedRows -and
       [int]$report.workbenchCounts.protectedStaleScaffolds -eq 0
     $updatedAt = (Get-Item -LiteralPath $SixMaxWorkbenchRefreshPath).LastWriteTimeUtc.ToString("o")
     Write-Host ("Six-max preflop workbench: current={0}, action-EV columns={1}/4, blank={2}, nonblank={3}, refreshed blank={4}, protected stale={5}, exports ready/waiting/invalid={6}/{7}/{8}, generated values={9}, updated={10}" -f `
@@ -165,6 +178,14 @@ function Show-LatestSixMaxWorkbenchRefresh {
       $report.workbenchCounts.nonBlankScaffolds, $report.workbenchCounts.refreshedBlankScaffolds, `
       $report.workbenchCounts.protectedStaleScaffolds, $report.counts.ready, $report.counts.waiting, `
       $report.counts.invalid, $report.strategyValuesGenerated, $updatedAt)
+    Write-Host ("Six-max workbench progress: measurable/structural={0}/{1}/4, in progress={2}, rows={3}/{4}, touched={5}, strategy complete/partial={6}/{7}, action-EV complete/partial={8}/{9}, review complete/partial={10}/{11}, source refs={12}, notes edited={13}" -f `
+      $report.workbenchCounts.measurableScaffolds, $report.workbenchCounts.structurallySafeScaffolds, `
+      $report.workbenchCounts.inProgressScaffolds, $report.workbenchCounts.parsedRows, `
+      $report.workbenchCounts.expectedRows, $report.workbenchCounts.contentTouchedRows, `
+      $report.workbenchCounts.strategyCompleteRows, $report.workbenchCounts.strategyPartialRows, `
+      $report.workbenchCounts.actionEvCompleteRows, $report.workbenchCounts.actionEvPartialRows, `
+      $report.workbenchCounts.reviewCompleteRows, $report.workbenchCounts.reviewPartialRows, `
+      $report.workbenchCounts.sourceReferenceRows, $report.workbenchCounts.notesEditedRows)
   } catch {
     Write-Host "Six-max preflop workbench: unreadable ($($_.Exception.Message))"
   }

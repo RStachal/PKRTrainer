@@ -108,6 +108,13 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(cycle).toContain("Get-SixMaxWorkbenchSummary $sixMaxWorkbenchExit");
     expect(cycle).toContain("sixMaxWorkbench = $SixMaxWorkbench");
     expect(cycle).toContain("actionEvReadyScaffolds -eq 4");
+    expect(cycle).toContain("measurableScaffolds -eq 4");
+    expect(cycle).toContain("structurallySafeScaffolds -eq 4");
+    expect(cycle).toContain("parsedRows -eq $summary.expectedRows");
+    expect(cycle).toContain("contentTouchedRows");
+    expect(cycle).toContain("strategyCompleteRows");
+    expect(cycle).toContain("actionEvCompleteRows");
+    expect(cycle).toContain("reviewCompleteRows");
     expect(cycle).toContain("strategy, EV, reviewer or notes edit");
     expect(cycle).toContain("blank postflop action-EV intake");
     expect(cycle).toContain('"mtt:postflop-action-ev-intake"');
@@ -204,6 +211,10 @@ describe("TexasSolver Windows autostart queue", () => {
     expect(manager).toContain("Show-LatestReviewOnlyRefresh");
     expect(manager).toContain("Show-LatestSixMaxWorkbenchRefresh");
     expect(manager).toContain("Six-max preflop workbench:");
+    expect(manager).toContain("Six-max workbench progress:");
+    expect(manager).toContain("strategy complete/partial=");
+    expect(manager).toContain("action-EV complete/partial=");
+    expect(manager).toContain("review complete/partial=");
     expect(manager).toContain("refresh-report.json");
     expect(manager).toContain("incremental review-only intake:");
     expect(manager).toContain("incremental staged accuracy:");

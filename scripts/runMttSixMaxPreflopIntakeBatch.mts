@@ -6,6 +6,7 @@ import {
   buildMttPreflopCsvScaffoldDocument,
   inspectMttPreflopCsvScaffold,
   type MttPreflopCsvScaffoldInspection,
+  type MttPreflopCsvScaffoldProgress,
   type MttPreflopCsvScaffoldSchema,
 } from "../src/data/ranges/mttPreflopCsvScaffold.ts";
 
@@ -20,7 +21,7 @@ const CONFIRM_TOKEN = "BUILD_MTT_SIXMAX_P1_CANDIDATES";
 type Confidence = "MEDIUM" | "HIGH";
 
 interface CliArgs { sourceDir: string; outDir: string; outputPath: string | null; reviewer: string; rightsOwner: string; sourceLocation: string; reviewedAt: string; confidence: Confidence | null; incremental: boolean; refreshBlankScaffolds: boolean; write: boolean; confirm: string | null; json: boolean; }
-interface PreflightRow { packId: string; csvPath: string; exists: boolean; records: number | null; csvReady: boolean | null; productionReady: boolean | null; legalSlot: boolean | null; preflightConfidence: Confidence; status: "READY" | "WAITING" | "INVALID"; errors: string[]; scaffoldSchema: MttPreflopCsvScaffoldSchema | null; actionEvColumnsPresent: boolean | null; sourceSafeBlank: boolean | null; refreshedBlank: boolean; protectedStale: boolean; scaffoldErrors: string[]; }
+interface PreflightRow { packId: string; csvPath: string; exists: boolean; records: number | null; csvReady: boolean | null; productionReady: boolean | null; legalSlot: boolean | null; preflightConfidence: Confidence; status: "READY" | "WAITING" | "INVALID"; errors: string[]; scaffoldSchema: MttPreflopCsvScaffoldSchema | null; scaffoldBodyRows: number | null; scaffoldExpectedRows: number | null; scaffoldProgress: MttPreflopCsvScaffoldProgress | null; actionEvColumnsPresent: boolean | null; sourceSafeBlank: boolean | null; structureSafe: boolean | null; refreshedBlank: boolean; protectedStale: boolean; scaffoldErrors: string[]; structuralErrors: string[]; }
 interface WorkbenchRefresh { packId: string; csvPath: string; existed: boolean; beforeSha256: string | null; afterSha256: string | null; initialSchema: MttPreflopCsvScaffoldSchema | null; initialSourceSafeBlank: boolean | null; refreshableBlank: boolean; refreshedBlank: boolean; protectedStale: boolean; errors: string[]; }
 
 try {
@@ -134,6 +135,24 @@ function run(args: CliArgs) {
       blankScaffolds: rows.filter((row) => row.sourceSafeBlank === true).length,
       nonBlankScaffolds: rows.filter((row) => row.exists && row.sourceSafeBlank === false).length,
       actionEvReadyScaffolds: rows.filter((row) => row.actionEvColumnsPresent === true).length,
+      measurableScaffolds: rows.filter((row) => row.scaffoldProgress?.measurable === true).length,
+      structurallySafeScaffolds: rows.filter((row) => row.structureSafe === true).length,
+      inProgressScaffolds: rows.filter((row) =>
+        row.structureSafe === true &&
+        (row.scaffoldProgress?.strategyCompleteRows ?? 0) > 0 &&
+        (row.scaffoldProgress?.strategyCompleteRows ?? 0) < (row.scaffoldExpectedRows ?? 0),
+      ).length,
+      expectedRows: sum(rows, (row) => row.scaffoldExpectedRows),
+      parsedRows: sum(rows, (row) => row.scaffoldBodyRows),
+      contentTouchedRows: sum(rows, (row) => row.scaffoldProgress?.contentTouchedRows),
+      strategyCompleteRows: sum(rows, (row) => row.scaffoldProgress?.strategyCompleteRows),
+      strategyPartialRows: sum(rows, (row) => row.scaffoldProgress?.strategyPartialRows),
+      actionEvCompleteRows: sum(rows, (row) => row.scaffoldProgress?.actionEvCompleteRows),
+      actionEvPartialRows: sum(rows, (row) => row.scaffoldProgress?.actionEvPartialRows),
+      reviewCompleteRows: sum(rows, (row) => row.scaffoldProgress?.reviewCompleteRows),
+      reviewPartialRows: sum(rows, (row) => row.scaffoldProgress?.reviewPartialRows),
+      sourceReferenceRows: sum(rows, (row) => row.scaffoldProgress?.sourceReferenceRows),
+      notesEditedRows: sum(rows, (row) => row.scaffoldProgress?.notesEditedRows),
       refreshedBlankScaffolds: refreshes.filter((refresh) => refresh.refreshedBlank).length,
       protectedStaleScaffolds: rows.filter((row) => row.protectedStale).length,
     },
@@ -156,12 +175,41 @@ function run(args: CliArgs) {
 function preflight(packId: string, args: CliArgs, refresh: WorkbenchRefresh | undefined): PreflightRow {
   const csvPath = join(args.sourceDir, `${packId}.csv`);
   const preflightConfidence = args.confidence ?? "MEDIUM";
-  if (!existsSync(csvPath)) return { packId, csvPath, exists: false, records: null, csvReady: null, productionReady: null, legalSlot: null, preflightConfidence, status: "WAITING", errors: ["CSV is missing."], scaffoldSchema: null, actionEvColumnsPresent: null, sourceSafeBlank: null, refreshedBlank: false, protectedStale: false, scaffoldErrors: [] };
+  if (!existsSync(csvPath)) return { packId, csvPath, exists: false, records: null, csvReady: null, productionReady: null, legalSlot: null, preflightConfidence, status: "WAITING", errors: ["CSV is missing."], scaffoldSchema: null, scaffoldBodyRows: null, scaffoldExpectedRows: null, scaffoldProgress: null, actionEvColumnsPresent: null, sourceSafeBlank: null, structureSafe: null, refreshedBlank: false, protectedStale: false, scaffoldErrors: [], structuralErrors: [] };
   const input = readFileSync(csvPath, "utf8");
   const scaffold = inspectMttPreflopCsvScaffold(input, packId);
   const scaffoldState = scaffoldFields(scaffold, refresh?.refreshedBlank ?? false);
   if (scaffold.sourceSafeBlank) {
     return { packId, csvPath, exists: true, records: 0, csvReady: null, productionReady: null, legalSlot: null, preflightConfidence, status: "WAITING", errors: ["CSV contains no reviewed strategy records yet."], ...scaffoldState };
+  }
+  if (!scaffold.structureSafe) {
+    return { packId, csvPath, exists: true, records: 0, csvReady: false, productionReady: false, legalSlot: false, preflightConfidence, status: "INVALID", errors: scaffold.structuralErrors, ...scaffoldState };
+  }
+  if (scaffold.progress.strategyPartialRows > 0 || scaffold.progress.actionEvPartialRows > 0) {
+    const errors = [
+      scaffold.progress.strategyPartialRows > 0
+        ? `CSV has ${scaffold.progress.strategyPartialRows} rows with only one strategy column populated.`
+        : null,
+      scaffold.progress.actionEvPartialRows > 0
+        ? `CSV has ${scaffold.progress.actionEvPartialRows} incomplete action-EV sets.`
+        : null,
+    ].filter((entry): entry is string => entry !== null);
+    return { packId, csvPath, exists: true, records: 0, csvReady: false, productionReady: false, legalSlot: true, preflightConfidence, status: "INVALID", errors, ...scaffoldState };
+  }
+  if (scaffold.progress.strategyCompleteRows < scaffold.expectedRows) {
+    return {
+      packId,
+      csvPath,
+      exists: true,
+      records: 0,
+      csvReady: null,
+      productionReady: null,
+      legalSlot: true,
+      preflightConfidence,
+      status: "WAITING",
+      errors: [`CSV strategy progress is ${scaffold.progress.strategyCompleteRows}/${scaffold.expectedRows} rows; complete the remaining ${scaffold.expectedRows - scaffold.progress.strategyCompleteRows} rows before candidate validation.`],
+      ...scaffoldState,
+    };
   }
   if (!csvNeedsFullPreflight(input, ["strictActions", "lenientActions", "actionEvsBb", "equivalentThresholdBb", "acceptableThresholdBb", "sourceReferenceId", "reviewer", "reviewedAt"])) {
     return { packId, csvPath, exists: true, records: 0, csvReady: null, productionReady: null, legalSlot: null, preflightConfidence, status: "WAITING", errors: ["CSV contains no reviewed strategy records yet."], ...scaffoldState };
@@ -244,11 +292,16 @@ function refreshWorkbench(packId: string, args: CliArgs): WorkbenchRefresh {
 function scaffoldFields(inspection: MttPreflopCsvScaffoldInspection, refreshedBlank: boolean) {
   return {
     scaffoldSchema: inspection.schema,
+    scaffoldBodyRows: inspection.bodyRows,
+    scaffoldExpectedRows: inspection.expectedRows,
+    scaffoldProgress: inspection.progress,
     actionEvColumnsPresent: inspection.actionEvColumnsPresent,
     sourceSafeBlank: inspection.sourceSafeBlank,
+    structureSafe: inspection.structureSafe,
     refreshedBlank,
     protectedStale: inspection.stale && !inspection.refreshableBlank,
     scaffoldErrors: inspection.errors,
+    structuralErrors: inspection.structuralErrors,
   };
 }
 
@@ -348,8 +401,11 @@ function parseJson(value: string): Record<string, unknown> | null {
 }
 function compact(value: string): string { return value.trim().slice(0, 500); }
 function today(): string { return new Date().toISOString().slice(0, 10); }
+function sum(rows: readonly PreflightRow[], select: (row: PreflightRow) => number | null | undefined): number {
+  return rows.reduce((total, row) => total + (select(row) ?? 0), 0);
+}
 function render(result: ReturnType<typeof run>): string {
-  return ["MTT six-max preflop intake batch", `mode: ${result.mode}`, `valid: ${result.valid}`, `preflight valid: ${result.preflightValid}`, `candidate valid: ${result.candidateValid}`, `write performed: ${result.writePerformed}`, `permission mode: ${result.permissionMode}`, `workbench current: ${result.workbenchCurrent}`, `current scaffolds: ${result.workbenchCounts.currentScaffolds}/${PACK_IDS.length}`, `action-EV ready scaffolds: ${result.workbenchCounts.actionEvReadyScaffolds}/${PACK_IDS.length}`, `blank scaffolds: ${result.workbenchCounts.blankScaffolds}`, `nonblank scaffolds: ${result.workbenchCounts.nonBlankScaffolds}`, `refreshed blank scaffolds: ${result.workbenchCounts.refreshedBlankScaffolds}`, `protected stale scaffolds: ${result.workbenchCounts.protectedStaleScaffolds}`, `strategy values generated: ${result.strategyValuesGenerated}`, `ready: ${result.counts.ready}`, `waiting: ${result.counts.waiting}`, `invalid: ${result.counts.invalid}`, `source: ${result.sourceDir}`, ...result.rows.map((row) => `- ${row.packId}: status=${row.status} records=${row.records} schema=${row.scaffoldSchema} actionEvColumns=${row.actionEvColumnsPresent} blank=${row.sourceSafeBlank} refreshed=${row.refreshedBlank} protectedStale=${row.protectedStale} csvReady=${row.csvReady} productionReady=${row.productionReady} legalSlot=${row.legalSlot} confidence=${row.preflightConfidence} errors=${row.errors.length}`)].join("\n");
+  return ["MTT six-max preflop intake batch", `mode: ${result.mode}`, `valid: ${result.valid}`, `preflight valid: ${result.preflightValid}`, `candidate valid: ${result.candidateValid}`, `write performed: ${result.writePerformed}`, `permission mode: ${result.permissionMode}`, `workbench current: ${result.workbenchCurrent}`, `current scaffolds: ${result.workbenchCounts.currentScaffolds}/${PACK_IDS.length}`, `action-EV ready scaffolds: ${result.workbenchCounts.actionEvReadyScaffolds}/${PACK_IDS.length}`, `measurable scaffolds: ${result.workbenchCounts.measurableScaffolds}/${PACK_IDS.length}`, `structurally safe scaffolds: ${result.workbenchCounts.structurallySafeScaffolds}/${PACK_IDS.length}`, `in-progress scaffolds: ${result.workbenchCounts.inProgressScaffolds}`, `workbench rows: ${result.workbenchCounts.parsedRows}/${result.workbenchCounts.expectedRows}`, `content-touched rows: ${result.workbenchCounts.contentTouchedRows}/${result.workbenchCounts.expectedRows}`, `strategy rows complete/partial: ${result.workbenchCounts.strategyCompleteRows}/${result.workbenchCounts.strategyPartialRows}`, `action-EV rows complete/partial: ${result.workbenchCounts.actionEvCompleteRows}/${result.workbenchCounts.actionEvPartialRows}`, `review rows complete/partial: ${result.workbenchCounts.reviewCompleteRows}/${result.workbenchCounts.reviewPartialRows}`, `source-reference rows: ${result.workbenchCounts.sourceReferenceRows}`, `notes-edited rows: ${result.workbenchCounts.notesEditedRows}`, `blank scaffolds: ${result.workbenchCounts.blankScaffolds}`, `nonblank scaffolds: ${result.workbenchCounts.nonBlankScaffolds}`, `refreshed blank scaffolds: ${result.workbenchCounts.refreshedBlankScaffolds}`, `protected stale scaffolds: ${result.workbenchCounts.protectedStaleScaffolds}`, `strategy values generated: ${result.strategyValuesGenerated}`, `ready: ${result.counts.ready}`, `waiting: ${result.counts.waiting}`, `invalid: ${result.counts.invalid}`, `source: ${result.sourceDir}`, ...result.rows.map((row) => `- ${row.packId}: status=${row.status} records=${row.records} schema=${row.scaffoldSchema} structureSafe=${row.structureSafe} rows=${row.scaffoldBodyRows}/${row.scaffoldExpectedRows} touched=${row.scaffoldProgress?.contentTouchedRows ?? "n/a"} strategyComplete=${row.scaffoldProgress?.strategyCompleteRows ?? "n/a"} strategyPartial=${row.scaffoldProgress?.strategyPartialRows ?? "n/a"} actionEvComplete=${row.scaffoldProgress?.actionEvCompleteRows ?? "n/a"} actionEvPartial=${row.scaffoldProgress?.actionEvPartialRows ?? "n/a"} actionEvColumns=${row.actionEvColumnsPresent} blank=${row.sourceSafeBlank} refreshed=${row.refreshedBlank} protectedStale=${row.protectedStale} csvReady=${row.csvReady} productionReady=${row.productionReady} legalSlot=${row.legalSlot} confidence=${row.preflightConfidence} errors=${row.errors.length}`)].join("\n");
 }
 
 function renderBatchReport(result: ReturnType<typeof run>): string {
@@ -363,6 +419,13 @@ function renderBatchReport(result: ReturnType<typeof run>): string {
     `- Permission mode: ${result.permissionMode}`,
     `- Workbench current: ${result.workbenchCurrent}`,
     `- Action-EV-ready scaffolds: ${result.workbenchCounts.actionEvReadyScaffolds}/${PACK_IDS.length}`,
+    `- Structurally safe scaffolds: ${result.workbenchCounts.structurallySafeScaffolds}/${PACK_IDS.length}`,
+    `- In-progress scaffolds: ${result.workbenchCounts.inProgressScaffolds}`,
+    `- Workbench rows: ${result.workbenchCounts.parsedRows}/${result.workbenchCounts.expectedRows}`,
+    `- Content-touched rows: ${result.workbenchCounts.contentTouchedRows}/${result.workbenchCounts.expectedRows}`,
+    `- Strategy rows complete/partial: ${result.workbenchCounts.strategyCompleteRows}/${result.workbenchCounts.strategyPartialRows}`,
+    `- Action-EV rows complete/partial: ${result.workbenchCounts.actionEvCompleteRows}/${result.workbenchCounts.actionEvPartialRows}`,
+    `- Review rows complete/partial: ${result.workbenchCounts.reviewCompleteRows}/${result.workbenchCounts.reviewPartialRows}`,
     `- Blank scaffolds refreshed: ${result.workbenchCounts.refreshedBlankScaffolds}`,
     `- Protected stale scaffolds: ${result.workbenchCounts.protectedStaleScaffolds}`,
     "",
