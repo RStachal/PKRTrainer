@@ -1049,6 +1049,22 @@ log path that resolved against the solver root after the runner's own
 restored it byte-identically by SHA-256. Use absolute paths for `-FailureReportPath`
 and any tee target.
 
+First live result on 2026-07-23 proved the loop end to end.
+`MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR 822tt` re-solved from 1.0611 to 0.4468 and
+converged at iteration 321 of the raised 600 budget, taking about 72 minutes. A
+review-only evidence refresh then made the mechanical assessment drop it from the
+over-target set automatically, 13 to 12, with no human verdict anywhere in the
+path. The earlier concern that deep-stack high-SPR trees might not reach 0.5 at
+all is therefore not supported; the budget, not the spot, was the limit. At
+roughly 72 minutes per board the full 13-board batch is an overnight job.
+
+Interrupting the batch has one evidence side effect worth knowing. Accuracy is
+parsed from solver logs, not from the raw checkpoint, so a killed mid-board run
+leaves an aborted log whose exploitability is worse than the restored checkpoint
+deserves. `832r` showed 2.5768 against its true 0.9816 after one such stop. The
+inconsistency is self-healing because that board is still queued, but never read
+an interrupted board's accuracy as final.
+
 Completion requires the mechanical assessment to report 20 accepted and zero
 over-target boards.
 
