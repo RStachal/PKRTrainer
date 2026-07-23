@@ -970,6 +970,88 @@ desktop plus 360/390/412 px, offline/reload/resilience, 48 contrast checks and
 service-worker rollback with zero browser errors. Its wrapper pins
 `NODE_ENV=production`, keeping browser-tested and normal build hashes equal.
 
+### OPS-65 - Replace the per-range human verdict with mechanical acceptance
+
+Status: `DONE 2026-07-23`
+Depends on: `OPS-56`, `OPS-57`
+Lane: `MECHANICAL`
+
+Owner decision of 2026-07-23: the professional-field beta distribution is the
+poker review. Hand-judging all 20 families before beta is not an acceptable use
+of the remaining schedule, so the per-range human verdict is no longer the gate.
+
+The replacement is objective, not a bypass. `mtt:texas-solver-mechanical-acceptance`
+grades each family only on evidence already on disk: structural completeness
+(expected boards present, parseable, no missing per-board log, no invalid JSON)
+and convergence, meaning every board's recorded exploitability is at or below the
+solver's own pinned `set_accuracy` target. It never reads raw strategy JSON and
+never infers a poker decision.
+
+Accepted families are written as `scoped: beta-field-review` through the existing
+audited `mtt:texas-solver-owner-review-batch` writer, so no new write path or
+schema appears. Honesty is preserved in the record itself: the reviewer is the
+non-human token `PKRTRAINER_MECHANICAL_ACCEPTANCE_V1` and every caveat states
+that this is a mechanical solver-accuracy acceptance, not a human poker verdict,
+and that poker correctness is validated by field distribution. A family with any
+over-target or structurally incomplete board is written as `no` until it is
+re-solved and re-graded, so the gate still refuses weak evidence.
+
+```powershell
+npm run mtt:texas-solver-mechanical-acceptance -- --summary
+npm run mtt:texas-solver-mechanical-acceptance -- --out=<decisions.json> --summary
+npm run mtt:texas-solver-owner-review-batch -- --decisions=<decisions.json> --write --confirm=RECORD_TEXAS_SOLVER_OWNER_REVIEW_BATCH
+```
+
+Acceptance: the live grading is 17 accepted and 3 withheld over 13 over-target
+boards. The review protocol moved from 0/20 protocol-ready to 20/20 with 17
+production eligible, 3 reviewed-not-usable and zero blockers. Focused tests pass
+9/9 across mechanical acceptance and the re-solve batch.
+
+### OPS-66 - Re-solve boards that missed the solver accuracy target
+
+Status: `ACTIVE 2026-07-23`
+Depends on: `OPS-65`
+Lane: `REPEATABLE`
+
+The 439/439 recovery proved every approved board has a traceable log; it did not
+prove every board converged. Thirteen boards across three families sit above the
+pinned 0.5 target, from 0.5139 up to 10.4251 on `MTT9_50BB_BTN_BB_SRP K83r`,
+which also carries a recorded RAM-guard stop. These under-converged results came
+from the reduced-budget memory-safe recovery path.
+
+`mtt:texas-solver-accuracy-resolve-batch` stages the repair without inventing
+solver input. For each over-target board it copies the exact authoritative
+full-tree parameter file, explicitly excluding the reduced-tree low-memory sets,
+and raises only `set_max_iteration`. The dump filename is preserved so a
+completed re-solve replaces the same canonical raw checkpoint through the normal
+ingest path. A test locks the invariant that nothing but the iteration line may
+differ from the authoritative source.
+
+```powershell
+npm run mtt:texas-solver-accuracy-resolve-batch -- --summary
+npm run mtt:texas-solver-accuracy-resolve-batch -- --write --summary
+npm run mtt:texas-solver-mechanical-acceptance -- --summary
+```
+
+The batch manifest is intentionally named `accuracy-resolve-v1-manifest.json` and
+not `coverage-*-manifest.json`. The expansion batch builders scan every
+`coverage-*-manifest.json` to reject duplicate family/board work, and this repair
+batch legitimately re-declares already-covered boards. Naming it as coverage made
+the owner-depth, beta-min, beta-depth and growth presets fail closed with
+duplicate blockers. A repair manifest is not a coverage declaration, so it stays
+outside that scan by name rather than by weakening the duplicate guard.
+
+Operational warning: the queue runner skips existing outputs unless `-Force`, and
+`-Force` deletes the canonical raw checkpoint before solving. Always back the
+selected checkpoints up first. A first launch on 2026-07-23 failed on a relative
+log path that resolved against the solver root after the runner's own
+`Push-Location`, and it had already removed the `822tt` checkpoint; the backup
+restored it byte-identically by SHA-256. Use absolute paths for `-FailureReportPath`
+and any tee target.
+
+Completion requires the mechanical assessment to report 20 accepted and zero
+over-target boards.
+
 ### XSOLVER-01 - Produce the first exact paired second-solver export
 
 Status: `EXTERNAL_DATA`
@@ -1637,6 +1719,8 @@ Use this exact handoff prompt after changing models:
 | 2026-07-22 | OPS-62 | DONE | Added dry-run-first atomic merging for reviewed six-max preflop subsets. Exact immutable identities, complete strategy/EV/review field groups, fill-only semantics, idempotence, conflict-wide rejection, pre-write SHA-256 and backup replacement are enforced. The command generates no poker values or production artifacts; full regression passed 155/155 files and 793/793 tests plus the complete integrity chain, and live blank workbenches were not touched. |
 | 2026-07-22 | OPS-63 | DONE | Froze the reusable MTT-to-SNG/Cash architecture boundary and 20-30-day playable-beta sequence without authorizing cross-variant strategy reuse. Added an exact solver-neutral node contract and comparator for setup/range/tree/economics fingerprints, a shared accuracy target, combo frequencies, per-action EV and range-weighted equivalent best-action sets. It cannot promote or overwrite private inputs; focused tests passed 10/10 and full regression passed 159/159 files and 809/809 tests. GTO+ remains an honest external gate at 0/3 ready with nine outputs missing. |
 | 2026-07-22 | OPS-64 | DONE | Added one source-free `MTT_PLAYABLE_BETA_V1` gate: current Core is a launchable increment at 4/8 preflop, six-max 0/4 and scoped FLOP 7/7 while full-target mode remains blocked. Added a fixed-metadata FTP ZIP builder with path/size/SHA-256 reconciliation, source-map exclusion, atomic writes, clean-commit enforcement and a full test/release/build/self-hosted Chrome chain before confirmed output. Full regression passed 159/159 files and 809/809 tests; all release gates and four-viewport production Chrome QA passed with zero browser errors. The preview wrapper pins production environment so its asset hashes match the normal build; the live dry run reconciled 13 deployable entries. |
+| 2026-07-23 | OPS-65 | DONE | Replaced the per-range human poker verdict with mechanical acceptance after the owner decided the professional-field beta is the review. Grading uses only on-disk evidence: structural completeness plus every board at or below the pinned `set_accuracy` target. Results are written through the existing audited batch writer with the non-human reviewer token `PKRTRAINER_MECHANICAL_ACCEPTANCE_V1` and caveats stating it is not a human poker verdict. Live grading 17 accepted / 3 withheld; review protocol moved 0/20 to 20/20 protocol-ready with 17 production eligible and zero blockers. Focused tests 9/9. |
+| 2026-07-23 | OPS-66 | ACTIVE | Staged a targeted re-solve for the 13 boards above the 0.5 exploitability target across 3 families. Each parameter is copied verbatim from its authoritative full-tree source with only `set_max_iteration` raised, reduced-tree low-memory sets excluded, and the dump filename preserved so the same canonical checkpoint is replaced. All 13 checkpoints were SHA-256 backed up first, which proved necessary when a first launch failed on a relative log path after the runner's `Push-Location` and had already removed `822tt`; it was restored byte-identically. The repair manifest is named outside the `coverage-*-manifest.json` scan because it re-declares already-covered boards; naming it as coverage made four expansion presets fail closed on duplicate blockers. |
 | 2026-07-20 | OPS-51 | DONE | Fixed UTF-16LE TexasSolver log intake and added a fast fail-closed staging refresh over already validated cumulative reports. The live pass refreshed 20/20 family summaries and recovered traceable exploitability for 403/439 approved boards across all 20 families; an immediate repeat wrote nothing. Protocol warnings fell from 38 to 20, leaving only human caveats and owner verdicts. Focused tests passed 38/38; typecheck, scoped Core and production build passed. |
 | 2026-07-20 | RELEASE-FTP-03 | DONE | Packaged source commit `c44efebdad96` after the complete 152-file / 762-test MTT Core release gate and four-viewport Chrome QA as `deploy/pkrtrainer-ftp-20260720-141237-c44efebdad96-mtt-core-p1-incremental.zip`. Portable forward-slash ZIP reconciliation passed 22/22 files with 0 missing, 0 extra and 0 hash mismatches; SHA-256 is `2374090EBAB10A4E2E38D9CD04D03C4457E0C6E561561F01C7A18093CC192F67`. |
 | 2026-07-20 | OWNER-REVIEW-06 | DONE | Owner dashboard progress now counts only export-valid decisions, marks missing reviewer/date/scope/caveats, and focuses the next incomplete visible row without selecting a poker verdict. Current dashboard regenerated over 53 reports with 20/20 mechanical family context and 0 preselected decisions. Focused reviewer/writer/autostart tests passed 17/17, typecheck passed, and browser QA removed the 390px global horizontal overflow. |

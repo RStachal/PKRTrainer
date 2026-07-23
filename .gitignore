@@ -23,6 +23,12 @@ Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver/
 Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-accuracy-recovery-v1-manifest.json
 Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_accuracy_recovery_v1/
 
+# The accuracy re-solve batch is derived from local solver evidence and becomes
+# obsolete once its boards converge. Regenerate it with
+# npm run mtt:texas-solver-accuracy-resolve-batch -- --write
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/accuracy-resolve-v1-manifest.json
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_accuracy_resolve_v1/
+
 # Logs
 *.log
 npm-debug.log*

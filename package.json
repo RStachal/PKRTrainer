@@ -27,6 +27,8 @@
     "mtt:texas-solver-review-readiness": "vite-node scripts/checkTexasSolverReviewReadiness.mts",
     "mtt:texas-solver-owner-review": "vite-node scripts/recordTexasSolverOwnerReview.mts",
     "mtt:texas-solver-owner-review-batch": "vite-node scripts/recordTexasSolverOwnerReviewBatch.mts",
+    "mtt:texas-solver-mechanical-acceptance": "vite-node scripts/assessTexasSolverMechanicalAcceptance.mts",
+    "mtt:texas-solver-accuracy-resolve-batch": "vite-node scripts/buildTexasSolverAccuracyResolveBatch.mts",
     "mtt:texas-solver-accuracy-recovery": "vite-node scripts/prepareTexasSolverAccuracyRecovery.mts",
     "mtt:texas-solver-accuracy-handoff": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/finalize-texas-solver-accuracy-recovery.ps1",
     "mtt:stage-texas-solver": "vite-node scripts/stageTexasSolverExports.mts",
