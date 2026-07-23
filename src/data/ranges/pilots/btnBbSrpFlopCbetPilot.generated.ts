@@ -112,17 +112,19 @@ export const btnBbSrpFlopCbetPilotPack = {
       "potType": "SINGLE_RAISED",
       "positionPattern": "SRP_BTN_VS_BB",
       "boardTextures": [
-        "rainbow",
-        "ace-high",
-        "disconnected",
-        "dry",
-        "monotone",
-        "flush-draw-heavy",
         "two-tone",
-        "broadway-high",
+        "flush-draw-heavy",
+        "low",
         "connected",
         "straight-possible",
-        "medium"
+        "paired",
+        "rainbow",
+        "disconnected",
+        "medium",
+        "ace-high",
+        "dry",
+        "monotone",
+        "broadway-high"
       ],
       "sprMin": 0,
       "sprMax": 2.99,
@@ -131,7 +133,7 @@ export const btnBbSrpFlopCbetPilotPack = {
         "BET_SMALL",
         "BET_BIG"
       ],
-      "recommendedAction": "BET_SMALL",
+      "recommendedAction": "CHECK",
       "rangeBuckets": [
         {
           "lane": "CHECK",
@@ -147,7 +149,7 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 79.5,
+              "frequencyPct": 79.8,
               "visibility": "EXACT"
             },
             {
@@ -157,36 +159,36 @@ export const btnBbSrpFlopCbetPilotPack = {
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.6,
+              "frequencyPct": 0.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "53s · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "53s · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "53s"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 60.6,
+              "frequencyPct": 68.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 39.3,
+              "frequencyPct": 27.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.1,
+              "frequencyPct": 3.6,
               "visibility": "EXACT"
             }
           ]
@@ -205,17 +207,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 81,
+              "frequencyPct": 73.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 18.4,
+              "frequencyPct": 20.8,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.6,
+              "frequencyPct": 5.7,
               "visibility": "EXACT"
             }
           ]
@@ -234,75 +236,75 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 76.9,
+              "frequencyPct": 73.3,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 22.8,
+              "frequencyPct": 25.3,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.3,
+              "frequencyPct": 1.4,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "64s · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "64s · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "64s"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 63.3,
+              "frequencyPct": 59.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 36.3,
+              "frequencyPct": 36.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.4,
+              "frequencyPct": 3.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "65s · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "65s · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "65s"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 50.1,
+              "frequencyPct": 59.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 49.8,
+              "frequencyPct": 30.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.1,
+              "frequencyPct": 9.9,
               "visibility": "EXACT"
             }
           ]
@@ -321,17 +323,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 99.2,
+              "frequencyPct": 78,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 0.6,
+              "frequencyPct": 21.6,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.2,
+              "frequencyPct": 0.4,
               "visibility": "EXACT"
             }
           ]
@@ -350,17 +352,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 77.3,
+              "frequencyPct": 63.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 22.6,
+              "frequencyPct": 28.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.1,
+              "frequencyPct": 8.2,
               "visibility": "EXACT"
             }
           ]
@@ -379,17 +381,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 80.3,
+              "frequencyPct": 69.8,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 19.4,
+              "frequencyPct": 29.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.3,
+              "frequencyPct": 0.5,
               "visibility": "EXACT"
             }
           ]
@@ -408,12 +410,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 95.7,
+              "frequencyPct": 77.6,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 4,
+              "frequencyPct": 22.1,
               "visibility": "EXACT"
             },
             {
@@ -424,88 +426,88 @@ export const btnBbSrpFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "85s · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "85s · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "85s"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 40.3,
+              "frequencyPct": 58.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 57.3,
+              "frequencyPct": 38.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 2.4,
+              "frequencyPct": 2.8,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "86s · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "86s · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "86s"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 49.9,
+              "frequencyPct": 59.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 42.8,
+              "frequencyPct": 29.3,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 7.3,
+              "frequencyPct": 11,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "87s · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "87s · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "87s"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 55.3,
+              "frequencyPct": 61.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 37.5,
+              "frequencyPct": 31.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 7.2,
+              "frequencyPct": 7.7,
               "visibility": "EXACT"
             }
           ]
@@ -524,46 +526,46 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 81.6,
+              "frequencyPct": 63.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 18.2,
+              "frequencyPct": 34.6,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.2,
+              "frequencyPct": 1.7,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "96s · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "96s · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "96s"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 64,
+              "frequencyPct": 50.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 35.9,
+              "frequencyPct": 48.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.1,
+              "frequencyPct": 1,
               "visibility": "EXACT"
             }
           ]
@@ -582,46 +584,46 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 80,
+              "frequencyPct": 57.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 19.7,
+              "frequencyPct": 40.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.3,
+              "frequencyPct": 1.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "98s · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "98s · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "98s"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 64.4,
+              "frequencyPct": 65.4,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 35.3,
+              "frequencyPct": 31.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.3,
+              "frequencyPct": 3.4,
               "visibility": "EXACT"
             }
           ]
@@ -640,17 +642,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 52.6,
+              "frequencyPct": 53.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 46.7,
+              "frequencyPct": 45.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.7,
+              "frequencyPct": 1.2,
               "visibility": "EXACT"
             }
           ]
@@ -670,17 +672,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 33,
+              "frequencyPct": 23.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 56.7,
+              "frequencyPct": 69.4,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 10.3,
+              "frequencyPct": 7.5,
               "visibility": "EXACT"
             }
           ]
@@ -700,17 +702,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 31.7,
+              "frequencyPct": 26.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 59.1,
+              "frequencyPct": 66.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 9.2,
+              "frequencyPct": 7.1,
               "visibility": "EXACT"
             }
           ]
@@ -730,17 +732,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 30.3,
+              "frequencyPct": 31.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 66.3,
+              "frequencyPct": 63.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 3.4,
+              "frequencyPct": 4.6,
               "visibility": "EXACT"
             }
           ]
@@ -760,77 +762,77 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 42.5,
+              "frequencyPct": 41.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 48.1,
+              "frequencyPct": 54.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 9.4,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "VALUE",
-          "label": "A6s · BET_SMALL",
-          "action": "BET_SMALL",
-          "handClasses": [
-            "A6s"
-          ],
-          "features": [
-            "solver-bet-frequency",
-            "suited",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "CHECK",
-              "frequencyPct": 41,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "BET_SMALL",
-              "frequencyPct": 48.4,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "BET_BIG",
-              "frequencyPct": 10.6,
+              "frequencyPct": 3.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "AA · CHECK",
+          "label": "A6s · CHECK",
           "action": "CHECK",
+          "handClasses": [
+            "A6s"
+          ],
+          "features": [
+            "solver-check-frequency",
+            "suited",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "CHECK",
+              "frequencyPct": 59.2,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "BET_SMALL",
+              "frequencyPct": 34.6,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "BET_BIG",
+              "frequencyPct": 6.2,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "VALUE",
+          "label": "AA · BET_SMALL",
+          "action": "BET_SMALL",
           "handClasses": [
             "AA"
           ],
           "features": [
-            "solver-check-frequency",
+            "solver-bet-frequency",
             "pocket-pair",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 64.3,
+              "frequencyPct": 48.6,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 34.9,
+              "frequencyPct": 49.6,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.8,
+              "frequencyPct": 1.8,
               "visibility": "EXACT"
             }
           ]
@@ -850,77 +852,77 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 34.5,
+              "frequencyPct": 43.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 61.3,
+              "frequencyPct": 51,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 4.2,
+              "frequencyPct": 5.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
-          "label": "AJs · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "AJs · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "AJs"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 40.5,
+              "frequencyPct": 49.8,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 53.8,
+              "frequencyPct": 42.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 5.7,
+              "frequencyPct": 7.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
-          "label": "AKo · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "AKo · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "AKo"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "offsuit",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 43.3,
+              "frequencyPct": 46.8,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 49.2,
+              "frequencyPct": 46.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 7.5,
+              "frequencyPct": 6.7,
               "visibility": "EXACT"
             }
           ]
@@ -940,17 +942,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 32.8,
+              "frequencyPct": 40.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 57,
+              "frequencyPct": 51.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 10.2,
+              "frequencyPct": 8.1,
               "visibility": "EXACT"
             }
           ]
@@ -970,17 +972,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 27.9,
+              "frequencyPct": 31.6,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 64.7,
+              "frequencyPct": 58.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 7.4,
+              "frequencyPct": 9.5,
               "visibility": "EXACT"
             }
           ]
@@ -1000,47 +1002,47 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 28.5,
+              "frequencyPct": 34.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 62.2,
+              "frequencyPct": 53.3,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 9.3,
+              "frequencyPct": 12.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
-          "label": "ATs · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "ATs · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "ATs"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 27,
+              "frequencyPct": 48.4,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 70.3,
+              "frequencyPct": 45.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 2.7,
+              "frequencyPct": 6.1,
               "visibility": "EXACT"
             }
           ]
@@ -1060,47 +1062,47 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 38.7,
+              "frequencyPct": 48.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 60.3,
+              "frequencyPct": 49.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 1,
+              "frequencyPct": 2.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
-          "label": "J9s · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "J9s · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "J9s"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 34.9,
+              "frequencyPct": 54,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 63.9,
+              "frequencyPct": 44.3,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 1.2,
+              "frequencyPct": 1.7,
               "visibility": "EXACT"
             }
           ]
@@ -1120,17 +1122,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 40.6,
+              "frequencyPct": 45.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 58.5,
+              "frequencyPct": 53,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.9,
+              "frequencyPct": 1.9,
               "visibility": "EXACT"
             }
           ]
@@ -1150,47 +1152,47 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 10.4,
+              "frequencyPct": 44,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 78.4,
+              "frequencyPct": 52.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 11.2,
+              "frequencyPct": 3.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "K4s · CHECK",
-          "action": "CHECK",
+          "lane": "VALUE",
+          "label": "K4s · BET_SMALL",
+          "action": "BET_SMALL",
           "handClasses": [
             "K4s"
           ],
           "features": [
-            "solver-check-frequency",
+            "solver-bet-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 63.1,
+              "frequencyPct": 41.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 36.6,
+              "frequencyPct": 58.3,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.3,
+              "frequencyPct": 0.2,
               "visibility": "EXACT"
             }
           ]
@@ -1210,12 +1212,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 35.6,
+              "frequencyPct": 46.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 64.3,
+              "frequencyPct": 53.8,
               "visibility": "EXACT"
             },
             {
@@ -1240,17 +1242,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 54.7,
+              "frequencyPct": 53.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 39.8,
+              "frequencyPct": 44.4,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 5.5,
+              "frequencyPct": 1.7,
               "visibility": "EXACT"
             }
           ]
@@ -1270,17 +1272,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 36.2,
+              "frequencyPct": 30.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 62.1,
+              "frequencyPct": 66.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 1.7,
+              "frequencyPct": 3.4,
               "visibility": "EXACT"
             }
           ]
@@ -1300,17 +1302,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 44,
+              "frequencyPct": 34.8,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 55.8,
+              "frequencyPct": 62.8,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.2,
+              "frequencyPct": 2.4,
               "visibility": "EXACT"
             }
           ]
@@ -1330,17 +1332,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 70.2,
+              "frequencyPct": 53.6,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 29.3,
+              "frequencyPct": 42.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.5,
+              "frequencyPct": 3.7,
               "visibility": "EXACT"
             }
           ]
@@ -1360,47 +1362,47 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 53.4,
+              "frequencyPct": 55.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 42.2,
+              "frequencyPct": 43.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 4.4,
+              "frequencyPct": 1.4,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "Q9s · CHECK",
-          "action": "CHECK",
+          "lane": "VALUE",
+          "label": "Q9s · BET_SMALL",
+          "action": "BET_SMALL",
           "handClasses": [
             "Q9s"
           ],
           "features": [
-            "solver-check-frequency",
+            "solver-bet-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 58.4,
+              "frequencyPct": 40.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 38.3,
+              "frequencyPct": 50.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 3.3,
+              "frequencyPct": 8.6,
               "visibility": "EXACT"
             }
           ]
@@ -1420,17 +1422,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 40.1,
+              "frequencyPct": 26.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 59.1,
+              "frequencyPct": 69.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.8,
+              "frequencyPct": 4.4,
               "visibility": "EXACT"
             }
           ]
@@ -1450,17 +1452,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 19.6,
+              "frequencyPct": 33.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 78.6,
+              "frequencyPct": 64.8,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 1.8,
+              "frequencyPct": 2,
               "visibility": "EXACT"
             }
           ]
@@ -1480,47 +1482,47 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 38.3,
+              "frequencyPct": 33.6,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 56.1,
+              "frequencyPct": 60.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 5.6,
+              "frequencyPct": 6.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "T7s · CHECK",
-          "action": "CHECK",
+          "lane": "VALUE",
+          "label": "T7s · BET_SMALL",
+          "action": "BET_SMALL",
           "handClasses": [
             "T7s"
           ],
           "features": [
-            "solver-check-frequency",
+            "solver-bet-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 46.6,
+              "frequencyPct": 46,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 41,
+              "frequencyPct": 49.4,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 12.4,
+              "frequencyPct": 4.6,
               "visibility": "EXACT"
             }
           ]
@@ -1540,47 +1542,47 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 54.3,
+              "frequencyPct": 68.8,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 35.3,
+              "frequencyPct": 26.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 10.4,
+              "frequencyPct": 4.7,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
-          "label": "T9s · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "T9s · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "T9s"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 35.1,
+              "frequencyPct": 66.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 57,
+              "frequencyPct": 31.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 7.9,
+              "frequencyPct": 2.4,
               "visibility": "EXACT"
             }
           ]
@@ -1600,17 +1602,17 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 39.8,
+              "frequencyPct": 39.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 59.4,
+              "frequencyPct": 59.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_BIG",
-              "frequencyPct": 0.8,
+              "frequencyPct": 1.7,
               "visibility": "EXACT"
             }
           ]
@@ -1631,22 +1633,22 @@ export const btnBbSrpFlopCbetPilotPack = {
           ],
           "board": [
             {
-              "rank": "A",
+              "rank": "7",
               "suit": "s"
             },
             {
-              "rank": "7",
-              "suit": "h"
+              "rank": "6",
+              "suit": "s"
             },
             {
-              "rank": "2",
-              "suit": "d"
+              "rank": "5",
+              "suit": "h"
             }
           ],
-          "rationale": "Representative sample for aggregated board set A72r_AT4mono_JT9tt_T84r; generated only to validate card-removal semantics."
+          "rationale": "Representative sample for aggregated board set 765tt_883r_976tt_A72r_A85mono_A95r_AT4mono_J73r_JT9tt_KQ5r_Q76mono_Q84r_QJ2tt_T84r; generated only to validate card-removal semantics."
         }
       ],
-      "explanation": "TexasSolver draft for MTT9_20BB_BTN_BB_SRP_LOWSPR CHECK aggregated across A72r_AT4mono_JT9tt_T84r: BET_SMALL is the most common dominant hand-class action in the reviewed aggregate. Adjacent SPR window normalized by merge tooling to avoid selector overlap at 3."
+      "explanation": "TexasSolver draft for MTT9_20BB_BTN_BB_SRP_LOWSPR CHECK aggregated across 765tt_883r_976tt_A72r_A85mono_A95r_AT4mono_J73r_JT9tt_KQ5r_Q76mono_Q84r_QJ2tt_T84r: CHECK is the most common dominant hand-class action in the reviewed aggregate. Adjacent SPR window normalized by merge tooling to avoid selector overlap at 3."
     },
     {
       "id": "mtt9_50bb_btn_bb_srp-check-aggregate",
@@ -3197,15 +3199,17 @@ export const btnBbSrpFlopCbetPilotPack = {
       "potType": "SINGLE_RAISED",
       "positionPattern": "SRP_BTN_VS_BB",
       "boardTextures": [
+        "two-tone",
+        "flush-draw-heavy",
+        "medium",
+        "connected",
+        "straight-possible",
         "rainbow",
         "ace-high",
         "disconnected",
         "dry",
         "monotone",
-        "flush-draw-heavy",
-        "broadway-high",
-        "two-tone",
-        "medium"
+        "broadway-high"
       ],
       "sprMin": 8,
       "sprMax": 20,
@@ -3230,12 +3234,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 15.1,
+              "frequencyPct": 17.6,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 84.9,
+              "frequencyPct": 82.4,
               "visibility": "EXACT"
             },
             {
@@ -3259,12 +3263,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 19.9,
+              "frequencyPct": 18.4,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 80.1,
+              "frequencyPct": 81.6,
               "visibility": "EXACT"
             },
             {
@@ -3288,12 +3292,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 18.2,
+              "frequencyPct": 15.8,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 81.8,
+              "frequencyPct": 84.2,
               "visibility": "EXACT"
             },
             {
@@ -3304,25 +3308,25 @@ export const btnBbSrpFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "55 · CHECK",
-          "action": "CHECK",
+          "lane": "VALUE",
+          "label": "55 · BET_SMALL",
+          "action": "BET_SMALL",
           "handClasses": [
             "55"
           ],
           "features": [
-            "solver-check-frequency",
+            "solver-bet-frequency",
             "pocket-pair"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 63.1,
+              "frequencyPct": 42.6,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 36.9,
+              "frequencyPct": 57.4,
               "visibility": "EXACT"
             },
             {
@@ -3346,12 +3350,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 25.2,
+              "frequencyPct": 22.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 74.8,
+              "frequencyPct": 77.8,
               "visibility": "EXACT"
             },
             {
@@ -3375,12 +3379,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 13.9,
+              "frequencyPct": 16,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 86.1,
+              "frequencyPct": 84,
               "visibility": "EXACT"
             },
             {
@@ -3404,12 +3408,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 59.3,
+              "frequencyPct": 54.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 40.7,
+              "frequencyPct": 45.8,
               "visibility": "EXACT"
             },
             {
@@ -3433,12 +3437,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 27.4,
+              "frequencyPct": 22.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 72.6,
+              "frequencyPct": 77.1,
               "visibility": "EXACT"
             },
             {
@@ -3462,12 +3466,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 20.4,
+              "frequencyPct": 19.3,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 79.6,
+              "frequencyPct": 80.7,
               "visibility": "EXACT"
             },
             {
@@ -3491,12 +3495,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 28.7,
+              "frequencyPct": 35.3,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 71.3,
+              "frequencyPct": 64.7,
               "visibility": "EXACT"
             },
             {
@@ -3520,12 +3524,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 30.6,
+              "frequencyPct": 18,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 69.4,
+              "frequencyPct": 82,
               "visibility": "EXACT"
             },
             {
@@ -3549,12 +3553,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 33.1,
+              "frequencyPct": 28,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 66.9,
+              "frequencyPct": 72,
               "visibility": "EXACT"
             },
             {
@@ -3578,12 +3582,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 32.2,
+              "frequencyPct": 26,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 67.8,
+              "frequencyPct": 74,
               "visibility": "EXACT"
             },
             {
@@ -3594,25 +3598,25 @@ export const btnBbSrpFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "88 · CHECK",
-          "action": "CHECK",
+          "lane": "VALUE",
+          "label": "88 · BET_SMALL",
+          "action": "BET_SMALL",
           "handClasses": [
             "88"
           ],
           "features": [
-            "solver-check-frequency",
+            "solver-bet-frequency",
             "pocket-pair"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 63,
+              "frequencyPct": 47.6,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 37,
+              "frequencyPct": 52.4,
               "visibility": "EXACT"
             },
             {
@@ -3636,12 +3640,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 26.5,
+              "frequencyPct": 28.4,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 73.5,
+              "frequencyPct": 71.6,
               "visibility": "EXACT"
             },
             {
@@ -3665,12 +3669,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 32.1,
+              "frequencyPct": 25.3,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 67.9,
+              "frequencyPct": 74.7,
               "visibility": "EXACT"
             },
             {
@@ -3694,12 +3698,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 18.3,
+              "frequencyPct": 18,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 81.7,
+              "frequencyPct": 82,
               "visibility": "EXACT"
             },
             {
@@ -3710,25 +3714,25 @@ export const btnBbSrpFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "99 · CHECK",
-          "action": "CHECK",
+          "lane": "VALUE",
+          "label": "99 · BET_SMALL",
+          "action": "BET_SMALL",
           "handClasses": [
             "99"
           ],
           "features": [
-            "solver-check-frequency",
+            "solver-bet-frequency",
             "pocket-pair"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 65.5,
+              "frequencyPct": 49.8,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 34.5,
+              "frequencyPct": 50.2,
               "visibility": "EXACT"
             },
             {
@@ -3753,12 +3757,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 10.3,
+              "frequencyPct": 31.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 89.7,
+              "frequencyPct": 68.8,
               "visibility": "EXACT"
             },
             {
@@ -3783,12 +3787,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 41.3,
+              "frequencyPct": 40.3,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 58.7,
+              "frequencyPct": 59.7,
               "visibility": "EXACT"
             },
             {
@@ -3813,12 +3817,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 31.3,
+              "frequencyPct": 34.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 68.7,
+              "frequencyPct": 65.9,
               "visibility": "EXACT"
             },
             {
@@ -3843,12 +3847,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 29.7,
+              "frequencyPct": 23,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 70.3,
+              "frequencyPct": 77,
               "visibility": "EXACT"
             },
             {
@@ -3873,12 +3877,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 74.8,
+              "frequencyPct": 65,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 25.2,
+              "frequencyPct": 35,
               "visibility": "EXACT"
             },
             {
@@ -3903,12 +3907,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 18.2,
+              "frequencyPct": 15.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 81.8,
+              "frequencyPct": 84.5,
               "visibility": "EXACT"
             },
             {
@@ -3933,12 +3937,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 42.4,
+              "frequencyPct": 29.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 57.6,
+              "frequencyPct": 70.8,
               "visibility": "EXACT"
             },
             {
@@ -3963,12 +3967,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 37.4,
+              "frequencyPct": 29.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 62.6,
+              "frequencyPct": 70.8,
               "visibility": "EXACT"
             },
             {
@@ -3993,12 +3997,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 24.7,
+              "frequencyPct": 24.4,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 75.3,
+              "frequencyPct": 75.6,
               "visibility": "EXACT"
             },
             {
@@ -4023,12 +4027,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 24.1,
+              "frequencyPct": 24.3,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 75.9,
+              "frequencyPct": 75.7,
               "visibility": "EXACT"
             },
             {
@@ -4053,12 +4057,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 23.1,
+              "frequencyPct": 24.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 76.9,
+              "frequencyPct": 75.1,
               "visibility": "EXACT"
             },
             {
@@ -4083,12 +4087,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 16.6,
+              "frequencyPct": 21,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 83.4,
+              "frequencyPct": 79,
               "visibility": "EXACT"
             },
             {
@@ -4113,12 +4117,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 42.1,
+              "frequencyPct": 38.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 57.9,
+              "frequencyPct": 61.3,
               "visibility": "EXACT"
             },
             {
@@ -4143,12 +4147,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 38.2,
+              "frequencyPct": 28.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 61.8,
+              "frequencyPct": 71.9,
               "visibility": "EXACT"
             },
             {
@@ -4173,12 +4177,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 33.5,
+              "frequencyPct": 26.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 66.5,
+              "frequencyPct": 73.5,
               "visibility": "EXACT"
             },
             {
@@ -4203,12 +4207,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 37.8,
+              "frequencyPct": 42.4,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 62.2,
+              "frequencyPct": 57.6,
               "visibility": "EXACT"
             },
             {
@@ -4233,12 +4237,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 35.3,
+              "frequencyPct": 26.9,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 64.7,
+              "frequencyPct": 73.1,
               "visibility": "EXACT"
             },
             {
@@ -4263,12 +4267,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 17.7,
+              "frequencyPct": 20.6,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 82.3,
+              "frequencyPct": 79.4,
               "visibility": "EXACT"
             },
             {
@@ -4293,12 +4297,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 7.4,
+              "frequencyPct": 10.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 92.6,
+              "frequencyPct": 89.5,
               "visibility": "EXACT"
             },
             {
@@ -4309,26 +4313,26 @@ export const btnBbSrpFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "KJs · CHECK",
-          "action": "CHECK",
+          "lane": "VALUE",
+          "label": "KJs · BET_SMALL",
+          "action": "BET_SMALL",
           "handClasses": [
             "KJs"
           ],
           "features": [
-            "solver-check-frequency",
+            "solver-bet-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 51.9,
+              "frequencyPct": 38.8,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 48.1,
+              "frequencyPct": 61.2,
               "visibility": "EXACT"
             },
             {
@@ -4353,12 +4357,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 29.1,
+              "frequencyPct": 31.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 70.9,
+              "frequencyPct": 68.8,
               "visibility": "EXACT"
             },
             {
@@ -4383,12 +4387,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 38.6,
+              "frequencyPct": 28.7,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 61.4,
+              "frequencyPct": 71.3,
               "visibility": "EXACT"
             },
             {
@@ -4413,12 +4417,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 49.7,
+              "frequencyPct": 35.1,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 50.3,
+              "frequencyPct": 64.9,
               "visibility": "EXACT"
             },
             {
@@ -4443,12 +4447,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 30.5,
+              "frequencyPct": 33,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 69.5,
+              "frequencyPct": 67,
               "visibility": "EXACT"
             },
             {
@@ -4473,12 +4477,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 39.6,
+              "frequencyPct": 31,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 60.4,
+              "frequencyPct": 69,
               "visibility": "EXACT"
             },
             {
@@ -4503,12 +4507,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 12.9,
+              "frequencyPct": 19,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 87.1,
+              "frequencyPct": 81,
               "visibility": "EXACT"
             },
             {
@@ -4533,12 +4537,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 19.8,
+              "frequencyPct": 26.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 80.2,
+              "frequencyPct": 73.8,
               "visibility": "EXACT"
             },
             {
@@ -4563,12 +4567,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 31.5,
+              "frequencyPct": 28.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 68.5,
+              "frequencyPct": 71.5,
               "visibility": "EXACT"
             },
             {
@@ -4593,12 +4597,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 30.1,
+              "frequencyPct": 28.2,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 69.9,
+              "frequencyPct": 71.8,
               "visibility": "EXACT"
             },
             {
@@ -4623,12 +4627,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 14.9,
+              "frequencyPct": 15,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 85.1,
+              "frequencyPct": 85,
               "visibility": "EXACT"
             },
             {
@@ -4653,12 +4657,12 @@ export const btnBbSrpFlopCbetPilotPack = {
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 17,
+              "frequencyPct": 17.5,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 83,
+              "frequencyPct": 82.5,
               "visibility": "EXACT"
             },
             {
@@ -4669,26 +4673,26 @@ export const btnBbSrpFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "TT · CHECK",
-          "action": "CHECK",
+          "lane": "VALUE",
+          "label": "TT · BET_SMALL",
+          "action": "BET_SMALL",
           "handClasses": [
             "TT"
           ],
           "features": [
-            "solver-check-frequency",
+            "solver-bet-frequency",
             "pocket-pair",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "CHECK",
-              "frequencyPct": 56.8,
+              "frequencyPct": 48.3,
               "visibility": "EXACT"
             },
             {
               "action": "BET_SMALL",
-              "frequencyPct": 43.2,
+              "frequencyPct": 51.7,
               "visibility": "EXACT"
             },
             {
@@ -4714,22 +4718,22 @@ export const btnBbSrpFlopCbetPilotPack = {
           ],
           "board": [
             {
-              "rank": "A",
+              "rank": "9",
               "suit": "s"
             },
             {
               "rank": "7",
-              "suit": "h"
+              "suit": "s"
             },
             {
-              "rank": "2",
-              "suit": "d"
+              "rank": "6",
+              "suit": "h"
             }
           ],
-          "rationale": "Representative sample for aggregated board set A72r_Q76mono_QJ2tt_T84r; generated only to validate card-removal semantics."
+          "rationale": "Representative sample for aggregated board set 976tt_A72r_A85mono_A95r_J73r_KQ5r_Q76mono_Q84r_QJ2tt_T84r; generated only to validate card-removal semantics."
         }
       ],
-      "explanation": "TexasSolver draft for MTT9_80BB_BTN_BB_SRP_HIGHSPR CHECK aggregated across A72r_Q76mono_QJ2tt_T84r: BET_SMALL is the most common dominant hand-class action in the reviewed aggregate."
+      "explanation": "TexasSolver draft for MTT9_80BB_BTN_BB_SRP_HIGHSPR CHECK aggregated across 976tt_A72r_A85mono_A95r_J73r_KQ5r_Q76mono_Q84r_QJ2tt_T84r: BET_SMALL is the most common dominant hand-class action in the reviewed aggregate."
     }
   ]
 } satisfies FlopProductionStrategyPack;

@@ -198,13 +198,20 @@ function scopedFlopDecisionErrors(
     if (rule.positionPattern !== scope.positionPattern) {
       errors.push(`${rule.id}: ${scope.label} pilot only allows ${scope.positionPattern}.`);
     }
-    const lanes = new Set(rule.rangeBuckets.map((bucket) => bucket.lane));
-    for (const lane of ["VALUE", "BLUFF", "CHECK"] as const) {
-      if (!lanes.has(lane)) errors.push(`${rule.id}: missing ${lane} lane.`);
-    }
+    if (rule.rangeBuckets.length === 0) errors.push(`${rule.id}: at least one range lane is required.`);
     if (rule.rangeBuckets.length < scope.minBuckets) {
       errors.push(`${rule.id}: ${scope.label} pilot needs at least ${scope.minBuckets} hand-class buckets.`);
     }
+  }
+
+  // Lane coverage is required of the pilot as a whole, not of every SPR band.
+  // A converged solve can legitimately have no bluffs in one band - below SPR 3
+  // the observed c-bet range is pairs and broadway only - and demanding all
+  // three lanes per rule would force a bluff lane to be invented where the
+  // solver has none.
+  const packLanes = new Set(pack.rules.flatMap((rule) => rule.rangeBuckets.map((bucket) => bucket.lane)));
+  for (const lane of ["VALUE", "BLUFF", "CHECK"] as const) {
+    if (!packLanes.has(lane)) errors.push(`${scope.label} pilot is missing the ${lane} lane across every rule.`);
   }
   return errors;
 }

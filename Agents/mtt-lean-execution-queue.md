@@ -1068,6 +1068,49 @@ an interrupted board's accuracy as final.
 Completion requires the mechanical assessment to report 20 accepted and zero
 over-target boards.
 
+### OPS-67 - Make lane coverage a pack requirement, not a per-rule one
+
+Status: `DONE 2026-07-23`
+Depends on: `OPS-65`
+Lane: `MECHANICAL`
+
+Four of the seven scoped flop pilots were `INVALID` while the beta gate still
+reported `7/7`, because the beta counts pilot definitions and the suite validates
+the current draft candidates. Each invalid pilot reported one rule missing its
+BLUFF lane plus a `runtime resolver returned no recommendation` error for all
+three SPR bands.
+
+Those were one defect, not two. `createFlopProductionStrategyResolver` returns
+null for every input when the pack fails validation, so a single rule missing one
+lane silently disabled the entire pack at runtime.
+
+The missing lane is genuine solver output, not a bug. The lane heuristic in
+`buildTexasSolverNormalizedDraft.mts` classifies a betting hand as VALUE when it
+is a pair or starts with A/K/Q/J/T and BLUFF otherwise. In the current converged
+`MTT9_20BB_BTN_BB_SRP_LOWSPR` solve the whole betting range is pairs and
+broadway, with suited connectors checking, which is ordinary poker below SPR 3.
+The classifier code did not change between the shipped module and the newer
+draft; only the solver data did. Requiring a BLUFF lane in every rule would have
+forced a bluff lane to be invented where the solver has none, which the content
+contract forbids.
+
+Lane coverage therefore moved from per-rule to per-pack in both
+`flopProductionStrategyPack.ts` and `mttPostflopPilotGate.ts`. A rule must still
+declare at least one lane and its buckets, and the pack as a whole must still
+demonstrate VALUE, BLUFF and CHECK.
+
+```powershell
+npm run mtt:postflop-pilot-suite -- --summary
+npm run mtt:postflop-pilot-modules -- --write
+```
+
+Acceptance: the pilot suite moved from 3 ready / 4 invalid to 7/7 ready with zero
+invalid. Regenerating the modules resolved a real drift: the shipped modules were
+built 2026-07-09 while their drafts were rebuilt 2026-07-15, so four modules
+carried superseded lane assignments and any regeneration would previously have
+produced an invalid pack. The regenerated modules now match their drafts exactly.
+Focused pack, gate, resolver, readiness and view regression passes 85/85.
+
 ### XSOLVER-01 - Produce the first exact paired second-solver export
 
 Status: `EXTERNAL_DATA`
@@ -1735,6 +1778,7 @@ Use this exact handoff prompt after changing models:
 | 2026-07-22 | OPS-62 | DONE | Added dry-run-first atomic merging for reviewed six-max preflop subsets. Exact immutable identities, complete strategy/EV/review field groups, fill-only semantics, idempotence, conflict-wide rejection, pre-write SHA-256 and backup replacement are enforced. The command generates no poker values or production artifacts; full regression passed 155/155 files and 793/793 tests plus the complete integrity chain, and live blank workbenches were not touched. |
 | 2026-07-22 | OPS-63 | DONE | Froze the reusable MTT-to-SNG/Cash architecture boundary and 20-30-day playable-beta sequence without authorizing cross-variant strategy reuse. Added an exact solver-neutral node contract and comparator for setup/range/tree/economics fingerprints, a shared accuracy target, combo frequencies, per-action EV and range-weighted equivalent best-action sets. It cannot promote or overwrite private inputs; focused tests passed 10/10 and full regression passed 159/159 files and 809/809 tests. GTO+ remains an honest external gate at 0/3 ready with nine outputs missing. |
 | 2026-07-22 | OPS-64 | DONE | Added one source-free `MTT_PLAYABLE_BETA_V1` gate: current Core is a launchable increment at 4/8 preflop, six-max 0/4 and scoped FLOP 7/7 while full-target mode remains blocked. Added a fixed-metadata FTP ZIP builder with path/size/SHA-256 reconciliation, source-map exclusion, atomic writes, clean-commit enforcement and a full test/release/build/self-hosted Chrome chain before confirmed output. Full regression passed 159/159 files and 809/809 tests; all release gates and four-viewport production Chrome QA passed with zero browser errors. The preview wrapper pins production environment so its asset hashes match the normal build; the live dry run reconciled 13 deployable entries. |
+| 2026-07-23 | OPS-67 | DONE | Moved flop range-lane coverage from a per-rule to a per-pack requirement in both the pack validator and the pilot gate. One rule missing its BLUFF lane previously made the resolver return null for the whole pack, disabling all three SPR bands at runtime. The missing lane is genuine converged solver output below SPR 3, where the observed c-bet range is pairs and broadway only, so demanding it per rule would have forced an invented bluff lane. The pilot suite moved from 3 ready / 4 invalid to 7/7, and regenerating the modules closed a real 2026-07-09 module vs 2026-07-15 draft drift. Focused regression 85/85. |
 | 2026-07-23 | OPS-65 | DONE | Replaced the per-range human poker verdict with mechanical acceptance after the owner decided the professional-field beta is the review. Grading uses only on-disk evidence: structural completeness plus every board at or below the pinned `set_accuracy` target. Results are written through the existing audited batch writer with the non-human reviewer token `PKRTRAINER_MECHANICAL_ACCEPTANCE_V1` and caveats stating it is not a human poker verdict. Live grading 17 accepted / 3 withheld; review protocol moved 0/20 to 20/20 protocol-ready with 17 production eligible and zero blockers. Focused tests 9/9. |
 | 2026-07-23 | OPS-66 | ACTIVE | Staged a targeted re-solve for the 13 boards above the 0.5 exploitability target across 3 families. Each parameter is copied verbatim from its authoritative full-tree source with only `set_max_iteration` raised, reduced-tree low-memory sets excluded, and the dump filename preserved so the same canonical checkpoint is replaced. All 13 checkpoints were SHA-256 backed up first, which proved necessary when a first launch failed on a relative log path after the runner's `Push-Location` and had already removed `822tt`; it was restored byte-identically. The repair manifest is named outside the `coverage-*-manifest.json` scan because it re-declares already-covered boards; naming it as coverage made four expansion presets fail closed on duplicate blockers. |
 | 2026-07-20 | OPS-51 | DONE | Fixed UTF-16LE TexasSolver log intake and added a fast fail-closed staging refresh over already validated cumulative reports. The live pass refreshed 20/20 family summaries and recovered traceable exploitability for 403/439 approved boards across all 20 families; an immediate repeat wrote nothing. Protocol warnings fell from 38 to 20, leaving only human caveats and owner verdicts. Focused tests passed 38/38; typecheck, scoped Core and production build passed. |

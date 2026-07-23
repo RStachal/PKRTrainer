@@ -301,9 +301,15 @@ export function validateFlopProductionRule(
     }
   }
 
-  for (const lane of FLOP_PRODUCTION_REQUIRED_RANGE_LANES) {
-    if (!lanes.has(lane)) errors.push(`${rule.id}: missing ${lane} range lane.`);
-  }
+  // Lane coverage is a pack-level requirement, not a per-rule one. A single rule
+  // is one SPR band at one action node, and a converged solve can legitimately
+  // have no bluffs there: at SPR below 3 the observed BTN c-bet range is pairs
+  // and broadway only, with suited connectors checking. Demanding all three
+  // lanes per rule would force a bluff lane to be invented where the solver has
+  // none, which the content contract forbids. The pack as a whole must still
+  // demonstrate VALUE, BLUFF and CHECK; see missingRangeLanes in
+  // buildFlopProductionStrategyPackReport.
+  if (lanes.size === 0) errors.push(`${rule.id}: at least one range lane is required.`);
 
   return errors;
 }
