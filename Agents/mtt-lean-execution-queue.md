@@ -79,11 +79,11 @@ attempt fail, or when a task explicitly changes strategy meaning or release scop
 - Complete memory-safe intake: all six derived manifests are raw-complete, including the
   98-board growth evidence wrapper. The 2026-07-20 14:49 snapshot has 439
   unique family/board pairs, 20/20 valid cumulative reports and 20/20 mechanical
-  family shapes. Approved per-board accuracy is traceable for 426/439 boards;
-  `OPS-56` owns the remaining isolated 13-log recovery queue across 5 families.
-  It began at 403/439 across 10 families. These
-  counts do not substitute for the 0/20 owner decisions. `OPS-57` is armed to
-  refresh the final reviewer handoff only after recovery reaches 439/439.
+  family shapes. Approved per-board accuracy is now traceable for all 439/439
+  boards; `OPS-56` closed its isolated recovery queue on 2026-07-22 after
+  starting at 403/439 across 10 families. `OPS-57` then finalized the reviewer
+  handoff, which reports `valid=True, current=True` at 439/439. These counts do
+  not substitute for the 0/20 owner decisions, which remain the live blocker.
 - Action-EV comparison: implementation complete, data not ready. Core preflop is
   `0/493818` complete decisions across `0/4` packs; scoped FLOP pilots are
   `0/972` across `0/7`. All seven blank FLOP intake templates are current at
@@ -670,7 +670,7 @@ scoped FLOP decisions.
 
 ### OPS-56 - Recover missing approved solver accuracy logs
 
-Status: `ACTIVE 2026-07-22 - 426/439`
+Status: `DONE 2026-07-22 - 439/439`
 Depends on: `OPS-51`, `OPS-55`
 Lane: `REPEATABLE`
 
@@ -700,6 +700,17 @@ The resumed guarded worker reached 426/439 on 2026-07-22 with 13 exact logs
 remaining across five families. The incremental watcher staged each completed
 accuracy log while the 439-board raw union stayed unchanged.
 
+The same guarded worker closed the final 13 logs later on 2026-07-22 between
+20:25 and 21:28 local time, across `MTT9_50BB_BTN_BB_SRP`,
+`MTT9_50BB_CO_BB_SRP_CBET_MIDSPR`, `MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR`,
+`MTT9_80BB_BTN_BB_SRP_HIGHSPR` and `MTT9_80BB_CO_BTN_3BP_MIDSPR`. Preparation
+now reports valid 439/439 evidence, zero pending logs, zero recovery families,
+zero recovery files and zero blockers, and every one of the 20 families
+reconciles `expectedLogs == parsedLogs` with an empty `missingLogs` list. The
+recovery queue and its manifest are therefore empty by design; the coverage
+overview lists `coverage-accuracy-recovery-v1-manifest.json` as `WAITING 0/0`
+for that reason and not because work is outstanding.
+
 ```powershell
 npm run mtt:texas-solver-accuracy-recovery -- --summary
 npm run mtt:texas-solver-low-memory-status
@@ -717,7 +728,7 @@ budget are green.
 
 ### OPS-57 - Finalize the complete accuracy reviewer handoff
 
-Status: `READY_AFTER_OPS-56`
+Status: `DONE 2026-07-22`
 Depends on: `OPS-56`, `OPS-54`
 Lane: `REPEATABLE`
 
@@ -1617,8 +1628,8 @@ Use this exact handoff prompt after changing models:
 | 2026-07-22 | OPS-53 | DONE | Bound every owner decision to a deterministic SHA-256 fingerprint of the exact source-safe family review reports and accuracy report. Dashboard schema v2, single and batch writers, and protocol validation reject stale evidence without inferring a verdict. The live template has 20/20 valid fingerprints and 0 decisions; dashboard remains 53 reports, 403/439 boards and owner 0/20. Focused tests passed 24/24; typecheck, scoped Core 4/4 plus 7/7 and production build passed. |
 | 2026-07-22 | OPS-54 | DONE | The ten-minute cycle now regenerates only the blank v2 owner template after a successful canonical dashboard refresh and exposes schema, fingerprint, verdict, timestamp and exit health in task status. A real cycle exited 0 and reported template ready with 20/20 fingerprints and 0 selected decisions. PowerShell parser checks and Windows automation tests passed 9/9; no human decision or strategy file was written. |
 | 2026-07-22 | OPS-55 | DONE | Rebaselined the full product after owner workflow hardening: 152/152 Vitest files and 771/771 tests passed, followed by typecheck, registry drift, scoped Core 4/4 plus 7/7, build, ranges, precache and bundle budget. Remaining red states are explicit external data/human gates: six-max 0 records, owner 0/20 and action EV 0/493818 preflop plus 0/972 scoped FLOP. |
-| 2026-07-22 | OPS-56 | ACTIVE | Prepared a fail-closed, restart-safe queue for exactly 36 missing approved per-board accuracy logs across 10 families. It solves one log at a time, preserves all 439 canonical raw checkpoints, refreshes staged accuracy after every success and cannot write poker review or production strategy. Initial preparation and scenario audit were valid at 403/439; live progress is now 407/439 with 32 pending across 9 families. Full regression passed 153 files / 775 tests plus the complete release integrity chain. |
-| 2026-07-22 | OPS-57 | READY_AFTER_OPS-56 | Added per-board canonical raw SHA-256/length/time invariants and a mutex-protected finalizer that refreshes protocol, readiness, owner dashboard and only the blank v2 fingerprint template after accuracy reaches 439/439. Live dry-run correctly waited at 407/439 with 32 pending and no reviewer write. Parser and focused regression passed; the full baseline is 153/153 files and 776/776 tests plus the complete green release integrity chain. |
+| 2026-07-22 | OPS-56 | DONE | Prepared a fail-closed, restart-safe queue for exactly 36 missing approved per-board accuracy logs across 10 families. It solves one log at a time, preserves all 439 canonical raw checkpoints, refreshes staged accuracy after every success and cannot write poker review or production strategy. Initial preparation and scenario audit were valid at 403/439; the guarded worker then advanced 403 to 407 to 426 and closed the final 13 logs by 21:28 local. Recovery now reports valid 439/439, 0 pending, 0 recovery families, 0 recovery files and 0 blockers, with all 20 families reconciling `expectedLogs == parsedLogs`. Full regression passed 153 files / 775 tests plus the complete release integrity chain. |
+| 2026-07-22 | OPS-57 | DONE | Added per-board canonical raw SHA-256/length/time invariants and a mutex-protected finalizer that refreshes protocol, readiness, owner dashboard and only the blank v2 fingerprint template after accuracy reaches 439/439. The live dry-run correctly waited at 407/439 with no reviewer write; the finalizer then ran at 21:28:38 local once recovery hit 439/439, and status now reports `accuracy handoff: valid=True, current=True`, accuracy 439/439 and blank owner decisions 0/20. Parser and focused regression passed; the full baseline is 153/153 files and 776/776 tests plus the complete green release integrity chain. |
 | 2026-07-22 | OPS-58 | DONE | Added fail-closed refresh for stale but provably blank postflop action-EV templates and exposed its status through the ten-minute task. The live pass refreshed all 7 blank templates covering 972 decisions and 2,916 action slots; an immediate repeat reported blank 7/7, nonblank 0 and zero writes. Edited or EV-bearing templates remain protected and make blank readiness false, candidate and promotion commands are absent, final focused tests passed 17/17 and the full 153-file / 778-test release integrity chain passed. |
 | 2026-07-22 | OPS-59 | DONE | Upgraded the four exact 118,638-row six-max preflop workbenches from the legacy header to the current optional action-EV columns using a full-structure, fail-closed blank invariant. The first live pass refreshed 4/4 and the repeat wrote 0; current/blank/action-EV columns are 4/4, nonblank/protected stale are 0 and generated values remain none. The ten-minute task now keeps and reports this state. Focused tests passed 29/29; full release passed 154/154 files, 785/785 tests and the complete integrity chain. |
 | 2026-07-22 | OPS-60 | DONE | Added source-safe partial-progress observability for all four six-max preflop workbenches and separated editable owner fields from the immutable 118,638-row scaffold structure. A whole-row chunk now remains `WAITING` without invoking full candidate validation; changed structure, one-sided strategy or partial EV remains `INVALID`. The live pass measured 474,552/474,552 rows, 4/4 structurally safe, 0 touched and 0/4/0 ready/waiting/invalid without writing strategy or EV. The recurring task exposes the same strategy, EV and review counters. Full release passed 154/154 files and 787/787 tests plus the integrity chain. |

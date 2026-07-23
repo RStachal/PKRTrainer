@@ -94,19 +94,21 @@ NLHE` roadmap. The old 64-row gate remains the full-library gate.
   pairs across 20 families and beta-depth is 83/83; 20/20 reports are valid, extraction failures are zero
   and 20/20 families meet the mechanical shape. Human review and production
   eligibility remain independently 0/20. Incremental staged accuracy now retains
-  traceable exploitability for 426/439 approved boards across all 20 families;
-  review-protocol warnings are down to 20 human caveat fields. The last canonical
-  owner dashboard remains the earlier 403/439 snapshot with 36 missing log names;
-  `OPS-57` intentionally refreshes that human handoff only after recovery reaches
-  439/439, rather than presenting an intermediate snapshot as final. Its
+  traceable exploitability for all 439/439 approved boards across all 20
+  families, with zero pending logs and zero blockers; review-protocol warnings
+  are down to 20 human caveat fields. `OPS-57` refreshed the canonical owner
+  dashboard on 2026-07-22 once recovery reached 439/439, so the handoff reports
+  `valid=True, current=True` against the final evidence rather than an
+  intermediate snapshot. Its
   v2 decision export binds every family to a deterministic SHA-256 fingerprint
   of the exact source-safe review and accuracy files; changed evidence makes an
   earlier sign-off stale in the dashboard, both writers and protocol gate. The
   ten-minute cycle regenerates only the blank template after a successful
   dashboard build and reports its v2/20-of-20/zero-verdict health explicitly.
 - Windows low-memory task: `PKRTrainer-TexasSolver-LowMemory` is installed and
-  owns the restart-safe 426/439 accuracy checkpoint with 13 exact logs remaining
-  across five families. Resource checks and repeated-trigger suppression keep
+  drove the restart-safe accuracy checkpoint to its final 439/439 state on
+  2026-07-22; it now idles with no pending recovery work and no solver
+  processes. Resource checks and repeated-trigger suppression keep
   the development-first queue single-owner and resumable. RAM-guard stops are
   now recorded separately from native solver exits and leave the unchanged
   checkpoint pending for a clean later retry; two of three historical exits
@@ -286,6 +288,7 @@ npm run mtt:postflop-action-ev-intake -- --all --write-template --refresh-blank-
 
 | Date | Priority | Result | Evidence |
 | --- | --- | --- | --- |
+| 2026-07-23 | P4 / Solver accuracy recovery closed | Every approved board now has traceable per-board accuracy evidence | The guarded low-memory worker closed the last 13 logs on 2026-07-22 between 20:25 and 21:28 local across `MTT9_50BB_BTN_BB_SRP`, `MTT9_50BB_CO_BB_SRP_CBET_MIDSPR`, `MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR`, `MTT9_80BB_BTN_BB_SRP_HIGHSPR` and `MTT9_80BB_CO_BTN_3BP_MIDSPR`. A live rescan reports valid 439/439 parsed, 0 pending, 0 recovery families/files and 0 blockers; all 20 families reconcile `expectedLogs == parsedLogs` with empty `missingLogs`. The OPS-57 finalizer completed at 21:28:38 with `valid=True, current=True`. Coverage overview is 1049/1049 boards with 21/22 manifests complete and the recovery manifest correctly empty. Mechanical readiness is 20/20 valid evidence and 20/20 shape-ready; the gate has moved entirely to `HUMAN_POKER_REVIEW` at 0/20 owner decisions and no solver work remains queued |
 | 2026-07-22 | Architecture / Exact solver QA | Future variants share adapters and validation without sharing strategy | Added the active 20-30-day MTT beta architecture contract and solver-neutral exact-node comparison. It fails before comparison on profile/range/board/node/tree/economics or pinned-accuracy drift, compares full combo frequencies and per-action EV, preserves range-weighted EV-equivalent best-action sets and cannot promote content or overwrite private exports. Focused comparison tests pass 10/10; live GTO+ readiness remains truthfully 0/3 with nine outputs missing |
 | 2026-07-22 | Release / Playable beta and FTP gate | Incremental beta delivery is bounded, reproducible and source-free | Added `MTT_PLAYABLE_BETA_V1`: current Core is launchable at 4/8 preflop, six-max 0/4 and scoped FLOP 7/7, while target-complete mode stays blocked. The FTP packager uses sorted fixed-metadata entries, excludes local-only hidden source maps, reopens the ZIP and reconciles every path, size and SHA-256 before atomic output; confirmed writes require a clean commit and rerun the complete test/release/build/self-hosted Chrome chain. Full regression passed 159/159 files and 809/809 tests; typecheck, registry, Core/beta, ranges, intake guard, build, precache and budget passed. Production Chrome E2E passed desktop plus 360/390/412 px, offline/reload/resilience, 48 contrast checks and service-worker rollback with zero browser errors. The wrapper pins `NODE_ENV=production`, so browser QA and the FTP build have identical asset hashes; the final live dry run reconciled 13 deployable entries |
 | 2026-07-22 | P1 / Progressive reviewed chunk merge | Exact six-max exports no longer require a one-shot full-file handoff | Added a shared atomic fill-only merge contract and dry-run-first CLI. It binds each chunk row to the immutable canonical decision, accepts complete strategy pairs and EV triples independently, preserves blanks, is idempotent and blocks the whole write on conflicts or partial groups. Confirmed writes recheck SHA-256 and use backup replacement; no values, candidates, permissions or production modules are generated. Full regression passed 155/155 files and 793/793 tests; typecheck, registry, Core 4/4 plus 7/7, ranges, raw intake guard, build, precache and bundle budget passed |
