@@ -35,9 +35,15 @@ export function createFlopProductionStrategyResolver(
     const actionEvs = isActionEvSetComplete(matchedHeroBucket?.actionEvs, rule.actions)
       ? cloneActionEvSet(matchedHeroBucket.actionEvs)
       : undefined;
+    // Recommend the action for the hero's own hand, not the rule-wide most-common
+    // action. Each hand class sits in a lane with its own dominant action, so a
+    // check-lane air hand must be told to check even when the rule as a whole
+    // most often bets. Prefer exact per-hand EV when present, then the matched
+    // bucket's action, and only fall back to the rule action for a hand that is
+    // outside this rule's range and therefore has no bucket.
     const action = actionEvs
-      ? highestEvAction(actionEvs) ?? rule.recommendedAction
-      : rule.recommendedAction;
+      ? highestEvAction(actionEvs) ?? matchedHeroBucket?.action ?? rule.recommendedAction
+      : matchedHeroBucket?.action ?? rule.recommendedAction;
 
     return {
       action,

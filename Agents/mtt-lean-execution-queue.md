@@ -1217,6 +1217,42 @@ and playable beta stay valid, typecheck passes and focused regression is green.
 Five of the six facing-bet SPR bands are board-aware; the sixth is documented as
 blocked on a uniform re-solve of `MTT9_150BB_CO_BTN_3BP_HIGHSPR`.
 
+### OPS-70 - Recommend the hero hand's action, not the rule-wide action
+
+Status: `DONE 2026-07-23`
+Depends on: `OPS-68`
+Lane: `MECHANICAL`
+
+A more serious correctness defect than the lanes sat one layer deeper. The drill
+deals the hero a random hand on a random board, but the flop production resolver
+returned `rule.recommendedAction` - the rule's single most-common action - for
+every hand when no per-hand action EV was present, which is always for the
+current pilots. It computed the hero's own bucket but ignored its action in the
+top-level recommendation.
+
+So a player dealt a check-lane air hand on an ace-high board in the BTN vs BB
+c-bet spot was told the correct answer was BET_SMALL and marked wrong for
+checking, while the range matrix beside it showed that same hand checking. The
+grade contradicted the display, and the product's core promise is that it
+recommends optimal play.
+
+The fix returns the matched hero bucket's action - highest-EV when that bucket
+carries complete action EV, otherwise its dominant action - and only falls back
+to the rule action for a hand outside the rule's range. The same one-line defect
+existed in the turn and river resolvers and was fixed identically.
+
+The runtime smoke check had encoded the bug as an invariant: it asserted
+`recommendation.action === rule.recommendedAction`. That assertion is wrong now
+that the runtime answers per hand, so it was changed to expect the sampled hand's
+own bucket action.
+
+Acceptance: a live check over the BTN vs BB c-bet pilot shows 150/150 buckets now
+recommend the hand's own action, including all 21 check-lane hands returning
+CHECK where they previously returned BET_SMALL. The pilot suite stays 7/7 with
+972 buckets, core release and playable beta stay valid, typecheck passes and the
+focused postflop resolver, scoring, runtime, readiness and view regression is
+green.
+
 ### XSOLVER-01 - Produce the first exact paired second-solver export
 
 Status: `EXTERNAL_DATA`

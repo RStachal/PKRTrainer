@@ -240,6 +240,69 @@ describe("flopProductionStrategyResolver", () => {
     expect(result?.actionEvs?.values).toHaveLength(3);
   });
 
+  it("doporuci akci konkretniho hero bucketu, ne rule-wide akci, kdyz chybi action EV", () => {
+    // The rule recommends BET_BIG overall, but 72o sits in the CHECK lane with no
+    // action EV. The player holding 72o must be told to CHECK, not graded against
+    // the rule-wide most-common action.
+    const resolver = createFlopProductionStrategyResolver(productionPack());
+
+    const checkHand = resolver({ ...input, heroHand: "72o" });
+    expect(checkHand?.action).toBe("CHECK");
+    expect(checkHand?.source?.kind).toBe("STRATEGY_PACK");
+    if (checkHand?.source?.kind === "STRATEGY_PACK") {
+      expect(checkHand.source.heroRangeBucket).toMatchObject({ lane: "CHECK", action: "CHECK", handClass: "72o" });
+    }
+
+    // A no-EV bluff hand in the same rule bets; its bucket action still leads.
+    const bluffHand = resolver({ ...input, heroHand: "QJs" });
+    expect(bluffHand?.action).toBe("BET_BIG");
+
+    // A hand outside the range has no bucket, so the rule-wide action is the
+    // only available fallback.
+    const offRange = resolver({ ...input, heroHand: "K3o" });
+    expect(offRange?.action).toBe("BET_BIG");
+    expect(offRange?.source?.kind === "STRATEGY_PACK" && offRange.source.heroRangeBucket).toBeUndefined();
+  });
+
+  it("hodnoti hrace podle akce jeho ruky, ne podle rule-wide akce", () => {
+    const resolver = createPostflopStrategyResolverWithProductionFallback(
+      [productionPack()],
+      [flopSingleRaisedPrototypeStrategyPack],
+    );
+    const spot = generatePostflopSpot({
+      seed: 11,
+      street: "FLOP",
+      board: [
+        { rank: "A", suit: "s" },
+        { rank: "7", suit: "d" },
+        { rank: "2", suit: "c" },
+      ],
+      heroCards: [
+        { rank: "7", suit: "h" },
+        { rank: "2", suit: "s" },
+      ],
+      potType: "SINGLE_RAISED",
+      potBB: 6,
+      effectiveStackBB: 40,
+      positionContext: {
+        heroPosition: "BTN",
+        villainPosition: "BB",
+        aggressorPosition: "BTN",
+        callerPosition: "BB",
+        inPosition: true,
+        callerType: "BIG_BLIND",
+        positionPattern: "BTN_VS_BB",
+      },
+      strategyResolver: resolver,
+    });
+
+    // 72o is a check-lane air hand: checking must grade correct even though the
+    // rule's most-common action is BET_BIG.
+    expect(spot.recommendedAction).toBe("CHECK");
+    expect(gradePostflopAction(postflopSpotToTrainingSpot(spot), "CHECK").correct).toBe(true);
+    expect(gradePostflopAction(postflopSpotToTrainingSpot(spot), "BET_BIG").correct).toBe(false);
+  });
+
   it("production fallback registry preferuje production pack pred public heuristic packem", () => {
     const resolver = createPostflopStrategyResolverWithProductionFallback(
       [productionPack()],
@@ -364,7 +427,9 @@ describe("flopProductionStrategyResolver", () => {
       heroHand: "AA",
     });
 
-    expect(facingResult?.action).toBe("CALL");
+    // AA is an overpair in the VALUE lane facing a bet; its own action is RAISE.
+    // The recommendation follows the hero bucket, not the rule-wide CALL.
+    expect(facingResult?.action).toBe("RAISE");
     expect(facingResult?.source?.kind).toBe("STRATEGY_PACK");
     if (facingResult?.source?.kind === "STRATEGY_PACK") {
       expect(facingResult.source.ruleId).toBe("flop-production-facing-bet-btn-bb-dry-call");

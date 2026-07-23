@@ -35,9 +35,11 @@ export function createTurnProductionStrategyResolver(
     const actionEvs = isActionEvSetComplete(matchedHeroBucket?.actionEvs, rule.actions)
       ? cloneActionEvSet(matchedHeroBucket.actionEvs)
       : undefined;
+    // Recommend the hero hand's own action, not the rule-wide most-common one;
+    // fall back to the rule action only for a hand outside this rule's range.
     const action = actionEvs
-      ? highestEvAction(actionEvs) ?? rule.recommendedAction
-      : rule.recommendedAction;
+      ? highestEvAction(actionEvs) ?? matchedHeroBucket?.action ?? rule.recommendedAction
+      : matchedHeroBucket?.action ?? rule.recommendedAction;
 
     return {
       action,
