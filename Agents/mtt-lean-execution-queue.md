@@ -1164,11 +1164,49 @@ them any more, and lane mixes shifted accordingly, for example UTG vs BB moving 
 stays 7/7 with 19 rules and 972 buckets, core release and playable beta stay
 valid, typecheck passes and focused regression is 67/67.
 
-Known gap: the two FLOP_FACING_BET pilots still carry rank-based lanes. Their
-drafts come from the facing-bet harvester rather than the ingest path, and a
-default harvest run produced a degraded 27-bucket FOLD/CALL-only candidate, so
-they need a deliberate per-family regeneration with the correct SPR ranges before
-their lanes are trustworthy.
+Closed for the c-bet pilots here; the facing-bet pilots are finished in OPS-69.
+
+### OPS-69 - Extend board-aware lanes to the facing-bet pilots
+
+Status: `DONE 2026-07-23`
+Depends on: `OPS-68`
+Lane: `MECHANICAL`
+
+The board-aware classifier from OPS-68 fixed the lane logic in the importer, but
+the two FLOP_FACING_BET pilots still shipped rank-based lanes because their
+drafts come from the facing-bet harvester rather than the ingest path, so nothing
+had regenerated them. Their RAISE ranges taught low aces and broadway as value:
+`A4s`, `A5s`, `K7s`, `J8s` and even `22` raising were all labelled VALUE.
+
+The harvester picks a "best" bet-size node automatically, and its default run
+chose `BET_600`, a degenerate overbet whose response is almost all fold. The fix
+is to pin the exact villain c-bet node per family with `--bet-actions` rather than
+let auto-selection pick, then regenerate each SPR band and re-merge.
+
+```powershell
+npm run mtt:texas-solver-facing-bet-candidates -- --family=<FAM> --source-node=CHECK --bet-actions=<BET_X> --pot-type=<...> --position-pattern=<...> --scope=<...> --spr-min=<n> --spr-max=<n> --write --summary
+npm run mtt:texas-solver-merge-pilot-drafts -- --scope=<...> --write --summary
+npm run mtt:postflop-pilot-modules -- --write
+```
+
+`BTN_vs_BB_SRP_FLOP_FACING_BET` is fully board-aware: all three SPR bands
+regenerated cleanly against `CHECK>BET_17`, and no low ace bets as value any more
+(the only ace left in a value RAISE is `AA`, a real overpair). The RAISE mixes
+shifted heavily toward BLUFF, for example the low band to `VALUE 4 / BLUFF 25`.
+
+`BTN_vs_CO_3BP_FLOP_FACING_BET` is fixed for its LOW and MID bands (`CHECK>BET_52`)
+but its HIGH band could not be regenerated. That family's raw exports were
+re-solved with inconsistent bet trees across boards - some boards offer
+`BET 39/79`, others `BET 52` - so no single small-bet node exists on every board
+and the review is all-or-nothing per node. The HIGH band therefore keeps its
+earlier rank-based content (`A7s` still labelled a value raise) until that family
+is re-solved with one uniform bet tree. This is not a regression: the runtime
+selects a rule per SPR band, so the LOW and MID bands now teach correct lanes.
+
+Acceptance: the pilot suite stays 7/7 with 19 rules and 972 buckets, core release
+and playable beta stay valid, typecheck passes and focused regression is green.
+Five of the six facing-bet SPR bands are board-aware; the sixth is documented as
+blocked on a uniform re-solve of `MTT9_150BB_CO_BTN_3BP_HIGHSPR`.
 
 ### XSOLVER-01 - Produce the first exact paired second-solver export
 

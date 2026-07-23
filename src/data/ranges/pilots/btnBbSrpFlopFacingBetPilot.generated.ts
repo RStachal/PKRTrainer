@@ -112,17 +112,19 @@ export const btnBbSrpFlopFacingBetPilotPack = {
       "potType": "SINGLE_RAISED",
       "positionPattern": "SRP_BTN_VS_BB",
       "boardTextures": [
-        "rainbow",
+        "monotone",
+        "flush-draw-heavy",
         "low",
         "connected",
         "straight-possible",
-        "ace-high",
+        "rainbow",
+        "paired",
         "disconnected",
-        "dry",
+        "medium",
         "two-tone",
-        "flush-draw-heavy",
-        "broadway-high",
-        "medium"
+        "ace-high",
+        "dry",
+        "broadway-high"
       ],
       "sprMin": 0,
       "sprMax": 2.99,
@@ -131,7 +133,7 @@ export const btnBbSrpFlopFacingBetPilotPack = {
         "CALL",
         "RAISE"
       ],
-      "recommendedAction": "CALL",
+      "recommendedAction": "RAISE",
       "rangeBuckets": [
         {
           "lane": "CHECK",
@@ -147,17 +149,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 29.9,
+              "frequencyPct": 21.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 51.8,
+              "frequencyPct": 65,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 18.3,
+              "frequencyPct": 13.7,
               "visibility": "EXACT"
             }
           ]
@@ -176,17 +178,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 30.1,
+              "frequencyPct": 20.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 62.2,
+              "frequencyPct": 66.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 7.7,
+              "frequencyPct": 12.7,
               "visibility": "EXACT"
             }
           ]
@@ -205,17 +207,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 38.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 44.7,
+              "frequencyPct": 33.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 36.5,
+              "frequencyPct": 27.6,
               "visibility": "EXACT"
             }
           ]
@@ -234,17 +236,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 27.7,
+              "frequencyPct": 20,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 71.3,
+              "frequencyPct": 68.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 1,
+              "frequencyPct": 11.2,
               "visibility": "EXACT"
             }
           ]
@@ -263,17 +265,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 32.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 28.5,
+              "frequencyPct": 38.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 52.7,
+              "frequencyPct": 29.2,
               "visibility": "EXACT"
             }
           ]
@@ -292,17 +294,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 31,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 25.7,
+              "frequencyPct": 39.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 55.5,
+              "frequencyPct": 29.8,
               "visibility": "EXACT"
             }
           ]
@@ -321,56 +323,27 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 25.7,
+              "frequencyPct": 17,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 73.8,
+              "frequencyPct": 79,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 0.5,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "CHECK",
-          "label": "64s · FOLD",
-          "action": "FOLD",
-          "handClasses": [
-            "64s"
-          ],
-          "features": [
-            "solver-fold-frequency",
-            "suited"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 43.7,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 31.6,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 24.7,
+              "frequencyPct": 4,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "BLUFF",
-          "label": "65s · RAISE",
+          "label": "64s · RAISE",
           "action": "RAISE",
           "handClasses": [
-            "65s"
+            "64s"
           ],
           "features": [
             "solver-raise-frequency",
@@ -379,17 +352,46 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 32.5,
+              "frequencyPct": 38.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 35.2,
+              "frequencyPct": 35.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 32.3,
+              "frequencyPct": 26.1,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "CHECK",
+          "label": "65s · CALL",
+          "action": "CALL",
+          "handClasses": [
+            "65s"
+          ],
+          "features": [
+            "solver-call-frequency",
+            "suited"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 26.3,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 53,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 20.7,
               "visibility": "EXACT"
             }
           ]
@@ -408,17 +410,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 15.1,
+              "frequencyPct": 8.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 84.5,
+              "frequencyPct": 75.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 0.4,
+              "frequencyPct": 15.7,
               "visibility": "EXACT"
             }
           ]
@@ -437,75 +439,75 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 27.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 77.1,
+              "frequencyPct": 58.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 4.1,
+              "frequencyPct": 13.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "76s · RAISE",
-          "action": "RAISE",
+          "lane": "CHECK",
+          "label": "76s · CALL",
+          "action": "CALL",
           "handClasses": [
             "76s"
           ],
           "features": [
-            "solver-raise-frequency",
+            "solver-call-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 30.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 50.2,
+              "frequencyPct": 50.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 31,
+              "frequencyPct": 19.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
-          "label": "77 · RAISE",
-          "action": "RAISE",
+          "lane": "CHECK",
+          "label": "77 · CALL",
+          "action": "CALL",
           "handClasses": [
             "77"
           ],
           "features": [
-            "solver-raise-frequency",
+            "solver-call-frequency",
             "pocket-pair"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 12.6,
+              "frequencyPct": 10.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 62.4,
+              "frequencyPct": 72.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 25,
+              "frequencyPct": 17.1,
               "visibility": "EXACT"
             }
           ]
@@ -524,17 +526,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 25.9,
+              "frequencyPct": 33.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 54.4,
+              "frequencyPct": 44.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 19.7,
+              "frequencyPct": 22.4,
               "visibility": "EXACT"
             }
           ]
@@ -553,23 +555,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.7,
+              "frequencyPct": 35.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 75,
+              "frequencyPct": 45.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 6.3,
+              "frequencyPct": 19,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "88 · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -582,81 +584,81 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 1.2,
+              "frequencyPct": 6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 73.5,
+              "frequencyPct": 67,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 25.3,
+              "frequencyPct": 27,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "97s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "97s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "97s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 28.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 92.7,
+              "frequencyPct": 43.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 7.3,
+              "frequencyPct": 28.7,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "98s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "98s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "98s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 6.3,
+              "frequencyPct": 30.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 92,
+              "frequencyPct": 36.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 1.7,
+              "frequencyPct": 33.8,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "99 · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -669,17 +671,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 37.2,
+              "frequencyPct": 61.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 62.8,
+              "frequencyPct": 34.2,
               "visibility": "EXACT"
             }
           ]
@@ -699,23 +701,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.5,
+              "frequencyPct": 23.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 50,
+              "frequencyPct": 60.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 12.5,
+              "frequencyPct": 16,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A3s · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -729,47 +731,47 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.5,
+              "frequencyPct": 26.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 29.6,
+              "frequencyPct": 45.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 32.9,
+              "frequencyPct": 27.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "A4s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "A4s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "A4s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.5,
+              "frequencyPct": 22.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 49.9,
+              "frequencyPct": 49.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 12.6,
+              "frequencyPct": 28.1,
               "visibility": "EXACT"
             }
           ]
@@ -789,17 +791,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.5,
+              "frequencyPct": 21.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 49.9,
+              "frequencyPct": 57.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 12.6,
+              "frequencyPct": 21.3,
               "visibility": "EXACT"
             }
           ]
@@ -819,17 +821,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 29,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 74.7,
+              "frequencyPct": 59.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 6.5,
+              "frequencyPct": 11.7,
               "visibility": "EXACT"
             }
           ]
@@ -849,17 +851,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 28.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 66.7,
+              "frequencyPct": 58.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 14.5,
+              "frequencyPct": 13,
               "visibility": "EXACT"
             }
           ]
@@ -879,47 +881,47 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 21,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 58.8,
+              "frequencyPct": 61.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 22.4,
+              "frequencyPct": 17.9,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "A9s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "A9s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "A9s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 3.6,
+              "frequencyPct": 13.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 87.9,
+              "frequencyPct": 58.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 8.5,
+              "frequencyPct": 27.6,
               "visibility": "EXACT"
             }
           ]
@@ -944,42 +946,42 @@ export const btnBbSrpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 98.2,
+              "frequencyPct": 85.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 1.8,
+              "frequencyPct": 14.4,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "AJo · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "AJo · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "AJo"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "offsuit",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 12.4,
+              "frequencyPct": 3.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 63.8,
+              "frequencyPct": 70.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 23.8,
+              "frequencyPct": 25.8,
               "visibility": "EXACT"
             }
           ]
@@ -999,77 +1001,77 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 12.4,
+              "frequencyPct": 4.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 70.3,
+              "frequencyPct": 74.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 17.3,
+              "frequencyPct": 21.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "AKo · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "AKo · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "AKo"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "offsuit",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 0.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 77.7,
+              "frequencyPct": 61.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 22.3,
+              "frequencyPct": 38.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "AKs · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "AKs · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "AKs"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 0.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 84.8,
+              "frequencyPct": 67.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 15.2,
+              "frequencyPct": 32.5,
               "visibility": "EXACT"
             }
           ]
@@ -1089,17 +1091,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 5.1,
+              "frequencyPct": 4.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 74.6,
+              "frequencyPct": 76.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 20.3,
+              "frequencyPct": 19.2,
               "visibility": "EXACT"
             }
           ]
@@ -1119,23 +1121,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 5,
+              "frequencyPct": 2.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 87.5,
+              "frequencyPct": 79.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 7.5,
+              "frequencyPct": 17.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "ATo · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -1149,23 +1151,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 16.1,
+              "frequencyPct": 9.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 46.8,
+              "frequencyPct": 62.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 37.1,
+              "frequencyPct": 28.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "ATs · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -1179,47 +1181,47 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 4,
+              "frequencyPct": 5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 58.6,
+              "frequencyPct": 67.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 37.4,
+              "frequencyPct": 27.7,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "J8s · CALL",
-          "action": "CALL",
+          "label": "J8s · FOLD",
+          "action": "FOLD",
           "handClasses": [
             "J8s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-fold-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 25,
+              "frequencyPct": 49.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 68.4,
+              "frequencyPct": 40.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 6.6,
+              "frequencyPct": 10.4,
               "visibility": "EXACT"
             }
           ]
@@ -1239,17 +1241,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 41,
+              "frequencyPct": 40,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 52.4,
+              "frequencyPct": 41.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 6.6,
+              "frequencyPct": 18.7,
               "visibility": "EXACT"
             }
           ]
@@ -1269,27 +1271,57 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 0.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 45.9,
+              "frequencyPct": 44.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 54.1,
+              "frequencyPct": 55.7,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "JTs · FOLD",
-          "action": "FOLD",
+          "label": "JTs · CALL",
+          "action": "CALL",
           "handClasses": [
             "JTs"
+          ],
+          "features": [
+            "solver-call-frequency",
+            "suited",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 33.5,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 43.5,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 23,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "CHECK",
+          "label": "K7s · FOLD",
+          "action": "FOLD",
+          "handClasses": [
+            "K7s"
           ],
           "features": [
             "solver-fold-frequency",
@@ -1299,27 +1331,57 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 49.6,
+              "frequencyPct": 43.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 33.9,
+              "frequencyPct": 37.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 16.5,
+              "frequencyPct": 18.9,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
-          "label": "K7s · RAISE",
+          "lane": "CHECK",
+          "label": "K8s · FOLD",
+          "action": "FOLD",
+          "handClasses": [
+            "K8s"
+          ],
+          "features": [
+            "solver-fold-frequency",
+            "suited",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 42,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 37.8,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 20.2,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "BLUFF",
+          "label": "K9s · RAISE",
           "action": "RAISE",
           "handClasses": [
-            "K7s"
+            "K9s"
           ],
           "features": [
             "solver-raise-frequency",
@@ -1329,137 +1391,77 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 12.6,
+              "frequencyPct": 30.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 51.4,
+              "frequencyPct": 38.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 36,
+              "frequencyPct": 30.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "K8s · CALL",
-          "action": "CALL",
-          "handClasses": [
-            "K8s"
-          ],
-          "features": [
-            "solver-call-frequency",
-            "suited",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 38.7,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 39.7,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 21.6,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "CHECK",
-          "label": "K9s · CALL",
-          "action": "CALL",
-          "handClasses": [
-            "K9s"
-          ],
-          "features": [
-            "solver-call-frequency",
-            "suited",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 28.8,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 58.1,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 13.1,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "CHECK",
-          "label": "KJo · FOLD",
-          "action": "FOLD",
+          "lane": "BLUFF",
+          "label": "KJo · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "KJo"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-raise-frequency",
             "offsuit",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 71.1,
+              "frequencyPct": 41.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 16.6,
+              "frequencyPct": 31.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 12.3,
+              "frequencyPct": 27.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "KJs · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "KJs · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "KJs"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 31.1,
+              "frequencyPct": 24.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 60.9,
+              "frequencyPct": 45.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 8,
+              "frequencyPct": 30.1,
               "visibility": "EXACT"
             }
           ]
@@ -1484,12 +1486,12 @@ export const btnBbSrpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 29.8,
+              "frequencyPct": 51.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 70.2,
+              "frequencyPct": 48.7,
               "visibility": "EXACT"
             }
           ]
@@ -1509,23 +1511,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 38,
+              "frequencyPct": 19.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 38.4,
+              "frequencyPct": 56.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 23.6,
+              "frequencyPct": 24.1,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KQs · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -1539,23 +1541,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 21.9,
+              "frequencyPct": 16.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 50.7,
+              "frequencyPct": 48.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 27.4,
+              "frequencyPct": 35.4,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KTs · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -1569,113 +1571,113 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 19.4,
+              "frequencyPct": 22.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 45.8,
+              "frequencyPct": 39.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 34.8,
+              "frequencyPct": 38.1,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "Q8s · CALL",
-          "action": "CALL",
+          "label": "Q8s · FOLD",
+          "action": "FOLD",
           "handClasses": [
             "Q8s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-fold-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 25,
+              "frequencyPct": 44.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 60.7,
+              "frequencyPct": 40.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 14.3,
+              "frequencyPct": 15,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "BLUFF",
+          "label": "Q9s · RAISE",
+          "action": "RAISE",
+          "handClasses": [
+            "Q9s"
+          ],
+          "features": [
+            "solver-raise-frequency",
+            "suited",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 32.4,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 40.8,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 26.8,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "Q9s · CALL",
-          "action": "CALL",
-          "handClasses": [
-            "Q9s"
-          ],
-          "features": [
-            "solver-call-frequency",
-            "suited",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 33.2,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 45.3,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 21.5,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "VALUE",
-          "label": "QJo · RAISE",
-          "action": "RAISE",
+          "label": "QJo · FOLD",
+          "action": "FOLD",
           "handClasses": [
             "QJo"
           ],
           "features": [
-            "solver-raise-frequency",
+            "solver-fold-frequency",
             "offsuit",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 75,
+              "frequencyPct": 51.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 0,
+              "frequencyPct": 34,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 25,
+              "frequencyPct": 14.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "QJs · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -1689,17 +1691,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 64.5,
+              "frequencyPct": 35.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 8.2,
+              "frequencyPct": 35.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 27.3,
+              "frequencyPct": 29.3,
               "visibility": "EXACT"
             }
           ]
@@ -1724,82 +1726,22 @@ export const btnBbSrpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 47.6,
+              "frequencyPct": 47.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 52.4,
+              "frequencyPct": 52.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "QTs · FOLD",
-          "action": "FOLD",
+          "lane": "BLUFF",
+          "label": "QTs · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "QTs"
-          ],
-          "features": [
-            "solver-fold-frequency",
-            "suited",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 43.7,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 36,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 20.3,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "VALUE",
-          "label": "T8s · RAISE",
-          "action": "RAISE",
-          "handClasses": [
-            "T8s"
-          ],
-          "features": [
-            "solver-raise-frequency",
-            "suited",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 24,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 27,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 49,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "VALUE",
-          "label": "T9s · RAISE",
-          "action": "RAISE",
-          "handClasses": [
-            "T9s"
           ],
           "features": [
             "solver-raise-frequency",
@@ -1814,42 +1756,102 @@ export const btnBbSrpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 44.3,
+              "frequencyPct": 42.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 26.2,
+              "frequencyPct": 28,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "TT · CALL",
-          "action": "CALL",
+          "label": "T8s · FOLD",
+          "action": "FOLD",
+          "handClasses": [
+            "T8s"
+          ],
+          "features": [
+            "solver-fold-frequency",
+            "suited",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 39,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 37,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 24,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "BLUFF",
+          "label": "T9s · RAISE",
+          "action": "RAISE",
+          "handClasses": [
+            "T9s"
+          ],
+          "features": [
+            "solver-raise-frequency",
+            "suited",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 30.6,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 41,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 28.4,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "VALUE",
+          "label": "TT · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "TT"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "pocket-pair",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 0.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 87.9,
+              "frequencyPct": 69.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 12.1,
+              "frequencyPct": 30,
               "visibility": "EXACT"
             }
           ]
@@ -1861,31 +1863,31 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "heroCards": [
             {
               "rank": "2",
-              "suit": "s"
+              "suit": "h"
             },
             {
               "rank": "2",
-              "suit": "h"
+              "suit": "d"
             }
           ],
           "board": [
             {
-              "rank": "6",
+              "rank": "4",
               "suit": "s"
             },
             {
-              "rank": "5",
-              "suit": "h"
+              "rank": "3",
+              "suit": "s"
             },
             {
-              "rank": "4",
-              "suit": "d"
+              "rank": "2",
+              "suit": "s"
             }
           ],
-          "rationale": "Representative sample for aggregated board set 654r_A72r_QJ9tt_T76tt; generated only to validate card-removal semantics."
+          "rationale": "Representative sample for aggregated board set 432mono_652r_654r_664r_922r_943mono_955tt_A55tt_A72r_A98tt_AKQtt_AQ6r_J32r_J85tt_K62mono_K72r_KJTmono_QJ9tt_T52r_T52tt_T64tt_T76tt_T97r_T99tt; generated only to validate card-removal semantics."
         }
       ],
-      "explanation": "TexasSolver draft for MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR CHECK > BET_17 aggregated across 654r_A72r_QJ9tt_T76tt: CALL is the most common dominant hand-class action in the reviewed aggregate. Adjacent SPR window normalized by merge tooling to avoid selector overlap at 3."
+      "explanation": "TexasSolver draft for MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR CHECK > BET_17 aggregated across 432mono_652r_654r_664r_922r_943mono_955tt_A55tt_A72r_A98tt_AKQtt_AQ6r_J32r_J85tt_K62mono_K72r_KJTmono_QJ9tt_T52r_T52tt_T64tt_T76tt_T97r_T99tt: RAISE is the most common dominant hand-class action in the reviewed aggregate. Adjacent SPR window normalized by merge tooling to avoid selector overlap at 3."
     },
     {
       "id": "mtt9_50bb_btn_bb_srp_facing_midspr-check-bet_17-aggregate",
@@ -1895,14 +1897,16 @@ export const btnBbSrpFlopFacingBetPilotPack = {
       "boardTextures": [
         "monotone",
         "flush-draw-heavy",
-        "medium",
+        "low",
         "connected",
         "straight-possible",
+        "paired",
         "rainbow",
-        "ace-high",
         "disconnected",
         "dry",
         "two-tone",
+        "medium",
+        "ace-high",
         "broadway-high"
       ],
       "sprMin": 3,
@@ -1912,10 +1916,10 @@ export const btnBbSrpFlopFacingBetPilotPack = {
         "CALL",
         "RAISE"
       ],
-      "recommendedAction": "CALL",
+      "recommendedAction": "RAISE",
       "rangeBuckets": [
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "22 · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -1928,46 +1932,46 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 28.4,
+              "frequencyPct": 37,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 37.2,
+              "frequencyPct": 22.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 34.4,
+              "frequencyPct": 40.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "33 · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "33 · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "33"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "pocket-pair"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 30.1,
+              "frequencyPct": 36.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 53.1,
+              "frequencyPct": 24.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 16.8,
+              "frequencyPct": 38.7,
               "visibility": "EXACT"
             }
           ]
@@ -1986,46 +1990,46 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.5,
+              "frequencyPct": 49.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 28.6,
+              "frequencyPct": 25,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 33.9,
+              "frequencyPct": 25.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "44 · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "44 · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "44"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "pocket-pair"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 31.3,
+              "frequencyPct": 39.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 48.6,
+              "frequencyPct": 28.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 20.1,
+              "frequencyPct": 31.9,
               "visibility": "EXACT"
             }
           ]
@@ -2044,17 +2048,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 37.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 54.8,
+              "frequencyPct": 35.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 26.4,
+              "frequencyPct": 26.7,
               "visibility": "EXACT"
             }
           ]
@@ -2073,110 +2077,110 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 35.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 50.2,
+              "frequencyPct": 36.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 31,
+              "frequencyPct": 27.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "55 · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "55 · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "55"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "pocket-pair"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 27.6,
+              "frequencyPct": 32.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 58.9,
+              "frequencyPct": 33.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13.5,
+              "frequencyPct": 33.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "64s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "64s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "64s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 39.4,
+              "frequencyPct": 41.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 47,
+              "frequencyPct": 33.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13.6,
+              "frequencyPct": 25.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "65s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "65s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "65s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 6.3,
+              "frequencyPct": 27.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 76.6,
+              "frequencyPct": 43.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 17.1,
+              "frequencyPct": 29.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "66 · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -2189,46 +2193,46 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 12.5,
+              "frequencyPct": 23.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 55.9,
+              "frequencyPct": 49.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 31.6,
+              "frequencyPct": 27.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "75s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "75s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "75s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 26.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 82.7,
+              "frequencyPct": 45,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 17.3,
+              "frequencyPct": 28.4,
               "visibility": "EXACT"
             }
           ]
@@ -2247,23 +2251,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 21.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 21.6,
+              "frequencyPct": 40.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 78.4,
+              "frequencyPct": 37.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "77 · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -2276,17 +2280,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 22.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 44.8,
+              "frequencyPct": 47.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 55.2,
+              "frequencyPct": 30.3,
               "visibility": "EXACT"
             }
           ]
@@ -2305,17 +2309,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 6.3,
+              "frequencyPct": 27.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 64.1,
+              "frequencyPct": 36.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 29.6,
+              "frequencyPct": 35.7,
               "visibility": "EXACT"
             }
           ]
@@ -2334,75 +2338,75 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 29.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 67.4,
+              "frequencyPct": 38.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 32.6,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "VALUE",
-          "label": "88 · RAISE",
-          "action": "RAISE",
-          "handClasses": [
-            "88"
-          ],
-          "features": [
-            "solver-raise-frequency",
-            "pocket-pair"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 0,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 61.4,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 38.6,
+              "frequencyPct": 31.9,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "97s · CALL",
+          "label": "88 · CALL",
           "action": "CALL",
+          "handClasses": [
+            "88"
+          ],
+          "features": [
+            "solver-call-frequency",
+            "pocket-pair"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 17.1,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 58.3,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 24.6,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "BLUFF",
+          "label": "97s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "97s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 20.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 86.3,
+              "frequencyPct": 48.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13.7,
+              "frequencyPct": 31.3,
               "visibility": "EXACT"
             }
           ]
@@ -2421,17 +2425,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 5.8,
+              "frequencyPct": 18.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 42,
+              "frequencyPct": 39.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 52.2,
+              "frequencyPct": 41.8,
               "visibility": "EXACT"
             }
           ]
@@ -2450,17 +2454,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 15.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 49.6,
+              "frequencyPct": 37.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 50.4,
+              "frequencyPct": 46.8,
               "visibility": "EXACT"
             }
           ]
@@ -2480,47 +2484,47 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 56.2,
+              "frequencyPct": 39.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 27.9,
+              "frequencyPct": 35.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 15.9,
+              "frequencyPct": 24.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "A3s · FOLD",
-          "action": "FOLD",
+          "label": "A3s · CALL",
+          "action": "CALL",
           "handClasses": [
             "A3s"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-call-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 56.3,
+              "frequencyPct": 37.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 35,
+              "frequencyPct": 38.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 8.7,
+              "frequencyPct": 23.7,
               "visibility": "EXACT"
             }
           ]
@@ -2540,87 +2544,27 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 53.1,
+              "frequencyPct": 38.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 33.1,
+              "frequencyPct": 37.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13.8,
+              "frequencyPct": 24.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "A5s · CALL",
-          "action": "CALL",
-          "handClasses": [
-            "A5s"
-          ],
-          "features": [
-            "solver-call-frequency",
-            "suited",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 37.5,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 54.5,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 8,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "CHECK",
-          "label": "A6s · CALL",
-          "action": "CALL",
-          "handClasses": [
-            "A6s"
-          ],
-          "features": [
-            "solver-call-frequency",
-            "suited",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 18.8,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 73.5,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 7.7,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "VALUE",
-          "label": "A7s · RAISE",
+          "lane": "BLUFF",
+          "label": "A5s · RAISE",
           "action": "RAISE",
           "handClasses": [
-            "A7s"
+            "A5s"
           ],
           "features": [
             "solver-raise-frequency",
@@ -2630,77 +2574,137 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 16.1,
+              "frequencyPct": 24.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 53.5,
+              "frequencyPct": 49.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 30.4,
+              "frequencyPct": 26.4,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "BLUFF",
+          "label": "A6s · RAISE",
+          "action": "RAISE",
+          "handClasses": [
+            "A6s"
+          ],
+          "features": [
+            "solver-raise-frequency",
+            "suited",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 29.1,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 38.8,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 32.1,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "A8s · CALL",
+          "label": "A7s · CALL",
           "action": "CALL",
+          "handClasses": [
+            "A7s"
+          ],
+          "features": [
+            "solver-call-frequency",
+            "suited",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 32,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 45.7,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 22.3,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "BLUFF",
+          "label": "A8s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "A8s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 26.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 89.9,
+              "frequencyPct": 45.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 10.1,
+              "frequencyPct": 27.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "A9s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "A9s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "A9s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 21.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 85.4,
+              "frequencyPct": 48.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 14.6,
+              "frequencyPct": 30.5,
               "visibility": "EXACT"
             }
           ]
@@ -2725,12 +2729,12 @@ export const btnBbSrpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 47.7,
+              "frequencyPct": 25.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 52.3,
+              "frequencyPct": 74.5,
               "visibility": "EXACT"
             }
           ]
@@ -2750,17 +2754,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.2,
+              "frequencyPct": 21,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 57.8,
+              "frequencyPct": 61.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 5,
+              "frequencyPct": 17.6,
               "visibility": "EXACT"
             }
           ]
@@ -2780,23 +2784,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.1,
+              "frequencyPct": 15.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 62.9,
+              "frequencyPct": 67.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 0,
+              "frequencyPct": 16.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AKo · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -2810,23 +2814,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 65.4,
+              "frequencyPct": 67.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 34.6,
+              "frequencyPct": 30.8,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AKs · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -2840,17 +2844,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 3.1,
+              "frequencyPct": 2.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 66.5,
+              "frequencyPct": 69.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 30.4,
+              "frequencyPct": 28.4,
               "visibility": "EXACT"
             }
           ]
@@ -2870,17 +2874,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 26.8,
+              "frequencyPct": 14,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 70.7,
+              "frequencyPct": 69.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 2.5,
+              "frequencyPct": 16.2,
               "visibility": "EXACT"
             }
           ]
@@ -2900,17 +2904,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 26.4,
+              "frequencyPct": 9.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 70.5,
+              "frequencyPct": 78.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 3.1,
+              "frequencyPct": 11.8,
               "visibility": "EXACT"
             }
           ]
@@ -2930,17 +2934,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 29.3,
+              "frequencyPct": 22.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 57.4,
+              "frequencyPct": 59.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13.3,
+              "frequencyPct": 17.7,
               "visibility": "EXACT"
             }
           ]
@@ -2960,47 +2964,47 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 31.2,
+              "frequencyPct": 18.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 63,
+              "frequencyPct": 72,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 5.8,
+              "frequencyPct": 9.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "J8s · CALL",
-          "action": "CALL",
+          "label": "J8s · FOLD",
+          "action": "FOLD",
           "handClasses": [
             "J8s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-fold-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 25,
+              "frequencyPct": 41.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 68.1,
+              "frequencyPct": 35,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 6.9,
+              "frequencyPct": 23.1,
               "visibility": "EXACT"
             }
           ]
@@ -3020,77 +3024,77 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 25,
+              "frequencyPct": 31.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 72.2,
+              "frequencyPct": 51.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 2.8,
+              "frequencyPct": 17.4,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "JJ · CALL",
-          "action": "CALL",
+          "lane": "VALUE",
+          "label": "JJ · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "JJ"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "pocket-pair",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 2.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 87.8,
+              "frequencyPct": 52.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 12.2,
+              "frequencyPct": 44.7,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "JTs · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "JTs · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "JTs"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 24.3,
+              "frequencyPct": 29.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 73.5,
+              "frequencyPct": 41.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 2.2,
+              "frequencyPct": 28.3,
               "visibility": "EXACT"
             }
           ]
@@ -3110,23 +3114,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 35.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 88.9,
+              "frequencyPct": 44.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 11.1,
+              "frequencyPct": 19.9,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K8s · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -3140,23 +3144,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 25,
+              "frequencyPct": 35,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 37.1,
+              "frequencyPct": 35.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 37.9,
+              "frequencyPct": 29.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K9s · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -3170,47 +3174,47 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 23.4,
+              "frequencyPct": 20.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 35.5,
+              "frequencyPct": 42.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 41.1,
+              "frequencyPct": 37.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "KJo · FOLD",
-          "action": "FOLD",
+          "label": "KJo · CALL",
+          "action": "CALL",
           "handClasses": [
             "KJo"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-call-frequency",
             "offsuit",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 52,
+              "frequencyPct": 32.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 39.7,
+              "frequencyPct": 52.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 8.3,
+              "frequencyPct": 15.7,
               "visibility": "EXACT"
             }
           ]
@@ -3230,17 +3234,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 43.4,
+              "frequencyPct": 23.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 54.9,
+              "frequencyPct": 60.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 1.7,
+              "frequencyPct": 16.4,
               "visibility": "EXACT"
             }
           ]
@@ -3265,72 +3269,72 @@ export const btnBbSrpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 69.3,
+              "frequencyPct": 35.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 30.7,
+              "frequencyPct": 64.1,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "KQo · FOLD",
-          "action": "FOLD",
+          "lane": "BLUFF",
+          "label": "KQo · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "KQo"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-raise-frequency",
             "offsuit",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 47.1,
+              "frequencyPct": 24.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 39.9,
+              "frequencyPct": 48.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13,
+              "frequencyPct": 26.9,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "KQs · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "KQs · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "KQs"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 34.5,
+              "frequencyPct": 17.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 54.4,
+              "frequencyPct": 55.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 11.1,
+              "frequencyPct": 27,
               "visibility": "EXACT"
             }
           ]
@@ -3350,97 +3354,37 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 33.1,
+              "frequencyPct": 22.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 66.9,
+              "frequencyPct": 62.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 0,
+              "frequencyPct": 15.4,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "Q8s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "Q8s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "Q8s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 24.6,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 62.4,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 13,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "CHECK",
-          "label": "Q9s · CALL",
-          "action": "CALL",
-          "handClasses": [
-            "Q9s"
-          ],
-          "features": [
-            "solver-call-frequency",
-            "suited",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 24.7,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 60.5,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 14.8,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "CHECK",
-          "label": "QJo · FOLD",
-          "action": "FOLD",
-          "handClasses": [
-            "QJo"
-          ],
-          "features": [
-            "solver-fold-frequency",
-            "offsuit",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 48.5,
+              "frequencyPct": 30.1,
               "visibility": "EXACT"
             },
             {
@@ -3450,7 +3394,67 @@ export const btnBbSrpFlopFacingBetPilotPack = {
             },
             {
               "action": "RAISE",
-              "frequencyPct": 6.7,
+              "frequencyPct": 25.1,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "BLUFF",
+          "label": "Q9s · RAISE",
+          "action": "RAISE",
+          "handClasses": [
+            "Q9s"
+          ],
+          "features": [
+            "solver-raise-frequency",
+            "suited",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 19.7,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 51.3,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 29,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "CHECK",
+          "label": "QJo · CALL",
+          "action": "CALL",
+          "handClasses": [
+            "QJo"
+          ],
+          "features": [
+            "solver-call-frequency",
+            "offsuit",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 40.7,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 44.5,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 14.8,
               "visibility": "EXACT"
             }
           ]
@@ -3470,30 +3474,30 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 34.5,
+              "frequencyPct": 29.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 61.1,
+              "frequencyPct": 51.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 4.4,
+              "frequencyPct": 19.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "QQ · CALL",
-          "action": "CALL",
+          "lane": "VALUE",
+          "label": "QQ · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "QQ"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "pocket-pair",
             "high-card-density"
           ],
@@ -3505,12 +3509,12 @@ export const btnBbSrpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 79.5,
+              "frequencyPct": 53.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 20.5,
+              "frequencyPct": 46.2,
               "visibility": "EXACT"
             }
           ]
@@ -3530,17 +3534,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 17.1,
+              "frequencyPct": 24,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 69.8,
+              "frequencyPct": 57.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13.1,
+              "frequencyPct": 18.9,
               "visibility": "EXACT"
             }
           ]
@@ -3560,77 +3564,77 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 14.3,
+              "frequencyPct": 35.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 79.1,
+              "frequencyPct": 44.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 6.6,
+              "frequencyPct": 20.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "T9s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "T9s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "T9s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 12.5,
+              "frequencyPct": 24.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 66,
+              "frequencyPct": 40.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 21.5,
+              "frequencyPct": 34.8,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "TT · CALL",
-          "action": "CALL",
+          "lane": "VALUE",
+          "label": "TT · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "TT"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "pocket-pair",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 3.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 99,
+              "frequencyPct": 52.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 1,
+              "frequencyPct": 44.3,
               "visibility": "EXACT"
             }
           ]
@@ -3642,31 +3646,31 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "heroCards": [
             {
               "rank": "2",
-              "suit": "s"
+              "suit": "h"
             },
             {
               "rank": "2",
-              "suit": "h"
+              "suit": "d"
             }
           ],
           "board": [
             {
-              "rank": "9",
+              "rank": "4",
               "suit": "s"
             },
             {
-              "rank": "8",
+              "rank": "3",
               "suit": "s"
             },
             {
-              "rank": "5",
+              "rank": "2",
               "suit": "s"
             }
           ],
-          "rationale": "Representative sample for aggregated board set 985mono_A72r_K98tt_T76tt; generated only to validate card-removal semantics."
+          "rationale": "Representative sample for aggregated board set 432mono_533r_632mono_664r_754r_873r_943tt_955tt_985mono_A72r_A99tt_AJTr_AKQtt_AQ6r_J85tt_JJTr_JT6r_K72r_K98tt_KJTmono_KK5tt_T76tt_T95r_T97r; generated only to validate card-removal semantics."
         }
       ],
-      "explanation": "TexasSolver draft for MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR CHECK > BET_17 aggregated across 985mono_A72r_K98tt_T76tt: CALL is the most common dominant hand-class action in the reviewed aggregate. Adjacent SPR window normalized by merge tooling to avoid selector overlap at 8."
+      "explanation": "TexasSolver draft for MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR CHECK > BET_17 aggregated across 432mono_533r_632mono_664r_754r_873r_943tt_955tt_985mono_A72r_A99tt_AJTr_AKQtt_AQ6r_J85tt_JJTr_JT6r_K72r_K98tt_KJTmono_KK5tt_T76tt_T95r_T97r: RAISE is the most common dominant hand-class action in the reviewed aggregate. Adjacent SPR window normalized by merge tooling to avoid selector overlap at 8."
     },
     {
       "id": "mtt9_100bb_btn_bb_srp_facing_highspr-check-bet_17-aggregate",
@@ -3674,15 +3678,19 @@ export const btnBbSrpFlopFacingBetPilotPack = {
       "potType": "SINGLE_RAISED",
       "positionPattern": "SRP_BTN_VS_BB",
       "boardTextures": [
-        "rainbow",
+        "monotone",
+        "flush-draw-heavy",
         "low",
         "connected",
         "straight-possible",
-        "two-tone",
-        "flush-draw-heavy",
-        "broadway-high",
+        "rainbow",
+        "paired",
         "disconnected",
-        "medium"
+        "two-tone",
+        "dry",
+        "medium",
+        "ace-high",
+        "broadway-high"
       ],
       "sprMin": 8,
       "sprMax": 20,
@@ -3694,204 +3702,204 @@ export const btnBbSrpFlopFacingBetPilotPack = {
       "recommendedAction": "CALL",
       "rangeBuckets": [
         {
-          "lane": "CHECK",
-          "label": "22 · FOLD",
-          "action": "FOLD",
+          "lane": "BLUFF",
+          "label": "22 · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "22"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-raise-frequency",
             "pocket-pair"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 56.3,
+              "frequencyPct": 31.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 43.3,
+              "frequencyPct": 30.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 0.4,
+              "frequencyPct": 38.4,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "33 · FOLD",
-          "action": "FOLD",
+          "label": "33 · CALL",
+          "action": "CALL",
           "handClasses": [
             "33"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-call-frequency",
             "pocket-pair"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 59.1,
+              "frequencyPct": 37.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 39.8,
+              "frequencyPct": 43.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 1.1,
+              "frequencyPct": 18.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "43s · CALL",
-          "action": "CALL",
+          "label": "43s · FOLD",
+          "action": "FOLD",
           "handClasses": [
             "43s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-fold-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.5,
+              "frequencyPct": 42.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 43.8,
+              "frequencyPct": 39.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 18.7,
+              "frequencyPct": 18.1,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "44 · FOLD",
-          "action": "FOLD",
+          "lane": "BLUFF",
+          "label": "44 · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "44"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-raise-frequency",
             "pocket-pair"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 52.3,
+              "frequencyPct": 35.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 34,
+              "frequencyPct": 34.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13.7,
+              "frequencyPct": 29.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "53s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "53s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "53s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.5,
+              "frequencyPct": 38.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 42.1,
+              "frequencyPct": 31.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 20.4,
+              "frequencyPct": 29.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "54s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "54s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "54s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.5,
+              "frequencyPct": 34.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 52.4,
+              "frequencyPct": 39.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 10.1,
+              "frequencyPct": 26.4,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "55 · FOLD",
-          "action": "FOLD",
+          "label": "55 · CALL",
+          "action": "CALL",
           "handClasses": [
             "55"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-call-frequency",
             "pocket-pair"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 51.1,
+              "frequencyPct": 33.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 35.4,
+              "frequencyPct": 43.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13.5,
+              "frequencyPct": 22.5,
               "visibility": "EXACT"
             }
           ]
@@ -3910,52 +3918,52 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.5,
+              "frequencyPct": 35.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 54.5,
+              "frequencyPct": 40.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 8,
+              "frequencyPct": 24.1,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "65s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "65s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "65s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 21.6,
+              "frequencyPct": 30.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 56.2,
+              "frequencyPct": 37,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 22.2,
+              "frequencyPct": 32.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "66 · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -3968,46 +3976,46 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 33.1,
+              "frequencyPct": 23.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 24.4,
+              "frequencyPct": 48.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 42.5,
+              "frequencyPct": 27.9,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "75s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "75s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "75s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.7,
+              "frequencyPct": 34.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 65.3,
+              "frequencyPct": 39.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 16,
+              "frequencyPct": 25.8,
               "visibility": "EXACT"
             }
           ]
@@ -4026,17 +4034,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 26.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 51.1,
+              "frequencyPct": 35,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 30.1,
+              "frequencyPct": 38.8,
               "visibility": "EXACT"
             }
           ]
@@ -4055,46 +4063,46 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 19.8,
+              "frequencyPct": 22.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 58.4,
+              "frequencyPct": 59.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 21.8,
+              "frequencyPct": 18,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "86s · CALL",
-          "action": "CALL",
+          "lane": "BLUFF",
+          "label": "86s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "86s"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 25.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 65.3,
+              "frequencyPct": 39.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 15.9,
+              "frequencyPct": 34.5,
               "visibility": "EXACT"
             }
           ]
@@ -4113,46 +4121,46 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.8,
+              "frequencyPct": 30.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 35.1,
+              "frequencyPct": 38.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 46.1,
+              "frequencyPct": 31,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
-          "label": "88 · RAISE",
-          "action": "RAISE",
+          "lane": "CHECK",
+          "label": "88 · CALL",
+          "action": "CALL",
           "handClasses": [
             "88"
           ],
           "features": [
-            "solver-raise-frequency",
+            "solver-call-frequency",
             "pocket-pair"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 11.7,
+              "frequencyPct": 16.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 61.2,
+              "frequencyPct": 67.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 27.1,
+              "frequencyPct": 15.7,
               "visibility": "EXACT"
             }
           ]
@@ -4171,17 +4179,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 31.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 68.1,
+              "frequencyPct": 41.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 31.9,
+              "frequencyPct": 27.2,
               "visibility": "EXACT"
             }
           ]
@@ -4200,17 +4208,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 27.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 61.2,
+              "frequencyPct": 44.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 38.8,
+              "frequencyPct": 28.8,
               "visibility": "EXACT"
             }
           ]
@@ -4229,147 +4237,87 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 12.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 58,
+              "frequencyPct": 59.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 42,
+              "frequencyPct": 27.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "A2s · FOLD",
-          "action": "FOLD",
+          "lane": "BLUFF",
+          "label": "A2s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "A2s"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-raise-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 56.3,
+              "frequencyPct": 28,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 24.3,
+              "frequencyPct": 44.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 19.4,
+              "frequencyPct": 27.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "A3s · FOLD",
-          "action": "FOLD",
+          "lane": "BLUFF",
+          "label": "A3s · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "A3s"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-raise-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 56.2,
+              "frequencyPct": 33.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 20.6,
+              "frequencyPct": 39.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 23.2,
+              "frequencyPct": 27.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "A4s · FOLD",
-          "action": "FOLD",
-          "handClasses": [
-            "A4s"
-          ],
-          "features": [
-            "solver-fold-frequency",
-            "suited",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 56.1,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 34.5,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 9.4,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "CHECK",
-          "label": "A5s · FOLD",
-          "action": "FOLD",
-          "handClasses": [
-            "A5s"
-          ],
-          "features": [
-            "solver-fold-frequency",
-            "suited",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 56.2,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 31.9,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 11.9,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "CHECK",
-          "label": "A6s · CALL",
+          "label": "A4s · CALL",
           "action": "CALL",
           "handClasses": [
-            "A6s"
+            "A4s"
           ],
           "features": [
             "solver-call-frequency",
@@ -4379,17 +4327,77 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.5,
+              "frequencyPct": 31,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 54.8,
+              "frequencyPct": 50.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 7.7,
+              "frequencyPct": 18.3,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "CHECK",
+          "label": "A5s · CALL",
+          "action": "CALL",
+          "handClasses": [
+            "A5s"
+          ],
+          "features": [
+            "solver-call-frequency",
+            "suited",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 27.9,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 50.5,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 21.6,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "BLUFF",
+          "label": "A6s · RAISE",
+          "action": "RAISE",
+          "handClasses": [
+            "A6s"
+          ],
+          "features": [
+            "solver-raise-frequency",
+            "suited",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 27.5,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 45.8,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 26.7,
               "visibility": "EXACT"
             }
           ]
@@ -4409,23 +4417,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 35.2,
+              "frequencyPct": 25.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 52.6,
+              "frequencyPct": 55.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 12.2,
+              "frequencyPct": 19.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A8s · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -4439,23 +4447,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 14.1,
+              "frequencyPct": 19.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 58.9,
+              "frequencyPct": 50.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 27,
+              "frequencyPct": 29.9,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A9s · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -4469,30 +4477,30 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 14.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 65,
+              "frequencyPct": 59,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 35,
+              "frequencyPct": 26.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "AA · CALL",
-          "action": "CALL",
+          "lane": "VALUE",
+          "label": "AA · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "AA"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "pocket-pair",
             "high-card-density"
           ],
@@ -4504,12 +4512,12 @@ export const btnBbSrpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 86.3,
+              "frequencyPct": 50.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13.7,
+              "frequencyPct": 49.6,
               "visibility": "EXACT"
             }
           ]
@@ -4529,17 +4537,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 33.7,
+              "frequencyPct": 14.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 61.7,
+              "frequencyPct": 77.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 4.6,
+              "frequencyPct": 7.7,
               "visibility": "EXACT"
             }
           ]
@@ -4559,17 +4567,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 25,
+              "frequencyPct": 9.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 73.4,
+              "frequencyPct": 82.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 1.6,
+              "frequencyPct": 7.7,
               "visibility": "EXACT"
             }
           ]
@@ -4589,17 +4597,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 2.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 89.7,
+              "frequencyPct": 78.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 10.3,
+              "frequencyPct": 19.6,
               "visibility": "EXACT"
             }
           ]
@@ -4619,17 +4627,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 2.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 92,
+              "frequencyPct": 76.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 8,
+              "frequencyPct": 20.7,
               "visibility": "EXACT"
             }
           ]
@@ -4649,17 +4657,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 24.3,
+              "frequencyPct": 11.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 74.6,
+              "frequencyPct": 77.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 1.1,
+              "frequencyPct": 10.7,
               "visibility": "EXACT"
             }
           ]
@@ -4679,17 +4687,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 23.9,
+              "frequencyPct": 9.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 76,
+              "frequencyPct": 79.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 0.1,
+              "frequencyPct": 10.7,
               "visibility": "EXACT"
             }
           ]
@@ -4709,17 +4717,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 34.7,
+              "frequencyPct": 30.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 46.5,
+              "frequencyPct": 54.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 18.8,
+              "frequencyPct": 14.8,
               "visibility": "EXACT"
             }
           ]
@@ -4739,23 +4747,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 16.4,
+              "frequencyPct": 17.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 68.9,
+              "frequencyPct": 73.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 14.7,
+              "frequencyPct": 8.9,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "J8s · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -4769,47 +4777,47 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 36.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 68.4,
+              "frequencyPct": 36.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 31.6,
+              "frequencyPct": 27.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
-          "label": "J9s · RAISE",
-          "action": "RAISE",
+          "lane": "CHECK",
+          "label": "J9s · CALL",
+          "action": "CALL",
           "handClasses": [
             "J9s"
           ],
           "features": [
-            "solver-raise-frequency",
+            "solver-call-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 4.2,
+              "frequencyPct": 30.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 69.9,
+              "frequencyPct": 52.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 25.9,
+              "frequencyPct": 16.7,
               "visibility": "EXACT"
             }
           ]
@@ -4829,17 +4837,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 5.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 86.4,
+              "frequencyPct": 75.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13.6,
+              "frequencyPct": 19,
               "visibility": "EXACT"
             }
           ]
@@ -4859,23 +4867,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 14.7,
+              "frequencyPct": 27.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 77.3,
+              "frequencyPct": 55.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 8,
+              "frequencyPct": 16.9,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K7s · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -4889,23 +4897,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 12.5,
+              "frequencyPct": 29.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 62.3,
+              "frequencyPct": 43.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 25.2,
+              "frequencyPct": 26.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K8s · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -4919,47 +4927,47 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 12.5,
+              "frequencyPct": 26.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 52.9,
+              "frequencyPct": 45.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 34.6,
+              "frequencyPct": 27.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
-          "label": "K9s · RAISE",
-          "action": "RAISE",
+          "lane": "CHECK",
+          "label": "K9s · CALL",
+          "action": "CALL",
           "handClasses": [
             "K9s"
           ],
           "features": [
-            "solver-raise-frequency",
+            "solver-call-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0.2,
+              "frequencyPct": 19.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 36,
+              "frequencyPct": 56.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 63.8,
+              "frequencyPct": 24.1,
               "visibility": "EXACT"
             }
           ]
@@ -4979,17 +4987,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 38,
+              "frequencyPct": 27.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 52.8,
+              "frequencyPct": 61.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 9.2,
+              "frequencyPct": 10.3,
               "visibility": "EXACT"
             }
           ]
@@ -5009,30 +5017,30 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 19,
+              "frequencyPct": 15.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 71.3,
+              "frequencyPct": 71.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 9.7,
+              "frequencyPct": 13.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "CHECK",
-          "label": "KK · CALL",
-          "action": "CALL",
+          "lane": "VALUE",
+          "label": "KK · RAISE",
+          "action": "RAISE",
           "handClasses": [
             "KK"
           ],
           "features": [
-            "solver-call-frequency",
+            "solver-raise-frequency",
             "pocket-pair",
             "high-card-density"
           ],
@@ -5044,12 +5052,12 @@ export const btnBbSrpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 77.8,
+              "frequencyPct": 69.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 22.2,
+              "frequencyPct": 30.3,
               "visibility": "EXACT"
             }
           ]
@@ -5069,17 +5077,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 28.4,
+              "frequencyPct": 21.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 64.3,
+              "frequencyPct": 65.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 7.3,
+              "frequencyPct": 12.6,
               "visibility": "EXACT"
             }
           ]
@@ -5099,53 +5107,53 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 14.7,
+              "frequencyPct": 13.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 68.9,
+              "frequencyPct": 71.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 16.4,
+              "frequencyPct": 15.6,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
-          "label": "KTs · RAISE",
-          "action": "RAISE",
+          "lane": "CHECK",
+          "label": "KTs · CALL",
+          "action": "CALL",
           "handClasses": [
             "KTs"
           ],
           "features": [
-            "solver-raise-frequency",
+            "solver-call-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 4.5,
+              "frequencyPct": 20.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 70.1,
+              "frequencyPct": 57.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 25.4,
+              "frequencyPct": 21.8,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "Q8s · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -5159,77 +5167,77 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 29.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 69.2,
+              "frequencyPct": 43.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 30.8,
-              "visibility": "EXACT"
-            }
-          ]
-        },
-        {
-          "lane": "VALUE",
-          "label": "Q9s · RAISE",
-          "action": "RAISE",
-          "handClasses": [
-            "Q9s"
-          ],
-          "features": [
-            "solver-raise-frequency",
-            "suited",
-            "high-card-density"
-          ],
-          "actionMix": [
-            {
-              "action": "FOLD",
-              "frequencyPct": 2.4,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "CALL",
-              "frequencyPct": 70.1,
-              "visibility": "EXACT"
-            },
-            {
-              "action": "RAISE",
-              "frequencyPct": 27.5,
+              "frequencyPct": 26.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "QJo · FOLD",
-          "action": "FOLD",
+          "label": "Q9s · CALL",
+          "action": "CALL",
+          "handClasses": [
+            "Q9s"
+          ],
+          "features": [
+            "solver-call-frequency",
+            "suited",
+            "high-card-density"
+          ],
+          "actionMix": [
+            {
+              "action": "FOLD",
+              "frequencyPct": 24.4,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "CALL",
+              "frequencyPct": 55.1,
+              "visibility": "EXACT"
+            },
+            {
+              "action": "RAISE",
+              "frequencyPct": 20.5,
+              "visibility": "EXACT"
+            }
+          ]
+        },
+        {
+          "lane": "CHECK",
+          "label": "QJo · CALL",
+          "action": "CALL",
           "handClasses": [
             "QJo"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-call-frequency",
             "offsuit",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 47.5,
+              "frequencyPct": 40.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 39.9,
+              "frequencyPct": 44.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 12.6,
+              "frequencyPct": 14.9,
               "visibility": "EXACT"
             }
           ]
@@ -5249,17 +5257,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 23.4,
+              "frequencyPct": 24,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 58.2,
+              "frequencyPct": 52.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 18.4,
+              "frequencyPct": 23.8,
               "visibility": "EXACT"
             }
           ]
@@ -5279,17 +5287,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 1.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 76.8,
+              "frequencyPct": 83,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 23.2,
+              "frequencyPct": 15.4,
               "visibility": "EXACT"
             }
           ]
@@ -5309,23 +5317,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 8.2,
+              "frequencyPct": 23.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 80.6,
+              "frequencyPct": 56.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 11.2,
+              "frequencyPct": 20.4,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "T8s · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -5339,23 +5347,23 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 34.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 60.5,
+              "frequencyPct": 37.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 39.5,
+              "frequencyPct": 28.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "T9s · RAISE",
           "action": "RAISE",
           "handClasses": [
@@ -5369,17 +5377,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 2.7,
+              "frequencyPct": 29.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 63.5,
+              "frequencyPct": 43.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 33.8,
+              "frequencyPct": 27.6,
               "visibility": "EXACT"
             }
           ]
@@ -5399,17 +5407,17 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0,
+              "frequencyPct": 6.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 77.8,
+              "frequencyPct": 81.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 22.2,
+              "frequencyPct": 11.6,
               "visibility": "EXACT"
             }
           ]
@@ -5421,31 +5429,31 @@ export const btnBbSrpFlopFacingBetPilotPack = {
           "heroCards": [
             {
               "rank": "2",
-              "suit": "s"
+              "suit": "h"
             },
             {
               "rank": "2",
-              "suit": "h"
+              "suit": "d"
             }
           ],
           "board": [
             {
-              "rank": "6",
+              "rank": "4",
               "suit": "s"
             },
             {
-              "rank": "5",
-              "suit": "h"
+              "rank": "3",
+              "suit": "s"
             },
             {
-              "rank": "4",
-              "suit": "d"
+              "rank": "2",
+              "suit": "s"
             }
           ],
-          "rationale": "Representative sample for aggregated board set 654r_K98tt_QJ9tt_T76tt; generated only to validate card-removal semantics."
+          "rationale": "Representative sample for aggregated board set 432mono_654r_664r_762tt_822tt_832r_954mono_954r_955tt_965r_AAKtt_AK2tt_AKQtt_AQ6r_J66tt_J85tt_K72r_K98tt_KJTmono_KK4r_QJ2r_QJ9tt_T76tt_T97r; generated only to validate card-removal semantics."
         }
       ],
-      "explanation": "TexasSolver draft for MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR CHECK > BET_17 aggregated across 654r_K98tt_QJ9tt_T76tt: CALL is the most common dominant hand-class action in the reviewed aggregate."
+      "explanation": "TexasSolver draft for MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR CHECK > BET_17 aggregated across 432mono_654r_664r_762tt_822tt_832r_954mono_954r_955tt_965r_AAKtt_AK2tt_AKQtt_AQ6r_J66tt_J85tt_K72r_K98tt_KJTmono_KK4r_QJ2r_QJ9tt_T76tt_T97r: CALL is the most common dominant hand-class action in the reviewed aggregate."
     }
   ]
 } satisfies FlopProductionStrategyPack;
