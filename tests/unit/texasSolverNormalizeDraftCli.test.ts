@@ -163,9 +163,16 @@ describe("mtt:texas-solver-normalize-draft CLI", () => {
         { action: "BET_SMALL", frequencyPct: 39.4, visibility: "EXACT" },
         { action: "BET_BIG", frequencyPct: 0.4, visibility: "EXACT" },
       ]);
+      // Lanes are judged against the board. On A72r neither betting hand is
+      // made: 65s and QJo are both pressure, so no VALUE lane exists here. The
+      // earlier rank-only heuristic promoted QJo to VALUE purely because it
+      // starts with a queen.
       expect(new Set(buckets.map((bucket) => bucket.lane))).toEqual(
-        new Set(["CHECK", "BLUFF", "VALUE"]),
+        new Set(["CHECK", "BLUFF"]),
       );
+      expect(buckets.find((bucket) => bucket.handClasses.includes("QJo"))).toMatchObject({
+        lane: "BLUFF",
+      });
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

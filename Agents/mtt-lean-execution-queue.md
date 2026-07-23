@@ -1111,6 +1111,65 @@ carried superseded lane assignments and any regeneration would previously have
 produced an invalid pack. The regenerated modules now match their drafts exactly.
 Focused pack, gate, resolver, readiness and view regression passes 85/85.
 
+### OPS-68 - Classify VALUE and BLUFF against the board
+
+Status: `DONE 2026-07-23`
+Depends on: `OPS-67`
+Lane: `MECHANICAL`
+
+The solver-content importer decided a hand's lane from the hand alone: a betting
+hand was VALUE when it was a pair or started with A/K/Q/J/T, and BLUFF
+otherwise. That is not a poker judgement. On `A72r` it taught `QJo` as value
+because of the queen, on `K83r` it taught `A2s` as value because of the ace, and
+it promoted any underpair that bets. VALUE versus BLUFF is a hand-versus-board
+question, and the product's whole claim is that it recommends optimal play, so
+the label has to be right.
+
+The board-aware classifier the range matrix already uses now decides it. Because
+that logic is shared poker knowledge rather than presentation, `classifyFlopHand`
+and the lane mapping moved from `src/ui/postflopRangeMatrixView.ts` into
+`src/core/flopHandCategory.ts`; the view re-exports them so both the matrix a
+player sees and the imported content agree by construction.
+
+A hand that puts money in is VALUE only when it is a made hand - set or better,
+straight, two pair, overpair or top pair. Everything else that bets is pressure,
+which is what BLUFF means. Hands that do not bet stay in the CHECK lane. A rule
+aggregates several flops, so VALUE additionally requires the hand to be made on a
+strict majority of them; an even split stays BLUFF.
+
+```powershell
+npm run mtt:texas-solver-review -- --family=<id> --node-history=<CHECK|ROOT> --write
+npm run mtt:texas-solver-normalize-draft -- --review <review.json> --pot-type=<...> --action-node=<...> --position-pattern=<...> --spr-min=<n> --spr-max=<n> --output-dir <dir> --write
+npm run mtt:texas-solver-pilot-refresh -- --skip-viewer --summary
+npm run mtt:postflop-pilot-modules -- --write
+```
+
+Two pipeline facts surfaced while applying it. `mtt:texas-solver-ingest-completed`
+is change-driven and rebuilds only coverage-v2 families, so the other ten
+per-family drafts had to be regenerated explicitly from their reviews, which live
+beside the raw exports as `strategy-export.<node>.review.json` rather than under
+`artifacts/.../reviews/`. The pilot refresh workflow also has no merge step for
+`SB_vs_BB_SRP_OOP_FLOP_CBET`, so that scope must be merged by hand or its pilot
+silently keeps stale content.
+
+Regenerating also exposed an unrelated fragility: the card-removal sample took
+the first aggregated board, and a trips board such as `5s 5h 5d` leaves the
+aggregated range hand `55` with no combos at all. The sample board is now chosen
+so every range hand keeps at least one combo, falling back to the first board for
+determinism.
+
+Acceptance: the five c-bet pilots now label by board; no low ace bets as VALUE in
+them any more, and lane mixes shifted accordingly, for example UTG vs BB moving to
+`BLUFF 30 / VALUE 6` because that node bets its entire range. The pilot suite
+stays 7/7 with 19 rules and 972 buckets, core release and playable beta stay
+valid, typecheck passes and focused regression is 67/67.
+
+Known gap: the two FLOP_FACING_BET pilots still carry rank-based lanes. Their
+drafts come from the facing-bet harvester rather than the ingest path, and a
+default harvest run produced a degraded 27-bucket FOLD/CALL-only candidate, so
+they need a deliberate per-family regeneration with the correct SPR ranges before
+their lanes are trustworthy.
+
 ### XSOLVER-01 - Produce the first exact paired second-solver export
 
 Status: `EXTERNAL_DATA`
@@ -1778,6 +1837,7 @@ Use this exact handoff prompt after changing models:
 | 2026-07-22 | OPS-62 | DONE | Added dry-run-first atomic merging for reviewed six-max preflop subsets. Exact immutable identities, complete strategy/EV/review field groups, fill-only semantics, idempotence, conflict-wide rejection, pre-write SHA-256 and backup replacement are enforced. The command generates no poker values or production artifacts; full regression passed 155/155 files and 793/793 tests plus the complete integrity chain, and live blank workbenches were not touched. |
 | 2026-07-22 | OPS-63 | DONE | Froze the reusable MTT-to-SNG/Cash architecture boundary and 20-30-day playable-beta sequence without authorizing cross-variant strategy reuse. Added an exact solver-neutral node contract and comparator for setup/range/tree/economics fingerprints, a shared accuracy target, combo frequencies, per-action EV and range-weighted equivalent best-action sets. It cannot promote or overwrite private inputs; focused tests passed 10/10 and full regression passed 159/159 files and 809/809 tests. GTO+ remains an honest external gate at 0/3 ready with nine outputs missing. |
 | 2026-07-22 | OPS-64 | DONE | Added one source-free `MTT_PLAYABLE_BETA_V1` gate: current Core is a launchable increment at 4/8 preflop, six-max 0/4 and scoped FLOP 7/7 while full-target mode remains blocked. Added a fixed-metadata FTP ZIP builder with path/size/SHA-256 reconciliation, source-map exclusion, atomic writes, clean-commit enforcement and a full test/release/build/self-hosted Chrome chain before confirmed output. Full regression passed 159/159 files and 809/809 tests; all release gates and four-viewport production Chrome QA passed with zero browser errors. The preview wrapper pins production environment so its asset hashes match the normal build; the live dry run reconciled 13 deployable entries. |
+| 2026-07-23 | OPS-68 | DONE | Made VALUE/BLUFF a hand-versus-board judgement instead of a rank guess. The importer previously called any betting pair or A/K/Q/J/T-high hand VALUE, teaching `QJo` on `A72r` and `A2s` on `K83r` as value bets. `classifyFlopHand` moved from the range-matrix view into `src/core/flopHandCategory.ts` so the matrix and imported content share one definition; a betting hand is VALUE only when made, and only on a strict majority of the boards a rule aggregates. Five c-bet pilots regenerated, suite stays 7/7 at 972 buckets, focused regression 67/67. The two facing-bet pilots still need their own harvest and keep rank-based lanes. |
 | 2026-07-23 | OPS-67 | DONE | Moved flop range-lane coverage from a per-rule to a per-pack requirement in both the pack validator and the pilot gate. One rule missing its BLUFF lane previously made the resolver return null for the whole pack, disabling all three SPR bands at runtime. The missing lane is genuine converged solver output below SPR 3, where the observed c-bet range is pairs and broadway only, so demanding it per rule would have forced an invented bluff lane. The pilot suite moved from 3 ready / 4 invalid to 7/7, and regenerating the modules closed a real 2026-07-09 module vs 2026-07-15 draft drift. Focused regression 85/85. |
 | 2026-07-23 | OPS-65 | DONE | Replaced the per-range human poker verdict with mechanical acceptance after the owner decided the professional-field beta is the review. Grading uses only on-disk evidence: structural completeness plus every board at or below the pinned `set_accuracy` target. Results are written through the existing audited batch writer with the non-human reviewer token `PKRTRAINER_MECHANICAL_ACCEPTANCE_V1` and caveats stating it is not a human poker verdict. Live grading 17 accepted / 3 withheld; review protocol moved 0/20 to 20/20 protocol-ready with 17 production eligible and zero blockers. Focused tests 9/9. |
 | 2026-07-23 | OPS-66 | ACTIVE | Staged a targeted re-solve for the 13 boards above the 0.5 exploitability target across 3 families. Each parameter is copied verbatim from its authoritative full-tree source with only `set_max_iteration` raised, reduced-tree low-memory sets excluded, and the dump filename preserved so the same canonical checkpoint is replaced. All 13 checkpoints were SHA-256 backed up first, which proved necessary when a first launch failed on a relative log path after the runner's `Push-Location` and had already removed `822tt`; it was restored byte-identically. The repair manifest is named outside the `coverage-*-manifest.json` scan because it re-declares already-covered boards; naming it as coverage made four expansion presets fail closed on duplicate blockers. |

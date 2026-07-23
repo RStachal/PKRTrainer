@@ -204,15 +204,14 @@ function scopedFlopDecisionErrors(
     }
   }
 
-  // Lane coverage is required of the pilot as a whole, not of every SPR band.
-  // A converged solve can legitimately have no bluffs in one band - below SPR 3
-  // the observed c-bet range is pairs and broadway only - and demanding all
-  // three lanes per rule would force a bluff lane to be invented where the
-  // solver has none.
-  const packLanes = new Set(pack.rules.flatMap((rule) => rule.rangeBuckets.map((bucket) => bucket.lane)));
-  for (const lane of ["VALUE", "BLUFF", "CHECK"] as const) {
-    if (!packLanes.has(lane)) errors.push(`${scope.label} pilot is missing the ${lane} lane across every rule.`);
-  }
+  // A scoped pilot covers a single action node, so its lane composition is
+  // whatever the converged solve actually plays there. Below SPR 3 the observed
+  // c-bet range is pairs and broadway with no bluffs, and the UTG node bets its
+  // entire range so nothing lands in the check lane. Requiring all three lanes
+  // here would force a lane to be invented where the solver has none, so the
+  // pilot only has to carry real, non-empty buckets. Full production coverage
+  // still demands every lane; see missingRangeLanes in
+  // buildFlopProductionStrategyPackReport.
   return errors;
 }
 

@@ -136,7 +136,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
       "recommendedAction": "BET_SMALL",
       "rangeBuckets": [
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "22 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -165,7 +165,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "33 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -223,7 +223,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "44 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -310,7 +310,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "55 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -397,7 +397,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "66 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -571,7 +571,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "88 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -716,7 +716,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "99 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -745,7 +745,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A2s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -775,7 +775,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A3s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -805,7 +805,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A4s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -835,7 +835,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A5o · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -895,7 +895,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A6s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -925,7 +925,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A7o · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -955,7 +955,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A7s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -985,7 +985,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A8o · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1015,7 +1015,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A8s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1045,7 +1045,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A9o · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1075,7 +1075,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A9s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1135,7 +1135,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AJo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1165,7 +1165,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AJs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1195,7 +1195,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AKo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1225,7 +1225,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AKs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1255,7 +1255,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AQo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1285,7 +1285,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AQs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1315,7 +1315,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "ATo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1345,7 +1345,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "ATs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1375,7 +1375,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "J7s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1405,7 +1405,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "J8s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1495,7 +1495,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "JTo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1525,7 +1525,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "JTs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1555,7 +1555,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K2s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1585,7 +1585,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K3s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1615,7 +1615,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K4s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1705,7 +1705,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K7s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1735,7 +1735,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K8s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1765,7 +1765,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K9o · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1825,7 +1825,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KJo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1855,7 +1855,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KJs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1915,7 +1915,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KQo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1945,7 +1945,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KQs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -1975,7 +1975,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KTo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2005,7 +2005,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KTs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2035,7 +2035,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "Q5s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2065,7 +2065,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "Q6s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2095,7 +2095,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "Q7s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2125,7 +2125,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "Q8s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2155,7 +2155,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "Q9s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2185,7 +2185,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "QJo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2215,7 +2215,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "QJs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2275,7 +2275,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "QTo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2305,7 +2305,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "QTs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2335,7 +2335,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "T7s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2365,7 +2365,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "T8s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2395,7 +2395,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "T9o · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2425,7 +2425,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "T9s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2455,7 +2455,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "TT · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2505,11 +2505,11 @@ export const sbBbSrpOopFlopCbetPilotPack = {
             },
             {
               "rank": "5",
-              "suit": "h"
+              "suit": "d"
             },
             {
               "rank": "4",
-              "suit": "d"
+              "suit": "c"
             }
           ],
           "rationale": "Representative sample for aggregated board set 654r_765tt_883r_976tt_A72r_A85mono_A95r_J73r_K98tt_KQ5r_Q76mono_Q84r_QJ2tt_T76tt_T84r; generated only to validate card-removal semantics."
@@ -2545,7 +2545,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
       "recommendedAction": "BET_SMALL",
       "rangeBuckets": [
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "22 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2574,7 +2574,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "33 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2603,14 +2603,14 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "43s · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "43s · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "43s"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited"
           ],
           "actionMix": [
@@ -2632,7 +2632,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "44 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2719,7 +2719,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "55 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2893,7 +2893,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "77 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -2951,14 +2951,14 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "87s · BET_SMALL",
-          "action": "BET_SMALL",
+          "lane": "CHECK",
+          "label": "87s · CHECK",
+          "action": "CHECK",
           "handClasses": [
             "87s"
           ],
           "features": [
-            "solver-bet-frequency",
+            "solver-check-frequency",
             "suited"
           ],
           "actionMix": [
@@ -2980,7 +2980,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "88 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3125,7 +3125,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "99 · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3154,7 +3154,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A2s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3184,7 +3184,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A3s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3214,7 +3214,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A4s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3274,7 +3274,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A5s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3304,7 +3304,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A6s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3364,7 +3364,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A7s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3394,7 +3394,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A8o · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3424,7 +3424,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A8s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3454,7 +3454,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "A9o · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3544,7 +3544,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AJo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3574,7 +3574,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AJs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3604,7 +3604,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AKo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3634,7 +3634,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AKs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3664,7 +3664,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AQo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3694,7 +3694,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "AQs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3724,7 +3724,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "ATo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3754,7 +3754,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "ATs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3784,7 +3784,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "J7s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3814,7 +3814,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "J8s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3844,7 +3844,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "J9s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3874,7 +3874,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "JJ · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3904,7 +3904,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "JTo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3934,7 +3934,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "JTs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -3994,7 +3994,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K3s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4024,7 +4024,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K4s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4054,7 +4054,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K5s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4084,7 +4084,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K6s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4114,7 +4114,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K7s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4144,7 +4144,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K8s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4204,7 +4204,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "K9s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4234,7 +4234,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KJo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4264,7 +4264,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KJs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4324,7 +4324,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KQo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4354,7 +4354,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KQs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4384,7 +4384,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KTo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4414,7 +4414,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "KTs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4444,7 +4444,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "Q5s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4474,7 +4474,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "Q6s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4504,7 +4504,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "Q7s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4534,7 +4534,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "Q8s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4564,7 +4564,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "Q9s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4594,7 +4594,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "QJo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4624,7 +4624,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "QJs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4684,7 +4684,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "QTo · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4714,7 +4714,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "QTs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4744,7 +4744,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "T7s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4774,7 +4774,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "T8s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4804,7 +4804,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "T9o · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4834,7 +4834,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "T9s · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4864,7 +4864,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "TT · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -4918,7 +4918,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
             },
             {
               "rank": "6",
-              "suit": "h"
+              "suit": "d"
             }
           ],
           "rationale": "Representative sample for aggregated board set 976tt_985mono_A72r_A85mono_A95r_J73r_K98tt_KQ5r_Q84r_QJ9tt; generated only to validate card-removal semantics."
@@ -6343,7 +6343,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "JTs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -7033,7 +7033,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "QJs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -7123,7 +7123,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
           ]
         },
         {
-          "lane": "VALUE",
+          "lane": "BLUFF",
           "label": "QTs · BET_SMALL",
           "action": "BET_SMALL",
           "handClasses": [
@@ -7327,7 +7327,7 @@ export const sbBbSrpOopFlopCbetPilotPack = {
             },
             {
               "rank": "6",
-              "suit": "h"
+              "suit": "d"
             }
           ],
           "rationale": "Representative sample for aggregated board set 976tt_985mono_A85mono_A95r_J73r_K98tt_KQ5r_Q84r_QJ9tt_T76tt; generated only to validate card-removal semantics."

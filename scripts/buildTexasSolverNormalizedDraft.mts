@@ -12,6 +12,7 @@ import type { PostflopActionNode } from "../src/core/postflopTrainingSpot.ts";
 import {
   representativeFlopForBoardId as representativeBoard,
 } from "../src/core/texasSolverBoardCatalog.ts";
+import { aggregateBettingLaneForHand } from "../src/core/flopHandCategory.ts";
 import type { Card, HandLabel, Rank, Suit } from "../src/core/types.ts";
 
 const DEFAULT_REVIEW =
@@ -20,6 +21,7 @@ const DEFAULT_OUTPUT_DIR = "artifacts/texas-solver-review-integration/normalized
 const DEFAULT_PACK_ID = "mtt-full-ring-9-regular-flop-chip-ev-ante-off-production-v1";
 const CREATED_AT = "2026-07-01";
 const RANKS = "AKQJT98765432";
+const SUITS: readonly Suit[] = ["s", "h", "d", "c"];
 const STRONG_RANKS = new Set(["A", "K", "Q", "J", "T"]);
 const MIN_MIXED_RAISE_FREQUENCY_FOR_ACTIVE_BUCKET = 25;
 
@@ -62,6 +64,8 @@ interface DraftRuleFile {
   boardId: string;
   boardTextures: BoardTexture[];
   board: [Card, Card, Card];
+  /** Every flop the rule aggregates; lane classification needs all of them. */
+  boards: [Card, Card, Card][];
   handClasses: Record<string, ReviewHandClassStrategy>;
 }
 
@@ -517,6 +521,7 @@ function aggregateFiles(actionNode: CliArgs["actionNode"], files: readonly Revie
     return {
       boardId: "empty",
       board: representativeBoard("A72r"),
+      boards: [representativeBoard("A72r")],
       boardTextures: ["ace-high", "rainbow", "disconnected", "dry"],
       handClasses: {},
     };
@@ -558,18 +563,20 @@ function aggregateFiles(actionNode: CliArgs["actionNode"], files: readonly Revie
   return {
     boardId: files.map((file) => file.boardId).join("_"),
     board: boards[0],
+    boards,
     boardTextures: [...boardTextures],
     handClasses,
   };
 }
 
 function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string[], file: DraftRuleFile) {
-  const board = file.board;
   const boardTextures = file.boardTextures;
   const buckets = Object.entries(file.handClasses)
     .sort(([left], [right]) => left.localeCompare(right))
-    .map(([handClass, strategy]) => buildBucket(args.actionNode, handClass as HandLabel, strategy));
+    .map(([handClass, strategy]) => buildBucket(args.actionNode, handClass as HandLabel, strategy, file.boards));
   const recommendedAction = mostCommonBucketAction(buckets);
+  const rangeHands = buckets.flatMap((bucket) => bucket.handClasses) as HandLabel[];
+  const board = cardRemovalSampleBoard(file, rangeHands);
   const sampleHand = buckets[0]?.handClasses[0] as HandLabel | undefined;
 
   return {
@@ -597,11 +604,53 @@ function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string
   };
 }
 
-function buildBucket(actionNode: CliArgs["actionNode"], handClass: HandLabel, strategy: ReviewHandClassStrategy) {
+/**
+ * Pick the flop used for the card-removal sample.
+ *
+ * A rule aggregates several boards, and the sample only proves that card
+ * removal is handled correctly. A paired or trips board can leave an aggregated
+ * range hand with no combos at all - `55` has none on `5s 5h 5d` - which is a
+ * property of that one board rather than a defect in the range. Prefer a board
+ * on which every range hand still has a combo, and fall back to the first board
+ * so behaviour stays deterministic when no board qualifies.
+ */
+function cardRemovalSampleBoard(
+  file: DraftRuleFile,
+  rangeHands: readonly HandLabel[],
+): [Card, Card, Card] {
+  const usable = file.boards.find((candidate) => (
+    rangeHands.every((hand) => handClassComboCount(hand, candidate) > 0)
+  ));
+  return usable ?? file.board;
+}
+
+/** Combos of an aggregated hand class that survive the board's card removal. */
+function handClassComboCount(handClass: HandLabel, board: readonly Card[]): number {
+  const high = handClass[0];
+  const low = handClass[1];
+  const available = (rank: string): number => 4 - board.filter((card) => card.rank === rank).length;
+  if (high === low) {
+    const remaining = available(high);
+    return (remaining * (remaining - 1)) / 2;
+  }
+  const suitedCombos = SUITS.filter((suit) => (
+    !board.some((card) => card.rank === high && card.suit === suit) &&
+    !board.some((card) => card.rank === low && card.suit === suit)
+  )).length;
+  if (handClass.endsWith("s")) return suitedCombos;
+  return available(high) * available(low) - suitedCombos;
+}
+
+function buildBucket(
+  actionNode: CliArgs["actionNode"],
+  handClass: HandLabel,
+  strategy: ReviewHandClassStrategy,
+  boards: readonly (readonly Card[])[],
+) {
   const actionMix = normalizeMappedActionMix(actionNode, strategy.averageByAction);
   const dominantAction = primaryBucketAction(actionNode, actionMix);
   return {
-    lane: laneForHand(actionNode, handClass, dominantAction),
+    lane: laneForHand(actionNode, handClass, dominantAction, boards),
     label: `${handClass} · ${dominantAction}`,
     action: dominantAction,
     handClasses: [handClass],
@@ -699,19 +748,26 @@ function mostCommonBucketAction(buckets: Array<{ action: PostflopAction }>): Pos
   return [...counts.entries()].sort((left, right) => right[1] - left[1])[0]?.[0] ?? "CHECK";
 }
 
+/**
+ * Lane for one aggregated hand class.
+ *
+ * VALUE versus BLUFF is a hand-versus-board judgement, so it is decided by the
+ * shared board-aware classifier rather than by the hand's own rank. Ranking a
+ * hand by its high card alone made every ace a value bet, so A2s betting as an
+ * ace-high blocker on K83r was taught as value while an underpair that bets was
+ * too. Both are pressure, not value.
+ *
+ * Hands that do not put money in stay in the CHECK lane.
+ */
 function laneForHand(
   actionNode: CliArgs["actionNode"],
   handClass: string,
   action: PostflopAction,
+  boards: readonly (readonly Card[])[],
 ): "VALUE" | "BLUFF" | "CHECK" {
-  if (actionNode === "FLOP_FACING_BET") {
-    if (action !== "RAISE") return "CHECK";
-    if (isPair(handClass) || STRONG_RANKS.has(handClass[0])) return "VALUE";
-    return "BLUFF";
-  }
-  if (action === "CHECK") return "CHECK";
-  if (isPair(handClass) || STRONG_RANKS.has(handClass[0])) return "VALUE";
-  return "BLUFF";
+  const aggressiveAction = actionNode === "FLOP_FACING_BET" ? action === "RAISE" : action !== "CHECK";
+  if (!aggressiveAction) return "CHECK";
+  return aggregateBettingLaneForHand(handClass as HandLabel, boards);
 }
 
 function featuresForHand(handClass: string, action: PostflopAction): string[] {

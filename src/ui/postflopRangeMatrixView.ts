@@ -1,24 +1,22 @@
-import { GRID_SIZE, R2V, RANKS, handLabel, isPair, isSuited } from "../core/poker";
-import type { Card, HandLabel, Rank } from "../core/types";
+import { GRID_SIZE, RANKS, handLabel } from "../core/poker";
+import type { Card, HandLabel } from "../core/types";
 import type { PostflopTrainingSpot } from "../core/postflopTrainingSpot";
+import {
+  classifyFlopHand,
+  flopzillaLaneForCategory,
+  type FlopzillaCategory,
+  type FlopzillaLane,
+} from "../core/flopHandCategory";
 import { localizedText } from "./cs";
 
-export type FlopzillaCategory =
-  | "SET_PLUS"
-  | "MADE_STRAIGHT"
-  | "TWO_PAIR"
-  | "OVERPAIR"
-  | "TOP_PAIR"
-  | "PAIR"
-  | "UNDERPAIR"
-  | "FLUSH_DRAW"
-  | "OESD"
-  | "GUTSHOT"
-  | "BACKDOOR_DRAW"
-  | "OVERCARDS"
-  | "AIR";
-
-export type FlopzillaLane = "VALUE" | "BLUFF" | "CHECK";
+// Classification lives in core so the range matrix and the solver-content
+// importer label hands the same way.
+export {
+  classifyFlopHand,
+  flopzillaLaneForCategory,
+  type FlopzillaCategory,
+  type FlopzillaLane,
+};
 
 interface CategoryDef {
   label: string;
@@ -58,13 +56,6 @@ const LEGEND_ORDER: readonly FlopzillaCategory[] = [
 ];
 
 type CategoryCounts = Partial<Record<FlopzillaCategory, number>>;
-
-interface ParsedHand {
-  high: Rank;
-  low: Rank;
-  pair: boolean;
-  suited: boolean;
-}
 
 export function renderPostflopRangeMatrix(
   spot: PostflopTrainingSpot,
@@ -143,91 +134,6 @@ export function renderPostflopRangeMatrix(
   wrap.appendChild(legend(doc, used, counts, matrix));
   wrap.appendChild(detail);
   root.appendChild(wrap);
-}
-
-export function classifyFlopHand(
-  hand: HandLabel,
-  board: readonly Card[],
-): FlopzillaCategory {
-  const parsed = parseHand(hand);
-  const boardRanks = board.map((card) => card.rank);
-  const boardValues = boardRanks.map((rank) => R2V[rank]);
-  const topBoard = Math.max(...boardValues);
-  const handValues = parsed.pair
-    ? [R2V[parsed.high], R2V[parsed.high]]
-    : [R2V[parsed.high], R2V[parsed.low]];
-
-  if (parsed.pair) {
-    const pairValue = R2V[parsed.high];
-    if (boardRanks.includes(parsed.high)) return "SET_PLUS";
-    if (pairValue > topBoard) return "OVERPAIR";
-    if (pairValue < Math.min(...boardValues)) return "UNDERPAIR";
-    return "PAIR";
-  }
-
-  const highOnBoard = boardRanks.includes(parsed.high);
-  const lowOnBoard = boardRanks.includes(parsed.low);
-  if (highOnBoard && lowOnBoard) return "TWO_PAIR";
-  if (highOnBoard || lowOnBoard) {
-    const pairedRank = highOnBoard ? parsed.high : parsed.low;
-    if (R2V[pairedRank] === topBoard) return "TOP_PAIR";
-    return "PAIR";
-  }
-
-  const straightCategory = straightDrawCategory([...boardValues, ...handValues]);
-  if (straightCategory === "MADE_STRAIGHT") return "MADE_STRAIGHT";
-
-  const flushCategory = flushDrawCategory(parsed, board);
-  if (flushCategory) return flushCategory;
-
-  if (straightCategory === "OESD" || straightCategory === "GUTSHOT") {
-    return straightCategory;
-  }
-
-  if (parsed.suited) return "BACKDOOR_DRAW";
-  if (handValues.every((value) => value > topBoard)) return "OVERCARDS";
-  return "AIR";
-}
-
-function parseHand(hand: HandLabel): ParsedHand {
-  const high = hand[0] as Rank;
-  const low = hand[1] as Rank;
-  return {
-    high,
-    low,
-    pair: isPair(hand),
-    suited: isSuited(hand),
-  };
-}
-
-function flushDrawCategory(
-  hand: ParsedHand,
-  board: readonly Card[],
-): "FLUSH_DRAW" | null {
-  if (!hand.suited) return null;
-  const suitCounts = new Map<string, number>();
-  for (const card of board) {
-    suitCounts.set(card.suit, (suitCounts.get(card.suit) ?? 0) + 1);
-  }
-  return [...suitCounts.values()].some((count) => count === 2) ? "FLUSH_DRAW" : null;
-}
-
-function straightDrawCategory(values: readonly number[]): "MADE_STRAIGHT" | "OESD" | "GUTSHOT" | null {
-  const valueSet = new Set<number>(values);
-  if (valueSet.has(14)) valueSet.add(1);
-
-  let hasGutshot = false;
-  for (let start = 1; start <= 10; start += 1) {
-    const window = [start, start + 1, start + 2, start + 3, start + 4];
-    const present = window.filter((value) => valueSet.has(value));
-    if (present.length === 5) return "MADE_STRAIGHT";
-    if (present.length === 4) {
-      const missing = window.find((value) => !valueSet.has(value));
-      if (missing === window[0] || missing === window[4]) return "OESD";
-      hasGutshot = true;
-    }
-  }
-  return hasGutshot ? "GUTSHOT" : null;
 }
 
 function matrixCell(
@@ -448,27 +354,6 @@ function categoryShare(count: number): string {
 
 export function flopzillaCategoryLabel(category: FlopzillaCategory): string {
   return CATEGORY_DEFS[category].label;
-}
-
-export function flopzillaLaneForCategory(category: FlopzillaCategory): FlopzillaLane {
-  switch (category) {
-    case "SET_PLUS":
-    case "MADE_STRAIGHT":
-    case "TWO_PAIR":
-    case "OVERPAIR":
-    case "TOP_PAIR":
-      return "VALUE";
-    case "FLUSH_DRAW":
-    case "OESD":
-    case "GUTSHOT":
-    case "BACKDOOR_DRAW":
-    case "OVERCARDS":
-      return "BLUFF";
-    case "PAIR":
-    case "UNDERPAIR":
-    case "AIR":
-      return "CHECK";
-  }
 }
 
 export function flopzillaLaneLabel(lane: FlopzillaLane): string {

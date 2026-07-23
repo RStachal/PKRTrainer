@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 
 /**
@@ -45,6 +45,7 @@ interface CliArgs {
   manifestPath: string;
   threshold: number;
   iterations: number;
+  threads: number | null;
   write: boolean;
   json: boolean;
   summary: boolean;
@@ -81,6 +82,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let manifestPath = resolve(DEFAULT_MANIFEST);
   let threshold = DEFAULT_THRESHOLD;
   let iterations = DEFAULT_ITERATIONS;
+  let threads: number | null = null;
   let write = false;
   let json = false;
   let summary = false;
@@ -96,12 +98,16 @@ function parseArgs(argv: readonly string[]): CliArgs {
     if (item.startsWith("--manifest=")) { manifestPath = resolve(value(item, "--manifest")); continue; }
     if (item.startsWith("--threshold=")) { threshold = Number(value(item, "--threshold")); continue; }
     if (item.startsWith("--iterations=")) { iterations = Number(value(item, "--iterations")); continue; }
+    if (item.startsWith("--threads=")) { threads = Number(value(item, "--threads")); continue; }
     throw new Error(`Unsupported argument: ${item}\n\n${usage()}`);
   }
 
   if (!Number.isFinite(threshold) || threshold <= 0) throw new Error("--threshold must be a positive number.");
   if (!Number.isInteger(iterations) || iterations <= 0) throw new Error("--iterations must be a positive integer.");
-  return { accuracyRoot, paramRoot, outputDir, manifestPath, threshold, iterations, write, json, summary };
+  if (threads !== null && (!Number.isInteger(threads) || threads <= 0)) {
+    throw new Error("--threads must be a positive integer.");
+  }
+  return { accuracyRoot, paramRoot, outputDir, manifestPath, threshold, iterations, threads, write, json, summary };
 }
 
 function value(item: string, flag: string): string {
@@ -215,9 +221,20 @@ function boardIdFromRawName(rawFileName: string): string {
 function writeBatch(args: CliArgs, boards: ReturnType<typeof build>["boards"]): void {
   mkdirSync(args.outputDir, { recursive: true });
   mkdirSync(dirname(args.manifestPath), { recursive: true });
+
+  // Prune parameters for boards that already converged. The queue runner solves
+  // every file it finds under the parameter root and `-Force` does not skip
+  // completed work, so a stale file makes the batch re-solve a board that is
+  // already at target.
+  const keep = new Set(boards.map((board) => board.fileName));
+  for (const existing of readdirSync(args.outputDir).filter((name) => name.endsWith(".txt"))) {
+    if (!keep.has(existing)) unlinkSync(join(args.outputDir, existing));
+  }
+
   for (const board of boards) {
     const source = readFileSync(resolve(board.sourcePath), "utf8");
-    writeFileSync(join(args.outputDir, board.fileName), raiseIterations(source, args.iterations), "utf8");
+    const raised = raiseIterations(source, args.iterations);
+    writeFileSync(join(args.outputDir, board.fileName), applyThreads(raised, args.threads), "utf8");
   }
   const scenarios = [...new Set(boards.map((board) => board.familyId))]
     .sort((a, b) => a.localeCompare(b, "en"))
@@ -258,6 +275,14 @@ function raiseIterations(content: string, iterations: number): string {
     return content.replace(/^set_max_iteration\s+\d+\s*$/im, `set_max_iteration ${iterations}`);
   }
   throw new Error("Authoritative parameter file has no set_max_iteration line to raise.");
+}
+
+function applyThreads(content: string, threads: number | null): string {
+  if (threads === null) return content;
+  if (!/^set_thread_num\s+\d+\s*$/im.test(content)) {
+    throw new Error("Authoritative parameter file has no set_thread_num line to set.");
+  }
+  return content.replace(/^set_thread_num\s+\d+\s*$/im, `set_thread_num ${threads}`);
 }
 
 function nextCommands(args: CliArgs): string[] {
