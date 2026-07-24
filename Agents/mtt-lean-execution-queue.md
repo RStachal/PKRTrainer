@@ -1253,6 +1253,56 @@ CHECK where they previously returned BET_SMALL. The pilot suite stays 7/7 with
 focused postflop resolver, scoring, runtime, readiness and view regression is
 green.
 
+### OPS-71 - Recover which tree profile actually produced each solved board
+
+Status: `DONE 2026-07-24` (audit); follow-up decision is owner input
+Depends on: `OPS-69`
+Lane: `MECHANICAL`
+
+The facing-bet high band could not be regenerated because
+`MTT9_150BB_CO_BTN_3BP_HIGHSPR` had no single small-bet node present on every
+board. The cause turned out to be bigger than one family: the authoritative full
+tree and the memory-safe reduced tree write the same canonical raw checkpoint
+path, so a family's `raw/` directory can hold a mix, and nothing in the raw file
+records which parameter set produced it.
+
+That distinction matters. The content contract treats the reduced tree as
+review-only: it may be audited and packaged for review but is not meant to be
+normalized and promoted into runtime content. Without provenance there was no way
+to say how much pilot content rests on it.
+
+`mtt:texas-solver-tree-provenance` recovers the missing provenance. It reads only
+the first bytes of each raw file to get the root action list, then matches the
+root bet sizes against every parameter set that could have solved that family.
+Each set is evaluated with its own pot, which matters because `safe_flops_v1`
+uses pot 57 where the review waves use 50, so the same 50 percent bet lands on 29
+chips rather than 25. When a full and a reduced set predict the same bet the
+board is reported as ambiguous rather than guessed.
+
+```powershell
+npm run mtt:texas-solver-tree-provenance -- --summary
+npm run mtt:texas-solver-tree-provenance -- --family=<FAMILY> --json
+```
+
+Measured over 577 boards in 20 families: 117 full tree, 337 reduced tree,
+123 ambiguous, 0 unknown. Twelve of the twenty families mix both profiles and
+none is entirely reduced. So a clear majority of the boards behind the scoped
+pilots come from the reduced review-only tree.
+
+This is disclosed rather than hidden - the pilots are labelled scoped, report
+`fullProductionReady: false`, and the beta gate states they are not complete
+postflop coverage - but the specific rule about review-only data not becoming
+runtime content is in tension with it. Resolving that is an owner decision, not a
+mechanical one:
+
+- accept reduced-tree solves inside scoped pilots and state it explicitly in the
+  pilot provenance and caveats, or
+- re-solve the reduced boards at full tree, which is a large compute commitment
+  at roughly 337 boards.
+
+Focused regression for the audit is 5/5. The audit is read-only and never writes
+or modifies solver data.
+
 ### XSOLVER-01 - Produce the first exact paired second-solver export
 
 Status: `EXTERNAL_DATA`
