@@ -88,12 +88,25 @@ switch ($Action) {
     $arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$worker`" -Threads $Threads -Iterations $Iterations -ProcessPriority $ProcessPriority"
     $taskAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments -WorkingDirectory $repo
 
-    $atStartup = New-ScheduledTaskTrigger -AtStartup
     $atLogon = New-ScheduledTaskTrigger -AtLogOn -User $currentUser
     # A repeating trigger is what actually makes the weekend self-healing: if the
     # worker exits for resource pressure or a crash, the next tick restarts it.
     $repeating = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(2) `
       -RepetitionInterval (New-TimeSpan -Minutes 30) -RepetitionDuration (New-TimeSpan -Days 7)
+
+    # An AtStartup trigger runs before any logon and Windows only allows an
+    # elevated caller to register one. Without elevation the logon trigger plus
+    # the 30-minute repetition already covers boot, restart and logout, so the
+    # task installs either way rather than failing.
+    $elevated = ([Security.Principal.WindowsPrincipal]::new(
+      [Security.Principal.WindowsIdentity]::GetCurrent()
+    )).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+    $triggers = if ($elevated) {
+      @((New-ScheduledTaskTrigger -AtStartup), $atLogon, $repeating)
+    } else {
+      @($atLogon, $repeating)
+    }
 
     $principal = New-ScheduledTaskPrincipal -UserId $currentUser -LogonType Interactive -RunLevel Limited
     $settings = New-ScheduledTaskSettingsSet `
@@ -102,13 +115,19 @@ switch ($Action) {
       -ExecutionTimeLimit (New-TimeSpan -Days 7) `
       -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 10)
 
-    $task = New-ScheduledTask -Action $taskAction -Trigger @($atStartup, $atLogon, $repeating) `
+    $task = New-ScheduledTask -Action $taskAction -Trigger $triggers `
       -Principal $principal -Settings $settings `
       -Description "PKRTrainer weekend uniform-tree TexasSolver re-solve; resumable and mutex-protected."
 
     Register-ScheduledTask -TaskName $TaskName -InputObject $task -Force | Out-Null
     Write-Host "Installed scheduled task: $TaskName"
-    Write-Host "  triggers: at startup, at logon, and every 30 minutes for 7 days"
+    if ($elevated) {
+      Write-Host "  triggers: at startup, at logon, and every 30 minutes for 7 days"
+    } else {
+      Write-Host "  triggers: at logon and every 30 minutes for 7 days"
+      Write-Host "  note:     an at-startup trigger needs an elevated shell; re-run Install as"
+      Write-Host "            Administrator to add it. Boot is still covered once you log in."
+    }
     Write-Host "  worker:   $worker"
     if ($StartNow) {
       Start-ScheduledTask -TaskName $TaskName
