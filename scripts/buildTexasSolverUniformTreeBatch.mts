@@ -113,6 +113,21 @@ function value(item: string, flag: string): string {
   return result;
 }
 
+/**
+ * Rough solve cost of a family, used only to order the queue.
+ *
+ * Stack depth and SPR band are read from the family id because they are the two
+ * measured cost drivers and they are known before anything is solved. Existing
+ * raw checkpoints were considered and rejected: for a board on the reduced tree
+ * the checkpoint describes the small tree, not the full one about to be solved,
+ * so it understates the very boards this batch exists to replace.
+ */
+function familyCost(familyId: string): number {
+  const depth = Number(/^MTT9_(\d+)BB_/.exec(familyId)?.[1] ?? 0);
+  const band = /HIGHSPR$|MIDHIGH$/.test(familyId) ? 2 : /MIDSPR$/.test(familyId) ? 1 : 0;
+  return depth * 10 + band;
+}
+
 function build(args: CliArgs) {
   const provenance = runProvenanceAudit(args);
   const exploitability = readExploitability(args.accuracyRoot);
@@ -144,8 +159,20 @@ function build(args: CliArgs) {
 
   // Solve the cheapest families first so an interrupted weekend still finishes
   // whole families rather than leaving many half-converted.
+  //
+  // Alphabetical order only looked like it did this, because it happens to keep
+  // families contiguous. It actually front-loads the most expensive ones - 100BB,
+  // 110BB and 150BB sort before 20BB - and solve cost climbs steeply with stack
+  // depth and SPR: measured at 25 s per board around SPR 2 against 572 s around
+  // SPR 13. A weekend spent in that order finishes almost nothing.
+  const cost = new Map<string, number>();
+  for (const item of selected) {
+    if (!cost.has(item.familyId)) cost.set(item.familyId, familyCost(item.familyId));
+  }
   selected.sort((left, right) => (
-    left.familyId.localeCompare(right.familyId, "en") || left.boardId.localeCompare(right.boardId, "en")
+    cost.get(left.familyId)! - cost.get(right.familyId)! ||
+    left.familyId.localeCompare(right.familyId, "en") ||
+    left.boardId.localeCompare(right.boardId, "en")
   ));
   selected.forEach((item, index) => {
     item.fileName = `${String(index + 1).padStart(4, "0")}_${item.familyId}_${item.boardId}.txt`;
