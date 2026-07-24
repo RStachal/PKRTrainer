@@ -1,0 +1,116 @@
+# MTT completion roadmap
+
+Updated: 2026-07-24
+Status: ACTIVE PLAN
+
+Two things this document keeps apart, because mixing them has repeatedly made
+progress look better than it is: what finishes the **playable beta**, and what
+finishes the **full MTT library**. It also separates work that is genuinely
+blocked on an external input from work that can run beside it, so a wait never
+costs a day.
+
+## Verified state
+
+Measured, not estimated:
+
+| Dimension | State |
+| --- | --- |
+| Full library rows | **4/64** production, 52 preview, 8 blocked |
+| Beta preflop profiles | **4/8** (six-max 0/4) |
+| Beta flop pilots | **7/7** ready |
+| Per-action EV, flop pilots | **0/972** |
+| Per-action EV, preflop | **0/329212** |
+| Postflop production matrix | **0/48** rows, 0/9600 targets |
+| Turn / River content | **0** of everything |
+| Boards on the reduced review-only tree | **337/577** |
+
+The beta is roughly half-built. The full library is at six percent, and nothing
+in the current plan closes that inside the 30-day window; treating it as a
+near-term target is the main way this project could mislead itself.
+
+## Blocked, and on exactly what
+
+Three items, and only two distinct inputs.
+
+**B1. Six-max preflop packs (0/4).** Needs one representative six-max preflop
+export of 10-100 rows to build the adapter, then the four full exports. The
+workbenches, merge, staging and promotion path all exist and are waiting. A pack
+needs all nine action contexts, so filling only the computable ones does not
+release it.
+
+**B2. Per-action EV (0/972).** Measured: TexasSolver cannot emit EV at any dump
+depth - a `set_dump_rounds 4` probe grew the file to 2.24 GB and still contained
+only `action_node` and `chance_node`. Needs an EV-capable solver. GTO+ is owned
+and its socket confirmed live on port 55143, but connections are refused pending
+the documented `tmp/customconnect.txt` override, which requires one elevated
+command.
+
+**B3. Cross-solver comparison.** Same input as B2; answering B2 answers this.
+
+Everything else below is unblocked.
+
+## Critical path to the playable beta
+
+1. **Weekend re-solve to a uniform tree** (in flight). 337 boards move off the
+   reduced review-only tree so no aggregated rule mixes two different games.
+2. **Post-resolve rebuild.** `npm run mtt:post-resolve -- --write` rebuilds
+   evidence, drafts, merged pilots and modules with the four pipeline traps
+   handled.
+3. **Unblock B2**, then ingest EV into the seven prepared templates so the action
+   buttons finally show EV. This is the single change that most improves what a
+   player learns, because call and raise are often separated by a hair.
+4. **Unblock B1**, then promote the four six-max packs to reach preflop 8/8.
+5. Repackage and re-verify the FTP artifact.
+
+## Parallel work while blocked
+
+Ordered by value, all independent of B1 and B2.
+
+**P1. Close the deep-stack hole.** Single-raised spots at the 125BB and 150BB
+buckets land at SPR 20.8 and 25.0, outside every pilot band, so they resolve to
+the public heuristic model with no solver backing. Either solve a deep SRP family
+or stop offering those buckets for postflop training.
+
+**P2. Fix the three-bet SPR mismatch.** An 18BB three-bet pot makes short stacks
+very shallow: the 5BB bucket shows SPR 0.3 against a solve at 1.8, and six of
+thirteen buckets are off by 1.5x or more. Options are narrowing the bands,
+solving more SPR points, or restricting which buckets offer three-bet postflop.
+This is a poker decision, not a mechanical one.
+
+**P3. Turn pilots.** Turn is the largest untouched dimension and needs no
+external input - the solver, schema, resolver and gates all already exist, and
+the turn resolver already carries the per-hand and provenance fixes. This is the
+biggest available content expansion.
+
+**P4. Continue the correctness audit.** Four defects of the same shape were found
+in one day, each resting on an incidental property rather than a structural one:
+lanes by rank instead of board, rule-wide instead of per-hand recommendations,
+hero hands outside the solved range, and heuristic-versus-solver decided by
+matching free text. Areas not yet audited with real data: the turn and river
+resolvers, the hand-history review path, statistics and scoring, and entitlement
+gating.
+
+**P5. Expand board coverage.** Measured: cutting a family from 31 to 24 boards
+changes the recommended action for 10.7 percent of hand classes, and to 12 boards
+for 31.9 percent. Aggregates are therefore sensitive to board count, which argues
+for more boards per family, not fewer.
+
+**P6. Six-max push/fold and vs-allin contexts.** Two of the nine contexts are a
+closed chipEV all-in Nash equilibrium: computable exactly, verifiable against
+published equilibria, 26,364 of 118,638 rows per pack. It does not release the
+pack on its own, so this is preparation rather than a deliverable, and it is only
+worth doing if B1 stays blocked for a long time or if the eventual export omits
+those contexts.
+
+## What full library completion would actually take
+
+Not a 30-day target, and worth stating plainly so it is never promised. The
+matrix is 48 postflop profile rows across three streets and 50 position patterns,
+9600 targets, currently zero. Each production row needs comprehensive coverage
+rather than a scoped pilot: every pot type, position, SPR band, texture and lane.
+Reaching it is a solver-time problem measured in weeks, and the measured curve is
+steep - 25 seconds per board at SPR 2 against 572 seconds at SPR 13 without even
+converging.
+
+The honest sequence is: finish the beta, ship it to the professional field, then
+decide whether the full matrix is worth the compute given what the field reports.
