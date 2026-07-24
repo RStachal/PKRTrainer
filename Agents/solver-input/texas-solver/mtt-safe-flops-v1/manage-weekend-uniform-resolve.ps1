@@ -11,7 +11,7 @@ param(
   [string]$TaskName = "PKRTrainer-Weekend-UniformResolve",
   [int]$Threads = 12,
   [int]$Iterations = 1200,
-  [string]$ProcessPriority = "Normal",
+  [string]$ProcessPriority = "BelowNormal",
   [switch]$StartNow
 )
 

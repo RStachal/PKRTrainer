@@ -11,7 +11,7 @@
 param(
   [int]$Threads = 12,
   [int]$Iterations = 1200,
-  [string]$ProcessPriority = "Normal",
+  [string]$ProcessPriority = "BelowNormal",
   [int]$MinimumFreeMemoryPercent = 12,
   [int]$MaximumCpuPercent = 100,
   [switch]$SkipBackup
