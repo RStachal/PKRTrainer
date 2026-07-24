@@ -1338,6 +1338,52 @@ the solved range went from 19 percent to 100 percent and every spot now resolves
 to its own hero bucket. Focused resolver, view, line-simulator and HH regression
 is 51/51 plus 12/12 on the resolver suite, and typecheck passes.
 
+### OPS-73 - Measure how far a shown spot sits from the SPR that was solved
+
+Status: `DONE 2026-07-24` (audit); narrowing the gap is owner input
+Depends on: `OPS-72`
+Lane: `MECHANICAL`
+
+Each pilot rule matches a wide SPR band, but every family was solved at a single
+SPR. The HIGH band spans 8 to 20 while its families were solved at 9.6, 10 and
+13, so on paper a spot could be shown strategy from 10x the SPR it displays.
+
+The runtime narrows that a lot, because the shown SPR is not free: the effective
+stack is the smallest selected stack bucket and the pot is fixed per pot type at
+6BB single-raised and 18BB three-bet. Mapping every selectable bucket to the rule
+it matches gives the real exposure.
+
+Single-raised is mostly sound. Nine of thirteen buckets land within 1.28x of a
+solved SPR. The exceptions are the 5BB bucket, at SPR 0.8 against a solve at 2.0,
+and the 125BB and 150BB buckets, at SPR 20.8 and 25.0, which fall outside every
+band and therefore resolve to the heuristic model with no solver backing at all.
+
+Three-bet pots are the real gap, because an 18BB pot makes short stacks very
+shallow:
+
+| Stack | Shown SPR | Solved SPR | Gap |
+| --- | --- | --- | --- |
+| 5BB | 0.3 | 1.8 | 6.5x |
+| 10BB | 0.6 | 1.8 | 3.2x |
+| 15BB | 0.8 | 1.8 | 2.2x |
+| 20BB | 1.1 | 1.8 | 1.6x |
+| 125BB | 6.9 | 3.8 | 1.8x |
+
+At SPR 0.3 a player is effectively committed and the correct strategy barely
+resembles a solve at 1.8. Six of thirteen three-bet buckets are off by 1.5x or
+more.
+
+This is a banding characteristic rather than a defect in the data, and the band
+is recorded in the recommendation source, but the solved point is not, so nothing
+downstream can warn about the distance. Closing it is an owner decision between
+narrowing the bands, solving additional SPR points, restricting which stack
+buckets offer three-bet postflop training, or surfacing the solved SPR next to
+the shown one.
+
+```powershell
+npm run mtt:texas-solver-tree-provenance -- --summary
+```
+
 ### XSOLVER-01 - Produce the first exact paired second-solver export
 
 Status: `EXTERNAL_DATA`

@@ -27,7 +27,7 @@ set_allin_threshold 0.67
 build_tree
 set_thread_num 6
 set_accuracy 0.5
-set_max_iteration 200
+set_max_iteration 1200
 set_print_interval 10
 set_use_isomorphism 1
 start_solve
