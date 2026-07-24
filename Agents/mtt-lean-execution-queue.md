@@ -1503,6 +1503,36 @@ are read-only and run either way, so a dry run still reports real state.
 Acceptance: the dry run resolves 14 c-bet families, 8 facing-bet families and 6
 merged scopes into 52 ordered steps with no blockers, and typecheck passes.
 
+### OPS-77 - Refuse a solver answer for a hand the solver never solved
+
+Status: `DONE 2026-07-24`
+Depends on: `OPS-72`, `OPS-75`
+Lane: `MECHANICAL`
+
+OPS-72 kept generated spots inside the solved range, but hand-history review
+supplies the hand the player actually held and cannot re-deal it. A replayed hand
+outside the range matched no bucket, so the recommendation fell back to the
+rule-wide action - and after OPS-75 that answer was labelled `SOLVER_BACKED`.
+The trainer would have presented a rule average as a solver result for a hand the
+solver never analysed.
+
+The production resolvers now return null when a hero hand is supplied and no
+bucket matches, so the chain falls through to the public heuristic model, which
+is labelled honestly. Asking without a hero hand still returns the rule-wide
+answer, because that question is about the rule rather than about a hand.
+
+That change interacted with the OPS-72 probe, which had been asking the resolver
+with the dealt hand: once the resolver refuses out-of-range hands, the probe
+would have received null and lost access to the very range it needs to draw from.
+The probe now omits the hero hand, which is sound because rule selection never
+depended on it.
+
+Acceptance: resolver, view, HH, line-simulator and provenance regression passes
+70/70 plus 3/3 on the provenance suite, including a replayed `32o` on `A72r`
+resolving as `PUBLIC_HEURISTIC`. A live check over 300 generated spots still
+reports 100 percent solver-backed with a hero bucket, so keeping generated spots
+in range was not weakened.
+
 ### XSOLVER-01 - Produce the first exact paired second-solver export
 
 Status: `EXTERNAL_DATA`

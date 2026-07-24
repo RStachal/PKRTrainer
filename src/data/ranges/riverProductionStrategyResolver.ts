@@ -32,6 +32,11 @@ export function createRiverProductionStrategyResolver(
     const rule = selectBestRiverProductionRule(matchingRiverProductionRules(pack, input), input);
     if (!rule) return null;
     const matchedHeroBucket = heroRangeBucket(rule, input);
+    // A hand outside this rule's range was never solved here. Returning a
+    // rule-wide average for it would present an answer the solver never gave,
+    // and label it solver-backed; let the chain fall through to the honestly
+    // labelled heuristic model instead.
+    if (input.heroHand !== undefined && matchedHeroBucket === undefined) return null;
     const actionEvs = isActionEvSetComplete(matchedHeroBucket?.actionEvs, rule.actions)
       ? cloneActionEvSet(matchedHeroBucket.actionEvs)
       : undefined;

@@ -257,11 +257,14 @@ describe("flopProductionStrategyResolver", () => {
     const bluffHand = resolver({ ...input, heroHand: "QJs" });
     expect(bluffHand?.action).toBe("BET_BIG");
 
-    // A hand outside the range has no bucket, so the rule-wide action is the
-    // only available fallback.
-    const offRange = resolver({ ...input, heroHand: "K3o" });
-    expect(offRange?.action).toBe("BET_BIG");
-    expect(offRange?.source?.kind === "STRATEGY_PACK" && offRange.source.heroRangeBucket).toBeUndefined();
+    // A hand outside the range was never solved here, so the pack refuses to
+    // answer rather than passing off a rule-wide average as a solver result.
+    // The resolver chain then falls through to the honestly labelled heuristic.
+    expect(resolver({ ...input, heroHand: "K3o" })).toBeNull();
+
+    // Without a hero hand the caller is asking about the rule itself, so the
+    // rule-wide action is still the right answer.
+    expect(resolver({ ...input })?.action).toBe("BET_BIG");
   });
 
   it("hodnoti hrace podle akce jeho ruky, ne podle rule-wide akce", () => {

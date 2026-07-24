@@ -428,11 +428,14 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   // to the rule-wide action. Rule selection does not depend on the hero hand, so
   // the pack can be probed with the dealt hand and the hero re-dealt only when
   // that hand is out of range. Spots without a pack range keep the plain deal.
+  // The probe deliberately omits the hero hand. Rule selection does not depend on
+  // it, and a production resolver refuses a per-hand answer for a hand outside
+  // the solved range, which would hide the very range this needs to draw from.
   const heroCards = config.heroCards
     ?? redealHeroIntoStrategyRange(
       rng,
       dealtHeroCards,
-      config.strategyResolver?.({ ...strategyInput, heroHand: postflopHandClassFromCards(dealtHeroCards) }) ?? null,
+      config.strategyResolver?.(strategyInput) ?? null,
       board,
     );
 
