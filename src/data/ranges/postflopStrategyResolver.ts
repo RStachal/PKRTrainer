@@ -35,6 +35,7 @@ export function createPostflopStrategyResolver(
       explanation: rule.explanation,
       source: {
         kind: "STRATEGY_PACK",
+        provenance: "PUBLIC_HEURISTIC",
         packId: pack.id,
         packVersion: pack.version,
         packVerifiedAt: pack.verifiedAt,

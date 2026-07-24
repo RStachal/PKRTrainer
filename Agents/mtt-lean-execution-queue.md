@@ -1427,6 +1427,44 @@ SPR 2, 96 at SPR 4 and 253 at SPR 9.6, but an SPR 13 board ran 572 seconds
 without converging, and the raised ceiling multiplies the hard cases further. The
 honest range is tens of hours, dominated by the four deepest families.
 
+### OPS-75 - Make solver-versus-heuristic a structural property
+
+Status: `DONE 2026-07-24`
+Depends on: `OPS-73`
+Lane: `MECHANICAL`
+
+The beta contract says no heuristic answer may be presented as solver-backed, and
+that matters more since the SPR audit showed real spots falling outside every
+pilot band and resolving to the public heuristic model.
+
+The rule was enforced, but by matching free text:
+
+```ts
+source.assumptions.some((assumption) => /^Public heuristic /i.test(assumption));
+```
+
+Both kinds of content return `kind: "STRATEGY_PACK"`, so the label hung on one
+assumption sentence happening to start with "Public heuristic". Rewording it
+would have silently relabelled the heuristic model as production content, with no
+test failing, which is the same shape as the three correctness defects found
+earlier: behaviour resting on an incidental property rather than a structural one.
+
+A structural discriminator existed - production packs carry `licenseKind` and
+heuristic packs do not - but it was never exposed on the recommendation, so the
+view had nothing else to read.
+
+`PostflopRecommendationSource` now carries `provenance: "SOLVER_BACKED" |
+"PUBLIC_HEURISTIC"`, set by each resolver: the flop, turn and river production
+resolvers mark solver-backed, the public heuristic resolver marks heuristic. The
+view reads that field and the string match is gone. Making the field required
+rather than optional was deliberate - the compiler then listed every construction
+site instead of letting one default silently to the wrong label.
+
+Acceptance: focused view, HH, generator, line-simulator and source-citation
+regression passes 73/73, including two new tests asserting that a solved pilot
+resolves as `SOLVER_BACKED` and the public heuristic model as `PUBLIC_HEURISTIC`
+regardless of its assumption wording.
+
 ### XSOLVER-01 - Produce the first exact paired second-solver export
 
 Status: `EXTERNAL_DATA`

@@ -356,6 +356,7 @@ describe("postflopView - DOM", () => {
       explanation: "Range bucket fixture prefers a small bet with a protected check mix.",
       source: {
         kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
         packId: "internal-test-pack",
         packVersion: "v1",
         packVerifiedAt: "2026-06-11",
@@ -428,6 +429,7 @@ describe("postflopView - DOM", () => {
       explanation: "Reviewed action EV fixture.",
       source: {
         kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
         packId: "internal-action-ev-pack",
         packVersion: "v1",
         packVerifiedAt: "2026-07-16",
@@ -478,6 +480,7 @@ describe("postflopView - DOM", () => {
       explanation: "Qualitative mix fixture.",
       source: {
         kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
         packId: "internal-qual-pack",
         packVersion: "v1",
         packVerifiedAt: "2026-06-11",
@@ -531,6 +534,7 @@ describe("postflopView - DOM", () => {
         explanation: "Production lane fixture.",
         source: {
           kind: "STRATEGY_PACK",
+          provenance: "SOLVER_BACKED",
           packId: "internal-lane-pack",
           packVersion: "v1",
           packVerifiedAt: "2026-06-12",

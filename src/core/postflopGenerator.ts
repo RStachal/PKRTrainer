@@ -175,9 +175,18 @@ export interface PostflopOpponentPolicyBranch {
   facingHeroRaise: Extract<PostflopAction, "CALL" | "FOLD">;
 }
 
+/**
+ * Whether a recommendation came from solved content or from the public
+ * heuristic model. The product must never present a heuristic answer as
+ * solver-backed, so this has to be a structural property of the recommendation
+ * rather than something inferred from free-text metadata.
+ */
+export type PostflopStrategyProvenance = "SOLVER_BACKED" | "PUBLIC_HEURISTIC";
+
 export type PostflopRecommendationSource =
   | {
       kind: "STRATEGY_PACK";
+      provenance: PostflopStrategyProvenance;
       packId: string;
       packVersion: string;
       packVerifiedAt: string;

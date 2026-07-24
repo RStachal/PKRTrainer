@@ -52,6 +52,7 @@ describe("hhPostflopBridge", () => {
         explanation: `Production HH resolver ${input.street} ${input.actionNode}`,
         source: {
           kind: "STRATEGY_PACK",
+          provenance: "SOLVER_BACKED",
           packId: "internal-hh-production-parity-pack",
           packVersion: "2026.06",
           packVerifiedAt: "2026-06-17",

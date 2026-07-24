@@ -279,6 +279,7 @@ describe("postflopGenerator", () => {
           explanation: "Resolver rozhodl.",
           source: {
             kind: "STRATEGY_PACK",
+            provenance: "SOLVER_BACKED",
             packId: "test-pack",
             packVersion: "test-v1",
             packVerifiedAt: "2026-06-02",
@@ -317,6 +318,7 @@ describe("postflopGenerator", () => {
     });
     expect(fromResolver.strategySource).toEqual({
       kind: "STRATEGY_PACK",
+      provenance: "SOLVER_BACKED",
       packId: "test-pack",
       packVersion: "test-v1",
       packVerifiedAt: "2026-06-02",

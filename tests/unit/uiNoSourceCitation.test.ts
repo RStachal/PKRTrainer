@@ -135,6 +135,7 @@ const sourceHeavyResolver: PostflopStrategyResolver = (input) => ({
   explanation: `Release gate ${input.street.toLowerCase()} recommendation`,
   source: {
     kind: "STRATEGY_PACK",
+    provenance: "SOLVER_BACKED",
     packId: "mtt-full-ring-9-flop-production-private-v1",
     packVersion: "source-free-test-v1",
     packVerifiedAt: "2026-06-17",

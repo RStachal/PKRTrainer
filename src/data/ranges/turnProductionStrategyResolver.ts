@@ -47,6 +47,7 @@ export function createTurnProductionStrategyResolver(
       explanation: rule.explanation,
       source: {
         kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
         packId: pack.id,
         packVersion: pack.version,
         packVerifiedAt: pack.verifiedAt,

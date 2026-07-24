@@ -1588,10 +1588,16 @@ function modelItems(spot: PostflopTrainingSpot): readonly string[] {
   return [localizedText("Basic heuristic", "Základní heuristika")];
 }
 
+/**
+ * Never present a heuristic answer as solver-backed. This reads the structural
+ * provenance the resolver records, not the wording of an assumption: matching
+ * free text meant that rephrasing one sentence would silently relabel the public
+ * heuristic model as production content.
+ */
 function isPublicHeuristicStrategySource(
   source: Extract<PostflopTrainingSpot["explanation"]["source"], { kind: "STRATEGY_PACK" }>,
 ): boolean {
-  return source.assumptions.some((assumption) => /^Public heuristic /i.test(assumption));
+  return source.provenance === "PUBLIC_HEURISTIC";
 }
 
 function userFacingAssumption(assumption: string): string {
