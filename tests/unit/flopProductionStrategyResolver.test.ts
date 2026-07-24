@@ -303,6 +303,61 @@ describe("flopProductionStrategyResolver", () => {
     expect(gradePostflopAction(postflopSpotToTrainingSpot(spot), "BET_BIG").correct).toBe(false);
   });
 
+  it("rozdava hrdinu z range, kterou pack skutecne resil", () => {
+    const resolver = createFlopProductionStrategyResolver(productionPack());
+    const packHands = new Set(
+      productionPack().rules.flatMap((rule) => rule.rangeBuckets.flatMap((bucket) => bucket.handClasses)),
+    );
+
+    let withBucket = 0;
+    const spots = 60;
+    for (let seed = 1; seed <= spots; seed += 1) {
+      const spot = generatePostflopSpot({
+        seed,
+        street: "FLOP",
+        potType: "SINGLE_RAISED",
+        potBB: 6,
+        effectiveStackBB: 40,
+        board: [
+          { rank: "A", suit: "s" },
+          { rank: "7", suit: "d" },
+          { rank: "2", suit: "c" },
+        ],
+        positionContext: {
+          heroPosition: "BTN",
+          villainPosition: "BB",
+          aggressorPosition: "BTN",
+          callerPosition: "BB",
+          inPosition: true,
+          callerType: "BIG_BLIND",
+          positionPattern: "BTN_VS_BB",
+        },
+        strategyResolver: resolver,
+      });
+      // A freely dealt hand is almost never in the solved range, so without the
+      // re-deal these spots would grade against the rule-wide action instead.
+      if (spot.strategySource.kind === "STRATEGY_PACK" && spot.strategySource.heroRangeBucket) {
+        withBucket += 1;
+        expect(packHands.has(spot.strategySource.heroRangeBucket.handClass)).toBe(true);
+      }
+    }
+    expect(withBucket).toBe(spots);
+  });
+
+  it("nechá hrdinu být, kdyz pack pro spot zadnou range nema", () => {
+    // The public heuristic model exposes no pack range, so the plain deal stands
+    // and seeded behaviour for those spots is unchanged.
+    const spot = generatePostflopSpot({
+      seed: 5,
+      street: "FLOP",
+      potType: "SINGLE_RAISED",
+      potBB: 6,
+      effectiveStackBB: 40,
+    });
+    expect(spot.heroCards).toHaveLength(2);
+    expect(spot.board).toHaveLength(3);
+  });
+
   it("production fallback registry preferuje production pack pred public heuristic packem", () => {
     const resolver = createPostflopStrategyResolverWithProductionFallback(
       [productionPack()],

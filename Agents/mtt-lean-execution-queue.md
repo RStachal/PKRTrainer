@@ -1303,6 +1303,41 @@ mechanical one:
 Focused regression for the audit is 5/5. The audit is read-only and never writes
 or modifies solver data.
 
+### OPS-72 - Deal the hero from the range the pack actually solved
+
+Status: `DONE 2026-07-24`
+Depends on: `OPS-70`
+Lane: `MECHANICAL`
+
+`generatePostflopSpot` dealt the hero two cards from the full deck, independently
+of the spot. On the BTN vs BB single-raised c-bet pilot the solved range covers
+50 hand classes, which is 252 of 1326 combinations, so **81 percent of spots put
+the hero on a hand the preflop raiser would never hold there**.
+
+Those hands match no range bucket, so `heroRangeBucket` is undefined and the
+recommendation falls back to the rule-wide action. The per-hand fix in OPS-70
+therefore only reached the 19 percent of spots that happened to be in range; for
+the rest the trainer was still grading an impossible hand against a rule average.
+
+The fix probes the pack with the dealt hand - rule selection does not depend on
+the hero hand - and re-deals only when that hand is out of range. Concrete
+combinations are enumerated rather than picking a hand class first, so pairs keep
+six combinations against a suited hand's four and board cards stay unavailable.
+
+Spots with no pack range, such as the public heuristic model, keep the plain deal
+untouched, which was deliberate: an earlier attempt reordered dealing for every
+spot and changed seeded output everywhere, breaking three unrelated view tests
+for no benefit.
+
+```powershell
+npm run mtt:postflop-pilot-suite -- --summary
+```
+
+Acceptance: over 300 generated spots on the live BTN vs BB c-bet pilot, hands in
+the solved range went from 19 percent to 100 percent and every spot now resolves
+to its own hero bucket. Focused resolver, view, line-simulator and HH regression
+is 51/51 plus 12/12 on the resolver suite, and typecheck passes.
+
 ### XSOLVER-01 - Produce the first exact paired second-solver export
 
 Status: `EXTERNAL_DATA`

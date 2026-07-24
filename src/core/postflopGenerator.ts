@@ -383,8 +383,10 @@ export const POSTFLOP_FULL_RING_POSITION_CONTEXTS = uniquePositionContexts([
 
 export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   const rng = mulberry32(config.seed);
-  const heroCards = config.heroCards ?? dealCards(rng, fullDeck(), 2) as [Card, Card];
-  const deck = fullDeck().filter((card) => !sameCard(card, heroCards[0]) && !sameCard(card, heroCards[1]));
+  const dealtHeroCards = config.heroCards ?? dealCards(rng, fullDeck(), 2) as [Card, Card];
+  const deck = fullDeck().filter((card) => (
+    !sameCard(card, dealtHeroCards[0]) && !sameCard(card, dealtHeroCards[1])
+  ));
   const street = config.street ?? randomStreet(rng);
   const board = config.board?.slice(0, boardLength(street)) ?? dealCards(rng, deck, boardLength(street));
   const textures = classifyBoard(board);
@@ -394,21 +396,41 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   const positionContext = config.positionContext ?? randomPositionContext(rng);
   const actionNode = config.actionNode ?? defaultActionNode(street, potType);
   const actions = actionsForActionNode(actionNode);
+
+  const strategyInput = {
+    street,
+    textures,
+    board,
+    potType,
+    potBB,
+    effectiveStackBB,
+    positionPattern: positionContext.positionPattern,
+    actionNode,
+    priorFlopAction: street === "TURN" ? config.priorFlopAction ?? "BET_SMALL" : config.priorFlopAction,
+    turnCardClass: street === "TURN" ? config.turnCardClass ?? classifyTurnCard(board) : config.turnCardClass,
+    priorTurnAction: street === "RIVER" ? config.priorTurnAction ?? "BET_SMALL" : config.priorTurnAction,
+    riverRunoutClass: street === "RIVER" ? config.riverRunoutClass ?? classifyRiverRunout(board) : config.riverRunoutClass,
+  } satisfies Omit<PostflopStrategyInput, "heroHand">;
+
+  // Keep the hero inside the range the solver actually analysed for this spot.
+  // A freely dealt hand is usually one the preflop raiser would never hold here
+  // - on the BTN vs BB c-bet pilot only 19 percent of random combinations are in
+  // range - and such a hand has no bucket, so its recommendation would fall back
+  // to the rule-wide action. Rule selection does not depend on the hero hand, so
+  // the pack can be probed with the dealt hand and the hero re-dealt only when
+  // that hand is out of range. Spots without a pack range keep the plain deal.
+  const heroCards = config.heroCards
+    ?? redealHeroIntoStrategyRange(
+      rng,
+      dealtHeroCards,
+      config.strategyResolver?.({ ...strategyInput, heroHand: postflopHandClassFromCards(dealtHeroCards) }) ?? null,
+      board,
+    );
+
   const resolvedRecommendation =
     config.strategyResolver?.({
-      street,
-      textures,
-      board,
-      potType,
-      potBB,
-      effectiveStackBB,
-      positionPattern: positionContext.positionPattern,
-      actionNode,
+      ...strategyInput,
       heroHand: postflopHandClassFromCards(heroCards),
-      priorFlopAction: street === "TURN" ? config.priorFlopAction ?? "BET_SMALL" : config.priorFlopAction,
-      turnCardClass: street === "TURN" ? config.turnCardClass ?? classifyTurnCard(board) : config.turnCardClass,
-      priorTurnAction: street === "RIVER" ? config.priorTurnAction ?? "BET_SMALL" : config.priorTurnAction,
-      riverRunoutClass: street === "RIVER" ? config.riverRunoutClass ?? classifyRiverRunout(board) : config.riverRunoutClass,
     });
   const fallbackRecommendation = recommendPostflopActionForNode(actionNode, street, textures);
   const validResolvedRecommendation = (
@@ -683,6 +705,43 @@ function fullDeck(): Card[] {
     }
   }
   return deck;
+}
+
+function deckWithout(board: readonly Card[]): Card[] {
+  return fullDeck().filter((card) => !board.some((used) => sameCard(card, used)));
+}
+
+/**
+ * Replace the hero hand when the strategy pack does not contain it.
+ *
+ * Enumerating concrete combinations rather than picking a hand class first keeps
+ * the natural combinatorial weighting: a pair has six combinations and a suited
+ * hand four, and cards already on the board are unavailable. The dealt hand is
+ * returned untouched when it is already in range or when there is no pack range
+ * to draw from, so spots backed by the heuristic model are unaffected.
+ */
+function redealHeroIntoStrategyRange(
+  rng: () => number,
+  dealt: readonly [Card, Card],
+  recommendation: PostflopRecommendation | null,
+  board: readonly Card[],
+): [Card, Card] {
+  const source = recommendation?.source;
+  if (source?.kind !== "STRATEGY_PACK") return [dealt[0], dealt[1]];
+  const handClasses = new Set(source.rangeBuckets?.flatMap((bucket) => bucket.handClasses) ?? []);
+  if (handClasses.size === 0) return [dealt[0], dealt[1]];
+  if (handClasses.has(postflopHandClassFromCards(dealt))) return [dealt[0], dealt[1]];
+
+  const deck = deckWithout(board);
+  const combos: Array<[Card, Card]> = [];
+  for (let i = 0; i < deck.length; i += 1) {
+    for (let j = i + 1; j < deck.length; j += 1) {
+      const pair: [Card, Card] = [deck[i], deck[j]];
+      if (handClasses.has(postflopHandClassFromCards(pair))) combos.push(pair);
+    }
+  }
+  if (combos.length === 0) return [dealt[0], dealt[1]];
+  return combos[Math.floor(rng() * combos.length)];
 }
 
 function dealCards(rng: () => number, deck: Card[], count: number): Card[] {
