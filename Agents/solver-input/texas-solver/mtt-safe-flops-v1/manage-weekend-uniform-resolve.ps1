@@ -1,0 +1,120 @@
+# Install, inspect, stop or remove the weekend uniform-tree re-solve task.
+#
+# The task must survive a machine that is switched off, restarted or logged out,
+# so it carries three triggers: at startup, at logon, and a repeating one that
+# retries every 30 minutes. The worker itself holds a global mutex and refuses to
+# run beside an existing solver process, so overlapping triggers are harmless.
+[CmdletBinding()]
+param(
+  [ValidateSet("Install", "Status", "Stop", "Uninstall")]
+  [string]$Action = "Status",
+  [string]$TaskName = "PKRTrainer-Weekend-UniformResolve",
+  [int]$Threads = 12,
+  [int]$Iterations = 1200,
+  [string]$ProcessPriority = "Normal",
+  [switch]$StartNow
+)
+
+$ErrorActionPreference = "Stop"
+$repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
+$worker = Join-Path $PSScriptRoot "run-weekend-uniform-resolve.ps1"
+$currentUser = "$env:USERDOMAIN\$env:USERNAME"
+
+function Show-Status {
+  $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+  if ($null -eq $task) {
+    Write-Host "Weekend uniform-resolve task is not installed: $TaskName"
+  } else {
+    $info = Get-ScheduledTaskInfo -TaskName $TaskName
+    Write-Host "name:          $TaskName"
+    Write-Host "state:         $($task.State)"
+    Write-Host "last run:      $($info.LastRunTime)"
+    Write-Host "last result:   $($info.LastTaskResult)"
+    Write-Host "next run:      $($info.NextRunTime)"
+    Write-Host "triggers:      $($task.Triggers.Count)"
+  }
+  $procs = @(Get-Process console_solver -ErrorAction SilentlyContinue)
+  Write-Host "solver procs:  $($procs.Count)"
+  if ($procs.Count -gt 0) {
+    Write-Host "  threads=$($procs[0].Threads.Count) priority=$($procs[0].PriorityClass)"
+  }
+  $paramDir = Join-Path $repo "Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_uniform_tree_weekend_v1"
+  $pending = @(Get-ChildItem -Path $paramDir -Filter "*.txt" -File -ErrorAction SilentlyContinue)
+  Write-Host "boards pending: $($pending.Count)"
+  $logDir = Join-Path $repo "artifacts\uniform-tree-weekend"
+  $latest = Get-ChildItem -Path $logDir -Filter "worker-*.log" -File -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 1
+  if ($null -ne $latest) {
+    Write-Host "latest log:    $($latest.FullName)"
+    Get-Content $latest.FullName -Tail 3 | ForEach-Object { Write-Host "  $_" }
+  }
+}
+
+switch ($Action) {
+  "Status" { Show-Status; break }
+
+  "Stop" {
+    # Stop the schedule first so a trigger cannot restart the solver behind us.
+    $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+    if ($null -ne $task) {
+      Disable-ScheduledTask -TaskName $TaskName | Out-Null
+      Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+      Write-Host "Disabled and stopped scheduled task: $TaskName"
+    } else {
+      Write-Host "Task not installed: $TaskName"
+    }
+    $procs = @(Get-Process console_solver -ErrorAction SilentlyContinue)
+    if ($procs.Count -gt 0) {
+      $procs | Stop-Process -Force -ErrorAction SilentlyContinue
+      Write-Host "Stopped $($procs.Count) solver process(es)."
+      Write-Host "A board interrupted mid-solve is restored from the backup on the next worker start."
+    }
+    break
+  }
+
+  "Uninstall" {
+    $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+    if ($null -ne $task) {
+      Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
+      Write-Host "Removed scheduled task: $TaskName"
+    } else {
+      Write-Host "Task was already absent: $TaskName"
+    }
+    @(Get-Process console_solver -ErrorAction SilentlyContinue) | Stop-Process -Force -ErrorAction SilentlyContinue
+    break
+  }
+
+  "Install" {
+    $arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$worker`" -Threads $Threads -Iterations $Iterations -ProcessPriority $ProcessPriority"
+    $taskAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments -WorkingDirectory $repo
+
+    $atStartup = New-ScheduledTaskTrigger -AtStartup
+    $atLogon = New-ScheduledTaskTrigger -AtLogOn -User $currentUser
+    # A repeating trigger is what actually makes the weekend self-healing: if the
+    # worker exits for resource pressure or a crash, the next tick restarts it.
+    $repeating = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(2) `
+      -RepetitionInterval (New-TimeSpan -Minutes 30) -RepetitionDuration (New-TimeSpan -Days 7)
+
+    $principal = New-ScheduledTaskPrincipal -UserId $currentUser -LogonType Interactive -RunLevel Limited
+    $settings = New-ScheduledTaskSettingsSet `
+      -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+      -StartWhenAvailable -MultipleInstances IgnoreNew `
+      -ExecutionTimeLimit (New-TimeSpan -Days 7) `
+      -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 10)
+
+    $task = New-ScheduledTask -Action $taskAction -Trigger @($atStartup, $atLogon, $repeating) `
+      -Principal $principal -Settings $settings `
+      -Description "PKRTrainer weekend uniform-tree TexasSolver re-solve; resumable and mutex-protected."
+
+    Register-ScheduledTask -TaskName $TaskName -InputObject $task -Force | Out-Null
+    Write-Host "Installed scheduled task: $TaskName"
+    Write-Host "  triggers: at startup, at logon, and every 30 minutes for 7 days"
+    Write-Host "  worker:   $worker"
+    if ($StartNow) {
+      Start-ScheduledTask -TaskName $TaskName
+      Write-Host "Started now."
+    }
+    Show-Status
+    break
+  }
+}

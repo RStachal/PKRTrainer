@@ -29,6 +29,11 @@ Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_acc
 Agents/solver-input/texas-solver/mtt-safe-flops-v1/accuracy-resolve-v1-manifest.json
 Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_accuracy_resolve_v1/
 
+# The weekend uniform-tree batch is regenerated from current evidence on every
+# worker start and shrinks as boards converge, so it is never a committed state.
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/uniform-tree-weekend-v1-manifest.json
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_uniform_tree_weekend_v1/
+
 # Logs
 *.log
 npm-debug.log*

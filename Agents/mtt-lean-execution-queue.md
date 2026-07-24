@@ -1384,6 +1384,49 @@ the shown one.
 npm run mtt:texas-solver-tree-provenance -- --summary
 ```
 
+### OPS-74 - Weekend uniform-tree re-solve
+
+Status: `ACTIVE 2026-07-24`
+Depends on: `OPS-71`, `OPS-73`
+Lane: `REPEATABLE`
+
+The provenance audit found 337 boards that either still use the reduced
+memory-safe tree or stopped above the accuracy target. Both shift the answer an
+aggregated rule gives, so the goal is one authoritative tree and one accuracy
+standard per family.
+
+`mtt:texas-solver-uniform-tree-batch` selects them by calling the provenance
+audit rather than copying its logic, and adds any board whose recorded
+exploitability exceeds the target. Parameters are copied verbatim from the
+authoritative full-tree source; only thread count and the iteration ceiling are
+set. Selection is recomputed on every run, which is what makes the weekend
+resumable: a board that has been upgraded and converged stops being selected.
+
+Two measured facts shaped the settings. Thread scaling saturates - 5 to 12
+threads bought 11 percent - and three boards solved in parallel took the same
+wall time as three solved in sequence, so the machine is throughput-capped rather
+than core-capped. And the authoritative `set_max_iteration 200` is too low for
+deep families: on the first calibration pass seven of nine boards hit the ceiling
+above 0.5, so the ceiling is raised to 1200.
+
+```powershell
+npm run mtt:weekend-resolve-install     # at startup, at logon, every 30 minutes
+npm run mtt:weekend-resolve-status
+npm run mtt:weekend-resolve-stop        # disables the schedule, then stops solving
+npm run mtt:weekend-resolve-uninstall
+```
+
+The worker holds a global mutex and refuses to run beside an existing solver
+process, so the three overlapping triggers are harmless. Because the queue runner
+deletes a canonical raw checkpoint before re-solving it, every selected
+checkpoint is backed up with a SHA-256 manifest first, and a board interrupted
+mid-solve is restored from that backup on the next start.
+
+Cost is not yet known precisely. The measured curve is 25 seconds per board at
+SPR 2, 96 at SPR 4 and 253 at SPR 9.6, but an SPR 13 board ran 572 seconds
+without converging, and the raised ceiling multiplies the hard cases further. The
+honest range is tens of hours, dominated by the four deepest families.
+
 ### XSOLVER-01 - Produce the first exact paired second-solver export
 
 Status: `EXTERNAL_DATA`
