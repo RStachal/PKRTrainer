@@ -35,10 +35,10 @@ describe("postflop strategy provenance", () => {
     const resolver = createDefaultPostflopStrategyResolver();
     const result = resolver({
       ...flopInput,
-      positionPattern: "IP_OR_RANGE_ADVANTAGE",
-      textures: ["dry"],
-      potBB: 10,
-      effectiveStackBB: 60,
+      positionPattern: "BTN_VS_BB",
+      textures: ["dry", "rainbow"],
+      potBB: 6,
+      effectiveStackBB: 40,
     });
 
     expect(result?.source?.kind).toBe("STRATEGY_PACK");

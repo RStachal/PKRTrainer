@@ -1465,6 +1465,44 @@ regression passes 73/73, including two new tests asserting that a solved pilot
 resolves as `SOLVER_BACKED` and the public heuristic model as `PUBLIC_HEURISTIC`
 regardless of its assumption wording.
 
+### OPS-76 - One command to rebuild the pilots after a re-solve
+
+Status: `DONE 2026-07-24`
+Depends on: `OPS-74`
+Lane: `REPEATABLE`
+
+Re-solving changes raw checkpoints and nothing downstream notices: accuracy
+evidence, per-family drafts, merged pilots and generated modules all keep serving
+the previous content until each is rebuilt, in order. Running that chain by hand
+this week hit four traps, none of which was written down anywhere.
+
+`mtt:post-resolve` encodes them:
+
+1. `mtt:texas-solver-ingest-completed` is change-driven, so a family whose raw
+   changed can still be skipped. Stale drafts are removed first to force it.
+2. That ingest only covers the coverage-v2 families. The other ten are rebuilt
+   from their reviews, which live beside the raw exports as
+   `strategy-export.<node>.review.json` rather than under `artifacts/.../reviews/`.
+3. `mtt:texas-solver-pilot-refresh` merges five scopes although seven exist.
+   Without the missing merge, `SB_vs_BB_SRP_OOP_FLOP_CBET` silently keeps stale
+   content - which is exactly what happened during OPS-68.
+4. Facing-bet drafts come from the harvester, whose automatic best-node selection
+   once picked `BET_600`, a degenerate overbet the response simply folds to. The
+   villain node is pinned per family from the previous best-candidate record.
+
+```powershell
+npm run mtt:post-resolve -- --summary          # dry run, prints the plan
+npm run mtt:post-resolve -- --write --summary  # rebuild, then report the gates
+```
+
+Normalization parameters are recovered from the drafts on disk rather than
+hardcoded, so the plan follows whatever the pipeline currently produces instead
+of a copy that goes stale. Dry run is the default and writes nothing; the gates
+are read-only and run either way, so a dry run still reports real state.
+
+Acceptance: the dry run resolves 14 c-bet families, 8 facing-bet families and 6
+merged scopes into 52 ordered steps with no blockers, and typecheck passes.
+
 ### XSOLVER-01 - Produce the first exact paired second-solver export
 
 Status: `EXTERNAL_DATA`

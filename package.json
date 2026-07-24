@@ -31,6 +31,7 @@
     "mtt:texas-solver-accuracy-resolve-batch": "vite-node scripts/buildTexasSolverAccuracyResolveBatch.mts",
     "mtt:texas-solver-tree-provenance": "vite-node scripts/auditTexasSolverTreeProvenance.mts",
     "mtt:texas-solver-uniform-tree-batch": "vite-node scripts/buildTexasSolverUniformTreeBatch.mts",
+    "mtt:post-resolve": "vite-node scripts/runMttPostResolvePipeline.mts",
     "mtt:weekend-resolve-install": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/manage-weekend-uniform-resolve.ps1 -Action Install -StartNow",
     "mtt:weekend-resolve-status": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/manage-weekend-uniform-resolve.ps1 -Action Status",
     "mtt:weekend-resolve-stop": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/manage-weekend-uniform-resolve.ps1 -Action Stop",
