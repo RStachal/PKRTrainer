@@ -102,7 +102,32 @@ function parseArgs(argv: readonly string[]): CliArgs {
 
 function run(args: CliArgs) {
   const steps: Step[] = [];
-  const plan = draftPlan();
+  const fullPlan = draftPlan();
+
+  // Trap 5: a re-solve that stops part way through a family leaves it split
+  // across two different trees, and rebuilding then bakes an aggregate that
+  // mixes both - the exact defect the re-solve exists to remove. The provenance
+  // audit already reports this per family, so it runs first and its verdict
+  // holds back the affected families instead of merely reporting them at the end.
+  const mixed = mixedTreeFamilies();
+  const plan = {
+    cbet: fullPlan.cbet.filter((item) => !mixed.has(item.familyId)),
+    facingBet: fullPlan.facingBet.filter((item) => !mixed.has(item.familyId)),
+  };
+  const heldBack = [...new Set([
+    ...fullPlan.cbet.filter((item) => mixed.has(item.familyId)).map((item) => item.familyId),
+    ...fullPlan.facingBet.filter((item) => mixed.has(item.familyId)).map((item) => item.familyId),
+  ])].sort();
+  steps.push({
+    id: "guard:partial-resolve",
+    detail: "Hold back families that are split across the full and reduced trees.",
+    ran: true,
+    ok: true,
+    output: heldBack.length === 0
+      ? `No family mixes trees; all ${fullPlan.cbet.length + fullPlan.facingBet.length} planned rebuild(s) proceed.`
+      : `Held back ${heldBack.length} partially re-solved family(ies): ${heldBack.join(", ")}. `
+        + "Finish their boards before rebuilding, or their aggregates will mix two trees.",
+  });
 
   steps.push(npm("refresh-evidence", ["mtt:texas-solver-review-only-refresh"], args.write,
     "Re-read solver logs so accuracy reflects the new solves."));
@@ -182,10 +207,42 @@ function run(args: CliArgs) {
     generatedAt: new Date().toISOString(),
     mode: args.write ? "WRITE" : "DRY_RUN",
     counts: { steps: steps.length, ran: steps.filter((s) => s.ran).length, failed: failed.length },
-    plan: { cbetFamilies: plan.cbet.length, facingBetFamilies: plan.facingBet.length, mergedScopes: MERGED_SCOPES.length },
+    plan: {
+      cbetFamilies: plan.cbet.length,
+      facingBetFamilies: plan.facingBet.length,
+      mergedScopes: MERGED_SCOPES.length,
+      heldBackFamilies: heldBack,
+    },
     valid: failed.length === 0,
     steps,
   };
+}
+
+/**
+ * Families whose boards sit on both trees at once, from the provenance audit.
+ *
+ * The audit is read-only, so this runs in a dry run too and reports real state.
+ * If it cannot run, the set is empty: this guard exists to stop a known bad
+ * rebuild, and it must not become a new way for the whole pipeline to fail.
+ */
+function mixedTreeFamilies(): Set<string> {
+  try {
+    const output = execFileSync("npm", [
+      "run", "mtt:texas-solver-tree-provenance", "--", "--json",
+    ], { cwd: process.cwd(), encoding: "utf8", maxBuffer: 256 * 1024 * 1024, shell: true });
+    const start = output.indexOf("{");
+    if (start < 0) return new Set();
+    const report = JSON.parse(output.slice(start)) as {
+      families?: Array<{ familyId?: unknown; fullTree?: unknown; reducedTree?: unknown }>;
+    };
+    const mixed = new Set<string>();
+    for (const row of report.families ?? []) {
+      if (Number(row.fullTree) > 0 && Number(row.reducedTree) > 0) mixed.add(String(row.familyId));
+    }
+    return mixed;
+  } catch {
+    return new Set();
+  }
 }
 
 interface CbetPlan {
