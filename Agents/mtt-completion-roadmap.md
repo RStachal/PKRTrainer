@@ -102,6 +102,32 @@ pack on its own, so this is preparation rather than a deliverable, and it is onl
 worth doing if B1 stays blocked for a long time or if the eventual export omits
 those contexts.
 
+## Open question: how wide the solved ranges are
+
+Measured across all 19 pilot rules, the solved hero range covers on average
+**21.4 percent** of the 1326 combinations. Most values are plausible for their
+spot:
+
+| Pilot | Coverage | Plausible for the spot? |
+| --- | --- | --- |
+| UTG vs BB SRP | 14.8% | yes, UTG opens roughly this wide |
+| CO vs BB SRP | 24.9% | yes |
+| BTN vs CO 3bet pot | 13.1% | yes, a 3bet-pot continuing range is narrow |
+| SB vs BB OOP | 36.0% | yes |
+| **BTN vs BB SRP** | **19.0%** | **no** |
+
+The button is the widest opening seat, so its range must be wider than the
+cutoff's, and here it is narrower. Both rules are the same shape - preflop raiser
+versus big blind in a single-raised pot - so the comparison is like for like.
+That points at the range in the solve inputs for `MTT9_*_BTN_BB_SRP`, not at the
+pipeline.
+
+This matters more since the trainer now deals the hero only from the solved
+range: whatever that range is, it is exactly what a player practises. It is a
+poker judgement about solve inputs rather than a mechanical defect, so it is
+recorded rather than changed. Confirming or correcting it is an owner decision,
+and re-solving those families would be the follow-up.
+
 ## What full library completion would actually take
 
 Not a 30-day target, and worth stating plainly so it is never promised. The
