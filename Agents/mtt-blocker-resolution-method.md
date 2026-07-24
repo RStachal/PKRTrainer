@@ -42,6 +42,24 @@ and it fails on two practical grounds.
   silent. A wrong EV is worse than a hidden EV bubble, because the product's
   claim is that it recommends optimal play.
 
+### Why this is a blocker rather than a nice-to-have
+
+The owner requirement is that after answering, every action button shows its EV,
+because call and raise are often separated by a hair. That is not cosmetic. The
+runtime already implements the whole mechanism:
+
+- `actionEvs` per hand bucket carries an EV for each available action;
+- `equivalentThresholdBb` and `acceptableThresholdBb` define what counts as
+  practically equal;
+- `evaluateActionEv` returns `BEST`, `EQUIVALENT` or `ACCEPTABLE`, and a player
+  who picks an `EQUIVALENT` action is graded correct rather than wrong;
+- `revealActionEvButtonBubbles` renders the per-button bubbles.
+
+So the feature is built and waiting for data. Without EV the trainer must fall
+back to a single dominant action and mark every other choice wrong, including a
+choice that loses one hundredth of a big blind. That is pedagogically worse than
+showing nothing, because it teaches a false certainty the solver does not have.
+
 ### The method
 
 EV requires a solver that exports it. Concretely, in order of preference:
