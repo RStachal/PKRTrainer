@@ -86,9 +86,30 @@ biggest available content expansion.
 in one day, each resting on an incidental property rather than a structural one:
 lanes by rank instead of board, rule-wide instead of per-hand recommendations,
 hero hands outside the solved range, and heuristic-versus-solver decided by
-matching free text. Areas not yet audited with real data: the turn and river
-resolvers, the hand-history review path, statistics and scoring, and entitlement
-gating.
+matching free text.
+
+Since then the four unaudited areas have been worked through:
+
+- **Turn and river resolvers.** Both carry all five flop fixes; the gap was that
+  their tests locked none of them, so a regression would have passed CI once
+  content is added. Three invariants ported to each and proven non-vacuous by
+  mutation.
+- **Entitlement gating.** The paid tier serves no heuristic content: production,
+  scoped-pilot and locked-pilot runtimes all set `allowFallback: false` and wire
+  no heuristic resolver. A test now sweeps the paid resolver across every pilot
+  rule and asserts each answer is solver-backed, rather than only checking the
+  flag.
+- **Scoring and EV-equivalence.** Clean. An action grades correct when it is BEST
+  or within the equivalence threshold of best, so call and raise a hair apart are
+  both correct, and the displayed recommendation is kept consistent with the
+  highest-EV action. This is the well-built part, not a defect.
+- **Hand-history review.** A replayed hand cannot be re-dealt into range, so an
+  out-of-range hand is refused and labelled heuristic rather than passed off as a
+  solver answer; the app path is production-only with `allowFallback: false`.
+  Already covered by the provenance test.
+
+The audit has stopped finding new defects. Remaining lower-value targets are the
+statistics rollups and the preflop range-store path.
 
 **P5. Expand board coverage.** Measured: cutting a family from 31 to 24 boards
 changes the recommended action for 10.7 percent of hand classes, and to 12 boards
