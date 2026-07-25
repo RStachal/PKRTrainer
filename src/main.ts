@@ -836,16 +836,19 @@ function postflopRuntimeNotice(input: {
   productionReady: boolean;
   coverage?: { potType: PostflopPotType; spr: number } | null;
 }): PostflopRuntimeNotice | null {
-  // When the player expects solver-backed content but has selected a stack depth
-  // past every solved band - a deep single-raised pot at SPR 25, say - say so
-  // first. Otherwise the "solver pilot is active" notice below would be actively
-  // misleading for exactly the spot they are about to see refused. Only warn when
-  // the pot type has some coverage at all, so it is a depth edge, not the general
-  // preview state the PREVIEW notice already describes.
-  const expectsSolverContent = input.productionReady ||
-    (input.hasScopedPilotCoverage && input.hasActivePilotEntitlement);
+  // When an active scoped pilot is the runtime but the player has selected a stack
+  // depth past every solved band - a deep single-raised pot at SPR 25, say - say
+  // so first. Otherwise the "solver pilot is active" notice below would be
+  // actively misleading for exactly the spot they are about to see refused. The
+  // coverage bands are derived from the pilots, so this applies only to the pilot
+  // runtime; a future full production model would carry its own, wider coverage,
+  // and its own notice must not be overridden by pilot-derived bands. Only warn
+  // when the pot type has some coverage at all, so it is a depth edge, not the
+  // general preview state the PREVIEW notice already describes.
+  const usesPilotCoverage = !input.productionReady &&
+    input.hasScopedPilotCoverage && input.hasActivePilotEntitlement;
   if (
-    expectsSolverContent &&
+    usesPilotCoverage &&
     input.coverage != null &&
     maxCoveredSprForPotType(input.coverage.potType) !== null &&
     !isPostflopSprCovered(input.coverage.potType, input.coverage.spr)
