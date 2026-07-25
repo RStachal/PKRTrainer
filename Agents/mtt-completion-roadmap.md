@@ -38,6 +38,13 @@ workbenches, merge, staging and promotion path all exist and are waiting. A pack
 needs all nine action contexts, so filling only the computable ones does not
 release it.
 
+Measured turnkey state: the intake batch reports 4/4 scaffolds current and
+structurally safe, 474,552 workbench rows across the four packs, all blank and
+waiting. The whole pipeline after the data - merge, stage, import, promote - is
+built and tested. What is genuinely blocked is only mapping the owner's native
+export columns onto the scaffold, which cannot be written without seeing one
+sample. Both beta blockers, this and B2, are data-blocked, not code-blocked.
+
 **B2. Per-action EV (0/972).** Measured: TexasSolver cannot emit EV at any dump
 depth - a `set_dump_rounds 4` probe grew the file to 2.24 GB and still contained
 only `action_node` and `chance_node`. Needs an EV-capable solver. GTO+ is owned
