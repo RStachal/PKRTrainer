@@ -38,33 +38,26 @@ function Show-Status {
   if ($procs.Count -gt 0) {
     Write-Host "  threads=$($procs[0].Threads.Count) priority=$($procs[0].PriorityClass)"
   }
-  # The queue runner never deletes parameter files, so their count is the size of
-  # the batch and never moves. Progress is read instead from the raw checkpoints:
-  # a board re-solved by this batch has been rewritten since the manifest was
-  # generated. That is a proxy rather than the selector's own verdict, but it
-  # costs a directory scan instead of re-auditing every board.
+  # Each worker tick regenerates the batch, which prunes the parameter files of
+  # boards that have already converged. So the parameter-file count is the number
+  # of boards still to solve - it shrinks as work completes and is the honest
+  # "remaining". The raw checkpoints touched since the run began give a second,
+  # cumulative view of how many were solved. The two measure different things
+  # (remaining versus done-so-far), so they are shown side by side and never
+  # subtracted: done can exceed remaining once most of the queue has drained.
   $paramDir = Join-Path $repo "Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_uniform_tree_weekend_v1"
-  $queued = @(Get-ChildItem -Path $paramDir -Filter "*.txt" -File -ErrorAction SilentlyContinue).Count
-  $manifestPath = Join-Path $repo "Agents\solver-input\texas-solver\mtt-safe-flops-v1\uniform-tree-weekend-v1-manifest.json"
-  $done = 0
-  if (Test-Path $manifestPath) {
-    # The batch starts after the manifest is written, so the manifest timestamp
-    # would miss boards finished in the first minutes of the run. The earliest
-    # worker log is when work actually began.
-    $startedAt = (Get-Content $manifestPath -Raw | ConvertFrom-Json).generatedAt -as [datetime]
-    $firstLog = Get-ChildItem -Path (Join-Path $repo "artifacts\uniform-tree-weekend") -Filter "worker-*.log" -File -ErrorAction SilentlyContinue |
-      Sort-Object CreationTime | Select-Object -First 1
-    if ($null -ne $firstLog -and $firstLog.CreationTime -lt $startedAt) { $startedAt = $firstLog.CreationTime }
-    $rawRoot = Join-Path $repo "Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver"
-    if ($null -ne $startedAt -and (Test-Path $rawRoot)) {
-      $done = @(Get-ChildItem -Path $rawRoot -Filter "pkrtrainer_*.json" -File -Recurse -ErrorAction SilentlyContinue |
-        Where-Object { $_.LastWriteTime -gt $startedAt }).Count
-    }
+  $remaining = @(Get-ChildItem -Path $paramDir -Filter "*.txt" -File -ErrorAction SilentlyContinue).Count
+  $solvedSinceStart = 0
+  $rawRoot = Join-Path $repo "Agents\solver-input\gto-plus\sample-postflop-v1\output\texas-solver"
+  $firstLog = Get-ChildItem -Path (Join-Path $repo "artifacts\uniform-tree-weekend") -Filter "worker-*.log" -File -ErrorAction SilentlyContinue |
+    Sort-Object CreationTime | Select-Object -First 1
+  if ($null -ne $firstLog -and (Test-Path $rawRoot)) {
+    $startedAt = $firstLog.CreationTime
+    $solvedSinceStart = @(Get-ChildItem -Path $rawRoot -Filter "pkrtrainer_*.json" -File -Recurse -ErrorAction SilentlyContinue |
+      Where-Object { $_.LastWriteTime -gt $startedAt }).Count
   }
-  $remaining = [Math]::Max(0, $queued - $done)
-  Write-Host "boards queued:  $queued"
-  Write-Host "boards done:    $done  (re-solved since the batch was generated)"
-  Write-Host "boards left:    $remaining"
+  Write-Host "boards remaining: $remaining  (parameter files still queued)"
+  Write-Host "boards solved:    $solvedSinceStart  (checkpoints rewritten since this run began)"
   $logDir = Join-Path $repo "artifacts\uniform-tree-weekend"
   $latest = Get-ChildItem -Path $logDir -Filter "worker-*.log" -File -ErrorAction SilentlyContinue |
     Sort-Object LastWriteTime -Descending | Select-Object -First 1
