@@ -80,6 +80,12 @@ buckets land at SPR 20.8 and 25.0, outside every pilot band, so they resolve to
 the public heuristic model with no solver backing. Either solve a deep SRP family
 or stop offering those buckets for postflop training.
 
+Partly addressed: the player is now told. `postflopSprCoverage` derives the
+covered bands from the shipped pilots, and when a paying player selects a depth
+past them the runtime warns plainly and points to a shallower stack instead of
+showing the "pilot is active" notice and then refusing the spot. Actually closing
+the hole - solving a deep SRP family - still needs solver time.
+
 **P2. Fix the three-bet SPR mismatch.** An 18BB three-bet pot makes short stacks
 very shallow: the 5BB bucket shows SPR 0.3 against a solve at 1.8, and six of
 thirteen buckets are off by 1.5x or more. Options are narrowing the bands,
