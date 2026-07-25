@@ -45,6 +45,14 @@ and its socket confirmed live on port 55143, but connections are refused pending
 the documented `tmp/customconnect.txt` override, which requires one elevated
 command.
 
+Only the EV *numbers* are now blocked; the plumbing that carries them to the
+buttons is complete and tested end to end. The intake validates an owned EV
+export into a candidate pack, the pilot module builder overlays that candidate
+onto the strategy pilot, the scoped-pilot runtime resolver is the flop resolver
+and so surfaces `actionEvs`, and the buttons reveal them. Today the builder
+reports 0/972 EV buckets; the moment an EV-capable solve fills the templates, the
+same pipeline lights the buttons up with no further code.
+
 **B3. Cross-solver comparison.** Same input as B2; answering B2 answers this.
 
 Everything else below is unblocked.
@@ -56,9 +64,10 @@ Everything else below is unblocked.
 2. **Post-resolve rebuild.** `npm run mtt:post-resolve -- --write` rebuilds
    evidence, drafts, merged pilots and modules with the four pipeline traps
    handled.
-3. **Unblock B2**, then ingest EV into the seven prepared templates so the action
-   buttons finally show EV. This is the single change that most improves what a
-   player learns, because call and raise are often separated by a hair.
+3. **Unblock B2**, then fill the seven prepared templates from the EV export. The
+   whole path after that is built and tested: intake validates, the module builder
+   overlays, and the buttons show EV. This is the single change that most improves
+   what a player learns, because call and raise are often separated by a hair.
 4. **Unblock B1**, then promote the four six-max packs to reach preflop 8/8.
 5. Repackage and re-verify the FTP artifact.
 
