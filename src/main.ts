@@ -53,7 +53,11 @@ import { resolveSeed, spotSequence } from "./core/drillEngine";
 import { postflopIntentFromFilters } from "./core/postflopIntent";
 import { grade } from "./core/scoring";
 import { buildPreflopExplanationForSpot } from "./core/preflopExplanation";
-import type { PostflopStreet } from "./core/postflopGenerator";
+import type { PostflopPotType, PostflopStreet } from "./core/postflopGenerator";
+import {
+  isPostflopSprCovered,
+  maxCoveredSprForPotType,
+} from "./data/ranges/postflopSprCoverage";
 import { runtimeEntitlementGrants } from "./core/runtimeEntitlements";
 import { evaluateEntitlementAccess } from "./core/paymentEntitlements";
 import {
@@ -438,6 +442,12 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       hasScopedPilotCoverage,
       hasActivePilotEntitlement,
       productionReady: capability?.status === "PRODUCTION",
+      coverage: postflopIntent
+        ? {
+          potType: postflopIntent.potType,
+          spr: Math.round((postflopIntent.effectiveStackBB / postflopIntent.potBB) * 10) / 10,
+        }
+        : null,
     });
     const requiresExactRuntime = (
       (hasScopedPilotCoverage && hasActivePilotEntitlement) ||
@@ -824,7 +834,31 @@ function postflopRuntimeNotice(input: {
   hasScopedPilotCoverage: boolean;
   hasActivePilotEntitlement: boolean;
   productionReady: boolean;
+  coverage?: { potType: PostflopPotType; spr: number } | null;
 }): PostflopRuntimeNotice | null {
+  // When the player expects solver-backed content but has selected a stack depth
+  // past every solved band - a deep single-raised pot at SPR 25, say - say so
+  // first. Otherwise the "solver pilot is active" notice below would be actively
+  // misleading for exactly the spot they are about to see refused. Only warn when
+  // the pot type has some coverage at all, so it is a depth edge, not the general
+  // preview state the PREVIEW notice already describes.
+  const expectsSolverContent = input.productionReady ||
+    (input.hasScopedPilotCoverage && input.hasActivePilotEntitlement);
+  if (
+    expectsSolverContent &&
+    input.coverage != null &&
+    maxCoveredSprForPotType(input.coverage.potType) !== null &&
+    !isPostflopSprCovered(input.coverage.potType, input.coverage.spr)
+  ) {
+    const maxSpr = maxCoveredSprForPotType(input.coverage.potType);
+    return {
+      kind: "DEEP_STACK_UNCOVERED",
+      text: localizedText(
+        `This stack depth is past the solved SPR range (up to SPR ${maxSpr}) for this pot type, so no solver-backed strategy is available here. Choose a shallower stack for solver coverage.`,
+        `Tato hloubka stacku je za solvenutým rozsahem SPR (do SPR ${maxSpr}) pro tento typ potu, takže zde není dostupná solverem podložená strategie. Pro solverové pokrytí zvolte mělčí stack.`,
+      ),
+    };
+  }
   if (input.productionReady) {
     return {
       kind: "PRODUCTION",

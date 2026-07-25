@@ -107,6 +107,22 @@ describe("postflopView - DOM", () => {
     expect(notice?.textContent).not.toMatch(/https?:|www\.|source|zdroj|RangePack|StrategyPack|mtt-/i);
   });
 
+  it("vykresli deep-stack notice jako alert, kdyz je hloubka za solvenym SPR", () => {
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      runtimeNotice: {
+        kind: "DEEP_STACK_UNCOVERED",
+        text: "Tato hloubka stacku je za solvenutým rozsahem SPR (do SPR 20) pro tento typ potu.",
+      },
+    });
+
+    const notice = root.querySelector<HTMLElement>(".postflop-runtime-notice");
+    expect(notice?.dataset.kind).toBe("DEEP_STACK_UNCOVERED");
+    // A depth with no solver-backed strategy must alert, not sit as quiet status.
+    expect(notice?.getAttribute("role")).toBe("alert");
+    expect(notice?.textContent).toContain("za solvenutým rozsahem SPR");
+  });
+
   it("zobrazi pot geometry pro check, small bet a big bet sizing", () => {
     const checkRoot = renderGeneratedSpot(0, "FLOP");
     const checkGeometry = checkRoot.querySelector<HTMLElement>(".postflop-table__bet-geometry");

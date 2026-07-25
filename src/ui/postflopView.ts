@@ -70,7 +70,7 @@ export interface PostflopViewOptions {
 }
 
 export interface PostflopRuntimeNotice {
-  kind: "SCOPED_PILOT" | "LOCKED_PILOT" | "PRODUCTION" | "PREVIEW";
+  kind: "SCOPED_PILOT" | "LOCKED_PILOT" | "PRODUCTION" | "PREVIEW" | "DEEP_STACK_UNCOVERED";
   text: string;
 }
 
@@ -325,7 +325,8 @@ function renderRuntimeNotice(
   const element = doc.createElement("div");
   element.className = "postflop-runtime-notice";
   element.dataset.kind = notice.kind;
-  element.setAttribute("role", notice.kind === "LOCKED_PILOT" ? "alert" : "status");
+  const alerting = notice.kind === "LOCKED_PILOT" || notice.kind === "DEEP_STACK_UNCOVERED";
+  element.setAttribute("role", alerting ? "alert" : "status");
   element.textContent = notice.text;
   return element;
 }
