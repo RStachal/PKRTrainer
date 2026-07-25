@@ -10,11 +10,13 @@ import {
   highestEvAction,
   isActionEvSetComplete,
 } from "../../core/actionEv";
+import { assessSprFidelity } from "../../core/postflopSprFidelity";
 import {
   type RiverProductionStrategyPack,
   type RiverProductionStrategyRule,
   validateRiverProductionStrategyPack,
 } from "./riverProductionStrategyPack";
+import { solvedSprForRuleId } from "./postflopSolvedSpr";
 import { runtimeMttRiverStrategyPacks } from "./mttProductionRuntimeRegistry";
 
 export const riverProductionStrategyPacks: readonly RiverProductionStrategyPack[] =
@@ -46,6 +48,11 @@ export function createRiverProductionStrategyResolver(
       ? highestEvAction(actionEvs) ?? matchedHeroBucket?.action ?? rule.recommendedAction
       : matchedHeroBucket?.action ?? rule.recommendedAction;
 
+    const solvedSpr = solvedSprForRuleId(rule.id);
+    const sprFidelity = solvedSpr === undefined
+      ? undefined
+      : assessSprFidelity(roundedSpr(input.effectiveStackBB, input.potBB), solvedSpr);
+
     return {
       action,
       ...(actionEvs ? { actionEvs } : {}),
@@ -68,6 +75,7 @@ export function createRiverProductionStrategyResolver(
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
         rangeBuckets: rangeBuckets(rule),
         heroRangeBucket: matchedHeroBucket,
+        ...(sprFidelity ? { sprFidelity } : {}),
         ...(rule.opponentPolicy
           ? { opponentPolicy: { ...rule.opponentPolicy } }
           : {}),

@@ -11,11 +11,13 @@ import {
   highestEvAction,
   isActionEvSetComplete,
 } from "../../core/actionEv";
+import { assessSprFidelity } from "../../core/postflopSprFidelity";
 import {
   type FlopProductionStrategyPack,
   type FlopProductionStrategyRule,
   validateFlopProductionStrategyPack,
 } from "./flopProductionStrategyPack";
+import { solvedSprForRuleId } from "./postflopSolvedSpr";
 import { runtimeMttFlopStrategyPacks } from "./mttProductionRuntimeRegistry";
 
 export const flopProductionStrategyPacks: readonly FlopProductionStrategyPack[] =
@@ -50,6 +52,11 @@ export function createFlopProductionStrategyResolver(
       ? highestEvAction(actionEvs) ?? matchedHeroBucket?.action ?? rule.recommendedAction
       : matchedHeroBucket?.action ?? rule.recommendedAction;
 
+    const solvedSpr = solvedSprForRuleId(rule.id);
+    const sprFidelity = solvedSpr === undefined
+      ? undefined
+      : assessSprFidelity(roundedSpr(input.effectiveStackBB, input.potBB), solvedSpr);
+
     return {
       action,
       ...(actionEvs ? { actionEvs } : {}),
@@ -72,6 +79,7 @@ export function createFlopProductionStrategyResolver(
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
         rangeBuckets: rangeBuckets(rule),
         heroRangeBucket: matchedHeroBucket,
+        ...(sprFidelity ? { sprFidelity } : {}),
         ...(rule.opponentPolicy
           ? { opponentPolicy: { ...rule.opponentPolicy } }
           : {}),

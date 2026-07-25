@@ -1577,6 +1577,7 @@ function modelItems(spot: PostflopTrainingSpot): readonly string[] {
         `Shoda textury: ${source.matchedTextures.map(textureLabel).join(", ")}`,
       ),
       localizedText(`SPR range: ${source.sprMin}-${source.sprMax}`, `Rozsah SPR: ${source.sprMin}-${source.sprMax}`),
+      ...sprFidelityItems(source.sprFidelity),
       ...source.assumptions.map(
         (assumption, index) => localizedText(
           `Assumption ${index + 1}: ${userFacingAssumption(assumption)}`,
@@ -1586,6 +1587,36 @@ function modelItems(spot: PostflopTrainingSpot): readonly string[] {
     ];
   }
   return [localizedText("Basic heuristic", "Základní heuristika")];
+}
+
+/**
+ * Show the SPR the strategy was actually solved at, and warn when the shown spot
+ * sits far from it. A rule matches a wide SPR band while its content comes from a
+ * solve at one point, so a spot can display strategy computed at a very different
+ * stack depth - most visibly a shallow three-bet pot shown a deeper solve. The
+ * band alone hides this; the solved point and the distance make it honest.
+ */
+function sprFidelityItems(
+  fidelity: Extract<PostflopTrainingSpot["explanation"]["source"], { kind: "STRATEGY_PACK" }>["sprFidelity"],
+): readonly string[] {
+  if (!fidelity) return [];
+  const solved = localizedText(
+    `Solved at SPR ${fidelity.solvedSpr}`,
+    `Solveno na SPR ${fidelity.solvedSpr}`,
+  );
+  if (fidelity.band === "MATCH") return [solved];
+
+  const times = `${fidelity.ratio}x`;
+  const warning = fidelity.band === "MISMATCH"
+    ? localizedText(
+      `Shown SPR is ${times} the solved SPR - the strategy may not transfer`,
+      `Zobrazené SPR je ${times} solveného - strategie nemusí sedět`,
+    )
+    : localizedText(
+      `Shown SPR is ${times} the solved SPR - treat as approximate`,
+      `Zobrazené SPR je ${times} solveného - ber orientačně`,
+    );
+  return [solved, warning];
 }
 
 /**

@@ -4,6 +4,7 @@ import { mulberry32 } from "./rng";
 import type { PostflopActionNode, PostflopTrainingSpot } from "./postflopTrainingSpot";
 import { positionsForFormat, type TableFormat } from "./trainingProfile";
 import type { ActionEvSet } from "./actionEv";
+import type { SprFidelity } from "./postflopSprFidelity";
 import {
   bestActionsForActionEv,
   cloneActionEvSet,
@@ -203,6 +204,11 @@ export type PostflopRecommendationSource =
       rangeBuckets?: readonly PostflopRangeBucket[];
       heroRangeBucket?: PostflopHeroRangeBucket;
       opponentPolicy?: PostflopOpponentPolicyBranch;
+      /**
+       * How far the shown SPR sits from the SPR this family was solved at. Absent
+       * when the family's solved SPR is unknown or the shown SPR is not positive.
+       */
+      sprFidelity?: SprFidelity;
     }
   | {
       kind: "FALLBACK";

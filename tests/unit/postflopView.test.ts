@@ -412,6 +412,44 @@ describe("postflopView - DOM", () => {
     expect(result?.textContent).not.toContain("https://");
   });
 
+  it("zobrazi solveny SPR a varuje, kdyz je zobrazeny spot daleko od nej", () => {
+    const resolver: PostflopStrategyResolver = (input) => ({
+      action: "BET_BIG",
+      explanation: "SPR fidelity fixture.",
+      source: {
+        kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
+        packId: "internal-fidelity-pack",
+        packVersion: "v1",
+        packVerifiedAt: "2026-07-25",
+        ruleId: "internal-fidelity-rule",
+        confidence: "HIGH",
+        matchedTextures: input.textures,
+        sprMin: 0,
+        sprMax: 25,
+        positionPattern: input.positionPattern,
+        sourceUrls: [],
+        assumptions: ["SPR fidelity fixture."],
+        selectionScore: 100,
+        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        sprFidelity: { shownSpr: 20, solvedSpr: 4, ratio: 5, band: "MISMATCH" },
+      },
+    });
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 7,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: resolver,
+    });
+
+    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
+
+    const result = root.querySelector<HTMLElement>(".postflop-result");
+    expect(result?.textContent).toContain("Solveno na SPR 4");
+    expect(result?.textContent).toContain("Zobrazené SPR je 5x solveného");
+  });
+
   it("zobrazi EV vsech akci a oznaci obe solverove rovnocenne volby", () => {
     const resolver: PostflopStrategyResolver = (input) => ({
       action: "BET_BIG",

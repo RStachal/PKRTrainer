@@ -77,6 +77,12 @@ thirteen buckets are off by 1.5x or more. Options are narrowing the bands,
 solving more SPR points, or restricting which buckets offer three-bet postflop.
 This is a poker decision, not a mechanical one.
 
+Partly addressed: the trainer no longer hides this from the player. Each family's
+solved SPR is recovered and carried into the recommendation, `assessSprFidelity`
+grades the distance, and the postflop view warns when a shown spot sits far from
+the solve (see OPS-73 follow-up). The player is told, but closing the gap in the
+content itself remains the owner decision above.
+
 **P3. Turn pilots.** Turn is the largest untouched dimension and needs no
 external input - the solver, schema, resolver and gates all already exist, and
 the turn resolver already carries the per-hand and provenance fixes. This is the

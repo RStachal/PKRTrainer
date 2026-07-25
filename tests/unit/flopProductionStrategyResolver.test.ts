@@ -240,6 +240,37 @@ describe("flopProductionStrategyResolver", () => {
     expect(result?.actionEvs?.values).toHaveLength(3);
   });
 
+  it("attaches SPR fidelity for a known family and warns when the shown SPR is far", () => {
+    // A rule matches a wide band while the family was solved at one SPR, so the
+    // shown spot can sit far from the solve. The band cannot express that; the
+    // distance to the solved point can. MTT9_50BB_BTN_BB_SRP was solved at 4.0.
+    const familyPack: FlopProductionStrategyPack = {
+      ...productionPack(),
+      rules: [{ ...productionPack().rules[0], id: "mtt9_50bb_btn_bb_srp-check-aggregate", sprMin: 0, sprMax: 25 }],
+    };
+    const resolver = createFlopProductionStrategyResolver(familyPack);
+
+    // Shown SPR 4.0 (stack 40 / pot 10) lands on the solved SPR.
+    const onPoint = resolver({ ...input, potBB: 10, effectiveStackBB: 40 });
+    expect(onPoint?.source?.kind).toBe("STRATEGY_PACK");
+    if (onPoint?.source?.kind === "STRATEGY_PACK") {
+      expect(onPoint.source.sprFidelity).toMatchObject({ solvedSpr: 4, shownSpr: 4, band: "MATCH" });
+    }
+
+    // Shown SPR 20 (stack 40 / pot 2) is five times the solved SPR: a mismatch,
+    // even though the wide band still matched the rule.
+    const farOff = resolver({ ...input, potBB: 2, effectiveStackBB: 40 });
+    if (farOff?.source?.kind === "STRATEGY_PACK") {
+      expect(farOff.source.sprFidelity).toMatchObject({ solvedSpr: 4, shownSpr: 20, band: "MISMATCH" });
+    }
+
+    // The generic fixture rule id belongs to no family, so no fidelity is claimed.
+    const noFamily = createFlopProductionStrategyResolver(productionPack())(input);
+    if (noFamily?.source?.kind === "STRATEGY_PACK") {
+      expect(noFamily.source.sprFidelity).toBeUndefined();
+    }
+  });
+
   it("doporuci akci konkretniho hero bucketu, ne rule-wide akci, kdyz chybi action EV", () => {
     // The rule recommends BET_BIG overall, but 72o sits in the CHECK lane with no
     // action EV. The player holding 72o must be told to CHECK, not graded against

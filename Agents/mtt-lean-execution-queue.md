@@ -1340,9 +1340,21 @@ is 51/51 plus 12/12 on the resolver suite, and typecheck passes.
 
 ### OPS-73 - Measure how far a shown spot sits from the SPR that was solved
 
-Status: `DONE 2026-07-24` (audit); narrowing the gap is owner input
+Status: `DONE 2026-07-24` (audit); `SURFACED 2026-07-25`; narrowing the gap is owner input
 Depends on: `OPS-72`
 Lane: `MECHANICAL`
+
+Follow-up shipped 2026-07-25. The audit's closing point was that the band is
+recorded but the solved point is not, so nothing downstream can warn about the
+distance. That is now closed: the solved SPR of every family is recovered into
+`postflopSolvedSpr.ts`, `assessSprFidelity` grades the distance (MATCH within
+1.3x, STRETCHED to 1.5x, MISMATCH beyond), the three street resolvers attach it
+to the recommendation source at resolve time, and the postflop view shows the
+solved SPR and warns on a stretched or mismatched spot. Computed at resolve time,
+so no pack regeneration and no conflict with the weekend re-solve. The remaining
+options - narrowing bands, solving more SPR points, restricting which buckets
+offer three-bet postflop - stay owner decisions; the player is now told when a
+spot is off-point rather than being left to assume the band is tight.
 
 Each pilot rule matches a wide SPR band, but every family was solved at a single
 SPR. The HIGH band spans 8 to 20 while its families were solved at 9.6, 10 and
