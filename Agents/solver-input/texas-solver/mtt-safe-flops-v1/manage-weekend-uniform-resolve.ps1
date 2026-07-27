@@ -9,7 +9,7 @@ param(
   [ValidateSet("Install", "Status", "Stop", "Uninstall")]
   [string]$Action = "Status",
   [string]$TaskName = "PKRTrainer-Weekend-UniformResolve",
-  [int]$Threads = 12,
+  [int]$Threads = 6,
   [int]$Iterations = 1200,
   [string]$ProcessPriority = "BelowNormal",
   [switch]$StartNow

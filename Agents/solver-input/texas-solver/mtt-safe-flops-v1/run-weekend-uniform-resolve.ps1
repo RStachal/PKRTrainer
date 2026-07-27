@@ -9,7 +9,7 @@
 # interrupted mid-solve is restored from that backup on the next start.
 [CmdletBinding()]
 param(
-  [int]$Threads = 12,
+  [int]$Threads = 6,
   [int]$Iterations = 1200,
   [string]$ProcessPriority = "BelowNormal",
   [int]$MinimumFreeMemoryPercent = 12,
