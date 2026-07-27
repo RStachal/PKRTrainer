@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
+import { nodeHistoryArgs, reviewFileName } from "./lib/mttReviewFileNaming.mts";
 
 /**
  * Rebuild every scoped pilot after a solver re-solve.
@@ -28,6 +29,7 @@ import { dirname, join, resolve } from "node:path";
 
 const SOLVER_OUTPUT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 const DRAFT_ROOT = "artifacts/texas-solver-review-integration/normalized-drafts";
+const DRAFT_BACKUP_ROOT = "artifacts/mtt-post-resolve/draft-backup";
 const DEFAULT_REPORT = "artifacts/mtt-post-resolve/report.json";
 const VITE_NODE = "node_modules/vite-node/vite-node.mjs";
 
@@ -152,10 +154,18 @@ function run(args: CliArgs) {
       "Rebuild the coverage-v2 family drafts."));
 
     // Trap 2: the remaining families are rebuilt from reviews beside the raw.
+    // Trap 6: "ROOT" is not an action, it is the absence of one. The extractor
+    // takes a node history of actions to walk, so a root export must pass no
+    // --node-history at all; passing the literal "ROOT" asks it to walk to an
+    // action node by that name and writes strategy-export.ROOT.review.json,
+    // which the normalize step then cannot find. Root exports are named
+    // strategy-export.review.json, without an infix.
     for (const item of plan.cbet) {
       steps.push(npm(`review:${item.familyId}`, [
         "mtt:texas-solver-review", "--",
-        `--family=${item.familyId}`, `--node-history=${item.node}`, "--write",
+        `--family=${item.familyId}`,
+        ...nodeHistoryArgs(item.node),
+        "--write",
       ], args.write, `Extract the ${item.node} review for ${item.familyId}.`));
       steps.push(npm(`draft:${item.familyId}`, [
         "mtt:texas-solver-normalize-draft", "--",
@@ -180,6 +190,9 @@ function run(args: CliArgs) {
       ], args.write, `Rebuild ${item.familyId} facing-bet on the pinned ${item.betAction} node.`));
     }
   }
+
+  // Nothing downstream may read a draft the rebuild silently dropped.
+  if (!args.skipDrafts) steps.push(restoreUnrebuiltDrafts(plan, args.write));
 
   // Trap 3: merge every scope, including the one the refresh workflow omits.
   for (const scope of MERGED_SCOPES) {
@@ -300,7 +313,7 @@ function draftPlan(): { cbet: CbetPlan[]; facingBet: FacingPlan[] } {
         sprMin: Number(rule.sprMin),
         sprMax: Number(rule.sprMax),
         outputDir: join(DRAFT_ROOT, dir),
-        reviewPath: join(SOLVER_OUTPUT_ROOT, familyId, `strategy-export.${node}.review.json`),
+        reviewPath: join(SOLVER_OUTPUT_ROOT, familyId, reviewFileName(node)),
       });
       continue;
     }
@@ -330,17 +343,69 @@ function draftPlan(): { cbet: CbetPlan[]; facingBet: FacingPlan[] } {
   return { cbet, facingBet };
 }
 
+/**
+ * Trap 7: clearing a draft is a bet that it can be rebuilt.
+ *
+ * The ingest is change-driven and skips a family whose draft still exists, so
+ * the drafts have to go before the rebuild. But a rebuild step can fail - a
+ * missing review file is enough - and then the source draft is simply gone, the
+ * merge downstream of it has nothing to read, and a scope silently loses its
+ * content. That is exactly what happened to the three SB families the first time
+ * this ran.
+ *
+ * So every cleared draft is copied aside first, and any that the rebuild did not
+ * recreate is restored at the end. The same backup-and-restore shape the weekend
+ * solver runner already uses for raw checkpoints.
+ */
 function clearCoverageV2Drafts(plan: ReturnType<typeof draftPlan>, write: boolean): Step {
   const targets = plan.cbet
     .map((item) => item.outputDir)
     .filter((dir) => existsSync(dir));
-  if (write) for (const dir of targets) rmSync(dir, { recursive: true, force: true });
+  if (write) {
+    rmSync(DRAFT_BACKUP_ROOT, { recursive: true, force: true });
+    for (const dir of targets) {
+      cpSync(dir, join(DRAFT_BACKUP_ROOT, basename(dir)), { recursive: true });
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
   return {
     id: "clear-stale-drafts",
-    detail: "Remove per-family drafts so the change-driven ingest cannot skip them.",
+    detail: "Back up and remove per-family drafts so the change-driven ingest cannot skip them.",
     ran: write,
     ok: true,
-    output: `${targets.length} draft directory(ies)${write ? " removed" : " would be removed"}`,
+    output: `${targets.length} draft directory(ies)${write ? ` backed up to ${DRAFT_BACKUP_ROOT} and removed` : " would be removed"}`,
+  };
+}
+
+/** Put back any draft the rebuild failed to recreate, so nothing is lost. */
+function restoreUnrebuiltDrafts(plan: ReturnType<typeof draftPlan>, write: boolean): Step {
+  if (!write || !existsSync(DRAFT_BACKUP_ROOT)) {
+    return {
+      id: "restore-unrebuilt-drafts",
+      detail: "Restore any draft a failed rebuild left missing.",
+      ran: false,
+      ok: true,
+      output: write ? "no draft backup was taken" : "dry run",
+    };
+  }
+  const restored: string[] = [];
+  for (const name of readdirSync(DRAFT_BACKUP_ROOT)) {
+    const target = join(DRAFT_ROOT, name);
+    if (existsSync(join(target, "normalized.candidate.json"))) continue;
+    rmSync(target, { recursive: true, force: true });
+    cpSync(join(DRAFT_BACKUP_ROOT, name), target, { recursive: true });
+    restored.push(name);
+  }
+  return {
+    id: "restore-unrebuilt-drafts",
+    detail: "Restore any draft a failed rebuild left missing.",
+    ran: true,
+    // A restore is a rescue, not a success: the rebuild did not do its job.
+    ok: restored.length === 0,
+    output: restored.length === 0
+      ? "every cleared draft was rebuilt"
+      : `Restored ${restored.length} draft(s) the rebuild did not recreate: ${restored.join(", ")}. `
+        + "Their content is the previous build, not the re-solve; fix the rebuild before shipping.",
   };
 }
 
