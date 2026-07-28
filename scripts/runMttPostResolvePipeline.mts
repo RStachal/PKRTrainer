@@ -2,6 +2,11 @@ import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { nodeHistoryArgs, reviewFileName } from "./lib/mttReviewFileNaming.mts";
+import {
+  renderWithheldFamilies,
+  withheldFamiliesForRules,
+  type AcceptanceRecord,
+} from "./lib/mttAcceptanceGuard.mts";
 
 /**
  * Rebuild every scoped pilot after a solver re-solve.
@@ -30,6 +35,8 @@ import { nodeHistoryArgs, reviewFileName } from "./lib/mttReviewFileNaming.mts";
 const SOLVER_OUTPUT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 const DRAFT_ROOT = "artifacts/texas-solver-review-integration/normalized-drafts";
 const DRAFT_BACKUP_ROOT = "artifacts/mtt-post-resolve/draft-backup";
+const ACCEPTANCE_DECISIONS = "artifacts/texas-solver-review-protocol/mechanical-acceptance-decisions.json";
+const PILOT_MODULE_DIR = "src/data/ranges/pilots";
 const DEFAULT_REPORT = "artifacts/mtt-post-resolve/report.json";
 const VITE_NODE = "node_modules/vite-node/vite-node.mjs";
 
@@ -204,6 +211,10 @@ function run(args: CliArgs) {
   steps.push(npm("pilot-modules", ["mtt:postflop-pilot-modules", "--", "--write"], args.write,
     "Regenerate the runtime pilot modules."));
 
+  // The accuracy grader's verdict is enforced here or nowhere: it lives in
+  // artifacts that are not version controlled, and nothing downstream reads it.
+  steps.push(withheldFamilyGuard());
+
   // Gates are read-only, so they run even in a dry run and report real state.
   steps.push(npm("gate:pilot-suite", ["mtt:postflop-pilot-suite", "--", "--summary"], true,
     "Pilot suite must be 7/7."));
@@ -375,6 +386,43 @@ function clearCoverageV2Drafts(plan: ReturnType<typeof draftPlan>, write: boolea
     ok: true,
     output: `${targets.length} draft directory(ies)${write ? ` backed up to ${DRAFT_BACKUP_ROOT} and removed` : " would be removed"}`,
   };
+}
+
+/**
+ * Report shipped packs that draw on a family the accuracy grader withheld.
+ *
+ * Read-only, so it runs in a dry run too and reports the real state. If the
+ * decisions file is absent the step passes: no evidence is not a failed grade,
+ * and failing here would block every machine that has not graded yet.
+ */
+function withheldFamilyGuard(): Step {
+  const id = "guard:withheld-families";
+  const detail = "Refuse to ship pack content built from families the accuracy grader withheld.";
+  if (!existsSync(ACCEPTANCE_DECISIONS)) {
+    return { id, detail, ran: true, ok: true, output: `No acceptance decisions at ${ACCEPTANCE_DECISIONS}; nothing to enforce.` };
+  }
+  let decisions: AcceptanceRecord[];
+  let ruleIds: string[];
+  try {
+    const parsed = JSON.parse(readFileSync(ACCEPTANCE_DECISIONS, "utf8")) as { decisions?: AcceptanceRecord[] };
+    decisions = Array.isArray(parsed.decisions) ? parsed.decisions : [];
+    ruleIds = shippedPilotRuleIds();
+  } catch (error) {
+    return { id, detail, ran: true, ok: false, output: `Could not read acceptance state: ${(error as Error).message}` };
+  }
+  const withheld = withheldFamiliesForRules(ruleIds, decisions);
+  return { id, detail, ran: true, ok: withheld.length === 0, output: renderWithheldFamilies(withheld) };
+}
+
+/** Rule ids of every generated pilot module, read from the built modules. */
+function shippedPilotRuleIds(): string[] {
+  if (!existsSync(PILOT_MODULE_DIR)) return [];
+  const ids: string[] = [];
+  for (const file of readdirSync(PILOT_MODULE_DIR).filter((name) => name.endsWith(".generated.ts"))) {
+    const text = readFileSync(join(PILOT_MODULE_DIR, file), "utf8");
+    for (const match of text.matchAll(/"id":\s*"(mtt9_[^"]+)"/gi)) ids.push(match[1]);
+  }
+  return ids;
 }
 
 /** Put back any draft the rebuild failed to recreate, so nothing is lost. */
