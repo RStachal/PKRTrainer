@@ -268,6 +268,38 @@ already contributed. Four families reach **five of the thirteen** shipped rules:
 BTN facing-bet MID and HIGH, SB c-bet HIGH, and 3bet c-bet plus 3bet facing-bet
 HIGH.
 
+## The facing-bet lanes described a move the player cannot make
+
+The three range lanes - value, bluff, check - are named for a betting node. Six
+of the nineteen shipped rules are facing-bet nodes, where the legal actions are
+FOLD, CALL and RAISE, and the player was shown a lane headed "Check".
+
+The lane also holds both the calls and the folds, which facing a bet is the whole
+decision. Measured across the shipped facing-bet packs, the split inside that one
+lane swings completely:
+
+| Rule | Calls | Folds |
+| --- | --- | --- |
+| `mtt9_100bb_btn_bb_srp_facing_highspr` | 31 | 1 |
+| `mtt9_70bb_co_btn_3bp_facing_midspr` | 35 | 1 |
+| `mtt9_45bb_co_btn_3bp_facing_lowspr` | 1 | 3 |
+
+Same colour, opposite meaning, and the range matrix carried no action at all, so
+nothing anywhere distinguished them. Fixed by making the lane wording follow the
+node - value raise, bluff raise, call or fold - and by carrying the solved
+per-hand action into each matrix cell. Betting-node wording is unchanged.
+
+Splitting CHECK into CALL and FOLD would be the deeper fix, but it is a schema
+change reaching packs, resolvers and every generated module. Worth doing when the
+lane vocabulary is next revisited.
+
+Still open from the same investigation: the villain bet size a facing-bet rule
+puts the player against is **pinned from a previous run**, not derived from
+current data, and the pinned record does not say why that size was chosen. The
+shipped pins are all plausible (25-34 percent of pot), but the 3bet pack faces a
+33 percent bet at low and mid SPR and a 25 percent bet at high SPR, which is an
+inconsistency nobody chose.
+
 ## Solver CPU policy
 
 The machine is shared with development, so the solver takes a share that depends
