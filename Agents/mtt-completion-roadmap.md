@@ -226,21 +226,41 @@ content. The solver is re-solving exactly these boards now. What has changed is
 that the rebuild reports failure until they converge or someone decides to ship
 them anyway.
 
-## Telling the two trees apart is possible after all
+## The audit's blind spot was hiding three mixed families
 
-The provenance audit classifies 226 of 577 boards as AMBIGUOUS, because it reads
-only the flop root, and the full and reduced parameter sets have **identical**
-flop bet sizes - they diverge only at turn and river. A structural discriminator
-was found that does distinguish them: a reduced tree declares no turn donk size,
-so TexasSolver emits the turn donk node with `CHECK` as its only legal action,
-a single-action node a full tree never produces. Corroborated by whole-file
-`"RAISE ` token counts, which measured 6-24 on reduced dumps against 286-1196 on
-full ones, with no overlap.
+The provenance audit classified boards by matching root bet sizes against
+parameter sets. That test could never work: the full and reduced trees are
+**identical at the flop root** and diverge only at turn and river, so any board
+whose root fits both sets came back AMBIGUOUS. That was 226 of 577 boards.
 
-Treat this as promising rather than settled: the adversarial pass that would have
-attacked it did not run, because the session limit was reached. Worth confirming
-before the audit is rewritten on top of it, since the partial-resolve guard rests
-on that audit.
+An earlier note here guessed, from dump file sizes, that those were probably not
+secretly reduced. That guess was **wrong**. Reading the boards themselves showed
+32 of them are reduced-tree solves, and they were concealing three tree-mixing
+families from the guard built to catch precisely that:
+
+| Family | Truth | Audit saw | Guard |
+| --- | --- | --- | --- |
+| `MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR` | 20 reduced / 4 full | all ambiguous | missed |
+| `MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR` | 12 reduced / 12 full | all ambiguous | missed |
+| `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR` | 17 reduced / 15 full | reduced only, no full | missed |
+
+The guard tests `fullTree > 0 && reducedTree > 0`, so a family whose full boards
+all hid under "ambiguous" never tripped it. All three feed shipped pilot rules:
+**three of the thirteen rules a paying player trains against are aggregates
+mixing two different games.** And because the batch selector only ever picked
+boards it knew were reduced, those 32 would never have been re-solved - the
+uniform-tree goal was unreachable by construction.
+
+Fixed by resolving ambiguity structurally. A full parameter set declares
+`set_bet_sizes oop,turn,donk`; a reduced one does not, so the solver emits that
+turn node with `CHECK` as its only legal action, and a full tree never produces a
+single-action node. Validated against all 351 boards the root test was confident
+about with zero disagreements, and it does not false-fire on the shallowest
+family. Verdicts are cached on size and mtime, so the warm pass is six seconds.
+
+Through the chain: reduced boards 46 to 78, ambiguous 226 to 0, mixing families 2
+to 5, re-solve queue 52 to 83. The solver picks up the hidden boards on its next
+tick, and the three affected rules should be rebuilt once it does.
 
 ## Open question: how wide the solved ranges are
 
