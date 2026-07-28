@@ -12,6 +12,9 @@ param(
   [int]$Threads = 6,
   [int]$Iterations = 1200,
   [string]$ProcessPriority = "BelowNormal",
+  # Roughly 40 percent of the machine, so development runs beside the solver.
+  [ValidateRange(1, 100)]
+  [int]$CpuCorePercent = 40,
   [switch]$StartNow
 )
 
@@ -36,7 +39,11 @@ function Show-Status {
   $procs = @(Get-Process console_solver -ErrorAction SilentlyContinue)
   Write-Host "solver procs:  $($procs.Count)"
   if ($procs.Count -gt 0) {
-    Write-Host "  threads=$($procs[0].Threads.Count) priority=$($procs[0].PriorityClass)"
+    $total = [Environment]::ProcessorCount
+    $mask = [int64]$procs[0].ProcessorAffinity
+    $cores = 0
+    for ($bit = 0; $bit -lt $total; $bit++) { if ($mask -band ([int64]1 -shl $bit)) { $cores++ } }
+    Write-Host "  threads=$($procs[0].Threads.Count) priority=$($procs[0].PriorityClass) cores=$cores/$total (~$([Math]::Round(100.0 * $cores / $total))% of CPU)"
   }
   # Each worker tick regenerates the batch, which prunes the parameter files of
   # boards that have already converged. So the parameter-file count is the number
@@ -102,7 +109,7 @@ switch ($Action) {
   }
 
   "Install" {
-    $arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$worker`" -Threads $Threads -Iterations $Iterations -ProcessPriority $ProcessPriority"
+    $arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$worker`" -Threads $Threads -Iterations $Iterations -ProcessPriority $ProcessPriority -CpuCorePercent $CpuCorePercent"
     $taskAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments -WorkingDirectory $repo
 
     $atLogon = New-ScheduledTaskTrigger -AtLogOn -User $currentUser

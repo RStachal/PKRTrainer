@@ -9,6 +9,11 @@ param(
   [int]$MaximumCpuPercent = 100,
   [ValidateSet("Idle", "BelowNormal", "Normal", "AboveNormal")]
   [string]$ProcessPriority = "Normal",
+  # Share of logical cores the solver may occupy. MaximumCpuPercent only decides
+  # whether to START another board; this caps what the solver itself consumes
+  # while it runs, which is what keeps a machine usable beside it.
+  [ValidateRange(1, 100)]
+  [int]$CpuCorePercent = 100,
   [switch]$ContinueOnSolverFailure,
   [string]$FailureReportPath = "",
   [string]$ResourceStopReportPath = "",
@@ -92,6 +97,23 @@ function Set-ProcessPriority([string]$Priority) {
   }
 }
 
+function Set-ProcessCoreCap([int]$Percent) {
+  if ($Percent -ge 100) { return }
+  try {
+    $total = [Environment]::ProcessorCount
+    # At least one core, and never all of them when a cap was asked for.
+    $cores = [Math]::Max(1, [Math]::Min($total - 1, [int][Math]::Round($total * $Percent / 100.0)))
+    # Affinity is inherited, so capping the queue runner caps every solver it
+    # spawns - including ones started after this script hands off.
+    $mask = ([bigint]1 -shl $cores) - 1
+    $currentProcess = [System.Diagnostics.Process]::GetCurrentProcess()
+    $currentProcess.ProcessorAffinity = [IntPtr][int64]$mask
+    Write-Host "TexasSolver queue core cap: $cores of $total logical cores (~$([Math]::Round(100.0 * $cores / $total))%)"
+  } catch {
+    Write-Warning "Could not cap TexasSolver queue to $Percent% of cores; continuing uncapped. $($_.Exception.Message)"
+  }
+}
+
 function Find-ResourceStop($file, [DateTimeOffset]$StartedAt) {
   if ([string]::IsNullOrWhiteSpace($ResourceStopReportPath) -or
       -not (Test-Path -LiteralPath $ResourceStopReportPath -PathType Leaf)) {
@@ -170,6 +192,7 @@ if ($files.Count -eq 0) {
 }
 
 Set-ProcessPriority $ProcessPriority
+Set-ProcessCoreCap $CpuCorePercent
 
 Write-Host "TexasSolver root: $solverRoot"
 Write-Host "Parameter root: $parameterRoot"

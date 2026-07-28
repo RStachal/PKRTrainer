@@ -14,6 +14,9 @@ param(
   [string]$ProcessPriority = "BelowNormal",
   [int]$MinimumFreeMemoryPercent = 12,
   [int]$MaximumCpuPercent = 100,
+  # Roughly 40 percent of the machine, so development runs beside the solver.
+  [ValidateRange(1, 100)]
+  [int]$CpuCorePercent = 40,
   [switch]$SkipBackup
 )
 
@@ -95,6 +98,7 @@ try {
     -ProcessPriority $ProcessPriority `
     -MinimumFreeMemoryPercent $MinimumFreeMemoryPercent `
     -MaximumCpuPercent $MaximumCpuPercent `
+    -CpuCorePercent $CpuCorePercent `
     -FailureReportPath (Join-Path $workDir "failures.jsonl") 2>&1 | ForEach-Object { Write-Log $_ }
 
   Write-Log "Refreshing review-only accuracy evidence."
