@@ -71,15 +71,35 @@ describe("mtt:texas-solver-tree-provenance CLI", () => {
     expect(row.matchedSets).toEqual(["pkrtrainer_mtt_safe_flops_v1"]);
   });
 
-  it("reports ambiguity instead of guessing when both sets predict the same bet", () => {
+  it("resolves a root the parameter sets cannot separate by reading the turn", () => {
+    // The two trees are identical at the flop, so whenever both sets predict the
+    // same root bet the root test can say nothing. It used to stop there and
+    // report AMBIGUOUS, which left 226 of 577 real boards unclassified - invisible
+    // to the tree-mixing guard and never selected for re-solve. The board's own
+    // turn structure decides it instead: this fixture has no suppressed donk node,
+    // so it is a full tree.
     writeParamSet("pkrtrainer_mtt_beta_min_board_review_v1", 50, [33]);
     writeParamSet("pkrtrainer_mtt_low_memory_beta_min_board_review_v1", 50, [33]);
     writeBoard("J54mono", [17, 125]);
 
     const report = invokeJson();
 
-    expect(boardRow(report, "J54mono").profile).toBe("AMBIGUOUS");
-    expect(report.counts).toMatchObject({ fullTree: 0, reducedTree: 0, ambiguous: 1 });
+    expect(boardRow(report, "J54mono").profile).toBe("FULL_TREE");
+    expect(boardRow(report, "J54mono").resolvedByMarker).toBe(true);
+    expect(report.counts).toMatchObject({ fullTree: 1, reducedTree: 0, ambiguous: 0, resolvedByMarker: 1 });
+  });
+
+  it("resolves the same unseparable root to reduced when the donk node is suppressed", () => {
+    writeParamSet("pkrtrainer_mtt_beta_min_board_review_v1", 50, [33]);
+    writeParamSet("pkrtrainer_mtt_low_memory_beta_min_board_review_v1", 50, [33]);
+    // A reduced tree declares no turn donk size, so the solver emits that node
+    // with CHECK as its only legal action - something a full tree never does.
+    writeBoardWithSuppressedDonk("J54mono", [17, 125]);
+
+    const report = invokeJson();
+
+    expect(boardRow(report, "J54mono").profile).toBe("REDUCED_TREE");
+    expect(report.counts).toMatchObject({ fullTree: 0, reducedTree: 1, ambiguous: 0 });
   });
 
   it("marks a board unknown when no parameter set explains its root bets", () => {
@@ -116,6 +136,16 @@ function writeParamSet(setName: string, pot: number, oopFlopBetPercents: readonl
   for (const board of ["K83r", "A72r", "Q72r", "J54mono", "T84r"]) {
     writeFileSync(join(dir, `01_${FAMILY}_${board}.txt`), lines, "utf8");
   }
+}
+
+/** A dump whose root matches, but which carries the reduced tree's turn marker. */
+function writeBoardWithSuppressedDonk(boardId: string, rootBetSizes: readonly number[]): void {
+  const actions = ["CHECK", ...rootBetSizes.map((size) => `BET ${size}.000000`)]
+    .map((item) => `"${item}"`)
+    .join(",");
+  const turn = '{"actions":["CHECK"],"childrens":{},"node_type":"action_node"}';
+  const body = `{"actions":[${actions}],"childrens":{"turn":${turn}},"node_type":"action_node"}`;
+  writeFileSync(join(outputRoot, FAMILY, "raw", `pkrtrainer_${FAMILY}_${boardId}.json`), body, "utf8");
 }
 
 function writeBoard(boardId: string, rootBetSizes: readonly number[]): void {

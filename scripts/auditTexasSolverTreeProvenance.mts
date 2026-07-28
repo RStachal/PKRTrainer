@@ -1,5 +1,34 @@
 import { existsSync, mkdirSync, openSync, readFileSync, readSync, closeSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import {
+  cachedTreeMarkerVerdict,
+  type TreeMarkerCacheEntry,
+} from "./lib/texasSolverTreeMarker.mts";
+
+/**
+ * Deciding an ambiguous board means reading it whole, so verdicts are cached on
+ * size and mtime. A re-solved board changes both and is read again.
+ */
+const MARKER_CACHE_PATH = "artifacts/texas-solver-tree-provenance/marker-cache.json";
+const markerCache = loadMarkerCache();
+
+function loadMarkerCache(): Map<string, TreeMarkerCacheEntry> {
+  try {
+    const parsed = JSON.parse(readFileSync(MARKER_CACHE_PATH, "utf8")) as Record<string, TreeMarkerCacheEntry>;
+    return new Map(Object.entries(parsed));
+  } catch {
+    return new Map();
+  }
+}
+
+function saveMarkerCache(): void {
+  try {
+    mkdirSync(dirname(MARKER_CACHE_PATH), { recursive: true });
+    writeFileSync(MARKER_CACHE_PATH, `${JSON.stringify(Object.fromEntries(markerCache), null, 1)}\n`, "utf8");
+  } catch {
+    // A cache that cannot be written costs time on the next run, nothing more.
+  }
+}
 
 /**
  * Tree-profile provenance audit for solved TexasSolver boards.
@@ -40,6 +69,8 @@ interface BoardRow {
   rootBetSizes: number[];
   matchedSets: string[];
   profile: TreeProfile;
+  /** True when the root test was ambiguous and the turn marker decided it. */
+  resolvedByMarker: boolean;
 }
 
 interface FamilyRow {
@@ -65,6 +96,7 @@ interface CliArgs {
 try {
   const args = parseArgs(process.argv.slice(2));
   const report = buildReport(args);
+  saveMarkerCache();
   if (args.reportPath !== null) {
     mkdirSync(dirname(args.reportPath), { recursive: true });
     writeFileSync(args.reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
@@ -136,11 +168,12 @@ function buildReport(args: CliArgs) {
   return {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
-    basis: "ROOT_BET_SIZES_MATCHED_AGAINST_PARAMETER_SETS",
+    basis: "ROOT_BET_SIZES_THEN_TURN_MARKER_FOR_AMBIGUOUS",
     counts: {
       families: rows.length,
       ...totals,
       mixedFamilies: rows.filter((row) => row.fullTree > 0 && row.reducedTree > 0).length,
+      resolvedByMarker: rows.reduce((sum, row) => sum + row.boardRows.filter((item) => item.resolvedByMarker).length, 0),
       fullyReducedFamilies: rows.filter((row) => row.boards > 0 && row.reducedTree === row.boards).length,
     },
     families: rows,
@@ -154,13 +187,24 @@ function familyRow(familyId: string, args: CliArgs): FamilyRow {
 
   for (const name of readdirSync(rawDir).filter((item) => item.endsWith(".json")).sort()) {
     const boardId = name.replace(new RegExp(`^pkrtrainer_${familyId}_`), "").replace(/\.json$/, "");
-    const rootBetSizes = rootBetSizesOf(join(rawDir, name));
+    const dumpPath = join(rawDir, name);
+    const rootBetSizes = rootBetSizesOf(dumpPath);
     const matched = paramSets.filter((set) => setMatchesBoard(set, rootBetSizes));
+    const rootProfile = classify(matched, rootBetSizes);
+    // The root test cannot separate the trees, because they are identical at the
+    // flop. When it says so, read the board's own turn structure instead of
+    // leaving it unknown - an unresolved board is invisible to the mixing guard
+    // and is never selected for re-solve, so ambiguity is not a safe resting
+    // place.
+    const profile = rootProfile === "AMBIGUOUS"
+      ? (cachedTreeMarkerVerdict(dumpPath, markerCache) === "REDUCED" ? "REDUCED_TREE" : "FULL_TREE")
+      : rootProfile;
     boardRows.push({
       boardId,
       rootBetSizes,
       matchedSets: matched.map((set) => set.setName),
-      profile: classify(matched, rootBetSizes),
+      profile,
+      resolvedByMarker: rootProfile === "AMBIGUOUS",
     });
   }
 
@@ -269,7 +313,7 @@ function classify(matched: readonly ParamSetProfile[], rootBetSizes: readonly nu
 function render(report: ReturnType<typeof buildReport>, summaryOnly: boolean): string {
   const lines = [
     "TexasSolver tree-profile provenance",
-    "basis: ROOT_BET_SIZES_MATCHED_AGAINST_PARAMETER_SETS",
+    "basis: ROOT_BET_SIZES_THEN_TURN_MARKER_FOR_AMBIGUOUS",
     `families: ${report.counts.families}`,
     `boards: ${report.counts.boards}`,
     `full tree: ${report.counts.fullTree}`,
@@ -277,6 +321,7 @@ function render(report: ReturnType<typeof buildReport>, summaryOnly: boolean): s
     `ambiguous: ${report.counts.ambiguous}`,
     `unknown: ${report.counts.unknown}`,
     `families mixing both: ${report.counts.mixedFamilies}`,
+    `ambiguous roots resolved by turn marker: ${report.counts.resolvedByMarker}`,
     `families fully reduced: ${report.counts.fullyReducedFamilies}`,
   ];
   if (summaryOnly) return lines.join("\n");
