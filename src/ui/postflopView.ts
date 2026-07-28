@@ -1,5 +1,6 @@
 import {
   generatePostflopSpot,
+  PostflopStrategyUnavailableError,
   type BoardTexture,
   type PostflopAction,
   type PostflopHeroRangeBucket,
@@ -54,6 +55,8 @@ export interface PostflopViewOptions {
   autoGenerate?: boolean;
   strategyResolver?: PostflopStrategyResolver;
   allowFallback?: boolean;
+  /** False when the runtime cannot serve turn and river, so a line cannot run. */
+  lineModeAvailable?: boolean;
   runtimeNotice?: PostflopRuntimeNotice | null;
   beforeGenerate?: (mode: "single" | "line") => Promise<void> | void;
   onLineCompleted?: (
@@ -218,6 +221,15 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   const lineOption = doc.createElement("option");
   lineOption.value = "line";
   lineOption.textContent = CS.postflop.handLine;
+  // A hand line needs strategy on all three streets. The scoped flop pilots have
+  // only the flop, so for a paying pilot subscriber the line could never be
+  // generated - it threw and the player was shown a bare "unavailable", while a
+  // free preview user got a working line from the heuristic model. Offering it
+  // there sold a mode that cannot run, so it is disabled and says why.
+  if (options.lineModeAvailable === false) {
+    lineOption.disabled = true;
+    lineOption.textContent = `${CS.postflop.handLine} - ${CS.postflop.handLineNeedsAllStreets}`;
+  }
   modeSelect.appendChild(singleOption);
   modeSelect.appendChild(lineOption);
   modeLabel.appendChild(modeText);
@@ -303,7 +315,11 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
         onNewSpot: showNewSpot,
         onChangeSituation: showSituationInput,
       });
-    } catch {
+    } catch (error) {
+      // Only a missing-strategy refusal means "no content for this spot". A bare
+      // catch made every other failure look like that too, so a real defect would
+      // have been reported by players as thin coverage and never as a bug.
+      if (!(error instanceof PostflopStrategyUnavailableError)) throw error;
       controls.hidden = false;
       output.hidden = false;
       renderUnavailable(output);

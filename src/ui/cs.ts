@@ -112,6 +112,7 @@ const CZ_CATALOG = {
     random: "náhodný",
     singleSpot: "Jeden spot",
     handLine: "Hand line",
+    handLineNeedsAllStreets: "needs turn and river coverage",
     generate: "Vygenerovat spot",
     unavailable:
       "Pro tuto situaci není dostupná produkční strategie. Vyberte jiný profil nebo akci zopakujte po instalaci produkčních dat.",
@@ -382,6 +383,7 @@ const EN_CATALOG: UiCatalog = {
     random: "random",
     singleSpot: "Single spot",
     handLine: "Hand line",
+    handLineNeedsAllStreets: "vyžaduje pokrytí turnu a riveru",
     generate: "Generate spot",
     unavailable:
       "No production strategy is available for this situation. Select another profile or retry after production data is installed.",

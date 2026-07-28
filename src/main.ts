@@ -475,6 +475,13 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
         ? (input) => postflopRuntime?.resolver?.(input) ?? null
         : undefined,
       allowFallback: requiresExactRuntime ? false : capability?.allowHeuristicFallback ?? true,
+      // A hand line walks flop, turn and river. When the runtime refuses the
+      // heuristic - a paying pilot or production subscriber - every street must
+      // have real content, and the scoped pilots are flop-only.
+      lineModeAvailable: !requiresExactRuntime || (resolvedProfile !== undefined && resolvedProfile !== null
+        && POSTFLOP_LINE_STREETS.every((street) => (
+          trainingCapabilityForProfile({ ...resolvedProfile, street }).status === "PRODUCTION"
+        ))),
       beforeGenerate: runtimeProfileForView
         ? async (mode) => {
           const { buildMttPostflopTrainingRuntime } = await import("./data/ranges/mttPostflopTrainingRuntime");
@@ -831,6 +838,9 @@ function runtimeProfile(profile: TrainingProfile, filters: Filters): TrainingPro
     ante: profile.gameVariant === "CASH" ? "OFF" : filters.ante,
   };
 }
+
+/** The streets a hand line walks; all three need content for it to run. */
+const POSTFLOP_LINE_STREETS = ["FLOP", "TURN", "RIVER"] as const;
 
 function postflopRuntimeNotice(input: {
   hasScopedPilotCoverage: boolean;
