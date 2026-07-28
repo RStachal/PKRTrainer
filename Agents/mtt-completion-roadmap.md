@@ -192,6 +192,34 @@ Counting those lines overstates completed boards by more than twenty times and
 makes converging boards look like failures. A board ends where the cumulative
 time resets.
 
+## Preflop audited: the core is sound, the gate was implicit
+
+The postflop pilots have had far more scrutiny than the preflop packs, which is
+backwards - preflop is the production content and what most players use most. So
+it was audited with the same lens. The core holds up:
+
+- `lenient` and `strict` are documented and correctly wired: strict is what is
+  recommended, lenient is what also grades correct.
+- A hand absent from a record defaults to fold, which is right for preflop, and
+  the pack audit already rejects empty strict or lenient cells - so a truncated
+  range cannot silently teach folding everything.
+- The action tree is total and offers FOLD everywhere except a big blind facing
+  limps, where it offers LIMP and the default correctly becomes a check. The
+  final `offeredKinds[0]` fallback is unreachable, so an unrecorded hand can
+  never default to an aggressive action.
+
+One thing was not sound. The postflop path refuses a profile it cannot serve
+explicitly, on `canStartTraining`; **the preflop path never checks it**. What kept
+six-max - which has no data at all - out of a paying player's hands was a local
+helper in `main.ts` returning undefined. An invariant held by one function's
+internals, stated nowhere and tested nowhere.
+
+The rule now lives in the data layer as `startableMttPreflopRangePack`, with a
+test sweeping all eight preflop profiles: any profile whose capability says it
+cannot start training must not obtain a pack. Written over every combination
+rather than the one unfinished today, so finishing six-max cannot quietly make
+another combination startable without data.
+
 ## Every known content problem lands on the same five rules
 
 Three separate defects were found in the shipped flop pilots - families mixing
