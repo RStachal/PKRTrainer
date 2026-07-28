@@ -65,7 +65,19 @@ function Invoke-Apply {
       @(Get-Process console_solver -ErrorAction SilentlyContinue) | Stop-Process -Force -ErrorAction SilentlyContinue
       Start-Sleep -Seconds 3
       Start-ScheduledTask -TaskName "PKRTrainer-Weekend-UniformResolve" -ErrorAction SilentlyContinue
-      Write-WindowLog "Worker restarted under the $($policy.Window) policy."
+      # Confirm it actually came back. A restart that quietly failed would stop
+      # solving for the rest of an unattended window, so it is stated either way.
+      $cameUp = $false
+      foreach ($attempt in 1..12) {
+        Start-Sleep -Seconds 5
+        if (@(Get-Process console_solver -ErrorAction SilentlyContinue).Count -gt 0) { $cameUp = $true; break }
+      }
+      if ($cameUp) {
+        Write-WindowLog "Worker restarted under the $($policy.Window) policy; solver is running."
+        Set-SolverCpuCap -CorePercent $policy.CorePercent -Priority $policy.Priority | Out-Null
+      } else {
+        Write-WindowLog "WARNING: no solver came up within a minute of the $($policy.Window) restart. The worker's 30-minute trigger will retry."
+      }
     } catch {
       Write-WindowLog "Could not restart the worker: $($_.Exception.Message)"
     }

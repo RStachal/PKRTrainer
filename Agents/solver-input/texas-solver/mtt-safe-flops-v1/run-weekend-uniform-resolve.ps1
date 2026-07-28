@@ -39,8 +39,13 @@ function Write-Log([string]$Message) {
 # One worker only. A second logon or a boot trigger must not start a rival solve
 # against the same checkpoints.
 $mutex = New-Object System.Threading.Mutex($false, "Global\PKRTrainerWeekendUniformResolve")
-if (-not $mutex.WaitOne(0)) {
-  Write-Log "Another weekend worker already holds the mutex; exiting."
+# Wait briefly rather than not at all. The day/night switch stops this worker and
+# starts a new one seconds later, and a predecessor still shutting down would
+# otherwise make every successor give up - which, unattended overnight, stops
+# solving silently until someone looks. A genuinely running worker holds the
+# mutex for hours, so a few seconds still refuses a real overlap.
+if (-not $mutex.WaitOne(15000)) {
+  Write-Log "Another weekend worker still holds the mutex after 15s; exiting."
   exit 0
 }
 
