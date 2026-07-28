@@ -1,0 +1,86 @@
+# Shared day/night CPU policy for the background solver.
+#
+# Development and solving want opposite things from the machine, and which one
+# matters changes with the clock rather than with anything the solver knows. So
+# the policy lives here, in one place, and is read both by the worker when it
+# starts a tick and by the applier that runs on a timer.
+#
+# The applier matters because a solve is long: a board can run over an hour, so a
+# process that started under the day cap would otherwise keep it for the whole
+# night. Affinity can be changed on a live process, so the timer re-applies the
+# current policy to whatever is running instead of waiting for a restart.
+#
+# Dot-source this file; it defines functions and does nothing on its own.
+
+function Get-SolverCpuPolicy {
+  param(
+    [int]$DayCorePercent = 40,
+    [int]$NightCorePercent = 95,
+    [int]$NightStartHour = 21,
+    [int]$NightEndHour = 9,
+    [DateTime]$Now = (Get-Date)
+  )
+  # The night window wraps past midnight, so it is "at or after the start OR
+  # before the end", never a single between-test.
+  $hour = $Now.Hour
+  $isNight = if ($NightStartHour -le $NightEndHour) {
+    ($hour -ge $NightStartHour) -and ($hour -lt $NightEndHour)
+  } else {
+    ($hour -ge $NightStartHour) -or ($hour -lt $NightEndHour)
+  }
+
+  # Affinity alone does not raise utilisation: six threads pinned to fifteen cores
+  # still do six cores of work. Thread count has to move with the window, so it is
+  # part of the policy rather than a separate knob that can drift out of step.
+  if ($isNight) {
+    return [pscustomobject]@{
+      Window       = "NIGHT"
+      CorePercent  = $NightCorePercent
+      Threads      = [Math]::Max(1, (Get-SolverCoreCount -Percent $NightCorePercent) - 1)
+      Priority     = "Normal"
+      Reason       = "Nobody is developing between ${NightStartHour}:00 and ${NightEndHour}:00, so the solver takes the machine."
+    }
+  }
+  return [pscustomobject]@{
+    Window       = "DAY"
+    CorePercent  = $DayCorePercent
+    Threads      = [Math]::Max(1, (Get-SolverCoreCount -Percent $DayCorePercent))
+    Priority     = "BelowNormal"
+    Reason       = "Development runs beside the solver, so it keeps a minority of the cores."
+  }
+}
+
+function Get-SolverCoreCount {
+  param([int]$Percent)
+  $total = [Environment]::ProcessorCount
+  if ($Percent -ge 100) { return $total }
+  # At least one core, and leave at least one free whenever a cap was asked for.
+  return [Math]::Max(1, [Math]::Min($total - 1, [int][Math]::Round($total * $Percent / 100.0)))
+}
+
+function Set-SolverCpuCap {
+  param(
+    [int]$CorePercent,
+    [string]$Priority = "BelowNormal"
+  )
+  $total = [Environment]::ProcessorCount
+  $cores = Get-SolverCoreCount -Percent $CorePercent
+  $mask = ([bigint]1 -shl $cores) - 1
+  $applied = 0
+  foreach ($proc in @(Get-Process console_solver -ErrorAction SilentlyContinue)) {
+    try {
+      $proc.ProcessorAffinity = [IntPtr][int64]$mask
+      $proc.PriorityClass = [System.Diagnostics.ProcessPriorityClass]$Priority
+      $applied++
+    } catch {
+      Write-Warning "Could not re-cap solver pid $($proc.Id): $($_.Exception.Message)"
+    }
+  }
+  [pscustomobject]@{
+    Cores       = $cores
+    TotalCores  = $total
+    Percent     = [Math]::Round(100.0 * $cores / $total)
+    Priority    = $Priority
+    ProcessCount = $applied
+  }
+}

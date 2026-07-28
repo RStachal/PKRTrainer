@@ -14,9 +14,10 @@ param(
   [string]$ProcessPriority = "BelowNormal",
   [int]$MinimumFreeMemoryPercent = 12,
   [int]$MaximumCpuPercent = 100,
-  # Roughly 40 percent of the machine, so development runs beside the solver.
-  [ValidateRange(1, 100)]
-  [int]$CpuCorePercent = 40,
+  # 0 means "ask the day/night policy". A explicit 1-100 overrides it, which is
+  # what makes a one-off run reproducible regardless of the hour.
+  [ValidateRange(0, 100)]
+  [int]$CpuCorePercent = 0,
   [switch]$SkipBackup
 )
 
@@ -49,7 +50,21 @@ try {
     exit 0
   }
 
-  Write-Log "Weekend uniform-tree re-solve starting; threads=$Threads iterations=$Iterations priority=$ProcessPriority"
+  # A tick started in the evening would otherwise hold the day cap all night, so
+  # the cap comes from the clock unless the caller pinned one explicitly.
+  . (Join-Path $PSScriptRoot "solver-cpu-window.ps1")
+  $effectiveCorePercent = $CpuCorePercent
+  $effectivePriority = $ProcessPriority
+  $effectiveThreads = $Threads
+  if ($CpuCorePercent -eq 0) {
+    $policy = Get-SolverCpuPolicy
+    $effectiveCorePercent = $policy.CorePercent
+    $effectivePriority = $policy.Priority
+    $effectiveThreads = $policy.Threads
+    Write-Log "CPU policy: $($policy.Window) window -> $($effectiveCorePercent)% of cores, $effectiveThreads threads, $effectivePriority."
+  }
+
+  Write-Log "Weekend uniform-tree re-solve starting; threads=$effectiveThreads iterations=$Iterations priority=$effectivePriority cores=$effectiveCorePercent%"
 
   $paramDir = Join-Path $repo "Agents\solver-input\texas-solver\mtt-safe-flops-v1\parameters\pkrtrainer_mtt_uniform_tree_weekend_v1"
   $manifestPath = Join-Path $repo "Agents\solver-input\texas-solver\mtt-safe-flops-v1\uniform-tree-weekend-v1-manifest.json"
@@ -67,7 +82,7 @@ try {
   }
 
   Write-Log "Rebuilding the batch from current evidence."
-  & npm run mtt:texas-solver-uniform-tree-batch -- --write --threads=$Threads --iterations=$Iterations --summary 2>&1 |
+  & npm run mtt:texas-solver-uniform-tree-batch -- --write --threads=$effectiveThreads --iterations=$Iterations --summary 2>&1 |
     ForEach-Object { Write-Log $_ }
 
   $pending = @(Get-ChildItem -Path $paramDir -Filter "*.txt" -File -ErrorAction SilentlyContinue)
@@ -95,10 +110,10 @@ try {
     -Limit 99999 `
     -Force `
     -ContinueOnSolverFailure `
-    -ProcessPriority $ProcessPriority `
+    -ProcessPriority $effectivePriority `
     -MinimumFreeMemoryPercent $MinimumFreeMemoryPercent `
     -MaximumCpuPercent $MaximumCpuPercent `
-    -CpuCorePercent $CpuCorePercent `
+    -CpuCorePercent $effectiveCorePercent `
     -FailureReportPath (Join-Path $workDir "failures.jsonl") 2>&1 | ForEach-Object { Write-Log $_ }
 
   Write-Log "Refreshing review-only accuracy evidence."

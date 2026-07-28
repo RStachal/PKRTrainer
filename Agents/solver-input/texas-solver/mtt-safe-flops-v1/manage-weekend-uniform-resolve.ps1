@@ -12,9 +12,9 @@ param(
   [int]$Threads = 6,
   [int]$Iterations = 1200,
   [string]$ProcessPriority = "BelowNormal",
-  # Roughly 40 percent of the machine, so development runs beside the solver.
-  [ValidateRange(1, 100)]
-  [int]$CpuCorePercent = 40,
+  # 0 means the worker asks the day/night policy in solver-cpu-window.ps1.
+  [ValidateRange(0, 100)]
+  [int]$CpuCorePercent = 0,
   [switch]$StartNow
 )
 
