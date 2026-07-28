@@ -260,7 +260,33 @@ family. Verdicts are cached on size and mtime, so the warm pass is six seconds.
 
 Through the chain: reduced boards 46 to 78, ambiguous 226 to 0, mixing families 2
 to 5, re-solve queue 52 to 83. The solver picks up the hidden boards on its next
-tick, and the three affected rules should be rebuilt once it does.
+tick, and the affected rules should be rebuilt once it does.
+
+`guard:mixed-tree-content` now names which shipped rules are affected, because
+holding a family back from the next rebuild does nothing about the content it
+already contributed. Four families reach **five of the thirteen** shipped rules:
+BTN facing-bet MID and HIGH, SB c-bet HIGH, and 3bet c-bet plus 3bet facing-bet
+HIGH.
+
+## Solver CPU policy
+
+The machine is shared with development, so the solver takes a share that depends
+on the clock rather than a fixed one:
+
+| Window | Cores | Threads | Priority |
+| --- | --- | --- | --- |
+| 09:00-20:59 | 6 of 16 | 6 | BelowNormal |
+| 21:00-08:59 | 15 of 16 | 14 | Normal |
+
+A timer applies it every fifteen minutes, because a deep board runs over an hour
+and a process started in the day would otherwise hold the day cap all night.
+Threads are part of the policy, since affinity alone does not raise utilisation -
+six threads pinned to fifteen cores still do six cores of work - and because
+thread count cannot be changed on a live process, a window change restarts the
+worker. That discards the board in flight, which the checkpoint backup makes
+safe, and costs at most one board twice a day.
+
+    npm run mtt:solver-cpu-window     # what the policy is now, and whether the timer is installed
 
 ## Open question: how wide the solved ranges are
 
