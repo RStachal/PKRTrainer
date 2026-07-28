@@ -205,18 +205,26 @@ that fail. On the refreshed evidence it withheld two:
 
 The other eighteen are at or under target, the worst at 0.4994.
 
-But the decision is written into `review-notes.md` beside the raw dumps, and
-nothing reads it back. The pilot gate does not consult it, and neither does the
-module builder. So a family graded "no" still flows into a pilot pack and ships -
-`MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR` is in the shipped SB pack right now,
-supplying its HIGH band.
+The decision was written into `review-notes.md` and a decisions JSON, and nothing
+read either back. Neither is version controlled, so the verdict existed only on
+the machine that produced it. Withheld content reached the shipped packs by
+default rather than by decision.
 
-Shipping it is still the better of the two options today: the previous build of
-that band came from boards that mixed two trees, so this is an improvement, and
-dropping the band outright would leave the SB pilot without HIGH coverage at all.
-The solver is re-solving those boards now. What needs fixing is that a withheld
-family reaches a player at all without anyone deciding so - the acceptance step
-is documentation wearing the word "gate".
+`guard:withheld-families` in the rebuild pipeline now enforces it, mapping every
+shipped pilot rule back to its family. Running it named **two** families, not the
+one first recorded here:
+
+- `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR`, supplying the SB pack's HIGH band.
+- `MTT9_150BB_CO_BTN_3BP_HIGHSPR`, reaching **both** the 3bet c-bet and the 3bet
+  facing-bet packs. This is the worse case, because it is also the family the
+  partial-resolve guard holds back for mixing two trees - so its shipped content
+  is the old pre-rebuild build *and* below the accuracy bar.
+
+The guard is a check, not a filter: dropping a withheld family would punch a hole
+in a pilot's SPR coverage, which is worse than shipping slightly unconverged
+content. The solver is re-solving exactly these boards now. What has changed is
+that the rebuild reports failure until they converge or someone decides to ship
+them anyway.
 
 ## Telling the two trees apart is possible after all
 
