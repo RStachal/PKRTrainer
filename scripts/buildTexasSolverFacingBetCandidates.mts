@@ -4,6 +4,9 @@ import { dirname, resolve } from "node:path";
 
 const DEFAULT_FAMILY = "MTT9_80BB_CO_BTN_3BP_MIDSPR";
 const DEFAULT_OUTPUT = "artifacts/texas-solver-facing-bet-candidates/report.json";
+import { reviewFileName } from "./lib/mttReviewFileNaming.mts";
+import { villainActionMix, villainBetFrequency } from "./lib/villainBetFrequency.mts";
+
 const DEFAULT_SOLVER_OUTPUT_DIR = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 const DEFAULT_OUTPUT_ROOT = "artifacts/texas-solver-review-integration/normalized-drafts";
 const VITE_NODE_ENTRY = resolve("node_modules/vite-node/vite-node.mjs");
@@ -45,6 +48,8 @@ interface CandidateRow {
   buckets: number;
   byLane: Record<string, number>;
   byAction: Record<string, number>;
+  /** How often the villain actually makes this bet, combo-weighted. */
+  villainFrequency: number;
   errors: string[];
   warnings: string[];
 }
@@ -226,7 +231,16 @@ function buildCandidates(args: CliArgs): CandidateReport {
   const candidateActions = args.betActions.length > 0
     ? args.betActions
     : discoverBetActions(sourceReview);
-  const rows = candidateActions.map((betAction) => buildCandidate(args, betAction));
+  // The villain's own node says how often each size is actually bet. Without it
+  // the ranking below could only compare how rich each candidate's matrix looked.
+  const mix = villainActionMix(resolve(
+    DEFAULT_SOLVER_OUTPUT_DIR,
+    args.familyId,
+    reviewFileName(args.sourceNode),
+  ));
+  const rows = candidateActions
+    .map((betAction) => buildCandidate(args, betAction))
+    .map((row) => ({ ...row, villainFrequency: villainBetFrequency(mix, row.betAction) }));
   const bestCandidate = [...rows].sort(compareCandidates)[0] ?? null;
   const bestAliasDir = args.write && bestCandidate?.gateValid === true
     ? writeBestAlias(args, bestCandidate)
@@ -401,8 +415,21 @@ function countBy(values: readonly string[]): Record<string, number> {
   return counts;
 }
 
+/**
+ * Which villain bet the pilot should put the player against.
+ *
+ * A usable candidate first, then the size the villain ACTUALLY bets most often.
+ * Ranking by lane count and bucket count alone - the richest-looking matrix -
+ * chose a 4-percent branch over a 41-percent one on a shipped rule, which taught
+ * the exception instead of the rule. Lane and bucket counts stay as tie-breakers
+ * for sizes the solver uses about equally.
+ */
 function compareCandidates(left: CandidateRow, right: CandidateRow): number {
   if (left.gateValid !== right.gateValid) return left.gateValid ? -1 : 1;
+  // A percentage point apart is noise; anything more is a real preference.
+  if (Math.abs(left.villainFrequency - right.villainFrequency) > 0.01) {
+    return right.villainFrequency - left.villainFrequency;
+  }
   const leftLaneCount = Object.keys(left.byLane).length;
   const rightLaneCount = Object.keys(right.byLane).length;
   if (leftLaneCount !== rightLaneCount) return rightLaneCount - leftLaneCount;
