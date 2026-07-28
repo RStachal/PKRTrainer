@@ -150,17 +150,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 22.1,
+              "frequencyPct": 23.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 52.1,
+              "frequencyPct": 51.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 25.8,
+              "frequencyPct": 25.3,
               "visibility": "EXACT"
             }
           ]
@@ -179,17 +179,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 36.3,
+              "frequencyPct": 36.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 22,
+              "frequencyPct": 27.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 41.7,
+              "frequencyPct": 36.5,
               "visibility": "EXACT"
             }
           ]
@@ -208,17 +208,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 17.9,
+              "frequencyPct": 17.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 48.8,
+              "frequencyPct": 48.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 33.3,
+              "frequencyPct": 33.5,
               "visibility": "EXACT"
             }
           ]
@@ -237,17 +237,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 35.2,
+              "frequencyPct": 35,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 30.1,
+              "frequencyPct": 30,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 34.7,
+              "frequencyPct": 35,
               "visibility": "EXACT"
             }
           ]
@@ -271,12 +271,12 @@ export const btnCo3bpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 32,
+              "frequencyPct": 37.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 37.4,
+              "frequencyPct": 32.3,
               "visibility": "EXACT"
             }
           ]
@@ -295,17 +295,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 10.7,
+              "frequencyPct": 11.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 44.8,
+              "frequencyPct": 46.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 44.5,
+              "frequencyPct": 42.3,
               "visibility": "EXACT"
             }
           ]
@@ -324,17 +324,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 25.6,
+              "frequencyPct": 25.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 38.7,
+              "frequencyPct": 43.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 35.7,
+              "frequencyPct": 30.4,
               "visibility": "EXACT"
             }
           ]
@@ -353,17 +353,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 21.4,
+              "frequencyPct": 21.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 29,
+              "frequencyPct": 29.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 49.6,
+              "frequencyPct": 49.2,
               "visibility": "EXACT"
             }
           ]
@@ -382,17 +382,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 13.7,
+              "frequencyPct": 14.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 38.4,
+              "frequencyPct": 37.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 47.9,
+              "frequencyPct": 48.2,
               "visibility": "EXACT"
             }
           ]
@@ -411,17 +411,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 25.3,
+              "frequencyPct": 25.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 39.5,
+              "frequencyPct": 46.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 35.2,
+              "frequencyPct": 28.3,
               "visibility": "EXACT"
             }
           ]
@@ -440,17 +440,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 26.3,
+              "frequencyPct": 26.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 33,
+              "frequencyPct": 36.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 40.7,
+              "frequencyPct": 37.2,
               "visibility": "EXACT"
             }
           ]
@@ -469,17 +469,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 11.7,
+              "frequencyPct": 11.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 48.7,
+              "frequencyPct": 47.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 39.6,
+              "frequencyPct": 41.1,
               "visibility": "EXACT"
             }
           ]
@@ -498,7 +498,7 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 33.7,
+              "frequencyPct": 33.2,
               "visibility": "EXACT"
             },
             {
@@ -508,7 +508,7 @@ export const btnCo3bpFlopFacingBetPilotPack = {
             },
             {
               "action": "RAISE",
-              "frequencyPct": 37.6,
+              "frequencyPct": 38.1,
               "visibility": "EXACT"
             }
           ]
@@ -527,17 +527,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 36.6,
+              "frequencyPct": 36.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 31.8,
+              "frequencyPct": 33.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 31.6,
+              "frequencyPct": 30.3,
               "visibility": "EXACT"
             }
           ]
@@ -556,17 +556,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 10.2,
+              "frequencyPct": 9.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 31.5,
+              "frequencyPct": 33.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 58.3,
+              "frequencyPct": 57.2,
               "visibility": "EXACT"
             }
           ]
@@ -586,17 +586,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 29.9,
+              "frequencyPct": 31.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 31.8,
+              "frequencyPct": 31.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 38.3,
+              "frequencyPct": 37.1,
               "visibility": "EXACT"
             }
           ]
@@ -616,17 +616,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 30.4,
+              "frequencyPct": 29.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 25.6,
+              "frequencyPct": 24.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 44,
+              "frequencyPct": 45.9,
               "visibility": "EXACT"
             }
           ]
@@ -646,17 +646,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 22.5,
+              "frequencyPct": 21.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 42.1,
+              "frequencyPct": 40.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 35.4,
+              "frequencyPct": 38.2,
               "visibility": "EXACT"
             }
           ]
@@ -676,17 +676,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 26.4,
+              "frequencyPct": 25.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 38.6,
+              "frequencyPct": 40.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 35,
+              "frequencyPct": 33.6,
               "visibility": "EXACT"
             }
           ]
@@ -706,17 +706,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 22,
+              "frequencyPct": 21.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 49.4,
+              "frequencyPct": 47.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 28.6,
+              "frequencyPct": 31,
               "visibility": "EXACT"
             }
           ]
@@ -736,17 +736,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 22.2,
+              "frequencyPct": 20.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 43.6,
+              "frequencyPct": 45.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 34.2,
+              "frequencyPct": 33.7,
               "visibility": "EXACT"
             }
           ]
@@ -771,12 +771,12 @@ export const btnCo3bpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 51.9,
+              "frequencyPct": 52.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 27.7,
+              "frequencyPct": 26.9,
               "visibility": "EXACT"
             }
           ]
@@ -796,17 +796,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 8.4,
+              "frequencyPct": 8.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 58.6,
+              "frequencyPct": 59.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 33,
+              "frequencyPct": 32.7,
               "visibility": "EXACT"
             }
           ]
@@ -831,12 +831,12 @@ export const btnCo3bpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 51.6,
+              "frequencyPct": 54.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 42.8,
+              "frequencyPct": 39.5,
               "visibility": "EXACT"
             }
           ]
@@ -856,17 +856,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 6.2,
+              "frequencyPct": 6.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 55.5,
+              "frequencyPct": 57.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 38.3,
+              "frequencyPct": 36,
               "visibility": "EXACT"
             }
           ]
@@ -886,17 +886,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 16,
+              "frequencyPct": 16.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 53.9,
+              "frequencyPct": 52.4,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 30.1,
+              "frequencyPct": 31.1,
               "visibility": "EXACT"
             }
           ]
@@ -916,17 +916,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 52.6,
+              "frequencyPct": 51.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 25.6,
+              "frequencyPct": 27.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 21.8,
+              "frequencyPct": 20.9,
               "visibility": "EXACT"
             }
           ]
@@ -946,17 +946,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 0.1,
+              "frequencyPct": 0.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 37.7,
+              "frequencyPct": 36.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 62.2,
+              "frequencyPct": 62.8,
               "visibility": "EXACT"
             }
           ]
@@ -976,47 +976,47 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 39.2,
+              "frequencyPct": 39,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 27.4,
+              "frequencyPct": 31.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 33.4,
+              "frequencyPct": 29.1,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "K9s · RAISE",
-          "action": "RAISE",
+          "lane": "CHECK",
+          "label": "K9s · CALL",
+          "action": "CALL",
           "handClasses": [
             "K9s"
           ],
           "features": [
-            "solver-raise-frequency",
+            "solver-call-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 32.9,
+              "frequencyPct": 32.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 41.7,
+              "frequencyPct": 45.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 25.4,
+              "frequencyPct": 21.8,
               "visibility": "EXACT"
             }
           ]
@@ -1036,17 +1036,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 21.1,
+              "frequencyPct": 20.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 43.8,
+              "frequencyPct": 47.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 35.1,
+              "frequencyPct": 31.6,
               "visibility": "EXACT"
             }
           ]
@@ -1066,17 +1066,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 30.6,
+              "frequencyPct": 31,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 29.6,
+              "frequencyPct": 30.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 39.8,
+              "frequencyPct": 38.4,
               "visibility": "EXACT"
             }
           ]
@@ -1096,17 +1096,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.7,
+              "frequencyPct": 17.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 39.1,
+              "frequencyPct": 44.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 42.2,
+              "frequencyPct": 37.9,
               "visibility": "EXACT"
             }
           ]
@@ -1126,17 +1126,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 24.1,
+              "frequencyPct": 23.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 38.9,
+              "frequencyPct": 41.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 37,
+              "frequencyPct": 35.3,
               "visibility": "EXACT"
             }
           ]
@@ -1156,17 +1156,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 43.1,
+              "frequencyPct": 40.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 29,
+              "frequencyPct": 33.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 27.9,
+              "frequencyPct": 26.3,
               "visibility": "EXACT"
             }
           ]
@@ -1186,47 +1186,47 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 56.2,
+              "frequencyPct": 55.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 25.4,
+              "frequencyPct": 27.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 18.4,
+              "frequencyPct": 16.9,
               "visibility": "EXACT"
             }
           ]
         },
         {
-          "lane": "BLUFF",
-          "label": "QJs · RAISE",
-          "action": "RAISE",
+          "lane": "CHECK",
+          "label": "QJs · FOLD",
+          "action": "FOLD",
           "handClasses": [
             "QJs"
           ],
           "features": [
-            "solver-raise-frequency",
+            "solver-fold-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 47.8,
+              "frequencyPct": 44.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 27,
+              "frequencyPct": 37,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 25.2,
+              "frequencyPct": 18.5,
               "visibility": "EXACT"
             }
           ]
@@ -1251,12 +1251,12 @@ export const btnCo3bpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 38.7,
+              "frequencyPct": 40.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 61.3,
+              "frequencyPct": 59.7,
               "visibility": "EXACT"
             }
           ]
@@ -1276,17 +1276,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 34.3,
+              "frequencyPct": 32.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 32,
+              "frequencyPct": 36.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 33.7,
+              "frequencyPct": 31.1,
               "visibility": "EXACT"
             }
           ]
@@ -1311,12 +1311,12 @@ export const btnCo3bpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 21.9,
+              "frequencyPct": 24.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 37.9,
+              "frequencyPct": 34.9,
               "visibility": "EXACT"
             }
           ]
@@ -1336,17 +1336,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 36.5,
+              "frequencyPct": 36.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 22.7,
+              "frequencyPct": 25.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 40.8,
+              "frequencyPct": 37.7,
               "visibility": "EXACT"
             }
           ]
@@ -1366,17 +1366,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 1,
+              "frequencyPct": 1.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 36.1,
+              "frequencyPct": 36.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 62.9,
+              "frequencyPct": 61.4,
               "visibility": "EXACT"
             }
           ]
@@ -1457,17 +1457,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.2,
+              "frequencyPct": 31.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 47.1,
+              "frequencyPct": 55.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 15.7,
+              "frequencyPct": 13,
               "visibility": "EXACT"
             }
           ]
@@ -1486,17 +1486,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 32.8,
+              "frequencyPct": 31.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 52.5,
+              "frequencyPct": 54.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 14.7,
+              "frequencyPct": 14.4,
               "visibility": "EXACT"
             }
           ]
@@ -1515,17 +1515,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 35.8,
+              "frequencyPct": 29.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 40.6,
+              "frequencyPct": 50.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 23.6,
+              "frequencyPct": 20.7,
               "visibility": "EXACT"
             }
           ]
@@ -1544,17 +1544,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 29.7,
+              "frequencyPct": 29.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 56.9,
+              "frequencyPct": 63.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13.4,
+              "frequencyPct": 6.7,
               "visibility": "EXACT"
             }
           ]
@@ -1573,17 +1573,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 30.4,
+              "frequencyPct": 30.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 48,
+              "frequencyPct": 58.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 21.6,
+              "frequencyPct": 10.5,
               "visibility": "EXACT"
             }
           ]
@@ -1602,17 +1602,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 26.9,
+              "frequencyPct": 19.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 51,
+              "frequencyPct": 66.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 22.1,
+              "frequencyPct": 14.1,
               "visibility": "EXACT"
             }
           ]
@@ -1631,17 +1631,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 33,
+              "frequencyPct": 31.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 45.9,
+              "frequencyPct": 59.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 21.1,
+              "frequencyPct": 8.9,
               "visibility": "EXACT"
             }
           ]
@@ -1665,12 +1665,12 @@ export const btnCo3bpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 52.9,
+              "frequencyPct": 65.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 24.1,
+              "frequencyPct": 11.4,
               "visibility": "EXACT"
             }
           ]
@@ -1689,17 +1689,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 26.5,
+              "frequencyPct": 21.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 60.8,
+              "frequencyPct": 70.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 12.7,
+              "frequencyPct": 7.6,
               "visibility": "EXACT"
             }
           ]
@@ -1718,17 +1718,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 29.6,
+              "frequencyPct": 29.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 52.9,
+              "frequencyPct": 59.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 17.5,
+              "frequencyPct": 10.6,
               "visibility": "EXACT"
             }
           ]
@@ -1747,17 +1747,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.2,
+              "frequencyPct": 33.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 40.9,
+              "frequencyPct": 53.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 21.9,
+              "frequencyPct": 13.8,
               "visibility": "EXACT"
             }
           ]
@@ -1776,17 +1776,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 22.8,
+              "frequencyPct": 19.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 58.7,
+              "frequencyPct": 67.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 18.5,
+              "frequencyPct": 13.7,
               "visibility": "EXACT"
             }
           ]
@@ -1805,46 +1805,46 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.5,
+              "frequencyPct": 30.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 38.9,
+              "frequencyPct": 57.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 23.6,
+              "frequencyPct": 11.8,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "98s · FOLD",
-          "action": "FOLD",
+          "label": "98s · CALL",
+          "action": "CALL",
           "handClasses": [
             "98s"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-call-frequency",
             "suited"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 41.3,
+              "frequencyPct": 36.6,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 36.5,
+              "frequencyPct": 47.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 22.2,
+              "frequencyPct": 15.6,
               "visibility": "EXACT"
             }
           ]
@@ -1863,77 +1863,77 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 17,
+              "frequencyPct": 14.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 47.9,
+              "frequencyPct": 54.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 35.1,
+              "frequencyPct": 31.5,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "A3s · FOLD",
-          "action": "FOLD",
+          "label": "A3s · CALL",
+          "action": "CALL",
           "handClasses": [
             "A3s"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-call-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 45.8,
+              "frequencyPct": 42,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 33.8,
+              "frequencyPct": 43.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 20.4,
+              "frequencyPct": 14.2,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "A4s · FOLD",
-          "action": "FOLD",
+          "label": "A4s · CALL",
+          "action": "CALL",
           "handClasses": [
             "A4s"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-call-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 39.6,
+              "frequencyPct": 36.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 39.1,
+              "frequencyPct": 45.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 21.3,
+              "frequencyPct": 18.7,
               "visibility": "EXACT"
             }
           ]
@@ -1953,17 +1953,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 34.3,
+              "frequencyPct": 31,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 51.2,
+              "frequencyPct": 58.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 14.5,
+              "frequencyPct": 10.8,
               "visibility": "EXACT"
             }
           ]
@@ -1983,17 +1983,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 32.7,
+              "frequencyPct": 30,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 52.9,
+              "frequencyPct": 59.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 14.4,
+              "frequencyPct": 10.3,
               "visibility": "EXACT"
             }
           ]
@@ -2013,17 +2013,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 26.3,
+              "frequencyPct": 23.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 58.7,
+              "frequencyPct": 62.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 15,
+              "frequencyPct": 14.8,
               "visibility": "EXACT"
             }
           ]
@@ -2043,17 +2043,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 27.5,
+              "frequencyPct": 23.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 52.2,
+              "frequencyPct": 55.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 20.3,
+              "frequencyPct": 20.4,
               "visibility": "EXACT"
             }
           ]
@@ -2073,17 +2073,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 22.3,
+              "frequencyPct": 19.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 58.5,
+              "frequencyPct": 65.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 19.2,
+              "frequencyPct": 15,
               "visibility": "EXACT"
             }
           ]
@@ -2103,17 +2103,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 7.7,
+              "frequencyPct": 7.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 75.6,
+              "frequencyPct": 73.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 16.7,
+              "frequencyPct": 19.1,
               "visibility": "EXACT"
             }
           ]
@@ -2133,17 +2133,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 14.4,
+              "frequencyPct": 12.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 65.3,
+              "frequencyPct": 67.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 20.3,
+              "frequencyPct": 19.9,
               "visibility": "EXACT"
             }
           ]
@@ -2163,17 +2163,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 8.7,
+              "frequencyPct": 6.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 72.1,
+              "frequencyPct": 78.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 19.2,
+              "frequencyPct": 15.4,
               "visibility": "EXACT"
             }
           ]
@@ -2193,47 +2193,47 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 12.5,
+              "frequencyPct": 11.1,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 72.7,
+              "frequencyPct": 74.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 14.8,
+              "frequencyPct": 14.3,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "J9s · FOLD",
-          "action": "FOLD",
+          "label": "J9s · CALL",
+          "action": "CALL",
           "handClasses": [
             "J9s"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-call-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 44.9,
+              "frequencyPct": 38.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 40.9,
+              "frequencyPct": 47.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 14.2,
+              "frequencyPct": 14.4,
               "visibility": "EXACT"
             }
           ]
@@ -2253,17 +2253,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 4,
+              "frequencyPct": 2.9,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 47,
+              "frequencyPct": 50.3,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 49,
+              "frequencyPct": 46.8,
               "visibility": "EXACT"
             }
           ]
@@ -2283,17 +2283,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 32.1,
+              "frequencyPct": 25.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 52.8,
+              "frequencyPct": 63.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 15.1,
+              "frequencyPct": 10.4,
               "visibility": "EXACT"
             }
           ]
@@ -2313,17 +2313,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 21.4,
+              "frequencyPct": 18,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 67.8,
+              "frequencyPct": 73.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 10.8,
+              "frequencyPct": 8.1,
               "visibility": "EXACT"
             }
           ]
@@ -2343,17 +2343,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.4,
+              "frequencyPct": 14.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 59.7,
+              "frequencyPct": 66.5,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 21.9,
+              "frequencyPct": 19.2,
               "visibility": "EXACT"
             }
           ]
@@ -2373,17 +2373,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 32.2,
+              "frequencyPct": 28.2,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 36.6,
+              "frequencyPct": 42.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 31.2,
+              "frequencyPct": 29.1,
               "visibility": "EXACT"
             }
           ]
@@ -2403,17 +2403,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 18.7,
+              "frequencyPct": 15.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 49.7,
+              "frequencyPct": 59.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 31.6,
+              "frequencyPct": 25.5,
               "visibility": "EXACT"
             }
           ]
@@ -2433,17 +2433,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 16.8,
+              "frequencyPct": 14.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 71.2,
+              "frequencyPct": 75.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 12,
+              "frequencyPct": 10,
               "visibility": "EXACT"
             }
           ]
@@ -2463,17 +2463,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 37.5,
+              "frequencyPct": 32.7,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 48.9,
+              "frequencyPct": 55.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 13.6,
+              "frequencyPct": 12.1,
               "visibility": "EXACT"
             }
           ]
@@ -2493,17 +2493,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 46.5,
+              "frequencyPct": 44.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 36.3,
+              "frequencyPct": 40.2,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 17.2,
+              "frequencyPct": 15.3,
               "visibility": "EXACT"
             }
           ]
@@ -2523,17 +2523,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 39.5,
+              "frequencyPct": 36.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 43.7,
+              "frequencyPct": 51.8,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 16.8,
+              "frequencyPct": 11.9,
               "visibility": "EXACT"
             }
           ]
@@ -2558,12 +2558,12 @@ export const btnCo3bpFlopFacingBetPilotPack = {
             },
             {
               "action": "CALL",
-              "frequencyPct": 47.2,
+              "frequencyPct": 63.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 52.8,
+              "frequencyPct": 36.9,
               "visibility": "EXACT"
             }
           ]
@@ -2583,47 +2583,47 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 28.7,
+              "frequencyPct": 21.3,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 56.8,
+              "frequencyPct": 63.7,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 14.5,
+              "frequencyPct": 15,
               "visibility": "EXACT"
             }
           ]
         },
         {
           "lane": "CHECK",
-          "label": "T8s · FOLD",
-          "action": "FOLD",
+          "label": "T8s · CALL",
+          "action": "CALL",
           "handClasses": [
             "T8s"
           ],
           "features": [
-            "solver-fold-frequency",
+            "solver-call-frequency",
             "suited",
             "high-card-density"
           ],
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 40.5,
+              "frequencyPct": 33.5,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 38.4,
+              "frequencyPct": 47.6,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 21.1,
+              "frequencyPct": 18.9,
               "visibility": "EXACT"
             }
           ]
@@ -2643,17 +2643,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 36.2,
+              "frequencyPct": 27.4,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 40.9,
+              "frequencyPct": 55.1,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 22.9,
+              "frequencyPct": 17.5,
               "visibility": "EXACT"
             }
           ]
@@ -2673,17 +2673,17 @@ export const btnCo3bpFlopFacingBetPilotPack = {
           "actionMix": [
             {
               "action": "FOLD",
-              "frequencyPct": 7,
+              "frequencyPct": 3.8,
               "visibility": "EXACT"
             },
             {
               "action": "CALL",
-              "frequencyPct": 45.9,
+              "frequencyPct": 56.9,
               "visibility": "EXACT"
             },
             {
               "action": "RAISE",
-              "frequencyPct": 47.1,
+              "frequencyPct": 39.3,
               "visibility": "EXACT"
             }
           ]
