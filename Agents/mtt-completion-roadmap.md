@@ -192,6 +192,47 @@ Counting those lines overstates completed boards by more than twenty times and
 makes converging boards look like failures. A board ends where the cumulative
 time resets.
 
+## The paying subscriber got less than the free one
+
+A hand line walks flop, turn and river. The scoped pilots are flop-only, and a
+paying subscriber's runtime refuses the heuristic model - so the line could never
+be generated for them. Verified by running it: a PRO_PLUS scoped-pilot runtime
+throws on the turn, and the view showed a bare "unavailable".
+
+A free preview user, whose runtime does allow the heuristic, gets a working line
+on all three streets. The option was offered to both with no hint it could not
+run for one of them.
+
+Fixed by disabling the option, with its reason shown, whenever the runtime
+refuses the heuristic and the profile is not production on all three streets.
+The test asserts the underlying fact rather than the symptom, so if the pilots
+ever gain turn and river it fails and says the option should return.
+
+The same investigation found the catch around spot and line generation was bare,
+turning every failure into "no content for this spot". A genuine defect would
+have reached players as a complaint about thin coverage and never as a bug. Only
+the missing-strategy refusal is handled now.
+
+## Statistics could not tell solver progress from heuristic progress
+
+The dashboard's "By production status" breakdown decided what counted as
+production from `confidence`, a quality label the pack author sets, rather than
+from provenance - and the result record did not store provenance at all.
+
+It came out right only by coincidence: all three public heuristic packs carry LOW
+confidence today. Raising one to MEDIUM, a plausible edit if that model improved,
+would have started counting heuristic answers as PRODUCTION in a player's own
+statistics.
+
+Provenance is now stored and carried into analytics, and decides
+solver-versus-not while confidence only grades solver-backed content. Heuristic
+answers get their own bucket, because heuristic-versus-solver is a difference in
+kind rather than degree. Records written earlier keep their old classification -
+reinterpreting history on a guess would silently rewrite a player's past.
+
+Preflop has no equivalent gap: its content is a production or preview pack
+identified by pack id, and there is no heuristic preflop model.
+
 ## Preflop audited: the core is sound, the gate was implicit
 
 The postflop pilots have had far more scrutiny than the preflop packs, which is
