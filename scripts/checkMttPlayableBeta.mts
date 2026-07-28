@@ -8,6 +8,7 @@ import { allMttPreflopRangePacks } from "../src/data/ranges/mttPreflopRangePacks
 import { buildMttCompletionReadinessReport } from "../src/data/ranges/mttProductionReadiness.ts";
 import type { MttCoreReleaseReport } from "./checkMttCoreRelease.mts";
 import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+import { shippedContentRisks } from "./lib/mttContentRisks.mts";
 
 export const MTT_PLAYABLE_BETA_SCOPE = "MTT_PLAYABLE_BETA_V1" as const;
 
@@ -93,6 +94,9 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
     preflopPacks: selectedPreflopPacks,
     postflopPacks: generatedMttPostflopPilotPacks.map((entry) => entry.pack),
   });
+  const contentRisks = shippedContentRisks(
+    generatedMttPostflopPilotPacks.flatMap((entry) => entry.pack.rules.map((rule) => rule.id)),
+  );
   const errors = [
     ...core.errors,
     ...missingTargetRows.map((key) => `Playable-beta target profile is absent from readiness: ${key}.`),
@@ -122,6 +126,11 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       `Full MTT NLHE library is not complete (${core.fullLibrary.productionReadyRows}/` +
       `${core.fullLibrary.totalRows}); this scope is a bounded playable beta.`,
     ]),
+    // A library can ship without a rebuild ever running, so the two family-level
+    // content risks are named here as well as in the pipeline. They are limits
+    // rather than errors: the content is the best available, and blocking would
+    // withhold the beta entirely rather than disclose what is in it.
+    ...contentRisks.limits,
     "The seven FLOP families are scoped pilots, not complete postflop coverage.",
   ];
 
