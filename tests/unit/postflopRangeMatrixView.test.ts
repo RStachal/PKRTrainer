@@ -6,6 +6,7 @@ import { postflopSpotToTrainingSpot } from "../../src/core/postflopTrainingSpot"
 import {
   classifyFlopHand,
   flopzillaLaneForCategory,
+  flopzillaLaneLabel,
   renderPostflopRangeMatrix,
 } from "../../src/ui/postflopRangeMatrixView";
 import type { Card } from "../../src/core/types";
@@ -152,6 +153,75 @@ describe("postflopRangeMatrixView", () => {
     expect(item?.getAttribute("aria-pressed")).toBe("false");
     expect(cells.some((cell) => cell.classList.contains("postflop-flopzilla__cell--muted")))
       .toBe(false);
+  });
+
+  it("nepojmenuje lane akci, ktera u celeni sazce neni legalni", () => {
+    // The three lanes are named for a betting node. Facing a bet, checking is not
+    // a legal action at all, so calling that lane "Check" described a move the
+    // player cannot make - and it covers both calling and folding, which is the
+    // entire decision there. The lane keys stay; only the words follow the node.
+    expect(flopzillaLaneLabel("CHECK")).toBe("Check");
+    expect(flopzillaLaneLabel("CHECK", "SINGLE_RAISED_POT_CBET")).toBe("Check");
+    for (const node of ["FLOP_FACING_BET", "TURN_FACING_BET", "RIVER_FACING_BET"] as const) {
+      expect(flopzillaLaneLabel("CHECK", node)).toBe("Call or fold");
+      expect(flopzillaLaneLabel("VALUE", node)).toBe("Value raise");
+      expect(flopzillaLaneLabel("BLUFF", node)).toBe("Bluff raise");
+    }
+  });
+
+  it("nese solvenou akci v bunce, aby sel call odlisit od foldu", () => {
+    // Call and fold share the one lane, so the lane alone cannot tell them apart.
+    // The per-hand action has to reach the cell or the distinction is lost.
+    const root = document.createElement("div");
+    const spot = postflopSpotToTrainingSpot(generatePostflopSpot({
+      seed: 42,
+      street: "FLOP",
+      board: dryAceBoard,
+      // Facing a bet is the node where the lane cannot express the decision.
+      actionNode: "FLOP_FACING_BET",
+      heroCards: [
+        { rank: "A", suit: "s" },
+        { rank: "K", suit: "s" },
+      ],
+      strategyResolver: () => ({
+        action: "CALL",
+        explanation: "Facing-bet lane fixture.",
+        source: {
+          kind: "STRATEGY_PACK",
+          provenance: "SOLVER_BACKED",
+          packId: "lane-fixture",
+          packVersion: "v1",
+          packVerifiedAt: "2026-07-28",
+          ruleId: "lane-fixture-rule",
+          confidence: "HIGH",
+          matchedTextures: ["dry"],
+          sprMin: 0,
+          sprMax: 20,
+          positionPattern: "BTN_VS_BB",
+          sourceUrls: [],
+          assumptions: ["Facing-bet lane fixture."],
+          selectionScore: 1,
+          tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+          rangeBuckets: [
+            { lane: "CHECK", label: "call", action: "CALL", handClasses: ["AKs"], features: [] },
+            { lane: "CHECK", label: "fold", action: "FOLD", handClasses: ["72o"], features: [] },
+          ],
+        },
+      }),
+    }));
+
+    renderPostflopRangeMatrix(spot, root);
+
+    const cellFor = (hand: string) => root.querySelector<HTMLElement>(
+      `.postflop-flopzilla__cell[data-hand="${hand}"]`,
+    );
+    // Same lane, opposite decisions - only the action separates them.
+    expect(cellFor("AKs")?.dataset.lane).toBe("CHECK");
+    expect(cellFor("72o")?.dataset.lane).toBe("CHECK");
+    expect(cellFor("AKs")?.dataset.action).toBe("CALL");
+    expect(cellFor("72o")?.dataset.action).toBe("FOLD");
+    expect(cellFor("AKs")?.getAttribute("aria-label")).toContain("CALL");
+    expect(cellFor("72o")?.title).toContain("FOLD");
   });
 
   it("mapuje Flopzilla kategorie do value/bluff/check lanes", () => {

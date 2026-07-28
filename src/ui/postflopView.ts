@@ -1334,9 +1334,12 @@ function renderFlopRangeSummary(
 
   const lanes = doc.createElement("div");
   lanes.className = "postflop-range-summary__lanes";
-  lanes.appendChild(rangeLane(doc, "Value", "VALUE", spot.explanation.valueHands, "BET", spot, chosen));
-  lanes.appendChild(rangeLane(doc, "Bluffs", "BLUFF", spot.explanation.bluffHands, "BET", spot, chosen));
-  lanes.appendChild(rangeLane(doc, "Check", "CHECK", spot.explanation.checkHands, "CHECK", spot, chosen));
+  // Facing a bet these lanes are raise / raise / call-or-fold, so their headings
+  // follow the node. The betting-node wording is left exactly as it was.
+  const facingBet = FACING_BET_ACTION_NODES.has(spot.actionNode);
+  lanes.appendChild(rangeLane(doc, facingBet ? "Value raise" : "Value", "VALUE", spot.explanation.valueHands, "BET", spot, chosen));
+  lanes.appendChild(rangeLane(doc, facingBet ? "Bluff raise" : "Bluffs", "BLUFF", spot.explanation.bluffHands, "BET", spot, chosen));
+  lanes.appendChild(rangeLane(doc, facingBet ? "Call or fold" : "Check", "CHECK", spot.explanation.checkHands, "CHECK", spot, chosen));
   section.appendChild(lanes);
 
   const matrixMount = doc.createElement("div");
@@ -1367,7 +1370,7 @@ function heroBucketInsight(
   insight.dataset.heroCategory = heroCategory;
   insight.dataset.heroCategoryLabel = heroCategoryLabel;
   insight.dataset.heroLane = heroLane;
-  insight.dataset.heroLaneLabel = flopzillaLaneLabel(heroLane);
+  insight.dataset.heroLaneLabel = flopzillaLaneLabel(heroLane, spot.actionNode);
   if (sourceBucket) {
     insight.dataset.rangeBucketLane = sourceBucket.lane;
     insight.dataset.rangeBucketAction = sourceBucket.action;
@@ -1386,9 +1389,9 @@ function heroBucketInsight(
     ? sourceBucketFeedback(heroHand, heroCategoryLabel, sourceBucket, chosen)
     : localizedText(
         `${heroHand} is ${heroCategoryLabel} on this flop and usually belongs to the ` +
-          `${flopzillaLaneLabel(heroLane).toLowerCase()} section. Compare it with the value, bluff, and check ranges.`,
+          `${flopzillaLaneLabel(heroLane, spot.actionNode).toLowerCase()} section. Compare it with the value, bluff, and check ranges.`,
         `${heroHand} je na tomto flopu kategorie ${heroCategoryLabel} a obvykle patří do části ` +
-          `${flopzillaLaneLabel(heroLane).toLowerCase()}. Porovnejte ji s value, bluff a check částí range.`,
+          `${flopzillaLaneLabel(heroLane, spot.actionNode).toLowerCase()}. Porovnejte ji s value, bluff a check částí range.`,
       );
   insight.appendChild(text);
 
@@ -1626,6 +1629,13 @@ function sprFidelityItems(
  * free text meant that rephrasing one sentence would silently relabel the public
  * heuristic model as production content.
  */
+/** Nodes where the hero is facing a bet, so checking is not a legal action. */
+const FACING_BET_ACTION_NODES = new Set<PostflopActionNode>([
+  "FLOP_FACING_BET",
+  "TURN_FACING_BET",
+  "RIVER_FACING_BET",
+]);
+
 function isPublicHeuristicStrategySource(
   source: Extract<PostflopTrainingSpot["explanation"]["source"], { kind: "STRATEGY_PACK" }>,
 ): boolean {

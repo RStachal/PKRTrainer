@@ -1,6 +1,7 @@
 import { GRID_SIZE, RANKS, handLabel } from "../core/poker";
 import type { Card, HandLabel } from "../core/types";
-import type { PostflopTrainingSpot } from "../core/postflopTrainingSpot";
+import type { PostflopActionNode, PostflopTrainingSpot } from "../core/postflopTrainingSpot";
+import type { PostflopAction } from "../core/postflopGenerator";
 import {
   classifyFlopHand,
   flopzillaLaneForCategory,
@@ -103,7 +104,7 @@ export function renderPostflopRangeMatrix(
   matrix.style.gridTemplateColumns = `repeat(${GRID_SIZE + 1}, minmax(0, 1fr))`;
   matrix.appendChild(headerCell(doc, "", "corner"));
   const detail = detailPanel(doc);
-  const productionLaneByHand = productionLaneMap(spot);
+  const productionByHand = productionLaneMap(spot);
 
   for (let j = 0; j < GRID_SIZE; j += 1) {
     matrix.appendChild(headerCell(doc, RANKS[j], "column"));
@@ -119,7 +120,7 @@ export function renderPostflopRangeMatrix(
       const category = classifyFlopHand(hand, spot.board);
       used.add(category);
       counts[category] = (counts[category] ?? 0) + 1;
-      const cell = matrixCell(doc, hand, category, hand === heroHand, productionLaneByHand.get(hand));
+      const cell = matrixCell(doc, hand, category, hand === heroHand, productionByHand.get(hand), spot.actionNode);
       cell.addEventListener("click", () => showCellDetail(matrix, detail, cell));
       cell.addEventListener("keydown", (event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
@@ -141,8 +142,10 @@ function matrixCell(
   hand: HandLabel,
   category: FlopzillaCategory,
   hero: boolean,
-  productionLane?: FlopzillaLane,
+  production?: ProductionCell,
+  actionNode?: PostflopActionNode,
 ): HTMLElement {
+  const productionLane = production?.lane;
   const cell = doc.createElement("div");
   cell.className = `postflop-flopzilla__cell postflop-flopzilla__cell--${category}`;
   if (productionLane) cell.classList.add("postflop-flopzilla__cell--production-lane");
@@ -156,21 +159,37 @@ function matrixCell(
   cell.dataset.category = category;
   cell.dataset.categoryLabel = flopzillaCategoryLabel(category);
   cell.dataset.lane = lane;
-  cell.dataset.laneLabel = flopzillaLaneLabel(lane);
+  cell.dataset.laneLabel = flopzillaLaneLabel(lane, actionNode);
   cell.dataset.laneSource = productionLane ? "production" : "taxonomy";
-  cell.title = `${hand}: ${flopzillaCategoryLabel(category)}`;
+  // Facing a bet, the lane cannot say whether to call or fold - both sit in the
+  // same lane - so the solved action rides along with the cell.
+  if (production?.action !== undefined) {
+    cell.dataset.action = production.action;
+    cell.setAttribute(
+      "aria-label",
+      `${hand}: ${flopzillaCategoryLabel(category)}, ${production.action}${hero ? ", Hero hand" : ""}`,
+    );
+  }
+  cell.title = production?.action !== undefined
+    ? `${hand}: ${flopzillaCategoryLabel(category)} - ${production.action}`
+    : `${hand}: ${flopzillaCategoryLabel(category)}`;
   cell.textContent = hand;
   cell.style.background = CATEGORY_DEFS[category].color;
   return cell;
 }
 
-function productionLaneMap(spot: PostflopTrainingSpot): Map<HandLabel, FlopzillaLane> {
+interface ProductionCell {
+  lane: FlopzillaLane;
+  action: PostflopAction;
+}
+
+function productionLaneMap(spot: PostflopTrainingSpot): Map<HandLabel, ProductionCell> {
   const source = spot.explanation.source;
   const buckets = source.kind === "STRATEGY_PACK" ? source.rangeBuckets : undefined;
-  const map = new Map<HandLabel, FlopzillaLane>();
+  const map = new Map<HandLabel, ProductionCell>();
   for (const bucket of buckets ?? []) {
     for (const hand of bucket.handClasses) {
-      if (!map.has(hand)) map.set(hand, bucket.lane);
+      if (!map.has(hand)) map.set(hand, { lane: bucket.lane, action: bucket.action });
     }
   }
   return map;
@@ -356,16 +375,33 @@ export function flopzillaCategoryLabel(category: FlopzillaCategory): string {
   return CATEGORY_DEFS[category].label;
 }
 
-export function flopzillaLaneLabel(lane: FlopzillaLane): string {
+/**
+ * A lane's user-facing name at a given decision node.
+ *
+ * The three lanes are named for a betting node, where checking is what you do
+ * when you are not betting. Facing a bet, checking is not a legal action at all,
+ * so calling that lane "Check" told the player about a move they cannot make -
+ * and it covers both calling and folding, which is the whole decision in that
+ * spot. The lane vocabulary stays as it is; only the words change with the node,
+ * and the per-hand action carries the call-or-fold distinction.
+ */
+export function flopzillaLaneLabel(lane: FlopzillaLane, actionNode?: PostflopActionNode): string {
+  const facingBet = actionNode !== undefined && FACING_BET_NODES.has(actionNode);
   switch (lane) {
     case "VALUE":
-      return "Value";
+      return facingBet ? "Value raise" : "Value";
     case "BLUFF":
-      return "Bluffy";
+      return facingBet ? "Bluff raise" : "Bluffy";
     case "CHECK":
-      return "Check";
+      return facingBet ? "Call or fold" : "Check";
   }
 }
+
+const FACING_BET_NODES = new Set<PostflopActionNode>([
+  "FLOP_FACING_BET",
+  "TURN_FACING_BET",
+  "RIVER_FACING_BET",
+]);
 
 export function postflopHandClassFromCards(cards: readonly [Card, Card]): HandLabel {
   const [a, b] = cards;
