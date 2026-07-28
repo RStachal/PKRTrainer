@@ -5,6 +5,7 @@ import type {
   PostflopPositionPattern,
   PostflopRecommendationSource,
   PostflopStreet,
+  PostflopStrategyProvenance,
 } from "../core/postflopGenerator";
 import { POSTFLOP_ACTIONS, isPostflopPositionPattern } from "../core/postflopGenerator";
 import type {
@@ -50,6 +51,12 @@ export interface PostflopResultRecord {
   sourceVerifiedAt: string | null;
   sourceRuleId: string;
   sourceConfidence: "LOW" | "MEDIUM" | "HIGH" | null;
+  /**
+   * Whether the answer was graded against solver output or the public heuristic
+   * model. Optional so records written before this field remain valid; absent
+   * means unknown, never "solver".
+   */
+  sourceProvenance?: PostflopStrategyProvenance | null;
   ts: number;
   responseMs?: number;
   actionEvOutcome?: ActionEvOutcome;
@@ -87,6 +94,7 @@ export interface PostflopStatsV2BridgeRecord {
   strategyVerifiedAt?: string | null;
   strategyRuleId: string;
   confidence: "LOW" | "MEDIUM" | "HIGH" | null;
+  strategyProvenance?: PostflopStrategyProvenance | null;
   responseMs?: number;
   actionEvOutcome?: ActionEvOutcome;
   chosenEvBb?: number;
@@ -157,6 +165,7 @@ export function buildPostflopResultRecord(
     sourceVerifiedAt: source.kind === "STRATEGY_PACK" ? source.packVerifiedAt : null,
     sourceRuleId: source.ruleId,
     sourceConfidence: source.kind === "STRATEGY_PACK" ? source.confidence : null,
+    sourceProvenance: source.kind === "STRATEGY_PACK" ? source.provenance : null,
     ts,
     ...(isValidResponseMs(responseMs) ? { responseMs } : {}),
     ...(grade.actionEv
@@ -210,6 +219,7 @@ export function bridgePostflopResultRecordToStatsV2(
     strategyVerifiedAt: record.sourceVerifiedAt,
     strategyRuleId: record.sourceRuleId,
     confidence: record.sourceConfidence,
+    strategyProvenance: record.sourceProvenance ?? null,
     ...(isValidResponseMs(record.responseMs) ? { responseMs: record.responseMs } : {}),
     ...(actionEv ?? {}),
   };
@@ -401,8 +411,23 @@ function postflopDimKey(
   return String(value);
 }
 
+/**
+ * How much a recorded answer is worth as evidence of progress.
+ *
+ * This used to read `confidence` alone, which is a quality label the pack author
+ * sets - not a statement about where the content came from. The public heuristic
+ * packs happen to carry LOW today, so heuristic answers land in PREVIEW; raise
+ * one to MEDIUM, a plausible edit if that model is ever improved, and a player's
+ * own statistics would start counting heuristic answers as PRODUCTION.
+ *
+ * Provenance is the structural fact, so it decides solver-versus-not and
+ * confidence only grades solver-backed content. Records written before
+ * provenance was stored keep the old classification rather than being
+ * reinterpreted on a guess.
+ */
 function postflopSourceQualityKey(record: PostflopStatsV2BridgeRecord): string {
   if (!record.strategyPackId || record.confidence === null) return "FALLBACK";
+  if (record.strategyProvenance === "PUBLIC_HEURISTIC") return "HEURISTIC";
   if (record.confidence === "LOW") return "PREVIEW";
   return "PRODUCTION";
 }

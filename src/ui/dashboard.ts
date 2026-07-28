@@ -422,6 +422,8 @@ function postflopSourceQualityLabel(key: string): string {
       return "Production";
     case "PREVIEW":
       return "Preview / low confidence";
+    case "HEURISTIC":
+      return "Heuristic model (not solver-backed)";
     case "FALLBACK":
       return "Fallback model";
     default:
