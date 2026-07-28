@@ -192,6 +192,34 @@ Counting those lines overstates completed boards by more than twenty times and
 makes converging boards look like failures. A board ends where the cumulative
 time resets.
 
+## Every known content problem lands on the same five rules
+
+Three separate defects were found in the shipped flop pilots - families mixing
+two solver trees, families the accuracy grader withheld, and facing-bet rules
+pinned to a villain bet size the solver rarely makes. Mapped onto the 19 shipped
+rules they do not spread out. They stack:
+
+| Shipped rule | Mixed tree | Withheld | Rare villain bet |
+| --- | --- | --- | --- |
+| `mtt9_150bb_co_btn_3bp_highspr-check-aggregate` | yes | yes | yes |
+| `mtt9_150bb_co_btn_3bp_highspr-check-bet_39-aggregate` | yes | yes | yes |
+| `mtt9_100bb_sb_bb_srp_oop_cbet_highspr-root-aggregate` | yes | yes | - |
+| `mtt9_100bb_btn_bb_srp_facing_highspr-check-bet_17-aggregate` | yes | - | yes |
+| `mtt9_50bb_btn_bb_srp_facing_midspr-check-bet_17-aggregate` | yes | - | yes |
+
+**Fourteen of the nineteen rules carry none of them.** Every affected rule has the
+mixed tree; withheld and rare-bet are strict subsets of it.
+
+The overlap of "rare villain bet" with "mixed tree" is exact across the
+facing-bet rules, which is probably not coincidence: the reduced tree has no turn
+or river raises, so it distorts which flop bet size looks best, and the size was
+picked on that distorted data. Recorded as a hypothesis, not a measurement.
+
+The practical consequence is that one action clears all five: finish the queued
+re-solve for those families, then rebuild - the rebuild now also re-ranks the
+villain bet size by measured frequency. Until then both guards and the beta gate
+name them.
+
 ## The mechanical acceptance gate is not a gate
 
 Found while integrating the weekend re-solve. `mtt:texas-solver-mechanical-acceptance`
