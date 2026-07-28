@@ -293,12 +293,36 @@ Splitting CHECK into CALL and FOLD would be the deeper fix, but it is a schema
 change reaching packs, resolvers and every generated module. Worth doing when the
 lane vocabulary is next revisited.
 
-Still open from the same investigation: the villain bet size a facing-bet rule
-puts the player against is **pinned from a previous run**, not derived from
-current data, and the pinned record does not say why that size was chosen. The
-shipped pins are all plausible (25-34 percent of pot), but the 3bet pack faces a
-33 percent bet at low and mid SPR and a 25 percent bet at high SPR, which is an
-inconsistency nobody chose.
+## The facing-bet pilots trained the exception, not the rule
+
+Same investigation, worse finding. A facing-bet pilot puts the player against ONE
+villain bet size. Which one was decided by whichever candidate produced the most
+lanes and the most range buckets - the richest-looking matrix - with nothing
+about how often the villain actually bets it.
+
+Measured against the villain's own decision node, combo-weighted:
+
+| Shipped rule | Pinned | Its frequency | Villain's main size |
+| --- | --- | --- | --- |
+| 150BB 3bet HIGH | BET_39 | **4%** | BET_52 at 41% |
+| 50BB BTN MID | BET_17 | **13%** | BET_38 at 30% |
+| 100BB BTN HIGH | BET_17 | **9%** | BET_38 at 24% |
+| 25BB BTN LOW | BET_17 | 28% | same |
+| 45BB 3bet LOW | BET_52 | 21% | same |
+| 70BB 3bet MID | BET_52 | 29% | same |
+
+Three of six trained a branch the solver rarely takes. The other three were right
+by luck, not construction - and the clearest sign of that is an unshipped family
+pinned to a size used 1 percent of the time, which is exactly the degenerate
+overbet the pinning was introduced to avoid.
+
+Candidates are now ranked by measured villain frequency after gate validity, with
+lane and bucket counts kept as tie-breakers for sizes used about equally.
+
+**Not yet re-harvested.** Three of the affected families are held back for mixing
+two solver trees and are queued for re-solve, so their packs must be rebuilt
+anyway; re-harvesting now would bake in numbers about to change. Do it with the
+post-resolve rebuild once the queue drains.
 
 ## Solver CPU policy
 
