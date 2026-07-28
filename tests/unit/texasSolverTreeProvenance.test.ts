@@ -9,6 +9,8 @@ interface BoardRow {
   rootBetSizes: number[];
   matchedSets: string[];
   profile: "FULL_TREE" | "REDUCED_TREE" | "AMBIGUOUS" | "UNKNOWN";
+  /** True when the root test could not separate the trees and the turn decided. */
+  resolvedByMarker: boolean;
 }
 
 interface Report {
