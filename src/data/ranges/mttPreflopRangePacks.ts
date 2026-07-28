@@ -10,6 +10,7 @@ import { rangePackMatchesTrainingProfile } from "./rangePackProfileGuard";
 import { anteOffRanges } from "./ante-off";
 import { anteOnRanges } from "./ante-on";
 import { runtimeMttPreflopRangePacks } from "./mttProductionRuntimeRegistry";
+import { isPlayableMttPreflopPreview } from "./trainingCapability";
 
 const VERIFIED_AT = "2026-06-01";
 
@@ -259,4 +260,41 @@ export function mttSixMaxCandidateImportReportForProfile(
   const pack = mttPreflopRangePackForProfile(profile);
   if (!pack || pack.dimensions.tableFormat !== "SIX_MAX") return undefined;
   return mttSixMaxCandidateImportReports.find((report) => report.packId === pack.id);
+}
+
+/**
+ * The preflop pack a profile may actually train against, or undefined.
+ *
+ * This is the only thing standing between a blocked profile and a drill. The
+ * postflop path refuses explicitly on `canStartTraining`; the preflop path does
+ * not, and instead depends on this returning nothing - so a six-max profile with
+ * no data was kept out of training by a helper's internal logic rather than by
+ * the capability contract, and nothing said so or tested it.
+ *
+ * Two ways a pack is startable and no others. Production requires the pack to be
+ * the exact one readiness declared, so a stale or renamed pack cannot stand in.
+ * Preview is limited to the 9-max chipEV shape that has playable historical data,
+ * and must have records.
+ */
+export function startableMttPreflopRangePack(
+  profile: TrainingProfile,
+  capability: {
+    status: string;
+    mttReadiness: { productionReady?: boolean; packId?: string | null } | null;
+  },
+): RangePack | undefined {
+  const pack = mttPreflopRangePackForProfile(profile);
+  const readiness = capability.mttReadiness;
+  if (capability.status === "PRODUCTION" && readiness?.productionReady === true) {
+    return pack?.id === readiness.packId ? pack : undefined;
+  }
+  if (
+    capability.status === "PREVIEW" &&
+    isPlayableMttPreflopPreview(profile) &&
+    pack &&
+    pack.records.length > 0
+  ) {
+    return pack;
+  }
+  return undefined;
 }

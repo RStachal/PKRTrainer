@@ -81,9 +81,11 @@ import { buildPostflopLineResultRecord } from "./persistence/postflopLineResultR
 import {
   isPlayableMttPreflopPreview,
   trainingCapabilityForProfile,
-  type TrainingCapability,
 } from "./data/ranges/trainingCapability";
-import { mttPreflopRangePackForProfile } from "./data/ranges/mttPreflopRangePacks";
+import {
+  mttPreflopRangePackForProfile,
+  startableMttPreflopRangePack,
+} from "./data/ranges/mttPreflopRangePacks";
 import { mttProductionImportSlotId } from "./data/ranges/mttImportSlotNaming";
 import { mttProductionLazyLoader } from "./data/ranges/mttProductionLazyLoader";
 import type { RangePack } from "./data/ranges/rangePack";
@@ -937,25 +939,6 @@ function profileGateMessage(profile: TrainingProfile, filters: Filters): string 
 
 }
 
-function preflopRangePackForStart(
-  profile: TrainingProfile,
-  capability: TrainingCapability,
-): RangePack | undefined {
-  const pack = mttPreflopRangePackForProfile(profile);
-  const readiness = capability.mttReadiness;
-  if (capability.status === "PRODUCTION" && readiness?.productionReady === true) {
-    return pack?.id === readiness.packId ? pack : undefined;
-  }
-  if (
-    capability.status === "PREVIEW" &&
-    isPlayableMttPreflopPreview(profile) &&
-    pack &&
-    pack.records.length > 0
-  ) {
-    return pack;
-  }
-  return undefined;
-}
 
 function mttProductionProfileKey(
   profile: TrainingProfile,
@@ -1073,7 +1056,7 @@ function setupTraining(
           );
           return;
         }
-        const pack = preflopRangePackForStart(resolvedProfile, capability);
+        const pack = startableMttPreflopRangePack(resolvedProfile, capability);
         if (!pack) {
           gameBox.hidden = true;
           filtersView.showEmptyResult(profileGateMessage(profile, filters));
@@ -1196,7 +1179,7 @@ function setupTraining(
     filtersView.setFilters(filters);
     const resolvedProfile = runtimeProfile(profile, filters);
     const capability = trainingCapabilityForProfile(resolvedProfile);
-    const pack = preflopRangePackForStart(resolvedProfile, capability);
+    const pack = startableMttPreflopRangePack(resolvedProfile, capability);
     if (!pack) {
       gameBox.hidden = true;
       filtersView.showEmptyResult(profileGateMessage(profile, filters));
