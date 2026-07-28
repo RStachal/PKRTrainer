@@ -4,6 +4,7 @@ import {
   familyIdFromRuleId,
   isWithheld,
   renderWithheldFamilies,
+  rulesByFamilyIn,
   withheldFamiliesForRules,
   type AcceptanceRecord,
 } from "../../scripts/lib/mttAcceptanceGuard.mts";
@@ -82,5 +83,33 @@ describe("acceptance guard", () => {
 
   it("says so plainly when nothing is withheld", () => {
     expect(renderWithheldFamilies([])).toBe("No shipped pack draws on a withheld family.");
+  });
+
+  it("groups shipped rules by family for a family-level problem", () => {
+    // Used to name which shipped content a tree-mixing family reaches. Holding a
+    // family back from the next rebuild does nothing about what it already put in
+    // the packs, so that reach has to be reported.
+    const grouped = rulesByFamilyIn(
+      [
+        "mtt9_150bb_co_btn_3bp_highspr-check-aggregate",
+        "mtt9_50bb_btn_bb_srp_facing_midspr-check-bet_17-aggregate",
+        "mtt9_150bb_co_btn_3bp_highspr-check-bet_39-aggregate",
+        "mtt9_40bb_utg_bb_srp-check-aggregate",
+      ],
+      new Set(["MTT9_150BB_CO_BTN_3BP_HIGHSPR", "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR"]),
+    );
+
+    expect([...grouped.keys()]).toEqual([
+      "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR",
+    ]);
+    expect(grouped.get("MTT9_150BB_CO_BTN_3BP_HIGHSPR")).toHaveLength(2);
+    // A family outside the set contributes nothing.
+    expect([...grouped.values()].flat()).not.toContain("mtt9_40bb_utg_bb_srp-check-aggregate");
+  });
+
+  it("returns nothing when no shipped rule touches the flagged families", () => {
+    expect(rulesByFamilyIn(["mtt9_40bb_utg_bb_srp-check-aggregate"], new Set(["MTT9_OTHER"])).size)
+      .toBe(0);
   });
 });

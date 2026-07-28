@@ -4,6 +4,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { nodeHistoryArgs, reviewFileName } from "./lib/mttReviewFileNaming.mts";
 import {
   renderWithheldFamilies,
+  rulesByFamilyIn,
   withheldFamiliesForRules,
   type AcceptanceRecord,
 } from "./lib/mttAcceptanceGuard.mts";
@@ -214,6 +215,9 @@ function run(args: CliArgs) {
   // The accuracy grader's verdict is enforced here or nowhere: it lives in
   // artifacts that are not version controlled, and nothing downstream reads it.
   steps.push(withheldFamilyGuard());
+  // Holding a mixed family back from the rebuild does not remove the content it
+  // already put in the packs, so that has to be reported separately.
+  steps.push(mixedTreeContentGuard(mixed));
 
   // Gates are read-only, so they run even in a dry run and report real state.
   steps.push(npm("gate:pilot-suite", ["mtt:postflop-pilot-suite", "--", "--summary"], true,
@@ -412,6 +416,37 @@ function withheldFamilyGuard(): Step {
   }
   const withheld = withheldFamiliesForRules(ruleIds, decisions);
   return { id, detail, ran: true, ok: withheld.length === 0, output: renderWithheldFamilies(withheld) };
+}
+
+/**
+ * Report shipped rules whose family mixes the full and reduced trees.
+ *
+ * The partial-resolve guard stops such a family being REBUILT, which protects
+ * the next build - but the content it contributed on an earlier run is still in
+ * the packs, and holding it back does nothing about that. An aggregate mixing two
+ * different games is the defect the whole re-solve exists to remove, so it is
+ * named here rather than left for someone to notice.
+ */
+function mixedTreeContentGuard(mixed: Set<string>): Step {
+  const id = "guard:mixed-tree-content";
+  const detail = "Name shipped rules whose family still mixes the full and reduced trees.";
+  const affected = rulesByFamilyIn(shippedPilotRuleIds(), mixed);
+  if (affected.size === 0) {
+    return { id, detail, ran: true, ok: true, output: "No shipped rule rests on a tree-mixing family." };
+  }
+  const lines = [...affected].map(([family, rules]) => `  ${family}: ${rules.join(", ")}`);
+  return {
+    id,
+    detail,
+    ran: true,
+    ok: false,
+    output: [
+      `${affected.size} shipped family(ies) still mix the full and reduced trees, so their`,
+      "aggregates blend two different games:",
+      ...lines,
+      "Their boards are queued for re-solve; rebuild these packs once the queue drains.",
+    ].join("\n"),
+  };
 }
 
 /** Rule ids of every generated pilot module, read from the built modules. */

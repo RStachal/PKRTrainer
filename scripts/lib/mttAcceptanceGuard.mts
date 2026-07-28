@@ -76,6 +76,26 @@ export function withheldFamiliesForRules(
   return withheld;
 }
 
+/**
+ * Group shipped rules by the family they came from, keeping only families in the
+ * given set. Used to name which shipped content a family-level problem reaches -
+ * a failed accuracy grade, or a family that still mixes two solver trees.
+ */
+export function rulesByFamilyIn(
+  ruleIds: readonly string[],
+  families: ReadonlySet<string>,
+): Map<string, string[]> {
+  const grouped = new Map<string, string[]>();
+  for (const ruleId of ruleIds) {
+    const family = familyIdFromRuleId(ruleId);
+    if (!families.has(family)) continue;
+    const list = grouped.get(family) ?? [];
+    list.push(ruleId);
+    grouped.set(family, list);
+  }
+  return new Map([...grouped].sort(([a], [b]) => a.localeCompare(b, "en")));
+}
+
 /** One line per withheld family, carrying the grader's own reason. */
 export function renderWithheldFamilies(withheld: readonly WithheldFamily[]): string {
   if (withheld.length === 0) return "No shipped pack draws on a withheld family.";
