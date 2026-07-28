@@ -192,6 +192,48 @@ Counting those lines overstates completed boards by more than twenty times and
 makes converging boards look like failures. A board ends where the cumulative
 time resets.
 
+## The mechanical acceptance gate is not a gate
+
+Found while integrating the weekend re-solve. `mtt:texas-solver-mechanical-acceptance`
+grades every family against the 0.5 exploitability target and withholds the ones
+that fail. On the refreshed evidence it withheld two:
+
+| Family | Why |
+| --- | --- |
+| `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR` | board 883r at 4.2263 |
+| `MTT9_150BB_CO_BTN_3BP_HIGHSPR` | five boards between 0.50 and 1.10 |
+
+The other eighteen are at or under target, the worst at 0.4994.
+
+But the decision is written into `review-notes.md` beside the raw dumps, and
+nothing reads it back. The pilot gate does not consult it, and neither does the
+module builder. So a family graded "no" still flows into a pilot pack and ships -
+`MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR` is in the shipped SB pack right now,
+supplying its HIGH band.
+
+Shipping it is still the better of the two options today: the previous build of
+that band came from boards that mixed two trees, so this is an improvement, and
+dropping the band outright would leave the SB pilot without HIGH coverage at all.
+The solver is re-solving those boards now. What needs fixing is that a withheld
+family reaches a player at all without anyone deciding so - the acceptance step
+is documentation wearing the word "gate".
+
+## Telling the two trees apart is possible after all
+
+The provenance audit classifies 226 of 577 boards as AMBIGUOUS, because it reads
+only the flop root, and the full and reduced parameter sets have **identical**
+flop bet sizes - they diverge only at turn and river. A structural discriminator
+was found that does distinguish them: a reduced tree declares no turn donk size,
+so TexasSolver emits the turn donk node with `CHECK` as its only legal action,
+a single-action node a full tree never produces. Corroborated by whole-file
+`"RAISE ` token counts, which measured 6-24 on reduced dumps against 286-1196 on
+full ones, with no overlap.
+
+Treat this as promising rather than settled: the adversarial pass that would have
+attacked it did not run, because the session limit was reached. Worth confirming
+before the audit is rewritten on top of it, since the partial-resolve guard rests
+on that audit.
+
 ## Open question: how wide the solved ranges are
 
 Measured across all 19 pilot rules, the solved hero range covers on average
