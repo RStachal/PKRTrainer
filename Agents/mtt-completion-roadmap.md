@@ -439,6 +439,22 @@ overbet, which is precisely what the ranking now handles - so the reason for the
 pin has gone. Removing it is the follow-up, best done once the last families stop
 mixing trees, since re-pinning from blended data would repeat this mistake.
 
+## Waiting trap: the villain in a hand line is not solver-backed
+
+None of the seven shipped pilots carries an `opponentPolicy`, so in line mode the
+villain always falls through to the built-in default response. The hero's
+recommendation is solver-backed; the opponent's behaviour is not.
+
+Not a live defect. Line mode is disabled for paid pilot subscribers, production
+postflop does not exist, and the preview users who can run a line get a heuristic
+hero as well - so provenance is uniform and nothing is mislabelled.
+
+It becomes one the moment turn and river pilots arrive and line mode is re-enabled
+for paying players: they would practise a solver line against an opponent who is
+not one, with nothing saying so. Either the packs need an opponent policy or the
+line has to declare whose behaviour is modelled. Recorded now so it is not
+discovered by a professional in the field.
+
 ## Hand-history review now fails closed
 
 With no range record for a spot, the parser synthesised a recommendation - the
