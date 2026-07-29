@@ -62,7 +62,7 @@ try {
   $effectivePriority = $ProcessPriority
   $effectiveThreads = $Threads
   if ($CpuCorePercent -eq 0) {
-    $policy = Get-SolverCpuPolicy
+    $policy = Get-EffectiveSolverCpuPolicy
     $effectiveCorePercent = $policy.CorePercent
     $effectivePriority = $policy.Priority
     $effectiveThreads = $policy.Threads

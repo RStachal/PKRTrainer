@@ -84,3 +84,40 @@ function Set-SolverCpuCap {
     ProcessCount = $applied
   }
 }
+
+# The state file the applier writes. Kept here so the worker and the applier read
+# the same override from the same place - the worker used to consult only the
+# clock, so a machine claimed for development still restarted the solver with the
+# night thread count and only its affinity was clawed back afterwards.
+function Get-SolverCpuStatePath {
+  $repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
+  return (Join-Path $repo "artifacts\uniform-tree-weekend\cpu-window-state.json")
+}
+
+function Get-SolverCpuOverride {
+  try { return (Get-Content (Get-SolverCpuStatePath) -Raw | ConvertFrom-Json).Override } catch { return $null }
+}
+
+<#
+  The policy actually in force: the manual claim when one is set, the clock
+  otherwise. Everything that decides how much machine the solver gets should call
+  this rather than Get-SolverCpuPolicy directly.
+#>
+function Get-EffectiveSolverCpuPolicy {
+  param(
+    [int]$DayCorePercent = 40,
+    [int]$NightCorePercent = 95,
+    [int]$NightStartHour = 21,
+    [int]$NightEndHour = 9
+  )
+  $override = Get-SolverCpuOverride
+  # An override is expressed as a window covering all hours or none, so the
+  # policy stays a pure function of its inputs.
+  if ($override -eq "DAY") {
+    return Get-SolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent -NightStartHour 0 -NightEndHour 0
+  }
+  if ($override -eq "NIGHT") {
+    return Get-SolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent -NightStartHour 0 -NightEndHour 24
+  }
+  return Get-SolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent -NightStartHour $NightStartHour -NightEndHour $NightEndHour
+}

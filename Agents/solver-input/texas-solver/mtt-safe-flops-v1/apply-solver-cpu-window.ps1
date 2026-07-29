@@ -9,7 +9,10 @@
 # Uninstall: .\apply-solver-cpu-window.ps1 -Action Uninstall
 [CmdletBinding()]
 param(
-  [ValidateSet("Apply", "Install", "Status", "Uninstall")]
+  # Day / Night claim the machine for one side until Auto hands it back. The
+  # timer keeps re-applying the claim, so it survives restarts instead of
+  # decaying quietly the way a one-off affinity change would.
+  [ValidateSet("Apply", "Install", "Status", "Uninstall", "Day", "Night", "Auto")]
   [string]$Action = "Apply",
   [string]$TaskName = "PKRTrainer-Solver-CpuWindow",
   [int]$DayCorePercent = 40,
@@ -36,9 +39,24 @@ function Write-WindowLog([string]$message) {
 
 $statePath = Join-Path $repo "artifacts\uniform-tree-weekend\cpu-window-state.json"
 
+function Set-WindowOverride([string]$Value) {
+  $previous = $null
+  try { $previous = (Get-Content $statePath -Raw | ConvertFrom-Json).Window } catch { }
+  New-Item -ItemType Directory -Force (Split-Path $statePath) | Out-Null
+  @{ Window = $previous; Override = $Value; At = (Get-Date).ToString("s") } | ConvertTo-Json |
+    Set-Content -LiteralPath $statePath -Encoding utf8
+}
+
 function Invoke-Apply {
-  $policy = Get-SolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent `
+  # An override wins over the clock. Expressed as a window covering all hours or
+  # none, so the policy stays a pure function of its inputs rather than something
+  # that pretends the time is different.
+  $override = Get-SolverCpuOverride
+  $policy = Get-EffectiveSolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent `
     -NightStartHour $NightStartHour -NightEndHour $NightEndHour
+  if ($null -ne $override) {
+    Write-WindowLog "Override active: $override (the clock says $((Get-Date).ToString('HH:mm')))."
+  }
   $result = Set-SolverCpuCap -CorePercent $policy.CorePercent -Priority $policy.Priority
   if ($result.ProcessCount -eq 0) {
     Write-WindowLog "$($policy.Window): no solver running; policy is $($policy.CorePercent)% / $($policy.Priority)."
@@ -84,7 +102,7 @@ function Invoke-Apply {
   }
   try {
     New-Item -ItemType Directory -Force (Split-Path $statePath) | Out-Null
-    @{ Window = $policy.Window; At = (Get-Date).ToString("s") } | ConvertTo-Json |
+    @{ Window = $policy.Window; Override = $override; At = (Get-Date).ToString("s") } | ConvertTo-Json |
       Set-Content -LiteralPath $statePath -Encoding utf8
   } catch { }
 
@@ -94,12 +112,26 @@ function Invoke-Apply {
 switch ($Action) {
   "Apply" { Invoke-Apply | Out-Null; break }
 
+  "Day"   { Set-WindowOverride "DAY";   Write-WindowLog "Override set to DAY; the solver yields the machine until Auto."; Invoke-Apply | Out-Null; break }
+  "Night" { Set-WindowOverride "NIGHT"; Write-WindowLog "Override set to NIGHT; the solver takes the machine until Auto."; Invoke-Apply | Out-Null; break }
+  "Auto"  { Set-WindowOverride $null;   Write-WindowLog "Override cleared; back to the clock."; Invoke-Apply | Out-Null; break }
+
   "Status" {
-    $policy = Get-SolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent `
+    # The effective policy, not the clock's opinion of it: reporting 95 percent
+    # while an override held the solver to 40 would be worse than silence.
+    $policy = Get-EffectiveSolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent `
       -NightStartHour $NightStartHour -NightEndHour $NightEndHour
     Write-Host "window:        $($policy.Window)  ($($policy.Reason))"
     Write-Host "policy:        $($policy.CorePercent)% cores, priority $($policy.Priority)"
     Write-Host "night window:  $($NightStartHour):00 to $($NightEndHour):00"
+    $override = Get-SolverCpuOverride
+    if ($null -eq $override) {
+      Write-Host "override:      none (following the clock)"
+    } else {
+      # An override that nobody can see is how a machine ends up mysteriously
+      # slow, so it is stated with the way back.
+      Write-Host "override:      $override  -- run with -Action Auto to follow the clock again"
+    }
     $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
     if ($null -eq $task) {
       Write-Host "timer task:    NOT INSTALLED - the switch will not happen on its own"
