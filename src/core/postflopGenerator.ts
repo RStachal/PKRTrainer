@@ -209,6 +209,11 @@ export type PostflopRecommendationSource =
        * when the family's solved SPR is unknown or the shown SPR is not positive.
        */
       sprFidelity?: SprFidelity;
+      /**
+       * Whether this rule's content was aggregated over one solver tree or two.
+       * Present only when it is two, since that is the case worth saying out loud.
+       */
+      treeIntegrity?: "MIXED_TREES";
     }
   | {
       kind: "FALLBACK";

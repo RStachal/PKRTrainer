@@ -1598,6 +1598,7 @@ function modelItems(spot: PostflopTrainingSpot): readonly string[] {
       ),
       localizedText(`SPR range: ${source.sprMin}-${source.sprMax}`, `Rozsah SPR: ${source.sprMin}-${source.sprMax}`),
       ...sprFidelityItems(source.sprFidelity),
+      ...treeIntegrityItems(source.treeIntegrity),
       ...source.assumptions.map(
         (assumption, index) => localizedText(
           `Assumption ${index + 1}: ${userFacingAssumption(assumption)}`,
@@ -1637,6 +1638,26 @@ function sprFidelityItems(
       `Zobrazené SPR je ${times} solveného - ber orientačně`,
     );
   return [solved, warning];
+}
+
+/**
+ * Say when a rule's content was aggregated over two different solver trees.
+ *
+ * Some families were solved partly on the authoritative full tree and partly on
+ * a reduced one that has no turn or river raise, no donk and no all-in. That is a
+ * different game, not a coarser description of the same one, so an aggregate over
+ * both blends two of them. The release gate has named these families to operators
+ * since the mixing was found, and the player training the spot was told nothing -
+ * while being told plainly when the shown SPR sits far from the solved one.
+ */
+function treeIntegrityItems(
+  integrity: Extract<PostflopTrainingSpot["explanation"]["source"], { kind: "STRATEGY_PACK" }>["treeIntegrity"],
+): readonly string[] {
+  if (integrity !== "MIXED_TREES") return [];
+  return [localizedText(
+    "Built from two solver trees - one without turn and river raises, so treat the turn and river plan as approximate",
+    "Postaveno ze dvou solverových stromů - jeden bez raisů na turnu a riveru, takže plán na turnu a riveru ber orientačně",
+  )];
 }
 
 /**

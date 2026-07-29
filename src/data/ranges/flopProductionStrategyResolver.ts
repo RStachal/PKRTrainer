@@ -12,6 +12,7 @@ import {
   isActionEvSetComplete,
 } from "../../core/actionEv";
 import { assessSprFidelity } from "../../core/postflopSprFidelity";
+import { treeIntegrityForRuleId } from "./postflopTreeIntegrity";
 import {
   type FlopProductionStrategyPack,
   type FlopProductionStrategyRule,
@@ -56,6 +57,10 @@ export function createFlopProductionStrategyResolver(
     const sprFidelity = solvedSpr === undefined
       ? undefined
       : assessSprFidelity(roundedSpr(input.effectiveStackBB, input.potBB), solvedSpr);
+    // A rule whose family holds boards from two different trees is an aggregate
+    // over two different games. The gate has said so to operators since it was
+    // found; this is what says it to the player training the spot.
+    const treeIntegrity = treeIntegrityForRuleId(rule.id);
 
     return {
       action,
@@ -80,6 +85,7 @@ export function createFlopProductionStrategyResolver(
         rangeBuckets: rangeBuckets(rule),
         heroRangeBucket: matchedHeroBucket,
         ...(sprFidelity ? { sprFidelity } : {}),
+        ...(treeIntegrity === "MIXED_TREES" ? { treeIntegrity } : {}),
         ...(rule.opponentPolicy
           ? { opponentPolicy: { ...rule.opponentPolicy } }
           : {}),

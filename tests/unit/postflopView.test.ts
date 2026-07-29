@@ -466,6 +466,86 @@ describe("postflopView - DOM", () => {
     expect(result?.textContent).toContain("Zobrazené SPR je 5x solveného");
   });
 
+  it("rekne hraci, kdyz je pravidlo poskladane ze dvou solverovych stromu", () => {
+    // Some families were solved partly on a reduced tree that has no turn or
+    // river raise, so their aggregates blend two different games. The release
+    // gate has said so to operators since it was found; the player training the
+    // spot was told nothing, while being told plainly about SPR distance.
+    const resolver: PostflopStrategyResolver = (input) => ({
+      action: "BET_BIG",
+      explanation: "Tree integrity fixture.",
+      source: {
+        kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
+        packId: "internal-integrity-pack",
+        packVersion: "v1",
+        packVerifiedAt: "2026-07-29",
+        ruleId: "internal-integrity-rule",
+        confidence: "HIGH",
+        matchedTextures: input.textures,
+        sprMin: 0,
+        sprMax: 25,
+        positionPattern: input.positionPattern,
+        sourceUrls: [],
+        assumptions: ["Tree integrity fixture."],
+        selectionScore: 100,
+        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        treeIntegrity: "MIXED_TREES",
+      },
+    });
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 7,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: resolver,
+    });
+
+    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
+
+    const result = root.querySelector<HTMLElement>(".postflop-result");
+    expect(result?.textContent).toContain("ze dvou solverových stromů");
+    expect(result?.textContent).toContain("turnu a riveru ber orientačně");
+  });
+
+  it("mlci o integrite stromu, kdyz je pravidlo z jednoho stromu", () => {
+    // The caveat must be absent rather than reassuring: a line saying "one tree"
+    // on every clean spot would train the eye to skip it on the spots that matter.
+    const resolver: PostflopStrategyResolver = (input) => ({
+      action: "BET_BIG",
+      explanation: "Uniform tree fixture.",
+      source: {
+        kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
+        packId: "internal-integrity-pack",
+        packVersion: "v1",
+        packVerifiedAt: "2026-07-29",
+        ruleId: "internal-integrity-rule",
+        confidence: "HIGH",
+        matchedTextures: input.textures,
+        sprMin: 0,
+        sprMax: 25,
+        positionPattern: input.positionPattern,
+        sourceUrls: [],
+        assumptions: ["Uniform tree fixture."],
+        selectionScore: 100,
+        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+      },
+    });
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 7,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: resolver,
+    });
+
+    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
+
+    const result = root.querySelector<HTMLElement>(".postflop-result");
+    expect(result?.textContent).not.toContain("solverových stromů");
+  });
+
   it("zobrazi EV vsech akci a oznaci obe solverove rovnocenne volby", () => {
     const resolver: PostflopStrategyResolver = (input) => ({
       action: "BET_BIG",

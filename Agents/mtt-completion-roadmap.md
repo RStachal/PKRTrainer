@@ -160,7 +160,7 @@ These are the ones still open:
 
 | Item | State | Section |
 | --- | --- | --- |
-| 3 of 19 shipped rules from 2 tree-mixing families | waiting on the queue | The audit's blind spot |
+| 3 of 19 shipped rules from 2 tree-mixing families | waiting on the queue; the player is now told | The audit's blind spot |
 | Same 2 families withheld by the accuracy grader | waiting on the queue | The mechanical acceptance gate |
 | 1 shipped rule on a drifted villain bet | cosmetic; no size dominates there | Correction: the pin measurement |
 | Six-max preflop 0/4, per-action EV 0/972 | data-blocked, plumbing done | Blocked, and on exactly what |
@@ -171,6 +171,13 @@ These are the ones still open:
 Fixed and kept here only as the reasoning behind a guard: the line-mode
 inversion, the statistics provenance gap, the preflop start guard, the facing-bet
 lane naming, the fail-closed review, and the solver thread budget.
+
+One thing changed about the first row rather than being resolved by it. Those
+three rules still blend two trees, but the player training them is now told so
+on the spot, the same way they are already told when the shown SPR sits far from
+the solved one. The caveat is derived from the tree-provenance audit and a test
+reconciles the two on every run, so when those boards are re-solved onto one tree
+the family leaves the table and the caveat disappears without anyone editing it.
 
 ## Parallel work while blocked
 
