@@ -109,15 +109,22 @@ export function buildStatsV2KpiModel(
   const minLeakSample = normalizePositiveInt(options.minLeakSample, 5);
   const leakRateThreshold = normalizeRateThreshold(options.leakRateThreshold, 60);
   const summary = summarizeStatsV2(records);
-  const recentRecords = records.slice(-recentWindowSize);
+  // Streaks and the recent window are claims about time, so they are read from
+  // the timestamps rather than from where a record happens to sit in the array.
+  // Import replaces the whole store with the order of the file it was given, and
+  // since there is no merge, combining two devices means pasting two exports
+  // together - which puts the older device's whole history last and made the
+  // current streak zero while the player was on a run of three.
+  const inTimeOrder = [...records].sort((a, b) => a.ts - b.ts);
+  const recentRecords = inTimeOrder.slice(-recentWindowSize);
   const recent = summarizeStatsV2(recentRecords);
 
   return {
     total: summary.total,
     correct: summary.correct,
     lifetimeRate: summary.rate,
-    currentStreak: currentCorrectStreak(records),
-    bestStreak: bestCorrectStreak(records),
+    currentStreak: currentCorrectStreak(inTimeOrder),
+    bestStreak: bestCorrectStreak(inTimeOrder),
     recentWindowSize,
     recentTotal: recent.total,
     recentCorrect: recent.correct,
