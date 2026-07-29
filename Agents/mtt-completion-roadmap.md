@@ -52,10 +52,21 @@ sample. Both beta blockers, this and B2, are data-blocked, not code-blocked.
 
 **B2. Per-action EV (0/972).** Measured: TexasSolver cannot emit EV at any dump
 depth - a `set_dump_rounds 4` probe grew the file to 2.24 GB and still contained
-only `action_node` and `chance_node`. Needs an EV-capable solver. GTO+ is owned
-and its socket confirmed live on port 55143, but connections are refused pending
-the documented `tmp/customconnect.txt` override, which requires one elevated
-command.
+only `action_node` and `chance_node`. Needs an EV-capable solver.
+
+Re-checked 2026-07-29, because the previous note here said the GTO+ socket was
+confirmed live and that is no longer true. What is actually on the machine:
+
+- GTO+ is installed at `C:\Program Files\GTO` (GTO.exe, gtokey.dat present).
+- It is **not running**, and nothing is listening on port 55143.
+- `tmp/customconnect.txt` does **not** exist, and the `tmp` folder under that
+  install directory is not writable without elevation - a write test was refused.
+- The required contents of that file are not recorded anywhere in this repo, only
+  the fact that it is needed.
+
+So this is three owner steps, not one: start GTO+, create the override file from
+the vendor's documented format with an elevated shell, then run the export. None
+of them can be done from inside the repo.
 
 Only the EV *numbers* are now blocked; the plumbing that carries them to the
 buttons is complete and tested end to end. The intake validates an owned EV

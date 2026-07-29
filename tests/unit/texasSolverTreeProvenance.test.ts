@@ -9,8 +9,9 @@ interface BoardRow {
   rootBetSizes: number[];
   matchedSets: string[];
   profile: "FULL_TREE" | "REDUCED_TREE" | "AMBIGUOUS" | "UNKNOWN";
-  /** True when the root test could not separate the trees and the turn decided. */
-  resolvedByMarker: boolean;
+  /** What the root bet sizes alone would have said. Corroboration only. */
+  sizeProfile: "FULL_TREE" | "REDUCED_TREE" | "AMBIGUOUS" | "UNKNOWN";
+  disagrees: boolean;
 }
 
 interface Report {
@@ -22,6 +23,8 @@ interface Report {
     ambiguous: number;
     unknown: number;
     mixedFamilies: number;
+    sizeTestCouldNotDecide: number;
+    sizeTestDisagreed: number;
   };
   families: Array<{ familyId: string; boardRows: BoardRow[] }>;
 }
@@ -43,19 +46,23 @@ afterEach(() => {
 });
 
 describe("mtt:texas-solver-tree-provenance CLI", () => {
-  it("separates full-tree from reduced-tree boards by their root bet sizes", () => {
-    // Full set bets 50% of a 157 pot -> 79. Low-memory bets 33% -> 52.
+  it("finds a family holding one board of each tree", () => {
+    // The whole point of the audit: an aggregate built over both is blending two
+    // different games. Told apart by what the boards ARE - the reduced one has a
+    // turn node whose only action is CHECK - not by which bet sizes they carry.
     writeParamSet("pkrtrainer_mtt_beta_min_board_review_v1", 157, [50]);
     writeParamSet("pkrtrainer_mtt_low_memory_beta_min_board_review_v1", 157, [33]);
     writeBoard("K83r", [79, 1500]);
-    writeBoard("A72r", [52, 1500]);
+    writeBoardWithSuppressedDonk("A72r", [52, 1500]);
 
     const report = invokeJson();
 
-    expect(report.counts).toMatchObject({ boards: 2, fullTree: 1, reducedTree: 1, ambiguous: 0, unknown: 0 });
+    expect(report.counts).toMatchObject({ boards: 2, fullTree: 1, reducedTree: 1 });
     expect(boardRow(report, "K83r").profile).toBe("FULL_TREE");
     expect(boardRow(report, "A72r").profile).toBe("REDUCED_TREE");
     expect(report.counts.mixedFamilies).toBe(1);
+    // Here the two signals agree, which is the ordinary case.
+    expect(report.counts.sizeTestDisagreed).toBe(0);
   });
 
   it("uses each parameter set's own pot rather than a shared one", () => {
@@ -87,8 +94,13 @@ describe("mtt:texas-solver-tree-provenance CLI", () => {
     const report = invokeJson();
 
     expect(boardRow(report, "J54mono").profile).toBe("FULL_TREE");
-    expect(boardRow(report, "J54mono").resolvedByMarker).toBe(true);
-    expect(report.counts).toMatchObject({ fullTree: 1, reducedTree: 0, ambiguous: 0, resolvedByMarker: 1 });
+    expect(boardRow(report, "J54mono").sizeProfile).toBe("AMBIGUOUS");
+    expect(report.counts).toMatchObject({
+      fullTree: 1,
+      reducedTree: 0,
+      sizeTestCouldNotDecide: 1,
+      sizeTestDisagreed: 0,
+    });
   });
 
   it("resolves the same unseparable root to reduced when the donk node is suppressed", () => {
@@ -104,12 +116,37 @@ describe("mtt:texas-solver-tree-provenance CLI", () => {
     expect(report.counts).toMatchObject({ fullTree: 0, reducedTree: 1, ambiguous: 0 });
   });
 
-  it("marks a board unknown when no parameter set explains its root bets", () => {
+  it("still classifies a board no parameter set explains", () => {
+    // This is the case a deliberately coarser tree lands in: solved with bet
+    // sizes no recorded set predicts, while being a full tree in every way that
+    // matters. Answering UNKNOWN would hide it from the mixing guard and keep it
+    // out of every re-solve batch, so the structure decides and the sizes only
+    // record that they could not have.
     writeParamSet("pkrtrainer_mtt_beta_min_board_review_v1", 50, [50]);
     writeBoard("T84r", [999]);
 
     const report = invokeJson();
-    expect(boardRow(report, "T84r").profile).toBe("UNKNOWN");
+
+    expect(boardRow(report, "T84r").profile).toBe("FULL_TREE");
+    expect(boardRow(report, "T84r").sizeProfile).toBe("UNKNOWN");
+    expect(boardRow(report, "T84r").disagrees).toBe(false);
+    expect(report.counts.sizeTestCouldNotDecide).toBe(1);
+  });
+
+  it("raises a hand when the sizes contradict the structure", () => {
+    // The cross-check earns its keep here. A set that says review-only against a
+    // board whose turn structure is full means one of the two signals has
+    // drifted, and that is a question for a person rather than something to
+    // resolve quietly in favour of either one.
+    writeParamSet("pkrtrainer_mtt_low_memory_beta_min_board_review_v1", 50, [33]);
+    writeBoard("A72r", [17, 125]);
+
+    const report = invokeJson();
+
+    expect(boardRow(report, "A72r").profile).toBe("FULL_TREE");
+    expect(boardRow(report, "A72r").sizeProfile).toBe("REDUCED_TREE");
+    expect(boardRow(report, "A72r").disagrees).toBe(true);
+    expect(report.counts.sizeTestDisagreed).toBe(1);
   });
 
   it("rejects an unknown option", () => {

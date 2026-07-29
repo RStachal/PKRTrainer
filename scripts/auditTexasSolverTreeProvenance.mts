@@ -42,9 +42,23 @@ function saveMarkerCache(): void {
  * That matters because the content contract treats the reduced tree as
  * review-only: it may be audited and packaged for review but is not meant to be
  * normalized and promoted into runtime content. This audit recovers the missing
- * provenance by comparing each board's root bet sizes against what each
- * parameter set would have produced, and reports how much of the pilot content
- * rests on reduced-tree solves.
+ * provenance from the board's own turn structure and reports how much of the
+ * pilot content rests on reduced-tree solves.
+ *
+ * The discriminator is structural: a reduced set declares no turn donk size, so
+ * the solver emits a turn donk node whose only legal action is CHECK, and a full
+ * tree never produces a single-action node. See texasSolverTreeMarker.mts.
+ *
+ * Root bet sizes are a CROSS-CHECK, not the decision. They were the decision
+ * once, and they were the wrong thing to key on twice over. They cannot separate
+ * the trees at all - the two are identical at the flop root and diverge only at
+ * turn and river - so the test shrugged at 226 of 577 boards, 32 of which were
+ * reduced and were hiding three tree-mixing families from the guard that exists
+ * to find them. And they are incidental rather than structural: a tree made
+ * deliberately coarser to fit in memory has different root sizes while being a
+ * full tree in every way that matters, and the size test would call it unknown.
+ * The marker reads what the tree IS. Sizes only corroborate, and a disagreement
+ * is reported rather than silently resolved.
  *
  * It reads only the first bytes of each raw file and never writes solver data.
  */
@@ -69,8 +83,10 @@ interface BoardRow {
   rootBetSizes: number[];
   matchedSets: string[];
   profile: TreeProfile;
-  /** True when the root test was ambiguous and the turn marker decided it. */
-  resolvedByMarker: boolean;
+  /** What the root bet sizes alone would have said. Corroboration only. */
+  sizeProfile: TreeProfile;
+  /** True when the sizes contradict the structure, which needs a human. */
+  disagrees: boolean;
 }
 
 interface FamilyRow {
@@ -115,8 +131,9 @@ function usage(): string {
     "  npm run mtt:texas-solver-tree-provenance -- --family=MTT9_150BB_CO_BTN_3BP_HIGHSPR",
     "  npm run mtt:texas-solver-tree-provenance -- --output=artifacts/tree-provenance/report.json --json",
     "",
-    "Classifies each solved board as a full-tree or reduced-tree solve by comparing",
-    "its root bet sizes against the parameter sets that could have produced it.",
+    "Classifies each solved board as a full-tree or reduced-tree solve from its own",
+    "turn structure: a reduced tree declares no turn donk size, so it emits a turn",
+    "node whose only action is CHECK. Root bet sizes cross-check the verdict.",
     "Read-only: it never writes or modifies solver data.",
   ].join("\n");
 }
@@ -168,12 +185,15 @@ function buildReport(args: CliArgs) {
   return {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
-    basis: "ROOT_BET_SIZES_THEN_TURN_MARKER_FOR_AMBIGUOUS",
+    basis: "TURN_DONK_MARKER_WITH_ROOT_SIZE_CROSSCHECK",
     counts: {
       families: rows.length,
       ...totals,
       mixedFamilies: rows.filter((row) => row.fullTree > 0 && row.reducedTree > 0).length,
-      resolvedByMarker: rows.reduce((sum, row) => sum + row.boardRows.filter((item) => item.resolvedByMarker).length, 0),
+      sizeTestCouldNotDecide: rows.reduce((sum, row) => sum + row.boardRows.filter(
+        (item) => item.sizeProfile === "AMBIGUOUS" || item.sizeProfile === "UNKNOWN",
+      ).length, 0),
+      sizeTestDisagreed: rows.reduce((sum, row) => sum + row.boardRows.filter((item) => item.disagrees).length, 0),
       fullyReducedFamilies: rows.filter((row) => row.boards > 0 && row.reducedTree === row.boards).length,
     },
     families: rows,
@@ -190,21 +210,26 @@ function familyRow(familyId: string, args: CliArgs): FamilyRow {
     const dumpPath = join(rawDir, name);
     const rootBetSizes = rootBetSizesOf(dumpPath);
     const matched = paramSets.filter((set) => setMatchesBoard(set, rootBetSizes));
-    const rootProfile = classify(matched, rootBetSizes);
-    // The root test cannot separate the trees, because they are identical at the
-    // flop. When it says so, read the board's own turn structure instead of
-    // leaving it unknown - an unresolved board is invisible to the mixing guard
-    // and is never selected for re-solve, so ambiguity is not a safe resting
-    // place.
-    const profile = rootProfile === "AMBIGUOUS"
-      ? (cachedTreeMarkerVerdict(dumpPath, markerCache) === "REDUCED" ? "REDUCED_TREE" : "FULL_TREE")
-      : rootProfile;
+    // The board's own turn structure decides. Nothing is left AMBIGUOUS or
+    // UNKNOWN: an unresolved board is invisible to the mixing guard and is never
+    // selected for re-solve, so not answering is not a safe resting place.
+    const profile: TreeProfile = cachedTreeMarkerVerdict(dumpPath, markerCache) === "REDUCED"
+      ? "REDUCED_TREE"
+      : "FULL_TREE";
+    // Sizes still get a vote, and it is only ever to raise a hand. A set that
+    // could not have produced this board, or one that says review-only against a
+    // full verdict, means one of the two signals has drifted and someone should
+    // look.
+    const sizeProfile = classify(matched, rootBetSizes);
+    const disagrees = (sizeProfile === "FULL_TREE" && profile === "REDUCED_TREE")
+      || (sizeProfile === "REDUCED_TREE" && profile === "FULL_TREE");
     boardRows.push({
       boardId,
       rootBetSizes,
       matchedSets: matched.map((set) => set.setName),
       profile,
-      resolvedByMarker: rootProfile === "AMBIGUOUS",
+      sizeProfile,
+      disagrees,
     });
   }
 
@@ -313,23 +338,23 @@ function classify(matched: readonly ParamSetProfile[], rootBetSizes: readonly nu
 function render(report: ReturnType<typeof buildReport>, summaryOnly: boolean): string {
   const lines = [
     "TexasSolver tree-profile provenance",
-    "basis: ROOT_BET_SIZES_THEN_TURN_MARKER_FOR_AMBIGUOUS",
+    `basis: ${report.basis}`,
     `families: ${report.counts.families}`,
     `boards: ${report.counts.boards}`,
     `full tree: ${report.counts.fullTree}`,
     `reduced tree (review-only): ${report.counts.reducedTree}`,
-    `ambiguous: ${report.counts.ambiguous}`,
-    `unknown: ${report.counts.unknown}`,
     `families mixing both: ${report.counts.mixedFamilies}`,
-    `ambiguous roots resolved by turn marker: ${report.counts.resolvedByMarker}`,
+    `boards the size cross-check could not have decided: ${report.counts.sizeTestCouldNotDecide}`,
+    `boards where sizes contradict the structure: ${report.counts.sizeTestDisagreed}`,
     `families fully reduced: ${report.counts.fullyReducedFamilies}`,
   ];
   if (summaryOnly) return lines.join("\n");
 
   for (const family of report.families) {
+    const disagreed = family.boardRows.filter((row) => row.disagrees);
     lines.push(
       `${family.familyId}: boards=${family.boards} full=${family.fullTree} reduced=${family.reducedTree}` +
-      ` ambiguous=${family.ambiguous} unknown=${family.unknown}`,
+      (disagreed.length === 0 ? "" : ` SIZE-DISAGREEMENT on ${disagreed.map((row) => row.boardId).join(", ")}`),
     );
   }
   return lines.join("\n");
