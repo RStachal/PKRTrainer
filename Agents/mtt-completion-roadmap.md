@@ -421,6 +421,23 @@ two solver trees and are queued for re-solve, so their packs must be rebuilt
 anyway; re-harvesting now would bake in numbers about to change. Do it with the
 post-resolve rebuild once the queue drains.
 
+## Hand-history review now fails closed
+
+With no range record for a spot, the parser synthesised a recommendation - the
+default action, a fold - shaped exactly like a real one, so nothing downstream
+could tell "fold is right here" from "we have no data, so we said fold". The same
+defect that was fixed on the postflop side.
+
+No live defect: the app sets `requireLoadedStrategy`, so a missing record already
+produced an honest error. But the *default* was the unsafe one, so the guarantee
+rested on every caller remembering a flag. Flipped to fail closed; nothing
+depended on the synthesised fold.
+
+Checked and deliberately left alone: the postflop bridge falls back to a default
+pot and a 40BB stack, which would pick a rule from invented numbers. It is
+unreachable - a street's financial state is created at the FLOP/TURN/RIVER marker
+rather than at the first bet, and the bridge only runs for streets with a board.
+
 ## Solver CPU policy
 
 The machine is shared with development, so the solver takes a share that depends
@@ -433,6 +450,16 @@ on the clock rather than a fixed one:
 
 A timer applies it every fifteen minutes, because a deep board runs over an hour
 and a process started in the day would otherwise hold the day cap all night.
+
+A person can claim the machine without touching the schedule - editing the night
+hours to express a temporary fact leaves an edit that outlives its reason:
+
+    npm run mtt:solver-day      # solver yields the machine
+    npm run mtt:solver-night    # solver takes it
+    npm run mtt:solver-auto     # back to the clock
+
+The claim is persisted and re-applied by the timer, so it survives restarts, and
+`mtt:solver-cpu-window` names any claim in force with the way to clear it.
 Threads are part of the policy, since affinity alone does not raise utilisation -
 six threads pinned to fifteen cores still do six cores of work - and because
 thread count cannot be changed on a live process, a window change restarts the
