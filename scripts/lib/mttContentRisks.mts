@@ -1,16 +1,22 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 
-import { isWithheld, rulesByFamilyIn, type AcceptanceRecord } from "./mttAcceptanceGuard.mts";
+import { isWithheld, rulesByFamilyIn, familyIdFromRuleId, type AcceptanceRecord } from "./mttAcceptanceGuard.mts";
+import { assessPinDrift, type PinDriftRow } from "./facingBetPinDrift.mts";
+import { reviewFileName } from "./mttReviewFileNaming.mts";
+import { join } from "node:path";
 
 /**
- * The two family-level problems that can reach shipped strategy content.
+ * The problems that can reach shipped strategy content without anyone deciding so.
  *
- * Both were found the hard way. A family can mix the authoritative full solver
- * tree with the reduced review-only one, which makes its aggregate a blend of two
- * different games; and a family can fail the accuracy grader while its content
- * still sits in a pack, because the verdict was recorded in artifacts nobody read
- * back.
+ * Three, and each was found the hard way.
+ *
+ * A family can mix the authoritative full solver tree with the reduced
+ * review-only one, which makes its aggregate a blend of two different games. A
+ * family can fail the accuracy grader while its content still sits in a pack,
+ * because the verdict was recorded in artifacts nobody read back. And a
+ * facing-bet rule trains one villain bet size, pinned from an earlier run, which
+ * can stop being the size the solver actually uses most.
  *
  * The rebuild pipeline reports both, but that is the wrong and only place: the
  * decision to ship is made at the release gates, and a library can be shipped
@@ -63,9 +69,12 @@ export function withheldFamilies(): Map<string, string> {
   }
 }
 
+const SOLVER_OUTPUT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
+
 export interface ShippedContentRisks {
   mixedTreeRules: Map<string, string[]>;
   withheldRules: Map<string, string[]>;
+  driftedPins: PinDriftRow[];
   /** One sentence per risk, empty when the library is clean. */
   limits: string[];
 }
@@ -75,8 +84,23 @@ export interface ShippedContentRisks {
  * works from a loaded pack as easily as from the generated modules on disk.
  */
 export function shippedContentRisks(ruleIds: readonly string[]): ShippedContentRisks {
-  const mixedTreeRules = rulesByFamilyIn(ruleIds, mixedTreeFamilies());
+  const mixed = mixedTreeFamilies();
+  const mixedTreeRules = rulesByFamilyIn(ruleIds, mixed);
   const withheldRules = rulesByFamilyIn(ruleIds, new Set(withheldFamilies().keys()));
+
+  // A facing-bet rule trains one villain bet size, pinned from an earlier run.
+  // Only genuinely judged drift counts: a family still spanning both trees is
+  // reported as unjudged and must not be presented as a finding.
+  const driftedPins = ruleIds.flatMap((ruleId) => {
+    const familyId = familyIdFromRuleId(ruleId);
+    const row = assessPinDrift({
+      ruleId,
+      familyId,
+      villainReviewPath: join(SOLVER_OUTPUT_ROOT, familyId, reviewFileName("CHECK")),
+      familyMixesTrees: mixed.has(familyId),
+    });
+    return row !== null && row.verdict === "DRIFTED" ? [row] : [];
+  });
 
   const limits: string[] = [];
   if (mixedTreeRules.size > 0) {
@@ -95,5 +119,15 @@ export function shippedContentRisks(ruleIds: readonly string[]): ShippedContentR
       + `${[...withheldRules.keys()].join(", ")}.`,
     );
   }
-  return { mixedTreeRules, withheldRules, limits };
+  if (driftedPins.length > 0) {
+    limits.push(
+      `${driftedPins.length} of ${ruleIds.length} shipped rules face a villain bet size that is `
+      + "no longer the one the solver uses most: "
+      + driftedPins.map((row) => (
+        `${row.ruleId} trains ${row.pinnedAction} at ${(row.pinnedFrequency * 100).toFixed(1)}% `
+        + `where ${row.topAction} is used ${(row.topFrequency * 100).toFixed(1)}%`
+      )).join("; ") + ".",
+    );
+  }
+  return { mixedTreeRules, withheldRules, driftedPins, limits };
 }
