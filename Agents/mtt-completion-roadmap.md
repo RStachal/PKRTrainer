@@ -1,6 +1,6 @@
 # MTT completion roadmap
 
-Updated: 2026-07-24
+Updated: 2026-07-29
 Status: ACTIVE PLAN
 
 Two things this document keeps apart, because mixing them has repeatedly made
@@ -22,11 +22,16 @@ Measured, not estimated:
 | Per-action EV, preflop | **0/329212** |
 | Postflop production matrix | **0/48** rows, 0/9600 targets |
 | Turn / River content | **0** of everything |
-| Boards on the reduced review-only tree | **337/577** |
+| Boards on the reduced review-only tree | **46/577** (was 337) |
+| Families still mixing two solver trees | **3** (was 5 when ambiguity was resolved) |
+| Shipped rules carrying a known content risk | **3/19** (was 5) |
 
 The beta is roughly half-built. The full library is at six percent, and nothing
 in the current plan closes that inside the 30-day window; treating it as a
 near-term target is the main way this project could mislead itself.
+
+The tree numbers move as the queue drains, so they are the one row here worth
+re-reading before any release decision: `npm run mtt:texas-solver-tree-provenance -- --summary`.
 
 ## Blocked, and on exactly what
 
