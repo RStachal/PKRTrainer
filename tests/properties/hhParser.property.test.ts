@@ -205,6 +205,26 @@ describe("hhParser - total parser properties", () => {
     expect(result.errors.join(" ")).toContain("produkční preflop strategie");
   });
 
+  it("bez vyzadaneho priznaku nevymysli doporuceni pro spot bez zaznamu", () => {
+    // The sharp case: the store IS loaded, it just has nothing for this spot.
+    // The parser used to synthesise the default action - a fold - shaped exactly
+    // like a real recommendation, so nothing downstream could tell "fold is right
+    // here" from "we have no data". Failing closed is now the default, so a
+    // caller has to ask for the lenient behaviour rather than inherit it.
+    const result = parseHandHistory(validNineHandedText("BTN", [
+      { rank: "A", suit: "s" },
+      { rank: "K", suit: "d" },
+    ]), {
+      rangeStore: {
+        lookup: () => undefined,
+        isLoaded: () => true,
+      },
+    });
+
+    expect(result.spot).toBeUndefined();
+    expect(result.errors.join(" ")).toMatch(/produkční preflop strategie/i);
+  });
+
   it("odmitne duplicitni kartu mezi hero handou a boardem", () => {
     const text = validNineHandedText("BTN", [
       { rank: "A", suit: "s" },

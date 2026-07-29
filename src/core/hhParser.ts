@@ -951,7 +951,12 @@ function buildSpot(
   ante: AnteMode,
   ctx: { context: ActionContext; facing: FacingAction; limps: number; calls: number; isBvB: boolean },
   store: RangeStore,
-  requireRangeRecord = false,
+  // Fails closed. Without a range record for the spot there is no strategy to
+  // report, and the alternative was to synthesise one - the default action, a
+  // fold - shaped exactly like a real recommendation, so nothing downstream
+  // could tell "fold is right here" from "we have no data". A caller that
+  // genuinely wants that has to ask for it.
+  requireRangeRecord = true,
   language: PreflopExplanationLanguage = "CZ",
 ): Spot | undefined {
   const hand = handLabelFromCards(heroCards);
@@ -1048,7 +1053,7 @@ function resolveParseOptions(
   if (isRangeStore(value)) {
     return {
       rangeStore: value,
-      requireLoadedStrategy: false,
+      requireLoadedStrategy: true,
       language: "CZ",
     };
   }
@@ -1056,7 +1061,7 @@ function resolveParseOptions(
     profile: value.profile,
     rangePack: value.rangePack,
     rangeStore: value.rangeStore ?? rangeStore,
-    requireLoadedStrategy: value.requireLoadedStrategy ?? false,
+    requireLoadedStrategy: value.requireLoadedStrategy ?? true,
     language: value.language ?? "CZ",
   };
 }
