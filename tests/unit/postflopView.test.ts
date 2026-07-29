@@ -508,6 +508,87 @@ describe("postflopView - DOM", () => {
     expect(result?.textContent).toContain("turnu a riveru ber orientačně");
   });
 
+  it("nevydava popis rozdane desky za shodu textury", () => {
+    // Eighteen of the nineteen shipped rules declare every texture in the
+    // taxonomy, so "Texture match: paired, low, dry" was the intersection of the
+    // board's own textures with everything - a description of the board dealt,
+    // presented as evidence the strategy was chosen for it.
+    const resolver: PostflopStrategyResolver = (input) => ({
+      action: "BET_BIG",
+      explanation: "Texture agnostic fixture.",
+      source: {
+        kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
+        packId: "internal-texture-pack",
+        packVersion: "v1",
+        packVerifiedAt: "2026-07-29",
+        ruleId: "internal-texture-rule",
+        confidence: "HIGH",
+        matchedTextures: input.textures,
+        sprMin: 0,
+        sprMax: 25,
+        positionPattern: input.positionPattern,
+        sourceUrls: [],
+        assumptions: ["Texture agnostic fixture."],
+        selectionScore: 100,
+        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        textureAgnostic: true,
+      },
+    });
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 7,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: resolver,
+    });
+
+    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
+
+    const result = root.querySelector<HTMLElement>(".postflop-result");
+    expect(result?.textContent).toContain("pro všechny textury desky v tomto pásmu");
+    expect(result?.textContent).not.toContain("Shoda textury");
+  });
+
+  it("nechá shodu textury stát, kdyz je pravidlo opravdu vyberove", () => {
+    // The claim is still worth making for a rule that genuinely excludes some
+    // boards, which is what a later, finer pilot would ship.
+    const resolver: PostflopStrategyResolver = (input) => ({
+      action: "BET_BIG",
+      explanation: "Texture specific fixture.",
+      source: {
+        kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
+        packId: "internal-texture-pack",
+        packVersion: "v1",
+        packVerifiedAt: "2026-07-29",
+        ruleId: "internal-texture-rule",
+        confidence: "HIGH",
+        matchedTextures: input.textures,
+        sprMin: 0,
+        sprMax: 25,
+        positionPattern: input.positionPattern,
+        sourceUrls: [],
+        assumptions: ["Texture specific fixture."],
+        selectionScore: 100,
+        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+      },
+    });
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 7,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: resolver,
+    });
+
+    root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
+
+    const result = root.querySelector<HTMLElement>(".postflop-result");
+    expect(result?.textContent).toContain("Shoda textury");
+    expect(result?.textContent).not.toContain("pro všechny textury desky");
+  });
+
   it("mlci o integrite stromu, kdyz je pravidlo z jednoho stromu", () => {
     // The caveat must be absent rather than reassuring: a line saying "one tree"
     // on every clean spot would train the eye to skip it on the spots that matter.

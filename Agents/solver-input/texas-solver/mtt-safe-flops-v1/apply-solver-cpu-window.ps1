@@ -49,6 +49,26 @@ function Set-WindowOverride([string]$Value) {
     Set-Content -LiteralPath $statePath -Encoding utf8
 }
 
+<#
+  Is there a solve this applier is responsible for?
+
+  The applier exists to keep the SCHEDULED worker inside its window. When that
+  task is disabled or absent there is nothing it owns, so any console_solver on
+  the machine was started by hand - a trial, a one-off, an operator testing a
+  parameter file - and stopping it is not protection, it is interference.
+
+  This was not hypothetical. A deliberate trial solve was killed two and a half
+  minutes after it started, by a policy that had correctly concluded the QUEUED
+  tree did not fit and then applied that conclusion to a different tree it knew
+  nothing about. The log said so; nobody was reading the log.
+#>
+function Test-ManagedSolveExists {
+  param([string]$WorkerTaskName = "PKRTrainer-Weekend-UniformResolve")
+  $task = Get-ScheduledTask -TaskName $WorkerTaskName -ErrorAction SilentlyContinue
+  if ($null -eq $task) { return $false }
+  return $task.State -ne "Disabled"
+}
+
 function Invoke-Apply {
   # An override wins over the clock. Expressed as a window covering all hours or
   # none, so the policy stays a pure function of its inputs rather than something
@@ -66,6 +86,15 @@ function Invoke-Apply {
   # re-capping does not help and the solver dies with an access violation, taking
   # the board with it. A clean stop loses the same board and nothing else, and the
   # worker's own trigger brings it back once the machine is free again.
+  # Nothing below may touch a process this applier does not own.
+  if (-not (Test-ManagedSolveExists)) {
+    $strays = @(Get-Process console_solver -ErrorAction SilentlyContinue).Count
+    if ($strays -gt 0) {
+      Write-WindowLog ("The weekend worker is disabled, so the {0} running solver process(es) were started by hand. Leaving them alone." -f $strays)
+    }
+    return $policy
+  }
+
   $freeGb = try { (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB } catch { [double]::PositiveInfinity }
   if ($freeGb -lt $MinimumFreeGb -and @(Get-Process console_solver -ErrorAction SilentlyContinue).Count -gt 0) {
     Write-WindowLog ("Only {0:N1} GB free: stopping the solver rather than letting it crash. Its trigger will restart it." -f $freeGb)

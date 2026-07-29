@@ -7,6 +7,7 @@ import {
 } from "../../src/data/ranges/postflopTreeIntegrity";
 import { familyIdFromRuleId } from "../../src/data/ranges/postflopSolvedSpr";
 import { generatedMttPostflopPilotPacks } from "../../src/data/ranges/mttPostflopPilotPacks.generated";
+import { ALL_BOARD_TEXTURES } from "../../src/core/postflopGenerator";
 
 // A hand-kept list of families is only as good as whatever keeps it honest.
 // These are the two things that can rot: it can name a family that no longer
@@ -63,4 +64,26 @@ describe("postflop tree integrity", () => {
 
     expect(shippedAndMixing).toEqual([...MTT_POSTFLOP_MIXED_TREE_FAMILIES].sort());
   }, 120_000);
+});
+
+describe("board texture disclosure", () => {
+  it("finds that the shipped rules are aggregates covering every texture", () => {
+    // The measurement the disclosure rests on. If a later pilot ships genuinely
+    // texture-specific rules this fails, and the "one aggregate for every
+    // texture" line has to stop being the normal case.
+    const agnostic = generatedMttPostflopPilotPacks.flatMap((entry) => entry.pack.rules)
+      .filter((rule) => ALL_BOARD_TEXTURES.every((texture) => rule.boardTextures.includes(texture)));
+
+    expect(agnostic.length).toBe(18);
+    expect(shippedRuleIds().length).toBe(19);
+  });
+
+  it("keeps rule selection working even though the texture term cancels", () => {
+    // Every rule declaring the same textures means the texture part of the score
+    // is identical across candidates, so SPR width decides. Pinned because it is
+    // easy to read the score and believe texture is doing work it is not.
+    const rules = generatedMttPostflopPilotPacks.flatMap((entry) => entry.pack.rules);
+    const textureCounts = new Set(rules.map((rule) => rule.boardTextures.length));
+    expect(textureCounts.size).toBeLessThanOrEqual(2);
+  });
 });

@@ -1592,10 +1592,7 @@ function modelItems(spot: PostflopTrainingSpot): readonly string[] {
         isPublicHeuristicStrategySource(source) ? "Heuristický model" : "Produkční model",
       ),
       localizedText(`Confidence: ${confidenceLabel(source.confidence)}`, `Spolehlivost: ${confidenceLabel(source.confidence)}`),
-      localizedText(
-        `Texture match: ${source.matchedTextures.map(textureLabel).join(", ")}`,
-        `Shoda textury: ${source.matchedTextures.map(textureLabel).join(", ")}`,
-      ),
+      ...textureItems(source),
       localizedText(`SPR range: ${source.sprMin}-${source.sprMax}`, `Rozsah SPR: ${source.sprMin}-${source.sprMax}`),
       ...sprFidelityItems(source.sprFidelity),
       ...treeIntegrityItems(source.treeIntegrity),
@@ -1638,6 +1635,34 @@ function sprFidelityItems(
       `Zobrazené SPR je ${times} solveného - ber orientačně`,
     );
   return [solved, warning];
+}
+
+/**
+ * Describe how the strategy relates to the board, without overstating it.
+ *
+ * "Texture match: paired, low, dry" reads as evidence that the strategy was
+ * selected for this board. For the shipped library it is not: eighteen of the
+ * nineteen rules declare every texture in the taxonomy and the nineteenth omits
+ * one, so the reported match is the intersection of the board's own textures with
+ * everything - which is just a description of the board that was dealt.
+ *
+ * These are family-level aggregates, and their ids say so. So a rule that covers
+ * every texture says that plainly, and only a genuinely selective rule gets to
+ * claim a match.
+ */
+function textureItems(
+  source: Extract<PostflopTrainingSpot["explanation"]["source"], { kind: "STRATEGY_PACK" }>,
+): readonly string[] {
+  if (source.textureAgnostic) {
+    return [localizedText(
+      "One aggregate for every board texture in this band, not tuned to this board",
+      "Jeden agregát pro všechny textury desky v tomto pásmu, není laděný na tuhle desku",
+    )];
+  }
+  return [localizedText(
+    `Texture match: ${source.matchedTextures.map(textureLabel).join(", ")}`,
+    `Shoda textury: ${source.matchedTextures.map(textureLabel).join(", ")}`,
+  )];
 }
 
 /**

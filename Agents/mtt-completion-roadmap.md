@@ -172,6 +172,25 @@ Fixed and kept here only as the reasoning behind a guard: the line-mode
 inversion, the statistics provenance gap, the preflop start guard, the facing-bet
 lane naming, the fail-closed review, and the solver thread budget.
 
+### The texture match that was not one
+
+Measured across the shipped library: 18 of 19 rules declare all 13 board textures
+and the 19th omits exactly one. These are family-level aggregates - their ids end
+in `-aggregate` - so texture never selected anything.
+
+Two consequences. The model panel showed "Texture match: paired, low, dry", which
+is the intersection of the board's own textures with everything, so it described
+the board that had just been dealt while reading as evidence that the strategy
+had been chosen for it. And the texture term in `ruleScore` cancels across
+candidates, leaving SPR width and pack order to decide - correct today, but easy
+to read as doing work it is not.
+
+The panel now says what is true, that this is one aggregate covering every
+texture in the band and is not tuned to the board on screen. A genuinely
+selective rule still gets to claim its match, which is what a finer pilot would
+ship. The score is untouched; a test pins the measurement so that when a
+texture-specific pilot does arrive, the claim stops being the normal case.
+
 One thing changed about the first row rather than being resolved by it. Those
 three rules still blend two trees, but the player training them is now told so
 on the spot, the same way they are already told when the shown SPR sits far from

@@ -41,6 +41,26 @@ export type BoardTexture =
   | "flush-draw-heavy"
   | "disconnected";
 
+/**
+ * Every texture in the taxonomy, so a rule that declares all of them can be
+ * recognised as covering any board rather than matching a particular one.
+ */
+export const ALL_BOARD_TEXTURES: readonly BoardTexture[] = [
+  "paired",
+  "monotone",
+  "two-tone",
+  "rainbow",
+  "connected",
+  "dry",
+  "ace-high",
+  "broadway-high",
+  "low",
+  "medium",
+  "straight-possible",
+  "flush-draw-heavy",
+  "disconnected",
+];
+
 export type PostflopPositionPattern =
   | "EP_VS_BB"
   | "BTN_VS_BB"
@@ -214,6 +234,11 @@ export type PostflopRecommendationSource =
        * Present only when it is two, since that is the case worth saying out loud.
        */
       treeIntegrity?: "MIXED_TREES";
+      /**
+       * True when the rule declares every texture in the taxonomy, so it applies
+       * to any board rather than to this one's texture. Present only when true.
+       */
+      textureAgnostic?: true;
     }
   | {
       kind: "FALLBACK";
