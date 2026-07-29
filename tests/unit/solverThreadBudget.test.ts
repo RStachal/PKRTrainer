@@ -30,6 +30,18 @@ function threadBudget(totalGb: number, coreThreads: number): number {
   return Number.parseInt(out.trim(), 10);
 }
 
+function dayPolicy(totalGb: number): { Threads: number; Run: boolean; Window: string } {
+  const command = [
+    `. '${policyScript}';`,
+    `Get-SolverCpuPolicy -TotalGb ${totalGb} -Now ([DateTime]'2026-07-29T11:00:00')`,
+    `| Select-Object Window,Threads,Run | ConvertTo-Json -Compress`,
+  ].join(" ");
+  const out = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command], {
+    encoding: "utf8",
+  });
+  return JSON.parse(out.trim());
+}
+
 // The measured cost model the budget is derived from. Kept here rather than
 // imported so a change to the constants has to be argued for in two places.
 const BASE_GB = 11;
@@ -61,6 +73,23 @@ describe.runIf(runnable)("solver thread budget", () => {
     // Returning zero or a negative would make the worker start the solver with
     // --threads 0, which is worse than one slow thread.
     expect(threadBudget(16, 8)).toBeGreaterThanOrEqual(1);
+  });
+
+  it("yields the whole machine when a solve cannot fit beside development", () => {
+    // Throttling does not free the fixed tree cost, so on a machine this size
+    // the honest answer is to stop. Cutting threads was the old answer and it
+    // produced zero boards in three hours while endangering the build.
+    const policy = dayPolicy(31.2);
+    expect(policy.Window).toBe("DAY");
+    expect(policy.Run).toBe(false);
+  });
+
+  it("keeps solving through the day on a machine with room for both", () => {
+    // The yield is derived from memory, not written into the policy as a rule
+    // about this machine. Given headroom, the same arithmetic keeps it running.
+    const policy = dayPolicy(64);
+    expect(policy.Run).toBe(true);
+    expect(policy.Threads).toBeGreaterThanOrEqual(2);
   });
 
   it("grows with memory rather than sitting at a constant", () => {

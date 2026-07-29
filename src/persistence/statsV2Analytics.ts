@@ -31,6 +31,12 @@ export interface StatsV2KpiOptions {
   minLeakSample?: number;
   leakRateThreshold?: number;
   leakDimensions?: readonly StatsV2BreakdownDim[];
+  /**
+   * Restricts leak detection to one training profile. The lifetime and recent
+   * figures stay whole-store - "how am I doing" is a fair thing to pool - but a
+   * leak is a thing to act on, and acting on it means training in one profile.
+   */
+  leakProfileId?: string;
 }
 
 export interface StatsV2LeakCandidate extends StatsV2Group {
@@ -124,6 +130,7 @@ export function buildStatsV2KpiModel(
       minLeakSample,
       leakRateThreshold,
       leakDimensions: options.leakDimensions,
+      leakProfileId: options.leakProfileId,
     }),
   };
 }
@@ -188,11 +195,14 @@ function averageResponseMs(records: readonly ResultRecordV2[]): number | null {
 function findLeakCandidates(
   records: readonly ResultRecordV2[],
   options: Required<Pick<StatsV2KpiOptions, "minLeakSample" | "leakRateThreshold">> &
-    Pick<StatsV2KpiOptions, "leakDimensions">,
+    Pick<StatsV2KpiOptions, "leakDimensions" | "leakProfileId">,
 ): StatsV2LeakCandidate[] {
   const dimensions = options.leakDimensions ?? ["context", "position", "bucket"];
+  const scoped = options.leakProfileId === undefined
+    ? records
+    : records.filter((record) => record.profileId === options.leakProfileId);
   const candidates = dimensions.flatMap((dim) => (
-    breakdownStatsV2(records, dim)
+    breakdownStatsV2(scoped, dim)
       .filter((group) => (
         group.total >= options.minLeakSample &&
         group.rate !== null &&

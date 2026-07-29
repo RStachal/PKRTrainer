@@ -98,6 +98,7 @@ These are the ones still open:
 | Six-max preflop 0/4, per-action EV 0/972 | data-blocked, plumbing done | Blocked, and on exactly what |
 | BTN vs BB solved range narrower than CO vs BB | owner poker decision | Open question: solved ranges |
 | Hand-line villain is not solver-backed | latent until turn pilots ship | Waiting trap |
+| Turn pilot track is flop-only infrastructure | deliberately deferred | P3 |
 
 Fixed and kept here only as the reasoning behind a guard: the line-mode
 inversion, the statistics provenance gap, the preflop start guard, the facing-bet
@@ -169,8 +170,42 @@ Since then the four unaudited areas have been worked through:
   solver answer; the app path is production-only with `allowFallback: false`.
   Already covered by the provenance test.
 
-The audit has stopped finding new defects. Remaining lower-value targets are the
-statistics rollups and the preflop range-store path.
+Both remaining targets have now been worked through, and the audit did not stop
+finding new defects - it found a fifth of exactly the same shape.
+
+- **Preflop range-store path.** Clean. `rangePackProfileMismatchReasons` compares
+  every dimension before a pack may be used, `startableMttPreflopRangePack` is the
+  single door and requires production packs to be the exact one readiness names,
+  and the per-pack runtime store rejects a lookup whose ante is not the pack's.
+  That last guard covers only ante because ante is the only profile dimension a
+  `RangeKey` carries; the rest are settled at selection.
+- **Statistics rollups.** One defect, described below.
+
+### The leak that was measured somewhere else
+
+The dashboard's leak detection and its study plan grouped answers by context,
+position and stack. None of those carries a training profile, and the store holds
+every profile the player has ever used - ante on and off, regular and turbo,
+nine-max and six-max, MTT and cash. So the percentage shown was an average across
+tables the player was not sitting at, and the Train button next to it started a
+drill in whichever profile happened to be loaded.
+
+A player strong at the ante table and weak away from it was shown the average of
+the two and sent to drill the strong one. `dominantAnte` is the tell: it took a
+majority vote on the ante of the pooled records, which is a patch on the symptom
+of mixing rather than a reason not to mix.
+
+Same shape as the four before it - lanes keyed by rank instead of board, rule-wide
+instead of per-hand recommendations, hero hands outside the solved range,
+heuristic-versus-solver decided by matching free text. Each one grouped on a label
+that looked like the identity and was not.
+
+Fixed by scoping. The plan is measured inside exactly one profile and says which,
+along with how many answers it set aside. Leak detection in the KPI panel takes
+the same scope; the lifetime and recent figures beside it stay whole-store, since
+"how am I doing" is a fair question to ask across every table. Where no caller
+names a profile the plan follows the newest answer rather than falling back to
+pooling, so the old behaviour is not reachable by omission.
 
 **P5. Expand board coverage.** Measured: cutting a family from 31 to 24 boards
 changes the recommended action for 10.7 percent of hand classes, and to 12 boards

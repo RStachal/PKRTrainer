@@ -74,6 +74,25 @@ function Invoke-Apply {
     return $policy
   }
 
+  # A policy that says the solver does not fit is acted on, not logged. Leaving it
+  # running at a reduced cap was the old behaviour and it produced nothing: the
+  # tree's fixed cost stays whether the threads are six or one, so the choice is
+  # between running and yielding, never between fast and slow.
+  if ($policy.PSObject.Properties.Name -contains "Run" -and -not $policy.Run) {
+    $running = @(Get-Process console_solver -ErrorAction SilentlyContinue)
+    if ($running.Count -gt 0) {
+      Write-WindowLog ("{0}: {1} Stopping {2} solver process(es)." -f $policy.Window, $policy.Reason, $running.Count)
+      Stop-ScheduledTask -TaskName "PKRTrainer-Weekend-UniformResolve" -ErrorAction SilentlyContinue
+      $running | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
+    try {
+      New-Item -ItemType Directory -Force (Split-Path $statePath) | Out-Null
+      @{ Window = $policy.Window; Override = $override; At = (Get-Date).ToString("s") } | ConvertTo-Json |
+        Set-Content -LiteralPath $statePath -Encoding utf8
+    } catch { }
+    return $policy
+  }
+
   $result = Set-SolverCpuCap -CorePercent $policy.CorePercent -Priority $policy.Priority
   if ($result.ProcessCount -eq 0) {
     Write-WindowLog "$($policy.Window): no solver running; policy is $($policy.CorePercent)% / $($policy.Priority)."
@@ -140,7 +159,11 @@ switch ($Action) {
     $policy = Get-EffectiveSolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent `
       -NightStartHour $NightStartHour -NightEndHour $NightEndHour
     Write-Host "window:        $($policy.Window)  ($($policy.Reason))"
-    Write-Host "policy:        $($policy.CorePercent)% cores, priority $($policy.Priority)"
+    if ($policy.PSObject.Properties.Name -contains "Run" -and -not $policy.Run) {
+      Write-Host "policy:        YIELDING - the solver does not fit beside development on this machine"
+    } else {
+      Write-Host "policy:        $($policy.CorePercent)% cores, $($policy.Threads) threads, priority $($policy.Priority)"
+    }
     Write-Host "night window:  $($NightStartHour):00 to $($NightEndHour):00"
     $override = Get-SolverCpuOverride
     if ($null -eq $override) {

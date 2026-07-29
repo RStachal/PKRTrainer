@@ -87,6 +87,13 @@ export interface DashboardData {
   postflopRecords?: readonly PostflopStatsV2BridgeRecord[];
   postflopLineRecords?: readonly PostflopLineResultRecord[];
   permissionReports?: readonly ProductionPermissionManifestReport[];
+  /**
+   * The preflop profile the player is training. Leak detection and the study
+   * plan are measured inside it; omitted, they follow the newest answer. What
+   * they must not do is pool every profile, which turns a leak into an average
+   * of tables the player is not sitting at.
+   */
+  activeProfileId?: string;
   onStartPreflopFocus?: (filters: Filters) => void;
   onPostflopRecordsImported?: (records: readonly PostflopStatsV2BridgeRecord[]) => boolean | void;
   onPostflopLineRecordsImported?: (records: readonly PostflopLineResultRecord[]) => boolean | void;
@@ -551,9 +558,10 @@ function renderKpiPanel(
   store: StatsStore,
   postflopRecords: readonly PostflopStatsV2BridgeRecord[] = [],
   onStartPreflopFocus?: (filters: Filters) => void,
+  activeProfileId?: string,
 ): HTMLElement {
   const preflopRecords = migrateResultRecordsToV2(store.events());
-  const model = buildStatsV2KpiModel(preflopRecords);
+  const model = buildStatsV2KpiModel(preflopRecords, { leakProfileId: activeProfileId });
   const avgDecisionMs = averageDecisionMs(preflopRecords, postflopRecords);
   const accuracyTrend = buildAccuracyTrend(preflopRecords, postflopRecords);
   const confidenceWeightedKpi = buildConfidenceWeightedKpi(preflopRecords, postflopRecords);
@@ -614,12 +622,19 @@ function renderKpiPanel(
 function renderPreflopCurriculumPanel(
   store: StatsStore,
   onStartPreflopFocus?: (filters: Filters) => void,
+  activeProfileId?: string,
 ): HTMLElement {
   const records = migrateResultRecordsToV2(store.events());
-  const plan = buildPreflopCurriculumPlan(records, { language: getAppLanguage() });
+  const plan = buildPreflopCurriculumPlan(records, {
+    language: getAppLanguage(),
+    profileId: activeProfileId,
+  });
   const box = el("section", "preflop-curriculum");
   box.dataset.available = String(plan.available);
   box.dataset.recommendations = String(plan.recommendations.length);
+  box.dataset.scopeProfileId = plan.scope.profileId ?? "";
+  box.dataset.scopeRecords = String(plan.scope.records);
+  box.dataset.scopeSetAside = String(plan.scope.setAside);
 
   const heading = el("h3", "preflop-curriculum__title");
   heading.textContent = CS.dashboard.trainingFocus;
@@ -641,6 +656,23 @@ function renderPreflopCurriculumPanel(
   const due = el("div", "preflop-curriculum__due");
   due.textContent = `Due for review: ${plan.repetitionQueue.length}`;
   box.appendChild(due);
+
+  // Where the number came from. Without this a player who trains more than one
+  // table sees a percentage with no way to tell which table it describes.
+  if (plan.scope.profileId !== null) {
+    const scope = el("div", "preflop-curriculum__scope");
+    const measured = statsProfileLabel(plan.scope.profileId);
+    scope.textContent = plan.scope.setAside > 0
+      ? localizedText(
+        `Measured in ${measured}: ${plan.scope.records} answers (${plan.scope.setAside} in other profiles are not counted).`,
+        `Měřeno v profilu ${measured}: ${plan.scope.records} odpovědí (${plan.scope.setAside} z jiných profilů se nepočítá).`,
+      )
+      : localizedText(
+        `Measured in ${measured}: ${plan.scope.records} answers.`,
+        `Měřeno v profilu ${measured}: ${plan.scope.records} odpovědí.`,
+      );
+    box.appendChild(scope);
+  }
 
   if (plan.recommendations.length > 0) {
     const recommendations = el("div", "preflop-curriculum__recommendations");
@@ -2106,8 +2138,13 @@ export function renderDashboard(data: DashboardData, root: HTMLElement): void {
     store,
     data.postflopRecords ?? [],
     data.onStartPreflopFocus,
+    data.activeProfileId,
   ));
-  wrapper.appendChild(renderPreflopCurriculumPanel(store, data.onStartPreflopFocus));
+  wrapper.appendChild(renderPreflopCurriculumPanel(
+    store,
+    data.onStartPreflopFocus,
+    data.activeProfileId,
+  ));
 
   // Streak and current-session count (Req 9.5).
   wrapper.appendChild(renderStreakSession(store.currentStreak(), sessionCount));

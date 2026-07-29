@@ -18,6 +18,13 @@ function Get-SolverCpuPolicy {
     [int]$NightCorePercent = 95,
     [int]$NightStartHour = 21,
     [int]$NightEndHour = 9,
+    # What development needs while it is running, and the smallest thread count
+    # worth keeping a solve alive for.
+    [double]$DevelopmentReserveGb = 20,
+    [int]$MinimumUsefulThreads = 2,
+    # Taken from the machine unless given; passing it is what lets the day
+    # yield decision be checked against sizes this machine does not have.
+    [double]$TotalGb = 0,
     [DateTime]$Now = (Get-Date)
   )
   # The night window wraps past midnight, so it is "at or after the start OR
@@ -45,17 +52,38 @@ function Get-SolverCpuPolicy {
     return [pscustomobject]@{
       Window       = "NIGHT"
       CorePercent  = $NightCorePercent
-      Threads      = Get-SolverThreadBudget -CoreThreads ([Math]::Max(1, (Get-SolverCoreCount -Percent $NightCorePercent) - 1))
+      Threads      = Get-SolverThreadBudget -CoreThreads ([Math]::Max(1, (Get-SolverCoreCount -Percent $NightCorePercent) - 1)) -TotalGb $TotalGb
       Priority     = "Normal"
+      Run          = $true
       Reason       = "Nobody is developing between ${NightStartHour}:00 and ${NightEndHour}:00, so the solver takes the machine."
     }
   }
+
+  # The day cap used to be a core percentage alone, which quietly assumed the
+  # solver could always share the machine if it took fewer cores. With a fixed
+  # 11 GB tree that assumption is false: six day threads cost 16.4 GB, a build
+  # and test run beside them drove free memory to 0.4 GB, and three consecutive
+  # workers produced zero boards in three hours before dying.
+  #
+  # So the day budget is computed against a reserve large enough for development,
+  # and when what is left cannot carry a real solve the answer is to stop rather
+  # than to throttle. Throttling does not free the base; only stopping does.
+  #
+  # This is a property of the machine, not a rule about this one: given enough
+  # memory the same arithmetic keeps the solver running all day.
+  $dayThreads = Get-SolverThreadBudget -CoreThreads ([Math]::Max(1, (Get-SolverCoreCount -Percent $DayCorePercent))) -ReserveGb $DevelopmentReserveGb -TotalGb $TotalGb
+  $fits = $dayThreads -ge $MinimumUsefulThreads
   return [pscustomobject]@{
     Window       = "DAY"
     CorePercent  = $DayCorePercent
-    Threads      = [Math]::Max(1, (Get-SolverCoreCount -Percent $DayCorePercent))
+    Threads      = $dayThreads
     Priority     = "BelowNormal"
-    Reason       = "Development runs beside the solver, so it keeps a minority of the cores."
+    Run          = $fits
+    Reason       = if ($fits) {
+      "Development runs beside the solver, so it keeps a minority of the cores."
+    } else {
+      "Development needs ${DevelopmentReserveGb} GB and the tree alone costs about 11 GB, so there is no thread count that fits beside it. The solver yields until the machine is free."
+    }
   }
 }
 

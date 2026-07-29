@@ -46,6 +46,7 @@ import {
   DEFAULT_TRAINING_PROFILE,
   evModelLabel,
   isPostflopStreet,
+  profileId,
   type TrainingProfile,
 } from "./core/trainingProfile";
 import { isFlowAllowed } from "./core/trainingCapability";
@@ -386,6 +387,11 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       renderDashboard({
         store: statsStore,
         sessionCount,
+        // Preflop answers are recorded under the preflop profile whatever street
+        // the trainer is showing, so the street is pinned rather than taken from
+        // the selection - otherwise the dashboard would scope to a profile that
+        // has no preflop answers in it at all.
+        activeProfileId: profileId({ ...getSelectedTrainingProfile(), street: "PREFLOP" }),
         postflopRecords: postflopStatsStore.events(),
         postflopLineRecords: postflopLineStatsStore.events(),
         onStartPreflopFocus: (filters) => {

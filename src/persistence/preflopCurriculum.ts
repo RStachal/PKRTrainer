@@ -25,6 +25,13 @@ export interface PreflopCurriculumOptions {
   repetitionLimit?: number;
   recentWindowSize?: number;
   language?: "EN" | "CZ";
+  /**
+   * The training profile the plan is for. A leak is only worth showing if it was
+   * measured where the player will train it, and the leak dimensions - context,
+   * position, stack - carry no profile of their own, so the scope has to come
+   * from outside. Omitted, the plan follows the profile of the newest answer.
+   */
+  profileId?: string;
 }
 
 export interface PreflopCurriculumFocus {
@@ -60,7 +67,15 @@ export interface PreflopStudyRecommendation extends PreflopCurriculumFocus {
   reason: string;
 }
 
+/** Which profile the plan was measured in, and what that left out. */
+export interface PreflopCurriculumScope {
+  profileId: string | null;
+  records: number;
+  setAside: number;
+}
+
 export interface PreflopCurriculumPlan {
+  scope: PreflopCurriculumScope;
   available: boolean;
   reason: string;
   focus: PreflopCurriculumFocus | null;
@@ -76,17 +91,37 @@ export function buildPreflopCurriculumPlan(
   records: readonly ResultRecordV2[],
   options: PreflopCurriculumOptions = {},
 ): PreflopCurriculumPlan {
-  const preflopRecords = records.filter((record) => record.street === "PREFLOP");
+  const allPreflop = records.filter((record) => record.street === "PREFLOP");
+  // Pooling profiles produced a percentage that was nobody's percentage: a
+  // player strong at the ante table and weak away from it was shown the average
+  // of the two, attached to a button that drills it wherever they happen to be
+  // sitting. So the analysis runs inside exactly one profile.
+  const scopeProfileId = options.profileId ?? newestProfileId(allPreflop);
+  const preflopRecords = scopeProfileId === null
+    ? allPreflop
+    : allPreflop.filter((record) => record.profileId === scopeProfileId);
+  const scope: PreflopCurriculumScope = {
+    profileId: scopeProfileId,
+    records: preflopRecords.length,
+    setAside: allPreflop.length - preflopRecords.length,
+  };
   const language = options.language ?? "CZ";
   const sessionGoal = buildSessionGoal(options);
   if (preflopRecords.length === 0) {
     return {
+      scope,
       available: false,
-      reason: localize(
-        language,
-        "No preflop answers yet.",
-        "Zatím nejsou žádné preflop odpovědi.",
-      ),
+      reason: scope.setAside > 0
+        ? localize(
+          language,
+          `No preflop answers in this profile yet (${scope.setAside} in others).`,
+          `V tomto profilu zatím nejsou preflop odpovědi (${scope.setAside} v jiných).`,
+        )
+        : localize(
+          language,
+          "No preflop answers yet.",
+          "Zatím nejsou žádné preflop odpovědi.",
+        ),
       focus: null,
       alternates: [],
       recommendations: [],
@@ -106,6 +141,7 @@ export function buildPreflopCurriculumPlan(
   });
   if (preflopRecords.length < kpi.minLeakSample) {
     return {
+      scope,
       available: false,
       reason: volumeGoalReason(preflopRecords.length, kpi.minLeakSample, language),
       focus: null,
@@ -130,6 +166,7 @@ export function buildPreflopCurriculumPlan(
 
   if (focuses.length === 0) {
     return {
+      scope,
       available: false,
       reason: localize(
         language,
@@ -146,6 +183,7 @@ export function buildPreflopCurriculumPlan(
 
   const focus = recommendations[0] ?? focuses[0];
   return {
+    scope,
     available: true,
     reason: localize(
       language,
@@ -213,6 +251,20 @@ export function buildPreflopSpacedRepetitionQueue(
     .sort((a, b) => b.priority - a.priority || a.scenarioId.localeCompare(b.scenarioId));
 
   return queue.slice(0, options.limit ?? 8);
+}
+
+/**
+ * The profile of the most recent answer. Used when no caller said which profile
+ * the plan is for: the newest answer is the table the player last sat at, and
+ * following it keeps the plan inside one profile rather than falling back to the
+ * pooled behaviour this replaced.
+ */
+function newestProfileId(records: readonly ResultRecordV2[]): string | null {
+  let newest: ResultRecordV2 | null = null;
+  for (const record of records) {
+    if (newest === null || record.ts >= newest.ts) newest = record;
+  }
+  return newest === null ? null : newest.profileId;
 }
 
 function buildPreflopStudyRecommendations(

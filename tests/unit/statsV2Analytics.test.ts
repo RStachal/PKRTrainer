@@ -198,4 +198,54 @@ describe("statsV2Analytics", () => {
     expect(emptyModel.avgResponseMs).toBeNull();
     expect(emptyModel.recentAvgResponseMs).toBeNull();
   });
+  it("hleda slabiny jen v profilu, ve kterem se hrac trenuje", () => {
+    // Lifetime figures may pool profiles - "how am I doing" is a fair question
+    // across all of them. A leak may not: it comes with a button that starts a
+    // drill in one profile, so it has to have been measured in that one.
+    const identity = (profileId: string) => ({
+      schema: "preflop_result_identity_v1" as const,
+      scenarioId: "RFI|BTN|25",
+      profileId,
+      gameVariant: "MTT" as const,
+      tableFormat: "FULL_RING_9" as const,
+      blindSpeed: "REGULAR" as const,
+      street: "PREFLOP" as const,
+      evModel: "CHIP_EV" as const,
+      ante: (profileId.includes("|ON|") ? "ON" : "OFF") as "ON" | "OFF",
+      rakeMode: "NONE" as const,
+      rangePackId: "pack",
+      rangePackVersion: "1.0.0",
+      sourceVerifiedAt: "2026-01-01",
+      scoringMode: "LENIENT" as const,
+    });
+    const on = "MTT|FULL_RING_9|REGULAR|PREFLOP|CHIP_EV|ON|NONE";
+    const off = "MTT|FULL_RING_9|REGULAR|PREFLOP|CHIP_EV|OFF|NONE";
+    const mixed = migrateResultRecordsToV2([
+      ...Array.from({ length: 6 }, (_, index) => ({
+        ...records[0],
+        correct: false,
+        ts: index + 1,
+        identity: identity(off),
+      })),
+      ...Array.from({ length: 6 }, (_, index) => ({
+        ...records[0],
+        correct: true,
+        ts: index + 7,
+        identity: identity(on),
+      })),
+    ]);
+
+    const pooled = buildStatsV2KpiModel(mixed, { minLeakSample: 5 });
+    const scoped = buildStatsV2KpiModel(mixed, { minLeakSample: 5, leakProfileId: on });
+    const weak = buildStatsV2KpiModel(mixed, { minLeakSample: 5, leakProfileId: off });
+
+    // Pooled, BTN reads 50% and looks like a leak in both profiles at once.
+    expect(pooled.leakCandidates.some((candidate) => candidate.key === "BTN")).toBe(true);
+    expect(scoped.leakCandidates).toHaveLength(0);
+    expect(weak.leakCandidates.map((candidate) => `${candidate.dim}:${candidate.key}:${candidate.rate}`))
+      .toContain("position:BTN:0");
+    // Scoping the leaks must not quietly scope the lifetime numbers with them.
+    expect(scoped.total).toBe(12);
+    expect(scoped.lifetimeRate).toBe(50);
+  });
 });

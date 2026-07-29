@@ -63,6 +63,15 @@ try {
   $effectiveThreads = $Threads
   if ($CpuCorePercent -eq 0) {
     $policy = Get-EffectiveSolverCpuPolicy
+    # The policy can also say the machine has no room. Starting anyway would take
+    # the tree's fixed 11 GB from a build that needs it, get stopped by the timer
+    # a few minutes later, and finish nothing - so the tick ends here instead. An
+    # explicit -CpuCorePercent still overrides, for the case where the caller knows
+    # better than the arithmetic.
+    if ($policy.PSObject.Properties.Name -contains "Run" -and -not $policy.Run) {
+      Write-Log "CPU policy: $($policy.Window) window -> not starting. $($policy.Reason)"
+      return
+    }
     $effectiveCorePercent = $policy.CorePercent
     $effectivePriority = $policy.Priority
     $effectiveThreads = $policy.Threads
