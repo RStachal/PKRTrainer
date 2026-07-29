@@ -496,9 +496,21 @@ and a process started in the day would otherwise hold the day cap all night.
 A person can claim the machine without touching the schedule - editing the night
 hours to express a temporary fact leaves an edit that outlives its reason:
 
+    npm run mtt:solver-follow   # follow development activity (recommended)
     npm run mtt:solver-day      # solver yields the machine
     npm run mtt:solver-night    # solver takes it
     npm run mtt:solver-auto     # back to the clock
+
+`follow` is the one to leave on. Assistant credit cannot be observed from this
+machine, so instead of guessing at it the policy reads whether anyone is
+developing: the newest write under `src`, `tests`, `scripts`, `package.json` and
+the git index. Thirty idle minutes and the solver takes the full machine; the
+moment work resumes it yields. Artifacts and solver-input are excluded, since the
+solver writes there constantly and would otherwise read as development.
+
+Switching is not instant, by design: up to the threshold plus one 15-minute tick
+to take over, and up to one tick to yield. `mtt:solver-cpu-window` reports the
+idle minutes, so the state is never a mystery.
 
 The claim is persisted and re-applied by the timer, so it survives restarts, and
 `mtt:solver-cpu-window` names any claim in force with the way to clear it.
