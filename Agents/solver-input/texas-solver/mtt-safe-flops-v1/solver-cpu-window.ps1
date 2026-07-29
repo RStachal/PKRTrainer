@@ -44,22 +44,24 @@ function Get-SolverCpuPolicy {
   # still do six cores of work. Thread count has to move with the window, so it is
   # part of the policy rather than a separate knob that can drift out of step.
   #
-  # But threads cost memory, not just cores, and past a point that stops being a
-  # trade and becomes a failure. Measured on this machine: fourteen threads on the
-  # remaining deep families peaked at 24.3 GB of 31.2 GB, left under 4 GB free,
-  # pushed commit to 43.9 GB, and finished nothing in three hours - the solver
-  # died with an access violation instead, which is what the historical crash
-  # exit codes were all along. Six threads had been running for hours at ~15 GB.
-  #
-  # So the night thread count is capped by a memory budget rather than by cores.
+  # But threads cost memory, not just cores, and the tree costs far more than the
+  # threads do. So the thread count is capped by a memory budget rather than by
+  # cores, and the budget can come back as "nothing fits" - see the note on
+  # Get-SolverThreadBudget for what that means on this machine.
   if ($isNight) {
+    $nightBudget = Get-SolverThreadBudget -CoreThreads ([Math]::Max(1, (Get-SolverCoreCount -Percent $NightCorePercent) - 1)) -ReserveGb $NightReserveGb -AvailableGb $AvailableGb -AllowZero
+    $nightFits = $nightBudget -ge $MinimumUsefulThreads
     return [pscustomobject]@{
       Window       = "NIGHT"
       CorePercent  = $NightCorePercent
-      Threads      = Get-SolverThreadBudget -CoreThreads ([Math]::Max(1, (Get-SolverCoreCount -Percent $NightCorePercent) - 1)) -ReserveGb $NightReserveGb -AvailableGb $AvailableGb
+      Threads      = [Math]::Max(1, $nightBudget)
       Priority     = "Normal"
-      Run          = $true
-      Reason       = "Nobody is developing between ${NightStartHour}:00 and ${NightEndHour}:00, so the solver takes the machine."
+      Run          = $nightFits
+      Reason       = if ($nightFits) {
+        "Nobody is developing between ${NightStartHour}:00 and ${NightEndHour}:00, so the solver takes the machine."
+      } else {
+        "Even with the machine to itself the queued tree does not fit in physical memory. Admitting it would page rather than solve."
+      }
     }
   }
 
@@ -94,27 +96,35 @@ function Get-SolverCpuPolicy {
 <#
   How many solver threads this machine can actually carry right now.
 
-  Cost is a fixed base plus a per-thread increment, not a per-thread rate.
-  Measured on the deep families left in the queue: 16.8 GB at six threads and
-  24.3 GB at fourteen, which is a base of about 11 GB for the tree itself plus
-  roughly 0.9 GB per thread.
+  MEASURE COMMIT, NOT WORKING SET. Two earlier versions of this budget were built
+  on working set and both were wrong, because under memory pressure Windows pages
+  a process out and its working set FALLS - so the number shrinks exactly when the
+  machine is in most trouble. The figures that produced the "base 11 GB plus
+  0.9 GB per thread" model, 16.8 GB at six threads and 24.3 GB at fourteen, were
+  already-paged working sets, not requirements.
 
-  The budget is taken against memory that is actually AVAILABLE, not against the
-  memory installed. Budgeting from the installed total was the second version of
-  this and it produced a kill loop: this machine reports 31.2 GB installed but
-  only about 19.9 GB free, because the operating system and the editor hold the
-  rest. Nine threads were budgeted, needed 19.1 GB, drove free memory to 0.1 GB,
-  and the low-memory guard stopped the solver a few minutes later - every fifteen
-  minutes for six hours, finishing nothing.
+  Measured properly on the three families left in the queue: committed memory is
+  25.9 GB at TWO threads, and it does not move much with the thread count. The
+  tree is nearly all of it. Working set at that moment oscillated between 17 and
+  19 GB while physical free memory sat at 0.5 GB and the solve stayed on iteration
+  zero - that is thrashing, not progress.
 
-  A running solver's own memory counts as available, since the budget decides
-  what to restart it with. Without that, recomputing while it runs would see its
-  own footprint as unavailable and spiral down to one thread.
+  So the requirement is a large fixed commit plus a small per-thread increment,
+  and it has to fit in PHYSICAL memory. Fitting inside the commit limit is not
+  enough: this machine's limit is 54.2 GB against 31.2 GB of RAM, so a solve can
+  be admitted and then page until it either crawls or dies with an access
+  violation - which is what the historical crash exit codes were.
+
+  A consequence worth stating plainly: with about 20 GB of usable physical memory
+  and a 24 GB base, the remaining deep families do not fit on this machine at any
+  thread count, in any window. That is a hardware answer, not a scheduling one.
 #>
 function Get-SolverThreadBudget {
   param(
     [int]$CoreThreads,
-    [double]$BaseGb = 11,
+    # Committed memory the tree itself needs. Measured on the deep families still
+    # queued; lighter families need less, which is why this is a parameter.
+    [double]$BaseGb = 24,
     [double]$PeakGbPerThread = 0.9,
     # Headroom left for whatever else the machine is doing.
     [double]$ReserveGb = 3,
@@ -140,15 +150,20 @@ function Get-SolverThreadBudget {
 }
 
 <#
-  Memory the solver could use: what is free, plus what a running solver already
-  holds. The second term matters because this is used to decide what to restart
-  with, and a solve that is about to be replaced is not competing with itself.
+  Physical memory the solver could use: what is free, plus what a running solver
+  already holds. The second term matters because this is used to decide what to
+  restart it with, and a solve about to be replaced is not competing with itself.
+
+  Deliberately physical rather than the commit limit. The pagefile will happily
+  admit a solve this machine cannot hold, and the result is thrashing.
 #>
 function Get-SolverAvailableGb {
   $freeGb = (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB
   $solverGb = 0
   foreach ($proc in @(Get-Process console_solver -ErrorAction SilentlyContinue)) {
-    $solverGb += $proc.WorkingSet64 / 1GB
+    # Commit, not working set: a paged-out solver reports a small working set
+    # precisely when it is the thing exhausting the machine.
+    $solverGb += $proc.PrivateMemorySize64 / 1GB
   }
   return $freeGb + $solverGb
 }

@@ -71,10 +71,23 @@ Everything else below is unblocked.
 
 ## Critical path to the playable beta
 
-1. **Finish the re-solve.** 52 boards left, all in three deep families. Needs the
-   machine largely to itself: at 11 GB of fixed tree cost these families cannot
-   share it with a build and test run, so solving happens while nobody develops.
-   `npm run mtt:solver-follow` arranges that without anyone remembering to switch.
+1. **Decide what to do about the last 52 boards.** They sit in three deep
+   families and they do not fit on this machine. Measured 2026-07-29: the tree
+   commits 25.9 GB at two threads and barely moves with the thread count, against
+   about 20 GB of usable physical memory. Every failure traces to this - the
+   access violations at fourteen threads, the guard killing nine-thread runs every
+   fifteen minutes for six hours, and a two-thread run that paged so hard it never
+   left iteration zero. There is no thread count and no window that fixes it.
+
+   Earlier notes here blamed a "fixed 11 GB tree" and scheduling. That figure was
+   a working set read under memory pressure, which falls as the machine gets
+   worse; committed memory is the honest measure and it is more than twice that.
+
+   Three ways forward, and this is an owner decision: more RAM, a smaller tree for
+   these three families only, or ship the beta without them and say so. The third
+   costs 3 of 19 shipped rules, which are already flagged as at-risk for the same
+   families. The solver's scheduled task is disabled meanwhile, because leaving it
+   on cost a full day of thrashing and produced nothing.
 2. **Rebuild.** `npm run mtt:post-resolve -- --write`. It holds back families that
    still mix trees, re-harvests any drifted villain bet, and reports what it
    refused. Clears the last three at-risk rules when the queue drains.

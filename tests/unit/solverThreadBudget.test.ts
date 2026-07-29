@@ -44,7 +44,10 @@ function dayPolicy(availableGb: number): { Threads: number; Run: boolean; Window
 
 // The measured cost model the budget is derived from. Kept here rather than
 // imported so a change to the constants has to be argued for in two places.
-const BASE_GB = 11;
+// Committed memory, not working set: a paged-out solver reports a small working
+// set precisely when it is the thing exhausting the machine, which is how two
+// earlier versions of this budget came to be wrong.
+const BASE_GB = 24;
 const PER_THREAD_GB = 0.9;
 const RESERVE_GB = 3;
 
@@ -52,20 +55,19 @@ const predictedPeakGb = (threads: number) => BASE_GB + PER_THREAD_GB * threads;
 
 describe.runIf(runnable)("solver thread budget", () => {
   it("leaves the reserve intact on every machine size, which is the whole job", () => {
-    for (const availableGb of [20, 24, 31.2, 48, 64, 128]) {
+    for (const availableGb of [28, 32, 48, 64, 128]) {
       const threads = threadBudget(availableGb, 32);
       expect(predictedPeakGb(threads) + RESERVE_GB, `${availableGb} GB available`).toBeLessThanOrEqual(availableGb);
     }
   });
 
   it("refuses the thread counts that actually failed on this machine", () => {
-    // Both failures happened on a machine reporting 31.2 GB installed with about
-    // 19.9 GB actually free. Fourteen threads died with an access violation; nine
-    // were budgeted from the installed figure, needed 19.1 GB of that 19.9, and
-    // were killed by the low-memory guard every fifteen minutes for six hours
-    // without finishing a board. Given the real number, neither is offered.
-    expect(threadBudget(19.9, 15)).toBeLessThan(9);
-    expect(threadBudget(19.9, 15)).toBeLessThan(14);
+    // Every failure happened on a machine with about 19.9 GB of usable physical
+    // memory: fourteen threads died with an access violation, nine were killed by
+    // the low-memory guard every fifteen minutes for six hours without finishing
+    // a board, and two paged so hard the solve never left iteration zero.
+    // Committed cost is 25.9 GB at two threads, so none of them ever fitted.
+    expect(threadBudget(19.9, 15)).toBeLessThan(2);
   });
 
   it("never hands back more threads than there are cores to run them", () => {
@@ -80,22 +82,21 @@ describe.runIf(runnable)("solver thread budget", () => {
     expect(threadBudget(16, 8)).toBeGreaterThanOrEqual(1);
   });
 
-  it("keeps the solver running through the day, on what development leaves", () => {
-    // Between 9:00 and 21:00 the solver is a background job, not stopped. With
-    // the ~19.9 GB this machine really has free that is a small thread count,
-    // and small is the point.
-    const policy = dayPolicy(19.9);
+  it("keeps the solver running through the day when the tree does fit", () => {
+    // Between 9:00 and 21:00 the solver is a background job, not stopped - given
+    // a machine with room for it beside the development reserve.
+    const policy = dayPolicy(40);
     expect(policy.Window).toBe("DAY");
     expect(policy.Run).toBe(true);
     expect(policy.Threads).toBeGreaterThanOrEqual(1);
-    expect(predictedPeakGb(policy.Threads)).toBeLessThanOrEqual(19.9 - 6);
+    expect(predictedPeakGb(policy.Threads)).toBeLessThanOrEqual(40 - 6);
   });
 
-  it("yields only when the tree itself no longer fits", () => {
-    // Throttling cannot free the fixed base, so below that there is nothing to
-    // throttle to. This is the transient a build and test run creates.
-    const policy = dayPolicy(15);
-    expect(policy.Run).toBe(false);
+  it("refuses to admit a solve this machine would only page", () => {
+    // 19.9 GB usable against a 24 GB tree. Throttling cannot free the base, so
+    // there is nothing to throttle to; admitting it produced six hours of a
+    // start-thrash-kill loop that finished nothing.
+    expect(dayPolicy(19.9).Run).toBe(false);
   });
 
   it("grows with memory rather than sitting at a constant", () => {
