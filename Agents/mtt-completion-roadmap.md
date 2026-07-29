@@ -82,67 +82,38 @@ Everything else below is unblocked.
 
 ## Critical path to the playable beta
 
-1. **Decide what to do about the last 52 boards.** They sit in three deep
-   families and they do not fit on this machine. Measured 2026-07-29: the tree
-   commits 25.9 GB at two threads and barely moves with the thread count, against
-   about 20 GB of usable physical memory. Every failure traces to this - the
-   access violations at fourteen threads, the guard killing nine-thread runs every
-   fifteen minutes for six hours, and a two-thread run that paged so hard it never
-   left iteration zero. There is no thread count and no window that fixes it.
+1. **Add RAM, then finish the re-solve on the full tree.** Decided 2026-07-29:
+   option A. The 52 remaining boards stay on the authoritative tree, the three
+   families become uniform, and the caveats they carry go away rather than being
+   described. Nothing about the content has to be compromised.
 
-   Earlier notes here blamed a "fixed 11 GB tree" and scheduling. That figure was
-   a working set read under memory pressure, which falls as the machine gets
-   worse; committed memory is the honest measure and it is more than twice that.
+   How much, measured rather than guessed. The tree commits about 24 GB before
+   threads, each thread adds roughly 0.9 GB, and this machine holds 11.3 GB for
+   the operating system and editor at idle:
 
-   Three ways forward, and this is an owner decision. The solver's scheduled task
-   is disabled meanwhile, because leaving it on cost a full day of thrashing and
-   produced nothing.
+   | Installed | Usable | Night | Day |
+   | --- | --- | --- | --- |
+   | 32 GB (today) | 20.7 GB | does not fit | does not fit |
+   | 48 GB | 36.7 GB | 10 threads | 6 threads |
+   | 64 GB | 52.7 GB | 14 threads | 6 threads |
+   | 96 GB | 84.7 GB | 14 threads | 6 threads |
 
-   **What the three families actually contain.** The queue is not an arbitrary 52
-   boards; it is precisely the reduced-tree ones, plus six that missed the
-   exploitability target.
+   **64 GB is the point to buy.** It saturates the CPU - fourteen threads is the
+   core cap, not the memory cap - and anything above it buys nothing at all. 48 GB
+   works and gets the night to ten of fourteen possible threads.
 
-   | Family | Boards | Full tree | Reduced | Queued |
-   | --- | --- | --- | --- | --- |
-   | MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR | 32 | 15 | 17 | 18 |
-   | MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH | 25 | 6 | 19 | 19 |
-   | MTT9_150BB_CO_BTN_3BP_HIGHSPR | 30 | 20 | 10 | 15 |
-   | **Total** | **87** | **41** | **46** | **52** |
+   Nothing needs changing in the policy when the memory arrives: the budget is
+   computed from what is actually free, so it starts permitting solves on its own.
+   The one manual step is the weekend task, which is disabled today because
+   leaving it enabled cost a full day of thrashing:
 
-   **A. More RAM.** Needs about 30 GB usable to hold a 26 GB tree with headroom,
-   so roughly a 48 GB machine. Nothing else changes and the queue drains as
-   planned.
+       npm run mtt:weekend-resolve-install
 
-   **B. A coarser tree for these three families.** The lever is bet-size
-   granularity, not action types. Raise, donk and all-in stay on every street, so
-   this is NOT the reduced review-only tree - that tree's defect is the ABSENCE of
-   turn and river raise, donk and all-in, which is what makes an aggregate blend
-   two different games. A coarser tree is the same game described less finely.
+   How long the 52 will take is not yet worth a number. Historical per-board times
+   span 0.2 to 197 minutes with a median of 2.3, but that distribution is mostly
+   shallow families and includes runs the kill loop cut short, so it says little
+   about three deep ones. It will be measured on the first real night.
 
-   Measured on 100BB_SB_BB_SRP_OOP_CBET_HIGHSPR board 872r, committed memory at
-   one thread, against roughly 20 GB usable on this machine:
-
-   | Tree | Committed | Fits here |
-   | --- | --- | --- |
-   | Current | 25.0 GB (25.9 at two threads) | no, at any thread count |
-   | Drop OOP flop 50, drop river 75 both players | 16.8 GB | only just, one thread |
-   | ...and IP flop 33, leaving one IP flop size | 13.2 GB | yes, three threads with headroom |
-
-   So the third row is the workable one: OOP flop keeps 33 and 75, IP flop keeps
-   50, turn keeps both sizes untouched, river keeps 50. What is given up is the
-   OOP flop half-pot size and the river three-quarter size - real granularity, and
-   the shape of the game unchanged.
-
-   The catch is that the whole family has to move, not just the queue: 87 boards
-   rather than 52, because 41 already-solved boards would otherwise sit on a
-   different tree from their own family. That trades 52 boards that cannot
-   complete on this machine for 87 that can, and it leaves these three families
-   coarser than the other seventeen - visible and defensible, since within-family
-   uniformity is what an aggregate depends on.
-
-   **C. Ship without them.** Costs 3 of 19 shipped rules, all already flagged
-   at-risk for these same families, and leaves the deep-stack hole open. Cheapest
-   now, and the one to take if the beta date matters more than the coverage.
 2. **Rebuild.** `npm run mtt:post-resolve -- --write`. It holds back families that
    still mix trees, re-harvests any drifted villain bet, and reports what it
    refused. Clears the last three at-risk rules when the queue drains.
