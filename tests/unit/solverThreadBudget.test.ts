@@ -67,6 +67,9 @@ describe.runIf(runnable)("solver thread budget", () => {
     // the low-memory guard every fifteen minutes for six hours without finishing
     // a board, and two paged so hard the solve never left iteration zero.
     // Committed cost is 25.9 GB at two threads, so none of them ever fitted.
+    // Note this is a statement about memory, not about thread counts: on a
+    // machine with room, fourteen threads is exactly what the policy should hand
+    // back, which the "keeps solving through the day" case above relies on.
     expect(threadBudget(19.9, 15)).toBeLessThan(2);
   });
 
