@@ -83,11 +83,42 @@ Everything else below is unblocked.
    a working set read under memory pressure, which falls as the machine gets
    worse; committed memory is the honest measure and it is more than twice that.
 
-   Three ways forward, and this is an owner decision: more RAM, a smaller tree for
-   these three families only, or ship the beta without them and say so. The third
-   costs 3 of 19 shipped rules, which are already flagged as at-risk for the same
-   families. The solver's scheduled task is disabled meanwhile, because leaving it
-   on cost a full day of thrashing and produced nothing.
+   Three ways forward, and this is an owner decision. The solver's scheduled task
+   is disabled meanwhile, because leaving it on cost a full day of thrashing and
+   produced nothing.
+
+   **What the three families actually contain.** The queue is not an arbitrary 52
+   boards; it is precisely the reduced-tree ones, plus six that missed the
+   exploitability target.
+
+   | Family | Boards | Full tree | Reduced | Queued |
+   | --- | --- | --- | --- | --- |
+   | MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR | 32 | 15 | 17 | 18 |
+   | MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH | 25 | 6 | 19 | 19 |
+   | MTT9_150BB_CO_BTN_3BP_HIGHSPR | 30 | 20 | 10 | 15 |
+   | **Total** | **87** | **41** | **46** | **52** |
+
+   **A. More RAM.** Needs about 30 GB usable to hold a 26 GB tree with headroom,
+   so roughly a 48 GB machine. Nothing else changes and the queue drains as
+   planned.
+
+   **B. A coarser tree for these three families.** The lever is bet-size
+   granularity, not action types. Dropping one of three OOP flop bet sizes and one
+   of two river sizes leaves raise, donk and all-in intact on every street, so this
+   is NOT the reduced review-only tree - that tree's defect is the ABSENCE of turn
+   and river raise, donk and all-in, which is what makes an aggregate blend two
+   different games. A coarser tree is the same game described less finely.
+
+   The catch is that the whole family has to move, not just the queue: 87 boards
+   rather than 52, because 41 already-solved boards would otherwise sit on a
+   different tree from their own family. That trades 52 boards that cannot
+   complete on this machine for 87 that can, and it leaves these three families
+   coarser than the other seventeen - visible and defensible, since within-family
+   uniformity is what an aggregate depends on.
+
+   **C. Ship without them.** Costs 3 of 19 shipped rules, all already flagged
+   at-risk for these same families, and leaves the deep-stack hole open. Cheapest
+   now, and the one to take if the beta date matters more than the coverage.
 2. **Rebuild.** `npm run mtt:post-resolve -- --write`. It holds back families that
    still mix trees, re-harvests any drifted villain bet, and reports what it
    refused. Clears the last three at-risk rules when the queue drains.
