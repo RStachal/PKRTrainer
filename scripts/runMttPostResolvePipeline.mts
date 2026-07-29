@@ -1,7 +1,12 @@
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { nodeHistoryArgs, reviewFileName } from "./lib/mttReviewFileNaming.mts";
+import {
+  backupAndClearDrafts,
+  recoverAbandonedDrafts,
+  restoreUnrebuilt,
+} from "./lib/draftBackup.mts";
 import {
   assessPinDrift,
   assessPinDriftForAction,
@@ -405,19 +410,30 @@ function clearCoverageV2Drafts(plan: ReturnType<typeof draftPlan>, write: boolea
   const targets = plan.cbet
     .map((item) => item.outputDir)
     .filter((dir) => existsSync(dir));
+  let recovered: string[] = [];
+  let cleared: readonly string[] = targets;
   if (write) {
-    rmSync(DRAFT_BACKUP_ROOT, { recursive: true, force: true });
-    for (const dir of targets) {
-      cpSync(dir, join(DRAFT_BACKUP_ROOT, basename(dir)), { recursive: true });
-      rmSync(dir, { recursive: true, force: true });
-    }
+    // Before the previous backup is wiped, put back anything it is still the
+    // only copy of. A run that stopped between clearing and restoring leaves
+    // exactly that, and a missing directory is not a backup target - so wiping
+    // first is how the safety net loses the drafts it was holding.
+    recovered = recoverAbandonedDrafts(DRAFT_BACKUP_ROOT, DRAFT_ROOT);
+    cleared = backupAndClearDrafts(
+      DRAFT_BACKUP_ROOT,
+      plan.cbet.map((item) => item.outputDir),
+    );
   }
+  const recoveredNote = recovered.length === 0
+    ? ""
+    : ` Recovered ${recovered.length} draft(s) a previous run cleared and never restored: ${recovered.join(", ")}.`;
   return {
     id: "clear-stale-drafts",
     detail: "Back up and remove per-family drafts so the change-driven ingest cannot skip them.",
     ran: write,
-    ok: true,
-    output: `${targets.length} draft directory(ies)${write ? ` backed up to ${DRAFT_BACKUP_ROOT} and removed` : " would be removed"}`,
+    // A recovery means a previous run did not finish. Worth failing the step so
+    // it is read rather than scrolled past.
+    ok: recovered.length === 0,
+    output: `${cleared.length} draft directory(ies)${write ? ` backed up to ${DRAFT_BACKUP_ROOT} and removed` : " would be removed"}.${recoveredNote}`,
   };
 }
 
@@ -516,26 +532,15 @@ function shippedPilotRuleIds(): string[] {
 
 /** Put back any draft the rebuild failed to recreate, so nothing is lost. */
 function restoreUnrebuiltDrafts(plan: ReturnType<typeof draftPlan>, write: boolean): Step {
+  const id = "restore-unrebuilt-drafts";
+  const detail = "Restore any draft a failed rebuild left missing.";
   if (!write || !existsSync(DRAFT_BACKUP_ROOT)) {
-    return {
-      id: "restore-unrebuilt-drafts",
-      detail: "Restore any draft a failed rebuild left missing.",
-      ran: false,
-      ok: true,
-      output: write ? "no draft backup was taken" : "dry run",
-    };
+    return { id, detail, ran: false, ok: true, output: write ? "no draft backup was taken" : "dry run" };
   }
-  const restored: string[] = [];
-  for (const name of readdirSync(DRAFT_BACKUP_ROOT)) {
-    const target = join(DRAFT_ROOT, name);
-    if (existsSync(join(target, "normalized.candidate.json"))) continue;
-    rmSync(target, { recursive: true, force: true });
-    cpSync(join(DRAFT_BACKUP_ROOT, name), target, { recursive: true });
-    restored.push(name);
-  }
+  const restored = restoreUnrebuilt(DRAFT_BACKUP_ROOT, DRAFT_ROOT);
   return {
-    id: "restore-unrebuilt-drafts",
-    detail: "Restore any draft a failed rebuild left missing.",
+    id,
+    detail,
     ran: true,
     // A restore is a rescue, not a success: the rebuild did not do its job.
     ok: restored.length === 0,
