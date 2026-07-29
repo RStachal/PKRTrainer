@@ -3,6 +3,13 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, write
 import { basename, dirname, join, resolve } from "node:path";
 import { nodeHistoryArgs, reviewFileName } from "./lib/mttReviewFileNaming.mts";
 import {
+  assessPinDrift,
+  renderPinDrift,
+  type PinDriftRow,
+} from "./lib/facingBetPinDrift.mts";
+import { reviewFileName as villainReviewFileName } from "./lib/mttReviewFileNaming.mts";
+import {
+  familyIdFromRuleId,
   renderWithheldFamilies,
   rulesByFamilyIn,
   withheldFamiliesForRules,
@@ -218,6 +225,9 @@ function run(args: CliArgs) {
   // Holding a mixed family back from the rebuild does not remove the content it
   // already put in the packs, so that has to be reported separately.
   steps.push(mixedTreeContentGuard(mixed));
+  // The pin is frozen from a previous run, so it can be right when made and wrong
+  // later with nothing to say so.
+  steps.push(pinDriftGuard(mixed));
 
   // Gates are read-only, so they run even in a dry run and report real state.
   steps.push(npm("gate:pilot-suite", ["mtt:postflop-pilot-suite", "--", "--summary"], true,
@@ -447,6 +457,31 @@ function mixedTreeContentGuard(mixed: Set<string>): Step {
       "Their boards are queued for re-solve; rebuild these packs once the queue drains.",
     ].join("\n"),
   };
+}
+
+/**
+ * Report shipped facing-bet rules whose pinned villain size is no longer the
+ * villain's most-used bet.
+ *
+ * Reports rather than fails: a drifted pin is a question for the next harvest,
+ * not a broken build. Families still mixing trees are left unjudged - measuring
+ * them is what produced a confident wrong answer once already.
+ */
+function pinDriftGuard(mixed: Set<string>): Step {
+  const id = "guard:facing-bet-pin-drift";
+  const detail = "Check each shipped facing-bet rule still trains the villain's most-used bet.";
+  const rows: PinDriftRow[] = [];
+  for (const ruleId of shippedPilotRuleIds()) {
+    const familyId = familyIdFromRuleId(ruleId);
+    const row = assessPinDrift({
+      ruleId,
+      familyId,
+      villainReviewPath: join(SOLVER_OUTPUT_ROOT, familyId, villainReviewFileName("CHECK")),
+      familyMixesTrees: mixed.has(familyId),
+    });
+    if (row !== null) rows.push(row);
+  }
+  return { id, detail, ran: true, ok: true, output: renderPinDrift(rows) };
 }
 
 /** Rule ids of every generated pilot module, read from the built modules. */
