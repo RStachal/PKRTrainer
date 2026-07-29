@@ -185,11 +185,12 @@ had been chosen for it. And the texture term in `ruleScore` cancels across
 candidates, leaving SPR width and pack order to decide - correct today, but easy
 to read as doing work it is not.
 
-The panel now says what is true, that this is one aggregate covering every
-texture in the band and is not tuned to the board on screen. A genuinely
-selective rule still gets to claim its match, which is what a finer pilot would
-ship. The score is untouched; a test pins the measurement so that when a
-texture-specific pilot does arrive, the claim stops being the normal case.
+The panel now says what is true. A rule covering the whole taxonomy says so and
+adds that it is not tuned to the board on screen; anything narrower reports its
+coverage as a fraction, because twelve of thirteen is not a match either and no
+threshold should have to be invented to say so. The score is untouched; a test
+pins the measurement, so when a texture-specific pilot arrives the universal case
+stops being the normal one.
 
 One thing changed about the first row rather than being resolved by it. Those
 three rules still blend two trees, but the player training them is now told so

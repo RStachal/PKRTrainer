@@ -235,10 +235,12 @@ export type PostflopRecommendationSource =
        */
       treeIntegrity?: "MIXED_TREES";
       /**
-       * True when the rule declares every texture in the taxonomy, so it applies
-       * to any board rather than to this one's texture. Present only when true.
+       * How many of the taxonomy's board textures this rule covers. A rule
+       * covering all of them applies to any board, so the textures it "matched"
+       * only describe the board that was dealt. Reported as a fraction rather
+       * than a flag so a nearly-universal rule cannot claim a match either.
        */
-      textureAgnostic?: true;
+      textureCoverage?: { covered: number; total: number };
     }
   | {
       kind: "FALLBACK";

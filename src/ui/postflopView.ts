@@ -1646,23 +1646,35 @@ function sprFidelityItems(
  * one, so the reported match is the intersection of the board's own textures with
  * everything - which is just a description of the board that was dealt.
  *
- * These are family-level aggregates, and their ids say so. So a rule that covers
- * every texture says that plainly, and only a genuinely selective rule gets to
- * claim a match.
+ * These are family-level aggregates and their ids say so. A rule covering the
+ * whole taxonomy says that plainly; anything narrower reports how much it covers,
+ * because twelve of thirteen is not a match either and no threshold should have
+ * to be invented to say so.
  */
 function textureItems(
   source: Extract<PostflopTrainingSpot["explanation"]["source"], { kind: "STRATEGY_PACK" }>,
 ): readonly string[] {
-  if (source.textureAgnostic) {
+  const coverage = source.textureCoverage;
+  const matched = source.matchedTextures.map(textureLabel).join(", ");
+  if (coverage === undefined) {
+    return [localizedText(`Texture match: ${matched}`, `Shoda textury: ${matched}`)];
+  }
+  if (coverage.covered >= coverage.total) {
     return [localizedText(
       "One aggregate for every board texture in this band, not tuned to this board",
       "Jeden agregát pro všechny textury desky v tomto pásmu, není laděný na tuhle desku",
     )];
   }
-  return [localizedText(
-    `Texture match: ${source.matchedTextures.map(textureLabel).join(", ")}`,
-    `Shoda textury: ${source.matchedTextures.map(textureLabel).join(", ")}`,
-  )];
+  // Stated as a fraction so a rule covering twelve of thirteen cannot pass for a
+  // selective one, and a genuinely narrow rule reads as narrow, with no threshold
+  // anywhere for someone to argue about.
+  return [
+    localizedText(
+      `Covers ${coverage.covered} of ${coverage.total} board textures`,
+      `Pokrývá ${coverage.covered} z ${coverage.total} textur desky`,
+    ),
+    localizedText(`This board matches: ${matched}`, `Tahle deska odpovídá: ${matched}`),
+  ];
 }
 
 /**

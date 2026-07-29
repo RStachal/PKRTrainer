@@ -532,7 +532,7 @@ describe("postflopView - DOM", () => {
         assumptions: ["Texture agnostic fixture."],
         selectionScore: 100,
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
-        textureAgnostic: true,
+        textureCoverage: { covered: 13, total: 13 },
       },
     });
     const root = document.createElement("div");
@@ -550,9 +550,10 @@ describe("postflopView - DOM", () => {
     expect(result?.textContent).not.toContain("Shoda textury");
   });
 
-  it("nechá shodu textury stát, kdyz je pravidlo opravdu vyberove", () => {
-    // The claim is still worth making for a rule that genuinely excludes some
-    // boards, which is what a later, finer pilot would ship.
+  it("rekne, kolik textur pravidlo pokryva, kdyz nepokryva vsechny", () => {
+    // Twelve of thirteen is not a match either, and saying so as a fraction
+    // needs no threshold for anyone to argue about. A genuinely narrow rule -
+    // what a finer pilot would ship - reads as narrow by the same line.
     const resolver: PostflopStrategyResolver = (input) => ({
       action: "BET_BIG",
       explanation: "Texture specific fixture.",
@@ -572,6 +573,7 @@ describe("postflopView - DOM", () => {
         assumptions: ["Texture specific fixture."],
         selectionScore: 100,
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+        textureCoverage: { covered: 4, total: 13 },
       },
     });
     const root = document.createElement("div");
@@ -585,7 +587,8 @@ describe("postflopView - DOM", () => {
     root.querySelector<HTMLButtonElement>('.postflop-action[data-action="CHECK"]')?.click();
 
     const result = root.querySelector<HTMLElement>(".postflop-result");
-    expect(result?.textContent).toContain("Shoda textury");
+    expect(result?.textContent).toContain("Pokrývá 4 z 13 textur desky");
+    expect(result?.textContent).toContain("Tahle deska odpovídá:");
     expect(result?.textContent).not.toContain("pro všechny textury desky");
   });
 

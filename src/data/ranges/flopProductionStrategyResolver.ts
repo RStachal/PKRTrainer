@@ -64,7 +64,10 @@ export function createFlopProductionStrategyResolver(
     const treeIntegrity = treeIntegrityForRuleId(rule.id);
     // A rule that declares the whole taxonomy applies to every board, so the
     // textures it "matched" are only a description of the board that was dealt.
-    const textureAgnostic = coversEveryTexture(rule);
+    const textureCoverage = {
+      covered: ALL_BOARD_TEXTURES.filter((texture) => rule.boardTextures.includes(texture)).length,
+      total: ALL_BOARD_TEXTURES.length,
+    };
 
     return {
       action,
@@ -90,7 +93,7 @@ export function createFlopProductionStrategyResolver(
         heroRangeBucket: matchedHeroBucket,
         ...(sprFidelity ? { sprFidelity } : {}),
         ...(treeIntegrity === "MIXED_TREES" ? { treeIntegrity } : {}),
-        ...(textureAgnostic ? { textureAgnostic: true as const } : {}),
+        textureCoverage,
         ...(rule.opponentPolicy
           ? { opponentPolicy: { ...rule.opponentPolicy } }
           : {}),
@@ -168,18 +171,6 @@ function actionNodeMatchesInput(
 ): boolean {
   if (input.actionNode !== undefined) return rule.actionNode === input.actionNode;
   return rule.actionNode !== "FLOP_FACING_BET";
-}
-
-/**
- * Whether a rule declares every texture in the taxonomy.
- *
- * Measured across the shipped library: eighteen of nineteen rules do, and the
- * nineteenth omits exactly one. These are family-level aggregates - their ids end
- * in `-aggregate` - so texture was never a selection criterion, and reporting a
- * "texture match" for them describes the dealt board rather than the strategy.
- */
-function coversEveryTexture(rule: FlopProductionStrategyRule): boolean {
-  return ALL_BOARD_TEXTURES.every((texture) => rule.boardTextures.includes(texture));
 }
 
 /**

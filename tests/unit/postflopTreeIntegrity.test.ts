@@ -76,6 +76,12 @@ describe("board texture disclosure", () => {
 
     expect(agnostic.length).toBe(18);
     expect(shippedRuleIds().length).toBe(19);
+    // The nineteenth is one texture short of universal, which is why the
+    // disclosure reports coverage as a fraction rather than a yes-or-no flag.
+    const narrowest = Math.min(...generatedMttPostflopPilotPacks
+      .flatMap((entry) => entry.pack.rules)
+      .map((rule) => ALL_BOARD_TEXTURES.filter((texture) => rule.boardTextures.includes(texture)).length));
+    expect(narrowest).toBe(12);
   });
 
   it("keeps rule selection working even though the texture term cancels", () => {
