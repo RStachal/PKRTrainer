@@ -103,11 +103,24 @@ Everything else below is unblocked.
    planned.
 
    **B. A coarser tree for these three families.** The lever is bet-size
-   granularity, not action types. Dropping one of three OOP flop bet sizes and one
-   of two river sizes leaves raise, donk and all-in intact on every street, so this
-   is NOT the reduced review-only tree - that tree's defect is the ABSENCE of turn
-   and river raise, donk and all-in, which is what makes an aggregate blend two
-   different games. A coarser tree is the same game described less finely.
+   granularity, not action types. Raise, donk and all-in stay on every street, so
+   this is NOT the reduced review-only tree - that tree's defect is the ABSENCE of
+   turn and river raise, donk and all-in, which is what makes an aggregate blend
+   two different games. A coarser tree is the same game described less finely.
+
+   Measured on 100BB_SB_BB_SRP_OOP_CBET_HIGHSPR board 872r, committed memory at
+   one thread, against roughly 20 GB usable on this machine:
+
+   | Tree | Committed | Fits here |
+   | --- | --- | --- |
+   | Current | 25.0 GB (25.9 at two threads) | no, at any thread count |
+   | Drop OOP flop 50, drop river 75 both players | 16.8 GB | only just, one thread |
+   | ...and IP flop 33, leaving one IP flop size | 13.2 GB | yes, three threads with headroom |
+
+   So the third row is the workable one: OOP flop keeps 33 and 75, IP flop keeps
+   50, turn keeps both sizes untouched, river keeps 50. What is given up is the
+   OOP flop half-pot size and the river three-quarter size - real granularity, and
+   the shape of the game unchanged.
 
    The catch is that the whole family has to move, not just the queue: 87 boards
    rather than 52, because 41 already-solved boards would otherwise sit on a
