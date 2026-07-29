@@ -71,17 +71,37 @@ Everything else below is unblocked.
 
 ## Critical path to the playable beta
 
-1. **Weekend re-solve to a uniform tree** (in flight). 337 boards move off the
-   reduced review-only tree so no aggregated rule mixes two different games.
-2. **Post-resolve rebuild.** `npm run mtt:post-resolve -- --write` rebuilds
-   evidence, drafts, merged pilots and modules with the four pipeline traps
-   handled.
+1. **Finish the re-solve.** 52 boards left, all in three deep families. Needs the
+   machine largely to itself: at 11 GB of fixed tree cost these families cannot
+   share it with a build and test run, so solving happens while nobody develops.
+   `npm run mtt:solver-follow` arranges that without anyone remembering to switch.
+2. **Rebuild.** `npm run mtt:post-resolve -- --write`. It holds back families that
+   still mix trees, re-harvests any drifted villain bet, and reports what it
+   refused. Clears the last three at-risk rules when the queue drains.
 3. **Unblock B2**, then fill the seven prepared templates from the EV export. The
    whole path after that is built and tested: intake validates, the module builder
    overlays, and the buttons show EV. This is the single change that most improves
    what a player learns, because call and raise are often separated by a hair.
 4. **Unblock B1**, then promote the four six-max packs to reach preflop 8/8.
 5. Repackage and re-verify the FTP artifact.
+
+## Open items, and where they are written up
+
+Everything below this line is a record of what was measured and what was done.
+These are the ones still open:
+
+| Item | State | Section |
+| --- | --- | --- |
+| 3 of 19 shipped rules from 2 tree-mixing families | waiting on the queue | The audit's blind spot |
+| Same 2 families withheld by the accuracy grader | waiting on the queue | The mechanical acceptance gate |
+| 1 shipped rule on a drifted villain bet | re-harvests on the next rebuild | Correction: the pin measurement |
+| Six-max preflop 0/4, per-action EV 0/972 | data-blocked, plumbing done | Blocked, and on exactly what |
+| BTN vs BB solved range narrower than CO vs BB | owner poker decision | Open question: solved ranges |
+| Hand-line villain is not solver-backed | latent until turn pilots ship | Waiting trap |
+
+Fixed and kept here only as the reasoning behind a guard: the line-mode
+inversion, the statistics provenance gap, the preflop start guard, the facing-bet
+lane naming, the fail-closed review, and the solver thread budget.
 
 ## Parallel work while blocked
 
@@ -110,10 +130,18 @@ grades the distance, and the postflop view warns when a shown spot sits far from
 the solve (see OPS-73 follow-up). The player is told, but closing the gap in the
 content itself remains the owner decision above.
 
-**P3. Turn pilots.** Turn is the largest untouched dimension and needs no
-external input - the solver, schema, resolver and gates all already exist, and
-the turn resolver already carries the per-hand and provenance fixes. This is the
-biggest available content expansion.
+**P3. Turn pilots.** Turn is the largest untouched dimension and needs no external
+input. This entry used to say the solver, schema, resolver and gates all already
+exist. Checked: the schema and resolver do, and the turn resolver carries the
+per-hand and provenance fixes with its own invariant tests. **The pilot track does
+not.** `MttPostflopPilotScope` enumerates only flop scopes, the pilot gate takes a
+`FlopProductionStrategyPack` and rejects anything whose street is not FLOP, and
+the merge and module builders are shaped the same way.
+
+So this is a real piece of infrastructure, not a wiring job, and building it
+before any turn solve exists means writing a parallel pilot track with no data to
+validate it against, while touching the gate that protects the flop content that
+does ship. Worth doing when turn solves are close, not before.
 
 **P4. Continue the correctness audit.** Four defects of the same shape were found
 in one day, each resting on an incidental property rather than a structural one:
