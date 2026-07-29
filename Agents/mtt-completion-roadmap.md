@@ -426,18 +426,26 @@ The clearest remaining case is not shipped: MTT9_80BB_CO_BTN_3BP_MIDSPR is pinne
 to BET_600, used 0.9 percent - the degenerate overbet the pinning was introduced
 to avoid in the first place.
 
-The ranking fix stands and is what would prevent that: candidates are ranked by
+The ranking fix stands and is what prevents that: candidates are ranked by
 measured villain frequency after gate validity, with lane and bucket counts kept
 as tie-breakers. Verified working - on 50BB BTN MID it chose BET_17 at 28.1
 percent over BET_25 at 22.6, where the old lane-count rule would have been
 decided by a tie.
 
-But it does not reach the content yet. The rebuild pipeline pins the villain node
-per family from the previous record and passes it as the only candidate, so the
-harvester never ranks anything. That pin exists to guard against the degenerate
-overbet, which is precisely what the ranking now handles - so the reason for the
-pin has gone. Removing it is the follow-up, best done once the last families stop
-mixing trees, since re-pinning from blended data would repeat this mistake.
+It now reaches the content. Rather than removing the pin wholesale - which would
+re-pin every family, including those whose boards still span both trees - the
+pipeline re-harvests a family when, and only when, its pin has stopped being the
+villain's most-used bet. Everything else keeps its pin, since re-harvesting costs
+a draft per candidate size.
+
+Judging drift from the plan's own pin rather than from a shipped rule id changed
+the answer: a family that is rebuilt but ships nothing was invisible to the
+rule-id version, and that is where the worst pin was - 80BB 3bet MID at BET_600,
+used 0.9 percent. Two families now re-harvest on the next rebuild, that one and
+100BB BTN HIGH.
+
+`guard:facing-bet-pin-drift` reports the state of every pin each run, and the
+release gate discloses any shipped drift, so this cannot go quiet again.
 
 ## Waiting trap: the villain in a hand line is not solver-backed
 
