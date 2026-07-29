@@ -94,7 +94,7 @@ These are the ones still open:
 | --- | --- | --- |
 | 3 of 19 shipped rules from 2 tree-mixing families | waiting on the queue | The audit's blind spot |
 | Same 2 families withheld by the accuracy grader | waiting on the queue | The mechanical acceptance gate |
-| 1 shipped rule on a drifted villain bet | re-harvests on the next rebuild | Correction: the pin measurement |
+| 1 shipped rule on a drifted villain bet | cosmetic; no size dominates there | Correction: the pin measurement |
 | Six-max preflop 0/4, per-action EV 0/972 | data-blocked, plumbing done | Blocked, and on exactly what |
 | BTN vs BB solved range narrower than CO vs BB | owner poker decision | Open question: solved ranges |
 | Hand-line villain is not solver-backed | latent until turn pilots ship | Waiting trap |
@@ -510,6 +510,21 @@ used 0.9 percent. Two families now re-harvest on the next rebuild, that one and
 `guard:facing-bet-pin-drift` reports the state of every pin each run, and the
 release gate discloses any shipped drift, so this cannot go quiet again.
 
+### Not every drift is the same size of problem
+
+The one remaining shipped drift is 100BB BTN HIGH, and measuring it properly
+changes what to do about it. The villain checks 50.8 percent there and splits the
+rest three ways - BET_25 at 17.8, BET_38 at 17.3, BET_17 at 14.1 - so the pinned
+size carries 29 percent of their betting against a top of 36. Re-pinning raises
+the number and leaves the spot as it was.
+
+That is a different thing from a pin on a genuinely rare branch, which is what
+80BB 3bet MID at 0.9 percent was, and reporting them identically makes a cosmetic
+change look like a correctness win. The drift row now carries the top bet's share
+of the villain's betting and whether that share is a majority, and the release
+limit says so. The re-harvest still happens on the next rebuild; it is not a
+reason to hold anything.
+
 ## Waiting trap: the villain in a hand line is not solver-backed
 
 None of the seven shipped pilots carries an `opponentPolicy`, so in line mode the
@@ -578,11 +593,28 @@ on the clock rather than a fixed one:
 
 | Window | Cores | Threads | Priority |
 | --- | --- | --- | --- |
-| 09:00-20:59 | 6 of 16 | 6 | BelowNormal |
-| 21:00-08:59 | 15 of 16 | 14 | Normal |
+| 09:00-20:59 | yields the machine | - | - |
+| 21:00-08:59 | 15 of 16 | 9 | Normal |
+
+Both numbers moved once the memory cost was measured properly, and the day one
+moved to nothing. Cost is a fixed base plus a per-thread increment - about 11 GB
+for the tree plus 0.9 GB per thread, from 16.8 GB at six threads and 24.3 GB at
+fourteen - so on a 31.2 GB machine the night budget is nine threads, not fourteen.
+
+The day cap was worse than wrong, it was incoherent. A core percentage assumed the
+solver could always share the machine if it took fewer cores, but cutting threads
+does not free the fixed base: six day threads still cost 16.4 GB, which is most of
+what a build and test run needs. That is why three consecutive daytime workers
+produced zero boards in three hours while free memory fell to 0.4 GB. So the day
+budget is computed against a development reserve, and when nothing useful is left
+the worker skips the tick and the applier stops any solver instead of throttling
+one that cannot help. The yield is derived from memory rather than written in as a
+rule about this machine: given headroom the same arithmetic keeps it solving.
 
 A timer applies it every fifteen minutes, because a deep board runs over an hour
 and a process started in the day would otherwise hold the day cap all night.
+There is also a floor: under 3 GB free the solver is stopped rather than left to
+die with an access violation, which loses the same one board and nothing else.
 
 A person can claim the machine without touching the schedule - editing the night
 hours to express a temporary fact leaves an edit that outlives its reason:
