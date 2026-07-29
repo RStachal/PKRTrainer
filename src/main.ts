@@ -260,6 +260,14 @@ function initializeStorage(storage: Storage): StorageInit {
     case "migrated":
     case "noop":
     default: {
+      // Legacy data existovala, ale nešla přečíst: stats začínají prázdné a hráč
+      // to musí vědět. Bez tohoto vypadal takový běh jako běžná úspěšná migrace
+      // hráče, který prostě žádnou historii neměl - přestože jeho data v
+      // úložišti dál leží a jsou obnovitelná.
+      if (migration.legacyEventsUnreadable === true) {
+        const okUnreadable = hasNewState(storage) || ensureCleanState(storage);
+        return { ok: okUnreadable, migration, startedEmpty: true };
+      }
       // Po migraci/idempotentnĂ­m noopu by mÄ›l stav existovat; pojistka pro
       // pĹ™Ă­pad nastavenĂ©ho pĹ™Ă­znaku migrace bez stavu.
       const ok = hasNewState(storage) || ensureCleanState(storage);

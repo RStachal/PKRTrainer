@@ -76,4 +76,40 @@ describe("migration - chybove toky", () => {
     expect(storage.getItem(KEY_STATE)).toBeNull();
     expect(storage.getItem(KEY_MIGRATED)).toBeNull();
   });
+
+  it("odlisi necitelna legacy data od zadne historie", () => {
+    // Both used to look identical: records [] and skipped 0, reported as a
+    // successful migration of a player who simply had no history. Their data was
+    // still sitting in storage, untouched and recoverable, with nothing to say
+    // so - the player just got a clean slate.
+    const storage = new MemoryStorage();
+    storage.setItem(LEGACY_KEYS.events, "{ this is not valid json");
+
+    const result = runMigration(storage);
+
+    expect(result.status).toBe("migrated");
+    expect(result.legacyEventsUnreadable).toBe(true);
+    expect(result.migratedEventCount).toBe(0);
+    // The original data must survive, since it is the only copy.
+    expect(storage.getItem(LEGACY_KEYS.events)).toBe("{ this is not valid json");
+  });
+
+  it("hlasi necitelnost i pro legacy hodnotu, ktera neni pole", () => {
+    const storage = new MemoryStorage();
+    storage.setItem(LEGACY_KEYS.events, JSON.stringify({ events: [] }));
+
+    expect(runMigration(storage).legacyEventsUnreadable).toBe(true);
+  });
+
+  it("necitelnost nehlasi, kdyz legacy data proste chybi nebo jsou v poradku", () => {
+    // The flag has to stay off for the ordinary cases, or the warning it drives
+    // becomes noise and gets ignored when it matters.
+    const empty = new MemoryStorage();
+    empty.setItem(LEGACY_KEYS.state, JSON.stringify({ any: "state" }));
+    expect(runMigration(empty).legacyEventsUnreadable).toBeUndefined();
+
+    const readable = new MemoryStorage();
+    readable.setItem(LEGACY_KEYS.events, JSON.stringify([]));
+    expect(runMigration(readable).legacyEventsUnreadable).toBeUndefined();
+  });
 });
