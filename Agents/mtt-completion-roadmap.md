@@ -395,36 +395,49 @@ Splitting CHECK into CALL and FOLD would be the deeper fix, but it is a schema
 change reaching packs, resolvers and every generated module. Worth doing when the
 lane vocabulary is next revisited.
 
-## The facing-bet pilots trained the exception, not the rule
+## Correction: the facing-bet pin measurement was made on bad data
 
-Same investigation, worse finding. A facing-bet pilot puts the player against ONE
-villain bet size. Which one was decided by whichever candidate produced the most
-lanes and the most range buckets - the richest-looking matrix - with nothing
-about how often the villain actually bets it.
+An earlier version of this section claimed three of six shipped facing-bet rules
+put the player against a bet the solver rarely makes, the worst at 4 percent
+against a real main size of 41. **That measurement was taken on reduced-tree
+review data and is wrong as stated.**
 
-Measured against the villain's own decision node, combo-weighted:
+The irony is that the same section hypothesised why: the reduced tree has no turn
+or river raises, so it distorts which flop bet size looks best. It does - and the
+frequencies computed from it were distorted the same way.
 
-| Shipped rule | Pinned | Its frequency | Villain's main size |
+Re-measured after the rebuild, on full-tree data:
+
+| Shipped rule | Pin | Its frequency | Villain's top bet |
 | --- | --- | --- | --- |
-| 150BB 3bet HIGH | BET_39 | **4%** | BET_52 at 41% |
-| 50BB BTN MID | BET_17 | **13%** | BET_38 at 30% |
-| 100BB BTN HIGH | BET_17 | **9%** | BET_38 at 24% |
-| 25BB BTN LOW | BET_17 | 28% | same |
-| 45BB 3bet LOW | BET_52 | 21% | same |
-| 70BB 3bet MID | BET_52 | 29% | same |
+| 25BB BTN LOW | BET_17 | 28.3% | same |
+| 50BB BTN MID | BET_17 | 28.1% | same |
+| 70BB 3bet MID | BET_52 | 28.6% | same |
+| 45BB 3bet LOW | BET_52 | 20.7% | same |
+| 100BB BTN HIGH | BET_17 | 14.1% | BET_25 at 17.8% |
+| 150BB 3bet HIGH | BET_39 | 4.1% | BET_52 at 40.7% |
 
-Three of six trained a branch the solver rarely takes. The other three were right
-by luck, not construction - and the clearest sign of that is an unshipped family
-pinned to a size used 1 percent of the time, which is exactly the degenerate
-overbet the pinning was introduced to avoid.
+Four of six pins are the most-used size. One shipped rule genuinely disagrees on
+clean data - 100BB BTN HIGH, and by a modest 3.7 points between two sizes the
+solver both uses often. The 150BB row still cannot be judged: that family still
+mixes trees, so its frequencies come from the same blend the correction is about.
 
-Candidates are now ranked by measured villain frequency after gate validity, with
-lane and bucket counts kept as tie-breakers for sizes used about equally.
+The clearest remaining case is not shipped: MTT9_80BB_CO_BTN_3BP_MIDSPR is pinned
+to BET_600, used 0.9 percent - the degenerate overbet the pinning was introduced
+to avoid in the first place.
 
-**Not yet re-harvested.** Three of the affected families are held back for mixing
-two solver trees and are queued for re-solve, so their packs must be rebuilt
-anyway; re-harvesting now would bake in numbers about to change. Do it with the
-post-resolve rebuild once the queue drains.
+The ranking fix stands and is what would prevent that: candidates are ranked by
+measured villain frequency after gate validity, with lane and bucket counts kept
+as tie-breakers. Verified working - on 50BB BTN MID it chose BET_17 at 28.1
+percent over BET_25 at 22.6, where the old lane-count rule would have been
+decided by a tie.
+
+But it does not reach the content yet. The rebuild pipeline pins the villain node
+per family from the previous record and passes it as the only candidate, so the
+harvester never ranks anything. That pin exists to guard against the degenerate
+overbet, which is precisely what the ranking now handles - so the reason for the
+pin has gone. Removing it is the follow-up, best done once the last families stop
+mixing trees, since re-pinning from blended data would repeat this mistake.
 
 ## Hand-history review now fails closed
 
