@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
   assessPinDrift,
+  assessPinDriftForAction,
   pinnedBetActionFromRuleId,
   renderPinDrift,
 } from "../../scripts/lib/facingBetPinDrift.mts";
@@ -100,6 +101,33 @@ describe("facing-bet pin drift", () => {
       familyMixesTrees: false,
     });
     expect(row?.verdict).toBe("NO_DATA");
+  });
+
+  it("judges a pin that no shipped rule carries", () => {
+    // A family can be rebuilt while shipping nothing, and those are the pins
+    // nobody looks at. One was pinned to a size used under one percent - the
+    // degenerate overbet the pinning was introduced to avoid - and deriving the
+    // pin from shipped rule ids alone could never see it.
+    const row = assessPinDriftForAction({
+      familyId: "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+      pinnedAction: "BET_600",
+      villainReviewPath: villainReview({ CHECK: 0.31, BET_79: 0.36, BET_39: 0.32, BET_600: 0.01 }),
+      familyMixesTrees: false,
+    });
+
+    expect(row.verdict).toBe("DRIFTED");
+    expect(row.pinnedAction).toBe("BET_600");
+    expect(row.topAction).toBe("BET_79");
+    expect(row.pinnedFrequency).toBeCloseTo(0.01, 5);
+  });
+
+  it("still refuses to judge a plan pin from a tree-mixing family", () => {
+    expect(assessPinDriftForAction({
+      familyId: "F",
+      pinnedAction: "BET_39",
+      villainReviewPath: villainReview({ BET_39: 0.04, BET_52: 0.4 }),
+      familyMixesTrees: true,
+    }).verdict).toBe("UNJUDGED");
   });
 
   it("summarises without claiming an unjudged rule is fine", () => {

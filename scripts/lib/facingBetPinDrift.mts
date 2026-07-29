@@ -102,3 +102,27 @@ export function renderPinDrift(rows: readonly PinDriftRow[]): string {
     : `${drifted.length} shipped rule(s) train a bet that is not the villain's most-used size.`;
   return [summary, ...lines].join("\n");
 }
+
+/**
+ * Drift for a pin known directly, rather than read out of a shipped rule id.
+ *
+ * A family can be rebuilt without any of its rules shipping - the 3bet MID
+ * facing-bet draft is built every run and merged into nothing - and those are
+ * exactly the pins nobody looks at. One of them is pinned to a size the solver
+ * uses under one percent, the degenerate overbet the pinning was introduced to
+ * avoid, and it would have stayed that way until someone merged it.
+ */
+export function assessPinDriftForAction(input: {
+  familyId: string;
+  pinnedAction: string;
+  villainReviewPath: string;
+  familyMixesTrees: boolean;
+}): PinDriftRow {
+  return assessPinDrift({
+    // The rule id only matters as a carrier for the pinned action here.
+    ruleId: `${input.familyId.toLowerCase()}-check-${input.pinnedAction.toLowerCase()}-aggregate`,
+    familyId: input.familyId,
+    villainReviewPath: input.villainReviewPath,
+    familyMixesTrees: input.familyMixesTrees,
+  })!;
+}

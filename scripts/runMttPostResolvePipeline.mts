@@ -4,6 +4,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { nodeHistoryArgs, reviewFileName } from "./lib/mttReviewFileNaming.mts";
 import {
   assessPinDrift,
+  assessPinDriftForAction,
   renderPinDrift,
   type PinDriftRow,
 } from "./lib/facingBetPinDrift.mts";
@@ -194,15 +195,33 @@ function run(args: CliArgs) {
     }
 
     // Trap 4: pin the villain node instead of letting the harvester pick.
+    // Trap 8: the pin is frozen from an earlier run, so it survives the very
+    // re-solve that can invalidate it. Re-harvesting every family each time is
+    // too slow - a draft per candidate size - and re-harvesting one whose boards
+    // still span both trees would re-pin from the blend this is meant to escape.
+    // So the pin is kept unless the family is clean AND its pin has stopped being
+    // the villain's most-used size, which is the one case where it is both safe
+    // and necessary to let the harvester choose again.
     for (const item of plan.facingBet) {
+      // Judged from the plan's own pin rather than from a shipped rule id, so a
+      // family that is rebuilt but ships nothing is covered too - that is where
+      // the worst pin was hiding.
+      const reharvest = assessPinDriftForAction({
+        familyId: item.familyId,
+        pinnedAction: item.betAction,
+        villainReviewPath: join(SOLVER_OUTPUT_ROOT, item.familyId, villainReviewFileName("CHECK")),
+        familyMixesTrees: mixed.has(item.familyId),
+      }).verdict === "DRIFTED";
       steps.push(npm(`facing:${item.familyId}`, [
         "mtt:texas-solver-facing-bet-candidates", "--",
         `--family=${item.familyId}`, "--source-node=CHECK",
-        `--bet-actions=${item.betAction}`,
+        ...(reharvest ? [] : [`--bet-actions=${item.betAction}`]),
         `--pot-type=${item.potType}`, `--position-pattern=${item.positionPattern}`,
         `--scope=${item.scope}`, `--spr-min=${item.sprMin}`, `--spr-max=${item.sprMax}`,
         "--write", "--summary",
-      ], args.write, `Rebuild ${item.familyId} facing-bet on the pinned ${item.betAction} node.`));
+      ], args.write, reharvest
+        ? `Re-harvest ${item.familyId} facing-bet: its pinned ${item.betAction} is no longer the villain's most-used bet.`
+        : `Rebuild ${item.familyId} facing-bet on the pinned ${item.betAction} node.`));
     }
   }
 
