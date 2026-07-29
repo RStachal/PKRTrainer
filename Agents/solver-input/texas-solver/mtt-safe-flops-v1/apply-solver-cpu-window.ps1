@@ -19,7 +19,9 @@ param(
   [int]$NightCorePercent = 95,
   [int]$NightStartHour = 21,
   [int]$NightEndHour = 9,
-  [int]$IntervalMinutes = 15
+  [int]$IntervalMinutes = 15,
+  # Below this the machine is in trouble and the solver is the thing to give up.
+  [double]$MinimumFreeGb = 3
 )
 
 $ErrorActionPreference = "Stop"
@@ -59,6 +61,19 @@ function Invoke-Apply {
   } elseif ($null -ne $override) {
     Write-WindowLog "Override active: $override (the clock says $((Get-Date).ToString('HH:mm')))."
   }
+  # Threads can be trimmed; the tree's fixed 11 GB cannot. When free memory has
+  # already collapsed - a full build and test run started beside a deep solve -
+  # re-capping does not help and the solver dies with an access violation, taking
+  # the board with it. A clean stop loses the same board and nothing else, and the
+  # worker's own trigger brings it back once the machine is free again.
+  $freeGb = try { (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB } catch { [double]::PositiveInfinity }
+  if ($freeGb -lt $MinimumFreeGb -and @(Get-Process console_solver -ErrorAction SilentlyContinue).Count -gt 0) {
+    Write-WindowLog ("Only {0:N1} GB free: stopping the solver rather than letting it crash. Its trigger will restart it." -f $freeGb)
+    Stop-ScheduledTask -TaskName "PKRTrainer-Weekend-UniformResolve" -ErrorAction SilentlyContinue
+    @(Get-Process console_solver -ErrorAction SilentlyContinue) | Stop-Process -Force -ErrorAction SilentlyContinue
+    return $policy
+  }
+
   $result = Set-SolverCpuCap -CorePercent $policy.CorePercent -Priority $policy.Priority
   if ($result.ProcessCount -eq 0) {
     Write-WindowLog "$($policy.Window): no solver running; policy is $($policy.CorePercent)% / $($policy.Priority)."

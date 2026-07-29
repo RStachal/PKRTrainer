@@ -67,18 +67,30 @@ function Get-SolverCpuPolicy {
   system, the editor, a test run, and the headroom a large allocation needs. Take
   that away and the solver does not slow down, it dies.
 
-  Measured at roughly 1.7 GB of peak working set per thread on the deep families
-  left in the queue: fourteen threads peaked at 24.3 GB of 31.2 GB and crashed.
+  Cost is a fixed base plus a per-thread increment, not a simple per-thread rate.
+  Measured on the deep families left in the queue: 16.8 GB at six threads and
+  24.3 GB at fourteen, which is a base of about 11 GB for the tree itself plus
+  roughly 0.9 GB per thread. The first version of this budget used a flat
+  per-thread figure and so under-counted badly at low thread counts.
+
+  A consequence worth stating: with an 11 GB base, these families cannot share
+  this machine with a full build and test run at any thread count. Cutting threads
+  helps at the margin; only stopping the solver frees the base.
 #>
 function Get-SolverThreadBudget {
   param(
     [int]$CoreThreads,
-    [double]$PeakGbPerThread = 1.7,
-    [double]$ReserveGb = 12
+    [double]$BaseGb = 11,
+    [double]$PeakGbPerThread = 0.9,
+    [double]$ReserveGb = 12,
+    # Taken from the machine unless given. Passing it is what lets the budget be
+    # checked against sizes this machine does not have, including the ones where
+    # the arithmetic would otherwise hand back a thread count that cannot fit.
+    [double]$TotalGb = 0
   )
   try {
-    $totalGb = (Get-CimInstance Win32_OperatingSystem).TotalVisibleMemorySize / 1MB
-    $budget = [int][Math]::Floor(($totalGb - $ReserveGb) / $PeakGbPerThread)
+    $totalGb = if ($TotalGb -gt 0) { $TotalGb } else { (Get-CimInstance Win32_OperatingSystem).TotalVisibleMemorySize / 1MB }
+    $budget = [int][Math]::Floor((($totalGb - $ReserveGb) - $BaseGb) / $PeakGbPerThread)
     return [Math]::Max(1, [Math]::Min($CoreThreads, $budget))
   } catch {
     # Unable to read memory: fall back to the core-derived count rather than
