@@ -32,11 +32,20 @@ function Get-SolverCpuPolicy {
   # Affinity alone does not raise utilisation: six threads pinned to fifteen cores
   # still do six cores of work. Thread count has to move with the window, so it is
   # part of the policy rather than a separate knob that can drift out of step.
+  #
+  # But threads cost memory, not just cores, and past a point that stops being a
+  # trade and becomes a failure. Measured on this machine: fourteen threads on the
+  # remaining deep families peaked at 24.3 GB of 31.2 GB, left under 4 GB free,
+  # pushed commit to 43.9 GB, and finished nothing in three hours - the solver
+  # died with an access violation instead, which is what the historical crash
+  # exit codes were all along. Six threads had been running for hours at ~15 GB.
+  #
+  # So the night thread count is capped by a memory budget rather than by cores.
   if ($isNight) {
     return [pscustomobject]@{
       Window       = "NIGHT"
       CorePercent  = $NightCorePercent
-      Threads      = [Math]::Max(1, (Get-SolverCoreCount -Percent $NightCorePercent) - 1)
+      Threads      = Get-SolverThreadBudget -CoreThreads ([Math]::Max(1, (Get-SolverCoreCount -Percent $NightCorePercent) - 1))
       Priority     = "Normal"
       Reason       = "Nobody is developing between ${NightStartHour}:00 and ${NightEndHour}:00, so the solver takes the machine."
     }
@@ -47,6 +56,34 @@ function Get-SolverCpuPolicy {
     Threads      = [Math]::Max(1, (Get-SolverCoreCount -Percent $DayCorePercent))
     Priority     = "BelowNormal"
     Reason       = "Development runs beside the solver, so it keeps a minority of the cores."
+  }
+}
+
+<#
+  How many solver threads this machine's memory can actually carry.
+
+  Expressed as a reserve rather than a fraction, because the reserve is the thing
+  that matters: whatever the solver does not take has to hold the operating
+  system, the editor, a test run, and the headroom a large allocation needs. Take
+  that away and the solver does not slow down, it dies.
+
+  Measured at roughly 1.7 GB of peak working set per thread on the deep families
+  left in the queue: fourteen threads peaked at 24.3 GB of 31.2 GB and crashed.
+#>
+function Get-SolverThreadBudget {
+  param(
+    [int]$CoreThreads,
+    [double]$PeakGbPerThread = 1.7,
+    [double]$ReserveGb = 12
+  )
+  try {
+    $totalGb = (Get-CimInstance Win32_OperatingSystem).TotalVisibleMemorySize / 1MB
+    $budget = [int][Math]::Floor(($totalGb - $ReserveGb) / $PeakGbPerThread)
+    return [Math]::Max(1, [Math]::Min($CoreThreads, $budget))
+  } catch {
+    # Unable to read memory: fall back to the core-derived count rather than
+    # inventing a cap, since being wrong low here only costs speed.
+    return $CoreThreads
   }
 }
 
