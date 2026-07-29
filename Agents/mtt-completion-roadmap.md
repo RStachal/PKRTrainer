@@ -480,6 +480,34 @@ pot and a 40BB stack, which would pick a rule from invented numbers. It is
 unreachable - a street's financial state is created at the FLOP/TURN/RIVER marker
 rather than at the first bet, and the bridge only runs for streets with a board.
 
+## More threads was making the solver crash, not go faster
+
+Checking on the background solver found three consecutive workers with zero
+boards finished between them, and the process gone entirely by one of the
+fifteen-minute checks.
+
+The day/night policy scaled threads with cores, on the assumption that more
+threads means more throughput. On the deep families left in the queue that is
+false, and expensively so:
+
+| Threads | Peak working set | Free RAM | Outcome |
+| --- | --- | --- | --- |
+| 6 | ~15 GB | comfortable | ran for hours |
+| 14 | **24.3 GB** of 31.2 | under 4 GB | crashed, nothing finished in 3 h |
+
+At fourteen threads commit reached 43.9 GB, deep into the page file, and the
+solver died with an access violation. The historical crash exit codes recorded in
+`failures.jsonl` are the same access violation, so this had been happening for
+days without anyone connecting it to thread count.
+
+Thread count is now bounded by a memory budget as well as by cores, written as a
+reserve rather than a fraction: whatever the solver does not take has to hold the
+operating system, a test run, and the headroom a large allocation needs. On this
+machine that gives 11 night threads and an estimated 18.7 GB peak.
+
+The lesson generalises past this setting. A knob that reads as "how much machine
+may it use" was really two knobs, and only one of them was safe to turn up.
+
 ## Solver CPU policy
 
 The machine is shared with development, so the solver takes a share that depends
