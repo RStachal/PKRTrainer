@@ -19,10 +19,10 @@ const policyScript = path.resolve(
 
 const runnable = process.platform === "win32" && existsSync(policyScript);
 
-function threadBudget(totalGb: number, coreThreads: number): number {
+function threadBudget(availableGb: number, coreThreads: number): number {
   const command = [
     `. '${policyScript}';`,
-    `Get-SolverThreadBudget -CoreThreads ${coreThreads} -TotalGb ${totalGb}`,
+    `Get-SolverThreadBudget -CoreThreads ${coreThreads} -AvailableGb ${availableGb}`,
   ].join(" ");
   const out = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command], {
     encoding: "utf8",
@@ -30,10 +30,10 @@ function threadBudget(totalGb: number, coreThreads: number): number {
   return Number.parseInt(out.trim(), 10);
 }
 
-function dayPolicy(totalGb: number): { Threads: number; Run: boolean; Window: string } {
+function dayPolicy(availableGb: number): { Threads: number; Run: boolean; Window: string } {
   const command = [
     `. '${policyScript}';`,
-    `Get-SolverCpuPolicy -TotalGb ${totalGb} -Now ([DateTime]'2026-07-29T11:00:00')`,
+    `Get-SolverCpuPolicy -AvailableGb ${availableGb} -Now ([DateTime]'2026-07-29T11:00:00')`,
     `| Select-Object Window,Threads,Run | ConvertTo-Json -Compress`,
   ].join(" ");
   const out = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command], {
@@ -46,21 +46,26 @@ function dayPolicy(totalGb: number): { Threads: number; Run: boolean; Window: st
 // imported so a change to the constants has to be argued for in two places.
 const BASE_GB = 11;
 const PER_THREAD_GB = 0.9;
-const RESERVE_GB = 12;
+const RESERVE_GB = 3;
 
 const predictedPeakGb = (threads: number) => BASE_GB + PER_THREAD_GB * threads;
 
 describe.runIf(runnable)("solver thread budget", () => {
   it("leaves the reserve intact on every machine size, which is the whole job", () => {
-    for (const totalGb of [24, 31.2, 32, 48, 64, 128]) {
-      const threads = threadBudget(totalGb, 32);
-      expect(predictedPeakGb(threads) + RESERVE_GB, `${totalGb} GB machine`).toBeLessThanOrEqual(totalGb);
+    for (const availableGb of [20, 24, 31.2, 48, 64, 128]) {
+      const threads = threadBudget(availableGb, 32);
+      expect(predictedPeakGb(threads) + RESERVE_GB, `${availableGb} GB available`).toBeLessThanOrEqual(availableGb);
     }
   });
 
-  it("refuses the thread count that actually crashed this machine", () => {
-    // 31.2 GB is what this machine reports. Fourteen threads is what died.
-    expect(threadBudget(31.2, 15)).toBeLessThan(14);
+  it("refuses the thread counts that actually failed on this machine", () => {
+    // Both failures happened on a machine reporting 31.2 GB installed with about
+    // 19.9 GB actually free. Fourteen threads died with an access violation; nine
+    // were budgeted from the installed figure, needed 19.1 GB of that 19.9, and
+    // were killed by the low-memory guard every fifteen minutes for six hours
+    // without finishing a board. Given the real number, neither is offered.
+    expect(threadBudget(19.9, 15)).toBeLessThan(9);
+    expect(threadBudget(19.9, 15)).toBeLessThan(14);
   });
 
   it("never hands back more threads than there are cores to run them", () => {
@@ -75,21 +80,22 @@ describe.runIf(runnable)("solver thread budget", () => {
     expect(threadBudget(16, 8)).toBeGreaterThanOrEqual(1);
   });
 
-  it("yields the whole machine when a solve cannot fit beside development", () => {
-    // Throttling does not free the fixed tree cost, so on a machine this size
-    // the honest answer is to stop. Cutting threads was the old answer and it
-    // produced zero boards in three hours while endangering the build.
-    const policy = dayPolicy(31.2);
+  it("keeps the solver running through the day, on what development leaves", () => {
+    // Between 9:00 and 21:00 the solver is a background job, not stopped. With
+    // the ~19.9 GB this machine really has free that is a small thread count,
+    // and small is the point.
+    const policy = dayPolicy(19.9);
     expect(policy.Window).toBe("DAY");
-    expect(policy.Run).toBe(false);
+    expect(policy.Run).toBe(true);
+    expect(policy.Threads).toBeGreaterThanOrEqual(1);
+    expect(predictedPeakGb(policy.Threads)).toBeLessThanOrEqual(19.9 - 6);
   });
 
-  it("keeps solving through the day on a machine with room for both", () => {
-    // The yield is derived from memory, not written into the policy as a rule
-    // about this machine. Given headroom, the same arithmetic keeps it running.
-    const policy = dayPolicy(64);
-    expect(policy.Run).toBe(true);
-    expect(policy.Threads).toBeGreaterThanOrEqual(2);
+  it("yields only when the tree itself no longer fits", () => {
+    // Throttling cannot free the fixed base, so below that there is nothing to
+    // throttle to. This is the transient a build and test run creates.
+    const policy = dayPolicy(15);
+    expect(policy.Run).toBe(false);
   });
 
   it("grows with memory rather than sitting at a constant", () => {

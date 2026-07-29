@@ -18,13 +18,17 @@ function Get-SolverCpuPolicy {
     [int]$NightCorePercent = 95,
     [int]$NightStartHour = 21,
     [int]$NightEndHour = 9,
-    # What development needs while it is running, and the smallest thread count
-    # worth keeping a solve alive for.
-    [double]$DevelopmentReserveGb = 20,
-    [int]$MinimumUsefulThreads = 2,
-    # Taken from the machine unless given; passing it is what lets the day
-    # yield decision be checked against sizes this machine does not have.
-    [double]$TotalGb = 0,
+    # Headroom left for everything else. Development gets the larger share,
+    # because between 9:00 and 21:00 the machine is being worked on and the
+    # solver is a background job rather than the point of the machine.
+    [double]$DevelopmentReserveGb = 6,
+    [double]$NightReserveGb = 3,
+    # A solve is worth keeping alive down to a single thread; below that the
+    # arithmetic is saying the tree itself does not fit.
+    [int]$MinimumUsefulThreads = 1,
+    # Taken from the machine unless given; passing it is what lets the policy be
+    # checked against conditions this machine is not currently in.
+    [double]$AvailableGb = 0,
     [DateTime]$Now = (Get-Date)
   )
   # The night window wraps past midnight, so it is "at or after the start OR
@@ -52,27 +56,27 @@ function Get-SolverCpuPolicy {
     return [pscustomobject]@{
       Window       = "NIGHT"
       CorePercent  = $NightCorePercent
-      Threads      = Get-SolverThreadBudget -CoreThreads ([Math]::Max(1, (Get-SolverCoreCount -Percent $NightCorePercent) - 1)) -TotalGb $TotalGb
+      Threads      = Get-SolverThreadBudget -CoreThreads ([Math]::Max(1, (Get-SolverCoreCount -Percent $NightCorePercent) - 1)) -ReserveGb $NightReserveGb -AvailableGb $AvailableGb
       Priority     = "Normal"
       Run          = $true
       Reason       = "Nobody is developing between ${NightStartHour}:00 and ${NightEndHour}:00, so the solver takes the machine."
     }
   }
 
-  # The day cap used to be a core percentage alone, which quietly assumed the
-  # solver could always share the machine if it took fewer cores. With a fixed
-  # 11 GB tree that assumption is false: six day threads cost 16.4 GB, a build
-  # and test run beside them drove free memory to 0.4 GB, and three consecutive
-  # workers produced zero boards in three hours before dying.
+  # Between 9:00 and 21:00 the machine is being developed on and the solver runs
+  # in the background on what is left. "What is left" is a memory question before
+  # it is a core question: a core percentage alone assumed the solver could always
+  # share the machine if it took fewer cores, and with a fixed 11 GB tree that is
+  # false. So the day thread count comes from the memory budget against a reserve
+  # sized for development, and the core cap only shapes how it competes for CPU.
   #
-  # So the day budget is computed against a reserve large enough for development,
-  # and when what is left cannot carry a real solve the answer is to stop rather
-  # than to throttle. Throttling does not free the base; only stopping does.
-  #
-  # This is a property of the machine, not a rule about this one: given enough
-  # memory the same arithmetic keeps the solver running all day.
-  $dayThreads = Get-SolverThreadBudget -CoreThreads ([Math]::Max(1, (Get-SolverCoreCount -Percent $DayCorePercent))) -ReserveGb $DevelopmentReserveGb -TotalGb $TotalGb
-  $fits = $dayThreads -ge $MinimumUsefulThreads
+  # Run is false only when even one thread cannot fit, which means the tree alone
+  # does not. Throttling cannot help there - only stopping frees the base - and
+  # the low-memory guard in the applier handles the transient case where a full
+  # build and test run temporarily needs everything.
+  $dayBudget = Get-SolverThreadBudget -CoreThreads ([Math]::Max(1, (Get-SolverCoreCount -Percent $DayCorePercent))) -ReserveGb $DevelopmentReserveGb -AvailableGb $AvailableGb -AllowZero
+  $fits = $dayBudget -ge $MinimumUsefulThreads
+  $dayThreads = [Math]::Max(1, $dayBudget)
   return [pscustomobject]@{
     Window       = "DAY"
     CorePercent  = $DayCorePercent
@@ -82,49 +86,71 @@ function Get-SolverCpuPolicy {
     Reason       = if ($fits) {
       "Development runs beside the solver, so it keeps a minority of the cores."
     } else {
-      "Development needs ${DevelopmentReserveGb} GB and the tree alone costs about 11 GB, so there is no thread count that fits beside it. The solver yields until the machine is free."
+      "Not even one thread fits beside the ${DevelopmentReserveGb} GB development reserve, so the tree itself does not fit. The solver yields until the machine is freer."
     }
   }
 }
 
 <#
-  How many solver threads this machine's memory can actually carry.
+  How many solver threads this machine can actually carry right now.
 
-  Expressed as a reserve rather than a fraction, because the reserve is the thing
-  that matters: whatever the solver does not take has to hold the operating
-  system, the editor, a test run, and the headroom a large allocation needs. Take
-  that away and the solver does not slow down, it dies.
-
-  Cost is a fixed base plus a per-thread increment, not a simple per-thread rate.
+  Cost is a fixed base plus a per-thread increment, not a per-thread rate.
   Measured on the deep families left in the queue: 16.8 GB at six threads and
   24.3 GB at fourteen, which is a base of about 11 GB for the tree itself plus
-  roughly 0.9 GB per thread. The first version of this budget used a flat
-  per-thread figure and so under-counted badly at low thread counts.
+  roughly 0.9 GB per thread.
 
-  A consequence worth stating: with an 11 GB base, these families cannot share
-  this machine with a full build and test run at any thread count. Cutting threads
-  helps at the margin; only stopping the solver frees the base.
+  The budget is taken against memory that is actually AVAILABLE, not against the
+  memory installed. Budgeting from the installed total was the second version of
+  this and it produced a kill loop: this machine reports 31.2 GB installed but
+  only about 19.9 GB free, because the operating system and the editor hold the
+  rest. Nine threads were budgeted, needed 19.1 GB, drove free memory to 0.1 GB,
+  and the low-memory guard stopped the solver a few minutes later - every fifteen
+  minutes for six hours, finishing nothing.
+
+  A running solver's own memory counts as available, since the budget decides
+  what to restart it with. Without that, recomputing while it runs would see its
+  own footprint as unavailable and spiral down to one thread.
 #>
 function Get-SolverThreadBudget {
   param(
     [int]$CoreThreads,
     [double]$BaseGb = 11,
     [double]$PeakGbPerThread = 0.9,
-    [double]$ReserveGb = 12,
+    # Headroom left for whatever else the machine is doing.
+    [double]$ReserveGb = 3,
     # Taken from the machine unless given. Passing it is what lets the budget be
-    # checked against sizes this machine does not have, including the ones where
-    # the arithmetic would otherwise hand back a thread count that cannot fit.
-    [double]$TotalGb = 0
+    # checked against conditions this machine is not currently in.
+    [double]$AvailableGb = 0,
+    # Report the true arithmetic instead of the usual floor of one thread. The
+    # floor is right for "how many threads should this run use" and wrong for
+    # "does a run fit at all" - clamping to one made every machine look like it
+    # fit, including the ones where the tree alone does not.
+    [switch]$AllowZero
   )
   try {
-    $totalGb = if ($TotalGb -gt 0) { $TotalGb } else { (Get-CimInstance Win32_OperatingSystem).TotalVisibleMemorySize / 1MB }
-    $budget = [int][Math]::Floor((($totalGb - $ReserveGb) - $BaseGb) / $PeakGbPerThread)
+    $available = if ($AvailableGb -gt 0) { $AvailableGb } else { Get-SolverAvailableGb }
+    $budget = [int][Math]::Floor((($available - $ReserveGb) - $BaseGb) / $PeakGbPerThread)
+    if ($AllowZero) { return [Math]::Min($CoreThreads, $budget) }
     return [Math]::Max(1, [Math]::Min($CoreThreads, $budget))
   } catch {
     # Unable to read memory: fall back to the core-derived count rather than
     # inventing a cap, since being wrong low here only costs speed.
     return $CoreThreads
   }
+}
+
+<#
+  Memory the solver could use: what is free, plus what a running solver already
+  holds. The second term matters because this is used to decide what to restart
+  with, and a solve that is about to be replaced is not competing with itself.
+#>
+function Get-SolverAvailableGb {
+  $freeGb = (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB
+  $solverGb = 0
+  foreach ($proc in @(Get-Process console_solver -ErrorAction SilentlyContinue)) {
+    $solverGb += $proc.WorkingSet64 / 1GB
+  }
+  return $freeGb + $solverGb
 }
 
 function Get-SolverCoreCount {
@@ -172,7 +198,15 @@ function Get-SolverCpuStatePath {
 }
 
 function Get-SolverCpuOverride {
-  try { return (Get-Content (Get-SolverCpuStatePath) -Raw | ConvertFrom-Json).Override } catch { return $null }
+  # An empty string means cleared, not set. Binding $null to a [string] parameter
+  # turns it into "", so clearing the override wrote "" into the state file and
+  # every status line afterwards announced an override nobody had asked for. The
+  # policy was still right - "" matches no window - but the report was not.
+  try {
+    $value = (Get-Content (Get-SolverCpuStatePath) -Raw | ConvertFrom-Json).Override
+    if ([string]::IsNullOrWhiteSpace($value)) { return $null }
+    return $value
+  } catch { return $null }
 }
 
 <#
