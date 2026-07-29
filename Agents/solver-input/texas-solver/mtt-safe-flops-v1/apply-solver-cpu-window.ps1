@@ -12,7 +12,7 @@ param(
   # Day / Night claim the machine for one side until Auto hands it back. The
   # timer keeps re-applying the claim, so it survives restarts instead of
   # decaying quietly the way a one-off affinity change would.
-  [ValidateSet("Apply", "Install", "Status", "Uninstall", "Day", "Night", "Auto")]
+  [ValidateSet("Apply", "Install", "Status", "Uninstall", "Day", "Night", "Auto", "Follow")]
   [string]$Action = "Apply",
   [string]$TaskName = "PKRTrainer-Solver-CpuWindow",
   [int]$DayCorePercent = 40,
@@ -54,7 +54,9 @@ function Invoke-Apply {
   $override = Get-SolverCpuOverride
   $policy = Get-EffectiveSolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent `
     -NightStartHour $NightStartHour -NightEndHour $NightEndHour
-  if ($null -ne $override) {
+  if ($override -eq "FOLLOW") {
+    Write-WindowLog ("Following development activity: idle {0} min -> {1} policy." -f $policy.IdleMinutes, $policy.Window)
+  } elseif ($null -ne $override) {
     Write-WindowLog "Override active: $override (the clock says $((Get-Date).ToString('HH:mm')))."
   }
   $result = Set-SolverCpuCap -CorePercent $policy.CorePercent -Priority $policy.Priority
@@ -115,6 +117,7 @@ switch ($Action) {
   "Day"   { Set-WindowOverride "DAY";   Write-WindowLog "Override set to DAY; the solver yields the machine until Auto."; Invoke-Apply | Out-Null; break }
   "Night" { Set-WindowOverride "NIGHT"; Write-WindowLog "Override set to NIGHT; the solver takes the machine until Auto."; Invoke-Apply | Out-Null; break }
   "Auto"  { Set-WindowOverride $null;   Write-WindowLog "Override cleared; back to the clock."; Invoke-Apply | Out-Null; break }
+  "Follow" { Set-WindowOverride "FOLLOW"; Write-WindowLog "Following development activity: the solver takes the machine while nobody is working and yields when work resumes."; Invoke-Apply | Out-Null; break }
 
   "Status" {
     # The effective policy, not the clock's opinion of it: reporting 95 percent
@@ -130,7 +133,10 @@ switch ($Action) {
     } else {
       # An override that nobody can see is how a machine ends up mysteriously
       # slow, so it is stated with the way back.
-      Write-Host "override:      $override  -- run with -Action Auto to follow the clock again"
+      $suffix = if ($override -eq "FOLLOW") {
+        "  -- idle $([Math]::Round((Get-DevelopmentIdleMinutes),1)) min; solver takes over after 30"
+      } else { "  -- run with -Action Auto to follow the clock again" }
+      Write-Host "override:      $override$suffix"
     }
     $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
     if ($null -eq $task) {

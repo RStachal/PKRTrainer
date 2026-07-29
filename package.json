@@ -38,6 +38,7 @@
     "mtt:solver-day": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/apply-solver-cpu-window.ps1 -Action Day",
     "mtt:solver-night": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/apply-solver-cpu-window.ps1 -Action Night",
     "mtt:solver-auto": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/apply-solver-cpu-window.ps1 -Action Auto",
+    "mtt:solver-follow": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/apply-solver-cpu-window.ps1 -Action Follow",
     "mtt:weekend-resolve-stop": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/manage-weekend-uniform-resolve.ps1 -Action Stop",
     "mtt:weekend-resolve-uninstall": "powershell -NoProfile -ExecutionPolicy Bypass -File Agents/solver-input/texas-solver/mtt-safe-flops-v1/manage-weekend-uniform-resolve.ps1 -Action Uninstall",
     "mtt:texas-solver-accuracy-recovery": "vite-node scripts/prepareTexasSolverAccuracyRecovery.mts",

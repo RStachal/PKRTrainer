@@ -108,9 +108,23 @@ function Get-EffectiveSolverCpuPolicy {
     [int]$DayCorePercent = 40,
     [int]$NightCorePercent = 95,
     [int]$NightStartHour = 21,
-    [int]$NightEndHour = 9
+    [int]$NightEndHour = 9,
+    [int]$IdleMinutesForSolving = 30
   )
   $override = Get-SolverCpuOverride
+  # FOLLOW hands the machine back and forth on its own: the solver takes it while
+  # nobody is developing and yields the moment work resumes. The threshold is
+  # longer than a full test suite so a quiet stretch mid-run is not mistaken for
+  # an idle machine.
+  if ($override -eq "FOLLOW") {
+    $idle = Get-DevelopmentIdleMinutes
+    $policy = if ($idle -ge $IdleMinutesForSolving) {
+      Get-SolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent -NightStartHour 0 -NightEndHour 24
+    } else {
+      Get-SolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent -NightStartHour 0 -NightEndHour 0
+    }
+    return $policy | Add-Member -NotePropertyName IdleMinutes -NotePropertyValue ([Math]::Round($idle, 1)) -PassThru -Force
+  }
   # An override is expressed as a window covering all hours or none, so the
   # policy stays a pure function of its inputs.
   if ($override -eq "DAY") {
@@ -120,4 +134,35 @@ function Get-EffectiveSolverCpuPolicy {
     return Get-SolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent -NightStartHour 0 -NightEndHour 24
   }
   return Get-SolverCpuPolicy -DayCorePercent $DayCorePercent -NightCorePercent $NightCorePercent -NightStartHour $NightStartHour -NightEndHour $NightEndHour
+}
+
+<#
+  When was development last active?
+
+  Credit running out cannot be observed from this machine - it is a property of
+  the assistant session, not the host. But the thing that actually matters can
+  be: whether anyone is working. When a session stops, edits and commits stop
+  with it, and when it resumes they start again. So activity is read from the
+  repository rather than from any notion of credit.
+
+  Deliberately excludes artifacts and solver-input: the solver writes there
+  constantly, and counting its own output as development activity would make it
+  hold the small cap forever.
+#>
+function Get-DevelopmentIdleMinutes {
+  $repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
+  $newest = $null
+  foreach ($rel in @("src", "tests", "scripts", "package.json", ".git\index")) {
+    $path = Join-Path $repo $rel
+    if (-not (Test-Path $path)) { continue }
+    $stamp = if (Test-Path $path -PathType Container) {
+      (Get-ChildItem -Path $path -Recurse -File -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending | Select-Object -First 1).LastWriteTime
+    } else {
+      (Get-Item $path).LastWriteTime
+    }
+    if ($null -ne $stamp -and ($null -eq $newest -or $stamp -gt $newest)) { $newest = $stamp }
+  }
+  if ($null -eq $newest) { return [double]::PositiveInfinity }
+  return ((Get-Date) - $newest).TotalMinutes
 }
