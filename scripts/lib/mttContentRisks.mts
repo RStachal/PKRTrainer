@@ -126,6 +126,13 @@ export function shippedContentRisks(ruleIds: readonly string[]): ShippedContentR
       + driftedPins.map((row) => (
         `${row.ruleId} trains ${row.pinnedAction} at ${(row.pinnedFrequency * 100).toFixed(1)}% `
         + `where ${row.topAction} is used ${(row.topFrequency * 100).toFixed(1)}%`
+        // Without this the reader takes every drift for the same thing. Where no
+        // size carries a majority of the villain's bets, re-pinning raises the
+        // number and leaves the spot as it was; that is worth doing on the next
+        // rebuild and is not worth holding a release for.
+        + (row.betSizingIsSplit
+          ? ` (no size carries a majority of the villain's bets; the top is ${(row.topShareOfBets * 100).toFixed(0)}% of them, so re-pinning changes the number more than the spot)`
+          : "")
       )).join("; ") + ".",
     );
   }

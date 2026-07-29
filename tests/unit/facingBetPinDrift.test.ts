@@ -150,4 +150,36 @@ describe("facing-bet pin drift", () => {
     // takes "all fine" to cover rules nobody actually checked.
     expect(rendered).toContain("(1 not judged)");
   });
+  it("separates a pin on a rare branch from one where no size dominates", () => {
+    // The real shipped case: the villain checks half the time and splits the rest
+    // three ways, so BET_17 is not the top bet and is also not rare. Reporting it
+    // the same as a genuinely rare pin would make a cosmetic re-pin look like a
+    // correctness win, and would hold a release for a number that barely moves.
+    const split = assessPinDrift({
+      ruleId: RULE,
+      familyId: "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR",
+      villainReviewPath: villainReview({
+        CHECK: 0.508, BET_25: 0.178, BET_38: 0.173, BET_17: 0.141,
+      }),
+      familyMixesTrees: false,
+    })!;
+
+    expect(split.verdict).toBe("DRIFTED");
+    expect(split.betSizingIsSplit).toBe(true);
+    expect(Math.round(split.topShareOfBets * 100)).toBe(36);
+    expect(renderPinDrift([split])).toContain("no size carries a majority");
+
+    const rare = assessPinDrift({
+      ruleId: RULE,
+      familyId: "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR",
+      villainReviewPath: villainReview({
+        CHECK: 0.3, BET_25: 0.62, BET_17: 0.08,
+      }),
+      familyMixesTrees: false,
+    })!;
+
+    expect(rare.verdict).toBe("DRIFTED");
+    expect(rare.betSizingIsSplit).toBe(false);
+    expect(renderPinDrift([rare])).not.toContain("no size carries a majority");
+  });
 });

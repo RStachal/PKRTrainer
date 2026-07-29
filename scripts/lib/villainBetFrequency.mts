@@ -81,3 +81,21 @@ export function dominantVillainBet(mix: VillainActionMix): { action: string; fre
   }
   return best;
 }
+
+/**
+ * How the villain splits their betting weight across sizes, largest first.
+ *
+ * Conditional on betting, so checks do not flatten every share. This is what
+ * distinguishes a pin that trains a genuinely rare branch from one that trains
+ * a size the villain uses about as often as the other two - the second is not a
+ * defect to fix, it is a spot where no size dominates, and saying so stops a
+ * cosmetic re-pin from looking like a correctness win.
+ */
+export function villainBetShares(mix: VillainActionMix): { action: string; share: number }[] {
+  const bets = [...mix.byAction].filter(([action]) => action.startsWith("BET"));
+  const total = bets.reduce((sum, [, frequency]) => sum + frequency, 0);
+  if (total <= 0) return [];
+  return bets
+    .map(([action, frequency]) => ({ action, share: frequency / total }))
+    .sort((a, b) => b.share - a.share);
+}

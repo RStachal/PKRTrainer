@@ -1,4 +1,4 @@
-import { villainActionMix, dominantVillainBet } from "./villainBetFrequency.mts";
+import { villainActionMix, dominantVillainBet, villainBetShares } from "./villainBetFrequency.mts";
 
 /**
  * Whether a shipped facing-bet rule still trains the bet the solver actually
@@ -29,6 +29,15 @@ export interface PinDriftRow {
   pinnedFrequency: number;
   topAction: string | null;
   topFrequency: number;
+  /**
+   * The top bet's share of the villain's betting weight, and whether that share
+   * is a majority. A pin can be off the top bet without training anything rare:
+   * where three sizes split the betting roughly evenly, moving the pin raises the
+   * number without changing the spot. Reported so the verdict is not read as a
+   * bigger finding than it is.
+   */
+  topShareOfBets: number;
+  betSizingIsSplit: boolean;
   verdict: PinDriftVerdict;
 }
 
@@ -62,6 +71,8 @@ export function assessPinDrift(input: {
     pinnedFrequency: 0,
     topAction: null as string | null,
     topFrequency: 0,
+    topShareOfBets: 0,
+    betSizingIsSplit: false,
   };
 
   // Judging a blended family is how the wrong answer was produced last time.
@@ -74,11 +85,15 @@ export function assessPinDrift(input: {
   const pinnedFrequency = mix.byAction.get(pinnedAction) ?? 0;
   if (top === null) return { ...base, pinnedFrequency, verdict: "NO_DATA" };
 
+  const shares = villainBetShares(mix);
+  const topShareOfBets = shares[0]?.share ?? 0;
   return {
     ...base,
     pinnedFrequency,
     topAction: top.action,
     topFrequency: top.frequency,
+    topShareOfBets,
+    betSizingIsSplit: topShareOfBets < 0.5,
     verdict: top.action === pinnedAction ? "ON_TOP_BET" : "DRIFTED",
   };
 }
@@ -95,7 +110,10 @@ export function renderPinDrift(rows: readonly PinDriftRow[]): string {
     }
     if (row.verdict === "NO_DATA") return `  ${row.ruleId}: ${row.pinnedAction} - no villain data`;
     if (row.verdict === "ON_TOP_BET") return `  ${row.ruleId}: ${pinned}, the top bet`;
-    return `  ${row.ruleId}: ${pinned}, but ${row.topAction} is used ${(row.topFrequency * 100).toFixed(1)}%`;
+    const split = row.betSizingIsSplit
+      ? `; no size carries a majority of the villain's bets (top is ${(row.topShareOfBets * 100).toFixed(0)}% of them)`
+      : "";
+    return `  ${row.ruleId}: ${pinned}, but ${row.topAction} is used ${(row.topFrequency * 100).toFixed(1)}%${split}`;
   });
   const summary = drifted.length === 0
     ? `Every judged pin is the villain's most-used bet (${unjudged.length} not judged).`

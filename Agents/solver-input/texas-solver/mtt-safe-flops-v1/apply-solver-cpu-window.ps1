@@ -84,6 +84,11 @@ function Invoke-Apply {
       Write-WindowLog ("{0}: {1} Stopping {2} solver process(es)." -f $policy.Window, $policy.Reason, $running.Count)
       Stop-ScheduledTask -TaskName "PKRTrainer-Weekend-UniformResolve" -ErrorAction SilentlyContinue
       $running | Stop-Process -Force -ErrorAction SilentlyContinue
+    } else {
+      # Said out loud even with nothing to stop. A solver that never starts and
+      # never explains itself is indistinguishable from one that is broken, and
+      # this log is where someone would look.
+      Write-WindowLog ("{0}: yielding, nothing to stop. {1}" -f $policy.Window, $policy.Reason)
     }
     try {
       New-Item -ItemType Directory -Force (Split-Path $statePath) | Out-Null
