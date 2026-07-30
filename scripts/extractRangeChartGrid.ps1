@@ -20,6 +20,10 @@ param(
   [int]$Left = 0,
   [int]$Top = 0,
   [double]$Cell = 0,
+  # Cells are not square on these pages - measured 45.08 wide against 46.2 tall -
+  # so the two pitches are separate. -Cell sets both when they happen to match.
+  [double]$CellX = 0,
+  [double]$CellY = 0,
   [switch]$Probe,
   [switch]$Json,
   # Colour distance below which two shades are treated as one fill.
@@ -55,14 +59,16 @@ try {
     return
   }
 
-  if ($Cell -le 0) { throw "-Cell is required unless -Probe is used." }
+  $pitchX = if ($CellX -gt 0) { $CellX } else { $Cell }
+  $pitchY = if ($CellY -gt 0) { $CellY } else { $Cell }
+  if ($pitchX -le 0 -or $pitchY -le 0) { throw "-Cell (or -CellX and -CellY) is required unless -Probe is used." }
 
   $cells = @()
   for ($row = 0; $row -lt 13; $row++) {
     for ($col = 0; $col -lt 13; $col++) {
       # Sample the centre, away from the label text and the cell border.
-      $x = [int]($Left + $Cell * ($col + 0.5))
-      $y = [int]($Top + $Cell * ($row + 0.5))
+      $x = [int]($Left + $pitchX * ($col + 0.5))
+      $y = [int]($Top + $pitchY * ($row + 0.5))
       if ($x -lt 0 -or $y -lt 0 -or $x -ge $bitmap.Width -or $y -ge $bitmap.Height) {
         throw "Cell [$row,$col] samples ($x,$y), outside the image. Check -Left/-Top/-Cell."
       }
@@ -72,7 +78,7 @@ try {
       # anti-aliasing and the page's background gradient do not split one fill
       # into a dozen near-identical shades.
       $tally = @{}
-      $reach = [int]($Cell * 0.32)
+      $reach = [int]([Math]::Min($pitchX, $pitchY) * 0.32)
       for ($dx = -$reach; $dx -le $reach; $dx += 2) {
         for ($dy = -$reach; $dy -le $reach; $dy += 2) {
           $px = [Math]::Min([Math]::Max($x + $dx, 0), $bitmap.Width - 1)

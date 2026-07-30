@@ -57,24 +57,41 @@ describe.runIf(runnable)("range chart extraction", () => {
     }
   });
 
-  it("refuses to place a grid it cannot resolve, on every layout tried", () => {
-    // Honest state of the detector: it locates the columns on these pages - the
-    // cell borders are unambiguous vertically - but the horizontal borders
-    // separate cells that are frequently the same colour, and only six of the
-    // fourteen register. So it declines.
-    //
-    // That is the behaviour worth pinning. Offsets that are merely plausible
-    // produce a complete, confident, wrong range, which is exactly the failure
-    // this whole extraction exists to avoid. Until the rows can be found, the
-    // geometry is supplied per layout and the extractor does the rest.
-    let refused = false;
-    try {
-      powershell(detector, "-Image", chart);
-    } catch (error) {
-      refused = true;
-      expect(String(error)).toMatch(/row borders line up/);
+  it("finds the grids on a page without being told where", () => {
+    const output = powershell(detector, "-Image", chart);
+    const grids = output.split(/\r?\n/).filter((line) => line.trim().startsWith("grid"));
+
+    expect(grids.length).toBe(2);
+    for (const grid of grids) {
+      // Cells are not square on these pages. Borrowing the column pitch for the
+      // rows is what made every earlier attempt drift a full cell over thirteen
+      // steps, so the two are asserted apart.
+      const cellX = Number(/-CellX ([\d.]+)/.exec(grid)?.[1]);
+      const cellY = Number(/-CellY ([\d.]+)/.exec(grid)?.[1]);
+      expect(cellX, grid).toBeGreaterThan(44.5);
+      expect(cellX, grid).toBeLessThan(45.5);
+      expect(cellY, grid).toBeGreaterThan(46);
+      expect(cellY, grid).toBeLessThan(46.6);
+      expect(cellY - cellX, grid).toBeGreaterThan(0.8);
     }
-    expect(refused, "the detector must not report geometry it could not verify").toBe(true);
+  });
+
+  it("reads the same range from detected geometry as from measured geometry", () => {
+    // The check that makes the detector usable in batch: what it finds has to
+    // agree with what a person measured by hand, or the automation is only
+    // confidently wrong at scale.
+    const detected = powershell(detector, "-Image", chart)
+      .split(/\r?\n/)
+      .find((line) => line.trim().startsWith("grid"));
+    expect(detected).toBeDefined();
+    const args = (detected ?? "").trim().replace(/^grid\s+/, "").split(/\s+/);
+
+    const auto = powershell(extractor, "-Image", chart, ...args);
+    const byHand = powershell(extractor, "-Image", chart, "-Left", "362", "-Top", "128", "-Cell", "45.6");
+
+    const openraise = (text: string) => text.split(/\r?\n/).find((line) => line.startsWith("#D87878"));
+    expect(openraise(auto)).toBe(openraise(byHand));
+    expect(auto.split(/\r?\n/).filter((l) => l.startsWith("#")).length).toBe(5);
   });
 
 });

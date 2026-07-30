@@ -133,62 +133,75 @@ try {
     $cell = ($lastEdge - $firstEdge) / 13.0
     $left = $firstEdge
 
-    # Rows are found exactly as the columns were: by cell borders. Scoring label
-    # ink does not work - a dark-filled cell is as dark as a label, so the peak
-    # lands anywhere. Edges are indifferent to the fill behind them.
-    $rowEdge = New-Object 'int[]' $height
+    # Rows get their own pitch. Borrowing the columns' was the mistake that made
+    # every earlier attempt fail: measured on these pages the cells are 45.08 wide
+    # and 46.2 tall, so a comb built on the column pitch drifts a full cell over
+    # thirteen steps and never lines up. The hand-tuned 45.6 that appeared to work
+    # was simply a compromise between the two that the sampling window forgave.
+    $rowEdge = New-Object 'double[]' $height
     $xFrom = [int]$left; $xTo = [Math]::Min($width - 1, [int]($left + 13 * $cell))
     for ($y = 1; $y -lt $height; $y++) {
-      $count = 0
+      $sum = 0.0
       for ($x = $xFrom; $x -le $xTo; $x += 2) {
-        if ([Math]::Abs($bitmap.GetPixel($x, $y - 1).GetBrightness() - $bitmap.GetPixel($x, $y).GetBrightness()) -gt 0.09) { $count++ }
+        $sum += [Math]::Abs($bitmap.GetPixel($x, $y - 1).GetBrightness() - $bitmap.GetPixel($x, $y).GetBrightness())
       }
-      $rowEdge[$y] = $count
+      $rowEdge[$y] = $sum
     }
-    $rowEdgeMax = ($rowEdge | Measure-Object -Maximum).Maximum
+
+    # A high percentile rather than the maximum: the title and the page artwork
+    # produce edges far stronger than any cell border, and scaling a threshold off
+    # them put the bar above every real border.
+    $sortedEdge = @($rowEdge | Sort-Object)
+    $strong = $sortedEdge[[int]($sortedEdge.Count * 0.97)]
     $rowBorders = New-Object System.Collections.ArrayList
-    $rowRunStart = -1; $rowPrev = -99
+    $runStart = -1; $rowPrev = -99
     for ($y = 1; $y -lt $height; $y++) {
-      # A lower bar than the columns use. A horizontal border separates two cells
-      # that are often the same colour, so it registers far more weakly than a
-      # vertical one; at the columns' threshold only three or four of fourteen
-      # showed up and every layout was refused.
-      if ($rowEdge[$y] -lt $rowEdgeMax * 0.22) { continue }
-      if ($y - $rowPrev -gt 3) {
-        if ($rowRunStart -ge 0) { [void]$rowBorders.Add(($rowRunStart + $rowPrev) / 2.0) }
-        $rowRunStart = $y
+      if ($rowEdge[$y] -lt $strong * 0.5) { continue }
+      if ($y - $rowPrev -gt 4) {
+        if ($runStart -ge 0) { [void]$rowBorders.Add(($runStart + $rowPrev) / 2.0) }
+        $runStart = $y
       }
       $rowPrev = $y
     }
-    if ($rowRunStart -ge 0) { [void]$rowBorders.Add(($rowRunStart + $rowPrev) / 2.0) }
+    if ($runStart -ge 0) { [void]$rowBorders.Add(($runStart + $rowPrev) / 2.0) }
     $rowBorders = @($rowBorders)
-    if ($rowBorders.Count -lt 14) { throw "Found $($rowBorders.Count) row borders for the grid at x=$left; expected at least 14." }
-
-    # Best fit rather than a strict run of fourteen. One border can go missing -
-    # a dark fill meeting a dark fill barely registers an edge - and demanding
-    # consecutiveness threw the whole grid away for it.
-    $bestTop = $null; $bestHits = -1
-    foreach ($candidate in $rowBorders) {
-      if ($candidate + 13 * $cell -ge $height) { continue }
-      $hits = 0
-      for ($k = 0; $k -le 13; $k++) {
-        $expected = $candidate + $k * $cell
-        foreach ($border in $rowBorders) {
-          if ([Math]::Abs($border - $expected) -le 3) { $hits++; break }
-        }
-      }
-      if ($hits -gt $bestHits) { $bestHits = $hits; $bestTop = $candidate }
+    if ($rowBorders.Count -lt 14) {
+      throw "Grid at x=${left}: found $($rowBorders.Count) row borders; expected at least 14."
     }
-    # Ten of fourteen is a grid; fewer means the pitch or the column group is wrong
-    # and reporting a position for it would be a guess.
-    if ($null -eq $bestTop -or $bestHits -lt 10) {
-      throw "Only $bestHits of 14 row borders line up for the grid at x=$left."
+
+    # Fit the comb to the candidates rather than demanding a clean run of
+    # fourteen. Real borders arrive doubled where a line is two pixels wide and
+    # missing where two identical fills meet, so consecutiveness is the wrong
+    # thing to require - it scored a 15 percent spread on a grid whose borders are
+    # plainly regular. Trying each pair as the outer two and counting how many of
+    # the intervening thirteen land on the comb tolerates both faults.
+    $bestTop = $null; $bestCellY = 0.0; $bestHits = -1
+    for ($i = 0; $i -lt $rowBorders.Count; $i++) {
+      for ($j = $i + 1; $j -lt $rowBorders.Count; $j++) {
+        $pitch = ($rowBorders[$j] - $rowBorders[$i]) / 13.0
+        # Cells are not square on these pages, but nor are they far off.
+        if ($pitch -lt $cell * 0.85 -or $pitch -gt $cell * 1.25) { continue }
+        $hits = 0
+        for ($k = 0; $k -le 13; $k++) {
+          $expected = $rowBorders[$i] + $k * $pitch
+          foreach ($border in $rowBorders) {
+            if ([Math]::Abs($border - $expected) -le 3) { $hits++; break }
+          }
+        }
+        if ($hits -gt $bestHits) { $bestHits = $hits; $bestTop = $rowBorders[$i]; $bestCellY = $pitch }
+      }
+    }
+    # Twelve of fourteen leaves room for the two outer edges to be undrawn while
+    # still being unambiguous; fewer means this is not a grid at this pitch.
+    if ($null -eq $bestTop -or $bestHits -lt 12) {
+      throw "Grid at x=${left}: only $bestHits of 14 row borders fit a constant pitch; refusing to place it."
     }
 
     [void]$found.Add([pscustomobject]@{
       left = [Math]::Round($left, 1)
-      top  = [Math]::Round($bestTop, 1)
-      cell = [Math]::Round($cell, 2)
+      top   = [Math]::Round($bestTop, 1)
+      cellX = [Math]::Round($cell, 2)
+      cellY = [Math]::Round($bestCellY, 2)
     })
   }
 
@@ -197,10 +210,11 @@ try {
   else {
     "band rows {0}-{1}" -f $band.Start, $band.End
     foreach ($g in $found) {
-      "grid  -Left {0} -Top {1} -Cell {2}" -f
+      "grid  -Left {0} -Top {1} -CellX {2} -CellY {3}" -f
         $g.left.ToString([System.Globalization.CultureInfo]::InvariantCulture),
         $g.top.ToString([System.Globalization.CultureInfo]::InvariantCulture),
-        $g.cell.ToString([System.Globalization.CultureInfo]::InvariantCulture)
+        $g.cellX.ToString([System.Globalization.CultureInfo]::InvariantCulture),
+        $g.cellY.ToString([System.Globalization.CultureInfo]::InvariantCulture)
     }
   }
 } finally {

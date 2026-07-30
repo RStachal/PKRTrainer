@@ -135,3 +135,29 @@ than trimmed to match a source whose premise is unknown.
 64s is not added for the same reason: one class, four combinations, 0.3 percent,
 against a chart of unstated ante. Worth recording, not worth quietly changing
 shipped content over.
+
+## Reading the chart packs in batch
+
+`scripts/detectRangeChartGrids.ps1` locates the grids; `extractRangeChartGrid.ps1`
+samples them. Run over both packs on 2026-07-30: **148 of 210 pages resolved,
+324 grids**. The other 62 are refused - they are the defend and three-bet pages,
+whose layout the detector does not yet handle - and refusing is the point. Wrong
+geometry emits a complete, confident range describing different cells.
+
+What took several attempts to get right, recorded so it is not rediscovered:
+
+- **Cells are not square.** Measured 45.08 wide against 46.2 tall. Every earlier
+  attempt borrowed the column pitch for the rows, so the comb drifted a full cell
+  over thirteen steps and never lined up. The hand-tuned 45.6 that appeared to
+  work was a compromise between the two that the sampling window forgave.
+- **Rows cannot be thresholded.** A horizontal border separates cells that are
+  frequently the same colour, so it registers far more weakly than a vertical one.
+  At any threshold admitting the weak ones, the strong ones smeared together.
+- **Grids are not separated by a wider gap.** The space between two grids is 27px
+  against a 45px cell pitch, so they are split where the spacing stops matching
+  the pitch, not where a gap appears.
+- **Borders arrive doubled or missing**, so the comb is fitted by trying pairs as
+  the outer two and counting hits, rather than by demanding a clean run.
+
+A test holds the property that makes the automation usable: the range read from
+detected geometry is identical to the range read from geometry measured by hand.
