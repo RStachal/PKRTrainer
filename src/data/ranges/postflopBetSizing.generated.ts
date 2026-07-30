@@ -14,6 +14,7 @@ export interface FamilyBetSizing {
   smallPct: readonly number[];
   bigPct: readonly number[];
   bigIsAllIn: boolean;
+  rule: "LEGACY_CHIP_THRESHOLD" | "POT_FRACTION";
 }
 
 export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> = {
@@ -23,6 +24,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [33, 50, 75],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR: {
     potChips: 50,
@@ -30,6 +32,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [33, 50, 75],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR: {
     potChips: 50,
@@ -37,6 +40,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [33, 50, 75],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH: {
     potChips: 157,
@@ -44,6 +48,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [25, 33],
     bigPct: [50],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_150BB_CO_BTN_3BP_HIGHSPR: {
     potChips: 157,
@@ -51,6 +56,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [25],
     bigPct: [50],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_20BB_BTN_BB_SRP_LOWSPR: {
     potChips: 50,
@@ -58,6 +64,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [50],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR: {
     potChips: 50,
@@ -65,6 +72,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [33, 50, 75],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_25BB_CO_BB_SRP_CBET_LOWSPR: {
     potChips: 50,
@@ -72,6 +80,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [33, 50, 75],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR: {
     potChips: 50,
@@ -79,6 +88,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [33, 50, 75],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_35BB_CO_BTN_3BP: {
     potChips: 157,
@@ -86,6 +96,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [25],
     bigPct: [50],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_35BB_CO_BTN_3BP_REPAIR: {
     potChips: 157,
@@ -93,6 +104,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [25],
     bigPct: [50],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_40BB_UTG_BB_SRP: {
     potChips: 50,
@@ -100,6 +112,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [25, 50],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR: {
     potChips: 157,
@@ -107,6 +120,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [25, 33],
     bigPct: [50],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_50BB_BTN_BB_SRP: {
     potChips: 50,
@@ -114,6 +128,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [50],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR: {
     potChips: 50,
@@ -121,6 +136,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [33, 50, 75],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_50BB_CO_BB_SRP_CBET_MIDSPR: {
     potChips: 50,
@@ -128,6 +144,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [33, 50, 75],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR: {
     potChips: 50,
@@ -135,6 +152,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [33, 50, 75],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR: {
     potChips: 157,
@@ -142,6 +160,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [25, 33],
     bigPct: [50],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_80BB_BTN_BB_SRP_HIGHSPR: {
     potChips: 50,
@@ -149,6 +168,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [50],
     bigPct: [],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
   MTT9_80BB_CO_BTN_3BP_MIDSPR: {
     potChips: 157,
@@ -156,6 +176,7 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     smallPct: [25],
     bigPct: [50],
     bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
   },
 };
 

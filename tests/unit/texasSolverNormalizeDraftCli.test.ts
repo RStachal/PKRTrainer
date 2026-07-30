@@ -55,6 +55,9 @@ describe("mtt:texas-solver-normalize-draft CLI", () => {
         `--output-dir=${outputDir}`,
         "--action-node=FLOP_FACING_BET",
         "--pot-type=SINGLE_RAISED",
+        // Synthetic family, so no solver parameter file supplies the pot. The
+        // bet split is a fraction of it, so the caller has to say what it is.
+        "--pot-chips=50",
         "--position-pattern=SRP_BTN_VS_BB",
         "--write",
       );
@@ -89,6 +92,49 @@ describe("mtt:texas-solver-normalize-draft CLI", () => {
       expect([...allMixActions]).not.toContain("CHECK");
       expect([...allMixActions]).not.toContain("BET_SMALL");
       expect([...allMixActions]).not.toContain("BET_BIG");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("odmitne draft, kdyz nezna pot, misto aby vsechny sazky slil do BET_SMALL", () => {
+    // The bet split is a fraction of the pot. With no pot the first attempt at
+    // this quietly answered BET_SMALL for everything, which erases the big-bet
+    // branch - a quieter and worse failure than the mislabelling it replaced.
+    const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-texas-normalize-nopot-"));
+    const reviewPath = join(directory, "strategy-export.review.json");
+    const outputDir = join(directory, "draft");
+    mkdirSync(outputDir, { recursive: true });
+    writeFileSync(
+      reviewPath,
+      JSON.stringify({
+        valid: true,
+        familyId: "TEST_FAMILY_WITH_NO_PARAMETER_FILE",
+        nodeHistory: [],
+        files: [{
+          boardId: "A72r",
+          handClasses: {
+            "43s": { comboCount: 4, averageByAction: { CHECK: 0.6, BET_25: 0.4 }, dominantAction: "CHECK" },
+          },
+        }],
+        anomalies: [],
+        blockers: [],
+      }),
+      "utf8",
+    );
+
+    try {
+      const result = runNormalize(
+        `--review=${reviewPath}`,
+        `--output-dir=${outputDir}`,
+        "--action-node=SINGLE_RAISED_POT_CBET",
+        "--pot-type=SINGLE_RAISED",
+        "--position-pattern=SRP_SB_VS_BB",
+        "--write",
+      );
+
+      expect(result.status).not.toBe(0);
+      expect(`${result.stdout}${result.stderr}`).toContain("Cannot resolve the pot");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
@@ -139,6 +185,9 @@ describe("mtt:texas-solver-normalize-draft CLI", () => {
         `--output-dir=${outputDir}`,
         "--action-node=SINGLE_RAISED_POT_CBET",
         "--pot-type=SINGLE_RAISED",
+        // Synthetic family, so no solver parameter file supplies the pot. The
+        // bet split is a fraction of it, so the caller has to say what it is.
+        "--pot-chips=50",
         "--position-pattern=SRP_SB_VS_BB",
         "--write",
       );

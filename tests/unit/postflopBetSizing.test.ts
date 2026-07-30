@@ -6,8 +6,9 @@ import {
 } from "../../src/data/ranges/postflopBetSizing.generated";
 import { collectBetSizing, familySizingFrom, heroBetSide } from "../../scripts/buildPostflopBetSizing.mts";
 import {
-  NORMALIZER_BIG_BET_CHIP_THRESHOLD,
-  betActionForChips,
+  BIG_BET_POT_FRACTION,
+  LEGACY_BIG_BET_CHIP_THRESHOLD,
+  betActionFor,
 } from "../../scripts/lib/postflopBetActionMapping.mts";
 import { readFileSync } from "node:fs";
 
@@ -29,6 +30,7 @@ describe("solved bet sizing", () => {
         smallPct: sizing.smallPct,
         bigPct: sizing.bigPct,
         bigIsAllIn: sizing.bigIsAllIn,
+        rule: sizing.rule,
       });
     }
   });
@@ -108,19 +110,48 @@ describe("bet sizing extraction", () => {
 });
 
 describe("one rule for both places", () => {
-  it("assigns the action by the same threshold the normalizer uses", () => {
-    expect(betActionForChips(NORMALIZER_BIG_BET_CHIP_THRESHOLD)).toBe("BET_SMALL");
-    expect(betActionForChips(NORMALIZER_BIG_BET_CHIP_THRESHOLD + 1)).toBe("BET_BIG");
-    expect(betActionForChips(Number.NaN)).toBe("BET_SMALL");
+  it("keeps the legacy rule available to describe packs already built by it", () => {
+    expect(betActionFor(LEGACY_BIG_BET_CHIP_THRESHOLD, 50, "LEGACY_CHIP_THRESHOLD")).toBe("BET_SMALL");
+    expect(betActionFor(LEGACY_BIG_BET_CHIP_THRESHOLD + 1, 50, "LEGACY_CHIP_THRESHOLD")).toBe("BET_BIG");
+  });
+
+  it("splits on the fraction of the pot under the current rule", () => {
+    // The whole point: the same fraction gets the same label whatever the pot.
+    // Under the legacy rule a half-pot bet was small at pot 50 and big at 157.
+    for (const pot of [50, 157, 400]) {
+      expect(betActionFor(pot * 0.5, pot, "POT_FRACTION"), `pot ${pot}`).toBe("BET_SMALL");
+      expect(betActionFor(pot * 0.75, pot, "POT_FRACTION"), `pot ${pot}`).toBe("BET_BIG");
+    }
+    expect(betActionFor(50 * 0.5, 50, "LEGACY_CHIP_THRESHOLD")).toBe("BET_SMALL");
+    expect(betActionFor(157 * 0.5, 157, "LEGACY_CHIP_THRESHOLD")).toBe("BET_BIG");
+  });
+
+  it("refuses to invent a fraction when the pot is unusable", () => {
+    expect(betActionFor(1000, 0, "POT_FRACTION")).toBe("BET_SMALL");
+    expect(betActionFor(1000, Number.NaN, "POT_FRACTION")).toBe("BET_SMALL");
+    expect(betActionFor(Number.NaN, 50, "POT_FRACTION")).toBe("BET_SMALL");
+  });
+
+  it("sits either side of the sizes the library actually solves", () => {
+    // 0.6 is a convention, but it has to separate 50 from 75, which is where
+    // every family in the library places its sizes.
+    expect(BIG_BET_POT_FRACTION).toBeGreaterThan(0.5);
+    expect(BIG_BET_POT_FRACTION).toBeLessThan(0.75);
   });
 
   it("leaves the normalizer with no threshold of its own to drift from", () => {
-    // The sizing table describes what is behind each button and the normalizer
-    // decides it. Two copies of one number is how the table comes to describe a
-    // split the packs do not have - the same shape as the defect it was written
-    // to fix - so the normalizer must own no literal of its own.
+    // Two copies of one rule is how the table comes to describe a split the packs
+    // do not have - the same shape as the defect it was written to fix.
     const source = readFileSync("scripts/buildTexasSolverNormalizedDraft.mts", "utf8");
-    expect(source).toContain("betActionForChips(");
+    expect(source).toContain("betActionFor(");
     expect(source).not.toMatch(/amount\s*>\s*75/);
+  });
+
+  it("describes every shipped family by the rule its pack was built with", () => {
+    // Families are corrected one at a time, so the table must record the rule per
+    // family rather than assume one. Everything shipped today predates the change.
+    for (const [family, sizing] of Object.entries(MTT_POSTFLOP_BET_SIZING)) {
+      expect(sizing.rule, family).toBe("LEGACY_CHIP_THRESHOLD");
+    }
   });
 });

@@ -1,9 +1,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import {
-  NORMALIZER_BIG_BET_CHIP_THRESHOLD,
-  betActionForChips,
-} from "./lib/postflopBetActionMapping.mts";
+import { betActionFor, type BetActionRule } from "./lib/postflopBetActionMapping.mts";
+import { SOLVER_PARAM_ROOT, SOLVER_PARAM_FILE, treeEconomicsFrom } from "./lib/solverFamilyParams.mts";
+import { generatedMttPostflopPilotPacks } from "../src/data/ranges/mttPostflopPilotPacks.generated";
 
 /**
  * Recover what each pilot family's bet buttons actually mean.
@@ -30,9 +29,11 @@ import {
  *   npm run mtt:postflop-bet-sizing -- --write
  */
 
-const PARAM_ROOT = "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters";
+const PARAM_ROOT = SOLVER_PARAM_ROOT;
 const OUTPUT = "src/data/ranges/postflopBetSizing.generated.ts";
-const PARAM_FILE = /^\d+_(?<family>[A-Z0-9_]+?)_[AKQJT98765432]{3}(?:r|tt|mono)\.txt$/;
+const PARAM_FILE = SOLVER_PARAM_FILE;
+/** The normalizer stamps this into a pack's assumptions when it used pot fractions. */
+const POT_FRACTION_MARKER = "bet-action-rule=POT_FRACTION";
 
 
 
@@ -45,20 +46,44 @@ export interface FamilyBetSizing {
   bigPct: number[];
   /** True when the solver's all-in is one of the actions behind BET_BIG. */
   bigIsAllIn: boolean;
+  /** Which mapping rule the shipped pack for this family was built with. */
+  rule: BetActionRule;
 }
 
-export { NORMALIZER_BIG_BET_CHIP_THRESHOLD };
+/**
+ * How a family's shipped pack was built, read from the pack rather than assumed.
+ *
+ * Families are corrected one at a time, so for a while some packs carry the old
+ * absolute-chip split and others the pot-fraction one. Assuming a single rule
+ * would make this table describe buttons half the packs do not have.
+ */
+export function ruleForShippedFamily(familyId: string): BetActionRule {
+  const rules = generatedMttPostflopPilotPacks
+    .flatMap((entry) => entry.pack.rules.map((rule) => ({ rule, pack: entry.pack })))
+    .filter((item) => item.rule.id.split("-", 1)[0].toUpperCase() === familyId);
+  // A family with no shipped pack still has drafts on disk, and those were built
+  // by whatever rule was current when they were made. Anticipating the new one
+  // would describe a split that does not exist yet.
+  if (rules.length === 0) return "LEGACY_CHIP_THRESHOLD";
+  return rules.every((item) => item.pack.assumptions.some((line) => line.includes(POT_FRACTION_MARKER)))
+    ? "POT_FRACTION"
+    : "LEGACY_CHIP_THRESHOLD";
+}
 
 export function heroBetSide(familyId: string): "oop" | "ip" {
   return familyId.includes("_OOP") ? "oop" : "ip";
 }
 
-export function familySizingFrom(text: string, familyId: string): FamilyBetSizing | null {
+export function familySizingFrom(
+  text: string,
+  familyId: string,
+  rule: BetActionRule = "LEGACY_CHIP_THRESHOLD",
+): FamilyBetSizing | null {
   const lines = text.split(/\r?\n/);
-  const num = (key: string) => Number(lines.find((l) => l.startsWith(`${key} `))?.split(" ")[1] ?? NaN);
-  const potChips = num("set_pot");
-  const effectiveStackChips = num("set_effective_stack");
-  if (!Number.isFinite(potChips) || potChips <= 0) return null;
+  const economics = treeEconomicsFrom(text);
+  // A pot of zero or missing is not a pot; a fraction of it would be invented.
+  if (economics === null) return null;
+  const { potChips, effectiveStackChips } = economics;
 
   const side = heroBetSide(familyId);
   const betLine = lines.find((l) => l.startsWith(`set_bet_sizes ${side},flop,bet,`));
@@ -67,14 +92,15 @@ export function familySizingFrom(text: string, familyId: string): FamilyBetSizin
     : betLine.split(",").slice(3).map(Number).filter((n) => Number.isFinite(n));
   const hasAllIn = lines.some((l) => l.startsWith(`set_bet_sizes ${side},flop,allin`));
 
-  // The same rule the normalizer assigns actions by, imported rather than
+  // The same rule the normalizer assigned actions by, imported rather than
   // restated, so the table can never describe a split the packs do not have.
-  const smallPct = pcts.filter((p) => betActionForChips(Math.round(potChips * p / 100)) === "BET_SMALL");
-  const bigPct = pcts.filter((p) => betActionForChips(Math.round(potChips * p / 100)) === "BET_BIG");
-  // The all-in is a bet too, and at any of these stacks it clears the threshold.
-  const bigIsAllIn = hasAllIn && betActionForChips(effectiveStackChips) === "BET_BIG";
+  const action = (pct: number) => betActionFor(Math.round(potChips * pct / 100), potChips, rule);
+  const smallPct = pcts.filter((p) => action(p) === "BET_SMALL");
+  const bigPct = pcts.filter((p) => action(p) === "BET_BIG");
+  // The all-in is a bet too, and at any of these stacks it is the biggest one.
+  const bigIsAllIn = hasAllIn && betActionFor(effectiveStackChips, potChips, rule) === "BET_BIG";
 
-  return { potChips, effectiveStackChips, smallPct, bigPct, bigIsAllIn };
+  return { potChips, effectiveStackChips, smallPct, bigPct, bigIsAllIn, rule };
 }
 
 export function collectBetSizing(paramRoot = PARAM_ROOT): Map<string, FamilyBetSizing> {
@@ -88,7 +114,7 @@ export function collectBetSizing(paramRoot = PARAM_ROOT): Map<string, FamilyBetS
       if (match?.groups === undefined) continue;
       const family = match.groups.family;
       if (found.has(family)) continue;
-      const sizing = familySizingFrom(readFileSync(join(dir, file), "utf8"), family);
+      const sizing = familySizingFrom(readFileSync(join(dir, file), "utf8"), family, ruleForShippedFamily(family));
       if (sizing !== null) found.set(family, sizing);
     }
   }
@@ -105,6 +131,7 @@ function render(sizing: Map<string, FamilyBetSizing>): string {
       `    smallPct: [${item.smallPct.join(", ")}],`,
       `    bigPct: [${item.bigPct.join(", ")}],`,
       `    bigIsAllIn: ${item.bigIsAllIn},`,
+      `    rule: ${JSON.stringify(item.rule)},`,
       `  },`,
     ].join("\n"))
     .join("\n");
@@ -125,6 +152,7 @@ export interface FamilyBetSizing {
   smallPct: readonly number[];
   bigPct: readonly number[];
   bigIsAllIn: boolean;
+  rule: "LEGACY_CHIP_THRESHOLD" | "POT_FRACTION";
 }
 
 export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> = {

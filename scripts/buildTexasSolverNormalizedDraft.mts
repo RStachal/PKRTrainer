@@ -14,7 +14,8 @@ import {
 } from "../src/core/texasSolverBoardCatalog.ts";
 import { aggregateBettingLaneForHand } from "../src/core/flopHandCategory.ts";
 import type { Card, HandLabel, Rank, Suit } from "../src/core/types.ts";
-import { NORMALIZER_BIG_BET_CHIP_THRESHOLD, betActionForChips } from "./lib/postflopBetActionMapping.mts";
+import { BIG_BET_POT_FRACTION, betActionFor } from "./lib/postflopBetActionMapping.mts";
+import { familyTreeEconomics } from "./lib/solverFamilyParams.mts";
 
 const DEFAULT_REVIEW =
   "artifacts/texas-solver-review-integration/reviews/MTT9_50BB_BTN_BB_SRP/CHECK.review-report.json";
@@ -35,6 +36,8 @@ interface CliArgs {
   packId: string;
   positionPattern: PostflopPositionPattern;
   potType: Extract<PostflopPotType, "SINGLE_RAISED" | "THREE_BET_POT">;
+  /** Pot in chips, when the caller states it rather than letting the family's parameter file supply it. */
+  potChipsOverride?: number;
   reviewPath: string;
   sprMax: number;
   sprMin: number;
@@ -103,6 +106,7 @@ try {
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
+  let potChipsOverride: number | undefined;
   let actionNode: CliArgs["actionNode"] = "SINGLE_RAISED_POT_CBET";
   let blindSpeeds = ["REGULAR"];
   let evModel: "CHIP_EV" | "DOLAR_EV" = "CHIP_EV";
@@ -153,6 +157,14 @@ function parseArgs(argv: readonly string[]): CliArgs {
     if (item === "--pot-type") {
       potType = parsePotType(nextArg(argv, index, "--pot-type"));
       index += 1;
+      continue;
+    }
+    if (item.startsWith("--pot-chips=")) {
+      potChipsOverride = parseNumber(requiredInlineValue(item, "--pot-chips"), "--pot-chips");
+      continue;
+    }
+    if (item === "--pot-chips") {
+      potChipsOverride = parseNumber(nextArg(argv, index, "--pot-chips"), "--pot-chips");
       continue;
     }
     if (item.startsWith("--pot-type=")) {
@@ -239,6 +251,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     packId,
     positionPattern,
     potType,
+    ...(potChipsOverride === undefined ? {} : { potChipsOverride }),
     reviewPath,
     sprMax,
     sprMin,
@@ -254,6 +267,9 @@ function usage(): string {
     "  npm run mtt:texas-solver-normalize-draft -- --review artifacts/.../CHECK.review-report.json --pack-id mtt-full-ring-9-regular-flop-chip-ev-ante-off-production-v1 --write",
     "  npm run mtt:texas-solver-normalize-draft -- --review artifacts/.../LOWSPR/CHECK.review-report.json --spr-min=0 --spr-max=3 --output-dir artifacts/.../LOWSPR --write",
     "  npm run mtt:texas-solver-normalize-draft -- --review artifacts/.../3BP/CHECK.review.json --pot-type=THREE_BET_POT --action-node=THREE_BET_POT_CBET --position-pattern=3BP_BTN_VS_CO --write",
+    "",
+    "  --pot-chips=N   Pot in chips. Taken from the family's solver parameter file when omitted;",
+    "                  required when no such file exists, because the bet mapping is a fraction of it.",
     "",
     "Builds a review-only canonical flop-production draft from a TexasSolver review report.",
     "The output is written to artifacts/ by default and must still pass human poker review before promotion.",
@@ -338,18 +354,28 @@ function parseNumber(value: string, flag: string): number {
 function buildDraft(args: CliArgs): DraftResult {
   const review = JSON.parse(readFileSync(args.reviewPath, "utf8")) as ReviewReport;
   const familyId = stringValue(review.familyId, "UNKNOWN_FAMILY");
+  // The bet/small split is a fraction of this family's pot, so the pot has to be
+  // known. Guessing one would put the mapping back to describing something it
+  // cannot see, which is the defect being corrected.
+  const potChips = args.potChipsOverride ?? familyTreeEconomics(familyId)?.potChips ?? Number.NaN;
   const nodeHistory = stringArray(review.nodeHistory);
   const files = normalizeFiles(review.files);
   const blockers = [
     ...stringArray(review.blockers),
     ...review.valid === true ? [] : ["TexasSolver review report is not valid."],
+    // Without the pot there is no fraction to split bets on, and defaulting them
+    // all to BET_SMALL would erase the big-bet branch entirely - a quieter and
+    // worse failure than the mislabelling this replaced. Refuse instead.
+    ...Number.isFinite(potChips) && potChips > 0
+      ? []
+      : [`Cannot resolve the pot for ${familyId}; pass --pot-chips or add its solver parameter file. The bet mapping is a fraction of the pot.`],
   ];
   const warnings = [
     ...stringArray(review.anomalies).map((item) => `Review anomaly: ${item}`),
     "Draft was generated from solver review aggregation and still needs human poker review.",
     "Draft intentionally covers one family/node only, so production coverage is expected to remain incomplete.",
   ];
-  const rules = [buildRule(args, familyId, nodeHistory, aggregateFiles(args.actionNode, files))];
+  const rules = [buildRule(args, familyId, nodeHistory, aggregateFiles(args.actionNode, files, potChips), potChips)];
   const bucketCount = rules.reduce((count, rule) => count + rule.rangeBuckets.length, 0);
   const normalizedPath = resolve(args.outputDir, "normalized.candidate.json");
   const permissionPath = resolve(args.outputDir, "permission.candidate.json");
@@ -401,7 +427,7 @@ function buildDraft(args: CliArgs): DraftResult {
       `${nodeHistory.join(" > ") || "ROOT"} node is treated as the hero decision node selected for review.`,
     args.actionNode === "FLOP_FACING_BET"
       ? "TexasSolver FOLD/CALL/RAISE labels are mapped to the facing-bet action space."
-      : `TexasSolver bets of ${NORMALIZER_BIG_BET_CHIP_THRESHOLD} chips or fewer are mapped to BET_SMALL and larger ones, including the all-in, to BET_BIG. This is an absolute chip threshold, so which button a given fraction of pot lands on depends on this family's pot size.`,
+      : `bet-action-rule=POT_FRACTION: TexasSolver bets above ${Math.round(BIG_BET_POT_FRACTION * 100)} percent of the pot, including the all-in, are mapped to BET_BIG and the rest to BET_SMALL.`,
       "Board ids from the review file are converted to representative physical cards only for texture/card-removal validation.",
       "This draft is not sufficient production coverage by itself.",
     ],
@@ -517,7 +543,7 @@ function normalizeActionMix(value: unknown): Record<string, number> {
   return result;
 }
 
-function aggregateFiles(actionNode: CliArgs["actionNode"], files: readonly ReviewFile[]): DraftRuleFile {
+function aggregateFiles(actionNode: CliArgs["actionNode"], files: readonly ReviewFile[], potChips: number): DraftRuleFile {
   if (files.length === 0) {
     return {
       boardId: "empty",
@@ -552,7 +578,7 @@ function aggregateFiles(actionNode: CliArgs["actionNode"], files: readonly Revie
         sum + (strategy.averageByAction[action] ?? 0)
       ), 0) / strategies.length;
     }
-    const actionMix = normalizeMappedActionMix(actionNode, averageByAction);
+    const actionMix = normalizeMappedActionMix(actionNode, averageByAction, potChips);
     const dominantAction = mappedDominantAction(actionMix);
     handClasses[handClass] = {
       averageByAction,
@@ -570,11 +596,11 @@ function aggregateFiles(actionNode: CliArgs["actionNode"], files: readonly Revie
   };
 }
 
-function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string[], file: DraftRuleFile) {
+function buildRule(args: CliArgs, familyId: string, nodeHistory: readonly string[], file: DraftRuleFile, potChips: number) {
   const boardTextures = file.boardTextures;
   const buckets = Object.entries(file.handClasses)
     .sort(([left], [right]) => left.localeCompare(right))
-    .map(([handClass, strategy]) => buildBucket(args.actionNode, handClass as HandLabel, strategy, file.boards));
+    .map(([handClass, strategy]) => buildBucket(args.actionNode, handClass as HandLabel, strategy, file.boards, potChips));
   const recommendedAction = mostCommonBucketAction(buckets);
   const rangeHands = buckets.flatMap((bucket) => bucket.handClasses) as HandLabel[];
   const board = cardRemovalSampleBoard(file, rangeHands);
@@ -647,8 +673,9 @@ function buildBucket(
   handClass: HandLabel,
   strategy: ReviewHandClassStrategy,
   boards: readonly (readonly Card[])[],
+  potChips: number,
 ) {
-  const actionMix = normalizeMappedActionMix(actionNode, strategy.averageByAction);
+  const actionMix = normalizeMappedActionMix(actionNode, strategy.averageByAction, potChips);
   const dominantAction = primaryBucketAction(actionNode, actionMix);
   return {
     lane: laneForHand(actionNode, handClass, dominantAction, boards),
@@ -677,6 +704,7 @@ function fallbackActionForNode(actionNode: CliArgs["actionNode"]): PostflopActio
 function normalizeMappedActionMix(
   actionNode: CliArgs["actionNode"],
   source: Record<string, number>,
+  potChips: number,
 ): Record<PostflopAction, number> {
   const legalActions = actionsForActionNode(actionNode);
   const mapped: Record<PostflopAction, number> = {
@@ -688,7 +716,7 @@ function normalizeMappedActionMix(
     FOLD: 0,
   };
   for (const [action, frequency] of Object.entries(source)) {
-    const mappedAction = mapSolverAction(actionNode, action);
+    const mappedAction = mapSolverAction(actionNode, action, potChips);
     if (mappedAction === null) continue;
     mapped[mappedAction] += Math.max(0, frequency);
   }
@@ -724,7 +752,11 @@ function primaryBucketAction(
   return dominantAction;
 }
 
-function mapSolverAction(actionNode: CliArgs["actionNode"], action: string): PostflopAction | null {
+function mapSolverAction(
+  actionNode: CliArgs["actionNode"],
+  action: string,
+  potChips: number,
+): PostflopAction | null {
   if (actionNode === "FLOP_FACING_BET") {
     if (action === "FOLD") return "FOLD";
     if (action === "CALL") return "CALL";
@@ -733,9 +765,11 @@ function mapSolverAction(actionNode: CliArgs["actionNode"], action: string): Pos
   }
   if (action === "CHECK") return "CHECK";
   if (action.startsWith("BET_")) {
-    // Shared with the bet-sizing table so the two cannot drift; see that module
-    // for why this threshold is wrong and why it is kept until a pack rebuild.
-    return betActionForChips(Number(action.slice("BET_".length)));
+    // As a fraction of this family's pot, not an absolute chip count. The chip
+    // threshold that preceded it made a half-pot bet BET_SMALL in a pot-50 family
+    // and BET_BIG in a pot-157 one, so the same label described two different
+    // bets. Shared with the bet-sizing table so they cannot drift.
+    return betActionFor(Number(action.slice("BET_".length)), potChips, "POT_FRACTION");
   }
   return null;
 }
