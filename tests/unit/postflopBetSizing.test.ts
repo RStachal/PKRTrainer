@@ -5,6 +5,11 @@ import {
   familyBetSizing,
 } from "../../src/data/ranges/postflopBetSizing.generated";
 import { collectBetSizing, familySizingFrom, heroBetSide } from "../../scripts/buildPostflopBetSizing.mts";
+import {
+  NORMALIZER_BIG_BET_CHIP_THRESHOLD,
+  betActionForChips,
+} from "../../scripts/lib/postflopBetActionMapping.mts";
+import { readFileSync } from "node:fs";
 
 // The draft normalizer splits BET_SMALL from BET_BIG on an absolute chip count,
 // and the families do not share a pot. With pot 50 every real bet is under the
@@ -99,5 +104,23 @@ describe("bet sizing extraction", () => {
       "MTT9_TEST_FAMILY",
     );
     expect(noShove?.bigIsAllIn).toBe(false);
+  });
+});
+
+describe("one rule for both places", () => {
+  it("assigns the action by the same threshold the normalizer uses", () => {
+    expect(betActionForChips(NORMALIZER_BIG_BET_CHIP_THRESHOLD)).toBe("BET_SMALL");
+    expect(betActionForChips(NORMALIZER_BIG_BET_CHIP_THRESHOLD + 1)).toBe("BET_BIG");
+    expect(betActionForChips(Number.NaN)).toBe("BET_SMALL");
+  });
+
+  it("leaves the normalizer with no threshold of its own to drift from", () => {
+    // The sizing table describes what is behind each button and the normalizer
+    // decides it. Two copies of one number is how the table comes to describe a
+    // split the packs do not have - the same shape as the defect it was written
+    // to fix - so the normalizer must own no literal of its own.
+    const source = readFileSync("scripts/buildTexasSolverNormalizedDraft.mts", "utf8");
+    expect(source).toContain("betActionForChips(");
+    expect(source).not.toMatch(/amount\s*>\s*75/);
   });
 });

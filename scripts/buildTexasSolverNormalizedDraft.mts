@@ -14,6 +14,7 @@ import {
 } from "../src/core/texasSolverBoardCatalog.ts";
 import { aggregateBettingLaneForHand } from "../src/core/flopHandCategory.ts";
 import type { Card, HandLabel, Rank, Suit } from "../src/core/types.ts";
+import { NORMALIZER_BIG_BET_CHIP_THRESHOLD, betActionForChips } from "./lib/postflopBetActionMapping.mts";
 
 const DEFAULT_REVIEW =
   "artifacts/texas-solver-review-integration/reviews/MTT9_50BB_BTN_BB_SRP/CHECK.review-report.json";
@@ -400,7 +401,7 @@ function buildDraft(args: CliArgs): DraftResult {
       `${nodeHistory.join(" > ") || "ROOT"} node is treated as the hero decision node selected for review.`,
     args.actionNode === "FLOP_FACING_BET"
       ? "TexasSolver FOLD/CALL/RAISE labels are mapped to the facing-bet action space."
-      : "TexasSolver BET 25 is mapped to BET_SMALL; larger/all-in bet labels are mapped to BET_BIG.",
+      : `TexasSolver bets of ${NORMALIZER_BIG_BET_CHIP_THRESHOLD} chips or fewer are mapped to BET_SMALL and larger ones, including the all-in, to BET_BIG. This is an absolute chip threshold, so which button a given fraction of pot lands on depends on this family's pot size.`,
       "Board ids from the review file are converted to representative physical cards only for texture/card-removal validation.",
       "This draft is not sufficient production coverage by itself.",
     ],
@@ -732,8 +733,9 @@ function mapSolverAction(actionNode: CliArgs["actionNode"], action: string): Pos
   }
   if (action === "CHECK") return "CHECK";
   if (action.startsWith("BET_")) {
-    const amount = Number(action.slice("BET_".length));
-    return Number.isFinite(amount) && amount > 75 ? "BET_BIG" : "BET_SMALL";
+    // Shared with the bet-sizing table so the two cannot drift; see that module
+    // for why this threshold is wrong and why it is kept until a pack rebuild.
+    return betActionForChips(Number(action.slice("BET_".length)));
   }
   return null;
 }

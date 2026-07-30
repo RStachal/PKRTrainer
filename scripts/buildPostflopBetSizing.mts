@@ -1,5 +1,9 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import {
+  NORMALIZER_BIG_BET_CHIP_THRESHOLD,
+  betActionForChips,
+} from "./lib/postflopBetActionMapping.mts";
 
 /**
  * Recover what each pilot family's bet buttons actually mean.
@@ -30,8 +34,7 @@ const PARAM_ROOT = "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameter
 const OUTPUT = "src/data/ranges/postflopBetSizing.generated.ts";
 const PARAM_FILE = /^\d+_(?<family>[A-Z0-9_]+?)_[AKQJT98765432]{3}(?:r|tt|mono)\.txt$/;
 
-/** The chip threshold the normalizer applies. Reproduced here to describe what shipped. */
-const NORMALIZER_CHIP_THRESHOLD = 75;
+
 
 export interface FamilyBetSizing {
   potChips: number;
@@ -43,6 +46,8 @@ export interface FamilyBetSizing {
   /** True when the solver's all-in is one of the actions behind BET_BIG. */
   bigIsAllIn: boolean;
 }
+
+export { NORMALIZER_BIG_BET_CHIP_THRESHOLD };
 
 export function heroBetSide(familyId: string): "oop" | "ip" {
   return familyId.includes("_OOP") ? "oop" : "ip";
@@ -62,10 +67,12 @@ export function familySizingFrom(text: string, familyId: string): FamilyBetSizin
     : betLine.split(",").slice(3).map(Number).filter((n) => Number.isFinite(n));
   const hasAllIn = lines.some((l) => l.startsWith(`set_bet_sizes ${side},flop,allin`));
 
-  const smallPct = pcts.filter((p) => Math.round(potChips * p / 100) <= NORMALIZER_CHIP_THRESHOLD);
-  const bigPct = pcts.filter((p) => Math.round(potChips * p / 100) > NORMALIZER_CHIP_THRESHOLD);
+  // The same rule the normalizer assigns actions by, imported rather than
+  // restated, so the table can never describe a split the packs do not have.
+  const smallPct = pcts.filter((p) => betActionForChips(Math.round(potChips * p / 100)) === "BET_SMALL");
+  const bigPct = pcts.filter((p) => betActionForChips(Math.round(potChips * p / 100)) === "BET_BIG");
   // The all-in is a bet too, and at any of these stacks it clears the threshold.
-  const bigIsAllIn = hasAllIn && effectiveStackChips > NORMALIZER_CHIP_THRESHOLD;
+  const bigIsAllIn = hasAllIn && betActionForChips(effectiveStackChips) === "BET_BIG";
 
   return { potChips, effectiveStackChips, smallPct, bigPct, bigIsAllIn };
 }
