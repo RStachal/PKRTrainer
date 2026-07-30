@@ -99,6 +99,40 @@ try {
   }
   [void]$colRuns.Add([pscustomobject]@{ Start = $runStart; End = $prev })
   $colRuns = @($colRuns)
+
+  # Where cells are drawn with a visible gap between them, each gap produces two
+  # edges - cell to gap and gap to cell - so a grid arrives as 27 borders instead
+  # of 14 and no group is ever the right size. Merge any pair closer together
+  # than a fraction of the typical spacing; a real cell border is never that
+  # close to its neighbour.
+  if ($colRuns.Count -ge 3) {
+    $rawSpacings = @()
+    for ($i = 1; $i -lt $colRuns.Count; $i++) {
+      $rawSpacings += ((($colRuns[$i].Start + $colRuns[$i].End) / 2.0) - (($colRuns[$i - 1].Start + $colRuns[$i - 1].End) / 2.0))
+    }
+    $sortedSpacings = @($rawSpacings | Sort-Object)
+    $typical = $sortedSpacings[[int]($sortedSpacings.Count / 2)]
+    $low = $sortedSpacings[[int]($sortedSpacings.Count * 0.25)]
+    $high = $sortedSpacings[[int]($sortedSpacings.Count * 0.75)]
+    # Only merge when the spacings are plainly bimodal - a narrow gap alternating
+    # with a cell width. Applied unconditionally it collapsed a three-grid page
+    # into one, which is a worse failure than the pages it was meant to rescue.
+    $doubled = $low -gt 0 -and ($low / $high) -lt 0.5
+    $merged = New-Object System.Collections.ArrayList
+    $pending = $colRuns[0]
+    for ($i = 1; $i -lt $colRuns.Count; $i++) {
+      $centre = ($colRuns[$i].Start + $colRuns[$i].End) / 2.0
+      $pendingCentre = ($pending.Start + $pending.End) / 2.0
+      if ($doubled -and ($centre - $pendingCentre) -lt $typical * 0.55) {
+        $pending = [pscustomobject]@{ Start = $pending.Start; End = $colRuns[$i].End }
+      } else {
+        [void]$merged.Add($pending); $pending = $colRuns[$i]
+      }
+    }
+    [void]$merged.Add($pending)
+    $colRuns = @($merged)
+  }
+
   if ($colRuns.Count -lt 14) { throw "Found $($colRuns.Count) borders; expected at least 14." }
 
   # Grids are not separated by a wider gap - measured on the openraising pages the
@@ -122,6 +156,23 @@ try {
     [void]$current.Add($colRuns[$i])
   }
   [void]$groups.Add(@($current))
+
+  # Grids can sit almost flush: measured on the pushing pages the space between
+  # two of them is 47px against a 45px cell pitch, a two-pixel deviation that no
+  # spacing rule can separate without also splitting inside a grid. But a hand
+  # grid has exactly fourteen borders, so a group holding a multiple of fourteen
+  # is that many grids and can be cut structurally rather than by measurement.
+  $subdivided = New-Object System.Collections.ArrayList
+  foreach ($group in $groups) {
+    if ($group.Count -gt 14 -and $group.Count % 14 -eq 0) {
+      for ($chunk = 0; $chunk -lt $group.Count / 14; $chunk++) {
+        [void]$subdivided.Add(@($group[($chunk * 14)..($chunk * 14 + 13)]))
+      }
+    } else {
+      [void]$subdivided.Add($group)
+    }
+  }
+  $groups = $subdivided
 
   $found = New-Object System.Collections.ArrayList
   foreach ($group in $groups) {

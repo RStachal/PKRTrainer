@@ -139,10 +139,11 @@ shipped content over.
 ## Reading the chart packs in batch
 
 `scripts/detectRangeChartGrids.ps1` locates the grids; `extractRangeChartGrid.ps1`
-samples them. Run over both packs on 2026-07-30: **148 of 210 pages resolved,
-324 grids**. The other 62 are refused - they are the defend and three-bet pages,
-whose layout the detector does not yet handle - and refusing is the point. Wrong
-geometry emits a complete, confident range describing different cells.
+samples them. Run over both packs on 2026-07-30: **156 of 210 pages resolved, 340 grids**. The
+other 54 are the entire mid/high-stakes pack, drawn in a different style - no gaps
+between cells, thin borders, a smaller canvas - and they are refused rather than
+guessed at. Wrong geometry emits a complete, confident range describing different
+cells, which is the one outcome worth preventing.
 
 What took several attempts to get right, recorded so it is not rediscovered:
 
@@ -158,6 +159,10 @@ What took several attempts to get right, recorded so it is not rediscovered:
   the pitch, not where a gap appears.
 - **Borders arrive doubled or missing**, so the comb is fitted by trying pairs as
   the outer two and counting hits, rather than by demanding a clean run.
+- **Two grids can sit almost flush.** On the pushing pages the space between them
+  is 47px against a 45px cell pitch - a two-pixel deviation no spacing rule can
+  separate without also splitting inside a grid. A hand grid has exactly fourteen
+  borders, so a group holding a multiple of fourteen is cut structurally instead.
 
 A test holds the property that makes the automation usable: the range read from
 detected geometry is identical to the range read from geometry measured by hand.
