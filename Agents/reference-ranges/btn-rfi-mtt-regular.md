@@ -108,3 +108,30 @@ are just worth more than a shove.
 
 So a shallow bucket needs a depth-indexed action per hand, not one open range,
 which is why the widening above stopped at 25BB rather than guessing.
+
+## Verified against the chart, 2026-07-30
+
+The shallow buckets this file deliberately left alone were then checked against
+the owner's own chart rather than against reasoning. Total hands the chart plays
+at 10-20BB - every non-fold class, whatever the action - against what the pack
+teaches at 15 and 20BB:
+
+| Source | Classes | Width |
+| --- | --- | --- |
+| RYE BU 10-20bb chart | 82 | 40.0% |
+| Pack, ante-off, 15BB and 20BB | 81 | 39.7% |
+| Pack, ante-on, 15BB and 20BB | 89 | 44.5% |
+
+**Ante-off agrees to a single hand class.** The chart plays 64s and the pack does
+not; nothing else differs in either direction. That is independent corroboration
+that the shallow buckets were right to leave, and it is worth more than the
+argument that led to leaving them.
+
+Ante-on is seven classes wider than the chart - Q3s, J6s, T6s, K7o, Q8o, J8o, 98o
+- all of them from the ante-on widening. Whether that is correct depends on
+whether the chart assumes ante, which it does not say. Left as measured rather
+than trimmed to match a source whose premise is unknown.
+
+64s is not added for the same reason: one class, four combinations, 0.3 percent,
+against a chart of unstated ante. Worth recording, not worth quietly changing
+shipped content over.
