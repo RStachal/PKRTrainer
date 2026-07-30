@@ -367,3 +367,36 @@ column as the single calibration point and give BB a depth curve from it -
 the structure the packs already have. Adding an opener-width dimension is a
 model change and should wait until the widths are right; being forty points out
 matters more than being six points out.
+
+## Applied, 2026-07-30 evening
+
+**BB defence now carries a depth curve** calibrated to the sheets' 45 percent
+opener column: 35.1 percent at 15-20BB, 52.0 at 25-35, 66.5 at 40BB and above.
+Every figure matches its sheet. Below 15BB the flat table stands, and the other
+defending seats keep theirs - the sheets cover only the big blind, and a curve
+nobody measured is worse than a flat range everybody can see is flat.
+
+**Push/fold at 10BB is now per seat** where the sheets establish one: LJ 27.6,
+HJ 34.2, CO 40.0, BTN 53.8, SB 74.7. The grouped table had put the cutoff and the
+button together at 22.2, fourteen points apart in the sheets, so no single group
+figure could have been right for both.
+
+Two limits carried deliberately:
+
+- **These are lower bounds.** Only the unambiguous blue is taken. If the cream
+  turns out to be a jam they are short by up to nineteen points; if it is a fold
+  they are exact. They cannot be too wide. The small blind's grid has no cream,
+  so 74.7 is the figure rather than a bound.
+- **Early position keeps the group.** Its sheet names three seats and the
+  detector finds two grids, so which grid is which seat is not established.
+  Attributing a range to the wrong seat is worse than leaving a narrow one.
+
+A side effect worth stating: for the charted seats ante-on and ante-off now
+coincide at 10BB, because the measured range already contains the group's ante
+extension and the sheets do not say whether they assume ante. Equal is honest;
+narrower would be a defect, and a test pins that.
+
+**Not done, and why.** The other defending seats and VS_ALLIN at 15-30BB have no
+chart coverage - the first is unmeasured, the second is absent content rather
+than wrong content. Neither is a correction that can be made from what is on
+disk.

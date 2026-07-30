@@ -14,6 +14,27 @@ const COMBOS = (handClass: string) => (
   handClass.length === 2 ? 6 : handClass.endsWith("s") ? 4 : 12
 );
 
+function contextWidthPct(
+  ante: AnteMode,
+  position: Position,
+  bucket: StackBucket,
+  context: "RFI" | "VS_OPEN" | "PUSH_FOLD",
+): number | null {
+  const pack = allMttPreflopRangePacks.find((item) => (
+    item.dimensions.tableFormat === "FULL_RING_9" &&
+    item.dimensions.blindSpeed === "REGULAR" &&
+    item.dimensions.ante === ante &&
+    item.records.length > 0
+  ));
+  if (pack === undefined) return null;
+  const entry = createRangeStoreFromRangePack(pack).lookup({ ante, position, bucket, context });
+  if (entry === undefined) return null;
+  const combos = Object.entries(entry.actions)
+    .filter(([, actions]) => actions.some((action) => action !== "FOLD"))
+    .reduce((sum, [handClass]) => sum + COMBOS(handClass), 0);
+  return Math.round(combos / 1326 * 1000) / 10;
+}
+
 function openWidthPct(ante: AnteMode, position: Position, bucket: StackBucket): number | null {
   const pack = allMttPreflopRangePacks.find((item) => (
     item.dimensions.tableFormat === "FULL_RING_9" &&
@@ -95,6 +116,79 @@ describe("button opening range width", () => {
       expect(on, `${bucket}BB`).not.toBeNull();
       expect(off, `${bucket}BB`).not.toBeNull();
       expect(on!, `${bucket}BB`).toBeGreaterThan(off!);
+    }
+  });
+});
+
+describe("big blind defence", () => {
+  it("carries the charts' depth curve instead of one width everywhere", () => {
+    // The flat table defended 21.6 percent at every depth. In the spot that
+    // reaches more flops than any other, that is forty points short at 50BB.
+    expect(contextWidthPct("OFF", "BB", 20 as StackBucket, "VS_OPEN")).toBe(35.1);
+    expect(contextWidthPct("OFF", "BB", 25 as StackBucket, "VS_OPEN")).toBe(52);
+    expect(contextWidthPct("OFF", "BB", 50 as StackBucket, "VS_OPEN")).toBe(66.5);
+  });
+
+  it("defends wider as stacks deepen, at both ante settings", () => {
+    for (const ante of ["OFF", "ON"] as AnteMode[]) {
+      const shallow = contextWidthPct(ante, "BB", 20 as StackBucket, "VS_OPEN");
+      const mid = contextWidthPct(ante, "BB", 25 as StackBucket, "VS_OPEN");
+      const deep = contextWidthPct(ante, "BB", 50 as StackBucket, "VS_OPEN");
+      expect(shallow, ante).not.toBeNull();
+      expect(mid!, ante).toBeGreaterThan(shallow!);
+      expect(deep!, ante).toBeGreaterThan(mid!);
+    }
+  });
+
+  it("leaves the other defending seats on the flat table", () => {
+    // Only the big blind has charts. Giving the rest a curve would be inventing
+    // one, and a curve nobody measured is worse than a flat range everybody can
+    // see is flat.
+    for (const seat of ["LJ", "HJ", "CO", "BTN", "SB"] as Position[]) {
+      const shallow = contextWidthPct("OFF", seat, 20 as StackBucket, "VS_OPEN");
+      const deep = contextWidthPct("OFF", seat, 100 as StackBucket, "VS_OPEN");
+      expect(deep, seat).toBe(shallow);
+    }
+  });
+});
+
+describe("push/fold at ten big blinds", () => {
+  it("matches the sheets for every seat they establish", () => {
+    // Lower bound by construction: only the unambiguous blue is taken, because
+    // the sheets carry no legend and their cream cannot be told from a fold by
+    // shade. These can be short; they cannot be too wide.
+    expect(contextWidthPct("OFF", "LJ", 10 as StackBucket, "PUSH_FOLD")).toBe(27.6);
+    expect(contextWidthPct("OFF", "HJ", 10 as StackBucket, "PUSH_FOLD")).toBe(34.2);
+    expect(contextWidthPct("OFF", "CO", 10 as StackBucket, "PUSH_FOLD")).toBe(40);
+    expect(contextWidthPct("OFF", "BTN", 10 as StackBucket, "PUSH_FOLD")).toBe(53.8);
+    // The small blind's grid has no cream, so this is the figure, not a bound.
+    expect(contextWidthPct("OFF", "SB", 10 as StackBucket, "PUSH_FOLD")).toBe(74.7);
+  });
+
+  it("separates the cutoff from the button, which the group could not", () => {
+    // Both sat in one "late" bucket at 22.2 percent while the sheets have them
+    // fourteen points apart. A group cannot be right for both.
+    const co = contextWidthPct("OFF", "CO", 10 as StackBucket, "PUSH_FOLD");
+    const btn = contextWidthPct("OFF", "BTN", 10 as StackBucket, "PUSH_FOLD");
+    expect(btn!).toBeGreaterThan(co! + 10);
+  });
+
+  it("leaves early position on the grouped table", () => {
+    // Its sheet names three seats and the detector finds two grids, so which
+    // grid belongs to which seat is not established. Attributing a range to the
+    // wrong seat is worse than leaving a known-narrow one in place.
+    expect(contextWidthPct("OFF", "UTG", 10 as StackBucket, "PUSH_FOLD")).toBe(11.6);
+  });
+
+  it("never lets ante-on fall below ante-off", () => {
+    // The measured ranges already contain the group's ante extension, so for the
+    // charted seats the two coincide. The sheets do not state whether they assume
+    // ante, so no separate ante-on figure can be derived from them - equal is the
+    // honest outcome, narrower would be a defect.
+    for (const seat of ["UTG", "LJ", "HJ", "CO", "BTN", "SB"] as Position[]) {
+      const off = contextWidthPct("OFF", seat, 10 as StackBucket, "PUSH_FOLD");
+      const on = contextWidthPct("ON", seat, 10 as StackBucket, "PUSH_FOLD");
+      expect(on!, seat).toBeGreaterThanOrEqual(off!);
     }
   });
 });
