@@ -40,18 +40,21 @@ describe("postflopRangeMatrixView", () => {
     expect(classifyFlopHand("87o", drawBoard)).toBe("OESD");
   });
 
-  it("vykresli 13x13 Flopzilla-style matrix s legendou a hero hand", () => {
+  function render(): HTMLElement {
     const root = document.createElement("div");
-    const spot = postflopSpotToTrainingSpot(generatePostflopSpot({
+    renderPostflopRangeMatrix(postflopSpotToTrainingSpot(generatePostflopSpot({
       seed: 42,
       street: "FLOP",
       heroCards: [
         { rank: "A", suit: "s" },
         { rank: "K", suit: "s" },
       ],
-    }));
+    })), root);
+    return root;
+  }
 
-    renderPostflopRangeMatrix(spot, root);
+  it("vykresli 13x13 matici s legendou a hero hand", () => {
+    const root = render();
 
     expect(root.querySelector(".postflop-flopzilla")).not.toBeNull();
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla")?.dataset.heroCategory)
@@ -59,7 +62,7 @@ describe("postflopRangeMatrixView", () => {
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla")?.dataset.heroCategoryLabel)
       .toBeTruthy();
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__title")?.textContent)
-      .toBe("Flopzilla range matrix");
+      .toBe("Matice range");
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__meta")?.textContent)
       .toContain("Hero AKs");
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__meta")?.textContent)
@@ -71,7 +74,7 @@ describe("postflopRangeMatrixView", () => {
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__matrix")?.getAttribute("role"))
       .toBe("grid");
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__matrix")?.getAttribute("aria-label"))
-      .toContain("Flopzilla range matrix for board");
+      .toContain("Matice range pro board");
     expect(root.querySelectorAll<HTMLElement>(".postflop-flopzilla__header-cell--row"))
       .toHaveLength(13);
     expect(root.querySelector<HTMLElement>(".postflop-flopzilla__header-cell--row")?.dataset.axis)
@@ -228,5 +231,37 @@ describe("postflopRangeMatrixView", () => {
     expect(flopzillaLaneForCategory("SET_PLUS")).toBe("VALUE");
     expect(flopzillaLaneForCategory("FLUSH_DRAW")).toBe("BLUFF");
     expect(flopzillaLaneForCategory("AIR")).toBe("CHECK");
+  });
+  it("nepojmenovava hracovi matici cizim produktem", () => {
+    // The matrix is modelled on a third-party tool's taxonomy, which is fine as
+    // an internal shape but has no business being the name a paying player reads.
+    const root = render();
+
+    expect(root.textContent).not.toContain("Flopzilla");
+    expect(root.querySelector(".postflop-flopzilla__matrix")?.getAttribute("aria-label") ?? "")
+      .not.toContain("Flopzilla");
+  });
+
+  it("da kazde bunce text, ktery je na jejim pozadi videt", () => {
+    // Half the palette taken from the owner's charts is light. Keeping the old
+    // uniform white label would have made the widest part of every range - the
+    // air and the folds - unreadable.
+    const root = render();
+    const cells = [...root.querySelectorAll<HTMLElement>(".postflop-flopzilla__cell")];
+    expect(cells.length).toBe(169);
+
+    const luminance = (rgb: string): number => {
+      const [r, g, b] = (rgb.match(/\d+/g) ?? ["0", "0", "0"]).map((n) => Number(n) / 255);
+      const ch = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+      return 0.2126 * ch(r) + 0.7152 * ch(g) + 0.0722 * ch(b);
+    };
+
+    for (const cell of cells) {
+      const bg = luminance(cell.style.background);
+      const fg = luminance(cell.style.color);
+      // Not a contrast-ratio assertion, just the property that matters: the two
+      // must sit on opposite sides of mid-grey.
+      expect(Math.abs(bg - fg), `${cell.dataset.hand}`).toBeGreaterThan(0.35);
+    }
   });
 });

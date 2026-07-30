@@ -24,21 +24,56 @@ interface CategoryDef {
   color: string;
 }
 
+/**
+ * Colours taken from the owner's own range charts, sampled from the images.
+ *
+ * The charts read at a glance because they use two families and a neutral tail
+ * rather than a thirteen-step rainbow: a salmon-red for the hands you commit
+ * with, greens for the hands still carrying equity, and near-white for the ones
+ * you give up. The previous palette ran red-orange-yellow-green-blue-purple-grey
+ * in category order, so a top pair was a brighter green than an overpair was
+ * yellow and nothing about the colour told you how strong the hand was.
+ *
+ * Three of these are the chart colours exactly - #D87878 openraise, #304830 and
+ * #90A890 the jam tiers, #F0F0F0 fold - with the rest interpolated inside those
+ * families so the ramp stays monotonic in strength.
+ */
 const CATEGORY_DEFS: Record<FlopzillaCategory, CategoryDef> = {
-  SET_PLUS: { label: "Set+", color: "#d83b3b" },
-  MADE_STRAIGHT: { label: "Made straight", color: "#ef6f2e" },
-  TWO_PAIR: { label: "Two pair", color: "#f59f32" },
-  OVERPAIR: { label: "Overpair", color: "#ffd15b" },
-  TOP_PAIR: { label: "Top pair", color: "#3ddc84" },
-  PAIR: { label: "Pair", color: "#2dbd6e" },
-  UNDERPAIR: { label: "Underpair", color: "#1f8f63" },
-  FLUSH_DRAW: { label: "Flush draw", color: "#3399ff" },
-  OESD: { label: "OESD", color: "#7c83ff" },
-  GUTSHOT: { label: "Gutshot", color: "#9b6cf0" },
-  BACKDOOR_DRAW: { label: "Backdoor draw", color: "#6e7891" },
-  OVERCARDS: { label: "Overcards", color: "#607d8b" },
-  AIR: { label: "Air", color: "#343b49" },
+  // Made hands: the salmon-red family, darkening with strength.
+  SET_PLUS: { label: "Set+", color: "#a63a32" },
+  MADE_STRAIGHT: { label: "Made straight", color: "#be4a3e" },
+  TWO_PAIR: { label: "Two pair", color: "#cf5f50" },
+  OVERPAIR: { label: "Overpair", color: "#d87878" },
+  TOP_PAIR: { label: "Top pair", color: "#e29a8e" },
+  PAIR: { label: "Pair", color: "#ebb9af" },
+  UNDERPAIR: { label: "Underpair", color: "#f0d2cb" },
+  // Draws: the jam greens, kept a distinct hue so equity reads apart from made
+  // strength rather than blending into the same ramp.
+  FLUSH_DRAW: { label: "Flush draw", color: "#304830" },
+  OESD: { label: "OESD", color: "#4e7050" },
+  GUTSHOT: { label: "Gutshot", color: "#90a890" },
+  BACKDOOR_DRAW: { label: "Backdoor draw", color: "#b8c9b6" },
+  // Nothing: the charts' fold shades.
+  OVERCARDS: { label: "Overcards", color: "#d6d6ce" },
+  AIR: { label: "Air", color: "#f0f0f0" },
 };
+
+/**
+ * Black or white label, whichever the background can carry.
+ *
+ * The cells used to be uniformly white-on-dark. Half this palette is light, and
+ * keeping white text would have made the widest part of every range - the air and
+ * the folds - unreadable.
+ */
+function readableTextColor(hex: string): string {
+  const value = hex.replace("#", "");
+  const r = Number.parseInt(value.slice(0, 2), 16) / 255;
+  const g = Number.parseInt(value.slice(2, 4), 16) / 255;
+  const b = Number.parseInt(value.slice(4, 6), 16) / 255;
+  const channel = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const luminance = 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+  return luminance > 0.45 ? "#12161f" : "#ffffff";
+}
 
 const LEGEND_ORDER: readonly FlopzillaCategory[] = [
   "SET_PLUS",
@@ -82,7 +117,7 @@ export function renderPostflopRangeMatrix(
 
   const title = doc.createElement("div");
   title.className = "postflop-flopzilla__title";
-  title.textContent = "Flopzilla range matrix";
+  title.textContent = localizedText("Range matrix", "Matice range");
   header.appendChild(title);
 
   const meta = doc.createElement("div");
@@ -100,7 +135,10 @@ export function renderPostflopRangeMatrix(
   const matrix = doc.createElement("div");
   matrix.className = "postflop-flopzilla__matrix";
   matrix.setAttribute("role", "grid");
-  matrix.setAttribute("aria-label", `Flopzilla range matrix for board ${boardText}`);
+  matrix.setAttribute("aria-label", localizedText(
+    `Range matrix for board ${boardText}`,
+    `Matice range pro board ${boardText}`,
+  ));
   matrix.style.gridTemplateColumns = `repeat(${GRID_SIZE + 1}, minmax(0, 1fr))`;
   matrix.appendChild(headerCell(doc, "", "corner"));
   const detail = detailPanel(doc);
@@ -174,7 +212,14 @@ function matrixCell(
     ? `${hand}: ${flopzillaCategoryLabel(category)} - ${production.action}`
     : `${hand}: ${flopzillaCategoryLabel(category)}`;
   cell.textContent = hand;
-  cell.style.background = CATEGORY_DEFS[category].color;
+  const background = CATEGORY_DEFS[category].color;
+  cell.style.background = background;
+  cell.style.color = readableTextColor(background);
+  // The shadow exists to lift white text off a dark fill; on a light fill it
+  // only smears the label.
+  cell.style.textShadow = readableTextColor(background) === "#ffffff"
+    ? "0 1px 1px rgba(0,0,0,.55)"
+    : "none";
   return cell;
 }
 

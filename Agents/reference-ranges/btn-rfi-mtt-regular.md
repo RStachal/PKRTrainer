@@ -82,3 +82,29 @@ Still outstanding: the six BTN postflop families were solved against 13.2 and
 19.0 percent and now disagree with the pack by more than before. Correcting them
 means re-solving, which is gated on solver memory.
 `npm run mtt:postflop-range-consistency` reports the current gaps.
+
+## Short-stack charts, and how to read them
+
+The owner's Raise Your Edge pack answers the 15-20BB question this file left
+open. Extracted from `openraising 10-20bb bu-sb.png` by
+`scripts/extractRangeChartGrid.ps1`, the button at 10-20BB has no single opening
+range. It has four actions:
+
+| Action | Classes | Hands |
+| --- | --- | --- |
+| openraise | 6 | AA, AKs, KK, QQ, JJ, TT |
+| openjam under 12BB | 26 | AQs-A8s, KQs, KJs, K4s-K2s, Q7s-Q5s, J7s, 96s, AKo, AQo, KQo, AJo, ATo, K9o, Q9o, J9o, T9o, 99, 88 |
+| openjam under 15BB | 46 | A7s-A2s, KTs-K5s, QJs, QTs, Q9s, Q8s, JTs, J9s, J8s, T9s, T8s, T7s, 98s, 97s, 87s, 86s, 76s, 75s, 65s, 64s, 54s, 77, 66, KJo, KTo, QJo, QTo, JTo, A9o-A2o |
+| openjam under 20BB | 4 | 55, 44, 33, 22 |
+
+**The threshold is the depth below which you jam; above it you open-raise.**
+Owner's reading, 2026-07-30: short of chips there is no fold equity to play a
+flop with, so the hand goes in; past the threshold a raise becomes affordable.
+
+That explains what first looked inverted. 99 and 88 jam only under 12BB because
+from 12 to 20 they would rather raise and play; 22-55 jam all the way to 20BB
+because they have nothing to play with. The strong pairs are not tighter, they
+are just worth more than a shove.
+
+So a shallow bucket needs a depth-indexed action per hand, not one open range,
+which is why the widening above stopped at 25BB rather than guessing.
