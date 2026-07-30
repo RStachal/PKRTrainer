@@ -99,7 +99,7 @@ describe("weighted hero deal", () => {
 
   // Two pairs, so both hold six combos and only the solve weight can separate
   // them. The button opens AA in full and 55 a quarter of the time.
-  function resolverFor(ruleId: string): PostflopStrategyResolver {
+  function resolverFor(ruleId: string, weightPct?: number): PostflopStrategyResolver {
     return (input) => ({
       action: "CHECK",
       explanation: "Range weight fixture.",
@@ -120,8 +120,8 @@ describe("weighted hero deal", () => {
         selectionScore: 100,
         tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
         rangeBuckets: [
-          { lane: "CHECK", label: "AA", action: "CHECK", handClasses: ["AA"], features: [] },
-          { lane: "CHECK", label: "55", action: "CHECK", handClasses: ["55"], features: [] },
+          { lane: "CHECK", label: "AA", action: "CHECK", handClasses: ["AA"], features: [], ...(weightPct === undefined ? {} : { weightPct }) },
+          { lane: "CHECK", label: "55", action: "CHECK", handClasses: ["55"], features: [], ...(weightPct === undefined ? {} : { weightPct }) },
         ],
       },
     });
@@ -172,20 +172,7 @@ describe("weighted hero deal", () => {
         potBB: 5,
         effectiveStackBB: 50,
         positionContext: POSITION,
-        strategyResolver: (input) => {
-          const base = resolverFor("mtt9_50bb_btn_bb_srp-check-aggregate")(input);
-          if (base === null || base.source.kind !== "STRATEGY_PACK") return base;
-          return {
-            ...base,
-            source: {
-              ...base.source,
-              rangeBuckets: (base.source.rangeBuckets ?? []).map((bucket) => ({
-                ...bucket,
-                weightPct: 100,
-              })),
-            },
-          };
-        },
+        strategyResolver: resolverFor("mtt9_50bb_btn_bb_srp-check-aggregate", 100),
       });
       const hero = spot.heroCards;
       if (hero === undefined) continue;
