@@ -166,3 +166,42 @@ What took several attempts to get right, recorded so it is not rediscovered:
 
 A test holds the property that makes the automation usable: the range read from
 detected geometry is identical to the range read from geometry measured by hand.
+
+## What the charts say about our opening ranges
+
+`npm run mtt:charts-vs-packs` compares the widths. Run 2026-07-30 over the twelve
+open-raising pages, ten grids where the file name says which seat each grid is:
+
+| Seat | Depth | Chart | Ours, ante-off | Ours, ante-on |
+| --- | --- | --- | --- | --- |
+| BTN | 20BB | 40.0% | 39.7% | 44.5% |
+| BTN | 25BB | 40.3% | 43.9% | 50.2% |
+| BTN | 100BB | 46.9% | 43.9% | 50.2% |
+| CO | 25BB | 30.3% | 27.0% | 30.0% |
+| CO | 100BB | 32.4% | 27.0% | 30.0% |
+| LJ | 25BB | 16.4% | 20.1% | 22.8% |
+| LJ | 100BB | 18.9% | 20.1% | 22.8% |
+| HJ | 25BB | 22.6% | 23.1% | 25.8% |
+| HJ | 100BB | 25.5% | 23.1% | 25.8% |
+
+**Every seat in the charts widens with depth. Ours do not.** The button goes 40.3
+to 46.9 percent between 25BB and 100BB, the cutoff 30.3 to 32.4, the lojack 16.4
+to 18.9, the hijack 22.6 to 25.5. Our table has one range from 25BB to 150BB for
+every seat, so at 25BB the button is 3.6 points too wide and at 100BB it is 3.0
+too narrow, against the same single number.
+
+That is the same defect already found and half-fixed: the shipped table applied
+one button range from 15BB to 150BB, and splitting it at 25BB corrected the
+shallow end while leaving everything above it flat. The charts say the flatness
+was the real problem and the split was only its first instalment.
+
+Two caveats worth keeping with these numbers:
+
+- **Width means "plays", not "raises".** Where a page draws limping as well, a
+  chart width is an upper bound - the small blind's 10-20BB grid has nine actions
+  and reads 75.6 percent, which is not an opening range. The comparison flags any
+  grid drawing more than six actions rather than dropping it; an earlier version
+  excluded them on that count and threw out the 100BB pages too.
+- **Seat mapping comes from the file name.** Pages naming a span rather than a
+  pair - "mp-co" with three grids - are skipped, because guessing which seat the
+  middle grid is would manufacture a disagreement.
