@@ -1,7 +1,6 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {
-  PAGE_SEATS,
   bucketForPage,
   combosInClass,
   packWidth,
@@ -49,7 +48,13 @@ for (const file of readdirSync(jsonDir).filter((f) => f.endsWith(".json")).sort(
   const bucket = bucketForPage(page.page);
   const seats = seatsForPage(page.page, page.grids.length);
   if (bucket === null || seats === null) {
-    skipped.push(`${page.page} (${page.grids.length} grid(s))`);
+    // Say which of the two failed. "does not say which seat" was printed for
+    // pages whose seats resolved fine and whose depth did not, which sent the
+    // last hour looking at the wrong half.
+    const why = bucket === null && seats === null ? "no depth and no seats"
+      : bucket === null ? "no depth in the name"
+      : "seats do not match the grid count";
+    skipped.push(`${page.page} (${page.grids.length} grid(s)) - ${why}`);
     continue;
   }
 

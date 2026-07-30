@@ -21,35 +21,60 @@ import type { AnteMode, Position, StackBucket } from "../../src/core/types";
 const TOTAL_COMBOS = 1326;
 
 /**
- * Which seat each grid on a page belongs to.
+ * Seats in table order, and the names the charts use for them.
  *
- * Taken from the file name and the left-to-right order of the grids, and only
- * where that is unambiguous. A page called "co-bu" holding two grids is the
- * cutoff then the button; a page called "mp-co" holding three is a span whose
- * middle seat the name does not state, and guessing at it would manufacture a
- * disagreement against whichever seat we happened to pick. Those are skipped.
+ * The packs use LJ where the charts say MP and BTN where they say BU; the rest
+ * agree. Recorded once here so a page naming a span can be expanded rather than
+ * skipped, which is what earlier runs did with anything not naming exactly two
+ * seats.
  */
-export const PAGE_SEATS: Readonly<Record<string, readonly Position[]>> = {
-  "co-bu": ["CO", "BTN"],
-  "bu-sb": ["BTN", "SB"],
-  "mp-hj": ["LJ", "HJ"],
-  "utg-utg2": ["UTG", "UTG+1"],
+const SEAT_ORDER: readonly Position[] = ["UTG", "UTG+1", "UTG+2", "LJ", "HJ", "CO", "BTN", "SB"];
+
+const CHART_SEAT_NAMES: Readonly<Record<string, Position>> = {
+  utg: "UTG",
+  "utg1": "UTG+1",
+  "utg+1": "UTG+1",
+  "utg2": "UTG+2",
+  "utg+2": "UTG+2",
+  mp: "LJ",
+  hj: "HJ",
+  co: "CO",
+  bu: "BTN",
+  btn: "BTN",
+  sb: "SB",
 };
+
+/**
+ * The seats a page covers, from its name and the grid count.
+ *
+ * A name like "co-bu" is a span from the cutoff to the button; with two grids
+ * that is exactly those two seats, and with three it would be one seat wider than
+ * the name allows, so it is refused. Matching the span length against the grids
+ * is what keeps this from quietly attributing a grid to the wrong seat.
+ */
+export function seatsForPage(page: string, gridCount: number): readonly Position[] | null {
+  const stem = page.toLowerCase().replace(/\.(png|json)$/i, "");
+  const match = /([a-z]+\+?[0-9]?)\s*-\s*([a-z]+\+?[0-9]?)/.exec(stem);
+  if (match === null) return null;
+  const from = CHART_SEAT_NAMES[match[1]];
+  const to = CHART_SEAT_NAMES[match[2]];
+  if (from === undefined || to === undefined) return null;
+
+  const start = SEAT_ORDER.indexOf(from);
+  const end = SEAT_ORDER.indexOf(to);
+  if (start < 0 || end < 0 || end < start) return null;
+  const span = SEAT_ORDER.slice(start, end + 1);
+  return span.length === gridCount ? span : null;
+}
 
 /** Stack depth the page covers, from its name. */
 export function bucketForPage(page: string): StackBucket | null {
-  if (/\b10-20bb\b/i.test(page)) return 20 as StackBucket;
-  if (/\b25bb\b/i.test(page)) return 25 as StackBucket;
-  if (/\b100bb\b/i.test(page)) return 100 as StackBucket;
-  return null;
-}
-
-export function seatsForPage(page: string, gridCount: number): readonly Position[] | null {
-  for (const [key, seats] of Object.entries(PAGE_SEATS)) {
-    if (!page.toLowerCase().includes(key)) continue;
-    // Only when the grids and the named seats line up one to one.
-    return seats.length === gridCount ? seats : null;
-  }
+  if (/10-20bb/i.test(page)) return 20 as StackBucket;
+  if (/25bb/i.test(page)) return 25 as StackBucket;
+  if (/100bb/i.test(page)) return 100 as StackBucket;
+  // The pushing pages state their depth in the title, not the file name; 10BB is
+  // what the sheet says and it is the only depth that folder covers.
+  if (/pushing/i.test(page)) return 10 as StackBucket;
   return null;
 }
 

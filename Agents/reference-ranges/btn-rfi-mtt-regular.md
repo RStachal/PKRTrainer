@@ -233,3 +233,38 @@ from 2.1 points to between 5.4 and 7.5. It stays under the guard's tolerance and
 clears when those families are re-solved, but it is a real widening and not a
 measurement artefact - correcting what we teach moved it away from what we
 solved.
+
+## Full open-raising comparison, 2026-07-30
+
+All twelve pages, twenty grids, after the seat mapping learned to expand a span
+(`mp-co` with three grids is LJ, HJ, CO) instead of skipping anything not naming
+exactly two seats.
+
+**The eight seats the depth curve was applied to now match their charts exactly** -
+no hand in the chart the pack lacks, none in the pack the chart lacks, at both
+25BB and 100BB. That is the change verified against its source rather than
+against its own arithmetic.
+
+**Early position is too wide in our packs, at every depth:**
+
+| Seat | Depth | Chart | Ours, ante-off | Ours minus chart |
+| --- | --- | --- | --- | --- |
+| UTG | 20BB | 11.2% | 14.9% | +3.7 |
+| UTG | 100BB | 11.5% | 14.9% | +3.4 |
+| UTG+1 | 20BB | 11.5% | 15.2% | +3.7 |
+| UTG+1 | 100BB | 13.0% | 15.2% | +2.2 |
+| UTG+2 | 20BB | 13.9% | 18.3% | +4.4 |
+| UTG+2 | 100BB | 16.3% | 18.3% | +2.0 |
+
+Every disagreement is one-directional - hands in the pack the chart does not
+open, never the reverse - so this is our range being loose rather than a
+different construction. It also flatly contradicts the earlier reading that UTG
+was "built correctly": that judgement came from UTG's solve input agreeing with
+the pack to a tenth of a point, which only ever showed the two agreed with each
+other, not that either was right.
+
+**The 20BB flat band disagrees in both directions**, which is expected of a band
+left alone: the cutoff is 6.9 points too narrow there (27.0 against 33.9) while
+the lojack and hijack are slightly wide. That band is where a single opening
+range stops being the model at all, so it needs the depth treatment and the
+short-stack charts together rather than a width nudge.
