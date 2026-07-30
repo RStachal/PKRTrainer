@@ -209,6 +209,7 @@ function heroRangeBucket(
     handClass: input.heroHand,
     features: [...bucket.features],
     actionMix: bucket.actionMix?.map((item) => ({ ...item })),
+    ...(bucket.weightPct === undefined ? {} : { weightPct: bucket.weightPct }),
     ...(bucket.actionEvs ? { actionEvs: cloneActionEvSet(bucket.actionEvs) } : {}),
   };
 }

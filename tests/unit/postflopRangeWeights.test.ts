@@ -159,6 +159,45 @@ describe("weighted hero deal", () => {
     expect(ratio, `AA ${counts.AA} vs 55 ${counts["55"]}`).toBeLessThan(6);
   });
 
+  it("lets a pack state its own weight and believes it over the table", () => {
+    // Nothing populates weightPct today. This is what stops the field becoming a
+    // second source of truth that is silently ignored: the family below IS in the
+    // generated table at 0.25 for 55, and the pack overrides it to parity.
+    const counts = { AA: 0, "55": 0 };
+    for (let seed = 1; seed <= 900; seed += 1) {
+      const spot = generatePostflopSpot({
+        seed,
+        street: "FLOP",
+        potType: "SINGLE_RAISED",
+        potBB: 5,
+        effectiveStackBB: 50,
+        positionContext: POSITION,
+        strategyResolver: (input) => {
+          const base = resolverFor("mtt9_50bb_btn_bb_srp-check-aggregate")(input);
+          if (base === null || base.source.kind !== "STRATEGY_PACK") return base;
+          return {
+            ...base,
+            source: {
+              ...base.source,
+              rangeBuckets: (base.source.rangeBuckets ?? []).map((bucket) => ({
+                ...bucket,
+                weightPct: 100,
+              })),
+            },
+          };
+        },
+      });
+      const hero = spot.heroCards;
+      if (hero === undefined) continue;
+      const handClass = pairClass(hero);
+      if (handClass === "AA" || handClass === "55") counts[handClass] += 1;
+    }
+
+    const ratio = counts.AA / Math.max(1, counts["55"]);
+    expect(ratio, `AA ${counts.AA} vs 55 ${counts["55"]}`).toBeGreaterThan(0.7);
+    expect(ratio, `AA ${counts.AA} vs 55 ${counts["55"]}`).toBeLessThan(1.4);
+  });
+
   it("deals both equally for a family whose range carries no weights", () => {
     // The control. Without it the test above would also pass against code that
     // simply favoured aces, which is not what is being claimed.

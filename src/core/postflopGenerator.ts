@@ -270,6 +270,12 @@ export interface PostflopRangeBucket {
   features: readonly string[];
   actionMix?: readonly PostflopActionFrequency[];
   actionEvs?: ActionEvSet<PostflopAction>;
+  /**
+   * How often the hero's preflop range holds this bucket, as a percentage. Packs
+   * do not carry it yet; when one does it wins over the generated weight table,
+   * so populating it in the pipeline is enough to make it take effect.
+   */
+  weightPct?: number;
 }
 
 export interface PostflopHeroRangeBucket {
@@ -790,6 +796,16 @@ function redealHeroIntoStrategyRange(
   // four times too often. The advice shown for them was right; the frequency the
   // player met them was not.
   const family = familyIdFromRuleId(source.ruleId);
+  // A pack that states its own weights is believed over the table recovered from
+  // the solve inputs. Nothing populates weightPct today, and this is what stops
+  // that becoming a trap: whoever fills it in the pipeline gets the effect they
+  // expect rather than a second source of truth that is silently ignored.
+  const bucketWeights = new Map<HandLabel, number>();
+  for (const bucket of source.rangeBuckets ?? []) {
+    if (bucket.weightPct === undefined || !Number.isFinite(bucket.weightPct)) continue;
+    const weight = Math.max(0, Math.min(100, bucket.weightPct)) / 100;
+    for (const handClass of bucket.handClasses) bucketWeights.set(handClass, weight);
+  }
   const deck = deckWithout(board);
   const combos: Array<[Card, Card]> = [];
   const weights: number[] = [];
@@ -799,7 +815,7 @@ function redealHeroIntoStrategyRange(
       const pair: [Card, Card] = [deck[i], deck[j]];
       const handClass = postflopHandClassFromCards(pair);
       if (!handClasses.has(handClass)) continue;
-      const weight = heroRangeWeight(family, handClass);
+      const weight = bucketWeights.get(handClass) ?? heroRangeWeight(family, handClass);
       if (weight <= 0) continue;
       combos.push(pair);
       weights.push(weight);
