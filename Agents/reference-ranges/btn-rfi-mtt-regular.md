@@ -301,3 +301,34 @@ picking one. `playedBounds` collapses to a single number wherever the palette is
 unambiguous, which is why the small blind shows one.
 
 One word from the owner on what the cream means unblocks all six.
+
+## Calling rejams, 2026-07-30: a coverage gap, not an accuracy one
+
+The calling-rejam sheets colour by **depth, not by action**. The legend reads
+30bb, 25bb, 20bb, 15bb, and the colour is the deepest stack at which the hand
+calls - so the calling range at depth D is every hand whose threshold is at least
+D. AA is the 30bb colour and calls everywhere; 22 is the 15bb colour and calls
+only when short. That is the second sheet in this pack whose colours turned out
+not to be actions, after the 100BB open-raising pages.
+
+Read that way the sheets are internally coherent: ranges narrow as stacks deepen,
+and later position calls wider. The button calls 16.1 percent at 15BB against
+UTG's 8.0.
+
+| Hero | 15BB | 20BB | 25BB | 30BB |
+| --- | --- | --- | --- | --- |
+| BTN | 16.1% | 11.0% | 8.4% | 6.3% |
+| CO | 12.5% | 9.2% | 7.2% | 6.0% |
+| LJ | 8.4% | 5.9% | 3.5% | 3.0% |
+| UTG | 8.0% | 5.1% | 3.5% | 3.0% |
+
+**Our VS_ALLIN holds records at 5BB and 10BB only.** The sheets start at 15BB, so
+there is no overlapping depth to compare and nothing here contradicts what we
+ship. What it shows instead is that our data stops exactly where these sheets
+begin: a player at 15 to 30BB facing a shove has no vs-allin content from us at
+all.
+
+That is a different kind of finding from the push/fold one and belongs in a
+different queue. Push/fold is wrong and can be corrected from data already
+extracted; this is absent, and filling it means new content across four depths
+and seven seats rather than a correction to something that exists.
