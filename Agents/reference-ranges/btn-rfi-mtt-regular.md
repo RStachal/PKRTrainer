@@ -332,3 +332,38 @@ That is a different kind of finding from the push/fold one and belongs in a
 different queue. Push/fold is wrong and can be corrected from data already
 extracted; this is absent, and filling it means new content across four depths
 and seven seats rather than a correction to something that exists.
+
+## BB defend, 2026-07-30: we teach 21.6 percent where the charts say 31 to 68
+
+The defend sheets are laid out by two things our model does not have. The three
+grids on a page are the **opener's range width** - 40, 45 and 50 percent, against
+a 2.5x open - and the file name gives the **depth band**. Actions are value 3bet,
+bluff 3bet and flatcall, with white the fold.
+
+| Depth | vs 40% opener | vs 45% | vs 50% | Ours |
+| --- | --- | --- | --- | --- |
+| 12-20BB | 31.2% | 35.1% | 38.8% | 21.6% |
+| 25-35BB | 45.7% | 52.0% | 59.0% | 21.6% |
+| 40-50BB | 62.9% | 66.5% | 68.3% | 21.6% |
+
+Our big blind defends 21.6 percent at every depth against every opener. The
+charts range from 31.2 to 68.3, so at 40-50BB against a normal button open we are
+short by more than forty points.
+
+This is the biggest gap measured so far and it sits in the most common spot in
+the game - the big blind facing a raise reaches more flops than any other
+situation. Folding two thirds of a range that should be defending two thirds is
+not a tight style, it is giving up the pot odds the blind is paid to use.
+
+**Two defects, not one.** The width is wrong, and the model is missing a
+dimension: our VS_OPEN holds one range per seat and depth, with no notion of how
+wide the opener was, while the sheets vary defence by 6 to 13 points across that
+axis alone. Our ranges are also flat across depth, the same defect corrected for
+RFI earlier today.
+
+**Recommended fix, in the order it should happen.** Take the 45 percent opener
+column as the single calibration point and give BB a depth curve from it -
+35.1 / 52.0 / 66.5 across the three bands. That corrects the large error using
+the structure the packs already have. Adding an opener-width dimension is a
+model change and should wait until the widths are right; being forty points out
+matters more than being six points out.
