@@ -19,6 +19,7 @@
     "mtt:blockers": "vite-node scripts/checkMttBlockers.mts",
     "mtt:intake-plan": "vite-node scripts/checkMttIntakePlan.mts",
     "mtt:postflop-matrix": "vite-node scripts/checkMttPostflopMatrix.mts",
+    "mtt:postflop-range-gap": "vite-node scripts/buildPostflopRangeGap.mts",
     "mtt:postflop-range-consistency": "vite-node scripts/checkPostflopHeroRangeConsistency.mts",
     "mtt:postflop-bet-sizing": "vite-node scripts/buildPostflopBetSizing.mts",
     "mtt:postflop-range-weights": "vite-node scripts/buildPostflopRangeWeights.mts",

@@ -4,7 +4,7 @@ import {
   combosInClass,
   compareHeroRanges,
   solveRangeCombos,
-} from "../../scripts/checkPostflopHeroRangeConsistency.mts";
+} from "../../scripts/lib/postflopHeroRangeConsistency.mts";
 
 // A postflop family is a spot reached through a preflop decision, so the hero's
 // range going into the flop is the preflop pack's range for that seat and depth.
