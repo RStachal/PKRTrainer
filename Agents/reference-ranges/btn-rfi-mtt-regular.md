@@ -197,11 +197,14 @@ was the real problem and the split was only its first instalment.
 
 Two caveats worth keeping with these numbers:
 
-- **Width means "plays", not "raises".** Where a page draws limping as well, a
-  chart width is an upper bound - the small blind's 10-20BB grid has nine actions
-  and reads 75.6 percent, which is not an opening range. The comparison flags any
-  grid drawing more than six actions rather than dropping it; an earlier version
-  excluded them on that count and threw out the 100BB pages too.
+- **A page with many colours needs its legend read.** Two stronger claims about
+  those pages were both wrong. Excluding them on the colour count threw out the
+  100BB pages; then calling them limp/raise pages was wrong as well. Checked
+  2026-07-30: the 100BB legend is entirely about play facing a three-bet - 4bet
+  value, call vs 3bet, fold vs 3bet - so every coloured cell IS in the opening
+  range and white is the fold. **Those widths are exact.** The small blind's
+  10-20BB grid genuinely does draw limp branches, and reads 75.6 percent for that
+  reason. Nothing but the legend tells them apart.
 - **Seat mapping comes from the file name.** Pages naming a span rather than a
   pair - "mp-co" with three grids - are skipped, because guessing which seat the
   middle grid is would manufacture a disagreement.

@@ -133,17 +133,18 @@ for (const file of readdirSync(jsonDir).filter((f) => f.endsWith(".json")).sort(
     const hands = playedHands(clusters);
     if (hands.length === 0) return;
 
-    // How many actions this grid draws. It matters because "not fold" is only
-    // the same thing as "opens" where every action is a raise, and some pages
-    // draw limping too - the small blind's 10-20BB grid has nine actions, several
-    // of them limp branches, so its width against a raise-first-in range would
-    // read as a 33 point gap that is not real.
+    // How many actions this grid draws. It flags a page whose legend needs
+    // reading before its width is taken as an opening range - it does not say
+    // what those actions are.
     //
-    // Reported rather than dropped. Excluding on a colour count guessed wrong the
-    // first time, taking out the 100BB pages as well, and discarding measurements
-    // on a proxy nobody has checked is worse than showing them with the caveat
-    // attached.
-    const mixedActions = clusters.length > 6;
+    // Both stronger claims turned out wrong. Excluding these grids on the count
+    // threw out the 100BB pages, and then calling them limp/raise pages was wrong
+    // too: the 100BB legend is entirely about play facing a three-bet - 4bet
+    // value, call vs 3bet, fold vs 3bet - so every coloured cell IS in the
+    // opening range and white is the fold. Its width is exact, not an upper
+    // bound. The small blind's 10-20BB grid genuinely does draw limp branches.
+    // Nothing but the legend distinguishes them, so the flag says only that.
+    const manyActions = clusters.length > 6;
 
     const chartPct = hands.reduce((sum, h) => sum + combosInClass(h), 0) / TOTAL_COMBOS * 100;
     const off = packWidth("OFF", seat, bucket);
@@ -156,7 +157,7 @@ for (const file of readdirSync(jsonDir).filter((f) => f.endsWith(".json")).sort(
     const note = (nearest === null
       ? "no pack range at this depth"
       : `${missing.length} in chart only, ${extra.length} in pack only`)
-      + (mixedActions ? `  [${clusters.length} actions drawn; may include limping, so the width is an upper bound]` : "");
+      + (manyActions ? `  [${clusters.length} actions drawn; read this page's legend before treating the width as an opening range]` : "");
 
     console.log(
       page.page.replace(/\.png$/i, "").padEnd(34) +
