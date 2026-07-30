@@ -90,6 +90,36 @@ interface CoreExtra {
   extra: string;
 }
 
+/**
+ * Opening ranges that replace the flat ones from a given depth upward.
+ *
+ * The flat table below applies one range from 15BB to 150BB, which cannot be
+ * right at both ends: a button opening range at 40BB and the same seat at 15BB
+ * are different strategies, and at the shallow end a single open range stops
+ * being the model at all - the strategy there mixes minraise, raise-fold,
+ * raise-call and open shove.
+ *
+ * The button's was also simply too narrow. Owner reference (GTO Wizard, recorded
+ * in Agents/reference-ranges/btn-rfi-mtt-regular.md) puts a 30-50BB button at
+ * 50.2 percent of hands with ante; the flat table had 39.7 without and 44.5 with.
+ * The postflop solves built on the narrow figure are what surfaced it - see
+ * `npm run mtt:postflop-range-consistency`.
+ *
+ * The split between core and extra follows the ante rather than a round number.
+ * Without ante the button adds the suited tail; with ante it also adds the weak
+ * offsuit broadways, which are the part of a steal range that most depends on
+ * the dead money being there. That lands ante-off at 43.9 percent and ante-on at
+ * the reference's 50.2.
+ */
+const DEEP_OPEN_FROM_BUCKET = 25;
+
+const DEEP_OPEN_RANGES: Record<string, CoreExtra> = {
+  BTN: {
+    core: "22+, A2s+, K2s+, Q2s+, J4s+, T5s+, 95s+, 85s+, 74s+, 64s+, 53s+, 43s, A2o+, K9o+, Q9o+, J9o+, T9o",
+    extra: "K6o, K7o, K8o, Q8o, J8o, T8o, 98o",
+  },
+};
+
 const OPEN_RANGES: Record<string, CoreExtra> = {
   UTG: {
     core: "22+, A4s+, KTs+, QTs+, JTs, T9s, 98s, AJo+, KQo",
@@ -328,7 +358,10 @@ function widenSpec(base: string, extra: string, wide: boolean): string {
 // ---------------------------------------------------------------------------
 
 function rfiSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSegment[] {
-  const ce = OPEN_RANGES[pos];
+  // Deep-stack overrides win from their bucket upward; the shallow buckets keep
+  // the flat table until someone decides what they should be, which is a
+  // different question rather than the same one at a different width.
+  const ce = (bucket >= DEEP_OPEN_FROM_BUCKET ? DEEP_OPEN_RANGES[pos] : undefined) ?? OPEN_RANGES[pos];
   const k = openKeys(bucket);
   return [{ spec: widen(ce, wide), strict: k.strict, lenient: k.lenient }];
 }

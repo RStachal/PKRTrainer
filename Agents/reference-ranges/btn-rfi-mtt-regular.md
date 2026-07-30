@@ -59,11 +59,26 @@ BTN range at 20BB and at 50BB, which by the notes above cannot both be right.
 
 ## Status
 
-Not yet applied. Applying it means two separate changes, and the second is gated
-on solver memory:
+**Applied to the preflop pack on 2026-07-30, at 25BB and above.**
 
-1. Widening the preflop pack's BTN RFI, which is owner-verified production
-   content and goes through the range intake and promotion path.
-2. Re-solving the six BTN postflop families against the corrected range.
+The reference states ante in its premise and contains the whole of the pack's
+previous ante-on addition, so 50.2 percent is the ante-ON figure. The split
+between the two variants follows the ante rather than a round number: without
+ante the button adds the suited tail, and with ante it also adds the weak offsuit
+broadways, which are the part of a steal range that most depends on the dead
+money being there.
 
+| Depth | ante-off | ante-on |
+| --- | --- | --- |
+| 15-20BB | 39.7% (unchanged) | 44.5% (unchanged) |
+| 25BB and up | 43.9% | **50.2%** |
+
+The shallow buckets were left alone deliberately. By the owner notes above a
+single open range stops being the model at 15-20BB, so widening them would be
+answering a question nobody has asked yet - and the table applying one range from
+15BB to 150BB was itself part of what was wrong.
+
+Still outstanding: the six BTN postflop families were solved against 13.2 and
+19.0 percent and now disagree with the pack by more than before. Correcting them
+means re-solving, which is gated on solver memory.
 `npm run mtt:postflop-range-consistency` reports the current gaps.
