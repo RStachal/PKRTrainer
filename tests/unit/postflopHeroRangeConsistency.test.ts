@@ -33,9 +33,12 @@ describe("hero range consistency", () => {
     const rows = compareHeroRanges();
     const byFamily = new Map(rows.map((row) => [row.familyId, row]));
 
-    // UTG still agrees to a tenth of a point, which is what makes the button's
-    // gap a data error rather than a convention applied throughout.
-    expect(byFamily.get("MTT9_40BB_UTG_BB_SRP")?.gapPoints).toBeLessThan(1);
+    // UTG used to agree to a tenth of a point, and that read as confirmation.
+    // It only ever showed the pack and the solve agreed with each other - both
+    // were three points wider than the charts, and correcting the pack moved
+    // this to a real gap. Agreement with a solve is not evidence either is right.
+    expect(byFamily.get("MTT9_40BB_UTG_BB_SRP")?.gapPoints).toBeGreaterThan(2);
+    expect(byFamily.get("MTT9_40BB_UTG_BB_SRP")?.gapPoints).toBeLessThan(5);
 
     // The cutoff no longer does, and that is a consequence rather than a
     // regression: widening the preflop packs toward the purchased charts moved

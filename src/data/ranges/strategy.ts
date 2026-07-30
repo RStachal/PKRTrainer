@@ -116,6 +116,18 @@ interface DepthBand {
 }
 
 const DEPTH_OPEN_RANGES: Record<string, readonly DepthBand[]> = {
+  UTG: [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, AKo, AQo, AJo, KQo" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, 98s, AKo, AQo, AJo" },
+  ],
+  "UTG+1": [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, A5s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, AKo, AQo, AJo, KQo" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, 98s, 87s, AKo, AQo, AJo, KQo" },
+  ],
+  "UTG+2": [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, 98s, AKo, AQo, AJo, ATo, KQo" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, 98s, 87s, AKo, AQo, AJo, ATo, KQo, KJo" },
+  ],
   CO: [
     { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, QJs, QTs, Q9s, Q8s, JTs, J9s, J8s, T9s, T8s, 98s, 97s, 87s, 76s, 65s, AKo, AQo, AJo, ATo, A9o, A8o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, QJo, QTo, JTo" },
     { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, QJs, QTs, Q9s, Q8s, Q7s, JTs, J9s, J8s, J7s, T9s, T8s, T7s, 98s, 97s, 87s, 86s, 76s, 75s, 65s, 54s, AKo, AQo, AJo, ATo, A9o, A8o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, QJo, QTo, JTo" },

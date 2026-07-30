@@ -80,6 +80,62 @@ same pipeline lights the buttons up with no further code.
 
 Everything else below is unblocked.
 
+## The two backlogs, and why they move at different speeds
+
+Added 2026-07-30, because the plan only stays realistic if these are counted
+apart.
+
+**Preflop corrections are cheap.** They are data in one file, verified against the
+owner's charts in seconds, and they reach every profile the product ships - four
+of eight production packs, and the part a player touches first. Six seats were
+corrected this way in a day.
+
+**Postflop re-solves are expensive and hardware-bound.** Each family is hours of
+solver time on a machine that currently cannot hold the tree at all. Nothing in
+this backlog moves until the memory arrives.
+
+The mistake to avoid is treating "preflop agrees with the postflop solve" as the
+goal. It is not: agreement with a solve that was itself built on a wrong range is
+worth nothing, and UTG proved it. Its solve input matched the pack to a tenth of
+a point, which read as confirmation and only ever showed the two agreed with each
+other - both were three points too wide against the charts.
+
+So preflop is corrected as soon as it is known to be wrong, the postflop gap is
+measured rather than avoided, and the player is told where a rule rests on a
+range we no longer teach.
+
+### Postflop re-solve queue, in priority order
+
+Measured by `npm run mtt:postflop-range-consistency` after the preflop
+corrections. Gap is the hero range the family was solved against, against what
+the product now teaches.
+
+| Priority | Family | Gap | Why this order |
+| --- | --- | --- | --- |
+| 1 | MTT9_50BB_BTN_BB_SRP | 33.7 | Worst gap, and the button is the most-played seat |
+| 2 | MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR | 27.9 | Same seat, deep stack |
+| 3 | MTT9_20BB_BTN_BB_SRP_LOWSPR | 26.5 | Same seat, short stack |
+| 4 | MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR | 21.3 | Completes the button |
+| 5 | 52 boards on the reduced tree, 3 families | n/a | Tree mixing, not range - independent of the above |
+| 6 | MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR | 7.5 | Under tolerance; correcting the pack moved it |
+| 7 | MTT9_25BB_CO_BB_SRP_CBET_LOWSPR | 5.4 | Under tolerance |
+| 8 | MTT9_40BB_UTG_BB_SRP | 3.6 | Under tolerance; was 0.2 before UTG was corrected |
+
+Priorities 1-4 are the four button families, and they are the only ones past the
+guard's tolerance. Everything from 5 down can wait for a second pass without the
+beta being wrong about it, because the player is told.
+
+### What is deliberately not being done
+
+**The 20BB band is left as it is**, though the charts disagree with it in both
+directions - the cutoff is 6.9 points too narrow there while the lojack and
+hijack are slightly wide. Fixing the width would fit a number while keeping the
+wrong model: at 10-20BB there is no single opening range at all, the charts show
+an openraise range and three jam thresholds, and the packs have one range per
+seat. That band needs a depth-indexed action per hand, which is a feature rather
+than a data correction, and doing it badly is worse than leaving a known gap that
+is measured and disclosed.
+
 ## Critical path to the playable beta
 
 1. **Add RAM, then finish the re-solve on the full tree.** Decided 2026-07-29:
