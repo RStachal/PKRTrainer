@@ -93,6 +93,37 @@ export interface Cluster { hex: string; count: number; hands: string[] }
  * Fold is taken as the lightest cluster. On every page examined it is a near
  * white, and it is always the palest thing present - the actions are saturated.
  */
+export function clusterLuminance(hex: string): number {
+  const v = hex.replace("#", "");
+  return 0.2126 * Number.parseInt(v.slice(0, 2), 16)
+    + 0.7152 * Number.parseInt(v.slice(2, 4), 16)
+    + 0.0722 * Number.parseInt(v.slice(4, 6), 16);
+}
+
+/**
+ * Lower and upper bounds on what a grid plays, when the palette is ambiguous.
+ *
+ * Fold is normally the palest colour by a wide margin. Some pages carry a second
+ * near-white - the pushing sheets draw blue, white and a cream, and the cream is
+ * within a luminance point of the white while covering as many hands as the blue.
+ * Those pages have no legend, so whether the cream is a push or a fold is not
+ * knowable from the image, and the two readings differ by a factor of two.
+ *
+ * Rather than pick one, both are reported: the lower bound excludes every pale
+ * cluster, the upper only the palest. Where they agree there is no ambiguity and
+ * the pair collapses to a single number.
+ */
+export function playedBounds(clusters: readonly Cluster[]): { lower: string[]; upper: string[] } {
+  if (clusters.length === 0) return { lower: [], upper: [] };
+  const sorted = [...clusters].sort((a, b) => clusterLuminance(b.hex) - clusterLuminance(a.hex));
+  const palest = clusterLuminance(sorted[0].hex);
+  const pale = sorted.filter((cluster) => palest - clusterLuminance(cluster.hex) <= 12);
+  return {
+    lower: clusters.filter((cluster) => !pale.includes(cluster)).flatMap((cluster) => cluster.hands),
+    upper: clusters.filter((cluster) => cluster !== sorted[0]).flatMap((cluster) => cluster.hands),
+  };
+}
+
 export function playedHands(clusters: readonly Cluster[]): string[] {
   if (clusters.length === 0) return [];
   const luminance = (hex: string) => {

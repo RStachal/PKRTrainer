@@ -268,3 +268,36 @@ left alone: the cutoff is 6.9 points too narrow there (27.0 against 33.9) while
 the lojack and hijack are slightly wide. That band is where a single opening
 range stops being the model at all, so it needs the depth treatment and the
 short-stack charts together rather than a width nudge.
+
+## Push/fold, 2026-07-30: our ranges are about half as wide as the charts
+
+The pushing sheets are 10BB. Compared against our PUSH_FOLD ranges, ante-off:
+
+| Seat | Chart, blue only | Chart, blue + cream | Ours |
+| --- | --- | --- | --- |
+| SB | **74.7%** | 74.7% | 28.5% |
+| BTN | 53.8% | 58.4% | 22.2% |
+| CO | 40.0% | 49.3% | 22.2% |
+| HJ | 34.2% | 45.7% | 15.2% |
+| LJ | 27.6% | 41.2% | 15.2% |
+| UTG+1 | 22.2% | 38.5% | 11.6% |
+| UTG | 14.9% | 33.9% | 11.6% |
+
+**Even the lower bound is roughly double ours at every seat**, and the small blind
+is not a bound at all - its grid has two colours, so 74.7 against our 28.5 is a
+46 point gap with nothing to interpret. A 10BB small blind shoving three quarters
+of its range against one opponent is ordinary; shoving 28 percent is not a
+tighter style, it is a different game.
+
+This is the largest content gap found so far, and it sits in the most common
+short-stack decision in the format.
+
+**What blocks the other six.** Those grids draw three colours - blue, white and a
+cream - and the sheets carry no legend. The cream is within a luminance point of
+the white, so it cannot even be told apart by shade, and it covers as many hands
+as the blue does on some seats. Whether it is a push or a fold changes the width
+by up to nineteen points, so the comparison reports both bounds rather than
+picking one. `playedBounds` collapses to a single number wherever the palette is
+unambiguous, which is why the small blind shows one.
+
+One word from the owner on what the cream means unblocks all six.
