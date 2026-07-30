@@ -102,12 +102,18 @@ Everything else below is unblocked.
    core cap, not the memory cap - and anything above it buys nothing at all. 48 GB
    works and gets the night to ten of fourteen possible threads.
 
-   Nothing needs changing in the policy when the memory arrives: the budget is
-   computed from what is actually free, so it starts permitting solves on its own.
-   The one manual step is the weekend task, which is disabled today because
-   leaving it enabled cost a full day of thrashing:
+   **Nothing has to be done when the memory arrives.** The budget is computed from
+   what is actually free, so it begins permitting solves on its own, and the
+   weekend task has been re-enabled now that the policy refuses cleanly instead of
+   admitting a solve it then has to kill. Verified 2026-07-30: the worker ticks,
+   declines, and says why -
 
-       npm run mtt:weekend-resolve-install
+       CPU policy: NIGHT window -> not starting. Even with the machine to itself
+       the queued tree does not fit in physical memory. Admitting it would page
+       rather than solve.
+
+   The first tick after the memory is installed - within thirty minutes - starts
+   solving at the thread count that then fits.
 
    How long the 52 will take is not yet worth a number. Historical per-board times
    span 0.2 to 197 minutes with a median of 2.3, but that distribution is mostly
@@ -130,10 +136,23 @@ Everything else below is unblocked.
 
    **A. More RAM. TAKEN.** Sized in the table above.
 
-   **B. A coarser tree for these three families.** Not taken, kept as the
-   fallback if the memory is delayed - and a trial solve of one queued board on
-   this tree was run on 2026-07-29 to show it converges where the full tree does
-   not. The lever is bet-size
+   **B. A coarser tree for these three families.** Not taken, kept as the proven
+   fallback if the memory is delayed.
+
+   Run end to end on 2026-07-29, on a real queued board rather than in principle:
+   MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR / 872r, two threads, from 196 percent
+   exploitability to **0.443 percent in 2h09m**, dumping a valid 235.6 MB
+   checkpoint. The same board on the full tree never left iteration zero. So the
+   fallback works, but at roughly two hours per board it is about a week of
+   machine time for all 87 - which is the real argument for buying memory rather
+   than coarsening content.
+
+   Two things it also confirmed. Convergence flattened around 0.7 percent for a
+   while before dropping through the target, so a mid-run plateau is not evidence
+   of a stall. And the resulting dump classifies as FULL under the turn-donk
+   marker, as predicted when that marker was made authoritative - under the old
+   root-bet-size test it would have been UNKNOWN, since its sizes match no
+   recorded parameter set. The lever is bet-size
    granularity, not action types. Raise, donk and all-in stay on every street, so
    this is NOT the reduced review-only tree - that tree's defect is the ABSENCE of
    turn and river raise, donk and all-in, which is what makes an aggregate blend
