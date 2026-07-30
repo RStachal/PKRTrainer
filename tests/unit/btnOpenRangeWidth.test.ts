@@ -31,19 +31,37 @@ function openWidthPct(ante: AnteMode, position: Position, bucket: StackBucket): 
 }
 
 describe("button opening range width", () => {
-  it("matches the owner reference exactly with ante from 25BB up", () => {
-    for (const bucket of [25, 30, 40, 50, 100, 150] as StackBucket[]) {
-      expect(openWidthPct("ON", "BTN", bucket), `${bucket}BB`).toBe(50.2);
+  it("matches the purchased charts exactly, ante-off, at both measured depths", () => {
+    // The charts are the benchmark and these are their measured widths. Ante-off
+    // carries the depth curve by the owner's decision; ante-on sits above it.
+    for (const bucket of [25, 30, 40] as StackBucket[]) {
+      expect(openWidthPct("OFF", "BTN", bucket), `${bucket}BB`).toBe(40.3);
+    }
+    for (const bucket of [50, 100, 150] as StackBucket[]) {
+      expect(openWidthPct("OFF", "BTN", bucket), `${bucket}BB`).toBe(46.9);
     }
   });
 
-  it("stays tighter without ante, because the dead money is not there", () => {
-    // Not a rounded-down copy of the ante figure: without ante the button adds
-    // the suited tail, and with ante it also adds the weak offsuit broadways,
-    // which are the part of a steal range that most needs the dead money.
-    for (const bucket of [25, 30, 40, 50, 100, 150] as StackBucket[]) {
-      expect(openWidthPct("OFF", "BTN", bucket), `${bucket}BB`).toBe(43.9);
+  it("widens every seat with depth, which is what the flat table did not", () => {
+    // The defect the charts exposed: one range from 25BB to 150BB per seat, so
+    // the same number was too wide at the shallow end and too narrow at the deep
+    // one. Stated as a property rather than as eight figures.
+    for (const seat of ["LJ", "HJ", "CO", "BTN"] as Position[]) {
+      for (const ante of ["OFF", "ON"] as AnteMode[]) {
+        const mid = openWidthPct(ante, seat, 25 as StackBucket);
+        const deep = openWidthPct(ante, seat, 100 as StackBucket);
+        expect(mid, `${ante} ${seat}`).not.toBeNull();
+        expect(deep, `${ante} ${seat}`).not.toBeNull();
+        expect(deep!, `${ante} ${seat} deep vs mid`).toBeGreaterThan(mid!);
+      }
     }
+  });
+
+  it("holds a band flat between the depths the charts measure", () => {
+    // The bands are the chart pack's own - 20-40BB and 40-100BB. Interpolating
+    // between two measurements would invent values the source does not contain.
+    expect(openWidthPct("OFF", "CO", 25 as StackBucket)).toBe(openWidthPct("OFF", "CO", 40 as StackBucket));
+    expect(openWidthPct("OFF", "CO", 50 as StackBucket)).toBe(openWidthPct("OFF", "CO", 150 as StackBucket));
   });
 
   it("leaves the shallow buckets alone", () => {

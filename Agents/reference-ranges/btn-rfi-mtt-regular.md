@@ -208,3 +208,28 @@ Two caveats worth keeping with these numbers:
 - **Seat mapping comes from the file name.** Pages naming a span rather than a
   pair - "mp-co" with three grids - are skipped, because guessing which seat the
   middle grid is would manufacture a disagreement.
+
+## Depth curve applied, 2026-07-30
+
+Owner's decision: the depth curve is ante-off, and the ante widening sits above
+it. Applied for the four seats the charts cover, in the chart pack's own bands -
+20-40BB and 40-100BB - rather than interpolated between the two measurements,
+which would invent values the source does not contain.
+
+| Seat | 25-40BB ante-off | 50BB+ ante-off | 25-40BB ante-on | 50BB+ ante-on |
+| --- | --- | --- | --- | --- |
+| LJ | 16.4% | 18.9% | 19.2% | 21.6% |
+| HJ | 22.6% | 25.5% | 23.8% | 26.7% |
+| CO | 30.3% | 32.4% | 32.4% | 33.9% |
+| BTN | 40.3% | 46.9% | 44.8% | 50.5% |
+
+Every ante-off figure matches its chart exactly. Below 25BB the flat table stands
+and was separately verified against the 10-20BB chart to one hand class.
+
+**A consequence worth stating.** Moving the packs toward the charts widened the
+gap to the postflop solves for the cutoff as well as the button: its solve was
+built against 24.9 percent and the pack now teaches 30.3 to 32.4, so the gap went
+from 2.1 points to between 5.4 and 7.5. It stays under the guard's tolerance and
+clears when those families are re-solved, but it is a real widening and not a
+measurement artefact - correcting what we teach moved it away from what we
+solved.

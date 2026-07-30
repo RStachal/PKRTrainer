@@ -91,33 +91,47 @@ interface CoreExtra {
 }
 
 /**
- * Opening ranges that replace the flat ones from a given depth upward.
+ * Opening ranges by stack depth, replacing the flat table from a given depth up.
  *
- * The flat table below applies one range from 15BB to 150BB, which cannot be
- * right at both ends: a button opening range at 40BB and the same seat at 15BB
- * are different strategies, and at the shallow end a single open range stops
- * being the model at all - the strategy there mixes minraise, raise-fold,
- * raise-call and open shove.
+ * The flat table gave each seat one range from 15BB to 150BB. Checked against the
+ * owner's purchased charts on 2026-07-30, every seat there widens with depth and
+ * none of ours did: the button runs 40.3 to 46.9 percent between 25BB and 100BB,
+ * the cutoff 30.3 to 32.4, the lojack 16.4 to 18.9, the hijack 22.6 to 25.5. One
+ * number for both ends is wrong at both ends.
  *
- * The button's was also simply too narrow. Owner reference (GTO Wizard, recorded
- * in Agents/reference-ranges/btn-rfi-mtt-regular.md) puts a 30-50BB button at
- * 50.2 percent of hands with ante; the flat table had 39.7 without and 44.5 with.
- * The postflop solves built on the narrow figure are what surfaced it - see
- * `npm run mtt:postflop-range-consistency`.
+ * The bands are the chart pack's own - it is organised 10-20BB, 20-40BB, 40-100BB
+ * - rather than points interpolated between measurements, which would be
+ * inventing data the source does not contain. Below 25BB the flat table stands,
+ * and it was verified against the 10-20BB chart to a single hand class.
  *
- * The split between core and extra follows the ante rather than a round number.
- * Without ante the button adds the suited tail; with ante it also adds the weak
- * offsuit broadways, which are the part of a steal range that most depends on
- * the dead money being there. That lands ante-off at 43.9 percent and ante-on at
- * the reference's 50.2.
+ * These are the ante-off ranges, by the owner's decision: the depth curve is
+ * taken as ante-off and the ante widening sits above it, which is why `extra`
+ * still comes from the flat table. Ante is a property of the dead money, not of
+ * the stack, so the same addition applies at every depth.
  */
-const DEEP_OPEN_FROM_BUCKET = 25;
+interface DepthBand {
+  /** Applies from this bucket upward, until a deeper band takes over. */
+  fromBucket: number;
+  core: string;
+}
 
-const DEEP_OPEN_RANGES: Record<string, CoreExtra> = {
-  BTN: {
-    core: "22+, A2s+, K2s+, Q2s+, J4s+, T5s+, 95s+, 85s+, 74s+, 64s+, 53s+, 43s, A2o+, K9o+, Q9o+, J9o+, T9o",
-    extra: "K6o, K7o, K8o, Q8o, J8o, T8o, 98o",
-  },
+const DEPTH_OPEN_RANGES: Record<string, readonly DepthBand[]> = {
+  CO: [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, QJs, QTs, Q9s, Q8s, JTs, J9s, J8s, T9s, T8s, 98s, 97s, 87s, 76s, 65s, AKo, AQo, AJo, ATo, A9o, A8o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, QJo, QTo, JTo" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, QJs, QTs, Q9s, Q8s, Q7s, JTs, J9s, J8s, J7s, T9s, T8s, T7s, 98s, 97s, 87s, 86s, 76s, 75s, 65s, 54s, AKo, AQo, AJo, ATo, A9o, A8o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, QJo, QTo, JTo" },
+  ],
+  BTN: [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, QJs, QTs, Q9s, Q8s, Q7s, Q6s, Q5s, JTs, J9s, J8s, J7s, T9s, T8s, T7s, 98s, 97s, 96s, 87s, 86s, 85s, 76s, 75s, 65s, 64s, 54s, AKo, AQo, AJo, ATo, A9o, A8o, A7o, A6o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, K9o, QJo, QTo, Q9o, JTo, J9o, T9o" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, QJs, QTs, Q9s, Q8s, Q7s, Q6s, Q5s, Q4s, Q3s, Q2s, JTs, J9s, J8s, J7s, J6s, J5s, J4s, J3s, J2s, T9s, T8s, T7s, T6s, T5s, T4s, 98s, 97s, 96s, 95s, 94s, 87s, 86s, 85s, 84s, 76s, 75s, 74s, 73s, 65s, 64s, 63s, 54s, 53s, 43s, AKo, AQo, AJo, ATo, A9o, A8o, A7o, A6o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, K9o, K8o, QJo, QTo, Q9o, JTo, J9o, T9o" },
+  ],
+  LJ: [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, QJs, QTs, Q9s, JTs, J9s, T9s, 98s, AKo, AQo, AJo, ATo, KQo, KJo" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, QJs, QTs, Q9s, JTs, J9s, T9s, 98s, 87s, 76s, AKo, AQo, AJo, ATo, KQo, KJo" },
+  ],
+  HJ: [
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, QJs, QTs, Q9s, Q8s, JTs, J9s, J8s, T9s, T8s, 98s, 97s, 87s, 76s, AKo, AQo, AJo, ATo, A9o, KQo, KJo, KTo, QJo, QTo" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, QJs, QTs, Q9s, Q8s, JTs, J9s, J8s, T9s, T8s, 98s, 97s, 87s, 76s, 65s, 54s, AKo, AQo, AJo, ATo, A9o, KQo, KJo, KTo, QJo, QTo, JTo" },
+  ],
 };
 
 const OPEN_RANGES: Record<string, CoreExtra> = {
@@ -358,10 +372,15 @@ function widenSpec(base: string, extra: string, wide: boolean): string {
 // ---------------------------------------------------------------------------
 
 function rfiSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSegment[] {
-  // Deep-stack overrides win from their bucket upward; the shallow buckets keep
-  // the flat table until someone decides what they should be, which is a
-  // different question rather than the same one at a different width.
-  const ce = (bucket >= DEEP_OPEN_FROM_BUCKET ? DEEP_OPEN_RANGES[pos] : undefined) ?? OPEN_RANGES[pos];
+  // The deepest band whose threshold this bucket has reached, else the flat
+  // table. Below 25BB that table stands: a single opening range stops being the
+  // model there at all, and the charts confirm it - the button has an openraise
+  // range and three jam thresholds, not one range.
+  const band = (DEPTH_OPEN_RANGES[pos] ?? [])
+    .filter((item) => bucket >= item.fromBucket)
+    .sort((left, right) => right.fromBucket - left.fromBucket)[0];
+  const flat = OPEN_RANGES[pos];
+  const ce = band === undefined ? flat : { core: band.core, extra: flat.extra };
   const k = openKeys(bucket);
   return [{ spec: widen(ce, wide), strict: k.strict, lenient: k.lenient }];
 }
