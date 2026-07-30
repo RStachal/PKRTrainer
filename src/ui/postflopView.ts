@@ -33,6 +33,8 @@ import {
   type FlopzillaLane,
 } from "./postflopRangeMatrixView";
 import { CS, getAppLanguage, localizedText } from "./cs";
+import { familyBetSizing } from "../data/ranges/postflopBetSizing.generated";
+import { familyIdFromRuleId } from "../data/ranges/postflopSolvedSpr";
 import { gradePostflopAction, type PostflopGrade } from "../core/postflopScoring";
 import {
   ACTION_EV_BUTTON_STYLES,
@@ -777,6 +779,35 @@ function betGeometry(doc: Document, spot: PostflopTrainingSpot): HTMLElement {
   return geometry;
 }
 
+/**
+ * What the solve actually put behind this button, when the family is known.
+ *
+ * Returns the largest solved fraction where several were merged, since the button
+ * is one choice and understating it would repeat the original error in the other
+ * direction. `allIn` is reported only when the shove is the ONLY action behind
+ * the button, because it is not a fraction of pot at all - where a real bet sits
+ * beside it, the bet is what the label should describe.
+ */
+function solvedSizing(
+  spot: PostflopTrainingSpot,
+  action: "BET_SMALL" | "BET_BIG",
+): { ratio: number; allIn: boolean; merged: number } | undefined {
+  const source = spot.explanation.source;
+  if (source.kind !== "STRATEGY_PACK") return undefined;
+  const sizing = familyBetSizing(familyIdFromRuleId(source.ruleId));
+  if (sizing === undefined) return undefined;
+
+  const pcts = action === "BET_SMALL" ? sizing.smallPct : sizing.bigPct;
+  if (action === "BET_BIG" && pcts.length === 0 && sizing.bigIsAllIn) {
+    return { ratio: 1, allIn: true, merged: 1 };
+  }
+  if (pcts.length === 0) return undefined;
+  // Only the sole-action case above is an all-in label. Where a real bet sits
+  // behind the button alongside the shove, calling the whole button "all-in"
+  // overstates it exactly as badly as the fixed 75 percent understated it.
+  return { ratio: Math.max(...pcts) / 100, allIn: false, merged: pcts.length };
+}
+
 function betSizingVisual(spot: PostflopTrainingSpot): {
   ariaLabel: string;
   betBB: number;
@@ -787,25 +818,43 @@ function betSizingVisual(spot: PostflopTrainingSpot): {
 } {
   switch (spot.recommendedAction) {
     case "BET_SMALL": {
-      const betBB = roundedBetBB(spot.potBB * 0.33);
+      const solved = solvedSizing(spot, "BET_SMALL");
+      const ratio = solved?.ratio ?? 0.33;
+      const betBB = roundedBetBB(spot.potBB * ratio);
       return {
         ariaLabel: CS.postflop.sizing.recommendedSmall(betBB),
         betBB,
         chips: 2,
         kind: "small",
         label: CS.postflop.sizing.small(betBB),
-        ratio: 0.33,
+        ratio,
       };
     }
     case "BET_BIG": {
-      const betBB = roundedBetBB(spot.potBB * 0.75);
+      const solved = solvedSizing(spot, "BET_BIG");
+      // The solver's all-in is a bet like any other, and in most families it is
+      // the only one behind this button. Showing 75 percent of pot for a shove
+      // was the label describing something the strategy never contained.
+      if (solved?.allIn === true) {
+        const betBB = roundedBetBB(spot.effectiveStackBB);
+        return {
+          ariaLabel: CS.postflop.sizing.recommendedAllIn(betBB),
+          betBB,
+          chips: 4,
+          kind: "big",
+          label: CS.postflop.sizing.allIn(betBB),
+          ratio: 1,
+        };
+      }
+      const ratio = solved?.ratio ?? 0.75;
+      const betBB = roundedBetBB(spot.potBB * ratio);
       return {
         ariaLabel: CS.postflop.sizing.recommendedBig(betBB),
         betBB,
         chips: 4,
         kind: "big",
         label: CS.postflop.sizing.big(betBB),
-        ratio: 0.75,
+        ratio,
       };
     }
     case "RAISE": {

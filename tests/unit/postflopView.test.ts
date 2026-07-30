@@ -508,6 +508,85 @@ describe("postflopView - DOM", () => {
     expect(result?.textContent).toContain("turnu a riveru ber orientačně");
   });
 
+  it("rekne all-in tam, kde solver za tim tlacitkem opravdu shoveuje", () => {
+    // In ten of thirteen shipped families the only bet behind BET_BIG is the
+    // solver's all-in, and the button rendered a fixed 75 percent of pot - "big
+    // bet 4 BB" for a 65 BB shove. Grading was never affected; what the player
+    // was reading while practising sizing was.
+    const resolver: PostflopStrategyResolver = (input) => ({
+      action: "BET_BIG",
+      explanation: "All-in sizing fixture.",
+      source: {
+        kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
+        packId: "internal-sizing-pack",
+        packVersion: "v1",
+        packVerifiedAt: "2026-07-30",
+        ruleId: "mtt9_100bb_co_bb_srp_cbet_highspr-check-aggregate",
+        confidence: "HIGH",
+        matchedTextures: input.textures,
+        sprMin: 0,
+        sprMax: 25,
+        positionPattern: input.positionPattern,
+        sourceUrls: [],
+        assumptions: ["All-in sizing fixture."],
+        selectionScore: 100,
+        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+      },
+    });
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 7,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: resolver,
+    });
+
+    // Matched in both languages: an earlier case in this file switches the UI to
+    // English and the setting persists, so a Czech-only assertion would be
+    // testing the language rather than the sizing.
+    const geometry = root.querySelector<HTMLElement>("[data-bet-sizing]");
+    expect(geometry?.textContent).toContain("All-in");
+    expect(geometry?.textContent).not.toMatch(/Velký bet|Big bet/);
+  });
+
+  it("nechá velky bet velkym betem, kdyz za nim opravdu bet je", () => {
+    // The control: pot 157 puts this family's half-pot bet over the normalizer's
+    // chip threshold, so its BET_BIG is a real bet and must not read as a shove.
+    const resolver: PostflopStrategyResolver = (input) => ({
+      action: "BET_BIG",
+      explanation: "Real big bet fixture.",
+      source: {
+        kind: "STRATEGY_PACK",
+        provenance: "SOLVER_BACKED",
+        packId: "internal-sizing-pack",
+        packVersion: "v1",
+        packVerifiedAt: "2026-07-30",
+        ruleId: "mtt9_80bb_co_btn_3bp_midspr-check-aggregate",
+        confidence: "HIGH",
+        matchedTextures: input.textures,
+        sprMin: 0,
+        sprMax: 25,
+        positionPattern: input.positionPattern,
+        sourceUrls: [],
+        assumptions: ["Real big bet fixture."],
+        selectionScore: 100,
+        tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+      },
+    });
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 7,
+      initialStreet: "FLOP",
+      autoGenerate: true,
+      strategyResolver: resolver,
+    });
+
+    const geometry = root.querySelector<HTMLElement>("[data-bet-sizing]");
+    expect(geometry?.textContent).toMatch(/Velký bet|Big bet/);
+    expect(geometry?.textContent).not.toContain("All-in");
+  });
+
   it("nevydava popis rozdane desky za shodu textury", () => {
     // Eighteen of the nineteen shipped rules declare every texture in the
     // taxonomy, so "Texture match: paired, low, dry" was the intersection of the

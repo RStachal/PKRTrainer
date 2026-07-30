@@ -212,6 +212,39 @@ Fixed and kept here only as the reasoning behind a guard: the line-mode
 inversion, the statistics provenance gap, the preflop start guard, the facing-bet
 lane naming, the fail-closed review, and the solver thread budget.
 
+### The bet button that described the wrong bet
+
+The draft normalizer separates BET_SMALL from BET_BIG on an absolute chip count,
+`amount > 75`. The families do not share a pot, so the same fraction falls on
+either side of it. Measured across the shipped library:
+
+| Pot | Families | What the buttons became |
+| --- | --- | --- |
+| 50 | 10 | 33, 50 and 75 percent all become BET_SMALL; **BET_BIG is only the all-in** |
+| 157 | 3 | 25 percent is BET_SMALL, 50 percent is BET_BIG, all-in joins BET_BIG |
+
+The view then rendered BET_BIG as a fixed 75 percent of pot and BET_SMALL as a
+fixed 33 percent, constants with no connection to any solve. So in ten of thirteen
+families the button read "big bet 4 BB" while the strategy behind it was the
+solver shoving 65 BB - a factor of sixteen - and in the other three the identical
+label meant a half-pot bet.
+
+Grading was never affected: it keys on the action, not the size. What was affected
+is a player practising sizing while reading a label that did not describe what
+they were being taught.
+
+The view now takes the sizes from a table recovered from the solve inputs, the
+same pattern as the SPR and range-weight tables. Where the shove is the only
+action behind the button it says all-in and shows the stack; where a real bet sits
+beside it, the bet is what gets described, because calling the whole button
+all-in overstates it exactly as badly as the fixed 75 percent understated it.
+
+Still open, and a content question rather than a display one: three genuinely
+different solved sizes sit behind one button in ten families, so a player cannot
+express or learn flop sizing there. And the threshold in the normalizer is still
+absolute - it has no pot to work from, since it is passed only `--pot-type` - so a
+future rebuild would reproduce the same split.
+
 ### The texture match that was not one
 
 Measured across the shipped library: 18 of 19 rules declare all 13 board textures
