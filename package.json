@@ -19,6 +19,7 @@
     "mtt:blockers": "vite-node scripts/checkMttBlockers.mts",
     "mtt:intake-plan": "vite-node scripts/checkMttIntakePlan.mts",
     "mtt:postflop-matrix": "vite-node scripts/checkMttPostflopMatrix.mts",
+    "mtt:postflop-range-weights": "vite-node scripts/buildPostflopRangeWeights.mts",
     "mtt:postflop-coverage": "vite-node scripts/checkMttPostflopProductionCoverage.mts",
     "mtt:postflop-positions": "vite-node scripts/checkMttPostflopPositions.mts",
     "mtt:postflop-release": "vite-node scripts/checkMttPostflopReleaseGate.mts",

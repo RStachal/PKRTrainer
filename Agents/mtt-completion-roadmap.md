@@ -800,11 +800,34 @@ versus big blind in a single-raised pot - so the comparison is like for like.
 That points at the range in the solve inputs for `MTT9_*_BTN_BB_SRP`, not at the
 pipeline.
 
-This matters more since the trainer now deals the hero only from the solved
-range: whatever that range is, it is exactly what a player practises. It is a
-poker judgement about solve inputs rather than a mechanical defect, so it is
-recorded rather than changed. Confirming or correcting it is an owner decision,
-and re-solving those families would be the follow-up.
+**Read from the solve inputs 2026-07-30, and it is sharper than 19 percent.** The
+button's range is the only one in the library written in mixed frequencies: 39 of
+its 49 hand classes carry a weight below 1, where the cutoff's and UTG's ranges
+are pure. Counting classes and ignoring those weights gives 18.3 percent, which is
+roughly the 19.0 above. Counting what the solve actually holds gives **12.4
+percent** - narrower than UTG's 14.8, which for a button is not defensible at any
+stack depth.
+
+So the two numbers were never comparable, and the coverage metric was reading a
+weighted range as though it were pure. The question for the owner is now specific:
+is that weighted button range the intended opening range, or a continuing range
+that was pasted into the opening slot? Only three families use it -
+20BB_BTN_BB_SRP_LOWSPR, 50BB_BTN_BB_SRP and 80BB_BTN_BB_SRP_HIGHSPR - and all
+three ship.
+
+This matters more since the trainer deals the hero only from the solved range:
+whatever that range is, it is exactly what a player practises. Whether the range
+itself is right remains a poker judgement about solve inputs, so it is recorded
+rather than changed, and re-solving those three families is the follow-up.
+
+The mechanical half of it is fixed. The trainer dealt uniformly from the solved
+range and ignored the weights entirely - the pack schema has had a `weightPct`
+slot all along and no pack ever filled it - so on 50BB_BTN_BB_SRP the hands the
+button opens a quarter of the time arrived four times too often, and the range as
+a whole was dealt 1.44x more than the solve assumes. The cutoff family measured
+exactly 1.00x, which is what made this visible. Weights are now recovered from the
+parameter files into a generated table and the deal is drawn in proportion to
+them, with a test reconciling the table against those files on every run.
 
 ## What full library completion would actually take
 

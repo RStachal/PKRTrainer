@@ -5,6 +5,8 @@ import type { PostflopActionNode, PostflopTrainingSpot } from "./postflopTrainin
 import { positionsForFormat, type TableFormat } from "./trainingProfile";
 import type { ActionEvSet } from "./actionEv";
 import type { SprFidelity } from "./postflopSprFidelity";
+import { heroRangeWeight } from "../data/ranges/postflopRangeWeights.generated";
+import { familyIdFromRuleId } from "../data/ranges/postflopSolvedSpr";
 import {
   bestActionsForActionEv,
   cloneActionEvSet,
@@ -782,16 +784,37 @@ function redealHeroIntoStrategyRange(
   if (handClasses.size === 0) return [dealt[0], dealt[1]];
   if (handClasses.has(postflopHandClassFromCards(dealt))) return [dealt[0], dealt[1]];
 
+  // Draw in proportion to how often the solve's range actually holds each class.
+  // Three families open part of their range part of the time - the button opens
+  // 55 a quarter of the time - and dealing uniformly practised those hands up to
+  // four times too often. The advice shown for them was right; the frequency the
+  // player met them was not.
+  const family = familyIdFromRuleId(source.ruleId);
   const deck = deckWithout(board);
   const combos: Array<[Card, Card]> = [];
+  const weights: number[] = [];
+  let totalWeight = 0;
   for (let i = 0; i < deck.length; i += 1) {
     for (let j = i + 1; j < deck.length; j += 1) {
       const pair: [Card, Card] = [deck[i], deck[j]];
-      if (handClasses.has(postflopHandClassFromCards(pair))) combos.push(pair);
+      const handClass = postflopHandClassFromCards(pair);
+      if (!handClasses.has(handClass)) continue;
+      const weight = heroRangeWeight(family, handClass);
+      if (weight <= 0) continue;
+      combos.push(pair);
+      weights.push(weight);
+      totalWeight += weight;
     }
   }
   if (combos.length === 0) return [dealt[0], dealt[1]];
-  return combos[Math.floor(rng() * combos.length)];
+
+  let target = rng() * totalWeight;
+  for (let index = 0; index < combos.length; index += 1) {
+    target -= weights[index];
+    if (target < 0) return combos[index];
+  }
+  // Only reachable through floating-point drift at the very top of the range.
+  return combos[combos.length - 1];
 }
 
 function dealCards(rng: () => number, deck: Card[], count: number): Card[] {
