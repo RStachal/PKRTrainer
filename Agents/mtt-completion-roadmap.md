@@ -125,6 +125,26 @@ Priorities 1-4 are the four button families, and they are the only ones past the
 guard's tolerance. Everything from 5 down can wait for a second pass without the
 beta being wrong about it, because the player is told.
 
+### The short-stack model, added 2026-07-31
+
+The largest structural finding from checking the owner's charts, and it subsumes
+several items previously tracked apart.
+
+Our short-stack contexts end at 10BB: PUSH_FOLD and VS_ALLIN hold buckets 5 and
+10, and VS_OPEN above that offers only CALL and 3BET. There is no jam action
+anywhere above 12BB. The charts show that 12 to 30BB is precisely where jamming
+is the strategy - open-jam thresholds instead of one opening range, re-jams over
+an open worth 2.1 to 33.0 percent, and call-a-shove ranges across 15 to 30BB.
+
+So a player in that band is taught deep-stack shapes throughout. This is why the
+corrections that were possible there were so large - big-blind defence forty
+points out, push/fold roughly half - while the deep-stack ranges, where the model
+does fit what it describes, were out by two to seven points.
+
+It is a feature rather than a correction: a jam action in the short-stack
+contexts, depth-indexed thresholds per hand instead of one range per bucket, and
+those contexts extended from 10BB to 30BB. The data is measured and on disk.
+
 ### What is deliberately not being done
 
 **The 20BB band is left as it is**, though the charts disagree with it in both

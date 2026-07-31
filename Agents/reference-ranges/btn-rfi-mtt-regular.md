@@ -433,3 +433,41 @@ This also settles the earlier worry that leaving the other defending seats flat
 was a silent risk. It was not: they were flat and close. The big blind was flat
 and forty points out. Being flat is only a defect where the underlying strategy
 moves, and it is worth measuring which case one is in before correcting either.
+
+## The one finding behind all four gaps: no short-stack model above 12BB
+
+Reading the rejam sheets settled what the previous four "missing" items had in
+common. They are not four gaps; they are one.
+
+Our short-stack contexts stop at 10BB. PUSH_FOLD holds buckets 5 and 10.
+VS_ALLIN holds 5 and 10. Above that, VS_OPEN at 15, 20, 25 and 30BB offers
+exactly two actions - CALL and 3BET. There is no jam anywhere above 12BB.
+
+The sheets say the band from 12 to 30BB is where jamming *is* the strategy:
+
+| Sheet | What it teaches at 15-30BB | What we offer |
+| --- | --- | --- |
+| Openraising 10-20bb | open-raise range plus three jam thresholds | one opening range |
+| Pushing 10bb | jam ranges to 74.7% | PUSH_FOLD, stops at 10BB |
+| Calling rejams | call-a-shove ranges, 15-30BB | VS_ALLIN, stops at 10BB |
+| Rejaming | re-jam over an open, 2.1% to 33.0% | CALL and 3BET only |
+
+So a player between twelve and thirty big blinds - a band that covers a large
+part of any tournament - is being taught deep-stack shapes. They are never told
+to shove over an open, never shown a jam threshold, and never given a range for
+calling one.
+
+That reframes the earlier items. The 20BB opening band, VS_ALLIN above 10BB, and
+the missing re-jam are not three data gaps to fill separately; they are one model
+that ends at 12BB, and the charts to fill it are all on disk and already read.
+
+**It also explains why the corrections that were possible were so large.** BB
+defence was forty points out and push/fold roughly half, both at short depths,
+because those are the places the model is being asked to describe a game it does
+not represent. The deep-stack ranges, where the model does fit, were out by two
+to seven points and mostly right.
+
+Worth being clear about the size: this is a feature, not a correction. It needs
+a jam action in the short-stack contexts, depth-indexed thresholds per hand
+rather than one range per bucket, and the contexts extended from 10BB to 30BB.
+The data is measured and waiting.
