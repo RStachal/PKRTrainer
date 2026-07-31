@@ -218,6 +218,39 @@ describe("drillEngine - generateSpot properties", () => {
     );
   });
 
+  // Feature: mtt-preflop-trainer, Property 9b: Doporuceni je vzdy mezi nabizenymi odpovedmi
+  // Validates: Requirements 3.5, 4.4, 7.2
+  it("Property 9b: strictCorrect je vždy mezi nabízenými odpověďmi, ve všech koších", () => {
+    // The guard that was missing. Ranges and the offered-action set are built by
+    // two separate paths, and nothing checked they agreed - so when the re-jam
+    // ranges started recommending JAM against an open, the drill went on offering
+    // only fold, call and three-bet. A player would have been marked wrong for
+    // every answer available to them, and every existing test still passed.
+    //
+    // Sweeps every bucket rather than the first valid one, because the disagreement
+    // only existed between 15 and 30BB.
+    fc.assert(
+      fc.property(arbSeed, arbContext, arbAnte, (seed, context, ante) => {
+        for (const bucket of validBucketsFor(context)) {
+          const spot = genSpot(
+            seed,
+            context,
+            makeFilters({ buckets: [bucket], contexts: [context], ante }),
+          );
+          if (spot === null) continue;
+          const offered = new Set(spot.answers.map((answer) => answer.key));
+          for (const key of spot.strictCorrect) {
+            expect(
+              offered.has(key),
+              `${context} ${spot.heroPos} ${bucket}BB ${spot.hand}: recommends ${key}, offers ${[...offered].join("/")}`,
+            ).toBe(true);
+          }
+        }
+      }),
+      { numRuns: 60 },
+    );
+  });
+
   // Feature: mtt-preflop-trainer, Property 13: Ante mod urcuje variantu dat i startovni pot
   // Validates: Requirements 5.2, 5.3
   it("Property 13: ante ON/OFF urcuje startovni pot", () => {

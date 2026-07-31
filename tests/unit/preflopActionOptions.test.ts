@@ -10,10 +10,15 @@ describe("preflop action options", () => {
       .toEqual(["ISO_3X", "OVERLIMP", "FOLD"]);
     expect(offeredPreflopActionKeysForContext("VS_LIMP", "BB", 25, ["ISO_3X"]))
       .toEqual(["LIMP", "ISO_3X"]);
+    // At 25BB a shove over an open is on the table, so it is offered. Deep, it is
+    // not - the charts draw no re-jam past 30BB and offering an action nobody
+    // should ever take is its own kind of wrong.
     expect(offeredPreflopActionKeysForContext("VS_OPEN", "BTN", 25, ["3BET"]))
+      .toEqual(["FOLD", "CALL", "3BET", "JAM"]);
+    expect(offeredPreflopActionKeysForContext("VS_OPEN", "BTN", 100, ["3BET"]))
       .toEqual(["FOLD", "CALL", "3BET"]);
     expect(offeredPreflopActionKeysForContext("SQUEEZE", "BTN", 25, ["SQUEEZE"]))
-      .toEqual(["FOLD", "CALL", "3BET", "SQUEEZE"]);
+      .toEqual(["FOLD", "CALL", "3BET", "SQUEEZE", "JAM"]);
   });
 
   it("uses stack and BvB state guards before the normal context branch", () => {
@@ -24,6 +29,6 @@ describe("preflop action options", () => {
     expect(offeredPreflopActionKeysForContext("BVB", "SB", 25, ["OPEN_25X"]))
       .toEqual(["OPEN_25X", "LIMP", "FOLD"]);
     expect(offeredPreflopActionKeysForContext("BVB", "BB", 25, ["3BET"]))
-      .toEqual(["FOLD", "CALL", "3BET"]);
+      .toEqual(["FOLD", "CALL", "3BET", "JAM"]);
   });
 });

@@ -50,6 +50,16 @@ export const STACK_BUCKETS: StackBucket[] = [
 /** Horní hranice (včetně) pro režim Push/Fold v BB (Req 2.3). */
 export const PUSH_FOLD_MAX = 12;
 
+/**
+ * Horní hranice (včetně) pro re-jam přes open v BB.
+ *
+ * Nad Push/Fold, ale stále krátký stack: mezi 12 a 30 BB je shove přes open
+ * reálná odpověď a majitelovy charty pro ni dávají prahy po jednotlivých rukách.
+ * Třicet je nejhlubší práh, který listy kreslí - hlouběji už žádný re-jam
+ * nenabízejí.
+ */
+export const RE_JAM_MAX = 30;
+
 // ---------------------------------------------------------------------------
 // Ante (Req 5)
 // ---------------------------------------------------------------------------
@@ -133,6 +143,8 @@ export type FacingAction = "NONE" | "OPEN" | "3BET" | "4BET" | "ALLIN";
 export interface TableState {
   heroPos: Position;
   pushFold: boolean; // eff <= 12 BB
+  /** eff <= 30 BB: shove přes open je nabízená akce (Req 3.5). */
+  shortStack: boolean;
   limpsBefore: number; // 0..8
   callsBefore: number; // 0..7
   facing: FacingAction;

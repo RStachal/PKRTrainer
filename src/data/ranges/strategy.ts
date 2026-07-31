@@ -32,6 +32,8 @@ import {
   openKeys,
   type RangeSegment,
 } from "./rangeBuilders";
+import { REJAM_CALIBRATION_OPENER, REJAM_RANGES } from "./rejamRanges.generated";
+import { CALL_REJAM_CALIBRATION_SHOVER, CALL_REJAM_RANGES } from "./callRejamRanges.generated";
 
 // ---------------------------------------------------------------------------
 // Rozdělení košů (Req 2.3: ≤ 12 BB = push/fold)
@@ -39,6 +41,9 @@ import {
 
 /** Koše v režimu Push/Fold (≤ 12 BB) z definované sady: 5 a 10 BB. */
 const PUSH_FOLD_BUCKETS: StackBucket[] = [5, 10];
+
+/** Depths the owner's re-jam and calling-rejam sheets draw. */
+const CALL_REJAM_BUCKETS: StackBucket[] = [15, 20, 25, 30];
 
 /** Koše mimo push/fold (> 12 BB): plný akční strom. */
 const DEEP_BUCKETS: StackBucket[] = [15, 20, 25, 30, 40, 50, 60, 75, 100, 125, 150];
@@ -460,6 +465,45 @@ function rfiSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSe
   return [{ spec: widen(ce, wide), strict: k.strict, lenient: k.lenient }];
 }
 
+/**
+ * Re-jam over an open, for the depths the owner's sheets cover.
+ *
+ * Between roughly twelve and thirty big blinds the shove is the main answer to an
+ * open, and the model had no way to say so: PUSH_FOLD stops at 12BB and VS_OPEN
+ * above it offered only CALL and 3BET, so a player at twenty big blinds was being
+ * taught deep-stack shapes. The sheets give each hand the deepest stack at which
+ * it jams, so the range at a bucket is every hand whose threshold reaches it -
+ * which is why these get narrower as stacks get deeper, not wider.
+ *
+ * Calibrated to one opener per hero, listed in REJAM_CALIBRATION_OPENER, because
+ * VS_OPEN has no opener axis. That axis matters here more than anywhere else -
+ * the big blind re-jams 33 percent over a button open at 15BB and 9.8 percent
+ * over an early one - so the measured ranges for every opener are kept in
+ * REJAM_RANGES and only collapsed at this one point.
+ */
+function rejamSegments(pos: Position, bucket: StackBucket): RangeSegment[] {
+  const opener = REJAM_CALIBRATION_OPENER[pos];
+  if (opener === undefined) return [];
+  const row = REJAM_RANGES.find((item) => item.hero === pos && item.opener === opener);
+  if (row === undefined) return [];
+
+  // Above the deepest threshold the sheets draw, there is no jam to make. Left as
+  // "no segment" rather than an empty range so the flat defence is untouched at
+  // the depths the charts say nothing about.
+  const jam = Object.entries(row.thresholds)
+    .filter(([, threshold]) => threshold >= bucket)
+    .map(([hand]) => hand);
+  if (jam.length === 0) return [];
+
+  return [
+    { spec: jam.join(", "), strict: ["JAM"] },
+    // The sheets' salmon band three-bets and calls the four-bet rather than
+    // jamming, at every depth they cover. It reaches the same stack in the middle
+    // but keeps worse hands in, so it is kept as its own action.
+    { spec: row.threeBetCall.join(", "), strict: ["3BET"] },
+  ];
+}
+
 function defendSegments(def: DefendDef, wide: boolean): RangeSegment[] {
   return [
     { spec: def.value, strict: ["3BET"] },
@@ -534,6 +578,33 @@ function callJamSegments(pos: Position, bucket: StackBucket, wide: boolean): Ran
   return [{ spec: widen(ce, wide), strict: ["CALL_JAM"], lenient: ["CALL_JAM"] }];
 }
 
+/**
+ * Calling a re-jam between 15 and 30BB, from the owner's charts.
+ *
+ * The other half of rejamSegments. Teaching a player to shove over an open at
+ * twenty big blinds without telling the opener what to call with would leave the
+ * spot half described, and VS_ALLIN held nothing above 10BB - so an opener facing
+ * a shove at those depths had no answer at all.
+ *
+ * Calibrated to the big blind shoving, for every hero: it is the widest re-jammer
+ * by a distance, the only seat present on all the sheets, and it is the range we
+ * now teach the big blind to shove, so both sides of the spot agree.
+ *
+ * Seats the sheets do not cover keep having nothing here rather than borrowing a
+ * neighbour's range.
+ */
+function callRejamSegments(pos: Position, bucket: StackBucket): RangeSegment[] {
+  const row = CALL_REJAM_RANGES.find(
+    (item) => item.hero === pos && item.shover === CALL_REJAM_CALIBRATION_SHOVER,
+  );
+  if (row === undefined) return [];
+  const call = Object.entries(row.thresholds)
+    .filter(([, threshold]) => threshold >= bucket)
+    .map(([hand]) => hand);
+  if (call.length === 0) return [];
+  return [{ spec: call.join(", "), strict: ["CALL_JAM"], lenient: ["CALL_JAM"] }];
+}
+
 // ---------------------------------------------------------------------------
 // Hlavní generátor souboru ranges pro variantu ante
 // ---------------------------------------------------------------------------
@@ -572,7 +643,13 @@ export function buildAnteRangeFile(ante: AnteMode, version: string): RangeFile {
       const def: DefendDef = band === undefined
         ? flat
         : { value: band.value, bluff: band.bluff, call: band.call, callExtra: flat.callExtra };
-      entries.push(makeRecord(pos, bucket, "VS_OPEN", defendSegments(def, wide)));
+      // The re-jam goes in front of the flat defence, not instead of it: the
+      // sheets it comes from describe only the shoving branch, and the pack keeps
+      // flatting and three-betting on separate sheets of its own.
+      entries.push(makeRecord(pos, bucket, "VS_OPEN", [
+        ...rejamSegments(pos, bucket),
+        ...defendSegments(def, wide),
+      ]));
     }
   }
 
@@ -625,6 +702,11 @@ export function buildAnteRangeFile(ante: AnteMode, version: string): RangeFile {
   for (const pos of POSITIONS_ALL) {
     for (const bucket of PUSH_FOLD_BUCKETS) {
       entries.push(makeRecord(pos, bucket, "VS_ALLIN", callJamSegments(pos, bucket, wide)));
+    }
+    // And the charted depths above them, where the answer used to be nothing.
+    for (const bucket of CALL_REJAM_BUCKETS) {
+      const segments = callRejamSegments(pos, bucket);
+      if (segments.length > 0) entries.push(makeRecord(pos, bucket, "VS_ALLIN", segments));
     }
   }
 

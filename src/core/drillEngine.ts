@@ -66,6 +66,7 @@
 import {
   POSITION_ORDER,
   PUSH_FOLD_MAX,
+  RE_JAM_MAX,
   STACK_BUCKETS,
   type ActionContext,
   type ActionKey,
@@ -434,6 +435,7 @@ export function generateSpot(
   const tableState: TableState = {
     heroPos,
     pushFold,
+    shortStack: effStack <= RE_JAM_MAX,
     limpsBefore,
     callsBefore,
     facing: facingFor(context, heroPos),

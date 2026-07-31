@@ -55,6 +55,7 @@
 
 import {
   PUSH_FOLD_MAX,
+  RE_JAM_MAX,
   STACK_BUCKETS,
   type ActionContext,
   type ActionKey,
@@ -965,6 +966,7 @@ function buildSpot(
   const tableState: TableState = {
     heroPos,
     pushFold,
+    shortStack: bucket <= RE_JAM_MAX,
     limpsBefore: ctx.limps,
     callsBefore: ctx.calls,
     facing: ctx.facing,

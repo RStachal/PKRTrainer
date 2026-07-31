@@ -104,7 +104,10 @@ const REQUIRED_CONTEXTS: readonly ActionContext[] = [
 const REPRESENTATIVE_ACTIONS: Record<ActionContext, readonly ActionKey[]> = {
   RFI: ["OPEN_2X", "OPEN_25X"],
   VS_LIMP: ["ISO_25X", "OVERLIMP", "LIMP"],
-  VS_OPEN: ["3BET", "CALL"],
+  // JAM belongs here now: between 15 and 30BB the owner's charts make re-jamming
+  // over an open a real branch, and listing it means the audit notices if that
+  // data ever silently stops reaching the packs.
+  VS_OPEN: ["3BET", "CALL", "JAM"],
   VS_3BET: ["4BET", "CALL"],
   VS_4BET: ["JAM", "CALL"],
   SQUEEZE: ["SQUEEZE", "CALL"],
@@ -114,7 +117,9 @@ const REPRESENTATIVE_ACTIONS: Record<ActionContext, readonly ActionKey[]> = {
 };
 
 const HAND_CLASS_SET: ReadonlySet<HandLabel> = new Set(ALL_HAND_CLASSES);
-const EXPECTED_RECORD_COUNT = 487;
+// 487 before the calling-rejam sheets added VS_ALLIN at 15, 20, 25 and 30BB for
+// the five seats they cover.
+const EXPECTED_RECORD_COUNT = 507;
 const EXPECTED_NORMALIZED_CELL_COUNT = EXPECTED_RECORD_COUNT * ALL_HAND_CLASSES.length;
 
 export function auditCurrentMttPreflopProductionPacks(): MttPreflopRangeAuditReport[] {

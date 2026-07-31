@@ -303,6 +303,11 @@ describe("mttPreflopRangePackImport", () => {
                   { action: "FOLD" as const, evBb: 0 },
                   { action: "CALL" as const, evBb: 0.204 },
                   { action: "3BET" as const, evBb: 0.21 },
+                  // A shove is offered against an open at 15BB, so a complete
+                  // export has to price it. This fixture is the "complete" half
+                  // of the test, and the whole point of the check is that
+                  // "complete" means every action actually on offer.
+                  { action: "JAM" as const, evBb: 0.18 },
                 ],
               },
             },

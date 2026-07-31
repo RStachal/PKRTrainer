@@ -145,6 +145,44 @@ It is a feature rather than a correction: a jam action in the short-stack
 contexts, depth-indexed thresholds per hand instead of one range per bucket, and
 those contexts extended from 10BB to 30BB. The data is measured and on disk.
 
+**Two of the four are now closed.** `VS_OPEN` carries a re-jam from 15 to 30BB for
+all six defending seats, and `VS_ALLIN` carries the range that calls it for the
+five seats the sheets cover - both depth-indexed per hand, both from the owner's
+charts, neither needing the solver. What remains is the open-jam threshold on the
+10-20BB opening sheet and push/fold above 10BB, and those wait on the one question
+still open: what the cream colour means on the pushing sheets.
+
+### What study material would unblock, and what it would not - 2026-07-31
+
+The owner asked whether processing the MTT videos or written notes would help.
+Worth recording the answer, because it splits cleanly.
+
+**It would not help for range numbers.** The charts are sampled pixel by pixel and
+every sheet is asserted to cover 169 hand classes exactly once. Reading widths off
+a video would be slower and less reliable than what already exists - and a
+spot-check on 2026-07-31 showed that reading a chart *by eye* got seven of thirteen
+cells wrong where the sampler got all of them right.
+
+**It is the only source for the rules.** Every remaining blocker is a question
+about what the charts mean, not what they contain:
+
+1. **What the cream colour means on the pushing sheets.** Push/fold ranges are
+   lower bounds because of it, and cannot be extended above 10BB until it is
+   settled. The owner has already answered this for the calling-rejam sheets -
+   fold - but that answer was given for those sheets specifically.
+2. **Whether the sheets assume an ante.** The largest of the five. Every ante-on
+   number derived from these charts rests on an assumption nobody has stated.
+3. Whether the 10-20BB openraising sheet's thresholds work like the re-jam ones.
+4. How much defence should change with the opener's width - the sheets have that
+   axis across their 40/45/50 percent columns and the model does not.
+5. What to do with conditions inside a depth band, like "raise + call 3bet only
+   50bb+" on the BB vs SB limp sheet.
+
+Usable formats: subtitle and transcript files, PDFs, written notes, individual
+screenshots. Video and audio cannot be read directly. Rule-shaped statements are
+the valuable part - "under 15bb jam, otherwise openraise" was one sentence from the
+owner and it shaped the whole short-stack model.
+
 ### What is deliberately not being done
 
 **The 20BB band is left as it is**, though the charts disagree with it in both

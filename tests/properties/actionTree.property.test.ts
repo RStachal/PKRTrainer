@@ -20,6 +20,7 @@ const FACINGS: FacingAction[] = ["NONE", "OPEN", "3BET", "4BET", "ALLIN"];
 const arbTableState: fc.Arbitrary<TableState> = fc.record({
   heroPos: fc.constantFrom<Position>(...POSITION_ORDER),
   pushFold: fc.boolean(),
+  shortStack: fc.boolean(),
   limpsBefore: fc.integer({ min: 0, max: 8 }),
   callsBefore: fc.integer({ min: 0, max: 7 }),
   facing: fc.constantFrom<FacingAction>(...FACINGS),
@@ -102,6 +103,7 @@ describe("actionTree — stavové stráže nabídky akcí", () => {
     const arbAllInState: fc.Arbitrary<TableState> = fc.record({
       heroPos: fc.constantFrom<Position>(...POSITION_ORDER),
       pushFold: fc.boolean(),
+      shortStack: fc.boolean(),
       limpsBefore: fc.integer({ min: 0, max: 8 }),
       callsBefore: fc.integer({ min: 0, max: 7 }),
       facing: fc.constant<FacingAction>("ALLIN"),

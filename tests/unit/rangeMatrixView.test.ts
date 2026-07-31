@@ -13,6 +13,7 @@ const heroCards: [Card, Card] = [
 const tableState: TableState = {
   heroPos: "BTN",
   pushFold: false,
+  shortStack: false,
   limpsBefore: 0,
   callsBefore: 0,
   facing: "NONE",

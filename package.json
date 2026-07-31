@@ -21,6 +21,8 @@
     "mtt:postflop-matrix": "vite-node scripts/checkMttPostflopMatrix.mts",
     "mtt:postflop-range-gap": "vite-node scripts/buildPostflopRangeGap.mts",
     "mtt:charts-vs-packs": "vite-node scripts/compareChartsToPacks.mts",
+    "mtt:rejam-ranges": "vite-node scripts/generateRejamRanges.mts",
+    "mtt:call-rejam-ranges": "vite-node scripts/generateCallRejamRanges.mts",
     "mtt:postflop-range-consistency": "vite-node scripts/checkPostflopHeroRangeConsistency.mts",
     "mtt:postflop-bet-sizing": "vite-node scripts/buildPostflopBetSizing.mts",
     "mtt:postflop-range-weights": "vite-node scripts/buildPostflopRangeWeights.mts",

@@ -27,7 +27,7 @@ const REQUIRED_CONTEXTS: ActionContext[] = [
 describe("mttPreflopRangeAudit", () => {
   it("audituje soucasne MTT 9-max regular packy jako produkcni baseline", () => {
     const reports = auditCurrentMttPreflopProductionPacks();
-    const expectedRecordCount = 487;
+    const expectedRecordCount = 507;
     const expectedCellCount = expectedRecordCount * ALL_HAND_CLASSES.length;
 
     expect(reports).toHaveLength(2);
@@ -87,7 +87,7 @@ describe("mttPreflopRangeAudit", () => {
     ));
     expect(fullRingOn).toMatchObject({
       status: "BLOCKED",
-      regularRecordCount: 487,
+      regularRecordCount: 507,
       turboRecordCount: 0,
       turboPackId: null,
     });

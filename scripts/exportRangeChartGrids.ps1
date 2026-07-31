@@ -9,12 +9,27 @@
 # describing different cells.
 #
 #   powershell -File scripts/exportRangeChartGrids.ps1 -Folder <dir> -Out <dir>
+#
+# -Geometry takes a JSON file of hand-measured grids for pages the detector reads
+# incompletely. It under-detects silently: "Rejam BB vs MP HJ CO" names three
+# openers and three grids sit at the same left offsets as every sibling sheet,
+# but only two were found, and a short page is not refused the way a page with no
+# grid at all is. Nothing downstream can tell a two-grid page from a page that
+# genuinely has two. So the override supplies the missing geometry rather than
+# loosening the detector, and each entry is a measurement someone made and
+# checked against the 169-class assertion.
+#
+#   { "Rejam BB vs MP HJ CO.png": ["-Left 1275.5 -Top 129.5 -CellX 45.12 -CellY 46.31"] }
+#
+# Listed grids are appended to whatever the detector found, then the whole set is
+# sorted left to right so the order still matches the seat order in the file name.
 
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)][string]$Folder,
   [Parameter(Mandatory = $true)][string]$Out,
-  [string]$Filter = "*.png"
+  [string]$Filter = "*.png",
+  [string]$Geometry = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,10 +38,27 @@ $detect = Join-Path $here "detectRangeChartGrids.ps1"
 $extract = Join-Path $here "extractRangeChartGrid.ps1"
 $null = New-Item -ItemType Directory -Force $Out
 
+$overrides = @{}
+if ($Geometry -ne "") {
+  $parsed = Get-Content -LiteralPath $Geometry -Raw -Encoding utf8 | ConvertFrom-Json
+  foreach ($property in $parsed.PSObject.Properties) { $overrides[$property.Name] = @($property.Value) }
+  Write-Host ("geometry overrides loaded for {0} page(s)" -f $overrides.Count)
+}
+
+function Get-GridLeft([string]$Line) {
+  if ($Line -match '-Left\s+([\d.]+)') { return [double]$Matches[1] }
+  return [double]::MaxValue
+}
+
 $resolved = 0; $refused = 0
 foreach ($file in Get-ChildItem $Folder -Recurse -File -Include $Filter) {
   $detected = & powershell -NoProfile -File $detect -Image $file.FullName 2>&1
   $lines = @($detected | ForEach-Object { "$_" } | Where-Object { $_.TrimStart().StartsWith("grid ") })
+  if ($overrides.ContainsKey($file.Name)) {
+    $added = @($overrides[$file.Name] | ForEach-Object { "grid  $_" })
+    $lines = @(@($lines) + $added) | Sort-Object { Get-GridLeft $_ }
+    Write-Host ("  +{0} hand-measured grid(s) for {1}" -f $added.Count, $file.Name)
+  }
   if ($lines.Count -eq 0) {
     $refused++
     Write-Host ("REFUSED  {0}" -f $file.Name)

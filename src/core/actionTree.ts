@@ -74,6 +74,12 @@ export function offeredActions(state: TableState): ActionKind[] {
       if (callsBefore >= MIN_SQUEEZE_CALLS && callsBefore <= MAX_SQUEEZE_CALLS) {
         actions.push("SQUEEZE");
       }
+      // Req 3.5 — a shove, while the stack is short enough for one. Between 12
+      // and 30BB the owner's charts make re-jamming the main answer to an open,
+      // and the ranges now say so; without offering it here the recommendation
+      // would not be among the options a player can pick. Listed last, as the
+      // action that ends the hand.
+      if (state.shortStack) actions.push("JAM");
       return actions;
     }
 

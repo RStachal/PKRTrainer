@@ -471,3 +471,234 @@ Worth being clear about the size: this is a feature, not a correction. It needs
 a jam action in the short-stack contexts, depth-indexed thresholds per hand
 rather than one range per bucket, and the contexts extended from 10BB to 30BB.
 The data is measured and waiting.
+
+## The re-jam, measured and shipped - 2026-07-31
+
+The first of the short-stack gaps to be closed, and the one that needed no solver
+because the data was already on disk.
+
+**What the sheets say.** The thirteen `rejaming` pages colour each hand by the
+deepest stack at which it shoves over an open - 30, 25, 20 or 15bb - plus a salmon
+band that three-bets and calls a four-bet instead. So the range at a depth is
+every hand whose threshold reaches it, and the ranges get *narrower* as stacks get
+deeper. The legend is on `Rejam BU vs MP HJ CO.png`.
+
+Each page is a hero against a group of openers and each grid on it is one opener,
+so 33 hero-opener pairs were measured. The spread across openers is large:
+
+| Hero | vs early | vs middle | vs late |
+| --- | --- | --- | --- |
+| BB at 15BB | 9.8% | 15.2% | 33.0% (vs BTN) |
+| SB at 15BB | 11.0% | 18.6% | 27.9% (vs BTN) |
+| BTN at 15BB | 7.2% | 14.9% | 19.2% (vs CO) |
+
+**What shipped.** `VS_OPEN` has no opener axis, so one column per hero is used and
+named in `REJAM_CALIBRATION_OPENER` - a middle-position opener throughout. All 33
+pairs are kept in `REJAM_RANGES` so adding the axis later needs no re-measurement.
+That mattered enough to say twice: collapsing this dimension without recording it
+is what left big-blind defence forty points out.
+
+The jam sits in front of the existing defence rather than replacing it, because
+the pack keeps flatting and three-betting on its own separate sheets - the
+`flatcalling_3betting_*` folders. A hand that shoves at 20BB stops flatting there,
+which is correct and is why the calling widths at those depths moved.
+
+Shipped widths, ante-off:
+
+| Seat | 15BB | 20BB | 25BB | 30BB | 40BB+ |
+| --- | --- | --- | --- | --- | --- |
+| LJ | 3.2% | 2.1% | 1.7% | 1.7% | none |
+| HJ | 10.4% | 8.6% | 2.7% | 2.4% | none |
+| CO | 11.9% | 10.4% | 5.1% | 3.0% | none |
+| BTN | 14.9% | 13.1% | 4.7% | 3.0% | none |
+| SB | 18.6% | 15.2% | 6.9% | 2.6% | none |
+| BB | 15.2% | 12.8% | 7.8% | 4.8% | none |
+
+Nothing above 30BB, which is where the sheets stop. The premiums three-bet rather
+than jam, per the salmon band - same stack in by the river, but it keeps worse
+hands in.
+
+**A detector fault found on the way.** `Rejam BB vs MP HJ CO.png` names three
+openers and has three grids at the usual offsets, but the detector found two and
+did not refuse - a short page looks exactly like a page that genuinely has fewer
+grids. Rather than loosen the detector, `exportRangeChartGrids.ps1` now takes a
+`-Geometry` overrides file of hand-measured grids, and the generator drops any
+page whose grid count disagrees with the openers its name lists. Both halves
+matter: the override supplies what was missing, the check makes the next silent
+short read fail loudly instead of filing a range under the wrong seat.
+
+## Calling the re-jam - 2026-07-31
+
+Shipped the same day as the re-jam and for the same reason: teaching a player to
+shove over an open at twenty big blinds while leaving the opener with no range to
+call it would describe half a spot.
+
+`VS_ALLIN` held 5BB and 10BB and nothing above. The seven `calling rejams` pages
+cover 15 to 30BB with the same threshold scheme - colour is the deepest stack at
+which the hand calls - and no salmon band, because calling is the only choice.
+The pale cells are folds; the owner confirmed that for these sheets directly,
+which is why they can be read at all. It stays confined to them: the same cream on
+the pushing sheets is still unresolved, and those ranges are still lower bounds.
+
+Eighteen hero-shover pairs measured. Calibrated to the big blind shoving, for
+every hero - it re-jams widest by a distance, it is the one seat present on every
+hero's sheets, and it is the range we now teach the big blind to shove, so the two
+sides of the spot describe the same game.
+
+| Seat | 5BB | 10BB | 15BB | 20BB | 25BB | 30BB |
+| --- | --- | --- | --- | --- | --- | --- |
+| UTG | 19.3% | 8.6% | 8.0% | 5.1% | 3.5% | 3.0% |
+| LJ | 24.3% | 11.8% | 8.7% | 6.2% | 3.8% | 3.0% |
+| CO | 29.4% | 15.2% | 12.5% | 9.2% | 7.2% | 6.0% |
+| BTN | 29.4% | 15.2% | 15.8% | 10.3% | 8.0% | 6.3% |
+| SB | 30.9% | 17.8% | 17.6% | 11.9% | 9.0% | 6.3% |
+
+**The seam is the interesting part.** The 10BB column comes from the shipped
+table, written long before any chart was opened; the 15BB column comes from
+sampling the charts. They meet within a few points at every seat - 17.8 against
+17.6 at the small blind, 15.2 against 15.8 on the button. Two independent routes
+landing on the same numbers is the closest thing to corroboration either source
+has, and a test now holds that seam so a future misreading of the colour scale
+shows up as a jump.
+
+UTG+1, UTG+2, HJ and BB have no sheets and keep having no range above 10BB. A call
+range borrowed from the seat next door would look exactly as authoritative as a
+measured one while being wrong by an unknown amount.
+
+## BB vs SB limp, measured - 2026-07-31
+
+The last unexamined folder, and the same story a third time.
+
+`BB vs SB ranges.png` carries three grids - 15-20bb, 20-25bb and 30bb+ - each with
+its own legend. The detector found one of the three and did not refuse, the same
+silent short read as the re-jam page, so both missing grids are now in the
+geometry overrides. All three read 169 classes cleanly and their cluster counts
+match their legends exactly (4, 4, 5), which is what says the geometry is right.
+
+| Action | 15-20bb | 20-25bb | 30bb+ |
+| --- | --- | --- | --- |
+| check behind | 63.0% | 65.5% | 61.5% |
+| jam | 20.5% | 9.0% | none |
+| raise 3.5x, fold to the shove or four-bet | 8.1% | 15.4% | 18.1% |
+| raise 3.5x and get it in | 8.3% | 10.1% | 16.9% |
+| raise 3.5x and four-bet under 100bb | - | - | 2.6% |
+| raise and call a three-bet, 50bb+ only | - | - | 0.9% |
+
+Jamming over a limp is a fifth of the range at 15-20bb, halves by 20-25 and is
+gone by 30 - the same short-stack shape as the re-jam and the calling ranges,
+arrived at from a different sheet. Our `VS_LIMP` has no jam at any depth.
+
+Not yet wired in. The two shallow bands are clean and could be shipped as they
+stand; the 30bb+ band carries conditions our model cannot express - "only 50bb+"
+and "four-bet under 100bb" are stack-dependent branches inside a single depth
+band - so that grid needs a decision about what to do with them rather than a
+straight import.
+
+## A spot-check that vindicated the pipeline - 2026-07-31
+
+Before shipping the re-jam ranges I checked a handful of cells on
+`Rejam BB vs BU SB.png` by eye against the generated thresholds, and got seven
+mismatches. Sampling the raw pixels settled it the other way: 33, 44, 77, 99 and
+22 are `#84A189`, which is the 30bb light green, and TT is `#8BA8CC`, the 20bb
+blue. The generated data was right at every point and my reading of the rendered
+image was wrong at seven of thirteen.
+
+Worth keeping because it is the whole argument for sampling rather than reading.
+The light green (30bb) and dark green (25bb) are easy to tell apart in the legend
+and hard to tell apart in a grid cell carrying a bold label, which is exactly the
+error that would have shifted a range one band without anything looking wrong.
+
+One incidental confirmation: a single pixel at the cell centre lands on the label
+glyph and returns black. The extractor takes the modal colour of the cell interior
+for that reason, and my ad-hoc 30x30 sample reproduced the problem the extractor
+already solves.
+
+## The range was only half the feature - 2026-07-31
+
+After the re-jam ranges were in and their tests were green, the drill still could
+not present the answer.
+
+`offeredActions` in src/core/actionTree.ts returned exactly FOLD, CALL and 3BET
+when the hero faced an open, at every depth. So a spot at 20BB whose recommended
+action was JAM offered three buttons, none of them the right one. `strictCorrect`
+came from the range record and `answers` from the offer, by two separate paths, and
+nothing compared them - a player would have been marked wrong for every answer
+available to them.
+
+Every existing test passed through this. The comment above the default-action code
+in drillEngine even asserts the invariant - "tim je doporuceni vzdy mezi
+nabizenymi moznostmi (Property 9)" - but Property 9 only checks that the two sets
+are non-empty, not that one contains the other.
+
+Fixed by giving TableState a `shortStack` flag, set from the bucket beside the
+existing `pushFold`, and offering JAM against an open while it holds. RE_JAM_MAX is
+30, the deepest threshold the sheets draw. The action is listed last, after any
+squeeze, as the one that ends the hand.
+
+The more useful half of the fix is Property 9b, which asserts what the old comment
+only claimed: every key in `strictCorrect` appears among the offered answers, for
+every context and every bucket. It sweeps all buckets rather than the first valid
+one, because the disagreement existed only between 15 and 30BB and a single-bucket
+check would have kept missing it.
+
+Worth stating plainly: shipping range data is not shipping a feature. The data, the
+offered actions and the grading are three separate paths, and only the third one is
+what the player experiences.
+
+### What offering a new action costs elsewhere
+
+Adding JAM to the vs-open offer had two consequences beyond the drill, and both
+are worth knowing rather than being surprised by later.
+
+**Solver EV exports are now short an action.** The app only shows per-action EV
+when the export prices every action on offer, which is the right rule - a bubble
+chart missing one bar is worse than none. Between 15 and 30BB there is now a
+fourth option against an open, so any VS_OPEN export at those depths needs a JAM
+value or the EV display silently switches off for that spot. Nothing is broken;
+the coverage bar simply moved, and the next EV intake has to clear it.
+
+**The record count went 487 to 507**, from the twenty new VS_ALLIN records. It was
+hard-coded in four places, one of them in `src/` - `EXPECTED_RECORD_COUNT` in
+mttPreflopRangeAudit.ts - so the audit would have reported a mismatch against
+correct data. All four updated.
+
+While there, `REPRESENTATIVE_ACTIONS.VS_OPEN` gained JAM. It lists the actions a
+pack is expected to contain at least one of, so the audit will now say so if the
+re-jam data ever stops reaching the packs - which, given it arrives through a
+generator and a chart folder that lives outside the repository, is a failure mode
+worth having an alarm for.
+
+## BB vs SB limp, and the same shape a fourth time
+
+The last unread folder. One sheet, three grids - 15-20BB, 20-25BB and 30BB+ -
+and each grid carries its own legend, so nothing here is inferred.
+
+| Action | 15-20BB | 20-25BB | 30BB+ |
+| --- | --- | --- | --- |
+| check behind | 63.0% | 65.5% | 61.5% |
+| jam | **20.5%** | **9.0%** | - |
+| raise 3.5x, bluff / fold to 4bet | 8.1% | 15.4% | 18.1% |
+| raise 3.5x and go with it | 8.3% | 10.1% | 16.9% |
+| raise 3.5x + 4bet under 100BB | - | - | 2.6% |
+| raise + call a 3bet, 50BB+ only | - | - | 0.9% |
+| **total, excluding check behind** | **36.9%** | **34.5%** | **38.5%** |
+
+Two things worth keeping.
+
+The iso-raise is close to flat across depth - 36.9, 34.5, 38.5 - but *what it is
+made of* changes completely. At 15-20BB more than half of it is a shove. By 30BB
+the shove is gone entirely and the same width is raises with a plan for the
+four-bet. A model with one iso range per seat gets the width right and the
+strategy wrong, which is the harder error to notice.
+
+And the jam vanishes at exactly the depth the re-jam sheets stop drawing one.
+Four folders, measured independently, agree that the short-stack game ends at
+30BB. That is the strongest evidence yet that [the band from 12 to 30BB is one
+model](#the-one-finding-behind-all-four-gaps-no-short-stack-model-above-12bb)
+rather than four unrelated gaps - it has a top edge, and every sheet puts it in
+the same place.
+
+This is not wired in. Our VS_LIMP has no jam and no depth curve, exactly as
+VS_OPEN did not, and the fix is the same fix. Recorded so it does not need
+re-measuring - which now matters more than it did, because the source images are
+no longer on disk.

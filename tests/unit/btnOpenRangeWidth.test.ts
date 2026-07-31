@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { createRangeStoreFromRangePack } from "../../src/data/rangeStore";
 import { allMttPreflopRangePacks } from "../../src/data/ranges/mttPreflopRangePacks";
-import type { AnteMode, Position, StackBucket } from "../../src/core/types";
+import type { ActionContext, ActionKey, AnteMode, Position, StackBucket } from "../../src/core/types";
 
 // The button acts last after the flop in every pot it opens, so its range is
 // meant to be materially wider than any earlier seat's. The shipped table had it
@@ -18,7 +18,8 @@ function contextWidthPct(
   ante: AnteMode,
   position: Position,
   bucket: StackBucket,
-  context: "RFI" | "VS_OPEN" | "PUSH_FOLD",
+  context: ActionContext,
+  exclude?: ActionKey,
 ): number | null {
   const pack = allMttPreflopRangePacks.find((item) => (
     item.dimensions.tableFormat === "FULL_RING_9" &&
@@ -31,6 +32,7 @@ function contextWidthPct(
   if (entry === undefined) return null;
   const combos = Object.entries(entry.actions)
     .filter(([, actions]) => actions.some((action) => action !== "FOLD"))
+    .filter(([, actions]) => exclude === undefined || !actions.includes(exclude))
     .reduce((sum, [handClass]) => sum + COMBOS(handClass), 0);
   return Math.round(combos / 1326 * 1000) / 10;
 }
@@ -140,14 +142,147 @@ describe("big blind defence", () => {
     }
   });
 
-  it("leaves the other defending seats on the flat table", () => {
-    // Only the big blind has charts. Giving the rest a curve would be inventing
-    // one, and a curve nobody measured is worse than a flat range everybody can
-    // see is flat.
+  it("leaves the other defending seats flat where nothing was measured", () => {
+    // Only the big blind has charts for how wide to defend by flatting and
+    // three-betting. Giving the rest a curve would be inventing one, and a curve
+    // nobody measured is worse than a flat range everybody can see is flat.
+    //
+    // Checked from 40BB up, which is where the re-jam sheets stop. Below that
+    // these seats now do have a measured shove, and it takes hands out of the
+    // calling range rather than sitting beside it - a hand that shoves at 20BB is
+    // not also flatting there. So the flatness this guards is the deep end, where
+    // there is still no measurement to justify a curve.
     for (const seat of ["LJ", "HJ", "CO", "BTN", "SB"] as Position[]) {
-      const shallow = contextWidthPct("OFF", seat, 20 as StackBucket, "VS_OPEN");
-      const deep = contextWidthPct("OFF", seat, 100 as StackBucket, "VS_OPEN");
-      expect(deep, seat).toBe(shallow);
+      const mid = contextWidthPct("OFF", seat, 40 as StackBucket, "VS_OPEN");
+      for (const bucket of [100, 150] as StackBucket[]) {
+        expect(contextWidthPct("OFF", seat, bucket, "VS_OPEN"), `${seat} ${bucket}BB`).toBe(mid);
+      }
+    }
+  });
+});
+
+describe("re-jamming over an open", () => {
+  const jamWidthPct = (position: Position, bucket: StackBucket): number => {
+    const pack = allMttPreflopRangePacks.find((item) => (
+      item.dimensions.tableFormat === "FULL_RING_9" &&
+      item.dimensions.blindSpeed === "REGULAR" &&
+      item.dimensions.ante === "OFF" &&
+      item.records.length > 0
+    ))!;
+    const entry = createRangeStoreFromRangePack(pack)
+      .lookup({ ante: "OFF", position, bucket, context: "VS_OPEN" });
+    if (entry === undefined) return 0;
+    const combos = Object.entries(entry.strict)
+      .filter(([, actions]) => actions.includes("JAM"))
+      .reduce((sum, [handClass]) => sum + COMBOS(handClass), 0);
+    return Math.round(combos / 1326 * 1000) / 10;
+  };
+
+  it("offers a shove at all, which between 12 and 30BB it did not", () => {
+    // The gap this closes. PUSH_FOLD stops at 12BB and VS_OPEN above it held only
+    // CALL and 3BET, so at twenty big blinds - where the sheets make shoving the
+    // main answer to an open - a player was being taught deep-stack shapes.
+    for (const seat of ["LJ", "HJ", "CO", "BTN", "SB", "BB"] as Position[]) {
+      for (const bucket of [15, 20, 25, 30] as StackBucket[]) {
+        expect(jamWidthPct(seat, bucket), `${seat} ${bucket}BB`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("narrows as stacks deepen, because the colours are thresholds", () => {
+    // Each hand carries the deepest stack at which it jams, so a deeper bucket
+    // keeps strictly fewer hands. If this ever inverts, the colour-to-depth
+    // mapping has been read upside down - which is the one way to get a complete,
+    // confident range that is exactly backwards.
+    for (const seat of ["HJ", "CO", "BTN", "SB", "BB"] as Position[]) {
+      const depths = ([15, 20, 25, 30] as StackBucket[]).map((bucket) => jamWidthPct(seat, bucket));
+      for (let index = 1; index < depths.length; index += 1) {
+        expect(depths[index], `${seat} ${depths.join(" ")}`).toBeLessThanOrEqual(depths[index - 1]);
+      }
+    }
+  });
+
+  it("stops where the sheets stop rather than extrapolating", () => {
+    // 30BB is the deepest threshold drawn. Carrying a jam to 40 would be inventing
+    // a number the source does not contain, and the flat defence there is intact.
+    for (const seat of ["LJ", "HJ", "CO", "BTN", "SB", "BB"] as Position[]) {
+      expect(jamWidthPct(seat, 40 as StackBucket), seat).toBe(0);
+      expect(jamWidthPct(seat, 100 as StackBucket), seat).toBe(0);
+    }
+  });
+
+  it("shoves wider from later seats", () => {
+    // Position buys width here as it does everywhere else. Stated as a property so
+    // it keeps holding if the calibration opener is ever changed.
+    for (const bucket of [15, 20] as StackBucket[]) {
+      expect(jamWidthPct("BTN", bucket), `${bucket}BB`).toBeGreaterThan(jamWidthPct("LJ", bucket));
+      expect(jamWidthPct("CO", bucket), `${bucket}BB`).toBeGreaterThan(jamWidthPct("LJ", bucket));
+    }
+  });
+
+  it("three-bets the premiums instead of jamming them", () => {
+    // The sheets' salmon band is "3bet /call", not a shove. It gets the same stack
+    // in by the river but keeps worse hands in the pot, so treating it as a jam
+    // would teach the wrong action with the right range.
+    const pack = allMttPreflopRangePacks.find((item) => (
+      item.dimensions.tableFormat === "FULL_RING_9" &&
+      item.dimensions.blindSpeed === "REGULAR" &&
+      item.dimensions.ante === "OFF" &&
+      item.records.length > 0
+    ))!;
+    const entry = createRangeStoreFromRangePack(pack)
+      .lookup({ ante: "OFF", position: "BB", bucket: 20 as StackBucket, context: "VS_OPEN" })!;
+    for (const hand of ["AA", "KK", "AKs", "AKo"]) {
+      expect(entry.strict[hand], hand).toContain("3BET");
+      expect(entry.strict[hand], hand).not.toContain("JAM");
+    }
+  });
+});
+
+describe("calling a re-jam", () => {
+  const CHARTED = ["UTG", "LJ", "CO", "BTN", "SB"] as Position[];
+
+  it("answers a shove between 15 and 30BB, where there was no answer at all", () => {
+    // VS_ALLIN held 5BB and 10BB and nothing above. An opener facing a shove at
+    // twenty big blinds - which is now a shove we teach - had no range to consult.
+    for (const seat of CHARTED) {
+      for (const bucket of [15, 20, 25, 30] as StackBucket[]) {
+        const width = contextWidthPct("OFF", seat, bucket, "VS_ALLIN");
+        expect(width, `${seat} ${bucket}BB`).not.toBeNull();
+        expect(width!, `${seat} ${bucket}BB`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("tightens as stacks deepen", () => {
+    // Same thresholds as the shoving side, so the same shape: worse pot odds and a
+    // stronger shoving range both argue for calling less as stacks grow.
+    for (const seat of CHARTED) {
+      const depths = ([15, 20, 25, 30] as StackBucket[])
+        .map((bucket) => contextWidthPct("OFF", seat, bucket, "VS_ALLIN")!);
+      for (let index = 1; index < depths.length; index += 1) {
+        expect(depths[index], `${seat} ${depths.join(" ")}`).toBeLessThanOrEqual(depths[index - 1]);
+      }
+    }
+  });
+
+  it("meets the flat table at the seam rather than jumping", () => {
+    // The 10BB ranges come from the shipped table and the 15BB ones from the
+    // charts, by two entirely separate routes. They land within a few points of
+    // each other, which is the closest thing to independent corroboration either
+    // source has. A large step here means one of the two is being misread.
+    for (const seat of CHARTED) {
+      const ten = contextWidthPct("OFF", seat, 10 as StackBucket, "VS_ALLIN")!;
+      const fifteen = contextWidthPct("OFF", seat, 15 as StackBucket, "VS_ALLIN")!;
+      expect(Math.abs(ten - fifteen), `${seat}: 10BB ${ten}% vs 15BB ${fifteen}%`).toBeLessThan(5);
+    }
+  });
+
+  it("leaves the uncharted seats empty instead of borrowing a neighbour's range", () => {
+    // No sheet covers these. A call range taken from the seat next door would look
+    // exactly as authoritative as a measured one and be wrong by an unknown amount.
+    for (const seat of ["UTG+1", "UTG+2", "HJ", "BB"] as Position[]) {
+      expect(contextWidthPct("OFF", seat, 20 as StackBucket, "VS_ALLIN"), seat).toBeNull();
     }
   });
 });

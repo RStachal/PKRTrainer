@@ -562,7 +562,9 @@ describe("mttProductionReadiness", () => {
     const productionRows = report.rows.filter((row) => row.productionReady);
     expect(productionRows).toEqual([]);
 
-    const legacyCandidates = report.rows.filter((row) => row.recordCount === 487);
+    // 487 until the calling-rejam sheets added VS_ALLIN at 15, 20, 25 and 30BB
+    // for the five seats they cover - twenty records that did not exist before.
+    const legacyCandidates = report.rows.filter((row) => row.recordCount === 507);
     expect(legacyCandidates).toHaveLength(2);
     expect(legacyCandidates.every((row) => (
       row.status === "CANDIDATE" &&
@@ -587,7 +589,7 @@ describe("mttProductionReadiness", () => {
     const productionRows = mttReport.rows.filter((row) => row.status === "PRODUCTION");
 
     expect(productionRows).toEqual([]);
-    expect(mttReport.rows.filter((row) => row.recordCount === 487).every((row) => (
+    expect(mttReport.rows.filter((row) => row.recordCount === 507).every((row) => (
       row.warnings.some((warning) => (
         warning.includes("canonical legal production provenance")
       ))
