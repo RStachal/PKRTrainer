@@ -143,7 +143,31 @@ does fit what it describes, were out by two to seven points.
 
 It is a feature rather than a correction: a jam action in the short-stack
 contexts, depth-indexed thresholds per hand instead of one range per bucket, and
-those contexts extended from 10BB to 30BB. The data is measured and on disk.
+those contexts extended from 10BB to 30BB.
+
+**Shipped so far: the re-jam over an open.** VS_OPEN now recommends a shove
+between 12 and 30BB from the measured thresholds, and the action tree offers it,
+which it did not - the two are built by separate paths and nothing checked they
+agreed, so the first run recommended an answer the drill did not offer. Property
+9b now holds that line for every context and bucket.
+
+**Still open**, all measured and recorded in the reference file:
+
+- VS_ALLIN above 10BB - calling a shove at 15 to 30BB
+- open-jam thresholds in the 10-20BB opening band, where we hold one range
+- VS_LIMP has no jam and no depth curve: BB versus a small-blind limp shoves
+  20.5 percent at 15-20BB and 9.0 at 20-25, and by 30BB the shove is gone while
+  the iso width barely moves - same width, different strategy
+- the opener-width axis, which every defending sheet has and no context of ours does
+
+One thing worth noting about the top edge: four folders measured independently all
+stop drawing a jam at 30BB. The band has a real upper limit and they agree on where.
+
+**The source charts are no longer on disk.** The Downloads folders they were read
+from are gone, so nothing further can be extracted until the owner restores them.
+What was measured is safe - the extracted grids and the generated ranges are in
+the repository - but the two chart-extraction tests now skip rather than run, and
+a re-measurement is not currently possible.
 
 **Two of the four are now closed.** `VS_OPEN` carries a re-jam from 15 to 30BB for
 all six defending seats, and `VS_ALLIN` carries the range that calls it for the
