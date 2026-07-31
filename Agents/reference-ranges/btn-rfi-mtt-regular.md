@@ -400,3 +400,36 @@ narrower would be a defect, and a test pins that.
 chart coverage - the first is unmeasured, the second is absent content rather
 than wrong content. Neither is a correction that can be made from what is on
 disk.
+
+## The other defending seats, 2026-07-31: no correction available, a feature is
+
+The flatting/3betting sheets do cover the seats the BB defend sheets did not, so
+the earlier note that they had no chart coverage was wrong. They are laid out by
+depth band, by the **opener's seat**, and by the defender. Legend: value 3bet +
+broke, 3bet + call 4bet, 3bet bluff, flatcall - plus two conditional colours,
+"flat if table super soft" and "optional 3bet bluff", which are exploitative
+additions and are excluded from the base range here.
+
+Base defence, against our flat figures:
+
+| Opener | BTN chart | BTN ours | SB chart | SB ours |
+| --- | --- | --- | --- | --- |
+| UTG | 14.3-17.9% | 17.0% | 10.0-12.5% | 10.3% |
+| MP | 16.7-17.3% | 17.0% | 12.1-14.3% | 10.3% |
+| CO | 23.4-23.7% | 17.0% | 16.9-19.2% | 10.3% |
+
+**Unlike the big blind, these are not wrong.** Against early and middle openers
+they land within a point or two; the whole residual error is against late
+openers, where the sheets defend 6 to 9 points wider. Our single number per seat
+is calibrated, in effect, to an early-position opener.
+
+So there is no width correction to make. Recalibrating to the middle column would
+move BTN by 0.3 points and would trade accuracy against UTG for accuracy against
+CO without gaining any. What closes this gap is the opener dimension the model
+does not have - the same one the big blind's sheets vary by - and that is a
+feature rather than a data fix.
+
+This also settles the earlier worry that leaving the other defending seats flat
+was a silent risk. It was not: they were flat and close. The big blind was flat
+and forty points out. Being flat is only a defect where the underlying strategy
+moves, and it is worth measuring which case one is in before correcting either.
