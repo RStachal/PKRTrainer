@@ -125,6 +125,46 @@ Priorities 1-4 are the four button families, and they are the only ones past the
 guard's tolerance. Everything from 5 down can wait for a second pass without the
 beta being wrong about it, because the player is told.
 
+### The solver queue is drained, and the remainder does not fit, tested 2026-08-03
+
+Checked every parameter queue against the raw checkpoints rather than trusting
+the runners' own phase reports. Across all 25 queues exactly **one** board has no
+checkpoint: `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR 872r`. Everything else is
+solved. The 52 files in the weekend queue are re-solves of boards that already
+have output, onto the uniform authoritative tree, and all 52 belong to the three
+deepest families - 110BB and 150BB three-bet pots and the 100BB out-of-position
+c-bet.
+
+So the machine is not idle at night because of a scheduling fault. It is idle
+because the only work left needs more memory than the machine has.
+
+That was tested rather than assumed. The one pending board was launched
+deliberately, overriding the memory budget, with 21.8 GB free against a tree that
+commits 25.9 GB:
+
+- it started and made real progress - iteration 21 of 200, exploitability down
+  from 201.6 to 34.8 percent
+- working set held at 24.8 GB of 25.9 committed, so the tree was resident and it
+  was not thrashing
+- at 382 seconds it died with `exit=-1`, a native access violation
+
+Which is exactly the failure the budget's comment predicts: admitted, then killed.
+Nothing was corrupted - no partial checkpoint was written and the family's other
+32 checkpoints are untouched - but six minutes of CPU produced nothing.
+
+**The budget is right and should not be relaxed.** It asks for 24 GB of base plus
+3 GB of reserve to be free before starting; the crash says that is the real
+requirement, not a conservative one. Two things that look like levers are not:
+committed memory barely moves with thread count, because the tree is nearly all
+of it, so cutting threads does not buy headroom; and free memory measured here
+equals available memory, so there is no reclaimable cache pool the budget is
+overlooking.
+
+The one board becomes solvable if roughly 4 GB more is free - closing the larger
+desktop applications would do it, and after the crash the machine sat at 25.7 GB
+free with them still open. The other 51 are quality re-solves, not gaps, and stay
+blocked until the machine has more RAM.
+
 ### The short-stack model, added 2026-07-31
 
 The largest structural finding from checking the owner's charts, and it subsumes
