@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { buildMttPreflopCsvScaffoldDocument } from "../../src/data/ranges/mttPreflopCsvScaffold.ts";
+import { CLI_SPAWN_TIMEOUT_MS } from "../cliSpawnBudget";
 
 const PACK_ID = "mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1";
 const CONFIRM_TOKEN = "MERGE_REVIEWED_MTT_SIXMAX_PREFLOP_CHUNK";
@@ -144,7 +145,7 @@ function invoke(workbenchPath: string, chunkPath: string, extra: readonly string
     cwd: process.cwd(),
     encoding: "utf8",
     maxBuffer: 8 * 1024 * 1024,
-    timeout: 30_000,
+    timeout: CLI_SPAWN_TIMEOUT_MS,
   });
 }
 

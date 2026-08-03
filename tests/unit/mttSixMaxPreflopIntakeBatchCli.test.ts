@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { buildMttPreflopCsvScaffoldDocument } from "../../src/data/ranges/mttPreflopCsvScaffold.ts";
+import { CLI_SPAWN_TIMEOUT_MS } from "../cliSpawnBudget";
 
 describe("mtt:sixmax-preflop-intake-batch CLI", () => {
   it("fails closed when one or more of the four exact solver CSV files are missing", () => {
@@ -205,7 +206,7 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
         `--source-dir=${sourceDir}`,
         "--incremental",
         "--json",
-      ], { cwd: process.cwd(), encoding: "utf8", timeout: 30_000 });
+      ], { cwd: process.cwd(), encoding: "utf8", timeout: CLI_SPAWN_TIMEOUT_MS });
 
       expect(result.status).toBe(0);
       const parsed = JSON.parse(result.stdout) as {

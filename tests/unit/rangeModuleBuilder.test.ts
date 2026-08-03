@@ -22,6 +22,7 @@ import {
   buildRangeModule,
   renderRangeModuleBuildReport,
 } from "../../src/data/ranges/rangeModuleBuilder";
+import { CLI_SPAWN_TIMEOUT_MS } from "../cliSpawnBudget";
 
 const ACTION_CONTEXTS: readonly ActionContext[] = [
   "RFI",
@@ -466,7 +467,7 @@ function runBuilderCli(
   return spawnSync(command, args, {
     cwd: process.cwd(),
     encoding: "utf8",
-    timeout: 60000,
+    timeout: CLI_SPAWN_TIMEOUT_MS,
   });
 }
 
