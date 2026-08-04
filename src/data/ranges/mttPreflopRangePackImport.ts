@@ -132,7 +132,10 @@ const ACTION_KEYS: readonly ActionKey[] = [
 ];
 
 const EXPECTED_NON_FOLD_ACTIONS_BY_CONTEXT: Record<ActionContext, readonly ActionKey[]> = {
-  RFI: ["OPEN_2X", "OPEN_25X", "OPEN_3X", "LIMP"],
+  // JAM belongs in RFI for the same reason it belongs in VS_OPEN and VS_LIMP:
+  // between ten and twenty big blinds the owner's sheets shove the small pairs
+  // rather than opening them, so a pack that says so is correct, not malformed.
+  RFI: ["OPEN_2X", "OPEN_25X", "OPEN_3X", "LIMP", "JAM"],
   // JAM belongs here for the same reason it belongs in VS_OPEN: short of thirty
   // big blinds the owner's chart answers a limp with a shove - 20.5 percent of
   // hands at 15-20BB - so a pack that teaches it is correct, not malformed.

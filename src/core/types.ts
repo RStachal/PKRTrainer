@@ -60,6 +60,24 @@ export const PUSH_FOLD_MAX = 12;
  */
 export const RE_JAM_MAX = 30;
 
+/**
+ * Horní hranice (včetně) pro open-shove místo open-raisu, v BB.
+ *
+ * Listy 10-20BB kreslí nejhlubší práh na dvaceti, takže na 20 BB už každá ruka
+ * raisuje a shove se nabízí jen na mělčích koších. Je to jiná hranice než
+ * `RE_JAM_MAX` a splynutí obou vedlo k tomu, že se shove nabízel na 25 BB, kde
+ * pro něj žádná ruka není.
+ */
+export const OPEN_SHOVE_MAX = 15;
+
+/**
+ * Horní hranice (včetně) pro shove přes limp, v BB.
+ *
+ * Chart BB vs SB limp shovuje v pásmech 15-20 a 20-25 BB; od 30 BB výš žádný
+ * shove nekreslí.
+ */
+export const LIMP_SHOVE_MAX = 25;
+
 // ---------------------------------------------------------------------------
 // Ante (Req 5)
 // ---------------------------------------------------------------------------
@@ -143,8 +161,15 @@ export type FacingAction = "NONE" | "OPEN" | "3BET" | "4BET" | "ALLIN";
 export interface TableState {
   heroPos: Position;
   pushFold: boolean; // eff <= 12 BB
-  /** eff <= 30 BB: shove přes open je nabízená akce (Req 3.5). */
-  shortStack: boolean;
+  /**
+   * Efektivní stack v BB.
+   *
+   * Nahradil dřívější `shortStack: boolean`. Majitelovy charty mají tři různé
+   * hloubky, ve kterých shove končí - open-shove na 20, shove přes limp na 25,
+   * re-jam na 30 - a jediný příznak je slučoval, takže se shove nabízel i tam,
+   * kde pro něj žádná ruka není. Strom si porovnání dělá sám.
+   */
+  effectiveStackBB: number;
   limpsBefore: number; // 0..8
   callsBefore: number; // 0..7
   facing: FacingAction;

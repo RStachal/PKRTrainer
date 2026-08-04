@@ -305,11 +305,27 @@ the chart shoves was, and one range per seat cannot express that difference. Onl
 the big blind has a sheet and only against the small blind; the other seats keep
 the flat table.
 
-**Still open**, all measured and recorded in the reference file:
+**Also shipped: the 10-20BB shove thresholds.** The button and cutoff shove their
+small pairs at fifteen big blinds rather than raising them. The width does not
+move - the sheet reclassifies hands, it does not add them - which is why this is a
+strategy correction and not a range one.
 
-- open-jam thresholds in the 10-20BB opening band, where we hold one range
+That completes the short-stack model. Every context between twelve and thirty big
+blinds now has the shove the charts draw: opening, facing an open, facing a limp,
+and calling one.
+
+It also forced an honest fix. `shortStack: boolean` was hiding three different
+depths - the open shove stops at 20BB, the shove over a limp at 25, the re-jam at
+30 - so a single flag offered an open shove at 25BB where no hand shoves. It is
+now `effectiveStackBB` with three named bounds.
+
+**Still open:**
+
 - VS_LIMP for the seats other than the big blind, which no sheet covers
 - the opener-width axis, which every defending sheet has and no context of ours does
+- HJ and BB calling a shove above 10BB, which no sheet covers
+- a conflict at 10BB: the pushing sheets put the button at 53.8 percent, the
+  10-20BB sheet's thresholds at 37.4. Two owned sources, no basis for picking one.
 
 One thing worth noting about the top edge: four folders measured independently all
 stop drawing a jam at 30BB. The band has a real upper limit and they agree on where.

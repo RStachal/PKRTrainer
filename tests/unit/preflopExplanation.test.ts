@@ -10,7 +10,7 @@ import type { TableState } from "../../src/core/types";
 const tableState: TableState = {
   heroPos: "BTN",
   pushFold: false,
-  shortStack: false,
+  effectiveStackBB: 100,
   limpsBefore: 0,
   callsBefore: 0,
   facing: "NONE",

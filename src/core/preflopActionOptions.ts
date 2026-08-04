@@ -1,7 +1,6 @@
 import { offeredActions } from "./actionTree";
 import {
   PUSH_FOLD_MAX,
-  RE_JAM_MAX,
   type ActionContext,
   type ActionKey,
   type ActionKind,
@@ -62,7 +61,7 @@ export function tableStateForPreflopContext(
   return {
     heroPos,
     pushFold: bucket <= PUSH_FOLD_MAX,
-    shortStack: bucket <= RE_JAM_MAX,
+    effectiveStackBB: bucket,
     limpsBefore: context === "VS_LIMP" ? 1 : 0,
     callsBefore: context === "SQUEEZE" ? 1 : 0,
     facing: facingForContext(context, heroPos),

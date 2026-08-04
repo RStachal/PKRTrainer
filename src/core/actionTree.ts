@@ -27,7 +27,14 @@
  * _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.13_
  */
 
-import type { ActionKind, FacingAction, TableState } from "./types";
+import {
+  LIMP_SHOVE_MAX,
+  OPEN_SHOVE_MAX,
+  RE_JAM_MAX,
+  type ActionKind,
+  type FacingAction,
+  type TableState,
+} from "./types";
 
 /** Dolní hranice (včetně) počtu limperů, kdy je v hře iso/over-limp/BB check (Req 3.3, 3.4, 3.13). */
 const MIN_LIMPS = 1;
@@ -65,7 +72,7 @@ export function offeredActions(state: TableState): ActionKind[] {
 
   switch (facing) {
     case "NONE":
-      return offeredWhenUnopened(heroIsBB, limpsBefore, state.shortStack);
+      return offeredWhenUnopened(heroIsBB, limpsBefore, state.effectiveStackBB);
 
     case "OPEN": {
       // Req 3.5 — vs-open: Fold / Call / 3bet.
@@ -79,7 +86,7 @@ export function offeredActions(state: TableState): ActionKind[] {
       // and the ranges now say so; without offering it here the recommendation
       // would not be among the options a player can pick. Listed last, as the
       // action that ends the hand.
-      if (state.shortStack) actions.push("JAM");
+      if (state.effectiveStackBB <= RE_JAM_MAX) actions.push("JAM");
       return actions;
     }
 
@@ -106,7 +113,7 @@ export function offeredActions(state: TableState): ActionKind[] {
 function offeredWhenUnopened(
   heroIsBB: boolean,
   limpsBefore: number,
-  shortStack: boolean,
+  effectiveStackBB: number,
 ): ActionKind[] {
   const hasLimps = limpsBefore >= MIN_LIMPS && limpsBefore <= MAX_LIMPS;
 
@@ -117,7 +124,7 @@ function offeredWhenUnopened(
       // Req 3.3 — plus a shove while the stack is short enough. The chart shoves
       // 20.5 percent over a limp at 15-20BB and 9.0 at 20-25, and draws none from
       // 30BB up, so the option appears exactly where a range exists to fill it.
-      return shortStack ? ["LIMP", "ISO", "JAM"] : ["LIMP", "ISO"];
+      return effectiveStackBB <= LIMP_SHOVE_MAX ? ["LIMP", "ISO", "JAM"] : ["LIMP", "ISO"];
     }
     // Req 3.4 — Iso-raise; Req 3.13 — Over-limp (jen mimo BB); plus Fold.
     return ["ISO", "OVERLIMP", "FOLD"];
@@ -126,7 +133,13 @@ function offeredWhenUnopened(
   // 0 limperů.
   if (!heroIsBB) {
     // Req 3.1 — RFI/Open; Req 3.2 — open-limp; plus Fold.
-    return ["OPEN", "LIMP", "FOLD"];
+    // Req 3.1 — plus the open shove while the stack is short. Between ten and
+    // twenty big blinds the owner's sheets do not draw one opening range: they
+    // draw a raising band and shove thresholds, and the small pairs are past
+    // theirs at fifteen big blinds.
+    return effectiveStackBB <= OPEN_SHOVE_MAX
+      ? ["OPEN", "LIMP", "JAM", "FOLD"]
+      : ["OPEN", "LIMP", "FOLD"];
   }
 
   // Hrdina na BB, facing = NONE, 0 limperů: tento stav v praxi nenastává

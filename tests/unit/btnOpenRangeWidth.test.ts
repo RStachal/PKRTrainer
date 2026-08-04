@@ -287,8 +287,67 @@ describe("calling a re-jam", () => {
   });
 });
 
+describe("opening between ten and twenty big blinds", () => {
+  function rfiWidthPct(position: Position, bucket: StackBucket, kind: "OPEN" | "JAM"): number {
+    const pack = allMttPreflopRangePacks.find((item) => (
+      item.dimensions.tableFormat === "FULL_RING_9" &&
+      item.dimensions.blindSpeed === "REGULAR" &&
+      item.dimensions.ante === "OFF" &&
+      item.records.length > 0
+    ))!;
+    const entry = createRangeStoreFromRangePack(pack)
+      .lookup({ ante: "OFF", position, bucket, context: "RFI" });
+    if (entry === undefined) return 0;
+    const combos = Object.entries(entry.strict)
+      .filter(([, actions]) => actions.some((action) => (
+        kind === "JAM" ? action === "JAM" : action.startsWith("OPEN")
+      )))
+      .reduce((sum, [handClass]) => sum + COMBOS(handClass), 0);
+    return Math.round(combos / 1326 * 1000) / 10;
+  }
+
+  it("shoves the small pairs from late position at fifteen big blinds", () => {
+    // The sheets do not draw one opening range at these depths. They draw a
+    // raising band and three shove thresholds, and the threshold is the depth
+    // *below* which the hand goes in - short of chips there is no fold equity to
+    // play a flop with.
+    expect(rfiWidthPct("BTN", 15 as StackBucket, "JAM")).toBe(1.8);
+    expect(rfiWidthPct("CO", 15 as StackBucket, "JAM")).toBe(2.7);
+  });
+
+  it("moves those hands out of the raise rather than adding them", () => {
+    // The point that makes this a strategy correction rather than a width one:
+    // the total played stays exactly where it was, and only the action changes.
+    for (const seat of ["BTN", "CO"] as Position[]) {
+      const played = rfiWidthPct(seat, 15 as StackBucket, "OPEN")
+        + rfiWidthPct(seat, 15 as StackBucket, "JAM");
+      expect(Math.round(played * 10) / 10, seat).toBe(rfiWidthPct(seat, 20 as StackBucket, "OPEN"));
+    }
+  });
+
+  it("stops shoving once the stack clears the deepest threshold", () => {
+    // The deepest threshold any sheet draws is 20BB, so at 20 and above every
+    // hand raises. Offering a shove past there would be teaching an action the
+    // source never draws.
+    for (const bucket of [20, 25, 50, 100] as StackBucket[]) {
+      for (const seat of ["BTN", "CO"] as Position[]) {
+        expect(rfiWidthPct(seat, bucket, "JAM"), `${seat} ${bucket}BB`).toBe(0);
+      }
+    }
+  });
+
+  it("leaves the seats whose sheets draw no shallow threshold alone", () => {
+    // Early and middle position have no 20BB threshold on their grids, so they
+    // raise their whole range at fifteen. Giving them a shove would be inventing
+    // one the charts do not contain.
+    for (const seat of ["UTG", "LJ", "HJ"] as Position[]) {
+      expect(rfiWidthPct(seat, 15 as StackBucket, "JAM"), seat).toBe(0);
+    }
+  });
+});
+
 describe("big blind against a small-blind limp", () => {
-  function actionWidthPct(bucket: StackBucket, action: string): number {
+  function actionWidthPct(bucket: StackBucket, action: ActionKey): number {
     const pack = allMttPreflopRangePacks.find((item) => (
       item.dimensions.tableFormat === "FULL_RING_9" &&
       item.dimensions.blindSpeed === "REGULAR" &&

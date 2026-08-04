@@ -80,3 +80,28 @@ reproduced it to 0.0709 weighted total variation while converging further -
 Production runs deliberately use a *richer* action set than the monolith, so they
 are not expected to match it and agreement with it is not the test. What is
 checked per run is that every planned node exists and converged.
+
+### One board, end to end
+
+Board 433r, 99 percent coverage, six workers:
+
+| | |
+| --- | --- |
+| subgames | 182 of 182 |
+| wall time | ~40 minutes over three passes |
+| memory | 1.6 GB for six concurrent, ~0.26 GB each |
+| output | 128 MB, 0.71 MB per node |
+
+The 40 minutes is the honest figure and it is not what the first run suggested.
+Extrapolating from the first nineteen nodes gave two hours, because the deepest
+line - check-check, full stack behind - is planned first and is by far the
+slowest. The tail is much quicker.
+
+**The retry loop is not optional.** The solver dies at random on some trees: exit
+code 4294967295, an access violation, on nodes holding a quarter of a gigabyte,
+so it is not memory. The same node fails on one pass and solves on the next. The
+first pass got 173 of 182, the second 180, the third all 182. `solve_plan.py` now
+retries automatically and stops when a pass achieves nothing.
+
+At this rate the 52 queued boards are about 35 hours - one or two nights - with no
+solve ever exceeding a gigabyte.

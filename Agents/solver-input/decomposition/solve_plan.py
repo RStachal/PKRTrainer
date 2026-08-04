@@ -9,7 +9,7 @@ The action set is the one the owner asked for and is deliberately richer than th
 monolithic trees carry: on each street, for both positions, a small bet, a big
 bet, a small raise, a big raise and a shove.
 
-  python solve_plan.py <plan.json> <out-dir> [--workers N] [--limit N] [--dry]
+  python solve_plan.py <plan.json> <out-dir> [--workers=N] [--limit=N] [--passes=N] [--dry]
 """
 import json
 import os
@@ -107,31 +107,49 @@ def main():
     workers = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--workers=")), 4))
     limit = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--limit=")), 0))
     dry = "--dry" in sys.argv
+    max_passes = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--passes=")), 4))
 
     plan = json.load(open(plan_path, encoding="utf8"))
     items = plan["items"][:limit] if limit else plan["items"]
     os.makedirs(out_dir, exist_ok=True)
     print(f"{len(items)} subgames, {workers} at a time, into {out_dir}")
 
-    done = failed = skipped = 0
     started = time.time()
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        for name, status, elapsed, expl in pool.map(lambda i: solve_one(i, out_dir, dry), items):
-            if status == "solved":
-                done += 1
-            elif status == "skip":
-                skipped += 1
-            elif status != "planned":
-                failed += 1
-                print(f"  {status:22} {name}")
-            if (done + failed) % 10 == 0 and status == "solved":
-                rate = (time.time() - started) / max(done, 1)
-                left = (len(items) - done - skipped - failed) * rate / max(workers, 1)
-                print(f"  {done} solved, {failed} failed, {skipped} skipped"
-                      f"   last {elapsed:.0f}s expl={expl}   ~{left/60:.0f} min left")
+    # The solver dies at random on some trees - the same node fails on one run and
+    # solves on the next, and the exit code is 4294967295, an access violation. It
+    # is not memory: these hold about a quarter of a gigabyte each. So a failure is
+    # retried rather than reported, and each pass narrows the gap. On the reference
+    # board this went 173 of 182, then 180, then all 182.
+    attempt = 0
+    while True:
+        attempt += 1
+        done = failed = skipped = 0
+        failures = []
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            for name, status, elapsed, expl in pool.map(lambda i: solve_one(i, out_dir, dry), items):
+                if status == "solved":
+                    done += 1
+                elif status == "skip":
+                    skipped += 1
+                elif status != "planned":
+                    failed += 1
+                    failures.append(name)
+                if (done + failed) % 10 == 0 and status == "solved":
+                    rate = (time.time() - started) / max(done, 1)
+                    left = (len(items) - done - skipped - failed) * rate / max(workers, 1)
+                    print(f"  {done} solved, {failed} failed, {skipped} skipped"
+                          f"   last {elapsed:.0f}s expl={expl}   ~{left/60:.0f} min left")
 
-    print(f"\nsolved {done}, failed {failed}, skipped {skipped}, "
-          f"elapsed {(time.time() - started)/60:.1f} min")
+        print(f"pass {attempt}: solved {done}, failed {failed}, skipped {skipped}")
+        if dry or failed == 0 or done == 0 or attempt >= max_passes:
+            # done == 0 means the pass achieved nothing, so another would not either.
+            if failed:
+                print(f"\nstill failing after {attempt} pass(es):")
+                for name in failures:
+                    print(f"  {name}")
+            break
+
+    print(f"\nelapsed {(time.time() - started)/60:.1f} min over {attempt} pass(es)")
 
 
 if __name__ == "__main__":

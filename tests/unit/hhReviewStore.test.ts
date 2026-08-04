@@ -65,7 +65,7 @@ const preflopSpot: Spot = {
   tableState: {
     heroPos: "BTN",
     pushFold: false,
-    shortStack: false,
+    effectiveStackBB: 100,
     limpsBefore: 0,
     callsBefore: 0,
     facing: "NONE",

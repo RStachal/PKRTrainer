@@ -35,6 +35,7 @@ import {
 import { REJAM_CALIBRATION_OPENER, REJAM_RANGES } from "./rejamRanges.generated";
 import { CALL_REJAM_CALIBRATION_SHOVER, CALL_REJAM_RANGES } from "./callRejamRanges.generated";
 import { BB_VS_SB_LIMP } from "./limpDefenceRanges.generated";
+import { OPEN_JAM_RANGES } from "./openJamRanges.generated";
 
 // ---------------------------------------------------------------------------
 // Rozdělení košů (Req 2.3: ≤ 12 BB = push/fold)
@@ -452,6 +453,25 @@ function widenSpec(base: string, extra: string, wide: boolean): string {
 // Sestavení segmentů pro jednotlivé kontexty
 // ---------------------------------------------------------------------------
 
+/**
+ * Hands that shove rather than open at this depth, from the 10-20BB sheets.
+ *
+ * Each hand carries the stack below which it goes in, so a hand jams when the
+ * bucket sits under its threshold. At our bucket spacing that bites only at
+ * 15BB, and only where a sheet drew a 20BB threshold - the button's small pairs
+ * and the cutoff's - because the sheets' other thresholds, 12 and 15, fall at or
+ * below buckets we do not hold. The full measurement is kept in
+ * OPEN_JAM_RANGES so a finer bucket would need no re-reading.
+ */
+function openJamAt(pos: Position, bucket: StackBucket): string[] {
+  const row = OPEN_JAM_RANGES.find((item) => item.seat === pos);
+  if (row === undefined) return [];
+  return Object.entries(row.thresholds)
+    .filter(([, threshold]) => threshold > bucket)
+    .map(([hand]) => hand)
+    .sort();
+}
+
 function rfiSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSegment[] {
   // The deepest band whose threshold this bucket has reached, else the flat
   // table. Below 25BB that table stands: a single opening range stops being the
@@ -463,7 +483,15 @@ function rfiSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSe
   const flat = OPEN_RANGES[pos];
   const ce = band === undefined ? flat : { core: band.core, extra: flat.extra };
   const k = openKeys(bucket);
-  return [{ spec: widen(ce, wide), strict: k.strict, lenient: k.lenient }];
+  const open: RangeSegment = { spec: widen(ce, wide), strict: k.strict, lenient: k.lenient };
+
+  // Listed *before* the open, because the first segment to name a hand wins and
+  // these hands are inside the opening range - the sheet moves them from raising
+  // to shoving rather than adding them. Putting it second silently did nothing.
+  const jam = openJamAt(pos, bucket);
+  return jam.length > 0
+    ? [{ spec: jam.join(", "), strict: ["JAM"] }, open]
+    : [open];
 }
 
 /**

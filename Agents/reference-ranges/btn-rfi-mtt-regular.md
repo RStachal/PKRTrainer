@@ -723,3 +723,34 @@ offer marks every available answer wrong.
 **This was the last of the surviving exports to be turned into shipped data.**
 The source images are gone, so anything not yet generated from an export now
 needs the charts restored before it can be measured at all.
+
+### The 10-20BB shove thresholds, wired in 2026-08-04
+
+The last of the short-stack model. The button and cutoff now shove their small
+pairs at fifteen big blinds instead of raising them - 1.8 and 2.7 percent - and
+the total played width does not move, because the sheet reclassifies those hands
+rather than adding them.
+
+The colour mapping was not guessed. The button grid's four groups match the hand
+lists recorded further up this file exactly: 6 open-raises, 26 at the 12BB
+threshold, 46 at 15BB, 4 at 20BB, 87 folds, 169 in total. That agreement is what
+licensed applying the same mapping to the sibling sheets, and it caught the small
+blind's grid immediately - its colours fall outside the legend, because it is the
+one that draws limp branches.
+
+Only the button and cutoff change anything at our bucket spacing. Early and
+middle position have no 20BB threshold on their grids, and the sheets' other two
+thresholds, 12 and 15, sit at or below buckets we do not hold. The full
+measurement is generated into `openJamRanges.generated.ts` so a finer bucket
+would need no re-reading.
+
+**One thing this exposed.** `shortStack: boolean` on TableState was hiding three
+different depths: the open shove stops at 20BB, the shove over a limp at 25, the
+re-jam at 30. A single flag offered an open shove at 25BB, where no hand shoves.
+It is now `effectiveStackBB` with three named bounds, which is the honest shape -
+the sheets disagree about where short stops, and the model has to say so.
+
+**And a conflict worth recording rather than resolving.** At 10BB the pushing
+sheets put the button at 53.8 percent; this sheet's three thresholds together
+come to 37.4. Two owned sources, different numbers, and no basis in either for
+picking one. Left as it stands, with our push/fold still on the pushing sheets.

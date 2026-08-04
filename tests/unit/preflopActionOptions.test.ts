@@ -6,6 +6,10 @@ describe("preflop action options", () => {
   it("returns the counterfactual actions actually offered for each common node", () => {
     expect(offeredPreflopActionKeysForContext("RFI", "BTN", 25, ["OPEN_2X"]))
       .toEqual(["OPEN_2X", "LIMP", "FOLD"]);
+    // Short of thirty big blinds an open shove is on the table, because the
+    // 10-20BB sheets shove hands rather than raising them.
+    expect(offeredPreflopActionKeysForContext("RFI", "BTN", 15, ["OPEN_2X"]))
+      .toEqual(["OPEN_2X", "LIMP", "JAM", "FOLD"]);
     expect(offeredPreflopActionKeysForContext("VS_LIMP", "CO", 25, ["ISO_3X"]))
       .toEqual(["ISO_3X", "OVERLIMP", "FOLD"]);
     // The big blind may shove over a limp while short, and may not once deep -
