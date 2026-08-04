@@ -395,43 +395,64 @@ describe("big blind against a small-blind limp", () => {
   });
 });
 
-describe("push/fold at ten big blinds", () => {
-  it("matches the sheets for every seat they establish", () => {
-    // Lower bound by construction: only the unambiguous blue is taken, because
-    // the sheets carry no legend and their cream cannot be told from a fold by
-    // shade. These can be short; they cannot be too wide.
-    expect(contextWidthPct("OFF", "LJ", 10 as StackBucket, "PUSH_FOLD")).toBe(27.6);
-    expect(contextWidthPct("OFF", "HJ", 10 as StackBucket, "PUSH_FOLD")).toBe(34.2);
-    expect(contextWidthPct("OFF", "CO", 10 as StackBucket, "PUSH_FOLD")).toBe(40);
-    expect(contextWidthPct("OFF", "BTN", 10 as StackBucket, "PUSH_FOLD")).toBe(53.8);
-    // The small blind's grid has no cream, so this is the figure, not a bound.
-    expect(contextWidthPct("OFF", "SB", 10 as StackBucket, "PUSH_FOLD")).toBe(74.7);
+describe("push/fold, from the owner's baseline chart", () => {
+  // The owner's Kompendium settles which source wins here. Section 4.2 reads
+  // "Chart jako baseline. Chart upravuj podle ICM..." and embeds the push/fold
+  // chart as its appendix, so the chart is the baseline and the RYE pushing
+  // sheets are not. See Agents/reference-ranges/study-library.md.
+
+  it("matches the chart exactly at both push/fold depths, ante on", () => {
+    // The chart states 10 percent antes, so it is an ante-on source and these are
+    // its printed widths. Each was checked against the chart's own percentage when
+    // the shorthand was parsed, so a misreading cannot reach here quietly.
+    for (const [seat, pct] of [["UTG", 14.6], ["LJ", 24.3], ["HJ", 29.7], ["CO", 33], ["BTN", 42.7], ["SB", 71.9]] as const) {
+      expect(contextWidthPct("ON", seat as Position, 10 as StackBucket, "PUSH_FOLD"), `${seat} 10BB`).toBe(pct);
+    }
+    for (const [seat, pct] of [["UTG", 25.5], ["LJ", 33], ["HJ", 36.7], ["CO", 45.4], ["BTN", 50.5], ["SB", 84.9]] as const) {
+      expect(contextWidthPct("ON", seat as Position, 5 as StackBucket, "PUSH_FOLD"), `${seat} 5BB`).toBe(pct);
+    }
   });
 
-  it("separates the cutoff from the button, which the group could not", () => {
-    // Both sat in one "late" bucket at 22.2 percent while the sheets have them
-    // fourteen points apart. A group cannot be right for both.
-    const co = contextWidthPct("OFF", "CO", 10 as StackBucket, "PUSH_FOLD");
-    const btn = contextWidthPct("OFF", "BTN", 10 as StackBucket, "PUSH_FOLD");
-    expect(btn!).toBeGreaterThan(co! + 10);
+  it("shoves the small blind at five big blinds, which the old table did not", () => {
+    // The largest single correction the chart produced. The 5BB row was legacy
+    // group data never measured against anything, and had the small blind at 57.2
+    // percent where the chart shoves 84.9 - twenty-eight points, in a spot the
+    // Kompendium calls the biggest source of spots there is.
+    expect(contextWidthPct("ON", "SB", 5 as StackBucket, "PUSH_FOLD")).toBe(84.9);
   });
 
-  it("leaves early position on the grouped table", () => {
-    // Its sheet names three seats and the detector finds two grids, so which
-    // grid belongs to which seat is not established. Attributing a range to the
-    // wrong seat is worse than leaving a known-narrow one in place.
-    expect(contextWidthPct("OFF", "UTG", 10 as StackBucket, "PUSH_FOLD")).toBe(11.6);
+  it("never lets ante-off exceed the ante-on chart", () => {
+    // The chart assumes antes, so it is a ceiling for ante-off rather than its
+    // value: a smaller pot cannot justify a wider shove. Ante-off keeps whichever
+    // is narrower, which is why it sits at or below every figure above.
+    for (const bucket of [5, 10] as StackBucket[]) {
+      for (const seat of ["UTG", "LJ", "HJ", "CO", "BTN", "SB"] as Position[]) {
+        const off = contextWidthPct("OFF", seat, bucket, "PUSH_FOLD");
+        const on = contextWidthPct("ON", seat, bucket, "PUSH_FOLD");
+        expect(off, `${seat} ${bucket}BB`).not.toBeNull();
+        expect(on!, `${seat} ${bucket}BB`).toBeGreaterThanOrEqual(off!);
+      }
+    }
   });
 
-  it("never lets ante-on fall below ante-off", () => {
-    // The measured ranges already contain the group's ante extension, so for the
-    // charted seats the two coincide. The sheets do not state whether they assume
-    // ante, so no separate ante-on figure can be derived from them - equal is the
-    // honest outcome, narrower would be a defect.
+  it("widens as the stack shortens, at every seat", () => {
+    // The property that makes push/fold push/fold: five big blinds shoves wider
+    // than ten, everywhere, because there is less room to wait.
     for (const seat of ["UTG", "LJ", "HJ", "CO", "BTN", "SB"] as Position[]) {
-      const off = contextWidthPct("OFF", seat, 10 as StackBucket, "PUSH_FOLD");
-      const on = contextWidthPct("ON", seat, 10 as StackBucket, "PUSH_FOLD");
-      expect(on!, seat).toBeGreaterThanOrEqual(off!);
+      const shallow = contextWidthPct("ON", seat, 5 as StackBucket, "PUSH_FOLD");
+      const deeper = contextWidthPct("ON", seat, 10 as StackBucket, "PUSH_FOLD");
+      expect(shallow!, seat).toBeGreaterThan(deeper!);
+    }
+  });
+
+  it("widens with position at both depths", () => {
+    for (const bucket of [5, 10] as StackBucket[]) {
+      const order: Position[] = ["UTG", "LJ", "HJ", "CO", "BTN"];
+      for (let i = 1; i < order.length; i += 1) {
+        const earlier = contextWidthPct("ON", order[i - 1], bucket, "PUSH_FOLD");
+        const later = contextWidthPct("ON", order[i], bucket, "PUSH_FOLD");
+        expect(later!, `${order[i]} vs ${order[i - 1]} at ${bucket}BB`).toBeGreaterThan(earlier!);
+      }
     }
   });
 });

@@ -36,6 +36,8 @@ import { REJAM_CALIBRATION_OPENER, REJAM_RANGES } from "./rejamRanges.generated"
 import { CALL_REJAM_CALIBRATION_SHOVER, CALL_REJAM_RANGES } from "./callRejamRanges.generated";
 import { BB_VS_SB_LIMP } from "./limpDefenceRanges.generated";
 import { OPEN_JAM_RANGES } from "./openJamRanges.generated";
+import { PUSH_FOLD_CHART } from "./pushFoldChart.generated";
+import { expandTokens } from "./handExpand";
 
 // ---------------------------------------------------------------------------
 // Rozdělení košů (Req 2.3: ≤ 12 BB = push/fold)
@@ -619,6 +621,33 @@ function bvbSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSe
   return defendSegments(BVB_BB_DEFEND, wide);
 }
 
+/**
+ * Jam ranges from the owner's push/fold chart, which is the owner's own baseline.
+ *
+ * The Kompendium settles what were three disagreeing sources: section 4.2 says
+ * "Chart jako baseline. Chart upravuj podle ICM..." and embeds this chart as its
+ * appendix. So where the chart speaks, it wins - including over the RYE pushing
+ * sheets, which had the button eleven points wider at 10BB than the chart and
+ * seven points wider than the RYE opening sheet's own thresholds. A reading that
+ * exceeds both of the other sources is not the lower bound it was taken for.
+ *
+ * The chart states 10 percent antes, so it is an ante-on source. That also makes
+ * it a ceiling for ante-off: a smaller pot cannot justify a wider shove, so the
+ * ante-off range is the narrower of what we held and what the chart gives.
+ */
+function chartJam(pos: Position, bucket: StackBucket, wide: boolean, fallback: string): string {
+  const row = PUSH_FOLD_CHART.find((item) => item.bb === bucket && item.seat === pos);
+  if (row === undefined) return fallback;
+  if (wide) return row.hands.join(", ");
+  // Ante-off: keep whichever is narrower, hand class by hand class. The held spec
+  // is written in range shorthand ("22+, A2s+"), so it has to be expanded before
+  // it can be intersected - comparing the shorthand directly matched almost
+  // nothing and collapsed the 5BB ante-off ranges to about one percent.
+  const chart = new Set(row.hands);
+  const narrower = expandTokens(fallback).filter((hand) => chart.has(hand));
+  return narrower.length > 0 ? narrower.join(", ") : row.hands.join(", ");
+}
+
 function jamSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSegment[] {
   // A per-seat 10BB range wins over the group where the sheets establish one.
   // The ante widening still comes from the group, because ante is a property of
@@ -626,10 +655,10 @@ function jamSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSe
   const table = bucket === 5 ? JAM_5 : JAM_10;
   const ce = table[posGroup(pos)];
   const measured = bucket === 10 ? JAM_10_BY_SEAT[pos] : undefined;
-  const spec = measured === undefined
+  const held = measured === undefined
     ? widen(ce, wide)
     : widenSpec(measured, ce.extra, wide);
-  return [{ spec, strict: ["JAM"], lenient: ["JAM"] }];
+  return [{ spec: chartJam(pos, bucket, wide, held), strict: ["JAM"], lenient: ["JAM"] }];
 }
 
 function callJamSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSegment[] {
