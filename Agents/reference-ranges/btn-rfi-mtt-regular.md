@@ -754,3 +754,64 @@ the sheets disagree about where short stops, and the model has to say so.
 sheets put the button at 53.8 percent; this sheet's three thresholds together
 come to 37.4. Two owned sources, different numbers, and no basis in either for
 picking one. Left as it stands, with our push/fold still on the pushing sheets.
+
+## A third push/fold source, and what it settles, 2026-08-04
+
+The owner supplied a library of study material. Most of it is cash-game work and
+is dealt with separately, but one item is directly usable: a push/fold chart
+covering every stack from 1 to 15BB for all eight seats, stating **10 percent
+antes**, and printing the width of each cell as a percentage.
+
+That printed percentage is what makes it trustworthy rather than merely typed in.
+It is an independent check on reading the shorthand, and it earned its keep
+immediately: the first parse read `Tx+` as "holdings containing a ten" and the
+small blind's 5BB cell came out at 39.1 percent against a printed 84.9. The
+correct reading is "every holding whose higher card is that rank or better, any
+kicker". All sixteen transcribed cells now parse to the printed width exactly,
+which is what says the notation is understood.
+
+### What it shows at 10BB
+
+| seat | ours (ante on) | chart | difference |
+| --- | --- | --- | --- |
+| UTG | 15.1% | 14.6% | +0.5 |
+| LJ | 27.6% | 24.3% | +3.3 |
+| HJ | 34.2% | 29.7% | +4.5 |
+| CO | 40.0% | 33.0% | +7.0 |
+| BTN | 53.8% | 42.7% | **+11.1** |
+| SB | 74.7% | 71.9% | +2.8 |
+
+We are systematically wider from the lojack onward, and the gap grows with
+position. This bears on the conflict recorded above: the RYE openraising sheet's
+thresholds put the button at 37.4 percent at 10BB, this chart at 42.7, and our
+push/fold at 53.8. **Two independent sources now sit below us**, which makes the
+earlier reading of the pushing sheets - that taking only the unambiguous blue
+gives a lower bound - look wrong. A lower bound cannot exceed two other sources.
+More likely the blue on those sheets is not all "push".
+
+Not corrected here, because it is a genuine three-way disagreement between owned
+sources and picking one by preference is exactly what this file exists to avoid.
+
+### What it settles at 5BB
+
+Nothing to disagree with: **the entire 5BB row is legacy group data that was
+never measured against anything.** This chart is its first real source.
+
+| seat | ours (ante off) | ours (ante on) | chart |
+| --- | --- | --- | --- |
+| UTG | 21.9% | 24.3% | 25.5% |
+| LJ | 30.3% | 34.5% | 33.0% |
+| HJ | 30.3% | 34.5% | 36.7% |
+| CO | 40.3% | 44.8% | 45.4% |
+| BTN | 40.3% | 44.8% | 50.5% |
+| SB | 50.2% | 57.2% | **84.9%** |
+
+Five of six seats are within a few points, which is reassuring about the legacy
+table. The small blind is not: at five big blinds it shoves 84.9 percent on the
+chart and 57.2 in our ante-on pack. Twenty-eight points, in a spot that occurs
+constantly late in a tournament, and one where push/fold is a solved problem
+rather than a matter of style.
+
+The chart states its ante, so it is an ante-on source. Applying it to ante-off
+would overstate that column, and nothing here says by how much it should be
+narrower.
