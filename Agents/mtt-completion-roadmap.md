@@ -125,6 +125,48 @@ Priorities 1-4 are the four button families, and they are the only ones past the
 guard's tolerance. Everything from 5 down can wait for a second pass without the
 beta being wrong about it, because the player is told.
 
+### The solver crashes were ours, found 2026-08-04
+
+The owner asked whether the scheduled tasks could be killing the solver. They
+were, and the log had been saying so all along:
+
+```
+09:23:44  DAY: ... Stopping 6 solver process(es).
+09:37:26  DAY: ... Stopping 6 solver process(es).
+10:07:23  DAY: ... Stopping 2 solver process(es).
+```
+
+Six is exactly the number of decomposition workers that were running; two is
+exactly the retry pass. `PKRTrainer-Solver-CpuWindow` fires every fifteen minutes,
+computes a policy for the *monolithic* 24 GB tree, concludes correctly that it
+does not fit, and then stops every `console_solver` on the machine - including
+subgames that need a quarter of a gigabyte each and were doing fine.
+
+**Why it read as a solver bug for hours.** A force-stopped process exits with
+0xFFFFFFFF, which is exactly what an access violation returns. So the failures
+looked like a non-deterministic native crash, and the fact that a retry usually
+succeeded looked like more evidence for that, when it was really the retry landing
+in the gap between two firings.
+
+**The guard that should have stopped it.** `Test-ManagedSolveExists` existed for
+precisely this - it was added after the applier killed a hand-started trial solve -
+but it tested `State -ne "Disabled"`. A scheduled task sits `Ready` between
+triggers, which is nearly always, so the guard passed whenever the worker was
+merely installed. It now tests `State -eq "Running"`, which is the honest question:
+the worker owns a solve only while it is running one. Three tests drive the shipped
+predicate against stubbed task states.
+
+**What this retracts.** Every crash previously attributed to solver instability is
+explained by this: the 6.6 GB flop pass that died at iteration 0 and then 51 with
+18 GB free, the 13.2 GB tree that died at 51 and then 91, and the decomposition
+losses. The reasoning built on them - that the failures were not memory, and
+therefore that more RAM might not help - was reasoning from our own interference.
+
+**What is now genuinely unknown.** Whether the monolithic 25.9 GB tree completes on
+this machine has not been tested, because the one attempt was killed at iteration
+21 while free memory sat near 0.6 GB. That is a real experiment to run with the
+task stopped, and it should happen before any hardware is bought.
+
 ### Decomposition tested end to end, 2026-08-04
 
 Built the machinery and ran it against a board that is already solved

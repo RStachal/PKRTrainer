@@ -61,12 +61,26 @@ function Set-WindowOverride([string]$Value) {
   minutes after it started, by a policy that had correctly concluded the QUEUED
   tree did not fit and then applied that conclusion to a different tree it knew
   nothing about. The log said so; nobody was reading the log.
+
+  It happened again, and the first fix is why. Testing "not Disabled" was too weak:
+  the task sits Ready between its triggers, which is almost always, so the guard
+  passed whenever the worker was merely INSTALLED and the applier went on to stop
+  every console_solver on the machine. On 2026-08-04 that killed six decomposition
+  subgames at 09:23, six more at 09:37 and two at 10:07 - the log names the counts
+  - and those losses were read for hours as a non-deterministic solver crash,
+  because the exit code for a force-stopped process is 0xFFFFFFFF and looks exactly
+  like an access violation.
+
+  The worker only owns solver processes while it is actually running one, and a
+  scheduled task reports Running for as long as its action lives. So Running is the
+  honest test, and Ready means the same as Disabled here: whatever is solving now,
+  this applier did not start it.
 #>
 function Test-ManagedSolveExists {
   param([string]$WorkerTaskName = "PKRTrainer-Weekend-UniformResolve")
   $task = Get-ScheduledTask -TaskName $WorkerTaskName -ErrorAction SilentlyContinue
   if ($null -eq $task) { return $false }
-  return $task.State -ne "Disabled"
+  return $task.State -eq "Running"
 }
 
 function Invoke-Apply {

@@ -97,11 +97,18 @@ Extrapolating from the first nineteen nodes gave two hours, because the deepest
 line - check-check, full stack behind - is planned first and is by far the
 slowest. The tail is much quicker.
 
-**The retry loop is not optional.** The solver dies at random on some trees: exit
-code 4294967295, an access violation, on nodes holding a quarter of a gigabyte,
-so it is not memory. The same node fails on one pass and solves on the next. The
-first pass got 173 of 182, the second 180, the third all 182. `solve_plan.py` now
-retries automatically and stops when a pass achieves nothing.
+**Those three passes were not the solver's fault.** The losses - 173 of 182, then
+180, then 182 - were `PKRTrainer-Solver-CpuWindow` stopping every `console_solver`
+on the machine every fifteen minutes, because its policy is computed for the
+monolithic 24 GB tree and it did not distinguish our subgames from its own worker's
+solve. The log names the counts: six stopped at 09:23, six at 09:37, two at 10:07.
+A force-stopped process exits with 0xFFFFFFFF, which is what an access violation
+returns, so it read as a flaky solver.
+
+Fixed in `apply-solver-cpu-window.ps1`: the applier now claims a solve only while
+its own worker task is `Running`, not merely installed. The retry loop stays, since
+a long unattended run should survive an interruption whatever caused it, but it
+should no longer have anything to do.
 
 At this rate the 52 queued boards are about 35 hours - one or two nights - with no
 solve ever exceeding a gigabyte.

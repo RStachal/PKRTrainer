@@ -108,3 +108,52 @@ describe.runIf(runnable)("solver thread budget", () => {
     expect(threadBudget(64, 32)).toBeGreaterThan(threadBudget(32, 32));
   });
 });
+
+// The applier decides whether a running solver belongs to it before stopping
+// anything. Getting that wrong does not look like a scheduling bug: a
+// force-stopped process exits with 0xFFFFFFFF, which is indistinguishable from an
+// access violation, so the losses read as a flaky solver for hours.
+
+const applyScript = path.resolve(
+  __dirname,
+  "../../Agents/solver-input/texas-solver/mtt-safe-flops-v1/apply-solver-cpu-window.ps1",
+);
+
+describe.runIf(process.platform === "win32" && existsSync(applyScript))(
+  "solver ownership guard",
+  () => {
+    function ownsSolves(taskState: string): boolean {
+      // Drives the real function against a stubbed Get-ScheduledTask, so the test
+      // exercises the shipped predicate rather than a copy of its logic.
+      const command = [
+        `function Get-ScheduledTask { [pscustomobject]@{ State = '${taskState}' } };`,
+        `$src = Get-Content -Raw '${applyScript}';`,
+        `$fn = [regex]::Match($src, '(?s)function Test-ManagedSolveExists \{.*?\n\}').Value;`,
+        "Invoke-Expression $fn;",
+        "Test-ManagedSolveExists",
+      ].join(" ");
+      const out = execFileSync(
+        "powershell.exe",
+        ["-NoProfile", "-NonInteractive", "-Command", command],
+        { encoding: "utf8" },
+      );
+      return out.trim() === "True";
+    }
+
+    it("claims a solve only while its own worker is running one", () => {
+      expect(ownsSolves("Running")).toBe(true);
+    });
+
+    it("leaves solves alone when the worker is merely installed", () => {
+      // The regression this exists for. "Ready" is the state a scheduled task sits
+      // in between triggers, which is nearly always, so treating it as ownership
+      // let the applier stop every console_solver on the machine. On 2026-08-04 it
+      // killed six decomposition subgames, then six more, then two.
+      expect(ownsSolves("Ready")).toBe(false);
+    });
+
+    it("leaves solves alone when the worker is disabled", () => {
+      expect(ownsSolves("Disabled")).toBe(false);
+    });
+  },
+);
