@@ -230,3 +230,55 @@ Twenty-nine files, and a name-by-name comparison with `C:\Work\PKR vedomosti`
 shows no new poker material: it lacks the Praktická MTT kniha and adds one
 spreadsheet whose name marks it as a personal financial document rather than poker
 content, so it was left unopened.
+
+## The ICM gap has an answer after all: bubble factor, 2026-08-04
+
+The owner's Evernote archive - 39 ENEX files, 1.8 GB, mostly base64 images - holds
+the thing the PDF library did not. `PS - 04_STRATEGY_SnGO.enex` contains a full
+numerical treatment of **bubble factor**, which is the practical mechanism for
+converting chipEV thresholds into ICM ones without owning an ICM engine.
+
+The definition it gives is a ratio of what a call risks to what it gains, both
+measured in prize-pool equity rather than chips:
+
+```
+BF = (equity if you fold - equity if you lose) / (equity if you win - equity if you fold)
+```
+
+and the adjustment is one division:
+
+```
+odds_icm = odds_chips / BF          required_equity = 1 / (1 + odds_icm)
+```
+
+Both worked examples in the article check out against that formula: pot odds of
+1.65:1 divided by a bubble factor of 1.2 gives 1.375:1 and 42.1 percent required
+equity, which is the 42 percent it prints; 1:1 gives 54.5 against its 55.
+
+**Why this matters more than the ICM range pages.** Those 180 HTML grids are 14
+fixed table configurations, and using them means adding a table-configuration axis
+to the model and teaching only the tables they happen to cover. Bubble factor is a
+single scalar per hero-villain pairing that adjusts a threshold we already have.
+It applies to every spot in the existing chipEV packs rather than replacing them.
+
+The article supplies values to calibrate against:
+
+| stage and format | bubble factor | coin-flip call needs |
+| --- | --- | --- |
+| early, full ring and short handed | 1.2 | 55% |
+| early, Double or Nothing | - | 67% |
+| bubble, 9-max full ring, even stacks | 1.9 | 67% |
+| bubble, 6-max, even stacks | 1.7 | 63% |
+| bubble, Double or Nothing, even stacks | 5.1 | 83% |
+| cash game | 1.0 | unchanged |
+
+And it shows the factor is **pairwise, not per player**: with a chip leader on the
+cutoff at 8000 against three stacks of 4000, the leader calls at 1.3 while the
+short stacks call him at 2.1 and each other at 1.7. That asymmetry is the whole
+reason a big stack can shove any two on the bubble - the article works exactly
+that example and puts the small blind's 32o shove at plus 1.3 percent of the prize
+pool against a correctly-calling big blind.
+
+So the "opponent stacks" axis I earlier costed as a model change reduces to one
+number per pairing. That is a far cheaper route than the ICM grids, and unlike
+them it generalises beyond the configurations someone happened to publish.
