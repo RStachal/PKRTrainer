@@ -308,6 +308,44 @@ desktop applications would do it, and after the crash the machine sat at 25.7 GB
 free with them still open. The other 51 are quality re-solves, not gaps, and stay
 blocked until the machine has more RAM.
 
+### One shape for ICM and for exploit, 2026-08-04
+
+Both of the axes the owner asked for turned out to be the same mechanism: leave the
+GTO baseline where it is and let one number move a threshold.
+
+| | the number | what it moves | where it comes from |
+| --- | --- | --- | --- |
+| ICM | bubble factor | the equity a call needs | computed from Malmuth-Harville equity |
+| exploit | fold frequency | the folds a bluff gets | measured per style |
+
+Neither needs a second set of ranges, which is what makes them affordable. The
+alternative - a range table per ICM configuration and another per opponent type -
+multiplies the data we have to measure and keep true by the number of axes.
+
+**Bubble factor is done and validated.** Against the owner's own worked examples
+rather than against itself: equities exact, factors 1.3/2.1/1.7 across a
+chip-leader table, 1.9 on a nine-handed bubble, 42.1 percent where the article
+prints 42.
+
+**Styles are in as a model, not yet wired into drills.** `opponentStyle.ts` carries
+the four quadrants the owner named plus the finer labels, and turns them on fold
+frequency. Two anchors are measured - Little's calling widths against a ten big
+blind shove, 20 percent tight and 40 loose, which are folds of 80 and 60 - and the
+values between are marked INTERPOLATED in the type rather than presented as
+findings. The direction is independently stated in the material: against a calling
+station the push range must narrow, because the fold equity that paid for it is
+gone.
+
+**Cash game needs no converter.** A flat payout gives a bubble factor of exactly 1,
+which is asserted by test. Cash is not a separate branch of this code; it is the
+degenerate case of the tournament one.
+
+**What is not built.** Neither number reaches a player yet - there is no drill that
+says "you need 42 percent here rather than 38 because of the ladder", and no
+opponent-style switch in the UI. The models are testable and sourced; the teaching
+layer on top of them is the next piece of work, and it is the piece that turns
+either of these into something a user can feel.
+
 ### The short-stack model, added 2026-07-31
 
 The largest structural finding from checking the owner's charts, and it subsumes
