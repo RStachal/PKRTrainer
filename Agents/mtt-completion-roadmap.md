@@ -125,6 +125,61 @@ Priorities 1-4 are the four button families, and they are the only ones past the
 guard's tolerance. Everything from 5 down can wait for a second pass without the
 beta being wrong about it, because the player is told.
 
+### Decomposition tested end to end, 2026-08-04
+
+Built the machinery and ran it against a board that is already solved
+monolithically, so every claim below is a comparison against a known answer
+rather than a plausibility argument. Board 433r, family
+MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR, node "flop bet 17, call, turn Kc".
+
+**Re-solving a subgame works, and works well.** Handed the ranges the monolith
+itself carries into that node, an independent turn-and-river solve reproduced the
+monolith's strategy to a weighted total-variation distance of **0.0709** - the two
+agree on about 93 percent of the probability mass - in **0.82 GB**. It also
+converged *further* than the monolith did, 0.296 percent exploitability against
+0.481, so part of that remaining 7 percent is the monolith's own residual noise
+rather than decomposition error. The action lists matched exactly, which is what
+says the subtree was rebuilt correctly and not merely something similar.
+
+**Supplying those ranges from a cheap flop pass does not work.** A flop pass with
+the full flop action set but a single bet size and no all-in on later streets is
+stable and cheap - 3.65 GB, nine minutes, 0.272 percent exploitability - and
+delivers materially different ranges:
+
+| class | cheap pass | monolith |
+| --- | --- | --- |
+| 33 (a set on 433) | 0.000 | 0.640 |
+| 44 | 0.141 | 0.481 |
+| AA (in position) | 0.000 | 0.960 |
+
+Weight-weighted mean difference 0.20 out of position, 0.13 in position. The reason
+is sound rather than a bug: with no way to get stacks in later, slowplaying has no
+value, so the solver rebuilds its flop strategy from the ground up. A truncated
+continuation does not preserve the flop.
+
+**And the middle ground could not be made to run.** Restoring the all-in on turn
+and river - the smallest change that gives slowplays a reason to exist - crashes.
+Silently, with no error, at **6.6 GB with 18 GB free**. Twice, at different points
+each time: iteration 0, then iteration 51. The same non-determinism appeared on
+other large trees, which crashed at iteration 51 then 91, and at 21.
+
+**So the memory ceiling is not the whole story.** A 6.6 GB solve failing with 18 GB
+free is not a memory ceiling, and dropping from eight threads to two did not help,
+so it is not thread contention either. The cause is unresolved. It matters
+commercially: the earlier conclusion that this queue needs a bigger machine may be
+wrong, and more RAM might not fix what is actually failing.
+
+**Where this leaves the design.** The flop layer cannot currently be produced
+cheaply, but it does not need to be produced at all - every board in the queue
+already has a monolithic solve. The 52 queued boards are re-solves for tree
+uniformity, not missing boards; 51 of the 52 have raw checkpoints today. So the
+existing solve supplies the flop layer, and decomposition supplies exactly what the
+owner asked for on top of it: turn and river re-solved with two bet sizes, two
+raise sizes and a shove, both positions, at 0.82 GB per node and validated against
+the answer we already hold.
+
+That is the plan worth building. It needs no large solve to ever run again.
+
 ### Splitting the deep solves instead of buying memory, measured 2026-08-04
 
 The owner asked whether the expensive solve can be divided so it needs less
