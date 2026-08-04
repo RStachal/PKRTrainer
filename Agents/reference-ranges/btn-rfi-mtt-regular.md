@@ -815,3 +815,45 @@ rather than a matter of style.
 The chart states its ante, so it is an ante-on source. Applying it to ante-off
 would overstate that column, and nothing here says by how much it should be
 narrower.
+
+## UTG goes the wrong way with depth, found 2026-08-04
+
+The owner's "Porovnání různých zdrojů" folder holds the same seat from three
+apps. Two of them state a width, and they agree with each other while disagreeing
+with us in a specific way.
+
+| source | format | depth | UTG RFI |
+| --- | --- | --- | --- |
+| GTO Preflop Charts | Tournament, MTTs Full Ring | 20BB | 17.60% |
+| GTO Wizard | MTT, every seat 50bb | 50BB | 17.7% |
+| ours, ante on | full ring | 20BB | 16.7% |
+| ours, ante on | full ring | 50BB | **13.6%** |
+
+At twenty big blinds we are fine - 16.7 against 17.6, within a point. At fifty we
+are four points short, and the reason is visible in our own column: **UTG narrows
+as stacks deepen**, 16.7 down to 13.6, while both sources hold it near 17.6 at
+both depths.
+
+Every other seat widens with depth here, and a test asserts it for the lojack,
+hijack, cutoff and button. UTG was never in that list. The cause is a seam: 15-20BB
+comes from the legacy flat table and 25BB upward from the measured RYE bands, and
+the two do not join - the measured band starts *below* where the flat table left
+off. Nothing checked that, because the property test deliberately excluded the seat
+whose numbers were not measured.
+
+So the original defect this file opens with - one range for every depth - was
+corrected for four seats and left a discontinuity at the fifth, pointing downhill.
+
+Not corrected yet. The two sources are different products at different depths, and
+one screenshot each is thin evidence for rewriting a seat. But the *direction* is
+not a judgement call: a seat that opens tighter at fifty big blinds than at twenty
+is wrong whatever the right width turns out to be, because position and depth both
+argue the other way.
+
+### A caution about that folder
+
+It is titled as a comparison of sources, but the three files are not the same
+question: GTO Wizard at 50bb nine-handed, GTO Preflop Charts at 20bb full ring, and
+a third app at **8-max, 40bb**. Only the middle one shares our format and states a
+number. Read as "three answers to one question" it would mislead; read as three
+different questions it is still useful, and that is how the figures above are taken.
