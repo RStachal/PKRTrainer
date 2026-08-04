@@ -171,3 +171,62 @@ sits inside the 12-30BB band we now teach a shove in.
 
 Lynch puts the push/fold switch where our constant already is: "all-in, pokud je
 můj stack nižší než 12 BB". `PUSH_FOLD_MAX` is 12.
+
+## Three more folders, 2026-08-04
+
+### archivedwl-130 - the opening-range pack is back, and it documents itself
+
+Thirty-six PNGs in nine folders: BB defend, BB vs SB, flatcalling and three-betting
+in four depth bands, and open-raising in three. This is the material that vanished
+from Downloads mid-session, so the two chart-extraction tests that had been
+skipping silently now run again - and pass, giving the same 169 classes, the same
+five colour groups, and the same agreement between detected and hand-measured
+geometry. That is independent confirmation the restored pack is the same material,
+not a different edition.
+
+The test now tries both known locations instead of one hard-coded path. It skipped
+for a day because a single string went stale, which is a poor way to lose a check.
+
+**It also contains a Readme that settles how the thresholds are read**, which until
+now rested on the owner's spoken explanation:
+
+> If you have K9o for 11bb -> Jam, for 13bb -> openraise/fold
+> If you have ATo for 12bb -> jam, for 19bb -> raise/call
+
+That confirms the reading already shipped - the threshold is the depth below which
+the hand goes in - and adds something we did not have: above the threshold the
+action is not simply "open-raise" but **openraise/fold** when shallow and
+**raise/call** when deeper. Our RFI has one open action and does not carry that
+distinction.
+
+Still absent: `pushing`, `rejaming` and `calling rejams`. Their data is already
+generated, so nothing is blocked, but they cannot be re-measured.
+
+### archivedwl-131 - GTO Wizard trainer screenshots, not a chart pack
+
+Forty-two phone screenshots of a GTO Wizard MTT trainer session, despite the folder
+being named for SNG. Each shows a "Correct" range matrix, the action frequencies
+behind it, and a score.
+
+They matter because of what they assume. One reads `MTT Avg. 50bb` with every seat
+at 50 - the uniform-stack model exactly as the owner describes it - and gives UTG's
+opening frequency as **Raise 2.3: 17.7%**.
+
+| UTG RFI at 50BB | width |
+| --- | --- |
+| ours, ante off | 11.5% |
+| ours, ante on | 13.6% |
+| GTO Wizard screenshot | **17.7%** |
+
+Four points wider than our ante-on and six wider than ante-off, on the tightest
+seat, from the source the owner named as the top authority. One screenshot is one
+data point and the ante setting behind it is not visible, so this is recorded
+rather than applied. If the remaining forty-one cover other seats and depths, they
+are a reference set for the whole RFI table.
+
+### "Poker - zaklad pro vedomosti" - the same library, already read
+
+Twenty-nine files, and a name-by-name comparison with `C:\Work\PKR vedomosti`
+shows no new poker material: it lacks the Praktická MTT kniha and adds one
+spreadsheet whose name marks it as a personal financial document rather than poker
+content, so it was left unopened.

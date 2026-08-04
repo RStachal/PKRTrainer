@@ -13,7 +13,15 @@ const extractor = path.join(repoRoot, "scripts/extractRangeChartGrid.ps1");
 const detector = path.join(repoRoot, "scripts/detectRangeChartGrids.ps1");
 // The charts live outside the repository - they are licensed material, not ours
 // to commit - so these run only where the owner has them.
-const chart = "C:/Users/stachal/Downloads/archivedwl-359/RYE/openraising 10-20bb/openraising 10-20bb bu-sb.png";
+// The pack moved once already: the folder these were first read from vanished
+// from Downloads, and these tests skipped silently for a day because the path was
+// a single hard-coded string. Both known locations are tried, so a restore in
+// either place brings the checks back rather than leaving them quietly off.
+const CHART_CANDIDATES = [
+  "C:/Users/stachal/Downloads/archivedwl-130/02_Openning ranges/03_Openraising 10-20bb/openraising 10-20bb bu-sb.png",
+  "C:/Users/stachal/Downloads/archivedwl-359/RYE/openraising 10-20bb/openraising 10-20bb bu-sb.png",
+];
+const chart = CHART_CANDIDATES.find((path) => existsSync(path)) ?? CHART_CANDIDATES[0];
 const runnable = process.platform === "win32" && existsSync(extractor) && existsSync(chart);
 
 function powershell(script: string, ...args: string[]): string {
