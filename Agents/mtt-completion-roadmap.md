@@ -125,6 +125,52 @@ Priorities 1-4 are the four button families, and they are the only ones past the
 guard's tolerance. Everything from 5 down can wait for a second pass without the
 beta being wrong about it, because the player is told.
 
+### Splitting the deep solves instead of buying memory, measured 2026-08-04
+
+The owner asked whether the expensive solve can be divided so it needs less
+memory at once - explicitly *not* by narrowing the tree, and wanting turn and
+river raises kept because the trainer has to match real play. The action set they
+want, per street and per position, is check, small bet, big bet, small raise, big
+raise, shove and call. That is **wider** than what we solve today, so a monolithic
+solve of it would need more than the 25.9 GB that already fails here.
+
+Three things had to be true for decomposition to work on the solver we own, and
+all three were tested rather than assumed:
+
+| Question | Result |
+| --- | --- |
+| Does it accept a four-card board, so a turn subgame is expressible? | yes - solves, exit 0, dumps |
+| What does one turn subgame cost with full ranges and the full action set? | **0.82 GB, 30 s, 0.41% exploitability** |
+| Can ranges entering a node carry weights, e.g. `AA:1.0,KK:0.5`? | yes - accepted and solved |
+
+So a turn-and-river subgame with 79 out-of-position and 115 in-position hand
+classes, two bet sizes, two raise sizes and a shove on both streets costs under a
+gigabyte. The monolith costs 25.9 GB and dies. The difference is that the subgame
+has two streets instead of three, and the flop's branching multiplies everything
+below it.
+
+**The shape of the fix.** Solve the flop with a cheap turn and river, which is
+1.7 GB, to get the flop strategy and the weighted ranges arriving at each turn
+node. Then re-solve every (flop line, turn card) node as its own subgame with the
+full action set, at 0.82 GB each. Then stitch. Peak memory is one subgame, not the
+whole tree, and the subgames are independent so they parallelise - eight at once
+is under 7 GB.
+
+**What it costs instead.** Time, and orchestration. Roughly ten turn-reaching flop
+lines times the turn cards left after isomorphism, so several hundred subgames per
+board; around four hours each if run one at a time, closer to half an hour with
+eight in parallel. The 52 queued boards become a night or two of work rather than
+a hardware purchase.
+
+**Where it is approximate, stated plainly.** The flop strategy is computed against
+a simplified continuation, so flop frequencies carry some error; the turn and river
+are then exact given the ranges arriving there. This is one-pass decomposition,
+and commercial solvers reduce the remaining gap by re-solving repeatedly. We are
+unusually well placed to measure that gap rather than argue about it: 438 boards
+are already solved monolithically, so the same board can be solved both ways and
+compared. That check should come before any decomposed output is promoted past
+review-only.
+
 ### The solver queue is drained, and the remainder does not fit, tested 2026-08-03
 
 Checked every parameter queue against the raw checkpoints rather than trusting
