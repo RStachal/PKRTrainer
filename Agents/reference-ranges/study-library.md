@@ -109,3 +109,65 @@ Two other concrete figures from Little worth keeping, both about calling a shove
 at 10BB: a tight field calls with about 20 percent (55+, A7+, K9+, QT+), a loose
 one with about 40 (22+, A2+, K2+, Q9+, JT). That is the width our VS_ALLIN should
 sit between, and it does.
+
+## The full inventory, measured rather than guessed
+
+Every PDF opened and its extractable text counted. Three facts change what this
+library can be asked for.
+
+**Five files are scanned images and cannot be read at all** - 872 pages between
+them, yielding under 200 characters each:
+
+| file | pages | extractable text |
+| --- | --- | --- |
+| Analytical No-Limit Holdem (Bakker) | 177 | 176 chars |
+| Collin Moshman - Heads Up NL | 203 | 406 chars |
+| Low Stakes Poker Playbook CZ | 142 | 141 chars |
+| Poker for Advanced Players (Sklansky), twice | 175 each | 174 chars |
+
+They would need OCR before anything here could use them. Worth knowing before
+anyone assumes the Playbook is available to build on.
+
+**`OR_loose_FR` and `OR_tight_FR` are one page each with 215 characters** - they
+are pictures of range grids, not text. They belong to the chart-extraction
+pipeline, not to reading.
+
+**ICM is effectively absent from the whole library.** Twelve mentions across
+twenty-seven files, every one of them in passing: Little II has seven in 314
+pages, all of the form "ICM se používá v SNG"; the Praktická MTT kniha lists it as
+a planned chapter; the Kompendium says "adjust for ICM" without saying by how
+much. There is no table, no formula, no threshold anywhere.
+
+So the Kompendium's repeated instruction cannot be followed from this library, and
+PKRTrainer cannot teach ICM from it. That needs a different source - HRC or ICMizer
+exports, or GTO Wizard's ICM sims - and it is the single largest hole in the
+material.
+
+### Where the MTT substance actually is
+
+Ranked by density of tournament vocabulary rather than by size:
+
+| file | pages | MTT terms |
+| --- | --- | --- |
+| Little, volume 2 | 314 | 847 |
+| Eric Lynch | 469 | 395 |
+| Little, volume 1 | 294 | 261 |
+| Praktická MTT kniha | 20 | 80 |
+
+Three books, about 1,077 pages, are the whole MTT core. Everything else is cash,
+maths, mental game, or unreadable.
+
+### What they corroborate
+
+Little states shove thresholds per hand, which is the same shape as the model
+built from the RYE charts - a hand carries the deepest stack at which it goes in:
+
+> "u plného stolu a vy máte K-2, musíte jít all-in, pokud máte méně než 8 BB"
+> "všeobecně byste jít dle mého názoru all-in, jen pokud máte 23 BB nebo méně"
+> "že byste tuto handu neměli složit, pokud máte 20 BB nebo méně"
+
+That is independent support for the threshold representation, and the 23BB figure
+sits inside the 12-30BB band we now teach a shove in.
+
+Lynch puts the push/fold switch where our constant already is: "all-in, pokud je
+můj stack nižší než 12 BB". `PUSH_FOLD_MAX` is 12.
