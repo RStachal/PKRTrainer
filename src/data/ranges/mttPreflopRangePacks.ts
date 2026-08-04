@@ -1,5 +1,6 @@
 import type { AnteMode } from "../../core/types";
 import type { BlindSpeed, TrainingProfile } from "../../core/trainingProfile";
+import { sixMaxPositionMap, unmappedFullRingPositions } from "../../core/tableFormatConversion";
 import type { RangeFile } from "./schema";
 import type { RangePack, RangeSourceEvidence } from "./rangePack";
 import {
@@ -214,12 +215,69 @@ function mttSixMaxCandidateRangePack(
   };
 }
 
+/**
+ * Six-max records carried across from the measured nine-handed pack.
+ *
+ * The six-max packs shipped with zero records - the format was supported and had
+ * nothing to teach - while nine-handed carries 507 measured records per ante mode.
+ * `tableFormatConversion` maps the seats by how many opponents are still to act,
+ * so a six-max under-the-gun inherits the nine-handed lojack: both have five
+ * behind them and face the same chance of running into a better hand.
+ *
+ * Marked derived, not measured. Confidence stays LOW, the assumption list says
+ * where every record came from, and the three nine-handed early seats that no
+ * six-max seat matches are named rather than quietly folded into the nearest one.
+ * A real six-max field is looser than a nine-handed one at equal seats-behind, so
+ * these will run tight - they are a floor for measurement to correct, which is how
+ * every derived number in this project is treated.
+ */
+function deriveSixMaxRecords(source: RangePack): RangePack["records"] {
+  const map = new Map(sixMaxPositionMap().map((pair) => [pair.fullRing, pair.sixMax]));
+  const out: RangePack["records"] = [];
+  for (const record of source.records) {
+    const seat = map.get(record.position);
+    if (seat === undefined) continue;
+    out.push({ ...record, position: seat });
+  }
+  return out;
+}
+
+export function mttSixMaxDerivedRangePack(
+  blindSpeed: BlindSpeed,
+  ante: AnteMode,
+): RangePack {
+  const base = mttSixMaxCandidateRangePack(blindSpeed, ante);
+  const source = ante === "ON" ? mttPreflopAnteOnRangePack : mttPreflopAnteOffRangePack;
+  const records = deriveSixMaxRecords(source);
+  const dropped = unmappedFullRingPositions().join(", ");
+  return {
+    ...base,
+    id: base.id.replace("candidate-v0", "derived-v1"),
+    version: "derived-v1",
+    assumptions: [
+      ...base.assumptions.filter((line) => !line.startsWith("Records are intentionally empty")),
+      "DERIVED, not measured: every record is a nine-handed record re-labelled to the six-max seat with the same number of opponents left to act.",
+      `Seat mapping: ${sixMaxPositionMap().map((p) => `${p.sixMax}<-${p.fullRing}`).join(", ")}.`,
+      `Nine-handed seats with no six-max counterpart, and so not carried over: ${dropped}.`,
+      "A six-max field plays looser at equal seats-behind, so these ranges are expected to be tight until measured six-max charts replace them.",
+    ],
+    records,
+  };
+}
+
 export const mttPreflopAnteOnRangePack = rangeFileToMttPreflopRangePack(anteOnRanges);
 export const mttPreflopAnteOffRangePack = rangeFileToMttPreflopRangePack(anteOffRanges);
 
 export const mttPreflopRangePacks = [
   mttPreflopAnteOnRangePack,
   mttPreflopAnteOffRangePack,
+] as const;
+
+export const mttSixMaxDerivedRangePacks = [
+  mttSixMaxDerivedRangePack("REGULAR", "ON"),
+  mttSixMaxDerivedRangePack("REGULAR", "OFF"),
+  mttSixMaxDerivedRangePack("TURBO", "ON"),
+  mttSixMaxDerivedRangePack("TURBO", "OFF"),
 ] as const;
 
 export const mttSixMaxPreflopRangePackCandidates = [
