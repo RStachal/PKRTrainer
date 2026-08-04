@@ -1,3 +1,4 @@
+import { callRequirement, explainCallPrice, explainShovePrice, shoveRequirement } from "./decisionMaths";
 import type {
   ActionContext,
   ActionKey,
@@ -13,6 +14,8 @@ export type PreflopExplanationMode = "BEGINNER" | "STANDARD" | "ADVANCED";
 export type PreflopExplanationLanguage = "CZ" | "EN";
 
 export interface PreflopExplanationInput {
+  /** Pot before the hero acts, in BB. Lets the explanation price the decision. */
+  startingPotBB?: number;
   context: ActionContext;
   heroPos: Position;
   effStack: StackBucket;
@@ -66,7 +69,7 @@ export function buildPreflopExplanationForSpot(
   spot: Pick<
     Spot,
     "context" | "heroPos" | "effStack" | "hand" | "strictCorrect" | "tableState" | "actionEvs"
-  >,
+  > & Partial<Pick<Spot, "startingPot">>,
   language: PreflopExplanationLanguage,
   mode: PreflopExplanationMode = "STANDARD",
 ): string {
@@ -74,12 +77,41 @@ export function buildPreflopExplanationForSpot(
     context: spot.context,
     heroPos: spot.heroPos,
     effStack: spot.effStack,
+    startingPotBB: spot.startingPot,
     hand: spot.hand,
     recommended: spot.actionEvs
       ? bestActionsForActionEv(spot.actionEvs)
       : spot.strictCorrect,
     tableState: spot.tableState,
   }, mode, language);
+}
+
+/**
+ * The price of the decision, when the spot determines one.
+ *
+ * Only two contexts carry a price that follows from the spot alone. Facing an
+ * all-in, the opponent has shoved their stack and the hero's call is priced
+ * against it; shoving, the hero risks a stack to win the blinds. Everything else
+ * depends on a sizing the spot does not fix, and inventing one to have a number
+ * to show would teach a price the drill never set.
+ *
+ * Uniform stacks are assumed, which is the model the packs are built on: at a
+ * stated depth every seat has it, so the effective stack is that depth in every
+ * pairing. See Agents/reference-ranges/study-library.md.
+ */
+function decisionPriceCs(input: PreflopExplanationInput): string {
+  const stack = input.effStack;
+  const pot = input.startingPotBB ?? 1.5;
+
+  if (input.context === "VS_ALLIN") {
+    // The opponent is all in for their stack, so the hero calls a stack into the
+    // blinds plus that stack.
+    return explainCallPrice(callRequirement({ potBB: pot + stack, toCallBB: stack }));
+  }
+  if (input.context === "PUSH_FOLD" && input.recommended.includes("JAM")) {
+    return explainShovePrice(shoveRequirement(stack, pot));
+  }
+  return "";
 }
 
 function buildPreflopExplanationCs(
@@ -102,6 +134,9 @@ function buildPreflopExplanationCs(
     `Třída handy: ${handReason(input.hand)}.`,
     `Plán: ${actionPlan(input.recommended, input.context, input.tableState)}.`,
   ];
+
+  const price = decisionPriceCs(input);
+  if (price !== "") parts.push(price);
 
   if (mode === "ADVANCED") {
     parts.push(`Poznámka k range: ${advancedRangeNote(input)}.`);
