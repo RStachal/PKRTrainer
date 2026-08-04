@@ -146,29 +146,125 @@ export function heroStackRank(distribution: StackDistribution): number {
     .length + 1;
 }
 
+/**
+ * Prize-pool equity of each stack, by Malmuth-Harville.
+ *
+ * The chance of finishing first is a player's share of the chips; the chance of
+ * finishing second is, for each other player finishing first, their share times
+ * this player's share of what remains. Recursing that over the places that pay
+ * gives an equity per player. Memoised on the set of players already placed, so
+ * a nine-handed table costs a few hundred steps rather than nine factorial.
+ */
+export function icmEquity(
+  stacks: readonly number[],
+  payouts: readonly number[],
+): number[] {
+  const n = stacks.length;
+  const paid = Math.min(payouts.length, n);
+  const equity = new Array<number>(n).fill(0);
+  const memo = new Map<number, number>();
+
+  const remainingChips = (placed: number): number => {
+    const cached = memo.get(placed);
+    if (cached !== undefined) return cached;
+    let total = 0;
+    for (let i = 0; i < n; i += 1) if ((placed & (1 << i)) === 0) total += stacks[i];
+    memo.set(placed, total);
+    return total;
+  };
+
+  const walk = (placed: number, place: number, probability: number): void => {
+    if (place >= paid || probability <= 1e-12) return;
+    const pool = remainingChips(placed);
+    if (pool <= 0) return;
+    for (let i = 0; i < n; i += 1) {
+      if ((placed & (1 << i)) !== 0) continue;
+      const chance = probability * (stacks[i] / pool);
+      equity[i] += chance * payouts[place];
+      walk(placed | (1 << i), place + 1, chance);
+    }
+  };
+
+  walk(0, 0, 1);
+  return equity;
+}
+
+/**
+ * How much more equity a call needs because of the payout structure.
+ *
+ * Bubble factor is the ratio of what a call risks to what it gains, both in
+ * prize-pool equity rather than chips. Divide chip pot odds by it to get the real
+ * odds, which is the whole adjustment:
+ *
+ *   odds_icm = odds_chips / bubbleFactor
+ *   requiredEquity = 1 / (1 + odds_icm)
+ *
+ * The previous version of this function was a table of invented constants - 1.05
+ * early, 2.2 on the bubble, plus a fudge for stack rank - with no derivation
+ * behind any of them. They were also wrong in a consistent direction: it put a
+ * chip leader at 1.8 to 2.0 where the real figure is 1.3, because a leader risks
+ * far less than the short stacks do. That is exactly the asymmetry the concept
+ * exists to express, and a per-player constant cannot express it at all.
+ *
+ * It is deliberately pairwise. A call is against a particular opponent, and how
+ * much it costs depends on that opponent's stack as well as the hero's.
+ *
+ * Cash games fall out at 1: with no ladder, equity is linear in chips, so risk
+ * and reward are equal and the adjustment vanishes. That is the hook for a cash
+ * conversion later - the same code path with a flat payout.
+ */
+export function bubbleFactor(
+  stacks: readonly number[],
+  payouts: readonly number[],
+  heroIndex: number,
+  villainIndex: number,
+): number {
+  const hero = stacks[heroIndex];
+  const villain = stacks[villainIndex];
+  if (hero === undefined || villain === undefined || hero <= 0 || villain <= 0) return 1;
+
+  const atRisk = Math.min(hero, villain);
+  const onFold = icmEquity(stacks, payouts)[heroIndex];
+
+  const lost = stacks.slice();
+  lost[heroIndex] = hero - atRisk;
+  lost[villainIndex] = villain + atRisk;
+  const onLoss = icmEquity(lost, payouts)[heroIndex];
+
+  const won = stacks.slice();
+  won[heroIndex] = hero + atRisk;
+  won[villainIndex] = villain - atRisk;
+  const onWin = icmEquity(won, payouts)[heroIndex];
+
+  const gain = onWin - onFold;
+  if (gain <= 1e-9) return 1;
+  return (onFold - onLoss) / gain;
+}
+
+/** Chip pot odds adjusted for the payout ladder, and the equity they demand. */
+export function requiredEquityWithIcm(chipOdds: number, factor: number): number {
+  const realOdds = chipOdds / Math.max(factor, 1e-9);
+  return 1 / (1 + realOdds);
+}
+
+/**
+ * Kept for callers that only know the shape of the tournament, not the stacks.
+ *
+ * Now derived rather than guessed: it builds an even-stack table of the size and
+ * payout given and measures the factor on it.
+ */
 export function estimateBubbleFactor(
   payoutStructure: PayoutStructure,
   distribution: StackDistribution,
 ): number {
-  const distanceToBubble = distribution.remainingPlayers - payoutStructure.paidPlaces;
-  const rank = heroStackRank(distribution);
-  const middleRank = Math.ceil(distribution.remainingPlayers / 2);
-
-  let base = 1.05;
-  if (distanceToBubble <= 0) base = 2.2;
-  else if (distanceToBubble === 1) base = 2.0;
-  else if (distanceToBubble === 2) base = 1.55;
-  else if (distanceToBubble <= 4) base = 1.25;
-
-  const stackPressure = rank === 1
-    ? -0.2
-    : rank >= middleRank
-      ? 0.25
-      : 0;
-
-  return clampToTenth(base + stackPressure, 1, 3);
-}
-
-function clampToTenth(value: number, min: number, max: number): number {
-  return Math.round(Math.min(max, Math.max(min, value)) * 10) / 10;
+  const stacks = distribution.stacks.map((stack) => stack.stackBB);
+  if (stacks.length < 2) return 1;
+  const villain = distribution.heroIndex === 0 ? 1 : 0;
+  const factor = bubbleFactor(
+    stacks,
+    normalizePayoutStructure(payoutStructure).payouts,
+    distribution.heroIndex,
+    villain,
+  );
+  return Math.round(factor * 10) / 10;
 }
