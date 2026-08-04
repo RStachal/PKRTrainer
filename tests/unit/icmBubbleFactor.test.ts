@@ -57,6 +57,15 @@ describe("bubble factor", () => {
     expect(bubbleFactor(don, Array(5).fill(0.2), 0, 1)).toBeGreaterThan(4.5);
   });
 
+  it("follows the article's equities where its own stated factor disagrees", () => {
+    // The six-max bubble row prints a factor of 1.7, but the equities printed
+    // beside it - 33 percent on a fold, 55 on a win - give 33/(55-33) = 1.5, which
+    // is what this computes. Equities are the primitive and the factor is derived
+    // from them, so the implementation follows the equities and the discrepancy is
+    // recorded rather than tuned away.
+    expect(bubbleFactor([3000, 3000, 3000], SH, 0, 1)).toBeCloseTo(1.5, 1);
+  });
+
   it("is exactly 1 when the payout is flat, which is the cash game case", () => {
     // No ladder means equity is linear in chips, so risk equals reward and the
     // adjustment vanishes. This is the hook a cash conversion would use.
