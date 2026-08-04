@@ -74,3 +74,38 @@ It has no MTT postflop solver output, so it cannot check the decomposed solves. 
 has no ICM tables, so the compendium's repeated "adjust for ICM" stays an
 instruction we cannot yet follow numerically. And nothing in it explains the cream
 colour on the RYE pushing sheets, which is still the oldest open question here.
+
+## Little contradicts the Kompendium about 10BB, and I was about to act on the wrong one
+
+The previous entry said our pure jam/fold at 9-12BB was "the same defect corrected
+at 15BB, one band lower" and named three sources against it. Reading the strongest
+of them properly shows that was too strong a claim.
+
+Jonathan Little, volume 2, states it directly:
+
+> "Když všichni až k vám složí a vy máte 10 BB či méně, jděte all-in s poměrně
+> širokou rangí."
+
+and refers throughout to "10BB all-in nebo fold hru" - a 10BB all-in-or-fold game.
+He puts the switch a band higher: "S 20 BB bude asi lepší raisnout a foldnout na
+případný all-in."
+
+So at ten big blinds unopened, the library's most authoritative MTT source says
+shove, which is what our model already does.
+
+**The disagreement is smaller than it looked.** The RYE 10-20BB sheet does draw an
+open-raise band at these depths, but it is tiny - 2.6 percent on the button, 4.1
+to 7.2 elsewhere - and it is the premiums: AA, AKs, KK, QQ, JJ, TT. So "mix
+open-raise and push" at 10BB means shove about 37 percent and min-raise the very
+top. Little's "wide all-in range" and that band are not really in conflict; one is
+the strategy and the other is a small refinement on top of it.
+
+**Left alone deliberately.** Adding a 2.6 percent raising band at 10BB would mean
+teaching two regimes at one depth without being able to say which applies, against
+an explicit statement from the best MTT source that the depth is all-in or fold.
+The earlier framing was wrong and is corrected here rather than built on.
+
+Two other concrete figures from Little worth keeping, both about calling a shove
+at 10BB: a tight field calls with about 20 percent (55+, A7+, K9+, QT+), a loose
+one with about 40 (22+, A2+, K2+, Q9+, JT). That is the width our VS_ALLIN should
+sit between, and it does.
