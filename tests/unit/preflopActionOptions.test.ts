@@ -8,7 +8,11 @@ describe("preflop action options", () => {
       .toEqual(["OPEN_2X", "LIMP", "FOLD"]);
     expect(offeredPreflopActionKeysForContext("VS_LIMP", "CO", 25, ["ISO_3X"]))
       .toEqual(["ISO_3X", "OVERLIMP", "FOLD"]);
+    // The big blind may shove over a limp while short, and may not once deep -
+    // the chart draws a shove at 15-25BB and none from 30BB up.
     expect(offeredPreflopActionKeysForContext("VS_LIMP", "BB", 25, ["ISO_3X"]))
+      .toEqual(["LIMP", "ISO_3X", "JAM"]);
+    expect(offeredPreflopActionKeysForContext("VS_LIMP", "BB", 100, ["ISO_3X"]))
       .toEqual(["LIMP", "ISO_3X"]);
     // At 25BB a shove over an open is on the table, so it is offered. Deep, it is
     // not - the charts draw no re-jam past 30BB and offering an action nobody

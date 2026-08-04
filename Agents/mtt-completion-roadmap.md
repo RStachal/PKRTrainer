@@ -191,13 +191,23 @@ which it did not - the two are built by separate paths and nothing checked they
 agreed, so the first run recommended an answer the drill did not offer. Property
 9b now holds that line for every context and bucket.
 
+**Also shipped: calling the shove.** VS_ALLIN now carries the charted depths from
+15 to 30BB for UTG, LJ, CO, BTN and SB, calibrated to the big blind shoving so
+both halves of the spot agree. HJ and BB stay empty above 10BB - no sheet covers
+them, and borrowing a neighbour's range would be inventing one.
+
+**Also shipped: the big blind against a limp.** Was one range at every depth;
+now the sheet's three bands, and it shoves 20.5 percent at 15-20BB, 9.0 at 20-25
+and none from 30BB up. The lesson worth keeping is that the *raise width* barely
+moved - 36.9, 34.5, 38.5 - so width was never the error. Teaching a raise where
+the chart shoves was, and one range per seat cannot express that difference. Only
+the big blind has a sheet and only against the small blind; the other seats keep
+the flat table.
+
 **Still open**, all measured and recorded in the reference file:
 
-- VS_ALLIN above 10BB - calling a shove at 15 to 30BB
 - open-jam thresholds in the 10-20BB opening band, where we hold one range
-- VS_LIMP has no jam and no depth curve: BB versus a small-blind limp shoves
-  20.5 percent at 15-20BB and 9.0 at 20-25, and by 30BB the shove is gone while
-  the iso width barely moves - same width, different strategy
+- VS_LIMP for the seats other than the big blind, which no sheet covers
 - the opener-width axis, which every defending sheet has and no context of ours does
 
 One thing worth noting about the top edge: four folders measured independently all

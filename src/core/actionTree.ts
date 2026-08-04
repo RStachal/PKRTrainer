@@ -65,7 +65,7 @@ export function offeredActions(state: TableState): ActionKind[] {
 
   switch (facing) {
     case "NONE":
-      return offeredWhenUnopened(heroIsBB, limpsBefore);
+      return offeredWhenUnopened(heroIsBB, limpsBefore, state.shortStack);
 
     case "OPEN": {
       // Req 3.5 — vs-open: Fold / Call / 3bet.
@@ -103,14 +103,21 @@ export function offeredActions(state: TableState): ActionKind[] {
  * @param heroIsBB Je hrdina na pozici BB?
  * @param limpsBefore Počet limperů před hrdinou (0..8).
  */
-function offeredWhenUnopened(heroIsBB: boolean, limpsBefore: number): ActionKind[] {
+function offeredWhenUnopened(
+  heroIsBB: boolean,
+  limpsBefore: number,
+  shortStack: boolean,
+): ActionKind[] {
   const hasLimps = limpsBefore >= MIN_LIMPS && limpsBefore <= MAX_LIMPS;
 
   if (hasLimps) {
     if (heroIsBB) {
       // Req 3.3 — BB čelící limpu(ům): Limp (check) a Iso-raise.
       // BB již vložil big blind, může zdarma dorovnat (check) → fold se nenabízí.
-      return ["LIMP", "ISO"];
+      // Req 3.3 — plus a shove while the stack is short enough. The chart shoves
+      // 20.5 percent over a limp at 15-20BB and 9.0 at 20-25, and draws none from
+      // 30BB up, so the option appears exactly where a range exists to fill it.
+      return shortStack ? ["LIMP", "ISO", "JAM"] : ["LIMP", "ISO"];
     }
     // Req 3.4 — Iso-raise; Req 3.13 — Over-limp (jen mimo BB); plus Fold.
     return ["ISO", "OVERLIMP", "FOLD"];

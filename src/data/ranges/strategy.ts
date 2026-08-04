@@ -34,6 +34,7 @@ import {
 } from "./rangeBuilders";
 import { REJAM_CALIBRATION_OPENER, REJAM_RANGES } from "./rejamRanges.generated";
 import { CALL_REJAM_CALIBRATION_SHOVER, CALL_REJAM_RANGES } from "./callRejamRanges.generated";
+import { BB_VS_SB_LIMP } from "./limpDefenceRanges.generated";
 
 // ---------------------------------------------------------------------------
 // Rozdělení košů (Req 2.3: ≤ 12 BB = push/fold)
@@ -534,10 +535,41 @@ function squeezeSegments(def: DefendDef, wide: boolean): RangeSegment[] {
   ];
 }
 
+/**
+ * The big blind against a small-blind limp, from the owner's chart.
+ *
+ * The flat table raised one range at every depth. The sheet's raise width barely
+ * moves - 37.0, 34.5, 38.5 percent - but what it is made of changes completely:
+ * at 15-20BB more than half of it is a shove, and by 30BB there is no shove at
+ * all. So the width was never the error; teaching a raise where the chart shoves
+ * was, and one range per seat cannot express the difference.
+ *
+ * Only the big blind has a sheet, and only against the small blind. The other
+ * seats keep the flat table rather than borrowing this curve.
+ */
+function bbLimpSegments(bucket: StackBucket, wide: boolean): RangeSegment[] | null {
+  const band = BB_VS_SB_LIMP
+    .filter((item) => bucket >= item.fromBucket)
+    .sort((left, right) => right.fromBucket - left.fromBucket)[0];
+  if (band === undefined) return null;
+
+  const k = isoKeys(bucket);
+  const segments: RangeSegment[] = [];
+  if (band.jam.length > 0) segments.push({ spec: band.jam.join(", "), strict: ["JAM"] });
+  segments.push({ spec: band.iso.join(", "), strict: k.strict, lenient: k.lenient });
+  // Checking the option is the rest of the grid, so the sheet leaves no folds -
+  // which is right, since nobody folds a big blind that is already in for free.
+  segments.push({ spec: band.check.join(", "), strict: ["LIMP"] });
+  void wide; // the sheet is one measurement; it does not vary with ante.
+  return segments;
+}
+
 function isoSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSegment[] {
   const k = isoKeys(bucket);
   const isoVal = widenSpec(ISO_VALUE, ISO_VALUE_EXTRA, wide);
   if (pos === "BB") {
+    const measured = bbLimpSegments(bucket, wide);
+    if (measured !== null) return measured;
     // BB čelící limpu(ům): iso value → ISO, ostatní hratelné → LIMP (check).
     return [
       { spec: isoVal, strict: k.strict, lenient: k.lenient },

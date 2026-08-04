@@ -287,6 +287,55 @@ describe("calling a re-jam", () => {
   });
 });
 
+describe("big blind against a small-blind limp", () => {
+  function actionWidthPct(bucket: StackBucket, action: string): number {
+    const pack = allMttPreflopRangePacks.find((item) => (
+      item.dimensions.tableFormat === "FULL_RING_9" &&
+      item.dimensions.blindSpeed === "REGULAR" &&
+      item.dimensions.ante === "OFF" &&
+      item.records.length > 0
+    ))!;
+    const entry = createRangeStoreFromRangePack(pack)
+      .lookup({ ante: "OFF", position: "BB", bucket, context: "VS_LIMP" });
+    if (entry === undefined) return 0;
+    const combos = Object.entries(entry.strict)
+      .filter(([, actions]) => actions.includes(action))
+      .reduce((sum, [handClass]) => sum + COMBOS(handClass), 0);
+    return Math.round(combos / 1326 * 1000) / 10;
+  }
+
+  it("shoves over the limp while the stack is short, and stops when the chart does", () => {
+    // The finding this replaced a flat range with: the raise width hardly moves
+    // across the bands, so width was never the error. What it is made of is.
+    expect(actionWidthPct(15 as StackBucket, "JAM")).toBe(20.5);
+    expect(actionWidthPct(20 as StackBucket, "JAM")).toBe(9);
+    expect(actionWidthPct(30 as StackBucket, "JAM")).toBe(0);
+    expect(actionWidthPct(100 as StackBucket, "JAM")).toBe(0);
+  });
+
+  it("keeps the raise width nearly flat while the shove disappears into it", () => {
+    // 16.4 + 20.5 at 15BB, 25.5 + 9.0 at 20BB, 38.5 + 0 at 30BB. A model with one
+    // iso range per seat gets this total right at every depth and the strategy
+    // wrong at two of them.
+    for (const [bucket, expected] of [[15, 36.9], [20, 34.5], [30, 38.5]] as const) {
+      const acting = actionWidthPct(bucket as StackBucket, "JAM")
+        + actionWidthPct(bucket as StackBucket, "ISO_25X");
+      expect(Math.round(acting * 10) / 10, `${bucket}BB`).toBe(expected);
+    }
+  });
+
+  it("never folds a big blind that is already in for free", () => {
+    // Every cell on the sheet is jam, raise or check, so the three actions have to
+    // account for the whole grid. A fold appearing here would mean a misread legend.
+    for (const bucket of [15, 20, 25, 30, 50, 100] as StackBucket[]) {
+      const total = actionWidthPct(bucket, "JAM")
+        + actionWidthPct(bucket, "ISO_25X")
+        + actionWidthPct(bucket, "LIMP");
+      expect(Math.round(total), `${bucket}BB`).toBe(100);
+    }
+  });
+});
+
 describe("push/fold at ten big blinds", () => {
   it("matches the sheets for every seat they establish", () => {
     // Lower bound by construction: only the unambiguous blue is taken, because
