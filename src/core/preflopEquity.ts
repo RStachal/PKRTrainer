@@ -63,7 +63,7 @@ export function equityVsRange(hero: HandLabel, range: readonly HandLabel[]): num
 }
 
 export interface ShoveEv {
-  /** EV of shoving, in big blinds, against a caller with this calling range. */
+  /** EV of shoving, in big blinds, against callers with this calling range. */
   jamBB: number;
   /** EV of folding is zero by definition, kept so the pair reads as a pair. */
   foldBB: 0;
@@ -83,12 +83,19 @@ export function shoveEv(
   callingRange: readonly HandLabel[],
   stackBB: number,
   potBB: number,
+  opponentsBehind = 1,
 ): ShoveEv | undefined {
   const equityWhenCalled = equityVsRange(hero, callingRange);
   if (equityWhenCalled === undefined) return undefined;
 
   const callCombos = callingRange.reduce((sum, hand) => sum + combosInClass(hand), 0);
-  const foldFrequency = Math.max(0, Math.min(1, 1 - callCombos / 1326));
+  const foldsOnce = Math.max(0, Math.min(1, 1 - callCombos / 1326));
+  // A shove has to get through everyone still to act, not just one player. Pricing
+  // it against a single caller was the first version and it flattered every hand:
+  // 52o came out at +0.36 BB from the button because one opponent folding 78
+  // percent of the time pays for anything. Five opponents behind fold together
+  // only 29 percent of the time, and the same shove is a loss.
+  const foldFrequency = Math.pow(foldsOnce, Math.max(1, opponentsBehind));
 
   // Called: the pot is the blinds plus both stacks; the hero has staked one.
   const calledPot = potBB + 2 * stackBB;

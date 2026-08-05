@@ -89,7 +89,8 @@ import { preflopActionKindToKey } from "./preflopActionOptions";
 import { questionId } from "./questionId";
 import { mulberry32, hashStr } from "./rng";
 import { buildPreflopExplanation } from "./preflopExplanation";
-import { cloneActionEvSet, isActionEvSetComplete } from "./actionEv";
+import { cloneActionEvSet, isActionEvSetComplete, type ActionEvSet } from "./actionEv";
+import { callAllInEv, shoveEv } from "./preflopEquity";
 import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
 
 // ---------------------------------------------------------------------------
@@ -354,6 +355,87 @@ function pickCallsBefore(rng: () => number, heroPos: Position): number {
  *   - ante = ON  ⇒ 2,5 BB (SB 0,5 + BB 1 + ante 1),
  *   - ante = OFF ⇒ 1,5 BB (SB 0,5 + BB 1).
  */
+/**
+ * Hands a range entry actually plays, as a list of classes.
+ */
+function playedClasses(entry: { strict: Record<string, readonly ActionKey[]> } | undefined): HandLabel[] {
+  if (entry === undefined) return [];
+  return Object.entries(entry.strict)
+    .filter(([, keys]) => keys.some((key) => key !== "FOLD"))
+    .map(([hand]) => hand);
+}
+
+/**
+ * EV per offered action, computed where the spot fixes a price.
+ *
+ * Only two contexts do. Facing an all-in the opponent has staked their stack and
+ * the hero's call is priced against it; shoving stakes a stack to win the blinds.
+ * Everywhere else the price depends on a sizing the drill never fixes, so no EV is
+ * offered rather than one being invented - the UI hides the bubbles when the set
+ * is incomplete, which is the honest outcome.
+ *
+ * The opponent's range has to come from somewhere, and this model has no opener
+ * identity: a spot knows the hero's seat, not who shoved or who will call. So one
+ * seat is named for each side and stated here, the same way REJAM_CALIBRATION_OPENER
+ * handles the same gap. The big blind is the last player who can call a shove and
+ * the most common one; the button is the seat that shoves most.
+ */
+function computeActionEvs(
+  context: ActionContext,
+  heroPos: Position,
+  hand: HandLabel,
+  effStack: StackBucket,
+  ante: AnteMode,
+  startingPot: number,
+  offered: readonly ActionKey[],
+  store: RangeStore,
+): ActionEvSet<ActionKey> | undefined {
+  if (context === "PUSH_FOLD" && offered.includes("JAM") && offered.includes("FOLD")) {
+    const caller = playedClasses(store.lookup({ ante, position: "BB", bucket: effStack, context: "VS_ALLIN" }));
+    if (caller.length === 0) return undefined;
+    // Everyone still to act has to fold, so the shove is priced against all of
+    // them rather than against one. From under the gun that is eight players.
+    const behind = Math.max(1, POSITION_ORDER.length - 1 - POSITION_ORDER.indexOf(heroPos));
+    const ev = shoveEv(hand, caller, effStack, startingPot, behind);
+    if (ev === undefined) return undefined;
+    return {
+      source: "ALL_IN_EQUITY",
+      unit: "BB",
+      values: [
+        { action: "JAM" as ActionKey, evBb: Math.round(ev.jamBB * 100) / 100 },
+        { action: "FOLD" as ActionKey, evBb: 0 },
+      ],
+      // The table is sampled to about half a point, which on a ten big blind
+      // shove is a tenth of a blind. Two actions inside that are not
+      // distinguishable by this method, and grading should say so rather than
+      // award a mistake for noise.
+      equivalentThresholdBb: 0.1,
+      acceptableThresholdBb: 0.3,
+    };
+  }
+
+  if (context === "VS_ALLIN" && offered.includes("CALL_JAM") && offered.includes("FOLD")) {
+    const shover = playedClasses(store.lookup({ ante, position: "BTN", bucket: effStack, context: "PUSH_FOLD" }));
+    if (shover.length === 0) return undefined;
+    // The shover is all in for their stack, so the pot the hero contests is the
+    // blinds plus that stack, and the call is the hero's own stack.
+    const ev = callAllInEv(hand, shover, effStack, startingPot + effStack);
+    if (ev === undefined) return undefined;
+    return {
+      source: "ALL_IN_EQUITY",
+      unit: "BB",
+      values: [
+        { action: "CALL_JAM" as ActionKey, evBb: Math.round(ev.callBB * 100) / 100 },
+        { action: "FOLD" as ActionKey, evBb: 0 },
+      ],
+      equivalentThresholdBb: 0.1,
+      acceptableThresholdBb: 0.3,
+    };
+  }
+
+  return undefined;
+}
+
 function startingPotFor(ante: AnteMode): number {
   return ante === "ON" ? 2.5 : 1.5;
 }
@@ -478,12 +560,14 @@ export function generateSpot(
   });
   const candidateActionEvs = entry.actionEvs?.[hand];
   const offeredActionKeys = answers.map((answer) => answer.key);
-  const actionEvs = isActionEvSetComplete(candidateActionEvs, offeredActionKeys)
-    ? cloneActionEvSet(candidateActionEvs)
-    : undefined;
-
   const id = questionId({ context, heroPos, effStack, hand, ante });
   const startingPot = startingPotFor(ante);
+
+  // A reviewed export wins where one exists; otherwise the two contexts whose
+  // price the spot fixes are computed. Nothing is invented for the rest.
+  const actionEvs = isActionEvSetComplete(candidateActionEvs, offeredActionKeys)
+    ? cloneActionEvSet(candidateActionEvs)
+    : computeActionEvs(context, heroPos, hand, effStack, ante, startingPot, offeredActionKeys, store);
   const explanation = buildPreflopExplanation({
     context,
     heroPos,

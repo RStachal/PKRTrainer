@@ -1,4 +1,15 @@
-export type ActionEvSource = "SOLVER";
+/**
+ * Where an EV set came from, which is never a detail.
+ *
+ * `SOLVER` is a reviewed export and is the only source a shipped range pack may
+ * carry - `validateActionEvSet` still insists on it, because that validator
+ * guards imports. `ALL_IN_EQUITY` is computed at runtime from the generated
+ * preflop equity table for the two contexts where the spot fixes a price, and it
+ * is a weaker claim: exact arithmetic over a sampled table, ignoring card removal
+ * between ranges. Keeping the two apart means nobody has to guess which they are
+ * looking at.
+ */
+export type ActionEvSource = "SOLVER" | "ALL_IN_EQUITY";
 export type ActionEvUnit = "BB";
 
 export interface ActionEvValue<Action extends string> {
