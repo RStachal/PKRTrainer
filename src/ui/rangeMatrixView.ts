@@ -283,7 +283,17 @@ function renderUnavailable(doc: Document, root: HTMLElement, message: string): v
   root.appendChild(wrap);
 }
 
-/** A one-line statement of how wide the hero's range is in this spot. */
+/**
+ * How wide the hero's range is here, and what it is made of.
+ *
+ * The grid answers "what would I do with each hand"; this answers the question a
+ * player actually asks when reviewing a spot - "how much am I playing, and how
+ * does it split". Those are different questions and the grid alone answers only
+ * the first: thirteen by thirteen coloured squares is a picture of every possible
+ * holding, not of a range. The bar below is the range itself, folds excluded,
+ * divided by action in the legend's own colours, so the split is read at a glance
+ * rather than assembled from numbers on separate pills.
+ */
 function renderRangeWidth(doc: Document, counts: CategoryCounts): HTMLElement {
   const entries = Object.entries(counts) as [ActionCategory, number][];
   const rangeCombos = entries
@@ -318,7 +328,67 @@ function renderRangeWidth(doc: Document, counts: CategoryCounts): HTMLElement {
 
   bar.appendChild(headline);
   bar.appendChild(detail);
-  return bar;
+
+  const block = doc.createElement("div");
+  block.className = "range-composition-block";
+  block.appendChild(bar);
+  if (rangeCombos > 0) block.appendChild(renderComposition(doc, counts, rangeCombos));
+  return block;
+}
+
+/**
+ * The hero's range as one bar, split by action in proportion to combinations.
+ *
+ * Folds are left out on purpose. Including them would make the bar a picture of
+ * the deck again, and at ten big blinds under the gun the fold slice is over nine
+ * tenths of it - every played action squeezed into a sliver. What the player needs
+ * to see is the shape of what they *play*.
+ */
+function renderComposition(
+  doc: Document,
+  counts: CategoryCounts,
+  rangeCombos: number,
+): HTMLElement {
+  const strip = doc.createElement("div");
+  strip.className = "range-composition";
+  strip.dataset.rangeCombos = String(rangeCombos);
+  strip.setAttribute("role", "img");
+  strip.style.display = "flex";
+  strip.style.height = "16px";
+  strip.style.marginTop = "7px";
+  strip.style.borderRadius = "999px";
+  strip.style.overflow = "hidden";
+  strip.style.border = "1px solid rgba(255,255,255,.12)";
+  strip.style.background = "rgba(2,7,13,.5)";
+
+  const parts: string[] = [];
+  for (const cat of LEGEND_ORDER) {
+    if (cat === "FOLD") continue;
+    const combos = counts[cat] ?? 0;
+    if (combos === 0) continue;
+    const pct = combos / rangeCombos * 100;
+
+    const segment = doc.createElement("span");
+    segment.className = "range-composition__part";
+    segment.dataset.action = cat;
+    segment.dataset.combos = String(combos);
+    segment.style.flex = `${combos} 0 0`;
+    segment.style.background = CATEGORIES[cat].color;
+    segment.style.display = "flex";
+    segment.style.alignItems = "center";
+    segment.style.justifyContent = "center";
+    segment.style.fontSize = "9px";
+    segment.style.fontWeight = "950";
+    segment.style.color = "rgba(4,10,18,.86)";
+    segment.title = `${CATEGORIES[cat].label}: ${combos} kombinací, ${pct.toFixed(0)} % range`;
+    // A number inside a sliver is unreadable and makes the bar look broken; below
+    // about a tenth the colour and the tooltip carry it.
+    if (pct >= 12) segment.textContent = `${pct.toFixed(0)} %`;
+    strip.appendChild(segment);
+    parts.push(`${CATEGORIES[cat].label} ${pct.toFixed(0)} %`);
+  }
+  strip.setAttribute("aria-label", `Rozdělení range: ${parts.join(", ")}`);
+  return strip;
 }
 
 /** Vykreslí legendu pro množinu použitých kategorií (fold vždy zahrnut). */
