@@ -1051,6 +1051,19 @@ function setupTraining(
   gameBox.appendChild(resultContainer);
   gameBox.appendChild(matrixContainer);
 
+  // The equity table prices the action buttons. It is fetched rather than bundled
+  // - 115 KB has no business on the install path - and the fetch starts here, at
+  // boot, rather than when a session starts. Gating the start on it was the first
+  // attempt and it was wrong twice over: it turned a synchronous click into a
+  // deferred one, which the mobile smoke tests caught immediately, and it made
+  // every postflop session wait for a table postflop never reads.
+  //
+  // Booting it here means it is in flight while the player picks filters, so by
+  // the click it has landed. If it somehow has not, the first spot of the session
+  // carries no EV and the rest carry it - spots are generated one at a time as
+  // the player advances, so only the first can be early enough to miss.
+  void loadPreflopEquity();
+
   // Stav bÄ›ĹľĂ­cĂ­ relace (iterĂˇtor sekvence).
   let iterator: Iterator<Spot> | null = null;
   let activeRangeStore: RangeStore = rangeStore;
@@ -1090,15 +1103,6 @@ function setupTraining(
         startSession(filters, seed, resolvedProfile, pack);
       };
 
-      // The equity table prices the action buttons and is fetched rather than
-      // bundled, so the session waits for it the same way it waits for the range
-      // pack. A failed fetch resolves false and the session starts anyway, with
-      // no EV shown - the alternative is blocking training on a number that is
-      // an explanation, not the answer.
-      const startWhenPriced = (): void => {
-        void loadPreflopEquity().then(startResolvedProfile, startResolvedProfile);
-      };
-
       mttProductionLazyLoader.cancelPendingProfileLoads();
       const profileKey = mttProductionProfileKey(resolvedProfile);
       const initialCapability = trainingCapabilityForProfile(resolvedProfile);
@@ -1111,12 +1115,12 @@ function setupTraining(
         profileKey === null ||
         mttProductionLazyLoader.isProfileLoaded(profileKey)
       ) {
-        startWhenPriced();
+        startResolvedProfile();
         return;
       }
       void mttProductionLazyLoader.loadProfile(profileKey)
         .then((loaded) => {
-          if (!loaded.stale) startWhenPriced();
+          if (!loaded.stale) startResolvedProfile();
         })
         .catch(() => {
           gameBox.hidden = true;
