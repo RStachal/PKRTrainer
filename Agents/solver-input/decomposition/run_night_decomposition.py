@@ -13,9 +13,10 @@ Design notes worth keeping:
 - It is resumable at every level. A board whose plan and outputs already exist is
   skipped in seconds, so an interrupted night costs nothing but the board in
   flight.
-- Boards are taken shallowest-first. A 25BB board's subgames are far cheaper than
-  a 100BB board's, so this gets more finished per hour early on, and the expensive
-  families still get their turn on a night that runs long.
+- Boards are taken deepest-first. This was the other way until the first full
+  night measured what shallowest-first produced: more boards, but over half their
+  turn nodes offering only check-or-shove, because a low SPR leaves no room for a
+  second sizing. Throughput was the wrong thing to maximise.
 - It stops at the deadline rather than mid-board where it can, because a
   half-planned board is the one state that needs re-reading a 395 MB dump.
 """
@@ -79,13 +80,20 @@ def main():
     os.makedirs(WORK, exist_ok=True)
     boards = board_parameter_files()
 
-    # Shallowest first: a 25BB subgame is a fraction of a 100BB one, so more
-    # boards finish per hour and the deep families still get a long night.
     def depth(key):
         match = re.search(r"MTT9_(\d+)BB", key[0])
         return int(match.group(1)) if match else 999
 
-    ordered = sorted(boards, key=lambda k: (depth(k), k[0], k[1]))
+    # Deepest first, reversing the original choice on evidence. Shallowest-first
+    # finished more boards per hour, and the first full night showed why that was
+    # the wrong thing to maximise: of the 22,842 subgames it produced, 12,397 turn
+    # nodes offered only two actions. At 20 to 35BB a flop bet and call leaves an
+    # SPR under one, so nothing fits between a small bet and the stack and the tree
+    # collapses to check-or-shove. Those nodes are correct and nearly free of
+    # information. The ones worth having - two bet sizes, two raise sizes, a shove
+    # that is a real choice - exist only where the stack is deep, and those were
+    # exactly the boards the old ordering left until last.
+    ordered = sorted(boards, key=lambda k: (-depth(k), k[0], k[1]))
     log(f"{len(ordered)} boards have a monolithic checkpoint; deadline {deadline:%H:%M}")
 
     done = skipped = failed = 0
