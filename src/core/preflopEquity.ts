@@ -1,4 +1,3 @@
-import { EQUITY_CLASSES, PREFLOP_EQUITY } from "../data/ranges/preflopEquity.generated";
 import type { HandLabel } from "./types";
 
 /**
@@ -13,18 +12,63 @@ import type { HandLabel } from "./types";
  * it is written; see scripts/generatePreflopEquity.mts. It is class against class,
  * so card removal between the two ranges is ignored - most visible with a pair
  * against itself. Preflop charts carry the same simplification.
+ *
+ * It is loaded on demand rather than imported. 169 by 169 equities are 115 KB of
+ * source, and importing them put the whole table in the precached main bundle,
+ * which took it 45 KB over its raw budget and 32 KB over its gzip budget - a cost
+ * paid on first paint by every user, including the ones who never open a
+ * push-or-fold spot. `loadPreflopEquity` is called where the range pack is
+ * already being fetched, so the table arrives with the data it prices.
+ *
+ * Until it arrives every accessor returns undefined, and the caller shows no EV
+ * rather than a wrong one. That is also what happens if the fetch fails.
  */
 
-const INDEX = new Map(EQUITY_CLASSES.map((hand, position) => [hand, position]));
-const ROWS = new Map<string, number[]>();
+interface EquityTable {
+  index: Map<string, number>;
+  raw: Readonly<Record<string, string>>;
+  rows: Map<string, number[]>;
+}
+
+let table: EquityTable | undefined;
+let loading: Promise<boolean> | undefined;
+
+/**
+ * Fetch the equity table, once.
+ *
+ * Resolves true when the table is usable. The promise is kept so concurrent
+ * callers share one fetch, and a failed load is not retried on every spot - it
+ * resolves false and the trainer runs without EV, which is the honest outcome.
+ */
+export function loadPreflopEquity(): Promise<boolean> {
+  if (table !== undefined) return Promise.resolve(true);
+  if (loading !== undefined) return loading;
+  loading = import("../data/ranges/preflopEquity.generated")
+    .then((module) => {
+      table = {
+        index: new Map(module.EQUITY_CLASSES.map((hand, position) => [hand, position])),
+        raw: module.PREFLOP_EQUITY,
+        rows: new Map(),
+      };
+      return true;
+    })
+    .catch(() => false);
+  return loading;
+}
+
+/** True once equity is available, so a caller can decide whether to offer EV. */
+export function isPreflopEquityLoaded(): boolean {
+  return table !== undefined;
+}
 
 function row(hand: HandLabel): number[] | undefined {
-  const cached = ROWS.get(hand);
+  if (table === undefined) return undefined;
+  const cached = table.rows.get(hand);
   if (cached !== undefined) return cached;
-  const raw = PREFLOP_EQUITY[hand];
+  const raw = table.raw[hand];
   if (raw === undefined) return undefined;
   const parsed = raw.split(",").map(Number);
-  ROWS.set(hand, parsed);
+  table.rows.set(hand, parsed);
   return parsed;
 }
 
@@ -37,7 +81,7 @@ export function combosInClass(hand: HandLabel): number {
 /** Equity of one class against another, 0..1. */
 export function equityVsClass(hero: HandLabel, villain: HandLabel): number | undefined {
   const values = row(hero);
-  const column = INDEX.get(villain);
+  const column = table?.index.get(villain);
   if (values === undefined || column === undefined) return undefined;
   const perMille = values[column];
   return perMille === undefined ? undefined : perMille / 1000;

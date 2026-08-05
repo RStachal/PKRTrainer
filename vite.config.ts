@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 import {
   buildPrecacheManifest,
   injectPrecacheManifest,
-  isLazyMttProductionAsset,
+  isDeferredAsset,
   mttProductionChunkNameForModuleId,
 } from "./src/pwa/precacheManifestBuild";
 
@@ -44,7 +44,7 @@ export default defineConfig({
           throw new Error("Expected generated sw.js chunk.");
         }
         const manifest = buildPrecacheManifest([
-          ...Object.keys(bundle).filter((fileName) => !isLazyMttProductionAsset(fileName)),
+          ...Object.keys(bundle).filter((fileName) => !isDeferredAsset(fileName)),
           ...listPublicAssets(),
         ]);
         worker.code = injectPrecacheManifest(worker.code, manifest);
@@ -73,6 +73,11 @@ export default defineConfig({
           if (mttProductionChunkName !== null) return mttProductionChunkName;
           if (id.split("\\").join("/").endsWith("/src/core/postflopLineSimulator.ts")) {
             return "postflop-line";
+          }
+          // Named rather than left to rollup so the precache predicate has a
+          // stable thing to match; the default was "preflopEquity.generated".
+          if (id.split("\\").join("/").endsWith("/src/data/ranges/preflopEquity.generated.ts")) {
+            return "preflop-equity";
           }
           return undefined;
         },

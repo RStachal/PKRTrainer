@@ -15,6 +15,24 @@ export function isLazyMttProductionAsset(fileName: string): boolean {
   );
 }
 
+/**
+ * The all-in equity table, which is fetched when a session starts.
+ *
+ * 115 KB of source that prices the action buttons. Precaching it would put it on
+ * the install path of every user, including the ones who only ever open a
+ * postflop drill, for a table that is not needed until the first preflop spot is
+ * dealt - and that the app is written to run without.
+ */
+export function isPreflopEquityAsset(fileName: string): boolean {
+  const baseName = fileName.replace(/\\/g, "/").split("/").pop() ?? "";
+  return /^preflop-equity-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
+}
+
+/** Assets the app fetches when it needs them, so they stay off the install path. */
+export function isDeferredAsset(fileName: string): boolean {
+  return isLazyMttProductionAsset(fileName) || isPreflopEquityAsset(fileName);
+}
+
 export function mttProductionChunkNameForModuleId(moduleId: string): string | null {
   const normalized = moduleId.replace(/\\/g, "/");
   const fileName = normalized.split("/").pop() ?? "";
@@ -42,7 +60,7 @@ export function buildPrecacheManifest(
       .filter((fileName) => (
         fileName !== "sw.js" &&
         !fileName.endsWith(".map") &&
-        !isLazyMttProductionAsset(fileName)
+        !isDeferredAsset(fileName)
       ))
       .map((fileName) => `./${fileName}`),
   ];

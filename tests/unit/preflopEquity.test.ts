@@ -1,16 +1,27 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import {
   callAllInEv,
   combosInClass,
   equityVsClass,
   equityVsRange,
+  isPreflopEquityLoaded,
+  loadPreflopEquity,
   shoveEv,
 } from "../../src/core/preflopEquity";
 
 // The table is sampled, so these assert what is true about poker rather than what
 // this particular run of the generator produced. Tolerances match the generator's
 // own gate: it refuses to write unless textbook matchups land within 1.5 points.
+
+// The table is fetched rather than imported, so it has to be asked for before
+// any of this means anything. Without the load every accessor returns undefined
+// by design, and each assertion below would fail on a non-null assertion rather
+// than on the poker - so the load is asserted too.
+beforeAll(async () => {
+  expect(await loadPreflopEquity()).toBe(true);
+  expect(isPreflopEquityLoaded()).toBe(true);
+});
 
 describe("preflop equity", () => {
   it("reproduces matchups every player knows", () => {

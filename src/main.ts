@@ -100,6 +100,7 @@ import {
 } from "./data/ranges/mttPostflopPilotCatalog";
 import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
+import { loadPreflopEquity } from "./core/preflopEquity";
 import { renderMatrix } from "./ui/rangeMatrixView";
 import { renderRangeModalButton } from "./ui/rangeModal";
 import { renderHHView } from "./ui/hhView";
@@ -1089,6 +1090,15 @@ function setupTraining(
         startSession(filters, seed, resolvedProfile, pack);
       };
 
+      // The equity table prices the action buttons and is fetched rather than
+      // bundled, so the session waits for it the same way it waits for the range
+      // pack. A failed fetch resolves false and the session starts anyway, with
+      // no EV shown - the alternative is blocking training on a number that is
+      // an explanation, not the answer.
+      const startWhenPriced = (): void => {
+        void loadPreflopEquity().then(startResolvedProfile, startResolvedProfile);
+      };
+
       mttProductionLazyLoader.cancelPendingProfileLoads();
       const profileKey = mttProductionProfileKey(resolvedProfile);
       const initialCapability = trainingCapabilityForProfile(resolvedProfile);
@@ -1101,12 +1111,12 @@ function setupTraining(
         profileKey === null ||
         mttProductionLazyLoader.isProfileLoaded(profileKey)
       ) {
-        startResolvedProfile();
+        startWhenPriced();
         return;
       }
       void mttProductionLazyLoader.loadProfile(profileKey)
         .then((loaded) => {
-          if (!loaded.stale) startResolvedProfile();
+          if (!loaded.stale) startWhenPriced();
         })
         .catch(() => {
           gameBox.hidden = true;

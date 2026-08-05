@@ -1,7 +1,10 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
-import { isLazyMttProductionAsset } from "../src/pwa/precacheManifestBuild";
+import {
+  isLazyMttProductionAsset,
+  isPreflopEquityAsset,
+} from "../src/pwa/precacheManifestBuild";
 
 const DIST_ASSETS_DIR = join(process.cwd(), "dist", "assets");
 const MAX_JS_KB = numberFromEnv("BUNDLE_MAX_JS_KB", 325);
@@ -15,6 +18,13 @@ const MAX_LAZY_MTT_TOTAL_GZIP_KB = numberFromEnv(
   "BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",
   8192,
 );
+// The equity table is fetched when a session starts, so it is off the install
+// path and does not belong in the precache totals - but it is not an MTT
+// production pack either, and folding it into that bucket would hide it behind a
+// 32 MB allowance. Its own line, sized just above what the table costs today, so
+// growth has to be deliberate.
+const MAX_DEFERRED_JS_KB = numberFromEnv("BUNDLE_MAX_DEFERRED_JS_KB", 140);
+const MAX_DEFERRED_GZIP_KB = numberFromEnv("BUNDLE_MAX_DEFERRED_GZIP_KB", 52);
 
 let hasFailure = false;
 
@@ -41,6 +51,9 @@ let precacheGzipKb = 0;
 let lazyMttRawKb = 0;
 let lazyMttGzipKb = 0;
 let lazyMttCount = 0;
+let deferredRawKb = 0;
+let deferredGzipKb = 0;
+let deferredCount = 0;
 
 for (const file of jsFiles) {
   const path = join(DIST_ASSETS_DIR, file);
@@ -52,17 +65,26 @@ for (const file of jsFiles) {
   console.log(`${file}: raw=${rawKb.toFixed(2)} KiB gzip=${gzipKb.toFixed(2)} KiB`);
 
   const lazyMttProduction = isLazyMttProductionAsset(file);
+  const deferred = isPreflopEquityAsset(file);
   if (lazyMttProduction) {
     lazyMttCount += 1;
     lazyMttRawKb += rawKb;
     lazyMttGzipKb += gzipKb;
+  } else if (deferred) {
+    deferredCount += 1;
+    deferredRawKb += rawKb;
+    deferredGzipKb += gzipKb;
   } else {
     precacheRawKb += rawKb;
     precacheGzipKb += gzipKb;
   }
 
-  const rawLimit = lazyMttProduction ? MAX_LAZY_MTT_JS_KB : MAX_JS_KB;
-  const gzipLimit = lazyMttProduction ? MAX_LAZY_MTT_GZIP_KB : MAX_GZIP_KB;
+  const rawLimit = lazyMttProduction
+    ? MAX_LAZY_MTT_JS_KB
+    : deferred ? MAX_DEFERRED_JS_KB : MAX_JS_KB;
+  const gzipLimit = lazyMttProduction
+    ? MAX_LAZY_MTT_GZIP_KB
+    : deferred ? MAX_DEFERRED_GZIP_KB : MAX_GZIP_KB;
   if (rawKb > rawLimit) {
     hasFailure = true;
     console.error(`${file} exceeds raw JS budget: ${rawKb.toFixed(2)} KiB > ${rawLimit} KiB`);
@@ -79,6 +101,11 @@ console.log(
 console.log(
   `lazy MTT JS total: count=${lazyMttCount} raw=${lazyMttRawKb.toFixed(2)} KiB ` +
     `gzip=${lazyMttGzipKb.toFixed(2)} KiB`,
+);
+
+console.log(
+  `deferred JS total: count=${deferredCount} raw=${deferredRawKb.toFixed(2)} KiB ` +
+    `gzip=${deferredGzipKb.toFixed(2)} KiB`,
 );
 
 checkTotalBudget("precache raw JS", precacheRawKb, MAX_PRECACHE_JS_KB);
