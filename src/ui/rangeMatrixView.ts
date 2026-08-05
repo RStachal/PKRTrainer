@@ -134,6 +134,22 @@ const LEGEND_ORDER: ActionCategory[] = [
 
 type CategoryCounts = Partial<Record<ActionCategory, number>>;
 
+/**
+ * Combinations in a hand class: 6 for a pair, 4 suited, 12 offsuit.
+ *
+ * The legend used to divide class counts by 169, which is not a range width.
+ * A class is not a unit - forty offsuit classes are three times the range forty
+ * suited ones are - so that figure could be a dozen points off the truth. The
+ * button opening 46.9 percent of hands showed as 59, because it happens to use
+ * many suited classes. Everything here counts combinations out of 1326.
+ */
+const TOTAL_COMBOS = 1326;
+
+function combosInClass(hand: HandLabel): number {
+  if (hand.length === 2) return 6;
+  return hand.endsWith("s") ? 4 : 12;
+}
+
 const HAND_LABEL_GRID: readonly (readonly HandLabel[])[] = Array.from(
   { length: GRID_SIZE },
   (_, row) => Array.from({ length: GRID_SIZE }, (_, column) => handLabel(row, column)),
@@ -267,6 +283,44 @@ function renderUnavailable(doc: Document, root: HTMLElement, message: string): v
   root.appendChild(wrap);
 }
 
+/** A one-line statement of how wide the hero's range is in this spot. */
+function renderRangeWidth(doc: Document, counts: CategoryCounts): HTMLElement {
+  const entries = Object.entries(counts) as [ActionCategory, number][];
+  const rangeCombos = entries
+    .filter(([category]) => category !== "FOLD")
+    .reduce((sum, [, combos]) => sum + combos, 0);
+  const foldCombos = counts.FOLD ?? 0;
+
+  const bar = doc.createElement("div");
+  bar.className = "range-width";
+  bar.dataset.rangeCombos = String(rangeCombos);
+  bar.dataset.foldCombos = String(foldCombos);
+  bar.style.display = "flex";
+  bar.style.alignItems = "baseline";
+  bar.style.gap = "8px";
+  bar.style.marginTop = "10px";
+  bar.style.fontSize = "12px";
+  bar.style.fontWeight = "900";
+  bar.style.color = "#e8ecf7";
+
+  const headline = doc.createElement("span");
+  headline.className = "range-width-value";
+  headline.textContent = `Vaše range: ${categoryShare(rangeCombos)}`;
+  headline.style.fontSize = "15px";
+  headline.style.color = "#8ef0b4";
+
+  const detail = doc.createElement("span");
+  detail.className = "range-width-detail";
+  detail.textContent = `${rangeCombos} z ${TOTAL_COMBOS} kombinací — foldujete ${categoryShare(foldCombos)}`;
+  detail.style.fontSize = "11px";
+  detail.style.fontWeight = "850";
+  detail.style.color = "#9fb2d5";
+
+  bar.appendChild(headline);
+  bar.appendChild(detail);
+  return bar;
+}
+
 /** Vykreslí legendu pro množinu použitých kategorií (fold vždy zahrnut). */
 function renderLegend(
   doc: Document,
@@ -274,6 +328,12 @@ function renderLegend(
   counts: CategoryCounts,
   matrix: HTMLElement,
 ): HTMLElement {
+  // The hero's range is everything that is not a fold. Stated once here so the
+  // per-action shares below add up to a hundred rather than to something the
+  // reader has to work out.
+  const rangeCombos = (Object.entries(counts) as [ActionCategory, number][])
+    .filter(([category]) => category !== "FOLD")
+    .reduce((sum, [, combos]) => sum + combos, 0);
   // Fold je vždy přítomen (Req 10.5).
   used.add("FOLD");
 
@@ -323,7 +383,13 @@ function renderLegend(
 
     const count = doc.createElement("span");
     count.className = "legend-count";
-    count.textContent = `${counts[cat] ?? 0}/169 (${categoryShare(counts[cat] ?? 0)})`;
+    // Two different questions, both worth answering: how much of the whole deck
+    // this action is, and how much of the hero's own range it makes up. The old
+    // single number answered neither - it was a count of classes over 169.
+    const combos = counts[cat] ?? 0;
+    count.textContent = cat === "FOLD"
+      ? `${combos} kombinací (${categoryShare(combos)})`
+      : `${combos} komb. — ${categoryShare(combos)} balíčku, ${shareOfRange(combos, rangeCombos)} range`;
     count.style.color = "#9fb2d5";
     count.style.fontSize = "10px";
     count.style.fontWeight = "900";
@@ -369,8 +435,15 @@ function applyLegendFilter(
   });
 }
 
-function categoryShare(count: number): string {
-  return `${Math.round((count / (GRID_SIZE * GRID_SIZE)) * 100)}%`;
+/** Share of the whole deck this many combinations is. */
+function categoryShare(combos: number): string {
+  return `${(combos / TOTAL_COMBOS * 100).toFixed(1).replace(".", ",")} %`;
+}
+
+/** Share of the hero's own range, which is what the legend is really about. */
+function shareOfRange(combos: number, rangeCombos: number): string {
+  if (rangeCombos <= 0) return "0 %";
+  return `${(combos / rangeCombos * 100).toFixed(0)} %`;
 }
 
 function actionListLabel(keys: readonly ActionKey[] | undefined): string {
@@ -623,7 +696,7 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
         const keys = entry.actions[hand];
         const category = categoryForHand(keys); // Req 10.2
         usedCategories.add(category);
-        counts[category] = (counts[category] ?? 0) + 1;
+        counts[category] = (counts[category] ?? 0) + combosInClass(hand);
 
         const cell = doc.createElement("div");
         cell.className = `matrix-cell matrix-cell--${category}`;
@@ -668,6 +741,13 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     bindMatrixInteraction(matrix, cellDetail, entry, spot.hand);
 
     wrap.appendChild(matrix);
+
+    // --- Šířka range (co vlastně hrajeme) ---
+    // The grid shows all 169 classes because that is what a range chart is, but
+    // the number a player needs first is how wide their own range is here. Without
+    // it the panel reads as "these are the possible hands" rather than "this is
+    // your range and this is how it splits".
+    wrap.appendChild(renderRangeWidth(doc, counts));
 
     // --- Legenda (Req 10.5) ---
     wrap.appendChild(renderLegend(doc, usedCategories, counts, matrix));

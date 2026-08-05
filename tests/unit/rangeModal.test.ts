@@ -85,9 +85,11 @@ describe("rangeModal - DOM", () => {
     expect(document.querySelector<HTMLElement>(".range-modal .legend-item")?.dataset.count)
       .toMatch(/^\d+$/);
     expect(document.querySelector<HTMLElement>(".range-modal .legend-item")?.dataset.share)
-      .toMatch(/^\d+%$/);
+      .toMatch(/^\d+,\d %$/);
     expect(document.querySelector<HTMLElement>(".range-modal .legend-count")?.textContent)
-      .toMatch(/\d+\/169 \(\d+%\)/);
+      // Combinations out of 1326, not classes out of 169: a class is 6, 4 or 12
+      // combos, so a class count is not a range width.
+      .toMatch(/\d+ (kombinací|komb\.) /);
     expect(model?.textContent).not.toContain("Zdroje:");
     expect(model?.textContent).not.toContain("RangePack");
     expect(model?.textContent).not.toContain("mtt-full-ring");

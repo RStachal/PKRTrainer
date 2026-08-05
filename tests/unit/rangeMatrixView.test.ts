@@ -92,11 +92,24 @@ describe("rangeMatrixView - DOM", () => {
       .toContain("Open / RFI");
     expect(root.querySelector<HTMLElement>('.legend-item[data-action="OPEN"]')
       ?.dataset.count).toMatch(/^\d+$/);
+    // Shares are combinations out of 1326, not classes out of 169. A class is not
+    // a unit - forty offsuit classes are three times the range forty suited ones
+    // are - so the old figure could be a dozen points from the truth.
     expect(root.querySelector<HTMLElement>('.legend-item[data-action="OPEN"]')
-      ?.dataset.share).toMatch(/^\d+%$/);
+      ?.dataset.share).toMatch(/^\d+,\d %$/);
     expect(root.querySelectorAll(".legend-count").length).toBeGreaterThan(1);
     expect([...root.querySelectorAll<HTMLElement>(".legend-count")]
-      .some((node) => /\d+\/169 \(\d+%\)/.test(node.textContent ?? ""))).toBe(true);
+      .some((node) => /komb\. — \d+,\d % balíčku, \d+ % range/.test(node.textContent ?? ""))).toBe(true);
+
+    // The panel leads with the hero's own range width, so it reads as "this is
+    // your range" rather than "these are the possible hands".
+    const width = root.querySelector<HTMLElement>(".range-width");
+    expect(width).not.toBeNull();
+    const rangeCombos = Number(width!.dataset.rangeCombos);
+    const foldCombos = Number(width!.dataset.foldCombos);
+    expect(rangeCombos).toBeGreaterThan(0);
+    expect(rangeCombos + foldCombos).toBe(1326);
+    expect(width!.textContent).toContain("Vaše range");
 
     const openLegend = root.querySelector<HTMLElement>('.legend-item[data-action="OPEN"]');
     expect(openLegend?.getAttribute("role")).toBe("button");
