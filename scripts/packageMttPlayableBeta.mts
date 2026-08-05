@@ -57,6 +57,14 @@ interface PackageManifest {
   targetScopeComplete: boolean;
   knownLimits: readonly string[];
   releaseEvidence: readonly CommandEvidence[];
+  /**
+   * Whether the evidence was produced by this run or reused from an earlier one.
+   *
+   * Reuse is only ever offered for the identical commit with a clean tree, so it
+   * is the same code the checks ran against - but a reader of the manifest should
+   * never have to infer that, so it is stated.
+   */
+  releaseEvidenceSource: "THIS_RUN" | { reusedFrom: string; generatedAt: string };
   archive: {
     fileName: string;
     bytes: number;
@@ -98,7 +106,9 @@ try {
       throw new Error(`Writing requires --confirm=${CONFIRM_TOKEN}.`);
     }
     assertGitClean();
-    const evidence = runReleaseChecks();
+    const headCommit = git(["rev-parse", "HEAD"]).trim();
+    const reused = args.reuseEvidence ? findReusableEvidence(headCommit) : null;
+    const evidence = reused === null ? runReleaseChecks() : reused.evidence;
     assertGitClean();
     const beta = runBetaReport();
     assertBetaCanPackage(beta, args.requireTargetComplete);
@@ -123,6 +133,9 @@ try {
       targetScopeComplete: beta.targetScopeComplete,
       knownLimits: beta.knownLimits,
       releaseEvidence: evidence,
+      releaseEvidenceSource: reused === null
+        ? "THIS_RUN"
+        : { reusedFrom: reused.manifestFile, generatedAt: reused.generatedAt },
       archive: {
         fileName: basename(outputPath),
         bytes: reconciliation.archiveBytes,
@@ -161,6 +174,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let manifestPath: string | null = null;
   let outputPath: string | null = null;
   let requireTargetComplete = false;
+  let reuseEvidence = false;
   let summary = false;
   let write = false;
   for (const item of argv) {
@@ -168,6 +182,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     if (item === "--write") { write = true; continue; }
     if (item === "--summary") { summary = true; continue; }
     if (item === "--require-target-complete") { requireTargetComplete = true; continue; }
+    if (item === "--reuse-evidence") { reuseEvidence = true; continue; }
     if (item.startsWith("--confirm=")) { confirm = inlineValue(item, "--confirm"); continue; }
     if (item.startsWith("--label=")) {
       label = inlineValue(item, "--label");
@@ -184,7 +199,62 @@ function parseArgs(argv: readonly string[]): CliArgs {
   if (!write && (outputPath !== null || manifestPath !== null)) {
     throw new Error("--output and --manifest are valid only with --write.");
   }
-  return { confirm, label, manifestPath, outputPath, requireTargetComplete, summary, write };
+  if (reuseEvidence && !write) throw new Error("--reuse-evidence is valid only with --write.");
+  return { confirm, label, manifestPath, outputPath, requireTargetComplete, reuseEvidence, summary, write };
+}
+
+/**
+ * Release evidence from an earlier run of the *same* commit, if there is any.
+ *
+ * The packaging chain is 24.9 minutes and 90 percent of that is `npm test`. When a
+ * ZIP has to be rebuilt for a commit whose checks already passed - a different
+ * label, a lost file, a second copy for someone else - rerunning them proves
+ * nothing new about that code.
+ *
+ * The guard is the commit, not the clock. A manifest qualifies only when it
+ * records the same HEAD, and the tree is already asserted clean on both sides of
+ * this call, so the evidence provably describes the code being packaged. Anything
+ * else - a different commit, no manifest, an unreadable one - falls through to
+ * running the checks, because a fast ZIP is worth nothing if it might be a ZIP of
+ * something unverified.
+ */
+function findReusableEvidence(
+  commit: string,
+): { evidence: CommandEvidence[]; manifestFile: string; generatedAt: string } | null {
+  let candidates: string[];
+  try {
+    candidates = readdirSync("deploy").filter((name) => name.endsWith(".manifest.json"));
+  } catch {
+    return null;
+  }
+
+  const matches: { file: string; generatedAt: string; evidence: CommandEvidence[] }[] = [];
+  for (const file of candidates) {
+    try {
+      const parsed = JSON.parse(readFileSync(resolve("deploy", file), "utf8")) as Partial<PackageManifest>;
+      if (parsed.commit !== commit) continue;
+      if (!Array.isArray(parsed.releaseEvidence) || parsed.releaseEvidence.length === 0) continue;
+      // Evidence that was itself reused is not reused again: the chain back to a
+      // real run should be one step, not a rumour of a rumour.
+      if (parsed.releaseEvidenceSource !== undefined && parsed.releaseEvidenceSource !== "THIS_RUN") continue;
+      matches.push({
+        file,
+        generatedAt: String(parsed.generatedAt ?? ""),
+        evidence: parsed.releaseEvidence as CommandEvidence[],
+      });
+    } catch {
+      continue;
+    }
+  }
+  if (matches.length === 0) return null;
+
+  matches.sort((left, right) => right.generatedAt.localeCompare(left.generatedAt));
+  const best = matches[0];
+  console.log(
+    `Reusing release evidence from ${best.file} (same commit ${commit.slice(0, 12)}, `
+    + `${best.evidence.length} checks, run at ${best.generatedAt}).`,
+  );
+  return { evidence: best.evidence, manifestFile: best.file, generatedAt: best.generatedAt };
 }
 
 function runReleaseChecks(): CommandEvidence[] {
@@ -426,6 +496,10 @@ function usage(): string {
     `  npm run mtt:ftp-package -- --write --confirm=${CONFIRM_TOKEN} --summary`,
     "  add --require-target-complete for the final eight-profile beta milestone",
     "",
+    "",
     "A confirmed write reruns the complete test, release, build and Chrome E2E chain before creating the ZIP.",
+    "Add --reuse-evidence to reuse that chain from an earlier manifest for the SAME commit,",
+    "which turns a 25-minute rebuild into seconds. It falls back to running the chain whenever",
+    "no manifest matches HEAD, and the manifest always records which of the two happened.",
   ].join("\n");
 }
