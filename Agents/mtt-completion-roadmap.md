@@ -308,6 +308,28 @@ desktop applications would do it, and after the crash the machine sat at 25.7 GB
 free with them still open. The other 51 are quality re-solves, not gaps, and stay
 blocked until the machine has more RAM.
 
+### The scheduler, cut to one task, 2026-08-05
+
+Five PKRTrainer tasks were installed. Four of them did nothing useful and one of
+them did harm, so the owner's instruction to keep only night solving was also the
+correct engineering call.
+
+| task | why it went |
+| --- | --- |
+| `Weekend-UniformResolve` | its 52 boards need 24 GB of tree; it refused on every run and would keep refusing |
+| `TexasSolver-LowMemory` | reported all five phases complete, 438/438, 0 blockers - nothing left to do |
+| `Solver-CpuWindow` | the applier that stopped every console_solver on the machine, including subgames it did not start |
+| `MTT-Task-Agent-10m` | woke every ten minutes and mostly deferred for resource pressure caused by its own siblings |
+
+What remains is `PKRTrainer-Night-Decomposition`: daily at 21:00, eight workers, an
+eleven-hour limit so it stops at 08:00, and IgnoreNew so a second trigger cannot
+start a rival run.
+
+The cost of the old arrangement was not idle CPU. Three of those tasks measured
+each other's load and stood down, and a fourth killed work in progress - which is
+how six decomposition subgames disappeared at 09:23, six more at 09:37 and two at
+10:07, and why that read as a flaky solver for hours.
+
 ### One shape for ICM and for exploit, 2026-08-04
 
 Both of the axes the owner asked for turned out to be the same mechanism: leave the
