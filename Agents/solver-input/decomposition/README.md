@@ -112,3 +112,43 @@ should no longer have anything to do.
 
 At this rate the 52 queued boards are about 35 hours - one or two nights - with no
 solve ever exceeding a gigabyte.
+
+## First full night, 2026-08-04 into 08-05
+
+188 boards, **22,842 of 22,842 planned subgames, no broken files and no empty
+nodes**. That last part is the strongest evidence the applier fix took: before it,
+subgames disappeared in batches of six and the losses read as a flaky solver.
+
+`index_corpus.py` walks the corpus and reports it, because tens of thousands of
+files across hundreds of folders is data nobody can consult - knowing whether a
+spot is covered would otherwise mean guessing a filename.
+
+### What the night actually covered
+
+| family | boards | subgames |
+| --- | --- | --- |
+| 25BB SB vs BB, out of position c-bet | 32 | 4,962 |
+| 25BB CO vs BB c-bet | 33 | 4,622 |
+| 35BB CO vs BTN three-bet repair | 29 | 3,341 |
+| 25BB BTN vs BB facing | 24 | 3,132 |
+| 35BB CO vs BTN three-bet | 28 | 2,711 |
+| 20BB BTN vs BB low SPR | 31 | 2,318 |
+| 40BB UTG vs BB | 11 | 1,756 |
+
+Shallowest-first, as the driver is written to do, so this is the cheap end. The
+50BB and 100BB families are still ahead and will take several nights.
+
+### A number worth reading carefully
+
+Turn nodes by how many actions they offer: **12,397 have two, 6,392 have three,
+4,053 have four.**
+
+Four is the maximum a turn root can have - check, small bet, big bet, shove, with
+raises appearing as children rather than at the root - so the four-action nodes are
+the full requested set. The two-action ones are not a defect: at 20 to 35BB, a flop
+bet and call leaves an SPR under one, and there is no room for a second sizing
+between a small bet and the stack. The tree collapses because the spot does.
+
+But it does mean this corpus is mostly low-SPR play. The nodes where two bet sizes
+and two raise sizes genuinely matter are in the deep families, and those are the
+ones not yet solved.
