@@ -220,6 +220,109 @@ function sectionTitle(doc: Document, text: string): HTMLElement {
   return h;
 }
 
+/**
+ * A filter group that folds away, with its selection stated on the header.
+ *
+ * Three groups of checkboxes - nine positions, thirteen depths, five contexts -
+ * fill most of a phone screen before a single hand is dealt. Collapsed, each is
+ * one line that says what is selected, and opening one is a tap.
+ *
+ * The checkboxes themselves are untouched inside `body`: same classes, same data
+ * attributes, present in the DOM whether the group is open or shut. Nothing that
+ * reads the filter state needs to know this exists.
+ */
+interface FilterDisclosure {
+  /** The element to append to the form. */
+  root: HTMLElement;
+  /** Where the group's controls go. */
+  body: HTMLElement;
+  /** Re-reads the inputs and rewrites the header summary. */
+  refresh: () => void;
+}
+
+function makeDisclosure(
+  doc: Document,
+  title: string,
+  summarise: () => string,
+  bulk: HTMLElement,
+  startOpen: boolean,
+): FilterDisclosure {
+  const root = el(doc, "section", "filter-disclosure");
+  root.dataset.open = startOpen ? "true" : "false";
+
+  const header = el(doc, "div", "filter-disclosure__header");
+  header.style.display = "flex";
+  header.style.alignItems = "center";
+  header.style.gap = "8px";
+
+  const toggle = doc.createElement("button");
+  toggle.type = "button";
+  toggle.className = "filter-disclosure__toggle";
+  toggle.setAttribute("aria-expanded", startOpen ? "true" : "false");
+  toggle.style.display = "flex";
+  toggle.style.alignItems = "baseline";
+  toggle.style.gap = "8px";
+  toggle.style.flex = "1";
+  toggle.style.textAlign = "left";
+  toggle.style.cursor = "pointer";
+
+  const caret = doc.createElement("span");
+  caret.className = "filter-disclosure__caret";
+  caret.setAttribute("aria-hidden", "true");
+  caret.textContent = startOpen ? "\u25be" : "\u25b8";
+
+  const name = doc.createElement("span");
+  name.className = "filter-disclosure__name";
+  name.textContent = title;
+  name.style.fontWeight = "700";
+  name.style.fontSize = "13px";
+
+  const summary = doc.createElement("span");
+  summary.className = "filter-disclosure__summary";
+  summary.style.fontSize = "12px";
+  summary.style.opacity = ".78";
+
+  toggle.appendChild(caret);
+  toggle.appendChild(name);
+  toggle.appendChild(summary);
+  header.appendChild(toggle);
+  header.appendChild(bulk);
+
+  const body = el(doc, "div", "filter-group");
+  body.hidden = !startOpen;
+
+  const refresh = () => {
+    summary.textContent = summarise();
+  };
+
+  toggle.addEventListener("click", () => {
+    const open = root.dataset.open !== "true";
+    root.dataset.open = open ? "true" : "false";
+    body.hidden = !open;
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    caret.textContent = open ? "\u25be" : "\u25b8";
+  });
+
+  root.appendChild(header);
+  root.appendChild(body);
+  refresh();
+  return { root, body, refresh };
+}
+
+/**
+ * "Vse (9)", "Zadna", or the picks themselves while they still fit on the line.
+ *
+ * Listing the selection matters more than counting it - "LJ, HJ, CO" tells a
+ * player what they are drilling, where "3 z 9" makes them open the group to find
+ * out. Past four picks the list stops being readable and the count is better.
+ */
+function summariseSelection(labels: string[], total: number): string {
+  if (labels.length === 0) return CS.filters.noneSelected;
+  if (labels.length === total) return CS.filters.allSelected(total);
+  if (labels.length <= 4) return labels.join(", ");
+  return CS.filters.someSelected(labels.length, total);
+}
+
 /** Vykreslí dvojici přepínačů „Vše" / „Žádné" pro hromadnou (de)selekci. */
 function makeBulkToggles(
   doc: Document,
@@ -311,92 +414,118 @@ export function renderFilters(
   }
 
   // --- Sekce: Pozice (Req 13.1) ---
-  const posTitleRow = el(doc, "div", "filter-row");
-  const posTitle = sectionTitle(doc, CS.filters.positions);
-  posTitleRow.appendChild(posTitle);
-  posTitleRow.appendChild(
-    makeBulkToggles(
-      doc,
-      CS.filters.positions.toLowerCase(),
-      () => {
-        for (const inp of positionInputs.values()) inp.checked = true;
-        hideWarning();
-      },
-      () => {
-        for (const inp of positionInputs.values()) inp.checked = false;
-        hideWarning();
-      },
-    ),
+  const posBulk = makeBulkToggles(
+    doc,
+    CS.filters.positions.toLowerCase(),
+    () => {
+      for (const inp of positionInputs.values()) inp.checked = true;
+      hideWarning();
+      posGroup.refresh();
+    },
+    () => {
+      for (const inp of positionInputs.values()) inp.checked = false;
+      hideWarning();
+      posGroup.refresh();
+    },
   );
-  wrap.appendChild(posTitleRow);
-
-  const posBox = el(doc, "div", "filter-group filter-group--positions");
+  const posGroup = makeDisclosure(
+    doc,
+    CS.filters.positions,
+    () => summariseSelection(
+      [...positionInputs].filter(([, inp]) => inp.checked).map(([pos]) => pos),
+      positionInputs.size,
+    ),
+    posBulk,
+    false,
+  );
+  const posBox = el(doc, "div", "filter-group--positions");
+  posGroup.body.appendChild(posBox);
   renderPositionControls(profileSelector.getProfile().tableFormat);
-  wrap.appendChild(posBox);
+  wrap.appendChild(posGroup.root);
 
   // --- Sekce: Hloubkové koše (Req 13.2) ---
-  const bucketTitleRow = el(doc, "div", "filter-row");
-  const bucketTitle = sectionTitle(doc, CS.filters.stackDepths);
-  bucketTitleRow.appendChild(bucketTitle);
-  bucketTitleRow.appendChild(
-    makeBulkToggles(
-      doc,
-      CS.filters.stackDepths.toLowerCase(),
-      () => {
-        for (const inp of bucketInputs.values()) inp.checked = true;
-        hideWarning();
-      },
-      () => {
-        for (const inp of bucketInputs.values()) inp.checked = false;
-        hideWarning();
-      },
-    ),
+  const bucketBulk = makeBulkToggles(
+    doc,
+    CS.filters.stackDepths.toLowerCase(),
+    () => {
+      for (const inp of bucketInputs.values()) inp.checked = true;
+      hideWarning();
+      bucketGroup.refresh();
+    },
+    () => {
+      for (const inp of bucketInputs.values()) inp.checked = false;
+      hideWarning();
+      bucketGroup.refresh();
+    },
   );
-  wrap.appendChild(bucketTitleRow);
-
-  const bucketBox = el(doc, "div", "filter-group filter-group--buckets");
+  const bucketGroup = makeDisclosure(
+    doc,
+    CS.filters.stackDepths,
+    () => summariseSelection(
+      [...bucketInputs].filter(([, inp]) => inp.checked).map(([bb]) => `${bb} BB`),
+      bucketInputs.size,
+    ),
+    bucketBulk,
+    false,
+  );
+  const bucketBox = el(doc, "div", "filter-group--buckets");
+  bucketGroup.body.appendChild(bucketBox);
   for (const bucket of STACK_BUCKETS) {
     const { label, input } = makeCheckbox(doc, "filter-bucket", String(bucket), {
       name: "bucket",
       value: String(bucket),
     });
-    input.addEventListener("change", hideWarning);
+    input.addEventListener("change", () => {
+      hideWarning();
+      bucketGroup.refresh();
+    });
     bucketInputs.set(bucket, input);
     bucketBox.appendChild(label);
   }
-  wrap.appendChild(bucketBox);
+  bucketGroup.refresh();
+  wrap.appendChild(bucketGroup.root);
 
   // --- Sekce: Akční kontexty (Req 13.3) ---
-  const ctxTitleRow = el(doc, "div", "filter-row");
-  const ctxTitle = sectionTitle(doc, CS.filters.actionContext);
-  ctxTitleRow.appendChild(ctxTitle);
-  ctxTitleRow.appendChild(
-    makeBulkToggles(
-      doc,
-      CS.filters.actionContext.toLowerCase(),
-      () => {
-        for (const inp of contextInputs.values()) inp.checked = true;
-        hideWarning();
-      },
-      () => {
-        for (const inp of contextInputs.values()) inp.checked = false;
-        hideWarning();
-      },
-    ),
+  const ctxBulk = makeBulkToggles(
+    doc,
+    CS.filters.actionContext.toLowerCase(),
+    () => {
+      for (const inp of contextInputs.values()) inp.checked = true;
+      hideWarning();
+      ctxGroup.refresh();
+    },
+    () => {
+      for (const inp of contextInputs.values()) inp.checked = false;
+      hideWarning();
+      ctxGroup.refresh();
+    },
   );
-  wrap.appendChild(ctxTitleRow);
-
-  const ctxBox = el(doc, "div", "filter-group filter-group--contexts");
+  const ctxGroup = makeDisclosure(
+    doc,
+    CS.filters.actionContext,
+    () => summariseSelection(
+      [...contextInputs].filter(([, inp]) => inp.checked).map(([ctx]) => CONTEXT_LABEL[ctx]),
+      contextInputs.size,
+    ),
+    ctxBulk,
+    false,
+  );
+  const ctxBox = el(doc, "div", "filter-group--contexts");
+  ctxGroup.body.appendChild(ctxBox);
   for (const ctx of CONTEXT_ORDER) {
     const { label, input } = makeCheckbox(doc, "filter-context", CONTEXT_LABEL[ctx], {
       name: "context",
       value: ctx,
     });
-    input.addEventListener("change", hideWarning);
+    input.addEventListener("change", () => {
+      hideWarning();
+      ctxGroup.refresh();
+    });
     contextInputs.set(ctx, input);
     ctxBox.appendChild(label);
   }
-  wrap.appendChild(ctxBox);
+  ctxGroup.refresh();
+  wrap.appendChild(ctxGroup.root);
 
   // --- Sekce: Konfigurace (ante, scoring, seed) ---
   wrap.appendChild(sectionTitle(doc, CS.filters.configuration));
@@ -524,10 +653,14 @@ export function renderFilters(
         value: pos,
       });
       input.checked = selected.has(pos);
-      input.addEventListener("change", hideWarning);
+      input.addEventListener("change", () => {
+        hideWarning();
+        posGroup.refresh();
+      });
       positionInputs.set(pos, input);
       posBox.appendChild(label);
     }
+    posGroup.refresh();
   }
 
   function getFilters(): Filters {
