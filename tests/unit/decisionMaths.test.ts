@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   callRequirement,
+  explainDefenceFrequency,
+  minimumDefenceFrequency,
   explainCallPrice,
   explainShovePrice,
   shoveRequirement,
 } from "../../src/core/decisionMaths";
-import { OPPONENT_STYLES } from "../../src/core/opponentStyle";
+import { OPPONENT_STYLES, requiredFoldFrequency } from "../../src/core/opponentStyle";
 
 // This is the layer that turns two models into something a player can act on.
 // Until it existed the trainer taught which action and never why at this price,
@@ -83,5 +85,26 @@ describe("what the player is told", () => {
     expect(good).toContain("i bez dojetí");
     const bad = explainShovePrice(shoveRequirement(3, 1, OPPONENT_STYLES.LOOSE_PASSIVE));
     expect(bad).toContain("až u showdownu");
+  });
+});
+
+describe("minimum defence frequency", () => {
+  it("reproduces the owner's own worked example", () => {
+    // "Pokud SB zvyšuje na 3 BB, riskuje 2,5 BB, aby vyhrál 1,5 BB. Naše minimální
+    // obranná frekvence je 1,5 / (2,5 + 1,5) = 37,5%." - PKR POZNATKY.
+    expect(minimumDefenceFrequency(2.5, 1.5) * 100).toBeCloseTo(37.5, 1);
+  });
+
+  it("is exactly the complement of what the attacker needs", () => {
+    // Same identity from the two sides, which is why both exist by name: the
+    // attacker asks how often they need a fold, the defender how often they must not.
+    for (const [bet, pot] of [[1, 1], [2.5, 1.5], [0.5, 3]] as const) {
+      expect(minimumDefenceFrequency(bet, pot) + requiredFoldFrequency(bet, pot)).toBeCloseTo(1, 9);
+    }
+  });
+
+  it("says it in the form the notes use", () => {
+    expect(explainDefenceFrequency(2.5, 1.5)).toContain("37,5 %");
+    expect(explainDefenceFrequency(2.5, 1.5)).toContain("s čímkoli");
   });
 });

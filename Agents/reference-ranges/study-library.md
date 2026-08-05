@@ -282,3 +282,37 @@ pool against a correctly-calling big blind.
 So the "opponent stacks" axis I earlier costed as a model change reduces to one
 number per pairing. That is a far cheaper route than the ICM grids, and unlike
 them it generalises beyond the configurations someone happened to publish.
+
+## The missing files turned up, 2026-08-05
+
+Three of the five the Kompendium cites and I could not find were sitting in
+Downloads as Evernote exports, along with several nobody had mentioned:
+`Vasinlu21`, `PKR COACHING` and its second part, `PKR POZNATKY`, plus
+`GTO Wizard - Functions`, three `Modelování ranges` notes and
+`BB x SB Limp 30bb Deep`.
+
+Two of them speak directly to work already shipped.
+
+**PKR POZNATKY derives minimum defence frequency in the owner's own words**, and
+does it from first principles rather than quoting a number: "Pokud SB zvyšuje na
+3 BB, riskuje 2,5 BB, aby vyhrál 1,5 BB. Naše minimální obranná frekvence je
+1,5 / (2,5 + 1,5) = 37,5%." That is the same identity `requiredFoldFrequency`
+already computed, seen from the defender's side, so it is now
+`minimumDefenceFrequency` with that example as its test - the number a player is
+actually taught to reach for.
+
+**BB x SB Limp 30bb Deep independently confirms a threshold taken from the
+chart.** The limp work set `LIMP_SHOVE_MAX` at 25BB because the sheet draws a
+shove at 15-20 and 20-25 and none from 30 up. This note, written for a different
+purpose, says the same thing in prose: "Občas shove (ale spíše s 20 bb a méně,
+30 bb je na to moc)."
+
+Two sources agreeing is worth more than either alone, particularly when one is a
+picture that had to be sampled and the other is a sentence.
+
+Other figures worth keeping from PKR POZNATKY, all of them about opponent stacks
+rather than our own - the axis the model still lacks:
+
+- "Pokud má OPO 3-6 BB, musím hrát uzkou range. Pokud má 2BB a méně, hraji témeř ATC"
+- "Bacha na PUSHE s 10 a vice BB se slabymi kartami na call stations"
+- "NEPUSHUJ kdyz je pred tebou reis (od rega!)"

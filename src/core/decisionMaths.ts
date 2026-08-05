@@ -94,7 +94,31 @@ export function shoveRequirement(
   };
 }
 
+/**
+ * Minimum defence frequency: how often the defender must continue.
+ *
+ * The other side of the same identity `requiredFoldFrequency` states. The owner's
+ * own notes derive it in the form they use at the table: "Pokud SB zvyšuje na
+ * 3 BB, riskuje 2,5 BB, aby vyhrál 1,5 BB. Naše minimální obranná frekvence je
+ * 1,5 / (2,5 + 1,5) = 37,5%." Defend less than that and the raiser profits by
+ * attacking with anything.
+ *
+ * Kept as its own function rather than left as one minus the other, because that
+ * is the number the material quotes and the one a player is taught to reach for.
+ */
+export function minimumDefenceFrequency(betBB: number, potBB: number): number {
+  if (betBB <= 0) return 0;
+  return potBB / (potBB + betBB);
+}
+
 const pct = (value: number) => `${(value * 100).toFixed(1).replace(".", ",")} %`;
+
+/** How often the big blind has to continue, in the owner's own framing. */
+export function explainDefenceFrequency(betBB: number, potBB: number): string {
+  const mdf = minimumDefenceFrequency(betBB, potBB);
+  return `Soupeř riskuje ${betBB.toFixed(1).replace(".", ",")} BB, aby vyhrál ${potBB.toFixed(1).replace(".", ",")} BB, `
+    + `takže bránit musíte aspoň ${pct(mdf)} — pod tím mu vyplácí útočit s čímkoli.`;
+}
 
 /** One Czech sentence a player can act on, or none when there is nothing to say. */
 export function explainCallPrice(requirement: CallRequirement): string {
