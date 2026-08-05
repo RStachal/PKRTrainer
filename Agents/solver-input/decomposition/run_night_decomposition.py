@@ -19,6 +19,12 @@ Design notes worth keeping:
   second sizing. Throughput was the wrong thing to maximise.
 - It stops at the deadline rather than mid-board where it can, because a
   half-planned board is the one state that needs re-reading a 395 MB dump.
+
+Stopping it early takes three steps, in order, because the children outlive the
+parent on Windows: kill this driver, then the `solve_plan.py` it launched, then
+`console_solver.exe`. Killing only the driver leaves solve_plan orphaned and still
+spawning solvers, which looks exactly like solvers that refuse to die - taskkill
+reports success on each one and the count stays where it was.
 """
 import json
 import os
