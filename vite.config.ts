@@ -2,7 +2,6 @@
 import { readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { execSync } from "node:child_process";
 import { defineConfig } from "vite";
 import {
   buildPrecacheManifest,
@@ -32,28 +31,6 @@ function listPublicAssets(): string[] {
 // - samostatný vstup pro Service Worker s pevným názvem `sw.js` v kořeni dist/
 //   (registrace v src/pwa/registerSw.ts očekává `./sw.js`), Req 12.1, 12.5
 // - sekce `test` konfiguruje Vitest jako test runner (Req 12.1)
-/**
- * Kolik vitest workerů si můžeme dovolit právě teď.
- *
- * Vrací nižší číslo, když na stroji běží solver, protože každý worker rozjede
- * vlastní strom podprocesů a solver už jádra drží. Detekce je záměrně
- * fail-open: když se zjišťování nepovede, vrátí konzervativní čtyřku, protože
- * spadlá konfigurace je horší než pomalá sada.
- */
-function resolveTestWorkers(): number {
-  const override = Number(process.env.PKRTRAINER_TEST_WORKERS);
-  if (Number.isFinite(override) && override > 0) return override;
-  try {
-    const listing = execSync("tasklist /FI \"IMAGENAME eq console_solver.exe\" /NH", {
-      encoding: "utf8",
-      timeout: 5000,
-      windowsHide: true,
-    });
-    return /console_solver/i.test(listing) ? 4 : 8;
-  } catch {
-    return 4;
-  }
-}
 
 export default defineConfig({
   base: "./",
@@ -115,16 +92,20 @@ export default defineConfig({
     // Mnoho integračních testů spouští další Node/PowerShell CLI procesy, takže
     // jeden worker znamená celý strom cmd -> npm -> node -> vite-node.
     //
-    // Kolik jich smí běžet, se ZJIŠŤUJE, ne předpokládá. Čtyři workery byly
-    // zvoleny tak, aby se sada snesla se solverem, a měření ukázalo, co ten strop
-    // stojí: sada obsahuje 58,7 minuty práce, deset CLI souborů z ní tvoří 55 %,
-    // nejpomalejší dva 432 a 405 sekund.
+    // Čtyřka není opatrnost, je to naměřená hodnota. Zvedl jsem ji na osm s tím,
+    // že sada obsahuje 58,7 minuty práce a víc workerů ji stlačí — a měření to
+    // otočilo naruby: 915 s při čtyřech, 4572 s při osmi. Každý CLI soubor se
+    // zpomalil sedmkrát až dvanáctkrát, například mttPostflopActionEvIntakeCli
+    // ze 186 s na 2251 s.
     //
-    // Bylo by lákavé zvednout to natvrdo s odůvodněním, že solver běží jen v noci.
-    // Jenže ho spouští časovač na 21:00, ne dohoda — takže sada spuštěná večer by
-    // narazila na osm solverů a šestnáct jader by obsluhovalo dvaatřicet vláken.
-    // Proto se tu solver hledá za běhu a limit se podle toho sníží.
-    maxWorkers: resolveTestWorkers(),
+    // Důvod je v tom, co ty testy dělají: osm workerů rozjede osm dalších
+    // npm/vite-node stromů, takže na šestnácti jádrech soupeří přes třicet
+    // procesů a studený start každého z nich se natáhne. Práce tu není dělitelná
+    // tak, jak vypadá — přidání workerů přidává hlavně režii.
+    //
+    // Neměňte to bez měření. PKRTRAINER_TEST_WORKERS je pro případ, kdy sada běží
+    // vedle něčeho jiného a potřebuje ubrat.
+    maxWorkers: Number(process.env.PKRTRAINER_TEST_WORKERS ?? 4),
     minWorkers: 1,
     include: ["tests/**/*.{test,spec}.{ts,js}", "src/**/*.{test,spec}.{ts,js}"],
   },
