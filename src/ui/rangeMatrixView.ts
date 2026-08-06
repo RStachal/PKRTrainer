@@ -739,7 +739,12 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     matrix.className = "matrix";
     matrix.style.display = "grid";
     matrix.style.gridTemplateColumns = `repeat(${GRID_SIZE + 1}, 1fr)`;
-    matrix.style.minWidth = "640px";
+    // No fixed floor. 640px was wider than every phone this ships to, so the one
+    // view a player most needs to read whole was the one they had to scroll
+    // sideways through. The grid is fourteen equal columns and shrinks cleanly;
+    // what stops it collapsing is the cell font, set from the column width below.
+    matrix.style.minWidth = "0";
+    matrix.style.width = "100%";
     matrix.style.gap = "2px";
     matrix.style.padding = "5px";
     matrix.style.borderRadius = "10px";
@@ -781,8 +786,12 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
         cell.textContent = hand;
         cell.style.background = CATEGORIES[category].color;
         cell.style.textAlign = "center";
-        cell.style.fontSize = "10px";
-        cell.style.minHeight = "28px";
+        // Sized from the viewport rather than pinned, so the grid scales instead
+        // of overflowing. Fourteen columns across a 360px phone leave about 20px
+        // each; the lower clamp keeps a three-character label inside that, and
+        // the upper stops the cells ballooning on a desktop.
+        cell.style.fontSize = "clamp(7px,1.9vw,11px)";
+        cell.style.minHeight = "clamp(18px,5vw,28px)";
         cell.style.padding = "2px 0";
         cell.style.color = "#fff";
         cell.style.borderRadius = "5px";
