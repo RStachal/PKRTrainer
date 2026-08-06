@@ -445,7 +445,7 @@ function computeActionEvs(
     // The opener has already raised, so they do not hold a random hand. Fold
     // equity has to be measured against what they can actually have, which is
     // their opening range at this depth - not against the deck.
-    const openerCombos = comboCount(openerClasses(effStack, ante, store));
+    const openerCombos = comboCount(openerClasses(heroPos, effStack, ante, store));
     if (openerCombos === 0) return undefined;
     // One opponent, not the field: the hero is jamming over a raise, and the
     // players behind have already folded to it. This is the case where pricing
@@ -514,16 +514,14 @@ function callRejamClasses(
 
 /** The opener's own range at this depth, from the seat the sheets calibrate to. */
 function openerClasses(
+  heroPos: Position,
   bucket: StackBucket,
   ante: AnteMode,
   store: RangeStore,
 ): HandLabel[] {
-  return playedClasses(store.lookup({
-    ante,
-    position: REJAM_EV_CALIBRATION_OPENER,
-    bucket,
-    context: "RFI",
-  }));
+  const opener = REJAM_EV_OPENER_BY_HERO[heroPos];
+  if (opener === undefined) return [];
+  return playedClasses(store.lookup({ ante, position: opener, bucket, context: "RFI" }));
 }
 
 function comboCount(classes: readonly HandLabel[]): number {
@@ -531,25 +529,38 @@ function comboCount(classes: readonly HandLabel[]): number {
 }
 
 /**
- * Whose ranges price a re-jam, and why the tightest one is the right choice.
+ * Which opener prices a re-jam: the one the sheet was drawn against.
  *
- * The spot does not record which seat opened - only that the hero faces an open -
- * so one has to be assumed, and the assumption decides the answer. Fold equity is
- * the calling range as a share of the *opener's* range, so a wide opener folds
- * more and a tight opener folds less.
+ * The spot records that the hero faces an open, not who opened, so a seat has to
+ * be chosen - and the choice decides the answer, because fold equity is the
+ * calling range as a share of the *opener's* range. A wide opener folds more.
  *
- * The first version used the button, with a comment claiming that its width made
- * the jam look worse. That was backwards, and the numbers showed it: every hand
- * came out profitable, including 52o at +0.7 big blinds, because a 39.7 percent
- * opening range folds about seven times in ten. Against an early seat opening
- * 14.9 percent the same shove is heavily negative, which is what the charts say.
+ * Two wrong answers came before this one. The button, with a comment claiming
+ * its width made the shove look worse; backwards, and it made every hand
+ * profitable including 52o. Then under the gun, chosen as the tightest seat on
+ * the reasoning that an approximation should not flatter the aggressive line.
  *
- * So the earliest seat, deliberately. Where an approximation has a direction, it
- * should be the one that does not flatter the aggressive line - a trainer that
- * overstates a shove teaches spew, and understating it costs a player only some
- * value they can find elsewhere.
+ * That second one was better reasoning applied to the wrong question. The sheets
+ * are not drawn against an unspecified opener: `REJAM_CALIBRATION_OPENER` names
+ * one per hero seat - the hijack for the blinds, button and cutoff, the lojack
+ * for the hijack, UTG+1 for the lojack - and that mapping has been in the
+ * repository since the ranges were extracted. Picking a safe constant overrode
+ * data that was already there, and it showed: at 15BB the model called 167 hands
+ * negative that the sheet jams, all of them suited hands whose shove only makes
+ * sense against a seat that opens wider than under the gun does.
+ *
+ * Where the source says who the opponent is, use it. A conservative default is
+ * for when nothing is known, not for overruling a measurement.
  */
-const REJAM_EV_CALIBRATION_OPENER: Position = "UTG";
+const REJAM_EV_OPENER_BY_HERO: Readonly<Record<string, Position>> = {
+  BB: "HJ",
+  BTN: "HJ",
+  CO: "HJ",
+  HJ: "LJ",
+  LJ: "UTG+1",
+  SB: "HJ",
+};
+
 const REJAM_EV_CALIBRATION_CALLER: Position = "BTN";
 
 function startingPotFor(ante: AnteMode): number {
