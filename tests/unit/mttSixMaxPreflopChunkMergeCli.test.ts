@@ -134,7 +134,7 @@ interface MergeReport {
 
 function invoke(workbenchPath: string, chunkPath: string, extra: readonly string[] = []) {
   return spawnSync(process.execPath, [
-    "node_modules/vite-node/vite-node.mjs",
+    "scripts/run-cli.mjs",
     "scripts/mergeMttSixMaxPreflopCsvChunk.mts",
     `--pack-id=${PACK_ID}`,
     `--workbench=${workbenchPath}`,

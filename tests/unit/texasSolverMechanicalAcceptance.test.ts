@@ -147,7 +147,7 @@ function invokeJson(...args: string[]): AcceptanceReport {
 
 function invoke(...args: string[]) {
   return spawnSync(process.execPath, [
-    "node_modules/vite-node/vite-node.mjs",
+    "scripts/run-cli.mjs",
     "scripts/assessTexasSolverMechanicalAcceptance.mts",
     `--root=${root}`,
     ...args,

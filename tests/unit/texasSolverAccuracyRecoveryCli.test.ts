@@ -7,7 +7,7 @@ import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
-const VITE_NODE = resolve(ROOT, "node_modules/vite-node/vite-node.mjs");
+const VITE_NODE = resolve(ROOT, "scripts/run-cli.mjs");
 const SCRIPT = resolve(ROOT, "scripts/prepareTexasSolverAccuracyRecovery.mts");
 const FAMILY = "MTT9_50BB_BTN_BB_SRP";
 const BOARD = "A72r";

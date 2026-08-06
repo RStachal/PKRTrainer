@@ -45,7 +45,7 @@ describe("postflop tree integrity", () => {
     // it no longer has. Spawned directly rather than through `npm run`, because
     // the shell option makes Node emit a deprecation warning on stderr.
     const output = execFileSync(process.execPath, [
-      "node_modules/vite-node/vite-node.mjs",
+      "scripts/run-cli.mjs",
       "scripts/auditTexasSolverTreeProvenance.mts",
       "--json",
     ], { cwd: process.cwd(), encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });

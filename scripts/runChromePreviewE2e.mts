@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 const root = resolve(".");
 const nodeExecutable = process.execPath;
 const viteCli = resolve("node_modules/vite/bin/vite.js");
-const viteNodeCli = resolve("node_modules/vite-node/vite-node.mjs");
+const viteNodeCli = resolve("scripts/run-cli.mjs");
 const previewPort = await findAvailablePort();
 let preview: ChildProcess | null = null;
 

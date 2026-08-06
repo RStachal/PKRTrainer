@@ -122,7 +122,7 @@ function writeOne(row: StageRow, args: CliArgs) { return invokeStage(row, args, 
 
 function invokeStage(row: Pick<StageRow, "packId" | "permissionPath">, args: CliArgs, write: boolean) {
   const commandArgs = [
-    "node_modules/vite-node/vite-node.mjs", "scripts/stageMttP1ReviewedPreflopIntake.mts",
+    "scripts/run-cli.mjs", "scripts/stageMttP1ReviewedPreflopIntake.mts",
     `--pack-id=${row.packId}`, `--draft-dir=${args.draftDir}`, `--raw-root=${args.rawRoot}`, `--permission=${row.permissionPath}`, "--json",
   ];
   if (write) commandArgs.push("--write", "--confirm=STAGE_REVIEWED_MTT_P1_PREFLOP");

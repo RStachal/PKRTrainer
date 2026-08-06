@@ -52,7 +52,7 @@ const DRAFT_BACKUP_ROOT = "artifacts/mtt-post-resolve/draft-backup";
 const ACCEPTANCE_DECISIONS = "artifacts/texas-solver-review-protocol/mechanical-acceptance-decisions.json";
 const PILOT_MODULE_DIR = "src/data/ranges/pilots";
 const DEFAULT_REPORT = "artifacts/mtt-post-resolve/report.json";
-const VITE_NODE = "node_modules/vite-node/vite-node.mjs";
+const VITE_NODE = "scripts/run-cli.mjs";
 
 /** Scopes with several SPR bands merged into one pilot pack. */
 const MERGED_SCOPES = [

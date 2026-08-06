@@ -48,7 +48,7 @@ function writeCandidateWithEv(): number {
 }
 
 function runBuilder() {
-  return spawnSync(process.execPath, ["node_modules/vite-node/vite-node.mjs", SCRIPT, "--json"], {
+  return spawnSync(process.execPath, ["scripts/run-cli.mjs", SCRIPT, "--json"], {
     cwd: process.cwd(),
     encoding: "utf8",
     maxBuffer: 16 * 1024 * 1024,

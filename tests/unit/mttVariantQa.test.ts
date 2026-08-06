@@ -41,7 +41,7 @@ describe("MTT variant QA", () => {
     try {
       const output = join(dir, "report.json");
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/checkMttVariantQa.mts",
         `--output=${output}`,
         "--json",

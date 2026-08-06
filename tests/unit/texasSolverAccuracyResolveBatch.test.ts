@@ -141,7 +141,7 @@ function invokeJson(...args: string[]): ResolveReport {
 
 function invoke(...args: string[]) {
   return spawnSync(process.execPath, [
-    "node_modules/vite-node/vite-node.mjs",
+    "scripts/run-cli.mjs",
     "scripts/buildTexasSolverAccuracyResolveBatch.mts",
     `--accuracy-root=${accuracyRoot}`,
     `--param-root=${paramRoot}`,

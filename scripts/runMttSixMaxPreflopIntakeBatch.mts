@@ -215,7 +215,7 @@ function preflight(packId: string, args: CliArgs, refresh: WorkbenchRefresh | un
     return { packId, csvPath, exists: true, records: 0, csvReady: null, productionReady: null, legalSlot: null, preflightConfidence, status: "WAITING", errors: ["CSV contains no reviewed strategy records yet."], ...scaffoldState };
   }
   const child = spawnSync(process.execPath, [
-    "node_modules/vite-node/vite-node.mjs", "scripts/buildMttPreflopCsvDraft.mts",
+    "scripts/run-cli.mjs", "scripts/buildMttPreflopCsvDraft.mts",
     `--csv=${csvPath}`, `--pack-id=${packId}`, `--confidence=${preflightConfidence}`,
     "--license-kind=OWNED_SOLVER_EXPORT",
     "--license-note=Owner-confirmed canonical permission manifest is staged separately.",
@@ -386,7 +386,7 @@ function writeCandidates(args: CliArgs, rows: readonly PreflightRow[]) {
     const packDir = join(args.outDir, row.packId);
     mkdirSync(packDir, { recursive: true });
     const child = spawnSync(process.execPath, [
-      "node_modules/vite-node/vite-node.mjs", "scripts/buildMttPreflopCsvDraft.mts", `--csv=${row.csvPath}`, `--pack-id=${row.packId}`,
+      "scripts/run-cli.mjs", "scripts/buildMttPreflopCsvDraft.mts", `--csv=${row.csvPath}`, `--pack-id=${row.packId}`,
       `--out=${join(packDir, "normalized.candidate.json")}`, "--license-kind=OWNED_SOLVER_EXPORT",
       "--license-note=Owner-confirmed canonical permission manifest is staged separately.",
       `--verified-at=${args.reviewedAt}`, `--confidence=${args.confidence}`, "--json",

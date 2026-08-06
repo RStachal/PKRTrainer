@@ -307,7 +307,7 @@ function runNpm(args: readonly string[]) {
 
 function runBetaReport(): MttPlayableBetaReport {
   const result = spawnSync(process.execPath, [
-    resolve("node_modules/vite-node/vite-node.mjs"),
+    resolve("scripts/run-cli.mjs"),
     resolve("scripts/checkMttPlayableBeta.mts"),
     "--json",
   ], {

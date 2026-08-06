@@ -313,7 +313,7 @@ describe("MTT postflop action-EV intake CLI", () => {
 });
 
 function run(...args: string[]) {
-  return spawnSync(process.execPath, ["node_modules/vite-node/vite-node.mjs", SCRIPT, ...args], {
+  return spawnSync(process.execPath, ["scripts/run-cli.mjs", SCRIPT, ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
     maxBuffer: 8 * 1024 * 1024,

@@ -9,7 +9,7 @@ describe("mtt:p1-preflop-drafts CLI", () => {
     const dir = mkdtempSync(join(tmpdir(), "pkrtrainer-p1-drafts-"));
     try {
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/buildMttP1PreflopDrafts.mts",
         "--out-dir",
         dir,
@@ -32,7 +32,7 @@ describe("mtt:p1-preflop-drafts CLI", () => {
     const dir = mkdtempSync(join(tmpdir(), "pkrtrainer-p1-drafts-"));
     try {
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/buildMttP1PreflopDrafts.mts",
         `--out-dir=${dir}`,
         "--json",

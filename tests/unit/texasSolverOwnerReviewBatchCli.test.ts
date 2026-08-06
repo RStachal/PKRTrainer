@@ -156,7 +156,7 @@ function writeNotes(path: string): void {
 }
 
 function runBatch(...args: string[]) {
-  return spawnSync(process.execPath, ["node_modules/vite-node/vite-node.mjs", "scripts/recordTexasSolverOwnerReviewBatch.mts", ...args], {
+  return spawnSync(process.execPath, ["scripts/run-cli.mjs", "scripts/recordTexasSolverOwnerReviewBatch.mts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
   });

@@ -49,7 +49,7 @@ interface TechnicalAcceptanceReport {
 
 const root = resolve(".");
 const nodeExecutable = process.execPath;
-const viteNodeCli = resolve("node_modules/vite-node/vite-node.mjs");
+const viteNodeCli = resolve("scripts/run-cli.mjs");
 const viteCli = resolve("node_modules/vite/bin/vite.js");
 const tscCli = resolve("node_modules/typescript/bin/tsc");
 const vitestCli = resolve("node_modules/vitest/vitest.mjs");

@@ -9,7 +9,7 @@ import { villainActionMix, villainBetFrequency } from "./lib/villainBetFrequency
 
 const DEFAULT_SOLVER_OUTPUT_DIR = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 const DEFAULT_OUTPUT_ROOT = "artifacts/texas-solver-review-integration/normalized-drafts";
-const VITE_NODE_ENTRY = resolve("node_modules/vite-node/vite-node.mjs");
+const VITE_NODE_ENTRY = resolve("scripts/run-cli.mjs");
 
 interface CliArgs {
   familyId: string;

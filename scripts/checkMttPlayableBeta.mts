@@ -268,7 +268,7 @@ function usage(): string {
 
 function runCoreReleaseReport(): MttCoreReleaseReport {
   const result = spawnSync(process.execPath, [
-    resolve("node_modules/vite-node/vite-node.mjs"),
+    resolve("scripts/run-cli.mjs"),
     resolve("scripts/checkMttCoreRelease.mts"),
     "--json",
   ], {

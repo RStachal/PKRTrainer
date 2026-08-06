@@ -26,7 +26,7 @@ const DEFAULT_REPORTS_DIR = "artifacts/texas-solver-review-only-owner-depth/revi
 const DEFAULT_VIEWER_OUTPUT = "artifacts/texas-solver-review-only-owner-depth/viewer/index.html";
 const DEFAULT_OUTPUT = "artifacts/texas-solver-review-only-owner-depth/refresh-report.json";
 const DEFAULT_LOCK = "artifacts/texas-solver-review-only-owner-depth/refresh.lock";
-const VITE_NODE = resolve("node_modules/vite-node/vite-node.mjs");
+const VITE_NODE = resolve("scripts/run-cli.mjs");
 
 interface CliArgs {
   dryRun: boolean;

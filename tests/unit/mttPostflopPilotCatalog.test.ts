@@ -87,7 +87,7 @@ describe("MTT postflop pilot catalog", () => {
     try {
       const output = join(dir, "report.json");
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/checkMttPostflopPilotCatalog.mts",
         "--output",
         "--summary",
@@ -101,7 +101,7 @@ describe("MTT postflop pilot catalog", () => {
       expect(result.stdout).toContain("MTT postflop pilot catalog");
 
       const explicit = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/checkMttPostflopPilotCatalog.mts",
         `--output=${output}`,
         "--json",

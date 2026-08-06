@@ -110,7 +110,7 @@ describe("mtt:p1-stage-reviewed-preflop CLI", () => {
 
 function buildDrafts(outDir: string): void {
   const result = spawnSync(process.execPath, [
-    "node_modules/vite-node/vite-node.mjs",
+    "scripts/run-cli.mjs",
     "scripts/buildMttP1PreflopDrafts.mts",
     `--out-dir=${outDir}`,
   ], {
@@ -123,7 +123,7 @@ function buildDrafts(outDir: string): void {
 
 function runStage(args: readonly string[]) {
   return spawnSync(process.execPath, [
-    "node_modules/vite-node/vite-node.mjs",
+    "scripts/run-cli.mjs",
     "scripts/stageMttP1ReviewedPreflopIntake.mts",
     ...args,
   ], {

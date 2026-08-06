@@ -211,7 +211,7 @@ function invokeJson(...args: string[]): Report {
 
 function invoke(...args: string[]) {
   return spawnSync(process.execPath, [
-    "node_modules/vite-node/vite-node.mjs",
+    "scripts/run-cli.mjs",
     "scripts/auditTexasSolverTreeProvenance.mts",
     `--output-root=${outputRoot}`,
     `--param-root=${paramRoot}`,

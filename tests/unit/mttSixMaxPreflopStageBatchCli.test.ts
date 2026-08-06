@@ -10,7 +10,7 @@ describe("mtt:sixmax-preflop-stage-batch CLI", () => {
     const rawRoot = join(draftDir, "raw");
     try {
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/stageMttSixMaxPreflopIntakeBatch.mts",
         `--draft-dir=${draftDir}`,
         `--raw-root=${rawRoot}`,
@@ -31,7 +31,7 @@ describe("mtt:sixmax-preflop-stage-batch CLI", () => {
     const draftDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-stage-summary-"));
     try {
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/stageMttSixMaxPreflopIntakeBatch.mts",
         `--draft-dir=${draftDir}`,
         "--summary",
@@ -49,7 +49,7 @@ describe("mtt:sixmax-preflop-stage-batch CLI", () => {
     const rawRoot = join(draftDir, "raw");
     try {
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/stageMttSixMaxPreflopIntakeBatch.mts",
         `--draft-dir=${draftDir}`,
         `--raw-root=${rawRoot}`,
@@ -81,7 +81,7 @@ describe("mtt:sixmax-preflop-stage-batch CLI", () => {
       mkdirSync(rawPackDir, { recursive: true });
       writeFileSync(join(rawPackDir, "permission.json"), "{}\n", "utf8");
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/stageMttSixMaxPreflopIntakeBatch.mts",
         `--draft-dir=${draftDir}`,
         `--raw-root=${rawRoot}`,
@@ -111,7 +111,7 @@ describe("mtt:sixmax-preflop-stage-batch CLI", () => {
       mkdirSync(packDir);
       writeFileSync(join(packDir, "normalized.candidate.json"), "{}\n", "utf8");
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/stageMttSixMaxPreflopIntakeBatch.mts",
         `--draft-dir=${draftDir}`,
         `--raw-root=${rawRoot}`,

@@ -33,7 +33,7 @@ export function mixedTreeFamilies(): Set<string> {
     // option makes Node emit a deprecation warning on stderr, and callers of this
     // are gates whose tests hold them to producing none.
     const output = execFileSync(process.execPath, [
-      "node_modules/vite-node/vite-node.mjs",
+      "scripts/run-cli.mjs",
       "scripts/auditTexasSolverTreeProvenance.mts",
       "--json",
     ], { cwd: process.cwd(), encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });

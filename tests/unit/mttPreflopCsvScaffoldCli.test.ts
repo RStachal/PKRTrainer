@@ -11,7 +11,7 @@ describe("mtt preflop CSV scaffold CLI", () => {
       const output = join(dir, "scaffold.csv");
       const packId = "mtt-six-max-turbo-preflop-chip-ev-ante-off-production-v1";
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/buildMttPreflopCsvScaffold.mts",
         "--pack-id",
         packId,

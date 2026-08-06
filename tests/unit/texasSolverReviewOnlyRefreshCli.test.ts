@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
 const SCRIPT = resolve(ROOT, "scripts/refreshTexasSolverReviewOnlyEvidence.mts");
-const VITE_NODE = resolve(ROOT, "node_modules/vite-node/vite-node.mjs");
+const VITE_NODE = resolve(ROOT, "scripts/run-cli.mjs");
 const temporaryRoots: string[] = [];
 
 afterEach(() => {

@@ -209,7 +209,7 @@ function runProvenanceAudit(args: CliArgs): {
   families: Array<{ familyId: string; boardRows: Array<{ boardId: string; profile: string }> }>;
 } {
   const stdout = execFileSync(process.execPath, [
-    "node_modules/vite-node/vite-node.mjs",
+    "scripts/run-cli.mjs",
     AUDIT_SCRIPT,
     `--output-root=${args.accuracyRoot}`,
     `--param-root=${args.paramRoot}`,

@@ -11,7 +11,7 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
     const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-"));
     try {
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/runMttSixMaxPreflopIntakeBatch.mts",
         `--source-dir=${sourceDir}`,
         "--json",
@@ -31,7 +31,7 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
     const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-confidence-"));
     try {
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/runMttSixMaxPreflopIntakeBatch.mts",
         `--source-dir=${sourceDir}`,
         "--write",
@@ -51,7 +51,7 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
     const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-provenance-"));
     try {
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/runMttSixMaxPreflopIntakeBatch.mts",
         `--source-dir=${sourceDir}`,
         "--incremental",
@@ -81,7 +81,7 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
     const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-summary-"));
     try {
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/runMttSixMaxPreflopIntakeBatch.mts",
         `--source-dir=${sourceDir}`,
         "--summary",
@@ -98,7 +98,7 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
     const sourceDir = mkdtempSync(join(tmpdir(), "pkrtrainer-sixmax-intake-incremental-"));
     try {
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/runMttSixMaxPreflopIntakeBatch.mts",
         `--source-dir=${sourceDir}`,
         "--incremental",
@@ -134,7 +134,7 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
       ].join("\n"), "utf8");
 
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/runMttSixMaxPreflopIntakeBatch.mts",
         `--source-dir=${sourceDir}`,
         "--incremental",
@@ -201,7 +201,7 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
       writeFileSync(join(sourceDir, `${packId}.csv`), inProgress, "utf8");
 
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/runMttSixMaxPreflopIntakeBatch.mts",
         `--source-dir=${sourceDir}`,
         "--incremental",
@@ -257,7 +257,7 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
       writeFileSync(join(sourceDir, `${packId}.csv`), scaffold.document, "utf8");
 
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/runMttSixMaxPreflopIntakeBatch.mts",
         `--source-dir=${sourceDir}`,
         "--incremental",
@@ -288,7 +288,7 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
       ].join("\n"), "utf8");
 
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/runMttSixMaxPreflopIntakeBatch.mts",
         `--source-dir=${sourceDir}`,
         "--incremental",
@@ -330,7 +330,7 @@ describe("mtt:sixmax-preflop-intake-batch CLI", () => {
       writeFileSync(csvPath, original, "utf8");
 
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/runMttSixMaxPreflopIntakeBatch.mts",
         `--source-dir=${sourceDir}`,
         `--output=${csvPath}`,

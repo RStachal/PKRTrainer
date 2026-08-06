@@ -65,7 +65,7 @@ describe("mtt:playable-beta CLI", () => {
 
 function invoke(...args: string[]) {
   return spawnSync(process.execPath, [
-    "node_modules/vite-node/vite-node.mjs",
+    "scripts/run-cli.mjs",
     "scripts/checkMttPlayableBeta.mts",
     ...args,
   ], {

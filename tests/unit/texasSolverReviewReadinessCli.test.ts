@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
-const VITE_NODE = resolve(ROOT, "node_modules/vite-node/vite-node.mjs");
+const VITE_NODE = resolve(ROOT, "scripts/run-cli.mjs");
 const SCRIPT = resolve(ROOT, "scripts/checkTexasSolverReviewReadiness.mts");
 const DIVERSE_BOARDS = [
   "A72r", "A62tt", "K72r", "K65tt", "T72r", "T82tt",

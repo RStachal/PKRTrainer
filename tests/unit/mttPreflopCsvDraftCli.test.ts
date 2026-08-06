@@ -18,7 +18,7 @@ describe("mtt preflop CSV draft CLI", () => {
       ].join("\n"), "utf8");
 
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/buildMttPreflopCsvDraft.mts",
         "--csv",
         csv,

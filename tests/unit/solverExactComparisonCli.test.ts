@@ -117,7 +117,7 @@ function comparisonPaths(directory: string): Paths {
 
 function invoke(paths: Paths, ...extra: string[]) {
   return spawnSync(process.execPath, [
-    "node_modules/vite-node/vite-node.mjs",
+    "scripts/run-cli.mjs",
     "scripts/compareSolverExactNodes.mts",
     `--left=${paths.left}`,
     `--right=${paths.right}`,

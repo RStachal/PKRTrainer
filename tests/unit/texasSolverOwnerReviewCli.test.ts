@@ -115,7 +115,7 @@ function baseArgs(root: string, family: string, ...extra: string[]): string[] {
 
 function runOwnerReview(...args: string[]) {
   return spawnSync(process.execPath, [
-    "node_modules/vite-node/vite-node.mjs",
+    "scripts/run-cli.mjs",
     "scripts/recordTexasSolverOwnerReview.mts",
     ...args,
   ], {

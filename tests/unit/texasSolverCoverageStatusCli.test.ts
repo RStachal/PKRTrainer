@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
-const VITE_NODE = resolve(ROOT, "node_modules/vite-node/vite-node.mjs");
+const VITE_NODE = resolve(ROOT, "scripts/run-cli.mjs");
 const STATUS_SCRIPT = resolve(ROOT, "scripts/checkTexasSolverCoverageBatchStatus.mts");
 const DRAFT_ROOT = resolve(ROOT, "artifacts/texas-solver-review-integration/normalized-drafts");
 

@@ -48,7 +48,7 @@ describe("MTT scenario / learning path catalog", () => {
     try {
       const output = join(dir, "report.json");
       const result = spawnSync(process.execPath, [
-        "node_modules/vite-node/vite-node.mjs",
+        "scripts/run-cli.mjs",
         "scripts/checkMttScenarioCatalog.mts",
         `--output=${output}`,
         "--json",
