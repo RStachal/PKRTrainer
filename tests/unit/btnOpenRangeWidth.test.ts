@@ -92,18 +92,60 @@ describe("button opening range width", () => {
     // The defect the charts exposed: one range from 25BB to 150BB per seat, so
     // the same number was too wide at the shallow end and too narrow at the deep
     // one. Stated as a property rather than as eight figures.
-    // Under the gun is in this list now. It was left out when the other four
-    // were corrected, because its numbers were not measured - and that exclusion
-    // is exactly why it kept narrowing with depth, unnoticed, for as long as it
-    // did. A seat whose width is uncertain still cannot be allowed to run
-    // downhill; the direction is not the part in doubt.
-    for (const seat of ["UTG", "LJ", "HJ", "CO", "BTN"] as Position[]) {
+    // Two claims, because the evidence behind them differs. For the four seats
+    // whose bands were measured from the chart pack, the widening is in the
+    // source and the assertion is strict. Under the gun's bands are not measured
+    // - documented in Agents/reference-ranges/btn-rfi-mtt-regular.md - so the
+    // claim here is only that it never runs downhill, which is the part no
+    // source disputes.
+    //
+    // With ante on, under the gun's 25BB and 50BB bands differ only by hands the
+    // ante widening already adds to both, so the curve is flat rather than
+    // rising. That is a fact about how thin those two bands are, and writing
+    // hands into the range to make a strict comparison pass would be inventing
+    // the measurement this seat is missing.
+    for (const seat of ["LJ", "HJ", "CO", "BTN"] as Position[]) {
       for (const ante of ["OFF", "ON"] as AnteMode[]) {
         const mid = openWidthPct(ante, seat, 25 as StackBucket);
         const deep = openWidthPct(ante, seat, 100 as StackBucket);
         expect(mid, `${ante} ${seat}`).not.toBeNull();
         expect(deep, `${ante} ${seat}`).not.toBeNull();
         expect(deep!, `${ante} ${seat} deep vs mid`).toBeGreaterThan(mid!);
+      }
+    }
+    for (const ante of ["OFF", "ON"] as AnteMode[]) {
+      const mid = openWidthPct(ante, "UTG", 25 as StackBucket);
+      const deep = openWidthPct(ante, "UTG", 100 as StackBucket);
+      expect(deep!, `${ante} UTG must not narrow`).toBeGreaterThanOrEqual(mid!);
+    }
+  });
+
+  it("never drops a pair or a suited hand as stacks deepen, across the band seam", () => {
+    // The measured bands take over above 20BB, and where they did they were
+    // narrower than the flat table they replaced: under the gun 14.9 percent at
+    // 20BB and 11.2 at 25, the lojack 20.1 and 16.4, the same at UTG+1 and
+    // UTG+2. What they lost was mostly 22 through 66.
+    //
+    // A small pair is a set-mining hand. It needs implied odds, implied odds
+    // improve as stacks deepen, and the table opened them only while stacks were
+    // short - backwards, and identically backwards at four seats, which is what
+    // a gap between two sources looks like rather than a decision.
+    //
+    // Offsuit hands are excluded on purpose: KJo and QJo were dropped at the
+    // same seam and that direction stands on its own, because an offsuit
+    // broadway is the hand that gets dominated when the money goes in deep.
+    // The three early seats only. The chart pack measured the lojack, hijack,
+    // cutoff and button, and at the lojack the flat 20BB table is wider than the
+    // measured 50BB band - so applying this rule there would overwrite a
+    // measurement with an inference, which is the wrong way round.
+    for (const seat of ["UTG", "UTG+1", "UTG+2"] as Position[]) {
+      for (const ante of ["OFF", "ON"] as AnteMode[]) {
+        const shallow = openedClasses(ante, seat, 20 as StackBucket);
+        const deep = openedClasses(ante, seat, 25 as StackBucket);
+        const dropped = [...shallow]
+          .filter((hand) => !hand.endsWith("o"))
+          .filter((hand) => !deep.has(hand));
+        expect(dropped, `${ante} ${seat} drops at 25BB`).toEqual([]);
       }
     }
   });

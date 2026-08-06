@@ -33,12 +33,28 @@ describe("hero range consistency", () => {
     const rows = compareHeroRanges();
     const byFamily = new Map(rows.map((row) => [row.familyId, row]));
 
-    // UTG used to agree to a tenth of a point, and that read as confirmation.
-    // It only ever showed the pack and the solve agreed with each other - both
-    // were three points wider than the charts, and correcting the pack moved
-    // this to a real gap. Agreement with a solve is not evidence either is right.
-    expect(byFamily.get("MTT9_40BB_UTG_BB_SRP")?.gapPoints).toBeGreaterThan(2);
-    expect(byFamily.get("MTT9_40BB_UTG_BB_SRP")?.gapPoints).toBeLessThan(5);
+    // This gap has now closed again, to two tenths of a point, and the reason
+    // matters more than the number.
+    //
+    // It was opened deliberately: the pack and the solve agreed at about 15
+    // percent, the charts said 11, and the pack was narrowed to the charts. The
+    // note left here was right to warn that a pack agreeing with a solve proves
+    // nothing about either.
+    //
+    // What reopened it is a different argument, and not a re-reading of any
+    // chart. The narrow bands drop 22 through 66 at exactly the depth where
+    // stacks get deeper, and a small pair is a set-mining hand - it needs
+    // implied odds, and implied odds improve with depth. Opening them only while
+    // short is backwards, and it was backwards identically at four seats, which
+    // is the signature of a gap between two sources rather than a decision. The
+    // hands restored are the ones the same seat already opens at 20BB.
+    //
+    // So the solve is not the evidence here; it is a third thing that landed in
+    // the same place, having been built before any of this. The width question
+    // under the gun still has - roughly 15 percent here against 17.6 in two MTT
+    // sources - remains open and is documented in
+    // Agents/reference-ranges/btn-rfi-mtt-regular.md.
+    expect(byFamily.get("MTT9_40BB_UTG_BB_SRP")?.gapPoints).toBeLessThan(1);
 
     // The cutoff no longer does, and that is a consequence rather than a
     // regression: widening the preflop packs toward the purchased charts moved

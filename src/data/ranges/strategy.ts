@@ -499,7 +499,14 @@ function rfiSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSe
     .filter((item) => bucket >= item.fromBucket)
     .sort((left, right) => right.fromBucket - left.fromBucket)[0];
   const flat = OPEN_RANGES[pos];
-  const ce = band === undefined ? flat : { core: band.core, extra: flat.extra };
+  const ce = band === undefined
+    ? flat
+    : {
+      core: CARRY_FORWARD_SEATS.has(pos)
+        ? `${band.core}, ${carriedForward(flat.core)}`
+        : band.core,
+      extra: flat.extra,
+    };
   const k = openKeys(bucket);
   const open: RangeSegment = { spec: widen(ce, wide), strict: k.strict, lenient: k.lenient };
 
@@ -510,6 +517,56 @@ function rfiSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSe
   return jam.length > 0
     ? [{ spec: jam.join(", "), strict: ["JAM"] }, open]
     : [open];
+}
+
+/**
+ * Pairs and suited hands the seat already opens shallower, kept as it gets deeper.
+ *
+ * The measured depth bands start above twenty big blinds, and where they took
+ * over they were quietly *narrower* than the flat table they replaced. Measured
+ * across the seam: under the gun 14.9 percent at 20BB and 11.2 at 25, the lojack
+ * 20.1 and 16.4, with the same shape at UTG+1 and UTG+2. Four seats stepping
+ * down by about four points at the moment stacks get deeper.
+ *
+ * What they lost was mostly the small pairs - 22 through 66 - and that is the
+ * part that cannot be right whichever width is. A small pair is a set-mining
+ * hand: it needs implied odds, implied odds improve as stacks deepen, and our
+ * table opened them only while stacks were short. Backwards, and identically
+ * backwards at four seats, which is what a gap between two data sources looks
+ * like rather than a decision anybody made.
+ *
+ * So a band inherits every pair and suited hand from the shallower range.
+ * Offsuit hands are deliberately not carried: KJo and QJo were dropped at the
+ * same seam and that direction is defensible on its own terms, because an
+ * offsuit broadway plays worse deep, not better - it is the hand that gets
+ * dominated when the money goes in on later streets.
+ *
+ * This is a rule rather than an edit to the range strings so that a band added
+ * later cannot reintroduce the same cliff by omission.
+ */
+/**
+ * Seats whose depth bands were never measured against the owner's charts.
+ *
+ * The chart pack covers the lojack, hijack, cutoff and button, and their bands
+ * widen with depth in the source. The three early seats were not in it, and
+ * theirs came from somewhere else.
+ *
+ * The distinction decides where the carry-forward may apply, and the first
+ * version of this got it wrong by applying everywhere. At the lojack the flat
+ * 20BB table is 20.1 percent while the *measured* 50BB band is 18.9 - so
+ * carrying hands up from the flat table overwrote a measurement with an
+ * inference, and flattened a depth curve that the chart pack actually contains.
+ * Where there is a measurement it wins, and the unverified flat table below it
+ * is the part to be suspicious of.
+ */
+const CARRY_FORWARD_SEATS = new Set<string>(["UTG", "UTG+1", "UTG+2"]);
+
+function carriedForward(flatCore: string): string {
+  return flatCore
+    .split(",")
+    .map((token) => token.trim())
+    .filter((token) => token.length > 0 && !token.includes("o"))
+    .join(", ");
 }
 
 /**
