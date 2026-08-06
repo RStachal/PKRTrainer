@@ -74,7 +74,12 @@ describe("rangeMatrixView - DOM", () => {
       .toContain("linear-gradient");
     expect(root.querySelector<HTMLElement>(".range-matrix-view")?.style.overflowX)
       .toBe("auto");
-    expect(root.querySelector<HTMLElement>(".matrix")?.style.minWidth).toBe("640px");
+    // No fixed floor. It used to demand 640px, wider than every phone this ships
+    // to, so the one view a player most needs to read whole was the one they had
+    // to scroll sideways through. Asserting "0" rather than a new number because
+    // the property is the absence of a floor, not a smaller one.
+    expect(root.querySelector<HTMLElement>(".matrix")?.style.minWidth).toBe("0");
+    expect(root.querySelector<HTMLElement>(".matrix")?.style.width).toBe("100%");
     expect(root.querySelectorAll<HTMLElement>(".matrix-header--row")).toHaveLength(13);
     expect(root.querySelector<HTMLElement>(".matrix-header--row")?.dataset.axis).toBe("row");
     expect(root.querySelector<HTMLElement>(".matrix-header--row")?.style.position)

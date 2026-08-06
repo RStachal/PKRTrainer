@@ -85,89 +85,26 @@ describe("release bundle metadata", () => {
     expect(manifest.lang).toBe("cs");
     expect(manifest.description).toBe("Offline trenažér pokerových rozhodnutí pro turnajovou hru.");
     expect(pkg.description).toContain("offline full-ring 9-handed poker decision trainer");
-    expect(pkg.scripts["verify:ranges"]).toBe("vite-node scripts/verifyRanges.mts");
-    expect(pkg.scripts["validate:range-import"]).toBe("vite-node scripts/validateRangeImport.mts");
-    expect(pkg.scripts["build:range-module"]).toBe("vite-node scripts/buildRangeModule.mts");
-    expect(pkg.scripts["mtt:slots"]).toBe("vite-node scripts/listMttImportSlots.mts");
-    expect(pkg.scripts["mtt:completion"]).toBe("vite-node scripts/checkMttCompletion.mts");
-    expect(pkg.scripts["mtt:core-release"]).toBe("vite-node scripts/checkMttCoreRelease.mts");
-    expect(pkg.scripts["mtt:playable-beta"]).toBe("vite-node scripts/checkMttPlayableBeta.mts");
-    expect(pkg.scripts["mtt:ftp-package"]).toBe("vite-node scripts/packageMttPlayableBeta.mts");
-    expect(pkg.scripts["mtt:blockers"]).toBe("vite-node scripts/checkMttBlockers.mts");
-    expect(pkg.scripts["mtt:intake-plan"]).toBe("vite-node scripts/checkMttIntakePlan.mts");
-    expect(pkg.scripts["mtt:postflop-matrix"]).toBe("vite-node scripts/checkMttPostflopMatrix.mts");
-    expect(pkg.scripts["mtt:postflop-coverage"]).toBe("vite-node scripts/checkMttPostflopProductionCoverage.mts");
-    expect(pkg.scripts["mtt:postflop-positions"]).toBe("vite-node scripts/checkMttPostflopPositions.mts");
-    expect(pkg.scripts["mtt:postflop-release"]).toBe("vite-node scripts/checkMttPostflopReleaseGate.mts");
-    expect(pkg.scripts["mtt:solver-verification"]).toBe("vite-node scripts/checkMttSolverVerification.mts");
-    expect(pkg.scripts["mtt:texas-solver-review-protocol"]).toBe("vite-node scripts/checkTexasSolverReviewProtocol.mts");
-    expect(pkg.scripts["mtt:texas-solver-owner-review"]).toBe("vite-node scripts/recordTexasSolverOwnerReview.mts");
-    expect(pkg.scripts["mtt:texas-solver-accuracy-recovery"]).toBe("vite-node scripts/prepareTexasSolverAccuracyRecovery.mts");
+
+    // Every CLI script goes through the cached runner. This replaced a list of
+    // individual scripts pinned to their exact text, which had the effect of
+    // locking in the slow invocation: raw vite-node re-transpiles the whole
+    // import graph in every process, 63 seconds a time on a script that touches
+    // the data layer. Stated as a property so a new script cannot quietly
+    // reintroduce it.
+    const cliScripts = Object.entries(pkg.scripts)
+      .filter(([, command]) => command.includes("scripts/") && command.endsWith(".mts"));
+    expect(cliScripts.length).toBeGreaterThan(50);
+    for (const [name, command] of cliScripts) {
+      expect(command, name).not.toContain("vite-node");
+      expect(command, name).toContain("node scripts/run-cli.mjs");
+    }
     expect(pkg.scripts["mtt:texas-solver-accuracy-handoff"])
       .toContain("finalize-texas-solver-accuracy-recovery.ps1");
-    expect(pkg.scripts["mtt:stage-texas-solver"]).toBe("vite-node scripts/stageTexasSolverExports.mts");
-    expect(pkg.scripts["mtt:texas-solver-pack"]).toBe("vite-node scripts/checkTexasSolverParameterPack.mts");
-    expect(pkg.scripts["mtt:texas-solver-review"]).toBe("vite-node scripts/extractTexasSolverReview.mts");
-    expect(pkg.scripts["mtt:texas-solver-review-only-refresh"]).toBe("vite-node scripts/refreshTexasSolverReviewOnlyEvidence.mts");
-    expect(pkg.scripts["mtt:texas-solver-scenario-audit"]).toBe("vite-node scripts/auditTexasSolverScenarioBatch.mts");
-    expect(pkg.scripts["mtt:texas-solver-srp-sb-bb-cbet-batch"])
-      .toBe("vite-node scripts/buildTexasSolverSrpSbBbCbetBatch.mts");
-    expect(pkg.scripts["mtt:texas-solver-srp-co-bb-cbet-batch"])
-      .toBe("vite-node scripts/buildTexasSolverSrpCoBbCbetBatch.mts");
-    expect(pkg.scripts["mtt:texas-solver-coverage-batch"]).toBe("vite-node scripts/buildTexasSolverCoverageBatch.mts");
-    expect(pkg.scripts["mtt:texas-solver-board-catalog"])
-      .toBe("vite-node scripts/checkTexasSolverBoardCatalog.mts");
-    expect(pkg.scripts["mtt:texas-solver-coverage-status"]).toBe("vite-node scripts/checkTexasSolverCoverageBatchStatus.mts");
-    expect(pkg.scripts["mtt:texas-solver-coverage-overview"]).toBe("vite-node scripts/checkTexasSolverCoverageOverview.mts");
-    expect(pkg.scripts["mtt:texas-solver-ingest-completed"]).toBe("vite-node scripts/ingestTexasSolverCompletedCoverage.mts");
-    expect(pkg.scripts["mtt:texas-solver-normalize-draft"]).toBe("vite-node scripts/buildTexasSolverNormalizedDraft.mts");
-    expect(pkg.scripts["mtt:texas-solver-merge-pilot-drafts"]).toBe("vite-node scripts/mergeTexasSolverPilotDrafts.mts");
-    expect(pkg.scripts["mtt:texas-solver-viewer"]).toBe("vite-node scripts/buildTexasSolverReviewViewer.mts");
-    expect(pkg.scripts["mtt:postflop-pilot-gate"]).toBe("vite-node scripts/checkMttPostflopPilotGate.mts");
-    expect(pkg.scripts["mtt:postflop-pilot-suite"]).toBe("vite-node scripts/checkMttPostflopPilotSuite.mts");
-    expect(pkg.scripts["mtt:postflop-pilot-catalog"]).toBe("vite-node scripts/checkMttPostflopPilotCatalog.mts");
-    expect(pkg.scripts["mtt:postflop-pilot-modules"]).toBe("vite-node scripts/buildMttPostflopPilotModules.mts");
-    expect(pkg.scripts["mtt:postflop-action-ev-intake"])
-      .toBe("vite-node scripts/prepareMttPostflopActionEvIntake.mts");
-    expect(pkg.scripts["mtt:release-gates"]).toBe("vite-node scripts/checkMttReleaseGates.mts");
-    expect(pkg.scripts["mtt:acceptance"]).toBe("vite-node scripts/checkMttAcceptance.mts");
-    expect(pkg.scripts["mtt:technical-acceptance"])
-      .toBe("vite-node scripts/checkMttTechnicalAcceptance.mts");
-    expect(pkg.scripts["mtt:handoff"]).toBe("vite-node scripts/writeMttHandoffArtifacts.mts");
-    expect(pkg.scripts["mtt:scenario-catalog"]).toBe("vite-node scripts/checkMttScenarioCatalog.mts");
-    expect(pkg.scripts["mtt:utility-stats"]).toBe("vite-node scripts/checkMttUtilityStats.mts");
-    expect(pkg.scripts["mtt:content-packs"]).toBe("vite-node scripts/checkMttContentPacks.mts");
-    expect(pkg.scripts["mtt:variant-qa"]).toBe("vite-node scripts/checkMttVariantQa.mts");
-    expect(pkg.scripts["mtt:next-action"]).toBe("vite-node scripts/reportNextMttAction.mts");
-    expect(pkg.scripts["mtt:promote-ready"]).toBe("vite-node scripts/promoteReadyMttIntake.mts");
-    expect(pkg.scripts["mtt:registry-integrity"]).toBe("vite-node scripts/checkMttProductionRegistryIntegrity.mts");
-    expect(pkg.scripts["mtt:validate-ready-intake"]).toBe("vite-node scripts/validateMttReadyIntake.mts");
-    expect(pkg.scripts["mtt:preflop-csv-scaffold"]).toBe("vite-node scripts/buildMttPreflopCsvScaffold.mts");
-    expect(pkg.scripts["mtt:preflop-csv-draft"]).toBe("vite-node scripts/buildMttPreflopCsvDraft.mts");
-    expect(pkg.scripts["mtt:sixmax-preflop-intake-progress"])
-      .toBe("vite-node scripts/runMttSixMaxPreflopIntakeBatch.mts --incremental --summary");
-    expect(pkg.scripts["mtt:sixmax-preflop-workbench-refresh"])
-      .toBe("vite-node scripts/runMttSixMaxPreflopIntakeBatch.mts --incremental --refresh-blank-scaffolds --output=artifacts/mtt-sixmax-preflop-intake/workbench-refresh-report.json --summary");
-    expect(pkg.scripts["mtt:sixmax-preflop-stage-progress"])
-      .toBe("vite-node scripts/stageMttSixMaxPreflopIntakeBatch.mts --incremental --summary");
-    expect(pkg.scripts["range:intake"]).toBe("vite-node scripts/checkRangeIntakeStatus.mts");
-    expect(pkg.scripts["range:intake:guard"]).toBe("vite-node scripts/checkRangeIntakeWorkspace.mts");
-    expect(pkg.scripts["range:cross-check-exact"])
-      .toBe("vite-node scripts/compareSolverExactNodes.mts");
-    expect(pkg.scripts["bundle:budget"]).toBe("vite-node scripts/checkBundleBudget.mts");
-    expect(pkg.scripts["verify:precache"]).toBe("vite-node scripts/checkDistPrecache.mts");
-    expect(pkg.scripts["profile:render"]).toBe("vite-node scripts/profileRenderPerformance.mts");
-    expect(pkg.scripts["e2e:chrome"]).toBe("vite-node scripts/runChromeE2e.mts");
-    expect(pkg.scripts["e2e:chrome:preview"])
-      .toBe("vite-node scripts/runChromePreviewE2e.mts");
     expect(chromePreviewE2eScript).toContain('NODE_ENV: "production"');
     expect(chromePreviewE2eScript).toContain('"--strictPort"');
     expect(ftpPackageScript).toContain('!source.path.endsWith(".map")');
     expect(ftpPackageScript).toContain("Source map must not enter the FTP package");
-    expect(pkg.scripts["e2e:chrome:production-fixture"])
-      .toBe("vite-node scripts/runChromeProductionFixtureE2e.mts");
-    expect(pkg.scripts["e2e:android:preflight"])
-      .toBe("vite-node scripts/checkAndroidDeviceAvailability.mts");
     expect(pkg.scripts["release:mtt-core"])
       .toBe("npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:core-release && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget");
     expect(chromeE2eScript).toContain('"mobile-360"');

@@ -529,8 +529,11 @@ describe("TexasSolver Windows autostart queue", () => {
     const packageJson = JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8")) as {
       scripts: Record<string, string>;
     };
+    // Through the cached runner, like every CLI script. The invocation shape is
+    // held as a property in releaseBundleMetadata.test.ts; what matters here is
+    // that this task points at the recovery script at all.
     expect(packageJson.scripts["mtt:texas-solver-accuracy-recovery"]).toBe(
-      "vite-node scripts/prepareTexasSolverAccuracyRecovery.mts",
+      "node scripts/run-cli.mjs scripts/prepareTexasSolverAccuracyRecovery.mts",
     );
     expect(packageJson.scripts["mtt:texas-solver-accuracy-handoff"]).toContain(
       "finalize-texas-solver-accuracy-recovery.ps1",
