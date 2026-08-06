@@ -857,3 +857,41 @@ question: GTO Wizard at 50bb nine-handed, GTO Preflop Charts at 20bb full ring, 
 a third app at **8-max, 40bb**. Only the middle one shares our format and states a
 number. Read as "three answers to one question" it would mislead; read as three
 different questions it is still useful, and that is how the figures above are taken.
+
+## The UTG gap has a shape, 2026-08-06
+
+The chart PDFs were unreadable until now, and not for a subtle reason: they are
+pictures. Text extraction on the Upswing RFI guide returns the axis labels and the
+combination counts and not one of the 169 cells that says what is raised. With
+`Agents/solver-input/render-chart-pdf.py` the pages render and the ranges can be
+read off directly.
+
+Upswing's guide is full ring, and it is a **cash** guide - not the same question as
+a 50BB MTT, which is exactly why it is useful here. It gives an independent reading
+of how a tight full-ring open is shaped, against which our MTT table should sit
+*wider*, because antes and shallower stacks both argue that way.
+
+| seat | Upswing full ring (cash) | ours, 50BB ante off | difference |
+| --- | --- | --- | --- |
+| UTG | 11.5% | 11.5% | **0.0** |
+| HJ | 22.5% | 25.5% | +3.0 |
+
+Upswing UTG is `77+, ATs+, A5s, KTs+, K5s, QTs+, JTs, T9s, 98s, AJo+, KQo`, which
+is 152 combinations. Ours at 50BB is 152 combinations. Not close - identical.
+
+That is the shape of the defect, and it is a different statement from "UTG is four
+points too tight". Every other seat was widened for tournament play. **Under the
+gun was left at cash width.** The hijack sits three points above its cash
+reference; under the gun sits exactly on its own, which is not what a seat looks
+like when somebody has considered it and chosen a number.
+
+It also lines up with the two MTT sources that put UTG near 17.6-17.7% at both 20
+and 50BB, and with the seam already documented above: the measured RYE bands start
+below where the flat table left off, so the seat inherited a cash-shaped range and
+nothing widened it afterwards.
+
+Still not corrected here, and deliberately. Knowing a range is too tight does not
+tell you which hands to add, and the three sources that agree on the direction do
+not agree on a hand list - one is a screenshot, one is a cash guide, one is a
+different product. What would settle it is a single MTT chart for this seat at this
+depth, read the way these were.
