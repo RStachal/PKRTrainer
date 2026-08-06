@@ -37,6 +37,29 @@ function contextWidthPct(
   return Math.round(combos / 1326 * 1000) / 10;
 }
 
+/** The hand classes a seat opens at one depth, for comparing depths directly. */
+function openedClasses(
+  ante: AnteMode,
+  position: Position,
+  bucket: StackBucket,
+): Set<string> {
+  const pack = allMttPreflopRangePacks.find((item) => (
+    item.dimensions.tableFormat === "FULL_RING_9" &&
+    item.dimensions.blindSpeed === "REGULAR" &&
+    item.dimensions.ante === ante &&
+    item.records.length > 0
+  ));
+  if (pack === undefined) return new Set();
+  const entry = createRangeStoreFromRangePack(pack)
+    .lookup({ ante, position, bucket, context: "RFI" });
+  if (entry === undefined) return new Set();
+  return new Set(
+    Object.entries(entry.actions)
+      .filter(([, actions]) => actions.some((action) => action !== "FOLD"))
+      .map(([handClass]) => handClass),
+  );
+}
+
 function openWidthPct(ante: AnteMode, position: Position, bucket: StackBucket): number | null {
   const pack = allMttPreflopRangePacks.find((item) => (
     item.dimensions.tableFormat === "FULL_RING_9" &&
@@ -69,13 +92,39 @@ describe("button opening range width", () => {
     // The defect the charts exposed: one range from 25BB to 150BB per seat, so
     // the same number was too wide at the shallow end and too narrow at the deep
     // one. Stated as a property rather than as eight figures.
-    for (const seat of ["LJ", "HJ", "CO", "BTN"] as Position[]) {
+    // Under the gun is in this list now. It was left out when the other four
+    // were corrected, because its numbers were not measured - and that exclusion
+    // is exactly why it kept narrowing with depth, unnoticed, for as long as it
+    // did. A seat whose width is uncertain still cannot be allowed to run
+    // downhill; the direction is not the part in doubt.
+    for (const seat of ["UTG", "LJ", "HJ", "CO", "BTN"] as Position[]) {
       for (const ante of ["OFF", "ON"] as AnteMode[]) {
         const mid = openWidthPct(ante, seat, 25 as StackBucket);
         const deep = openWidthPct(ante, seat, 100 as StackBucket);
         expect(mid, `${ante} ${seat}`).not.toBeNull();
         expect(deep, `${ante} ${seat}`).not.toBeNull();
         expect(deep!, `${ante} ${seat} deep vs mid`).toBeGreaterThan(mid!);
+      }
+    }
+  });
+
+  it("never lets an early seat lose a hand it opened at a shallower depth", () => {
+    // The narrowing under the gun was one missing hand - KQo at 50BB, present at
+    // 25 and present at both neighbouring seats - and a width comparison alone
+    // would have missed it if something wider had been added at the same time.
+    // This asserts the containment directly, which is the property that was
+    // actually violated.
+    //
+    // Only the early seats, and only across the two measured bands. The later
+    // seats trade hands around freely as stacks deepen and the shallow buckets
+    // come from a different source entirely.
+    for (const seat of ["UTG", "UTG+1", "UTG+2"] as Position[]) {
+      for (const ante of ["OFF", "ON"] as AnteMode[]) {
+        const mid = openedClasses(ante, seat, 25 as StackBucket);
+        const deep = openedClasses(ante, seat, 50 as StackBucket);
+        expect(mid.size, `${ante} ${seat}`).toBeGreaterThan(0);
+        const dropped = [...mid].filter((hand) => !deep.has(hand));
+        expect(dropped, `${ante} ${seat} drops at 50BB`).toEqual([]);
       }
     }
   });

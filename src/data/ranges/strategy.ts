@@ -127,7 +127,23 @@ interface DepthBand {
 const DEPTH_OPEN_RANGES: Record<string, readonly DepthBand[]> = {
   UTG: [
     { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, AKo, AQo, AJo, KQo" },
-    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, 98s, AKo, AQo, AJo" },
+    // Two hands were missing at this depth that the same seat opens at 25BB:
+    // KQo and A8s. Under the gun was the only early seat to lose anything as
+    // stacks deepened - UTG+1 and UTG+2 both keep KQo at 50 - and a seat that
+    // opens tighter deep than shallow is wrong whatever the right width is,
+    // because position and depth both argue the other way.
+    //
+    // A8s is here because the first reading of this band was wrong. It looked
+    // like A9s and A8s had been traded for the wheel aces, which is a real
+    // solver pattern and would have been left alone. But A9s is still here: only
+    // A8s went, against four hands added. One out and four in is an omission,
+    // not a strategy.
+    //
+    // Restored as transcription fixes, not as a re-reading of the chart. The
+    // width question this seat still has - 13.6% here against roughly 17.6% in
+    // two independent sources - is not answered by either hand and is documented
+    // in Agents/reference-ranges/btn-rfi-mtt-regular.md.
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, 98s, AKo, AQo, AJo, KQo" },
   ],
   "UTG+1": [
     { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, A5s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, AKo, AQo, AJo, KQo" },
