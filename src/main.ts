@@ -101,6 +101,7 @@ import {
 import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
 import { loadPreflopEquity } from "./core/preflopEquity";
+import { renderDecisionPrice } from "./ui/decisionPricePanel";
 import { renderMatrix } from "./ui/rangeMatrixView";
 import { renderRangeModalButton } from "./ui/rangeModal";
 import { renderHHView } from "./ui/hhView";
@@ -1069,6 +1070,10 @@ function setupTraining(
   let activeRangeStore: RangeStore = rangeStore;
   let activeTrainingProfile: TrainingProfile | null = null;
   let activeRangePack: RangePack | null = null;
+  // The filters the running session was started with. Kept here beside the other
+  // session state rather than threaded through the click handlers, which is how
+  // this file already carries the range store and the profile.
+  let activeFilters: Filters | null = null;
   let answered = false; // bylo uĹľ na aktuĂˇlnĂ­ spot odpovÄ›zeno?
   let activeQuestionStartedAt = 0;
 
@@ -1239,6 +1244,7 @@ function setupTraining(
 
   function showSpot(spot: Spot, filters: Filters): void {
     answered = false;
+    activeFilters = filters;
     activeQuestionStartedAt = nowMs();
 
     sessionTitle.textContent = `${actionContextLabel(spot.context)} - ${spot.heroPos} - ${spot.hand}`;
@@ -1317,7 +1323,7 @@ function setupTraining(
     hooks.refreshDashboard();
 
     // ZobrazenĂ­ vĂ˝sledku, zdĹŻvodnÄ›nĂ­ a doporuÄŤenĂ­.
-    renderResult(spot, result, save.ok);
+    renderResult(spot, result, save.ok, activeFilters);
 
     // Range matice pro danĂ˝ spot (Req 10) + legacy parity modal.
     matrixContainer.innerHTML = "";
@@ -1332,6 +1338,7 @@ function setupTraining(
     spot: Spot,
     result: ReturnType<typeof grade>,
     saveOk: boolean,
+    filters: Filters | null,
   ): void {
     resultContainer.innerHTML = "";
 
@@ -1362,6 +1369,12 @@ function setupTraining(
       box.appendChild(rec);
     }
     box.appendChild(renderPreflopActionEv(spot, result));
+
+    // What the decision cost, derived from the pot and the stack rather than
+    // looked up, so every all-in spot can be priced whether or not a pack ships
+    // a number for it.
+    const price = filters === null ? null : renderDecisionPrice(document, spot, filters);
+    if (price !== null) box.appendChild(price);
 
     // ZdĹŻvodnÄ›nĂ­ (Req 7.4); pĹ™i nedostupnosti zobraz nĂˇhradnĂ­ text (Req 7.5).
     const explanation = el("div", "result__explanation");
@@ -1673,6 +1686,13 @@ ${ACTION_EV_BUTTON_STYLES}
 .action-ev__row--best .action-ev__delta{color:#9ff0bd;font-weight:900;}
 .action-ev__note,.action-ev__unavailable{margin:6px 0 0;color:#aebbd3;font-size:11px;font-weight:650;}
 .result__explanation{font-size:13px;color:#cdd5e6;}
+.decision-price{margin:10px 0 2px;padding:9px 11px;border-radius:10px;
+  background:linear-gradient(180deg,rgba(123,211,255,.09),rgba(123,211,255,.03));
+  border:1px solid rgba(123,211,255,.22);}
+.decision-price__headline{font-size:13px;font-weight:850;color:#e8f4ff;}
+.decision-price__verdict{margin-top:5px;font-size:12px;font-weight:850;color:#ffd15b;}
+.decision-price__verdict--good{color:#8ef0b4;}
+.decision-price__basis{margin-top:5px;font-size:11px;font-weight:750;color:#93a5c4;}
 .result__explanation--unavailable{font-style:italic;color:#9aa6c2;}
 .result__save-warning{margin-top:8px;font-size:12px;color:#ffd15b;}
 .result__next{margin-top:12px;appearance:none;border:0;border-radius:10px;

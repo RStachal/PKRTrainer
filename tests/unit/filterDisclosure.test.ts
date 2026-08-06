@@ -61,6 +61,16 @@ describe("collapsible filter groups", () => {
     expect(positions.dataset.open).toBe("false");
   });
 
+  it("offers the opponent as a combobox, defaulting to no read", () => {
+    const root = render();
+    const select = root.querySelector<HTMLSelectElement>(".filter-opponent");
+    expect(select).not.toBeNull();
+    // Unknown is the default and the honest one: the shipped ranges are a GTO
+    // baseline against nobody in particular.
+    expect(select!.value).toBe("");
+    expect(select!.options.length).toBe(5);
+  });
+
   it("names the picks on the header rather than counting them", () => {
     const root = render();
     const positions = group(root, 0);

@@ -67,6 +67,7 @@ import {
   type ScoringMode,
   type StackBucket,
 } from "../core/types";
+import type { OpponentStyleId } from "../core/opponentStyle";
 import {
   positionsForFormat,
   type TableFormat,
@@ -577,6 +578,41 @@ export function renderFilters(
   scoringLabel.appendChild(scoringSelect);
   configBox.appendChild(scoringLabel);
 
+  // Who the hero is up against.
+  //
+  // The shipped ranges are a GTO baseline against nobody in particular, and that
+  // stays the default and stays the answer. Naming an opponent does not swap in a
+  // second set of ranges - there is no second set, and inventing one would be
+  // inventing poker. It supplies one number, the folds that opponent gives, and
+  // the result panel prices the decision against it. See core/opponentStyle for
+  // where the two measured anchors come from and where the interpolation starts.
+  const opponentLabel = doc.createElement("label");
+  opponentLabel.className = "filter-opponent-item";
+  opponentLabel.style.display = "inline-flex";
+  opponentLabel.style.alignItems = "center";
+  opponentLabel.style.gap = "4px";
+  opponentLabel.style.fontSize = "13px";
+  const opponentText = doc.createElement("span");
+  opponentText.textContent = CS.filters.opponent;
+  const opponentSelect = doc.createElement("select");
+  opponentSelect.className = "filter-opponent";
+  for (const [value, label] of [
+    ["", CS.filters.opponentUnknown],
+    ["TIGHT_AGGRESSIVE", CS.filters.opponentTightAggressive],
+    ["TIGHT_PASSIVE", CS.filters.opponentTightPassive],
+    ["LOOSE_AGGRESSIVE", CS.filters.opponentLooseAggressive],
+    ["LOOSE_PASSIVE", CS.filters.opponentLoosePassive],
+  ] as const) {
+    const option = doc.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    opponentSelect.appendChild(option);
+  }
+  opponentSelect.value = "";
+  opponentLabel.appendChild(opponentText);
+  opponentLabel.appendChild(opponentSelect);
+  configBox.appendChild(opponentLabel);
+
   // Seed (Req 6.7 — prázdné = engine vygeneruje).
   const seedLabel = doc.createElement("label");
   seedLabel.className = "filter-seed-item";
@@ -667,6 +703,9 @@ export function renderFilters(
     const ante: AnteMode = anteInput.checked ? "ON" : "OFF";
     const scoringMode: ScoringMode =
       scoringSelect.value === "STRICT" ? "STRICT" : "LENIENT";
+    const opponentStyle = opponentSelect.value === ""
+      ? undefined
+      : opponentSelect.value as OpponentStyleId;
     const positionOrder = positionsForFormat(profileSelector.getProfile().tableFormat);
     return {
       positions: collect(positionOrder, positionInputs),
@@ -674,6 +713,7 @@ export function renderFilters(
       contexts: collect(CONTEXT_ORDER, contextInputs),
       ante,
       scoringMode,
+      opponentStyle,
     };
   }
 
@@ -724,6 +764,7 @@ export function renderFilters(
       setCheckedValues(contextInputs, filters.contexts);
       anteInput.checked = filters.ante === "ON";
       scoringSelect.value = filters.scoringMode;
+      opponentSelect.value = filters.opponentStyle ?? "";
       hideWarning();
     },
     getProfile(): TrainingProfile {

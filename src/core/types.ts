@@ -181,6 +181,7 @@ export interface TableState {
 // ---------------------------------------------------------------------------
 
 import type { ActionEvSet } from "./actionEv";
+import type { OpponentStyleId } from "./opponentStyle";
 
 /** Jedna nabízená odpověď: 1 Akční_klíč + popisek. */
 export interface Answer {
@@ -228,6 +229,16 @@ export interface Filters {
   contexts: ActionContext[]; // [] = neomezeno
   ante: AnteMode;
   scoringMode: ScoringMode;
+  /**
+   * Who the hero is up against, when the player says.
+   *
+   * Absent means unknown, which is what the shipped ranges actually describe -
+   * they are a GTO baseline against no one in particular. Naming an opponent does
+   * not swap in a second set of ranges; it supplies one number, the folds that
+   * opponent gives, and the trainer prices the decision against it. See
+   * `core/opponentStyle`.
+   */
+  opponentStyle?: OpponentStyleId;
 }
 
 export interface SessionConfig {

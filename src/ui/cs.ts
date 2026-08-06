@@ -62,6 +62,12 @@ const CZ_CATALOG = {
     none: "Žádné",
     selectAll: (section: string) => `Vybrat vše: ${section}`,
     clearAll: (section: string) => `Zrušit výběr: ${section}`,
+    opponent: "Soupeř:",
+    opponentUnknown: "Neznámý (GTO)",
+    opponentTightAggressive: "Reg / TAG — solidní",
+    opponentTightPassive: "Rock / nit — těsný, pasivní",
+    opponentLooseAggressive: "Maniak / gambler — široký, agresivní",
+    opponentLoosePassive: "Fish / calling station — široký, pasivní",
     noneSelected: "nic nevybráno",
     allSelected: (total: number) => `vše (${total})`,
     someSelected: (picked: number, total: number) => `${picked} z ${total}`,
@@ -76,6 +82,16 @@ const CZ_CATALOG = {
       "Vybrané filtry neodpovídají žádnému spotu. Upravte pozice, hloubky stacku nebo kontext akce.",
   },
   training: {
+    shovePrice: (risk: string, pot: string, folds: string) =>
+      `Riskujete ${risk} BB, abyste vyhráli ${pot} BB — shove se zaplatí sám při ${folds} foldů.`,
+    shoveFoldsEnough: (folds: string) =>
+      `Tenhle soupeř folduje ${folds}, takže shove vydělává i bez dojetí do showdownu.`,
+    shoveFoldsShort: (folds: string) =>
+      `Tenhle soupeř folduje jen ${folds}, takže shove musí obstát až u showdownu.`,
+    callPrice: (odds: string, equity: string) =>
+      `Pot odds ${odds}:1 — call potřebuje ${equity} equity.`,
+    opponentBasisMeasured: "Frekvence foldů je změřená (Little, sv. 2).",
+    opponentBasisInterpolated: "Frekvence foldů je odhad mezi změřenými krajními body — pořadí sedí, číslo je orientační.",
     question: "Otázka",
     changeSituation: "Změnit situaci",
     referenceRangesUnavailable:
@@ -339,6 +355,12 @@ const EN_CATALOG: UiCatalog = {
     none: "None",
     selectAll: (section: string) => `Select all: ${section}`,
     clearAll: (section: string) => `Clear all: ${section}`,
+    opponent: "Opponent:",
+    opponentUnknown: "Unknown (GTO)",
+    opponentTightAggressive: "Reg / TAG - solid",
+    opponentTightPassive: "Rock / nit - tight, passive",
+    opponentLooseAggressive: "Maniac / gambler - wide, aggressive",
+    opponentLoosePassive: "Fish / calling station - wide, passive",
     noneSelected: "none selected",
     allSelected: (total: number) => `all (${total})`,
     someSelected: (picked: number, total: number) => `${picked} of ${total}`,
@@ -353,6 +375,16 @@ const EN_CATALOG: UiCatalog = {
       "The selected filters do not match any spot. Adjust positions, stack depths, or the action context.",
   },
   training: {
+    shovePrice: (risk: string, pot: string, folds: string) =>
+      `You risk ${risk} BB to win ${pot} BB - the shove pays for itself at ${folds} folds.`,
+    shoveFoldsEnough: (folds: string) =>
+      `This opponent folds ${folds}, so the shove profits without ever reaching showdown.`,
+    shoveFoldsShort: (folds: string) =>
+      `This opponent folds only ${folds}, so the shove has to hold up at showdown.`,
+    callPrice: (odds: string, equity: string) =>
+      `Pot odds ${odds}:1 - the call needs ${equity} equity.`,
+    opponentBasisMeasured: "Fold frequency is measured (Little, vol. 2).",
+    opponentBasisInterpolated: "Fold frequency is interpolated between the measured anchors - the ordering holds, the number is indicative.",
     question: "Question",
     changeSituation: "Change situation",
     referenceRangesUnavailable:
