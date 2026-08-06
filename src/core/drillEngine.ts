@@ -90,7 +90,7 @@ import { questionId } from "./questionId";
 import { mulberry32, hashStr } from "./rng";
 import { buildPreflopExplanation } from "./preflopExplanation";
 import { cloneActionEvSet, isActionEvSetComplete, type ActionEvSet } from "./actionEv";
-import { callAllInEv, shoveEv } from "./preflopEquity";
+import { callAllInEv, combosInClass, shoveEv } from "./preflopEquity";
 import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
 
 // ---------------------------------------------------------------------------
@@ -433,8 +433,124 @@ function computeActionEvs(
     };
   }
 
+  // Re-jamming over an open. The hero's action is all in, so its size is fixed;
+  // the only other number needed is what the opener put in, and that is not an
+  // assumption either - the product teaches one open size per depth and says so
+  // in its own action keys.
+  if (context === "VS_OPEN" && offered.includes("JAM") && offered.includes("FOLD")) {
+    const openBB = openSizeAtDepth(effStack, ante, store);
+    if (openBB === undefined) return undefined;
+    const caller = callRejamClasses(effStack, ante, store);
+    if (caller.length === 0) return undefined;
+    // The opener has already raised, so they do not hold a random hand. Fold
+    // equity has to be measured against what they can actually have, which is
+    // their opening range at this depth - not against the deck.
+    const openerCombos = comboCount(openerClasses(effStack, ante, store));
+    if (openerCombos === 0) return undefined;
+    // One opponent, not the field: the hero is jamming over a raise, and the
+    // players behind have already folded to it. This is the case where pricing
+    // against a single caller is right rather than flattering.
+    const ev = shoveEv(hand, caller, effStack, startingPot + openBB, 1, openerCombos);
+    if (ev === undefined) return undefined;
+    return {
+      source: "ALL_IN_EQUITY",
+      unit: "BB",
+      values: [
+        { action: "JAM" as ActionKey, evBb: Math.round(ev.jamBB * 100) / 100 },
+        { action: "FOLD" as ActionKey, evBb: 0 },
+      ],
+      equivalentThresholdBb: 0.1,
+      acceptableThresholdBb: 0.3,
+    };
+  }
+
   return undefined;
 }
+
+/**
+ * What an open costs at this depth, read from the product's own action keys.
+ *
+ * Not a constant and not a guess. The shipped table offers OPEN_2X up to 25BB
+ * and OPEN_25X from 30 up, uniformly across every seat, so the size is already
+ * decided by the depth - this reads it back rather than restating it. If the
+ * table ever teaches a different size, this follows without being edited.
+ */
+function openSizeAtDepth(
+  bucket: StackBucket,
+  ante: AnteMode,
+  store: RangeStore,
+): number | undefined {
+  for (const position of POSITION_ORDER) {
+    const entry = store.lookup({ ante, position, bucket, context: "RFI" });
+    if (entry === undefined) continue;
+    for (const keys of Object.values(entry.actions)) {
+      if (keys.includes("OPEN_25X" as ActionKey)) return 2.5;
+      if (keys.includes("OPEN_2X" as ActionKey)) return 2;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * The opener's calling range against a re-jam at this depth.
+ *
+ * Taken from the seat the calling-rejam sheets were drawn for, stated here the
+ * same way the other two calibrations are: the sheets cover named pairs of
+ * seats, not every pair, and borrowing one for another is an approximation that
+ * has to be visible rather than buried.
+ */
+function callRejamClasses(
+  bucket: StackBucket,
+  ante: AnteMode,
+  store: RangeStore,
+): HandLabel[] {
+  return playedClasses(store.lookup({
+    ante,
+    position: REJAM_EV_CALIBRATION_CALLER,
+    bucket,
+    context: "VS_ALLIN",
+  }));
+}
+
+/** The opener's own range at this depth, from the seat the sheets calibrate to. */
+function openerClasses(
+  bucket: StackBucket,
+  ante: AnteMode,
+  store: RangeStore,
+): HandLabel[] {
+  return playedClasses(store.lookup({
+    ante,
+    position: REJAM_EV_CALIBRATION_OPENER,
+    bucket,
+    context: "RFI",
+  }));
+}
+
+function comboCount(classes: readonly HandLabel[]): number {
+  return classes.reduce((sum, hand) => sum + combosInClass(hand), 0);
+}
+
+/**
+ * Whose ranges price a re-jam, and why the tightest one is the right choice.
+ *
+ * The spot does not record which seat opened - only that the hero faces an open -
+ * so one has to be assumed, and the assumption decides the answer. Fold equity is
+ * the calling range as a share of the *opener's* range, so a wide opener folds
+ * more and a tight opener folds less.
+ *
+ * The first version used the button, with a comment claiming that its width made
+ * the jam look worse. That was backwards, and the numbers showed it: every hand
+ * came out profitable, including 52o at +0.7 big blinds, because a 39.7 percent
+ * opening range folds about seven times in ten. Against an early seat opening
+ * 14.9 percent the same shove is heavily negative, which is what the charts say.
+ *
+ * So the earliest seat, deliberately. Where an approximation has a direction, it
+ * should be the one that does not flatter the aggressive line - a trainer that
+ * overstates a shove teaches spew, and understating it costs a player only some
+ * value they can find elsewhere.
+ */
+const REJAM_EV_CALIBRATION_OPENER: Position = "UTG";
+const REJAM_EV_CALIBRATION_CALLER: Position = "BTN";
 
 function startingPotFor(ante: AnteMode): number {
   return ante === "ON" ? 2.5 : 1.5;

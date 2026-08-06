@@ -72,6 +72,9 @@ function row(hand: HandLabel): number[] | undefined {
   return parsed;
 }
 
+/** Every two-card combination in a deck. */
+const TOTAL_COMBOS = 1326;
+
 /** Combinations in a hand class: 6 for a pair, 4 suited, 12 offsuit. */
 export function combosInClass(hand: HandLabel): number {
   if (hand.length === 2) return 6;
@@ -128,12 +131,21 @@ export function shoveEv(
   stackBB: number,
   potBB: number,
   opponentsBehind = 1,
+  villainRangeCombos = TOTAL_COMBOS,
 ): ShoveEv | undefined {
   const equityWhenCalled = equityVsRange(hero, callingRange);
   if (equityWhenCalled === undefined) return undefined;
 
   const callCombos = callingRange.reduce((sum, hand) => sum + combosInClass(hand), 0);
-  const foldsOnce = Math.max(0, Math.min(1, 1 - callCombos / 1326));
+  // How often they fold depends on what they can hold, and that is not always the
+  // whole deck. A player still to act behind a shove holds anything, so dividing
+  // by 1326 is right there. A player who has already raised does not: conditional
+  // on having opened, the same calling range is a far larger share of what they
+  // have. Dividing by the deck in that spot gave a re-jam with 52o an expected
+  // value of +2.7 big blinds, which would have taught players to shove trash over
+  // a raise.
+  const denominator = Math.max(callCombos, villainRangeCombos);
+  const foldsOnce = Math.max(0, Math.min(1, 1 - callCombos / denominator));
   // A shove has to get through everyone still to act, not just one player. Pricing
   // it against a single caller was the first version and it flattered every hand:
   // 52o came out at +0.36 BB from the button because one opponent folding 78
