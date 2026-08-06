@@ -82,6 +82,10 @@ const CZ_CATALOG = {
       "Vybrané filtry neodpovídají žádnému spotu. Upravte pozice, hloubky stacku nebo kontext akce.",
   },
   training: {
+    streak: (n: number) => (n === 0 ? "Série 0" : `Série ${n}`),
+    tallyEmpty: "zatím bez odpovědi",
+    tally: (correct: number, total: number, best: number) =>
+      `${correct}/${total} správně · nejlepší série ${best}`,
     shovePrice: (risk: string, pot: string, folds: string) =>
       `Riskujete ${risk} BB, abyste vyhráli ${pot} BB — shove se zaplatí sám při ${folds} foldů.`,
     shoveFoldsEnough: (folds: string) =>
@@ -375,6 +379,10 @@ const EN_CATALOG: UiCatalog = {
       "The selected filters do not match any spot. Adjust positions, stack depths, or the action context.",
   },
   training: {
+    streak: (n: number) => (n === 0 ? "Streak 0" : `Streak ${n}`),
+    tallyEmpty: "no answers yet",
+    tally: (correct: number, total: number, best: number) =>
+      `${correct}/${total} correct - best streak ${best}`,
     shovePrice: (risk: string, pot: string, folds: string) =>
       `You risk ${risk} BB to win ${pot} BB - the shove pays for itself at ${folds} folds.`,
     shoveFoldsEnough: (folds: string) =>

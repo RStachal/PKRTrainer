@@ -102,6 +102,13 @@ import { renderFilters, type FiltersView } from "./ui/filters";
 import { renderTable } from "./ui/tableRenderer";
 import { loadPreflopEquity } from "./core/preflopEquity";
 import { renderDecisionPrice } from "./ui/decisionPricePanel";
+import {
+  emptySessionScore,
+  isHit,
+  isHotStreak,
+  recordAnswer,
+} from "./core/sessionScore";
+import { colorForActionKey } from "./ui/rangeMatrixView";
 import { renderMatrix } from "./ui/rangeMatrixView";
 import { renderRangeModalButton } from "./ui/rangeModal";
 import { renderHHView } from "./ui/hhView";
@@ -1040,7 +1047,48 @@ function setupTraining(
   changeSituationBtn.textContent = CS.training.changeSituation;
   sessionInfo.appendChild(sessionTitle);
   sessionInfo.appendChild(sessionMeta);
+
+  /**
+   * How this session is going, on the bar above the table.
+   *
+   * The trainer graded every answer and then forgot it until the dashboard. A
+   * player working through spots had nothing in front of them that moved, which
+   * is the difference between practising and playing. The streak is the part
+   * that pulls - it is the number you do not want to reset - and the tally is
+   * the part that keeps it honest, because a streak alone hides a bad session.
+   *
+   * Session-scoped and deliberately not persisted: this is the run you are in,
+   * not your record. The dashboard already owns the long view.
+   */
+  const scoreboard = el("div", "training__scoreboard");
+  const streakChip = el("div", "training__streak");
+  const tallyChip = el("div", "training__tally");
+  scoreboard.appendChild(streakChip);
+  scoreboard.appendChild(tallyChip);
+  let sessionScore = emptySessionScore();
+
+  function renderScoreboard(): void {
+    streakChip.dataset.streak = String(sessionScore.streak);
+    streakChip.textContent = CS.training.streak(sessionScore.streak);
+    streakChip.classList.toggle("training__streak--hot", isHotStreak(sessionScore));
+    tallyChip.textContent = sessionScore.answered === 0
+      ? CS.training.tallyEmpty
+      : CS.training.tally(sessionScore.correct, sessionScore.answered, sessionScore.bestStreak);
+  }
+
+  function recordScore(hit: boolean): void {
+    sessionScore = recordAnswer(sessionScore, hit);
+    renderScoreboard();
+  }
+
+  function resetScore(): void {
+    sessionScore = emptySessionScore();
+    renderScoreboard();
+  }
+
+  renderScoreboard();
   sessionBar.appendChild(sessionInfo);
+  sessionBar.appendChild(scoreboard);
   sessionBar.appendChild(changeSituationBtn);
   const tableContainer = el("div", "training__table");
   const actionsContainer = el("div", "training__actions");
@@ -1200,6 +1248,7 @@ function setupTraining(
 
     // NovĂˇ relace: vynuluj poÄŤet spotĹŻ relace (Req 9.5) a vyÄŤisti vĂ˝sledek.
     hooks.resetSession();
+    resetScore();
     hooks.refreshDashboard();
     filtersView.clearWarning();
 
@@ -1271,6 +1320,12 @@ function setupTraining(
       btn.type = "button";
       btn.className = "action-btn";
       btn.dataset.action = answer.key;
+      // The same colour this action wears in the range matrix, so pressing a
+      // button and reading the grid afterwards are visibly the same decision.
+      // Applied as an accent rather than a fill: eleven saturated backgrounds
+      // behind white text would be a colour test, not a poker trainer.
+      const accent = colorForActionKey(answer.key);
+      btn.style.setProperty("--action-accent", accent);
       setActionEvButtonContent(btn, answer.label);
       btn.addEventListener("click", () => handleAnswer(spot, answer.key, mode));
       row.appendChild(btn);
@@ -1321,6 +1376,11 @@ function setupTraining(
     // Inkrement poÄŤtu spotĹŻ relace + pĹ™ekreslenĂ­ dashboardu (Req 9.5).
     hooks.onAnswered();
     hooks.refreshDashboard();
+
+    // The scoreboard counts what the grader decided, so an EQUIVALENT or
+    // ACCEPTABLE outcome is not punished as a mistake - the same distinction the
+    // verdict text makes.
+    recordScore(isHit(result.correct, result.actionEv?.outcome));
 
     // ZobrazenĂ­ vĂ˝sledku, zdĹŻvodnÄ›nĂ­ a doporuÄŤenĂ­.
     renderResult(spot, result, save.ok, activeFilters);
@@ -1654,14 +1714,42 @@ body{margin:0;background:
   background:linear-gradient(180deg,#202a3e,#151d2d);color:#e8ecf7;border-radius:10px;font-size:13px;
   font-weight:850;padding:9px 13px;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.18);}
 .training__change-situation:hover{border-color:#2bd576;}
+.training__scoreboard{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin:0 auto 0 8px;}
+.training__streak{font-size:12px;font-weight:950;letter-spacing:.2px;
+  padding:5px 11px;border-radius:999px;color:#c6d3ea;
+  border:1px solid rgba(148,163,184,.26);background:rgba(255,255,255,.04);
+  transition:color .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;}
+/* Lit only from three up, so the signal keeps meaning something. */
+.training__streak--hot{color:#0b2a17;border-color:transparent;
+  background:linear-gradient(180deg,#8ef0b4,#2bd576);
+  box-shadow:0 0 0 1px rgba(43,213,118,.35),0 6px 18px rgba(43,213,118,.28);}
+.training__tally{font-size:11px;font-weight:800;color:#9fb2d5;}
+@media (prefers-reduced-motion:reduce){.training__streak{transition:none;}}
 .training__actions-title{font-weight:700;font-size:14px;margin-bottom:8px;}
 .training__actions-row{display:flex;flex-wrap:wrap;gap:8px;}
-.action-btn{appearance:none;border:1px solid rgba(148,163,184,.24);
-  background:linear-gradient(180deg,#202a3f,#141d2f);color:#e8ecf7;font-size:14px;font-weight:900;
+.action-btn{appearance:none;position:relative;overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--action-accent,#94a3b8) 42%,transparent);
+  background:
+    linear-gradient(180deg,color-mix(in srgb,var(--action-accent,#94a3b8) 16%,transparent),transparent 62%),
+    linear-gradient(180deg,#202a3f,#141d2f);
+  color:#e8ecf7;font-size:14px;font-weight:900;
   display:grid;grid-template-rows:minmax(20px,auto) 24px;place-items:center;gap:5px;
   min-width:156px;min-height:68px;padding:9px 12px;border-radius:8px;cursor:pointer;
+  transition:border-color .12s ease,transform .12s ease,box-shadow .12s ease;
   box-shadow:0 10px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.06);}
-.action-btn:hover:not(:disabled){border-color:#2bd576;}
+/* The category stripe. This is the part that has to survive at a glance, so it
+   is the full accent rather than a tint of it. */
+.action-btn::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;
+  background:var(--action-accent,#94a3b8);}
+.action-btn:hover:not(:disabled){border-color:var(--action-accent,#2bd576);
+  transform:translateY(-1px);box-shadow:0 14px 26px rgba(0,0,0,.26),
+  inset 0 1px 0 rgba(255,255,255,.09);}
+.action-btn:active:not(:disabled){transform:translateY(0);}
+@media (prefers-reduced-motion:reduce){
+  .action-btn{transition:none;}
+  .action-btn:hover:not(:disabled){transform:none;}
+}
 .action-btn:disabled{opacity:.55;cursor:default;}
 .action-btn[data-ev-available="true"]:disabled{opacity:1;}
 .action-btn--chosen{outline:2px solid #2bd576;outline-offset:1px;}

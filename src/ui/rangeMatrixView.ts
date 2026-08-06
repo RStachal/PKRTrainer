@@ -218,6 +218,19 @@ export function categoryForActionKey(key: ActionKey): ActionCategory {
  * Prázdná množina ⇒ FOLD (ruka bez doporučené akce, Req 10.2). Při více klíčích
  * se vybere kategorie s nejvyšší prioritou agresivity.
  */
+/**
+ * The colour this action wears, wherever it appears.
+ *
+ * The matrix has always coloured its cells by action category. The action
+ * buttons were uniformly grey, so nothing connected the button a player pressed
+ * to the field they then read in the matrix - the same decision in two visual
+ * languages. One lookup, used by both, makes the colour mean something: press
+ * amber, find amber.
+ */
+export function colorForActionKey(key: ActionKey): string {
+  return CATEGORIES[categoryForActionKey(key)].color;
+}
+
 export function categoryForHand(keys: ActionKey[] | undefined): ActionCategory {
   if (!keys || keys.length === 0) return "FOLD";
   let best: ActionCategory = "FOLD";

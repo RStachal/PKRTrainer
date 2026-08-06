@@ -18,7 +18,10 @@ Design notes worth keeping:
   turn nodes offering only check-or-shove, because a low SPR leaves no room for a
   second sizing. Throughput was the wrong thing to maximise.
 - It stops at the deadline rather than mid-board where it can, because a
-  half-planned board is the one state that needs re-reading a 395 MB dump.
+  half-planned board is the one state that needs re-reading a 395 MB dump. It
+  will not *start* a board it does not expect to finish in time, either, which is
+  what `--until` originally failed to mean: gating only the start let a board
+  begun nine minutes before the deadline run half an hour past it.
 
 Stopping it early takes three steps, in order, because the children outlive the
 parent on Windows: kill this driver, then the `solve_plan.py` it launched, then
@@ -103,10 +106,26 @@ def main():
     log(f"{len(ordered)} boards have a monolithic checkpoint; deadline {deadline:%H:%M}")
 
     done = skipped = failed = 0
+    # How long a board has been taking, so the deadline can mean what it says.
+    # `--until` used to gate only the start of a board, and a board is 20 to 30
+    # minutes: a board begun at 07:51 ran until past 08:20, holding eight cores
+    # through the first half hour of the working day. Now a board is only started
+    # if it is expected to finish in time, using the measured duration of the
+    # boards already done this run rather than a guess.
+    board_minutes = []
     for family, board in ordered:
-        if datetime.now() >= deadline:
+        remaining = (deadline - datetime.now()).total_seconds() / 60
+        if remaining <= 0:
             log("deadline reached; stopping between boards")
             break
+        if board_minutes:
+            expected = max(board_minutes)
+            if expected > remaining:
+                log(
+                    f"stopping {remaining:.0f} min before the deadline: the next board "
+                    f"needs about {expected:.0f} min and would overrun it"
+                )
+                break
 
         out_dir = os.path.join(WORK, f"{family}__{board}")
         plan_path = os.path.join(out_dir, "plan.json")
@@ -146,7 +165,9 @@ def main():
             capture_output=True, text=True,
         )
         after = len([f for f in os.listdir(out_dir) if f.endswith(".json") and f != "plan.json"])
-        log(f"  {after}/{planned} after {(time.time() - started) / 60:.1f} min")
+        minutes = (time.time() - started) / 60
+        log(f"  {after}/{planned} after {minutes:.1f} min")
+        board_minutes.append(minutes)
         done += 1
 
     log(f"boards worked {done}, already complete {skipped}, failed {failed}")
