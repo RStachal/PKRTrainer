@@ -119,6 +119,39 @@ export function renderDecisionPrice(
           : CS.training.shoveFoldsShort(pct(requirement.expectedFolds)),
       ));
     }
+  } else if (spot.context === "VS_LIMP" && offersJam(spot)) {
+    // Shoving over limpers. The pot is determined without assuming anything -
+    // the blinds plus one big blind for each limper, and the spot records how
+    // many there were - so the folds this needs can be stated exactly.
+    //
+    // The expected value cannot. That would need how much of their range a
+    // limper calls with, and a limping range is not modelled anywhere here.
+    // Inventing a denominator is what turned a re-jam with 52o into +2.7 big
+    // blinds before it was caught, so this panel says the price and the EV
+    // bubbles stay empty rather than guessing.
+    const limped = pot + spot.tableState.limpsBefore;
+    const requirement = shoveRequirement(stack, limped, style);
+    box.appendChild(line(
+      doc,
+      "decision-price__headline",
+      CS.training.limpJamPrice(
+        bb(stack),
+        bb(limped),
+        String(spot.tableState.limpsBefore),
+        pct(requirement.requiredFolds),
+      ),
+    ));
+    if (style !== undefined && requirement.expectedFolds !== undefined) {
+      box.appendChild(line(
+        doc,
+        requirement.profitableOnFoldsAlone
+          ? "decision-price__verdict decision-price__verdict--good"
+          : "decision-price__verdict",
+        requirement.profitableOnFoldsAlone
+          ? CS.training.shoveFoldsEnough(pct(requirement.expectedFolds))
+          : CS.training.shoveFoldsShort(pct(requirement.expectedFolds)),
+      ));
+    }
   } else if (spot.context === "VS_ALLIN") {
     // The shover is in for their stack, so the pot is the blinds plus that stack
     // and the call is the hero's own - the same convention the EV uses.

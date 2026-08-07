@@ -101,6 +101,38 @@ describe("decision price panel", () => {
     expect(compared).toBeGreaterThan(5);
   });
 
+  it("prices a shove over limpers from the limps the spot records", () => {
+    const limpSpot = {
+      ...spot("VS_LIMP", 20),
+      answers: [{ key: "JAM", label: "Jam" }, { key: "FOLD", label: "Fold" }],
+      tableState: { limpsBefore: 2 },
+    } as unknown as Spot;
+    const panel = renderDecisionPrice(document, limpSpot, filters())!;
+    // Blinds 1.5 plus two limps is 3.5, so risking 20 needs 20/23.5 - about 85
+    // percent - and the pot needs no assumption at all: the spot counted the
+    // limpers.
+    const text = panel.querySelector(".decision-price__headline")?.textContent ?? "";
+    expect(text).toContain("3,5");
+    expect(text).toContain("85");
+  });
+
+  it("prices more limpers as a better shove", () => {
+    const withLimps = (limpsBefore: number) => {
+      const s = {
+        ...spot("VS_LIMP", 20),
+        answers: [{ key: "JAM", label: "Jam" }, { key: "FOLD", label: "Fold" }],
+        tableState: { limpsBefore },
+      } as unknown as Spot;
+      return renderDecisionPrice(document, s, filters())!
+        .querySelector(".decision-price__headline")!.textContent ?? "";
+    };
+    // Each limper adds dead money, so the shove needs fewer folds. Reading the
+    // required percentage back out keeps this a statement about the arithmetic
+    // rather than about the wording.
+    const folds = (text: string) => Number(/(\d+,\d)\s*%/.exec(text)![1].replace(",", "."));
+    expect(folds(withLimps(4))).toBeLessThan(folds(withLimps(1)));
+  });
+
   it("declines to price a spot that does not fix one", () => {
     // Outside the all-in contexts the bet size is not determined by the spot, and
     // a made-up size reads exactly as authoritative as a real one.

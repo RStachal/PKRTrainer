@@ -90,6 +90,8 @@ const CZ_CATALOG = {
       `Riskujete ${risk} BB, abyste vyhráli ${pot} BB — shove se zaplatí sám při ${folds} foldů.`,
     rejamPrice: (risk: string, pot: string, folds: string) =>
       `Přeshoveváte za ${risk} BB do potu ${pot} BB (blindy + open) — shove se zaplatí sám při ${folds} foldů openera.`,
+    limpJamPrice: (risk: string, pot: string, limpers: string, folds: string) =>
+      `Shove za ${risk} BB do potu ${pot} BB (blindy + ${limpers} limp) — zaplatí se sám, když všichni složí v ${folds} případů.`,
     shoveFoldsEnough: (folds: string) =>
       `Tenhle soupeř folduje ${folds}, takže shove vydělává i bez dojetí do showdownu.`,
     shoveFoldsShort: (folds: string) =>
@@ -389,6 +391,8 @@ const EN_CATALOG: UiCatalog = {
       `You risk ${risk} BB to win ${pot} BB - the shove pays for itself at ${folds} folds.`,
     rejamPrice: (risk: string, pot: string, folds: string) =>
       `You shove ${risk} BB over the raise into ${pot} BB (blinds plus the open) - it pays for itself at ${folds} folds from the opener.`,
+    limpJamPrice: (risk: string, pot: string, limpers: string, folds: string) =>
+      `You shove ${risk} BB into ${pot} BB (blinds plus ${limpers} limp) - it pays for itself when everyone folds ${folds} of the time.`,
     shoveFoldsEnough: (folds: string) =>
       `This opponent folds ${folds}, so the shove profits without ever reaching showdown.`,
     shoveFoldsShort: (folds: string) =>
