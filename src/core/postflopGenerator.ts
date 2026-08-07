@@ -348,7 +348,11 @@ export const POSTFLOP_POSITION_CONTEXTS = [
     callerPosition: "BTN",
     inPosition: false,
     callerType: "IN_POSITION_CALLER",
-    positionPattern: "OOP_RAISER_VS_IP_CALLER",
+    // By seat. This entry names the hijack and the button in every other field
+    // and then spelled the pattern by role, which is the one field a solved pack
+    // is matched on - so a pack for this pairing could never be reached. The
+    // same defect as in postflopIntent, in the generator's own default list.
+    positionPattern: "SRP_HJ_VS_BTN",
   },
 ] as const satisfies readonly PostflopPositionContext[];
 

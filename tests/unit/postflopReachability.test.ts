@@ -43,7 +43,7 @@ import { generatedMttPostflopPilotPacks } from "../../src/data/ranges/mttPostflo
  */
 
 const LEGACY_PATTERNS = [
-  "BTN_VS_BB", "SB_VS_BB", "EP_VS_BB", "OOP_RAISER_VS_IP_CALLER",
+  "BTN_VS_BB", "SB_VS_BB", "EP_VS_BB",
 ];
 
 function generatedPatternCounts(seeds: number): Map<string, number> {
@@ -94,6 +94,19 @@ describe("postflop reachability", () => {
     for (const name of LEGACY_PATTERNS) {
       expect(rulePatterns().has(name), `${name} now has a rule`).toBe(false);
     }
+  });
+
+  it("no longer spells a pattern by role when it knows the seats", () => {
+    // Both role names are gone from what the intent produces. They described a
+    // situation the intent could name exactly - it was holding both seats and
+    // passing them in - and spelling them by role discarded that at the one
+    // point a solved pack has to be matched.
+    //
+    // Asserted against the generator's own output rather than the type, because
+    // the type still permits them: stats records written under the old spelling
+    // still have to parse.
+    expect(counts.get("OOP_RAISER_VS_IP_CALLER") ?? 0).toBe(0);
+    expect(counts.get("OOP_CALLER_VS_IP_3BETTOR") ?? 0).toBe(0);
   });
 
   it("resolves the three mappable legacy names to solved content", () => {

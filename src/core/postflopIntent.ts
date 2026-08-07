@@ -193,7 +193,11 @@ function oopRaiserVsIpCallerContext(
     callerPosition: villainPosition,
     inPosition: false,
     callerType: "IN_POSITION_CALLER",
-    positionPattern: "OOP_RAISER_VS_IP_CALLER",
+    // By seat, for the reason the three-bet version is: both are arguments to
+    // this function, and spelling the pattern by role discarded them at the one
+    // point a solved pack has to be matched. This is the single-raised half of
+    // the same defect.
+    positionPattern: `SRP_${patternToken(heroPosition)}_VS_${patternToken(villainPosition)}` as PostflopPositionContext["positionPattern"],
   };
 }
 
