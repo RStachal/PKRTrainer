@@ -47,7 +47,7 @@ const CZ_CATALOG = {
     mttPreflopPreview:
       "Náhled preflop tréninku je hratelný z historických dat; produkční release gate zůstává vypnutý do dokončení importu.",
     mttSixMaxDerivedPreview:
-      "Odvozený náhled: range jsou přeneseny z 9-max podle počtu hráčů, kteří ještě jednají (6-max UTG dědí po 9-max LJ). Nejsou měřené a proti veřejným 6-max referencím jsou o 2 až 6 procentních bodů širší — hrajete tedy víc rukou, ne míň. Produkční hodnocení je vypnuté do importu měřených 6-max chartů.",
+      "Odvozený náhled: range jsou přeneseny z 9-max podle počtu hráčů, kteří ještě jednají (6-max UTG dědí po 9-max LJ). Nejsou měřené. Proti veřejným 6-max referencím sedí v raných pozicích uvnitř běžných pásem, na buttonu a SB jsou spíš těsnější; u SB se přitom běžně uváděné hodnoty rozcházejí o víc než 20 bodů. Produkční hodnocení je vypnuté do importu měřených 6-max chartů.",
     candidatePreview:
       "Kandidátní náhled. Produkční hodnocení je vypnuté do dokončení kontroly strategických hodnot.",
     candidateBlocked:
@@ -350,7 +350,7 @@ const EN_CATALOG: UiCatalog = {
     mttPreflopPreview:
       "The preflop preview is playable from historical data; the production release gate remains disabled until import is complete.",
     mttSixMaxDerivedPreview:
-      "Derived preview: ranges are carried across from 9-max by how many opponents are still to act (6-max UTG inherits the 9-max lojack). They are not measured, and against public 6-max references they run 2 to 6 percentage points wider - you will be playing more hands, not fewer. Production scoring stays off until measured 6-max charts are imported.",
+      "Derived preview: ranges are carried across from 9-max by how many opponents are still to act (6-max UTG inherits the 9-max lojack). They are not measured. Against public 6-max references the early seats sit inside the usual bands while the button and small blind run tighter - and published figures for the small blind disagree with each other by more than 20 points. Production scoring stays off until measured 6-max charts are imported.",
     candidatePreview:
       "Candidate preview. Production scoring is disabled until strategy values are reviewed.",
     candidateBlocked:

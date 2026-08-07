@@ -93,8 +93,12 @@ describe("profileSelector", () => {
     // checked against published six-max frequencies and came out 2 to 6 points
     // above them - so a player reading "conservative" would have widened a range
     // that was already too wide. sixMaxDerivedWidth.test.ts holds the numbers.
-    expect(CS.profile.mttSixMaxDerivedPreview).toMatch(/wider|širší/);
-    expect(CS.profile.mttSixMaxDerivedPreview).not.toMatch(/tight|těsné/);
+    // No single direction claimed. Two public references disagree - by more
+    // than 20 points at the small blind - so the note reports where the ranges
+    // sit rather than calling them conservative or loose, which are opposite
+    // instructions to give a player.
+    expect(CS.profile.mttSixMaxDerivedPreview).toMatch(/band|pásem|references|referencím/);
+    expect(CS.profile.mttSixMaxDerivedPreview).toMatch(/20/);
     expect(note?.textContent).not.toContain("RangePack");
     expect(note?.textContent).not.toContain("mtt-");
   });

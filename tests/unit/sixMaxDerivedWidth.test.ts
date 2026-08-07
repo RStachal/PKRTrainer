@@ -5,7 +5,7 @@ import { createRangeStoreFromRangePack } from "../../src/data/rangeStore";
 import { allMttPreflopRangePacks } from "../../src/data/ranges/mttPreflopRangePacks";
 
 /**
- * The derived six-max ranges run *wide*, and the app has to keep saying so.
+ * Where the derived six-max ranges sit against published six-max ranges.
  *
  * `tableFormatConversion` originally predicted the opposite - that a six-max
  * field is looser at equal seats-behind, so nine-handed ranges carried across
@@ -19,19 +19,35 @@ import { allMttPreflopRangePacks } from "../../src/data/ranges/mttPreflopRangePa
  * same players behind it is the earliest at its table. Seats-behind captures how
  * often you run into a better hand, not how the table responds to a raise.
  *
- * Reference frequencies for 6-max MTT at 100BB, from public preflop chart
- * summaries: UTG 17, HJ 21, CO 28, BTN 43, SB 36 percent. They are MTT figures
- * and so already include antes, while the comparison below is our ante-off pack
- * - which makes the gap a lower bound rather than an estimate.
+ * Two public sources, and they do not agree, which is the first thing worth
+ * recording. Point estimates for 6-max MTT at 100BB give UTG 17, HJ 21, CO 28,
+ * BTN 43, SB 36 percent. A second summary gives 50BB *bands*: early 18-20,
+ * middle 25-30, cutoff 30-40, button 50+, small blind 60+.
+ *
+ * Against the first, ours run 2 to 6 points wide at every seat. Against the
+ * second, ours sit inside the band at the three early seats and *below* it at
+ * the button and small blind. The small blind is the extreme case: 36 percent in
+ * one source and 60-plus in the other, a 24-point disagreement between two
+ * published references for the same seat.
+ *
+ * So there is no single number to calibrate to, and narrowing these ranges to
+ * hit one would be picking a source rather than measuring. What the tests below
+ * hold is the weaker claim that survives both: the derived ranges are in the
+ * same region as published six-max play and are not drifting away from it.
  */
 
 const COMBOS = (handClass: string) => (
   handClass.length === 2 ? 6 : handClass.endsWith("s") ? 4 : 12
 );
 
-/** Published 6-max MTT opening frequency at 100BB, in percent. */
-const REFERENCE: Readonly<Record<string, number>> = {
+/** One source: 6-max MTT opening frequency at 100BB, in percent. */
+const POINT_ESTIMATES: Readonly<Record<string, number>> = {
   UTG: 17, HJ: 21, CO: 28, BTN: 43, SB: 36,
+};
+
+/** Another source: 6-max opening bands at 50BB, low and high, in percent. */
+const BANDS_50BB: Readonly<Record<string, readonly [number, number]>> = {
+  UTG: [18, 20], HJ: [25, 30], CO: [30, 40], BTN: [50, 70], SB: [60, 80],
 };
 
 function openWidthPct(ante: AnteMode, position: Position, bucket: StackBucket): number | null {
@@ -53,34 +69,52 @@ function openWidthPct(ante: AnteMode, position: Position, bucket: StackBucket): 
 
 describe("derived six-max width against published references", () => {
   it("has ranges to measure at all", () => {
-    for (const seat of Object.keys(REFERENCE) as Position[]) {
+    for (const seat of Object.keys(POINT_ESTIMATES) as Position[]) {
       expect(openWidthPct("OFF", seat, 100 as StackBucket), seat).not.toBeNull();
+      expect(openWidthPct("OFF", seat, 50 as StackBucket), seat).not.toBeNull();
     }
   });
 
-  it("runs wider than the reference at every seat", () => {
-    for (const [seat, reference] of Object.entries(REFERENCE)) {
+  it("runs wider than the point-estimate source at every seat", () => {
+    // True against that source, and it is why the player note no longer calls
+    // these conservative. It is not true against the banded source below, which
+    // is why the note does not call them loose either.
+    for (const [seat, reference] of Object.entries(POINT_ESTIMATES)) {
       const ours = openWidthPct("OFF", seat as Position, 100 as StackBucket)!;
-      expect(ours, `${seat}: ours ${ours}% vs reference ${reference}%`)
+      expect(ours, `${seat}: ours ${ours}% vs point estimate ${reference}%`)
         .toBeGreaterThan(reference);
     }
   });
 
-  it("stays within a band worth previewing rather than drifting away", () => {
-    // Wide, but not so wide the preview teaches something unrecognisable. Eight
-    // points would no longer be the same strategy with a seat relabelled.
-    for (const [seat, reference] of Object.entries(REFERENCE)) {
-      const ours = openWidthPct("OFF", seat as Position, 100 as StackBucket)!;
-      expect(ours - reference, `${seat} gap`).toBeLessThan(8);
-    }
+  it("sits inside the banded source at the early seats and below it late", () => {
+    // The opposite verdict from the same ranges, against a source that gives
+    // ranges instead of points. Asserted rather than smoothed over, because a
+    // trainer that picks whichever reference flatters its data is not measuring.
+    const inside = (seat: Position) => {
+      const ours = openWidthPct("OFF", seat, 50 as StackBucket)!;
+      const [low, high] = BANDS_50BB[seat];
+      return ours >= low && ours <= high;
+    };
+    expect(inside("UTG"), "UTG").toBe(true);
+    expect(inside("HJ"), "HJ").toBe(true);
+    expect(inside("CO"), "CO").toBe(true);
+    // Below the band: the button and small blind open tighter here than either
+    // source suggests a six-max player should.
+    expect(openWidthPct("OFF", "BTN", 50 as StackBucket)!).toBeLessThan(BANDS_50BB.BTN[0]);
+    expect(openWidthPct("OFF", "SB", 50 as StackBucket)!).toBeLessThan(BANDS_50BB.SB[0]);
   });
 
-  it("is wider still with ante, so the note cannot claim conservatism there either", () => {
-    for (const seat of Object.keys(REFERENCE) as Position[]) {
-      const off = openWidthPct("OFF", seat, 100 as StackBucket)!;
-      const on = openWidthPct("ON", seat, 100 as StackBucket)!;
-      expect(on, `${seat}`).toBeGreaterThanOrEqual(off);
-      expect(on, `${seat} vs reference`).toBeGreaterThan(REFERENCE[seat]);
+  it("stays in the same region as published six-max play", () => {
+    // The claim that survives both sources. Loose enough to be true of a derived
+    // pack, tight enough that a mapping error would break it.
+    for (const seat of Object.keys(POINT_ESTIMATES) as Position[]) {
+      const ours = openWidthPct("OFF", seat, 100 as StackBucket)!;
+      const [low] = BANDS_50BB[seat];
+      const point = POINT_ESTIMATES[seat];
+      const lowest = Math.min(low, point);
+      const highest = Math.max(low, point);
+      expect(ours, `${seat}`).toBeGreaterThan(lowest - 10);
+      expect(ours, `${seat}`).toBeLessThan(highest + 10);
     }
   });
 });

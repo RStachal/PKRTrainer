@@ -36,23 +36,29 @@ import type { TableFormat } from "./trainingProfile";
  * built from it must say so.
  *
  * The expectation written here first was that a six-max field plays looser at
- * equal seats-behind, so these would run tight. Checked against published
- * six-max opening frequencies, that is wrong, and wrong in the direction that
- * matters: at 100BB ante off they run 1.9 points wide under the gun, 4.5 at the
- * hijack, 4.4 at the cutoff, 3.9 on the button and 6.1 in the small blind - and
- * the references are MTT figures that already include antes, while those are
- * our ante-off numbers, so the gap is if anything understated.
+ * equal seats-behind, so these would run tight. Two public references were
+ * checked and they disagree, so neither the original claim nor its opposite
+ * survives:
  *
- * The reason is visible in the mapping. Six-max under-the-gun inherits the
- * nine-handed lojack, which is a middle seat in a nine-handed game and opens
- * like one; the six-max seat with the same players behind it is the earliest
- * seat at its table and is played tighter than the seat count alone suggests.
- * Seats-behind captures how often you run into a better hand and not how the
- * rest of the table responds to a raise.
+ * - against 100BB point estimates (UTG 17, HJ 21, CO 28, BTN 43, SB 36) ours run
+ *   1.9 to 6.1 points wider at every seat;
+ * - against 50BB bands (early 18-20, middle 25-30, cutoff 30-40, button 50+,
+ *   small blind 60+) ours sit inside at the three early seats and below at the
+ *   button and small blind.
  *
- * So: a ceiling to be corrected downward by measurement, not a floor. Anything
- * shown to a player has to say which, because "these are conservative" and
- * "these are loose" are opposite instructions.
+ * The small blind is the extreme: 36 percent in one source, 60-plus in the
+ * other. A 24-point spread between two published references for one seat is not
+ * something a derivation can be calibrated against, and narrowing to hit either
+ * would be choosing a source rather than measuring.
+ *
+ * What can be said is that the mapping lands in the same region as published
+ * six-max play, and where it drifts it drifts at the late seats - which is where
+ * seats-behind is weakest, because it captures how often you run into a better
+ * hand and not how the rest of the table answers a raise.
+ *
+ * Neither a floor nor a ceiling, then. An approximation whose error is not one
+ * signed number, and anything shown to a player has to say that rather than pick
+ * a direction, because "conservative" and "loose" are opposite instructions.
  */
 
 /** How many opponents still have to act behind a seat, counting the blinds. */
