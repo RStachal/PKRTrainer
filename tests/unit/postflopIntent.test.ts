@@ -27,7 +27,7 @@ describe("postflopIntent", () => {
       callerPosition: "LJ",
       inPosition: false,
       callerType: "OUT_OF_POSITION_CALLER",
-      positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+      positionPattern: "3BP_HJ_VS_LJ",
     });
   });
 
@@ -44,7 +44,7 @@ describe("postflopIntent", () => {
       positionContext: {
         heroPosition: "LJ",
         villainPosition: "HJ",
-        positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+        positionPattern: "3BP_HJ_VS_LJ",
       },
     });
   });

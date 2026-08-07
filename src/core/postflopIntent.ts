@@ -197,6 +197,16 @@ function oopRaiserVsIpCallerContext(
   };
 }
 
+/**
+ * The seat token a position takes inside a `3BP_` or `SRP_` pattern name.
+ *
+ * UTG+1 and UTG+2 carry a plus sign the pattern grammar spells with an
+ * underscore; every other seat is written as it is named.
+ */
+function patternToken(position: Position): string {
+  return position.replace("+", "_");
+}
+
 function oopCallerVsIpThreeBettorContext(
   heroPosition: Position,
   villainPosition: Position,
@@ -208,7 +218,16 @@ function oopCallerVsIpThreeBettorContext(
     callerPosition: heroPosition,
     inPosition: false,
     callerType: "OUT_OF_POSITION_CALLER",
-    positionPattern: "OOP_CALLER_VS_IP_3BETTOR",
+    // Named by seat rather than by role. The seats are right here - the
+    // three-bettor and the caller are both arguments - and spelling the pattern
+    // OOP_CALLER_VS_IP_3BETTOR threw them away, so a solved pack carrying
+    // 3BP_BTN_VS_CO could never match a spot that was exactly that. Measured
+    // over 2000 button-versus-cutoff three-bet pots: none reached the solver,
+    // and two of the seven pilot packs answer only this pattern.
+    //
+    // The role information is not lost; aggressorPosition and callerPosition
+    // still carry it, and every consumer that wanted the role reads those.
+    positionPattern: `3BP_${patternToken(villainPosition)}_VS_${patternToken(heroPosition)}` as PostflopPositionContext["positionPattern"],
   };
 }
 

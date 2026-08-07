@@ -348,7 +348,7 @@ describe("bootstrap - inicializacni tok", () => {
     expect(meta?.dataset.street).toBe("FLOP");
     expect(meta?.dataset.actionNode).toBe("THREE_BET_POT_CBET");
     expect(meta?.dataset.potType).toBe("THREE_BET_POT");
-    expect(meta?.dataset.positionPattern).toBe("OOP_CALLER_VS_IP_3BETTOR");
+    expect(meta?.dataset.positionPattern).toBe("3BP_HJ_VS_LJ");
     expect(meta?.textContent).toContain("3bet pot");
     expect(meta?.textContent).toContain("pot 18 BB");
     expect(meta?.textContent).toContain("LJ vs HJ");

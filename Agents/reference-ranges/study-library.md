@@ -395,6 +395,18 @@ them again.
 `OOP_RAISER_VS_IP_CALLER` and `OOP_CALLER_VS_IP_3BETTOR` stay unmapped - they
 name no seats, so choosing a pairing would be inventing the thing this avoids.
 
-`3BP_BTN_VS_CO` remains unreachable and is now the larger of the two: two of
-seven packs that no player can see, and the fix is in the generator rather than
-the resolver.
+**`3BP_BTN_VS_CO` is reachable too, and that one was a false alarm followed by a
+real defect.** The first measurement said the generator never produces a
+three-bet pot at all - which was an artefact of calling it with no configuration,
+so it took the SINGLE_RAISED default. Filters carrying `VS_3BET` or `SQUEEZE` do
+produce one.
+
+What they produced was `OOP_CALLER_VS_IP_3BETTOR`, a name describing roles rather
+than seats - while the intent building it already knew both, passing them in as
+`aggressorPosition` and `callerPosition`. So a button-versus-cutoff three-bet pot
+could never match the pack solved for exactly that. Measured over 2000 such
+spots: **0 % solver-backed before, 100 % after**.
+
+The pattern is now spelled by seat. The role information is not lost;
+`aggressorPosition` and `callerPosition` still carry it and every consumer that
+wanted a role reads those.
