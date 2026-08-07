@@ -97,7 +97,15 @@ describe("derived six-max width against published references", () => {
     };
     expect(inside("UTG"), "UTG").toBe(true);
     expect(inside("HJ"), "HJ").toBe(true);
-    expect(inside("CO"), "CO").toBe(true);
+    // The cutoff has dropped just below the band. It inherits the nine-handed
+    // cutoff, which lost its offsuit wheel aces - a repair made on nine-handed
+    // evidence that moves six-max the other way. Recorded rather than smoothed
+    // over: the derivation carries every correction to its source seat, whether
+    // or not that suits six-max.
+    expect(openWidthPct("OFF", "CO", 50 as StackBucket)!)
+      .toBeLessThan(BANDS_50BB.CO[0]);
+    expect(openWidthPct("OFF", "CO", 50 as StackBucket)!)
+      .toBeGreaterThan(BANDS_50BB.CO[0] - 3);
     // Below the band: the button and small blind open tighter here than either
     // source suggests a six-max player should.
     expect(openWidthPct("OFF", "BTN", 50 as StackBucket)!).toBeLessThan(BANDS_50BB.BTN[0]);

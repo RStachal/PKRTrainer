@@ -56,7 +56,10 @@ describe("hero range consistency", () => {
     // It sits under the guard's tolerance but no longer near zero, and it clears
     // when those families are re-solved.
     const cutoff = byFamily.get("MTT9_50BB_CO_BB_SRP_CBET_MIDSPR")?.gapPoints;
-    expect(cutoff).toBeGreaterThan(4);
+    // Narrower than it was: the cutoff lost its offsuit wheel aces, which moved
+    // the preflop pack toward the solve rather than away. Still a real gap, and
+    // it clears when those families are re-solved.
+    expect(cutoff).toBeGreaterThan(2);
     expect(cutoff).toBeLessThan(8);
 
     const button = rows.filter((row) => row.seat === "BTN" && row.gapPoints !== null);

@@ -173,8 +173,11 @@ describe("button opening range width", () => {
     // be answering a question nobody has asked yet.
     expect(openWidthPct("OFF", "BTN", 15 as StackBucket)).toBe(39.7);
     expect(openWidthPct("OFF", "BTN", 20 as StackBucket)).toBe(39.7);
-    expect(openWidthPct("ON", "BTN", 15 as StackBucket)).toBe(44.5);
-    expect(openWidthPct("ON", "BTN", 20 as StackBucket)).toBe(44.5);
+    // 45.4 rather than 44.5 since the ante widening gained K8o: the button
+    // opened K7o while folding the hand that dominates it, and it is the one
+    // seat two published sets say we open too tight.
+    expect(openWidthPct("ON", "BTN", 15 as StackBucket)).toBe(45.4);
+    expect(openWidthPct("ON", "BTN", 20 as StackBucket)).toBe(45.4);
   });
 
   it("keeps the button wider than every earlier seat at the same depth", () => {

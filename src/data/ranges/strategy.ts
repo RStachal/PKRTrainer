@@ -153,9 +153,19 @@ const DEPTH_OPEN_RANGES: Record<string, readonly DepthBand[]> = {
     { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, 98s, AKo, AQo, AJo, ATo, KQo" },
     { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, QJs, QTs, JTs, T9s, 98s, 87s, AKo, AQo, AJo, ATo, KQo, KJo" },
   ],
+  // The cutoff's offsuit wheel aces are gone. The range held A5o, A4o, A3o and
+  // A2o while folding A7o and A6o - a shape no chart draws, because a range that
+  // plays A5o and folds the hand that dominates it is not a range, it is a
+  // misreading. The same signature as the A8s omission under the gun, and found
+  // the same way: by looking at what the range says about itself.
+  //
+  // Removed rather than completed by adding A7o and A6o, because two independent
+  // published sets put the cutoff near 26 percent and this seat was at 32.4.
+  // Both repairs fix the inconsistency; only one moves toward the evidence.
+  // 32.4 to 28.8 percent, and 30.3 to 26.7 at the shallower band.
   CO: [
-    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, QJs, QTs, Q9s, Q8s, JTs, J9s, J8s, T9s, T8s, 98s, 97s, 87s, 76s, 65s, AKo, AQo, AJo, ATo, A9o, A8o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, QJo, QTo, JTo" },
-    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, QJs, QTs, Q9s, Q8s, Q7s, JTs, J9s, J8s, J7s, T9s, T8s, T7s, 98s, 97s, 87s, 86s, 76s, 75s, 65s, 54s, AKo, AQo, AJo, ATo, A9o, A8o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, QJo, QTo, JTo" },
+    { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, QJs, QTs, Q9s, Q8s, JTs, J9s, J8s, T9s, T8s, 98s, 97s, 87s, 76s, 65s, AKo, AQo, AJo, ATo, A9o, A8o, KQo, KJo, KTo, QJo, QTo, JTo" },
+    { fromBucket: 50, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, QJs, QTs, Q9s, Q8s, Q7s, JTs, J9s, J8s, J7s, T9s, T8s, T7s, 98s, 97s, 87s, 86s, 76s, 75s, 65s, 54s, AKo, AQo, AJo, ATo, A9o, A8o, KQo, KJo, KTo, QJo, QTo, JTo" },
   ],
   BTN: [
     { fromBucket: 25, core: "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, QJs, QTs, Q9s, Q8s, Q7s, Q6s, Q5s, JTs, J9s, J8s, J7s, T9s, T8s, T7s, 98s, 97s, 96s, 87s, 86s, 85s, 76s, 75s, 65s, 64s, 54s, AKo, AQo, AJo, ATo, A9o, A8o, A7o, A6o, A5o, A4o, A3o, A2o, KQo, KJo, KTo, K9o, QJo, QTo, Q9o, JTo, J9o, T9o" },
@@ -182,7 +192,11 @@ const OPEN_RANGES: Record<string, CoreExtra> = {
   },
   "UTG+2": {
     core: "22+, A2s+, K9s+, QTs+, JTs, T9s, 98s, 87s, 76s, ATo+, KJo+",
-    extra: "K8s, Q9s, J9s, KTo",
+    // KJo added ahead of KTo. The 25BB band folds KJo while the ante widening
+    // adds KTo, so with ante on the seat opened the weaker of the two and folded
+    // the hand that dominates it. The 50BB band already has KJo, which is what
+    // made this visible: the same seat, one band deeper, gets it right.
+    extra: "K8s, Q9s, J9s, KJo, KTo",
   },
   LJ: {
     core: "22+, A2s+, K9s+, Q9s+, J9s+, T9s, 98s, 87s, 76s, 65s, ATo+, KJo+, QJo",
@@ -194,15 +208,28 @@ const OPEN_RANGES: Record<string, CoreExtra> = {
   },
   CO: {
     core: "22+, A2s+, K6s+, Q8s+, J8s+, T8s+, 97s+, 87s, 76s, 65s, 54s, A8o+, KTo+, QTo+, JTo",
-    extra: "K4s, Q6s, J7s, 86s, A5o, K9o",
+    // A5o dropped: the cutoff folds A7o and A6o, so an ante widening that adds
+    // the hand both of those dominate is adding the wrong one. Same signature as
+    // the offsuit wheel aces removed from the core band above, and found by the
+    // same scan - a range that plays a weaker kicker while folding a stronger one
+    // is describing a misreading, not a strategy.
+    extra: "K4s, Q6s, J7s, 86s, K9o",
   },
   BTN: {
     core: "22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 96s+, 86s+, 75s+, 65s, 54s, A2o+, K9o+, Q9o+, J9o+, T9o",
-    extra: "Q3s, J6s, T6s, 64s, K7o, Q8o, J8o, 98o",
+    // K8o added rather than K7o removed. The button is the one seat two published
+    // sets agree we open *too tight* - 50.5 percent against 54.8 - so where the
+    // repair can go either way, here it goes wider.
+    extra: "Q3s, J6s, T6s, 64s, K8o, K7o, Q8o, J8o, 98o",
   },
   SB: {
     core: "22+, A2s+, K2s+, Q4s+, J6s+, T6s+, 96s+, 86s+, 76s, 65s, 54s, A2o+, K8o+, Q9o+, J9o+, T9o, 98o",
-    extra: "Q2s, J4s, T5s, 95s, 75s, K5o, Q7o, J8o, T8o, 87o",
+    // K7o, K6o and Q8o added. The small blind opened K5o while folding both
+    // hands that dominate it, and Q7o while folding Q8o. Completed rather than
+    // trimmed because this seat has no depth bands at all and is the least
+    // measured in the table - see depthBandCoverage.test.ts - so removing hands
+    // here would be pruning a range nobody has checked.
+    extra: "Q2s, J4s, T5s, 95s, 75s, K7o, K6o, K5o, Q8o, Q7o, J8o, T8o, 87o",
   },
 };
 
