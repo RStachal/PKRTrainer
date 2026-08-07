@@ -316,3 +316,39 @@ rather than our own - the axis the model still lacks:
 - "Pokud má OPO 3-6 BB, musím hrát uzkou range. Pokud má 2BB a méně, hraji témeř ATC"
 - "Bacha na PUSHE s 10 a vice BB se slabymi kartami na call stations"
 - "NEPUSHUJ kdyz je pred tebou reis (od rega!)"
+
+## What the postflop pilots cover, and what to solve next, 2026-08-07
+
+Nineteen rules across seven pilot packs. The useful question is not how many
+there are but which decisions a player can reach that none of them answer.
+
+| position pattern | SRP cbet | facing bet | 3bet-pot cbet |
+| --- | --- | --- | --- |
+| 3BP_BTN_VS_CO | – | SPR 0-20 | SPR 0-20 |
+| SRP_BTN_VS_BB | SPR 0-20 | SPR 0-20 | – |
+| SRP_CO_VS_BB | SPR 0-20 | – | – |
+| SRP_SB_VS_BB | SPR 0-20 | – | – |
+| SRP_UTG_VS_BB | **SPR 3-8** | – | – |
+
+Eight of fifteen cells are empty. Three are structural - a single-raised pot has
+no three-bet-pot cbet node and vice versa - so five are real gaps.
+
+**Board texture is not a gap anywhere.** Every rule carries twelve or thirteen of
+the thirteen textures, so a player never falls through because of the flop that
+came. That is worth knowing before commissioning more solves: texture coverage is
+done, and adding boards buys nothing.
+
+### The two gaps worth solving, in order
+
+1. **Facing a bet at the cutoff, small blind and under the gun.** Three patterns
+   that can be bet into with no answer for it. The button has one, so the shape
+   of the work is known and it is the same job three more times.
+
+2. **Under the gun outside SPR 3 to 8.** Every other pattern runs 0 to 20. A
+   UTG-versus-BB flop at SPR 1 or SPR 15 matches no rule while the identical spot
+   on the button matches one - and the shallow end is where tournament play
+   actually lives.
+
+`postflopCoverageMap.test.ts` pins this grid. A pilot is allowed to be partial;
+what it is not allowed to do is shrink unnoticed, or grow while this table still
+claims the old shape.
