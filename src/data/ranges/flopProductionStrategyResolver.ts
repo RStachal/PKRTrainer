@@ -115,6 +115,39 @@ export function createFlopProductionStrategyResolverChain(
   };
 }
 
+/**
+ * The seat pairing a legacy pattern name describes.
+ *
+ * Two spellings for the same situation have been in circulation: the generator
+ * emits BTN_VS_BB where the rules say SRP_BTN_VS_BB, and so on. Measured over
+ * 6000 flop spots, 746 carried a legacy name and 716 carried a matched one - so
+ * the button-versus-blind pilot was answering roughly half the spots it exists
+ * for and the rest fell through to the public heuristic, for no reason a player
+ * could describe.
+ *
+ * Canonicalising here rather than renaming everywhere is deliberate. A rename
+ * touches the generator, the packs, the stats records already written under the
+ * old names and the UI citation policy that lists both spellings, and getting it
+ * wrong silently mislabels solved content as heuristic or the reverse. Reading
+ * one name as the other costs a lookup and cannot mislabel anything.
+ *
+ * EP_VS_BB maps to under the gun because that is the seat the early-position
+ * pilot was solved for. The two remaining legacy names -
+ * OOP_RAISER_VS_IP_CALLER and OOP_CALLER_VS_IP_3BETTOR - name no seats at all
+ * and are deliberately left unmapped: guessing which pairing they meant would be
+ * inventing the thing this avoids.
+ */
+const LEGACY_PATTERN_EQUIVALENT: Readonly<Record<string, string>> = {
+  BTN_VS_BB: "SRP_BTN_VS_BB",
+  SB_VS_BB: "SRP_SB_VS_BB",
+  EP_VS_BB: "SRP_UTG_VS_BB",
+};
+
+function positionPatternMatches(rule: FlopProductionStrategyRule, pattern: string): boolean {
+  if (rule.positionPattern === pattern) return true;
+  return rule.positionPattern === LEGACY_PATTERN_EQUIVALENT[pattern];
+}
+
 export function matchingFlopProductionRules(
   pack: FlopProductionStrategyPack,
   input: PostflopStrategyInput,
@@ -123,7 +156,7 @@ export function matchingFlopProductionRules(
   return pack.rules.filter((rule) => (
     rule.potType === input.potType &&
     actionNodeMatchesInput(rule, input) &&
-    rule.positionPattern === input.positionPattern &&
+    positionPatternMatches(rule, input.positionPattern) &&
     rule.boardTextures.some((texture) => input.textures.includes(texture))
   ));
 }
@@ -158,7 +191,10 @@ function ruleMatchesInput(
   return (
     rule.potType === input.potType &&
     actionNodeMatchesInput(rule, input) &&
-    rule.positionPattern === input.positionPattern &&
+    // Same canonicalisation as the filter above. Fixing only one of the two
+    // left the legacy names still unmatched: the filter let them through and
+    // this rejected them again, which is why the first attempt changed nothing.
+    positionPatternMatches(rule, input.positionPattern) &&
     spr >= rule.sprMin &&
     spr <= rule.sprMax &&
     rule.boardTextures.some((texture) => input.textures.includes(texture))

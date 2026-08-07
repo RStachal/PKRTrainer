@@ -46,12 +46,6 @@ function store(ante: AnteMode) {
   return createRangeStoreFromRangePack(pack);
 }
 
-interface Record {
-  played: Set<string>;
-  strict: Readonly<Record<string, readonly string[]>>;
-  lenient: Readonly<Record<string, readonly string[]>>;
-}
-
 function read(ante: AnteMode, position: Position, bucket: StackBucket, context: ActionContext) {
   const entry = store(ante).lookup({ ante, position, bucket, context });
   if (entry === undefined) return null;

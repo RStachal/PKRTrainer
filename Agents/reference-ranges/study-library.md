@@ -381,8 +381,20 @@ falls through to the heuristic the rest, for no reason a player could describe.
 Fixing this alone would roughly double solver-backed coverage without solving a
 single new board.
 
-Neither is repaired yet. Renaming touches the generator, the packs, stats records
-already written under the old names, and the UI citation policy which lists both
-spellings - and getting it wrong silently mislabels solved content as heuristic
-or the reverse, which is worse than the gap. `postflopReachability.test.ts` pins
-the state so the repair can be measured when it is made.
+**The naming one is repaired: 11.9 % -> 21.1 %.** The resolver reads a legacy
+name as its solved equivalent rather than anything being renamed - a rename
+touches the generator, the packs, stats records already written under the old
+names and the citation policy listing both spellings, and getting it wrong
+silently mislabels solved content as heuristic or the reverse. A lookup cannot.
+
+Nearly double the solver-backed coverage, without solving one new board. Worth
+noting the first attempt changed nothing: the position check existed in *two*
+functions, so the filter admitted the legacy names and the second pass rejected
+them again.
+
+`OOP_RAISER_VS_IP_CALLER` and `OOP_CALLER_VS_IP_3BETTOR` stay unmapped - they
+name no seats, so choosing a pairing would be inventing the thing this avoids.
+
+`3BP_BTN_VS_CO` remains unreachable and is now the larger of the two: two of
+seven packs that no player can see, and the fix is in the generator rather than
+the resolver.
