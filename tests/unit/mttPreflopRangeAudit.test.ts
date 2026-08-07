@@ -97,19 +97,24 @@ describe("mttPreflopRangeAudit", () => {
     const sixMaxOn = report.rows.find((row) => (
       row.tableFormat === "SIX_MAX" && row.ante === "ON"
     ));
+    // Six-max regular now carries records derived from the nine-handed pack;
+    // turbo does not, and that asymmetry is deliberate. A derived turbo pack
+    // would be the derived regular pack relabelled, which is exactly the silent
+    // metadata-only reuse this audit exists to catch - it caught it during the
+    // change, which is why turbo kept its empty candidate.
     expect(sixMaxOn).toMatchObject({
       status: "BLOCKED",
-      regularRecordCount: 0,
+      regularRecordCount: 425,
       turboRecordCount: 0,
-      regularPackId: "mtt-six-max-regular-preflop-chip-ev-ante-on-candidate-v0",
+      regularPackId: "mtt-six-max-regular-preflop-chip-ev-ante-on-derived-v1",
       turboPackId: "mtt-six-max-turbo-preflop-chip-ev-ante-on-candidate-v0",
     });
-    expect(sixMaxOn?.blockers).toContain("Regular RangePack has no records to compare.");
+    expect(sixMaxOn?.blockers).not.toContain("Regular RangePack has no records to compare.");
     expect(sixMaxOn?.blockers).toContain("Turbo RangePack has no records to compare.");
-    expect(sixMaxOn?.blockers).toContain(
-      "Turbo profile is metadata-only; dedicated hand recommendations are not normalized yet.",
-    );
-    expect(sixMaxOn?.actionDiffs).toEqual([]);
+    // Non-empty now, and that is the point: regular teaches hands turbo has no
+    // answer for. When both were empty the diff was empty too, which read as
+    // agreement while it only ever meant neither said anything.
+    expect(sixMaxOn?.actionDiffs.length).toBeGreaterThan(0);
   });
 
   it("renderuje speed diff audit jako source-free operator report", () => {

@@ -10,6 +10,7 @@ import {
   type TrainingStreet,
 } from "../../src/core/trainingProfile";
 import type { AnteMode } from "../../src/core/types";
+import { CS } from "../../src/ui/cs";
 import { renderProfileSelector } from "../../src/ui/profileSelector";
 
 afterEach(() => {
@@ -74,10 +75,21 @@ describe("profileSelector", () => {
     format!.dispatchEvent(new Event("change"));
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
-    expect(note?.dataset.status).toBe("blocked");
+    // Preview, not blocked. Six-max regular carries ranges derived from the
+    // nine-handed pack, so there is something to drill - and the note still says
+    // candidate, because derived is not measured.
+    expect(note?.dataset.status).toBe("preview");
     expect(note?.textContent).toContain("MTT 6-max regular preflop chipEV");
-    expect(note?.textContent).toContain("Kandidátní náhled");
-    expect(note?.textContent).toContain("kontroly pokrytí hand");
+    // The note has to say where these ranges came from. The generic preview
+    // wording describes historical data, which is true of nine-handed and not
+    // of this - these are nine-handed records re-labelled by seats-behind, and
+    // a player should be told they will run tight before they drill them.
+    expect(note?.textContent).toContain(CS.profile.mttSixMaxDerivedPreview);
+    // Asserted through the catalog because the suite runs in English while the
+    // app ships in Czech; a literal would pin the language instead of the fact.
+    // What the fact has to be is checked here.
+    expect(CS.profile.mttSixMaxDerivedPreview).toMatch(/9-max/);
+    expect(CS.profile.mttSixMaxDerivedPreview).toMatch(/tight|těsné/);
     expect(note?.textContent).not.toContain("RangePack");
     expect(note?.textContent).not.toContain("mtt-");
   });

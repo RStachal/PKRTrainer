@@ -386,9 +386,14 @@ describe("bootstrap - inicializacni tok", () => {
     ).toBe("1");
   });
 
-  it("candidate 6-max preflop profil nespusti legacy 9-max drill", async () => {
+  it("6-max preflop profil spusti odvozeny nahled a rekne to hraci", async () => {
+    // This used to assert six-max was refused, which was right while it had no
+    // records. It has derived ones now - nine-handed records re-labelled by
+    // seats-behind - so it starts, and what has to hold instead is that the
+    // player is told what they are drilling before they drill it.
     const { bootstrap } = await importFreshMain();
     const root = document.createElement("div");
+    document.body.appendChild(root);
 
     bootstrap({ root, storage: new MemoryStorage(), registerSw: false });
 
@@ -396,19 +401,23 @@ describe("bootstrap - inicializacni tok", () => {
     format!.value = "SIX_MAX";
     format!.dispatchEvent(new Event("change"));
 
-    root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    const note = root.querySelector<HTMLElement>(".profile-selector__note");
+    expect(note?.dataset.status).toBe("preview");
+    expect(note?.textContent).toContain("6-max");
+    // Provenance, not marketing: derived from 9-max and expected to run tight.
+    expect(note?.textContent).toMatch(/9-max/);
+    expect(note?.textContent).toMatch(/tight|těsné/);
+    // And no internal identifiers leak into player-facing copy.
+    expect(note?.textContent).not.toContain("mtt-six-max");
+    expect(note?.textContent).not.toContain("derived-v1");
 
-    const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
-    expect(warning?.hidden).toBe(false);
-    expect(warning?.textContent).toContain("kandidátní náhled");
-    expect(warning?.textContent).toContain("Produkční trénink je vypnutý");
-    expect(warning?.textContent).toContain("MTT 6-max regular preflop chipEV");
-    expect(warning?.textContent).toContain("dokončení kontroly pokrytí");
-    expect(warning?.textContent).not.toContain("Import preview:");
-    expect(warning?.textContent).not.toContain("RangePack");
-    expect(warning?.textContent).not.toContain("mtt-");
-    expect(root.querySelector(".poker-table")).toBeNull();
-    expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(true);
+    root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+    await vi.waitFor(() => {
+      expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
+    }, { timeout: 15000 });
+    // A dealt table, which is the whole difference: this profile used to reach
+    // the start button and stop there.
+    expect(root.querySelector(".poker-table")).not.toBeNull();
   });
 
   it("MTT preflop gate respektuje readiness pro vsechny format/speed/ante kombinace", async () => {
@@ -443,18 +452,22 @@ describe("bootstrap - inicializacni tok", () => {
         warning: "chybí produkční range",
       },
       {
+        // Regular six-max plays now, from ranges derived by seats-behind.
+        // Turbo below still does not: deriving it would produce this pack under
+        // another label, which the speed audit exists to refuse.
         format: "SIX_MAX",
         speed: "REGULAR",
         ante: "ON",
-        playable: false,
-        warning: "kandidátní náhled",
+        playable: true,
       },
       {
+        // Regular six-max plays now, from ranges derived by seats-behind.
+        // Turbo below still does not: deriving it would produce this pack under
+        // another label, which the speed audit exists to refuse.
         format: "SIX_MAX",
         speed: "REGULAR",
         ante: "OFF",
-        playable: false,
-        warning: "kandidátní náhled",
+        playable: true,
       },
       {
         format: "SIX_MAX",

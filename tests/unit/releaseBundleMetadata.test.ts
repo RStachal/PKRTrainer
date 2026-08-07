@@ -13,7 +13,9 @@ describe("release bundle metadata", () => {
   it("obsahuje nove RangePack/StrategyPack metadata v offline katalogu", () => {
     const ids = allTrainingRangePacks.map((pack) => pack.id);
 
-    expect(ids).toContain("mtt-six-max-regular-preflop-chip-ev-ante-on-candidate-v0");
+    // The derived pack is what ships for six-max regular; the empty candidate it
+    // replaced is no longer in the catalogue.
+    expect(ids).toContain("mtt-six-max-regular-preflop-chip-ev-ante-on-derived-v1");
     expect(ids).toContain("sng-six-max-turbo-preflop-chip-ev-ante-off-candidate-v0");
     expect(ids).toContain("cash-six-max-regular-preflop-chip-ev-rake-candidate-v0");
     expect(ids).toContain("cash-six-max-regular-preflop-chip-ev-no-rake-candidate-v0");

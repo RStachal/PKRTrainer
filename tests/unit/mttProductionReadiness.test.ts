@@ -206,16 +206,30 @@ describe("mttProductionReadiness", () => {
       row.coverage.contexts.join("|") === REQUIRED_CONTEXTS.join("|")
     ))).toBe(true);
 
+    // Six-max splits by speed now. Regular carries ranges derived from the
+    // nine-handed pack by seats-behind; turbo does not, because a derived turbo
+    // pack would be the derived regular pack relabelled, which is the silent
+    // metadata-only reuse the speed audit exists to catch. Both remain
+    // CANDIDATE - derived is not measured, and production refuses inferred
+    // chart values.
     const sixMax = report.rows.filter((row) => row.tableFormat === "SIX_MAX");
     expect(sixMax).toHaveLength(4);
     expect(sixMax.every((row) => row.status === "CANDIDATE")).toBe(true);
-    expect(sixMax.every((row) => row.recordCount === 0)).toBe(true);
-    expect(sixMax.every((row) => (
+
+    const sixMaxRegular = sixMax.filter((row) => row.blindSpeed === "REGULAR");
+    expect(sixMaxRegular).toHaveLength(2);
+    expect(sixMaxRegular.every((row) => row.recordCount > 0)).toBe(true);
+    expect(sixMaxRegular.every((row) => row.packId.includes("derived"))).toBe(true);
+
+    const sixMaxTurbo = sixMax.filter((row) => row.blindSpeed === "TURBO");
+    expect(sixMaxTurbo).toHaveLength(2);
+    expect(sixMaxTurbo.every((row) => row.recordCount === 0)).toBe(true);
+    expect(sixMaxTurbo.every((row) => (
       row.coverage.missingPositions.join("|") === SIX_MAX_POSITION_ORDER.join("|") &&
       row.coverage.missingStackBuckets.join("|") === STACK_BUCKETS.join("|") &&
       row.coverage.missingContexts.join("|") === REQUIRED_CONTEXTS.join("|")
     ))).toBe(true);
-    expect(sixMax.every((row) => row.missingReasons.some((reason) => (
+    expect(sixMaxTurbo.every((row) => row.missingReasons.some((reason) => (
       reason.includes("no normalized hand-class records")
     )))).toBe(true);
 
@@ -497,10 +511,14 @@ describe("mttProductionReadiness", () => {
       blindSpeed: "REGULAR",
       ante: "OFF",
     });
+    // Six-max regular has records now, so the reason it is not production is no
+    // longer emptiness - it is that derived data carries LOW confidence, which
+    // is the honest blocker and the one that should remain until measured
+    // six-max charts land.
     expect(sixMaxCandidate.status).toBe("CANDIDATE");
     expect(sixMaxCandidate.confidence).toBe("LOW");
     expect(sixMaxCandidate.missingReasons).toContain("RangePack confidence is LOW.");
-    expect(sixMaxCandidate.missingReasons).toContain(
+    expect(sixMaxCandidate.missingReasons).not.toContain(
       "RangePack has no normalized hand-class records.",
     );
   });
@@ -533,7 +551,7 @@ describe("mttProductionReadiness", () => {
       status: "CANDIDATE",
       productionReady: false,
       coverageKind: "PREFLOP_RANGE_PACK",
-      packId: "mtt-six-max-regular-preflop-chip-ev-ante-on-candidate-v0",
+      packId: "mtt-six-max-regular-preflop-chip-ev-ante-on-derived-v1",
     });
     expect(sixMaxCompletion?.importSlot?.packId)
       .toBe("mtt-six-max-regular-preflop-chip-ev-ante-on-production-v1");
@@ -553,7 +571,8 @@ describe("mttProductionReadiness", () => {
     expect(report.productionReadyRows).toBe(0);
     expect(report.candidateRows).toBe(6);
     expect(report.lowConfidenceRows).toBe(4);
-    expect(report.emptyRecordRows).toBe(4);
+    // Two, not four: six-max regular is populated and six-max turbo is not.
+    expect(report.emptyRecordRows).toBe(2);
     expect(report.missingExpectedProfiles).toHaveLength(2);
     expect(report.missingExpectedProfiles.every((row) => (
       row.tableFormat === "FULL_RING_9" && row.blindSpeed === "TURBO"

@@ -84,13 +84,27 @@ describe("mttPreflopRangePacks", () => {
       expect(report.errors).toEqual([]);
       expect(report.sourceCount).toBeGreaterThanOrEqual(5);
       expect(report.searchQueryCount).toBe(4);
-      expect(report.recordCount).toBe(0);
-      expect(report.totalExplicitHands).toBe(0);
-      expect(report.totalImpliedFolds).toBe(0);
-      expect(report.warnings).toEqual([
-        "RangePack confidence is LOW; review before production use.",
-        "RangePack has no records.",
-      ]);
+      // Regular is derived and populated; turbo is still an empty candidate,
+      // because deriving it would produce the regular pack under another label.
+      const expectRecords = report.packId.includes("-regular-");
+      if (expectRecords) expect(report.recordCount, report.packId).toBeGreaterThan(0);
+      else expect(report.recordCount, report.packId).toBe(0);
+      if (expectRecords) {
+        expect(report.totalExplicitHands, report.packId).toBeGreaterThan(0);
+        // Derived, so the LOW-confidence warning stays and is the only one:
+        // there are records now, and confidence is what keeps it out of
+        // production until measured six-max charts arrive.
+        expect(report.warnings).toEqual([
+          "RangePack confidence is LOW; review before production use.",
+        ]);
+      } else {
+        expect(report.totalExplicitHands).toBe(0);
+        expect(report.totalImpliedFolds).toBe(0);
+        expect(report.warnings).toEqual([
+          "RangePack confidence is LOW; review before production use.",
+          "RangePack has no records.",
+        ]);
+      }
     }
   });
 

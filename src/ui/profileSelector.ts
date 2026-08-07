@@ -210,9 +210,17 @@ function describeProfileStatus(profile: TrainingProfile): {
     profile.gameVariant === "MTT" &&
     profile.street === "PREFLOP"
   ) {
+    // Six-max says where its ranges came from. The generic preview note
+    // describes playing from historical data, which is true of nine-handed and
+    // not of six-max: those records are nine-handed records re-labelled by
+    // seats-behind. A player drilling them should be told that, and told they
+    // will run tight, rather than being left to find out at a table.
+    const previewNote = profile.tableFormat === "SIX_MAX"
+      ? CS.profile.mttSixMaxDerivedPreview
+      : CS.profile.mttPreflopPreview;
     return {
       status: "preview",
-      text: `Preview: ${mttProfileLabel(profile)}. ${CS.profile.mttPreflopPreview}`,
+      text: `Preview: ${mttProfileLabel(profile)}. ${previewNote}`,
     };
   }
   if (capability.status === "PREVIEW") {

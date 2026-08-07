@@ -113,10 +113,24 @@ function bundledProductionReadiness(
   };
 }
 
+/**
+ * Six-max joins nine-handed here, and it is worth being explicit about what it
+ * allows: drilling ranges that are derived rather than measured.
+ *
+ * The six-max packs are nine-handed records re-labelled by how many opponents
+ * are still to act. They carry LOW confidence, name the seat each came from, and
+ * will run tight, because a six-max field is looser at equal seats-behind.
+ *
+ * The alternative was what shipped - six-max in the picker teaching nothing,
+ * because the derivation was written and never wired in. Preview only:
+ * `startableMttPreflopRangePack` still demands records, and the production gate
+ * still refuses inferred chart values, which stands until measured six-max
+ * charts arrive.
+ */
 export function isPlayableMttPreflopPreview(profile: TrainingProfile): boolean {
   return (
     profile.gameVariant === "MTT" &&
-    profile.tableFormat === "FULL_RING_9" &&
+    (profile.tableFormat === "FULL_RING_9" || profile.tableFormat === "SIX_MAX") &&
     profile.blindSpeed === "REGULAR" &&
     profile.street === "PREFLOP" &&
     profile.evModel === "CHIP_EV" &&

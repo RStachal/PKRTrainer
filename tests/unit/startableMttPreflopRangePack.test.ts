@@ -52,13 +52,26 @@ describe("startable MTT preflop range pack", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("keeps six-max out while it has no production data", () => {
+  it("lets six-max regular preview from derived data, and keeps turbo out", () => {
+    // Six-max used to be refused outright, which was right while it had no
+    // records at all. Regular now carries ranges derived from the nine-handed
+    // pack by seats-behind, so it previews; turbo has nothing to derive from
+    // that would not be the regular pack relabelled, so it stays out.
     const sixMax = preflopProfiles().filter((profile) => profile.tableFormat === "SIX_MAX");
     expect(sixMax).toHaveLength(4);
     for (const profile of sixMax) {
       const capability = trainingCapabilityForProfile(profile);
-      expect(startableMttPreflopRangePack(profile, capability), profile.blindSpeed)
-        .toBeUndefined();
+      const pack = startableMttPreflopRangePack(profile, capability);
+      if (profile.blindSpeed === "REGULAR") {
+        expect(pack, `${profile.blindSpeed} ${profile.ante}`).toBeDefined();
+        expect(pack!.records.length).toBeGreaterThan(0);
+        // Preview, never production: the pack is derived, and the production
+        // gate refuses inferred chart values.
+        expect(pack!.confidence).toBe("LOW");
+        expect(pack!.id).toContain("derived");
+      } else {
+        expect(pack, `${profile.blindSpeed} ${profile.ante}`).toBeUndefined();
+      }
     }
   });
 

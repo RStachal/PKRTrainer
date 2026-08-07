@@ -287,14 +287,42 @@ export const mttSixMaxPreflopRangePackCandidates = [
   mttSixMaxCandidateRangePack("TURBO", "OFF"),
 ] as const;
 
+// Built from the packs the app exposes, so the note a player reads describes
+// what they will actually drill. Built from the empty candidates it reported
+// zero records for a profile that now has data.
+// Regular six-max derived; turbo left empty on purpose.
+//
+// The derivation re-labels nine-handed records, and there is one nine-handed
+// pack per ante mode - so a derived turbo pack would be the derived regular pack
+// with a different label and nothing else. That is exactly the silent
+// metadata-only reuse `mttPreflopRangeAudit` exists to catch, and it caught it.
+// Turbo differs by blind schedule and stack distribution; without turbo data
+// there is nothing honest to derive, so it keeps its empty candidate.
+const mttSixMaxExposedPacks = [
+  ...mttSixMaxDerivedRangePacks.filter((pack) => pack.dimensions.blindSpeed === "REGULAR"),
+  ...mttSixMaxPreflopRangePackCandidates.filter((pack) => pack.dimensions.blindSpeed === "TURBO"),
+];
+
 export const mttSixMaxCandidateImportReports: readonly RangePackImportReport[] =
-  mttSixMaxPreflopRangePackCandidates.map(buildRangePackImportReport);
+  mttSixMaxExposedPacks.map(buildRangePackImportReport);
 
 const mutableAllMttPreflopRangePacks =
   runtimeMttPreflopRangePacks as RangePack[];
+// The derived six-max packs, not the empty candidates.
+//
+// Both describe the same four slots and only one can be exposed. It was the pair
+// with no records, so six-max sat in the profile picker teaching nothing while
+// the derivation existed, tested, and unwired.
+//
+// Derived is not measured and the packs say so: LOW confidence, an assumption
+// naming the nine-handed seat each record came from, and the three early seats
+// with no six-max counterpart listed rather than folded into the nearest one.
+// They stay preview-grade for that reason - the production gate refuses inferred
+// chart values and should - but a tight floor a player can drill, and is told
+// the provenance of, beats an empty profile.
 mutableAllMttPreflopRangePacks.push(
   ...mttPreflopRangePacks,
-  ...mttSixMaxPreflopRangePackCandidates,
+  ...mttSixMaxExposedPacks,
 );
 
 export const allMttPreflopRangePacks: readonly RangePack[] =

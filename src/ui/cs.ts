@@ -46,6 +46,8 @@ const CZ_CATALOG = {
       `Dostupné scoped solver piloty: ${count}. Nejde o plnou produkční coverage.`,
     mttPreflopPreview:
       "Náhled preflop tréninku je hratelný z historických dat; produkční release gate zůstává vypnutý do dokončení importu.",
+    mttSixMaxDerivedPreview:
+      "Odvozený náhled: range jsou přeneseny z 9-max podle počtu hráčů, kteří ještě jednají (6-max UTG dědí po 9-max LJ). Nejsou měřené a proti skutečnému 6-max poli budou těsné. Produkční hodnocení je vypnuté do importu měřených 6-max chartů.",
     candidatePreview:
       "Kandidátní náhled. Produkční hodnocení je vypnuté do dokončení kontroly strategických hodnot.",
     candidateBlocked:
@@ -347,6 +349,8 @@ const EN_CATALOG: UiCatalog = {
       `Scoped solver pilots available: ${count}. This is not full production coverage.`,
     mttPreflopPreview:
       "The preflop preview is playable from historical data; the production release gate remains disabled until import is complete.",
+    mttSixMaxDerivedPreview:
+      "Derived preview: ranges are carried across from 9-max by how many opponents are still to act (6-max UTG inherits the 9-max lojack). They are not measured and will run tight against a real 6-max field. Production scoring stays off until measured 6-max charts are imported.",
     candidatePreview:
       "Candidate preview. Production scoring is disabled until strategy values are reviewed.",
     candidateBlocked:
@@ -589,6 +593,7 @@ const CZECH_EXPLANATION_PREFIXES = [
   "profile.postflopPreview",
   "profile.postflopPilotAvailable",
   "profile.mttPreflopPreview",
+  "profile.mttSixMaxDerivedPreview",
   "profile.candidatePreview",
   "profile.candidateBlocked",
   "profile.missingRange",
