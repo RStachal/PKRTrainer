@@ -410,3 +410,51 @@ spots: **0 % solver-backed before, 100 % after**.
 The pattern is now spelled by seat. The role information is not lost;
 `aggressorPosition` and `callerPosition` still carry it and every consumer that
 wanted a role reads those.
+
+## The night solver's output reaches no player, 2026-08-07
+
+Measured across the three postflop streets:
+
+| street | solver-backed |
+| --- | --- |
+| flop | 22 % |
+| turn | **0 %** |
+| river | **0 %** |
+
+Turn and river are entirely heuristic, and that part is scope rather than a
+defect - the pilot packs are flop packs by type.
+
+What is not scope is what sits in `artifacts/decomposition`:
+
+- **261 boards** with output, across **11 families**
+- **35,144 solved turn subgames**
+- each one a full solved node: `actions`, `strategy`, `node_type`, `player`,
+  `childrens` - around 400 KB apiece
+
+Nothing reads them. Grepping the whole repository for `decomposition` finds the
+three scripts that *produce* and compare them and one PowerShell CPU-window
+script. There is no converter, no pack builder, no import slot. **The path from a
+solved turn subgame to a player does not exist.**
+
+That is what the night window has been producing. The last full night worked 70
+boards; the queue is 577.
+
+### What the bridge needs
+
+The flop side already shows the shape: a `FlopProductionStrategyPack` holds
+rules keyed by action node, position pattern, board texture and SPR band, each
+carrying range buckets of hand classes with an action and a frequency mix. A turn
+pack is the same structure one street later, and the subgames carry exactly the
+strategy those buckets need.
+
+Three pieces, in order:
+
+1. A turn equivalent of `FlopProductionStrategyPack` and its validator.
+2. A converter from a decomposition subgame to range buckets - grouping hand
+   classes by dominant action and reading the frequencies off `strategy`.
+3. A resolver entry so the turn node reaches it, the same way
+   `flopProductionStrategyResolver` serves the flop.
+
+Until then the solver runs are an input to nothing, and adding boards to the
+queue makes the pile larger rather than the product better - the same lesson as
+board texture on the flop, at a much larger scale.
