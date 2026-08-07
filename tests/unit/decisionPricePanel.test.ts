@@ -133,10 +133,20 @@ describe("decision price panel", () => {
     expect(folds(withLimps(4))).toBeLessThan(folds(withLimps(1)));
   });
 
+  it("prices an open, which is the context a player sees most", () => {
+    // The hero's money is not all in, but the size still is not a choice the
+    // spot leaves open - the table teaches one open size per depth. So the price
+    // can be stated even though the expected value cannot, and RFI carried no
+    // number at all until this.
+    const panel = renderDecisionPrice(document, spot("RFI", 50), filters())!;
+    expect(panel).not.toBeNull();
+    // Risking 2.5 to win 1.5 needs 2.5/4 - 62.5 percent.
+    expect(panel.querySelector(".decision-price__headline")?.textContent).toContain("62,5");
+  });
+
   it("declines to price a spot that does not fix one", () => {
     // Outside the all-in contexts the bet size is not determined by the spot, and
     // a made-up size reads exactly as authoritative as a real one.
-    expect(renderDecisionPrice(document, spot("RFI"), filters())).toBeNull();
     // A VS_OPEN spot with no shove on offer has no all-in price to state.
     expect(renderDecisionPrice(document, spot("VS_OPEN"), filters())).toBeNull();
     expect(renderDecisionPrice(document, spot("SQUEEZE"), filters())).toBeNull();

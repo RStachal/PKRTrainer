@@ -152,6 +152,22 @@ export function renderDecisionPrice(
           : CS.training.shoveFoldsShort(pct(requirement.expectedFolds)),
       ));
     }
+  } else if (spot.context === "RFI") {
+    // Opening first in. The hero's money is not all in, but the size is still
+    // not a choice the spot leaves open: the shipped table teaches one open size
+    // per depth. So the price can be stated even though the expected value
+    // cannot - that would need what happens after the call, and no postflop
+    // model stands behind these packs.
+    //
+    // This is the context a player sees most often, and it carried no number at
+    // all until now.
+    const openBB = teachesOpenSizeAtDepth(spot.effStack);
+    const requirement = shoveRequirement(openBB, pot, style);
+    box.appendChild(line(
+      doc,
+      "decision-price__headline",
+      CS.training.openPrice(bb(openBB), bb(pot), pct(requirement.requiredFolds)),
+    ));
   } else if (spot.context === "VS_ALLIN") {
     // The shover is in for their stack, so the pot is the blinds plus that stack
     // and the call is the hero's own - the same convention the EV uses.

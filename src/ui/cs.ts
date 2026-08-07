@@ -94,6 +94,8 @@ const CZ_CATALOG = {
       `Přeshoveváte za ${risk} BB do potu ${pot} BB (blindy + open) — shove se zaplatí sám při ${folds} foldů openera.`,
     limpJamPrice: (risk: string, pot: string, limpers: string, folds: string) =>
       `Shove za ${risk} BB do potu ${pot} BB (blindy + ${limpers} limp) — zaplatí se sám, když všichni složí v ${folds} případů.`,
+    openPrice: (risk: string, pot: string, folds: string) =>
+      `Otevíráte za ${risk} BB do potu ${pot} BB — samotný open se zaplatí, když všichni složí v ${folds} případů. Co získáte navíc, když vás někdo dohraje, závisí na postflopu.`,
     shoveFoldsEnough: (folds: string) =>
       `Tenhle soupeř folduje ${folds}, takže shove vydělává i bez dojetí do showdownu.`,
     shoveFoldsShort: (folds: string) =>
@@ -397,6 +399,8 @@ const EN_CATALOG: UiCatalog = {
       `You shove ${risk} BB over the raise into ${pot} BB (blinds plus the open) - it pays for itself at ${folds} folds from the opener.`,
     limpJamPrice: (risk: string, pot: string, limpers: string, folds: string) =>
       `You shove ${risk} BB into ${pot} BB (blinds plus ${limpers} limp) - it pays for itself when everyone folds ${folds} of the time.`,
+    openPrice: (risk: string, pot: string, folds: string) =>
+      `You open for ${risk} BB into ${pot} BB - the raise alone pays for itself when everyone folds ${folds} of the time. What it wins beyond that when called depends on postflop play.`,
     shoveFoldsEnough: (folds: string) =>
       `This opponent folds ${folds}, so the shove profits without ever reaching showdown.`,
     shoveFoldsShort: (folds: string) =>

@@ -397,8 +397,16 @@ function computeActionEvs(
   store: RangeStore,
   opponentStyle?: OpponentStyleId,
 ): ActionEvSet<ActionKey> | undefined {
-  if (context === "PUSH_FOLD" && offered.includes("JAM") && offered.includes("FOLD")) {
-    const measured = playedClasses(store.lookup({ ante, position: "BB", bucket: effStack, context: "VS_ALLIN" }));
+  // An open-shove at fifteen big blinds is the same decision as a push/fold
+  // shove, just reached from a different context: the hero is first in, the pot
+  // is the blinds, and everyone behind can still wake up. Priced identically
+  // rather than left blank because the context label happens to differ.
+  if (
+    (context === "PUSH_FOLD" || context === "RFI") &&
+    offered.includes("JAM") &&
+    offered.includes("FOLD")
+  ) {
+    const measured = shoveCallerClasses(effStack, ante, store);
     if (measured.length === 0) return undefined;
     // A named opponent replaces the measured range with the slice their folding
     // implies. The players behind have not acted, so the pool is the whole deck.
@@ -555,6 +563,32 @@ function styledCallers(
   if (style === undefined) return [...measured];
   const sliced = strongestSlice(pool, 1 - OPPONENT_STYLES[style].foldsToShove);
   return sliced.length === 0 ? [...measured] : sliced;
+}
+
+/**
+ * Who calls a first-in shove at this depth.
+ *
+ * The big blind is the natural answer and the only one at five and ten big
+ * blinds, where the push/fold chart draws it. Above that the sheets change hands:
+ * the calling-rejam charts cover UTG, the lojack, the cutoff, the button and the
+ * small blind, and explicitly not the big blind - so an open-shove at fifteen
+ * found nothing under "BB" and silently produced no EV at all.
+ *
+ * Falling back to the small blind, then the button. Both are charted at those
+ * depths and both are the seat immediately behind a late-position shove, which is
+ * the caller that matters most. Stated here rather than hidden because it is an
+ * approximation: the range that answers is not always the seat the spot implies.
+ */
+function shoveCallerClasses(
+  bucket: StackBucket,
+  ante: AnteMode,
+  store: RangeStore,
+): HandLabel[] {
+  for (const position of ["BB", "SB", "BTN"] as Position[]) {
+    const classes = playedClasses(store.lookup({ ante, position, bucket, context: "VS_ALLIN" }));
+    if (classes.length > 0) return classes;
+  }
+  return [];
 }
 
 /** The opener's own range at this depth, from the seat the sheets calibrate to. */
