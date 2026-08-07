@@ -5,7 +5,7 @@ import { createRangeStoreFromRangePack } from "../../src/data/rangeStore";
 import { allMttPreflopRangePacks } from "../../src/data/ranges/mttPreflopRangePacks";
 
 /**
- * An offsuit range may not play a kicker while folding a better one.
+ * A range may not play a kicker while folding a better one of the same shape.
  *
  * KJo dominates KTo. A range holding the second and not the first is not
  * describing a strategy, it is describing a misreading - and this scan found
@@ -53,8 +53,8 @@ function playedClasses(
   );
 }
 
-describe("offsuit kicker order", () => {
-  it("never opens a kicker while folding a better one", () => {
+describe("kicker order", () => {
+  it("never opens a kicker while folding a better one of the same shape", () => {
     const violations: string[] = [];
     let checked = 0;
     for (const ante of ["OFF", "ON"] as AnteMode[]) {
@@ -64,10 +64,16 @@ describe("offsuit kicker order", () => {
           if (played === null) continue;
           checked += 1;
           for (const hand of played) {
-            if (!hand.endsWith("o")) continue;
+            if (hand.length === 2) continue;
+            const suit = hand[2];
+            // The wheel defence is for suited aces only: A5s through A2s make
+            // straights, so folding A7s while playing A5s is deliberate. A suited
+            // king with a lower kicker has no such story, and neither does any
+            // offsuit hand.
+            if (suit === "s" && hand[0] === "A" && "5432".includes(hand[1])) continue;
             const high = RANKS.indexOf(hand[0]);
             for (let kicker = RANKS.indexOf(hand[1]) + 1; kicker < high; kicker += 1) {
-              const better = `${hand[0]}${RANKS[kicker]}o`;
+              const better = `${hand[0]}${RANKS[kicker]}${suit}`;
               if (!played.has(better)) {
                 violations.push(`${ante} ${seat} ${depth}BB plays ${hand}, folds ${better}`);
               }

@@ -173,11 +173,12 @@ describe("button opening range width", () => {
     // be answering a question nobody has asked yet.
     expect(openWidthPct("OFF", "BTN", 15 as StackBucket)).toBe(39.7);
     expect(openWidthPct("OFF", "BTN", 20 as StackBucket)).toBe(39.7);
-    // 45.4 rather than 44.5 since the ante widening gained K8o: the button
-    // opened K7o while folding the hand that dominates it, and it is the one
-    // seat two published sets say we open too tight.
-    expect(openWidthPct("ON", "BTN", 15 as StackBucket)).toBe(45.4);
-    expect(openWidthPct("ON", "BTN", 20 as StackBucket)).toBe(45.4);
+    // 45.7 rather than 44.5: the ante widening gained K8o and Q4s. The button
+    // opened K7o and Q3s while folding the hands that dominate each, and it is
+    // the one seat two published sets say we open too tight - so both pairs were
+    // completed upward instead of trimmed.
+    expect(openWidthPct("ON", "BTN", 15 as StackBucket)).toBe(45.7);
+    expect(openWidthPct("ON", "BTN", 20 as StackBucket)).toBe(45.7);
   });
 
   it("keeps the button wider than every earlier seat at the same depth", () => {

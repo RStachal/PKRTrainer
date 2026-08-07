@@ -196,7 +196,11 @@ const OPEN_RANGES: Record<string, CoreExtra> = {
     // adds KTo, so with ante on the seat opened the weaker of the two and folded
     // the hand that dominates it. The 50BB band already has KJo, which is what
     // made this visible: the same seat, one band deeper, gets it right.
-    extra: "K8s, Q9s, J9s, KJo, KTo",
+    // K8s dropped: the seat folds K9s, so an ante widening adding K8s adds the
+    // weaker of the pair. Removed rather than completed because the published
+    // gradient - UTG 11.4, UTG+1 13.2, LJ 15.7 - puts this seat near 14.5 and it
+    // sits at 20.1.
+    extra: "Q9s, J9s, KJo, KTo",
   },
   LJ: {
     core: "22+, A2s+, K9s+, Q9s+, J9s+, T9s, 98s, 87s, 76s, 65s, ATo+, KJo+, QJo",
@@ -213,14 +217,20 @@ const OPEN_RANGES: Record<string, CoreExtra> = {
     // the offsuit wheel aces removed from the core band above, and found by the
     // same scan - a range that plays a weaker kicker while folding a stronger one
     // is describing a misreading, not a strategy.
-    extra: "K4s, Q6s, J7s, 86s, K9o",
+    // K4s and Q6s dropped with A5o for the same reason and in the same direction:
+    // each is the weaker half of a pair whose stronger half this seat folds, and
+    // two published sets put the cutoff near 26 percent against our 32.4.
+    extra: "J7s, 86s, K9o",
   },
   BTN: {
     core: "22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 96s+, 86s+, 75s+, 65s, 54s, A2o+, K9o+, Q9o+, J9o+, T9o",
     // K8o added rather than K7o removed. The button is the one seat two published
     // sets agree we open *too tight* - 50.5 percent against 54.8 - so where the
     // repair can go either way, here it goes wider.
-    extra: "Q3s, J6s, T6s, 64s, K8o, K7o, Q8o, J8o, 98o",
+    // Q4s added beside Q3s, as K8o was beside K7o. The button is the only seat
+    // the published sets say we open too tight, so where a pair can be completed
+    // either way it is completed upward.
+    extra: "Q4s, Q3s, J6s, T6s, 64s, K8o, K7o, Q8o, J8o, 98o",
   },
   SB: {
     core: "22+, A2s+, K2s+, Q4s+, J6s+, T6s+, 96s+, 86s+, 76s, 65s, 54s, A2o+, K8o+, Q9o+, J9o+, T9o, 98o",
@@ -229,7 +239,11 @@ const OPEN_RANGES: Record<string, CoreExtra> = {
     // trimmed because this seat has no depth bands at all and is the least
     // measured in the table - see depthBandCoverage.test.ts - so removing hands
     // here would be pruning a range nobody has checked.
-    extra: "Q2s, J4s, T5s, 95s, 75s, K7o, K6o, K5o, Q8o, Q7o, J8o, T8o, 87o",
+    // Q3s and J5s added beside Q2s and J4s. Completed rather than trimmed for the
+    // same reason as the offsuit repairs at this seat: it has no depth bands at
+    // all, so it is the least measured range in the table and pruning it would be
+    // guessing at the one seat nobody has checked.
+    extra: "Q3s, Q2s, J5s, J4s, T5s, 95s, 75s, K7o, K6o, K5o, Q8o, Q7o, J8o, T8o, 87o",
   },
 };
 
