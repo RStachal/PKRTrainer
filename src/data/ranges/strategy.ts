@@ -184,11 +184,19 @@ const DEPTH_OPEN_RANGES: Record<string, readonly DepthBand[]> = {
 const OPEN_RANGES: Record<string, CoreExtra> = {
   UTG: {
     core: "22+, A4s+, KTs+, QTs+, JTs, T9s, 98s, AJo+, KQo",
-    extra: "A2s+, 87s, ATo",
+    // 87s dropped. With ante on, under the gun opened it while UTG+1, UTG+2 and
+    // the lojack all folded it at 25 to 40BB - a hand cannot be playable from the
+    // earliest seat and unplayable from three seats later, where there are fewer
+    // players left to act. Removed rather than added to the later seats because
+    // those already run wide against published sets while under the gun is the
+    // closest to them.
+    extra: "A2s+, ATo",
   },
   "UTG+1": {
     core: "22+, A4s+, KTs+, QTs+, JTs, T9s, 98s, 87s, AJo+, KQo",
-    extra: "A2s+, 76s, ATo",
+    // 76s dropped for the same reason: UTG+1 opened it with ante on while UTG+2
+    // and the lojack folded it, in UTG+2's case at every depth from 25 to 150.
+    extra: "A2s+, ATo",
   },
   "UTG+2": {
     core: "22+, A2s+, K9s+, QTs+, JTs, T9s, 98s, 87s, 76s, ATo+, KJo+",
