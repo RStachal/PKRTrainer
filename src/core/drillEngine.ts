@@ -396,6 +396,7 @@ function computeActionEvs(
   offered: readonly ActionKey[],
   store: RangeStore,
   opponentStyle?: OpponentStyleId,
+  callsBefore = 0,
 ): ActionEvSet<ActionKey> | undefined {
   // An open-shove at fifteen big blinds is the same decision as a push/fold
   // shove, just reached from a different context: the hero is first in, the pot
@@ -474,6 +475,43 @@ function computeActionEvs(
     // players behind have already folded to it. This is the case where pricing
     // against a single caller is right rather than flattering.
     const ev = shoveEv(hand, caller, effStack, startingPot + openBB, 1, openerCombos);
+    if (ev === undefined) return undefined;
+    return {
+      source: "ALL_IN_EQUITY",
+      unit: "BB",
+      values: [
+        { action: "JAM" as ActionKey, evBb: Math.round(ev.jamBB * 100) / 100 },
+        { action: "FOLD" as ActionKey, evBb: 0 },
+      ],
+      equivalentThresholdBb: 0.1,
+      acceptableThresholdBb: 0.3,
+    };
+  }
+
+  // Blind versus blind, and squeezing over an open with callers. Both put the
+  // hero all in and both have a pot the spot determines: the blinds alone in the
+  // first case, the blinds plus the open plus one open-sized call for each caller
+  // in the second, and `callsBefore` is recorded.
+  //
+  // The calling range is the approximation, and it is the same one the re-jam
+  // uses: whichever charted seat answers a shove at this depth. Blind-versus-
+  // blind that is the big blind, which the sheets do not draw, so it falls back
+  // as everywhere else and says so rather than producing nothing.
+  if (
+    (context === "BVB" || context === "SQUEEZE") &&
+    offered.includes("JAM") &&
+    offered.includes("FOLD")
+  ) {
+    const caller = shoveCallerClasses(effStack, ante, store);
+    if (caller.length === 0) return undefined;
+    const openBB = openSizeAtDepth(effStack, ante, store) ?? 0;
+    const pot = context === "SQUEEZE"
+      ? startingPot + openBB * (1 + callsBefore)
+      : startingPot;
+    // One opponent blind versus blind; everyone still in the hand facing a
+    // squeeze, since any of them can call.
+    const opponents = context === "SQUEEZE" ? 1 + callsBefore : 1;
+    const ev = shoveEv(hand, caller, effStack, pot, opponents);
     if (ev === undefined) return undefined;
     return {
       source: "ALL_IN_EQUITY",
@@ -783,6 +821,7 @@ export function generateSpot(
       offeredActionKeys,
       store,
       filters.opponentStyle,
+      tableState.callsBefore,
     );
   const explanation = buildPreflopExplanation({
     context,
