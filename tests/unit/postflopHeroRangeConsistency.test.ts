@@ -33,28 +33,22 @@ describe("hero range consistency", () => {
     const rows = compareHeroRanges();
     const byFamily = new Map(rows.map((row) => [row.familyId, row]));
 
-    // This gap has now closed again, to two tenths of a point, and the reason
-    // matters more than the number.
+    // Open again, at about three and a half points, and deliberately so.
     //
-    // It was opened deliberately: the pack and the solve agreed at about 15
-    // percent, the charts said 11, and the pack was narrowed to the charts. The
-    // note left here was right to warn that a pack agreeing with a solve proves
-    // nothing about either.
+    // The pack and the 40BB UTG solve once agreed at roughly 15 percent; the
+    // pack was narrowed to the charts and this gap opened. A carry-forward rule
+    // then widened the pack back and closed it, and I read landing within two
+    // tenths of the solve as corroboration - the note already in this file
+    // warning that a pack agreeing with a solve proves nothing about either.
     //
-    // What reopened it is a different argument, and not a re-reading of any
-    // chart. The narrow bands drop 22 through 66 at exactly the depth where
-    // stacks get deeper, and a small pair is a set-mining hand - it needs
-    // implied odds, and implied odds improve with depth. Opening them only while
-    // short is backwards, and it was backwards identically at four seats, which
-    // is the signature of a gap between two sources rather than a decision. The
-    // hands restored are the ones the same seat already opens at 20BB.
-    //
-    // So the solve is not the evidence here; it is a third thing that landed in
-    // the same place, having been built before any of this. The width question
-    // under the gun still has - roughly 15 percent here against 17.6 in two MTT
-    // sources - remains open and is documented in
-    // Agents/reference-ranges/btn-rfi-mtt-regular.md.
-    expect(byFamily.get("MTT9_40BB_UTG_BB_SRP")?.gapPoints).toBeLessThan(1);
+    // It was right to warn. Two published references put nine-handed UTG near
+    // 11.4 percent, the narrowed pack sits at 11.2 to 12.7, and the solve takes
+    // its hero range from the same lineage as the flat table it was widened
+    // toward. So the gap is between the pack and an old assumption rather than
+    // between the pack and the evidence, and it closes when those families are
+    // re-solved.
+    expect(byFamily.get("MTT9_40BB_UTG_BB_SRP")?.gapPoints).toBeGreaterThan(2);
+    expect(byFamily.get("MTT9_40BB_UTG_BB_SRP")?.gapPoints).toBeLessThan(5);
 
     // The cutoff no longer does, and that is a consequence rather than a
     // regression: widening the preflop packs toward the purchased charts moved

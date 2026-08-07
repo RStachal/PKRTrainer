@@ -120,33 +120,22 @@ describe("button opening range width", () => {
     }
   });
 
-  it("never drops a pair or a suited hand as stacks deepen, across the band seam", () => {
-    // The measured bands take over above 20BB, and where they did they were
-    // narrower than the flat table they replaced: under the gun 14.9 percent at
-    // 20BB and 11.2 at 25, the lojack 20.1 and 16.4, the same at UTG+1 and
-    // UTG+2. What they lost was mostly 22 through 66.
+  it("records the 20 to 25BB seam as a real step down at the early seats", () => {
+    // The early seats narrow by about four points where the measured bands take
+    // over, and this pins that rather than forbidding it.
     //
-    // A small pair is a set-mining hand. It needs implied odds, implied odds
-    // improve as stacks deepen, and the table opened them only while stacks were
-    // short - backwards, and identically backwards at four seats, which is what
-    // a gap between two sources looks like rather than a decision.
-    //
-    // Offsuit hands are excluded on purpose: KJo and QJo were dropped at the
-    // same seam and that direction stands on its own, because an offsuit
-    // broadway is the hand that gets dominated when the money goes in deep.
-    // The three early seats only. The chart pack measured the lojack, hijack,
-    // cutoff and button, and at the lojack the flat 20BB table is wider than the
-    // measured 50BB band - so applying this rule there would overwrite a
-    // measurement with an inference, which is the wrong way round.
-    for (const seat of ["UTG", "UTG+1", "UTG+2"] as Position[]) {
-      for (const ante of ["OFF", "ON"] as AnteMode[]) {
-        const shallow = openedClasses(ante, seat, 20 as StackBucket);
-        const deep = openedClasses(ante, seat, 25 as StackBucket);
-        const dropped = [...shallow]
-          .filter((hand) => !hand.endsWith("o"))
-          .filter((hand) => !deep.has(hand));
-        expect(dropped, `${ante} ${seat} drops at 25BB`).toEqual([]);
-      }
+    // A rule carrying pairs and suited hands up from the shallower range was
+    // tried and removed. Two published references put nine-handed UTG near 11.4
+    // percent and the measured bands sit at 11.2 to 12.7 - within a point - so
+    // the outlier is the flat 20BB table, not the bands, and widening the bands
+    // moved four seats away from the evidence to make one seam disappear.
+    for (const seat of ["UTG", "UTG+1", "UTG+2", "LJ"] as Position[]) {
+      const shallow = openWidthPct("OFF", seat, 20 as StackBucket)!;
+      const deep = openWidthPct("OFF", seat, 25 as StackBucket)!;
+      expect(deep, `${seat} 20BB ${shallow}% vs 25BB ${deep}%`).toBeLessThan(shallow);
+      // Real, but not a chasm - past six points the two ends would not be
+      // describing the same seat.
+      expect(shallow - deep, `${seat} step`).toBeLessThan(6);
     }
   });
 

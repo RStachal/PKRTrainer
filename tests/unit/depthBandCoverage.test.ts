@@ -13,15 +13,12 @@ import { allMttPreflopRangePacks } from "../../src/data/ranges/mttPreflopRangePa
  * so - it still answers the same 42.1 percent at fifteen big blinds and at a
  * hundred and fifty.
  *
- * Writing this test found a second case that nothing had recorded: under the gun
- * and UTG+1 are flat too, but only with ante on. That one is a side effect of a
- * deliberate decision. The ante widening is a fixed set of extra hands applied
- * at every depth - ante is a property of the dead money, not of the stack - and
- * for the two narrowest seats those extras are larger than the gap between the
- * 25BB and 50BB bands, so they swallow the curve entirely. Ante off, both seats
- * have two bands; ante on, one.
+ * Writing this test briefly found a second case - under the gun and UTG+1 flat
+ * with ante on - which turned out to be an artefact of a carry-forward rule that
+ * has since been removed. With the measured bands standing on their own, both
+ * seats have their curve back in either ante mode.
  *
- * Neither is fixed here, because there is nothing to fix them with. The chart
+ * The small blind is not fixed here, because there is nothing to fix it with. The chart
  * pack that produced the bands covers the lojack, hijack, cutoff and button. The
  * small blind's depth behaviour was never measured, and inventing bands for the
  * one seat that opens into a single opponent - where limping is part of the
@@ -48,8 +45,6 @@ const DEPTHS = [15, 20, 25, 30, 40, 50, 75, 100, 150] as StackBucket[];
 const KNOWN_FLAT: ReadonlyArray<{ seat: Position; ante: AnteMode }> = [
   { seat: "SB", ante: "OFF" },
   { seat: "SB", ante: "ON" },
-  { seat: "UTG", ante: "ON" },
-  { seat: "UTG+1", ante: "ON" },
 ];
 
 const isKnownFlat = (seat: Position, ante: AnteMode) => (
@@ -106,13 +101,12 @@ describe("depth band coverage", () => {
     expect(KNOWN_FLAT.length).toBeLessThan(6);
   });
 
-  it("flattens under the gun with ante, which is the ante widening not a band", () => {
-    // Ante off the seat has two bands; ante on it has one. The extras are a
-    // fixed set applied at every depth, and for the narrowest seats they are
-    // larger than the step between bands. Asserted so the cause stays attached
-    // to the symptom.
+  it("keeps under the gun banded in both ante modes", () => {
+    // Ante widens the seat at every depth without erasing the depth curve, which
+    // is what a fixed addition should do and what it failed to do while the
+    // carry-forward rule was in place.
     expect(distinctWidths("OFF", "UTG")).toBeGreaterThan(1);
-    expect(distinctWidths("ON", "UTG")).toBe(1);
+    expect(distinctWidths("ON", "UTG")).toBeGreaterThan(1);
     expect(widthPct("ON", "UTG", 25 as StackBucket)!)
       .toBeGreaterThan(widthPct("OFF", "UTG", 25 as StackBucket)!);
   });

@@ -895,3 +895,40 @@ tell you which hands to add, and the three sources that agree on the direction d
 not agree on a hand list - one is a screenshot, one is a cash guide, one is a
 different product. What would settle it is a single MTT chart for this seat at this
 depth, read the way these were.
+
+## The seam repair was made at the wrong end, 2026-08-07
+
+Earlier today the early seats were widened at 25BB and above, by carrying every
+pair and suited hand up from the flat 20BB table. The reasoning was that a small
+pair is a set-mining hand, implied odds improve with depth, and a table that
+opens them only while stacks are short has the relationship backwards.
+
+Checked against published nine-handed ranges, that repair is wrong, and the
+argument behind it reverses.
+
+| source | seat | width |
+| --- | --- | --- |
+| published MTT chart set, 75BB with antes | UTG | 11.4% |
+| full-ring cash guide | UTG | 11.5% |
+| ours, measured bands, before the repair | UTG | 11.2-12.7% |
+| ours, after the repair | UTG | 15.5% off / 16.7% on |
+
+Two independent sources agree with each other and with the measured bands to
+within about a point. The repair moved four seats three to five points away from
+both.
+
+**The set-mining argument runs the other way.** At twenty big blinds a small pair
+from under the gun has nothing to mine for - the stacks are too shallow to be
+paid off when it hits. At a hundred they are. So opening them shallow and folding
+them deep is wrong because the *shallow* end is too wide, and carrying that
+upward turned one wrong seat into four.
+
+**The corroboration was circular.** The 40BB UTG postflop solves were built at
+about 15 percent and the repair landed within two tenths of that, which read as
+independent confirmation. Those solves take their hero range from the same
+lineage as the flat table. `postflopHeroRangeConsistency.test.ts` already carried
+a note saying a pack agreeing with a solve proves nothing about either, and that
+note was right.
+
+Reverted. The seam is real and stays documented: the flat 20BB table is the
+outlier, and it is the end to re-measure.

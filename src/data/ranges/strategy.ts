@@ -499,14 +499,7 @@ function rfiSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSe
     .filter((item) => bucket >= item.fromBucket)
     .sort((left, right) => right.fromBucket - left.fromBucket)[0];
   const flat = OPEN_RANGES[pos];
-  const ce = band === undefined
-    ? flat
-    : {
-      core: CARRY_FORWARD_SEATS.has(pos)
-        ? `${band.core}, ${carriedForward(flat.core)}`
-        : band.core,
-      extra: flat.extra,
-    };
+  const ce = band === undefined ? flat : { core: band.core, extra: flat.extra };
   const k = openKeys(bucket);
   const open: RangeSegment = { spec: widen(ce, wide), strict: k.strict, lenient: k.lenient };
 
@@ -520,54 +513,42 @@ function rfiSegments(pos: Position, bucket: StackBucket, wide: boolean): RangeSe
 }
 
 /**
- * Pairs and suited hands the seat already opens shallower, kept as it gets deeper.
+ * Why the early seats step down at the 20 to 25BB seam, and why that stands.
  *
- * The measured depth bands start above twenty big blinds, and where they took
- * over they were quietly *narrower* than the flat table they replaced. Measured
- * across the seam: under the gun 14.9 percent at 20BB and 11.2 at 25, the lojack
- * 20.1 and 16.4, with the same shape at UTG+1 and UTG+2. Four seats stepping
- * down by about four points at the moment stacks get deeper.
+ * The measured bands start above twenty big blinds and are narrower than the
+ * flat table they replace: under the gun 14.9 percent at 20BB and 11.2 at 25,
+ * the lojack 20.1 and 16.4, with the same shape at UTG+1 and UTG+2. What they
+ * drop is mostly the small pairs.
  *
- * What they lost was mostly the small pairs - 22 through 66 - and that is the
- * part that cannot be right whichever width is. A small pair is a set-mining
- * hand: it needs implied odds, implied odds improve as stacks deepen, and our
- * table opened them only while stacks were short. Backwards, and identically
- * backwards at four seats, which is what a gap between two data sources looks
- * like rather than a decision anybody made.
+ * That looked backwards - a small pair is a set-mining hand, implied odds
+ * improve with depth, and the table opened them only while stacks were short -
+ * so a rule was added carrying every pair and suited hand up from the shallower
+ * range. It has been removed again, because it fixed the wrong end.
  *
- * So a band inherits every pair and suited hand from the shallower range.
- * Offsuit hands are deliberately not carried: KJo and QJo were dropped at the
- * same seam and that direction is defensible on its own terms, because an
- * offsuit broadway plays worse deep, not better - it is the hand that gets
- * dominated when the money goes in on later streets.
+ * Two independent published references put nine-handed UTG at about 11.4 percent
+ * (one MTT chart set at 75BB with antes, one full-ring cash guide at 11.5). Our
+ * measured deep bands were 11.2 to 12.7 - within a point of both. The carry rule
+ * pushed them to 15.5 ante off and 16.7 ante on, four to five points above two
+ * sources that agree with each other.
  *
- * This is a rule rather than an edit to the range strings so that a band added
- * later cannot reintroduce the same cliff by omission.
+ * So the outlier is the flat 20BB table, not the bands. And the set-mining
+ * argument reverses on inspection: at twenty big blinds a small pair from under
+ * the gun has no implied odds to mine for - the stacks are too shallow to get
+ * paid - while at a hundred they do. Opening them shallow and folding them deep
+ * is wrong in the direction the flat table is wrong, and propagating it upward
+ * made four seats wrong instead of one.
+ *
+ * The corroboration that persuaded me was also weaker than it looked: the 40BB
+ * UTG postflop solves were built at about 15 percent, and I read landing within
+ * two tenths of that as confirmation. Those solves take their hero range from
+ * the same lineage as the flat table, and the consistency test in this repo
+ * already warns in as many words that a pack agreeing with a solve proves
+ * nothing about either.
+ *
+ * Left as it is until the 20BB end can be re-measured. The seam is real and
+ * documented in Agents/reference-ranges/btn-rfi-mtt-regular.md; closing it by
+ * widening the end that matches the evidence was the wrong repair.
  */
-/**
- * Seats whose depth bands were never measured against the owner's charts.
- *
- * The chart pack covers the lojack, hijack, cutoff and button, and their bands
- * widen with depth in the source. The three early seats were not in it, and
- * theirs came from somewhere else.
- *
- * The distinction decides where the carry-forward may apply, and the first
- * version of this got it wrong by applying everywhere. At the lojack the flat
- * 20BB table is 20.1 percent while the *measured* 50BB band is 18.9 - so
- * carrying hands up from the flat table overwrote a measurement with an
- * inference, and flattened a depth curve that the chart pack actually contains.
- * Where there is a measurement it wins, and the unverified flat table below it
- * is the part to be suspicious of.
- */
-const CARRY_FORWARD_SEATS = new Set<string>(["UTG", "UTG+1", "UTG+2"]);
-
-function carriedForward(flatCore: string): string {
-  return flatCore
-    .split(",")
-    .map((token) => token.trim())
-    .filter((token) => token.length > 0 && !token.includes("o"))
-    .join(", ");
-}
 
 /**
  * Re-jam over an open, for the depths the owner's sheets cover.
