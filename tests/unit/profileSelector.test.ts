@@ -89,7 +89,12 @@ describe("profileSelector", () => {
     // app ships in Czech; a literal would pin the language instead of the fact.
     // What the fact has to be is checked here.
     expect(CS.profile.mttSixMaxDerivedPreview).toMatch(/9-max/);
-    expect(CS.profile.mttSixMaxDerivedPreview).toMatch(/tight|těsné/);
+    // Wider, not tighter. The note said tighter until the derived widths were
+    // checked against published six-max frequencies and came out 2 to 6 points
+    // above them - so a player reading "conservative" would have widened a range
+    // that was already too wide. sixMaxDerivedWidth.test.ts holds the numbers.
+    expect(CS.profile.mttSixMaxDerivedPreview).toMatch(/wider|širší/);
+    expect(CS.profile.mttSixMaxDerivedPreview).not.toMatch(/tight|těsné/);
     expect(note?.textContent).not.toContain("RangePack");
     expect(note?.textContent).not.toContain("mtt-");
   });

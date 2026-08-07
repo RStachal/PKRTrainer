@@ -33,10 +33,26 @@ import type { TableFormat } from "./trainingProfile";
  * ## What this is not
  *
  * It is an approximation with a stated basis, not a measurement, and anything
- * built from it must say so. A real six-max field plays looser and more
- * aggressively than a nine-handed one at the same seats-behind, so these ranges
- * will run tight. They are a floor to be corrected by measurement, not a
- * substitute for it - the same discipline the chart work has followed throughout.
+ * built from it must say so.
+ *
+ * The expectation written here first was that a six-max field plays looser at
+ * equal seats-behind, so these would run tight. Checked against published
+ * six-max opening frequencies, that is wrong, and wrong in the direction that
+ * matters: at 100BB ante off they run 1.9 points wide under the gun, 4.5 at the
+ * hijack, 4.4 at the cutoff, 3.9 on the button and 6.1 in the small blind - and
+ * the references are MTT figures that already include antes, while those are
+ * our ante-off numbers, so the gap is if anything understated.
+ *
+ * The reason is visible in the mapping. Six-max under-the-gun inherits the
+ * nine-handed lojack, which is a middle seat in a nine-handed game and opens
+ * like one; the six-max seat with the same players behind it is the earliest
+ * seat at its table and is played tighter than the seat count alone suggests.
+ * Seats-behind captures how often you run into a better hand and not how the
+ * rest of the table responds to a raise.
+ *
+ * So: a ceiling to be corrected downward by measurement, not a floor. Anything
+ * shown to a player has to say which, because "these are conservative" and
+ * "these are loose" are opposite instructions.
  */
 
 /** How many opponents still have to act behind a seat, counting the blinds. */

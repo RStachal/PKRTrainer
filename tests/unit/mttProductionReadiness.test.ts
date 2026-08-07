@@ -219,7 +219,7 @@ describe("mttProductionReadiness", () => {
     const sixMaxRegular = sixMax.filter((row) => row.blindSpeed === "REGULAR");
     expect(sixMaxRegular).toHaveLength(2);
     expect(sixMaxRegular.every((row) => row.recordCount > 0)).toBe(true);
-    expect(sixMaxRegular.every((row) => row.packId.includes("derived"))).toBe(true);
+    expect(sixMaxRegular.every((row) => row.packId?.includes("derived") === true)).toBe(true);
 
     const sixMaxTurbo = sixMax.filter((row) => row.blindSpeed === "TURBO");
     expect(sixMaxTurbo).toHaveLength(2);

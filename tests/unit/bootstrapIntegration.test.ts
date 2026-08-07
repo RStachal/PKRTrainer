@@ -404,9 +404,10 @@ describe("bootstrap - inicializacni tok", () => {
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(note?.dataset.status).toBe("preview");
     expect(note?.textContent).toContain("6-max");
-    // Provenance, not marketing: derived from 9-max and expected to run tight.
+    // Provenance, not marketing: derived from 9-max, and measured wider than
+    // published six-max references rather than tighter.
     expect(note?.textContent).toMatch(/9-max/);
-    expect(note?.textContent).toMatch(/tight|těsné/);
+    expect(note?.textContent).toMatch(/wider|širší/);
     // And no internal identifiers leak into player-facing copy.
     expect(note?.textContent).not.toContain("mtt-six-max");
     expect(note?.textContent).not.toContain("derived-v1");
