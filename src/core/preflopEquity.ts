@@ -109,6 +109,60 @@ export function equityVsRange(hero: HandLabel, range: readonly HandLabel[]): num
   return combos === 0 ? undefined : weighted / combos;
 }
 
+/**
+ * Every hand class, strongest first, ranked by how it runs against a random hand.
+ *
+ * Derived from the same table everything else here uses rather than written down:
+ * a class's strength is its combination-weighted equity against the whole deck,
+ * which is exactly what the table already holds. Nothing about the ordering is a
+ * judgement, so nothing about it can be wrong in a way a chart would settle.
+ */
+export function strengthOrder(): HandLabel[] {
+  if (table === undefined) return [];
+  if (strengthCache !== undefined) return strengthCache;
+  const all = [...table.index.keys()] as HandLabel[];
+  strengthCache = all
+    .map((hand) => ({ hand, strength: equityVsRange(hand, all) ?? 0 }))
+    .sort((left, right) => right.strength - left.strength)
+    .map((item) => item.hand);
+  return strengthCache;
+}
+
+let strengthCache: HandLabel[] | undefined;
+
+/**
+ * The strongest `fraction` of a range, by combinations.
+ *
+ * This is what an opponent style actually says. A player who folds sixty percent
+ * to a shove calls with the top forty of whatever they hold - not with a
+ * different chart, and not with hands chosen by hand. Taking the slice from the
+ * pool the opponent can actually have keeps that true whether the pool is the
+ * whole deck, which it is for a player yet to act, or an opening range, which it
+ * is for someone who has already raised.
+ *
+ * Returns the pool unchanged at a fraction of one or more, and empty at zero, so
+ * the two ends behave the way a caller would expect without special-casing.
+ */
+export function strongestSlice(
+  pool: readonly HandLabel[],
+  fraction: number,
+): HandLabel[] {
+  if (fraction >= 1) return [...pool];
+  if (fraction <= 0) return [];
+  const inPool = new Set(pool);
+  const poolCombos = pool.reduce((sum, hand) => sum + combosInClass(hand), 0);
+  const target = poolCombos * fraction;
+  const taken: HandLabel[] = [];
+  let combos = 0;
+  for (const hand of strengthOrder()) {
+    if (!inPool.has(hand)) continue;
+    if (combos >= target) break;
+    taken.push(hand);
+    combos += combosInClass(hand);
+  }
+  return taken;
+}
+
 export interface ShoveEv {
   /** EV of shoving, in big blinds, against callers with this calling range. */
   jamBB: number;

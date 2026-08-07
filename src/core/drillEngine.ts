@@ -90,7 +90,13 @@ import { questionId } from "./questionId";
 import { mulberry32, hashStr } from "./rng";
 import { buildPreflopExplanation } from "./preflopExplanation";
 import { cloneActionEvSet, isActionEvSetComplete, type ActionEvSet } from "./actionEv";
-import { callAllInEv, combosInClass, shoveEv } from "./preflopEquity";
+import {
+  callAllInEv,
+  combosInClass,
+  shoveEv,
+  strongestSlice,
+} from "./preflopEquity";
+import { OPPONENT_STYLES, type OpponentStyleId } from "./opponentStyle";
 import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
 
 // ---------------------------------------------------------------------------
@@ -389,10 +395,14 @@ function computeActionEvs(
   startingPot: number,
   offered: readonly ActionKey[],
   store: RangeStore,
+  opponentStyle?: OpponentStyleId,
 ): ActionEvSet<ActionKey> | undefined {
   if (context === "PUSH_FOLD" && offered.includes("JAM") && offered.includes("FOLD")) {
-    const caller = playedClasses(store.lookup({ ante, position: "BB", bucket: effStack, context: "VS_ALLIN" }));
-    if (caller.length === 0) return undefined;
+    const measured = playedClasses(store.lookup({ ante, position: "BB", bucket: effStack, context: "VS_ALLIN" }));
+    if (measured.length === 0) return undefined;
+    // A named opponent replaces the measured range with the slice their folding
+    // implies. The players behind have not acted, so the pool is the whole deck.
+    const caller = styledCallers(measured, ALL_HAND_CLASSES, opponentStyle);
     // Everyone still to act has to fold, so the shove is priced against all of
     // them rather than against one. From under the gun that is eight players.
     const behind = Math.max(1, POSITION_ORDER.length - 1 - POSITION_ORDER.indexOf(heroPos));
@@ -440,13 +450,18 @@ function computeActionEvs(
   if (context === "VS_OPEN" && offered.includes("JAM") && offered.includes("FOLD")) {
     const openBB = openSizeAtDepth(effStack, ante, store);
     if (openBB === undefined) return undefined;
-    const caller = callRejamClasses(effStack, ante, store);
-    if (caller.length === 0) return undefined;
+    const measured = callRejamClasses(effStack, ante, store);
+    if (measured.length === 0) return undefined;
     // The opener has already raised, so they do not hold a random hand. Fold
     // equity has to be measured against what they can actually have, which is
     // their opening range at this depth - not against the deck.
-    const openerCombos = comboCount(openerClasses(heroPos, effStack, ante, store));
+    const opener = openerClasses(heroPos, effStack, ante, store);
+    const openerCombos = comboCount(opener);
     if (openerCombos === 0) return undefined;
+    // Here the pool is what the opener can hold, not the deck: they have already
+    // raised. A calling station calls a larger share of that, a rock a smaller
+    // one, and both are slices of the same range rather than new charts.
+    const caller = styledCallers(measured, opener, opponentStyle);
     // One opponent, not the field: the hero is jamming over a raise, and the
     // players behind have already folded to it. This is the case where pricing
     // against a single caller is right rather than flattering.
@@ -510,6 +525,30 @@ function callRejamClasses(
     bucket,
     context: "VS_ALLIN",
   }));
+}
+
+/**
+ * The calling range to price against, once the player has named an opponent.
+ *
+ * With no read, the measured sheet stands - it is what the shipped ranges
+ * describe and what the trainer teaches. Naming an opponent is the player
+ * saying this one is not the baseline, and the style model turns that into a
+ * single number: how often they fold to a shove. The calling range is then the
+ * strongest slice of what they can hold.
+ *
+ * Slicing rather than swapping in a second chart is the whole point of the
+ * design. Four styles times every seat and depth would be four times the
+ * material and none of it measured; one number moving one threshold is the same
+ * shape the bubble factor uses, and it leaves the baseline untouched.
+ */
+function styledCallers(
+  measured: readonly HandLabel[],
+  pool: readonly HandLabel[],
+  style: OpponentStyleId | undefined,
+): HandLabel[] {
+  if (style === undefined) return [...measured];
+  const sliced = strongestSlice(pool, 1 - OPPONENT_STYLES[style].foldsToShove);
+  return sliced.length === 0 ? [...measured] : sliced;
 }
 
 /** The opener's own range at this depth, from the seat the sheets calibrate to. */
@@ -694,7 +733,17 @@ export function generateSpot(
   // price the spot fixes are computed. Nothing is invented for the rest.
   const actionEvs = isActionEvSetComplete(candidateActionEvs, offeredActionKeys)
     ? cloneActionEvSet(candidateActionEvs)
-    : computeActionEvs(context, heroPos, hand, effStack, ante, startingPot, offeredActionKeys, store);
+    : computeActionEvs(
+      context,
+      heroPos,
+      hand,
+      effStack,
+      ante,
+      startingPot,
+      offeredActionKeys,
+      store,
+      filters.opponentStyle,
+    );
   const explanation = buildPreflopExplanation({
     context,
     heroPos,
