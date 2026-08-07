@@ -352,3 +352,37 @@ done, and adding boards buys nothing.
 `postflopCoverageMap.test.ts` pins this grid. A pilot is allowed to be partial;
 what it is not allowed to do is shrink unnoticed, or grow while this table still
 claims the old shape.
+
+### Only 12 % of postflop spots reach a solver, and two reasons are defects
+
+Coverage above answers what exists. This is what a player meets: of 6000
+generated flop spots, **12 % resolve to solver-backed content and 88 % to the
+public heuristic**.
+
+Most of that is scope - the generator produces 33 position patterns and the
+pilots cover five. Two parts of it are not.
+
+**`3BP_BTN_VS_CO` is never generated.** Two of the seven pilot packs answer it -
+the three-bet-pot cbet and the facing-bet node, both SPR 0-20 across all thirteen
+textures - and the app cannot produce the spot. That is solved content no player
+can ever see, and it is two of seven packs.
+
+**Two naming schemes coexist.** The generator emits `BTN_VS_BB`, `SB_VS_BB`,
+`EP_VS_BB` and `OOP_RAISER_VS_IP_CALLER` alongside the `SRP_`-prefixed names the
+rules match on:
+
+| spelling | spots in 6000 |
+| --- | --- |
+| legacy names, no rule matches | 746 (12.4 %) |
+| `SRP_`-prefixed, rules match | 716 (11.9 %) |
+
+So the button-versus-blind situation reaches its pilot roughly half the time and
+falls through to the heuristic the rest, for no reason a player could describe.
+Fixing this alone would roughly double solver-backed coverage without solving a
+single new board.
+
+Neither is repaired yet. Renaming touches the generator, the packs, stats records
+already written under the old names, and the UI citation policy which lists both
+spellings - and getting it wrong silently mislabels solved content as heuristic
+or the reverse, which is worse than the gap. `postflopReachability.test.ts` pins
+the state so the repair can be measured when it is made.
