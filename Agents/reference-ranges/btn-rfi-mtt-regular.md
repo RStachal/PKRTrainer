@@ -932,3 +932,39 @@ note was right.
 
 Reverted. The seam is real and stays documented: the flat 20BB table is the
 outlier, and it is the end to re-measure.
+
+## The whole curve is too flat, 2026-08-07
+
+With the seam repair reverted, the production table was compared seat by seat
+against a published nine-handed MTT set at 75BB with antes.
+
+| seat | ours (ante on) | published | gap |
+| --- | --- | --- | --- |
+| UTG | 14.5% | 11.4% | +3.1 |
+| UTG+1 | 14.8% | 13.2% | +1.6 |
+| LJ | 21.6% | 15.7% | **+5.9** |
+| HJ | 26.7% | 19.6% | **+7.1** |
+| CO | 33.9% | 26.1% | **+7.8** |
+| BTN | 50.5% | 54.8% | **-4.3** |
+
+The two earliest seats are close. The middle three are six to eight points wide
+and the button is four points tight, and those are not two separate problems:
+**the curve is too flat.** Cutoff to button is 16.6 points here and 28.7 in the
+published set, so the table teaches less separation between a middle seat and the
+best seat at the table than the game rewards.
+
+That is a more useful statement than any single seat's width, because it points
+at a direction rather than a number: steeper. A player drilling this opens too
+much from the lojack through the cutoff and not enough from the button.
+
+Not corrected. One published set is not grounds to rewrite six seats, and the
+last repair made from a single comparison was reverted the same day - see above.
+`positionalSpread.test.ts` pins the shape as it stands: the ordering, the two
+seats that match, and the flatness itself, so a future change can be seen to
+steepen or flatten it rather than being argued about.
+
+### What would settle it
+
+Per-seat opening frequencies from one MTT source at one depth, for all six
+seats, read the way the chart PDFs are read now. Two sources would settle it
+properly, since two have already disagreed by 24 points on a six-max seat.
