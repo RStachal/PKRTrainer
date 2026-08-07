@@ -88,6 +88,8 @@ const CZ_CATALOG = {
       `${correct}/${total} správně · nejlepší série ${best}`,
     shovePrice: (risk: string, pot: string, folds: string) =>
       `Riskujete ${risk} BB, abyste vyhráli ${pot} BB — shove se zaplatí sám při ${folds} foldů.`,
+    rejamPrice: (risk: string, pot: string, folds: string) =>
+      `Přeshoveváte za ${risk} BB do potu ${pot} BB (blindy + open) — shove se zaplatí sám při ${folds} foldů openera.`,
     shoveFoldsEnough: (folds: string) =>
       `Tenhle soupeř folduje ${folds}, takže shove vydělává i bez dojetí do showdownu.`,
     shoveFoldsShort: (folds: string) =>
@@ -385,6 +387,8 @@ const EN_CATALOG: UiCatalog = {
       `${correct}/${total} correct - best streak ${best}`,
     shovePrice: (risk: string, pot: string, folds: string) =>
       `You risk ${risk} BB to win ${pot} BB - the shove pays for itself at ${folds} folds.`,
+    rejamPrice: (risk: string, pot: string, folds: string) =>
+      `You shove ${risk} BB over the raise into ${pot} BB (blinds plus the open) - it pays for itself at ${folds} folds from the opener.`,
     shoveFoldsEnough: (folds: string) =>
       `This opponent folds ${folds}, so the shove profits without ever reaching showdown.`,
     shoveFoldsShort: (folds: string) =>

@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest";
 
 import { OPPONENT_STYLES } from "../../src/core/opponentStyle";
 import type { Filters, Spot } from "../../src/core/types";
-import { renderDecisionPrice } from "../../src/ui/decisionPricePanel";
+import { openSizeAtDepth } from "../../src/core/drillEngine";
+import { createRangeStoreFromRangePack } from "../../src/data/rangeStore";
+import { allMttPreflopRangePacks } from "../../src/data/ranges/mttPreflopRangePacks";
+import { renderDecisionPrice, teachesOpenSizeAtDepth } from "../../src/ui/decisionPricePanel";
+import { STACK_BUCKETS } from "../../src/core/types";
 
 // The trainer could always say which action. This says at what price, which is
 // the part a player can redo at the table. The numbers are derived from the pot
@@ -20,7 +24,7 @@ const filters = (opponentStyle?: Filters["opponentStyle"]): Filters => ({
 });
 
 const spot = (context: string, effStack = 10): Spot => ({
-  context, effStack, startingPot: 1.5, heroPos: "BTN", hand: "A5s",
+  context, effStack, startingPot: 1.5, heroPos: "BTN", hand: "A5s", answers: [],
 } as unknown as Spot);
 
 describe("decision price panel", () => {
@@ -60,10 +64,49 @@ describe("decision price panel", () => {
       .not.toBe(loose.querySelector(".decision-price__basis")?.textContent);
   });
 
+  it("prices a re-jam, which used to be a number with no explanation", () => {
+    // The EV bubbles showed a figure for this spot while the panel said nothing,
+    // so a player saw a number with no statement of what it was priced against.
+    const jamSpot = {
+      ...spot("VS_OPEN", 20),
+      answers: [{ key: "JAM", label: "Jam" }, { key: "FOLD", label: "Fold" }],
+    } as unknown as Spot;
+    const panel = renderDecisionPrice(document, jamSpot, filters())!;
+    expect(panel).not.toBeNull();
+    // Risking 20 to win the blinds plus a 2x open - 3.5 - needs 20/23.5, about
+    // 85 percent. The open is part of the pot, which is the whole difference
+    // from a push/fold shove.
+    expect(panel.querySelector(".decision-price__headline")?.textContent).toContain("85");
+  });
+
+  it("keeps the panel's open size in step with the engine's", () => {
+    // The engine reads the size back from the shipped action keys; the panel has
+    // no range store and mirrors the rule. Duplication that cannot be seen is
+    // duplication that drifts, so the two are compared at every depth rather
+    // than trusted.
+    const pack = allMttPreflopRangePacks.find((item) => (
+      item.dimensions.tableFormat === "FULL_RING_9" &&
+      item.dimensions.ante === "OFF" &&
+      item.records.length > 0
+    ));
+    if (pack === undefined) throw new Error("no full-ring pack");
+    const store = createRangeStoreFromRangePack(pack);
+    let compared = 0;
+    for (const bucket of STACK_BUCKETS) {
+      const fromEngine = openSizeAtDepth(bucket, "OFF", store);
+      if (fromEngine === undefined) continue;
+      compared += 1;
+      expect(teachesOpenSizeAtDepth(bucket), `${bucket}BB`).toBe(fromEngine);
+    }
+    expect(compared).toBeGreaterThan(5);
+  });
+
   it("declines to price a spot that does not fix one", () => {
     // Outside the all-in contexts the bet size is not determined by the spot, and
     // a made-up size reads exactly as authoritative as a real one.
     expect(renderDecisionPrice(document, spot("RFI"), filters())).toBeNull();
+    // A VS_OPEN spot with no shove on offer has no all-in price to state.
     expect(renderDecisionPrice(document, spot("VS_OPEN"), filters())).toBeNull();
+    expect(renderDecisionPrice(document, spot("SQUEEZE"), filters())).toBeNull();
   });
 });

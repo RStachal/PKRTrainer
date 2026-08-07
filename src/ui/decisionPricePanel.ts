@@ -23,6 +23,24 @@ import { CS } from "./cs";
  * measured.
  */
 
+/**
+ * The open size the shipped table teaches at this depth.
+ *
+ * A mirror of what `drillEngine.openSizeAtDepth` reads back from the action keys
+ * themselves - OPEN_2X up to 25BB, OPEN_25X from 30 up. Duplicated because the
+ * panel has no range store to consult, and duplication that cannot be seen is
+ * duplication that drifts, so `decisionPricePanel.test.ts` asserts the two agree
+ * at every depth rather than trusting this to stay true.
+ */
+export function teachesOpenSizeAtDepth(bucket: number): number {
+  return bucket <= 25 ? 2 : 2.5;
+}
+
+/** Whether the spot actually offers a shove, since only then is there one to price. */
+function offersJam(spot: Spot): boolean {
+  return spot.answers.some((answer) => answer.key === "JAM");
+}
+
 const pct = (value: number): string => `${(value * 100).toFixed(1).replace(".", ",")} %`;
 const bb = (value: number): string => value.toFixed(1).replace(".", ",");
 
@@ -36,10 +54,10 @@ function line(doc: Document, className: string, text: string): HTMLElement {
 /**
  * The price of this spot, or nothing when the spot does not fix one.
  *
- * Only the all-in contexts fix a price without further assumption: the hero is
- * either putting a whole stack in or calling one. Elsewhere the bet size is not
- * determined by the spot, and a made-up size would produce a made-up requirement
- * that reads exactly as authoritative as a real one.
+ * Priced where the hero's own money is all in, because then the size is not a
+ * choice: push/fold, calling a shove, and shoving over an open. Everywhere else
+ * the bet size is not determined by the spot, and a made-up size produces a
+ * made-up requirement that reads exactly as authoritative as a real one.
  */
 export function renderDecisionPrice(
   doc: Document,
@@ -62,6 +80,33 @@ export function renderDecisionPrice(
       doc,
       "decision-price__headline",
       CS.training.shovePrice(bb(stack), bb(pot), pct(requirement.requiredFolds)),
+    ));
+    if (style !== undefined && requirement.expectedFolds !== undefined) {
+      box.appendChild(line(
+        doc,
+        requirement.profitableOnFoldsAlone
+          ? "decision-price__verdict decision-price__verdict--good"
+          : "decision-price__verdict",
+        requirement.profitableOnFoldsAlone
+          ? CS.training.shoveFoldsEnough(pct(requirement.expectedFolds))
+          : CS.training.shoveFoldsShort(pct(requirement.expectedFolds)),
+      ));
+    }
+  } else if (spot.context === "VS_OPEN" && offersJam(spot)) {
+    // Re-jamming over a raise. The hero's side is all in, so the only other
+    // number is what the opener put in - and that is not an assumption: the
+    // shipped table teaches one open size per depth, 2x up to 25BB and 2.5x from
+    // 30 up, which is where this reads it from.
+    //
+    // The panel used to say nothing here while the EV bubbles showed a figure
+    // for the same spot, which left a player looking at a number with no
+    // statement of what it was priced against.
+    const openBB = teachesOpenSizeAtDepth(spot.effStack);
+    const requirement = shoveRequirement(stack, pot + openBB, style);
+    box.appendChild(line(
+      doc,
+      "decision-price__headline",
+      CS.training.rejamPrice(bb(stack), bb(pot + openBB), pct(requirement.requiredFolds)),
     ));
     if (style !== undefined && requirement.expectedFolds !== undefined) {
       box.appendChild(line(

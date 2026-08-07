@@ -490,15 +490,21 @@ function computeActionEvs(
  * decided by the depth - this reads it back rather than restating it. If the
  * table ever teaches a different size, this follows without being edited.
  */
-function openSizeAtDepth(
+export function openSizeAtDepth(
   bucket: StackBucket,
   ante: AnteMode,
   store: RangeStore,
 ): number | undefined {
+  // The STRICT set, not the lenient one. Lenient offers every sizing the spot
+  // tolerates, so at 15BB it holds both OPEN_2X and OPEN_25X and reading it
+  // returned 2.5 - the largest size present rather than the one taught. That
+  // priced every re-jam below 30BB against a pot half a blind too big, and it
+  // stood until decisionPricePanel.test.ts compared this against the panel's
+  // mirror of the same rule and found them disagreeing at 15BB.
   for (const position of POSITION_ORDER) {
     const entry = store.lookup({ ante, position, bucket, context: "RFI" });
     if (entry === undefined) continue;
-    for (const keys of Object.values(entry.actions)) {
+    for (const keys of Object.values(entry.strict)) {
       if (keys.includes("OPEN_25X" as ActionKey)) return 2.5;
       if (keys.includes("OPEN_2X" as ActionKey)) return 2;
     }
