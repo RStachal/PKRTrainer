@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS } from "../../src/core/postflopGenerator";
 import { generatePostflopSpot } from "../../src/core/postflopGenerator";
+import { createDefaultPostflopStrategyResolver } from "../../src/data/ranges/postflopStrategyRegistry";
 import { createTurnSolvedStrategyResolverChain, loadSolvedTurnPacks } from "../../src/data/ranges/turnSolvedStrategyPacks";
 import {
   pickSolvedTurnSpot,
@@ -117,6 +118,42 @@ describe("solved turn spot catalogue", () => {
       solvedTurnSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS) === undefined
     ));
     expect(undealable).toHaveLength(0);
+  });
+
+  it("deals hero a hand they can actually hold, so the solve answers", () => {
+    // The gap this closed: the catalogue chose a solved board and then let the
+    // generator deal hero any two cards. A hand outside hero's solved range is
+    // not merely unanswerable - holding it means hero folded before this turn -
+    // so three quarters of solved spots asked the resolver an impossible
+    // question, were refused, and fell through to the heuristic on a board that
+    // had been picked precisely because it was solved.
+    const candidates = solvedTurnSpots().filter((spot) => spot.actionNode === "TURN_OOP_LEAD");
+    expect(candidates.length).toBeGreaterThan(0);
+
+    let solverBacked = 0;
+    const attempts = 120;
+    for (let seed = 0; seed < attempts; seed += 1) {
+      const random = (seed + 0.5) / attempts;
+      const picked = pickSolvedTurnSpot(random, candidates)!;
+      const config = solvedTurnSpotConfig(picked, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, random);
+      if (config === undefined) continue;
+      const generated = generatePostflopSpot({
+        seed,
+        strategyResolver: createDefaultPostflopStrategyResolver(),
+        allowFallback: true,
+        ...config,
+      });
+      const source = generated.strategySource;
+      if (source.kind === "STRATEGY_PACK" && source.provenance === "SOLVER_BACKED") {
+        solverBacked += 1;
+      }
+      // Hero's cards must be two of the board's absentees.
+      const board = new Set(generated.board.map((c) => `${c.rank}${c.suit}`));
+      for (const heroCard of generated.heroCards) {
+        expect(board.has(`${heroCard.rank}${heroCard.suit}`)).toBe(false);
+      }
+    }
+    expect(solverBacked).toBe(attempts);
   });
 
   it("picks the same spot for the same seed", () => {

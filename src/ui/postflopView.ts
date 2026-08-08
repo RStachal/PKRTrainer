@@ -1891,7 +1891,7 @@ function solvedTurnConfigForSeed(seed: number, actionNode: PostflopActionNode) {
   rng();
   const spot = pickSolvedTurnSpot(rng(), candidates);
   if (spot === undefined) return undefined;
-  return solvedTurnSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS);
+  return solvedTurnSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, rng());
 }
 
 function parseStreet(value: string): PostflopStreet {

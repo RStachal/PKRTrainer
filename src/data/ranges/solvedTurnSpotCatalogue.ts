@@ -143,6 +143,75 @@ export function pickSolvedTurnSpot(
   return spots[spots.length - 1];
 }
 
+const SUITS = ["s", "h", "d", "c"] as const;
+
+/**
+ * Two cards making this hand class, avoiding the board.
+ *
+ * Returns undefined when the board has eaten the class - three of a rank on the
+ * board leaves one card, and a suited class needs two of the same suit that are
+ * both still available.
+ */
+function cardsForHandClass(
+  handClass: string,
+  board: readonly Card[],
+  random: number,
+): [Card, Card] | undefined {
+  const used = new Set(board.map((card) => `${card.rank}${card.suit}`.toLowerCase()));
+  const free = (rank: string) => SUITS
+    .map((suit) => ({ rank: rank as Rank, suit: suit as Suit }))
+    .filter((card) => !used.has(`${card.rank}${card.suit}`.toLowerCase()));
+
+  const first = handClass[0];
+  const second = handClass[1];
+  const combos: [Card, Card][] = [];
+
+  if (first === second) {
+    const available = free(first);
+    for (let i = 0; i < available.length; i += 1) {
+      for (let j = i + 1; j < available.length; j += 1) combos.push([available[i], available[j]]);
+    }
+  } else {
+    const suited = handClass.endsWith("s");
+    for (const high of free(first)) {
+      for (const low of free(second)) {
+        if ((high.suit === low.suit) === suited) combos.push([high, low]);
+      }
+    }
+  }
+
+  if (combos.length === 0) return undefined;
+  return combos[Math.min(Math.floor(random * combos.length), combos.length - 1)];
+}
+
+/**
+ * A hand hero can actually hold here, weighted the way a deck deals them.
+ *
+ * Picking a class uniformly would deal aces as often as ace-king offsuit, which
+ * a deck does not - there are six of one and twelve of the other. Weighting by
+ * combination count is the right prior when the solve records which classes are
+ * in the range but not how much of each.
+ */
+function heroCardsFor(spot: SolvedTurnSpot, random: number): [Card, Card] | undefined {
+  const weight = (handClass: string) => (
+    handClass.length === 2 ? 6 : handClass.endsWith("s") ? 4 : 12
+  );
+  const total = spot.heroHandClasses.reduce((sum, item) => sum + weight(item), 0);
+  if (total === 0) return undefined;
+
+  let cursor = Math.min(Math.max(random, 0), 0.999999) * total;
+  for (const handClass of spot.heroHandClasses) {
+    cursor -= weight(handClass);
+    if (cursor < 0) {
+      // The second draw reuses the same number, deliberately: one random value
+      // per spot keeps a seed reproducing the same hand, which is what the seed
+      // box is for.
+      return cardsForHandClass(handClass, spot.board, random);
+    }
+  }
+  return undefined;
+}
+
 /**
  * The generator config that deals this spot, or nothing if the seats are unknown.
  *
@@ -151,16 +220,23 @@ export function pickSolvedTurnSpot(
  * point: the alternative is a spot whose seats disagree with its strategy, and
  * a player would be shown a cutoff's solve labelled as a hijack's.
  *
- * Hero's cards are left to the generator. The catalogue knows which classes are
- * in hero's range but not which two cards make one, and the generator already
- * deals around the board.
+ * ## Hero's cards come from the solve, not from the deck
+ *
+ * Leaving them to the generator looked harmless and was not. A hand outside
+ * hero's solved range is not merely unanswerable - it is a hand hero cannot
+ * hold, because holding it means they folded before reaching this turn. Dealt
+ * anyway, three quarters of solved turn spots asked the resolver a question
+ * about an impossible holding, got a refusal, and fell through to the heuristic
+ * on a board that had been chosen precisely because it was solved.
  */
 export function solvedTurnSpotConfig(
   spot: SolvedTurnSpot,
   contexts: readonly PostflopPositionContext[],
+  random = 0.5,
 ): {
   street: "TURN";
   board: Card[];
+  heroCards?: [Card, Card];
   potType: PostflopPotType;
   potBB: number;
   effectiveStackBB: number;
@@ -169,9 +245,11 @@ export function solvedTurnSpotConfig(
 } | undefined {
   const positionContext = contexts.find((item) => item.positionPattern === spot.positionPattern);
   if (positionContext === undefined) return undefined;
+  const heroCards = heroCardsFor(spot, random);
   return {
     street: "TURN",
     board: [...spot.board],
+    ...(heroCards ? { heroCards } : {}),
     potType: spot.potType,
     potBB: spot.potBB,
     effectiveStackBB: spot.effectiveStackBB,
