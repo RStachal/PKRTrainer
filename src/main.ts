@@ -1638,17 +1638,26 @@ function appStyles(): HTMLStyleElement {
   const style = document.createElement("style");
   style.textContent = `
 :root{color-scheme:dark;}
+/* The felt reads through the whole page rather than stopping at the table.
+   A trainer that looks like a form with a poker table in it is a form; the
+   green is what tells a player at a glance which app they are in. Kept low in
+   saturation so the action colours, which carry meaning, stay the brightest
+   thing on screen. */
 body{margin:0;background:
-  radial-gradient(circle at 18% -8%,rgba(43,213,118,.14),rgba(43,213,118,0) 28%),
-  radial-gradient(circle at 88% 4%,rgba(123,211,255,.11),rgba(123,211,255,0) 30%),
-  linear-gradient(180deg,#090f18,#060a11 58%,#05080e);
+  radial-gradient(ellipse at 50% -12%,rgba(34,150,96,.20),rgba(34,150,96,0) 42%),
+  radial-gradient(circle at 12% 8%,rgba(43,213,118,.10),rgba(43,213,118,0) 30%),
+  radial-gradient(circle at 90% 2%,rgba(123,211,255,.09),rgba(123,211,255,0) 32%),
+  linear-gradient(180deg,#08110d,#060c10 46%,#05080e);
   color:#e8ecf7;font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;}
 .app{width:min(100% - 32px,1120px);margin:0 auto;padding:28px 0 56px;}
 .app__header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
   margin-bottom:18px;padding:4px 0 2px;}
 .app__header-copy{min-width:0;}
-.app__title{margin:0;font-size:28px;font-weight:950;letter-spacing:0;color:#f8fbff;
+.app__title{margin:0;font-size:28px;font-weight:950;letter-spacing:0;
+  background:linear-gradient(180deg,#f8fbff,#a8e8c4);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
   text-shadow:0 10px 30px rgba(0,0,0,.35);}
+@supports not (background-clip:text){.app__title{color:#f8fbff;background:none;}}
 .app__subtitle{margin:6px 0 0;font-size:14px;color:#a8b7d5;}
 .language-switch{display:grid;grid-template-columns:repeat(2,40px);flex:0 0 auto;
   border:1px solid rgba(148,163,184,.28);border-radius:7px;background:#111827;padding:2px;}
@@ -1667,8 +1676,8 @@ body{margin:0;background:
   border-bottom:3px solid transparent;white-space:nowrap;}
 .app__tab:hover{color:#e8ecf7;background:rgba(255,255,255,.035);}
 .app__tab--active{color:#f8fbff;border-color:rgba(148,163,184,.16);
-  border-bottom-color:#2bd576;background:linear-gradient(180deg,rgba(21,30,45,.92),rgba(13,19,30,.72));
-  box-shadow:0 10px 24px rgba(0,0,0,.18);}
+  border-bottom-color:#2bd576;background:linear-gradient(180deg,rgba(24,44,36,.92),rgba(13,24,20,.72));
+  box-shadow:0 10px 24px rgba(0,0,0,.22),inset 0 1px 0 rgba(140,240,190,.12);}
 .app__panel{outline:none;}
 .training__filters{background:linear-gradient(180deg,rgba(18,25,38,.98),rgba(10,15,24,.98));
   border:1px solid rgba(148,163,184,.16);border-radius:16px;padding:18px 20px;margin-bottom:18px;
@@ -1755,10 +1764,18 @@ body{margin:0;background:
 .action-btn--chosen{outline:2px solid #2bd576;outline-offset:1px;}
 .action-btn--recommended{border-color:#2bd576;background:linear-gradient(180deg,rgba(43,213,118,.28),rgba(43,213,118,.14));}
 ${ACTION_EV_BUTTON_STYLES}
-.result{border-radius:12px;padding:14px 16px;}
-.result--correct{background:rgba(43,213,118,.12);border:1px solid rgba(43,213,118,.5);}
-.result--wrong{background:rgba(226,59,59,.12);border:1px solid rgba(226,59,59,.5);}
+/* The verdict is the moment the player is here for, so it gets a border that
+   states it before any text is read - a stripe down the leading edge in the
+   colour the answer earned. */
+.result{border-radius:12px;padding:14px 16px;border-left-width:4px;
+  animation:result-in .16s ease-out;}
+.result--correct{background:linear-gradient(90deg,rgba(43,213,118,.16),rgba(43,213,118,.06));
+  border:1px solid rgba(43,213,118,.5);border-left:4px solid #2bd576;}
+.result--wrong{background:linear-gradient(90deg,rgba(226,59,59,.16),rgba(226,59,59,.06));
+  border:1px solid rgba(226,59,59,.5);border-left:4px solid #e23b3b;}
 .result__verdict{font-size:18px;font-weight:900;margin-bottom:6px;}
+@keyframes result-in{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion:reduce){.result{animation:none;}}
 .result__recommended{font-size:14px;font-weight:700;margin-bottom:6px;}
 .action-ev{margin:8px 0 10px;border-top:1px solid rgba(255,255,255,.12);padding-top:10px;}
 .action-ev__title{margin-bottom:6px;color:#e8ecf7;font-size:11px;font-weight:950;text-transform:uppercase;}
