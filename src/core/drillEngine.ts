@@ -488,6 +488,95 @@ function computeActionEvs(
     };
   }
 
+  // Facing a four-bet, where the hero's only fixed-price action is the five-bet
+  // jam. The pot needs two sizes the product does not teach - the three-bet the
+  // hero made and the four-bet in front of them - so those are chosen here and
+  // named as choices rather than left blank.
+  //
+  // Two and a bit times the previous raise in position, three times out of it,
+  // is the standard tournament shape and the one every public chart is drawn
+  // against. Getting the pot slightly wrong moves the jam's price by a fraction
+  // of a blind; showing no number at all was the thing a player actually
+  // noticed, and the honest fix is a stated assumption rather than silence.
+  if (context === "VS_4BET" && offered.includes("JAM") && offered.includes("FOLD")) {
+    const openBB = openSizeAtDepth(effStack, ante, store);
+    if (openBB === undefined) return undefined;
+    // Násobek se nesmí dostat přes stack. Při 20 BB vyjde tří-bet krát 2,2 na
+    // šestnáct blindů a čtyři-bet nad celý stack - to není velký raise, to je
+    // all-in, a pot spočítaný z takového čísla dá jamu cenu vyšší, než kolik je
+    // vůbec na stole. Zastropování na efektivní stack tu situaci popíše
+    // správně: mělký čtyři-bet je fakticky shove.
+    const threeBetBB = Math.min(
+      effStack,
+      openBB * (isInPositionForThreeBet(heroPos) ? THREE_BET_MULTIPLE_IP : THREE_BET_MULTIPLE_OOP),
+    );
+    const fourBetBB = Math.min(effStack, threeBetBB * FOUR_BET_MULTIPLE);
+    // Kdo vložil víc, ten určuje, o kolik se hraje. Soupeř je po čtyři-betu v
+    // potu hlouběji než hrdina po tří-betu, takže zbytek jeho stacku je strop -
+    // ne zbytek hrdinova. Počítáno z hrdinova zbytku vycházelo při 150 BB EV
+    // 112 blindů: jam vyhrával víc, než kolik soupeř vůbec mohl doplatit.
+    const atRisk = effStack - fourBetBB;
+    const pot = startingPot + openBB + threeBetBB + fourBetBB;
+
+    // Kdo čtyři-betuje celý stack, nemůže složit. Při mělkých hloubkách vyjde
+    // modelovaný čtyři-bet na celý stack nebo přes něj, a tehdy to není
+    // pětibetový jam s fold equity, ale dorovnání all-inu. Počítat tam fold
+    // equity znamená připsat jamu hodnotu za akci, kterou soupeř nemá.
+    const committedRange = fourBetClasses(heroPos, effStack, ante, store);
+    if (committedRange.length === 0) return undefined;
+    const committedCombos = comboCount(committedRange);
+    if (committedCombos === 0) return undefined;
+
+    if (atRisk <= 0) {
+      const called = callAllInEv(hand, committedRange, effStack - threeBetBB, pot);
+      if (called === undefined) return undefined;
+      return {
+        source: "ALL_IN_EQUITY",
+        unit: "BB",
+        values: [
+          { action: "JAM" as ActionKey, evBb: Math.round(called.callBB * 100) / 100 },
+          { action: "FOLD" as ActionKey, evBb: 0 },
+        ],
+        equivalentThresholdBb: 0.1,
+        acceptableThresholdBb: 0.3,
+      };
+    }
+
+    // Kdo dorovná pětibet. Range čtyři-betujícího je měřená - ruce, které
+    // charty značí 4BET proti tří-betu - a v těchhle hloubkách je čtyři-bet
+    // blízko commitu, takže pokračuje prakticky s celou. To je měřená data
+    // zúžená vyřčeným čtením, ne nový chart.
+    const caller = styledCallers(committedRange, committedRange, opponentStyle);
+    const ev = shoveEv(hand, caller, atRisk, pot, 1, committedCombos);
+    if (ev === undefined) return undefined;
+    return {
+      source: "ALL_IN_EQUITY",
+      unit: "BB",
+      values: [
+        { action: "JAM" as ActionKey, evBb: Math.round(ev.jamBB * 100) / 100 },
+        { action: "FOLD" as ActionKey, evBb: 0 },
+      ],
+      equivalentThresholdBb: 0.1,
+      acceptableThresholdBb: 0.3,
+    };
+  }
+
+  // Jamming over limpers is deliberately left unpriced, and the reason is not the
+  // one this file used to give.
+  //
+  // The stated obstacle was a missing limping range. There is one - the charts
+  // mark a hundred and five classes as LIMP or OVERLIMP - so that reading was
+  // simply wrong. Measured instead: every spot in this context that offers a jam
+  // is the big blind's, and not one of them offers a fold. That is correct poker
+  // rather than missing data, because the big blind has already posted and can
+  // check into a limped pot for free.
+  //
+  // Every other priced branch compares a jam against folding, worth zero. Here
+  // the alternative is a free flop, which is worth something this product cannot
+  // yet compute - so scoring the jam against zero would not be an approximation,
+  // it would flatter jamming in the one context where the alternative is
+  // cheapest. A number biased toward the aggressive line is worse than no number.
+
   // Blind versus blind, and squeezing over an open with callers. Both put the
   // hero all in and both have a pot the spot determines: the blinds alone in the
   // first case, the blinds plus the open plus one open-sized call for each caller
@@ -639,6 +728,49 @@ function openerClasses(
   const opener = REJAM_EV_OPENER_BY_HERO[heroPos];
   if (opener === undefined) return [];
   return playedClasses(store.lookup({ ante, position: opener, bucket, context: "RFI" }));
+}
+
+/**
+ * Kolikrát se zvedá nad předchozí raise, když se v produktu žádná velikost neučí.
+ *
+ * Tohle jsou volby, ne měření. Produkt učí jednu velikost otevření na hloubku a
+ * dál už nic, takže tři-bet a čtyři-bet nemá odkud vzít - a přesně kvůli tomu se
+ * u `VS_4BET` dosud nezobrazovalo žádné EV. Standardní turnajový tvar je zhruba
+ * 2,2× v pozici a 3× mimo ni; čtyři-bet o něco menší, protože už je sám o sobě
+ * velký.
+ *
+ * Chyba v potu posouvá cenu jamu o zlomek blindu. Chybějící číslo si hráč všiml.
+ */
+const THREE_BET_MULTIPLE_IP = 2.2;
+const THREE_BET_MULTIPLE_OOP = 3;
+const FOUR_BET_MULTIPLE = 2.2;
+
+/** Sedačky, které po flopu hrají poslední, a tak tři-betují menší. */
+function isInPositionForThreeBet(heroPos: Position): boolean {
+  return heroPos === "BTN" || heroPos === "CO";
+}
+
+/**
+ * Range, kterou soupeř čtyři-betuje, z měřených chartů.
+ *
+ * Bere se ze `VS_3BET`: to je pohled hráče, který otevřel a čelí tři-betu, tedy
+ * přesně toho, kdo v tomhle spotu čtyři-betuje. Sedačka se volí stejným
+ * kalibračním mechanismem jako u re-jamu, protože spot ani tady neví, kdo
+ * otevřel - ví jen, kde sedí hrdina.
+ */
+function fourBetClasses(
+  heroPos: Position,
+  bucket: StackBucket,
+  ante: AnteMode,
+  store: RangeStore,
+): HandLabel[] {
+  const opener = REJAM_EV_OPENER_BY_HERO[heroPos];
+  if (opener === undefined) return [];
+  const entry = store.lookup({ ante, position: opener, bucket, context: "VS_3BET" });
+  if (entry === undefined) return [];
+  return Object.entries(entry.strict)
+    .filter(([, keys]) => keys.includes("4BET" as ActionKey))
+    .map(([hand]) => hand);
 }
 
 function comboCount(classes: readonly HandLabel[]): number {
