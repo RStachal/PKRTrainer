@@ -127,6 +127,18 @@ export type PostflopStrategyPositionPattern =
   | PostflopPositionPattern
   | "IP_OR_RANGE_ADVANTAGE"
   | "OOP_OR_DYNAMIC_BOARD"
+  /**
+   * Spots where the player out of position is the one who called, not raised.
+   *
+   * `OOP_OR_DYNAMIC_BOARD` sounds like it covers this and does not: it selects
+   * spots where the *raiser* is out of position, which is the small blind's
+   * situation and nobody else's. The big blind defending a cutoff open is out of
+   * position too and matches none of the existing tokens, so rules written for
+   * the caller's turn silently matched nothing.
+   *
+   * The token names which spot; the action node names whose decision inside it.
+   */
+  | "OOP_CALLER_VS_IP_RAISER"
   | "EP_VS_BLINDS_OR_STRONG_RANGE_ADVANTAGE";
 
 export type PostflopCallerType =
@@ -441,6 +453,42 @@ export const POSTFLOP_FULL_RING_POSITION_CONTEXTS = uniquePositionContexts([
 ]);
 
 /**
+ * The defender's side of a single-raised pot, which the product did not have.
+ *
+ * Every single-raised context is written from the raiser's side: `SRP_CO_VS_BB`
+ * seats hero at the cutoff, in position, holding the initiative. The big blind
+ * who called and now has to act first on the turn has no context at all - so a
+ * spot built for that decision seated the player at the cutoff and handed them
+ * the big blind's strategy, which is the presentation-layer twin of the data bug
+ * that named those solves after the wrong player.
+ *
+ * The pattern is unchanged, because a pattern names the spot: `SRP_CO_VS_BB` is
+ * the same pot from either chair. What changes is who is sitting in it.
+ */
+export function postflopDefenderContextsForFormat(
+  format: TableFormat,
+): PostflopPositionContext[] {
+  const positions = positionsForFormat(format);
+  if (!positions.includes("BB")) return [];
+  const contexts: PostflopPositionContext[] = [];
+  for (const opener of positions) {
+    if (opener === "BB") continue;
+    contexts.push({
+      heroPosition: "BB",
+      villainPosition: opener,
+      aggressorPosition: opener,
+      callerPosition: "BB",
+      // The big blind acts first on every street after the flop, against every
+      // seat. The small blind is the one exception and acts before them.
+      inPosition: opener === "SB",
+      callerType: "BIG_BLIND",
+      positionPattern: `SRP_${opener.replace("+", "_")}_VS_BB` as PostflopPositionPattern,
+    });
+  }
+  return uniquePositionContexts(contexts);
+}
+
+/**
  * Every full-ring context, three-bet pots included.
  *
  * The list above is single-raised only, which is right for dealing a random spot
@@ -453,7 +501,20 @@ export const POSTFLOP_FULL_RING_POSITION_CONTEXTS = uniquePositionContexts([
 export const POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS = uniquePositionContexts([
   ...POSTFLOP_FULL_RING_POSITION_CONTEXTS,
   ...postflopPositionContextsForFormat("FULL_RING_9", "THREE_BET_POT"),
+  ...postflopDefenderContextsForFormat("FULL_RING_9"),
 ]);
+
+/**
+ * Seatings where hero called the last raise and is out of position.
+ *
+ * The only seatings in which "lead or check, first to act, without the
+ * initiative" is a decision that can occur. Drawn from anywhere else, the same
+ * node describes a hand that cannot be dealt: the out-of-position player made
+ * the last raise, so acting first is a continuation bet, not a lead.
+ */
+export const OOP_CALLER_POSITION_CONTEXTS = POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS.filter(
+  (context) => !context.inPosition && context.heroPosition !== context.aggressorPosition,
+);
 
 export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   const rng = mulberry32(config.seed);
@@ -467,8 +528,8 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   const potType = config.potType ?? "SINGLE_RAISED";
   const potBB = config.potBB ?? defaultPotBB(potType);
   const effectiveStackBB = config.effectiveStackBB ?? 40;
-  const positionContext = config.positionContext ?? randomPositionContext(rng);
   const actionNode = config.actionNode ?? defaultActionNode(street, potType);
+  const positionContext = config.positionContext ?? randomPositionContext(rng, actionNode);
   const actions = actionsForActionNode(actionNode);
 
   const strategyInput = {
@@ -553,10 +614,29 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   };
 }
 
-function randomPositionContext(rng: () => number): PostflopPositionContext {
-  return POSTFLOP_FULL_RING_POSITION_CONTEXTS[
-    Math.floor(rng() * POSTFLOP_FULL_RING_POSITION_CONTEXTS.length)
-  ];
+/**
+ * A seating the requested decision can actually happen in.
+ *
+ * Drawing seats and a decision independently produces hands that contradict
+ * themselves. `TURN_OOP_LEAD` is the player who called the last raise, out of
+ * position, acting first - so in a spot where the out-of-position player is the
+ * raiser, the same decision is a continuation bet and the hand as dealt cannot
+ * occur. Roughly three quarters of randomly seated lead spots were that
+ * contradiction, and the strategy model was right to refuse them.
+ *
+ * Only this one node needs filtering today, because it is the only one whose
+ * name commits to a role. The others are stated from the aggressor's side and
+ * every seating admits them.
+ */
+function randomPositionContext(
+  rng: () => number,
+  actionNode?: PostflopActionNode,
+): PostflopPositionContext {
+  const pool = actionNode === "TURN_OOP_LEAD"
+    ? OOP_CALLER_POSITION_CONTEXTS
+    : POSTFLOP_FULL_RING_POSITION_CONTEXTS;
+  const candidates = pool.length > 0 ? pool : POSTFLOP_FULL_RING_POSITION_CONTEXTS;
+  return candidates[Math.floor(rng() * candidates.length)];
 }
 
 function defaultPotBB(potType: PostflopPotType): number {

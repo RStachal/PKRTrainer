@@ -1,4 +1,4 @@
-import type { Card, Rank, Suit } from "../../core/types";
+import { POSITION_ORDER, type Card, type Position, type Rank, type Suit } from "../../core/types";
 import type {
   PostflopPositionContext,
   PostflopPositionPattern,
@@ -49,6 +49,13 @@ export interface SolvedTurnSpot {
   reach: number;
   /** The directory the spot was solved in, for tracing an answer back. */
   sourceDirectory: string;
+  /** The seat whose strategy this is, as the solve identified it. */
+  heroSeat: string;
+  villainSeat: string;
+  /** Whether that seat took the betting lead before the flop. */
+  heroIsAggressor: boolean;
+  /** Whether that seat acts last after the flop. */
+  heroInPosition: boolean;
 }
 
 /**
@@ -89,6 +96,8 @@ export function solvedTurnSpots(): readonly SolvedTurnSpot[] {
       if (solved === undefined) continue;
       if (solved.potBB === undefined) continue;
 
+      const hero = solved.hero;
+      if (hero === undefined) continue;
       const actionNode = actionNodeFor(rule);
       if (actionNode === undefined) continue;
 
@@ -110,6 +119,10 @@ export function solvedTurnSpots(): readonly SolvedTurnSpot[] {
         heroHandClasses,
         reach: solved.reach,
         sourceDirectory: rule.sourceDirectory,
+        heroSeat: hero.seat,
+        villainSeat: hero.villainSeat,
+        heroIsAggressor: hero.isAggressor,
+        heroInPosition: hero.side === "IP",
       });
     }
   }
@@ -212,6 +225,46 @@ function heroCardsFor(spot: SolvedTurnSpot, random: number): [Card, Card] | unde
   return undefined;
 }
 
+/** "UTG_1" as the solves write it, "UTG+1" as the product does. */
+function seatToPosition(seat: string): Position {
+  return seat.replace(/_(\d)$/, "+$1") as Position;
+}
+
+/**
+ * Seat the player in the chair whose strategy they are about to be shown.
+ *
+ * Looking the context up by pattern is not enough and was actively wrong. Every
+ * single-raised context is written from the raiser's side, so `SRP_CO_VS_BB`
+ * seats hero at the cutoff - and these solves hold the big blind's decision.
+ * The player would have been sat at the cutoff, in position, holding the
+ * initiative, and given the answers of the player across the table.
+ *
+ * The solve names both seats and which of them raised, so the chair is built
+ * from that. The lookup remains as a fallback for spots whose seat names cannot
+ * be read, and those simply are not dealt.
+ */
+function positionContextFor(
+  spot: SolvedTurnSpot,
+  contexts: readonly PostflopPositionContext[],
+): PostflopPositionContext | undefined {
+  const hero = seatToPosition(spot.heroSeat);
+  const villain = seatToPosition(spot.villainSeat);
+  if (!POSITION_ORDER.includes(hero) || !POSITION_ORDER.includes(villain)) {
+    return contexts.find((item) => item.positionPattern === spot.positionPattern);
+  }
+  return {
+    heroPosition: hero,
+    villainPosition: villain,
+    aggressorPosition: spot.heroIsAggressor ? hero : villain,
+    callerPosition: spot.heroIsAggressor ? villain : hero,
+    inPosition: spot.heroInPosition,
+    callerType: spot.heroIsAggressor
+      ? (villain === "BB" ? "BIG_BLIND" : "IN_POSITION_CALLER")
+      : (hero === "BB" ? "BIG_BLIND" : "OUT_OF_POSITION_CALLER"),
+    positionPattern: spot.positionPattern,
+  };
+}
+
 /**
  * The generator config that deals this spot, or nothing if the seats are unknown.
  *
@@ -243,7 +296,7 @@ export function solvedTurnSpotConfig(
   actionNode: PostflopActionNode;
   positionContext: PostflopPositionContext;
 } | undefined {
-  const positionContext = contexts.find((item) => item.positionPattern === spot.positionPattern);
+  const positionContext = positionContextFor(spot, contexts);
   if (positionContext === undefined) return undefined;
   const heroCards = heroCardsFor(spot, random);
   return {
