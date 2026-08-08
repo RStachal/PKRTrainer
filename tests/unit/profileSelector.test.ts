@@ -205,9 +205,15 @@ describe("profileSelector", () => {
 
     const note = root.querySelector<HTMLElement>(".profile-selector__note");
     expect(view.getProfile().evModel).toBe("DOLAR_EV");
-    expect(note?.dataset.status).toBe("blocked");
+    // Devítistolový regular $EV má odvozené bublinové range, takže je hratelné
+    // preview. Podstatné zůstává, že chipEV produkce se tím nespouští - to drží
+    // řádky pod tímhle.
+    expect(note?.dataset.status).toBe("preview");
     expect(note?.textContent).toContain("MTT 9-max regular preflop $EV");
-    expect(note?.textContent).toContain("Chybí produkční range");
+    // Hláška musí říct, co ten náhled je: odvozené range pro jednu bublinovou
+    // situaci, ne měřená data a ne ICM obecně.
+    expect(note?.textContent).toContain("peněžní bublina");
+    expect(note?.textContent).toContain("Nejsou měřené");
     expect(note?.textContent).not.toContain("CHIP_EV");
     expect(note?.textContent).not.toContain("DOLAR_EV");
     expect(note?.textContent).not.toContain("RangePack");

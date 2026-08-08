@@ -12,6 +12,7 @@ import { anteOffRanges } from "./ante-off";
 import { anteOnRanges } from "./ante-on";
 import { runtimeMttPreflopRangePacks } from "./mttProductionRuntimeRegistry";
 import { isPlayableMttPreflopPreview } from "./trainingCapability";
+import { buildMttIcmDerivedRangePacks } from "./mttIcmDerivedRangePacks";
 
 const VERIFIED_AT = "2026-06-01";
 
@@ -323,9 +324,13 @@ const mutableAllMttPreflopRangePacks =
 // They stay preview-grade for that reason - the production gate refuses inferred
 // chart values and should - but a tight floor a player can drill, and is told
 // the provenance of, beats an empty profile.
+// Odvozené ICM packy pro bublinový scénář jdou stejnou cestou jako šestistolové:
+// zablokovaný profil bez dat nahradí odvozený s poctivou nálepkou. Platí jen pro
+// scénář pojmenovaný v jejich `assumptions` a zůstávají preview.
 mutableAllMttPreflopRangePacks.push(
   ...mttPreflopRangePacks,
   ...mttSixMaxExposedPacks,
+  ...buildMttIcmDerivedRangePacks(mttPreflopAnteOffRangePack, mttPreflopAnteOnRangePack),
 );
 
 export const allMttPreflopRangePacks: readonly RangePack[] =

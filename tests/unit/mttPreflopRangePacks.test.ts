@@ -57,7 +57,8 @@ describe("mttPreflopRangePacks", () => {
 
   it("pripravuje 6-max candidate RangePacky bez produkcnich records", () => {
     expect(mttSixMaxPreflopRangePackCandidates).toHaveLength(4);
-    expect(allMttPreflopRangePacks).toHaveLength(6);
+    // Dva měřené chipEV, dva odvozené šestistolové, dva odvozené ICM.
+    expect(allMttPreflopRangePacks).toHaveLength(8);
 
     for (const pack of mttSixMaxPreflopRangePackCandidates) {
       expect(validateRangePack(pack)).toEqual([]);

@@ -268,8 +268,11 @@ describe("mttProductionReadiness", () => {
 
     expect(report.rows).toHaveLength(64);
     expect(report.productionRows).toBe(0);
-    expect(report.missingRows).toBe(10);
-    expect(report.candidateRows).toBe(54);
+    // Dva devítistolové DOLAR_EV sloty se posunuly z MISSING na CANDIDATE:
+    // mají odvozený bublinový pack. Nic se tím nedostalo do produkce - odvozené
+    // hodnoty produkční brána dál odmítá - ale slot s daty už není prázdný.
+    expect(report.missingRows).toBe(8);
+    expect(report.candidateRows).toBe(56);
 
     const production = report.rows.filter((row) => row.status === "PRODUCTION");
     expect(production).toEqual([]);
@@ -295,11 +298,17 @@ describe("mttProductionReadiness", () => {
       row.evModel === "DOLAR_EV" && row.street === "PREFLOP"
     ));
     expect(dolarPreflop).toHaveLength(8);
-    expect(dolarPreflop.every((row) => row.status === "MISSING")).toBe(true);
+    // Devítistolové regular sloty mají odvozený bublinový pack, zbytek ne.
+    // Podstatné je, že žádný z nich není produkční - to drží řádek pod tímhle.
+    expect(dolarPreflop.filter((row) => row.status === "CANDIDATE")).toHaveLength(2);
+    expect(dolarPreflop.filter((row) => row.status === "MISSING")).toHaveLength(6);
     expect(dolarPreflop.every((row) => row.productionReady === false)).toBe(true);
-    expect(dolarPreflop.every((row) => row.missingReasons.some((reason) => (
+    // Šest slotů bez packu ten důvod pořád nese; dva odvozené už ne, protože
+    // pack mají. Jejich důvod je jiný a jde o ten, na kterém záleží: odvozená
+    // data produkční brána nepustí.
+    expect(dolarPreflop.filter((row) => row.missingReasons.some((reason) => (
       reason.includes("No dedicated DOLAR_EV MTT preflop RangePack")
-    )))).toBe(true);
+    )))).toHaveLength(6);
     expect(dolarPreflop.find((row) => (
       row.tableFormat === "SIX_MAX" && row.blindSpeed === "TURBO" && row.ante === "OFF"
     ))?.importSlot).toMatchObject({
@@ -366,8 +375,11 @@ describe("mttProductionReadiness", () => {
     });
 
     expect(report.productionRows).toBe(0);
-    expect(report.candidateRows).toBe(54);
-    expect(report.missingRows).toBe(10);
+    // Dva devítistolové DOLAR_EV sloty se posunuly z MISSING na CANDIDATE:
+    // mají odvozený bublinový pack. Nic se tím nedostalo do produkce - odvozené
+    // hodnoty produkční brána dál odmítá - ale slot s daty už není prázdný.
+    expect(report.candidateRows).toBe(56);
+    expect(report.missingRows).toBe(8);
 
     const flopRows = report.rows.filter((row) => (
       row.tableFormat === "FULL_RING_9" &&
@@ -415,8 +427,11 @@ describe("mttProductionReadiness", () => {
     expect(gate.mode).toBe("PRODUCTION");
     expect(gate.totalRows).toBe(64);
     expect(gate.productionReadyRows).toBe(0);
-    expect(gate.previewRows).toBe(54);
-    expect(gate.blockedRows).toBe(10);
+    // Dva devítistolové DOLAR_EV sloty se posunuly z MISSING na CANDIDATE:
+    // mají odvozený bublinový pack. Nic se tím nedostalo do produkce - odvozené
+    // hodnoty produkční brána dál odmítá - ale slot s daty už není prázdný.
+    expect(gate.previewRows).toBe(56);
+    expect(gate.blockedRows).toBe(8);
     expect(gate.errors).toHaveLength(64);
     expect(gate.errors[0]).toContain("row is not production-ready");
     expect(rendered).toContain("mode: PRODUCTION");
@@ -436,8 +451,11 @@ describe("mttProductionReadiness", () => {
     expect(gate.mode).toBe("PREVIEW");
     expect(gate.totalRows).toBe(64);
     expect(gate.productionReadyRows).toBe(0);
-    expect(gate.previewRows).toBe(54);
-    expect(gate.blockedRows).toBe(10);
+    // Dva devítistolové DOLAR_EV sloty se posunuly z MISSING na CANDIDATE:
+    // mají odvozený bublinový pack. Nic se tím nedostalo do produkce - odvozené
+    // hodnoty produkční brána dál odmítá - ale slot s daty už není prázdný.
+    expect(gate.previewRows).toBe(56);
+    expect(gate.blockedRows).toBe(8);
     expect(gate.errors).toEqual([]);
     expect(rendered).toContain("mode: PREVIEW");
     expect(rendered).toContain("valid: true");
@@ -536,9 +554,13 @@ describe("mttProductionReadiness", () => {
 
     const dolar = profileWith(DEFAULT_TRAINING_PROFILE, { evModel: "DOLAR_EV" });
     const dolarCompletion = mttCompletionReadinessRowForTrainingProfile(dolar, "ON");
-    expect(dolarCompletion?.status).toBe("MISSING");
+    // Devítistolový regular DOLAR_EV už odvozený pack má, takže je kandidát.
+    expect(dolarCompletion?.status).toBe("CANDIDATE");
     expect(dolarCompletion?.productionReady).toBe(false);
-    expect(dolarCompletion?.missingReasons.join(" ")).toContain("DOLAR_EV");
+    // Důvod se změnil, protože slot už pack má: nechybí data, chybí legální
+    // produkční doklad. Odvozený pack je preview a produkční brána ho nepustí -
+    // což je přesně to, co má tenhle řádek hlídat.
+    expect(dolarCompletion?.missingReasons.join(" ")).toContain("canonical legal production provenance");
 
     const sixMaxRegular = profileWith(DEFAULT_TRAINING_PROFILE, { tableFormat: "SIX_MAX" });
     const sixMaxCompletion = mttCompletionReadinessRowForTrainingProfile(sixMaxRegular, "ON");
@@ -567,10 +589,11 @@ describe("mttProductionReadiness", () => {
   it("vytvori import-readiness report pro vsechny registrovane MTT preflop packy", () => {
     const report = buildMttPreflopPackImportReadinessReport();
 
-    expect(report.rows).toHaveLength(6);
+    // Šest chipEV a šestistolových packů plus dva odvozené ICM.
+    expect(report.rows).toHaveLength(8);
     expect(report.productionReadyRows).toBe(0);
-    expect(report.candidateRows).toBe(6);
-    expect(report.lowConfidenceRows).toBe(4);
+    expect(report.candidateRows).toBe(8);
+    expect(report.lowConfidenceRows).toBe(6);
     // Two, not four: six-max regular is populated and six-max turbo is not.
     expect(report.emptyRecordRows).toBe(2);
     expect(report.missingExpectedProfiles).toHaveLength(2);
@@ -583,8 +606,11 @@ describe("mttProductionReadiness", () => {
 
     // 487 until the calling-rejam sheets added VS_ALLIN at 15, 20, 25 and 30BB
     // for the five seats they cover - twenty records that did not exist before.
+    // Čtyři, ne dva: odvozené ICM packy vznikly z těchto dvou a mají proto
+    // stejný počet záznamů. Odvození jen posouvá šířku uvnitř záznamu, nepřidává
+    // ani neubírá řádky.
     const legacyCandidates = report.rows.filter((row) => row.recordCount === 507);
-    expect(legacyCandidates).toHaveLength(2);
+    expect(legacyCandidates).toHaveLength(4);
     expect(legacyCandidates.every((row) => (
       row.status === "CANDIDATE" &&
       !row.productionReady &&

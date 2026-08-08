@@ -198,9 +198,11 @@ describe("mtt:next-action CLI", () => {
     expect(parsed.counts.blockerRows).toBe(8);
     expect(parsed.counts.byPriority.P2_PREFLOP_DOLAR_EV).toBe(8);
     expect(parsed.nextAction.priority).toBe("P2_PREFLOP_DOLAR_EV");
-    expect(parsed.nextAction.slotId).toBe("FULL_RING_9|REGULAR|DOLAR_EV|PREFLOP|OFF");
+    // Devítistolový regular $EV už odvozený pack má, takže další na řadě je
+    // turbo - jediný $EV slot v tomhle formátu, který zatím nemá nic.
+    expect(parsed.nextAction.slotId).toBe("FULL_RING_9|TURBO|DOLAR_EV|PREFLOP|OFF");
     expect(parsed.nextAction.packId).toBe(
-      "mtt-full-ring-9-regular-preflop-dolar-ev-ante-off-production-v1",
+      "mtt-full-ring-9-turbo-preflop-dolar-ev-ante-off-production-v1",
     );
     expect(JSON.stringify(parsed)).not.toContain("https://");
   });

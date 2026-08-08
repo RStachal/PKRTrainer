@@ -127,13 +127,25 @@ function bundledProductionReadiness(
  * still refuses inferred chart values, which stands until measured six-max
  * charts arrive.
  */
+/**
+ * Preflopové profily, které smí běžet jako hratelné preview.
+ *
+ * `DOLAR_EV` sem patří od chvíle, kdy odvození přestalo hádat sílu ruky. Utažení
+ * dorovnávací range jen odebírá ruce z měřených dat, ale rozšíření agresivní
+ * range ruce přidává - a dokud se vybíraly podle toho, v kolika rangích se ruka
+ * objevuje, byl to odhad právě tam, kde na něm záleží. Teď se berou podle equity
+ * proti balíčku, spočítané předem do `preflopStrengthOrder.generated`.
+ *
+ * Pack zůstává odvozený, LOW a platný pro jeden pojmenovaný scénář. Produkční
+ * brána ho dál nepustí; preview znamená hratelné, ne ověřené.
+ */
 export function isPlayableMttPreflopPreview(profile: TrainingProfile): boolean {
   return (
     profile.gameVariant === "MTT" &&
     (profile.tableFormat === "FULL_RING_9" || profile.tableFormat === "SIX_MAX") &&
     profile.blindSpeed === "REGULAR" &&
     profile.street === "PREFLOP" &&
-    profile.evModel === "CHIP_EV" &&
+    (profile.evModel === "CHIP_EV" || profile.evModel === "DOLAR_EV") &&
     profile.rakeMode === "NONE"
   );
 }

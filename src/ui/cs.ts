@@ -48,6 +48,8 @@ const CZ_CATALOG = {
       "Náhled preflop tréninku je hratelný z historických dat; produkční release gate zůstává vypnutý do dokončení importu.",
     mttSixMaxDerivedPreview:
       "Odvozený náhled: range jsou přeneseny z 9-max podle počtu hráčů, kteří ještě jednají (6-max UTG dědí po 9-max LJ). Nejsou měřené. Proti veřejným 6-max referencím sedí v raných pozicích uvnitř běžných pásem, na buttonu a SB jsou spíš těsnější; u SB se přitom běžně uváděné hodnoty rozcházejí o víc než 20 bodů. Produkční hodnocení je vypnuté do importu měřených 6-max chartů.",
+    mttIcmDerivedPreview:
+      "Odvozený náhled pro jednu situaci: peněžní bublina, čtyři rovné stacky, výplata na tři místa. Range vznikly z chipEV dat posunem podle bubble faktoru - dorovnání se utahuje, agrese rozšiřuje. Nejsou měřené a mimo tuto situaci neplatí. Produkční hodnocení je vypnuté.",
     candidatePreview:
       "Kandidátní náhled. Produkční hodnocení je vypnuté do dokončení kontroly strategických hodnot.",
     candidateBlocked:
@@ -354,6 +356,8 @@ const EN_CATALOG: UiCatalog = {
       "The preflop preview is playable from historical data; the production release gate remains disabled until import is complete.",
     mttSixMaxDerivedPreview:
       "Derived preview: ranges are carried across from 9-max by how many opponents are still to act (6-max UTG inherits the 9-max lojack). They are not measured. Against public 6-max references the early seats sit inside the usual bands while the button and small blind run tighter - and published figures for the small blind disagree with each other by more than 20 points. Production scoring stays off until measured 6-max charts are imported.",
+    mttIcmDerivedPreview:
+      "Odvozený náhled pro jednu situaci: peněžní bublina, čtyři rovné stacky, výplata na tři místa. Range vznikly z chipEV dat posunem podle bubble faktoru - dorovnání se utahuje, agrese rozšiřuje. Nejsou měřené a mimo tuto situaci neplatí. Produkční hodnocení je vypnuté.",
     candidatePreview:
       "Candidate preview. Production scoring is disabled until strategy values are reviewed.",
     candidateBlocked:

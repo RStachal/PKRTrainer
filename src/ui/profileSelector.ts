@@ -210,14 +210,16 @@ function describeProfileStatus(profile: TrainingProfile): {
     profile.gameVariant === "MTT" &&
     profile.street === "PREFLOP"
   ) {
-    // Six-max says where its ranges came from. The generic preview note
-    // describes playing from historical data, which is true of nine-handed and
-    // not of six-max: those records are nine-handed records re-labelled by
-    // seats-behind. A player drilling them should be told that, and told they
-    // will run tight, rather than being left to find out at a table.
-    const previewNote = profile.tableFormat === "SIX_MAX"
-      ? CS.profile.mttSixMaxDerivedPreview
-      : CS.profile.mttPreflopPreview;
+    // Odvozené profily řeknou, odkud jejich range jsou. Obecná hláška mluví o
+    // hraní z historických dat, což platí pro devítistolový chipEV a pro nic
+    // dalšího: šestistolové záznamy jsou devítistolové přeznačené podle počtu
+    // hráčů za sebou, a $EV range vznikly posunem podle bubble faktoru pro jednu
+    // konkrétní situaci. Hráč to má vědět od začátku, ne to zjistit u stolu.
+    const previewNote = profile.evModel === "DOLAR_EV"
+      ? CS.profile.mttIcmDerivedPreview
+      : profile.tableFormat === "SIX_MAX"
+        ? CS.profile.mttSixMaxDerivedPreview
+        : CS.profile.mttPreflopPreview;
     return {
       status: "preview",
       text: `Preview: ${mttProfileLabel(profile)}. ${previewNote}`,

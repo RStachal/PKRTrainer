@@ -26,8 +26,10 @@ describe("MTT preflop production de-fallback guard", () => {
 
     expect(preflopRows).toHaveLength(16);
     expect(preflopRows.filter((row) => row.productionReady)).toHaveLength(0);
-    expect(preflopRows.filter((row) => row.status === "CANDIDATE")).toHaveLength(6);
-    expect(preflopRows.filter((row) => row.status === "MISSING")).toHaveLength(10);
+    // Osm kandidátů: šest chipEV a šestistolových, plus dva odvozené ICM. Řádek
+    // nad tímhle je ten, na kterém záleží - produkčních zůstává nula.
+    expect(preflopRows.filter((row) => row.status === "CANDIDATE")).toHaveLength(8);
+    expect(preflopRows.filter((row) => row.status === "MISSING")).toHaveLength(8);
 
     for (const tableFormat of tableFormats) {
       for (const blindSpeed of blindSpeeds) {

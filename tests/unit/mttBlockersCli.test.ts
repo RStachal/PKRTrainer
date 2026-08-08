@@ -12,8 +12,8 @@ describe("mtt:blockers CLI", () => {
     expect(result.stdout).toContain("MTT production blockers");
     expect(result.stdout).toContain("total rows in filter: 64");
     expect(result.stdout).toContain("blocker rows: 60");
-    expect(result.stdout).toContain("candidate blocker rows: 52");
-    expect(result.stdout).toContain("missing blocker rows: 8");
+    expect(result.stdout).toContain("candidate blocker rows: 54");
+    expect(result.stdout).toContain("missing blocker rows: 6");
     expect(result.stdout).toContain("ready for validation: 0");
     expect(result.stdout).toContain("missing normalized.json: 60");
     expect(result.stdout).toContain("missing permission.json: 56");
