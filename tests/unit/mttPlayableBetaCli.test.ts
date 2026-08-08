@@ -79,6 +79,11 @@ describe("mtt:playable-beta CLI", () => {
     expect(parsed.turnFamilies.every((family: { confidence: string }) => family.confidence === "LOW")).toBe(true);
     expect(parsed.knownLimits.join(" ")).toContain("Solved TURN content ships");
     expect(parsed.knownLimits.join(" ")).toContain("not verified content");
+    // Dve z devíti rodin mají část boardů z redukovaného review stromu. Agregát
+    // pres oba by michal dve ruzne hry, takze se redukovane boardy do packu
+    // nedostanou vubec - a brana to musi rict, protoze uzsi rodina je vysledek
+    // rozhodnuti, ne nedostatku dat.
+    expect(parsed.knownLimits.join(" ")).toContain("no turn pack blends two trees");
   });
 
   it("rejects an unknown option", () => {

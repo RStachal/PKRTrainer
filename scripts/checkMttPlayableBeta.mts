@@ -182,7 +182,8 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       `Solved TURN content ships as ${turnFamilies.length} families, ` +
       `${turnSolvedTurns} solved turns across ${turnDistinctFlops} distinct flops. ` +
       "It answers only the exact boards it was solved on and declines every other; " +
-      "confidence stays LOW until a player reviews it.",
+      "confidence stays LOW until a player reviews it. " +
+      "Boards solved on the reduced review-only tree are excluded, so no turn pack blends two trees.",
     ]),
     ...(turnFamilies.some((family) => family.confidence !== "LOW") ? [] : [
       "No solved TURN family has been player-reviewed yet, so turn content is shipped content, not verified content.",

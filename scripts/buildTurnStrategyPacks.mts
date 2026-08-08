@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { buildTurnStrategyRule } from "../src/data/ranges/turnStrategyRuleBuilder";
@@ -32,6 +33,52 @@ const PROFILE_KEY = "FULL_RING_9|REGULAR|CHIP_EV|TURN";
  * board that was dropped.
  */
 const RULE_BUDGET = 300;
+
+/**
+ * Boardy vyřešené na plném solverovém stromu, po rodinách.
+ *
+ * Tři rodiny mají část boardů z plného stromu a část z redukovaného, který
+ * vznikl jen pro review. Agregát přes obojí míchá dvě různé hry - a dvě z těch
+ * rodin jsou mezi turn rodinami, které se dodávají hráči. Redukovaný board se
+ * proto do packu nedostane; radši užší rodina než rodina, která tiše kombinuje
+ * dva stromy.
+ *
+ * Když audit neproběhne, vrátí se prázdná mapa a nefiltruje se. Riziko, které
+ * neumíme změřit, se hlásí jinde; tohle je generátor, ne brána.
+ */
+function fullTreeBoardsByFamily(): Map<string, Set<string>> {
+  const byFamily = new Map<string, Set<string>>();
+  try {
+    const output = execFileSync(process.execPath, [
+      "scripts/run-cli.mjs",
+      "scripts/auditTexasSolverTreeProvenance.mts",
+      "--json",
+    ], { cwd: process.cwd(), encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
+    const start = output.indexOf("{");
+    if (start < 0) return byFamily;
+    const report = JSON.parse(output.slice(start)) as {
+      families?: Array<{
+        familyId?: unknown;
+        fullTree?: unknown;
+        reducedTree?: unknown;
+        boardRows?: Array<{ boardId?: unknown; profile?: unknown }>;
+      }>;
+    };
+    for (const family of report.families ?? []) {
+      // Rodina celá na jednom stromě se nefiltruje: filtr má řešit míchání, ne
+      // zužovat rodiny, u kterých není co míchat.
+      if (Number(family.fullTree) === 0 || Number(family.reducedTree) === 0) continue;
+      const boards = new Set<string>();
+      for (const row of family.boardRows ?? []) {
+        if (String(row.profile) === "FULL_TREE") boards.add(String(row.boardId));
+      }
+      byFamily.set(String(family.familyId).toUpperCase(), boards);
+    }
+  } catch {
+    return new Map();
+  }
+  return byFamily;
+}
 
 interface ManifestEntry { familyId: string; packId: string; slug: string }
 
@@ -223,7 +270,15 @@ if (family === undefined) {
   console.error(`${ROOT} is absent; nothing to build from.`);
   process.exitCode = 1;
 } else {
-  const directories = readdirSync(ROOT).filter((name) => name.startsWith(`${family}__`));
+  const fullTreeBoards = fullTreeBoardsByFamily().get(family.toUpperCase());
+  const allDirectories = readdirSync(ROOT).filter((name) => name.startsWith(`${family}__`));
+  const directories = fullTreeBoards === undefined
+    ? allDirectories
+    : allDirectories.filter((name) => fullTreeBoards.has(name.split("__")[1] ?? ""));
+  const droppedReduced = allDirectories.length - directories.length;
+  if (droppedReduced > 0) {
+    console.log(`  ${droppedReduced} boardů vynecháno: vyřešené na redukovaném stromě`);
+  }
   const evidence: TurnFamilyEvidence = {
     familyId: family, boards: 0, plannedItems: 0, writtenItems: 0,
     minCoverage: 1, coverageTarget: TURN_COVERAGE_TARGET, sampledRules: [],

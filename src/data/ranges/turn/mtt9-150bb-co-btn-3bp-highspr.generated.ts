@@ -25,7 +25,7 @@ export const turnPack: TurnStrategyPack = {
     "MTT9_150BB_CO_BTN_3BP_HIGHSPR"
   ],
   "assumptions": [
-    "Built from 300 solved turn subgames across 30 boards.",
+    "Built from 300 solved turn subgames across 20 boards.",
     "Position pattern 3BP_BTN_VS_CO, CBET, 150BB effective.",
     "Bet sizes carry the solver's own labels in chips; translating them needs the pot at the node.",
     "Frequencies within a hand class are averaged across its combinations, so a class cannot express a preference between them.",
@@ -250,105 +250,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__742r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "742r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "4d",
-          "2c"
-        ],
-        "turnCards": [
-          "2d",
-          "2s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.622792
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 132,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 26
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
@@ -1640,252 +1541,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A87tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "A87tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "8s",
-          "7h"
-        ],
-        "turnCards": [
-          "2c",
-          "2d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.524074
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AQs",
-            "ATs",
-            "JJ",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 108,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.807
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.029
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.163
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "77",
-            "AJs",
-            "AQo",
-            "JTs",
-            "T9s"
-          ],
-          "combos": 30,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.411
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.061
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.528
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AJ6tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "AJ6tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "Js",
-          "6h"
-        ],
-        "turnCards": [
-          "2c",
-          "2d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.539164
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "T9s",
-            "TT"
-          ],
-          "combos": 116,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.707
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.114
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.178
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "A7s",
-            "AJs",
-            "ATs",
-            "QTs"
-          ],
-          "combos": 22,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.351
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.164
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.485
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -2085,154 +1740,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J54mono",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "J54mono",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "5s",
-          "4s"
-        ],
-        "turnCards": [
-          "2c",
-          "2d",
-          "2h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.424497
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 130,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.794
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.118
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.088
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "76s"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.164
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.223
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.613
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "A6s"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.269
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.421
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.31
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -2324,228 +1831,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__JT9tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "JT9tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "Th",
-          "9h"
-        ],
-        "turnCards": [
-          "2c",
-          "2d"
-        ],
-        "priorLine": [
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.415712
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 196.000000",
-          "handClasses": [
-            "77",
-            "87s",
-            "99",
-            "AQo",
-            "AQs",
-            "JJ",
-            "KJs",
-            "KQo",
-            "KQs",
-            "QQ",
-            "TT"
-          ],
-          "combos": 70,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.282
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.133
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.585
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "88",
-            "98s",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JTs",
-            "KTs",
-            "QJs",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 68,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.783
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.099
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.118
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__K83r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "K83r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "8d",
-          "3c"
-        ],
-        "turnCards": [
-          "2c",
-          "2d",
-          "2s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.896771
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 128,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
               "frequency": 0
             }
           ]
@@ -2646,129 +1931,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "KQ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "Qs",
-          "2h"
-        ],
-        "turnCards": [
-          "2c",
-          "2d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.505159
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "KQo",
-            "KQs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 122,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.806
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.028
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.166
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "AJs",
-            "JTs",
-            "KJs",
-            "KTs"
-          ],
-          "combos": 16,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.444
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.017
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.54
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -2901,153 +2063,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q72r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "Q72r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "7d",
-          "2c"
-        ],
-        "turnCards": [
-          "2d",
-          "2s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.508168
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KQo",
-            "KQs",
-            "QJs",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 104,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.679
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.178
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.143
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A5s",
-            "A6s",
-            "AQo",
-            "KTs"
-          ],
-          "combos": 24,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.369
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.141
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.49
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "KJs",
-            "QQ"
-          ],
-          "combos": 10,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.191
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.595
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.214
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -3164,129 +2179,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QJ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "QJ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "Jh",
-          "2h"
-        ],
-        "turnCards": [
-          "2c",
-          "2d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.576919
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "QJs",
-            "QTs",
-            "TT"
-          ],
-          "combos": 108,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.783
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.003
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.215
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "AQo",
-            "AQs",
-            "KTs",
-            "QQ",
-            "T9s"
-          ],
-          "combos": 30,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.351
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.003
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.646
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -3441,105 +2333,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__T84r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "T84r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ts",
-          "8d",
-          "4c"
-        ],
-        "turnCards": [
-          "2c",
-          "2d",
-          "2s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.469582
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
@@ -3733,104 +2526,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__742r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "742r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "4d",
-          "2c"
-        ],
-        "turnCards": [
-          "2h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.622792
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 132,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 26
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
@@ -5131,274 +3826,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A87tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "A87tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "8s",
-          "7h"
-        ],
-        "turnCards": [
-          "2h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.524074
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 124,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.744
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.055
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.2
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "77",
-            "AJs",
-            "T9s"
-          ],
-          "combos": 14,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.438
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.048
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.515
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AJ6tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "AJ6tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "Js",
-          "6h"
-        ],
-        "turnCards": [
-          "2h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.539164
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.667
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.148
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.185
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "A6s",
-            "A7s"
-          ],
-          "combos": 8,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.223
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.429
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.348
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "AQs"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.371
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.254
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.375
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -5594,104 +4021,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J54mono",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "J54mono",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "5s",
-          "4s"
-        ],
-        "turnCards": [
-          "2s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.424497
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 138,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.863
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.115
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.022
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -5781,225 +4110,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__JT9tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "JT9tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "Th",
-          "9h"
-        ],
-        "turnCards": [
-          "2h"
-        ],
-        "priorLine": [
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.415712
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.719
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.28
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.001
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 86.000000",
-          "handClasses": [
-            "JJ",
-            "TT"
-          ],
-          "combos": 12,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.454
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.545
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.002
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__K83r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "K83r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "8d",
-          "3c"
-        ],
-        "turnCards": [
-          "2h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.896771
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 128,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
               "frequency": 0
             }
           ]
@@ -6099,128 +4209,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "KQ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "Qs",
-          "2h"
-        ],
-        "turnCards": [
-          "2s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.505159
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 134,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.731
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.104
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.165
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "JTs"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.373
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.407
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.219
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -6351,152 +4339,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q72r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "Q72r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "7d",
-          "2c"
-        ],
-        "turnCards": [
-          "2h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.508168
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JTs",
-            "KQo",
-            "T9s",
-            "TT"
-          ],
-          "combos": 106,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.649
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.242
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.11
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "JJ",
-            "KJs",
-            "KQs",
-            "QJs",
-            "QQ",
-            "QTs"
-          ],
-          "combos": 28,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.275
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.612
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.113
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "KTs"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.096
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.327
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.577
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -6587,128 +4429,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QJ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "QJ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "Jh",
-          "2h"
-        ],
-        "turnCards": [
-          "2s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.576919
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "QJs",
-            "QTs",
-            "TT"
-          ],
-          "combos": 88,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.736
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.031
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.233
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A7s",
-            "AQo",
-            "AQs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QQ",
-            "T9s"
-          ],
-          "combos": 50,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.357
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.021
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.622
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -6861,103 +4581,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__T84r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "T84r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ts",
-          "8d",
-          "4c"
-        ],
-        "turnCards": [
-          "2h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.469582
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
@@ -7152,106 +4775,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__742r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "742r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "4d",
-          "2c"
-        ],
-        "turnCards": [
-          "3c",
-          "3d",
-          "3s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.622792
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 132,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 26
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
@@ -8492,250 +6015,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A87tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "A87tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "8s",
-          "7h"
-        ],
-        "turnCards": [
-          "2s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.524074
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 110,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.8
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.043
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.157
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "A8s",
-            "T9s"
-          ],
-          "combos": 28,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.19
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.032
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.778
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AJ6tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "AJ6tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "Js",
-          "6h"
-        ],
-        "turnCards": [
-          "2s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.539164
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 128,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.804
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.097
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.099
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "76s"
-          ],
-          "combos": 10,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.079
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.093
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.828
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -8935,154 +6214,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J54mono",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "J54mono",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "5s",
-          "4s"
-        ],
-        "turnCards": [
-          "3c",
-          "3d",
-          "3h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.424497
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 120,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.767
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.16
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.072
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "76s",
-            "A6s",
-            "A7s"
-          ],
-          "combos": 12,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.183
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.401
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.416
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "QQ"
-          ],
-          "combos": 6,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.407
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.473
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.12
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -9173,250 +6304,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__JT9tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "JT9tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "Th",
-          "9h"
-        ],
-        "turnCards": [
-          "2s"
-        ],
-        "priorLine": [
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.415712
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "88",
-            "98s",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JTs",
-            "KJs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs"
-          ],
-          "combos": 80,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.69
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.115
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.195
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 196.000000",
-          "handClasses": [
-            "87s",
-            "AQo",
-            "AQs",
-            "JJ",
-            "KQo",
-            "KQs",
-            "TT"
-          ],
-          "combos": 48,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.277
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.203
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.52
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 86.000000",
-          "handClasses": [
-            "99",
-            "T9s"
-          ],
-          "combos": 10,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.4
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.466
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.134
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__K83r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "K83r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "8d",
-          "3c"
-        ],
-        "turnCards": [
-          "3d",
-          "3s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.896771
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 128,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
               "frequency": 0
             }
           ]
@@ -9516,129 +6403,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "KQ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "Qs",
-          "2h"
-        ],
-        "turnCards": [
-          "3c",
-          "3d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.505159
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "JJ",
-            "JTs",
-            "KQo",
-            "KQs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 118,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.77
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.001
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.23
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A5s",
-            "AJs",
-            "ATs",
-            "KJs",
-            "KTs"
-          ],
-          "combos": 20,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.354
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.645
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -9771,154 +6535,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q72r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "Q72r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "7d",
-          "2c"
-        ],
-        "turnCards": [
-          "3c",
-          "3d",
-          "3s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.508168
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 76,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.703
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.137
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.16
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "76s",
-            "A5s",
-            "A6s",
-            "AQo",
-            "AQs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs"
-          ],
-          "combos": 56,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.316
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.155
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.529
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "QQ"
-          ],
-          "combos": 6,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.258
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.493
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.249
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -10035,129 +6651,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QJ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "QJ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "Jh",
-          "2h"
-        ],
-        "turnCards": [
-          "3c",
-          "3d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.576919
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "QTs",
-            "TT"
-          ],
-          "combos": 78,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.858
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.141
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "A5s",
-            "AQo",
-            "AQs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "T9s"
-          ],
-          "combos": 60,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.355
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.644
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -10312,105 +6805,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__T84r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "T84r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ts",
-          "8d",
-          "4c"
-        ],
-        "turnCards": [
-          "3c",
-          "3d",
-          "3s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.469582
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
@@ -10605,104 +6999,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__742r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "742r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "4d",
-          "2c"
-        ],
-        "turnCards": [
-          "3h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.622792
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 132,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 26
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
@@ -11958,252 +8254,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A87tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "A87tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "8s",
-          "7h"
-        ],
-        "turnCards": [
-          "3c",
-          "3d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.524074
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AQs",
-            "ATs",
-            "JJ",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 108,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.808
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.031
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.161
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "77",
-            "AJs",
-            "AQo",
-            "JTs",
-            "T9s"
-          ],
-          "combos": 30,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.41
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.063
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.527
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AJ6tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "AJ6tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "Js",
-          "6h"
-        ],
-        "turnCards": [
-          "3c",
-          "3d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.539164
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "T9s",
-            "TT"
-          ],
-          "combos": 112,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.72
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.109
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.171
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "A6s",
-            "A7s",
-            "AJs",
-            "ATs",
-            "QTs"
-          ],
-          "combos": 26,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.345
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.183
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.472
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -12423,104 +8473,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J54mono",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "J54mono",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "5s",
-          "4s"
-        ],
-        "turnCards": [
-          "3s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.424497
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 138,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.749
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.204
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.046
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -12610,226 +8562,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__JT9tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "JT9tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "Th",
-          "9h"
-        ],
-        "turnCards": [
-          "3c",
-          "3d"
-        ],
-        "priorLine": [
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.415712
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 196.000000",
-          "handClasses": [
-            "77",
-            "87s",
-            "99",
-            "AQo",
-            "AQs",
-            "JJ",
-            "KJs",
-            "KQo",
-            "KQs",
-            "QQ",
-            "TT"
-          ],
-          "combos": 70,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.28
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.133
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.587
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "88",
-            "98s",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JTs",
-            "KTs",
-            "QJs",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 68,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.78
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.099
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.12
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__K83r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "K83r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "8d",
-          "3c"
-        ],
-        "turnCards": [
-          "3h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.896771
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 128,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
               "frequency": 0
             }
           ]
@@ -12930,128 +8662,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "KQ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "Qs",
-          "2h"
-        ],
-        "turnCards": [
-          "3h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.505159
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "JJ",
-            "JTs",
-            "KQs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 90,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.782
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.002
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.216
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A5s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "KJs",
-            "KQo",
-            "KTs"
-          ],
-          "combos": 48,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.397
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.002
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.601
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -13182,152 +8792,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q72r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "Q72r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "7d",
-          "2c"
-        ],
-        "turnCards": [
-          "3h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.508168
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A7s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 86,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.684
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.184
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.132
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "A8s",
-            "JJ",
-            "KJs",
-            "QJs",
-            "QQ",
-            "QTs"
-          ],
-          "combos": 28,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.221
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.5
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.28
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A6s",
-            "KQo",
-            "KQs",
-            "KTs"
-          ],
-          "combos": 24,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.214
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.265
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.52
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -13418,152 +8882,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QJ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "QJ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "Jh",
-          "2h"
-        ],
-        "turnCards": [
-          "3h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.576919
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 116,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.708
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.202
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.09
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "76s",
-            "A5s",
-            "JJ",
-            "KTs"
-          ],
-          "combos": 18,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.227
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.243
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.529
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "QJs"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.31
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.517
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.173
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -13716,103 +9034,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__T84r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "T84r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ts",
-          "8d",
-          "4c"
-        ],
-        "turnCards": [
-          "3h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.469582
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
@@ -14006,105 +9227,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__742r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "742r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "4d",
-          "2c"
-        ],
-        "turnCards": [
-          "4c",
-          "4s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.622792
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 132,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 26
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
@@ -15368,250 +10490,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A87tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "A87tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "8s",
-          "7h"
-        ],
-        "turnCards": [
-          "3h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.524074
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 124,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.745
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.055
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.201
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "77",
-            "AJs",
-            "T9s"
-          ],
-          "combos": 14,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.446
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.044
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.51
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AJ6tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "AJ6tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "Js",
-          "6h"
-        ],
-        "turnCards": [
-          "3h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.539164
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 130,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.665
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.148
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.188
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "A6s",
-            "A7s"
-          ],
-          "combos": 8,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.256
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.424
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.321
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -15811,130 +10689,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J54mono",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "J54mono",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "5s",
-          "4s"
-        ],
-        "turnCards": [
-          "4c",
-          "4d",
-          "4h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.424497
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 130,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.814
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.128
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.058
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "76s",
-            "JTs"
-          ],
-          "combos": 8,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.326
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.503
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.17
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -16034,227 +10788,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 25
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__JT9tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "JT9tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "Th",
-          "9h"
-        ],
-        "turnCards": [
-          "3h"
-        ],
-        "priorLine": [
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.415712
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 132,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.744
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.25
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.006
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 86.000000",
-          "handClasses": [
-            "JJ"
-          ],
-          "combos": 6,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.48
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.505
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.015
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__K83r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "K83r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "8d",
-          "3c"
-        ],
-        "turnCards": [
-          "4c",
-          "4d",
-          "4s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.896771
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 128,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KJ4tt",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -16346,128 +10879,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "KQ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "Qs",
-          "2h"
-        ],
-        "turnCards": [
-          "3s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.505159
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 118,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.783
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.111
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.106
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A5s",
-            "KQo",
-            "KQs"
-          ],
-          "combos": 20,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.322
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.245
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.433
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -16600,154 +11011,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q72r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "Q72r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "7d",
-          "2c"
-        ],
-        "turnCards": [
-          "4c",
-          "4d",
-          "4s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.508168
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 72,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.689
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.153
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.158
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "76s",
-            "A5s",
-            "A6s",
-            "AQo",
-            "AQs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QTs"
-          ],
-          "combos": 60,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.288
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.202
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.51
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "QQ"
-          ],
-          "combos": 6,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.23
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.499
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.27
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -16864,128 +11127,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QJ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "QJ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "Jh",
-          "2h"
-        ],
-        "turnCards": [
-          "3s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.576919
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "QJs",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 92,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.741
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.004
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.255
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A5s",
-            "AQo",
-            "AQs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QQ"
-          ],
-          "combos": 46,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.319
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.004
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.678
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -17140,104 +11281,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__T84r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "T84r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ts",
-          "8d",
-          "4c"
-        ],
-        "turnCards": [
-          "4d",
-          "4s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.469582
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
@@ -17434,104 +11477,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__742r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "742r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "4d",
-          "2c"
-        ],
-        "turnCards": [
-          "4h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.622792
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 132,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 26
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
@@ -18762,250 +12707,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A87tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "A87tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "8s",
-          "7h"
-        ],
-        "turnCards": [
-          "3s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.524074
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 110,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.798
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.043
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.159
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "A8s",
-            "T9s"
-          ],
-          "combos": 28,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.184
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.034
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.782
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AJ6tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "AJ6tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "Js",
-          "6h"
-        ],
-        "turnCards": [
-          "3s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.539164
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 128,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.806
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.085
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.109
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "76s"
-          ],
-          "combos": 10,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.092
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.093
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.815
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -19203,130 +12904,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J54mono",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "J54mono",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "5s",
-          "4s"
-        ],
-        "turnCards": [
-          "5c",
-          "5d",
-          "5h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.424497
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 134,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.831
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.11
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.059
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "76s"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.261
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.445
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.294
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -19416,249 +12993,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__JT9tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "JT9tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "Th",
-          "9h"
-        ],
-        "turnCards": [
-          "3s"
-        ],
-        "priorLine": [
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.415712
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "88",
-            "98s",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JTs",
-            "KJs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 86,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.669
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.125
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.206
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 196.000000",
-          "handClasses": [
-            "87s",
-            "AQo",
-            "AQs",
-            "JJ",
-            "KQo",
-            "KQs"
-          ],
-          "combos": 42,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.266
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.19
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.544
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 86.000000",
-          "handClasses": [
-            "99",
-            "T9s"
-          ],
-          "combos": 10,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.395
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.466
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.139
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__K83r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "K83r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "8d",
-          "3c"
-        ],
-        "turnCards": [
-          "4h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.896771
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 128,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
               "frequency": 0
             }
           ]
@@ -19758,129 +13092,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "KQ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "Qs",
-          "2h"
-        ],
-        "turnCards": [
-          "4c",
-          "4d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.505159
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "JJ",
-            "JTs",
-            "KQo",
-            "KQs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 118,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.77
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.001
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.229
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A5s",
-            "AJs",
-            "ATs",
-            "KJs",
-            "KTs"
-          ],
-          "combos": 20,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.358
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.001
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.641
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -20011,152 +13222,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q72r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "Q72r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "7d",
-          "2c"
-        ],
-        "turnCards": [
-          "4h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.508168
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "A5s",
-            "A7s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 80,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.66
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.214
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.126
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "99",
-            "A8s",
-            "JJ",
-            "KJs",
-            "QJs",
-            "QQ",
-            "QTs"
-          ],
-          "combos": 34,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.248
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.515
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.237
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A6s",
-            "KQo",
-            "KQs",
-            "KTs"
-          ],
-          "combos": 24,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.175
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.254
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.571
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -20247,129 +13312,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QJ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "QJ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "Jh",
-          "2h"
-        ],
-        "turnCards": [
-          "4c",
-          "4d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.576919
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 82,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.836
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.164
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "A5s",
-            "AQo",
-            "AQs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ"
-          ],
-          "combos": 56,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.347
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.653
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -20522,103 +13464,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__T84r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "T84r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ts",
-          "8d",
-          "4c"
-        ],
-        "turnCards": [
-          "4h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.469582
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
@@ -20812,106 +13657,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__742r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "742r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "4d",
-          "2c"
-        ],
-        "turnCards": [
-          "5c",
-          "5d",
-          "5s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.622792
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 132,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 26
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
@@ -22201,276 +14946,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A87tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "A87tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "8s",
-          "7h"
-        ],
-        "turnCards": [
-          "4c",
-          "4d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.524074
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 118,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.812
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.022
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.165
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "77",
-            "87s",
-            "88",
-            "T9s"
-          ],
-          "combos": 20,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.343
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.015
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.642
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AJ6tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "AJ6tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "Js",
-          "6h"
-        ],
-        "turnCards": [
-          "4c",
-          "4d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.539164
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 116,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.709
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.115
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.176
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "A6s",
-            "AJs",
-            "ATs"
-          ],
-          "combos": 18,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.344
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.144
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.512
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "A7s"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.323
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.339
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.338
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -22691,130 +15166,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J54mono",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "J54mono",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "5s",
-          "4s"
-        ],
-        "turnCards": [
-          "6c",
-          "6d",
-          "6h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.424497
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "76s",
-            "77",
-            "88",
-            "99",
-            "A5s",
-            "A6s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 86,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.745
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.202
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.053
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "66",
-            "87s",
-            "98s",
-            "A7s",
-            "A8s",
-            "AJs",
-            "JTs",
-            "KJs",
-            "KQo",
-            "QQ"
-          ],
-          "combos": 52,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.322
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.526
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.151
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -22906,228 +15257,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__JT9tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "JT9tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "Th",
-          "9h"
-        ],
-        "turnCards": [
-          "4c",
-          "4d"
-        ],
-        "priorLine": [
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.415712
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 196.000000",
-          "handClasses": [
-            "77",
-            "87s",
-            "99",
-            "AQo",
-            "AQs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "QQ",
-            "TT"
-          ],
-          "combos": 74,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.279
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.059
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.662
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "88",
-            "98s",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "KTs",
-            "QJs",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 64,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.841
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.039
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.12
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__K83r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "K83r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "8d",
-          "3c"
-        ],
-        "turnCards": [
-          "5c",
-          "5d",
-          "5s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.896771
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 128,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
               "frequency": 0
             }
           ]
@@ -23228,128 +15357,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "KQ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "Qs",
-          "2h"
-        ],
-        "turnCards": [
-          "4h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.505159
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KQs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 94,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.763
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.011
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.225
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A5s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "KJs",
-            "KQo",
-            "KTs"
-          ],
-          "combos": 44,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.394
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.009
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.597
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -23481,154 +15488,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q72r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "Q72r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "7d",
-          "2c"
-        ],
-        "turnCards": [
-          "5c",
-          "5d",
-          "5s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.508168
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "88",
-            "99",
-            "A5s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 72,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.698
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.142
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.159
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "76s",
-            "98s",
-            "A6s",
-            "AQo",
-            "AQs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs"
-          ],
-          "combos": 56,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.3
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.19
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.509
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "QQ",
-            "QTs"
-          ],
-          "combos": 10,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.222
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.482
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.296
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -23745,152 +15604,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QJ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "QJ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "Jh",
-          "2h"
-        ],
-        "turnCards": [
-          "4h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.576919
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 112,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.708
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.203
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.09
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "76s",
-            "A5s",
-            "A6s",
-            "JJ",
-            "KTs"
-          ],
-          "combos": 22,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.254
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.236
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.51
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "QJs"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.269
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.474
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.257
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -24045,105 +15758,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__T84r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "T84r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ts",
-          "8d",
-          "4c"
-        ],
-        "turnCards": [
-          "5c",
-          "5d",
-          "5s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.469582
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
@@ -24339,104 +15953,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__742r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "742r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "4d",
-          "2c"
-        ],
-        "turnCards": [
-          "5h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.622792
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 132,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 26
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
@@ -25693,274 +17209,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A87tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "A87tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "8s",
-          "7h"
-        ],
-        "turnCards": [
-          "4h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.524074
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 130,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.747
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.071
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.182
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "87s",
-            "T9s"
-          ],
-          "combos": 8,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.318
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.08
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.603
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AJ6tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "AJ6tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "Js",
-          "6h"
-        ],
-        "turnCards": [
-          "4h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.539164
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A8s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 122,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.679
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.146
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.175
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A6s",
-            "ATs"
-          ],
-          "combos": 8,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.335
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.282
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.384
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "A7s",
-            "A9s"
-          ],
-          "combos": 8,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.301
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.391
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.308
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -26158,104 +17406,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J54mono",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "J54mono",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "5s",
-          "4s"
-        ],
-        "turnCards": [
-          "6s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.424497
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 138,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.835
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.143
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.022
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -26345,225 +17495,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__JT9tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "JT9tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "Th",
-          "9h"
-        ],
-        "turnCards": [
-          "4h"
-        ],
-        "priorLine": [
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.415712
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.724
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.276
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 86.000000",
-          "handClasses": [
-            "JJ",
-            "TT"
-          ],
-          "combos": 12,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.455
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.546
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__K83r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "K83r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "8d",
-          "3c"
-        ],
-        "turnCards": [
-          "5h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.896771
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 128,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
               "frequency": 0
             }
           ]
@@ -26663,128 +17594,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "KQ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "Qs",
-          "2h"
-        ],
-        "turnCards": [
-          "4s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.505159
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 118,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.777
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.112
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.111
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A5s",
-            "KQo",
-            "KQs"
-          ],
-          "combos": 20,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.31
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.241
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.449
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -26915,152 +17724,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q72r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "Q72r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "7d",
-          "2c"
-        ],
-        "turnCards": [
-          "5h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.508168
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "99",
-            "A5s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JTs",
-            "T9s"
-          ],
-          "combos": 80,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.651
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.184
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.166
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "98s",
-            "A6s",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs"
-          ],
-          "combos": 36,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.193
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.257
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.55
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "JJ",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 22,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.225
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.506
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.269
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -27151,128 +17814,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QJ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "QJ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "Jh",
-          "2h"
-        ],
-        "turnCards": [
-          "4s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.576919
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "QJs",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 92,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.738
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.004
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.258
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "A5s",
-            "AQo",
-            "AQs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QQ"
-          ],
-          "combos": 46,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.32
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.004
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.676
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -27425,103 +17966,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__T84r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "T84r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ts",
-          "8d",
-          "4c"
-        ],
-        "turnCards": [
-          "5h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.469582
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
@@ -27716,106 +18160,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__742r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "742r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "4d",
-          "2c"
-        ],
-        "turnCards": [
-          "6c",
-          "6d",
-          "6s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.622792
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 132,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.974
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.025
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 26
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
@@ -29174,274 +19518,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A87tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "A87tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "8s",
-          "7h"
-        ],
-        "turnCards": [
-          "4s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.524074
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 110,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.784
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.041
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.175
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "A8s",
-            "T9s"
-          ],
-          "combos": 28,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.148
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.055
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.797
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AJ6tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "AJ6tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "Js",
-          "6h"
-        ],
-        "turnCards": [
-          "4s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.539164
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 124,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.783
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.109
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.108
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "AJs"
-          ],
-          "combos": 10,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.181
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.047
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.772
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "76s"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.291
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.365
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.344
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -29661,130 +19737,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 25
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J54mono",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "J54mono",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "5s",
-          "4s"
-        ],
-        "turnCards": [
-          "7c",
-          "7d",
-          "7h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.424497
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "99",
-            "A5s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 116,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.707
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.217
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.076
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "98s",
-            "A6s",
-            "AJs",
-            "KJs",
-            "QQ"
-          ],
-          "combos": 22,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.254
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.634
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.112
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -29876,251 +19828,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__JT9tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "JT9tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "Th",
-          "9h"
-        ],
-        "turnCards": [
-          "4s"
-        ],
-        "priorLine": [
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.415712
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JTs",
-            "KJs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs"
-          ],
-          "combos": 86,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.678
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.115
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.208
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 196.000000",
-          "handClasses": [
-            "87s",
-            "AQo",
-            "AQs",
-            "JJ",
-            "KQo",
-            "KQs",
-            "TT"
-          ],
-          "combos": 48,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.269
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.161
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.57
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 86.000000",
-          "handClasses": [
-            "T9s"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.463
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.485
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.052
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__K83r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "K83r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "8d",
-          "3c"
-        ],
-        "turnCards": [
-          "6c",
-          "6d",
-          "6s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.896771
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 128,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
               "frequency": 0
             }
           ]
@@ -30221,129 +19928,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "KQ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "Qs",
-          "2h"
-        ],
-        "turnCards": [
-          "5c",
-          "5d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.505159
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "JJ",
-            "JTs",
-            "KQo",
-            "KQs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 122,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.752
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.001
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.247
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "AJs",
-            "ATs",
-            "KJs",
-            "KTs"
-          ],
-          "combos": 16,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.275
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.001
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.724
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -30500,154 +20084,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q72r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "Q72r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "7d",
-          "2c"
-        ],
-        "turnCards": [
-          "6c",
-          "6d",
-          "6s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.508168
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "98s",
-            "A5s",
-            "A7s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "T9s"
-          ],
-          "combos": 80,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.123
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.224
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.654
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "76s",
-            "99",
-            "JJ",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 32,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.255
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.606
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.138
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "88",
-            "A6s",
-            "A8s",
-            "AJs",
-            "ATs",
-            "JTs"
-          ],
-          "combos": 26,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.643
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.144
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.212
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -30764,129 +20200,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QJ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "QJ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "Jh",
-          "2h"
-        ],
-        "turnCards": [
-          "5c",
-          "5d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.576919
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "QTs",
-            "TT"
-          ],
-          "combos": 78,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.832
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.004
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.164
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "A5s",
-            "AQo",
-            "AQs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "T9s"
-          ],
-          "combos": 60,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.344
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.003
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.653
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -31041,105 +20354,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__T84r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "T84r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ts",
-          "8d",
-          "4c"
-        ],
-        "turnCards": [
-          "6c",
-          "6d",
-          "6s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.469582
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
@@ -31335,104 +20549,6 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__742r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "742r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "4d",
-          "2c"
-        ],
-        "turnCards": [
-          "6h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.622792
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 132,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.997
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.003
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.001
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 26
     },
     {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
@@ -32763,252 +21879,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A87tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "A87tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "8s",
-          "7h"
-        ],
-        "turnCards": [
-          "5c",
-          "5d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.524074
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "98s",
-            "99",
-            "A7s",
-            "A8s",
-            "A9s",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 80,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.787
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.003
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.21
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "A5s",
-            "A6s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "T9s"
-          ],
-          "combos": 58,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.335
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.002
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.663
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AJ6tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "AJ6tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "As",
-          "Js",
-          "6h"
-        ],
-        "turnCards": [
-          "5c",
-          "5d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.539164
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "77",
-            "88",
-            "98s",
-            "99",
-            "A7s",
-            "A8s",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "T9s",
-            "TT"
-          ],
-          "combos": 84,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.761
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.051
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.188
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "76s",
-            "87s",
-            "A5s",
-            "A6s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "QTs"
-          ],
-          "combos": 54,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.344
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.063
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.593
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -33206,104 +22076,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J54mono",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "J54mono",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "5s",
-          "4s"
-        ],
-        "turnCards": [
-          "7s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.424497
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 138,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.867
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.125
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.008
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -33393,226 +22165,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 25
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__JT9tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "JT9tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Js",
-          "Th",
-          "9h"
-        ],
-        "turnCards": [
-          "5c",
-          "5d"
-        ],
-        "priorLine": [
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.415712
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 196.000000",
-          "handClasses": [
-            "77",
-            "87s",
-            "99",
-            "AQo",
-            "AQs",
-            "JJ",
-            "KJs",
-            "KQo",
-            "KQs",
-            "QQ",
-            "TT"
-          ],
-          "combos": 70,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.274
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.146
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.581
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "88",
-            "98s",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JTs",
-            "KTs",
-            "QJs",
-            "QTs",
-            "T9s"
-          ],
-          "combos": 68,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.778
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0.11
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0.112
-            },
-            {
-              "action": "BET 1448.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__K83r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "K83r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "8d",
-          "3c"
-        ],
-        "turnCards": [
-          "6h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 52.000000",
-          "CALL"
-        ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.896771
-      },
-      "actions": [
-        "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 128,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 86.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 196.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 1448.000000",
               "frequency": 0
             }
           ]
@@ -33713,128 +22265,6 @@ export const turnPack: TurnStrategyPack = {
             {
               "action": "BET 1421.000000",
               "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "KQ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Ks",
-          "Qs",
-          "2h"
-        ],
-        "turnCards": [
-          "5h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.505159
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A5s",
-            "A6s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "ATs",
-            "JJ",
-            "JTs",
-            "KQo",
-            "KQs",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9s",
-            "TT"
-          ],
-          "combos": 126,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.662
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.099
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.214
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0.025
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "AJs",
-            "KJs",
-            "KTs"
-          ],
-          "combos": 12,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.41
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.085
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.495
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0.01
             }
           ]
         }
@@ -33988,152 +22418,6 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q72r",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "Q72r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "7d",
-          "2c"
-        ],
-        "turnCards": [
-          "6h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.508168
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "66",
-            "77",
-            "98s",
-            "A5s",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AQo",
-            "AQs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "QJs",
-            "T9s"
-          ],
-          "combos": 80,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.089
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.24
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.671
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "76s",
-            "99",
-            "JJ",
-            "JTs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 36,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.221
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.652
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.127
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "87s",
-            "88",
-            "A6s",
-            "AJs",
-            "ATs"
-          ],
-          "combos": 22,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.734
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.19
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.075
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
       "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
@@ -34250,152 +22534,6 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 1421.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 27
-    },
-    {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QJ2tt",
-      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "positionPattern": "3BP_BTN_VS_CO",
-      "node": "CBET",
-      "potType": "THREE_BET_POT",
-      "stackBB": 150,
-      "sprBand": "HIGH",
-      "heroOutOfPosition": false,
-      "board": "QJ2tt",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "CO",
-          "villainSeat": "BTN",
-          "isAggressor": false,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "Qs",
-          "Jh",
-          "2h"
-        ],
-        "turnCards": [
-          "5h"
-        ],
-        "priorLine": [
-          "CHECK",
-          "CHECK"
-        ],
-        "potChips": 157,
-        "stackChips": 1500,
-        "potBB": 15.7,
-        "stackBehindBB": 150,
-        "reach": 0.576919
-      },
-      "actions": [
-        "CHECK",
-        "BET 52.000000",
-        "BET 118.000000",
-        "BET 1500.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "66",
-            "77",
-            "87s",
-            "88",
-            "98s",
-            "99",
-            "A7s",
-            "A8s",
-            "A9s",
-            "AJs",
-            "ATs",
-            "JTs",
-            "KJs",
-            "KQo",
-            "KQs",
-            "QQ",
-            "QTs",
-            "TT"
-          ],
-          "combos": 92,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.73
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.201
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.069
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 52.000000",
-          "handClasses": [
-            "A5s",
-            "AQo",
-            "AQs",
-            "KTs",
-            "QJs",
-            "T9s"
-          ],
-          "combos": 32,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.35
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.484
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.166
-            },
-            {
-              "action": "BET 1500.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 118.000000",
-          "handClasses": [
-            "76s",
-            "A6s",
-            "JJ"
-          ],
-          "combos": 14,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.319
-            },
-            {
-              "action": "BET 52.000000",
-              "frequency": 0.226
-            },
-            {
-              "action": "BET 118.000000",
-              "frequency": 0.455
-            },
-            {
-              "action": "BET 1500.000000",
               "frequency": 0
             }
           ]
@@ -34550,7 +22688,7 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 27
     },
     {
-      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__T84r",
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "positionPattern": "3BP_BTN_VS_CO",
       "node": "CBET",
@@ -34558,7 +22696,7 @@ export const turnPack: TurnStrategyPack = {
       "stackBB": 150,
       "sprBand": "HIGH",
       "heroOutOfPosition": false,
-      "board": "T84r",
+      "board": "322r",
       "spot": {
         "hero": {
           "side": "OOP",
@@ -34569,29 +22707,5373 @@ export const turnPack: TurnStrategyPack = {
           "facingBet": false
         },
         "flop": [
-          "Ts",
+          "3s",
+          "2h",
+          "2d"
+        ],
+        "turnCards": [
+          "7c"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.824603
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "88",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "TT"
+          ],
+          "combos": 118,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 22
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__662tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "662tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "6s",
+          "6h",
+          "2s"
+        ],
+        "turnCards": [
+          "5s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.581902
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "744tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "7s",
+          "4s",
+          "4h"
+        ],
+        "turnCards": [
+          "6c",
+          "6d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.58407
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.989
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.01
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__862tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "862tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "6s",
+          "2h"
+        ],
+        "turnCards": [
+          "5s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.518256
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__875tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "875tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7s",
+          "5d"
+        ],
+        "turnCards": [
+          "5s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.565996
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "98s",
+            "99",
+            "A5s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "TT"
+          ],
+          "combos": 124,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.743
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.244
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.014
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "88",
+            "A6s",
+            "T9s"
+          ],
+          "combos": 14,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.346
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.606
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.048
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__876mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "876mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "8c",
           "8d",
-          "4c"
+          "8h"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.343638
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "77",
+            "98s",
+            "99",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 114,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.748
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.145
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.107
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 236.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "87s",
+            "A5s"
+          ],
+          "combos": 18,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.263
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.083
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.653
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "88"
+          ],
+          "combos": 6,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.283
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.576
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.141
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__883r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "883r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "8d",
+          "3c"
+        ],
+        "turnCards": [
+          "7c",
+          "7d",
+          "7s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.680562
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QQ",
+            "TT"
+          ],
+          "combos": 116,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.802
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.198
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "88",
+            "JTs",
+            "QJs",
+            "T9s"
+          ],
+          "combos": 18,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.343
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.656
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.002
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 26
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__932tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "932tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "3s",
+          "2h"
+        ],
+        "turnCards": [
+          "6c",
+          "6d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.637475
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__962tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "962tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "6s",
+          "2h"
+        ],
+        "turnCards": [
+          "5s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.528138
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "A5s",
+            "A6s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 112,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.712
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.264
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.024
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "99",
+            "A7s",
+            "A8s",
+            "KQo"
+          ],
+          "combos": 26,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.4
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.495
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.105
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__986tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "986tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "8s",
+          "6d"
+        ],
+        "turnCards": [
+          "5d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.57248
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "66",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A7s",
+            "AJs",
+            "ATs",
+            "JTs",
+            "KTs",
+            "QJs",
+            "QTs"
+          ],
+          "combos": 60,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.127
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.249
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.624
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "A5s",
+            "A6s",
+            "A8s",
+            "AQo",
+            "AQs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "QQ"
+          ],
+          "combos": 54,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.596
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.226
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.178
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "76s",
+            "A9s",
+            "JJ",
+            "T9s",
+            "TT"
+          ],
+          "combos": 24,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.347
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.534
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.119
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__997r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "997r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "9d",
+          "7c"
+        ],
+        "turnCards": [
+          "7d",
+          "7s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.447561
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "A5s",
+            "A6s",
+            "A7s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QTs"
+          ],
+          "combos": 64,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.582
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.251
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.166
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "99",
+            "JTs",
+            "KJs",
+            "QJs",
+            "T9s"
+          ],
+          "combos": 38,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.183
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.141
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.676
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "87s",
+            "88",
+            "98s",
+            "A8s",
+            "JJ",
+            "QQ",
+            "TT"
+          ],
+          "combos": 36,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.232
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.504
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.265
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A72r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "7c",
+          "7s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.616115
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A8s",
+            "A9s",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QQ",
+            "T9s",
+            "TT"
+          ],
+          "combos": 102,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.798
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.073
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.129
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "76s",
+            "A7s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "QJs",
+            "QTs"
+          ],
+          "combos": 36,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.298
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.06
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.643
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A85mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "A85mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "8s",
+          "5s"
+        ],
+        "turnCards": [
+          "7s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.344972
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "99",
+            "A6s",
+            "A9s",
+            "ATs",
+            "JJ",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QQ",
+            "QTs",
+            "TT"
+          ],
+          "combos": 64,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.577
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.278
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.145
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "66",
+            "87s",
+            "88",
+            "A5s",
+            "A7s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "QJs"
+          ],
+          "combos": 48,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.3
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.521
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.179
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 236.000000",
+          "handClasses": [
+            "76s",
+            "98s",
+            "A8s",
+            "JTs",
+            "T9s"
+          ],
+          "combos": 20,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.095
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.237
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.668
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 26
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "AK5r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "Kd",
+          "5c"
+        ],
+        "turnCards": [
+          "7c",
+          "7d",
+          "7s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.654121
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "88",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "TT"
+          ],
+          "combos": 120,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 23
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AT4mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "AT4mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "Ts",
+          "4s"
+        ],
+        "turnCards": [
+          "7s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.548812
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "88",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs"
+          ],
+          "combos": 110,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.74
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.246
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.014
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "98s",
+            "T9s",
+            "TT"
+          ],
+          "combos": 14,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.267
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.612
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.121
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 24
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "J73r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "7d",
+          "3c"
+        ],
+        "turnCards": [
+          "7c",
+          "7s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.462576
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A7s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 130,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.979
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.018
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.003
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 25
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KJ4tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "KJ4tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "Js",
+          "4d"
+        ],
+        "turnCards": [
+          "5s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.582162
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 134,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 26
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ5r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "KQ5r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "Qd",
+          "5c"
+        ],
+        "turnCards": [
+          "7c",
+          "7d",
+          "7s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.455576
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "76s",
+            "77",
+            "87s",
+            "A5s",
+            "A7s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QQ"
+          ],
+          "combos": 80,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.174
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.113
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.713
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "88",
+            "98s",
+            "99",
+            "A6s",
+            "A8s",
+            "A9s",
+            "JJ",
+            "QJs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 54,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.728
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.129
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.144
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "QTs"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.369
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.453
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.177
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "8c",
+          "8d",
+          "8h"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.401956
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "99",
+            "A6s",
+            "A7s",
+            "A8s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "TT"
+          ],
+          "combos": 96,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.732
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.2
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.067
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "A5s",
+            "T9s"
+          ],
+          "combos": 38,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.276
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.505
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.218
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 236.000000",
+          "handClasses": [
+            "A9s"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.104
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.411
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.486
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QQ7r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "QQ7r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "Qd",
+          "7c"
+        ],
+        "turnCards": [
+          "7d",
+          "7s"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.468472
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "A5s",
+            "A6s",
+            "A7s",
+            "AQo",
+            "AQs",
+            "JJ",
+            "KQo",
+            "KQs",
+            "QJs",
+            "QQ"
+          ],
+          "combos": 70,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.262
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.599
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.138
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A8s",
+            "A9s",
+            "AJs",
+            "ATs",
+            "JTs",
+            "KJs",
+            "KTs",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 68,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.692
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.297
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.012
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "322r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "3s",
+          "2h",
+          "2d"
+        ],
+        "turnCards": [
+          "7d",
+          "7h",
+          "7s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.824603
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "88",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "TT"
+          ],
+          "combos": 118,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.988
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.007
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.005
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 22
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__662tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "662tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "6s",
+          "6h",
+          "2s"
+        ],
+        "turnCards": [
+          "6c",
+          "6d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.581902
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 132,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 26
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "744tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "7s",
+          "4s",
+          "4h"
         ],
         "turnCards": [
           "6h"
         ],
         "priorLine": [
           "CHECK",
-          "BET 52.000000",
+          "BET 79.000000",
           "CALL"
         ],
-        "potChips": 261,
-        "stackChips": 1448,
-        "potBB": 26.1,
-        "stackBehindBB": 144.8,
-        "reach": 0.469582
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.58407
       },
       "actions": [
         "CHECK",
-        "BET 86.000000",
-        "BET 196.000000",
-        "BET 1448.000000"
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.912
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.084
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.003
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__862tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "862tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "6s",
+          "2h"
+        ],
+        "turnCards": [
+          "6c",
+          "6d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.518256
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.997
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.002
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__875tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "875tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7s",
+          "5d"
+        ],
+        "turnCards": [
+          "6c",
+          "6h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.565996
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "66",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A6s",
+            "A8s",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KTs",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 76,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.329
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.601
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.07
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "76s",
+            "A5s",
+            "A7s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "KQo",
+            "KQs",
+            "QJs",
+            "QQ"
+          ],
+          "combos": 62,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.742
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.228
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.03
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__876mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "876mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9h"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.343638
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 126,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.686
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.182
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.132
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 236.000000",
+          "handClasses": [
+            "66"
+          ],
+          "combos": 6,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.361
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.169
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.47
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "99"
+          ],
+          "combos": 6,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.393
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.509
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.098
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__883r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "883r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "8d",
+          "3c"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.680562
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QQ",
+            "TT"
+          ],
+          "combos": 122,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.863
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.136
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "JTs",
+            "QJs",
+            "T9s"
+          ],
+          "combos": 12,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.287
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.703
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.01
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 26
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__932tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "932tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "3s",
+          "2h"
+        ],
+        "turnCards": [
+          "6h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.637475
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__962tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "962tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "6s",
+          "2h"
+        ],
+        "turnCards": [
+          "6c",
+          "6d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.528138
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 122,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.756
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.12
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.124
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "66",
+            "JJ",
+            "QJs"
+          ],
+          "combos": 16,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.257
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.136
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.608
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__986tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "986tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "8s",
+          "6d"
+        ],
+        "turnCards": [
+          "5s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.57248
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "98s",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "KQo",
+            "KQs",
+            "QQ",
+            "T9s",
+            "TT"
+          ],
+          "combos": 76,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.712
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.282
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.006
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "99",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KTs",
+            "QJs",
+            "QTs"
+          ],
+          "combos": 62,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.337
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.658
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.005
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__997r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "997r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "9d",
+          "7c"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.447561
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "A5s",
+            "A6s",
+            "A7s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QTs"
+          ],
+          "combos": 60,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.631
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.285
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.084
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "87s",
+            "88",
+            "98s",
+            "A8s",
+            "ATs",
+            "JJ",
+            "QQ",
+            "T9s",
+            "TT"
+          ],
+          "combos": 44,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.232
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.614
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.154
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "99",
+            "JTs",
+            "KJs",
+            "QJs"
+          ],
+          "combos": 34,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.17
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.143
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.687
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A72r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.616115
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A8s",
+            "A9s",
+            "JJ",
+            "JTs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QQ",
+            "T9s",
+            "TT"
+          ],
+          "combos": 94,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.824
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.13
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.046
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "76s",
+            "A7s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "KJs",
+            "QJs",
+            "QTs"
+          ],
+          "combos": 40,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.273
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.134
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.593
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "ATs"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.426
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.468
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.106
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A85mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "A85mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "8s",
+          "5s"
+        ],
+        "turnCards": [
+          "8c",
+          "8d",
+          "8h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.344972
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "AK5r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "Kd",
+          "5c"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.654121
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "88",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "TT"
+          ],
+          "combos": 126,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.991
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.003
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.006
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 24
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AT4mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "AT4mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "Ts",
+          "4s"
+        ],
+        "turnCards": [
+          "8c",
+          "8d",
+          "8h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.548812
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "J73r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "7d",
+          "3c"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.462576
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A7s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 130,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.999
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 25
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KJ4tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "KJ4tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "Js",
+          "4d"
+        ],
+        "turnCards": [
+          "6c",
+          "6h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.582162
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ5r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "KQ5r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "Qd",
+          "5c"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.455576
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "76s",
+            "77",
+            "87s",
+            "A5s",
+            "A7s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ"
+          ],
+          "combos": 84,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.185
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.084
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.731
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "88",
+            "98s",
+            "99",
+            "A6s",
+            "A8s",
+            "A9s",
+            "JJ",
+            "T9s",
+            "TT"
+          ],
+          "combos": 50,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.811
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.099
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.089
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "QTs"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.337
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.371
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.293
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "8s"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.401956
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 134,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.999
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 26
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QQ7r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "QQ7r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "Qd",
+          "7c"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.468472
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A8s",
+            "A9s",
+            "AJs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KTs",
+            "QJs",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 84,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.772
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.179
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.049
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "76s",
+            "A7s",
+            "AQo",
+            "AQs",
+            "KQo",
+            "KQs",
+            "QQ"
+          ],
+          "combos": 46,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.34
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.465
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.195
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 236.000000",
+          "handClasses": [
+            "A5s",
+            "A6s"
+          ],
+          "combos": 8,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.197
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.328
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.477
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "322r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "3s",
+          "2h",
+          "2d"
+        ],
+        "turnCards": [
+          "8c"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.824603
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "88",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "TT"
+          ],
+          "combos": 118,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 22
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__662tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "662tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "6s",
+          "6h",
+          "2s"
+        ],
+        "turnCards": [
+          "7c",
+          "7d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.581902
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 134,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.936
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.062
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.003
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "QJs"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.414
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.565
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.021
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "744tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "7s",
+          "4s",
+          "4h"
+        ],
+        "turnCards": [
+          "6s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.58407
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 134,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.909
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.084
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.007
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 26
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__862tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "862tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "6s",
+          "2h"
+        ],
+        "turnCards": [
+          "6h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.518256
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.996
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.003
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__875tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "875tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7s",
+          "5d"
+        ],
+        "turnCards": [
+          "6d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.565996
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "76s",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "KQo",
+            "KQs",
+            "QJs",
+            "QQ",
+            "TT"
+          ],
+          "combos": 76,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.693
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.276
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.032
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "66",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KTs",
+            "QTs",
+            "T9s"
+          ],
+          "combos": 62,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.29
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.612
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.098
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__876mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "876mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "9s"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.343638
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.901
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.099
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__883r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "883r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "8d",
+          "3c"
+        ],
+        "turnCards": [
+          "8c"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.680562
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
       ],
       "buckets": [
         {
@@ -34620,31 +28102,6312 @@ export const turnPack: TurnStrategyPack = {
             "KTs",
             "QJs",
             "QQ",
-            "QTs",
-            "T9s"
+            "T9s",
+            "TT"
           ],
-          "combos": 126,
+          "combos": 128,
           "mix": [
             {
               "action": "CHECK",
               "frequency": 1
             },
             {
-              "action": "BET 86.000000",
+              "action": "BET 104.000000",
               "frequency": 0
             },
             {
-              "action": "BET 196.000000",
+              "action": "BET 236.000000",
               "frequency": 0
             },
             {
-              "action": "BET 1448.000000",
+              "action": "BET 1421.000000",
               "frequency": 0
             }
           ]
         }
       ],
       "classCount": 25
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__932tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "932tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "3s",
+          "2h"
+        ],
+        "turnCards": [
+          "6s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.637475
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 130,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.999
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 25
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__962tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "962tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "6s",
+          "2h"
+        ],
+        "turnCards": [
+          "6h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.528138
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 128,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.734
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.095
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.171
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "66",
+            "QJs"
+          ],
+          "combos": 10,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.249
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.118
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.632
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__986tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "986tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "8s",
+          "6d"
+        ],
+        "turnCards": [
+          "6c",
+          "6h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.57248
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "88",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KQo",
+            "KQs",
+            "QQ"
+          ],
+          "combos": 88,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.685
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.246
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.069
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "76s",
+            "77",
+            "87s",
+            "98s",
+            "KJs",
+            "KTs",
+            "QJs",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 44,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.352
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.54
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.108
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "66"
+          ],
+          "combos": 6,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.203
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.349
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.448
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__997r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "997r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "9d",
+          "7c"
+        ],
+        "turnCards": [
+          "8c",
+          "8d",
+          "8s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.447561
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "98s",
+            "99",
+            "A6s",
+            "A9s",
+            "AJs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s"
+          ],
+          "combos": 62,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.197
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.233
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.57
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "A7s",
+            "A8s",
+            "TT"
+          ],
+          "combos": 40,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.262
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.526
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.212
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "A5s",
+            "AQo",
+            "AQs",
+            "KQo",
+            "KQs"
+          ],
+          "combos": 36,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.649
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.199
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.152
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A72r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "8c",
+          "8d",
+          "8s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.616115
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "JJ",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "TT"
+          ],
+          "combos": 82,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.83
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.031
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.14
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JTs",
+            "T9s"
+          ],
+          "combos": 56,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.302
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.089
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.609
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A85mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "A85mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "8s",
+          "5s"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.344972
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "AK5r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "Kd",
+          "5c"
+        ],
+        "turnCards": [
+          "8c",
+          "8d",
+          "8s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.654121
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "88",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "TT"
+          ],
+          "combos": 126,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.984
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.003
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.012
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0.001
+            }
+          ]
+        }
+      ],
+      "classCount": 24
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AT4mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "AT4mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "Ts",
+          "4s"
+        ],
+        "turnCards": [
+          "8s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.548812
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs"
+          ],
+          "combos": 106,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.758
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.205
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.036
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "76s",
+            "JTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 18,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.271
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.626
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.102
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 24
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "J73r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "7d",
+          "3c"
+        ],
+        "turnCards": [
+          "8c",
+          "8d",
+          "8s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.462576
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A7s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "QQ",
+            "QTs"
+          ],
+          "combos": 94,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.706
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.294
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "A9s",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KTs",
+            "QJs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 36,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.32
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.68
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 25
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KJ4tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "KJ4tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "Js",
+          "4d"
+        ],
+        "turnCards": [
+          "6d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.582162
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ5r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "KQ5r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "Qd",
+          "5c"
+        ],
+        "turnCards": [
+          "8c",
+          "8d",
+          "8s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.455576
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 100,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.811
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.05
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.14
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "76s",
+            "87s",
+            "88",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs"
+          ],
+          "combos": 38,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.346
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.039
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.614
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9h"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.401956
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "88",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "KJs",
+            "KQo",
+            "KQs",
+            "QQ",
+            "TT"
+          ],
+          "combos": 84,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.741
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.09
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.169
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 236.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "98s",
+            "99",
+            "A8s",
+            "JTs",
+            "KTs",
+            "QJs",
+            "QTs",
+            "T9s"
+          ],
+          "combos": 54,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.237
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.075
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.688
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QQ7r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "QQ7r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "Qd",
+          "7c"
+        ],
+        "turnCards": [
+          "8c",
+          "8d",
+          "8s"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.468472
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "ATs",
+            "JJ",
+            "KJs",
+            "KTs",
+            "TT"
+          ],
+          "combos": 90,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.698
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.194
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.108
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "AQs",
+            "JTs",
+            "KQo",
+            "KQs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s"
+          ],
+          "combos": 42,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.308
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.542
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.15
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 236.000000",
+          "handClasses": [
+            "77"
+          ],
+          "combos": 6,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.403
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.123
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.474
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "322r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "3s",
+          "2h",
+          "2d"
+        ],
+        "turnCards": [
+          "8d",
+          "8h",
+          "8s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.824603
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "88",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "TT"
+          ],
+          "combos": 118,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.999
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 22
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__662tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "662tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "6s",
+          "6h",
+          "2s"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.581902
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.963
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.03
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.007
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "744tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "7s",
+          "4s",
+          "4h"
+        ],
+        "turnCards": [
+          "7c",
+          "7d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.58407
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.998
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__862tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "862tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "6s",
+          "2h"
+        ],
+        "turnCards": [
+          "7c",
+          "7d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.518256
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "A6s",
+            "A7s",
+            "AQo",
+            "AQs",
+            "KQo",
+            "KQs",
+            "QJs",
+            "QQ",
+            "TT"
+          ],
+          "combos": 76,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.742
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.258
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KTs",
+            "QTs",
+            "T9s"
+          ],
+          "combos": 62,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.336
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.664
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__875tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "875tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7s",
+          "5d"
+        ],
+        "turnCards": [
+          "6s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.565996
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 128,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.818
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.17
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.011
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "88",
+            "JTs"
+          ],
+          "combos": 10,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.441
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.523
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.036
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__876mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "876mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "Tc",
+          "Td",
+          "Th"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.343638
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "98s",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QQ",
+            "QTs",
+            "T9s"
+          ],
+          "combos": 100,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.728
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.272
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "87s",
+            "88",
+            "99",
+            "A8s",
+            "JTs",
+            "KJs",
+            "QJs",
+            "TT"
+          ],
+          "combos": 38,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.438
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.562
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__883r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "883r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "8d",
+          "3c"
+        ],
+        "turnCards": [
+          "8h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.680562
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "ATs",
+            "JJ",
+            "KQs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 78,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.76
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.218
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.022
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "AQo",
+            "AQs",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KTs",
+            "QQ"
+          ],
+          "combos": 46,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.414
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.546
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.041
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 236.000000",
+          "handClasses": [
+            "QJs"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.334
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.189
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.477
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 25
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__932tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "932tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "3s",
+          "2h"
+        ],
+        "turnCards": [
+          "7c",
+          "7d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.637475
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.998
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.002
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__962tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "962tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "6s",
+          "2h"
+        ],
+        "turnCards": [
+          "7c",
+          "7d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.528138
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "66",
+            "77",
+            "87s",
+            "98s",
+            "99",
+            "A8s",
+            "A9s",
+            "JJ",
+            "JTs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 72,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.204
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.099
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.697
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "76s",
+            "A5s",
+            "A6s",
+            "A7s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "KJs",
+            "KQo",
+            "KQs"
+          ],
+          "combos": 60,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.687
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.102
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.211
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "88"
+          ],
+          "combos": 6,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.353
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.37
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.277
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__986tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "986tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "8s",
+          "6d"
+        ],
+        "turnCards": [
+          "6s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.57248
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "KJs",
+            "KQo",
+            "KQs",
+            "QJs",
+            "QQ",
+            "T9s",
+            "TT"
+          ],
+          "combos": 112,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.724
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.276
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "A7s",
+            "JTs",
+            "KTs",
+            "QTs"
+          ],
+          "combos": 26,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.244
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.755
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__997r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "997r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "9d",
+          "7c"
+        ],
+        "turnCards": [
+          "8h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.447561
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "98s",
+            "99",
+            "A6s",
+            "A9s",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s"
+          ],
+          "combos": 54,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.151
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.215
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.634
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "A5s",
+            "A7s",
+            "A8s",
+            "TT"
+          ],
+          "combos": 44,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.21
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.573
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.218
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "KQo",
+            "KQs"
+          ],
+          "combos": 40,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.576
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.264
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.16
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A72r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "8h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.616115
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A9s",
+            "JJ",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "TT"
+          ],
+          "combos": 78,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.889
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.012
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.099
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "A8s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JTs",
+            "T9s"
+          ],
+          "combos": 60,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.277
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.042
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.681
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A85mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "A85mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "8s",
+          "5s"
+        ],
+        "turnCards": [
+          "9s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.344972
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "JJ",
+            "QJs",
+            "QTs"
+          ],
+          "combos": 82,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.234
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.677
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.089
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "A6s",
+            "A7s",
+            "ATs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QQ",
+            "TT"
+          ],
+          "combos": 48,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.629
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.321
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.05
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 236.000000",
+          "handClasses": [
+            "JTs"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.388
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.611
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 26
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "AK5r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "Kd",
+          "5c"
+        ],
+        "turnCards": [
+          "8h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.654121
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "88",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "TT"
+          ],
+          "combos": 126,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.999
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 24
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AT4mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "AT4mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "Ts",
+          "4s"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.548812
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "J73r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "7d",
+          "3c"
+        ],
+        "turnCards": [
+          "8h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.462576
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A7s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "QJs",
+            "QQ"
+          ],
+          "combos": 94,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.757
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.242
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "A9s",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KTs",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 36,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.402
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.598
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 25
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KJ4tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "KJ4tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "Js",
+          "4d"
+        ],
+        "turnCards": [
+          "6s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.582162
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 124,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 24
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ5r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "KQ5r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "Qd",
+          "5c"
+        ],
+        "turnCards": [
+          "8h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.455576
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AQo",
+            "AQs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 100,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.871
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.023
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.106
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "76s",
+            "87s",
+            "88",
+            "AJs",
+            "ATs",
+            "KQo",
+            "KQs"
+          ],
+          "combos": 38,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.429
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.021
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.55
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "9s"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.401956
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 134,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.998
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.002
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 26
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QQ7r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "QQ7r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "Qd",
+          "7c"
+        ],
+        "turnCards": [
+          "8h"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.468472
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "KJs",
+            "KTs",
+            "TT"
+          ],
+          "combos": 100,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.701
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.199
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.1
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "JTs",
+            "KQo",
+            "KQs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s"
+          ],
+          "combos": 38,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.252
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.619
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.13
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__322r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "322r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "3s",
+          "2h",
+          "2d"
+        ],
+        "turnCards": [
+          "9c"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.824603
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "88",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "TT"
+          ],
+          "combos": 118,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 22
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__662tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "662tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "6s",
+          "6h",
+          "2s"
+        ],
+        "turnCards": [
+          "7s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.581902
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "88",
+            "99",
+            "A6s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 122,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.826
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.171
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.004
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "98s",
+            "A5s"
+          ],
+          "combos": 8,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.382
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.595
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.023
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 25
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__744tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "744tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "7s",
+          "4s",
+          "4h"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.58407
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.999
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__862tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "862tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "6s",
+          "2h"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.518256
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "98s",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "JJ",
+            "KQo",
+            "KQs",
+            "QJs",
+            "QQ",
+            "QTs"
+          ],
+          "combos": 96,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.722
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.228
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.046
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0.004
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "88",
+            "99",
+            "A9s",
+            "ATs",
+            "JTs",
+            "KJs",
+            "KTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 42,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.338
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.568
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.085
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0.009
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__875tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "875tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7s",
+          "5d"
+        ],
+        "turnCards": [
+          "7c",
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.565996
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "87s",
+            "88",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QQ",
+            "QTs",
+            "TT"
+          ],
+          "combos": 94,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.694
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.165
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.141
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "77",
+            "JJ",
+            "JTs",
+            "QJs",
+            "T9s"
+          ],
+          "combos": 24,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.266
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.236
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.498
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "98s",
+            "99"
+          ],
+          "combos": 20,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.377
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.448
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.175
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__876mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "876mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "Ts"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.343638
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.937
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.063
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__883r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "883r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "8d",
+          "3c"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.680562
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "T9s",
+            "TT"
+          ],
+          "combos": 134,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.984
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.015
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 26
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__932tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "932tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "3s",
+          "2h"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.637475
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.997
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.003
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__962tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "962tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "6s",
+          "2h"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.528138
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "76s",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "QJs"
+          ],
+          "combos": 68,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.657
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.116
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.227
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "66",
+            "77",
+            "87s",
+            "98s",
+            "99",
+            "A8s",
+            "JJ",
+            "JTs",
+            "KTs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 64,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.207
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.176
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.617
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "88"
+          ],
+          "combos": 6,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.359
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.44
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.201
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__986tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "986tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "8s",
+          "6d"
+        ],
+        "turnCards": [
+          "7c",
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.57248
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 122,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.181
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.786
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.033
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "AQo",
+            "AQs"
+          ],
+          "combos": 16,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.648
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.301
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.051
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__997r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "997r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "9d",
+          "7c"
+        ],
+        "turnCards": [
+          "9c"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.447561
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "TT"
+          ],
+          "combos": 124,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.812
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.136
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.052
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "JTs",
+            "T9s"
+          ],
+          "combos": 8,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.25
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.449
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.302
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 26
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A72r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.616115
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "ATs",
+            "JJ",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 120,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.755
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.094
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.151
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "76s",
+            "77",
+            "AQs"
+          ],
+          "combos": 14,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.361
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.134
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.505
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 52.000000",
+          "handClasses": [
+            "JTs"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.09
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.488
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.422
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__A85mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "A85mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "8s",
+          "5s"
+        ],
+        "turnCards": [
+          "Tc",
+          "Td",
+          "Th"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.344972
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.997
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.003
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AK5r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "AK5r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "Kd",
+          "5c"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.654121
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "88",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "TT"
+          ],
+          "combos": 126,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.999
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 24
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__AT4mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "AT4mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "Ts",
+          "4s"
+        ],
+        "turnCards": [
+          "9s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.548812
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "88",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 124,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.817
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.146
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.037
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 236.000000",
+          "handClasses": [
+            "87s"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.106
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.375
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.518
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 25
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__J73r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "J73r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "7d",
+          "3c"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.462576
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A7s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 130,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.924
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.075
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 25
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KJ4tt",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "KJ4tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "Js",
+          "4d"
+        ],
+        "turnCards": [
+          "7c",
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.582162
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__KQ5r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "KQ5r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "Qd",
+          "5c"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "CHECK"
+        ],
+        "potChips": 157,
+        "stackChips": 1500,
+        "potBB": 15.7,
+        "stackBehindBB": 150,
+        "reach": 0.455576
+      },
+      "actions": [
+        "CHECK",
+        "BET 52.000000",
+        "BET 118.000000",
+        "BET 1500.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "77",
+            "87s",
+            "88",
+            "98s",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AQo",
+            "AQs",
+            "JJ",
+            "JTs",
+            "KJs",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 100,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.815
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.039
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.146
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 118.000000",
+          "handClasses": [
+            "76s",
+            "99",
+            "AJs",
+            "ATs",
+            "KQo",
+            "KQs",
+            "KTs"
+          ],
+          "combos": 38,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.289
+            },
+            {
+              "action": "BET 52.000000",
+              "frequency": 0.074
+            },
+            {
+              "action": "BET 118.000000",
+              "frequency": 0.637
+            },
+            {
+              "action": "BET 1500.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__Q76mono",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "Tc",
+          "Td",
+          "Th"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.401956
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "98s",
+            "99",
+            "A6s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "KJs",
+            "KTs",
+            "QQ",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 86,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.234
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.628
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.138
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "88",
+            "A5s",
+            "A7s",
+            "A8s",
+            "JJ",
+            "JTs",
+            "KQo",
+            "KQs",
+            "QJs"
+          ],
+          "combos": 48,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.653
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.321
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.026
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 236.000000",
+          "handClasses": [
+            "ATs"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.145
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.362
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.494
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
+    },
+    {
+      "sourceDirectory": "MTT9_150BB_CO_BTN_3BP_HIGHSPR__QQ7r",
+      "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+      "positionPattern": "3BP_BTN_VS_CO",
+      "node": "CBET",
+      "potType": "THREE_BET_POT",
+      "stackBB": 150,
+      "sprBand": "HIGH",
+      "heroOutOfPosition": false,
+      "board": "QQ7r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "CO",
+          "villainSeat": "BTN",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "Qd",
+          "7c"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9s"
+        ],
+        "priorLine": [
+          "BET 79.000000",
+          "CALL"
+        ],
+        "potChips": 315,
+        "stackChips": 1421,
+        "potBB": 31.5,
+        "stackBehindBB": 142.1,
+        "reach": 0.468472
+      },
+      "actions": [
+        "CHECK",
+        "BET 104.000000",
+        "BET 236.000000",
+        "BET 1421.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "66",
+            "76s",
+            "87s",
+            "88",
+            "98s",
+            "99",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "JJ",
+            "KTs",
+            "QJs",
+            "QTs",
+            "T9s",
+            "TT"
+          ],
+          "combos": 102,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.696
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.217
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.087
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 104.000000",
+          "handClasses": [
+            "JTs",
+            "KJs",
+            "KQo",
+            "KQs",
+            "QQ"
+          ],
+          "combos": 30,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.233
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.581
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.185
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 236.000000",
+          "handClasses": [
+            "77"
+          ],
+          "combos": 6,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.382
+            },
+            {
+              "action": "BET 104.000000",
+              "frequency": 0.136
+            },
+            {
+              "action": "BET 236.000000",
+              "frequency": 0.481
+            },
+            {
+              "action": "BET 1421.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 27
     }
   ]
 };
