@@ -59,7 +59,11 @@ describe("the derived six-max packs", () => {
       expect(pack.confidence).toBe("LOW");
       expect(pack.id).toContain("derived");
       expect(pack.assumptions.some((line) => line.startsWith("DERIVED, not measured"))).toBe(true);
-      expect(pack.assumptions.some((line) => line.includes("expected to be tight"))).toBe(true);
+      // Dřív se tu drželo tvrzení, že odvozené range poběží těsně. Neběží:
+      // po porovnání s veřejně uváděnými šestistolovými frekvencemi sedí do
+      // pásma a s ante leží při jeho horní hraně. Pack teď musí říct, že to
+      // porovnání proběhlo - tvrzení bez opory je horší než žádné.
+      expect(pack.assumptions.some((line) => line.includes("porovnány s veřejně uváděnými"))).toBe(true);
     }
   });
 

@@ -227,9 +227,12 @@ function mttSixMaxCandidateRangePack(
  * Marked derived, not measured. Confidence stays LOW, the assumption list says
  * where every record came from, and the three nine-handed early seats that no
  * six-max seat matches are named rather than quietly folded into the nearest one.
- * A real six-max field is looser than a nine-handed one at equal seats-behind, so
- * these will run tight - they are a floor for measurement to correct, which is how
- * every derived number in this project is treated.
+ * Předpoklad, že poběží těsně, se nepotvrdil. Když se šířky poprvé porovnaly s
+ * veřejně uváděnými šestistolovými frekvencemi (`sixMaxOpenWidthAudit`), sedly
+ * do pásma na všech sedačkách bez ante a s ante přesáhly horní mez o desetiny
+ * až 1,4 bodu. Odvození tedy neběží těsně, ale při horní hraně - a to je jiná
+ * chyba než ta, kterou komentář předpovídal. Zůstává odvozené a LOW, dokud ho
+ * nenahradí měřená data; nově ale existuje kontrola, která to umí ukázat.
  */
 function deriveSixMaxRecords(source: RangePack): RangePack["records"] {
   const map = new Map(sixMaxPositionMap().map((pair) => [pair.fullRing, pair.sixMax]));
@@ -259,7 +262,7 @@ export function mttSixMaxDerivedRangePack(
       "DERIVED, not measured: every record is a nine-handed record re-labelled to the six-max seat with the same number of opponents left to act.",
       `Seat mapping: ${sixMaxPositionMap().map((p) => `${p.sixMax}<-${p.fullRing}`).join(", ")}.`,
       `Nine-handed seats with no six-max counterpart, and so not carried over: ${dropped}.`,
-      "A six-max field plays looser at equal seats-behind, so these ranges are expected to be tight until measured six-max charts replace them.",
+      "Šířky otevírání byly porovnány s veřejně uváděnými šestistolovými frekvencemi: bez ante sedí do pásma na všech sedačkách, s ante leží při jeho horní hraně.",
     ],
     records,
   };
