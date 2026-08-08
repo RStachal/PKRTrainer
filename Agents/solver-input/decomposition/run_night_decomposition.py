@@ -7,6 +7,7 @@ are 577 such boards, so this is not a job that finishes; it is a job that makes
 progress and stops when told.
 
   python run_night_decomposition.py [--until=HH:MM] [--workers=N] [--coverage=0.99]
+                                    [--river-budget=N]
 
 Design notes worth keeping:
 
@@ -30,6 +31,7 @@ spawning solvers, which looks exactly like solvers that refuse to die - taskkill
 reports success on each one and the count stays where it was.
 """
 import json
+from collections import defaultdict
 import os
 import re
 import subprocess
@@ -80,6 +82,9 @@ def main():
     until = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--until=")), "08:45")
     workers = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--workers=")), "8")
     coverage = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--coverage=")), "0.99")
+    # Riverová vrstva je vypnutá, dokud se nezadá rozpočet. Zapnutá naslepo by
+    # spolkla celé okno turnové fázi, a nedokončený turn blokuje review bránu.
+    river_budget = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--river-budget=")), "0"))
 
     hour, minute = (int(x) for x in until.split(":"))
     deadline = datetime.now().replace(hour=hour, minute=minute, second=0, microsecond=0)
@@ -202,6 +207,126 @@ def main():
         done += 1
 
     log(f"boards worked {done}, already complete {skipped}, failed {failed}")
+
+    if river_budget > 0:
+        run_river_phase(deadline, workers, coverage, river_budget)
+
+
+def turn_subgames_by_reach(limit):
+    """Vyřešené turnové podhry, od nejčastěji dosahovaných.
+
+    River nejde plánovat plošně. Z jedné turnové podhry vyjde kolem 111 riverových
+    a turnových je přes dva tisíce - to je čtvrt milionu solvů, tedy ne noc, ale
+    měsíce. Reach je přitom v plánech zapsaný, takže výběr nemusí nic hádat: bere
+    se shora a končí se u rozpočtu.
+    """
+    rows = []
+    for name in os.listdir(WORK):
+        directory = os.path.join(WORK, name)
+        plan_path = os.path.join(directory, "plan.json")
+        if not os.path.isdir(directory) or not os.path.exists(plan_path):
+            continue
+        try:
+            plan = json.load(open(plan_path, encoding="utf8"))
+        except Exception:
+            continue
+        for item in plan.get("items", []):
+            subgame = os.path.join(directory, subgame_file_name(item))
+            if not os.path.exists(subgame):
+                continue
+            rows.append({
+                "path": subgame,
+                "directory": directory,
+                "board": ",".join(item.get("board", [])),
+                "pot": item.get("pot", plan.get("pot", 0)),
+                "stack": item.get("stack", plan.get("stack", 0)),
+                "reach": item.get("reach", 0),
+            })
+    # Uvnitř desky podle reach, mezi deskami střídavě.
+    #
+    # Samotné řazení podle reach vybere prvních pět podher z jedné desky a jedné
+    # linky - liší se jen turnovou kartou - protože reach je vlastnost linky, ne
+    # karty. Riverová vrstva na jedné desce ale neučí nic, co by se nedalo naučit
+    # z jedné z nich. Stejná chyba a stejná oprava jako u rozpočtu turnových
+    # pravidel: brát po jedné z každé desky, dokud rozpočet vydrží.
+    by_directory = defaultdict(list)
+    for row in rows:
+        by_directory[row["directory"]].append(row)
+    for bucket in by_directory.values():
+        bucket.sort(key=lambda row: row["reach"], reverse=True)
+
+    queues = sorted(by_directory.values(), key=lambda bucket: bucket[0]["reach"], reverse=True)
+    picked = []
+    index = 0
+    while len(picked) < limit:
+        placed = 0
+        for bucket in queues:
+            if index >= len(bucket):
+                continue
+            if len(picked) >= limit:
+                break
+            picked.append(bucket[index])
+            placed += 1
+        if placed == 0:
+            break
+        index += 1
+    return picked
+
+
+def subgame_file_name(item):
+    """Jak solve_plan pojmenoval soubor pro tuhle položku plánu."""
+    parts = []
+    for action in item.get("line", []):
+        action = action.strip()
+        head = action.split()[0].upper()
+        if head in ("BET", "RAISE", "ALLIN", "ALL_IN"):
+            parts.append(f"{head}{round(float(action.split()[1]))}")
+        else:
+            parts.append(head)
+    return "__".join(["_".join(parts), item["turn"]]) + ".json"
+
+
+def run_river_phase(deadline, workers, coverage, budget):
+    """Riverová vrstva pro nejčastěji dosahované turny, dokud vydrží okno.
+
+    Běží až po turnové fázi schválně. Nedokončený turn blokuje celou rodinu na
+    review bráně, kdežto chybějící river zatím neblokuje nic - takže dokud turn
+    není hotový, je river ta levnější věc, kterou lze odložit.
+    """
+    log(f"river phase: rozpočet {budget} turnových podher")
+    picked = turn_subgames_by_reach(budget)
+    log(f"  {len(picked)} podher vybráno podle reach")
+    done = 0
+    for row in picked:
+        remaining = (deadline - datetime.now()).total_seconds() / 60
+        if remaining <= 0:
+            log("  deadline reached; stopping river phase")
+            break
+        out_dir = os.path.join(row["directory"], "river", os.path.basename(row["path"])[:-5])
+        plan_path = os.path.join(out_dir, "plan.json")
+        os.makedirs(out_dir, exist_ok=True)
+        if not os.path.exists(plan_path):
+            result = subprocess.run(
+                [sys.executable, os.path.join(HERE, "plan_river.py"),
+                 row["path"], row["board"], str(row["pot"]), str(row["stack"]),
+                 plan_path, str(coverage)],
+                capture_output=True, text=True,
+            )
+            if result.returncode != 0 or not os.path.exists(plan_path):
+                log(f"  SKIP {out_dir}: plánování selhalo")
+                continue
+        planned = len(json.load(open(plan_path, encoding="utf8")).get("items", []))
+        solved = len([f for f in os.listdir(out_dir) if f.endswith(".json") and f != "plan.json"])
+        if solved >= planned:
+            continue
+        log(f"  solving river {os.path.basename(out_dir)}: {planned - solved} z {planned}")
+        subprocess.run(
+            [sys.executable, os.path.join(HERE, "solve_plan.py"),
+             plan_path, out_dir, f"--workers={workers}"],
+            capture_output=True, text=True,
+        )
+        done += 1
+    log(f"river phase: {done} turnových podher dostalo riverovou vrstvu")
 
 
 if __name__ == "__main__":
