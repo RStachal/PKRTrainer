@@ -230,6 +230,35 @@ export const flopSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
         "Monotone flop zveda riziko silnych flush kombinaci a check-raise; bez presne range volime check.",
     },
     {
+      id: "flop-srp-oop-lead-default-check",
+      actionNode: "FLOP_OOP_LEAD",
+      // Checking to the raiser is the default the whole spot turns on, and the
+      // flop is where it is strongest: the opener has bet almost their whole
+      // range on many textures and the defender has not yet learned anything.
+      boardTextures: ALL_BOARD_TEXTURES,
+      sprMin: 0,
+      sprMax: 60,
+      positionPattern: "OOP_CALLER_VS_IP_RAISER",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "CHECK",
+      explanation:
+        "Po dorovnani preflopu a mimo pozici je check zaklad: agresor sazi na flopu velkou cast range a vedeni do nej z capovane range zve raise, na ktery nemame odpoved.",
+    },
+    {
+      id: "flop-srp-oop-lead-low-connected-small",
+      actionNode: "FLOP_OOP_LEAD",
+      // The one shape where the defender's range is genuinely ahead: a wholly
+      // low board that the opener's high cards missed.
+      boardTextures: ["low"],
+      sprMin: 0,
+      sprMax: 60,
+      positionPattern: "OOP_CALLER_VS_IP_RAISER",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "BET_SMALL",
+      explanation:
+        "Cely nizky flop mine vetsinu otviraci range a sedne obrane blindu. Male vedeni je proto obhajitelne - velke ne, protoze nase range nema dost nejsilnejsich kombinaci.",
+    },
+    {
       id: "flop-srp-low-spr-range-advantage-small-cbet",
       actionNode: "SINGLE_RAISED_POT_CBET",
       boardTextures: ["dry", "rainbow", "paired"],
@@ -505,6 +534,20 @@ export const riverSingleRaisedPrototypeStrategyPack: PostflopStrategyPack = {
       preferredAction: "CHECK",
       explanation:
         "Na riveru s dokoncenymi draw bez presnych blockeru a value/bluff pomeru zustava check nejbezpecnejsi vyukova heuristika.",
+    },
+    {
+      id: "river-srp-oop-lead-default-check",
+      actionNode: "RIVER_OOP_LEAD",
+      // On the river the defender's range is at its most capped, and a lead
+      // gets called by everything better and folded to by everything worse.
+      boardTextures: ALL_BOARD_TEXTURES,
+      sprMin: 0,
+      sprMax: 60,
+      positionPattern: "OOP_CALLER_VS_IP_RAISER",
+      actions: ["CHECK", "BET_SMALL", "BET_BIG"],
+      preferredAction: "CHECK",
+      explanation:
+        "Na riveru je nase range nejvic capovana. Vedeni bez iniciativy dostane call od vseho lepsiho a fold od vseho horsiho; check nechava agresorovi prostor blafovat.",
     },
   ],
 };

@@ -29,6 +29,9 @@ export type PostflopActionNode =
    * held the betting lead when they held the opposite.
    */
   | "TURN_OOP_LEAD"
+  /** The same decision one street earlier and one street later. */
+  | "FLOP_OOP_LEAD"
+  | "RIVER_OOP_LEAD"
   | "TURN_FACING_BET"
   | "RIVER_PRESSURE"
   | "RIVER_FACING_BET";

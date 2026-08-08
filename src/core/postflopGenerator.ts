@@ -512,6 +512,13 @@ export const POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS = uniquePositionContexts([
  * node describes a hand that cannot be dealt: the out-of-position player made
  * the last raise, so acting first is a continuation bet, not a lead.
  */
+/** The three streets' version of "hero called, is out of position, acts first". */
+export const OOP_LEAD_NODES: ReadonlySet<PostflopActionNode> = new Set([
+  "FLOP_OOP_LEAD",
+  "TURN_OOP_LEAD",
+  "RIVER_OOP_LEAD",
+]);
+
 export const OOP_CALLER_POSITION_CONTEXTS = POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS.filter(
   (context) => !context.inPosition && context.heroPosition !== context.aggressorPosition,
 );
@@ -632,7 +639,7 @@ function randomPositionContext(
   rng: () => number,
   actionNode?: PostflopActionNode,
 ): PostflopPositionContext {
-  const pool = actionNode === "TURN_OOP_LEAD"
+  const pool = actionNode !== undefined && OOP_LEAD_NODES.has(actionNode)
     ? OOP_CALLER_POSITION_CONTEXTS
     : POSTFLOP_FULL_RING_POSITION_CONTEXTS;
   const candidates = pool.length > 0 ? pool : POSTFLOP_FULL_RING_POSITION_CONTEXTS;
@@ -672,8 +679,10 @@ function actionsForActionNode(actionNode: PostflopActionNode): readonly Postflop
       return ["FOLD", "CALL", "RAISE"];
     case "SINGLE_RAISED_POT_CBET":
     case "THREE_BET_POT_CBET":
+    case "FLOP_OOP_LEAD":
     case "TURN_BARREL":
     case "TURN_OOP_LEAD":
+    case "RIVER_OOP_LEAD":
     case "RIVER_PRESSURE":
       return ["CHECK", "BET_SMALL", "BET_BIG"];
   }
@@ -797,7 +806,9 @@ function recommendPostflopActionForNode(
     case "TURN_BARREL":
     case "RIVER_PRESSURE":
       return recommendPostflopAction(street, textures);
+    case "FLOP_OOP_LEAD":
     case "TURN_OOP_LEAD":
+    case "RIVER_OOP_LEAD":
       return recommendOopLeadAction();
   }
 }

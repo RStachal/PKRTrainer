@@ -157,3 +157,77 @@ describe("hhPostflopBridge", () => {
     expect(resolverInputs.every((input) => input.positionPattern === "SRP_BTN_VS_BB")).toBe(true);
   });
 });
+
+/**
+ * Obrana velkeho blindu - nejcastejsi postflopovy spot, ktery rozbor neznal.
+ *
+ * Rozbor bral jen ruce, kde hrdina sam zvedal, protoze pro hrace, ktery jen
+ * dorovnal, neexistovala zadna sedacka: vsechny kontexty jsou psane ze strany
+ * raisera. Ruce s obranou blindu se proto tise preskakovaly.
+ */
+const bigBlindDefenceHh = [
+  "PokerStars Hand #7: Tournament #1, 10/20",
+  "Table 'Test' 9-max Seat #8 is the button",
+  "Seat 1: Hero (1000 in chips)",
+  "Seat 2: Villain2 (1000 in chips)",
+  "Seat 3: Villain3 (1000 in chips)",
+  "Seat 4: Villain4 (1000 in chips)",
+  "Seat 5: Villain5 (1000 in chips)",
+  "Seat 6: Villain6 (1000 in chips)",
+  "Seat 7: Villain7 (1000 in chips)",
+  "Seat 8: Villain8 (1000 in chips)",
+  "Seat 9: Villain9 (1000 in chips)",
+  "Villain9: posts small blind 10",
+  "Hero: posts big blind 20",
+  "*** HOLE CARDS ***",
+  "Dealt to Hero [9s 8s]",
+  "Villain2: folds",
+  "Villain3: folds",
+  "Villain4: folds",
+  "Villain5: folds",
+  "Villain6: folds",
+  "Villain7: raises 40 to 60",
+  "Villain8: folds",
+  "Villain9: folds",
+  "Hero: calls 40",
+  "*** FLOP *** [7h 5d 2c]",
+  "Hero: checks",
+  "Villain6: bets 40",
+  "Hero: calls 40",
+  "*** TURN *** [7h 5d 2c] [4s]",
+  "Hero: bets 60",
+  "*** SUMMARY ***",
+].join("\n");
+
+describe("hhPostflopBridge - obrana velkeho blindu", () => {
+  it("pozna, kdo v ruce zvedal naposledy", () => {
+    const result = parseHandHistory(bigBlindDefenceHh);
+    // Button na sedadle 8: sedadlo 9 je SB, sedadlo 1 je BB. Hrdina tedy sedi
+    // ve velkem blindu a otviral hrac ze sedadla 7.
+    expect(result.fields.position).toBe("BB");
+    expect(result.fields.preflopAggressorPosition).toBeDefined();
+    expect(result.fields.preflopAggressorPosition).not.toBe("BB");
+  });
+
+  it("posadi hrdinu do velkeho blindu, ne do kresla otvirajiciho", () => {
+    const result = parseHandHistory(bigBlindDefenceHh);
+    const spots = buildImportedPostflopTrainingSpots(result, undefined, { allowFallback: true });
+    expect(spots.length).toBeGreaterThan(0);
+    for (const spot of spots) {
+      expect(spot.heroPosition).toBe("BB");
+      expect(spot.aggressorPosition).not.toBe("BB");
+      expect(spot.callerPosition).toBe("BB");
+      expect(spot.potType).toBe("SINGLE_RAISED");
+    }
+  });
+
+  it("pojmenuje turn jako vedeni bez iniciativy, ne jako barrel", () => {
+    const result = parseHandHistory(bigBlindDefenceHh);
+    const spots = buildImportedPostflopTrainingSpots(result, undefined, { allowFallback: true });
+    const turn = spots.find((spot) => spot.street === "TURN");
+    expect(turn?.actionNode).toBe("TURN_OOP_LEAD");
+    // Flop hrdina checkoval do agresora, takze i tam jde o rozhodnuti obrance.
+    const flop = spots.find((spot) => spot.street === "FLOP");
+    expect(flop?.actionNode).toBe("FLOP_OOP_LEAD");
+  });
+});

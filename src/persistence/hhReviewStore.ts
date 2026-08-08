@@ -423,8 +423,10 @@ function actionsForNode(node: PostflopActionNode): readonly PostflopAction[] {
       return ["FOLD", "CALL", "RAISE"];
     case "SINGLE_RAISED_POT_CBET":
     case "THREE_BET_POT_CBET":
+    case "FLOP_OOP_LEAD":
     case "TURN_BARREL":
     case "TURN_OOP_LEAD":
+    case "RIVER_OOP_LEAD":
     case "RIVER_PRESSURE":
       return ["CHECK", "BET_SMALL", "BET_BIG"];
   }
@@ -441,6 +443,8 @@ function isPostflopActionNode(value: unknown): value is PostflopActionNode {
     value === "FLOP_FACING_BET" ||
     value === "TURN_BARREL" ||
     value === "TURN_OOP_LEAD" ||
+    value === "FLOP_OOP_LEAD" ||
+    value === "RIVER_OOP_LEAD" ||
     value === "TURN_FACING_BET" ||
     value === "RIVER_PRESSURE" ||
     value === "RIVER_FACING_BET"

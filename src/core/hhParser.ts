@@ -106,6 +106,13 @@ export interface HHFields {
   /** Akce hrdiny v preflopu (textové tokeny, např. "raises 120 to 180"). */
   actions?: string[];
   preflopActionDetails?: readonly HHParsedAction[];
+  /**
+   * Pozice hráče, který v preflopu naposledy zvedal.
+   *
+   * Bez ní nejde pojmenovat spot, ve kterém hrdina jen dorovnal - a to je každá
+   * obrana velkého blindu.
+   */
+  preflopAggressorPosition?: Position;
   flop?: [Card, Card, Card];
   turn?: [Card, Card, Card, Card];
   river?: [Card, Card, Card, Card, Card];
@@ -811,13 +818,29 @@ function deriveHeroPosition(
   hand: ParsedHand,
   tableFormat: TableFormat,
 ): Position | undefined {
+  if (hand.heroName === undefined) return undefined;
+  return derivePositionForPlayer(hand, tableFormat, hand.heroName);
+}
+
+/**
+ * Pozice libovolného hráče, nejen hrdiny.
+ *
+ * Aritmetika od buttonu je pro všechny stejná, jen se dosud používala výhradně
+ * na hrdinu - a kvůli tomu neexistoval způsob, jak zjistit, kdo ruku otevřel.
+ * Ruce, kde hrdina bránil velký blind, se proto do postflopového rozboru vůbec
+ * nedostaly: bez sedadla otvírajícího nejde spot pojmenovat.
+ */
+function derivePositionForPlayer(
+  hand: ParsedHand,
+  tableFormat: TableFormat,
+  playerName: string,
+): Position | undefined {
   const positions = positionsForFormat(tableFormat);
   if (hand.seats.length !== positions.length) return undefined;
-  if (hand.heroName === undefined) return undefined;
 
   // Seřaď sedadla podle čísla.
   const sorted = [...hand.seats].sort((a, b) => a.seat - b.seat);
-  const heroSeat = sorted.find((s) => s.name === hand.heroName);
+  const heroSeat = sorted.find((s) => s.name === playerName);
   if (heroSeat === undefined) return undefined;
 
   let buttonSeat = hand.buttonSeat;
@@ -1227,6 +1250,19 @@ export function parseHandHistory(
       fields.position = heroPos;
     } else {
       unreadable.push("position");
+    }
+
+    // Kdo držel iniciativu: poslední preflopový raise. Chybí-li, nikdo nezvedal
+    // a spot není ani single-raised, ani tříbetový - pole zůstane prázdné a
+    // volající si s tím poradí sám.
+    if (tableFormat) {
+      const lastRaiser = [...hand.preflopActionDetails]
+        .reverse()
+        .find((action) => action.kind === "RAISE" || action.kind === "BET");
+      const aggressorPos = lastRaiser
+        ? derivePositionForPlayer(hand, tableFormat, lastRaiser.actor)
+        : undefined;
+      if (aggressorPos) fields.preflopAggressorPosition = aggressorPos;
     }
 
     // --- Hloubky ---
