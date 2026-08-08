@@ -55,6 +55,32 @@ describe("mtt:playable-beta CLI", () => {
     }
   });
 
+  it("zapocita vyreseny turn obsah, o kterem brana driv nevedela", () => {
+    // Devet turn rodin se dodava hraci a brana o nich nevedela vubec: hlasila
+    // sedm flopovych pilotu a v limitech tvrdila, ze to je cela postflopova
+    // nabidka. Brana, ktera nevi, co produkt obsahuje, neni brana.
+    const result = invoke("--json");
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+
+    expect(parsed.counts.turnFamiliesShipped).toBeGreaterThan(0);
+    expect(parsed.counts.turnFamiliesShipped).toBe(parsed.counts.turnFamiliesReviewReady);
+    expect(parsed.counts.turnSolvedTurns).toBeGreaterThan(1000);
+    expect(parsed.turnFamilies.length).toBe(parsed.counts.turnFamiliesShipped);
+
+    // Ruzne flopy, ne soucet pres rodiny: nekolik rodin resi tentyz flop v jine
+    // hloubce, takze sectene cislo by tvrdilo sirsi pokryti, nez jake je.
+    expect(parsed.counts.turnDistinctFlops).toBeLessThan(
+      parsed.turnFamilies.reduce((sum: number, family: { boards: number }) => sum + family.boards, 0),
+    );
+
+    // Dodavany obsah, ne overeny. Dokud to zadny hrac neprosel, musi to brana
+    // rikat nahlas - jinak by nizka duvera zustala jen v datech.
+    expect(parsed.turnFamilies.every((family: { confidence: string }) => family.confidence === "LOW")).toBe(true);
+    expect(parsed.knownLimits.join(" ")).toContain("Solved TURN content ships");
+    expect(parsed.knownLimits.join(" ")).toContain("not verified content");
+  });
+
   it("rejects an unknown option", () => {
     const result = invoke("--unknown");
 

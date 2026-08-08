@@ -8,6 +8,9 @@ import { allMttPreflopRangePacks } from "../src/data/ranges/mttPreflopRangePacks
 import { buildMttCompletionReadinessReport } from "../src/data/ranges/mttProductionReadiness.ts";
 import type { MttCoreReleaseReport } from "./checkMttCoreRelease.mts";
 import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
+import { solvedTurnManifest } from "../src/data/ranges/turnSolvedManifest.generated.ts";
+import { loadSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks.ts";
+import { runtimeSolvedTurnPacks } from "../src/data/ranges/turnSolvedRuntimeRegistry.ts";
 import { shippedContentRisks } from "./lib/mttContentRisks.mts";
 
 export const MTT_PLAYABLE_BETA_SCOPE = "MTT_PLAYABLE_BETA_V1" as const;
@@ -40,6 +43,19 @@ export interface MttPlayableBetaReport {
     sixMaxTargets: number;
     flopPilotsReady: number;
     flopPilotTargets: number;
+    /** Vyřešené turn rodiny, které se opravdu dodávají hráči. */
+    turnFamiliesShipped: number;
+    /** Rodiny, které prošly review bránou a daly by se dodat. */
+    turnFamiliesReviewReady: number;
+    turnSolvedTurns: number;
+    /**
+     * Různých flopů napříč rodinami.
+     *
+     * Ne součet přes rodiny: několik rodin řeší tentýž flop v jiné hloubce nebo
+     * jiném typu potu, takže sečtený počet by tvrdil širší pokrytí board space,
+     * než jaké ve skutečnosti je - 234 místo 133.
+     */
+    turnDistinctFlops: number;
     actionEvPreflopComplete: number;
     actionEvPreflopTotal: number;
     actionEvFlopComplete: number;
@@ -58,6 +74,15 @@ export interface MttPlayableBetaReport {
     rules: number;
     rangeBuckets: number;
     limitations: readonly string[];
+  }[];
+  turnFamilies: readonly {
+    familyId: string;
+    packId: string;
+    /** Vyřešené turny v packu; jeden na board a kartu. */
+    solvedTurns: number;
+    /** Kolik různých flopů rodina pokrývá. */
+    boards: number;
+    confidence: "LOW" | "MEDIUM" | "HIGH";
   }[];
   fullLibrary: MttCoreReleaseReport["fullLibrary"];
   actionEv: MttCoreReleaseReport["actionEv"] & {
@@ -94,6 +119,23 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
     preflopPacks: selectedPreflopPacks,
     postflopPacks: generatedMttPostflopPilotPacks.map((entry) => entry.pack),
   });
+  // Vyřešený turn obsah se načte stejnou cestou jako v aplikaci, aby brána
+  // počítala to, co hráč skutečně dostane - ne to, co leží v artefaktech.
+  await loadSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
+  const turnFamilies = runtimeSolvedTurnPacks.map((pack) => ({
+    familyId: pack.familyIds[0] ?? pack.id,
+    packId: pack.id,
+    solvedTurns: pack.rules.length,
+    boards: new Set(pack.rules.map((rule) => rule.sourceDirectory)).size,
+    confidence: pack.confidence,
+  }));
+  const turnSolvedTurns = turnFamilies.reduce((sum, family) => sum + family.solvedTurns, 0);
+  const turnDistinctFlops = new Set(
+    runtimeSolvedTurnPacks.flatMap((pack) => pack.rules.flatMap((rule) => (
+      rule.spot === undefined ? [] : [rule.spot.flop.join("")]
+    ))),
+  ).size;
+
   const contentRisks = shippedContentRisks(
     generatedMttPostflopPilotPacks.flatMap((entry) => entry.pack.rules.map((rule) => rule.id)),
   );
@@ -132,6 +174,19 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
     // withhold the beta entirely rather than disclose what is in it.
     ...contentRisks.limits,
     "The seven FLOP families are scoped pilots, not complete postflop coverage.",
+    // Turn obsah se dodává a brána o něm dosud nevěděla. Je to nejrozsáhlejší
+    // solverem podložený obsah v aplikaci a zároveň nejméně prověřený: review
+    // brána ověřila tvar solvu, ne kvalitu strategie, takže důvěra zůstává LOW,
+    // dokud ho nepřečte hráč.
+    ...(turnFamilies.length === 0 ? [] : [
+      `Solved TURN content ships as ${turnFamilies.length} families, ` +
+      `${turnSolvedTurns} solved turns across ${turnDistinctFlops} distinct flops. ` +
+      "It answers only the exact boards it was solved on and declines every other; " +
+      "confidence stays LOW until a player reviews it.",
+    ]),
+    ...(turnFamilies.some((family) => family.confidence !== "LOW") ? [] : [
+      "No solved TURN family has been player-reviewed yet, so turn content is shipped content, not verified content.",
+    ]),
   ];
 
   return {
@@ -153,6 +208,10 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       sixMaxTargets: 4,
       flopPilotsReady: core.counts.readyPilots,
       flopPilotTargets: core.counts.pilotTargets,
+      turnFamiliesShipped: turnFamilies.length,
+      turnFamiliesReviewReady: solvedTurnManifest.length,
+      turnSolvedTurns,
+      turnDistinctFlops,
       actionEvPreflopComplete: actionEv.preflop.completeDecisions,
       actionEvPreflopTotal: actionEv.preflop.totalDecisions,
       actionEvFlopComplete: actionEv.postflop.completeDecisions,
@@ -172,6 +231,7 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       rangeBuckets: pilot.rangeBuckets,
       limitations: pilot.limitations,
     })),
+    turnFamilies,
     fullLibrary: core.fullLibrary,
     actionEv: {
       ...core.actionEv,
@@ -230,6 +290,8 @@ function render(report: MttPlayableBetaReport, summary: boolean): string {
     `preflop production: ${report.counts.preflopReady}/${report.counts.preflopTargets}`,
     `six-max production: ${report.counts.sixMaxReady}/${report.counts.sixMaxTargets}`,
     `scoped FLOP pilots: ${report.counts.flopPilotsReady}/${report.counts.flopPilotTargets}`,
+    `solved TURN families: ${report.counts.turnFamiliesShipped}/${report.counts.turnFamiliesReviewReady} ` +
+    `(${report.counts.turnSolvedTurns} turns, ${report.counts.turnDistinctFlops} flops)`,
     `preflop action EV: ${report.counts.actionEvPreflopComplete}/${report.counts.actionEvPreflopTotal}`,
     `scoped FLOP action EV: ${report.counts.actionEvFlopComplete}/${report.counts.actionEvFlopTotal}`,
     `errors: ${report.counts.errors}`,

@@ -57,7 +57,7 @@ Zdroj pravdy o mezerách je `npm run mtt:playable-beta`. Stav k 2026-08-08:
 |---|---|---|---|
 | 1 | ~~Six-max preflop~~ | **hotovo 2026-08-08.** Regular je hratelné preview se 425 odvozenými záznamy; ověřeno proti třem veřejným zdrojům přes `npm run mtt:six-max-widths` — všechny sedačky uvnitř pásma. Turbo zůstává prázdné záměrně: odvozený turbo pack by byl regular s jiným štítkem. | — |
 | 2 | Preflop produkce 4/8 | **Zjištěno 2026-08-08:** chybějící polovina nejsou ante/rychlost, ale `DOLAR_EV` (ICM). Devítistolový regular má nově odvozený bublinový pack jako hratelné preview; produkce zůstává 4/8 správně, protože odvozená data brána nepouští. | zbývající čtyři $EV sloty jsou turbo a šestistolové — odvozovat je nelze, měřený zdroj je jeden na režim ante |
-| 3 | Turn solved rodiny mimo scope brány | 9 rodin běží, brána o nich neví | rozšířit scope brány o turn, ať se počítají |
+| 3 | ~~Turn rodiny mimo scope brány~~ | **hotovo 2026-08-08.** Brána hlásí 9/9 rodin, 2 644 vyřešených turnů, 133 různých flopů, a dva nové limity: že obsah odpovídá jen na boardy, na kterých byl vyřešen, a že ho zatím nikdo neprošel. | — |
 | 4 | Dvě rodiny míchají dva solverové stromy | `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR`, `MTT9_150BB_CO_BTN_3BP_HIGHSPR` | přesolvit v nočním okně; do té doby zůstávají označené |
 | 5 | `mtt9_100bb_btn_bb_srp_facing_highspr` trénuje BET_17, solver hraje nejčastěji BET_25 | žádná velikost nemá většinu (nejvyšší 36 %) | nechat být a říct proč — přepnutí mění číslo víc než spot |
 | 6 | EV pro VS_4BET | 3BET/4BET klíče nenesou sizing | zvolit standardní turnajové sizingy (3bet 2,2× IP / 3× OOP, 4bet 2,2×), zapsat jako assumption |
