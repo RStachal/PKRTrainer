@@ -1653,11 +1653,13 @@ body{margin:0;background:
 .app__header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
   margin-bottom:18px;padding:4px 0 2px;}
 .app__header-copy{min-width:0;}
-.app__title{margin:0;font-size:28px;font-weight:950;letter-spacing:0;
-  background:linear-gradient(180deg,#f8fbff,#a8e8c4);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
+/* Solid, not a gradient. A gradient title needs color:transparent with
+   background-clip, which makes the computed colour transparent - the Chrome
+   accessibility pass measured the h1 at 1:1 against a required 3:1, and any
+   browser without background-clip support would render nothing at all. The
+   felt behind it already carries the colour; the title only has to be read. */
+.app__title{margin:0;font-size:28px;font-weight:950;letter-spacing:0;color:#f8fbff;
   text-shadow:0 10px 30px rgba(0,0,0,.35);}
-@supports not (background-clip:text){.app__title{color:#f8fbff;background:none;}}
 .app__subtitle{margin:6px 0 0;font-size:14px;color:#a8b7d5;}
 .language-switch{display:grid;grid-template-columns:repeat(2,40px);flex:0 0 auto;
   border:1px solid rgba(148,163,184,.28);border-radius:7px;background:#111827;padding:2px;}
