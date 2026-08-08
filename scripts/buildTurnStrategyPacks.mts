@@ -132,17 +132,33 @@ if (family === undefined) {
     // line that led there and the pot at that node. Reading the files alone would
     // produce rules that know their family but not their turn, and a resolver
     // holding those has no way to refuse a board nobody solved.
+    // The blind, in chips. The plan states the root stack in chips and the family
+    // name states it in big blinds, so their ratio is the only place the two unit
+    // systems meet. Without it nothing downstream can deal a spot at the depth it
+    // was actually solved at.
+    const familyStackBB = Number(/_(\d+)BB_/.exec(directory)?.[1] ?? 0);
+    const chipsPerBB = familyStackBB > 0 && plan.stack > 0 ? plan.stack / familyStackBB : 0;
+    const inBB = (chips: number) => (
+      chipsPerBB > 0 ? Math.round((chips / chipsPerBB) * 10) / 10 : undefined
+    );
+
     for (const item of plan.items ?? []) {
       const fileName = subgameFileName(item);
       const path = join(ROOT, directory, fileName);
       if (!existsSync(path)) continue;
       const node = JSON.parse(readFileSync(path, "utf8"));
+      const potChips = item.pot ?? plan.pot ?? 0;
+      const stackChips = item.stack ?? plan.stack ?? 0;
+      const potBB = inBB(potChips);
+      const stackBehindBB = inBB(stackChips);
       const rule = buildTurnStrategyRule(directory, node, {
         flop: (plan.board ?? []) as string[],
         turnCards: [item.turn, ...(item.represents ?? []).filter((card: string) => card !== item.turn)],
         priorLine: item.line ?? [],
-        potChips: item.pot ?? plan.pot ?? 0,
-        stackChips: item.stack ?? plan.stack ?? 0,
+        potChips,
+        stackChips,
+        ...(potBB === undefined ? {} : { potBB }),
+        ...(stackBehindBB === undefined ? {} : { stackBehindBB }),
         reach: item.reach ?? 0,
       });
       if (rule) rules.push(rule);

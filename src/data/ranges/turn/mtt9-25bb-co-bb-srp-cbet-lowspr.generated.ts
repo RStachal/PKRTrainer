@@ -60,6 +60,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.347972
       },
       "actions": [
@@ -219,6 +221,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.369499
       },
       "actions": [
@@ -347,6 +351,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.350192
       },
       "actions": [
@@ -479,6 +485,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.476232
       },
       "actions": [
@@ -641,6 +649,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.325942
       },
       "actions": [
@@ -802,6 +812,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.721025
       },
       "actions": [
@@ -976,6 +988,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.368093
       },
       "actions": [
@@ -1107,6 +1121,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.383366
       },
       "actions": [
@@ -1273,6 +1289,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.337349
       },
       "actions": [
@@ -1447,6 +1465,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.544467
       },
       "actions": [
@@ -1580,6 +1600,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.367109
       },
       "actions": [
@@ -1754,6 +1776,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767014
       },
       "actions": [
@@ -1930,6 +1954,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.326278
       },
       "actions": [
@@ -2061,6 +2087,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.633437
       },
       "actions": [
@@ -2234,6 +2262,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.560767
       },
       "actions": [
@@ -2385,6 +2415,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.754737
       },
       "actions": [
@@ -2560,6 +2592,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.379
       },
       "actions": [
@@ -2696,6 +2730,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767984
       },
       "actions": [
@@ -2845,6 +2881,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.591228
       },
       "actions": [
@@ -3015,6 +3053,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.416352
       },
       "actions": [
@@ -3147,6 +3187,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.554601
       },
       "actions": [
@@ -3287,6 +3329,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.561262
       },
       "actions": [
@@ -3460,6 +3504,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.678644
       },
       "actions": [
@@ -3635,6 +3681,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.576958
       },
       "actions": [
@@ -3785,6 +3833,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.40099
       },
       "actions": [
@@ -3920,6 +3970,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.807245
       },
       "actions": [
@@ -4095,6 +4147,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.330525
       },
       "actions": [
@@ -4230,6 +4284,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.782635
       },
       "actions": [
@@ -4404,6 +4460,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.700342
       },
       "actions": [
@@ -4578,6 +4636,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.544601
       },
       "actions": [
@@ -4751,6 +4811,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.490266
       },
       "actions": [
@@ -4925,6 +4987,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.424128
       },
       "actions": [
@@ -5098,6 +5162,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.52246
       },
       "actions": [
@@ -5271,6 +5337,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.347972
       },
       "actions": [
@@ -5429,6 +5497,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.369499
       },
       "actions": [
@@ -5559,6 +5629,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.350192
       },
       "actions": [
@@ -5690,6 +5762,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.476232
       },
       "actions": [
@@ -5850,6 +5924,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.325942
       },
       "actions": [
@@ -6011,6 +6087,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.721025
       },
       "actions": [
@@ -6184,6 +6262,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.368093
       },
       "actions": [
@@ -6314,6 +6394,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.383366
       },
       "actions": [
@@ -6505,6 +6587,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.337349
       },
       "actions": [
@@ -6678,6 +6762,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.544467
       },
       "actions": [
@@ -6813,6 +6899,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.367109
       },
       "actions": [
@@ -6985,6 +7073,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767014
       },
       "actions": [
@@ -7135,6 +7225,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.326278
       },
       "actions": [
@@ -7265,6 +7357,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.633437
       },
       "actions": [
@@ -7439,6 +7533,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.560767
       },
       "actions": [
@@ -7612,6 +7708,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.754737
       },
       "actions": [
@@ -7785,6 +7883,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.379
       },
       "actions": [
@@ -7923,6 +8023,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767984
       },
       "actions": [
@@ -8095,6 +8197,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.591228
       },
       "actions": [
@@ -8267,6 +8371,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.416352
       },
       "actions": [
@@ -8397,6 +8503,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.554601
       },
       "actions": [
@@ -8536,6 +8644,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.561262
       },
       "actions": [
@@ -8711,6 +8821,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.678644
       },
       "actions": [
@@ -8884,6 +8996,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.576958
       },
       "actions": [
@@ -9057,6 +9171,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.40099
       },
       "actions": [
@@ -9190,6 +9306,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.807245
       },
       "actions": [
@@ -9339,6 +9457,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.330525
       },
       "actions": [
@@ -9472,6 +9592,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.782635
       },
       "actions": [
@@ -9645,6 +9767,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.700342
       },
       "actions": [
@@ -9818,6 +9942,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.544601
       },
       "actions": [
@@ -9992,6 +10118,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.490266
       },
       "actions": [
@@ -10165,6 +10293,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.424128
       },
       "actions": [
@@ -10336,6 +10466,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.52246
       },
       "actions": [
@@ -10511,6 +10643,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.347972
       },
       "actions": [
@@ -10671,6 +10805,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.369499
       },
       "actions": [
@@ -10799,6 +10935,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.350192
       },
       "actions": [
@@ -10930,6 +11068,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.476232
       },
       "actions": [
@@ -11091,6 +11231,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.325942
       },
       "actions": [
@@ -11252,6 +11394,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.721025
       },
       "actions": [
@@ -11425,6 +11569,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.368093
       },
       "actions": [
@@ -11555,6 +11701,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.383366
       },
       "actions": [
@@ -11721,6 +11869,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.337349
       },
       "actions": [
@@ -11896,6 +12046,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.544467
       },
       "actions": [
@@ -12030,6 +12182,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.367109
       },
       "actions": [
@@ -12204,6 +12358,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767014
       },
       "actions": [
@@ -12380,6 +12536,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.326278
       },
       "actions": [
@@ -12511,6 +12669,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.633437
       },
       "actions": [
@@ -12684,6 +12844,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.560767
       },
       "actions": [
@@ -12835,6 +12997,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.754737
       },
       "actions": [
@@ -13009,6 +13173,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.379
       },
       "actions": [
@@ -13145,6 +13311,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767984
       },
       "actions": [
@@ -13293,6 +13461,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.591228
       },
       "actions": [
@@ -13463,6 +13633,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.416352
       },
       "actions": [
@@ -13594,6 +13766,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.554601
       },
       "actions": [
@@ -13733,6 +13907,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.561262
       },
       "actions": [
@@ -13906,6 +14082,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.678644
       },
       "actions": [
@@ -14081,6 +14259,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.576958
       },
       "actions": [
@@ -14232,6 +14412,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.40099
       },
       "actions": [
@@ -14367,6 +14549,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.807245
       },
       "actions": [
@@ -14542,6 +14726,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.330525
       },
       "actions": [
@@ -14677,6 +14863,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.782635
       },
       "actions": [
@@ -14851,6 +15039,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.700342
       },
       "actions": [
@@ -15024,6 +15214,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.544601
       },
       "actions": [
@@ -15197,6 +15389,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.490266
       },
       "actions": [
@@ -15370,6 +15564,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.424128
       },
       "actions": [
@@ -15543,6 +15739,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.52246
       },
       "actions": [
@@ -15716,6 +15914,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.347972
       },
       "actions": [
@@ -15874,6 +16074,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.369499
       },
       "actions": [
@@ -16003,6 +16205,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.350192
       },
       "actions": [
@@ -16135,6 +16339,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.476232
       },
       "actions": [
@@ -16295,6 +16501,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.325942
       },
       "actions": [
@@ -16454,6 +16662,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.721025
       },
       "actions": [
@@ -16604,6 +16814,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.368093
       },
       "actions": [
@@ -16735,6 +16947,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.383366
       },
       "actions": [
@@ -16903,6 +17117,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.337349
       },
       "actions": [
@@ -17076,6 +17292,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.544467
       },
       "actions": [
@@ -17211,6 +17429,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.367109
       },
       "actions": [
@@ -17383,6 +17603,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767014
       },
       "actions": [
@@ -17533,6 +17755,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.326278
       },
       "actions": [
@@ -17663,6 +17887,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.633437
       },
       "actions": [
@@ -17838,6 +18064,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.560767
       },
       "actions": [
@@ -18011,6 +18239,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.754737
       },
       "actions": [
@@ -18160,6 +18390,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.379
       },
       "actions": [
@@ -18298,6 +18530,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767984
       },
       "actions": [
@@ -18471,6 +18705,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.591228
       },
       "actions": [
@@ -18643,6 +18879,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.416352
       },
       "actions": [
@@ -18773,6 +19011,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.554601
       },
       "actions": [
@@ -18913,6 +19153,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.561262
       },
       "actions": [
@@ -19088,6 +19330,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.678644
       },
       "actions": [
@@ -19261,6 +19505,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.576958
       },
       "actions": [
@@ -19434,6 +19680,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.40099
       },
       "actions": [
@@ -19567,6 +19815,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.807245
       },
       "actions": [
@@ -19716,6 +19966,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.330525
       },
       "actions": [
@@ -19850,6 +20102,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.782635
       },
       "actions": [
@@ -19999,6 +20253,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.700342
       },
       "actions": [
@@ -20173,6 +20429,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.544601
       },
       "actions": [
@@ -20348,6 +20606,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.490266
       },
       "actions": [
@@ -20522,6 +20782,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.424128
       },
       "actions": [
@@ -20693,6 +20955,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.52246
       },
       "actions": [
@@ -20867,6 +21131,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.347972
       },
       "actions": [
@@ -21026,6 +21292,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.369499
       },
       "actions": [
@@ -21154,6 +21422,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.350192
       },
       "actions": [
@@ -21285,6 +21555,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.476232
       },
       "actions": [
@@ -21447,6 +21719,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.325942
       },
       "actions": [
@@ -21608,6 +21882,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.721025
       },
       "actions": [
@@ -21781,6 +22057,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.368093
       },
       "actions": [
@@ -21911,6 +22189,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.383366
       },
       "actions": [
@@ -22077,6 +22357,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.337349
       },
       "actions": [
@@ -22252,6 +22534,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.544467
       },
       "actions": [
@@ -22385,6 +22669,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.367109
       },
       "actions": [
@@ -22559,6 +22845,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767014
       },
       "actions": [
@@ -22735,6 +23023,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.326278
       },
       "actions": [
@@ -22865,6 +23155,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.633437
       },
       "actions": [
@@ -23038,6 +23330,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.560767
       },
       "actions": [
@@ -23189,6 +23483,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.754737
       },
       "actions": [
@@ -23364,6 +23660,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.379
       },
       "actions": [
@@ -23520,6 +23818,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767984
       },
       "actions": [
@@ -23668,6 +23968,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.591228
       },
       "actions": [
@@ -23838,6 +24140,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.416352
       },
       "actions": [
@@ -23989,6 +24293,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.554601
       },
       "actions": [
@@ -24128,6 +24434,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.561262
       },
       "actions": [
@@ -24301,6 +24609,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.678644
       },
       "actions": [
@@ -24476,6 +24786,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.576958
       },
       "actions": [
@@ -24627,6 +24939,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.40099
       },
       "actions": [
@@ -24762,6 +25076,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.807245
       },
       "actions": [
@@ -24936,6 +25252,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.330525
       },
       "actions": [
@@ -25071,6 +25389,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.782635
       },
       "actions": [
@@ -25244,6 +25564,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.700342
       },
       "actions": [
@@ -25417,6 +25739,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.544601
       },
       "actions": [
@@ -25590,6 +25914,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.490266
       },
       "actions": [
@@ -25763,6 +26089,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.424128
       },
       "actions": [
@@ -25935,6 +26263,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.52246
       },
       "actions": [
@@ -26108,6 +26438,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.347972
       },
       "actions": [
@@ -26266,6 +26598,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.369499
       },
       "actions": [
@@ -26395,6 +26729,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.350192
       },
       "actions": [
@@ -26526,6 +26862,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.476232
       },
       "actions": [
@@ -26686,6 +27024,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.325942
       },
       "actions": [
@@ -26845,6 +27185,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.721025
       },
       "actions": [
@@ -26994,6 +27336,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.368093
       },
       "actions": [
@@ -27124,6 +27468,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.383366
       },
       "actions": [
@@ -27292,6 +27638,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.337349
       },
       "actions": [
@@ -27465,6 +27813,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.544467
       },
       "actions": [
@@ -27600,6 +27950,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.367109
       },
       "actions": [
@@ -27772,6 +28124,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767014
       },
       "actions": [
@@ -27922,6 +28276,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.326278
       },
       "actions": [
@@ -28053,6 +28409,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.633437
       },
       "actions": [
@@ -28228,6 +28586,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.560767
       },
       "actions": [
@@ -28379,6 +28739,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.754737
       },
       "actions": [
@@ -28552,6 +28914,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.379
       },
       "actions": [
@@ -28690,6 +29054,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767984
       },
       "actions": [
@@ -28862,6 +29228,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.591228
       },
       "actions": [
@@ -29032,6 +29400,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.416352
       },
       "actions": [
@@ -29161,6 +29531,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.554601
       },
       "actions": [
@@ -29300,6 +29672,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.561262
       },
       "actions": [
@@ -29475,6 +29849,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.678644
       },
       "actions": [
@@ -29648,6 +30024,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.576958
       },
       "actions": [
@@ -29821,6 +30199,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.40099
       },
       "actions": [
@@ -29954,6 +30334,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.807245
       },
       "actions": [
@@ -30103,6 +30485,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.330525
       },
       "actions": [
@@ -30218,6 +30602,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.782635
       },
       "actions": [
@@ -30392,6 +30778,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.700342
       },
       "actions": [
@@ -30566,6 +30954,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.544601
       },
       "actions": [
@@ -30741,6 +31131,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.490266
       },
       "actions": [
@@ -30914,6 +31306,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.424128
       },
       "actions": [
@@ -31085,6 +31479,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.52246
       },
       "actions": [
@@ -31259,6 +31655,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.347972
       },
       "actions": [
@@ -31419,6 +31817,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.369499
       },
       "actions": [
@@ -31547,6 +31947,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.350192
       },
       "actions": [
@@ -31679,6 +32081,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.476232
       },
       "actions": [
@@ -31841,6 +32245,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.325942
       },
       "actions": [
@@ -32002,6 +32408,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.721025
       },
       "actions": [
@@ -32176,6 +32584,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.368093
       },
       "actions": [
@@ -32307,6 +32717,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.383366
       },
       "actions": [
@@ -32473,6 +32885,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.337349
       },
       "actions": [
@@ -32648,6 +33062,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.544467
       },
       "actions": [
@@ -32782,6 +33198,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.367109
       },
       "actions": [
@@ -32956,6 +33374,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767014
       },
       "actions": [
@@ -33131,6 +33551,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.326278
       },
       "actions": [
@@ -33261,6 +33683,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.633437
       },
       "actions": [
@@ -33434,6 +33858,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.560767
       },
       "actions": [
@@ -33583,6 +34009,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.754737
       },
       "actions": [
@@ -33734,6 +34162,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.379
       },
       "actions": [
@@ -33890,6 +34320,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767984
       },
       "actions": [
@@ -34063,6 +34495,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.591228
       },
       "actions": [
@@ -34233,6 +34667,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.416352
       },
       "actions": [
@@ -34364,6 +34800,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.554601
       },
       "actions": [
@@ -34504,6 +34942,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.561262
       },
       "actions": [
@@ -34677,6 +35117,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.678644
       },
       "actions": [
@@ -34851,6 +35293,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.576958
       },
       "actions": [
@@ -35002,6 +35446,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.40099
       },
       "actions": [
@@ -35137,6 +35583,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.807245
       },
       "actions": [
@@ -35312,6 +35760,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.330525
       },
       "actions": [
@@ -35445,6 +35895,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.782635
       },
       "actions": [
@@ -35594,6 +36046,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.700342
       },
       "actions": [
@@ -35767,6 +36221,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.544601
       },
       "actions": [
@@ -35940,6 +36396,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.490266
       },
       "actions": [
@@ -36114,6 +36572,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.424128
       },
       "actions": [
@@ -36287,6 +36747,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.52246
       },
       "actions": [
@@ -36460,6 +36922,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.347972
       },
       "actions": [
@@ -36618,6 +37082,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.369499
       },
       "actions": [
@@ -36748,6 +37214,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.350192
       },
       "actions": [
@@ -36879,6 +37347,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.476232
       },
       "actions": [
@@ -37039,6 +37509,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.325942
       },
       "actions": [
@@ -37198,6 +37670,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.721025
       },
       "actions": [
@@ -37347,6 +37821,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.368093
       },
       "actions": [
@@ -37477,6 +37953,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.383366
       },
       "actions": [
@@ -37645,6 +38123,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.337349
       },
       "actions": [
@@ -37818,6 +38298,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.544467
       },
       "actions": [
@@ -37953,6 +38435,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.367109
       },
       "actions": [
@@ -38127,6 +38611,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767014
       },
       "actions": [
@@ -38301,6 +38787,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.326278
       },
       "actions": [
@@ -38431,6 +38919,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.633437
       },
       "actions": [
@@ -38606,6 +39096,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.560767
       },
       "actions": [
@@ -38781,6 +39273,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.754737
       },
       "actions": [
@@ -38954,6 +39448,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.379
       },
       "actions": [
@@ -39092,6 +39588,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767984
       },
       "actions": [
@@ -39264,6 +39762,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.591228
       },
       "actions": [
@@ -39436,6 +39936,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.416352
       },
       "actions": [
@@ -39566,6 +40068,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.554601
       },
       "actions": [
@@ -39705,6 +40209,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.561262
       },
       "actions": [
@@ -39880,6 +40386,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.678644
       },
       "actions": [
@@ -40053,6 +40561,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.576958
       },
       "actions": [
@@ -40202,6 +40712,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.40099
       },
       "actions": [
@@ -40335,6 +40847,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.807245
       },
       "actions": [
@@ -40484,6 +40998,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.330525
       },
       "actions": [
@@ -40619,6 +41135,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.782635
       },
       "actions": [
@@ -40792,6 +41310,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.700342
       },
       "actions": [
@@ -40966,6 +41486,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.544601
       },
       "actions": [
@@ -41141,6 +41663,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.490266
       },
       "actions": [
@@ -41314,6 +41838,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.424128
       },
       "actions": [
@@ -41509,6 +42035,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.52246
       },
       "actions": [
@@ -41683,6 +42211,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.347972
       },
       "actions": [
@@ -41843,6 +42373,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.369499
       },
       "actions": [
@@ -41971,6 +42503,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.350192
       },
       "actions": [
@@ -42100,6 +42634,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.476232
       },
       "actions": [
@@ -42262,6 +42798,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.325942
       },
       "actions": [
@@ -42423,6 +42961,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.721025
       },
       "actions": [
@@ -42596,6 +43136,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.368093
       },
       "actions": [
@@ -42725,6 +43267,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.383366
       },
       "actions": [
@@ -42891,6 +43435,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.337349
       },
       "actions": [
@@ -43066,6 +43612,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.544467
       },
       "actions": [
@@ -43199,6 +43747,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.367109
       },
       "actions": [
@@ -43371,6 +43921,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767014
       },
       "actions": [
@@ -43523,6 +44075,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.326278
       },
       "actions": [
@@ -43654,6 +44208,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.633437
       },
       "actions": [
@@ -43827,6 +44383,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.560767
       },
       "actions": [
@@ -43976,6 +44534,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.754737
       },
       "actions": [
@@ -44127,6 +44687,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.379
       },
       "actions": [
@@ -44283,6 +44845,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.767984
       },
       "actions": [
@@ -44455,6 +45019,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.591228
       },
       "actions": [
@@ -44625,6 +45191,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.416352
       },
       "actions": [
@@ -44757,6 +45325,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.554601
       },
       "actions": [
@@ -44896,6 +45466,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.561262
       },
       "actions": [
@@ -45069,6 +45641,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.678644
       },
       "actions": [
@@ -45244,6 +45818,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.576958
       },
       "actions": [
@@ -45419,6 +45995,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.40099
       },
       "actions": [
@@ -45554,6 +46132,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.807245
       },
       "actions": [
@@ -45729,6 +46309,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.330525
       },
       "actions": [
@@ -45862,6 +46444,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.782635
       },
       "actions": [
@@ -46012,6 +46596,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.700342
       },
       "actions": [
@@ -46185,6 +46771,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.544601
       },
       "actions": [
@@ -46358,6 +46946,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.490266
       },
       "actions": [
@@ -46531,6 +47121,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.424128
       },
       "actions": [
@@ -46704,6 +47296,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 50,
         "stackChips": 125,
+        "potBB": 10,
+        "stackBehindBB": 25,
         "reach": 0.52246
       },
       "actions": [
@@ -46877,6 +47471,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 84,
         "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
         "reach": 0.347972
       },
       "actions": [
@@ -47035,6 +47631,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.369499
       },
       "actions": [
@@ -47165,6 +47763,8 @@ export const turnPack: TurnStrategyPack = {
         ],
         "potChips": 100,
         "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
         "reach": 0.350192
       },
       "actions": [

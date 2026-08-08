@@ -73,6 +73,18 @@ export interface TurnSolvedSpot {
   potChips: number;
   /** Stack behind at this node, in chips. */
   stackChips: number;
+  /**
+   * The same two numbers in the units the trainer speaks.
+   *
+   * The solve works in chips and the product works in big blinds, and the
+   * conversion is knowable only at build time - the plan states the root stack
+   * in chips and the family name states it in big blinds, and their ratio is the
+   * blind. Recording the result here means nothing downstream has to rediscover
+   * it, and a spot dealt from this rule arrives at the depth it was solved at
+   * rather than at a default.
+   */
+  potBB?: number;
+  stackBehindBB?: number;
   /** Share of the flop node's range that reaches this turn, 0 to 1. */
   reach: number;
 }

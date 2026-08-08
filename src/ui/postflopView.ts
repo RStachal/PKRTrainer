@@ -1,5 +1,6 @@
 import {
   generatePostflopSpot,
+  POSTFLOP_FULL_RING_POSITION_CONTEXTS,
   PostflopStrategyUnavailableError,
   type BoardTexture,
   type PostflopAction,
@@ -22,6 +23,11 @@ import {
   type PostflopTrainingSpot,
 } from "../core/postflopTrainingSpot";
 import { createDefaultPostflopStrategyResolver } from "../data/ranges/postflopStrategyRegistry";
+import {
+  pickSolvedTurnSpot,
+  solvedTurnSpotConfig,
+} from "../data/ranges/solvedTurnSpotCatalogue";
+import { mulberry32 } from "../core/rng";
 import { POSITION_ORDER, type Card, type Position, type Suit } from "../core/types";
 import {
   classifyFlopHand,
@@ -296,6 +302,14 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       }
 
       const street = parseStreet(streetSelect.value);
+      // A solved turn answers one board and refuses every other, so dealing at
+      // random reaches it about never - the content being unreachable and the
+      // resolver being broken look identical from the player's side. When solved
+      // turns are loaded and the player has not pinned the situation themselves,
+      // deal one of them.
+      const solvedTurn = street === "TURN" && options.initialPositionContext == null
+        ? solvedTurnConfigForSeed(seed)
+        : undefined;
       const spot = generatePostflopSpot({
         seed,
         street,
@@ -310,6 +324,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
         positionContext: options.initialPositionContext ?? undefined,
         strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
         allowFallback: options.allowFallback,
+        ...(solvedTurn ?? {}),
       });
       controls.hidden = true;
       output.hidden = false;
@@ -1833,6 +1848,23 @@ function actionLabel(action: PostflopAction): string {
     case "FOLD":
       return "Fold";
   }
+}
+
+/**
+ * A solved turn to deal for this seed, or nothing when none is loaded.
+ *
+ * The seed picks the spot, so the same seed reproduces the same board - which is
+ * what the seed box is for, and would stop working if the catalogue drew from
+ * anywhere else. The rng is stepped once before use because mulberry32's first
+ * value is close to linear in its seed, and consecutive seeds would otherwise
+ * walk the catalogue in order rather than sample it.
+ */
+function solvedTurnConfigForSeed(seed: number) {
+  const rng = mulberry32(seed);
+  rng();
+  const spot = pickSolvedTurnSpot(rng());
+  if (spot === undefined) return undefined;
+  return solvedTurnSpotConfig(spot, POSTFLOP_FULL_RING_POSITION_CONTEXTS);
 }
 
 function parseStreet(value: string): PostflopStreet {
