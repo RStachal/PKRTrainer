@@ -13,7 +13,7 @@ Design notes worth keeping:
 - It is resumable at every level. A board whose plan and outputs already exist is
   skipped in seconds, so an interrupted night costs nothing but the board in
   flight.
-- Boards are taken deepest-first. This was the other way until the first full
+- Half-finished boards are taken before anything else, then boards deepest-first. This was the other way until the first full
   night measured what shallowest-first produced: more boards, but over half their
   turn nodes offering only check-or-shove, because a low SPR leaves no room for a
   second sizing. Throughput was the wrong thing to maximise.
@@ -102,7 +102,38 @@ def main():
     # information. The ones worth having - two bet sizes, two raise sizes, a shove
     # that is a real choice - exist only where the stack is deep, and those were
     # exactly the boards the old ordering left until last.
-    ordered = sorted(boards, key=lambda k: (-depth(k), k[0], k[1]))
+    def partially_done(key):
+        """How far a board already is: 0 untouched, 1 finished, between if partial.
+
+        A board left half solved is wasted work until it is finished, and
+        finishing it costs less than starting a fresh one. It also unblocks the
+        review gate at family level: MTT9_40BB_UTG_BB_SRP sat at 2,010 of 2,152
+        subgames because a single board stopped at 38 of 180, and one incomplete
+        board blocks the whole family whatever the other twelve did.
+        """
+        out_dir = os.path.join(WORK, f"{key[0]}__{key[1]}")
+        plan_path = os.path.join(out_dir, "plan.json")
+        if not os.path.exists(plan_path):
+            return 0.0
+        try:
+            planned = len(json.load(open(plan_path, encoding="utf8"))["items"])
+        except Exception:
+            return 0.0
+        if planned == 0:
+            return 0.0
+        solved = len([f for f in os.listdir(out_dir)
+                      if f.endswith(".json") and f != "plan.json"])
+        return solved / planned
+
+    def priority(key):
+        progress = partially_done(key)
+        # Started but unfinished goes first, least-finished within that, then the
+        # deepest untouched boards as before. A finished board sorts with the
+        # untouched ones and is skipped seconds later either way.
+        started = 0 < progress < 1
+        return (0 if started else 1, progress if started else 0, -depth(key), key[0], key[1])
+
+    ordered = sorted(boards, key=priority)
     log(f"{len(ordered)} boards have a monolithic checkpoint; deadline {deadline:%H:%M}")
 
     done = skipped = failed = 0
