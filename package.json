@@ -138,7 +138,8 @@
     "release:mtt-core": "npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:core-release && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget",
     "release:check": "npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:release-gates && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "mtt:turn-review-gate": "node scripts/run-cli.mjs scripts/checkTurnReviewGate.mts"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",

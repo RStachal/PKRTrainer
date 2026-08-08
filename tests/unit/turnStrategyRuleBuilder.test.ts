@@ -68,7 +68,7 @@ describe("turn strategy rule builder", () => {
       },
     })!;
     const bucket = rule.buckets.find((item) => item.action === "BET 75.000000")!;
-    expect(bucket.handClasses.sort()).toEqual(["AA", "KQo"]);
+    expect([...bucket.handClasses].sort()).toEqual(["AA", "KQo"]);
     expect(bucket.combos).toBe(18);
     // (1.0*6 + 0.6*12) / 18 = 0.733, not the unweighted 0.8.
     expect(bucket.mix[1].frequency).toBeCloseTo(0.733, 2);
@@ -117,7 +117,8 @@ describe("turn strategy rule builder", () => {
       // Buckets are widest first, so a reader meets the main line before the
       // exceptions.
       const combos = rule.buckets.map((bucket) => bucket.combos);
-      expect([...combos].sort((left, right) => right - left)).toEqual(combos);
+      const descending = [...combos].sort((left, right) => right - left);
+      expect(descending).toEqual([...combos]);
     }
   });
 });
