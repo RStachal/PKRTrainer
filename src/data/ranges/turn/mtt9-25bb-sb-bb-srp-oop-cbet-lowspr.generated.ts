@@ -25,7 +25,7 @@ export const turnPack: TurnStrategyPack = {
     "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR"
   ],
   "assumptions": [
-    "Built from 158 solved turn subgames across 32 boards.",
+    "Built from 244 solved turn subgames across 32 boards.",
     "Position pattern SRP_SB_VS_BB, CBET, 25BB effective.",
     "Bet sizes carry the solver's own labels in chips; translating them needs the pot at the node.",
     "Frequencies within a hand class are averaged across its combinations, so a class cannot express a preference between them.",
@@ -203,6 +203,124 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 76
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__654r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "654r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "6s",
+          "5d",
+          "4c"
+        ],
+        "turnCards": [
+          "8c",
+          "8d",
+          "8s"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.018193
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "33",
+            "53s",
+            "96s",
+            "97s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A7o",
+            "A9o",
+            "A9s",
+            "ATo",
+            "J7s",
+            "J9s",
+            "JTo",
+            "K4s",
+            "K7s",
+            "Q5s",
+            "Q7s",
+            "Q9s",
+            "QTo",
+            "T7s",
+            "T9o"
+          ],
+          "combos": 138,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.85
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.15
+            }
+          ]
+        },
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "43s",
+            "86s",
+            "88",
+            "99",
+            "A5o",
+            "A6s",
+            "A8o",
+            "A8s",
+            "K3s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "Q6s",
+            "Q8s",
+            "TT"
+          ],
+          "combos": 100,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.101
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.899
+            }
+          ]
+        }
+      ],
+      "classCount": 39
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
@@ -451,8 +569,7 @@ export const turnPack: TurnStrategyPack = {
           "7d"
         ],
         "turnCards": [
-          "8d",
-          "8h"
+          "2c"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -474,7 +591,6 @@ export const turnPack: TurnStrategyPack = {
           "action": "BET 28.000000",
           "handClasses": [
             "22",
-            "33",
             "54s",
             "55",
             "64s",
@@ -484,17 +600,13 @@ export const turnPack: TurnStrategyPack = {
             "77",
             "86s",
             "87s",
-            "88",
-            "96s",
             "97s",
             "98o",
             "98s",
-            "A2s",
+            "99",
             "A3s",
-            "A4s",
             "A5o",
             "A5s",
-            "A6s",
             "A7o",
             "A7s",
             "A8o",
@@ -505,15 +617,17 @@ export const turnPack: TurnStrategyPack = {
             "AJs",
             "AKo",
             "AKs",
+            "AQo",
             "AQs",
             "ATo",
             "ATs",
             "J7s",
             "J8s",
-            "J9s",
             "JJ",
             "JTo",
             "JTs",
+            "K5s",
+            "K6s",
             "K7s",
             "K8s",
             "K9o",
@@ -522,6 +636,8 @@ export const turnPack: TurnStrategyPack = {
             "KK",
             "KTo",
             "KTs",
+            "Q5s",
+            "Q6s",
             "Q7s",
             "Q8s",
             "Q9s",
@@ -533,72 +649,73 @@ export const turnPack: TurnStrategyPack = {
             "T7s",
             "T8s",
             "T9o",
-            "T9s"
+            "T9s",
+            "TT"
           ],
-          "combos": 382,
+          "combos": 390,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.076
+              "frequency": 0.085
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.859
+              "frequency": 0.863
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.066
+              "frequency": 0.052
             }
           ]
         },
         {
           "action": "CHECK",
           "handClasses": [
-            "44",
+            "88",
+            "96s",
+            "A4s",
+            "A6s",
             "AA",
-            "K5s",
-            "K6s",
             "KQo",
-            "KQs",
-            "Q5s",
-            "Q6s"
+            "KQs"
           ],
-          "combos": 44,
+          "combos": 40,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.798
+              "frequency": 0.843
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.202
+              "frequency": 0.156
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0
+              "frequency": 0.001
             }
           ]
         },
         {
           "action": "BET 108.000000",
           "handClasses": [
-            "99",
-            "AQo",
-            "TT"
+            "33",
+            "44",
+            "A2s",
+            "J9s"
           ],
-          "combos": 24,
+          "combos": 20,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.075
+              "frequency": 0.001
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.265
+              "frequency": 0.146
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.66
+              "frequency": 0.853
             }
           ]
         }
@@ -791,6 +908,1584 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 77
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__932r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "932r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "3h",
+          "2d"
+        ],
+        "turnCards": [
+          "4d",
+          "4h",
+          "4s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.012803
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "54s",
+            "64s",
+            "65s",
+            "77",
+            "87s",
+            "88",
+            "96s",
+            "99",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JTs",
+            "K7s",
+            "K8s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q8s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 292,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.957
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.042
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.002
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "K6s"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.402
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.598
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.001
+            }
+          ]
+        }
+      ],
+      "classCount": 48
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__986tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "986tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "8s",
+          "6d"
+        ],
+        "turnCards": [
+          "Js"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.011329
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "77",
+            "87s",
+            "97s",
+            "98o",
+            "98s",
+            "A7o",
+            "A8o",
+            "A9o",
+            "AJo",
+            "AQo",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KQo",
+            "KTo",
+            "KTs",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 230,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.067
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.933
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "54s",
+            "A5o",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "Q5s"
+          ],
+          "combos": 36,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.82
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.18
+            }
+          ]
+        }
+      ],
+      "classCount": 36
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "2d",
+          "2s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 228,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.996
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.004
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "5h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.309701
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "66",
+            "76s",
+            "77",
+            "86s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "JJ",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KQs",
+            "Q8s",
+            "Q9s",
+            "QTo",
+            "QTs"
+          ],
+          "combos": 256,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.703
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.203
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.094
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "55",
+            "87s",
+            "A8o",
+            "AA",
+            "AJo",
+            "AJs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JTo",
+            "JTs",
+            "KJo",
+            "KJs",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 162,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.101
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.16
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.739
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "75s",
+            "A8s",
+            "A9s",
+            "K8s",
+            "KQo",
+            "Q6s",
+            "Q7s",
+            "T7s"
+          ],
+          "combos": 40,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.265
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.727
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.009
+            }
+          ]
+        }
+      ],
+      "classCount": 74
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__K98tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "K98tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "9s",
+          "8d"
+        ],
+        "turnCards": [
+          "3s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.311353
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "33",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "K8s",
+            "KK",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 244,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.73
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.178
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.092
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "96s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AKo",
+            "AKs",
+            "JTo",
+            "K2s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs"
+          ],
+          "combos": 144,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.136
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.176
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.689
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "43s",
+            "65s",
+            "75s",
+            "76s",
+            "A9o",
+            "JJ",
+            "JTs",
+            "K3s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 90,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.27
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.571
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.159
+            }
+          ]
+        }
+      ],
+      "classCount": 79
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q54tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q54tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "5s",
+          "4h"
+        ],
+        "turnCards": [
+          "3h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.533745
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q7s",
+            "QQ",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 296,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.845
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.128
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.027
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "65s",
+            "75s",
+            "77",
+            "88",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
+            "K2s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "KK",
+            "KQo",
+            "KQs",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s"
+          ],
+          "combos": 142,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.186
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.103
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.711
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "33",
+            "66",
+            "76s",
+            "86s",
+            "87s",
+            "96s",
+            "97s",
+            "J7s",
+            "Q6s"
+          ],
+          "combos": 40,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.292
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.584
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.124
+            }
+          ]
+        }
+      ],
+      "classCount": 79
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "2c",
+          "2d",
+          "2h"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 360,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.999
+            }
+          ]
+        }
+      ],
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__QJ2tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "QJ2tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "Jh",
+          "2h"
+        ],
+        "turnCards": [
+          "5h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.534731
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "33",
+            "53s",
+            "54s",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KTo",
+            "KTs",
+            "QJs",
+            "T7s",
+            "T8s",
+            "TT"
+          ],
+          "combos": 300,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.794
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.09
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.116
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "44",
+            "55",
+            "AJs",
+            "AQo",
+            "AQs",
+            "K9o",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QTo",
+            "QTs"
+          ],
+          "combos": 112,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.242
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.213
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.545
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "43s",
+            "64s",
+            "A3s",
+            "A4s",
+            "K9s",
+            "KQo",
+            "QJo",
+            "QQ",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 66,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.209
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.618
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.174
+            }
+          ]
+        }
+      ],
+      "classCount": 79
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T76tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T76tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "7s",
+          "6d"
+        ],
+        "turnCards": [
+          "4s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.199946
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "33",
+            "44",
+            "53s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "99",
+            "A5o",
+            "A8o",
+            "A9o",
+            "AA",
+            "ATo",
+            "ATs",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K8s",
+            "K9o",
+            "KK",
+            "KTo",
+            "KTs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 248,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.183
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.103
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.714
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "A2s",
+            "A4s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "J7s",
+            "K2s",
+            "K4s",
+            "K6s",
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "Q6s",
+            "Q7s",
+            "QJo",
+            "QJs"
+          ],
+          "combos": 154,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.775
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.141
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.085
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "98o",
+            "98s",
+            "A3s",
+            "A5s",
+            "J8s",
+            "J9s",
+            "K3s",
+            "K5s",
+            "K7s",
+            "K9s",
+            "Q5s",
+            "Q8s",
+            "Q9s"
+          ],
+          "combos": 60,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.246
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.685
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.069
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "2c",
+          "2d",
+          "2s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "43s",
+            "55",
+            "86s",
+            "87s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A8o",
+            "A8s",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "K4s",
+            "K8s",
+            "KJo",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 206,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.12
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.185
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.694
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "54s",
+            "64s",
+            "65s",
+            "77",
+            "88",
+            "A3s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "K2s",
+            "K3s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s"
+          ],
+          "combos": 154,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.681
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.228
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.091
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "53s",
+            "66",
+            "75s",
+            "96s",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "JTs",
+            "KK",
+            "QQ",
+            "QTs",
+            "T8s",
+            "TT"
+          ],
+          "combos": 114,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.281
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.622
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.097
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T93tt",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -815,7 +2510,7 @@ export const turnPack: TurnStrategyPack = {
           "3h"
         ],
         "turnCards": [
-          "Kh"
+          "2h"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -834,140 +2529,140 @@ export const turnPack: TurnStrategyPack = {
       ],
       "buckets": [
         {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "44",
-            "55",
-            "76s",
-            "77",
-            "86s",
-            "87s",
-            "88",
-            "96s",
-            "98o",
-            "98s",
-            "99",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A9o",
-            "A9s",
-            "J9s",
-            "K9o",
-            "K9s",
-            "KK",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QJo",
-            "QJs",
-            "QQ",
-            "QTs",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 194,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.243
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.673
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.084
-            }
-          ]
-        },
-        {
           "action": "BET 108.000000",
           "handClasses": [
-            "A2s",
+            "44",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
             "A3s",
-            "AA",
-            "AKo",
-            "AKs",
-            "AQo",
+            "A5o",
+            "A9o",
+            "A9s",
             "ATo",
             "ATs",
-            "J7s",
             "J8s",
+            "J9s",
             "JJ",
             "JTo",
             "JTs",
-            "K2s",
             "K3s",
-            "K4s",
-            "K5s",
-            "K6s",
-            "K7s",
-            "K8s",
-            "KJs",
+            "K9o",
+            "K9s",
             "KQo",
             "KQs",
             "KTo",
             "KTs",
             "Q5s",
             "Q6s",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
             "QTo",
+            "QTs",
             "T7s",
             "T8s"
           ],
-          "combos": 180,
+          "combos": 216,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.077
+              "frequency": 0.17
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.228
+              "frequency": 0.07
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.694
+              "frequency": 0.76
             }
           ]
         },
         {
           "action": "CHECK",
           "handClasses": [
-            "33",
             "43s",
             "53s",
-            "54s",
-            "64s",
-            "65s",
-            "66",
             "75s",
-            "97s",
+            "76s",
+            "87s",
+            "88",
+            "99",
+            "A2s",
+            "A4s",
+            "A6s",
             "A7o",
             "A7s",
             "A8o",
             "A8s",
+            "AA",
             "AJo",
             "AJs",
-            "AQs"
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "K2s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KJs",
+            "QQ"
           ],
-          "combos": 92,
+          "combos": 156,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.618
+              "frequency": 0.711
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.276
+              "frequency": 0.222
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.106
+              "frequency": 0.067
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "77",
+            "86s",
+            "A5s",
+            "J7s",
+            "K4s",
+            "K5s",
+            "KK",
+            "Q8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 94,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.258
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.636
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.107
             }
           ]
         }
@@ -1420,9 +3115,9 @@ export const turnPack: TurnStrategyPack = {
           "7d"
         ],
         "turnCards": [
-          "Ad",
-          "Ah",
-          "As"
+          "2d",
+          "2h",
+          "2s"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -1441,17 +3136,22 @@ export const turnPack: TurnStrategyPack = {
       ],
       "buckets": [
         {
-          "action": "CHECK",
+          "action": "BET 28.000000",
           "handClasses": [
-            "33",
-            "44",
+            "22",
+            "54s",
             "55",
+            "64s",
             "66",
+            "75s",
+            "76s",
+            "77",
             "86s",
-            "88",
+            "87s",
+            "97s",
             "98o",
             "98s",
-            "A2s",
+            "99",
             "A3s",
             "A4s",
             "A5o",
@@ -1459,24 +3159,35 @@ export const turnPack: TurnStrategyPack = {
             "A6s",
             "A7o",
             "A7s",
-            "A8o",
             "A8s",
             "A9o",
             "A9s",
-            "AA",
+            "AJo",
+            "AJs",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
             "J8s",
+            "J9s",
             "JJ",
+            "JTo",
+            "JTs",
             "K5s",
+            "K6s",
+            "K7s",
             "K8s",
             "K9o",
             "K9s",
             "KJo",
             "KK",
-            "KQo",
-            "KQs",
             "KTo",
             "KTs",
             "Q5s",
+            "Q6s",
+            "Q7s",
             "Q8s",
             "Q9s",
             "QJo",
@@ -1484,71 +3195,75 @@ export const turnPack: TurnStrategyPack = {
             "QQ",
             "QTo",
             "QTs",
-            "T8s"
+            "T7s",
+            "T8s",
+            "TT"
           ],
-          "combos": 274,
+          "combos": 362,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.806
+              "frequency": 0.098
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.194
+              "frequency": 0.79
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0
+              "frequency": 0.113
             }
           ]
         },
         {
-          "action": "BET 28.000000",
+          "action": "BET 108.000000",
           "handClasses": [
-            "22",
-            "54s",
-            "64s",
-            "75s",
-            "76s",
-            "77",
-            "87s",
+            "33",
+            "44",
             "96s",
-            "97s",
-            "99",
-            "AJo",
-            "AJs",
+            "A2s",
+            "A8o",
             "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J9s",
-            "JTo",
-            "JTs",
-            "K6s",
-            "K7s",
-            "Q6s",
-            "Q7s",
-            "T7s",
             "T9o",
-            "T9s",
-            "TT"
+            "T9s"
           ],
-          "combos": 176,
+          "combos": 60,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.162
+              "frequency": 0.059
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.838
+              "frequency": 0.273
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0
+              "frequency": 0.668
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "88",
+            "AA",
+            "KQo",
+            "KQs"
+          ],
+          "combos": 28,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.826
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.173
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.001
             }
           ]
         }
@@ -1737,6 +3452,1629 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__932r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "932r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "9s",
+          "3h",
+          "2d"
+        ],
+        "turnCards": [
+          "5d",
+          "5h",
+          "5s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.012803
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "54s",
+            "65s",
+            "77",
+            "87s",
+            "88",
+            "99",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JTs",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q8s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 288,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.924
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.063
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.013
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "64s",
+            "96s"
+          ],
+          "combos": 8,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.336
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.483
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.181
+            }
+          ]
+        }
+      ],
+      "classCount": 48
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "2h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 228,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.999
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.309701
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K9o",
+            "KJo",
+            "KJs",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 350,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.769
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.181
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.051
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "88",
+            "A8o",
+            "AQo",
+            "AQs",
+            "JJ",
+            "JTo",
+            "K2s",
+            "K7s",
+            "K8s",
+            "K9s",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q8s"
+          ],
+          "combos": 96,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.238
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.709
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.053
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "86s",
+            "87s",
+            "A8s"
+          ],
+          "combos": 12,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.249
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.185
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.566
+            }
+          ]
+        }
+      ],
+      "classCount": 74
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__K98tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "K98tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "9s",
+          "8d"
+        ],
+        "turnCards": [
+          "4s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.311353
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "33",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "K8s",
+            "KK",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 256,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.735
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.169
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.095
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "96s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AKo",
+            "AKs",
+            "JTo",
+            "K2s",
+            "K3s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs"
+          ],
+          "combos": 144,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.127
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.172
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.702
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "43s",
+            "65s",
+            "75s",
+            "76s",
+            "JJ",
+            "JTs",
+            "K4s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 78,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.264
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.581
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.156
+            }
+          ]
+        }
+      ],
+      "classCount": 79
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q54tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q54tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "5s",
+          "4h"
+        ],
+        "turnCards": [
+          "5h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.533745
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98s",
+            "99",
+            "A4s",
+            "A7o",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K9o",
+            "KK",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9s",
+            "TT"
+          ],
+          "combos": 324,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.273
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.706
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.021
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "98o",
+            "A2s",
+            "A3s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "JTo",
+            "K6s",
+            "K7s",
+            "K8s",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KTo",
+            "KTs",
+            "T9o"
+          ],
+          "combos": 154,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.69
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.3
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.01
+            }
+          ]
+        }
+      ],
+      "classCount": 79
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "2s"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 354,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.003
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.997
+            }
+          ]
+        }
+      ],
+      "classCount": 51
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__QJ2tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "QJ2tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "Jh",
+          "2h"
+        ],
+        "turnCards": [
+          "6h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.534731
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KTo",
+            "KTs",
+            "QJs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 312,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.786
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.084
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.129
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "AQo",
+            "AQs",
+            "JTs",
+            "K9o",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QTo",
+            "QTs"
+          ],
+          "combos": 100,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.205
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.223
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.572
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "K9s",
+            "KQo",
+            "QJo",
+            "QQ",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 66,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.224
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.623
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.154
+            }
+          ]
+        }
+      ],
+      "classCount": 79
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T76tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T76tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "7s",
+          "6d"
+        ],
+        "turnCards": [
+          "5s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.199946
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "33",
+            "43s",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "99",
+            "A8o",
+            "A9o",
+            "ATo",
+            "ATs",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K8s",
+            "K9o",
+            "KK",
+            "KTo",
+            "KTs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 230,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.18
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.092
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.727
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "53s",
+            "A2s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A8s",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "J7s",
+            "K2s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "QJo",
+            "QJs"
+          ],
+          "combos": 176,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.787
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.128
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.085
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "98o",
+            "98s",
+            "A3s",
+            "A4s",
+            "J8s",
+            "J9s",
+            "K3s",
+            "K4s",
+            "K9s",
+            "Q7s",
+            "Q8s",
+            "Q9s"
+          ],
+          "combos": 56,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.292
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.633
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.076
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "2h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "53s",
+            "66",
+            "75s",
+            "77",
+            "96s",
+            "98o",
+            "98s",
+            "A2s",
+            "A5o",
+            "A5s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s",
+            "TT"
+          ],
+          "combos": 270,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.204
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.649
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.148
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "54s",
+            "64s",
+            "88",
+            "A3s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "K2s",
+            "K3s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "Q5s",
+            "Q6s",
+            "Q7s"
+          ],
+          "combos": 108,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.655
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.31
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.035
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "43s",
+            "55",
+            "65s",
+            "86s",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A8o",
+            "A8s",
+            "J7s",
+            "J8s",
+            "K4s",
+            "K8s",
+            "Q8s",
+            "Q9s",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 96,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.117
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.183
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.7
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T93tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T93tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "9s",
+          "3h"
+        ],
+        "turnCards": [
+          "4h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.513936
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "54s",
+            "55",
+            "64s",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "A4s",
+            "A5o",
+            "A9o",
+            "A9s",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K4s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s"
+          ],
+          "combos": 226,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.148
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.059
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.793
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "53s",
+            "65s",
+            "66",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "99",
+            "A2s",
+            "A3s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "K2s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KK",
+            "Q5s",
+            "Q6s"
+          ],
+          "combos": 172,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.726
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.16
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.114
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "75s",
+            "86s",
+            "A5s",
+            "J7s",
+            "K3s",
+            "Q8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 68,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.342
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.571
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.087
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -2156,114 +5494,158 @@ export const turnPack: TurnStrategyPack = {
           "7d"
         ],
         "turnCards": [
-          "4c"
+          "3c"
         ],
         "priorLine": [
-          "CHECK",
-          "BET 25.000000",
+          "BET 17.000000",
           "CALL"
         ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.082417
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
       },
       "actions": [
         "CHECK",
-        "BET 100.000000"
+        "BET 28.000000",
+        "BET 108.000000"
       ],
       "buckets": [
         {
-          "action": "CHECK",
+          "action": "BET 28.000000",
           "handClasses": [
+            "22",
             "33",
-            "44",
-            "65s",
+            "54s",
+            "55",
+            "64s",
+            "66",
             "75s",
             "76s",
             "77",
             "86s",
             "87s",
-            "88",
-            "96s",
             "97s",
             "98o",
             "98s",
-            "A3s",
+            "99",
+            "A2s",
+            "A5o",
             "A5s",
-            "A6s",
             "A7o",
             "A7s",
+            "A8o",
+            "A8s",
             "A9o",
             "A9s",
-            "AA",
             "AJo",
             "AJs",
+            "AKo",
+            "AKs",
             "AQo",
             "AQs",
             "ATo",
             "ATs",
             "J7s",
             "J8s",
-            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K5s",
+            "K6s",
             "K7s",
             "K8s",
             "K9o",
             "K9s",
             "KJo",
-            "KJs",
             "KK",
-            "KQo",
-            "KQs",
             "KTo",
             "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
             "Q9s",
+            "QJo",
             "QJs",
+            "QQ",
+            "QTo",
             "QTs",
             "T7s",
-            "T8s"
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
           ],
-          "combos": 276,
+          "combos": 396,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.979
+              "frequency": 0.12
             },
             {
-              "action": "BET 100.000000",
-              "frequency": 0.021
+              "action": "BET 28.000000",
+              "frequency": 0.83
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.05
             }
           ]
         },
         {
-          "action": "BET 100.000000",
+          "action": "CHECK",
           "handClasses": [
-            "54s",
-            "55",
-            "64s",
-            "66",
+            "88",
             "A4s",
-            "JTo",
-            "JTs",
-            "Q8s",
-            "T9o",
-            "T9s"
+            "A6s",
+            "AA",
+            "KQo",
+            "KQs"
           ],
-          "combos": 60,
+          "combos": 36,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.098
+              "frequency": 0.917
             },
             {
-              "action": "BET 100.000000",
-              "frequency": 0.902
+              "action": "BET 28.000000",
+              "frequency": 0.083
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "44",
+            "96s",
+            "A3s",
+            "J9s"
+          ],
+          "combos": 18,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.105
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.208
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.688
             }
           ]
         }
       ],
-      "classCount": 56
+      "classCount": 72
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
@@ -2448,6 +5830,1456 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "3c",
+          "3d",
+          "3s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 228,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.999
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "2c",
+          "2d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 348,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.96
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.04
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "J7s"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.382
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.618
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__K98tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "K98tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ks",
+          "9s",
+          "8d"
+        ],
+        "turnCards": [
+          "5s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.311353
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s"
+          ],
+          "combos": 280,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.753
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.104
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.142
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "A9s",
+            "AA",
+            "AKo",
+            "AKs",
+            "JTo",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 176,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.175
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.093
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.732
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "J7s",
+            "JTs",
+            "KK",
+            "T7s"
+          ],
+          "combos": 18,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.313
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.666
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.02
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q54tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q54tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "5s",
+          "4h"
+        ],
+        "turnCards": [
+          "Ah"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.533745
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "76s",
+            "86s",
+            "87s",
+            "A4s",
+            "A5o",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "KK",
+            "KTo",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTs",
+            "TT"
+          ],
+          "combos": 240,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.268
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.658
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.075
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A5s",
+            "A6s",
+            "AA",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "QQ",
+            "QTo",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 238,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.725
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.26
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.015
+            }
+          ]
+        }
+      ],
+      "classCount": 79
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "3c",
+          "3d",
+          "3h"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 360,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.002
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.998
+            }
+          ]
+        }
+      ],
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__QJ2tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "QJ2tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "Jh",
+          "2h"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.534731
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KTo",
+            "KTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 324,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.777
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.1
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.123
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "AQo",
+            "AQs",
+            "K9o",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJs",
+            "QTo",
+            "QTs"
+          ],
+          "combos": 112,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.211
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.23
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.56
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "K9s",
+            "QJo",
+            "QQ",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 42,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.236
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.604
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.16
+            }
+          ]
+        }
+      ],
+      "classCount": 79
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T76tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T76tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "7s",
+          "6d"
+        ],
+        "turnCards": [
+          "Qs"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.199946
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "33",
+            "44",
+            "55",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "96s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7s",
+            "AJo",
+            "AJs",
+            "AKs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "QQ",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 204,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.695
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.229
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.077
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "97s",
+            "A8o",
+            "AA",
+            "AKo",
+            "AQo",
+            "AQs",
+            "K9o",
+            "KK",
+            "KQo",
+            "KQs",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 156,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.151
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.193
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.657
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "43s",
+            "53s",
+            "64s",
+            "98o",
+            "98s",
+            "A8s",
+            "A9o",
+            "A9s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K8s",
+            "K9s",
+            "KJo",
+            "KJs",
+            "QJo",
+            "T8s"
+          ],
+          "combos": 102,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.266
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.617
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.118
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "3c",
+          "3d",
+          "3s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "55",
+            "86s",
+            "87s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A8o",
+            "A8s",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "K4s",
+            "K8s",
+            "KJo",
+            "KJs",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 202,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.125
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.195
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.681
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "66",
+            "75s",
+            "77",
+            "96s",
+            "A3s",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "JTs",
+            "KK",
+            "KQo",
+            "QQ",
+            "QTs",
+            "T8s",
+            "TT"
+          ],
+          "combos": 136,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.301
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.601
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.098
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "88",
+            "A2s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "K2s",
+            "K3s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s"
+          ],
+          "combos": 136,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.736
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.206
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.058
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T93tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T93tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "9s",
+          "3h"
+        ],
+        "turnCards": [
+          "4s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.513936
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "55",
+            "66",
+            "98o",
+            "98s",
+            "A9o",
+            "A9s",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K9o",
+            "K9s",
+            "KK",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 240,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.16
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.16
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.68
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "53s",
+            "54s",
+            "64s",
+            "96s",
+            "97s",
+            "99",
+            "A3s",
+            "A4s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "TT"
+          ],
+          "combos": 144,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.704
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.169
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.127
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "A2s",
+            "A5o",
+            "A5s",
+            "AA",
+            "J7s",
+            "KJs",
+            "KQo",
+            "Q8s"
+          ],
+          "combos": 82,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.235
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.633
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.132
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -2870,6 +7702,186 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "3d",
+          "3h",
+          "3s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9s",
+            "TT"
+          ],
+          "combos": 372,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.126
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.809
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.065
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "87s",
+            "88",
+            "96s",
+            "A4s",
+            "A6s",
+            "AA",
+            "K8s",
+            "KQo",
+            "KQs",
+            "KTs"
+          ],
+          "combos": 52,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.828
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.147
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.025
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "44",
+            "A3s",
+            "Q8s",
+            "T9o"
+          ],
+          "combos": 26,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.058
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.276
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.665
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -2894,9 +7906,7 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "4c",
-          "4d",
-          "4s"
+          "3h"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -2919,18 +7929,33 @@ export const turnPack: TurnStrategyPack = {
           "handClasses": [
             "22",
             "33",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
             "75s",
             "76s",
             "77",
             "86s",
             "87s",
             "88",
+            "96s",
             "97s",
             "98o",
             "98s",
             "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
             "A7o",
             "A7s",
+            "A8o",
+            "A8s",
             "A9o",
             "A9s",
             "AJo",
@@ -2947,10 +7972,22 @@ export const turnPack: TurnStrategyPack = {
             "JJ",
             "JTo",
             "JTs",
-            "K2s",
+            "K3s",
+            "K4s",
             "K5s",
-            "K6s",
+            "K7s",
             "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
             "Q8s",
             "Q9s",
             "QJo",
@@ -2958,42 +7995,359 @@ export const turnPack: TurnStrategyPack = {
             "QQ",
             "QTo",
             "QTs",
+            "T7s",
             "T8s",
             "T9o",
             "T9s",
             "TT"
           ],
-          "combos": 284,
+          "combos": 450,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.219
+              "frequency": 0.164
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.707
+              "frequency": 0.818
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.074
+              "frequency": 0.019
             }
           ]
         },
         {
           "action": "CHECK",
           "handClasses": [
-            "44",
-            "55",
+            "AA",
+            "K2s",
+            "K6s",
+            "KK"
+          ],
+          "combos": 20,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.719
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.28
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.002
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "3h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "54s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A3s",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 220,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.999
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 39
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "2h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
             "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
             "96s",
-            "A2s",
-            "A5o",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A3s",
+            "A4s",
             "A5s",
             "A6s",
             "A8o",
             "A8s",
+            "A9o",
+            "A9s",
             "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
             "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 348,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.998
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.002
+            }
+          ]
+        }
+      ],
+      "classCount": 58
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q54tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q54tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "5s",
+          "4h"
+        ],
+        "turnCards": [
+          "As"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.533745
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "55",
+            "65s",
+            "66",
+            "75s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AQo",
+            "AQs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTs",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
             "K9o",
             "K9s",
             "KJo",
@@ -3003,56 +8357,948 @@ export const turnPack: TurnStrategyPack = {
             "KQs",
             "KTo",
             "KTs",
-            "Q5s",
             "Q6s",
             "Q7s",
-            "T7s"
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
           ],
-          "combos": 156,
+          "combos": 328,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.814
+              "frequency": 0.77
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.181
+              "frequency": 0.197
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.005
+              "frequency": 0.033
             }
           ]
         },
         {
           "action": "BET 108.000000",
           "handClasses": [
+            "22",
+            "33",
             "54s",
-            "64s",
-            "66",
-            "A3s",
-            "A4s",
-            "K3s",
-            "K4s"
+            "A8s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "ATo",
+            "ATs",
+            "JTo",
+            "Q5s"
           ],
-          "combos": 30,
+          "combos": 100,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.037
+              "frequency": 0.085
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.072
+              "frequency": 0.27
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.89
+              "frequency": 0.645
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "44",
+            "64s",
+            "76s",
+            "86s",
+            "87s",
+            "A4s",
+            "A8o",
+            "K2s",
+            "K3s"
+          ],
+          "combos": 46,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.321
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.594
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.086
             }
           ]
         }
       ],
-      "classCount": 77
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "3s"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 354,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.999
+            }
+          ]
+        }
+      ],
+      "classCount": 51
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__QJ2tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "QJ2tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "Jh",
+          "2h"
+        ],
+        "turnCards": [
+          "8h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.534731
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KJo",
+            "KJs",
+            "T8s",
+            "T9s",
+            "TT"
+          ],
+          "combos": 300,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.772
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.13
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.098
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "99",
+            "A9o",
+            "AQo",
+            "AQs",
+            "KK",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs"
+          ],
+          "combos": 108,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.185
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.196
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.619
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "96s",
+            "AA",
+            "K9o",
+            "K9s",
+            "KTo",
+            "KTs",
+            "QQ",
+            "T7s",
+            "T9o"
+          ],
+          "combos": 70,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.185
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.652
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.163
+            }
+          ]
+        }
+      ],
+      "classCount": 79
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T76tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T76tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "7s",
+          "6d"
+        ],
+        "turnCards": [
+          "Ks"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.199946
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "43s",
+            "53s",
+            "64s",
+            "65s",
+            "88",
+            "98o",
+            "98s",
+            "99",
+            "A8s",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "K8s",
+            "KJo",
+            "KK",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 202,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.281
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.652
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.067
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "76s",
+            "77",
+            "97s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AKo",
+            "AKs",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 142,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.126
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.197
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.677
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "44",
+            "55",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "96s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7s",
+            "ATo",
+            "ATs",
+            "J7s",
+            "JTs",
+            "K4s",
+            "K5s",
+            "Q5s",
+            "Q6s"
+          ],
+          "combos": 110,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.683
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.203
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.114
+            }
+          ]
+        }
+      ],
+      "classCount": 75
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "3h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "66",
+            "75s",
+            "77",
+            "96s",
+            "98o",
+            "98s",
+            "A3s",
+            "A5o",
+            "A5s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s",
+            "TT"
+          ],
+          "combos": 270,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.209
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.631
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.16
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "53s",
+            "54s",
+            "64s",
+            "88",
+            "A2s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "K2s",
+            "K3s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "Q5s",
+            "Q6s",
+            "Q7s"
+          ],
+          "combos": 112,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.7
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.277
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.023
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "55",
+            "65s",
+            "86s",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A8o",
+            "A8s",
+            "J7s",
+            "J8s",
+            "K4s",
+            "K8s",
+            "Q8s",
+            "Q9s",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 92,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.134
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.157
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.709
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T93tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T93tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "9s",
+          "3h"
+        ],
+        "turnCards": [
+          "5h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.513936
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "87s",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "A2s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A9o",
+            "A9s",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s"
+          ],
+          "combos": 220,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.126
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.088
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.785
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "99",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "K2s",
+            "K4s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KK",
+            "Q6s"
+          ],
+          "combos": 168,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.719
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.193
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.088
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "33",
+            "44",
+            "53s",
+            "55",
+            "66",
+            "86s",
+            "A3s",
+            "J7s",
+            "K3s",
+            "K5s",
+            "Q5s",
+            "Q8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 78,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.233
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.674
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.093
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -3448,6 +9694,184 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "4c"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "44",
+            "54s",
+            "64s",
+            "76s",
+            "87s",
+            "88",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T8s"
+          ],
+          "combos": 234,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.762
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.223
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.014
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "66",
+            "75s",
+            "77",
+            "86s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A8o",
+            "A8s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "J7s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K5s",
+            "K6s",
+            "K7s",
+            "KK",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "QQ",
+            "T7s",
+            "T9s",
+            "TT"
+          ],
+          "combos": 186,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.206
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.707
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.087
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "55",
+            "96s",
+            "J8s",
+            "Q8s",
+            "T9o"
+          ],
+          "combos": 30,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.272
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.239
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.488
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -3472,7 +9896,9 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "4h"
+          "4c",
+          "4d",
+          "4s"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -3495,19 +9921,16 @@ export const turnPack: TurnStrategyPack = {
           "handClasses": [
             "22",
             "33",
-            "55",
-            "66",
             "75s",
             "76s",
             "77",
             "86s",
             "87s",
             "88",
+            "97s",
             "98o",
             "98s",
             "99",
-            "A3s",
-            "A4s",
             "A7o",
             "A7s",
             "A9o",
@@ -3527,11 +9950,9 @@ export const turnPack: TurnStrategyPack = {
             "JTo",
             "JTs",
             "K2s",
-            "K3s",
             "K5s",
             "K6s",
             "K8s",
-            "Q5s",
             "Q8s",
             "Q9s",
             "QJo",
@@ -3541,21 +9962,22 @@ export const turnPack: TurnStrategyPack = {
             "QTs",
             "T8s",
             "T9o",
+            "T9s",
             "TT"
           ],
-          "combos": 304,
+          "combos": 284,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.234
+              "frequency": 0.219
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.724
+              "frequency": 0.707
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.042
+              "frequency": 0.074
             }
           ]
         },
@@ -3563,9 +9985,9 @@ export const turnPack: TurnStrategyPack = {
           "action": "CHECK",
           "handClasses": [
             "44",
+            "55",
             "65s",
             "96s",
-            "97s",
             "A2s",
             "A5o",
             "A5s",
@@ -3583,16 +10005,16 @@ export const turnPack: TurnStrategyPack = {
             "KQs",
             "KTo",
             "KTs",
+            "Q5s",
             "Q6s",
             "Q7s",
-            "T7s",
-            "T9s"
+            "T7s"
           ],
-          "combos": 154,
+          "combos": 156,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.819
+              "frequency": 0.814
             },
             {
               "action": "BET 28.000000",
@@ -3600,7 +10022,7 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0
+              "frequency": 0.005
             }
           ]
         },
@@ -3609,26 +10031,884 @@ export const turnPack: TurnStrategyPack = {
           "handClasses": [
             "54s",
             "64s",
+            "66",
+            "A3s",
+            "A4s",
+            "K3s",
             "K4s"
           ],
-          "combos": 12,
+          "combos": 30,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.316
+              "frequency": 0.037
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.204
+              "frequency": 0.072
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.48
+              "frequency": 0.89
             }
           ]
         }
       ],
       "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "4h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "53s",
+            "54s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 220,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.999
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 39
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "2s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 344,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.937
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.063
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "J7s",
+            "J8s"
+          ],
+          "combos": 8,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.386
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.614
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "4c",
+          "4d",
+          "4h"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 360,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.002
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.998
+            }
+          ]
+        }
+      ],
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__QJ2tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "QJ2tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "Jh",
+          "2h"
+        ],
+        "turnCards": [
+          "9h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.02505
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "QQ",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 356,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.992
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.008
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 60
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "4d",
+          "4s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "77",
+            "88",
+            "96s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K9o",
+            "KK",
+            "KQo",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9s",
+            "TT"
+          ],
+          "combos": 358,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.183
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.697
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.12
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "86s",
+            "87s",
+            "97s",
+            "A8s",
+            "J9s",
+            "K8s",
+            "KJo",
+            "KJs",
+            "Q9s",
+            "T8s",
+            "T9o"
+          ],
+          "combos": 60,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.126
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.327
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.547
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "53s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9s",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s"
+          ],
+          "combos": 56,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.615
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.375
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.01
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T93tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T93tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "9s",
+          "3h"
+        ],
+        "turnCards": [
+          "5s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.513936
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "53s",
+            "66",
+            "98o",
+            "98s",
+            "A9o",
+            "A9s",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K9o",
+            "K9s",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 230,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.13
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.189
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.681
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "54s",
+            "55",
+            "65s",
+            "75s",
+            "96s",
+            "97s",
+            "99",
+            "A3s",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "Q6s",
+            "Q7s",
+            "TT"
+          ],
+          "combos": 176,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.676
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.165
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.159
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "64s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "A2s",
+            "A4s",
+            "A5o",
+            "J7s",
+            "KJs",
+            "Q8s"
+          ],
+          "combos": 60,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.236
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.721
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.043
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -4051,6 +11331,186 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "4d",
+          "4h",
+          "4s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "44",
+            "54s",
+            "64s",
+            "87s",
+            "88",
+            "96s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AKo",
+            "AQo",
+            "ATo",
+            "ATs",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T9s"
+          ],
+          "combos": 238,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.701
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.268
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.031
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "97s",
+            "98s",
+            "A7o",
+            "A8s",
+            "AJs",
+            "AKs",
+            "AQs",
+            "J7s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K5s",
+            "K6s",
+            "K7s",
+            "KK",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "QQ",
+            "T7s",
+            "T8s",
+            "TT"
+          ],
+          "combos": 152,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.226
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.708
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.067
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "55",
+            "98o",
+            "99",
+            "A8o",
+            "J8s",
+            "K8s",
+            "Q8s",
+            "T9o"
+          ],
+          "combos": 60,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.226
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.287
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.487
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -4075,9 +11535,7 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "5c",
-          "5d",
-          "5s"
+          "4h"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -4100,26 +11558,32 @@ export const turnPack: TurnStrategyPack = {
           "handClasses": [
             "22",
             "33",
-            "44",
+            "55",
             "66",
+            "75s",
+            "76s",
             "77",
             "86s",
             "87s",
             "88",
-            "96s",
-            "97s",
             "98o",
             "98s",
             "99",
             "A3s",
+            "A4s",
             "A7o",
             "A7s",
             "A9o",
             "A9s",
+            "AJo",
             "AJs",
+            "AKo",
+            "AKs",
             "AQo",
+            "AQs",
             "ATo",
             "ATs",
+            "J7s",
             "J8s",
             "J9s",
             "JJ",
@@ -4127,10 +11591,10 @@ export const turnPack: TurnStrategyPack = {
             "JTs",
             "K2s",
             "K3s",
-            "K4s",
-            "K7s",
+            "K5s",
+            "K6s",
             "K8s",
-            "Q7s",
+            "Q5s",
             "Q8s",
             "Q9s",
             "QJo",
@@ -4139,40 +11603,40 @@ export const turnPack: TurnStrategyPack = {
             "QTo",
             "QTs",
             "T8s",
+            "T9o",
             "TT"
           ],
-          "combos": 252,
+          "combos": 304,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.197
+              "frequency": 0.234
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.706
+              "frequency": 0.724
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.097
+              "frequency": 0.042
             }
           ]
         },
         {
           "action": "CHECK",
           "handClasses": [
-            "55",
-            "64s",
-            "76s",
+            "44",
+            "65s",
+            "96s",
+            "97s",
             "A2s",
-            "A4s",
+            "A5o",
+            "A5s",
             "A6s",
             "A8o",
             "A8s",
             "AA",
-            "AKo",
-            "AKs",
-            "J7s",
-            "K6s",
+            "K7s",
             "K9o",
             "K9s",
             "KJo",
@@ -4183,23 +11647,23 @@ export const turnPack: TurnStrategyPack = {
             "KTo",
             "KTs",
             "Q6s",
+            "Q7s",
             "T7s",
-            "T9o",
             "T9s"
           ],
-          "combos": 166,
+          "combos": 154,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.81
+              "frequency": 0.819
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.175
+              "frequency": 0.181
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.015
+              "frequency": 0
             }
           ]
         },
@@ -4207,33 +11671,900 @@ export const turnPack: TurnStrategyPack = {
           "action": "BET 108.000000",
           "handClasses": [
             "54s",
-            "65s",
-            "75s",
-            "A5o",
-            "A5s",
-            "AJo",
-            "AQs",
-            "K5s",
-            "Q5s"
+            "64s",
+            "K4s"
           ],
-          "combos": 52,
+          "combos": 12,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.031
+              "frequency": 0.316
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.195
+              "frequency": 0.204
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.774
+              "frequency": 0.48
             }
           ]
         }
       ],
       "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "5h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "54s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 224,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.995
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.005
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 40
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "3c",
+          "3d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 348,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.963
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.037
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "J7s"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.381
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.619
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "4s"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 354,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.005
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.995
+            }
+          ]
+        }
+      ],
+      "classCount": 51
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__QJ2tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "QJ2tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "Jh",
+          "2h"
+        ],
+        "turnCards": [
+          "Th"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.02505
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JTo",
+            "JTs",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "QQ",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 328,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.851
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.114
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.035
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "98o",
+            "K2s"
+          ],
+          "combos": 22,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.334
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.041
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.625
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "JJ",
+            "K6s",
+            "K7s",
+            "K8s"
+          ],
+          "combos": 18,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.193
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.787
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.021
+            }
+          ]
+        }
+      ],
+      "classCount": 61
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "4h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "77",
+            "86s",
+            "87s",
+            "96s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 410,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.17
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.767
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.064
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "53s",
+            "88",
+            "97s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "AA",
+            "K5s",
+            "K6s",
+            "K7s",
+            "Q5s",
+            "Q6s",
+            "Q7s"
+          ],
+          "combos": 64,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.667
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.305
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.029
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T93tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T93tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "9s",
+          "3h"
+        ],
+        "turnCards": [
+          "6h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.513936
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "76s",
+            "77",
+            "86s",
+            "88",
+            "96s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q8s",
+            "QJs",
+            "QQ",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 288,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.787
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.135
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.077
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "97s",
+            "98o",
+            "98s",
+            "A8o",
+            "A9o",
+            "A9s",
+            "ATo",
+            "ATs",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s"
+          ],
+          "combos": 166,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.161
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.038
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.801
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "54s",
+            "75s",
+            "87s"
+          ],
+          "combos": 12,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.306
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.682
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.012
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -4605,6 +12936,184 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "5c"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "44",
+            "55",
+            "64s",
+            "66",
+            "76s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "A2s",
+            "A3s",
+            "A6s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J9s",
+            "K5s",
+            "K6s",
+            "KJo",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs"
+          ],
+          "combos": 218,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.808
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.155
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.037
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "75s",
+            "77",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
+            "AKo",
+            "AKs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KK",
+            "Q7s",
+            "Q9s",
+            "QQ",
+            "T7s"
+          ],
+          "combos": 170,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.204
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.749
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.047
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "54s",
+            "A8o",
+            "A8s",
+            "J8s",
+            "K8s",
+            "Q6s",
+            "Q8s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 62,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.188
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.093
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.719
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -4629,7 +13138,9 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "5h"
+          "5c",
+          "5d",
+          "5s"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -4653,12 +13164,12 @@ export const turnPack: TurnStrategyPack = {
             "22",
             "33",
             "44",
-            "65s",
             "66",
             "77",
             "86s",
             "87s",
             "88",
+            "96s",
             "97s",
             "98o",
             "98s",
@@ -4668,13 +13179,10 @@ export const turnPack: TurnStrategyPack = {
             "A7s",
             "A9o",
             "A9s",
-            "AJo",
             "AJs",
             "AQo",
-            "AQs",
             "ATo",
             "ATs",
-            "J7s",
             "J8s",
             "J9s",
             "JJ",
@@ -4683,7 +13191,6 @@ export const turnPack: TurnStrategyPack = {
             "K2s",
             "K3s",
             "K4s",
-            "K6s",
             "K7s",
             "K8s",
             "Q7s",
@@ -4697,19 +13204,19 @@ export const turnPack: TurnStrategyPack = {
             "T8s",
             "TT"
           ],
-          "combos": 276,
+          "combos": 252,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.212
+              "frequency": 0.197
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.722
+              "frequency": 0.706
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.066
+              "frequency": 0.097
             }
           ]
         },
@@ -4727,6 +13234,8 @@ export const turnPack: TurnStrategyPack = {
             "AA",
             "AKo",
             "AKs",
+            "J7s",
+            "K6s",
             "K9o",
             "K9s",
             "KJo",
@@ -4741,19 +13250,19 @@ export const turnPack: TurnStrategyPack = {
             "T9o",
             "T9s"
           ],
-          "combos": 158,
+          "combos": 166,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.849
+              "frequency": 0.81
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.151
+              "frequency": 0.175
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0
+              "frequency": 0.015
             }
           ]
         },
@@ -4761,31 +13270,762 @@ export const turnPack: TurnStrategyPack = {
           "action": "BET 108.000000",
           "handClasses": [
             "54s",
+            "65s",
             "75s",
-            "96s",
             "A5o",
             "A5s",
+            "AJo",
+            "AQs",
             "K5s",
             "Q5s"
           ],
-          "combos": 36,
+          "combos": 52,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.079
+              "frequency": 0.031
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.275
+              "frequency": 0.195
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.645
+              "frequency": 0.774
             }
           ]
         }
       ],
       "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "6c",
+          "6d",
+          "6s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 228,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.999
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "3h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 340,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.998
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.002
+            }
+          ]
+        }
+      ],
+      "classCount": 56
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "5c",
+          "5d",
+          "5h"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 348,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.048
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.952
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "AJo"
+          ],
+          "combos": 12,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.572
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.428
+            }
+          ]
+        }
+      ],
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "5c",
+          "5d",
+          "5s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "64s",
+            "65s",
+            "75s",
+            "88",
+            "A2s",
+            "A3s",
+            "A5s",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "QQ"
+          ],
+          "combos": 226,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.812
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.129
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.059
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "86s",
+            "87s",
+            "97s",
+            "98o",
+            "99",
+            "A6s",
+            "A7o",
+            "A8o",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 180,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.197
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.153
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.649
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "54s",
+            "55",
+            "66",
+            "77",
+            "96s",
+            "98s",
+            "A4s",
+            "A5o",
+            "A7s",
+            "Q6s",
+            "Q7s",
+            "T8s",
+            "TT"
+          ],
+          "combos": 68,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.352
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.567
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.081
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T93tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T93tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "9s",
+          "3h"
+        ],
+        "turnCards": [
+          "6s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.513936
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "TT"
+          ],
+          "combos": 290,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.778
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.119
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.103
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "A9o",
+            "A9s",
+            "ATo",
+            "ATs",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K9o",
+            "K9s",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 164,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.147
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.085
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.768
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "54s",
+            "75s",
+            "Q8s"
+          ],
+          "combos": 12,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.201
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.783
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.016
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -5161,6 +14401,186 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "5d",
+          "5h",
+          "5s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "44",
+            "55",
+            "64s",
+            "66",
+            "76s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "A2s",
+            "A3s",
+            "A6s",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AKo",
+            "AQo",
+            "ATo",
+            "ATs",
+            "K5s",
+            "K6s",
+            "KJo",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T9s"
+          ],
+          "combos": 230,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.752
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.192
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.056
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "75s",
+            "77",
+            "97s",
+            "98s",
+            "99",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "AJs",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KK",
+            "Q7s",
+            "Q9s",
+            "QQ",
+            "T7s"
+          ],
+          "combos": 150,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.209
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.757
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.035
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "54s",
+            "98o",
+            "A8o",
+            "A8s",
+            "J8s",
+            "J9s",
+            "K8s",
+            "Q8s",
+            "T8s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 70,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.183
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.156
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.66
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -5185,9 +14605,7 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "6c",
-          "6d",
-          "6s"
+          "5h"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -5206,33 +14624,85 @@ export const turnPack: TurnStrategyPack = {
       ],
       "buckets": [
         {
-          "action": "CHECK",
+          "action": "BET 28.000000",
           "handClasses": [
-            "54s",
+            "22",
+            "33",
+            "44",
+            "65s",
             "66",
-            "75s",
+            "77",
             "86s",
             "87s",
+            "88",
             "97s",
-            "A2s",
-            "A4s",
-            "A5s",
+            "98o",
+            "98s",
+            "99",
+            "A3s",
             "A7o",
             "A7s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s",
+            "TT"
+          ],
+          "combos": 276,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.212
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.722
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.066
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "55",
+            "64s",
+            "76s",
+            "A2s",
+            "A4s",
+            "A6s",
             "A8o",
             "A8s",
-            "A9o",
             "AA",
             "AKo",
             "AKs",
-            "J7s",
-            "J9s",
-            "JTo",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K6s",
-            "K8s",
             "K9o",
             "K9s",
             "KJo",
@@ -5242,22 +14712,20 @@ export const turnPack: TurnStrategyPack = {
             "KQs",
             "KTo",
             "KTs",
-            "Q5s",
             "Q6s",
-            "Q7s",
-            "Q9s",
-            "QTo",
-            "QTs"
+            "T7s",
+            "T9o",
+            "T9s"
           ],
-          "combos": 246,
+          "combos": 158,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.78
+              "frequency": 0.849
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.22
+              "frequency": 0.151
             },
             {
               "action": "BET 108.000000",
@@ -5266,64 +14734,755 @@ export const turnPack: TurnStrategyPack = {
           ]
         },
         {
-          "action": "BET 28.000000",
+          "action": "BET 108.000000",
+          "handClasses": [
+            "54s",
+            "75s",
+            "96s",
+            "A5o",
+            "A5s",
+            "K5s",
+            "Q5s"
+          ],
+          "combos": 36,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.079
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.275
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.645
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "6h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
           "handClasses": [
             "22",
-            "33",
-            "44",
-            "55",
+            "43s",
+            "53s",
+            "54s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 228,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "3s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
             "64s",
             "65s",
+            "75s",
             "76s",
             "77",
             "88",
             "96s",
+            "97s",
             "98o",
             "98s",
             "99",
+            "A2s",
             "A3s",
-            "A5o",
+            "A4s",
+            "A5s",
             "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
             "A9s",
+            "AA",
             "AJo",
             "AJs",
+            "AKo",
+            "AKs",
             "AQo",
             "AQs",
             "ATo",
             "ATs",
-            "J8s",
+            "J9s",
             "JJ",
-            "K2s",
-            "K3s",
             "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
             "Q8s",
+            "Q9s",
             "QJo",
             "QJs",
-            "QQ",
+            "QTo",
+            "QTs",
             "T7s",
             "T8s",
             "T9o",
             "T9s",
             "TT"
           ],
-          "combos": 224,
+          "combos": 344,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.274
+              "frequency": 0.931
             },
             {
-              "action": "BET 28.000000",
-              "frequency": 0.723
+              "action": "BET 100.000000",
+              "frequency": 0.069
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "J7s",
+            "J8s"
+          ],
+          "combos": 8,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.37
             },
             {
-              "action": "BET 108.000000",
-              "frequency": 0.002
+              "action": "BET 100.000000",
+              "frequency": 0.63
             }
           ]
         }
       ],
-      "classCount": 77
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "5s"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 342,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.044
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.956
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "KJo"
+          ],
+          "combos": 12,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.53
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.47
+            }
+          ]
+        }
+      ],
+      "classCount": 51
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "5h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "64s",
+            "65s",
+            "75s",
+            "88",
+            "A2s",
+            "A3s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "QQ"
+          ],
+          "combos": 254,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.788
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.136
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.076
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "86s",
+            "87s",
+            "97s",
+            "99",
+            "J7s",
+            "J8s",
+            "J9s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KTo",
+            "KTs",
+            "Q6s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 122,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.156
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.109
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.735
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "54s",
+            "55",
+            "66",
+            "77",
+            "96s",
+            "98o",
+            "98s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
+            "KK",
+            "Q7s",
+            "T8s",
+            "TT"
+          ],
+          "combos": 98,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.284
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.544
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.172
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T93tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T93tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "9s",
+          "3h"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.513936
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "97s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "T7s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 276,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.861
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.04
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.098
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "88",
+            "96s",
+            "98o",
+            "98s",
+            "A8o",
+            "A9o",
+            "A9s",
+            "AA",
+            "ATo",
+            "ATs",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s"
+          ],
+          "combos": 190,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.146
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.032
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.822
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -5719,6 +15878,184 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 78
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "6c"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "66",
+            "76s",
+            "87s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J9s",
+            "K5s",
+            "K6s",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 304,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.748
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.214
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.039
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "55",
+            "75s",
+            "77",
+            "96s",
+            "A6s",
+            "JTo",
+            "JTs",
+            "K7s",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "T7s",
+            "TT"
+          ],
+          "combos": 74,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.22
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.778
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.002
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "64s",
+            "86s",
+            "A8o",
+            "A8s",
+            "J8s",
+            "JJ",
+            "K8s",
+            "K9o",
+            "K9s",
+            "Q8s",
+            "Q9s",
+            "QQ",
+            "T8s"
+          ],
+          "combos": 72,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.111
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.074
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.815
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -5743,7 +16080,9 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "6h"
+          "6c",
+          "6d",
+          "6s"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -5768,24 +16107,23 @@ export const turnPack: TurnStrategyPack = {
             "66",
             "75s",
             "86s",
+            "87s",
             "97s",
             "A2s",
             "A4s",
-            "A5o",
             "A5s",
             "A7o",
             "A7s",
             "A8o",
             "A8s",
+            "A9o",
             "AA",
             "AKo",
             "AKs",
-            "ATo",
-            "ATs",
             "J7s",
+            "J9s",
             "JTo",
             "JTs",
-            "K3s",
             "K4s",
             "K5s",
             "K6s",
@@ -5802,17 +16140,19 @@ export const turnPack: TurnStrategyPack = {
             "Q5s",
             "Q6s",
             "Q7s",
-            "T7s"
+            "Q9s",
+            "QTo",
+            "QTs"
           ],
-          "combos": 242,
+          "combos": 246,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.793
+              "frequency": 0.78
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.207
+              "frequency": 0.22
             },
             {
               "action": "BET 108.000000",
@@ -5831,25 +16171,388 @@ export const turnPack: TurnStrategyPack = {
             "65s",
             "76s",
             "77",
-            "87s",
             "88",
             "96s",
             "98o",
             "98s",
             "99",
             "A3s",
+            "A5o",
             "A6s",
-            "A9o",
             "A9s",
             "AJo",
             "AJs",
             "AQo",
             "AQs",
+            "ATo",
+            "ATs",
             "J8s",
-            "J9s",
             "JJ",
             "K2s",
+            "K3s",
             "K7s",
+            "Q8s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 224,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.274
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.723
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.002
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "7c",
+          "7s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "75s",
+            "76s",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 218,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.998
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.002
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 39
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "4c",
+          "4d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 344,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.956
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.044
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "J7s",
+            "J8s"
+          ],
+          "combos": 8,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.38
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.621
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "6c",
+          "6d",
+          "6h"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
             "Q8s",
             "Q9s",
             "QJo",
@@ -5857,20 +16560,384 @@ export const turnPack: TurnStrategyPack = {
             "QQ",
             "QTo",
             "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 354,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.002
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.998
+            }
+          ]
+        }
+      ],
+      "classCount": 51
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "6c",
+          "6d",
+          "6s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "J7s",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "T8s",
+            "TT"
+          ],
+          "combos": 282,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.853
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.071
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.076
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "98o",
+            "99",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KTo",
+            "KTs",
+            "Q9s",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 188,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.204
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.059
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.737
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "53s"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.28
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.705
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.015
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T93tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T93tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "9s",
+          "3h"
+        ],
+        "turnCards": [
+          "7s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.513936
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "88",
+            "97s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "J7s",
+            "J9s",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs"
+          ],
+          "combos": 256,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.767
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.112
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.121
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "96s",
+            "98o",
+            "98s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "ATo",
+            "ATs",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K9o",
+            "K9s",
+            "KK",
+            "KTo",
+            "KTs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
             "T8s",
             "T9o",
             "T9s",
             "TT"
           ],
-          "combos": 228,
+          "combos": 186,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.317
+              "frequency": 0.18
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.683
+              "frequency": 0.075
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.745
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "64s",
+            "65s",
+            "J8s",
+            "K8s",
+            "Q8s"
+          ],
+          "combos": 20,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.385
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.614
             },
             {
               "action": "BET 108.000000",
@@ -6301,6 +17368,186 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "6d",
+          "6h",
+          "6s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "64s",
+            "66",
+            "76s",
+            "87s",
+            "88",
+            "97s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "J9s",
+            "JTs",
+            "K5s",
+            "K6s",
+            "KJo",
+            "KQo",
+            "KQs",
+            "Q6s",
+            "QJo",
+            "QJs",
+            "QTs"
+          ],
+          "combos": 238,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.752
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.211
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.036
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "86s",
+            "98o",
+            "98s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "ATo",
+            "ATs",
+            "J8s",
+            "JJ",
+            "K8s",
+            "K9o",
+            "K9s",
+            "Q8s",
+            "Q9s",
+            "QQ",
+            "T8s",
+            "TT"
+          ],
+          "combos": 110,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.168
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.136
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.697
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "55",
+            "75s",
+            "77",
+            "96s",
+            "J7s",
+            "JTo",
+            "K7s",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q7s",
+            "QTo",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 102,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.36
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.596
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.044
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -6325,9 +17572,7 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "7c",
-          "7d",
-          "7s"
+          "6h"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -6346,84 +17591,34 @@ export const turnPack: TurnStrategyPack = {
       ],
       "buckets": [
         {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "44",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "76s",
-            "86s",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "98s",
-            "99",
-            "A3s",
-            "A5o",
-            "A5s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JJ",
-            "JTo",
-            "JTs",
-            "K8s",
-            "Q8s",
-            "QJo",
-            "QJs",
-            "QQ",
-            "QTo",
-            "QTs",
-            "T7s",
-            "T8s",
-            "TT"
-          ],
-          "combos": 256,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.273
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.65
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.077
-            }
-          ]
-        },
-        {
           "action": "CHECK",
           "handClasses": [
-            "65s",
-            "77",
-            "96s",
+            "54s",
+            "66",
+            "75s",
+            "86s",
+            "97s",
             "A2s",
             "A4s",
-            "A6s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
             "A8o",
             "A8s",
             "AA",
             "AKo",
             "AKs",
-            "K2s",
+            "ATo",
+            "ATs",
+            "J7s",
+            "JTo",
+            "JTs",
+            "K3s",
             "K4s",
             "K5s",
             "K6s",
+            "K8s",
             "K9o",
             "K9s",
             "KJo",
@@ -6435,55 +17630,793 @@ export const turnPack: TurnStrategyPack = {
             "KTs",
             "Q5s",
             "Q6s",
-            "Q9s",
-            "T9o",
-            "T9s"
+            "Q7s",
+            "T7s"
           ],
-          "combos": 178,
+          "combos": 242,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.688
+              "frequency": 0.793
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.251
+              "frequency": 0.207
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.061
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "96s",
+            "98o",
+            "98s",
+            "99",
+            "A3s",
+            "A6s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K2s",
+            "K7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 228,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.317
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.683
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.001
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 228,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.998
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.002
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "4h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "53s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 336,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.998
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.002
+            }
+          ]
+        }
+      ],
+      "classCount": 55
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "7c",
+          "7d",
+          "7h"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 360,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.004
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.996
+            }
+          ]
+        }
+      ],
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "6h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "T8s",
+            "TT"
+          ],
+          "combos": 294,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.842
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.08
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.077
             }
           ]
         },
         {
           "action": "BET 108.000000",
           "handClasses": [
-            "75s",
-            "A7o",
-            "A7s",
+            "99",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "ATo",
+            "ATs",
             "J7s",
-            "K3s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
             "K7s",
-            "Q7s"
+            "K8s",
+            "K9o",
+            "K9s",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "T9s"
           ],
-          "combos": 36,
+          "combos": 176,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.181
+              "frequency": 0.175
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.291
+              "frequency": 0.065
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.529
+              "frequency": 0.76
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "53s"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.186
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.78
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.033
             }
           ]
         }
       ],
-      "classCount": 77
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T93tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T93tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "9s",
+          "3h"
+        ],
+        "turnCards": [
+          "Qh"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.513936
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "86s",
+            "96s",
+            "97s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKs",
+            "J9s",
+            "K9o",
+            "K9s",
+            "QQ",
+            "TT"
+          ],
+          "combos": 190,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.753
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.211
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.035
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "77",
+            "87s",
+            "88",
+            "98o",
+            "98s",
+            "99",
+            "A8o",
+            "AA",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q9s",
+            "QJs",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 188,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.242
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.579
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.179
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "AKo",
+            "AQo",
+            "AQs",
+            "K3s",
+            "K8s",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "QJo",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s"
+          ],
+          "combos": 88,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.155
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.173
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.673
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -6877,6 +18810,182 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 77
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "7c"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "86s",
+            "96s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K8s",
+            "Q8s",
+            "Q9s",
+            "QTo",
+            "QTs",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 276,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.054
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.027
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.919
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "88",
+            "A6s",
+            "A7o",
+            "A7s",
+            "AA",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "QJo",
+            "QJs"
+          ],
+          "combos": 134,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.766
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.155
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.079
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "75s",
+            "76s",
+            "97s",
+            "J7s",
+            "Q7s",
+            "QQ",
+            "T7s"
+          ],
+          "combos": 30,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.198
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.755
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.047
+            }
+          ]
+        }
+      ],
+      "classCount": 70
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -6901,7 +19010,9 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "7h"
+          "7c",
+          "7d",
+          "7s"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -6929,9 +19040,9 @@ export const turnPack: TurnStrategyPack = {
             "55",
             "64s",
             "66",
-            "75s",
             "76s",
             "86s",
+            "87s",
             "88",
             "97s",
             "98o",
@@ -6940,8 +19051,6 @@ export const turnPack: TurnStrategyPack = {
             "A3s",
             "A5o",
             "A5s",
-            "A7o",
-            "A7s",
             "A9o",
             "A9s",
             "AJo",
@@ -6950,13 +19059,12 @@ export const turnPack: TurnStrategyPack = {
             "AQs",
             "ATo",
             "ATs",
-            "J7s",
             "J8s",
+            "J9s",
             "JJ",
             "JTo",
             "JTs",
             "K8s",
-            "Q7s",
             "Q8s",
             "QJo",
             "QJs",
@@ -6967,19 +19075,19 @@ export const turnPack: TurnStrategyPack = {
             "T8s",
             "TT"
           ],
-          "combos": 276,
+          "combos": 256,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.262
+              "frequency": 0.273
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.658
+              "frequency": 0.65
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.08
+              "frequency": 0.077
             }
           ]
         },
@@ -6988,7 +19096,6 @@ export const turnPack: TurnStrategyPack = {
           "handClasses": [
             "65s",
             "77",
-            "87s",
             "96s",
             "A2s",
             "A4s",
@@ -7002,7 +19109,6 @@ export const turnPack: TurnStrategyPack = {
             "K4s",
             "K5s",
             "K6s",
-            "K7s",
             "K9o",
             "K9s",
             "KJo",
@@ -7018,46 +19124,799 @@ export const turnPack: TurnStrategyPack = {
             "T9o",
             "T9s"
           ],
-          "combos": 186,
+          "combos": 178,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.721
+              "frequency": 0.688
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.247
+              "frequency": 0.251
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.032
+              "frequency": 0.061
             }
           ]
         },
         {
           "action": "BET 108.000000",
           "handClasses": [
-            "J9s",
-            "K3s"
+            "75s",
+            "A7o",
+            "A7s",
+            "J7s",
+            "K3s",
+            "K7s",
+            "Q7s"
           ],
-          "combos": 8,
+          "combos": 36,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.112
+              "frequency": 0.181
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.36
+              "frequency": 0.291
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.528
+              "frequency": 0.529
             }
           ]
         }
       ],
       "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "8c",
+          "8d",
+          "8s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 228,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.93
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.068
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.002
+            }
+          ]
+        }
+      ],
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "4s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 340,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.929
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.071
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "J7s",
+            "J8s",
+            "Q6s"
+          ],
+          "combos": 12,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.423
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.577
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "8c",
+          "8d",
+          "8h"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AKo",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K7s",
+            "K9o",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 306,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.045
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.955
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "A6s",
+            "AJo",
+            "AKs",
+            "K6s",
+            "KJo"
+          ],
+          "combos": 54,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.739
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.261
+            }
+          ]
+        }
+      ],
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "7c",
+          "7d",
+          "7s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "J8s",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K7s",
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "T7s",
+            "T8s",
+            "TT"
+          ],
+          "combos": 286,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.834
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.061
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.105
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "75s",
+            "98o",
+            "99",
+            "A6s",
+            "A8o",
+            "A8s",
+            "AJo",
+            "ATo",
+            "ATs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 184,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.168
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.033
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.799
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "J9s"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.439
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.56
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.001
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T93tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T93tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "9s",
+          "3h"
+        ],
+        "turnCards": [
+          "Kh"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.513936
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "44",
+            "55",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "98o",
+            "98s",
+            "99",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A9o",
+            "A9s",
+            "J9s",
+            "K9o",
+            "K9s",
+            "KK",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTs",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 194,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.243
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.673
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.084
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "A2s",
+            "A3s",
+            "AA",
+            "AKo",
+            "AKs",
+            "AQo",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "QTo",
+            "T7s",
+            "T8s"
+          ],
+          "combos": 180,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.077
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.228
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.694
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "33",
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "97s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AJo",
+            "AJs",
+            "AQs"
+          ],
+          "combos": 92,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.618
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.276
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.106
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -7478,6 +20337,183 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 78
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "7s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "54s",
+            "64s",
+            "66",
+            "75s",
+            "76s",
+            "86s",
+            "87s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "J7s",
+            "J8s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "TT"
+          ],
+          "combos": 324,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.048
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.844
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.108
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "96s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J9s",
+            "K9s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 116,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.003
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.146
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.851
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "KQs"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.653
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.325
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.022
+            }
+          ]
+        }
+      ],
+      "classCount": 71
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -7502,7 +20538,7 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "8c"
+          "7h"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -7523,48 +20559,468 @@ export const turnPack: TurnStrategyPack = {
         {
           "action": "BET 28.000000",
           "handClasses": [
+            "22",
+            "33",
             "44",
             "54s",
             "55",
             "64s",
-            "65s",
             "66",
             "75s",
             "76s",
-            "77",
             "86s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A3s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K8s",
+            "Q7s",
+            "Q8s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "TT"
+          ],
+          "combos": 276,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.262
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.658
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.08
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "65s",
+            "77",
             "87s",
+            "96s",
+            "A2s",
+            "A4s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AKo",
+            "AKs",
+            "K2s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q9s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 186,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.721
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.247
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.032
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "J9s",
+            "K3s"
+          ],
+          "combos": 8,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.112
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.36
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.528
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "8h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 228,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 1
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "5c",
+          "5d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
             "96s",
             "97s",
             "98o",
             "98s",
             "99",
             "A2s",
+            "A3s",
             "A4s",
-            "A5o",
             "A5s",
             "A6s",
-            "A7o",
-            "A7s",
             "A8o",
             "A8s",
             "A9o",
             "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
             "ATo",
             "ATs",
-            "J7s",
             "J8s",
             "J9s",
             "JJ",
-            "JTo",
-            "JTs",
-            "K2s",
-            "K3s",
-            "K4s",
-            "K5s",
+            "K7s",
             "K8s",
-            "KJo",
+            "K9o",
+            "K9s",
             "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 348,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.983
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.017
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "J7s"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.404
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.596
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "8s"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
             "KK",
             "KQo",
             "KQs",
@@ -7575,89 +21031,229 @@ export const turnPack: TurnStrategyPack = {
             "Q8s",
             "Q9s",
             "QJo",
+            "QJs",
             "QQ",
             "QTo",
             "QTs",
             "T7s",
-            "T8s",
             "T9o",
-            "T9s",
             "TT"
           ],
-          "combos": 362,
+          "combos": 348,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.097
+              "frequency": 0.053
             },
             {
-              "action": "BET 28.000000",
-              "frequency": 0.848
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.055
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "A3s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs"
-          ],
-          "combos": 64,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.192
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.808
+              "action": "BET 87.000000",
+              "frequency": 0.947
             }
           ]
         },
         {
           "action": "CHECK",
           "handClasses": [
-            "AA",
-            "K6s",
-            "K7s",
-            "K9o",
-            "K9s",
-            "KTs",
-            "QJs"
+            "KJo"
           ],
-          "combos": 38,
+          "combos": 12,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.622
+              "frequency": 0.501
             },
             {
-              "action": "BET 28.000000",
-              "frequency": 0.344
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.034
+              "action": "BET 87.000000",
+              "frequency": 0.499
             }
           ]
         }
       ],
-      "classCount": 76
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "7h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "J8s",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K7s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "T7s",
+            "T8s",
+            "TT"
+          ],
+          "combos": 284,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.852
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.071
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.077
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "75s",
+            "98o",
+            "98s",
+            "99",
+            "A6s",
+            "A8o",
+            "A8s",
+            "AJo",
+            "AJs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KTo",
+            "KTs",
+            "Q6s",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 186,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.14
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.028
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.832
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "J9s"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.473
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.526
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.001
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -8054,6 +21650,163 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "8c"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 412,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.083
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.875
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.042
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "AA",
+            "K5s",
+            "K6s",
+            "KQo",
+            "KQs",
+            "Q5s"
+          ],
+          "combos": 34,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.582
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.417
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.001
+            }
+          ]
+        }
+      ],
+      "classCount": 71
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -8078,7 +21831,7 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "8h"
+          "8c"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -8097,30 +21850,344 @@ export const turnPack: TurnStrategyPack = {
       ],
       "buckets": [
         {
-          "action": "BET 108.000000",
+          "action": "BET 28.000000",
           "handClasses": [
-            "22",
-            "33",
             "44",
+            "54s",
             "55",
+            "64s",
             "65s",
             "66",
             "75s",
             "76s",
             "77",
+            "86s",
+            "87s",
             "96s",
             "97s",
+            "98o",
+            "98s",
             "99",
             "A2s",
-            "A3s",
             "A4s",
             "A5o",
             "A5s",
             "A6s",
             "A7o",
             "A7s",
+            "A8o",
+            "A8s",
             "A9o",
             "A9s",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K8s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 362,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.097
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.848
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.055
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "A3s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs"
+          ],
+          "combos": 64,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.192
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.808
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "AA",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KTs",
+            "QJs"
+          ],
+          "combos": 38,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.622
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.344
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.034
+            }
+          ]
+        }
+      ],
+      "classCount": 76
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 216,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.841
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.158
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.001
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "53s",
+            "54s",
+            "JTs"
+          ],
+          "combos": 12,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.462
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.537
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.002
+            }
+          ]
+        }
+      ],
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "5s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
             "AJo",
             "AJs",
             "AKo",
@@ -8129,111 +22196,380 @@ export const turnPack: TurnStrategyPack = {
             "AQs",
             "ATo",
             "ATs",
-            "J7s",
+            "J8s",
             "J9s",
-            "JTo",
-            "JTs",
-            "K3s",
-            "KJo",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
             "KJs",
             "KQo",
             "KQs",
+            "KTo",
+            "KTs",
             "Q5s",
-            "Q6s",
-            "Q7s",
+            "Q8s",
             "Q9s",
             "QJo",
             "QJs",
             "QTo",
             "QTs",
             "T7s",
+            "T8s",
             "T9o",
-            "T9s"
+            "T9s",
+            "TT"
           ],
-          "combos": 318,
+          "combos": 340,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.047
+              "frequency": 0.944
             },
             {
-              "action": "BET 28.000000",
-              "frequency": 0.116
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.837
+              "action": "BET 100.000000",
+              "frequency": 0.056
             }
           ]
         },
         {
-          "action": "BET 28.000000",
+          "action": "BET 100.000000",
           "handClasses": [
-            "54s",
-            "64s",
-            "86s",
-            "87s",
-            "98o",
-            "98s",
-            "A8o",
-            "A8s",
-            "AA",
-            "J8s",
-            "JJ",
-            "K2s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KK",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "QQ",
-            "T8s",
-            "TT"
+            "J7s",
+            "Q6s",
+            "Q7s"
           ],
-          "combos": 130,
+          "combos": 12,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.14
+              "frequency": 0.484
             },
             {
-              "action": "BET 28.000000",
-              "frequency": 0.728
+              "action": "BET 100.000000",
+              "frequency": 0.516
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9h"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 328,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.053
             },
             {
-              "action": "BET 108.000000",
-              "frequency": 0.132
+              "action": "BET 87.000000",
+              "frequency": 0.947
             }
           ]
         },
         {
           "action": "CHECK",
           "handClasses": [
-            "K4s",
-            "K5s",
-            "K6s",
-            "K7s"
+            "33",
+            "44",
+            "A6s",
+            "AJo",
+            "K6s"
           ],
-          "combos": 16,
+          "combos": 32,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.579
+              "frequency": 0.653
             },
             {
-              "action": "BET 28.000000",
-              "frequency": 0.129
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.292
+              "action": "BET 87.000000",
+              "frequency": 0.347
             }
           ]
         }
       ],
-      "classCount": 76
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "8c",
+          "8s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "65s",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9s",
+            "TT"
+          ],
+          "combos": 338,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.141
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.756
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.103
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "43s",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "77",
+            "97s",
+            "A4s",
+            "AKo",
+            "AKs",
+            "J7s",
+            "K4s",
+            "KJo",
+            "KJs",
+            "T9o"
+          ],
+          "combos": 90,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.099
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.221
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.679
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "44",
+            "53s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "K5s",
+            "K6s",
+            "Q5s",
+            "Q6s"
+          ],
+          "combos": 46,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.562
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.433
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.005
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -8633,6 +22969,185 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "8d",
+          "8h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 382,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.076
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.859
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.066
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "44",
+            "AA",
+            "K5s",
+            "K6s",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s"
+          ],
+          "combos": 44,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.798
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.202
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "99",
+            "AQo",
+            "TT"
+          ],
+          "combos": 24,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.075
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.265
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.66
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -8657,9 +23172,7 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "9c",
-          "9d",
-          "9s"
+          "8h"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -8678,7 +23191,7 @@ export const turnPack: TurnStrategyPack = {
       ],
       "buckets": [
         {
-          "action": "BET 28.000000",
+          "action": "BET 108.000000",
           "handClasses": [
             "22",
             "33",
@@ -8689,20 +23202,331 @@ export const turnPack: TurnStrategyPack = {
             "75s",
             "76s",
             "77",
-            "86s",
-            "87s",
-            "88",
+            "96s",
             "97s",
-            "98o",
-            "98s",
+            "99",
+            "A2s",
             "A3s",
+            "A4s",
             "A5o",
             "A5s",
             "A6s",
             "A7o",
             "A7s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J9s",
+            "JTo",
+            "JTs",
+            "K3s",
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 318,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.047
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.116
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.837
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "54s",
+            "64s",
+            "86s",
+            "87s",
+            "98o",
+            "98s",
             "A8o",
             "A8s",
+            "AA",
+            "J8s",
+            "JJ",
+            "K2s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "QQ",
+            "T8s",
+            "TT"
+          ],
+          "combos": 130,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.14
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.728
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.132
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s"
+          ],
+          "combos": 16,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.579
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.129
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.292
+            }
+          ]
+        }
+      ],
+      "classCount": 76
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "9h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s"
+          ],
+          "combos": 194,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.944
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.056
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "JTo",
+            "JTs",
+            "TT"
+          ],
+          "combos": 22,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.472
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.528
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 40
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "6c",
+          "6d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
             "AJo",
             "AJs",
             "AKo",
@@ -8715,51 +23539,10 @@ export const turnPack: TurnStrategyPack = {
             "J8s",
             "J9s",
             "JJ",
-            "K8s",
-            "KK",
-            "Q8s",
-            "Q9s",
-            "QJo",
-            "QJs",
-            "QQ",
-            "QTo",
-            "QTs",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 302,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.204
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.709
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.087
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "54s",
-            "64s",
-            "99",
-            "A2s",
-            "A4s",
-            "AA",
-            "K2s",
-            "K4s",
-            "K5s",
-            "K6s",
             "K7s",
-            "KJo",
+            "K8s",
+            "K9o",
+            "K9s",
             "KJs",
             "KQo",
             "KQs",
@@ -8768,54 +23551,328 @@ export const turnPack: TurnStrategyPack = {
             "Q5s",
             "Q6s",
             "Q7s",
-            "T7s"
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
           ],
-          "combos": 112,
+          "combos": 352,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.709
+              "frequency": 0.978
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.022
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "9s"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 348,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.062
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.938
+            }
+          ]
+        }
+      ],
+      "classCount": 51
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "8h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "65s",
+            "75s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 390,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.16
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.262
+              "frequency": 0.774
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.028
+              "frequency": 0.066
             }
           ]
         },
         {
           "action": "BET 108.000000",
           "handClasses": [
-            "96s",
-            "A9o",
-            "A9s",
-            "JTo",
-            "JTs",
-            "K3s",
-            "K9o",
-            "K9s"
+            "43s",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "A4s",
+            "AKo",
+            "AKs",
+            "J7s",
+            "K4s"
           ],
-          "combos": 56,
+          "combos": 52,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.195
+              "frequency": 0.091
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.27
+              "frequency": 0.244
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.536
+              "frequency": 0.666
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "53s",
+            "97s",
+            "A6s",
+            "K5s",
+            "K6s",
+            "K9s",
+            "Q5s",
+            "Q6s"
+          ],
+          "combos": 32,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.614
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.356
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.03
             }
           ]
         }
       ],
-      "classCount": 77
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -9211,6 +24268,184 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "9c"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JTo",
+            "JTs",
+            "K5s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 284,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.782
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.2
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.018
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "75s",
+            "76s",
+            "77",
+            "A5o",
+            "A5s",
+            "A6s",
+            "J7s",
+            "JJ",
+            "K6s",
+            "KJo",
+            "KK",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T8s",
+            "TT"
+          ],
+          "combos": 108,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.19
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.774
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.036
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "98o",
+            "98s",
+            "A9o",
+            "A9s",
+            "KTo",
+            "KTs",
+            "Q6s",
+            "QQ"
+          ],
+          "combos": 58,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.146
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.158
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.696
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -9235,7 +24470,9 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "9h"
+          "9c",
+          "9d",
+          "9s"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -9268,7 +24505,6 @@ export const turnPack: TurnStrategyPack = {
             "86s",
             "87s",
             "88",
-            "96s",
             "97s",
             "98o",
             "98s",
@@ -9278,8 +24514,8 @@ export const turnPack: TurnStrategyPack = {
             "A6s",
             "A7o",
             "A7s",
-            "A9o",
-            "A9s",
+            "A8o",
+            "A8s",
             "AJo",
             "AJs",
             "AKo",
@@ -9292,12 +24528,8 @@ export const turnPack: TurnStrategyPack = {
             "J8s",
             "J9s",
             "JJ",
-            "K2s",
-            "K3s",
-            "K4s",
             "K8s",
-            "K9o",
-            "K9s",
+            "KK",
             "Q8s",
             "Q9s",
             "QJo",
@@ -9307,21 +24539,22 @@ export const turnPack: TurnStrategyPack = {
             "QTs",
             "T8s",
             "T9o",
+            "T9s",
             "TT"
           ],
-          "combos": 324,
+          "combos": 302,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.173
+              "frequency": 0.204
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.826
+              "frequency": 0.709
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.001
+              "frequency": 0.087
             }
           ]
         },
@@ -9333,17 +24566,14 @@ export const turnPack: TurnStrategyPack = {
             "99",
             "A2s",
             "A4s",
-            "A8o",
-            "A8s",
             "AA",
-            "JTo",
-            "JTs",
+            "K2s",
+            "K4s",
             "K5s",
             "K6s",
             "K7s",
             "KJo",
             "KJs",
-            "KK",
             "KQo",
             "KQs",
             "KTo",
@@ -9353,24 +24583,616 @@ export const turnPack: TurnStrategyPack = {
             "Q7s",
             "T7s"
           ],
-          "combos": 142,
+          "combos": 112,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.795
+              "frequency": 0.709
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.204
+              "frequency": 0.262
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.028
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "96s",
+            "A9o",
+            "A9s",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K9o",
+            "K9s"
+          ],
+          "combos": 56,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.195
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.27
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.536
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "Tc",
+          "Td",
+          "Ts"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AKs",
+            "J7s",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 176,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.856
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.143
             },
             {
               "action": "BET 108.000000",
               "frequency": 0.001
             }
           ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "AA",
+            "AQs",
+            "JJ",
+            "QJo",
+            "QQ"
+          ],
+          "combos": 52,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.289
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.709
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.002
+            }
+          ]
         }
       ],
-      "classCount": 76
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "6h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "75s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 336,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.997
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.003
+            }
+          ]
+        }
+      ],
+      "classCount": 55
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "Tc",
+          "Td",
+          "Th"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 340,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.121
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.879
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "44",
+            "55",
+            "A6s",
+            "K6s"
+          ],
+          "combos": 20,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.791
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.209
+            }
+          ]
+        }
+      ],
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "9c",
+          "9d",
+          "9s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KQs",
+            "Q5s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "T8s",
+            "TT"
+          ],
+          "combos": 258,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.848
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.097
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.054
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "96s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K7s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KTo",
+            "KTs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 180,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.123
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.05
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.826
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "75s",
+            "KQo",
+            "Q6s",
+            "QJo",
+            "QJs"
+          ],
+          "combos": 36,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.29
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.671
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.039
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -9770,6 +25592,186 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "9d",
+          "9h",
+          "9s"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "55",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "K5s",
+            "K8s",
+            "K9o",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QTs",
+            "T7s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 268,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.721
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.22
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.059
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "64s",
+            "66",
+            "76s",
+            "77",
+            "A5o",
+            "A5s",
+            "J7s",
+            "JTo",
+            "JTs",
+            "K7s",
+            "KJo",
+            "QJo",
+            "QJs",
+            "T8s"
+          ],
+          "combos": 92,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.31
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.683
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.007
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "98o",
+            "98s",
+            "A9o",
+            "A9s",
+            "JJ",
+            "K6s",
+            "K9s",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q6s",
+            "QQ",
+            "QTo"
+          ],
+          "combos": 90,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.124
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.129
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.747
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -9794,9 +25796,7 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "Tc",
-          "Td",
-          "Ts"
+          "9h"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -9821,7 +25821,9 @@ export const turnPack: TurnStrategyPack = {
             "33",
             "44",
             "55",
+            "65s",
             "66",
+            "75s",
             "76s",
             "77",
             "86s",
@@ -9837,8 +25839,6 @@ export const turnPack: TurnStrategyPack = {
             "A6s",
             "A7o",
             "A7s",
-            "A8o",
-            "A8s",
             "A9o",
             "A9s",
             "AJo",
@@ -9851,16 +25851,434 @@ export const turnPack: TurnStrategyPack = {
             "ATs",
             "J7s",
             "J8s",
+            "J9s",
             "JJ",
-            "JTo",
-            "JTs",
             "K2s",
             "K3s",
             "K4s",
             "K8s",
+            "K9o",
+            "K9s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 324,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.173
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.826
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.001
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "54s",
+            "64s",
+            "99",
+            "A2s",
+            "A4s",
+            "A8o",
+            "A8s",
+            "AA",
+            "JTo",
+            "JTs",
+            "K5s",
+            "K6s",
+            "K7s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "T7s"
+          ],
+          "combos": 142,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.795
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.204
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.001
+            }
+          ]
+        }
+      ],
+      "classCount": 76
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "Th"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "T7s",
+            "TT"
+          ],
+          "combos": 182,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.92
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.08
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "AA",
+            "JJ",
+            "QQ"
+          ],
+          "combos": 30,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.208
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.792
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 39
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "6s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q6s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 336,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.943
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.057
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "J7s",
+            "Q5s",
+            "Q7s"
+          ],
+          "combos": 12,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.489
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.511
+            }
+          ]
+        }
+      ],
+      "classCount": 58
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "Ts"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
             "KJo",
             "KK",
+            "KQo",
+            "KQs",
             "Q5s",
+            "Q6s",
             "Q7s",
             "Q8s",
             "Q9s",
@@ -9870,69 +26288,207 @@ export const turnPack: TurnStrategyPack = {
             "QTo",
             "QTs",
             "T7s",
-            "T8s",
             "T9o",
-            "T9s"
-          ],
-          "combos": 356,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.143
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.857
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "54s",
-            "64s",
-            "65s",
-            "75s",
-            "99",
-            "A2s",
-            "A4s",
-            "AA",
-            "J9s",
-            "K5s",
-            "K6s",
-            "K7s",
-            "K9o",
-            "K9s",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q6s",
             "TT"
           ],
-          "combos": 114,
+          "combos": 336,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.69
+              "frequency": 0.059
             },
             {
-              "action": "BET 28.000000",
-              "frequency": 0.31
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
+              "action": "BET 87.000000",
+              "frequency": 0.941
             }
           ]
         }
       ],
-      "classCount": 77
+      "classCount": 50
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "9h"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "J7s",
+            "J8s",
+            "JJ",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "Q5s",
+            "Q8s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 280,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.8
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.158
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.042
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "96s",
+            "A7o",
+            "A7s",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "JTo",
+            "JTs",
+            "K7s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s"
+          ],
+          "combos": 140,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.115
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.056
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.829
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "75s",
+            "AA",
+            "J9s",
+            "KQo",
+            "KQs",
+            "Q6s",
+            "Q9s",
+            "QJo",
+            "QJs"
+          ],
+          "combos": 54,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.28
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.684
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.035
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -10328,6 +26884,184 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "Tc"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q6s",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 394,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.127
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.861
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.012
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "54s",
+            "A8o",
+            "A8s",
+            "J9s",
+            "K5s",
+            "K8s",
+            "Q5s",
+            "Q8s",
+            "TT"
+          ],
+          "combos": 46,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.719
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.281
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "QQ",
+            "T8s"
+          ],
+          "combos": 10,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.013
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.257
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.73
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -10352,7 +27086,9 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "Th"
+          "Tc",
+          "Td",
+          "Ts"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -10384,6 +27120,7 @@ export const turnPack: TurnStrategyPack = {
             "87s",
             "88",
             "96s",
+            "97s",
             "98o",
             "98s",
             "A3s",
@@ -10392,6 +27129,8 @@ export const turnPack: TurnStrategyPack = {
             "A6s",
             "A7o",
             "A7s",
+            "A8o",
+            "A8s",
             "A9o",
             "A9s",
             "AJo",
@@ -10411,6 +27150,7 @@ export const turnPack: TurnStrategyPack = {
             "K3s",
             "K4s",
             "K8s",
+            "KJo",
             "KK",
             "Q5s",
             "Q7s",
@@ -10423,17 +27163,18 @@ export const turnPack: TurnStrategyPack = {
             "QTs",
             "T7s",
             "T8s",
-            "T9o"
+            "T9o",
+            "T9s"
           ],
-          "combos": 320,
+          "combos": 356,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.105
+              "frequency": 0.143
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.895
+              "frequency": 0.857
             },
             {
               "action": "BET 108.000000",
@@ -10448,12 +27189,9 @@ export const turnPack: TurnStrategyPack = {
             "64s",
             "65s",
             "75s",
-            "97s",
             "99",
             "A2s",
             "A4s",
-            "A8o",
-            "A8s",
             "AA",
             "J9s",
             "K5s",
@@ -10461,7 +27199,6 @@ export const turnPack: TurnStrategyPack = {
             "K7s",
             "K9o",
             "K9s",
-            "KJo",
             "KJs",
             "KQo",
             "KQs",
@@ -10470,15 +27207,15 @@ export const turnPack: TurnStrategyPack = {
             "Q6s",
             "TT"
           ],
-          "combos": 146,
+          "combos": 114,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.715
+              "frequency": 0.69
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.285
+              "frequency": 0.31
             },
             {
               "action": "BET 108.000000",
@@ -10487,7 +27224,575 @@ export const turnPack: TurnStrategyPack = {
           ]
         }
       ],
-      "classCount": 76
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "Jc",
+          "Jd",
+          "Js"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A7o",
+            "A7s",
+            "AKs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 178,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.886
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.114
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "A4s",
+            "AA",
+            "AQs",
+            "QQ",
+            "QTo"
+          ],
+          "combos": 50,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.237
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.763
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "7c",
+          "7d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 352,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.969
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.031
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "Jc",
+          "Jd",
+          "Jh"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 336,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.114
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.886
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "55",
+            "A8o",
+            "JJ"
+          ],
+          "combos": 24,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.591
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.409
+            }
+          ]
+        }
+      ],
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "Tc",
+          "Td"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "65s",
+            "75s",
+            "77",
+            "96s",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KQo",
+            "KTo",
+            "KTs",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 290,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.178
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.747
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.075
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "33",
+            "43s",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "86s",
+            "87s",
+            "97s",
+            "98o",
+            "A4s",
+            "A8o",
+            "A8s",
+            "AKo",
+            "AKs",
+            "J8s",
+            "J9s",
+            "K4s",
+            "K8s",
+            "Q8s",
+            "Q9s"
+          ],
+          "combos": 114,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.107
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.208
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.685
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "44",
+            "53s",
+            "88",
+            "A5o",
+            "A5s",
+            "A6s",
+            "AA",
+            "K5s",
+            "K6s",
+            "KJs",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s"
+          ],
+          "combos": 70,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.669
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.307
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.023
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -10887,6 +28192,186 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "Td",
+          "Th",
+          "Ts"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "33",
+            "44",
+            "55",
+            "64s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A6s",
+            "A9s",
+            "AA",
+            "AKs",
+            "J7s",
+            "J8s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K6s",
+            "K7s",
+            "K9s",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 252,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.171
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.796
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.033
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "54s",
+            "86s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AQo",
+            "AQs",
+            "J9s",
+            "K5s",
+            "K8s",
+            "Q5s",
+            "Q6s",
+            "Q8s",
+            "TT"
+          ],
+          "combos": 160,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.65
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.291
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.058
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "ATo",
+            "ATs",
+            "K9o",
+            "QQ",
+            "T8s"
+          ],
+          "combos": 38,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.077
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.111
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.812
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -10911,9 +28396,7 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "Jc",
-          "Jd",
-          "Js"
+          "Th"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -10937,27 +28420,22 @@ export const turnPack: TurnStrategyPack = {
             "22",
             "33",
             "44",
-            "54s",
             "55",
             "66",
+            "76s",
             "77",
             "86s",
             "87s",
             "88",
-            "97s",
+            "96s",
             "98o",
             "98s",
-            "99",
-            "A2s",
             "A3s",
-            "A4s",
             "A5o",
             "A5s",
             "A6s",
             "A7o",
             "A7s",
-            "A8o",
-            "A8s",
             "A9o",
             "A9s",
             "AJo",
@@ -10970,19 +28448,421 @@ export const turnPack: TurnStrategyPack = {
             "ATs",
             "J7s",
             "J8s",
-            "J9s",
             "JJ",
             "JTo",
             "JTs",
             "K2s",
+            "K3s",
             "K4s",
-            "K5s",
             "K8s",
+            "KK",
+            "Q5s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o"
+          ],
+          "combos": 320,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.105
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.895
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "97s",
+            "99",
+            "A2s",
+            "A4s",
+            "A8o",
+            "A8s",
+            "AA",
+            "J9s",
+            "K5s",
+            "K6s",
+            "K7s",
             "K9o",
             "K9s",
             "KJo",
             "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q6s",
+            "TT"
+          ],
+          "combos": 146,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.715
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.285
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 76
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "Jh"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AKs",
+            "J7s",
+            "JJ",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
             "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 160,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.909
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.091
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "AA",
+            "AQs",
+            "QQ",
+            "QTo",
+            "QTs"
+          ],
+          "combos": 44,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.258
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.742
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 39
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "7s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 352,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.948
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.052
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "Js"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
             "Q5s",
             "Q6s",
             "Q7s",
@@ -10994,69 +28874,160 @@ export const turnPack: TurnStrategyPack = {
             "QTo",
             "QTs",
             "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 348,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 1
+            }
+          ]
+        }
+      ],
+      "classCount": 51
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "Th"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "65s",
+            "66",
+            "75s",
+            "77",
+            "86s",
+            "87s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
             "T8s",
             "T9o",
             "T9s",
             "TT"
           ],
-          "combos": 400,
+          "combos": 320,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.195
+              "frequency": 0.151
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.791
+              "frequency": 0.779
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.013
+              "frequency": 0.07
             }
           ]
         },
         {
           "action": "CHECK",
           "handClasses": [
-            "64s",
-            "65s",
-            "75s",
-            "76s",
-            "96s",
+            "44",
+            "53s",
+            "88",
+            "A5o",
+            "A5s",
+            "A6s",
             "AA",
+            "K5s",
             "K6s",
             "K7s",
+            "KJs",
             "KQo",
             "KQs",
-            "KTo",
-            "KTs"
+            "Q5s",
+            "Q6s",
+            "Q7s"
           ],
-          "combos": 66,
+          "combos": 86,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.698
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.298
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.003
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "K3s"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.245
+              "frequency": 0.637
             },
             {
               "action": "BET 28.000000",
@@ -11064,12 +29035,46 @@ export const turnPack: TurnStrategyPack = {
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.393
+              "frequency": 0.002
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "33",
+            "43s",
+            "54s",
+            "55",
+            "64s",
+            "96s",
+            "97s",
+            "A4s",
+            "AKo",
+            "AKs",
+            "J7s",
+            "K4s",
+            "K8s",
+            "Q9s"
+          ],
+          "combos": 68,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.119
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.2
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.681
             }
           ]
         }
       ],
-      "classCount": 77
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -11465,6 +29470,164 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "Jc"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K6s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 434,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.043
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.957
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "96s",
+            "K5s",
+            "Q5s",
+            "Q6s"
+          ],
+          "combos": 16,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.921
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.079
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -11489,7 +29652,9 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "Jh"
+          "Jc",
+          "Jd",
+          "Js"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -11551,7 +29716,6 @@ export const turnPack: TurnStrategyPack = {
             "JTo",
             "JTs",
             "K2s",
-            "K3s",
             "K4s",
             "K5s",
             "K8s",
@@ -11560,8 +29724,6 @@ export const turnPack: TurnStrategyPack = {
             "KJo",
             "KJs",
             "KK",
-            "KTo",
-            "KTs",
             "Q5s",
             "Q6s",
             "Q7s",
@@ -11578,19 +29740,19 @@ export const turnPack: TurnStrategyPack = {
             "T9s",
             "TT"
           ],
-          "combos": 420,
+          "combos": 400,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.182
+              "frequency": 0.195
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.807
+              "frequency": 0.791
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.011
+              "frequency": 0.013
             }
           ]
         },
@@ -11606,26 +29768,618 @@ export const turnPack: TurnStrategyPack = {
             "K6s",
             "K7s",
             "KQo",
-            "KQs"
+            "KQs",
+            "KTo",
+            "KTs"
           ],
-          "combos": 50,
+          "combos": 66,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.763
+              "frequency": 0.698
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.237
+              "frequency": 0.298
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.001
+              "frequency": 0.003
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "K3s"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.245
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.362
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.393
             }
           ]
         }
       ],
       "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "Qc",
+          "Qd",
+          "Qs"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 194,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.97
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.03
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "JTo",
+            "JTs"
+          ],
+          "combos": 34,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.134
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.866
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "8c",
+          "8d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "88",
+            "96s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 322,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.909
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.091
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "97s",
+            "K7s"
+          ],
+          "combos": 30,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.149
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.851
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "Kc",
+          "Kd",
+          "Kh"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 360,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.034
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.966
+            }
+          ]
+        }
+      ],
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "Jc",
+          "Jd",
+          "Js"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "JJ",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "QTs",
+            "T8s",
+            "TT"
+          ],
+          "combos": 294,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.833
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.07
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.097
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "75s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "J7s",
+            "J9s",
+            "JTo",
+            "JTs",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "T7s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 168,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.137
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.043
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.82
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "96s",
+            "97s",
+            "Q9s"
+          ],
+          "combos": 12,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.337
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.534
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.13
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -12025,6 +30779,166 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "Jd",
+          "Jh",
+          "Js"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K6s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 434,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.091
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.909
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "96s",
+            "K5s",
+            "Q5s",
+            "Q6s"
+          ],
+          "combos": 16,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.649
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.346
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.005
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -12049,9 +30963,7 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "Qc",
-          "Qd",
-          "Qs"
+          "Jh"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -12077,13 +30989,12 @@ export const turnPack: TurnStrategyPack = {
             "44",
             "54s",
             "55",
-            "64s",
             "66",
-            "75s",
             "77",
             "86s",
             "87s",
             "88",
+            "97s",
             "98o",
             "98s",
             "99",
@@ -12117,14 +31028,12 @@ export const turnPack: TurnStrategyPack = {
             "K3s",
             "K4s",
             "K5s",
-            "K6s",
-            "K7s",
             "K8s",
             "K9o",
             "K9s",
+            "KJo",
+            "KJs",
             "KK",
-            "KQo",
-            "KQs",
             "KTo",
             "KTs",
             "Q5s",
@@ -12137,57 +31046,620 @@ export const turnPack: TurnStrategyPack = {
             "QQ",
             "QTo",
             "QTs",
+            "T7s",
             "T8s",
             "T9o",
             "T9s",
             "TT"
           ],
-          "combos": 428,
+          "combos": 420,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.179
+              "frequency": 0.182
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.814
+              "frequency": 0.807
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.007
+              "frequency": 0.011
             }
           ]
         },
         {
           "action": "CHECK",
           "handClasses": [
+            "64s",
             "65s",
+            "75s",
             "76s",
             "96s",
-            "97s",
             "AA",
-            "KJo",
-            "KJs",
-            "T7s"
+            "K6s",
+            "K7s",
+            "KQo",
+            "KQs"
           ],
-          "combos": 42,
+          "combos": 50,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.649
+              "frequency": 0.763
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.347
+              "frequency": 0.237
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.003
+              "frequency": 0.001
             }
           ]
         }
       ],
       "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "Qh"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "43s",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AA",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "T7s",
+            "TT"
+          ],
+          "combos": 200,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.958
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.042
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "53s",
+            "54s",
+            "JTo",
+            "JTs"
+          ],
+          "combos": 24,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.381
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.619
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 40
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "8h"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "88",
+            "96s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 298,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.92
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.08
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "75s",
+            "76s",
+            "77",
+            "97s",
+            "AQo",
+            "AQs",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s"
+          ],
+          "combos": 50,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.372
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.628
+            }
+          ]
+        }
+      ],
+      "classCount": 58
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "Ks"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 360,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.001
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.999
+            }
+          ]
+        }
+      ],
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "Jh"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "98o",
+            "98s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "KTo",
+            "KTs",
+            "Q6s",
+            "Q8s",
+            "Q9s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 312,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.814
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.139
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.047
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "75s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "J7s",
+            "J9s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "QJo",
+            "QJs",
+            "QQ",
+            "T7s"
+          ],
+          "combos": 124,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.127
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.114
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.759
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "96s",
+            "97s",
+            "99",
+            "Q5s",
+            "Q7s",
+            "QTo",
+            "QTs"
+          ],
+          "combos": 38,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.357
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.567
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.076
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -12583,6 +32055,162 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "Qc"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K7s",
+            "K8s",
+            "KK",
+            "KQo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 326,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.256
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.735
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.01
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "88",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A9o",
+            "A9s",
+            "AA",
+            "K5s",
+            "K6s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KTo",
+            "KTs"
+          ],
+          "combos": 108,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.572
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.427
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.002
+            }
+          ]
+        }
+      ],
+      "classCount": 70
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -12607,7 +32235,9 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "Qh"
+          "Qc",
+          "Qd",
+          "Qs"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -12693,25 +32323,24 @@ export const turnPack: TurnStrategyPack = {
             "QQ",
             "QTo",
             "QTs",
-            "T7s",
             "T8s",
             "T9o",
             "T9s",
             "TT"
           ],
-          "combos": 432,
+          "combos": 428,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.155
+              "frequency": 0.179
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.841
+              "frequency": 0.814
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.005
+              "frequency": 0.007
             }
           ]
         },
@@ -12724,26 +32353,595 @@ export const turnPack: TurnStrategyPack = {
             "97s",
             "AA",
             "KJo",
-            "KJs"
+            "KJs",
+            "T7s"
           ],
-          "combos": 38,
+          "combos": 42,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.632
+              "frequency": 0.649
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.367
+              "frequency": 0.347
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0.001
+              "frequency": 0.003
             }
           ]
         }
       ],
       "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "Kc",
+          "Kd",
+          "Ks"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 204,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.944
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.056
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "AA"
+          ],
+          "combos": 24,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.303
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.697
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 41
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "8s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "53s",
+            "88",
+            "96s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 290,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.908
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.092
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "43s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "97s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "AQo",
+            "K7s"
+          ],
+          "combos": 62,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.305
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.695
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "Ac",
+          "Ad",
+          "Ah"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A5o",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A9o",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
+            "JJ",
+            "K6s",
+            "K7s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "TT"
+          ],
+          "combos": 360,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.023
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 0.977
+            }
+          ]
+        }
+      ],
+      "classCount": 52
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "Qc",
+          "Qd",
+          "Qs"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "33",
+            "65s",
+            "66",
+            "75s",
+            "77",
+            "88",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "AA",
+            "J7s",
+            "J8s",
+            "JJ",
+            "JTs",
+            "K4s",
+            "K9o",
+            "K9s",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s",
+            "TT"
+          ],
+          "combos": 162,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.227
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.661
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.112
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "22",
+            "96s",
+            "97s",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "JTo",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 160,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.075
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.127
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.798
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "55",
+            "64s",
+            "86s",
+            "87s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "J9s",
+            "K2s",
+            "K3s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "T7s"
+          ],
+          "combos": 152,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.739
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.219
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.042
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -13143,6 +33341,166 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "Qd",
+          "Qh",
+          "Qs"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A7o",
+            "A7s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K7s",
+            "K8s",
+            "K9o",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 338,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.278
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.722
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "33",
+            "88",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "K5s",
+            "K6s",
+            "K9s",
+            "KTs",
+            "Q5s",
+            "Q9s",
+            "QQ"
+          ],
+          "combos": 112,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.657
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.343
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -13167,9 +33525,7 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "Kc",
-          "Kd",
-          "Ks"
+          "Qh"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -13193,24 +33549,34 @@ export const turnPack: TurnStrategyPack = {
             "22",
             "33",
             "44",
+            "54s",
             "55",
+            "64s",
             "66",
-            "76s",
+            "75s",
             "77",
             "86s",
             "87s",
             "88",
-            "96s",
-            "97s",
             "98o",
             "98s",
+            "99",
             "A2s",
             "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
             "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
             "A9o",
             "A9s",
             "AJo",
             "AJs",
+            "AKo",
+            "AKs",
             "AQo",
             "AQs",
             "ATo",
@@ -13218,10 +33584,289 @@ export const turnPack: TurnStrategyPack = {
             "J7s",
             "J8s",
             "J9s",
+            "JJ",
             "JTo",
             "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
             "K8s",
+            "K9o",
+            "K9s",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 432,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.155
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.841
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.005
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "65s",
+            "76s",
+            "96s",
+            "97s",
+            "AA",
             "KJo",
+            "KJs"
+          ],
+          "combos": 38,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.632
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.367
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.001
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "Kh"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A4s",
+            "A7o",
+            "A7s",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 196,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.928
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.072
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "43s",
+            "53s",
+            "54s",
+            "AA"
+          ],
+          "combos": 24,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.15
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.85
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 39
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "9c",
+          "9d"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
             "KJs",
             "KQo",
             "KQs",
@@ -13232,52 +33877,144 @@ export const turnPack: TurnStrategyPack = {
             "Q7s",
             "Q8s",
             "Q9s",
-            "T8s"
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
           ],
-          "combos": 266,
+          "combos": 292,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.237
+              "frequency": 0.945
             },
             {
-              "action": "BET 28.000000",
-              "frequency": 0.763
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
+              "action": "BET 100.000000",
+              "frequency": 0.055
             }
           ]
         },
         {
-          "action": "CHECK",
+          "action": "BET 100.000000",
           "handClasses": [
-            "54s",
+            "96s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "J7s",
+            "K8s",
+            "K9o",
+            "K9s"
+          ],
+          "combos": 60,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.265
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.735
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__Q76mono",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "Q76mono",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Qs",
+          "7s",
+          "6s"
+        ],
+        "turnCards": [
+          "As"
+        ],
+        "priorLine": [
+          "BET 38.000000",
+          "CALL"
+        ],
+        "potChips": 126,
+        "stackChips": 87,
+        "potBB": 25.2,
+        "stackBehindBB": 17.4,
+        "reach": 0.020577
+      },
+      "actions": [
+        "CHECK",
+        "BET 87.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 87.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
             "64s",
             "65s",
+            "66",
             "75s",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
             "99",
-            "A4s",
             "A5o",
-            "A5s",
             "A6s",
+            "A7o",
             "A7s",
             "A8o",
-            "A8s",
+            "A9o",
             "AA",
             "AKo",
             "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "J7s",
             "JJ",
-            "K2s",
-            "K3s",
-            "K4s",
-            "K5s",
             "K6s",
             "K7s",
             "K9o",
-            "K9s",
+            "KJo",
             "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
             "QJo",
             "QJs",
             "QQ",
@@ -13285,27 +34022,206 @@ export const turnPack: TurnStrategyPack = {
             "QTs",
             "T7s",
             "T9o",
-            "T9s",
             "TT"
           ],
-          "combos": 204,
+          "combos": 348,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.738
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.262
-            },
-            {
-              "action": "BET 108.000000",
               "frequency": 0
+            },
+            {
+              "action": "BET 87.000000",
+              "frequency": 1
             }
           ]
         }
       ],
-      "classCount": 77
+      "classCount": 51
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "Qh"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AKo",
+            "AKs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s",
+            "TT"
+          ],
+          "combos": 280,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.174
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.747
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.079
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "44",
+            "53s",
+            "54s",
+            "86s",
+            "87s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "J9s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "T7s"
+          ],
+          "combos": 130,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.677
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.287
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.036
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q9s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 64,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.04
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.345
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.615
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -13701,6 +34617,163 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "Kc"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AKo",
+            "AKs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KQo",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 374,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.199
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.801
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "88",
+            "A4s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "Q5s",
+            "Q6s"
+          ],
+          "combos": 72,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.604
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.396
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 71
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -13725,9 +34798,9 @@ export const turnPack: TurnStrategyPack = {
           "3c"
         ],
         "turnCards": [
-          "Ac",
-          "Ad",
-          "As"
+          "Kc",
+          "Kd",
+          "Ks"
         ],
         "priorLine": [
           "BET 17.000000",
@@ -13746,41 +34819,465 @@ export const turnPack: TurnStrategyPack = {
       ],
       "buckets": [
         {
-          "action": "CHECK",
+          "action": "BET 28.000000",
           "handClasses": [
+            "22",
+            "33",
+            "44",
             "55",
-            "65s",
             "66",
-            "75s",
             "76s",
             "77",
+            "86s",
+            "87s",
+            "88",
             "96s",
-            "99",
+            "97s",
+            "98o",
+            "98s",
             "A2s",
             "A3s",
+            "A7o",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JTo",
+            "JTs",
+            "K8s",
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "T8s"
+          ],
+          "combos": 266,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.237
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.763
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "99",
             "A4s",
             "A5o",
             "A5s",
             "A6s",
-            "A7o",
             "A7s",
             "A8o",
             "A8s",
-            "A9o",
-            "A9s",
             "AA",
-            "AJo",
+            "AKo",
+            "AKs",
+            "JJ",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KK",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 204,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.738
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.262
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "Ac",
+          "Ad"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A7o",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 202,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.937
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.063
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "A4s",
+            "AA"
+          ],
+          "combos": 22,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.364
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.636
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 40
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "9s"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "AA",
             "AJs",
             "AKo",
             "AKs",
             "AQo",
+            "AQs",
             "ATo",
             "ATs",
+            "J8s",
+            "J9s",
+            "JJ",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 276,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.955
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.045
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "97s",
+            "A9o",
+            "A9s",
+            "AJo",
             "J7s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "Q5s",
+            "Q6s",
+            "Q7s"
+          ],
+          "combos": 72,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.303
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.697
+            }
+          ]
+        }
+      ],
+      "classCount": 58
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "Kc",
+          "Kd",
+          "Ks"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "43s",
+            "55",
+            "65s",
+            "66",
+            "75s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AKo",
+            "AKs",
+            "J7s",
+            "J8s",
             "J9s",
             "JJ",
             "JTo",
-            "K3s",
+            "JTs",
             "K5s",
             "K6s",
             "K7s",
@@ -13794,76 +35291,102 @@ export const turnPack: TurnStrategyPack = {
             "KQs",
             "KTo",
             "KTs",
-            "Q5s",
-            "Q6s",
-            "Q7s",
+            "Q8s",
             "Q9s",
             "QJo",
             "QJs",
             "QQ",
             "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
             "T9o",
             "T9s",
             "TT"
           ],
-          "combos": 374,
+          "combos": 320,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.782
+              "frequency": 0.154
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.218
+              "frequency": 0.799
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0
+              "frequency": 0.046
             }
           ]
         },
         {
-          "action": "BET 28.000000",
+          "action": "CHECK",
           "handClasses": [
             "22",
             "33",
             "44",
+            "53s",
             "54s",
             "64s",
-            "86s",
-            "87s",
-            "88",
-            "97s",
             "98o",
             "98s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AQo",
             "AQs",
-            "J8s",
-            "JTs",
-            "K2s",
+            "ATo",
+            "ATs",
             "K4s",
-            "Q8s",
-            "QTs",
-            "T7s",
-            "T8s"
+            "Q5s",
+            "Q6s",
+            "Q7s"
           ],
-          "combos": 96,
+          "combos": 146,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.263
+              "frequency": 0.692
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.737
+              "frequency": 0.29
             },
             {
               "action": "BET 108.000000",
-              "frequency": 0
+              "frequency": 0.018
+            }
+          ]
+        },
+        {
+          "action": "BET 108.000000",
+          "handClasses": [
+            "K2s",
+            "K3s"
+          ],
+          "combos": 8,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.08
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.231
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.688
             }
           ]
         }
       ],
-      "classCount": 77
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -14263,6 +35786,744 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "Kd",
+          "Kh",
+          "Ks"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "AKo",
+            "AKs",
+            "AQs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 374,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.219
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.781
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "86s",
+            "87s",
+            "88",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AQo",
+            "ATo",
+            "ATs",
+            "Q5s",
+            "Q6s"
+          ],
+          "combos": 76,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.648
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.352
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "883r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "8d",
+          "3c"
+        ],
+        "turnCards": [
+          "Kh"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.438739
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "96s",
+            "99",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AKo",
+            "AKs",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KK",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 236,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.813
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.187
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "66",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "A2s",
+            "A3s",
+            "A7o",
+            "A7s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "K8s",
+            "KJo",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "Q9s",
+            "T8s"
+          ],
+          "combos": 234,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.276
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.724
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__A72r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "A72r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "As",
+          "7d",
+          "2c"
+        ],
+        "turnCards": [
+          "Ah"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.00958
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "75s",
+            "76s",
+            "77",
+            "87s",
+            "97s",
+            "99",
+            "A7o",
+            "A7s",
+            "AKs",
+            "AQs",
+            "J7s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQs",
+            "KTs",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "TT"
+          ],
+          "combos": 206,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.956
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.044
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "A3s",
+            "A4s",
+            "AA"
+          ],
+          "combos": 26,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.278
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.722
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 42
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "Tc",
+          "Td"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 352,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.978
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.022
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "Kh"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "43s",
+            "55",
+            "64s",
+            "65s",
+            "66",
+            "75s",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "AA",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 416,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.214
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.761
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.025
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "44",
+            "53s",
+            "54s",
+            "A6s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "Q5s",
+            "Q6s"
+          ],
+          "combos": 58,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.616
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.381
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.003
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
@@ -14655,6 +36916,616 @@ export const turnPack: TurnStrategyPack = {
         }
       ],
       "classCount": 79
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "877r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "7h",
+          "7d"
+        ],
+        "turnCards": [
+          "Ac"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.310713
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "55",
+            "66",
+            "88",
+            "98o",
+            "98s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AKo",
+            "AKs",
+            "ATo",
+            "J8s",
+            "K5s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q8s",
+            "Q9s",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T8s"
+          ],
+          "combos": 282,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.796
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.204
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "54s",
+            "64s",
+            "75s",
+            "76s",
+            "77",
+            "86s",
+            "87s",
+            "96s",
+            "97s",
+            "99",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATs",
+            "J7s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K6s",
+            "K7s",
+            "Q6s",
+            "Q7s",
+            "QJo",
+            "QJs",
+            "T7s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 168,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.147
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.853
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "883r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "8s",
+          "8d",
+          "3c"
+        ],
+        "turnCards": [
+          "Ac",
+          "Ad",
+          "As"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.438739
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "55",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "96s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "K3s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 374,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.782
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.218
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "64s",
+            "86s",
+            "87s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "AQs",
+            "J8s",
+            "JTs",
+            "K2s",
+            "K4s",
+            "Q8s",
+            "QTs",
+            "T7s",
+            "T8s"
+          ],
+          "combos": 96,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.263
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.737
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "Ts"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 352,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.949
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.051
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "T84r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Ts",
+          "8d",
+          "4c"
+        ],
+        "turnCards": [
+          "Ac",
+          "Ad",
+          "As"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.504212
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "53s",
+            "65s",
+            "75s",
+            "96s",
+            "97s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K8s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 358,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.143
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.856
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0.001
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "77",
+            "86s",
+            "87s",
+            "88",
+            "98o",
+            "98s",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "KQs",
+            "Q5s",
+            "Q6s",
+            "Q7s"
+          ],
+          "combos": 116,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.739
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.261
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 78
     },
     {
       "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
@@ -15054,7 +37925,7 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 79
     },
     {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__643r",
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__877r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
       "node": "CBET",
@@ -15062,7 +37933,7 @@ export const turnPack: TurnStrategyPack = {
       "stackBB": 25,
       "sprBand": "LOW",
       "heroOutOfPosition": true,
-      "board": "643r",
+      "board": "877r",
       "spot": {
         "hero": {
           "side": "OOP",
@@ -15073,15 +37944,16 @@ export const turnPack: TurnStrategyPack = {
           "facingBet": false
         },
         "flop": [
-          "6s",
-          "4h",
-          "3d"
+          "8s",
+          "7h",
+          "7d"
         ],
         "turnCards": [
-          "7c"
+          "Ad",
+          "Ah",
+          "As"
         ],
         "priorLine": [
-          "CHECK",
           "BET 17.000000",
           "CALL"
         ],
@@ -15089,7 +37961,7 @@ export const turnPack: TurnStrategyPack = {
         "stackChips": 108,
         "potBB": 16.8,
         "stackBehindBB": 21.6,
-        "reach": 0.023714
+        "reach": 0.310713
       },
       "actions": [
         "CHECK",
@@ -15101,21 +37973,19 @@ export const turnPack: TurnStrategyPack = {
           "action": "CHECK",
           "handClasses": [
             "33",
-            "43s",
             "44",
-            "53s",
-            "54s",
             "55",
-            "64s",
             "66",
-            "75s",
-            "87s",
-            "97s",
+            "86s",
+            "88",
+            "98o",
             "98s",
             "A2s",
             "A3s",
+            "A4s",
             "A5o",
             "A5s",
+            "A6s",
             "A7o",
             "A7s",
             "A8o",
@@ -15123,11081 +37993,79 @@ export const turnPack: TurnStrategyPack = {
             "A9o",
             "A9s",
             "AA",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
             "J8s",
-            "J9s",
-            "JTs",
-            "K2s",
-            "K3s",
+            "JJ",
             "K5s",
-            "K7s",
             "K8s",
             "K9o",
             "K9s",
             "KJo",
-            "KJs",
             "KK",
             "KQo",
             "KQs",
             "KTo",
             "KTs",
-            "Q7s",
+            "Q5s",
             "Q8s",
             "Q9s",
             "QJo",
             "QJs",
+            "QQ",
             "QTo",
             "QTs",
-            "T7s",
-            "T8s",
-            "T9s"
-          ],
-          "combos": 360,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 59
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "2c"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "64s",
-            "65s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "96s",
-            "97s",
-            "99",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JJ",
-            "JTs",
-            "K3s",
-            "K4s",
-            "K5s",
-            "K6s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KK",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q6s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 342,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.108
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.838
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.054
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "33",
-            "98o",
-            "98s",
-            "A2s",
-            "AQo",
-            "AQs",
             "T8s"
-          ],
-          "combos": 46,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.063
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.117
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.82
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "AA",
-            "KJo",
-            "KJs",
-            "KQo",
-            "KQs"
-          ],
-          "combos": 38,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "2d",
-          "2h",
-          "2s"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98s",
-            "99",
-            "A3s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JJ",
-            "JTs",
-            "K3s",
-            "K4s",
-            "K5s",
-            "K7s",
-            "KK",
-            "KTo",
-            "Q5s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 270,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.119
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.845
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.036
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "33",
-            "64s",
-            "65s",
-            "96s",
-            "98o",
-            "A2s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "K6s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "Q6s"
-          ],
-          "combos": 110,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.068
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.248
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.684
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "A4s",
-            "AA",
-            "KJo",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs"
-          ],
-          "combos": 46,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.879
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.094
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.027
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "3c"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "44",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "99",
-            "A2s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JJ",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KK",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "TT"
-          ],
-          "combos": 300,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.191
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.724
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.084
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "43s",
-            "53s",
-            "55",
-            "64s",
-            "65s",
-            "96s",
-            "98o",
-            "98s",
-            "A3s",
-            "A6s",
-            "K3s",
-            "K6s",
-            "Q6s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 82,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.061
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.208
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.731
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "33",
-            "AA",
-            "KJo",
-            "KJs",
-            "KQo",
-            "KQs"
-          ],
-          "combos": 44,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.926
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.074
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "3d",
-          "3h",
-          "3s"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98s",
-            "99",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JJ",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "KTo",
-            "Q5s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 278,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.179
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.743
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.077
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "43s",
-            "44",
-            "53s",
-            "64s",
-            "65s",
-            "96s",
-            "98o",
-            "A3s",
-            "A6s",
-            "AQo",
-            "AQs",
-            "K3s",
-            "K4s",
-            "K5s",
-            "K6s",
-            "Q6s"
-          ],
-          "combos": 82,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.051
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.159
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.79
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "33",
-            "A2s",
-            "A4s",
-            "AA",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTs"
-          ],
-          "combos": 66,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.838
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.147
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.015
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "4c"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "A2s",
-            "A3s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "JJ",
-            "K3s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KK",
-            "KTo",
-            "KTs",
-            "Q7s",
-            "Q8s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "T9o",
-            "T9s",
-            "TT"
           ],
           "combos": 274,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.212
+              "frequency": 0.806
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.747
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.042
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "33",
-            "43s",
-            "64s",
-            "65s",
-            "96s",
-            "98o",
-            "98s",
-            "99",
-            "A4s",
-            "A6s",
-            "AQo",
-            "AQs",
-            "K4s",
-            "K5s",
-            "K6s",
-            "Q5s",
-            "Q6s",
-            "T8s"
-          ],
-          "combos": 92,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.063
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.14
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.797
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "44",
-            "53s",
-            "AA",
-            "J9s",
-            "JTs",
-            "KJo",
-            "KJs",
-            "KQo",
-            "KQs",
-            "Q9s"
-          ],
-          "combos": 60,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.938
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.062
+              "frequency": 0.194
             },
             {
               "action": "BET 108.000000",
               "frequency": 0
             }
           ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
         },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "4d",
-          "4h",
-          "4s"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
         {
           "action": "BET 28.000000",
           "handClasses": [
             "22",
-            "55",
-            "66",
+            "54s",
+            "64s",
             "75s",
             "76s",
             "77",
             "87s",
-            "88",
+            "96s",
             "97s",
-            "A3s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8s",
-            "A9o",
-            "A9s",
+            "99",
             "AJo",
             "AJs",
+            "AKo",
             "AKs",
+            "AQo",
+            "AQs",
             "ATo",
             "ATs",
             "J7s",
-            "J8s",
-            "JJ",
-            "K3s",
+            "J9s",
+            "JTo",
+            "JTs",
+            "K6s",
             "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KK",
-            "KTo",
+            "Q6s",
             "Q7s",
-            "Q8s",
-            "QQ",
             "T7s",
             "T9o",
             "T9s",
             "TT"
           ],
-          "combos": 226,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.207
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.757
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.037
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "33",
-            "43s",
-            "64s",
-            "65s",
-            "96s",
-            "98o",
-            "99",
-            "A4s",
-            "A6s",
-            "A8o",
-            "AKo",
-            "AQo",
-            "AQs",
-            "K4s",
-            "K5s",
-            "K6s",
-            "Q5s",
-            "Q6s",
-            "T8s"
-          ],
-          "combos": 112,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.104
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.148
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.748
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "44",
-            "53s",
-            "98s",
-            "A2s",
-            "A5o",
-            "AA",
-            "J9s",
-            "JTs",
-            "KJo",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "Q9s",
-            "QTs"
-          ],
-          "combos": 88,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.828
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.13
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.042
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "5c"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "98s",
-            "99",
-            "A2s",
-            "A3s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J9s",
-            "JJ",
-            "K3s",
-            "K7s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KTo",
-            "KTs",
-            "Q7s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 286,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.15
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.778
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.071
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "53s",
-            "64s",
-            "65s",
-            "96s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A9o",
-            "A9s",
-            "AKo",
-            "AKs",
-            "J8s",
-            "K4s",
-            "K5s",
-            "K6s",
-            "K8s",
-            "Q5s",
-            "Q6s",
-            "Q8s",
-            "T8s",
-            "TT"
-          ],
-          "combos": 110,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.034
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.134
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.833
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "55",
-            "A4s",
-            "JTs",
-            "KQo",
-            "KQs"
-          ],
-          "combos": 30,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.726
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.273
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.001
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "5d",
-          "5h",
-          "5s"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "98s",
-            "A3s",
-            "A4s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J9s",
-            "K3s",
-            "K7s",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KTo",
-            "KTs",
-            "Q7s",
-            "Q9s",
-            "QTs",
-            "T7s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 240,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.172
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.751
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.077
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "53s",
-            "64s",
-            "65s",
-            "96s",
-            "99",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A9o",
-            "A9s",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "J8s",
-            "JJ",
-            "K4s",
-            "K5s",
-            "K6s",
-            "K8s",
-            "K9o",
-            "Q5s",
-            "Q6s",
-            "Q8s",
-            "QQ",
-            "T8s",
-            "TT"
-          ],
-          "combos": 156,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.023
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.188
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.789
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "55",
-            "A2s",
-            "JTs",
-            "KQo",
-            "KQs"
-          ],
-          "combos": 30,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.707
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.289
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.004
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "6c"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "64s",
-            "65s",
-            "66",
-            "75s",
-            "77",
-            "87s",
-            "88",
-            "96s",
-            "97s",
-            "98o",
-            "98s",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JJ",
-            "JTs",
-            "K3s",
-            "K4s",
-            "K5s",
-            "K6s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q6s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 414,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.041
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.901
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.058
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "Q5s"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.555
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.445
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "T8s"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.002
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.476
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.523
-            }
-          ]
-        }
-      ],
-      "classCount": 71
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "6h",
-          "6s"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "64s",
-            "65s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "96s",
-            "97s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JJ",
-            "JTs",
-            "K6s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q6s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 376,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.109
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.774
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.117
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "88",
-            "98o",
-            "98s",
-            "99"
-          ],
-          "combos": 28,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.026
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.356
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.619
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "AA",
-            "K3s",
-            "K4s",
-            "K5s",
-            "Q5s"
-          ],
-          "combos": 22,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.77
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.229
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.001
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "7c"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "64s",
-            "65s",
-            "66",
-            "88",
-            "96s",
-            "98o",
-            "98s",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K6s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KTo",
-            "KTs",
-            "Q6s",
-            "Q8s",
-            "Q9s",
-            "QTs",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 312,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.016
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.093
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.891
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "75s",
-            "87s",
-            "97s",
-            "A7o",
-            "A7s",
-            "AA",
-            "J7s",
-            "JJ",
-            "K3s",
-            "K4s",
-            "K5s",
-            "K7s",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "Q5s",
-            "Q7s",
-            "QQ",
-            "T7s"
-          ],
-          "combos": 104,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.063
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.848
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.089
-            }
-          ]
-        }
-      ],
-      "classCount": 70
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "7d"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "53s",
-            "66",
-            "75s",
-            "76s",
-            "87s",
-            "88",
-            "97s",
-            "99",
-            "A6s",
-            "A7o",
-            "A7s",
-            "AA",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JJ",
-            "JTs",
-            "K3s",
-            "K4s",
-            "K5s",
-            "K6s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q6s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "TT"
-          ],
-          "combos": 220,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.083
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.813
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.104
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "55",
-            "64s",
-            "65s",
-            "96s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 200,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.013
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.15
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.837
-            }
-          ]
-        }
-      ],
-      "classCount": 71
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "8c"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "43s",
-            "65s",
-            "88",
-            "97s",
-            "A2s",
-            "A3s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "J8s",
-            "J9s",
-            "K3s",
-            "K4s",
-            "K5s",
-            "K6s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KQo",
-            "KQs",
-            "Q6s",
-            "Q8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 210,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.746
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.199
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.056
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "33",
-            "44",
-            "53s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "96s",
-            "98o",
-            "98s",
-            "99",
-            "A4s",
-            "A7o",
-            "A7s",
-            "AKo",
-            "AKs",
-            "J7s",
-            "JTs",
-            "KK",
-            "KTo",
-            "KTs",
-            "Q7s",
-            "QTs",
-            "T7s",
-            "T8s",
-            "TT"
-          ],
-          "combos": 164,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.177
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.81
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.013
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "A8o",
-            "A8s",
-            "ATo",
-            "ATs",
-            "JJ",
-            "Q5s",
-            "Q9s",
-            "QQ"
-          ],
-          "combos": 52,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.113
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.158
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.729
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "8d",
-          "8h",
-          "8s"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "65s",
-            "87s",
-            "88",
-            "97s",
-            "99",
-            "A2s",
-            "A3s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "J7s",
-            "J8s",
-            "K3s",
-            "K4s",
-            "K6s",
-            "K7s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "Q6s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 238,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.758
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.214
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.027
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "53s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "96s",
-            "98o",
-            "98s",
-            "A4s",
-            "A7s",
-            "JTs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q7s",
-            "QTs",
-            "T7s",
-            "T8s",
-            "TT"
-          ],
-          "combos": 104,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.197
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.77
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.033
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "64s",
-            "A8o",
-            "A8s",
-            "ATo",
-            "ATs",
-            "J9s",
-            "JJ",
-            "K5s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "Q8s",
-            "Q9s",
-            "QQ"
-          ],
-          "combos": 84,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.097
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.042
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.861
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "9c"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "65s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "96s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JJ",
-            "JTs",
-            "K5s",
-            "K7s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q6s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 374,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.123
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.862
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.015
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "64s",
-            "99",
-            "AA",
-            "AJo",
-            "AJs",
-            "K3s",
-            "K4s",
-            "K6s",
-            "K8s",
-            "T8s"
-          ],
-          "combos": 52,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.685
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.281
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.035
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "9d",
-          "9h",
-          "9s"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "44",
-            "53s",
-            "55",
-            "64s",
-            "65s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "96s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J9s",
-            "JTs",
-            "K5s",
-            "K6s",
-            "K7s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KTs",
-            "Q5s",
-            "Q6s",
-            "Q7s",
-            "Q9s",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 326,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.173
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.717
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.11
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "A9o",
-            "A9s",
-            "J8s",
-            "JJ",
-            "K8s",
-            "KTo",
-            "Q8s",
-            "QQ"
-          ],
-          "combos": 52,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.057
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.268
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.676
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "43s",
-            "99",
-            "A3s",
-            "A4s",
-            "AA",
-            "AJo",
-            "K3s",
-            "K4s",
-            "KQs"
-          ],
-          "combos": 48,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.562
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.369
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.069
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Tc"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "64s",
-            "65s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "96s",
-            "97s",
-            "98o",
-            "98s",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JJ",
-            "JTs",
-            "K6s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KTo",
-            "Q5s",
-            "Q6s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 388,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.051
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.949
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "AA",
-            "K3s",
-            "K4s",
-            "K5s",
-            "KQo",
-            "KQs"
-          ],
-          "combos": 34,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.682
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.318
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 71
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Td",
-          "Th",
-          "Ts"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "64s",
-            "65s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "96s",
-            "97s",
-            "98o",
-            "98s",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JJ",
-            "JTs",
-            "K6s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KTo",
-            "KTs",
-            "Q6s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 390,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.077
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.923
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "K3s",
-            "K4s",
-            "K5s",
-            "KQo",
-            "KQs",
-            "Q5s"
-          ],
-          "combos": 32,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.62
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.38
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 71
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Jc"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "96s",
-            "97s",
-            "99",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K5s",
-            "K7s",
-            "Q5s",
-            "Q6s",
-            "Q7s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 288,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.168
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.832
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "64s",
-            "65s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "AA",
-            "JJ",
-            "K3s",
-            "K4s",
-            "K6s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s"
-          ],
-          "combos": 134,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.703
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.297
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 71
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Jd",
-          "Jh",
-          "Js"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "96s",
-            "97s",
-            "99",
-            "A5o",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K7s",
-            "Q5s",
-            "Q6s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 282,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.225
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.775
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "64s",
-            "65s",
-            "66",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "AA",
-            "JJ",
-            "K3s",
-            "K5s",
-            "K6s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs"
-          ],
-          "combos": 144,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.69
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.31
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Qc"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "98s",
-            "99",
-            "A2s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "JJ",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "KQo",
-            "Q5s",
-            "Q6s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 330,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.19
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.81
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "64s",
-            "65s",
-            "96s",
-            "A3s",
-            "AA",
-            "J8s",
-            "J9s",
-            "K3s",
-            "K6s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KTo",
-            "KTs"
-          ],
-          "combos": 92,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.714
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.286
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 71
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Qd",
-          "Qh",
-          "Qs"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A5o",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "JJ",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "KK",
-            "KQo",
-            "Q5s",
-            "Q6s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QQ",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 308,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.222
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.778
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "64s",
-            "65s",
-            "96s",
-            "98s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A8o",
-            "AA",
-            "J9s",
-            "K3s",
-            "K6s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KQs",
-            "KTo",
-            "KTs"
-          ],
-          "combos": 114,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.7
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.3
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 71
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Kc"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "64s",
-            "65s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "96s",
-            "97s",
-            "98o",
-            "98s",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J9s",
-            "JJ",
-            "JTs",
-            "K3s",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KK",
-            "KQo",
-            "KTo",
-            "Q6s",
-            "Q7s",
-            "Q9s",
-            "QQ",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 384,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.271
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.729
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "AA",
-            "J8s",
-            "K6s",
-            "K8s",
-            "Q5s",
-            "Q8s",
-            "QTs"
-          ],
-          "combos": 30,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.636
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.364
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 69
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Kd",
-          "Kh",
-          "Ks"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "98s",
-            "99",
-            "A2s",
-            "A3s",
-            "A5o",
-            "A6s",
-            "A7o",
-            "A7s",
-            "AJs",
-            "AQs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JJ",
-            "JTs",
-            "K3s",
-            "K4s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q6s",
-            "Q7s",
-            "Q9s",
-            "QQ",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 292,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.273
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.727
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "64s",
-            "65s",
-            "96s",
-            "A4s",
-            "A5s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AKo",
-            "AKs",
-            "AQo",
-            "ATo",
-            "ATs",
-            "K5s",
-            "K6s",
-            "Q5s",
-            "Q8s",
-            "QTs"
-          ],
-          "combos": 134,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.57
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.43
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Ac"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "64s",
-            "65s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "96s",
-            "97s",
-            "98o",
-            "98s",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A6s",
-            "A7o",
-            "A7s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K3s",
-            "K4s",
-            "K5s",
-            "K6s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q6s",
-            "Q7s",
-            "Q9s",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 334,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.203
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.797
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "A8o",
-            "A8s",
-            "AKo",
-            "AKs",
-            "JJ",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "Q8s",
-            "QQ"
-          ],
-          "combos": 92,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.757
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.243
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Ad",
-          "Ah",
-          "As"
-        ],
-        "priorLine": [
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.289089
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "64s",
-            "65s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "96s",
-            "97s",
-            "98o",
-            "98s",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "AKo",
-            "AKs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J7s",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K3s",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q6s",
-            "Q7s",
-            "Q8s",
-            "Q9s",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s",
-            "TT"
-          ],
-          "combos": 356,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.253
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.745
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.002
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "88",
-            "A6s",
-            "AA",
-            "JJ",
-            "K6s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "QQ"
-          ],
-          "combos": 70,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.798
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.202
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.001
-            }
-          ]
-        }
-      ],
-      "classCount": 72
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "2c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 302,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.975
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.025
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "33",
-            "98s"
-          ],
-          "combos": 10,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.204
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.796
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "2d",
-          "2h",
-          "2s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "43s",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 300,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.958
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.042
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "33",
-            "44"
-          ],
-          "combos": 12,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.172
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.828
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "3c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 282,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.976
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.024
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "43s",
-            "44",
-            "53s",
-            "98o",
-            "98s"
-          ],
-          "combos": 30,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.076
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.924
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "3d",
-          "3h",
-          "3s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "54s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 276,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.972
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.028
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "98o",
-            "98s"
-          ],
-          "combos": 36,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.308
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.693
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "4c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "44",
-            "53s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 282,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.986
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.014
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "33",
-            "43s",
-            "54s",
-            "A3s",
-            "A4s",
-            "J8s",
-            "T8s"
-          ],
-          "combos": 30,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.09
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.91
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "4d",
-          "4h",
-          "4s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "44",
-            "53s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 290,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.942
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.058
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "33",
-            "43s",
-            "54s",
-            "97s",
-            "T8s"
-          ],
-          "combos": 22,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.074
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.926
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "5c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "43s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 260,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.948
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.052
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "33",
-            "44",
-            "53s",
-            "54s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "J8s",
-            "T7s",
-            "T8s"
-          ],
-          "combos": 52,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.163
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.837
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "5d",
-          "5h",
-          "5s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 252,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.95
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.05
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "J8s",
-            "Q8s",
-            "T7s",
-            "T8s"
-          ],
-          "combos": 60,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.097
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.903
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "6c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 308,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.997
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.003
-            }
-          ]
-        }
-      ],
-      "classCount": 51
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "6h",
-          "6s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 312,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.951
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.049
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "7c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "44",
-            "54s",
-            "55",
-            "66",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 214,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.04
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.96
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "43s",
-            "53s",
-            "75s",
-            "87s",
-            "97s",
-            "A7o",
-            "A7s",
-            "AA",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "KK",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s"
-          ],
-          "combos": 88,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.893
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.107
-            }
-          ]
-        }
-      ],
-      "classCount": 50
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "7d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "87s",
-            "97s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 262,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.95
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.05
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "98o",
-            "98s",
-            "AJo",
-            "AJs"
-          ],
-          "combos": 44,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.307
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.693
-            }
-          ]
-        }
-      ],
-      "classCount": 51
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "8c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "JTs",
-            "K7s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 248,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.958
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.042
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "J9s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "Q9s"
-          ],
-          "combos": 60,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.154
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.846
-            }
-          ]
-        }
-      ],
-      "classCount": 51
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "8d",
-          "8h",
-          "8s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "JTs",
-            "K7s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 252,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.934
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.066
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "A7o",
-            "A8o",
-            "A8s",
-            "J9s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "Q8s",
-            "Q9s"
-          ],
-          "combos": 60,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.069
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.931
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "9c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K9o",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o"
-          ],
-          "combos": 288,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.928
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.072
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "J8s",
-            "K8s",
-            "K9s",
-            "Q8s"
-          ],
-          "combos": 16,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.166
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.834
-            }
-          ]
-        }
-      ],
-      "classCount": 50
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "9d",
-          "9h",
-          "9s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J9s",
-            "JTs",
-            "K7s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 264,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.975
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.025
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "A9o",
-            "A9s",
-            "J8s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "Q8s",
-            "Q9s"
-          ],
-          "combos": 48,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.199
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.801
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Tc"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o"
-          ],
-          "combos": 308,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.986
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.014
-            }
-          ]
-        }
-      ],
-      "classCount": 51
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Td",
-          "Th",
-          "Ts"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 308,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.924
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.076
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "T8s"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.26
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.74
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Jc"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 288,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.956
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.044
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "98o",
-            "98s",
-            "J9s",
-            "JTs"
-          ],
-          "combos": 24,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.142
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.858
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Jd",
-          "Jh",
-          "Js"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 268,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.944
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.056
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "98o",
-            "98s",
-            "J8s",
-            "J9s",
-            "JTs",
-            "KJo",
-            "KJs"
-          ],
-          "combos": 44,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.224
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.776
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Qc"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 292,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.989
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.011
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "98o",
-            "98s",
-            "QJs"
-          ],
-          "combos": 20,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.232
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.768
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Qd",
-          "Qh",
-          "Qs"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "98s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 308,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.961
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.039
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "QJs"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.119
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.881
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Kc"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "KK",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s"
-          ],
-          "combos": 208,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.989
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.011
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "54s",
-            "98o",
-            "98s",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTs",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 80,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.143
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.857
-            }
-          ]
-        }
-      ],
-      "classCount": 50
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Kd",
-          "Kh",
-          "Ks"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "KK",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s"
-          ],
-          "combos": 208,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.951
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.049
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "54s",
-            "98o",
-            "98s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 104,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.208
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.792
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Ac"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "55",
-            "66",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "AA",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s"
-          ],
-          "combos": 208,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.917
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.083
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "54s",
-            "75s",
-            "98o",
-            "98s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 104,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.303
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.697
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Ad",
-          "Ah",
-          "As"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 25.000000",
-          "CALL"
-        ],
-        "potChips": 100,
-        "stackChips": 100,
-        "potBB": 20,
-        "stackBehindBB": 20,
-        "reach": 0.112851
-      },
-      "actions": [
-        "CHECK",
-        "BET 100.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "44",
-            "53s",
-            "55",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "A3s",
-            "A4s",
-            "A5s",
-            "A7o",
-            "A7s",
-            "AA",
-            "J8s",
-            "J9s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o"
-          ],
-          "combos": 212,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.906
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.094
-            }
-          ]
-        },
-        {
-          "action": "BET 100.000000",
-          "handClasses": [
-            "43s",
-            "54s",
-            "98o",
-            "98s",
-            "A2s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJo",
-            "AJs",
-            "ATo",
-            "ATs",
-            "JTs",
-            "T9s"
-          ],
-          "combos": 100,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.212
-            },
-            {
-              "action": "BET 100.000000",
-              "frequency": 0.788
-            }
-          ]
-        }
-      ],
-      "classCount": 52
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "2c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 364,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.986
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.013
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.001
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "2d",
-          "2h",
-          "2s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 364,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 1
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "3c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 364,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.991
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.009
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "3d",
-          "3h",
-          "3s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 364,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.949
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.049
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.002
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "4c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 360,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.994
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.006
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "J8s"
-          ],
-          "combos": 4,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.095
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.905
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "4d",
-          "4h",
-          "4s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 364,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.969
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.029
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.003
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "5c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 346,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.974
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.026
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "98o",
-            "99"
-          ],
-          "combos": 18,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.412
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.588
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "5d",
-          "5h",
-          "5s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 364,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.938
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.058
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.004
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "6c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 360,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.997
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.002
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 59
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "6h",
-          "6s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 364,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.996
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.003
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "7c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "43s",
-            "53s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "87s",
-            "88",
-            "97s",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 316,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.916
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.001
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.083
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "44",
-            "54s",
-            "98o",
-            "AQs"
-          ],
-          "combos": 38,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.151
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.849
-            }
-          ]
-        }
-      ],
-      "classCount": 58
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "7d"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 322,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.814
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.092
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.093
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "75s",
-            "76s",
-            "87s",
-            "88",
-            "97s",
-            "T7s"
-          ],
-          "combos": 26,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.342
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.657
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.001
-            }
-          ]
-        },
-        {
-          "action": "BET 108.000000",
-          "handClasses": [
-            "22"
-          ],
-          "combos": 6,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.252
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.013
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.735
-            }
-          ]
-        }
-      ],
-      "classCount": 58
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "8c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 350,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.956
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.043
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "77",
-            "JTs",
-            "K4s"
-          ],
-          "combos": 14,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.33
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.67
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "8d",
-          "8h",
-          "8s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 360,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.951
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.047
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.002
-            }
-          ]
-        }
-      ],
-      "classCount": 59
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "9c"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o"
-          ],
-          "combos": 360,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.957
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.041
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.002
-            }
-          ]
-        }
-      ],
-      "classCount": 59
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "9d",
-          "9h",
-          "9s"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 364,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.957
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.041
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.002
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Tc"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "88",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T8s",
-            "T9o"
-          ],
-          "combos": 314,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.907
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.093
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "43s",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "J8s",
-            "J9s",
-            "K7s",
-            "Q8s",
-            "T7s"
-          ],
-          "combos": 46,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.245
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.755
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 59
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Td",
-          "Th",
-          "Ts"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "88",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 314,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.857
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.14
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.002
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "J8s",
-            "J9s",
-            "K7s",
-            "T7s"
-          ],
-          "combos": 50,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.347
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.652
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.001
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Jc"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "44",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "98o",
-            "99",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 316,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.887
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.111
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.001
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "43s",
-            "53s",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "K7s",
-            "T7s",
-            "T8s"
-          ],
-          "combos": 48,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.342
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.657
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.001
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Jd",
-          "Jh",
-          "Js"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "98o",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs"
-          ],
-          "combos": 294,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.907
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.091
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.002
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "43s",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "99",
-            "K7s",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 66,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.328
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.671
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0.001
-            }
-          ]
-        }
-      ],
-      "classCount": 59
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Qc"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "44",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "98o",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 310,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.919
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.081
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "43s",
-            "53s",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "99",
-            "K7s",
-            "T7s",
-            "T8s"
-          ],
-          "combos": 54,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.101
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.899
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Qd",
-          "Qh",
-          "Qs"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "22",
-            "33",
-            "44",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "98o",
-            "A2s",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 310,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.927
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.073
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "43s",
-            "53s",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "88",
-            "97s",
-            "99",
-            "K7s",
-            "T7s",
-            "T8s"
-          ],
-          "combos": 54,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.103
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.897
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Kc"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AA",
-            "AJo",
-            "AJs",
-            "AQo",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 348,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.095
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.905
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        },
-        {
-          "action": "CHECK",
-          "handClasses": [
-            "88",
-            "99",
-            "A2s"
-          ],
-          "combos": 16,
-          "mix": [
-            {
-              "action": "CHECK",
-              "frequency": 0.626
-            },
-            {
-              "action": "BET 28.000000",
-              "frequency": 0.374
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
-            }
-          ]
-        }
-      ],
-      "classCount": 60
-    },
-    {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
-      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "positionPattern": "SRP_SB_VS_BB",
-      "node": "CBET",
-      "potType": "SINGLE_RAISED",
-      "stackBB": 25,
-      "sprBand": "LOW",
-      "heroOutOfPosition": true,
-      "board": "776r",
-      "spot": {
-        "hero": {
-          "side": "OOP",
-          "seat": "SB",
-          "villainSeat": "BB",
-          "isAggressor": true,
-          "confidence": 1,
-          "facingBet": false
-        },
-        "flop": [
-          "7s",
-          "7h",
-          "6d"
-        ],
-        "turnCards": [
-          "Kd",
-          "Kh",
-          "Ks"
-        ],
-        "priorLine": [
-          "CHECK",
-          "BET 17.000000",
-          "CALL"
-        ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
-      },
-      "actions": [
-        "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
-      ],
-      "buckets": [
-        {
-          "action": "BET 28.000000",
-          "handClasses": [
-            "22",
-            "33",
-            "43s",
-            "44",
-            "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
-            "75s",
-            "76s",
-            "77",
-            "87s",
-            "97s",
-            "98o",
-            "A3s",
-            "A4s",
-            "A5o",
-            "A5s",
-            "A7o",
-            "A7s",
-            "A8o",
-            "A8s",
-            "A9o",
-            "A9s",
-            "AJs",
-            "AQs",
-            "ATo",
-            "ATs",
-            "J8s",
-            "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
-            "QTs",
-            "T7s",
-            "T8s",
-            "T9o",
-            "T9s"
-          ],
-          "combos": 314,
+          "combos": 176,
           "mix": [
             {
               "action": "CHECK",
@@ -26212,30 +38080,289 @@ export const turnPack: TurnStrategyPack = {
               "frequency": 0
             }
           ]
+        }
+      ],
+      "classCount": 72
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__883r",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "883r",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
         },
+        "flop": [
+          "8s",
+          "8d",
+          "3c"
+        ],
+        "turnCards": [
+          "Ah"
+        ],
+        "priorLine": [
+          "BET 17.000000",
+          "CALL"
+        ],
+        "potChips": 84,
+        "stackChips": 108,
+        "potBB": 16.8,
+        "stackBehindBB": 21.6,
+        "reach": 0.438739
+      },
+      "actions": [
+        "CHECK",
+        "BET 28.000000",
+        "BET 108.000000"
+      ],
+      "buckets": [
         {
           "action": "CHECK",
           "handClasses": [
-            "88",
+            "65s",
+            "66",
+            "75s",
+            "76s",
+            "77",
+            "96s",
             "99",
             "A2s",
+            "A3s",
+            "A4s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
             "AA",
             "AJo",
-            "AQo"
+            "AJs",
+            "AKo",
+            "AKs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTs",
+            "TT"
           ],
-          "combos": 46,
+          "combos": 280,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.709
+              "frequency": 0.745
             },
             {
               "action": "BET 28.000000",
-              "frequency": 0.291
+              "frequency": 0.255
             },
             {
               "action": "BET 108.000000",
               "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "BET 28.000000",
+          "handClasses": [
+            "22",
+            "33",
+            "44",
+            "54s",
+            "55",
+            "64s",
+            "86s",
+            "87s",
+            "88",
+            "97s",
+            "98o",
+            "98s",
+            "A5o",
+            "A5s",
+            "A6s",
+            "A7o",
+            "A7s",
+            "AQo",
+            "AQs",
+            "J8s",
+            "K2s",
+            "K3s",
+            "K4s",
+            "KQo",
+            "KQs",
+            "Q8s",
+            "QTo",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 190,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.325
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.675
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 77
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "Jc",
+          "Jd"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 352,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.997
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.003
             }
           ]
         }
@@ -26243,7 +38370,7 @@ export const turnPack: TurnStrategyPack = {
       "classCount": 59
     },
     {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__T84r",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
       "node": "CBET",
@@ -26251,7 +38378,7 @@ export const turnPack: TurnStrategyPack = {
       "stackBB": 25,
       "sprBand": "LOW",
       "heroOutOfPosition": true,
-      "board": "776r",
+      "board": "T84r",
       "spot": {
         "hero": {
           "side": "OOP",
@@ -26262,15 +38389,14 @@ export const turnPack: TurnStrategyPack = {
           "facingBet": false
         },
         "flop": [
-          "7s",
-          "7h",
-          "6d"
+          "Ts",
+          "8d",
+          "4c"
         ],
         "turnCards": [
-          "Ac"
+          "Ah"
         ],
         "priorLine": [
-          "CHECK",
           "BET 17.000000",
           "CALL"
         ],
@@ -26278,7 +38404,7 @@ export const turnPack: TurnStrategyPack = {
         "stackChips": 108,
         "potBB": 16.8,
         "stackBehindBB": 21.6,
-        "reach": 0.084253
+        "reach": 0.504212
       },
       "actions": [
         "CHECK",
@@ -26287,32 +38413,443 @@ export const turnPack: TurnStrategyPack = {
       ],
       "buckets": [
         {
-          "action": "CHECK",
+          "action": "BET 28.000000",
           "handClasses": [
             "22",
             "33",
-            "43s",
             "44",
             "53s",
-            "54s",
-            "55",
-            "64s",
-            "66",
+            "65s",
             "75s",
-            "76s",
-            "77",
             "87s",
-            "88",
+            "96s",
             "97s",
-            "98o",
             "99",
             "A2s",
             "A3s",
             "A4s",
             "A5o",
             "A5s",
+            "A6s",
             "A7o",
             "A7s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "JTo",
+            "JTs",
+            "K8s",
+            "KJo",
+            "KJs",
+            "KK",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QQ",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 354,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.174
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.826
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        },
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "54s",
+            "55",
+            "64s",
+            "66",
+            "77",
+            "86s",
+            "88",
+            "98o",
+            "98s",
+            "AA",
+            "K2s",
+            "K3s",
+            "K4s",
+            "K5s",
+            "K6s",
+            "K7s",
+            "K9o",
+            "K9s",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "TT"
+          ],
+          "combos": 120,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.796
+            },
+            {
+              "action": "BET 28.000000",
+              "frequency": 0.204
+            },
+            {
+              "action": "BET 108.000000",
+              "frequency": 0
+            }
+          ]
+        }
+      ],
+      "classCount": 78
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "Jh"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 324,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.997
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.003
+            }
+          ]
+        }
+      ],
+      "classCount": 54
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "Qc",
+          "Qd"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 280,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.93
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.07
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "AKo",
+            "AKs"
+          ],
+          "combos": 72,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.228
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.772
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "Qh"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
             "A8o",
             "A8s",
             "A9o",
@@ -26324,53 +38861,69 @@ export const turnPack: TurnStrategyPack = {
             "AQs",
             "ATo",
             "ATs",
+            "J7s",
             "J8s",
             "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
+            "JJ",
             "K7s",
             "K8s",
             "K9o",
             "K9s",
-            "KJo",
             "KJs",
-            "KK",
             "KQo",
             "KQs",
             "KTo",
             "KTs",
             "Q5s",
+            "Q6s",
+            "Q7s",
             "Q8s",
             "Q9s",
-            "QJs",
+            "QTo",
             "QTs",
             "T7s",
             "T8s",
             "T9o",
-            "T9s"
+            "T9s",
+            "TT"
           ],
-          "combos": 364,
+          "combos": 312,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.986
+              "frequency": 0.842
             },
             {
-              "action": "BET 28.000000",
-              "frequency": 0.014
+              "action": "BET 100.000000",
+              "frequency": 0.158
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "A5s",
+            "A6s",
+            "AKo",
+            "AKs"
+          ],
+          "combos": 24,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.326
             },
             {
-              "action": "BET 108.000000",
-              "frequency": 0
+              "action": "BET 100.000000",
+              "frequency": 0.674
             }
           ]
         }
       ],
-      "classCount": 60
+      "classCount": 57
     },
     {
-      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__776r",
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "positionPattern": "SRP_SB_VS_BB",
       "node": "CBET",
@@ -26378,7 +38931,7 @@ export const turnPack: TurnStrategyPack = {
       "stackBB": 25,
       "sprBand": "LOW",
       "heroOutOfPosition": true,
-      "board": "776r",
+      "board": "JT9tt",
       "spot": {
         "hero": {
           "side": "OOP",
@@ -26389,59 +38942,891 @@ export const turnPack: TurnStrategyPack = {
           "facingBet": false
         },
         "flop": [
-          "7s",
-          "7h",
-          "6d"
+          "Js",
+          "Th",
+          "9h"
         ],
         "turnCards": [
-          "Ad",
-          "Ah",
+          "Qs"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 268,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.925
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.075
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "AKo",
+            "AKs",
+            "K7s"
+          ],
+          "combos": 84,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.279
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.721
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "Kc",
+          "Kd"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 352,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.948
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.052
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "Kh"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 336,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.918
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.082
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "AQs",
+            "Q5s",
+            "Q6s"
+          ],
+          "combos": 12,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.437
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.563
+            }
+          ]
+        }
+      ],
+      "classCount": 58
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "Ks"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "98o",
+            "98s",
+            "99",
+            "A2s",
+            "A3s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J8s",
+            "J9s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 348,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.886
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.114
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "KTs"
+          ],
+          "combos": 4,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.356
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.644
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "Ac",
+          "Ad"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "96s",
+            "97s",
+            "99",
+            "A3s",
+            "AJs",
+            "AQs",
+            "J8s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJs",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T9o",
+            "T9s",
+            "TT"
+          ],
+          "combos": 196,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.871
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.129
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "88",
+            "98o",
+            "98s",
+            "A2s",
+            "A4s",
+            "A5s",
+            "A6s",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AKo",
+            "AKs",
+            "AQo",
+            "ATo",
+            "ATs",
+            "J7s",
+            "J9s",
+            "QJo",
+            "T8s"
+          ],
+          "combos": 156,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.177
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.823
+            }
+          ]
+        }
+      ],
+      "classCount": 59
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
+          "Ah"
+        ],
+        "priorLine": [
+          "CHECK",
+          "BET 25.000000",
+          "CALL"
+        ],
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
+      },
+      "actions": [
+        "CHECK",
+        "BET 100.000000"
+      ],
+      "buckets": [
+        {
+          "action": "CHECK",
+          "handClasses": [
+            "43s",
+            "53s",
+            "54s",
+            "64s",
+            "65s",
+            "75s",
+            "76s",
+            "77",
+            "88",
+            "96s",
+            "97s",
+            "J7s",
+            "J8s",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "QTo",
+            "QTs",
+            "T7s",
+            "T8s",
+            "T9o",
+            "T9s"
+          ],
+          "combos": 174,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.86
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.14
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "98o",
+            "98s",
+            "99",
+            "A8o",
+            "A8s",
+            "A9o",
+            "A9s",
+            "AA",
+            "AJo",
+            "AJs",
+            "AKo",
+            "AKs",
+            "AQo",
+            "AQs",
+            "ATo",
+            "ATs",
+            "J9s",
+            "KQs",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "TT"
+          ],
+          "combos": 158,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.093
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.907
+            }
+          ]
+        }
+      ],
+      "classCount": 54
+    },
+    {
+      "sourceDirectory": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR__JT9tt",
+      "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+      "positionPattern": "SRP_SB_VS_BB",
+      "node": "CBET",
+      "potType": "SINGLE_RAISED",
+      "stackBB": 25,
+      "sprBand": "LOW",
+      "heroOutOfPosition": true,
+      "board": "JT9tt",
+      "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "SB",
+          "villainSeat": "BB",
+          "isAggressor": true,
+          "confidence": 1,
+          "facingBet": false
+        },
+        "flop": [
+          "Js",
+          "Th",
+          "9h"
+        ],
+        "turnCards": [
           "As"
         ],
         "priorLine": [
           "CHECK",
-          "BET 17.000000",
+          "BET 25.000000",
           "CALL"
         ],
-        "potChips": 84,
-        "stackChips": 108,
-        "potBB": 16.8,
-        "stackBehindBB": 21.6,
-        "reach": 0.084253
+        "potChips": 100,
+        "stackChips": 100,
+        "potBB": 20,
+        "stackBehindBB": 20,
+        "reach": 0.085984
       },
       "actions": [
         "CHECK",
-        "BET 28.000000",
-        "BET 108.000000"
+        "BET 100.000000"
       ],
       "buckets": [
         {
           "action": "CHECK",
           "handClasses": [
-            "22",
-            "33",
             "43s",
-            "44",
             "53s",
             "54s",
-            "55",
             "64s",
-            "66",
+            "65s",
             "75s",
             "76s",
             "77",
-            "87s",
             "88",
+            "96s",
             "97s",
-            "98o",
             "99",
-            "A2s",
             "A3s",
+            "AQs",
+            "JJ",
+            "K7s",
+            "K8s",
+            "K9o",
+            "K9s",
+            "KJs",
+            "KQo",
+            "KQs",
+            "KTo",
+            "KTs",
+            "Q5s",
+            "Q6s",
+            "Q7s",
+            "Q8s",
+            "Q9s",
+            "QJo",
+            "QJs",
+            "QTo",
+            "T7s",
+            "T9s",
+            "TT"
+          ],
+          "combos": 190,
+          "mix": [
+            {
+              "action": "CHECK",
+              "frequency": 0.857
+            },
+            {
+              "action": "BET 100.000000",
+              "frequency": 0.143
+            }
+          ]
+        },
+        {
+          "action": "BET 100.000000",
+          "handClasses": [
+            "98o",
+            "98s",
+            "A2s",
             "A4s",
-            "A5o",
             "A5s",
-            "A7o",
-            "A7s",
+            "A6s",
             "A8o",
             "A8s",
             "A9o",
@@ -26449,54 +39834,32 @@ export const turnPack: TurnStrategyPack = {
             "AA",
             "AJo",
             "AJs",
+            "AKo",
+            "AKs",
             "AQo",
-            "AQs",
             "ATo",
             "ATs",
+            "J7s",
             "J8s",
             "J9s",
-            "JTs",
-            "K4s",
-            "K5s",
-            "K7s",
-            "K8s",
-            "K9o",
-            "K9s",
-            "KJo",
-            "KJs",
-            "KK",
-            "KQo",
-            "KQs",
-            "KTo",
-            "KTs",
-            "Q5s",
-            "Q8s",
-            "Q9s",
-            "QJs",
             "QTs",
-            "T7s",
             "T8s",
-            "T9o",
-            "T9s"
+            "T9o"
           ],
-          "combos": 364,
+          "combos": 162,
           "mix": [
             {
               "action": "CHECK",
-              "frequency": 0.986
+              "frequency": 0.176
             },
             {
-              "action": "BET 28.000000",
-              "frequency": 0.014
-            },
-            {
-              "action": "BET 108.000000",
-              "frequency": 0
+              "action": "BET 100.000000",
+              "frequency": 0.824
             }
           ]
         }
       ],
-      "classCount": 60
+      "classCount": 59
     }
   ]
 };

@@ -125,14 +125,25 @@ function bestRule(
 ): TurnStrategyRule | null {
   let best: TurnStrategyRule | null = null;
   let bestDistance = Number.POSITIVE_INFINITY;
+  const lines = new Set<string>();
+
   for (const rule of rules) {
     if (!ruleMatches(rule, input)) continue;
+    lines.add((rule.spot?.priorLine ?? []).join("|"));
     const distance = Math.abs(rule.stackBB - input.effectiveStackBB);
     if (distance < bestDistance) {
       best = rule;
       bestDistance = distance;
     }
   }
+
+  // The same board and turn card can be reached by more than one flop line, and
+  // those are different spots with different ranges - a turn checked through is
+  // not a turn that saw a bet and a call. The trainer does not yet tell the
+  // resolver which line it dealt, so when several match there is no way to pick
+  // the right one, and picking the first would answer one line's question with
+  // another's strategy under a solver-backed label.
+  if (lines.size > 1) return null;
   return best;
 }
 

@@ -75,32 +75,60 @@ function heroSideOfNode(
   );
   if (classes.size === 0) return undefined;
 
-  const containment = (range?: Record<string, number>) => {
-    if (range === undefined) return 0;
-    const keys = new Set(Object.keys(range));
+  const oopKeys = new Set(Object.keys(item.oop ?? {}));
+  const ipKeys = new Set(Object.keys(item.ip ?? {}));
+
+  const containment = (keys: Set<string>) => {
     let inside = 0;
     for (const handClass of classes) if (keys.has(handClass)) inside += 1;
     return inside / classes.size;
   };
+  const oopContainment = containment(oopKeys);
+  const ipContainment = containment(ipKeys);
 
-  const oop = containment(item.oop);
-  const ip = containment(item.ip);
-  const [side, best, other] = oop >= ip
-    ? ["OOP" as const, oop, ip]
-    : ["IP" as const, ip, oop];
+  // Containment alone cannot decide this, and relying on it threw away 4,882
+  // turns. The two ranges overlap heavily and the wider one contains the
+  // narrower node almost by construction, so whichever player was dealt the
+  // looser range wins on containment whoever the node actually belongs to - and
+  // the margin test that was meant to catch the ambiguity simply rejected the
+  // whole family instead.
+  //
+  // The classes only one side can hold are the evidence. A hand in the big
+  // blind's defending range and not in the cutoff's opening range identifies its
+  // owner outright, and a node holding several of those has said whose it is.
+  let oopOnly = 0;
+  let ipOnly = 0;
+  for (const handClass of classes) {
+    const inOop = oopKeys.has(handClass);
+    const inIp = ipKeys.has(handClass);
+    if (inOop && !inIp) oopOnly += 1;
+    if (inIp && !inOop) ipOnly += 1;
+  }
 
-  // Contained in one side and clearly better contained than in the other. A node
-  // that fits both equally has not been identified, and shipping it would be a
-  // coin toss over which player's strategy a reader is shown.
-  if (best < HERO_CONTAINMENT_FLOOR) return undefined;
-  if (best - other < HERO_CONTAINMENT_MARGIN) return undefined;
-  return { side, confidence: Math.round(best * 1000) / 1000 };
+  const [side, containmentOfSide, exclusive, otherExclusive] = oopOnly >= ipOnly
+    ? ["OOP" as const, oopContainment, oopOnly, ipOnly]
+    : ["IP" as const, ipContainment, ipOnly, oopOnly];
+
+  // The node's classes have to be inside the range claimed for them, and the
+  // exclusive evidence has to point one way rather than being split. Both, or
+  // the turn is left out: shipping a coin toss decides which player's strategy a
+  // reader is shown by rounding.
+  if (containmentOfSide < HERO_CONTAINMENT_FLOOR) return undefined;
+  if (exclusive === 0) return undefined;
+  if (exclusive < otherExclusive * HERO_EXCLUSIVE_RATIO) return undefined;
+  return { side, confidence: Math.round(containmentOfSide * 1000) / 1000 };
 }
 
 /** Share of a node's classes that must sit inside the range claimed for it. */
 const HERO_CONTAINMENT_FLOOR = 0.9;
-/** How much better the winning side must fit than the losing one. */
-const HERO_CONTAINMENT_MARGIN = 0.05;
+/**
+ * How far ahead the winning side's exclusive evidence must be.
+ *
+ * Three to one. Card removal and rounding put a stray class on the wrong side of
+ * this line now and then, so demanding none at all would reject sound turns; a
+ * near-tie is a genuine ambiguity and gets rejected.
+ */
+const HERO_EXCLUSIVE_RATIO = 3;
 
 /**
  * The two seats a family names, and which of them acts last after the flop.
@@ -288,6 +316,32 @@ if (family === undefined) {
   // twenty two boards a player will still be dealt. Taking turns from each board
   // in rotation spends the same budget across all of them, and within a board it
   // still spends it on the turns that actually arrive.
+  // One line per board and turn card, the one most often taken.
+  //
+  // The same turn is reached by several flop lines - checked through, or bet and
+  // called - and those are different spots with different ranges. The resolver
+  // cannot tell them apart, because the trainer does not tell it which line it
+  // dealt, so shipping both means it must refuse every turn where more than one
+  // exists. That cost 5.7% of reach and put the refused rules in the bundle
+  // anyway. Keeping the highest-reach line spends the space on something a
+  // player can actually be served.
+  const byLine = new Map<string, (typeof rules)[number]>();
+  for (const rule of rules) {
+    const spot = rule.spot;
+    if (spot === undefined) continue;
+    const key = `${rule.sourceDirectory}|${spot.turnCards[0]}|${rule.node}`;
+    const held = byLine.get(key);
+    if (held === undefined || (spot.reach ?? 0) > (held.spot?.reach ?? 0)) {
+      byLine.set(key, rule);
+    }
+  }
+  const collapsed = rules.length - byLine.size;
+  rules.length = 0;
+  rules.push(...byLine.values());
+  if (collapsed > 0) {
+    console.log(`  ${collapsed} turns dropped: another flop line reaches the same board more often`);
+  }
+
   const byBoard = new Map<string, typeof rules>();
   for (const rule of rules) {
     const key = rule.sourceDirectory;
