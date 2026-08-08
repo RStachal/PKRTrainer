@@ -38,12 +38,63 @@ import type { TurnStrategyRule } from "./turnStrategyRuleBuilder";
 /** How far a rule's stated depth may sit from the spot's, in big blinds. */
 export const TURN_DEPTH_TOLERANCE_BB = 10;
 
+/**
+ * The two turn decisions the product asks about, and the two a family holds.
+ *
+ * `TURN_BARREL` is hero acting first with the betting lead, which is what a
+ * family's `CBET` node solved. `TURN_FACING_BET` is hero with a bet in front,
+ * which is `FACING_BET`. Spelling the pair out beats deriving one from the
+ * absence of the other: a third turn node added later would otherwise be handed
+ * silently to the CBET rules, and a player facing a decision nobody solved would
+ * be told the answer was solver-backed.
+ */
+const NODE_FOR_ACTION_NODE: Partial<Record<
+  NonNullable<PostflopStrategyInput["actionNode"]>,
+  TurnStrategyRule["node"]
+>> = {
+  TURN_BARREL: "CBET",
+  TURN_FACING_BET: "FACING_BET",
+};
+
+/** "6s" from `{ rank: "6", suit: "s" }`, in the notation the solves use. */
+function cardKey(card: { rank: string; suit: string }): string {
+  return `${card.rank}${card.suit}`.toLowerCase();
+}
+
+/**
+ * Whether this rule was solved on the board in front of the player.
+ *
+ * The exact board, not a similar one. A family holds one flop per directory and
+ * about twenty six turn groups within it, and the strategy on a deuce has
+ * nothing in common with the strategy on an ace - so a rule that answered any
+ * turn in its family would be serving one board's solve for every board, wearing
+ * a solver-backed label. Suits matter as much as ranks: the same ranks with a
+ * flush draw completed is a different game.
+ *
+ * A rule with no recorded spot is from before the spot was recorded, and cannot
+ * establish that it matches anything. It declines.
+ */
+function boardMatches(rule: TurnStrategyRule, input: PostflopStrategyInput): boolean {
+  if (rule.spot === undefined) return false;
+  const board = input.board;
+  if (board === undefined || board.length < 4) return false;
+
+  const flop = board.slice(0, 3).map(cardKey).sort();
+  const solvedFlop = [...rule.spot.flop].map((card) => card.toLowerCase()).sort();
+  if (flop.length !== solvedFlop.length) return false;
+  if (flop.some((card, index) => card !== solvedFlop[index])) return false;
+
+  const turn = cardKey(board[3]);
+  return rule.spot.turnCards.some((card) => card.toLowerCase() === turn);
+}
+
 function ruleMatches(rule: TurnStrategyRule, input: PostflopStrategyInput): boolean {
   if (rule.positionPattern !== input.positionPattern) return false;
   if (rule.potType !== input.potType) return false;
-  const wantsFacingBet = input.actionNode === "TURN_FACING_BET";
-  if (wantsFacingBet !== (rule.node === "FACING_BET")) return false;
-  return Math.abs(rule.stackBB - input.effectiveStackBB) <= TURN_DEPTH_TOLERANCE_BB;
+  if (input.actionNode === undefined) return false;
+  if (NODE_FOR_ACTION_NODE[input.actionNode] !== rule.node) return false;
+  if (Math.abs(rule.stackBB - input.effectiveStackBB) > TURN_DEPTH_TOLERANCE_BB) return false;
+  return boardMatches(rule, input);
 }
 
 /**
@@ -78,10 +129,13 @@ export function createTurnStrategyResolver(pack: TurnStrategyPack): PostflopStra
     const rule = bestRule(pack.rules, input);
     if (rule === null) return null;
 
-    // The pot is what the solver's chip sizes are measured against, and without
-    // it a bet cannot be called small or big. An input carrying no pot is not a
-    // spot this can answer.
-    const { actions, mergedCount } = translateTurnActions(rule.actions, input.potBB);
+    // The solver's bet labels are chips measured against the pot at that node,
+    // so that pot is the denominator - not the trainer's pot, which is the same
+    // spot in different units and would rescale every size. The plan recorded it;
+    // where it did not, there is nothing to measure against and the trainer's own
+    // pot is the only candidate left.
+    const potForSizes = rule.spot?.potChips ?? input.potBB;
+    const { actions, mergedCount } = translateTurnActions(rule.actions, potForSizes);
     if (actions.length === 0) return null;
 
     const bucket = input.heroHand === undefined

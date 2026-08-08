@@ -89,6 +89,7 @@ import {
 } from "./data/ranges/mttPreflopRangePacks";
 import { mttProductionImportSlotId } from "./data/ranges/mttImportSlotNaming";
 import { mttProductionLazyLoader } from "./data/ranges/mttProductionLazyLoader";
+import { loadSolvedTurnPacks } from "./data/ranges/turnSolvedStrategyPacks";
 import type { RangePack } from "./data/ranges/rangePack";
 import {
   createMttProductionPostflopStrategyResolver,
@@ -520,6 +521,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
               }))
               .filter((profileKey): profileKey is string => profileKey !== null);
             await mttProductionLazyLoader.loadProfiles(profileKeys);
+            await loadSolvedTurnPacksForProfiles(profileKeys);
           }
         }
         : undefined,
@@ -566,6 +568,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
           .map((street) => mttProductionProfileKey({ ...selected, street }))
           .filter((profileKey): profileKey is string => profileKey !== null);
         await mttProductionLazyLoader.loadProfiles(profileKeys);
+        await loadSolvedTurnPacksForProfiles(profileKeys);
         if (
           selectedFamily ===
           mttProductionProfileFamilyKey(getSelectedTrainingProfile())
@@ -1549,6 +1552,20 @@ function renderStorageError(panel: HTMLElement): void {
 }
 
 /** ZobrazĂ­ nenĂˇsilnĂ© upozornÄ›nĂ­ v banneru (Req 12.4, 14.3). */
+/**
+ * Fetch solved turn content alongside the production packs, without gating on it.
+ *
+ * A failed chunk must not stop a session starting. The resolver chain already
+ * falls through to the chart-derived turn packs and then to the heuristic model
+ * when no solved pack is present, so the cost of a failed download is content
+ * that is a grade less specific - not a trainer that refuses to deal a hand.
+ */
+async function loadSolvedTurnPacksForProfiles(profileKeys: readonly string[]): Promise<void> {
+  await Promise.all(profileKeys.map((profileKey) => (
+    loadSolvedTurnPacks(profileKey).catch(() => [])
+  )));
+}
+
 function showNotice(notice: HTMLElement, message: string): void {
   notice.hidden = false;
   const line = el("div", "app__notice-line", message);

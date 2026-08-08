@@ -53,6 +53,30 @@ export interface TurnRangeBucket {
   mix: readonly TurnActionFrequency[];
 }
 
+/**
+ * The board and betting line one rule was actually solved on.
+ *
+ * `turnCards` holds the solved card plus the ones the solve treated as identical
+ * to it. A solver groups turn cards it has proved isomorphic - a deuce of clubs
+ * and a deuce of spades on a rainbow flop with no club or spade draw are the
+ * same card strategically - and the grouping is the solver's own claim, recorded
+ * in the plan, not an abstraction invented here.
+ */
+export interface TurnSolvedSpot {
+  /** The three flop cards, as the solve wrote them: "6s", "5d", "4c". */
+  flop: readonly string[];
+  /** Turn cards this rule answers for, the solved one first. */
+  turnCards: readonly string[];
+  /** The flop betting line that led here, in the solver's own labels. */
+  priorLine: readonly string[];
+  /** Pot at this node, in chips, which the action translation needs. */
+  potChips: number;
+  /** Stack behind at this node, in chips. */
+  stackChips: number;
+  /** Share of the flop node's range that reaches this turn, 0 to 1. */
+  reach: number;
+}
+
 export interface TurnStrategyRule {
   /** Directory name, so a rule can always be traced back to its solve. */
   sourceDirectory: string;
@@ -64,6 +88,17 @@ export interface TurnStrategyRule {
   sprBand?: TurnFamilyId["sprBand"];
   heroOutOfPosition: boolean;
   board?: string;
+  /**
+   * The exact spot this was solved for, when the plan recorded it.
+   *
+   * Turn strategy is a function of the board, not of the family. A directory
+   * holds one flop and about twenty six turn groups, and the strategy on a deuce
+   * has nothing to do with the strategy on an ace. Without these fields a rule
+   * cannot say which turn it belongs to, and a resolver has no way to refuse a
+   * board nobody solved - it would serve one board's answer for every board in
+   * the family and label it solver-backed.
+   */
+  spot?: TurnSolvedSpot;
   /** The node's actions, in the order the frequencies use. */
   actions: readonly string[];
   buckets: readonly TurnRangeBucket[];
@@ -86,6 +121,7 @@ const COMBOS = (handClass: string) => (
 export function buildTurnStrategyRule(
   directoryName: string,
   node: TurnSubgameNode,
+  spot?: TurnSolvedSpot,
 ): TurnStrategyRule | undefined {
   const family = parseTurnFamilyId(directoryName);
   if (family === undefined) return undefined;
@@ -123,6 +159,7 @@ export function buildTurnStrategyRule(
     ...(family.sprBand ? { sprBand: family.sprBand } : {}),
     heroOutOfPosition: family.heroOutOfPosition,
     ...(family.board ? { board: family.board } : {}),
+    ...(spot ? { spot } : {}),
     actions: strategy.actions,
     buckets,
     classCount: strategy.classes.length,

@@ -4,6 +4,7 @@ import { gzipSync } from "node:zlib";
 import {
   isLazyMttProductionAsset,
   isPreflopEquityAsset,
+  isSolvedTurnAsset,
 } from "../src/pwa/precacheManifestBuild";
 
 const DIST_ASSETS_DIR = join(process.cwd(), "dist", "assets");
@@ -64,7 +65,10 @@ for (const file of jsFiles) {
 
   console.log(`${file}: raw=${rawKb.toFixed(2)} KiB gzip=${gzipKb.toFixed(2)} KiB`);
 
-  const lazyMttProduction = isLazyMttProductionAsset(file);
+  // A solved turn family is budgeted with the lazy MTT content it is: fetched
+  // per profile, never on the install path, and capped per chunk so one family
+  // cannot grow without anyone noticing.
+  const lazyMttProduction = isLazyMttProductionAsset(file) || isSolvedTurnAsset(file);
   const deferred = isPreflopEquityAsset(file);
   if (lazyMttProduction) {
     lazyMttCount += 1;

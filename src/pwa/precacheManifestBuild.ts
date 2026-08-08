@@ -28,9 +28,26 @@ export function isPreflopEquityAsset(fileName: string): boolean {
   return /^preflop-equity-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
 }
 
+/**
+ * A solved turn family, one chunk each.
+ *
+ * These are the largest content the app has per unit of use: a family answers
+ * one spot at one depth, and a player who never reaches it should never pay for
+ * it. Eleven of them precached would be four hundred kilobytes on the install
+ * path of someone who might only ever open a preflop drill.
+ */
+export function isSolvedTurnAsset(fileName: string): boolean {
+  const baseName = fileName.replace(/\\/g, "/").split("/").pop() ?? "";
+  return /^mtt-turn-solved-[a-z0-9-]+-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
+}
+
 /** Assets the app fetches when it needs them, so they stay off the install path. */
 export function isDeferredAsset(fileName: string): boolean {
-  return isLazyMttProductionAsset(fileName) || isPreflopEquityAsset(fileName);
+  return (
+    isLazyMttProductionAsset(fileName) ||
+    isPreflopEquityAsset(fileName) ||
+    isSolvedTurnAsset(fileName)
+  );
 }
 
 export function mttProductionChunkNameForModuleId(moduleId: string): string | null {
@@ -38,6 +55,12 @@ export function mttProductionChunkNameForModuleId(moduleId: string): string | nu
   const fileName = normalized.split("/").pop() ?? "";
   if (fileName === "mttPostflopTrainingRuntime.ts") {
     return "mtt-postflop-pilot-runtime";
+  }
+  // Solved turn families live under ranges/turn/ and are named for the family
+  // rather than for a profile, so they need their own naming rule to land in a
+  // chunk the precache manifest recognises as deferred.
+  if (normalized.includes("/ranges/turn/") && fileName.endsWith(".generated.ts")) {
+    return `mtt-turn-solved-${fileName.slice(0, -".generated.ts".length)}`;
   }
   if (
     !fileName.endsWith(".ts") ||
