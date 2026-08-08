@@ -134,6 +134,15 @@ export function parseTurnFamilyId(directoryName: string): TurnFamilyId | undefin
  */
 export function positionPatternForFamily(family: TurnFamilyId): string {
   const token = (seat: Position) => seat.replace("+", "_");
-  const prefix = family.potType === "THREE_BET_POT" ? "3BP" : "SRP";
-  return `${prefix}_${token(family.hero)}_VS_${token(family.villain)}`;
+  if (family.potType !== "THREE_BET_POT") {
+    // A single-raised family names the raiser then the caller, which is the
+    // order the pattern wants: `SRP_<raiser>_VS_<caller>`.
+    return `SRP_${token(family.hero)}_VS_${token(family.villain)}`;
+  }
+  // A three-bet family names the seats in the order they acted preflop - the
+  // opener, then the player who three-bet them. The pattern names the aggressor
+  // first, and in a three-bet pot the aggressor is the second of those two. Kept
+  // in the family's order this produced `3BP_CO_VS_BTN` for a pot the button
+  // three-bet, which is the button's spot filed under the cutoff's name.
+  return `3BP_${token(family.villain)}_VS_${token(family.hero)}`;
 }

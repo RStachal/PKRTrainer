@@ -1,6 +1,6 @@
 import {
   generatePostflopSpot,
-  POSTFLOP_FULL_RING_POSITION_CONTEXTS,
+  POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS,
   PostflopStrategyUnavailableError,
   type BoardTexture,
   type PostflopAction,
@@ -26,6 +26,7 @@ import { createDefaultPostflopStrategyResolver } from "../data/ranges/postflopSt
 import {
   pickSolvedTurnSpot,
   solvedTurnSpotConfig,
+  solvedTurnSpots,
 } from "../data/ranges/solvedTurnSpotCatalogue";
 import { mulberry32 } from "../core/rng";
 import { POSITION_ORDER, type Card, type Position, type Suit } from "../core/types";
@@ -194,11 +195,29 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
   const facingBetOption = doc.createElement("option");
   facingBetOption.value = "facing-bet";
   facingBetOption.textContent = CS.postflop.facingBet;
+  // The third turn decision: hero called the last raise, is out of position, and
+  // acts first before anyone has bet. It is only offered on the turn, because
+  // that is the only street the app has content for it on - a situation a player
+  // can select and never get an answer for is worse than one they cannot select.
+  const oopLeadOption = doc.createElement("option");
+  oopLeadOption.value = "oop-lead";
+  oopLeadOption.textContent = CS.postflop.oopLead;
   situationSelect.appendChild(initiativeOption);
   situationSelect.appendChild(facingBetOption);
-  situationSelect.value = options.initialActionNode?.endsWith("_FACING_BET")
-    ? "facing-bet"
-    : "initiative";
+  situationSelect.appendChild(oopLeadOption);
+  const syncSituationOptions = (): void => {
+    oopLeadOption.hidden = streetSelect.value !== "TURN";
+    if (oopLeadOption.hidden && situationSelect.value === "oop-lead") {
+      situationSelect.value = "initiative";
+    }
+  };
+  situationSelect.value = options.initialActionNode === "TURN_OOP_LEAD"
+    ? "oop-lead"
+    : options.initialActionNode?.endsWith("_FACING_BET")
+      ? "facing-bet"
+      : "initiative";
+  streetSelect.addEventListener("change", syncSituationOptions);
+  syncSituationOptions();
   situationLabel.appendChild(situationText);
   situationLabel.appendChild(situationSelect);
 
@@ -302,23 +321,29 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       }
 
       const street = parseStreet(streetSelect.value);
+      const actionNode = selectedActionNode(
+        street,
+        situationSelect.value,
+        options.initialPotType,
+      );
       // A solved turn answers one board and refuses every other, so dealing at
       // random reaches it about never - the content being unreachable and the
       // resolver being broken look identical from the player's side. When solved
       // turns are loaded and the player has not pinned the situation themselves,
       // deal one of them.
+      //
+      // Only one that answers the decision the player asked for. Overriding the
+      // situation selector to reach solved content would answer a question they
+      // did not ask, which is a worse failure than falling back to a heuristic on
+      // the question they did.
       const solvedTurn = street === "TURN" && options.initialPositionContext == null
-        ? solvedTurnConfigForSeed(seed)
+        ? solvedTurnConfigForSeed(seed, actionNode)
         : undefined;
       const spot = generatePostflopSpot({
         seed,
         street,
         potType: options.initialPotType,
-        actionNode: selectedActionNode(
-          street,
-          situationSelect.value,
-          options.initialPotType,
-        ),
+        actionNode,
         potBB: options.initialPotBB,
         effectiveStackBB: options.initialEffectiveStackBB,
         positionContext: options.initialPositionContext ?? undefined,
@@ -1859,12 +1884,14 @@ function actionLabel(action: PostflopAction): string {
  * value is close to linear in its seed, and consecutive seeds would otherwise
  * walk the catalogue in order rather than sample it.
  */
-function solvedTurnConfigForSeed(seed: number) {
+function solvedTurnConfigForSeed(seed: number, actionNode: PostflopActionNode) {
+  const candidates = solvedTurnSpots().filter((spot) => spot.actionNode === actionNode);
+  if (candidates.length === 0) return undefined;
   const rng = mulberry32(seed);
   rng();
-  const spot = pickSolvedTurnSpot(rng());
+  const spot = pickSolvedTurnSpot(rng(), candidates);
   if (spot === undefined) return undefined;
-  return solvedTurnSpotConfig(spot, POSTFLOP_FULL_RING_POSITION_CONTEXTS);
+  return solvedTurnSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS);
 }
 
 function parseStreet(value: string): PostflopStreet {
@@ -1881,6 +1908,7 @@ function selectedActionNode(
     if (street === "TURN") return "TURN_FACING_BET";
     return "RIVER_FACING_BET";
   }
+  if (situation === "oop-lead" && street === "TURN") return "TURN_OOP_LEAD";
   if (street === "TURN") return "TURN_BARREL";
   if (street === "RIVER") return "RIVER_PRESSURE";
   return potType === "THREE_BET_POT"

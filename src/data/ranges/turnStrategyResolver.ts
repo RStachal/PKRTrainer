@@ -39,22 +39,28 @@ import type { TurnStrategyRule } from "./turnStrategyRuleBuilder";
 export const TURN_DEPTH_TOLERANCE_BB = 10;
 
 /**
- * The two turn decisions the product asks about, and the two a family holds.
+ * Which product decision a solved node answers, read from the node itself.
  *
- * `TURN_BARREL` is hero acting first with the betting lead, which is what a
- * family's `CBET` node solved. `TURN_FACING_BET` is hero with a bet in front,
- * which is `FACING_BET`. Spelling the pair out beats deriving one from the
- * absence of the other: a third turn node added later would otherwise be handed
- * silently to the CBET rules, and a player facing a decision nobody solved would
- * be told the answer was solver-backed.
+ * The family name is not the source here, and an earlier version of this that
+ * used it was wrong. `..._CO_BB_SRP_CBET_...` names the flop c-bet that defines
+ * the family; the turn node inside it holds the big blind's decision after
+ * calling that c-bet. Mapping `CBET` to `TURN_BARREL` therefore told a cutoff
+ * they held the betting lead while serving them the big blind's strategy.
+ *
+ * What the rule records instead is the node's own shape: which side of the table
+ * it belongs to, and whether there is a bet in front of it. Those two facts name
+ * the decision without going through the directory name at all.
  */
-const NODE_FOR_ACTION_NODE: Partial<Record<
-  NonNullable<PostflopStrategyInput["actionNode"]>,
-  TurnStrategyRule["node"]
->> = {
-  TURN_BARREL: "CBET",
-  TURN_FACING_BET: "FACING_BET",
-};
+function productNodeFor(
+  hero: NonNullable<NonNullable<TurnStrategyRule["spot"]>["hero"]>,
+): NonNullable<PostflopStrategyInput["actionNode"]> | undefined {
+  if (hero.facingBet) return "TURN_FACING_BET";
+  // First to act with the betting lead is a barrel; first to act without it is a
+  // lead into the player who has it. Role, not seat: a small blind who opened is
+  // out of position for the whole hand, and calling their turn bet a donk would
+  // teach the opposite of what they did.
+  return hero.isAggressor ? "TURN_BARREL" : "TURN_OOP_LEAD";
+}
 
 /** "6s" from `{ rank: "6", suit: "s" }`, in the notation the solves use. */
 function cardKey(card: { rank: string; suit: string }): string {
@@ -76,6 +82,12 @@ function cardKey(card: { rank: string; suit: string }): string {
  */
 function boardMatches(rule: TurnStrategyRule, input: PostflopStrategyInput): boolean {
   if (rule.spot === undefined) return false;
+  // A rule that cannot say whose strategy it holds is not servable, whatever
+  // else matches. The directory name states the flop c-bet that defines the
+  // family, not the player whose turn decision was solved, and a rule built
+  // before that distinction was drawn can be filed under the wrong seat - which
+  // shows one player the other's answers under a solver-backed label.
+  if (rule.spot.hero === undefined) return false;
   const board = input.board;
   if (board === undefined || board.length < 4) return false;
 
@@ -92,7 +104,9 @@ function ruleMatches(rule: TurnStrategyRule, input: PostflopStrategyInput): bool
   if (rule.positionPattern !== input.positionPattern) return false;
   if (rule.potType !== input.potType) return false;
   if (input.actionNode === undefined) return false;
-  if (NODE_FOR_ACTION_NODE[input.actionNode] !== rule.node) return false;
+  const hero = rule.spot?.hero;
+  if (hero === undefined) return false;
+  if (productNodeFor(hero) !== input.actionNode) return false;
   if (Math.abs(rule.stackBB - input.effectiveStackBB) > TURN_DEPTH_TOLERANCE_BB) return false;
   return boardMatches(rule, input);
 }

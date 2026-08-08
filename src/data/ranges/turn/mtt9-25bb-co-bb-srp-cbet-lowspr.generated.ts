@@ -44,6 +44,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "654r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "6s",
           "5d",
@@ -206,6 +214,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "742r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4d",
@@ -337,6 +353,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "743r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4h",
@@ -470,6 +494,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "765tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "6s",
@@ -633,6 +665,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "883r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "8s",
           "8d",
@@ -796,6 +836,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "932mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "3s",
@@ -973,6 +1021,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "976tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "7s",
@@ -1106,6 +1162,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "986tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "8s",
@@ -1275,6 +1339,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "992r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "9h",
@@ -1450,6 +1522,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7d",
@@ -1586,6 +1666,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A76r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7h",
@@ -1760,6 +1848,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A85mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "8s",
@@ -1937,6 +2033,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A95r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "9d",
@@ -2072,6 +2176,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Js",
@@ -2248,6 +2360,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AK2r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Kh",
@@ -2399,6 +2519,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AT4mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Ts",
@@ -2576,6 +2704,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "J73r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "7d",
@@ -2716,6 +2852,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JJJr",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Jh",
@@ -2866,6 +3010,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JT9tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Th",
@@ -3039,6 +3191,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K44r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "4h",
@@ -3171,6 +3331,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K83r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "8d",
@@ -3314,6 +3482,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K98tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "9s",
@@ -3490,6 +3666,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KJ8r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Jh",
@@ -3665,6 +3849,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KQ5r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Qd",
@@ -3818,6 +4010,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7d",
@@ -3954,6 +4154,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q76mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7s",
@@ -4131,6 +4339,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "8d",
@@ -4268,6 +4484,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q94mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "9s",
@@ -4445,6 +4669,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "QJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "Jh",
@@ -4621,6 +4853,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T43tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "4s",
@@ -4797,6 +5037,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7h",
@@ -4972,6 +5220,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T76tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7s",
@@ -5146,6 +5402,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "8d",
@@ -5323,6 +5587,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "654r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "6s",
           "5d",
@@ -5483,6 +5755,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "742r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4d",
@@ -5613,6 +5893,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "743r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4h",
@@ -5748,6 +6036,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "765tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "6s",
@@ -5910,6 +6206,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "883r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "8s",
           "8d",
@@ -6071,6 +6375,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "932mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "3s",
@@ -6248,6 +6560,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "976tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "7s",
@@ -6380,6 +6700,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "986tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "8s",
@@ -6572,6 +6900,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "992r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "9h",
@@ -6748,6 +7084,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7d",
@@ -6883,6 +7227,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A76r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7h",
@@ -7059,6 +7411,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A85mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "8s",
@@ -7210,6 +7570,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A95r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "9d",
@@ -7343,6 +7711,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Js",
@@ -7518,6 +7894,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AK2r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Kh",
@@ -7694,6 +8078,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AT4mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Ts",
@@ -7869,6 +8261,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "J73r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "7d",
@@ -8007,6 +8407,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JJJr",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Jh",
@@ -8183,6 +8591,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JT9tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Th",
@@ -8355,6 +8771,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K44r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "4h",
@@ -8489,6 +8913,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K83r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "8d",
@@ -8630,6 +9062,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K98tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "9s",
@@ -8805,6 +9245,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KJ8r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Jh",
@@ -8982,6 +9430,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KQ5r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Qd",
@@ -9157,6 +9613,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7d",
@@ -9292,6 +9756,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q76mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7s",
@@ -9443,6 +9915,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "8d",
@@ -9578,6 +10058,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q94mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "9s",
@@ -9753,6 +10241,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "QJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "Jh",
@@ -9928,6 +10424,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T43tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "4s",
@@ -10103,6 +10607,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7h",
@@ -10279,6 +10791,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T76tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7s",
@@ -10452,6 +10972,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "8d",
@@ -10627,6 +11155,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "654r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "6s",
           "5d",
@@ -10789,6 +11325,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "742r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4d",
@@ -10921,6 +11465,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "743r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4h",
@@ -11054,6 +11606,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "765tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "6s",
@@ -11216,6 +11776,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "883r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "8s",
           "8d",
@@ -11378,6 +11946,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "932mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "3s",
@@ -11555,6 +12131,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "976tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "7s",
@@ -11687,6 +12271,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "986tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "8s",
@@ -11855,6 +12447,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "992r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "9h",
@@ -12030,6 +12630,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7d",
@@ -12168,6 +12776,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A76r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7h",
@@ -12342,6 +12958,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A85mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "8s",
@@ -12519,6 +13143,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A95r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "9d",
@@ -12654,6 +13286,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Js",
@@ -12830,6 +13470,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AK2r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Kh",
@@ -12981,6 +13629,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AT4mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Ts",
@@ -13158,6 +13814,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "J73r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "7d",
@@ -13297,6 +13961,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JJJr",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Jh",
@@ -13447,6 +14119,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JT9tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Th",
@@ -13619,6 +14299,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K44r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "4h",
@@ -13751,6 +14439,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K83r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "8d",
@@ -13893,6 +14589,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K98tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "9s",
@@ -14068,6 +14772,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KJ8r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Jh",
@@ -14243,6 +14955,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KQ5r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Qd",
@@ -14396,6 +15116,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7d",
@@ -14533,6 +15261,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q76mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7s",
@@ -14710,6 +15446,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "8d",
@@ -14847,6 +15591,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q94mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "9s",
@@ -15024,6 +15776,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "QJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "Jh",
@@ -15200,6 +15960,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T43tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "4s",
@@ -15375,6 +16143,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7h",
@@ -15550,6 +16326,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T76tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7s",
@@ -15723,6 +16507,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "8d",
@@ -15900,6 +16692,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "654r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "6s",
           "5d",
@@ -16060,6 +16860,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "742r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4d",
@@ -16190,6 +16998,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "743r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4h",
@@ -16324,6 +17140,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "765tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "6s",
@@ -16487,6 +17311,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "883r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "8s",
           "8d",
@@ -16648,6 +17480,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "932mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "3s",
@@ -16799,6 +17639,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "976tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "7s",
@@ -16932,6 +17780,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "986tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "8s",
@@ -17101,6 +17957,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "992r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "9h",
@@ -17278,6 +18142,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7d",
@@ -17413,6 +18285,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A76r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7h",
@@ -17589,6 +18469,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A85mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "8s",
@@ -17740,6 +18628,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A95r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "9d",
@@ -17873,6 +18769,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Js",
@@ -18048,6 +18952,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AK2r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Kh",
@@ -18225,6 +19137,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AT4mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Ts",
@@ -18376,6 +19296,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "J73r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "7d",
@@ -18514,6 +19442,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JJJr",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Jh",
@@ -18690,6 +19626,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JT9tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Th",
@@ -18863,6 +19807,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K44r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "4h",
@@ -18997,6 +19949,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K83r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "8d",
@@ -19138,6 +20098,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K98tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "9s",
@@ -19314,6 +20282,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KJ8r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Jh",
@@ -19491,6 +20467,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KQ5r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Qd",
@@ -19666,6 +20650,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7d",
@@ -19801,6 +20793,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q76mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7s",
@@ -19952,6 +20952,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "8d",
@@ -20088,6 +21096,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q94mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "9s",
@@ -20239,6 +21255,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "QJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "Jh",
@@ -20414,6 +21438,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T43tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "4s",
@@ -20590,6 +21622,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7h",
@@ -20767,6 +21807,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T76tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7s",
@@ -20941,6 +21989,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "8d",
@@ -21116,6 +22172,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "654r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "6s",
           "5d",
@@ -21277,6 +22341,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "742r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4d",
@@ -21408,6 +22480,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "743r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4h",
@@ -21541,6 +22621,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "765tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "6s",
@@ -21703,6 +22791,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "883r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "8s",
           "8d",
@@ -21866,6 +22962,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "932mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "3s",
@@ -22043,6 +23147,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "976tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "7s",
@@ -22175,6 +23287,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "986tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "8s",
@@ -22343,6 +23463,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "992r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "9h",
@@ -22518,6 +23646,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7d",
@@ -22655,6 +23791,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A76r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7h",
@@ -22829,6 +23973,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A85mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "8s",
@@ -23006,6 +24158,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A95r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "9d",
@@ -23141,6 +24301,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Js",
@@ -23316,6 +24484,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AK2r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Kh",
@@ -23467,6 +24643,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AT4mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Ts",
@@ -23644,6 +24828,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "J73r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "7d",
@@ -23804,6 +24996,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JJJr",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Jh",
@@ -23954,6 +25154,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JT9tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Th",
@@ -24126,6 +25334,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K44r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "4h",
@@ -24277,6 +25493,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K83r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "8d",
@@ -24420,6 +25644,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K98tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "9s",
@@ -24595,6 +25827,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KJ8r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Jh",
@@ -24770,6 +26010,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KQ5r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Qd",
@@ -24923,6 +26171,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7d",
@@ -25060,6 +26316,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q76mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7s",
@@ -25237,6 +26501,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "8d",
@@ -25373,6 +26645,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q94mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "9s",
@@ -25550,6 +26830,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "QJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "Jh",
@@ -25725,6 +27013,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T43tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "4s",
@@ -25900,6 +27196,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7h",
@@ -26075,6 +27379,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T76tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7s",
@@ -26248,6 +27560,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "8d",
@@ -26424,6 +27744,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "654r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "6s",
           "5d",
@@ -26584,6 +27912,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "742r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4d",
@@ -26714,6 +28050,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "743r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4h",
@@ -26848,6 +28192,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "765tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "6s",
@@ -27010,6 +28362,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "883r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "8s",
           "8d",
@@ -27171,6 +28531,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "932mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "3s",
@@ -27322,6 +28690,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "976tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "7s",
@@ -27454,6 +28830,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "986tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "8s",
@@ -27622,6 +29006,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "992r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "9h",
@@ -27799,6 +29191,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7d",
@@ -27934,6 +29334,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A76r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7h",
@@ -28110,6 +29518,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A85mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "8s",
@@ -28261,6 +29677,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A95r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "9d",
@@ -28394,6 +29818,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Js",
@@ -28570,6 +30002,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AK2r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Kh",
@@ -28723,6 +30163,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AT4mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Ts",
@@ -28900,6 +30348,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "J73r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "7d",
@@ -29038,6 +30494,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JJJr",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Jh",
@@ -29214,6 +30678,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JT9tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Th",
@@ -29386,6 +30858,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K44r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "4h",
@@ -29517,6 +30997,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K83r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "8d",
@@ -29658,6 +31146,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K98tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "9s",
@@ -29833,6 +31329,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KJ8r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Jh",
@@ -30010,6 +31514,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KQ5r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Qd",
@@ -30185,6 +31697,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7d",
@@ -30320,6 +31840,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q76mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7s",
@@ -30471,6 +31999,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "8d",
@@ -30586,6 +32122,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q94mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "9s",
@@ -30763,6 +32307,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "QJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "Jh",
@@ -30939,6 +32491,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T43tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "4s",
@@ -31115,6 +32675,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7h",
@@ -31292,6 +32860,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T76tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7s",
@@ -31465,6 +33041,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "8d",
@@ -31640,6 +33224,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "654r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "6s",
           "5d",
@@ -31801,6 +33393,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "742r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4d",
@@ -31933,6 +33533,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "743r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4h",
@@ -32066,6 +33674,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "765tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "6s",
@@ -32229,6 +33845,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "883r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "8s",
           "8d",
@@ -32392,6 +34016,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "932mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "3s",
@@ -32569,6 +34201,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "976tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "7s",
@@ -32702,6 +34342,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "986tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "8s",
@@ -32871,6 +34519,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "992r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "9h",
@@ -33046,6 +34702,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7d",
@@ -33184,6 +34848,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A76r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7h",
@@ -33358,6 +35030,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A85mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "8s",
@@ -33535,6 +35215,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A95r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "9d",
@@ -33669,6 +35357,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Js",
@@ -33844,6 +35540,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AK2r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Kh",
@@ -33995,6 +35699,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AT4mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Ts",
@@ -34146,6 +35858,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "J73r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "7d",
@@ -34306,6 +36026,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JJJr",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Jh",
@@ -34480,6 +36208,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JT9tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Th",
@@ -34653,6 +36389,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K44r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "4h",
@@ -34784,6 +36528,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K83r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "8d",
@@ -34927,6 +36679,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K98tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "9s",
@@ -35103,6 +36863,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KJ8r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Jh",
@@ -35278,6 +37046,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KQ5r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Qd",
@@ -35430,6 +37206,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7d",
@@ -35567,6 +37351,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q76mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7s",
@@ -35744,6 +37536,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "8d",
@@ -35881,6 +37681,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q94mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "9s",
@@ -36032,6 +37840,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "QJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "Jh",
@@ -36207,6 +38023,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T43tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "4s",
@@ -36382,6 +38206,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7h",
@@ -36557,6 +38389,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T76tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7s",
@@ -36731,6 +38571,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "8d",
@@ -36908,6 +38756,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "654r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "6s",
           "5d",
@@ -37068,6 +38924,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "742r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4d",
@@ -37198,6 +39062,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "743r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4h",
@@ -37333,6 +39205,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "765tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "6s",
@@ -37495,6 +39375,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "883r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "8s",
           "8d",
@@ -37656,6 +39544,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "932mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "3s",
@@ -37807,6 +39703,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "976tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "7s",
@@ -37939,6 +39843,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "986tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "8s",
@@ -38107,6 +40019,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "992r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "9h",
@@ -38284,6 +40204,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7d",
@@ -38419,6 +40347,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A76r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7h",
@@ -38595,6 +40531,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A85mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "8s",
@@ -38772,6 +40716,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A95r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "9d",
@@ -38905,6 +40857,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Js",
@@ -39080,6 +41040,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AK2r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Kh",
@@ -39257,6 +41225,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AT4mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Ts",
@@ -39434,6 +41410,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "J73r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "7d",
@@ -39572,6 +41556,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JJJr",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Jh",
@@ -39748,6 +41740,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JT9tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Th",
@@ -39920,6 +41920,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K44r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "4h",
@@ -40054,6 +42062,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K83r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "8d",
@@ -40195,6 +42211,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K98tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "9s",
@@ -40370,6 +42394,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KJ8r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Jh",
@@ -40547,6 +42579,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KQ5r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Qd",
@@ -40698,6 +42738,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7d",
@@ -40833,6 +42881,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q76mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7s",
@@ -40984,6 +43040,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "8d",
@@ -41119,6 +43183,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q94mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "9s",
@@ -41296,6 +43368,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "QJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "Jh",
@@ -41471,6 +43551,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T43tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "4s",
@@ -41647,6 +43735,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7h",
@@ -41824,6 +43920,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T76tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7s",
@@ -42021,6 +44125,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "8d",
@@ -42196,6 +44308,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "654r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "6s",
           "5d",
@@ -42357,6 +44477,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "742r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4d",
@@ -42489,6 +44617,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "743r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4h",
@@ -42620,6 +44756,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "765tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "6s",
@@ -42782,6 +44926,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "883r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "8s",
           "8d",
@@ -42945,6 +45097,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "932mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "3s",
@@ -43122,6 +45282,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "976tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "7s",
@@ -43253,6 +45421,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "986tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "8s",
@@ -43421,6 +45597,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "992r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "9s",
           "9h",
@@ -43596,6 +45780,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7d",
@@ -43733,6 +45925,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A76r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "7h",
@@ -43907,6 +46107,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A85mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "8s",
@@ -44058,6 +46266,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "A95r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "9d",
@@ -44193,6 +46409,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Js",
@@ -44369,6 +46593,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AK2r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Kh",
@@ -44520,6 +46752,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "AT4mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "As",
           "Ts",
@@ -44671,6 +46911,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "J73r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "7d",
@@ -44831,6 +47079,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JJJr",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Jh",
@@ -45005,6 +47261,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "JT9tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Js",
           "Th",
@@ -45177,6 +47441,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K44r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "4h",
@@ -45309,6 +47581,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K83r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "8d",
@@ -45452,6 +47732,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "K98tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "9s",
@@ -45627,6 +47915,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KJ8r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Jh",
@@ -45802,6 +48098,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "KQ5r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ks",
           "Qd",
@@ -45979,6 +48283,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7d",
@@ -46116,6 +48428,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q76mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "7s",
@@ -46293,6 +48613,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "8d",
@@ -46430,6 +48758,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "Q94mono",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "9s",
@@ -46581,6 +48917,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "QJ2tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Qs",
           "Jh",
@@ -46757,6 +49101,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T43tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "4s",
@@ -46932,6 +49284,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T72r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7h",
@@ -47107,6 +49467,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T76tt",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "7s",
@@ -47280,6 +49648,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "T84r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "Ts",
           "8d",
@@ -47457,6 +49833,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "654r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "6s",
           "5d",
@@ -47617,6 +50001,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "742r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4d",
@@ -47747,6 +50139,14 @@ export const turnPack: TurnStrategyPack = {
       "heroOutOfPosition": false,
       "board": "743r",
       "spot": {
+        "hero": {
+          "side": "OOP",
+          "seat": "BB",
+          "villainSeat": "CO",
+          "isAggressor": false,
+          "confidence": 1,
+          "facingBet": false
+        },
         "flop": [
           "7s",
           "4h",

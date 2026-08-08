@@ -70,8 +70,13 @@ describe("turn family id", () => {
     // Getting this wrong is exactly what made two flop packs unreachable.
     const srp = parseTurnFamilyId("MTT9_40BB_UTG_BB_SRP")!;
     expect(positionPatternForFamily(srp)).toBe("SRP_UTG_VS_BB");
+    // A three-bet family names the seats in the order they acted before the
+    // flop: the cutoff opened, the button three-bet them. The pattern names the
+    // aggressor first, and in a three-bet pot that is the second of the two, so
+    // the order flips. Kept as written, this filed the button's spot under the
+    // cutoff's name.
     const threeBet = parseTurnFamilyId("MTT9_150BB_CO_BTN_3BP_HIGHSPR")!;
-    expect(positionPatternForFamily(threeBet)).toBe("3BP_CO_VS_BTN");
+    expect(positionPatternForFamily(threeBet)).toBe("3BP_BTN_VS_CO");
   });
 
   it("parses every directory the solver has actually written", () => {

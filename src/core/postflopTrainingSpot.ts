@@ -17,6 +17,18 @@ export type PostflopActionNode =
   | "THREE_BET_POT_CBET"
   | "FLOP_FACING_BET"
   | "TURN_BARREL"
+  /**
+   * The out-of-position caller's first decision on the turn: lead, or check.
+   *
+   * The product modelled the aggressor continuing and the defender facing it,
+   * and had no name for the third turn decision - the player who called the
+   * flop bet, out of position, acting first on the turn before anyone has bet.
+   * That is what every solved turn family actually holds, which is how the
+   * absence came to light: nine families of solved strategy had no node to be
+   * filed under, and filing them as TURN_BARREL would have told a player they
+   * held the betting lead when they held the opposite.
+   */
+  | "TURN_OOP_LEAD"
   | "TURN_FACING_BET"
   | "RIVER_PRESSURE"
   | "RIVER_FACING_BET";

@@ -568,7 +568,11 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
           .map((street) => mttProductionProfileKey({ ...selected, street }))
           .filter((profileKey): profileKey is string => profileKey !== null);
         await mttProductionLazyLoader.loadProfiles(profileKeys);
-        await loadSolvedTurnPacksForProfiles(profileKeys);
+        // Started, not waited on. Reviewing a hand history does not depend on
+        // solved turn content - the chain falls through to the heuristic without
+        // it - and nine families is several megabytes that would otherwise sit
+        // between the player pressing analyse and seeing anything.
+        void loadSolvedTurnPacksForProfiles(profileKeys);
         if (
           selectedFamily ===
           mttProductionProfileFamilyKey(getSelectedTrainingProfile())

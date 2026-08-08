@@ -35,7 +35,7 @@ import { ALL_HAND_CLASSES } from "../src/core/poker";
  */
 
 const HANDS = ALL_HAND_CLASSES;
-const FAMILY_PATTERN = "SRP_CO_VS_BB" as PostflopPositionPattern;
+
 
 function card(text: string): Card {
   return { rank: text[0].toUpperCase() as Rank, suit: text[1].toLowerCase() as Suit };
@@ -53,16 +53,32 @@ const rules = runtimeSolvedTurnPacks.flatMap((pack) => pack.rules);
 const withSpot = rules.filter((rule) => rule.spot !== undefined);
 const solvedBoards = new Set(withSpot.map((rule) => rule.spot!.flop.join("")));
 
-function probe(board: readonly Card[], heroHand: string, stackBB: number): boolean {
+function probe(
+  board: readonly Card[],
+  heroHand: string,
+  rule: {
+    stackBB: number;
+    positionPattern: string;
+    potType: string;
+    spot?: { hero?: { facingBet: boolean; isAggressor: boolean } };
+  },
+): boolean {
   const input: PostflopStrategyInput = {
     street: "TURN",
     textures: [],
     board,
-    potType: "SINGLE_RAISED",
+    potType: rule.potType as PostflopStrategyInput["potType"],
     potBB: 12,
-    effectiveStackBB: stackBB,
-    positionPattern: FAMILY_PATTERN,
-    actionNode: "TURN_BARREL",
+    effectiveStackBB: rule.stackBB,
+    positionPattern: rule.positionPattern as PostflopPositionPattern,
+    // The same role-based naming the resolver uses. Reading it off the family
+    // name instead is what made a big blind's turn decision look like a cutoff's
+    // barrel, so the probe must not reintroduce the shortcut it is checking.
+    actionNode: rule.spot?.hero === undefined
+      ? "TURN_BARREL"
+      : rule.spot.hero.facingBet
+        ? "TURN_FACING_BET"
+        : rule.spot.hero.isAggressor ? "TURN_BARREL" : "TURN_OOP_LEAD",
     heroHand,
     priorFlopAction: "BET_SMALL",
     turnCardClass: "BLANK",
@@ -79,7 +95,7 @@ for (const rule of withSpot) {
   const board = [...spot.flop, spot.turnCards[0]].map(card);
   for (const hand of inRange) {
     servedSpots += 1;
-    if (probe(board, hand, rule.stackBB)) served += 1;
+    if (probe(board, hand, rule)) served += 1;
   }
 }
 
@@ -87,6 +103,8 @@ for (const rule of withSpot) {
 // The turn card is one of the solved ones, so the only thing wrong is the flop -
 // the closest an unsolved board can get to a solved one.
 const RANKS: Rank[] = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
+// One rule per family, so every family gets asked about a board it never solved.
+const probeRules = [...new Map(withSpot.map((rule) => [rule.familyId, rule])).values()];
 let unsolvedSpots = 0;
 let unsolvedAnswered = 0;
 for (const high of RANKS) {
@@ -97,8 +115,10 @@ for (const high of RANKS) {
       if (new Set([high, mid, low]).size < 3) continue;
       const board = [...flop, "2h"].map(card);
       for (const hand of HANDS.slice(0, 12)) {
-        unsolvedSpots += 1;
-        if (probe(board, hand, 25)) unsolvedAnswered += 1;
+        for (const rule of probeRules) {
+          unsolvedSpots += 1;
+          if (probe(board, hand, rule)) unsolvedAnswered += 1;
+        }
       }
     }
   }

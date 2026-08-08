@@ -440,6 +440,21 @@ export const POSTFLOP_FULL_RING_POSITION_CONTEXTS = uniquePositionContexts([
   ...postflopPositionContextsForFormat("FULL_RING_9", "SINGLE_RAISED"),
 ]);
 
+/**
+ * Every full-ring context, three-bet pots included.
+ *
+ * The list above is single-raised only, which is right for dealing a random spot
+ * - most postflop pots are single-raised, and a random draw should look like
+ * that. But it is the wrong list for asking "can this solved spot be dealt at
+ * all": three solved families are three-bet pots, and against the single-raised
+ * list they answered no, so several hundred solved turns were unreachable for a
+ * reason that had nothing to do with the strategy in them.
+ */
+export const POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS = uniquePositionContexts([
+  ...POSTFLOP_FULL_RING_POSITION_CONTEXTS,
+  ...postflopPositionContextsForFormat("FULL_RING_9", "THREE_BET_POT"),
+]);
+
 export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   const rng = mulberry32(config.seed);
   const dealtHeroCards = config.heroCards ?? dealCards(rng, fullDeck(), 2) as [Card, Card];
@@ -578,6 +593,7 @@ function actionsForActionNode(actionNode: PostflopActionNode): readonly Postflop
     case "SINGLE_RAISED_POT_CBET":
     case "THREE_BET_POT_CBET":
     case "TURN_BARREL":
+    case "TURN_OOP_LEAD":
     case "RIVER_PRESSURE":
       return ["CHECK", "BET_SMALL", "BET_BIG"];
   }
@@ -701,7 +717,29 @@ function recommendPostflopActionForNode(
     case "TURN_BARREL":
     case "RIVER_PRESSURE":
       return recommendPostflopAction(street, textures);
+    case "TURN_OOP_LEAD":
+      return recommendOopLeadAction();
   }
+}
+
+/**
+ * The fallback for the out-of-position caller's first turn decision.
+ *
+ * Not the barrel heuristic. Betting into the player who took the lead preflop
+ * and on the flop is the exception, and the same rule that says "keep betting
+ * with the range that bet" would tell a caller to lead most of their range -
+ * the opposite of the spot. Without a model, checking to the aggressor is the
+ * answer that is wrong least often, and it is offered as a fallback rather than
+ * as a claim about the right frequency.
+ */
+function recommendOopLeadAction(): PostflopRecommendation {
+  return {
+    action: "CHECK",
+    explanation:
+      "Bez modelu pro tuto situaci hráč mimo pozici kontroluje na agresora: "
+      + "vedení do soupeře, který držel iniciativu, je výjimka, ne pravidlo.",
+    source: fallbackStrategySource(),
+  };
 }
 
 function recommendFacingBetAction(

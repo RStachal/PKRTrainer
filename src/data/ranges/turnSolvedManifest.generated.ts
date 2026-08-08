@@ -12,9 +12,57 @@ export interface SolvedTurnManifestEntry {
 
 export const solvedTurnManifest: readonly SolvedTurnManifestEntry[] = [
   {
+    familyId: "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-100bb-btn-bb-srp-facing-highspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-100bb-btn-bb-srp-facing-highspr.generated").then((module) => module.turnPack),
+  },
+  {
+    familyId: "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-100bb-co-bb-srp-cbet-highspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-100bb-co-bb-srp-cbet-highspr.generated").then((module) => module.turnPack),
+  },
+  {
+    familyId: "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-110bb-co-btn-3bp-facing-midhigh-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-110bb-co-btn-3bp-facing-midhigh.generated").then((module) => module.turnPack),
+  },
+  {
+    familyId: "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-150bb-co-btn-3bp-highspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-150bb-co-btn-3bp-highspr.generated").then((module) => module.turnPack),
+  },
+  {
+    familyId: "MTT9_20BB_BTN_BB_SRP_LOWSPR",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-20bb-btn-bb-srp-lowspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-20bb-btn-bb-srp-lowspr.generated").then((module) => module.turnPack),
+  },
+  {
+    familyId: "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-25bb-btn-bb-srp-facing-lowspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-25bb-btn-bb-srp-facing-lowspr.generated").then((module) => module.turnPack),
+  },
+  {
     familyId: "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
     packId: "mtt-full-ring-9-turn-solved-mtt9-25bb-co-bb-srp-cbet-lowspr-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
     load: () => import("./turn/mtt9-25bb-co-bb-srp-cbet-lowspr.generated").then((module) => module.turnPack),
+  },
+  {
+    familyId: "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-25bb-sb-bb-srp-oop-cbet-lowspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-25bb-sb-bb-srp-oop-cbet-lowspr.generated").then((module) => module.turnPack),
+  },
+  {
+    familyId: "MTT9_35BB_CO_BTN_3BP_REPAIR",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-35bb-co-btn-3bp-repair-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-35bb-co-btn-3bp-repair.generated").then((module) => module.turnPack),
   },
 ];

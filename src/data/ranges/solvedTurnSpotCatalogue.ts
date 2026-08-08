@@ -51,10 +51,19 @@ export interface SolvedTurnSpot {
   sourceDirectory: string;
 }
 
-const ACTION_NODE_FOR_RULE: Partial<Record<TurnStrategyRule["node"], PostflopActionNode>> = {
-  CBET: "TURN_BARREL",
-  FACING_BET: "TURN_FACING_BET",
-};
+/**
+ * The decision a solved node holds, read from the node rather than its family.
+ *
+ * The same mapping the resolver uses, and for the same reason: a family named
+ * for its flop c-bet holds a turn node belonging to the player who called that
+ * c-bet, so the name is not evidence of which decision was solved.
+ */
+function actionNodeFor(rule: TurnStrategyRule): PostflopActionNode | undefined {
+  const hero = rule.spot?.hero;
+  if (hero === undefined) return undefined;
+  if (hero.facingBet) return "TURN_FACING_BET";
+  return hero.isAggressor ? "TURN_BARREL" : "TURN_OOP_LEAD";
+}
 
 function card(text: string): Card | undefined {
   if (text.length < 2) return undefined;
@@ -80,7 +89,7 @@ export function solvedTurnSpots(): readonly SolvedTurnSpot[] {
       if (solved === undefined) continue;
       if (solved.potBB === undefined) continue;
 
-      const actionNode = ACTION_NODE_FOR_RULE[rule.node];
+      const actionNode = actionNodeFor(rule);
       if (actionNode === undefined) continue;
 
       const board = [...solved.flop, solved.turnCards[0]]

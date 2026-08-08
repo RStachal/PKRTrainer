@@ -62,6 +62,35 @@ export interface TurnRangeBucket {
  * same card strategically - and the grouping is the solver's own claim, recorded
  * in the plan, not an abstraction invented here.
  */
+/**
+ * Which of the two players a solved node belongs to, and how sure we are.
+ *
+ * `seat` is the position that plays it. `confidence` is the overlap between the
+ * node's hand classes and the plan's range for that side - a number, because the
+ * two are never identical: the plan's ranges are stated at the flop node and the
+ * node's classes are after a turn card has removed some combinations.
+ */
+export interface TurnSolvedHero {
+  side: "OOP" | "IP";
+  seat: string;
+  villainSeat: string;
+  /** Overlap with the plan's range for this side, 0 to 1. */
+  confidence: number;
+  /** Whether hero has a bet in front of them at this node. */
+  facingBet: boolean;
+  /**
+   * Whether hero took the betting lead before the flop.
+   *
+   * Position alone does not name the decision. Out of position and first to act
+   * is a lead when hero called the last raise and a barrel when hero made it -
+   * and a small blind who opened is out of position for the whole hand, so the
+   * two cases live in the same seat. Getting this from the role rather than the
+   * seat is what keeps a small blind's continuation from being taught as a
+   * donk bet.
+   */
+  isAggressor: boolean;
+}
+
 export interface TurnSolvedSpot {
   /** The three flop cards, as the solve wrote them: "6s", "5d", "4c". */
   flop: readonly string[];
@@ -85,6 +114,23 @@ export interface TurnSolvedSpot {
    */
   potBB?: number;
   stackBehindBB?: number;
+  /**
+   * Whose strategy this node holds, established from the solve rather than read
+   * off the directory name.
+   *
+   * The name was not enough, and assuming it was produced a real error. A family
+   * called `..._CO_BB_SRP_CBET_...` names the flop c-bet that defines the spot,
+   * not the player whose turn decision was solved - and the node extracted from
+   * it turned out to hold the big blind's strategy for acting first on the turn
+   * after calling that c-bet. Filed under the name, the cutoff's seat would have
+   * been shown the big blind's answers.
+   *
+   * The determination is made by matching the node's hand classes against the
+   * two ranges the plan records for that turn, `oop` and `ip`. That is the
+   * solve's own record of who holds what, so it cannot drift from the strategy
+   * the way a naming convention can.
+   */
+  hero?: TurnSolvedHero;
   /** Share of the flop node's range that reaches this turn, 0 to 1. */
   reach: number;
 }

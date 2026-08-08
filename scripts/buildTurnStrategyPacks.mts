@@ -43,6 +43,93 @@ interface ManifestEntry { familyId: string; packId: string; slug: string }
  * mapping is the writer's, and reconstructing it here is the only link between a
  * plan item and the strategy it planned.
  */
+/** "AhKs" to "AKs", so a node's combinations can be compared with a plan's range. */
+function handClassOfCombo(combo: string): string | undefined {
+  if (combo.length < 4) return undefined;
+  const [rankOne, suitOne, rankTwo, suitTwo] = combo;
+  if (rankOne === rankTwo) return `${rankOne}${rankTwo}`;
+  return `${rankOne}${rankTwo}${suitOne === suitTwo ? "s" : "o"}`;
+}
+
+/**
+ * Which player a solved node belongs to, decided by its hand classes.
+ *
+ * The directory name cannot answer this. `MTT9_25BB_CO_BB_SRP_CBET_LOWSPR` names
+ * the flop c-bet that defines the family, and the turn node inside it turned out
+ * to hold the big blind's strategy for acting first after calling that c-bet -
+ * so filing by name would have shown the cutoff's seat the big blind's answers.
+ *
+ * The plan states both ranges at every turn it planned, `oop` and `ip`, which is
+ * the solve's own record of who holds what. Overlap decides it. The two ranges
+ * are not disjoint - both players hold sixes on a board with a six - so the test
+ * is which side the node's classes are more contained in, and by enough of a
+ * margin that the answer is not a coin toss.
+ */
+function heroSideOfNode(
+  node: { strategy?: { strategy?: Record<string, unknown> } },
+  item: { oop?: Record<string, number>; ip?: Record<string, number> },
+): { side: "OOP" | "IP"; confidence: number } | undefined {
+  const combos = Object.keys(node.strategy?.strategy ?? {});
+  const classes = new Set(
+    combos.map(handClassOfCombo).filter((item): item is string => item !== undefined),
+  );
+  if (classes.size === 0) return undefined;
+
+  const containment = (range?: Record<string, number>) => {
+    if (range === undefined) return 0;
+    const keys = new Set(Object.keys(range));
+    let inside = 0;
+    for (const handClass of classes) if (keys.has(handClass)) inside += 1;
+    return inside / classes.size;
+  };
+
+  const oop = containment(item.oop);
+  const ip = containment(item.ip);
+  const [side, best, other] = oop >= ip
+    ? ["OOP" as const, oop, ip]
+    : ["IP" as const, ip, oop];
+
+  // Contained in one side and clearly better contained than in the other. A node
+  // that fits both equally has not been identified, and shipping it would be a
+  // coin toss over which player's strategy a reader is shown.
+  if (best < HERO_CONTAINMENT_FLOOR) return undefined;
+  if (best - other < HERO_CONTAINMENT_MARGIN) return undefined;
+  return { side, confidence: Math.round(best * 1000) / 1000 };
+}
+
+/** Share of a node's classes that must sit inside the range claimed for it. */
+const HERO_CONTAINMENT_FLOOR = 0.9;
+/** How much better the winning side must fit than the losing one. */
+const HERO_CONTAINMENT_MARGIN = 0.05;
+
+/**
+ * The two seats a family names, and which of them acts last after the flop.
+ *
+ * Postflop order runs SB, BB, then UTG round to the button, so the later a seat
+ * sits in that order the more often it is in position - with the blinds first
+ * rather than last, which is the whole reason this cannot be read off the
+ * preflop order.
+ */
+const POSTFLOP_ORDER = ["SB", "BB", "UTG", "UTG_1", "UTG_2", "LJ", "HJ", "CO", "BTN"];
+
+function seatsOfFamily(
+  directoryName: string,
+): { oop: string; ip: string; aggressor: string } | undefined {
+  const match = /^MTT9_\d+BB_([A-Z0-9_]+?)_([A-Z0-9_]+?)_(SRP|3BP)/.exec(directoryName);
+  if (match === null) return undefined;
+  const [first, second, potType] = [match[1], match[2], match[3]];
+  const rank = (seat: string) => POSTFLOP_ORDER.indexOf(seat);
+  if (rank(first) < 0 || rank(second) < 0) return undefined;
+  // The name lists the seats in the order they acted before the flop. In a
+  // single-raised pot that makes the first one the raiser; in a three-bet pot
+  // the first opened and the second raised them, so the aggressor is the second.
+  const aggressor = potType === "3BP" ? second : first;
+  const seats = rank(first) < rank(second)
+    ? { oop: first, ip: second }
+    : { oop: second, ip: first };
+  return { ...seats, aggressor };
+}
+
 function subgameFileName(item: { line?: string[]; turn: string }): string {
   const line = (item.line ?? []).map((action) => {
     const sized = /^(BET|RAISE|ALLIN|ALL_IN)\s+([\d.]+)$/i.exec(action.trim());
@@ -114,6 +201,7 @@ if (family === undefined) {
     minCoverage: 1, coverageTarget: TURN_COVERAGE_TARGET, sampledRules: [],
   };
   const rules = [];
+  let unidentified = 0;
 
   for (const directory of directories) {
     const planPath = join(ROOT, directory, "plan.json");
@@ -136,6 +224,7 @@ if (family === undefined) {
     // name states it in big blinds, so their ratio is the only place the two unit
     // systems meet. Without it nothing downstream can deal a spot at the depth it
     // was actually solved at.
+    const seats = seatsOfFamily(directory);
     const familyStackBB = Number(/_(\d+)BB_/.exec(directory)?.[1] ?? 0);
     const chipsPerBB = familyStackBB > 0 && plan.stack > 0 ? plan.stack / familyStackBB : 0;
     const inBB = (chips: number) => (
@@ -151,7 +240,31 @@ if (family === undefined) {
       const stackChips = item.stack ?? plan.stack ?? 0;
       const potBB = inBB(potChips);
       const stackBehindBB = inBB(stackChips);
+
+      // Whose node this is, from the solve rather than from the name. An item
+      // whose side cannot be established is left out: a rule filed under the
+      // wrong seat shows one player the other's answers, wearing a label that
+      // says a solver produced them.
+      const side = seats === undefined ? undefined : heroSideOfNode(node, item);
+      if (side === undefined) {
+        unidentified += 1;
+        continue;
+      }
+      const actions: string[] = node.actions ?? [];
+      const seat = side.side === "OOP" ? seats!.oop : seats!.ip;
+      const hero = {
+        side: side.side,
+        seat,
+        villainSeat: side.side === "OOP" ? seats!.ip : seats!.oop,
+        isAggressor: seat === seats!.aggressor,
+        confidence: side.confidence,
+        // A node offering a fold has a bet in front of it; one offering a check
+        // does not. This is the node's own shape, not a reading of the name.
+        facingBet: actions.some((action) => /^FOLD$/i.test(action.trim())),
+      };
+
       const rule = buildTurnStrategyRule(directory, node, {
+        hero,
         flop: (plan.board ?? []) as string[],
         turnCards: [item.turn, ...(item.represents ?? []).filter((card: string) => card !== item.turn)],
         priorLine: item.line ?? [],
@@ -202,6 +315,25 @@ if (family === undefined) {
   rules.push(...kept);
   evidence.sampledRules = rules.slice(0, 1);
   if (dropped > 0) console.log(`  ${dropped} lower-reach turns dropped to fit the rule budget`);
+
+  // Who the kept turns belong to, printed every run. This is the fact the
+  // directory name could not be trusted for, so it is reported rather than
+  // assumed - a family whose seats read wrongly should be visible here before
+  // anything is written.
+  const identities = new Map<string, number>();
+  for (const rule of rules) {
+    const hero = rule.spot?.hero;
+    if (hero === undefined) continue;
+    const key = `${hero.side} ${hero.seat} vs ${hero.villainSeat}, `
+      + `${hero.facingBet ? "facing a bet" : "first to act"}`;
+    identities.set(key, (identities.get(key) ?? 0) + 1);
+  }
+  for (const [key, count] of [...identities].sort()) {
+    console.log(`  hero: ${key} - ${count} turns`);
+  }
+  if (unidentified > 0) {
+    console.log(`  ${unidentified} turns left out: could not establish whose strategy the node holds`);
+  }
 
   const result = buildTurnStrategyPack({
     id: `mtt-full-ring-9-turn-solved-${family.toLowerCase().replace(/_/g, "-")}-v1`,

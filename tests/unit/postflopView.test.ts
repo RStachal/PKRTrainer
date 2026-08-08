@@ -29,7 +29,7 @@ describe("postflopView - DOM", () => {
       .toBe("Generate spot");
     expect([...root.querySelectorAll<HTMLOptionElement>(".postflop-situation option")]
       .map((option) => option.textContent))
-      .toEqual(["We have initiative", "Facing a bet"]);
+      .toEqual(["We have initiative", "Facing a bet", "No initiative, first to act"]);
     expect(root.querySelectorAll(".postflop-card")).toHaveLength(0);
     expect(root.querySelectorAll(".postflop-action")).toHaveLength(0);
 

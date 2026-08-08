@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { POSTFLOP_FULL_RING_POSITION_CONTEXTS } from "../../src/core/postflopGenerator";
+import { POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS } from "../../src/core/postflopGenerator";
 import { generatePostflopSpot } from "../../src/core/postflopGenerator";
 import { createTurnSolvedStrategyResolverChain, loadSolvedTurnPacks } from "../../src/data/ranges/turnSolvedStrategyPacks";
 import {
@@ -52,7 +52,7 @@ describe("solved turn spot catalogue", () => {
     let recognised = 0;
 
     for (const spot of spots.slice(0, 40)) {
-      const config = solvedTurnSpotConfig(spot, POSTFLOP_FULL_RING_POSITION_CONTEXTS);
+      const config = solvedTurnSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS);
       if (config === undefined) continue;
       const answer = resolve({
         street: "TURN",
@@ -79,13 +79,44 @@ describe("solved turn spot catalogue", () => {
   it("generates a real spot on the solved board", () => {
     const spot = pickSolvedTurnSpot(0.5);
     expect(spot).toBeDefined();
-    const config = solvedTurnSpotConfig(spot!, POSTFLOP_FULL_RING_POSITION_CONTEXTS);
+    const config = solvedTurnSpotConfig(spot!, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS);
     expect(config).toBeDefined();
 
     const generated = generatePostflopSpot({ seed: 7, ...config!, allowFallback: true });
     expect(generated.board.map((card) => `${card.rank}${card.suit}`))
       .toEqual(config!.board.map((card) => `${card.rank}${card.suit}`));
     expect(generated.effectiveStackBB).toBe(config!.effectiveStackBB);
+  });
+
+  it("names the decision from the node's role, not the family's name", () => {
+    // The defect this replaced: every family is named for the flop c-bet that
+    // defines it, and the turn node inside holds the player who *called* that
+    // c-bet. Filed by name, a cutoff would be shown the big blind's answers and
+    // told they held the betting lead.
+    //
+    // The small blind family is the one that proves it is role and not seat: the
+    // small blind opened and is out of position for the whole hand, so its turn
+    // bet is a continuation, not a lead.
+    const byPattern = new Map<string, Set<string>>();
+    for (const spot of solvedTurnSpots()) {
+      const seen = byPattern.get(spot.positionPattern) ?? new Set<string>();
+      seen.add(spot.actionNode);
+      byPattern.set(spot.positionPattern, seen);
+    }
+    expect([...(byPattern.get("SRP_SB_VS_BB") ?? [])]).toEqual(["TURN_BARREL"]);
+    expect([...(byPattern.get("SRP_CO_VS_BB") ?? [])]).toEqual(["TURN_OOP_LEAD"]);
+    expect([...(byPattern.get("3BP_BTN_VS_CO") ?? [])]).toEqual(["TURN_OOP_LEAD"]);
+  });
+
+  it("can deal every solved spot it offers", () => {
+    // A spot the catalogue lists but the generator cannot build is content that
+    // exists and is unreachable, which reads from outside exactly like content
+    // that is broken. Three-bet families were in that state: their contexts were
+    // absent from the single-raised list the catalogue was matched against.
+    const undealable = solvedTurnSpots().filter((spot) => (
+      solvedTurnSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS) === undefined
+    ));
+    expect(undealable).toHaveLength(0);
   });
 
   it("picks the same spot for the same seed", () => {

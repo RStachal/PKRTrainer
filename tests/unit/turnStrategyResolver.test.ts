@@ -21,6 +21,11 @@ import type { TurnStrategyRule } from "../../src/data/ranges/turnStrategyRuleBui
  * neighbouring family would be worse than the heuristic, because the heuristic
  * is labelled as one while a wrong solved answer arrives wearing SOLVER_BACKED.
  *
+ * Whose decision it is, is part of that too. The family name states the flop
+ * c-bet that defines the spot, not the player whose turn node was solved - here
+ * the big blind, acting first after calling that c-bet - so every fixture states
+ * the hero the solve identified rather than letting the name imply one.
+ *
  * The board is part of that. A family holds one flop per directory and about
  * twenty six turn groups inside it, so a rule now carries the exact board it was
  * solved on and every fixture here states one. The pot the sizes are measured
@@ -46,6 +51,14 @@ const rule = (over: Partial<TurnStrategyRule> = {}): TurnStrategyRule => ({
     flop: ["6s", "5d", "4c"],
     turnCards: ["2c", "2d", "2s"],
     priorLine: ["BET 17.000000", "CALL"],
+    hero: {
+      side: "OOP" as const,
+      seat: "BB",
+      villainSeat: "CO",
+      confidence: 0.98,
+      facingBet: false,
+      isAggressor: false,
+    },
     potChips: 100,
     stackChips: 108,
     reach: 0.35,
@@ -93,7 +106,7 @@ const input = (over: Partial<PostflopStrategyInput> = {}): PostflopStrategyInput
   potBB: 100,
   effectiveStackBB: 25,
   positionPattern: "SRP_CO_VS_BB",
-  actionNode: "TURN_BARREL",
+  actionNode: "TURN_OOP_LEAD",
   heroHand: "AA",
   ...over,
 });
@@ -132,8 +145,10 @@ describe("turn strategy resolver", () => {
     expect(resolve(input({ positionPattern: "SRP_BTN_VS_BB" }))).toBeNull();
     expect(resolve(input({ potType: "THREE_BET_POT" }))).toBeNull();
     expect(resolve(input({ street: "FLOP" }))).toBeNull();
-    // A facing-bet node is a different decision from betting into the field.
+    // The other two turn decisions. This family holds the big blind acting first
+    // without the lead; neither facing a bet nor barrelling with it is that.
     expect(resolve(input({ actionNode: "TURN_FACING_BET" }))).toBeNull();
+    expect(resolve(input({ actionNode: "TURN_BARREL" }))).toBeNull();
   });
 
   it("declines a depth the solve is not near", () => {
@@ -162,6 +177,14 @@ describe("turn strategy resolver", () => {
         flop: ["6s", "5d", "4c"],
         turnCards: ["2c"],
         priorLine: ["BET 17.000000", "CALL"],
+        hero: {
+          side: "OOP" as const,
+          seat: "BB",
+          villainSeat: "CO",
+          confidence: 0.98,
+          facingBet: false,
+          isAggressor: false,
+        },
         potChips: 0,
         stackChips: 108,
         reach: 0.35,
@@ -190,6 +213,14 @@ describe("turn strategy resolver", () => {
         flop: ["6s", "5d", "4c"],
         turnCards: ["2c"],
         priorLine: ["BET 17.000000", "CALL"],
+        hero: {
+          side: "OOP" as const,
+          seat: "BB",
+          villainSeat: "CO",
+          confidence: 0.98,
+          facingBet: false,
+          isAggressor: false,
+        },
         potChips: 84,
         stackChips: 108,
         reach: 0.35,

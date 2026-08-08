@@ -393,6 +393,8 @@ function postflopActionNodeLabel(key: string): string {
       return "Flop facing bet";
     case "TURN_BARREL":
       return "Turn barrel";
+    case "TURN_OOP_LEAD":
+      return "Turn lead out of position";
     case "TURN_FACING_BET":
       return "Turn facing bet";
     case "RIVER_PRESSURE":
