@@ -489,9 +489,11 @@ function mixedTreeContentGuard(mixed: Set<string>): Step {
       `${affected.size} shipped family(ies) still mix the full and reduced trees, so their`,
       "aggregates blend two different games:",
       ...lines,
-      "Re-solving them needs a fresh monolithic solve on the full tree, which is upstream",
-      "of this pipeline and is not scheduled by any job today. The turn packs exclude the",
-      "reduced-tree boards outright; the flop rules above still carry the blend.",
+      "Stage the re-solve with `npm run mtt:texas-solver-uniform-tree-batch -- --write`,",
+      "which copies the authoritative full-tree parameters for every reduced-tree and",
+      "over-target board. Running the solve itself is a monolithic job and is not",
+      "scheduled. The turn packs exclude the reduced-tree boards outright; the flop",
+      "rules above still carry the blend.",
     ].join("\n"),
   };
 }

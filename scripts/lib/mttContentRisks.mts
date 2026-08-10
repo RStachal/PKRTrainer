@@ -109,14 +109,15 @@ export function shippedContentRisks(ruleIds: readonly string[]): ShippedContentR
       `${rules.length} of ${ruleIds.length} shipped rules come from ${mixedTreeRules.size} family(ies) `
       + "that still mix the full and reduced solver trees, so those aggregates blend two different "
       + `games: ${[...mixedTreeRules.keys()].join(", ")}. `
-      // Dřív tu stálo "their boards are queued for re-solve". Nic je nefrontí:
-      // noční běh řadí boardy podle rozpracovanosti a hloubky a o stromech neví.
-      // Přesolvení navíc není jeho práce - board z redukovaného stromu je nutné
-      // znovu vyřešit monolitickým solvem s plnou sadou parametrů, což leží před
-      // dekompozicí. Nepodložený příslib zní líp než popis mezery a brání tomu,
-      // aby ji někdo zavřel.
-      + "Re-solving them means a fresh monolithic solve on the full tree, which no "
-      + "scheduled job does today; the turn packs exclude these boards instead.",
+      // Text tady byl dvakrát mimo, pokaždé jinak. Nejdřív tvrdil, že boardy
+      // jsou "queued for re-solve", což nebyla pravda - noční dekompozice o
+      // stromech neví a přesolvení není její práce. Pak tvrdil, že to nedělá
+      // žádná úloha, což bylo příliš silné: `mtt:texas-solver-uniform-tree-batch`
+      // přesně tohle vybírá a staguje. Chybělo jen to, aby ji někdo spustil.
+      + "Their boards are staged for re-solve by mtt:texas-solver-uniform-tree-batch, "
+      + "which copies the authoritative full-tree parameters; the solve itself is a "
+      + "monolithic run and is not automatically scheduled. The turn packs exclude "
+      + "the reduced-tree boards outright, so only the flop rules above carry the blend.",
     );
   }
   if (withheldRules.size > 0) {
