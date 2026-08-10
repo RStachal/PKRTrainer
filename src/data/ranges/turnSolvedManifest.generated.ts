@@ -65,4 +65,10 @@ export const solvedTurnManifest: readonly SolvedTurnManifestEntry[] = [
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
     load: () => import("./turn/mtt9-35bb-co-btn-3bp-repair.generated").then((module) => module.turnPack),
   },
+  {
+    familyId: "MTT9_40BB_UTG_BB_SRP",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-40bb-utg-bb-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-40bb-utg-bb-srp.generated").then((module) => module.turnPack),
+  },
 ];
