@@ -40,6 +40,9 @@ import time
 from datetime import datetime, timedelta
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+# Nejdelší okno, které se ještě bere jako noční běh, v hodinách.
+MAX_WINDOW_HOURS = 11
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 OUTPUT_BASE = os.path.join(REPO, "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver")
 PARAM_ROOT = os.path.join(REPO, "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters")
@@ -90,6 +93,22 @@ def main():
     deadline = datetime.now().replace(hour=hour, minute=minute, second=0, microsecond=0)
     if deadline <= datetime.now():
         deadline += timedelta(days=1)
+
+    # Okno se nesmí natáhnout na celý den.
+    #
+    # `--until=07:00` spuštěné ve 21:00 dá deset hodin, ale spuštěné v 08:00 dá
+    # dvacet tři - a běh pak drží osm jader přes celou pracovní dobu. Přesně to
+    # se stalo: log má poslední zápisy v 08:19, hodinu po zamýšleném konci, a
+    # kontrola deadlinu u každé desky proti tomu nepomůže, protože deadline sám
+    # byl špatně. Solvení patří do noci; spuštění mimo ni je skoro vždy omyl.
+    window_hours = (deadline - datetime.now()).total_seconds() / 3600
+    if window_hours > MAX_WINDOW_HOURS and "--force" not in sys.argv:
+        log(
+            f"okno by trvalo {window_hours:.1f} h (do {deadline:%d.%m. %H:%M}), což je víc než "
+            f"{MAX_WINDOW_HOURS} h - běh se pravděpodobně spouští mimo noční okno. "
+            "Buď spusť po 21:00, nebo přidej --force."
+        )
+        return
 
     os.makedirs(WORK, exist_ok=True)
     boards = board_parameter_files()
@@ -183,7 +202,20 @@ def main():
                 capture_output=True, text=True,
             )
             if result.returncode != 0 or not os.path.exists(plan_path):
-                log(f"  plan failed: {result.stderr.strip().splitlines()[-1:] or result.stdout.strip()[-200:]}")
+                # Návratový kód a obě roury, ne jen poslední řádek stderru.
+                #
+                # Původní hlášení tisklo `stderr.splitlines()[-1:] or stdout[-200:]`,
+                # což pro proces zabitý bez výstupu vypsalo prázdný seznam - a
+                # jedna noc tak spálila 119 desek na řádcích "plan failed: " bez
+                # jediného vodítka. Plánovač přitom na týchž datech ručně projde,
+                # takže příčina byla v prostředí a přesně to zahozený návratový
+                # kód říct uměl.
+                detail = (result.stderr.strip() or result.stdout.strip() or "žádný výstup")
+                if not os.path.exists(checkpoint):
+                    detail = f"chybí checkpoint {checkpoint}"
+                elif result.returncode == 0:
+                    detail = f"plán se nezapsal do {plan_path}; {detail}"
+                log(f"  plan failed (rc={result.returncode}): {detail[-400:]}")
                 failed += 1
                 continue
 
