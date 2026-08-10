@@ -51,7 +51,7 @@ zatímco běží sada — stálo to už tři falešné výsledky a jeden 219minu
 
 ## Fronta práce, seřazená podle dopadu
 
-Zdroj pravdy o mezerách je `npm run mtt:playable-beta`. Stav k 2026-08-08:
+Zdroj pravdy o mezerách je `npm run mtt:playable-beta`. Stav k 2026-08-10:
 
 | # | Položka | Stav | Default, když chybí podklad |
 |---|---|---|---|
@@ -63,6 +63,7 @@ Zdroj pravdy o mezerách je `npm run mtt:playable-beta`. Stav k 2026-08-08:
 | 6 | ~~EV pro VS_4BET~~ | **hotovo 2026-08-08.** Sizingy zvoleny (3bet 2,2× IP / 3× OOP, 4bet 2,2×), zastropovány stackem. Všech 6 000 nabídnutých jamů oceněno. Mělký čtyřbet je fakticky all-in, tam se počítá dorovnání bez fold equity. | — |
 | 7 | EV pro VS_LIMP | **Uzavřeno jako neocenitelné 2026-08-08, s jiným důvodem, než jsem psal.** Limpovací range modelovaná je (105 tříd) — můj předpoklad byl mylný. Změřeno: každý limp spot s jamem je z big blindu a žádný nenabízí fold, protože BB má vloženo a může checknout. Ostatní větve porovnávají jam proti skládání za nulu; tady je alternativou flop zdarma, kterou produkt neumí ocenit. Nula by jam nadhodnotila právě tam, kde je alternativa nejlevnější. | otevřít až bude postflopový model, který ocení check z BB |
 | 8 | Plochá poziční křivka | chybí měřené frekvence po sedačkách | ponechat; měnit tvar bez měření už jednou selhalo (viz commit o seam repair) |
+| 10 | Noční běh spálil noc tiše | **opraveno 2026-08-10.** Log hlásil 119× „plan failed:" bez důvodu (zahazoval návratový kód) a `--until=07:00` spuštěné ráno dalo 23hodinové okno, takže běh držel jádra přes pracovní den. Obojí opraveno; běh se mimo noční okno odmítne spustit. | — |
 | 9 | River jen heuristika | **Nástroje hotové 2026-08-08.** `plan_river.py` plánuje riverové podhry z vyřešené turnové (ověřeno: 65 podher, pokrytí 1,000, všech 48 riverových karet). Noční běh má fázi `--river-budget=N`, která běží až po turnové a výběr rozprostírá po deskách. Vlastní solvení je práce nočního okna. | rozpočet zvyšovat po nocích; turn má přednost, protože nedokončený turn blokuje review bránu |
 
 Položky 6 a 7 byly dřív vedené jako „blokované na uživateli". Nejsou. Mají
