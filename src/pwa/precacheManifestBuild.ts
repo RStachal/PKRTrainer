@@ -59,8 +59,19 @@ export function mttProductionChunkNameForModuleId(moduleId: string): string | nu
   // Solved turn families live under ranges/turn/ and are named for the family
   // rather than for a profile, so they need their own naming rule to land in a
   // chunk the precache manifest recognises as deferred.
-  if (normalized.includes("/ranges/turn/") && fileName.endsWith(".generated.ts")) {
-    return `mtt-turn-solved-${fileName.slice(0, -".generated.ts".length)}`;
+  // Přípona je `.json`, ne `.ts`, a na tom celé pojmenování stálo.
+  //
+  // Rodiny se emitují jako data, protože jako TypeScript stály každý běh sady
+  // dvanáct vteřin transformace. Tahle podmínka ale hlídala `.generated.ts`, tak
+  // po převodu přestala platit: chunky dostaly jméno podle souboru, precache
+  // predikát je přestal poznávat jako odložené, a rozpočet vyskočil z 362 kB na
+  // 4,4 MB - celý solverový obsah se ocitl na instalační cestě.
+  if (
+    normalized.includes("/ranges/turn/") &&
+    (fileName.endsWith(".generated.json") || fileName.endsWith(".generated.ts"))
+  ) {
+    const suffix = fileName.endsWith(".json") ? ".generated.json" : ".generated.ts";
+    return `mtt-turn-solved-${fileName.slice(0, -suffix.length)}`;
   }
   if (
     !fileName.endsWith(".ts") ||

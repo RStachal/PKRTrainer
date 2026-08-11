@@ -9,6 +9,7 @@ import {
   buildPrecacheManifest,
   injectPrecacheManifest,
   isLazyMttProductionAsset,
+  isDeferredAsset,
   mttProductionChunkNameForModuleId,
 } from "../../src/pwa/precacheManifestBuild";
 
@@ -79,6 +80,23 @@ describe("precache build manifest", () => {
     expect(mttProductionChunkNameForModuleId(
       "/repo/src/data/ranges/flopProductionStrategyPack.ts",
     )).toBeNull();
+  });
+
+  it("dá vyřešené turn rodině jméno, které precache pozná jako odložené", () => {
+    // Tohle se jednou rozbilo tiše. Rodiny se emitují jako `.json`, protože jako
+    // TypeScript stály dvanáct vteřin transformace v každém běhu sady - jenže
+    // pravidlo hlídalo `.generated.ts`, po převodu přestalo platit, chunky
+    // dostaly jméno podle souboru a precache je přestal poznávat. Rozpočet
+    // vyskočil z 362 kB na 4,4 MB: celý solverový obsah se ocitl na instalační
+    // cestě. Chytil to až rozpočet, ne test.
+    for (const path of [
+      "/repo/src/data/ranges/turn/mtt9-40bb-utg-bb-srp.generated.json",
+      "C:\\repo\\src\\data\\ranges\\turn\\mtt9-40bb-utg-bb-srp.generated.json",
+    ]) {
+      const name = mttProductionChunkNameForModuleId(path);
+      expect(name).toBe("mtt-turn-solved-mtt9-40bb-utg-bb-srp");
+      expect(isDeferredAsset(`assets/${name}-AbCd1234.js`)).toBe(true);
+    }
   });
 
   it("realny Vite build emituje production modul jako lazy chunk mimo precache", async () => {
