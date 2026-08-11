@@ -20,6 +20,22 @@ import { TURN_COVERAGE_TARGET, type TurnFamilyEvidence } from "../src/data/range
  */
 
 const ROOT = "artifacts/decomposition";
+const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
+
+/**
+ * Kolik desek má rodina vyřešených monolitickým solvem.
+ *
+ * Deska bez plánu není v žádném plánu, takže ji brána neuvidí - a rodina, které
+ * se rozložila třetina desek, projde jako COMPLETE. Tohle je jediné místo, kde
+ * jde zjistit, kolik jich vlastně existuje.
+ */
+function checkpointBoardCount(familyId: string): number {
+  const directory = join(CHECKPOINT_ROOT, familyId, "raw");
+  if (!existsSync(directory)) return 0;
+  return readdirSync(directory).filter((name) => (
+    name.startsWith(`pkrtrainer_${familyId}_`) && name.endsWith(".json")
+  )).length;
+}
 const OUT_DIR = "src/data/ranges/turn";
 const MANIFEST_PATH = "src/data/ranges/turnSolvedManifest.generated.ts";
 const PROFILE_KEY = "FULL_RING_9|REGULAR|CHIP_EV|TURN";
@@ -306,7 +322,17 @@ if (family === undefined) {
     console.log(`  ${droppedReduced} boardů vynecháno: vyřešené na redukovaném stromě`);
   }
   const evidence: TurnFamilyEvidence = {
-    familyId: family, boards: 0, plannedItems: 0, writtenItems: 0,
+    familyId: family,
+    boards: 0,
+    // Kolik desek rodina vůbec má, ne kolik jich má plán. Brána bez tohohle
+    // čísla nepozná rodinu, které se rozložila polovina board space.
+    // Desky vyloučené kvůli redukovanému stromu se odečtou.
+    //
+    // Schodek má dvě různé příčiny a slučovat je znamená hlásit nepravdu:
+    // "nerozloženo" u desky, která rozložená je a jen se vědomě vynechala,
+    // protože míchá dvě hry. Brána má vidět, kolik desek se dalo použít.
+    boardsWithCheckpoint: Math.max(0, checkpointBoardCount(family) - droppedReduced),
+    plannedItems: 0, writtenItems: 0,
     minCoverage: 1, coverageTarget: TURN_COVERAGE_TARGET, sampledRules: [],
   };
   const rules = [];
@@ -492,7 +518,11 @@ if (family === undefined) {
     const slug = family.toLowerCase().replace(/_/g, "-");
     const outPath = join(OUT_DIR, `${slug}.generated.ts`);
     console.log(`family ${family}`);
-    console.log(`  boards ${evidence.boards}, rules ${rules.length}, module ${(module.length / 1024).toFixed(0)} KB`);
+    const available = evidence.boardsWithCheckpoint ?? evidence.boards;
+    const coverageNote = available > evidence.boards
+      ? ` (z ${available} použitelných; ${available - evidence.boards} nerozloženo)`
+      : "";
+    console.log(`  boards ${evidence.boards}${coverageNote}, rules ${rules.length}, module ${(module.length / 1024).toFixed(0)} KB`);
     console.log(`  ${write ? "written" : "would write"}: ${outPath}`);
     if (write) {
       mkdirSync(dirname(outPath), { recursive: true });

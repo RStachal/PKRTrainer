@@ -48,6 +48,15 @@ export interface TurnFamilyEvidence {
   familyId: string;
   /** Boards with a written plan. */
   boards: number;
+  /**
+   * Boards the family has a monolithic checkpoint for, planned or not.
+   *
+   * Bez tohohle čísla brána tvrdila COMPLETE i rodině, které se rozložila
+   * polovina desek. `MTT9_40BB_UTG_BB_SRP` má dvacet sedm checkpointů a třináct
+   * plánů, a projde - protože se ptala jen na to, jestli se zapsalo všechno, co
+   * plán vyjmenoval. Deska bez plánu v žádném plánu není, takže ji nic nehledá.
+   */
+  boardsWithCheckpoint?: number;
   /** Subgames the plans listed. */
   plannedItems: number;
   /** Subgame files actually written. */
@@ -75,6 +84,8 @@ export interface TurnReviewVerdict {
   findings: readonly TurnReviewFinding[];
   /** Share of planned subgames actually written, 0 to 1. */
   completeness: number;
+  /** Share of available boards that were planned at all, 0 to 1. */
+  boardCoverage: number;
 }
 
 /** Coverage the decomposition is run against; below this a board is unconverged. */
@@ -93,19 +104,22 @@ export function reviewTurnFamily(evidence: TurnFamilyEvidence): TurnReviewVerdic
     ? 0
     : evidence.writtenItems / evidence.plannedItems;
 
+  const available = evidence.boardsWithCheckpoint ?? evidence.boards;
+  const boardCoverage = available === 0 ? 0 : Math.min(1, evidence.boards / available);
+
   const family = parseTurnFamilyId(`${evidence.familyId}__probe`);
   if (family === undefined) {
     findings.push({
       tier: "TRACEABLE",
       detail: `family name does not parse, so the spot it was solved for is unrecoverable`,
     });
-    return { familyId: evidence.familyId, readyForReview: false, failedTier: "TRACEABLE", findings, completeness };
+    return { familyId: evidence.familyId, readyForReview: false, failedTier: "TRACEABLE", findings, completeness, boardCoverage };
   }
   const positionPattern = positionPatternForFamily(family);
 
   if (evidence.boards === 0) {
     findings.push({ tier: "COMPLETE", detail: "no boards with a plan" });
-    return { familyId: evidence.familyId, positionPattern, readyForReview: false, failedTier: "COMPLETE", findings, completeness };
+    return { familyId: evidence.familyId, positionPattern, readyForReview: false, failedTier: "COMPLETE", findings, completeness, boardCoverage };
   }
   if (evidence.writtenItems < evidence.plannedItems) {
     const missing = evidence.plannedItems - evidence.writtenItems;
@@ -113,7 +127,21 @@ export function reviewTurnFamily(evidence: TurnFamilyEvidence): TurnReviewVerdic
       tier: "COMPLETE",
       detail: `${missing} of ${evidence.plannedItems} planned subgames were never written, so ${missing} turn lines have no strategy`,
     });
-    return { familyId: evidence.familyId, positionPattern, readyForReview: false, failedTier: "COMPLETE", findings, completeness };
+    return { familyId: evidence.familyId, positionPattern, readyForReview: false, failedTier: "COMPLETE", findings, completeness, boardCoverage };
+  }
+
+  // Nerozložené desky se hlásí, ale rodinu neblokují.
+  //
+  // Pack odpovídá jen na desky, které vyřešil, a na ostatní se přizná - takže
+  // třináct desek z dvaceti sedmi není špatný obsah, jen užší. Blokovat by
+  // znamenalo stáhnout obsah, který funguje. Mlčet by znamenalo tvrdit COMPLETE
+  // o rodině, které chybí polovina board space, a to je horší.
+  if (boardCoverage < 1) {
+    const missing = available - evidence.boards;
+    findings.push({
+      tier: "COMPLETE",
+      detail: `${missing} z ${available} desek nemá plán, takže rodina pokrývá ${(boardCoverage * 100).toFixed(0)} % dostupného board space`,
+    });
   }
 
   if (evidence.minCoverage < evidence.coverageTarget) {
@@ -121,7 +149,7 @@ export function reviewTurnFamily(evidence: TurnFamilyEvidence): TurnReviewVerdic
       tier: "CONVERGED",
       detail: `lowest board coverage ${evidence.minCoverage.toFixed(3)} is under the ${evidence.coverageTarget} target`,
     });
-    return { familyId: evidence.familyId, positionPattern, readyForReview: false, failedTier: "CONVERGED", findings, completeness };
+    return { familyId: evidence.familyId, positionPattern, readyForReview: false, failedTier: "CONVERGED", findings, completeness, boardCoverage };
   }
 
   for (const rule of evidence.sampledRules) {
@@ -137,11 +165,16 @@ export function reviewTurnFamily(evidence: TurnFamilyEvidence): TurnReviewVerdic
       });
     }
   }
-  if (findings.length > 0) {
-    return { familyId: evidence.familyId, positionPattern, readyForReview: false, failedTier: "COHERENT", findings, completeness };
+  // Blokuje jen nesoudržnost, ne hlášení o šířce.
+  //
+  // Nález o nerozložených deskách je informace, ne vada, a leží ve stejném poli
+  // jako vady - takže test na "jsou tu nějaké nálezy" by rodinu shodil za to, že
+  // o sobě řekla pravdu. Kontroluje se proto tier, ne počet.
+  if (findings.some((finding) => finding.tier === "COHERENT")) {
+    return { familyId: evidence.familyId, positionPattern, readyForReview: false, failedTier: "COHERENT", findings, completeness, boardCoverage };
   }
 
-  return { familyId: evidence.familyId, positionPattern, readyForReview: true, findings, completeness };
+  return { familyId: evidence.familyId, positionPattern, readyForReview: true, findings, completeness, boardCoverage };
 }
 
 /** One line per family, ordered worst first so what needs attention leads. */

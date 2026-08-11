@@ -5,7 +5,7 @@ import type { TurnStrategyPack } from "../turnStrategyPack";
 export const turnPack: TurnStrategyPack = {
   "id": "mtt-full-ring-9-turn-solved-mtt9-40bb-utg-bb-srp-v1",
   "version": "turn-solved-v1",
-  "createdAt": "2026-08-10",
+  "createdAt": "2026-08-11",
   "provenance": "SOLVER_BACKED",
   "confidence": "LOW",
   "dimensions": {
@@ -26,6 +26,7 @@ export const turnPack: TurnStrategyPack = {
   ],
   "assumptions": [
     "Built from 300 solved turn subgames across 13 boards.",
+    "Rodina pokrývá 48 % dostupných desek; zbytek zatím nebyl rozložen a pack na něj neodpovídá.",
     "Position pattern SRP_UTG_VS_BB, CBET, 40BB effective.",
     "Bet sizes carry the solver's own labels in chips; translating them needs the pot at the node.",
     "Frequencies within a hand class are averaged across its combinations, so a class cannot express a preference between them.",

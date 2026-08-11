@@ -118,6 +118,9 @@ export function buildTurnStrategyPack(input: TurnPackBuildInput): TurnPackBuildR
       familyIds: [input.evidence.familyId],
       assumptions: [
         `Built from ${input.rules.length} solved turn subgames across ${input.evidence.boards} boards.`,
+        ...(verdict.boardCoverage < 1 ? [
+          `Rodina pokrývá ${(verdict.boardCoverage * 100).toFixed(0)} % dostupných desek; zbytek zatím nebyl rozložen a pack na něj neodpovídá.`,
+        ] : []),
         `Position pattern ${verdict.positionPattern}, ${first.node}, ${first.stackBB}BB effective.`,
         "Bet sizes carry the solver's own labels in chips; translating them needs the pot at the node.",
         "Frequencies within a hand class are averaged across its combinations, so a class cannot express a preference between them.",

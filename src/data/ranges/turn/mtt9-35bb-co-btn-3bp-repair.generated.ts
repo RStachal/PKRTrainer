@@ -5,7 +5,7 @@ import type { TurnStrategyPack } from "../turnStrategyPack";
 export const turnPack: TurnStrategyPack = {
   "id": "mtt-full-ring-9-turn-solved-mtt9-35bb-co-btn-3bp-repair-v1",
   "version": "turn-solved-v1",
-  "createdAt": "2026-08-08",
+  "createdAt": "2026-08-11",
   "provenance": "SOLVER_BACKED",
   "confidence": "LOW",
   "dimensions": {
