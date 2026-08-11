@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { runtimeSolvedTurnPacks } from "../src/data/ranges/turnSolvedRuntimeRegistry";
 import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks";
+import { profileTurnFamilies } from "../src/data/ranges/turnFamilyAnomaly";
 import {
   parseTurnReviewVerdicts,
   turnRuleContentHash,
@@ -53,6 +54,12 @@ const familyId = arg("family");
 
 if (familyId === undefined) {
   console.log("Vyřešené turn rodiny a stav jejich čtení\n");
+  // Rodiny, které se od svých sourozenců liší, jdou najevo hned. Čtení je práce,
+  // kterou nikdo jiný neudělá, a jedenáct rodin po třech stech pravidlech nikdo
+  // nepřečte celé - ale chyby, které jsme v tomhle obsahu doopravdy našli, měly
+  // všechny stejný tvar: posunuté rozdělení akcí přes celou rodinu, ne špatné
+  // jednotlivé pravidlo. Právě to jde porovnat strojově.
+  const profiles = new Map(profileTurnFamilies(runtimeSolvedTurnPacks).map((row) => [row.familyId, row]));
   for (const pack of [...runtimeSolvedTurnPacks].sort((a, b) => a.id.localeCompare(b.id))) {
     const family = pack.familyIds[0] ?? pack.id;
     const verdict = verdicts.find((item) => item.familyId === family);
@@ -62,9 +69,20 @@ if (familyId === undefined) {
       : stale
         ? `PROPADLO (čteno na jiný obsah, ${verdict.reviewedAt})`
         : `${verdict.outcome} ${verdict.reviewedAt} (${verdict.reviewer})`;
-    console.log(`  ${pack.confidence.padEnd(6)} ${family.padEnd(42)} ${pack.rules.length} pravidel  ${state}`);
+    const profile = profiles.get(family);
+    const flag = profile !== undefined && profile.anomalies.length > 0 ? "!" : " ";
+    const aggression = profile === undefined
+      ? "         "
+      : `${(profile.aggressionShare * 100).toFixed(0).padStart(3)} % sází`;
+    console.log(`${flag} ${pack.confidence.padEnd(6)} ${family.padEnd(42)} ${aggression}  ${state}`);
+    for (const anomaly of profile?.anomalies ?? []) console.log(`      -> ${anomaly.detail}`);
   }
-  console.log("\nČtení jedné rodiny: npm run mtt:turn-review -- --family=<ID>");
+
+  const flagged = [...profiles.values()].filter((row) => row.anomalies.length > 0).length;
+  console.log(flagged === 0
+    ? "\nŽádná rodina se od ostatních nápadně neliší; čti v libovolném pořadí."
+    : `\n${flagged} rodin se liší od ostatních - začni u nich.`);
+  console.log("Čtení jedné rodiny: npm run mtt:turn-review -- --family=<ID>");
 } else {
   const pack = runtimeSolvedTurnPacks.find((item) => item.familyIds.includes(familyId));
   if (pack === undefined) {
