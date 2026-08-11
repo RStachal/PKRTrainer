@@ -31,8 +31,18 @@ RAISE_PCT = "60,120"
 
 
 def item_id(item):
+    """Jméno souboru pro položku plánu, ať je z turnové nebo riverové vrstvy.
+
+    Turnový plán nese kartu pod klíčem `turn`, riverový pod `river`. Tahle
+    funkce četla jen `turn`, takže riverová fáze nočního běhu spadla na první
+    položce s `KeyError: 'turn'` - byla zapojená, ale nikdy neprošla celou
+    cestou. Ta chyba by se objevila až v noci a spolkla by okno.
+    """
     line = "_".join(a.split()[0] + (a.split()[1].split(".")[0] if len(a.split()) > 1 else "") for a in item["line"])
-    return f"{line or 'ROOT'}__{item['turn']}"
+    card = item.get("turn") or item.get("river")
+    if card is None:
+        raise SystemExit(f"položka plánu nemá kartu (ani turn, ani river): {sorted(item)}")
+    return f"{line or 'ROOT'}__{card}"
 
 
 def write_param(item, param_path, dump_path):
