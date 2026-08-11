@@ -29,6 +29,7 @@ import {
   solvedTurnSpots,
 } from "../data/ranges/solvedTurnSpotCatalogue";
 import { mulberry32 } from "../core/rng";
+import { RANKS, SUITS } from "../core/poker";
 import { POSITION_ORDER, type Card, type Position, type Suit } from "../core/types";
 import {
   classifyFlopHand,
@@ -297,17 +298,22 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       const preparation = options.beforeGenerate?.(mode);
       if (preparation) await preparation;
       if (modeSelect.value === "line") {
+        // Postavit linku kolem vyřešeného turnu, když nějaký je. Bez toho se
+        // rozdá náhodná deska a resolver ji odmítne - měřeno 0 z 500 linek se
+        // solverovým obsahem, přestože se dodává jedenáct rodin.
+        const solved = solvedLineConfigForSeed(seed);
         const line = generatePostflopLine({
           seed,
-          potType: options.initialPotType,
-          actionNode: selectedActionNode(
+          potType: solved?.potType ?? options.initialPotType,
+          actionNode: solved?.actionNode ?? selectedActionNode(
             "FLOP",
             situationSelect.value,
             options.initialPotType,
           ),
-          potBB: options.initialPotBB,
-          effectiveStackBB: options.initialEffectiveStackBB,
-          positionContext: options.initialPositionContext ?? undefined,
+          ...(solved ? { board: solved.board } : {}),
+          potBB: solved?.potBB ?? options.initialPotBB,
+          effectiveStackBB: solved?.effectiveStackBB ?? options.initialEffectiveStackBB,
+          positionContext: solved?.positionContext ?? options.initialPositionContext ?? undefined,
           strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
           allowFallback: options.allowFallback,
         });
@@ -1892,6 +1898,61 @@ function solvedTurnConfigForSeed(seed: number, actionNode: PostflopActionNode) {
   const spot = pickSolvedTurnSpot(rng(), candidates);
   if (spot === undefined) return undefined;
   return solvedTurnSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, rng());
+}
+
+/**
+ * Konfigurace linky postavená kolem vyřešeného turnu.
+ *
+ * Linka rozdávala náhodnou pětikartovou desku a resolver ji - správně - odmítal:
+ * změřeno 0 z 500 linek se solverovým obsahem na kterékoli ulici, přestože se
+ * dodává jedenáct vyřešených rodin. Stejná situace, v jaké byl jednotlivý spot,
+ * než vznikl katalog: obsah existuje a je nedosažitelný, a zvenku to vypadá
+ * úplně stejně jako by neexistoval.
+ *
+ * Linka se proto staví od turnu, který někdo vyřešil. Flop a turn jsou z
+ * katalogu, river se dolosuje - ten vyřešený stejně není a předstírat opak by
+ * bylo horší než heuristika, protože heuristika se aspoň jako heuristika
+ * označuje.
+ *
+ * Když katalog nic nenabídne, vrací se `undefined` a linka se rozdá jako dřív.
+ * Prázdný katalog nesmí znamenat, že se nedá hrát.
+ */
+function solvedLineConfigForSeed(seed: number): {
+  board: [Card, Card, Card, Card, Card];
+  potType: PostflopPotType;
+  potBB: number;
+  effectiveStackBB: number;
+  positionContext: PostflopPositionContext;
+  actionNode: PostflopActionNode;
+} | undefined {
+  const rng = mulberry32(seed);
+  rng();
+  const spot = pickSolvedTurnSpot(rng(), solvedTurnSpots());
+  if (spot === undefined) return undefined;
+  const config = solvedTurnSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, rng());
+  if (config === undefined || config.board.length !== 4) return undefined;
+
+  // Pátá karta se dolosuje mimo ty čtyři, které už na stole jsou.
+  const used = new Set(config.board.map((card) => `${card.rank}${card.suit}`));
+  const deck: Card[] = [];
+  for (const rank of RANKS) {
+    for (const suit of SUITS) {
+      if (!used.has(`${rank}${suit}`)) deck.push({ rank, suit });
+    }
+  }
+  const river = deck[Math.min(Math.floor(rng() * deck.length), deck.length - 1)];
+  if (river === undefined) return undefined;
+
+  return {
+    board: [config.board[0], config.board[1], config.board[2], config.board[3], river],
+    potType: config.potType,
+    potBB: config.potBB,
+    effectiveStackBB: config.effectiveStackBB,
+    positionContext: config.positionContext,
+    // Linka začíná na flopu, takže uzel je flopový; turnový uzel si simulátor
+    // odvodí sám z toho, jak se na flopu zahrálo.
+    actionNode: config.potType === "THREE_BET_POT" ? "THREE_BET_POT_CBET" : "SINGLE_RAISED_POT_CBET",
+  };
 }
 
 function parseStreet(value: string): PostflopStreet {

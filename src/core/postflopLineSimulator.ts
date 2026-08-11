@@ -127,6 +127,15 @@ export interface PostflopLineTransitionInput {
   action: PostflopLineAction;
   priorFlopAction?: PostflopAction;
   priorTurnAction?: PostflopAction;
+  /**
+   * Jestli hrdina drží iniciativu, tedy jestli byl posledním, kdo zvedal.
+   *
+   * Bez toho nešlo odlišit pokračování v sázení od vedení bez iniciativy a
+   * simulátor vyráběl `TURN_BARREL` pro obojí. Změřeno: 281 z 300 linek
+   * postavených na vyřešeném turnu minulo, protože vyřešený uzel byl
+   * `TURN_OOP_LEAD` a linka nabídla barrel - správný obsah, špatná otázka.
+   */
+  heroHasInitiative?: boolean;
 }
 
 export interface PostflopLineTransition {
@@ -218,6 +227,9 @@ export function generatePostflopLine(config: PostflopLineConfig): PostflopLine {
       action,
       priorFlopAction,
       priorTurnAction,
+      // Iniciativu drží ten, kdo naposledy zvedal. Spot ji zná v sedačkách:
+      // hrdina ji má, právě když je sám agresorem.
+      heroHasInitiative: spot.heroPosition === spot.aggressorPosition,
     });
     state = transition.state;
     priorFlopAction = transition.priorFlopAction;
@@ -271,7 +283,11 @@ export function transitionPostflopLineState(
   return {
     nextStreet,
     nextActionNode: nextStreet
-      ? actionNodeForLineStreet(nextStreet, input.action.action)
+      ? actionNodeForLineStreet(
+        nextStreet,
+        input.action.action,
+        input.heroHasInitiative ?? true,
+      )
       : undefined,
     potBB: state.potBB,
     effectiveStackBB: effectiveStack(state),
@@ -824,12 +840,32 @@ function isAggressivePolicyAction(
     action === "ALL_IN";
 }
 
+/**
+ * Který uzel čeká na hrdinu na další ulici.
+ *
+ * Tři různá rozhodnutí, ne dvě. Kdo dorovnal sázku, čelí na další ulici další;
+ * kdo drží iniciativu a nikdo nesázel, pokračuje; a kdo iniciativu nemá a hraje
+ * první, vede bez ní - to je uzel, který dostal jméno teprve nedávno a tahle
+ * funkce o něm nevěděla. Vyráběla `TURN_BARREL` i pro hráče, který na flopu jen
+ * dorovnal, takže mu nabízela pokračování v sázení, které nikdy nezačal.
+ */
 function actionNodeForLineStreet(
   street: PostflopStreet,
   previousAction: PostflopAction,
+  heroHasInitiative: boolean,
 ): PostflopActionNode {
   if (previousAction === "CALL") {
+    // Dorovnání znamená, že iniciativu má někdo jiný. Na další ulici se buď
+    // čelí další sázce, nebo se hraje první bez iniciativy; co z toho, rozhodne
+    // až soupeř, a spot se generuje dřív. Bere se ta možnost, kterou hrdina
+    // ovlivní: hraje první.
+    if (!heroHasInitiative) {
+      return street === "TURN" ? "TURN_OOP_LEAD" : "RIVER_OOP_LEAD";
+    }
     return street === "TURN" ? "TURN_FACING_BET" : "RIVER_FACING_BET";
+  }
+  if (!heroHasInitiative) {
+    return street === "TURN" ? "TURN_OOP_LEAD" : "RIVER_OOP_LEAD";
   }
   return street === "TURN" ? "TURN_BARREL" : "RIVER_PRESSURE";
 }
