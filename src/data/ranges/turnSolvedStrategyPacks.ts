@@ -56,35 +56,78 @@ export function solvedTurnEntriesForProfile(
 
 const loads = new Map<string, Promise<TurnStrategyPack>>();
 
+function loadOne(entry: SolvedTurnManifestEntry): Promise<TurnStrategyPack> {
+  const cached = loads.get(entry.packId);
+  if (cached) return cached;
+  const pending = entry.load()
+    .then((pack) => {
+      if (pack.id !== entry.packId) {
+        throw new Error(`Solved turn manifest expected ${entry.packId}, loaded ${pack.id}.`);
+      }
+      registerSolvedTurnPack(pack);
+      return pack;
+    })
+    .catch((error: unknown) => {
+      // Neúspěšný chunk vypadne z cache, aby šel zkusit znovu: jedno selhání na
+      // vratkém připojení nesmí vypnout turnový obsah na celou relaci.
+      loads.delete(entry.packId);
+      throw error;
+    });
+  loads.set(entry.packId, pending);
+  return pending;
+}
+
 /**
- * Fetch the solved turn families for a profile, once each.
+ * Načte první rodinu a zbytek dotáhne na pozadí.
  *
- * A failed load drops out of the cache so a later attempt can retry: a chunk
- * that failed on a flaky connection should not disable turn content for the rest
- * of the session.
+ * Rodin je jedenáct a dohromady 345 kB po kompresi. Když se čekalo na všechny,
+ * relace nezačala, dokud se nestáhly - a to číslo rostlo tiše: s jednou rodinou
+ * to bylo třicet kilobajtů, s jedenácti skoro půl megabajtu před první rukou, na
+ * telefonu mezi dvěma turnaji.
+ *
+ * Čekat na nic ale nejde. Katalog vyřešených turnů se staví z nahraných packů, a
+ * dokud je prázdný, trenér rozdá náhodný board - tedy „vyřešený turn", na který
+ * odpoví heuristika. Prázdný katalog je horší než pomalý start.
+ *
+ * Kompromis: počká se na jednu rodinu, což katalog naplní, a ostatní se dotáhnou
+ * během hraní. Prvních pár spotů proto pochází z té rodiny, která dorazila
+ * první, a výběr se během chvíle rozšíří. To je vychýlení na pár vteřin, ne
+ * chybný obsah - resolver dál odmítá všechno, co nevyřešil.
  */
 export function loadSolvedTurnPacks(
   profileKey: string,
   manifest: readonly SolvedTurnManifestEntry[] = solvedTurnManifest,
 ): Promise<readonly TurnStrategyPack[]> {
-  return Promise.all(solvedTurnEntriesForProfile(profileKey, manifest).map((entry) => {
-    const cached = loads.get(entry.packId);
-    if (cached) return cached;
-    const pending = entry.load()
-      .then((pack) => {
-        if (pack.id !== entry.packId) {
-          throw new Error(`Solved turn manifest expected ${entry.packId}, loaded ${pack.id}.`);
-        }
-        registerSolvedTurnPack(pack);
-        return pack;
-      })
-      .catch((error: unknown) => {
-        loads.delete(entry.packId);
-        throw error;
-      });
-    loads.set(entry.packId, pending);
-    return pending;
-  }));
+  const entries = solvedTurnEntriesForProfile(profileKey, manifest);
+  if (entries.length === 0) return Promise.resolve([]);
+
+  const [first, ...rest] = entries;
+  for (const entry of rest) {
+    // Chyba na pozadí se spolkne tady. Kdyby se nechala probublat, byla by z ní
+    // neodchycená rejekce a spadl by běh kvůli chunku, bez kterého se hraje dál.
+    void loadOne(entry).catch(() => undefined);
+  }
+  return loadOne(first).then((pack) => [pack]);
+}
+
+/**
+ * Počká na všechny rodiny. Pro nástroje, ne pro hráče.
+ *
+ * Brána a měření dosahu musí vidět celý obsah, jinak by hlásily 1 z 11 a
+ * vypadalo by to jako ztráta dat. V aplikaci se tohle nepoužívá: tam je půl
+ * megabajtu před první rukou přesně ten problém, kvůli kterému se čeká jen na
+ * jednu rodinu.
+ */
+export function loadAllSolvedTurnPacks(
+  profileKey: string,
+  manifest: readonly SolvedTurnManifestEntry[] = solvedTurnManifest,
+): Promise<readonly TurnStrategyPack[]> {
+  return Promise.all(solvedTurnEntriesForProfile(profileKey, manifest).map(loadOne));
+}
+
+/** Kolik rodin už dorazilo, pro testy a diagnostiku. */
+export function loadedSolvedTurnPackCount(): number {
+  return runtimeSolvedTurnPacks.length;
 }
 
 export function createTurnSolvedStrategyResolverChain(

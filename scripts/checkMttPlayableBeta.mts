@@ -9,7 +9,7 @@ import { buildMttCompletionReadinessReport } from "../src/data/ranges/mttProduct
 import type { MttCoreReleaseReport } from "./checkMttCoreRelease.mts";
 import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import { solvedTurnManifest } from "../src/data/ranges/turnSolvedManifest.generated.ts";
-import { loadSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks.ts";
+import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks.ts";
 import { runtimeSolvedTurnPacks } from "../src/data/ranges/turnSolvedRuntimeRegistry.ts";
 import { shippedContentRisks } from "./lib/mttContentRisks.mts";
 
@@ -121,7 +121,7 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
   });
   // Vyřešený turn obsah se načte stejnou cestou jako v aplikaci, aby brána
   // počítala to, co hráč skutečně dostane - ne to, co leží v artefaktech.
-  await loadSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
+  await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
   const turnFamilies = runtimeSolvedTurnPacks.map((pack) => ({
     familyId: pack.familyIds[0] ?? pack.id,
     packId: pack.id,

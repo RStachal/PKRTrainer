@@ -1,6 +1,6 @@
 import {
   createTurnSolvedStrategyResolverChain,
-  loadSolvedTurnPacks,
+  loadAllSolvedTurnPacks,
 } from "../src/data/ranges/turnSolvedStrategyPacks";
 import { runtimeSolvedTurnPacks } from "../src/data/ranges/turnSolvedRuntimeRegistry";
 import type {
@@ -41,7 +41,7 @@ function card(text: string): Card {
   return { rank: text[0].toUpperCase() as Rank, suit: text[1].toLowerCase() as Suit };
 }
 
-await loadSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
+await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
 console.log(`solved turn packs loaded: ${runtimeSolvedTurnPacks.length}`);
 for (const pack of runtimeSolvedTurnPacks) {
   console.log(`  ${pack.id}: ${pack.rules.length} rules, families ${pack.familyIds.join(", ")}`);

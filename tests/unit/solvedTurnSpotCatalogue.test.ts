@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS } from "../../src/core/postflopGenerator";
 import { generatePostflopSpot } from "../../src/core/postflopGenerator";
 import { createDefaultPostflopStrategyResolver } from "../../src/data/ranges/postflopStrategyRegistry";
-import { createTurnSolvedStrategyResolverChain, loadSolvedTurnPacks } from "../../src/data/ranges/turnSolvedStrategyPacks";
+import { createTurnSolvedStrategyResolverChain, loadAllSolvedTurnPacks } from "../../src/data/ranges/turnSolvedStrategyPacks";
 import {
   pickSolvedTurnSpot,
   solvedTurnSpotConfig,
@@ -24,7 +24,7 @@ import {
 
 describe("solved turn spot catalogue", () => {
   beforeAll(async () => {
-    await loadSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
+    await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
   });
 
   it("offers the turns that were solved", () => {
