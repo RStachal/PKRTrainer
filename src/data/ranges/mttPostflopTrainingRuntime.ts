@@ -10,6 +10,22 @@ import {
   requiredEntitlementsForMttPostflopPilotScopes,
 } from "./mttPostflopPilotCatalog";
 import { createMttPostflopPilotAwareResolver } from "./mttPostflopPilotRuntime";
+import { createTurnSolvedStrategyResolverChain } from "./turnSolvedStrategyPacks";
+import { runtimeSolvedTurnPacks } from "./turnSolvedRuntimeRegistry";
+
+/** Jedno oprávnění na celý vyřešený turn; rodiny vznikly jedním během. */
+const SOLVED_TURN_ENTITLEMENT = "mtt.postflop.turn.solved.pilot" as const;
+
+/**
+ * Resolver nad vyřešenými turn rodinami, nebo nic, když žádná nedorazila.
+ *
+ * Packy se stahují na pozadí, takže na začátku relace jich je málo a za chvíli
+ * všechny. Řetězec čte živý registr, takže se nemusí přestavovat; tahle funkce
+ * jen odpoví, jestli už je co servírovat.
+ */
+function solvedTurnRuntimeResolver(): ReturnType<typeof createTurnSolvedStrategyResolverChain> | null {
+  return runtimeSolvedTurnPacks.length > 0 ? createTurnSolvedStrategyResolverChain() : null;
+}
 import { trainingCapabilityForProfile } from "./trainingCapability";
 
 export type MttPostflopTrainingRuntimeMode =
@@ -73,6 +89,45 @@ export function buildMttPostflopTrainingRuntime(
       activeEntitlements: [],
       missingEntitlements: [],
     };
+  }
+
+  // Vyřešený turn obsah má vlastní placenou cestu, protože žádná jiná neexistuje.
+  //
+  // Jedenáct rodin a 3 082 vyřešených turnů se dodává jako lazy chunky, stahuje
+  // se na začátku relace - a runtime se jich nikdy na nic nezeptal. Produkční
+  // větev je nepustí, dokud není celý profil PRODUCTION, a pilotní katalog je
+  // flopový. Obsah byl dosažitelný jen měřicím skriptem, což zvenku vypadá úplně
+  // stejně, jako by neexistoval.
+  if (profile.street === "TURN") {
+    const solvedTurn = solvedTurnRuntimeResolver();
+    if (solvedTurn !== null) {
+      const access = evaluateEntitlementAccess({
+        required: [SOLVED_TURN_ENTITLEMENT],
+        grants,
+        now: options.now,
+        allowGrace: options.allowGrace,
+      });
+      if (access.active.includes(SOLVED_TURN_ENTITLEMENT)) {
+        return {
+          mode: "SCOPED_PILOT",
+          resolver: solvedTurn,
+          allowFallback: false,
+          reason: "Vyřešený turn obsah je dostupný pro jedenáct rodin; není to plné produkční pokrytí a odpovídá jen na desky, které někdo vyřešil.",
+          pilotScopes: [],
+          activeEntitlements: [SOLVED_TURN_ENTITLEMENT],
+          missingEntitlements: [],
+        };
+      }
+      return {
+        mode: "LOCKED_PILOT",
+        resolver: null,
+        allowFallback: false,
+        reason: "Vyřešený turn obsah existuje, ale chybí k němu aktivní oprávnění.",
+        pilotScopes: [],
+        activeEntitlements: [],
+        missingEntitlements: [SOLVED_TURN_ENTITLEMENT],
+      };
+    }
   }
 
   const pilots = readyMttPostflopPilotsForProfile(profile);
