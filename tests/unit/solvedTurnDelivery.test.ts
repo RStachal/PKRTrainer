@@ -64,3 +64,47 @@ describe("dodání vyřešeného turn obsahu", () => {
     }
   });
 });
+
+/**
+ * Hláška, podle které se hráč rozhoduje, jestli si obsah koupí.
+ *
+ * Runtime umí vyřešený turn zamknout, ale hráč to musí poznat. Text o pilotech
+ * mluvil vždycky o flopu, protože jiné piloty neexistovaly - a člověku, který si
+ * vybral turn, by věta o flopových situacích neřekla nic. Zamčeno je něco jiného
+ * než nedostupné a hláška to má rozlišit.
+ */
+describe("hláška u vyřešeného turnu", () => {
+  it("zamčený turn mluví o turnu, ne o flopu", async () => {
+    const { postflopRuntimeNotice } = await import("../../src/main");
+    const turn = postflopRuntimeNotice({
+      street: "TURN",
+      hasScopedPilotCoverage: true,
+      hasActivePilotEntitlement: false,
+      productionReady: false,
+    });
+    expect(turn?.kind).toBe("LOCKED_PILOT");
+    expect(turn?.text).toContain("turnové desky");
+    expect(turn?.text).not.toContain("flop");
+
+    // Flop musí zůstat, jak byl: hláška se dělí podle ulice, ne přepisuje.
+    const flop = postflopRuntimeNotice({
+      street: "FLOP",
+      hasScopedPilotCoverage: true,
+      hasActivePilotEntitlement: false,
+      productionReady: false,
+    });
+    expect(flop?.text).toContain("flopové situace");
+  });
+
+  it("runtime rozliší zamčeno od nedostupného", () => {
+    const locked = buildMttPostflopTrainingRuntime({ profile, grants: [] });
+    const unlocked = buildMttPostflopTrainingRuntime({ profile, grants: [grant] });
+
+    // Zamčeno: obsah existuje, jen k němu chybí licence.
+    expect(locked.mode).toBe("LOCKED_PILOT");
+    expect(locked.missingEntitlements.length).toBeGreaterThan(0);
+    // Odemčeno: licence je aktivní a nic nechybí.
+    expect(unlocked.mode).toBe("SCOPED_PILOT");
+    expect(unlocked.missingEntitlements).toEqual([]);
+  });
+});

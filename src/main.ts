@@ -90,6 +90,10 @@ import {
 import { mttProductionImportSlotId } from "./data/ranges/mttImportSlotNaming";
 import { mttProductionLazyLoader } from "./data/ranges/mttProductionLazyLoader";
 import { loadSolvedTurnPacks } from "./data/ranges/turnSolvedStrategyPacks";
+import { runtimeSolvedTurnPacks } from "./data/ranges/turnSolvedRuntimeRegistry";
+
+/** Oprávnění k vyřešenému turn obsahu; jedno na celý turn, ne na rodinu. */
+const SOLVED_TURN_PILOT_ENTITLEMENT = "mtt.postflop.turn.solved.pilot" as const;
 import type { RangePack } from "./data/ranges/rangePack";
 import {
   createMttProductionPostflopStrategyResolver,
@@ -464,9 +468,22 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       required: [],
       grants,
     }).active.some((entitlement) => pilotEntitlements.includes(entitlement));
+    // Vyřešený turn obsah se počítá jako pilotní pokrytí, i když v pilotním
+    // katalogu není: má vlastní placený režim a hráč o něm má vědět stejně jako
+    // o flopových pilotech. Bez toho by mu runtime obsah zamkl a hláška by
+    // mluvila o náhledu, tedy o něčem, co se koupit nedá.
+    const hasSolvedTurnCoverage = resolvedProfile?.street === "TURN" &&
+      runtimeSolvedTurnPacks.length > 0;
+    const hasSolvedTurnEntitlement = hasSolvedTurnCoverage && evaluateEntitlementAccess({
+      required: [SOLVED_TURN_PILOT_ENTITLEMENT],
+      grants,
+    }).active.includes(SOLVED_TURN_PILOT_ENTITLEMENT);
+
     const runtimeNotice = postflopRuntimeNotice({
-      hasScopedPilotCoverage,
-      hasActivePilotEntitlement,
+      // Preflop se sem nedostane, ale typ to neví; hláška je postflopová.
+      street: resolvedProfile?.street === "PREFLOP" ? undefined : resolvedProfile?.street,
+      hasScopedPilotCoverage: hasScopedPilotCoverage || hasSolvedTurnCoverage,
+      hasActivePilotEntitlement: hasActivePilotEntitlement || hasSolvedTurnEntitlement,
       productionReady: capability?.status === "PRODUCTION",
       coverage: postflopIntent
         ? {
@@ -476,6 +493,7 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
         : null,
     });
     const requiresExactRuntime = (
+      (hasSolvedTurnCoverage && hasSolvedTurnEntitlement) ||
       (hasScopedPilotCoverage && hasActivePilotEntitlement) ||
       capability?.status === "PRODUCTION"
     );
@@ -872,12 +890,24 @@ function runtimeProfile(profile: TrainingProfile, filters: Filters): TrainingPro
 /** The streets a hand line walks; all three need content for it to run. */
 const POSTFLOP_LINE_STREETS = ["FLOP", "TURN", "RIVER"] as const;
 
-function postflopRuntimeNotice(input: {
+export function postflopRuntimeNotice(input: {
   hasScopedPilotCoverage: boolean;
   hasActivePilotEntitlement: boolean;
   productionReady: boolean;
   coverage?: { potType: PostflopPotType; spr: number } | null;
+  /**
+   * Ulice, pro kterou se hláška píše.
+   *
+   * Text o pilotech mluvil vždycky o flopu, protože jiné piloty neexistovaly.
+   * Vyřešený turn obsah má teď vlastní placený režim a hráči, který si vybral
+   * turn, by věta o flopových situacích neřekla nic užitečného - a to je zrovna
+   * hláška, podle které se rozhoduje, jestli si něco koupí.
+   */
+  street?: PostflopStreet;
 }): PostflopRuntimeNotice | null {
+  const pilotSubject = input.street === "TURN"
+    ? localizedText("solved turn boards", "vyřešené turnové desky")
+    : localizedText("selected flop situations", "vybrané flopové situace");
   // When an active scoped pilot is the runtime but the player has selected a stack
   // depth past every solved band - a deep single-raised pot at SPR 25, say - say
   // so first. Otherwise the "solver pilot is active" notice below would be
@@ -917,8 +947,8 @@ function postflopRuntimeNotice(input: {
     return {
       kind: "SCOPED_PILOT",
       text: localizedText(
-        "A solver pilot is active for selected flop situations. This is a narrow pilot, not complete postflop production coverage.",
-        "Solverový pilot je aktivní pro vybrané flop situace. Jde o úzký pilotní režim, ne kompletní postflop production coverage.",
+        `A solver pilot is active for ${pilotSubject}. This is a narrow pilot, not complete postflop production coverage.`,
+        `Solverový pilot je aktivní pro ${pilotSubject}. Jde o úzký pilotní režim, ne kompletní produkční pokrytí.`,
       ),
     };
   }
@@ -926,8 +956,8 @@ function postflopRuntimeNotice(input: {
     return {
       kind: "LOCKED_PILOT",
       text: localizedText(
-        "Paid solver pilots exist for this profile. Without an active pilot license, only preview mode is available, not the full production strategy.",
-        "Pro tento profil existují placené solverové piloty. Bez aktivní pilot licence běží pouze náhledový režim, ne plná produkční strategie.",
+        `Paid solver content exists for ${pilotSubject}. Without an active licence only preview mode runs, not the solved strategy.`,
+        `Pro ${pilotSubject} existuje placený solverový obsah. Bez aktivní licence běží jen náhledový režim, ne vyřešená strategie.`,
       ),
     };
   }
