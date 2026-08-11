@@ -629,9 +629,16 @@ async function importFreshMain(): Promise<typeof import("../../src/main")> {
 }
 
 async function waitForDashboard(root: HTMLElement): Promise<void> {
+  // Stejná rezerva jako u preflopové relace, a ze stejného důvodu.
+  //
+  // Start relace teď na pozadí dotahuje deset turn packů. V prohlížeči jsou to
+  // paralelní stahování, která nikomu nepřekáží; ve vitestu je z každého
+  // transformace zhruba megabajtového modulu, a deset naráz blokuje smyčku na
+  // vteřiny. Výchozí limit `vi.waitFor` na to nestačí, takže test padal na tom,
+  // že se dashboard nestihl vykreslit - ne na tom, že by se nevykreslil.
   await vi.waitFor(() => {
     expect(root.querySelector(".dashboard")).not.toBeNull();
-  });
+  }, { timeout: 10000 });
 }
 
 async function waitForPreflopSession(root: HTMLElement): Promise<void> {

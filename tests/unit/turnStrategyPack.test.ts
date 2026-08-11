@@ -63,11 +63,16 @@ describe("turn strategy pack", () => {
     // The gate checks traceable, complete, converged and coherent. None of those
     // is a statement about whether the strategy is good - a tree missing a bet
     // size converges beautifully to the wrong game - so only a player moves this.
+    //
+    // A player now can: a recorded verdict tied to the content hash lifts a
+    // family to MEDIUM. Without one, or with one taken on different content,
+    // this stays exactly where it was.
     const result = build({ minCoverage: 1 });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.pack.confidence).toBe("LOW");
-    expect(result.pack.assumptions.join(" ")).toContain("until a player reviews");
+    expect(result.pack.assumptions.join(" ")).toContain("Důvěra LOW");
+    expect(result.pack.assumptions.join(" ")).toContain("nečetl");
   });
 
   it("refuses a family the gate blocked, with the reason attached", () => {

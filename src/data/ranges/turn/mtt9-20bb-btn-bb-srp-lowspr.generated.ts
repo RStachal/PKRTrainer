@@ -8,6 +8,7 @@ export const turnPack: TurnStrategyPack = {
   "createdAt": "2026-08-11",
   "provenance": "SOLVER_BACKED",
   "confidence": "LOW",
+  "contentHash": "e4fee944-191b0",
   "dimensions": {
     "gameVariant": "MTT",
     "tableFormat": "FULL_RING_9",
@@ -29,7 +30,7 @@ export const turnPack: TurnStrategyPack = {
     "Position pattern SRP_BTN_VS_BB, CBET, 20BB effective.",
     "Bet sizes carry the solver's own labels in chips; translating them needs the pot at the node.",
     "Frequencies within a hand class are averaged across its combinations, so a class cannot express a preference between them.",
-    "Confidence stays LOW until a player reviews the content: the gate checks shape, not whether the strategy is good.",
+    "Důvěra LOW: rodinu zatím nikdo nečetl. Brána kontroluje tvar solvu, ne jestli je strategie dobrá - to pozná jen hráč.",
     "Every rule names the directory it was solved in, so any answer can be traced to its run."
   ],
   "rules": [

@@ -2,6 +2,11 @@ import type { AnteMode } from "../../core/types";
 import type { BlindSpeed, EvModel, GameVariant, TableFormat } from "../../core/trainingProfile";
 import { reviewTurnFamily, type TurnFamilyEvidence } from "./turnReviewGate";
 import type { TurnStrategyRule } from "./turnStrategyRuleBuilder";
+import {
+  confidenceForFamily,
+  turnRuleContentHash,
+  type TurnReviewVerdictRecord,
+} from "./turnReviewVerdict";
 
 /**
  * A turn strategy pack, and the rule that only review-ready families enter one.
@@ -50,6 +55,8 @@ export interface TurnStrategyPack {
   provenance: TurnStrategyProvenance;
   /** LOW until a player has reviewed the content; the gate checks shape, not poker. */
   confidence: "LOW" | "MEDIUM" | "HIGH";
+  /** Otisk obsahu, proti kterému se ověřuje platnost review verdiktu. */
+  contentHash: string;
   dimensions: TurnStrategyPackDimensions;
   /** Families included, so a reader can see the scope without counting rules. */
   familyIds: readonly string[];
@@ -63,6 +70,8 @@ export interface TurnPackBuildInput {
   evidence: TurnFamilyEvidence;
   /** Every rule built for this family, not just the sample the gate inspected. */
   rules: readonly TurnStrategyRule[];
+  /** Zaznamenané verdikty hráčů. Bez nich zůstává rodina na LOW. */
+  verdicts?: readonly TurnReviewVerdictRecord[];
 }
 
 export type TurnPackBuildResult =
@@ -99,6 +108,14 @@ export function buildTurnStrategyPack(input: TurnPackBuildInput): TurnPackBuildR
   }
 
   const first = input.rules[0];
+  // Důvěra se řídí verdiktem, ne přáním. Bez čtení LOW, po čtení MEDIUM, a po
+  // přegenerování zase LOW - otisk obsahu se rozejde a požehnání propadne.
+  const contentHash = turnRuleContentHash(input.rules);
+  const { confidence, reason } = confidenceForFamily(
+    input.evidence.familyId,
+    contentHash,
+    input.verdicts ?? [],
+  );
   return {
     ok: true,
     pack: {
@@ -106,7 +123,8 @@ export function buildTurnStrategyPack(input: TurnPackBuildInput): TurnPackBuildR
       version: "turn-solved-v1",
       createdAt: input.createdAt,
       provenance: "SOLVER_BACKED",
-      confidence: "LOW",
+      confidence,
+      contentHash,
       dimensions: {
         gameVariant: "MTT",
         tableFormat: "FULL_RING_9",
@@ -124,7 +142,7 @@ export function buildTurnStrategyPack(input: TurnPackBuildInput): TurnPackBuildR
         `Position pattern ${verdict.positionPattern}, ${first.node}, ${first.stackBB}BB effective.`,
         "Bet sizes carry the solver's own labels in chips; translating them needs the pot at the node.",
         "Frequencies within a hand class are averaged across its combinations, so a class cannot express a preference between them.",
-        "Confidence stays LOW until a player reviews the content: the gate checks shape, not whether the strategy is good.",
+        `Důvěra ${confidence}: ${reason}. Brána kontroluje tvar solvu, ne jestli je strategie dobrá - to pozná jen hráč.`,
         `Every rule names the directory it was solved in, so any answer can be traced to its run.`,
       ],
       rules: input.rules,

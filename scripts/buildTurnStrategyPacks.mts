@@ -4,6 +4,10 @@ import { dirname, join } from "node:path";
 import { buildTurnStrategyRule } from "../src/data/ranges/turnStrategyRuleBuilder";
 import { buildTurnStrategyPack } from "../src/data/ranges/turnStrategyPack";
 import { TURN_COVERAGE_TARGET, type TurnFamilyEvidence } from "../src/data/ranges/turnReviewGate";
+import {
+  parseTurnReviewVerdicts,
+  type TurnReviewVerdictRecord,
+} from "../src/data/ranges/turnReviewVerdict";
 
 /**
  * Write a turn strategy pack module from a review-ready family.
@@ -21,6 +25,13 @@ import { TURN_COVERAGE_TARGET, type TurnFamilyEvidence } from "../src/data/range
 
 const ROOT = "artifacts/decomposition";
 const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
+const VERDICTS_PATH = "Agents/turn-review/verdicts.json";
+
+/** Zaznamenané verdikty hráčů; bez souboru se nic neděje a rodina zůstane LOW. */
+function readVerdicts(): TurnReviewVerdictRecord[] {
+  if (!existsSync(VERDICTS_PATH)) return [];
+  return parseTurnReviewVerdicts(readFileSync(VERDICTS_PATH, "utf8"));
+}
 
 /**
  * Kolik desek má rodina vyřešených monolitickým solvem.
@@ -501,6 +512,7 @@ if (family === undefined) {
     createdAt: new Date().toISOString().slice(0, 10),
     evidence,
     rules,
+    verdicts: readVerdicts(),
   });
 
   if (!result.ok) {
@@ -523,6 +535,7 @@ if (family === undefined) {
       ? ` (z ${available} použitelných; ${available - evidence.boards} nerozloženo)`
       : "";
     console.log(`  boards ${evidence.boards}${coverageNote}, rules ${rules.length}, module ${(module.length / 1024).toFixed(0)} KB`);
+    console.log(`  důvěra ${result.pack.confidence}, otisk ${result.pack.contentHash}`);
     console.log(`  ${write ? "written" : "would write"}: ${outPath}`);
     if (write) {
       mkdirSync(dirname(outPath), { recursive: true });

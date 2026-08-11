@@ -143,7 +143,8 @@
     "mtt:turn-pack": "node scripts/run-cli.mjs scripts/buildTurnStrategyPacks.mts",
     "mtt:turn-reach": "node scripts/run-cli.mjs scripts/measureTurnSolvedReach.mts",
     "mtt:six-max-widths": "node scripts/run-cli.mjs scripts/checkSixMaxOpenWidths.mts",
-    "mtt:strength-order": "node scripts/run-cli.mjs scripts/generatePreflopStrengthOrder.mts"
+    "mtt:strength-order": "node scripts/run-cli.mjs scripts/generatePreflopStrengthOrder.mts",
+    "mtt:turn-review": "node scripts/run-cli.mjs scripts/reviewTurnFamily.mts"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",
