@@ -177,11 +177,18 @@ export function createTurnStrategyResolver(pack: TurnStrategyPack): PostflopStra
 
     return {
       action: translated.action,
+      // Text pro hráče, ne pro toho, kdo ladí generátor.
+      //
+      // Dřív tu stálo `Solved turn strategy for ${rule.positionPattern}...` -
+      // tedy `SRP_CO_VS_BB` a syrové názvy akcí jako `BET 28.000000`, anglicky, v
+      // české aplikaci. Sedačky přitom ukazuje panel spotu vedle, takže je nemá
+      // smysl opakovat, a interní enum hráči neřekne nic; jen prozradí, jak je
+      // aplikace uvnitř poskládaná.
       explanation: [
-        `Solved turn strategy for ${rule.positionPattern} at ${rule.stackBB}BB effective.`,
-        `This hand sits in the ${bucket.action} group, ${bucket.handClasses.length} classes and ${bucket.combos} combinations.`,
+        `Vyřešený turn pro hloubku ${rule.stackBB} BB.`,
+        `Tahle ruka patří do skupiny, kterou solver hraje stejně: ${bucket.handClasses.length} tříd, ${bucket.combos} kombinací.`,
         mergedCount > 0
-          ? `The solve offered more bet sizes than the trainer shows; ${mergedCount} were merged into the two it has.`
+          ? `Solver nabídl víc velikostí sázky, než kolik jich trenažér rozlišuje; ${mergedCount} se sloučily do těch dvou, které má.`
           : "",
       ].filter(Boolean).join(" "),
       source: {

@@ -256,6 +256,9 @@ describe("turn strategy resolver", () => {
         ],
       }],
     })]));
-    expect(wide(input())!.explanation).toContain("merged");
+    // Text je pro hráče a česky; interní enumy a syrové velikosti sázek v něm
+    // nemají co dělat, takže se kontroluje smysl, ne anglické slovo.
+    expect(wide(input())!.explanation).toContain("sloučily");
+    expect(wide(input())!.explanation).not.toContain("BET 75");
   });
 });
