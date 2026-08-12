@@ -140,9 +140,15 @@ function handClassOfCombo(combo: string): string | undefined {
  * margin that the answer is not a coin toss.
  */
 function heroSideOfNode(
-  node: { strategy?: { strategy?: Record<string, unknown> } },
+  node: { player?: unknown; strategy?: { strategy?: Record<string, unknown> } },
   item: { oop?: Record<string, number>; ip?: Record<string, number> },
-): { side: "OOP" | "IP"; confidence: number } | undefined {
+): { side: "OOP" | "IP"; confidence: number; source: "OVERLAP" | "NODE_PLAYER" } | undefined {
+  // Solver sám říká, kdo je na tahu, a plán mapuje jeho indexy: `reach[1]` je
+  // OOP, `reach[0]` je IP. Tohle je přímý údaj, ne odvození - a přesně tenhle
+  // údaj se dosud nepoužíval.
+  const fromPlayer: "OOP" | "IP" | undefined = node.player === 1
+    ? "OOP"
+    : node.player === 0 ? "IP" : undefined;
   const combos = Object.keys(node.strategy?.strategy ?? {});
   const classes = new Set(
     combos.map(handClassOfCombo).filter((item): item is string => item !== undefined),
@@ -187,10 +193,26 @@ function heroSideOfNode(
   // exclusive evidence has to point one way rather than being split. Both, or
   // the turn is left out: shipping a coin toss decides which player's strategy a
   // reader is shown by rounding.
-  if (containmentOfSide < HERO_CONTAINMENT_FLOOR) return undefined;
-  if (exclusive === 0) return undefined;
-  if (exclusive < otherExclusive * HERO_EXCLUSIVE_RATIO) return undefined;
-  return { side, confidence: Math.round(containmentOfSide * 1000) / 1000 };
+  // Překryv nerozhodl. Dřív to znamenalo turn zahodit - u rodin blind proti
+  // blindu se tak ztrácely tisíce, protože obě range jsou široké a podobné a
+  // výhradních tříd je málo. Solverův vlastní údaj o hráči na tahu tu pochybnost
+  // nemá, tak se použije.
+  const overlapUndecided = containmentOfSide < HERO_CONTAINMENT_FLOOR ||
+    exclusive === 0 ||
+    exclusive < otherExclusive * HERO_EXCLUSIVE_RATIO;
+  if (overlapUndecided) {
+    return fromPlayer === undefined
+      ? undefined
+      : { side: fromPlayer, confidence: 1, source: "NODE_PLAYER" };
+  }
+
+  // Oba signály rozhodly a neshodly se. Jeden z nich je špatně a nevíme který,
+  // takže se turn zahodí - to je jediná odpověď, která nehádá, čí strategii
+  // hráči ukážeme. Změřeno na 1 926 uzlech: shoda 1 914, neshoda 12, všech
+  // dvanáct v jedné rodině, což vypadá na systematické prohození indexů, ne na
+  // šum. Dokud se to nevysvětlí, nesmí ani jeden signál druhý přebít.
+  if (fromPlayer !== undefined && fromPlayer !== side) return undefined;
+  return { side, confidence: Math.round(containmentOfSide * 1000) / 1000, source: "OVERLAP" };
 }
 
 /** Share of a node's classes that must sit inside the range claimed for it. */
