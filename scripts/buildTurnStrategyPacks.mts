@@ -208,9 +208,14 @@ function heroSideOfNode(
 
   // Oba signály rozhodly a neshodly se. Jeden z nich je špatně a nevíme který,
   // takže se turn zahodí - to je jediná odpověď, která nehádá, čí strategii
-  // hráči ukážeme. Změřeno na 1 926 uzlech: shoda 1 914, neshoda 12, všech
-  // dvanáct v jedné rodině, což vypadá na systematické prohození indexů, ne na
-  // šum. Dokud se to nevysvětlí, nesmí ani jeden signál druhý přebít.
+  // hráči ukážeme.
+  //
+  // Na současných datech se to nestane ani jednou: 2 564 shod, 0 neshod, 244
+  // případů, kde překryv nerozhodne a rozhodne uzel. Dřívější měření hlásilo
+  // dvanáct neshod, ale porovnávalo uzel s ranži z nesprávné položky plánu -
+  // soubor `BET17_CALL__2c.json` patří lince bez úvodního checku, ne první
+  // položce se stejnou turnovou kartou. Ta větev tedy hlídá něco, co dnes
+  // nenastává, a to je důvod ji nechat: až nastane, je to vada, ne detail.
   if (fromPlayer !== undefined && fromPlayer !== side) return undefined;
   return { side, confidence: Math.round(containmentOfSide * 1000) / 1000, source: "OVERLAP" };
 }
