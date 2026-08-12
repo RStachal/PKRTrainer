@@ -127,3 +127,32 @@ describe("hraná linka u částečně vyřešeného obsahu", () => {
     expect(runtime.mode).toBe("SCOPED_PILOT");
   });
 });
+
+/**
+ * Obsah, který si nikdo nemůže koupit, je stejně nedostupný jako obsah, který
+ * neexistuje.
+ *
+ * Runtime umí vyřešený turn odemknout proti oprávnění - ale jen když je to
+ * oprávnění v nějakém tieru. Kdyby v žádném nebylo, zůstal by `LOCKED_PILOT`
+ * navždycky a celá cesta k hráči by byla teoretická.
+ */
+describe("dostupnost turn oprávnění v tierech", () => {
+  it("odemyká PRO_PLUS a TEAM_COACH, ne FREE a PRO", async () => {
+    const { TIER_ENTITLEMENTS } = await import("../../src/core/paymentEntitlements");
+    const entitlement = "mtt.postflop.turn.solved.pilot";
+    expect(TIER_ENTITLEMENTS.PRO_PLUS).toContain(entitlement);
+    expect(TIER_ENTITLEMENTS.TEAM_COACH).toContain(entitlement);
+    // Vyřešený obsah je to nejdražší, co se v produktu vyrábí; do základních
+    // tierů nepatří, jinak není co prodávat.
+    expect(TIER_ENTITLEMENTS.FREE).not.toContain(entitlement);
+    expect(TIER_ENTITLEMENTS.PRO).not.toContain(entitlement);
+  });
+
+  it("tier, který oprávnění má, dostane od runtime resolver", async () => {
+    const { grantsForTier } = await import("../../src/core/paymentEntitlements");
+    const grants = grantsForTier("PRO_PLUS", { startsAt: "2020-01-01T00:00:00Z" });
+    const runtime = buildMttPostflopTrainingRuntime({ profile, grants });
+    expect(runtime.mode).toBe("SCOPED_PILOT");
+    expect(runtime.resolver).not.toBeNull();
+  });
+});

@@ -81,13 +81,7 @@ export const TIER_ENTITLEMENTS: Record<PkrCommercialTier, readonly PkrEntitlemen
     "mtt.postflop.flop.srp_btn_bb.facing_bet.pilot",
     "mtt.postflop.flop.3bp_btn_co.cbet.pilot",
     "mtt.postflop.flop.3bp_btn_co.facing_bet.pilot",
-  // Jedno oprávnění na celý vyřešený turn, ne jedno na rodinu.
-  //
-  // Flopové piloty jsou po jednom na spot, protože každý vznikl zvlášť a
-  // prodával se zvlášť. Turn je jiný případ: jedenáct rodin vzniklo jedním
-  // nočním během ze stejného stromu a dělit je na jedenáct nákupů by prodávalo
-  // hranice, které pro hráče nic neznamenají.
-  "mtt.postflop.turn.solved.pilot",
+    "mtt.postflop.turn.solved.pilot",
     "analytics.advanced",
     "export.cross_check",
   ],
@@ -102,13 +96,7 @@ export const TIER_ENTITLEMENTS: Record<PkrCommercialTier, readonly PkrEntitlemen
     "mtt.postflop.flop.srp_btn_bb.facing_bet.pilot",
     "mtt.postflop.flop.3bp_btn_co.cbet.pilot",
     "mtt.postflop.flop.3bp_btn_co.facing_bet.pilot",
-  // Jedno oprávnění na celý vyřešený turn, ne jedno na rodinu.
-  //
-  // Flopové piloty jsou po jednom na spot, protože každý vznikl zvlášť a
-  // prodával se zvlášť. Turn je jiný případ: jedenáct rodin vzniklo jedním
-  // nočním během ze stejného stromu a dělit je na jedenáct nákupů by prodávalo
-  // hranice, které pro hráče nic neznamenají.
-  "mtt.postflop.turn.solved.pilot",
+    "mtt.postflop.turn.solved.pilot",
     "analytics.advanced",
     "export.cross_check",
     "coach.team",
