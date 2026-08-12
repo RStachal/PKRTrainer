@@ -479,9 +479,15 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
       grants,
     }).active.includes(SOLVED_TURN_PILOT_ENTITLEMENT);
 
+    // Dodané rodiny nesou vlastní důvěru; dokud je celá LOW, nikdo je nečetl.
+    // Až první projde review, tahle věta z hlášky sama zmizí.
+    const unreviewedContent = hasSolvedTurnCoverage &&
+      runtimeSolvedTurnPacks.every((pack) => pack.confidence === "LOW");
+
     const runtimeNotice = postflopRuntimeNotice({
       // Preflop se sem nedostane, ale typ to neví; hláška je postflopová.
       street: resolvedProfile?.street === "PREFLOP" ? undefined : resolvedProfile?.street,
+      unreviewedContent,
       hasScopedPilotCoverage: hasScopedPilotCoverage || hasSolvedTurnCoverage,
       hasActivePilotEntitlement: hasActivePilotEntitlement || hasSolvedTurnEntitlement,
       productionReady: capability?.status === "PRODUCTION",
@@ -909,7 +915,23 @@ export function postflopRuntimeNotice(input: {
    * hláška, podle které se rozhoduje, jestli si něco koupí.
    */
   street?: PostflopStreet;
+  /** Pravda, dokud žádná z dodaných rodin neprošla čtením hráče. */
+  unreviewedContent?: boolean;
 }): PostflopRuntimeNotice | null {
+  // Nepřečtený obsah to musí říct právě tady.
+  //
+  // Pack má důvěru LOW a ve svých `assumptions` napsáno, že ho zatím nikdo
+  // nečetl - jenže to hráč nevidí. Na obrazovce stálo jen „úzký pilot, ne plné
+  // pokrytí", což čte jako rozsah, ne jako míru ověření. Platícímu člověku pak
+  // servírujeme solverová data s tichým předpokladem, že solverové znamená
+  // prověřené. Neznamená: brána kontroluje tvar solvu, ne jestli je strategie
+  // dobrá.
+  const unreviewed = input.unreviewedContent === true
+    ? localizedText(
+      " Nobody has reviewed this content yet, so it is shipped content, not verified content.",
+      " Tenhle obsah zatím nikdo neprošel, takže je dodaný, ne ověřený.",
+    )
+    : "";
   const pilotSubject = input.street === "TURN"
     ? localizedText("solved turn boards", "vyřešené turnové desky")
     : localizedText("selected flop situations", "vybrané flopové situace");
@@ -952,8 +974,8 @@ export function postflopRuntimeNotice(input: {
     return {
       kind: "SCOPED_PILOT",
       text: localizedText(
-        `A solver pilot is active for ${pilotSubject}. This is a narrow pilot, not complete postflop production coverage.`,
-        `Solverový pilot je aktivní pro ${pilotSubject}. Jde o úzký pilotní režim, ne kompletní produkční pokrytí.`,
+        `A solver pilot is active for ${pilotSubject}. This is a narrow pilot, not complete postflop production coverage.${unreviewed}`,
+        `Solverový pilot je aktivní pro ${pilotSubject}. Jde o úzký pilotní režim, ne kompletní produkční pokrytí.${unreviewed}`,
       ),
     };
   }

@@ -156,3 +156,40 @@ describe("dostupnost turn oprávnění v tierech", () => {
     expect(runtime.resolver).not.toBeNull();
   });
 });
+
+/**
+ * Platícímu hráči se nesmí mlčky tvrdit, že solverové znamená prověřené.
+ *
+ * Pack má důvěru LOW a ve svých předpokladech napsáno, že ho nikdo nečetl - jenže
+ * to hráč nevidí. Na obrazovce stálo jen „úzký pilot, ne plné pokrytí", což čte
+ * jako rozsah, ne jako míru ověření. Brána přitom kontroluje tvar solvu, ne
+ * jestli je strategie dobrá.
+ */
+describe("hláška o neověřeném obsahu", () => {
+  it("řekne, že obsah nikdo neprošel, dokud je to pravda", async () => {
+    const { postflopRuntimeNotice } = await import("../../src/main");
+    const notice = postflopRuntimeNotice({
+      street: "TURN",
+      hasScopedPilotCoverage: true,
+      hasActivePilotEntitlement: true,
+      productionReady: false,
+      unreviewedContent: true,
+    });
+    expect(notice?.kind).toBe("SCOPED_PILOT");
+    expect(notice?.text).toContain("nikdo neprošel");
+  });
+
+  it("po review ta věta zmizí sama", async () => {
+    const { postflopRuntimeNotice } = await import("../../src/main");
+    const notice = postflopRuntimeNotice({
+      street: "TURN",
+      hasScopedPilotCoverage: true,
+      hasActivePilotEntitlement: true,
+      productionReady: false,
+      unreviewedContent: false,
+    });
+    // Rozsah zůstává, protože pilot je pilot; mizí jen tvrzení o neověřenosti.
+    expect(notice?.text).toContain("úzký pilotní režim");
+    expect(notice?.text).not.toContain("nikdo neprošel");
+  });
+});
