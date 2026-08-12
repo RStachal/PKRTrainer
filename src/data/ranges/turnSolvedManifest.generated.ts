@@ -77,4 +77,10 @@ export const solvedTurnManifest: readonly SolvedTurnManifestEntry[] = [
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
     load: () => import("./turn/mtt9-40bb-utg-bb-srp.generated.json").then((module) => module.default as unknown as TurnStrategyPack),
   },
+  {
+    familyId: "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-80bb-btn-bb-srp-highspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-80bb-btn-bb-srp-highspr.generated.json").then((module) => module.default as unknown as TurnStrategyPack),
+  },
 ];
