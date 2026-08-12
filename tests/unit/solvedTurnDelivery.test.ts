@@ -193,3 +193,33 @@ describe("hláška o neověřeném obsahu", () => {
     expect(notice?.text).not.toContain("nikdo neprošel");
   });
 });
+
+/**
+ * Varování o hloubce platí pro flop, protože z flopu pochází.
+ *
+ * SPR pásma se počítají z flopových pilotů. Vyřešený turn je nechtěně zpřístupnil
+ * i turnu, protože „má pilotní pokrytí" je teď pravda i pro něj - a hráč by u
+ * turnového spotu dostal varování odvozené z rozsahů, které se ho netýkají.
+ * Varování ze špatných dat je horší než žádné: člověk podle něj změní hloubku a
+ * nic se nezlepší.
+ */
+describe("varování o hloubce mimo pokrytí", () => {
+  const deepCoverage = {
+    hasScopedPilotCoverage: true,
+    hasActivePilotEntitlement: true,
+    productionReady: false,
+    coverage: { potType: "SINGLE_RAISED" as const, spr: 40 },
+  };
+
+  it("u turnu se neuplatní, protože pásma jsou flopová", async () => {
+    const { postflopRuntimeNotice } = await import("../../src/main");
+    const notice = postflopRuntimeNotice({ ...deepCoverage, street: "TURN" });
+    expect(notice?.kind).not.toBe("DEEP_STACK_UNCOVERED");
+  });
+
+  it("u flopu zůstává, jak byla", async () => {
+    const { postflopRuntimeNotice } = await import("../../src/main");
+    const notice = postflopRuntimeNotice({ ...deepCoverage, street: "FLOP" });
+    expect(notice?.kind).toBe("DEEP_STACK_UNCOVERED");
+  });
+});

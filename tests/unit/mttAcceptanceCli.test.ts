@@ -5,6 +5,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("mtt:acceptance CLI", () => {
+  // Každý z těchhle případů spustí celou acceptance bránu, což je jedenáct vteřin
+  // i na klidném stroji. Pod paralelní zátěží celé sady to přeteče výchozí limit
+  // a soubor spadne, aniž by se cokoli pokazilo - a falešně červená sada je
+  // horší než pomalá, protože se přestane číst.
   it("spusti finalni MTT acceptance gate a zustane cerveny pred legalnimi production daty", () => {
     const result = runAcceptance();
 
@@ -40,7 +44,7 @@ describe("mtt:acceptance CLI", () => {
     expect(result.stdout).toContain("Android WebView/device preflight");
     expect(result.stdout).toContain("ready serial:");
     expect(result.stdout).not.toContain("https://");
-  });
+  }, 60_000);
 
   it("umi vratit JSON report pro release/operator tooling", () => {
     const result = runAcceptance("--json");
@@ -93,7 +97,7 @@ describe("mtt:acceptance CLI", () => {
     expect(parsed.commands[10].stdout).toContain("ready serial:");
     expect(parsed.commands[0].stdout).not.toContain("> mtt-preflop-trainer");
     expect(JSON.stringify(parsed)).not.toContain("https://");
-  });
+  }, 60_000);
 
   it("vrati chybu pro neznamy argument", () => {
     const result = runAcceptance("--format=SIX_MAX");
@@ -120,7 +124,7 @@ describe("mtt:acceptance CLI", () => {
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
-  });
+  }, 60_000);
 });
 
 function runAcceptance(...args: string[]) {

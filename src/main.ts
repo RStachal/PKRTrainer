@@ -944,7 +944,14 @@ export function postflopRuntimeNotice(input: {
   // and its own notice must not be overridden by pilot-derived bands. Only warn
   // when the pot type has some coverage at all, so it is a depth edge, not the
   // general preview state the PREVIEW notice already describes.
+  //
+  // Pásma se počítají z flopových pilotů, takže platí pro flop a pro nic jiného.
+  // Vyřešený turn je zpřístupnil i turnu - `hasScopedPilotCoverage` je teď
+  // pravda i pro něj - a hráč by u turnového spotu dostal varování odvozené z
+  // rozsahů, které se ho netýkají. Varování odvozené ze špatných dat je horší
+  // než žádné: hráč podle něj změní hloubku a nic se nezlepší.
   const usesPilotCoverage = !input.productionReady &&
+    input.street !== "TURN" &&
     input.hasScopedPilotCoverage && input.hasActivePilotEntitlement;
   if (
     usesPilotCoverage &&
