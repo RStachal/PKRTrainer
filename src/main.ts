@@ -517,10 +517,15 @@ function renderApp(root: HTMLElement, options: BootstrapOptions): void {
         ? (input) => postflopRuntime?.resolver?.(input) ?? null
         : undefined,
       allowFallback: requiresExactRuntime ? false : capability?.allowHeuristicFallback ?? true,
-      // A hand line walks flop, turn and river. When the runtime refuses the
-      // heuristic - a paying pilot or production subscriber - every street must
-      // have real content, and the scoped pilots are flop-only.
-      lineModeAvailable: !requiresExactRuntime || (resolvedProfile !== undefined && resolvedProfile !== null
+      // Linka prochází flop, turn i river. Když je obsah vyřešený jen na části
+      // z nich, běží linka s heuristikou tam, kde vyřešená není - jednotlivý spot
+      // zůstává přísný.
+      //
+      // Dřív se v takovém případě linka vypínala úplně, a to mělo absurdní
+      // důsledek: hráč, který si vyřešený turn zaplatil, o celý režim přišel.
+      // Zaplatit za obsah a přijít o funkci je nejhorší možný tvar paywallu.
+      lineModeAvailable: true,
+      lineAllowFallback: !(resolvedProfile !== undefined && resolvedProfile !== null
         && POSTFLOP_LINE_STREETS.every((street) => (
           trainingCapabilityForProfile({ ...resolvedProfile, street }).status === "PRODUCTION"
         ))),

@@ -108,3 +108,22 @@ describe("hláška u vyřešeného turnu", () => {
     expect(unlocked.missingEntitlements).toEqual([]);
   });
 });
+
+/**
+ * Zaplatit za obsah nesmí znamenat přijít o funkci.
+ *
+ * Když turn dostal vlastní placený režim, začal nastavovat „runtime odmítá
+ * heuristiku" globálně - a pravidlo pro hranou linku z toho vyvodilo, že se
+ * linka nesmí spustit, protože flop a river vyřešené nejsou. Hráč bez oprávnění
+ * tedy linku měl, hráč, který si obsah koupil, o ni přišel.
+ */
+describe("hraná linka u částečně vyřešeného obsahu", () => {
+  it("jednotlivý spot zůstává přísný, linka smí sáhnout po heuristice", () => {
+    // Dvě různé otázky, dvě různé odpovědi. Spot: hráč si vybral ulici a obsah
+    // pro ni existuje, takže heuristika by byla podvod. Linka: prochází i ulice,
+    // kde obsah není, a bez fallbacku by se nespustila vůbec.
+    const runtime = buildMttPostflopTrainingRuntime({ profile, grants: [grant] });
+    expect(runtime.allowFallback).toBe(false);
+    expect(runtime.mode).toBe("SCOPED_PILOT");
+  });
+});

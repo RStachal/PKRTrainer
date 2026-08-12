@@ -65,6 +65,16 @@ export interface PostflopViewOptions {
   autoGenerate?: boolean;
   strategyResolver?: PostflopStrategyResolver;
   allowFallback?: boolean;
+  /**
+   * Fallback uvnitř hrané linky, když má hráč vyřešený jen některé ulice.
+   *
+   * Jednotlivý spot může být přísný: hráč si vybral turn, obsah na turn máme, a
+   * tiše mu podstrčit heuristiku by bylo přesně to, čemu `allowFallback: false`
+   * brání. Linka ale prochází flop, turn i river a vyřešený je z nich jeden.
+   * Stejná přísnost tam znamená, že se linka nespustí vůbec - a hráč, který si
+   * obsah zaplatil, přijde o celý režim.
+   */
+  lineAllowFallback?: boolean;
   /** False when the runtime cannot serve turn and river, so a line cannot run. */
   lineModeAvailable?: boolean;
   runtimeNotice?: PostflopRuntimeNotice | null;
@@ -315,7 +325,7 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
           effectiveStackBB: solved?.effectiveStackBB ?? options.initialEffectiveStackBB,
           positionContext: solved?.positionContext ?? options.initialPositionContext ?? undefined,
           strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
-          allowFallback: options.allowFallback,
+          allowFallback: options.lineAllowFallback ?? options.allowFallback,
         });
         controls.hidden = true;
         output.hidden = false;
@@ -354,6 +364,9 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
         effectiveStackBB: options.initialEffectiveStackBB,
         positionContext: options.initialPositionContext ?? undefined,
         strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
+        // Jednotlivý spot zůstává přísný. Hráč si vybral ulici, obsah pro ni
+        // máme, a tiše mu podstrčit heuristiku je přesně to, čemu tenhle příznak
+        // brání. Uvolňuje se jen linka, která prochází i ulice bez obsahu.
         allowFallback: options.allowFallback,
         ...(solvedTurn ?? {}),
       });
@@ -1260,7 +1273,7 @@ function branchPostflopLine(
     positionContext: firstStreet ? positionContextFromSpot(firstStreet) : undefined,
     actionNode: firstStreet?.actionNode,
     strategyResolver: options.strategyResolver ?? POSTFLOP_STRATEGY_RESOLVER,
-    allowFallback: options.allowFallback,
+    allowFallback: options.lineAllowFallback ?? options.allowFallback,
     chosenActionsByStreet,
   });
 }
