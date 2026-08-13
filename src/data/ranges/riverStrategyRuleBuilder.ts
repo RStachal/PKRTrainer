@@ -19,13 +19,12 @@ import type { TurnSubgameNode } from "./turnSubgameReader";
  *    je v riverovém plánu a bez ní by pravidlo neumělo říct, na kterou desku
  *    vlastně odpovídá - a resolver by servíroval jednu odpověď na všechny.
  *
- * ## Co tu vědomě není
+ * ## Zbytek cesty
  *
- * Pack, manifest ani resolver. Ty se staví, až budou skutečné riverové rodiny -
- * zatím existuje jedna podhra vyřešená kvůli ověření. Napsat je teď by znamenalo
- * hádat tvar dat, která ještě nevznikla, a přesně tahle chyba už jednou stála
- * noc: riverová fáze byla zapojená, otestovaná na plánování a spadla na první
- * položce, protože celou cestu nikdo neprošel.
+ * Pack, manifest, loader i resolver existují od 13. srpna a vznikly až nad
+ * skutečnou vyřešenou vrstvou - 65 riverových podher z jedné turnové. Čekat na
+ * data bylo správné rozhodnutí: cesta cestou skrývala dvě tiché vady, které by
+ * odhad tvaru neodhalil, protože obě se projevují jen tím, že na disku nic není.
  */
 
 export interface RiverSolvedSpot {
@@ -52,6 +51,8 @@ export interface RiverPlanItem {
   board: readonly string[];
   pot: number;
   stack: number;
+  /** Jak často se tahle linka na riveru vůbec hraje, 0 až 1. */
+  reach?: number;
 }
 
 /**
@@ -69,16 +70,44 @@ export function familyDirectoryOfRiverPath(path: string): string | undefined {
   return name === undefined || !name.includes("__") ? undefined : name;
 }
 
+/**
+ * Co o spotu ví generátor a podhra sama ne.
+ *
+ * Čí strategii uzel drží, se z jména adresáře přečíst nedá - u turnu to stálo
+ * chybu, kdy sedačka cutoffu dostala odpovědi big blindu. Určuje se stejně jako
+ * tam, z ranží, které plán zapsal k téhle lince, a generátor ho sem předá
+ * hotové. Pot a hloubka v blindech se počítají z poměru, který zná jen build.
+ */
+export interface RiverRuleContext {
+  hero?: NonNullable<TurnStrategyRule["spot"]>["hero"];
+  potBB?: number;
+  stackBehindBB?: number;
+}
+
 export function buildRiverStrategyRule(
   riverDirectoryPath: string,
   node: TurnSubgameNode,
   item: RiverPlanItem,
+  context: RiverRuleContext = {},
 ): RiverStrategyRule | undefined {
   const familyDirectory = familyDirectoryOfRiverPath(riverDirectoryPath);
   if (familyDirectory === undefined) return undefined;
   if (item.board.length !== 5) return undefined;
 
-  const base = buildTurnStrategyRule(familyDirectory, node);
+  // Turnový spot popisuje prvních čtyři karty; pátá patří do `riverSpot`. Bez
+  // něj by pravidlo neslo jen rodinu a nikdo by nepoznal, na které desce vzniklo
+  // - a hlavně by neneslo hrdinu, takže by se filovalo pod sedačku z názvu.
+  const base = buildTurnStrategyRule(familyDirectory, node, {
+    flop: item.board.slice(0, 3),
+    turnCards: [item.board[3]],
+    priorLine: [...item.line],
+    potChips: item.pot,
+    stackChips: item.stack,
+    ...(context.potBB === undefined ? {} : { potBB: context.potBB }),
+    ...(context.stackBehindBB === undefined ? {} : { stackBehindBB: context.stackBehindBB }),
+    ...(context.hero === undefined ? {} : { hero: context.hero }),
+    reach: item.reach ?? 0,
+  });
   if (base === undefined) return undefined;
 
   return {

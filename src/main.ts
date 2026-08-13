@@ -90,6 +90,7 @@ import {
 import { mttProductionImportSlotId } from "./data/ranges/mttImportSlotNaming";
 import { mttProductionLazyLoader } from "./data/ranges/mttProductionLazyLoader";
 import { loadSolvedTurnPacks } from "./data/ranges/turnSolvedStrategyPacks";
+import { loadSolvedRiverPacks } from "./data/ranges/riverSolvedStrategyPacks";
 import { runtimeSolvedTurnPacks } from "./data/ranges/turnSolvedRuntimeRegistry";
 
 /** Oprávnění k vyřešenému turn obsahu; jedno na celý turn, ne na rodinu. */
@@ -1637,9 +1638,13 @@ function renderStorageError(panel: HTMLElement): void {
  * that is a grade less specific - not a trainer that refuses to deal a hand.
  */
 async function loadSolvedTurnPacksForProfiles(profileKeys: readonly string[]): Promise<void> {
-  await Promise.all(profileKeys.map((profileKey) => (
-    loadSolvedTurnPacks(profileKey).catch(() => [])
-  )));
+  await Promise.all(profileKeys.flatMap((profileKey) => [
+    loadSolvedTurnPacks(profileKey).catch(() => []),
+    // Riverový obsah jde stejnou cestou a se stejnou tolerancí k selhání. Kdyby
+    // se nenačetl, resolver na riveru prostě nic nenajde a řetězec propadne níž
+    // - stejně jako když ta rodina ještě neexistuje.
+    loadSolvedRiverPacks(profileKey).catch(() => []),
+  ]));
 }
 
 function showNotice(notice: HTMLElement, message: string): void {

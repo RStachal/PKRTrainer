@@ -1,5 +1,4 @@
-import type { RiverStrategyRule } from "./riverStrategyRuleBuilder";
-import type { TurnStrategyPack } from "./turnStrategyPack";
+import type { RiverStrategyPack } from "./riverStrategyPack";
 
 /**
  * Vyřešené riverové packy, které už dorazily.
@@ -8,16 +7,10 @@ import type { TurnStrategyPack } from "./turnStrategyPack";
  * samostatné chunky a přistávají během relace, takže řetězec, který by je
  * načetl jednou při startu, by odpovídal z prázdna po celý běh.
  *
- * Tvar packu je turnový. Řádek strategie se mezi ulicemi neliší - deska,
- * hloubka, uzel, kbelíky ruk - liší se jen to, kolik karet je na stole a že po
- * riveru už nic nenásleduje. Vyrábět druhý skoro totožný typ by znamenalo mít
- * dvě místa, kde se opravuje jedna chyba; přesně tím trpí produkční packy pro
- * turn a river, které vznikly každý zvlášť.
+ * Typ packu bydlí u jeho stavitele, ne tady. Registr má vědět, co drží, ne
+ * definovat, co to je.
  */
-export type RiverStrategyPack = Omit<TurnStrategyPack, "dimensions" | "rules"> & {
-  dimensions: Omit<TurnStrategyPack["dimensions"], "street"> & { street: "RIVER" };
-  rules: readonly RiverStrategyRule[];
-};
+export type { RiverStrategyPack };
 
 const packs: RiverStrategyPack[] = [];
 const registeredIds = new Set<string>();

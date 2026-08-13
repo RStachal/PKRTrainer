@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { buildMttPostflopTrainingRuntime } from "../../src/data/ranges/mttPostflopTrainingRuntime";
 import { grantsForTier } from "../../src/core/paymentEntitlements";
 import { loadAllSolvedTurnPacks } from "../../src/data/ranges/turnSolvedStrategyPacks";
+import { loadSolvedRiverPacks } from "../../src/data/ranges/riverSolvedStrategyPacks";
 import type { PostflopStreet } from "../../src/core/postflopGenerator";
 import type { TrainingProfile } from "../../src/core/trainingProfile";
 
@@ -33,6 +34,7 @@ function manifestsOnDisk(): string[] {
 describe("dosažitelnost vyřešeného obsahu", () => {
   it("každá ulice s manifestem umí vydat resolver", async () => {
     await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
+    await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
     const present = manifestsOnDisk();
     const grants = grantsForTier("PRO_PLUS", { startsAt: "2020-01-01T00:00:00Z" });
 

@@ -45,6 +45,24 @@ def item_id(item):
     return f"{line or 'ROOT'}__{card}"
 
 
+def dump_rounds_for(board):
+    """Kolik kol se má zapsat, podle toho, kolik karet už na stole leží.
+
+    Změřeno na solveru, protože jeho `set_dump_rounds` neznamená "N kol odsud".
+    Turnová podhra (čtyři karty) s jedničkou zapíše turnovou vrstvu; riverová
+    podhra (pět karet) s toutéž jedničkou nezapíše **nic** - a neřekne to. Solve
+    proběhne, konvergence se vypíše, návratový kód je nula a na disku není
+    soubor. Zvenčí to vypadá jako "solver umřel na téhle větvi".
+
+    S dvojkou vznikne 29 898 B; trojka i čtyřka dají bajt po bajtu totéž, protože
+    po riveru už žádná ulice není. Bere se tedy nejmenší hodnota, která funguje.
+
+    U turnu se dvojka vzít nesmí: tam by druhé kolo byla celá riverová vrstva,
+    tedy stovky megabajtů na uzel, a to je přesně to, co dekompozice neukládá.
+    """
+    return 2 if len(board) >= 5 else 1
+
+
 def write_param(item, param_path, dump_path):
     def spec(side):
         return ",".join(f"{n}:{w}" for n, w in sorted(item[side].items()))
@@ -72,9 +90,7 @@ def write_param(item, param_path, dump_path):
         "set_print_interval 50",
         "set_use_isomorphism 1",
         "start_solve",
-        # Round 1 only. Round 2 writes the whole river layer, which is hundreds of
-        # megabytes per node and is not what anything downstream reads.
-        "set_dump_rounds 1",
+        f"set_dump_rounds {dump_rounds_for(item['board'])}",
         f"dump_result {dump_path}",
     ]
     open(param_path, "w", newline="\n").write("\n".join(lines) + "\n")
@@ -114,6 +130,17 @@ def solve_one(item, out_dir, dry):
 
 def main():
     plan_path, out_dir = sys.argv[1], sys.argv[2]
+    # Absolutní, protože solver běží s `cwd` ve svém vlastním adresáři.
+    #
+    # Relativní cesta se u něj vyhodnotí proti kořeni solveru, kde nic z tohohle
+    # neleží. `-i` pak ukazuje na neexistující soubor a `dump_result` do
+    # neexistujícího adresáře - a solver v obou případech mlčí: nic nevypíše,
+    # vrátí nulu a nezapíše soubor. Zvenčí to vypadá jako "solver umřel na téhle
+    # větvi", což je hláška o pár řádků níž, takže se pak hledá vada ve stromě
+    # místo v cestě. Stálo to jednu vrstvu odsolvovanou dvakrát.
+    #
+    # Noční běh si absolutní cesty skládá sám, takže tohle chrání ruční spuštění.
+    out_dir = os.path.abspath(out_dir)
     workers = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--workers=")), 4))
     limit = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--limit=")), 0))
     dry = "--dry" in sys.argv

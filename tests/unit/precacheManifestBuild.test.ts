@@ -99,6 +99,20 @@ describe("precache build manifest", () => {
     }
   });
 
+  it("stejné pravidlo platí pro river, ne jen pro turn", () => {
+    // Riverové rodiny jsou stejně velké a emitují se stejně. Kdyby je pravidlo
+    // nepoznalo, zopakoval by se tentýž skok rozpočtu o ulici dál - a znovu by to
+    // nechytil test, ale až rozpočet.
+    for (const path of [
+      "/repo/src/data/ranges/river/mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+      "C:\\repo\\src\\data\\ranges\\river\\mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+    ]) {
+      const name = mttProductionChunkNameForModuleId(path);
+      expect(name).toBe("mtt-river-solved-mtt9-20bb-btn-bb-srp-lowspr");
+      expect(isDeferredAsset(`assets/${name}-AbCd1234.js`)).toBe(true);
+    }
+  });
+
   it("realny Vite build emituje production modul jako lazy chunk mimo precache", async () => {
     const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-lazy-mtt-"));
     const packId = "mtt-six-max-turbo-turn-chip-ev-ante-off-production-v1";

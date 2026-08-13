@@ -29,16 +29,20 @@ export function isPreflopEquityAsset(fileName: string): boolean {
 }
 
 /**
- * A solved turn family, one chunk each.
+ * A solved family, one chunk each, on either street.
  *
  * These are the largest content the app has per unit of use: a family answers
  * one spot at one depth, and a player who never reaches it should never pay for
  * it. Eleven of them precached would be four hundred kilobytes on the install
  * path of someone who might only ever open a preflop drill.
+ *
+ * Ulice je ve vzoru alternativa, ne druhá funkce. Riverové rodiny se emitují
+ * stejně a jsou stejně velké; kdyby je predikát nepoznal, skončily by na
+ * instalační cestě - a přesně tohle už jednou zvedlo rozpočet z 362 kB na 4,4 MB.
  */
-export function isSolvedTurnAsset(fileName: string): boolean {
+export function isSolvedStreetAsset(fileName: string): boolean {
   const baseName = fileName.replace(/\\/g, "/").split("/").pop() ?? "";
-  return /^mtt-turn-solved-[a-z0-9-]+-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
+  return /^mtt-(turn|river)-solved-[a-z0-9-]+-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
 }
 
 /** Assets the app fetches when it needs them, so they stay off the install path. */
@@ -46,7 +50,7 @@ export function isDeferredAsset(fileName: string): boolean {
   return (
     isLazyMttProductionAsset(fileName) ||
     isPreflopEquityAsset(fileName) ||
-    isSolvedTurnAsset(fileName)
+    isSolvedStreetAsset(fileName)
   );
 }
 
@@ -66,12 +70,15 @@ export function mttProductionChunkNameForModuleId(moduleId: string): string | nu
   // po převodu přestala platit: chunky dostaly jméno podle souboru, precache
   // predikát je přestal poznávat jako odložené, a rozpočet vyskočil z 362 kB na
   // 4,4 MB - celý solverový obsah se ocitl na instalační cestě.
+  const street = normalized.includes("/ranges/turn/")
+    ? "turn"
+    : normalized.includes("/ranges/river/") ? "river" : null;
   if (
-    normalized.includes("/ranges/turn/") &&
+    street !== null &&
     (fileName.endsWith(".generated.json") || fileName.endsWith(".generated.ts"))
   ) {
     const suffix = fileName.endsWith(".json") ? ".generated.json" : ".generated.ts";
-    return `mtt-turn-solved-${fileName.slice(0, -suffix.length)}`;
+    return `mtt-${street}-solved-${fileName.slice(0, -suffix.length)}`;
   }
   if (
     !fileName.endsWith(".ts") ||
