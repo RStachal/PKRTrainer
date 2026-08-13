@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { runtimeSolvedTurnPacks } from "../src/data/ranges/turnSolvedRuntimeRegistry";
 import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks";
-import { renderHandGridBlock } from "../src/data/ranges/handGridRender";
+import { renderTurnFamilyDigest } from "../src/data/ranges/turnReviewDigest";
 import { profileTurnFamilies } from "../src/data/ranges/turnFamilyAnomaly";
 import {
   parseTurnReviewVerdicts,
@@ -98,7 +98,7 @@ if (familyId === undefined) {
             : undefined;
 
     if (outcome === undefined) {
-      renderForReading(pack, contentHash);
+      console.log(renderTurnFamilyDigest(pack, contentHash));
     } else {
       const reviewer = arg("reviewer") ?? "neuvedeno";
       const note = arg("note");
@@ -115,97 +115,4 @@ if (familyId === undefined) {
       console.log("Přegeneruj pack, aby se důvěra propsala: npm run mtt:turn-pack -- --family=" + familyId + " --write");
     }
   }
-}
-
-/**
- * Kbelíky za celou rodinu podle toho, jak často třída napříč deskami sází.
- *
- * Většinová akce na třídu tady nefunguje. Check je převažující akce skoro všude,
- * takže by většina vyšla na check u každé jediné třídy a rodinová mřížka by byla
- * jednolitá plocha jednoho znaku - technicky pravdivá a k ničemu.
- *
- * Zajímavý je tvar sázecí range: které ruce sázejí na většině desek, které jen
- * občas a které nikdy. To se do jednoho znaku vejde jako pásmo, a právě tenhle
- * tvar odhalí chybu, kterou jednotlivé pravidlo neprozradí - třeba že se sází
- * nejsilnějšími i nejslabšími a nic mezi tím, nebo naopak že sází jen střed.
- */
-function familyBuckets(
-  pack: (typeof runtimeSolvedTurnPacks)[number],
-): { action: string; handClasses: string[]; combos: number }[] {
-  const boards = new Map<string, { seen: number; bet: number }>();
-  for (const rule of pack.rules) {
-    for (const bucket of rule.buckets) {
-      const bets = /^(BET|RAISE|ALL)/i.test(bucket.action);
-      for (const handClass of bucket.handClasses) {
-        const row = boards.get(handClass) ?? { seen: 0, bet: 0 };
-        row.seen += 1;
-        if (bets) row.bet += 1;
-        boards.set(handClass, row);
-      }
-    }
-  }
-
-  const combosOf = (hand: string) => (hand.length === 2 ? 6 : hand.endsWith("s") ? 4 : 12);
-  const bands: { action: string; test: (share: number) => boolean }[] = [
-    { action: "sází na většině desek", test: (share) => share >= 0.5 },
-    { action: "sází na části desek", test: (share) => share >= 0.15 },
-    { action: "sází výjimečně", test: (share) => share > 0 },
-    { action: "nikdy nesází", test: () => true },
-  ];
-
-  const byBand = new Map<string, { handClasses: string[]; combos: number }>();
-  for (const [handClass, row] of boards) {
-    const share = row.seen === 0 ? 0 : row.bet / row.seen;
-    const band = bands.find((candidate) => candidate.test(share))!;
-    const bucket = byBand.get(band.action) ?? { handClasses: [], combos: 0 };
-    bucket.handClasses.push(handClass);
-    bucket.combos += combosOf(handClass);
-    byBand.set(band.action, bucket);
-  }
-  // Pořadí pásem, ne podle velikosti: čtenář čte mřížku odshora dolů a chce, aby
-  // nejagresivnější pásmo mělo první znak bez ohledu na to, kolik ruk v něm je.
-  return bands
-    .filter((band) => byBand.has(band.action))
-    .map((band) => ({ action: band.action, ...byBand.get(band.action)! }));
-}
-
-function renderForReading(
-  pack: (typeof runtimeSolvedTurnPacks)[number],
-  contentHash: string,
-): void {
-  const first = pack.rules[0];
-  console.log(`${pack.familyIds[0]}`);
-  console.log(`  spot: ${first?.positionPattern}, ${first?.potType}, ${first?.node}, ${first?.stackBB}BB`);
-  console.log(`  pravidel ${pack.rules.length}, důvěra ${pack.confidence}, otisk ${contentHash}\n`);
-
-  // Rozdělení akcí je to, co odhalí obrácené znaménko. Rodina, která z pozice
-  // bez iniciativy sází ve třech čtvrtinách případů, je špatně, i kdyby každé
-  // jednotlivé pravidlo vypadalo rozumně.
-  const byAction = new Map<string, number>();
-  for (const rule of pack.rules) {
-    for (const bucket of rule.buckets) {
-      byAction.set(bucket.action, (byAction.get(bucket.action) ?? 0) + bucket.combos);
-    }
-  }
-  const totalCombos = [...byAction.values()].reduce((sum, value) => sum + value, 0) || 1;
-  console.log("  rozdělení akcí podle kombinací:");
-  for (const [action, combos] of [...byAction].sort((a, b) => b[1] - a[1])) {
-    console.log(`    ${action.padEnd(22)} ${((combos / totalCombos) * 100).toFixed(1)} %`);
-  }
-
-  // Celá rodina v jedné mřížce: pro každou třídu akce, kterou hraje nejčastěji
-  // napříč deskami. Tvar range je z toho vidět na první pohled, ze seznamu tříd
-  // nikdy - a právě tvar odhalí chyby, které jsme v tomhle obsahu našli.
-  console.log("\n  celá rodina - jak často která ruka sází napříč deskami:");
-  console.log(renderHandGridBlock(familyBuckets(pack), "    ", { preserveOrder: true }));
-
-  console.log("\n  tři desky jednotlivě:");
-  for (const rule of pack.rules.slice(0, 3)) {
-    console.log(`\n    ${rule.sourceDirectory}`);
-    console.log(renderHandGridBlock(rule.buckets, "      "));
-  }
-
-  console.log("\n  Verdikt:");
-  console.log(`    npm run mtt:turn-review -- --family=${pack.familyIds[0]} --accept --reviewer="jméno"`);
-  console.log(`    npm run mtt:turn-review -- --family=${pack.familyIds[0]} --needs-work --note="co je špatně"`);
 }
