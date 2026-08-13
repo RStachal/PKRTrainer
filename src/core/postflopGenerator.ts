@@ -189,6 +189,19 @@ export interface PostflopStrategyInput {
   potBB: number;
   effectiveStackBB: number;
   positionPattern: PostflopPositionPattern;
+  /**
+   * Na které straně stolu sedí hrdina.
+   *
+   * `positionPattern` to neříká: `SRP_CO_VS_BB` jmenuje, kdo otevřel a kdo
+   * dorovnal, a platí pro obě sedačky u toho stolu. Dokud vyřešený obsah držel
+   * jen rozhodnutí hráče mimo pozici, nescházelo to - uzel sám stranu určoval.
+   * Jakmile přibude obsah pro obě strany, je `SRP_CO_VS_BB` + „čelí sázce" dvěma
+   * různým hráčům stejný klíč, a resolver by mezi nimi vybíral pořadím.
+   *
+   * Volitelné, aby nástroje a testy nemusely vědět všechno; kdo to ale neuvede,
+   * dostane od vyřešeného resolveru odpověď jen tam, kde je odpověď jediná.
+   */
+  heroOutOfPosition?: boolean;
   actionNode?: PostflopActionNode;
   heroHand?: HandLabel;
   priorFlopAction?: PostflopAction;
@@ -547,6 +560,9 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
     potBB,
     effectiveStackBB,
     positionPattern: positionContext.positionPattern,
+    // Stranu stolu zná jen tenhle kontext a dál se dosud nepředávala, takže
+    // resolver ji neměl jak zjistit.
+    heroOutOfPosition: !positionContext.inPosition,
     actionNode,
     priorFlopAction: street === "TURN" ? config.priorFlopAction ?? "BET_SMALL" : config.priorFlopAction,
     turnCardClass: street === "TURN" ? config.turnCardClass ?? classifyTurnCard(board) : config.turnCardClass,

@@ -62,6 +62,18 @@ function ruleMatches(rule: RiverStrategyRule, input: PostflopStrategyInput): boo
   const hero = rule.spot?.hero;
   if (hero === undefined) return false;
   if (actionNodeForSolvedHero(hero, "RIVER") !== input.actionNode) return false;
+  // Strana stolu, když ji spot uvede. Vyřešené pravidlo drží rozhodnutí jednoho
+  // hráče, ne obou: `SRP_CO_VS_BB` platí pro obě sedačky a bez tohohle by
+  // pravidlo pro hráče mimo pozici odpovědělo tomu v pozici.
+  //
+  // Porovnává se `hero.side`, ne `rule.heroOutOfPosition`. To druhé pole se tak
+  // jmenuje, ale popisuje rodinu, ne hrdinu: u `SRP_CO_VS_BB` je `false`, protože
+  // cutoff je v pozici - jenže uzel drží strategii big blindu, který je mimo ni.
+  // Porovnání proti němu odmítlo úplně všechno.
+  if (
+    input.heroOutOfPosition !== undefined &&
+    input.heroOutOfPosition !== (hero.side === "OOP")
+  ) return false;
   if (Math.abs(rule.stackBB - input.effectiveStackBB) > RIVER_DEPTH_TOLERANCE_BB) return false;
   return boardMatches(rule, input);
 }

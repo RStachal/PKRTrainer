@@ -144,6 +144,17 @@ export interface TurnStrategyRule {
   potType: TurnFamilyId["potType"];
   stackBB: number;
   sprBand?: TurnFamilyId["sprBand"];
+  /**
+   * Pozor: tohle je vlastnost **rodiny**, ne hrdiny, i když se tak jmenuje.
+   *
+   * Bere se z `parseTurnFamilyId`, které čte jméno adresáře - a to jmenuje
+   * preflopovou akci. U `SRP_CO_VS_BB` vyjde `false`, protože cutoff je v pozici;
+   * uzel uvnitř ale drží strategii big blindu, který je mimo ni. Kdo tímhle
+   * polem porovná stranu stolu, odmítne úplně všechno, nebo hůř - vydá odpověď
+   * druhého hráče.
+   *
+   * Stranu hrdiny říká `spot.hero.side`, který se určuje ze solvu.
+   */
   heroOutOfPosition: boolean;
   board?: string;
   /**
