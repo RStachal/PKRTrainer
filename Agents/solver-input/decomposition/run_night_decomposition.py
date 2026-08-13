@@ -23,6 +23,10 @@ Design notes worth keeping:
   will not *start* a board it does not expect to finish in time, either, which is
   what `--until` originally failed to mean: gating only the start let a board
   begun nine minutes before the deadline run half an hour past it.
+- Zbytek okna po vyčerpané turnové frontě patří riveru. `--river-budget` zůstává
+  ruční pákou, ale bez něj se river nespouští jen dokud turn něco má; jakmile
+  fronta dojde, dostane river ocas noci a konec určí deadline. Nula napořád by
+  znamenala, že třetí noc spálí osm jader na tom, že nemá co dělat.
 
 Stopping it early takes three steps, in order, because the children outlive the
 parent on Windows: kill this driver, then the `solve_plan.py` it launched, then
@@ -168,10 +172,15 @@ def main():
     # if it is expected to finish in time, using the measured duration of the
     # boards already done this run rather than a guess.
     board_minutes = []
+    # Jestli fronta došla, nebo ji zastavil deadline. Tohle rozhoduje, co dělá
+    # zbytek noci: vyčerpaná fronta znamená volné okno pro river, zastavená
+    # znamená, že turn má co dělat a přednost si drží.
+    turn_exhausted = True
     for family, board in ordered:
         remaining = (deadline - datetime.now()).total_seconds() / 60
         if remaining <= 0:
             log("deadline reached; stopping between boards")
+            turn_exhausted = False
             break
         if board_minutes:
             expected = max(board_minutes)
@@ -180,6 +189,7 @@ def main():
                     f"stopping {remaining:.0f} min before the deadline: the next board "
                     f"needs about {expected:.0f} min and would overrun it"
                 )
+                turn_exhausted = False
                 break
 
         out_dir = os.path.join(WORK, f"{family}__{board}")
@@ -240,8 +250,41 @@ def main():
 
     log(f"boards worked {done}, already complete {skipped}, failed {failed}")
 
-    if river_budget > 0:
-        run_river_phase(deadline, workers, coverage, river_budget)
+    remaining = (deadline - datetime.now()).total_seconds() / 60
+    budget = river_budget_for(river_budget, turn_exhausted, remaining)
+    if budget is None:
+        log(f"river phase: turnová fronta vyčerpaná, zbývá {remaining:.0f} min okna")
+        run_river_phase(deadline, workers, coverage, None)
+    elif budget > 0:
+        run_river_phase(deadline, workers, coverage, budget)
+    elif not turn_exhausted:
+        log("river phase se nespouští: turn není hotový a má přednost")
+
+
+# Kratší zbytek okna river nespouští: samotné plánování vrstvy něco stojí a
+# nedoplánovaná vrstva není poloviční výsledek, ale žádný.
+RIVER_MIN_WINDOW_MIN = 10
+
+
+def river_budget_for(explicit, turn_exhausted, remaining_minutes):
+    """Kolik turnových podher dostane riverovou vrstvu. `None` znamená kolik stihne.
+
+    Rozpočet byl dosud nula a nikdo ho nenastavoval, takže riverová fáze od svého
+    opravení nikdy neběžela. Nula byla přitom správný default jen kvůli pořadí:
+    nedokončený turn blokuje celou rodinu na review bráně, kdežto chybějící river
+    neblokuje nic. To pořadí drží dál - river se pouští až když turnová fronta
+    došla, ne místo ní.
+
+    Co nedrží, je nula i potom. Turnu zbývá 107 desek, tedy zhruba dvě noci; třetí
+    noc by při nule spálila osm jader na tom, že nemá co dělat. Ocas okna proto
+    dostane river a končí ho deadline, ne číslo vymyšlené dopředu - kolik vrstev
+    se stihne, ví až běh sám.
+    """
+    if explicit > 0:
+        return explicit
+    if not turn_exhausted:
+        return 0
+    return None if remaining_minutes >= RIVER_MIN_WINDOW_MIN else 0
 
 
 def turn_subgames_by_reach(limit):
@@ -290,12 +333,13 @@ def turn_subgames_by_reach(limit):
     queues = sorted(by_directory.values(), key=lambda bucket: bucket[0]["reach"], reverse=True)
     picked = []
     index = 0
-    while len(picked) < limit:
+    # `limit=None` znamená všechny; pořadí platí dál, jen konec určí deadline.
+    while limit is None or len(picked) < limit:
         placed = 0
         for bucket in queues:
             if index >= len(bucket):
                 continue
-            if len(picked) >= limit:
+            if limit is not None and len(picked) >= limit:
                 break
             picked.append(bucket[index])
             placed += 1
@@ -325,14 +369,24 @@ def run_river_phase(deadline, workers, coverage, budget):
     review bráně, kdežto chybějící river zatím neblokuje nic - takže dokud turn
     není hotový, je river ta levnější věc, kterou lze odložit.
     """
-    log(f"river phase: rozpočet {budget} turnových podher")
+    log(f"river phase: rozpočet {'kolik stihne' if budget is None else budget} turnových podher")
     picked = turn_subgames_by_reach(budget)
     log(f"  {len(picked)} podher vybráno podle reach")
     done = 0
+    # Stejná ochrana jako u desek. Vrstva se počítá v minutách a fáze, která ji
+    # začne pět minut před koncem okna, drží jádra dál do pracovního dne - přesně
+    # to okno mělo řešit.
+    layer_minutes = []
     for row in picked:
         remaining = (deadline - datetime.now()).total_seconds() / 60
         if remaining <= 0:
             log("  deadline reached; stopping river phase")
+            break
+        if layer_minutes and max(layer_minutes) > remaining:
+            log(
+                f"  končím {remaining:.0f} min před deadline: další vrstva potřebuje "
+                f"asi {max(layer_minutes):.0f} min a přetáhla by ho"
+            )
             break
         out_dir = os.path.join(row["directory"], "river", os.path.basename(row["path"])[:-5])
         plan_path = os.path.join(out_dir, "plan.json")
@@ -352,11 +406,16 @@ def run_river_phase(deadline, workers, coverage, budget):
         if solved >= planned:
             continue
         log(f"  solving river {os.path.basename(out_dir)}: {planned - solved} z {planned}")
+        started = time.time()
         subprocess.run(
             [sys.executable, os.path.join(HERE, "solve_plan.py"),
              plan_path, out_dir, f"--workers={workers}"],
             capture_output=True, text=True,
         )
+        minutes = (time.time() - started) / 60
+        after = len([f for f in os.listdir(out_dir) if f.endswith(".json") and f != "plan.json"])
+        log(f"    {after}/{planned} za {minutes:.1f} min")
+        layer_minutes.append(minutes)
         done += 1
     log(f"river phase: {done} turnových podher dostalo riverovou vrstvu")
 
