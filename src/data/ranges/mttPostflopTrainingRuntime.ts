@@ -12,9 +12,18 @@ import {
 import { createMttPostflopPilotAwareResolver } from "./mttPostflopPilotRuntime";
 import { createTurnSolvedStrategyResolverChain } from "./turnSolvedStrategyPacks";
 import { runtimeSolvedTurnPacks } from "./turnSolvedRuntimeRegistry";
+import { createRiverSolvedStrategyResolverChain } from "./riverStrategyResolver";
+import { runtimeSolvedRiverPacks } from "./riverSolvedRuntimeRegistry";
 
 /** Jedno oprávnění na celý vyřešený turn; rodiny vznikly jedním během. */
 const SOLVED_TURN_ENTITLEMENT = "mtt.postflop.turn.solved.pilot" as const;
+/** Totéž pro river, ze stejného důvodu. */
+const SOLVED_RIVER_ENTITLEMENT = "mtt.postflop.river.solved.pilot" as const;
+
+/** Resolver nad vyřešenými riverovými rodinami, nebo nic, když žádná nedorazila. */
+function solvedRiverRuntimeResolver(): ReturnType<typeof createRiverSolvedStrategyResolverChain> | null {
+  return runtimeSolvedRiverPacks.length > 0 ? createRiverSolvedStrategyResolverChain() : null;
+}
 
 /**
  * Resolver nad vyřešenými turn rodinami, nebo nic, když žádná nedorazila.
@@ -98,23 +107,32 @@ export function buildMttPostflopTrainingRuntime(
   // větev je nepustí, dokud není celý profil PRODUCTION, a pilotní katalog je
   // flopový. Obsah byl dosažitelný jen měřicím skriptem, což zvenku vypadá úplně
   // stejně, jako by neexistoval.
-  if (profile.street === "TURN") {
-    const solvedTurn = solvedTurnRuntimeResolver();
+  // Turn i river jdou stejnou cestou, jen s jiným registrem a jiným oprávněním.
+  // Napsat to dvakrát by znamenalo dvě místa, kde se opravuje jedna chyba -
+  // přesně tím trpí produkční packy pro turn a river, které vznikly každý zvlášť.
+  const solvedStreet = profile.street === "TURN"
+    ? { resolver: solvedTurnRuntimeResolver(), entitlement: SOLVED_TURN_ENTITLEMENT, label: "turn" }
+    : profile.street === "RIVER"
+      ? { resolver: solvedRiverRuntimeResolver(), entitlement: SOLVED_RIVER_ENTITLEMENT, label: "river" }
+      : null;
+
+  if (solvedStreet !== null) {
+    const solvedTurn = solvedStreet.resolver;
     if (solvedTurn !== null) {
       const access = evaluateEntitlementAccess({
-        required: [SOLVED_TURN_ENTITLEMENT],
+        required: [solvedStreet.entitlement],
         grants,
         now: options.now,
         allowGrace: options.allowGrace,
       });
-      if (access.active.includes(SOLVED_TURN_ENTITLEMENT)) {
+      if (access.active.includes(solvedStreet.entitlement)) {
         return {
           mode: "SCOPED_PILOT",
           resolver: solvedTurn,
           allowFallback: false,
-          reason: "Vyřešený turn obsah je dostupný pro jedenáct rodin; není to plné produkční pokrytí a odpovídá jen na desky, které někdo vyřešil.",
+          reason: `Vyřešený ${solvedStreet.label} obsah je dostupný; není to plné produkční pokrytí a odpovídá jen na desky, které někdo vyřešil.`,
           pilotScopes: [],
-          activeEntitlements: [SOLVED_TURN_ENTITLEMENT],
+          activeEntitlements: [solvedStreet.entitlement],
           missingEntitlements: [],
         };
       }
@@ -122,10 +140,10 @@ export function buildMttPostflopTrainingRuntime(
         mode: "LOCKED_PILOT",
         resolver: null,
         allowFallback: false,
-        reason: "Vyřešený turn obsah existuje, ale chybí k němu aktivní oprávnění.",
+        reason: `Vyřešený ${solvedStreet.label} obsah existuje, ale chybí k němu aktivní oprávnění.`,
         pilotScopes: [],
         activeEntitlements: [],
-        missingEntitlements: [SOLVED_TURN_ENTITLEMENT],
+        missingEntitlements: [solvedStreet.entitlement],
       };
     }
   }

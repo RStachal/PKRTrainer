@@ -16,6 +16,7 @@ export const PKR_ENTITLEMENTS = [
   // nočním během ze stejného stromu a dělit je na jedenáct nákupů by prodávalo
   // hranice, které pro hráče nic neznamenají.
   "mtt.postflop.turn.solved.pilot",
+  "mtt.postflop.river.solved.pilot",
   "analytics.advanced",
   "export.cross_check",
   "coach.team",
@@ -82,6 +83,7 @@ export const TIER_ENTITLEMENTS: Record<PkrCommercialTier, readonly PkrEntitlemen
     "mtt.postflop.flop.3bp_btn_co.cbet.pilot",
     "mtt.postflop.flop.3bp_btn_co.facing_bet.pilot",
     "mtt.postflop.turn.solved.pilot",
+    "mtt.postflop.river.solved.pilot",
     "analytics.advanced",
     "export.cross_check",
   ],
@@ -97,6 +99,7 @@ export const TIER_ENTITLEMENTS: Record<PkrCommercialTier, readonly PkrEntitlemen
     "mtt.postflop.flop.3bp_btn_co.cbet.pilot",
     "mtt.postflop.flop.3bp_btn_co.facing_bet.pilot",
     "mtt.postflop.turn.solved.pilot",
+    "mtt.postflop.river.solved.pilot",
     "analytics.advanced",
     "export.cross_check",
     "coach.team",
