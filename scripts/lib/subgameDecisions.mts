@@ -47,6 +47,19 @@ export interface SubgameDecision {
   depth: number;
   /** Kolik má každý hráč vloženo v tomhle uzlu; index 1 je OOP, 0 je IP. */
   committed: readonly [number, number];
+  /**
+   * Jak často se hra do tohohle uzlu dostane, uvnitř téhle podhry, 0 až 1.
+   *
+   * Součin frekvencí akcí na cestě sem, každá zprůměrovaná přes kombinace, které
+   * ten hráč v uzlu drží. Kořen má jedničku.
+   *
+   * K čemu to je: do stejného produktového rozhodnutí na téže desce vede víc
+   * uzlů - čelit sázce po checku a čelit raisu po vlastní sázce jsou obojí „čelí
+   * sázce". Resolver je od sebe nerozliší, protože trenažér mu neřekne, jak se
+   * ke spotu došlo, takže se dodá jeden. Vybrat ten, do kterého se hra dostane
+   * častěji, je jediná volba, která se opírá o data místo o dojem.
+   */
+  arrival: number;
 }
 
 /** Částka, na kterou akce sází, nebo `undefined`, když se nesází. */
@@ -99,6 +112,7 @@ export function subgameDecisions(
     line: string[],
     committed: [number, number],
     depth: number,
+    arrival: number,
   ): void => {
     if (node.node_type !== "action_node") return;
     const block = node.strategy;
@@ -116,19 +130,33 @@ export function subgameDecisions(
       toCallChips: Math.max(0, committed[opponent] - committed[player]),
       depth,
       committed: [committed[0], committed[1]],
+      arrival,
     });
 
     const actions = (node.actions ?? []) as string[];
+    // Průměrná frekvence každé akce přes kombinace, které hráč v uzlu drží.
+    // Neváží se počtem kombinací té třídy: strategie je zapsaná po kombinacích,
+    // takže prostý průměr už tu váhu nese.
+    const shares = actions.map(() => 0);
+    let combos = 0;
+    for (const probabilities of Object.values(block.strategy)) {
+      const row = probabilities as number[];
+      combos += 1;
+      for (let index = 0; index < shares.length; index += 1) {
+        shares[index] += row[index] ?? 0;
+      }
+    }
     for (const action of actions) {
       const child = node.childrens?.[action];
       if (child === undefined) continue;
       const next = committedAfterAction(action, player, committed);
+      const share = combos === 0 ? 0 : shares[actions.indexOf(action)] / combos;
       line.push(action);
-      walk(child, line, next, depth + 1);
+      walk(child, line, next, depth + 1, arrival * share);
       line.pop();
     }
   };
 
-  walk(root, [], [0, 0], 0);
+  walk(root, [], [0, 0], 0, 1);
   return found;
 }

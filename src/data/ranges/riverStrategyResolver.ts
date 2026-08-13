@@ -94,9 +94,14 @@ export function createRiverStrategyResolver(pack: RiverStrategyPack): PostflopSt
     }
     if (best === null) return null;
 
-    // Bez potu nejde říct, jestli je sázka malá nebo velká - solver píše žetony,
-    // produkt mluví o podílu potu. Spot bez potu tenhle resolver neumí.
-    const { actions, mergedCount } = translateTurnActions(best.actions, input.potBB);
+    // Jmenovatelem je pot toho uzlu v žetonech, ne trenažérův pot v blindech.
+    //
+    // Solverovy popisky jsou žetony ("BET 83"), a dělit je potem vyjádřeným v
+    // blindech znamená dělit jiným řádem: sázka za třetinu potu vyjde nad každou
+    // hranici a hráči se ukáže jako velká. Turnový resolver to dělá takhle od
+    // začátku; tenhle to zdědit zapomněl.
+    const potForSizes = best.riverSpot.potChips || input.potBB;
+    const { actions, mergedCount } = translateTurnActions(best.actions, potForSizes);
     if (actions.length === 0) return null;
 
     const bucket = input.heroHand === undefined

@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { buildRiverStrategyRule, type RiverPlanItem } from "../../src/data/ranges/riverStrategyRuleBuilder";
+import {
+  buildRiverStrategyRule,
+  type RiverPlanItem,
+  type RiverStrategyRule,
+} from "../../src/data/ranges/riverStrategyRuleBuilder";
 import {
   RIVER_DEPTH_TOLERANCE_BB,
   createRiverStrategyResolver,
@@ -108,5 +112,28 @@ describe("riverový resolver", () => {
     const unknown = ["72o", "82o", "92o"].find((hand) => !known.has(hand));
     if (unknown === undefined) return;
     expect(createRiverStrategyResolver(pack)(input({ heroHand: unknown as never }))).toBeNull();
+  });
+
+  it("velikost sázky měří potem uzlu v žetonech, ne potem v blindech", () => {
+    // Solver píše žetony. Kdyby se dělilo trenažérovým potem v blindech, vyšla by
+    // sázka za třetinu potu nad každou hranici a hráči by se ukázala jako velká -
+    // tedy opak toho, co solver spočítal.
+    const smallBet: RiverStrategyRule = {
+      ...rule,
+      actions: ["CHECK", "BET 28.000000"],
+      buckets: [{ ...rule.buckets[0], action: "BET 28.000000" }],
+      riverSpot: { ...rule.riverSpot, potChips: 84 },
+    };
+    const answer = createRiverStrategyResolver({ ...pack, rules: [smallBet] })(
+      input({
+        heroHand: smallBet.buckets[0].handClasses[0] as never,
+        // Trenažérův pot v blindech; musí se lišit od potu v žetonech, jinak by
+        // test obě jednotky nerozlišil a neověřil nic.
+        potBB: 16.8,
+      }),
+    );
+    // 28 z 84 žetonů je třetina potu, tedy malá sázka. Proti 16,8 by to bylo
+    // 1,67 potu, tedy velká.
+    expect(answer?.action).toBe("BET_SMALL");
   });
 });

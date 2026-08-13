@@ -64,6 +64,30 @@ describe("rozhodnutí uvnitř podhry", () => {
       .toEqual({ pot: 117, stack: 83, toCall: 33 });
   });
 
+  it("spočítá, jak často se do uzlu dojde", () => {
+    const tree: SubgameNode = {
+      node_type: "action_node",
+      player: 1,
+      actions: ["CHECK", "BET 17.000000"],
+      // Dvě kombinace: jedna checkne vždycky, druhá vždycky sází. Průměr je půl
+      // na půl, takže do každé větve jde polovina hry.
+      strategy: { strategy: { AhKs: [1, 0], QhQd: [0, 1] } },
+      childrens: {
+        "BET 17.000000": {
+          node_type: "action_node",
+          player: 0,
+          actions: ["CALL", "FOLD"],
+          strategy: { strategy: { AhKs: [0.25, 0.75] } },
+          childrens: {},
+        },
+      },
+    };
+
+    const [root, facing] = subgameDecisions(tree, 50, 100);
+    expect(root.arrival).toBe(1);
+    expect(facing.arrival).toBeCloseTo(0.5, 6);
+  });
+
   it("na skutečné podhře sedí s tím, co spočítal plánovač riveru", () => {
     if (!existsSync(SUBGAME) || !existsSync(RIVER_PLAN)) return;
     const root = JSON.parse(readFileSync(SUBGAME, "utf8")) as SubgameNode;
