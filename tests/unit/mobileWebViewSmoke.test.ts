@@ -205,9 +205,16 @@ describe("mobile / Android WebView smoke", () => {
 });
 
 async function waitForDashboard(root: HTMLElement): Promise<void> {
+  // Dashboard se načítá dynamickým importem, takže se při prvním otevření musí
+  // celý přeložit. V plné sadě ho stihne předehřát jiný soubor a čekání je
+  // krátké; při samostatném spuštění jde o studený překlad a výchozí limit
+  // `vi.waitFor` na něj nestačí.
+  //
+  // Test tím procházel jen díky sousedům. To je horší než test, který padá:
+  // tvrdí, že mobilní workflow funguje, a přitom se nikdy sám neověřil.
   await vi.waitFor(() => {
     expect(root.querySelector(".stats-export")).not.toBeNull();
-  });
+  }, { timeout: 15000 });
 }
 
 async function importFreshMain(): Promise<typeof import("../../src/main")> {
