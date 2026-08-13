@@ -4,6 +4,7 @@ import type {
   PostflopStrategyResolver,
 } from "../../core/postflopGenerator";
 import { translateTurnActions } from "./turnActionTranslation";
+import { actionNodeForSolvedHero } from "./solvedHeroActionNode";
 import type { TurnStrategyPack } from "./turnStrategyPack";
 import type { TurnStrategyRule } from "./turnStrategyRuleBuilder";
 
@@ -37,30 +38,6 @@ import type { TurnStrategyRule } from "./turnStrategyRuleBuilder";
 
 /** How far a rule's stated depth may sit from the spot's, in big blinds. */
 export const TURN_DEPTH_TOLERANCE_BB = 10;
-
-/**
- * Which product decision a solved node answers, read from the node itself.
- *
- * The family name is not the source here, and an earlier version of this that
- * used it was wrong. `..._CO_BB_SRP_CBET_...` names the flop c-bet that defines
- * the family; the turn node inside it holds the big blind's decision after
- * calling that c-bet. Mapping `CBET` to `TURN_BARREL` therefore told a cutoff
- * they held the betting lead while serving them the big blind's strategy.
- *
- * What the rule records instead is the node's own shape: which side of the table
- * it belongs to, and whether there is a bet in front of it. Those two facts name
- * the decision without going through the directory name at all.
- */
-function productNodeFor(
-  hero: NonNullable<NonNullable<TurnStrategyRule["spot"]>["hero"]>,
-): NonNullable<PostflopStrategyInput["actionNode"]> | undefined {
-  if (hero.facingBet) return "TURN_FACING_BET";
-  // First to act with the betting lead is a barrel; first to act without it is a
-  // lead into the player who has it. Role, not seat: a small blind who opened is
-  // out of position for the whole hand, and calling their turn bet a donk would
-  // teach the opposite of what they did.
-  return hero.isAggressor ? "TURN_BARREL" : "TURN_OOP_LEAD";
-}
 
 /** "6s" from `{ rank: "6", suit: "s" }`, in the notation the solves use. */
 function cardKey(card: { rank: string; suit: string }): string {
@@ -106,7 +83,7 @@ function ruleMatches(rule: TurnStrategyRule, input: PostflopStrategyInput): bool
   if (input.actionNode === undefined) return false;
   const hero = rule.spot?.hero;
   if (hero === undefined) return false;
-  if (productNodeFor(hero) !== input.actionNode) return false;
+  if (actionNodeForSolvedHero(hero, "TURN") !== input.actionNode) return false;
   if (Math.abs(rule.stackBB - input.effectiveStackBB) > TURN_DEPTH_TOLERANCE_BB) return false;
   return boardMatches(rule, input);
 }

@@ -25,6 +25,19 @@ const rule = buildRiverStrategyRule(
   "MTT9_20BB_BTN_BB_SRP_LOWSPR__999r/river/CHECK_CHECK__2c",
   node,
   item,
+  {
+    // Identita hráče se předává tak, jak ji předává generátor. Pravidlo bez ní
+    // resolver odmítne, a to schválně: uzel, který neví, čí strategii drží,
+    // nepojmenuje žádné rozhodnutí, takže by se dal vydat komukoli.
+    hero: {
+      side: "OOP",
+      seat: "BB",
+      villainSeat: "BTN",
+      isAggressor: false,
+      confidence: 1,
+      facingBet: false,
+    },
+  },
 )!;
 
 const pack: RiverStrategyPack = {

@@ -31,6 +31,7 @@ const solvedInput: PostflopStrategyInput = {
   potBB: 16.8,
   board: board(["9s", "9h", "9d", "2c", "2d"]),
   heroHand: "66",
+  actionNode: "RIVER_OOP_LEAD",
 } as unknown as PostflopStrategyInput;
 
 describe("vyřešený river odpovídá", () => {
@@ -68,6 +69,24 @@ describe("vyřešený river odpovídá", () => {
     // rozdíl deseti blindů je rozdíl mezi sázkou za třetinu potu a za celý pot.
     const deep = { ...solvedInput, effectiveStackBB: 60 };
     expect(createRiverSolvedStrategyResolverChain()(deep)).toBeNull();
+  });
+
+  it("na jiné rozhodnutí, než uzel drží, neodpoví", async () => {
+    // Tohle je vada, kterou tenhle resolver měl od začátku: deska seděla,
+    // hloubka seděla, a hráči čelícímu sázce se vydala strategie pro hraní
+    // první - s cedulkou, že to spočítal solver. Vyřešený uzel je jedno
+    // rozhodnutí, ne odpověď na celou desku.
+    await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
+    for (const actionNode of ["RIVER_FACING_BET", "RIVER_PRESSURE"]) {
+      const other = { ...solvedInput, actionNode } as PostflopStrategyInput;
+      expect(createRiverSolvedStrategyResolverChain()(other), actionNode).toBeNull();
+    }
+  });
+
+  it("bez uvedeného rozhodnutí neodpoví", async () => {
+    await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
+    const bare = { ...solvedInput, actionNode: undefined } as PostflopStrategyInput;
+    expect(createRiverSolvedStrategyResolverChain()(bare)).toBeNull();
   });
 
   it("bez načtených packů nevydá nic", () => {

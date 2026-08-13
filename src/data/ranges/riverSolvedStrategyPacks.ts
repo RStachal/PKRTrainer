@@ -30,8 +30,18 @@ export function solvedRiverEntriesForProfile(
 const loads = new Map<string, Promise<RiverStrategyPack>>();
 
 function loadOne(entry: SolvedRiverManifestEntry): Promise<RiverStrategyPack> {
+  // Registrace se dělá při každém čekání, ne jen při prvním stažení.
+  //
+  // Cache drží slib, takže druhé volání dostane tentýž pack - ale zápis do
+  // registru se dřív stal jen jednou, uvnitř prvního `then`. Kdo registr
+  // vyprázdnil (v testech se to dělá mezi případy), dostal od dalšího načtení
+  // prázdno a resolver pak odmítal všechno. Test tím procházel a netvrdil nic.
+  // Zápis je idempotentní podle id, takže opakování nic nestojí.
   const cached = loads.get(entry.packId);
-  if (cached) return cached;
+  if (cached) return cached.then((pack) => {
+    registerSolvedRiverPack(pack);
+    return pack;
+  });
   const pending = entry.load()
     .then((pack) => {
       if (pack.id !== entry.packId) {

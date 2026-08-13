@@ -14,6 +14,7 @@ import { runtimeSolvedTurnPacks } from "../src/data/ranges/turnSolvedRuntimeRegi
 import { solvedRiverManifest } from "../src/data/ranges/riverSolvedManifest.generated.ts";
 import { loadSolvedRiverPacks } from "../src/data/ranges/riverSolvedStrategyPacks.ts";
 import { runtimeSolvedRiverPacks } from "../src/data/ranges/riverSolvedRuntimeRegistry.ts";
+import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode.ts";
 import { shippedContentRisks } from "./lib/mttContentRisks.mts";
 
 export const MTT_PLAYABLE_BETA_SCOPE = "MTT_PLAYABLE_BETA_V1" as const;
@@ -176,6 +177,41 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
     ))),
   ).size;
 
+  // Která rozhodnutí vyřešený obsah opravdu odpovídá.
+  //
+  // Počet rodin a turnů zní široce, ale rozhodnutí, které hráč zrovna má, je
+  // součástí shody - resolver porovnává i uzel. Rodina může mít desku vyřešenou
+  // a přesto na ni neodpovědět, protože vyřešila jinou situaci. Bez tohohle
+  // řádku brána hlásí pokrytí, které v praxi není.
+  //
+  // Měří se toutéž funkcí, kterou používá resolver, aby se brána a runtime
+  // nemohly rozejít.
+  const decisionsCovered = (street: "TURN" | "RIVER") => {
+    const rules = street === "TURN"
+      ? runtimeSolvedTurnPacks.flatMap((pack) => pack.rules)
+      : runtimeSolvedRiverPacks.flatMap((pack) => pack.rules);
+    const counts = new Map<string, number>();
+    for (const rule of rules) {
+      const node = actionNodeForSolvedHero(rule.spot?.hero, street) ?? "NEZNÁMÝ";
+      counts.set(node, (counts.get(node) ?? 0) + 1);
+    }
+    return [...counts].sort((left, right) => right[1] - left[1]);
+  };
+  const turnDecisions = decisionsCovered("TURN");
+  const riverDecisions = decisionsCovered("RIVER");
+  const decisionLimit = (street: string, decisions: readonly (readonly [string, number])[]) => {
+    const total = decisions.reduce((sum, [, count]) => sum + count, 0);
+    if (total === 0) return [];
+    const covered = decisions.map(([node, count]) => (
+      `${node} ${((count / total) * 100).toFixed(0)}%`
+    )).join(", ");
+    const facing = `${street}_FACING_BET`;
+    const missing = decisions.some(([node]) => node === facing)
+      ? ""
+      : ` Nothing answers ${facing}: a player facing a bet on this street is served the heuristic model even on a board that was solved.`;
+    return [`Solved ${street} content answers ${covered}.${missing}`];
+  };
+
   const contentRisks = shippedContentRisks(
     generatedMttPostflopPilotPacks.flatMap((entry) => entry.pack.rules.map((rule) => rule.id)),
   );
@@ -225,6 +261,8 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       "confidence stays LOW until a player reviews it. " +
       "Boards solved on the reduced review-only tree are excluded, so no turn pack blends two trees.",
     ]),
+    ...decisionLimit("TURN", turnDecisions),
+    ...decisionLimit("RIVER", riverDecisions),
     ...(riverFamilies.length === 0 ? [] : [
       `Solved RIVER content ships as ${riverFamilies.length} families, ` +
       `${riverSolvedRivers} solved rivers across ${riverDistinctBoards} distinct five-card boards. ` +

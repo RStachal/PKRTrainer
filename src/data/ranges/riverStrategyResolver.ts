@@ -8,6 +8,7 @@ import type { RiverStrategyPack } from "./riverSolvedRuntimeRegistry";
 import { runtimeSolvedRiverPacks } from "./riverSolvedRuntimeRegistry";
 import type { RiverStrategyRule } from "./riverStrategyRuleBuilder";
 import { translateTurnActions } from "./turnActionTranslation";
+import { actionNodeForSolvedHero } from "./solvedHeroActionNode";
 
 /**
  * Vyřešená riverová strategie, nebo odmítnutí.
@@ -53,6 +54,14 @@ function ruleMatches(rule: RiverStrategyRule, input: PostflopStrategyInput): boo
   if (input.street !== "RIVER") return false;
   if (rule.positionPattern !== input.positionPattern) return false;
   if (rule.potType !== input.potType) return false;
+  // Které rozhodnutí uzel drží. Bez téhle kontroly odpovídal resolver na
+  // kterýkoli riverový spot na správné desce - takže hráči, který čelí sázce,
+  // vydal strategii pro hraní první, a to s cedulkou, že to spočítal solver.
+  // Deska seděla, hloubka seděla, situace byla jiná.
+  if (input.actionNode === undefined) return false;
+  const hero = rule.spot?.hero;
+  if (hero === undefined) return false;
+  if (actionNodeForSolvedHero(hero, "RIVER") !== input.actionNode) return false;
   if (Math.abs(rule.stackBB - input.effectiveStackBB) > RIVER_DEPTH_TOLERANCE_BB) return false;
   return boardMatches(rule, input);
 }

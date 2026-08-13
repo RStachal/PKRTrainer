@@ -57,8 +57,15 @@ export function solvedTurnEntriesForProfile(
 const loads = new Map<string, Promise<TurnStrategyPack>>();
 
 function loadOne(entry: SolvedTurnManifestEntry): Promise<TurnStrategyPack> {
+  // Registrace při každém čekání, ne jen při prvním stažení; zápis je
+  // idempotentní podle id. Kdo registr vyprázdní, dostane ho od dalšího načtení
+  // zpátky - jinak resolver mlčky odmítá všechno a test nad tím projde, aniž by
+  // cokoli ověřil.
   const cached = loads.get(entry.packId);
-  if (cached) return cached;
+  if (cached) return cached.then((pack) => {
+    registerSolvedTurnPack(pack);
+    return pack;
+  });
   const pending = entry.load()
     .then((pack) => {
       if (pack.id !== entry.packId) {
