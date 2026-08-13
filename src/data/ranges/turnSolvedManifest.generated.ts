@@ -78,9 +78,33 @@ export const solvedTurnManifest: readonly SolvedTurnManifestEntry[] = [
     load: () => import("./turn/mtt9-40bb-utg-bb-srp.generated.json").then((module) => module.default as unknown as TurnStrategyPack),
   },
   {
+    familyId: "MTT9_50BB_BTN_BB_SRP",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-50bb-btn-bb-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-50bb-btn-bb-srp.generated.json").then((module) => module.default as unknown as TurnStrategyPack),
+  },
+  {
+    familyId: "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-50bb-btn-bb-srp-facing-midspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-50bb-btn-bb-srp-facing-midspr.generated.json").then((module) => module.default as unknown as TurnStrategyPack),
+  },
+  {
+    familyId: "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-70bb-co-btn-3bp-facing-midspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-70bb-co-btn-3bp-facing-midspr.generated.json").then((module) => module.default as unknown as TurnStrategyPack),
+  },
+  {
     familyId: "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
     packId: "mtt-full-ring-9-turn-solved-mtt9-80bb-btn-bb-srp-highspr-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
     load: () => import("./turn/mtt9-80bb-btn-bb-srp-highspr.generated.json").then((module) => module.default as unknown as TurnStrategyPack),
+  },
+  {
+    familyId: "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-80bb-co-btn-3bp-midspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-80bb-co-btn-3bp-midspr.generated.json").then((module) => module.default as unknown as TurnStrategyPack),
   },
 ];
