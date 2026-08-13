@@ -932,9 +932,17 @@ export function postflopRuntimeNotice(input: {
       " Tenhle obsah zatím nikdo neprošel, takže je dodaný, ne ověřený.",
     )
     : "";
+  // Každá ulice vyjmenovaná, žádná přes `else`.
+  //
+  // Dřív tu byl turn a všechno ostatní spadlo na „flopové situace" - takže river
+  // by hráči tvrdil, že jde o flop. Je to potřetí, co stejný tvar udělal chybu:
+  // pravidlo psané pro jednu ulici mlčky pohltí ty ostatní. Vyjmenovat je stojí
+  // řádek navíc a ušetří ten objev.
   const pilotSubject = input.street === "TURN"
     ? localizedText("solved turn boards", "vyřešené turnové desky")
-    : localizedText("selected flop situations", "vybrané flopové situace");
+    : input.street === "RIVER"
+      ? localizedText("solved river boards", "vyřešené riverové desky")
+      : localizedText("selected flop situations", "vybrané flopové situace");
   // When an active scoped pilot is the runtime but the player has selected a stack
   // depth past every solved band - a deep single-raised pot at SPR 25, say - say
   // so first. Otherwise the "solver pilot is active" notice below would be
