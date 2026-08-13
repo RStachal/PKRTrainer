@@ -98,15 +98,26 @@ describe("solved turn spot catalogue", () => {
     // The small blind family is the one that proves it is role and not seat: the
     // small blind opened and is out of position for the whole hand, so its turn
     // bet is a continuation, not a lead.
+    // Rodina drží víc rozhodnutí než jedno, protože se z podhry čtou i uzly pod
+    // kořenem. Tvrzení „jeden vzor, jedno rozhodnutí" tedy neplatí a nemá platit;
+    // co platit musí, je role.
     const byPattern = new Map<string, Set<string>>();
     for (const spot of solvedTurnSpots()) {
       const seen = byPattern.get(spot.positionPattern) ?? new Set<string>();
       seen.add(spot.actionNode);
       byPattern.set(spot.positionPattern, seen);
     }
-    expect([...(byPattern.get("SRP_SB_VS_BB") ?? [])]).toEqual(["TURN_BARREL"]);
-    expect([...(byPattern.get("SRP_CO_VS_BB") ?? [])]).toEqual(["TURN_OOP_LEAD"]);
-    expect([...(byPattern.get("3BP_BTN_VS_CO") ?? [])]).toEqual(["TURN_OOP_LEAD"]);
+
+    // Small blind otevřel a je mimo pozici celou ruku, takže jeho turnová sázka
+    // je pokračování, ne lead. Kdyby se rozhodnutí odvozovalo ze sedačky, vyšel
+    // by tu `TURN_OOP_LEAD` - a rodina by hráči tvrdila opak toho, co udělal.
+    const smallBlind = byPattern.get("SRP_SB_VS_BB") ?? new Set<string>();
+    expect([...smallBlind].sort()).toEqual(["TURN_BARREL", "TURN_FACING_BET"]);
+
+    // Cutoff otevřel a je v pozici; uzel na vrcholu drží rozhodnutí big blindu,
+    // který dorovnal, takže lead patří jemu a barrel cutoffu.
+    const cutoff = byPattern.get("SRP_CO_VS_BB") ?? new Set<string>();
+    expect([...cutoff].sort()).toEqual(["TURN_BARREL", "TURN_FACING_BET", "TURN_OOP_LEAD"]);
   });
 
   it("can deal every solved spot it offers", () => {

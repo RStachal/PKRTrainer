@@ -4,6 +4,8 @@ import {
   heroSideOfNode,
   seatsOfFamily,
 } from "./lib/solvedPackBuilding.mts";
+import { subgameDecisions } from "./lib/subgameDecisions.mts";
+import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
 import { dirname, join } from "node:path";
 import { buildTurnStrategyRule } from "../src/data/ranges/turnStrategyRuleBuilder";
 import { buildTurnStrategyPack } from "../src/data/ranges/turnStrategyPack";
@@ -56,14 +58,19 @@ const MANIFEST_PATH = "src/data/ranges/turnSolvedManifest.generated.ts";
 const PROFILE_KEY = "FULL_RING_9|REGULAR|CHIP_EV|TURN";
 
 /**
- * Solved turns kept per family.
+ * Vyřešených rozhodnutí na rodinu.
  *
- * A family holds several hundred of them and each costs about a kilobyte built.
- * Three hundred fills a third of a chunk's five-hundred-and-twelve-kilobyte
- * limit, which leaves room for the family to grow when a reviewer asks for a
- * board that was dropped.
+ * Číslo se řídí limitem chunku, ne odhadem. Rodina je vlastní stahovaný soubor s
+ * limitem 512 KiB a nejhustší z nich (`MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR`,
+ * patnáct desek a hluboké stromy) se při třech stech pravidlech dostala na
+ * 528,74 KiB - tedy přes. Změřeno buildem, ne odhadnuto.
+ *
+ * Dvě stě šedesát je čtyřikrát šedesát pět, takže vyjde beze zbytku na čtyři
+ * rozhodnutí, která se z podhry čtou, a nejhustší rodina se vejde s rezervou.
+ * Předtím to bylo tři sta, ale to bylo na jediné rozhodnutí; pravidlo pro
+ * hráče, který čelí sázce, nese navíc call, raise i fold, takže je dražší.
  */
-const RULE_BUDGET = 300;
+const RULE_BUDGET = 260;
 
 interface ManifestEntry { familyId: string; packId: string; slug: string }
 
@@ -237,40 +244,65 @@ if (family === undefined) {
       const potBB = inBB(potChips);
       const stackBehindBB = inBB(stackChips);
 
-      // Whose node this is, from the solve rather than from the name. An item
-      // whose side cannot be established is left out: a rule filed under the
-      // wrong seat shows one player the other's answers, wearing a label that
-      // says a solver produced them.
-      const side = seats === undefined ? undefined : heroSideOfNode(node, item);
-      if (side === undefined) {
-        unidentified += 1;
-        continue;
-      }
-      const actions: string[] = node.actions ?? [];
-      const seat = side.side === "OOP" ? seats!.oop : seats!.ip;
-      const hero = {
-        side: side.side,
-        seat,
-        villainSeat: side.side === "OOP" ? seats!.ip : seats!.oop,
-        isAggressor: seat === seats!.aggressor,
-        confidence: side.confidence,
-        // A node offering a fold has a bet in front of it; one offering a check
-        // does not. This is the node's own shape, not a reading of the name.
-        facingBet: actions.some((action) => /^FOLD$/i.test(action.trim())),
-      };
+      // Každé rozhodnutí v podhře, ne jen to kořenové.
+      //
+      // Dosud se bral jediný uzel - ten na vrcholu - a zbytek stromu se zahodil.
+      // Přitom jsou to plnohodnotná vyřešená rozhodnutí: hráč v pozici čelící
+      // sázce, hráč v pozici sázející po checku, hráč mimo pozici čelící sázce
+      // nebo raisu. V jedné rodině jich je 33 012 a dodávalo se 4 622. Právě
+      // proto brána hlásila u „čelí sázce na turnu" nulu.
+      for (const decision of subgameDecisions(node, potChips, stackChips)) {
+        // Kořen se určuje překryvem ranží jako dosud, protože plán ty range
+        // zapsal právě pro něj. Hlouběji už neplatí - akce po cestě je zúžily -
+        // a tam je solverův vlastní údaj o hráči na tahu jediný správný zdroj.
+        const side = decision.depth === 0
+          ? (seats === undefined ? undefined : heroSideOfNode(node, item))
+          : { side: decision.player === 1 ? "OOP" as const : "IP" as const, confidence: 1 };
+        if (side === undefined || seats === undefined) {
+          unidentified += 1;
+          continue;
+        }
+        const seat = side.side === "OOP" ? seats.oop : seats.ip;
+        const hero = {
+          side: side.side,
+          seat,
+          villainSeat: side.side === "OOP" ? seats.ip : seats.oop,
+          isAggressor: seat === seats.aggressor,
+          confidence: side.confidence,
+          // Kolik je před hráčem k dorovnání. Dřív se to četlo z toho, jestli
+          // uzel nabízí fold; tohle je totéž, jen změřené místo odvozené.
+          facingBet: decision.toCallChips > 0,
+        };
 
-      const rule = buildTurnStrategyRule(directory, node, {
-        hero,
-        flop: (plan.board ?? []) as string[],
-        turnCards: [item.turn, ...(item.represents ?? []).filter((card: string) => card !== item.turn)],
-        priorLine: item.line ?? [],
-        potChips,
-        stackChips,
-        ...(potBB === undefined ? {} : { potBB }),
-        ...(stackBehindBB === undefined ? {} : { stackBehindBB }),
-        reach: item.reach ?? 0,
-      });
-      if (rule) rules.push(rule);
+        // Rozhodnutí, pro která produkt nemá jméno, se nedodávají.
+        //
+        // `TURN_OOP_LEAD` znamená „mimo pozici, na tahu první, bez iniciativy".
+        // Hráč **v pozici**, který hraje po checku a iniciativu nemá, je jiná
+        // situace a produkt pro ni uzel nemá - trenažér ji nikdy nerozdá, takže
+        // by takové pravidlo neodpovědělo nikomu a jen zabíralo místo v balíku.
+        // Týká se to dvou rodin, kde otevřel small blind: tam je v pozici big
+        // blind, který dorovnal. Změřeno: 130 pravidel ze 4 160.
+        if (!hero.facingBet && !hero.isAggressor && side.side === "IP") continue;
+
+        const rule = buildTurnStrategyRule(directory, decision.node, {
+          hero,
+          flop: (plan.board ?? []) as string[],
+          turnCards: [item.turn, ...(item.represents ?? []).filter((card: string) => card !== item.turn)],
+          // Flopová linka i to, co se stihlo na turnu, aby šlo poznat, odkud
+          // rozhodnutí pochází.
+          priorLine: [...(item.line ?? []), ...decision.line],
+          potChips: decision.potChips,
+          stackChips: decision.stackChips,
+          ...(inBB(decision.potChips) === undefined ? {} : { potBB: inBB(decision.potChips) }),
+          ...(inBB(decision.stackChips) === undefined
+            ? {}
+            : { stackBehindBB: inBB(decision.stackChips) }),
+          // Dosah linky k téhle podhře krát pravděpodobnost, že se hra dostane
+          // až do tohohle uzlu.
+          reach: (item.reach ?? 0) * decision.arrival,
+        });
+        if (rule) rules.push(rule);
+      }
     }
   }
 
@@ -293,11 +325,21 @@ if (family === undefined) {
   // exists. That cost 5.7% of reach and put the refused rules in the bundle
   // anyway. Keeping the highest-reach line spends the space on something a
   // player can actually be served.
+  //
+  // Klíč nese i to, které rozhodnutí uzel drží a na které straně stolu sedí
+  // hrdina. Bez toho by se čtyři různé situace na téže desce - hraju první,
+  // sázím s iniciativou, čelím sázce v pozici, čelím sázce mimo pozici -
+  // přebily na jednu a zbyla by ta nejdosahovanější. Přesně tyhle dva údaje
+  // porovnává resolver, takže se slučuje právě to, co by se u něj srazilo.
+  const decisionKey = (rule: (typeof rules)[number]): string => {
+    const hero = rule.spot?.hero;
+    return `${actionNodeForSolvedHero(hero, "TURN") ?? "?"}|${hero?.side ?? "?"}`;
+  };
   const byLine = new Map<string, (typeof rules)[number]>();
   for (const rule of rules) {
     const spot = rule.spot;
     if (spot === undefined) continue;
-    const key = `${rule.sourceDirectory}|${spot.turnCards[0]}|${rule.node}`;
+    const key = `${rule.sourceDirectory}|${spot.turnCards[0]}|${rule.node}|${decisionKey(rule)}`;
     const held = byLine.get(key);
     if (held === undefined || (spot.reach ?? 0) > (held.spot?.reach ?? 0)) {
       byLine.set(key, rule);
@@ -310,27 +352,45 @@ if (family === undefined) {
     console.log(`  ${collapsed} turns dropped: another flop line reaches the same board more often`);
   }
 
-  const byBoard = new Map<string, typeof rules>();
+  // Rozpočet se dělí mezi rozhodnutí, ne jen mezi desky.
+  //
+  // Kdyby se nedělil, vyhrálo by rozhodnutí s nejvyšším dosahem všechno: hraní
+  // první je nejčastější situace a zaplnilo by tři sta pravidel dřív, než by na
+  // ostatní došlo. Hráč, který čelí sázce, by dál nedostal nic - a to je stav,
+  // ze kterého tenhle blok vychází.
+  //
+  // **Assumption:** dělí se rovným dílem. Poměr, ve kterém trenažér ty situace
+  // rozdává, změřený není; rovný díl je obhajitelný default, protože každá z
+  // nich je situace, do které se hráč dostane, a žádná zatím nemá přednost.
+  // Uvnitř rozhodnutí se pak střídají desky a uvnitř desky rozhoduje dosah.
+  const byDecision = new Map<string, Map<string, typeof rules>>();
   for (const rule of rules) {
-    const key = rule.sourceDirectory;
-    const bucket = byBoard.get(key) ?? [];
+    const decision = decisionKey(rule);
+    const boards = byDecision.get(decision) ?? new Map<string, typeof rules>();
+    const bucket = boards.get(rule.sourceDirectory) ?? [];
     bucket.push(rule);
-    byBoard.set(key, bucket);
-  }
-  for (const bucket of byBoard.values()) {
-    bucket.sort((left, right) => (right.spot?.reach ?? 0) - (left.spot?.reach ?? 0));
+    boards.set(rule.sourceDirectory, bucket);
+    byDecision.set(decision, boards);
   }
   const kept: typeof rules = [];
-  const queues = [...byBoard.values()];
-  for (let round = 0; kept.length < RULE_BUDGET; round += 1) {
-    let placed = 0;
-    for (const queue of queues) {
-      if (round >= queue.length) continue;
-      if (kept.length >= RULE_BUDGET) break;
-      kept.push(queue[round]);
-      placed += 1;
+  const share = Math.max(1, Math.floor(RULE_BUDGET / Math.max(1, byDecision.size)));
+  for (const boards of byDecision.values()) {
+    for (const bucket of boards.values()) {
+      bucket.sort((left, right) => (right.spot?.reach ?? 0) - (left.spot?.reach ?? 0));
     }
-    if (placed === 0) break;
+    const queues = [...boards.values()];
+    let taken = 0;
+    for (let round = 0; taken < share && kept.length < RULE_BUDGET; round += 1) {
+      let placed = 0;
+      for (const queue of queues) {
+        if (round >= queue.length) continue;
+        if (taken >= share || kept.length >= RULE_BUDGET) break;
+        kept.push(queue[round]);
+        taken += 1;
+        placed += 1;
+      }
+      if (placed === 0) break;
+    }
   }
   const dropped = rules.length - kept.length;
   rules.length = 0;
