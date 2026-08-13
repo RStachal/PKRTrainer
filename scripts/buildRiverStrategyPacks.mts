@@ -1,6 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { heroSideOfNode, seatsOfFamily } from "./lib/solvedPackBuilding.mts";
+import { subgameDecisions } from "./lib/subgameDecisions.mts";
+import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
 import { buildRiverStrategyRule } from "../src/data/ranges/riverStrategyRuleBuilder";
 import { buildRiverStrategyPack } from "../src/data/ranges/riverStrategyPack";
 import { TURN_COVERAGE_TARGET, type TurnFamilyEvidence } from "../src/data/ranges/turnReviewGate";
@@ -185,29 +187,52 @@ if (family === undefined) {
       if (!existsSync(path)) continue;
       const node = JSON.parse(readFileSync(path, "utf8"));
 
-      // Čí uzel to je, ze solvu a ne ze jména. Položka, u které to nejde určit,
-      // se vynechá: pravidlo pod špatnou sedačkou ukáže jednomu hráči odpovědi
-      // druhého, a to s cedulkou, že je vyrobil solver.
-      const side = seats === undefined ? undefined : heroSideOfNode(node, item);
-      if (side === undefined) {
-        unidentified += 1;
-        continue;
+      // Každé rozhodnutí v podhře, ne jen to kořenové - stejně jako na turnu a ze
+      // stejného důvodu: hráč, který na riveru čelí sázce, jinak nedostane
+      // vyřešenou odpověď nikdy, ačkoli ta odpověď leží na disku.
+      for (const decision of subgameDecisions(node, item.pot ?? 0, item.stack ?? 0)) {
+        // Kořen podle překryvu ranží, které plán zapsal právě pro něj; hlouběji
+        // je zúžily akce po cestě a platí solverův vlastní údaj o hráči na tahu.
+        const side = decision.depth === 0
+          ? (seats === undefined ? undefined : heroSideOfNode(node, item))
+          : { side: decision.player === 1 ? "OOP" as const : "IP" as const, confidence: 1 };
+        if (side === undefined || seats === undefined) {
+          unidentified += 1;
+          continue;
+        }
+        const seat = side.side === "OOP" ? seats.oop : seats.ip;
+        const isAggressor = seat === seats.aggressor;
+        const facingBet = decision.toCallChips > 0;
+        // `RIVER_OOP_LEAD` znamená „mimo pozici"; hráč v pozici hrající po checku
+        // bez iniciativy je jiná situace, pro kterou produkt uzel nemá, takže by
+        // takové pravidlo neodpovědělo nikomu.
+        if (!facingBet && !isAggressor && side.side === "IP") continue;
+
+        // Pot a stack toho uzlu, ne kořene. Riverové pravidlo si pot nese s
+        // sebou a resolver jím měří velikost sázky; kořenový pot by u uzlu za
+        // sázkou označil malou sázku za velkou.
+        const nodeItem = {
+          ...item,
+          pot: decision.potChips,
+          stack: decision.stackChips,
+          line: [...(item.line ?? []), ...decision.line],
+        };
+        const rule = buildRiverStrategyRule(riverDirectory, decision.node, nodeItem, {
+          hero: {
+            side: side.side,
+            seat,
+            villainSeat: side.side === "OOP" ? seats.ip : seats.oop,
+            isAggressor,
+            confidence: side.confidence,
+            facingBet,
+          },
+          ...(inBB(decision.potChips) === undefined ? {} : { potBB: inBB(decision.potChips) }),
+          ...(inBB(decision.stackChips) === undefined
+            ? {}
+            : { stackBehindBB: inBB(decision.stackChips) }),
+        });
+        if (rule) rules.push(rule);
       }
-      const actions: string[] = node.actions ?? [];
-      const seat = side.side === "OOP" ? seats.oop : seats.ip;
-      const rule = buildRiverStrategyRule(riverDirectory, node, item, {
-        hero: {
-          side: side.side,
-          seat,
-          villainSeat: side.side === "OOP" ? seats.ip : seats.oop,
-          isAggressor: seat === seats.aggressor,
-          confidence: side.confidence,
-          facingBet: actions.some((action) => /^FOLD$/i.test(action.trim())),
-        },
-        ...(inBB(item.pot ?? 0) === undefined ? {} : { potBB: inBB(item.pot ?? 0) }),
-        ...(inBB(item.stack ?? 0) === undefined ? {} : { stackBehindBB: inBB(item.stack ?? 0) }),
-      });
-      if (rule) rules.push(rule);
     }
   }
 
@@ -217,9 +242,16 @@ if (family === undefined) {
   // sebe nerozliší, protože trenažér mu neřekne, kterou rozdal. Dodat obě by
   // znamenalo odmítnout každou desku, kde existují dvě - přesně to stálo u turnu
   // 5,7 % dosahu a pravidla zůstala v balíku.
+  // Klíč nese i to, které rozhodnutí uzel drží a na které straně stolu hrdina
+  // sedí - přesně to porovnává resolver, takže se slučuje to, co by se u něj
+  // srazilo. Bez toho by se čtyři situace na téže desce přebily na jednu.
+  const decisionKey = (rule: (typeof rules)[number]): string => {
+    const hero = rule.spot?.hero;
+    return `${actionNodeForSolvedHero(hero, "RIVER") ?? "?"}|${hero?.side ?? "?"}`;
+  };
   const byLine = new Map<string, (typeof rules)[number]>();
   for (const rule of rules) {
-    const key = `${rule.riverSpot.turnBoard.join("")}|${rule.riverSpot.riverCard}|${rule.node}`;
+    const key = `${rule.riverSpot.turnBoard.join("")}|${rule.riverSpot.riverCard}|${rule.node}|${decisionKey(rule)}`;
     const held = byLine.get(key);
     if (held === undefined || (rule.spot?.reach ?? 0) > (held.spot?.reach ?? 0)) {
       byLine.set(key, rule);
@@ -234,26 +266,37 @@ if (family === undefined) {
 
   // Po jednom z každé turnové podhry, uvnitř podhry podle dosahu. Řadit celou
   // rodinu podle dosahu a uříznout by rozpočet utratilo na jedné podhře.
-  const byParent = new Map<string, typeof rules>();
+  // Rozpočet rovným dílem mezi rozhodnutí, uvnitř rozhodnutí střídavě po
+  // turnových podhrách. **Assumption:** poměr, ve kterém trenažér ty situace
+  // rozdává, změřený není; bez dělení by nejčastější situace zabrala všechno.
+  const byDecision = new Map<string, Map<string, typeof rules>>();
   for (const rule of rules) {
-    const bucket = byParent.get(rule.sourceDirectory) ?? [];
+    const decision = decisionKey(rule);
+    const parents = byDecision.get(decision) ?? new Map<string, typeof rules>();
+    const bucket = parents.get(rule.sourceDirectory) ?? [];
     bucket.push(rule);
-    byParent.set(rule.sourceDirectory, bucket);
-  }
-  for (const bucket of byParent.values()) {
-    bucket.sort((left, right) => (right.spot?.reach ?? 0) - (left.spot?.reach ?? 0));
+    parents.set(rule.sourceDirectory, bucket);
+    byDecision.set(decision, parents);
   }
   const kept: typeof rules = [];
-  const queues = [...byParent.values()];
-  for (let round = 0; kept.length < RULE_BUDGET; round += 1) {
-    let placed = 0;
-    for (const queue of queues) {
-      if (round >= queue.length) continue;
-      if (kept.length >= RULE_BUDGET) break;
-      kept.push(queue[round]);
-      placed += 1;
+  const share = Math.max(1, Math.floor(RULE_BUDGET / Math.max(1, byDecision.size)));
+  for (const parents of byDecision.values()) {
+    for (const bucket of parents.values()) {
+      bucket.sort((left, right) => (right.spot?.reach ?? 0) - (left.spot?.reach ?? 0));
     }
-    if (placed === 0) break;
+    const queues = [...parents.values()];
+    let taken = 0;
+    for (let round = 0; taken < share && kept.length < RULE_BUDGET; round += 1) {
+      let placed = 0;
+      for (const queue of queues) {
+        if (round >= queue.length) continue;
+        if (taken >= share || kept.length >= RULE_BUDGET) break;
+        kept.push(queue[round]);
+        taken += 1;
+        placed += 1;
+      }
+      if (placed === 0) break;
+    }
   }
   const dropped = rules.length - kept.length;
   rules.length = 0;

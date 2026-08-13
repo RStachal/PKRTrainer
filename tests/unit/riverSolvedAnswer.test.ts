@@ -76,10 +76,20 @@ describe("vyřešený river odpovídá", () => {
     // hloubka seděla, a hráči čelícímu sázce se vydala strategie pro hraní
     // první - s cedulkou, že to spočítal solver. Vyřešený uzel je jedno
     // rozhodnutí, ne odpověď na celou desku.
-    await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
+    //
+    // Pack se pro tenhle test zúží na pravidla pro hraní první. Jinak by test
+    // netvrdil nic o zábraně, jen o tom, že obsah pro čelící spoty zrovna
+    // neexistuje - a ten už existuje.
+    const packs = await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
+    const leadOnly = packs.map((pack) => ({
+      ...pack,
+      rules: pack.rules.filter((rule) => rule.spot?.hero?.facingBet === false),
+    }));
+    expect(leadOnly.some((pack) => pack.rules.length > 0)).toBe(true);
+
     for (const actionNode of ["RIVER_FACING_BET", "RIVER_PRESSURE"]) {
       const other = { ...solvedInput, actionNode } as PostflopStrategyInput;
-      expect(createRiverSolvedStrategyResolverChain()(other), actionNode).toBeNull();
+      expect(createRiverSolvedStrategyResolverChain(leadOnly)(other), actionNode).toBeNull();
     }
   });
 
