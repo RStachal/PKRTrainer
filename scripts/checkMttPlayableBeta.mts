@@ -11,6 +11,9 @@ import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.m
 import { solvedTurnManifest } from "../src/data/ranges/turnSolvedManifest.generated.ts";
 import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks.ts";
 import { runtimeSolvedTurnPacks } from "../src/data/ranges/turnSolvedRuntimeRegistry.ts";
+import { solvedRiverManifest } from "../src/data/ranges/riverSolvedManifest.generated.ts";
+import { loadSolvedRiverPacks } from "../src/data/ranges/riverSolvedStrategyPacks.ts";
+import { runtimeSolvedRiverPacks } from "../src/data/ranges/riverSolvedRuntimeRegistry.ts";
 import { shippedContentRisks } from "./lib/mttContentRisks.mts";
 
 export const MTT_PLAYABLE_BETA_SCOPE = "MTT_PLAYABLE_BETA_V1" as const;
@@ -56,6 +59,17 @@ export interface MttPlayableBetaReport {
      * než jaké ve skutečnosti je - 234 místo 133.
      */
     turnDistinctFlops: number;
+    /** Vyřešené river rodiny, které se opravdu dodávají hráči. */
+    riverFamiliesShipped: number;
+    riverFamiliesReviewReady: number;
+    riverSolvedRivers: number;
+    /**
+     * Různých pětikaretních desek napříč rodinami.
+     *
+     * Jednotka je celá deska, ne flop: na riveru je odpověď funkcí všech pěti
+     * karet a počítat flopy by tvrdilo pokrytí, které pack nemá.
+     */
+    riverDistinctBoards: number;
     actionEvPreflopComplete: number;
     actionEvPreflopTotal: number;
     actionEvFlopComplete: number;
@@ -82,6 +96,15 @@ export interface MttPlayableBetaReport {
     solvedTurns: number;
     /** Kolik různých flopů rodina pokrývá. */
     boards: number;
+    confidence: "LOW" | "MEDIUM" | "HIGH";
+  }[];
+  riverFamilies: readonly {
+    familyId: string;
+    packId: string;
+    /** Vyřešené rivery v packu; jeden na desku a pátou kartu. */
+    solvedRivers: number;
+    /** Kolik turnových podher rodina pokrývá. */
+    turnSubgames: number;
     confidence: "LOW" | "MEDIUM" | "HIGH";
   }[];
   fullLibrary: MttCoreReleaseReport["fullLibrary"];
@@ -136,6 +159,23 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
     ))),
   ).size;
 
+  // River stejnou cestou. Bez tohohle brána mlčí o ulici, která obsah dodává, a
+  // zdroj pravdy o mezerách tvrdí, že mezera je tam, kde už není.
+  await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
+  const riverFamilies = runtimeSolvedRiverPacks.map((pack) => ({
+    familyId: pack.familyIds[0] ?? pack.id,
+    packId: pack.id,
+    solvedRivers: pack.rules.length,
+    turnSubgames: new Set(pack.rules.map((rule) => rule.sourceDirectory)).size,
+    confidence: pack.confidence,
+  }));
+  const riverSolvedRivers = riverFamilies.reduce((sum, family) => sum + family.solvedRivers, 0);
+  const riverDistinctBoards = new Set(
+    runtimeSolvedRiverPacks.flatMap((pack) => pack.rules.map((rule) => (
+      `${rule.riverSpot.turnBoard.join("")}${rule.riverSpot.riverCard}`
+    ))),
+  ).size;
+
   const contentRisks = shippedContentRisks(
     generatedMttPostflopPilotPacks.flatMap((entry) => entry.pack.rules.map((rule) => rule.id)),
   );
@@ -185,6 +225,12 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       "confidence stays LOW until a player reviews it. " +
       "Boards solved on the reduced review-only tree are excluded, so no turn pack blends two trees.",
     ]),
+    ...(riverFamilies.length === 0 ? [] : [
+      `Solved RIVER content ships as ${riverFamilies.length} families, ` +
+      `${riverSolvedRivers} solved rivers across ${riverDistinctBoards} distinct five-card boards. ` +
+      "It answers only those exact boards and declines every other; the river is the narrowest content the app has.",
+      "Solved RIVER content has no player-review path yet, so it stays LOW and cannot reach production on its own.",
+    ]),
     ...(turnFamilies.some((family) => family.confidence !== "LOW") ? [] : [
       "No solved TURN family has been player-reviewed yet, so turn content is shipped content, not verified content.",
     ]),
@@ -213,6 +259,10 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       turnFamiliesReviewReady: solvedTurnManifest.length,
       turnSolvedTurns,
       turnDistinctFlops,
+      riverFamiliesShipped: riverFamilies.length,
+      riverFamiliesReviewReady: solvedRiverManifest.length,
+      riverSolvedRivers,
+      riverDistinctBoards,
       actionEvPreflopComplete: actionEv.preflop.completeDecisions,
       actionEvPreflopTotal: actionEv.preflop.totalDecisions,
       actionEvFlopComplete: actionEv.postflop.completeDecisions,
@@ -233,6 +283,7 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       limitations: pilot.limitations,
     })),
     turnFamilies,
+    riverFamilies,
     fullLibrary: core.fullLibrary,
     actionEv: {
       ...core.actionEv,
@@ -293,6 +344,8 @@ function render(report: MttPlayableBetaReport, summary: boolean): string {
     `scoped FLOP pilots: ${report.counts.flopPilotsReady}/${report.counts.flopPilotTargets}`,
     `solved TURN families: ${report.counts.turnFamiliesShipped}/${report.counts.turnFamiliesReviewReady} ` +
     `(${report.counts.turnSolvedTurns} turns, ${report.counts.turnDistinctFlops} flops)`,
+    `solved RIVER families: ${report.counts.riverFamiliesShipped}/${report.counts.riverFamiliesReviewReady} ` +
+    `(${report.counts.riverSolvedRivers} rivers, ${report.counts.riverDistinctBoards} boards)`,
     `preflop action EV: ${report.counts.actionEvPreflopComplete}/${report.counts.actionEvPreflopTotal}`,
     `scoped FLOP action EV: ${report.counts.actionEvFlopComplete}/${report.counts.actionEvFlopTotal}`,
     `errors: ${report.counts.errors}`,
