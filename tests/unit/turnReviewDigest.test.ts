@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   bettingShare,
+  digestDecisions,
   digestSamples,
   heroSentence,
   renderTurnFamilyDigest,
@@ -65,13 +66,39 @@ function packWith(rules: readonly TurnStrategyRule[]): TurnStrategyPack {
 }
 
 describe("digest ke čtení: čí strategii čtenář vidí", () => {
-  it("jmenuje hrdinu dřív než poziční vzor", () => {
+  it("jmenuje hrdinu dřív, než ukáže jeho mřížku", () => {
+    // Rodina drží víc rozhodnutí, takže hlavička nemůže jmenovat jednoho hrdinu
+    // za všechny. Co platit musí: než čtenář uvidí mřížku, ví, čí je.
     const text = renderTurnFamilyDigest(packWith([ruleWith()]), "abc-123");
-    const heroLine = text.split("\n").findIndex((line) => line.includes("čteš strategii"));
-    const patternLine = text.split("\n").findIndex((line) => line.includes("SRP_CO_VS_BB"));
+    const lines = text.split("\n");
+    const heroLine = lines.findIndex((line) => line.includes("čteš strategii"));
+    const firstGrid = lines.findIndex((line) => line.includes("A K Q J T 9 8 7 6 5 4 3 2"));
     expect(heroLine).toBeGreaterThanOrEqual(0);
-    expect(heroLine).toBeLessThan(patternLine);
+    expect(firstGrid).toBeGreaterThan(heroLine);
     expect(text).toContain("BB (mimo pozici) proti CO");
+  });
+
+  it("čte každé rozhodnutí zvlášť, ne všechna dohromady", () => {
+    // Smíchat je znamená hlásit `CALL` vedle `BET` v jednom rozdělení a skládat
+    // range hráče, který sází, s range hráče, který se rozhoduje o dorovnání.
+    const facing = ruleWith({
+      sourceDirectory: "B",
+      actions: ["CALL", "FOLD"],
+      buckets: [{ action: "CALL", handClasses: ["AA"], combos: 6, mix: [] }],
+      spot: {
+        ...(ruleWith().spot!),
+        hero: { ...(ruleWith().spot!.hero!), facingBet: true },
+      },
+    } as Partial<TurnStrategyRule>);
+
+    const decisions = digestDecisions([ruleWith(), facing]);
+    expect(decisions).toHaveLength(2);
+    expect(new Set(decisions.map((item) => item.hero)).size).toBe(2);
+
+    const text = renderTurnFamilyDigest(packWith([ruleWith(), facing]), "abc-123");
+    expect(text).toContain("rodina drží 2 různých rozhodnutí");
+    expect(text).toContain("1/2:");
+    expect(text).toContain("2/2:");
   });
 
   it("u vzoru řekne, že jmenuje preflopovou akci, ne hráče na tahu", () => {
@@ -134,13 +161,32 @@ describe("digest ke čtení: výběr ukázek", () => {
 });
 
 describe("digest ke čtení: skutečné dodávané rodiny", () => {
-  it("každá dodávaná rodina ví, čí strategii nese", async () => {
+  it("každá dodávaná rodina ví, čí strategii nese", { timeout: 30000 }, async () => {
     await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
     expect(runtimeSolvedTurnPacks.length).toBeGreaterThan(0);
     for (const pack of runtimeSolvedTurnPacks) {
-      const sentence = heroSentence(pack.rules[0]);
-      expect({ family: pack.familyIds[0], known: !sentence.includes("NEZNÁMÁ") })
-        .toEqual({ family: pack.familyIds[0], known: true });
+      // Každé rozhodnutí, ne jen první pravidlo. Rodina jich drží několik a
+      // stačí jedno bez identity, aby čtenář schvaloval něco, o čem neví, čí to
+      // je.
+      const unknown = digestDecisions(pack.rules)
+        .filter((decision) => decision.hero.includes("NEZNÁMÁ"));
+      expect({ family: pack.familyIds[0], unknown: unknown.length })
+        .toEqual({ family: pack.familyIds[0], unknown: 0 });
     }
   });
+
+  it("rodina drží víc rozhodnutí a digest je nesmíchá", async () => {
+    await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
+    for (const pack of runtimeSolvedTurnPacks) {
+      const decisions = digestDecisions(pack.rules);
+      // Součet pravidel po rozhodnutích musí sedět na pack: kdyby se některé
+      // ztratilo, čtenář by schválil obsah, který nikdy neviděl.
+      const counted = decisions.reduce((sum, item) => sum + item.rules.length, 0);
+      expect({ family: pack.familyIds[0], counted }).toEqual({
+        family: pack.familyIds[0],
+        counted: pack.rules.length,
+      });
+      expect(decisions.length).toBeGreaterThan(1);
+    }
+  }, 30000);
 });

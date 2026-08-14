@@ -144,45 +144,86 @@ export function heroSentence(rule: TurnStrategyRule | undefined): string {
   return `čteš strategii: ${hero.seat} (${position}) proti ${hero.villainSeat}, ${acting}, ${role}`;
 }
 
+/**
+ * Rozhodnutí, která rodina drží, od nejdosahovanějšího.
+ *
+ * Rodina jich drží víc než jedno od chvíle, kdy se z podhry začaly číst i uzly
+ * pod kořenem. Míchat je do jednoho obrázku znamená dívat se na několik různých
+ * her najednou: rozdělení akcí by hlásilo `CALL` vedle `BET` a mřížka by
+ * skládala range hráče, který sází, s range hráče, který se rozhoduje o
+ * dorovnání. Čtenář by nad tím vydal verdikt, aniž by kterékoli z těch
+ * rozhodnutí doopravdy viděl - a verdikt zvedá rodinu do produkce.
+ */
+export function digestDecisions(
+  rules: readonly TurnStrategyRule[],
+): { hero: string; rules: TurnStrategyRule[] }[] {
+  const groups = new Map<string, TurnStrategyRule[]>();
+  for (const rule of rules) {
+    const key = heroSentence(rule);
+    const bucket = groups.get(key) ?? [];
+    bucket.push(rule);
+    groups.set(key, bucket);
+  }
+  const reachOf = (group: readonly TurnStrategyRule[]) => (
+    group.reduce((sum, rule) => sum + (rule.spot?.reach ?? 0), 0)
+  );
+  return [...groups]
+    .map(([hero, group]) => ({ hero, rules: group }))
+    .sort((left, right) => reachOf(right.rules) - reachOf(left.rules));
+}
+
 export function renderTurnFamilyDigest(
   pack: TurnStrategyPack,
   contentHash: string,
 ): string {
   const first = pack.rules[0];
   const lines: string[] = [];
+  const decisions = digestDecisions(pack.rules);
   lines.push(`${pack.familyIds[0]}`);
-  lines.push(`  ${heroSentence(first)}`);
-  // Vzor se píše až za hrdinou a s vysvětlením, co pojmenovává. Sám o sobě svádí
-  // číst ho jako hráče na tahu.
+  // Vzor se píše s vysvětlením, co pojmenovává. Sám o sobě svádí číst ho jako
+  // hráče na tahu, a to je záměna, která už jednou byla chyba v kódu.
   lines.push(
     `  spot: ${first?.positionPattern} (vzor jmenuje preflopovou akci, ne hráče na tahu)`
     + `, ${first?.potType}, ${first?.node}, ${first?.stackBB}BB`,
   );
-  lines.push(`  pravidel ${pack.rules.length}, důvěra ${pack.confidence}, otisk ${contentHash}\n`);
+  lines.push(`  pravidel ${pack.rules.length}, důvěra ${pack.confidence}, otisk ${contentHash}`);
+  lines.push(
+    `  rodina drží ${decisions.length} různých rozhodnutí a čtou se odděleně:`
+    + " smíchat je znamená dívat se na několik různých her najednou.",
+  );
 
-  // Rozdělení akcí je to, co odhalí obrácené znaménko. Rodina, která z pozice
-  // bez iniciativy sází ve třech čtvrtinách případů, je špatně, i kdyby každé
-  // jednotlivé pravidlo vypadalo rozumně.
-  const byAction = new Map<string, number>();
-  for (const rule of pack.rules) {
-    for (const bucket of rule.buckets) {
-      byAction.set(bucket.action, (byAction.get(bucket.action) ?? 0) + bucket.combos);
+  for (const [index, decision] of decisions.entries()) {
+    lines.push(`\n  ── ${index + 1}/${decisions.length}: ${decision.hero}`);
+    lines.push(`     ${decision.rules.length} pravidel`);
+
+    // Rozdělení akcí odhalí obrácené znaménko: rozhodnutí, kde hráč bez
+    // iniciativy sází ve třech čtvrtinách případů, je špatně, i kdyby každé
+    // jednotlivé pravidlo vypadalo rozumně.
+    const byAction = new Map<string, number>();
+    for (const rule of decision.rules) {
+      for (const bucket of rule.buckets) {
+        byAction.set(bucket.action, (byAction.get(bucket.action) ?? 0) + bucket.combos);
+      }
     }
-  }
-  const totalCombos = [...byAction.values()].reduce((sum, value) => sum + value, 0) || 1;
-  lines.push("  rozdělení akcí podle kombinací:");
-  for (const [action, combos] of [...byAction].sort((a, b) => b[1] - a[1])) {
-    lines.push(`    ${action.padEnd(22)} ${((combos / totalCombos) * 100).toFixed(1)} %`);
-  }
+    const totalCombos = [...byAction.values()].reduce((sum, value) => sum + value, 0) || 1;
+    lines.push("     rozdělení akcí podle kombinací:");
+    for (const [action, combos] of [...byAction].sort((a, b) => b[1] - a[1])) {
+      lines.push(`       ${action.padEnd(22)} ${((combos / totalCombos) * 100).toFixed(1)} %`);
+    }
 
-  lines.push("\n  celá rodina - jak často která ruka sází napříč deskami:");
-  lines.push(renderHandGridBlock(familyBettingBands(pack.rules), "    ", { preserveOrder: true }));
+    lines.push("     jak často která ruka sází nebo zvyšuje napříč deskami:");
+    lines.push(renderHandGridBlock(
+      familyBettingBands(decision.rules),
+      "     ",
+      { preserveOrder: true },
+    ));
 
-  lines.push("\n  tři spoty, vybrané tak, aby se lišily:");
-  for (const { label, rule } of digestSamples(pack.rules)) {
-    lines.push(`\n    ${label}: ${spotTitle(rule)}`);
-    lines.push(`    (${rule.sourceDirectory})`);
-    lines.push(renderHandGridBlock(rule.buckets, "      "));
+    const sample = digestSamples(decision.rules)[0];
+    if (sample !== undefined) {
+      lines.push(`     ${sample.label}: ${spotTitle(sample.rule)}`);
+      lines.push(`     (${sample.rule.sourceDirectory})`);
+      lines.push(renderHandGridBlock(sample.rule.buckets, "       "));
+    }
   }
 
   lines.push("\n  Přijetím říkáš, že tahle strategie je k trénování v pořádku;");
