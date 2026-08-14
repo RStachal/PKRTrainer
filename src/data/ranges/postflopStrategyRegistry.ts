@@ -24,6 +24,7 @@ import {
   riverProductionStrategyPacks,
 } from "./riverProductionStrategyResolver";
 import type { TurnStrategyPack } from "./turnStrategyPack";
+import { createRiverSolvedStrategyResolverChain } from "./riverStrategyResolver";
 import {
   createTurnSolvedStrategyResolverChain,
   turnSolvedStrategyPacks,
@@ -63,6 +64,13 @@ export function createPostflopStrategyResolverWithProductionFallback(
   // Left undefined, the chain reads the solved packs late, so families that
   // finish downloading mid-session are used instead of being missed.
   const turnSolvedResolver = createTurnSolvedStrategyResolverChain(turnSolvedPacks);
+  // River má vyřešený obsah od 13. srpna a tenhle řetězec se ho nikdy nezeptal.
+  //
+  // Turn tu byl a river ne, což je ta horší varianta: vypadá to jako promyšlené
+  // pořadí, ne jako opomenutí. Vyřešený river přitom odmítá všechno, co
+  // nevyřešil, takže před chartovým riverem nic nezastíní - jen dá přednost
+  // odpovědi, jejíž podklad leží na disku.
+  const riverSolvedResolver = createRiverSolvedStrategyResolverChain();
   const turnProductionResolver = createTurnProductionStrategyResolverChain(turnProductionPacks);
   const riverProductionResolver = createRiverProductionStrategyResolverChain(riverProductionPacks);
   const heuristicResolver = createPostflopStrategyResolverChain(heuristicPacks);
@@ -70,6 +78,7 @@ export function createPostflopStrategyResolverWithProductionFallback(
   return (input) => (
     productionResolver(input) ??
     turnSolvedResolver(input) ??
+    riverSolvedResolver(input) ??
     turnProductionResolver(input) ??
     riverProductionResolver(input) ??
     heuristicResolver(input)

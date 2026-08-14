@@ -28,6 +28,10 @@ import {
   solvedTurnSpotConfig,
   solvedTurnSpots,
 } from "../data/ranges/solvedTurnSpotCatalogue";
+import {
+  pickSolvedRiverSpot,
+  solvedRiversForTurnBoard,
+} from "../data/ranges/solvedRiverSpotCatalogue";
 import { mulberry32 } from "../core/rng";
 import { RANKS, SUITS } from "../core/poker";
 import { POSITION_ORDER, type Card, type Position, type Suit } from "../core/types";
@@ -1953,7 +1957,17 @@ function solvedLineConfigForSeed(seed: number): {
       if (!used.has(`${rank}${suit}`)) deck.push({ rank, suit });
     }
   }
-  const river = deck[Math.min(Math.floor(rng() * deck.length), deck.length - 1)];
+  // Pátá karta z vyřešeného riveru, když pro tuhle desku nějaký je.
+  //
+  // Dřív se dolosovala vždycky, a to bylo správně jen dokud vyřešený river
+  // neexistoval. Jakmile existuje, znamená losování, že se hráč na něj trefí s
+  // pravděpodobností jedna ku čtyřiceti čtyřem - tedy že se obsah dodává,
+  // stahuje a nikdo ho nepotká. Bez shody se dolosuje dál: vyrobit river, který
+  // nikdo nespočítal, by bylo horší než heuristika.
+  const solvedRivers = solvedRiversForTurnBoard(config.board);
+  const solvedRiver = pickSolvedRiverSpot(rng(), solvedRivers)?.board[4];
+  const river = solvedRiver
+    ?? deck[Math.min(Math.floor(rng() * deck.length), deck.length - 1)];
   if (river === undefined) return undefined;
 
   return {

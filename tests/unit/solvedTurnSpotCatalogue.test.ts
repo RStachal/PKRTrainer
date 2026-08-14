@@ -138,33 +138,45 @@ describe("solved turn spot catalogue", () => {
     // so three quarters of solved spots asked the resolver an impossible
     // question, were refused, and fell through to the heuristic on a board that
     // had been picked precisely because it was solved.
-    const candidates = solvedTurnSpots().filter((spot) => spot.actionNode === "TURN_OOP_LEAD");
-    expect(candidates.length).toBeGreaterThan(0);
+    // Každé rozhodnutí, ne jen hraní první.
+    //
+    // Většina obsahu jsou dnes uzly pod kořenem - čelení sázce je polovina - a
+    // test, který se ptá jen na `TURN_OOP_LEAD`, by regresi v té většině
+    // nezachytil. Změřeno při zavedení: 4 156 nabídnutých spotů, 4 156
+    // odpovězených, tedy nula nedosažitelného obsahu ve všech třech
+    // rozhodnutích.
+    const nodes = [...new Set(solvedTurnSpots().map((spot) => spot.actionNode))];
+    expect(nodes.length).toBeGreaterThan(1);
 
-    let solverBacked = 0;
-    const attempts = 120;
-    for (let seed = 0; seed < attempts; seed += 1) {
-      const random = (seed + 0.5) / attempts;
-      const picked = pickSolvedTurnSpot(random, candidates)!;
-      const config = solvedTurnSpotConfig(picked, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, random);
-      if (config === undefined) continue;
-      const generated = generatePostflopSpot({
-        seed,
-        strategyResolver: createDefaultPostflopStrategyResolver(),
-        allowFallback: true,
-        ...config,
-      });
-      const source = generated.strategySource;
-      if (source.kind === "STRATEGY_PACK" && source.provenance === "SOLVER_BACKED") {
-        solverBacked += 1;
+    for (const actionNode of nodes) {
+      const candidates = solvedTurnSpots().filter((spot) => spot.actionNode === actionNode);
+      expect({ actionNode, some: candidates.length > 0 }).toEqual({ actionNode, some: true });
+
+      let solverBacked = 0;
+      const attempts = 60;
+      for (let seed = 0; seed < attempts; seed += 1) {
+        const random = (seed + 0.5) / attempts;
+        const picked = pickSolvedTurnSpot(random, candidates)!;
+        const config = solvedTurnSpotConfig(picked, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, random);
+        if (config === undefined) continue;
+        const generated = generatePostflopSpot({
+          seed,
+          strategyResolver: createDefaultPostflopStrategyResolver(),
+          allowFallback: true,
+          ...config,
+        });
+        const source = generated.strategySource;
+        if (source.kind === "STRATEGY_PACK" && source.provenance === "SOLVER_BACKED") {
+          solverBacked += 1;
+        }
+        // Hero's cards must be two of the board's absentees.
+        const board = new Set(generated.board.map((c) => `${c.rank}${c.suit}`));
+        for (const heroCard of generated.heroCards) {
+          expect(board.has(`${heroCard.rank}${heroCard.suit}`)).toBe(false);
+        }
       }
-      // Hero's cards must be two of the board's absentees.
-      const board = new Set(generated.board.map((c) => `${c.rank}${c.suit}`));
-      for (const heroCard of generated.heroCards) {
-        expect(board.has(`${heroCard.rank}${heroCard.suit}`)).toBe(false);
-      }
+      expect({ actionNode, solverBacked }).toEqual({ actionNode, solverBacked: attempts });
     }
-    expect(solverBacked).toBe(attempts);
   });
 
   it("picks the same spot for the same seed", () => {

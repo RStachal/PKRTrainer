@@ -205,24 +205,33 @@ function cardsForHandClass(
  * combination count is the right prior when the solve records which classes are
  * in the range but not how much of each.
  */
-function heroCardsFor(spot: SolvedTurnSpot, random: number): [Card, Card] | undefined {
+export function heroCardsFromClasses(
+  heroHandClasses: readonly string[],
+  board: readonly Card[],
+  random: number,
+): [Card, Card] | undefined {
   const weight = (handClass: string) => (
     handClass.length === 2 ? 6 : handClass.endsWith("s") ? 4 : 12
   );
-  const total = spot.heroHandClasses.reduce((sum, item) => sum + weight(item), 0);
+  const total = heroHandClasses.reduce((sum, item) => sum + weight(item), 0);
   if (total === 0) return undefined;
 
   let cursor = Math.min(Math.max(random, 0), 0.999999) * total;
-  for (const handClass of spot.heroHandClasses) {
+  for (const handClass of heroHandClasses) {
     cursor -= weight(handClass);
     if (cursor < 0) {
       // The second draw reuses the same number, deliberately: one random value
       // per spot keeps a seed reproducing the same hand, which is what the seed
       // box is for.
-      return cardsForHandClass(handClass, spot.board, random);
+      return cardsForHandClass(handClass, board, random);
     }
   }
   return undefined;
+}
+
+/** Ruka, kterou hrdina v tomhle turnovém spotu může držet. */
+function heroCardsFor(spot: SolvedTurnSpot, random: number): [Card, Card] | undefined {
+  return heroCardsFromClasses(spot.heroHandClasses, spot.board, random);
 }
 
 /** "UTG_1" as the solves write it, "UTG+1" as the product does. */
