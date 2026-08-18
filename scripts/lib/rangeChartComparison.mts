@@ -30,7 +30,7 @@ const TOTAL_COMBOS = 1326;
  */
 const SEAT_ORDER: readonly Position[] = ["UTG", "UTG+1", "UTG+2", "LJ", "HJ", "CO", "BTN", "SB"];
 
-const CHART_SEAT_NAMES: Readonly<Record<string, Position>> = {
+export const CHART_SEAT_NAMES: Readonly<Record<string, Position>> = {
   utg: "UTG",
   "utg1": "UTG+1",
   "utg+1": "UTG+1",
