@@ -23,6 +23,7 @@ import type { TrainingProfile } from "../../src/core/trainingProfile";
  * riverový manifest, spadne to hned - ne za měsíc.
  */
 const MANIFEST_STREETS: readonly { street: PostflopStreet; marker: string }[] = [
+  { street: "FLOP", marker: "flopSolvedManifest.generated" },
   { street: "TURN", marker: "turnSolvedManifest.generated" },
   { street: "RIVER", marker: "riverSolvedManifest.generated" },
 ];

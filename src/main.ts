@@ -91,6 +91,7 @@ import { mttProductionImportSlotId } from "./data/ranges/mttImportSlotNaming";
 import { mttProductionLazyLoader } from "./data/ranges/mttProductionLazyLoader";
 import { loadSolvedTurnPacks } from "./data/ranges/turnSolvedStrategyPacks";
 import { loadSolvedRiverPacks } from "./data/ranges/riverSolvedStrategyPacks";
+import { loadSolvedFlopPacks } from "./data/ranges/flopSolvedStrategyPacks";
 import { runtimeSolvedTurnPacks } from "./data/ranges/turnSolvedRuntimeRegistry";
 
 /** Oprávnění k vyřešenému turn obsahu; jedno na celý turn, ne na rodinu. */
@@ -1644,6 +1645,9 @@ async function loadSolvedTurnPacksForProfiles(profileKeys: readonly string[]): P
     // se nenačetl, resolver na riveru prostě nic nenajde a řetězec propadne níž
     // - stejně jako když ta rodina ještě neexistuje.
     loadSolvedRiverPacks(profileKey).catch(() => []),
+    // Flop stejnou cestou. Když se nenačte, odpoví texturní agregát jako dřív -
+    // tedy o stupeň méně přesně, ne vůbec.
+    loadSolvedFlopPacks(profileKey).catch(() => []),
   ]));
 }
 

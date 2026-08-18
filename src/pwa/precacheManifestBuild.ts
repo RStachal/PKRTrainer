@@ -42,7 +42,7 @@ export function isPreflopEquityAsset(fileName: string): boolean {
  */
 export function isSolvedStreetAsset(fileName: string): boolean {
   const baseName = fileName.replace(/\\/g, "/").split("/").pop() ?? "";
-  return /^mtt-(turn|river)-solved-[a-z0-9-]+-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
+  return /^mtt-(flop|turn|river)-solved-[a-z0-9-]+-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
 }
 
 /** Assets the app fetches when it needs them, so they stay off the install path. */
@@ -72,7 +72,9 @@ export function mttProductionChunkNameForModuleId(moduleId: string): string | nu
   // 4,4 MB - celý solverový obsah se ocitl na instalační cestě.
   const street = normalized.includes("/ranges/turn/")
     ? "turn"
-    : normalized.includes("/ranges/river/") ? "river" : null;
+    : normalized.includes("/ranges/river/")
+      ? "river"
+      : normalized.includes("/ranges/flop/") ? "flop" : null;
   if (
     street !== null &&
     (fileName.endsWith(".generated.json") || fileName.endsWith(".generated.ts"))

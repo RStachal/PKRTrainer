@@ -24,6 +24,7 @@ import {
   riverProductionStrategyPacks,
 } from "./riverProductionStrategyResolver";
 import type { TurnStrategyPack } from "./turnStrategyPack";
+import { createFlopSolvedStrategyResolverChain } from "./flopSolvedStrategyResolver";
 import { createRiverSolvedStrategyResolverChain } from "./riverStrategyResolver";
 import {
   createTurnSolvedStrategyResolverChain,
@@ -55,6 +56,10 @@ export function createPostflopStrategyResolverWithProductionFallback(
   turnSolvedPacks?: readonly TurnStrategyPack[],
 ): PostflopStrategyResolver {
   const productionResolver = createFlopProductionStrategyResolverChain(productionPacks);
+  // Vyřešený flop stojí před chartovým, protože odpovídá na konkrétní desku,
+  // kterou někdo doopravdy spočítal, kdežto chartový na třídu textury. Kde
+  // přesná odpověď není, se vyřešený flop přizná a agregát odpoví jako dosud.
+  const flopSolvedResolver = createFlopSolvedStrategyResolverChain();
   // The solved packs go ahead of the chart-derived turn packs, because they are
   // the only turn content that names the run it came from. Both refuse spots
   // they were not solved for, so the ordering decides nothing except which of
@@ -76,6 +81,7 @@ export function createPostflopStrategyResolverWithProductionFallback(
   const heuristicResolver = createPostflopStrategyResolverChain(heuristicPacks);
 
   return (input) => (
+    flopSolvedResolver(input) ??
     productionResolver(input) ??
     turnSolvedResolver(input) ??
     riverSolvedResolver(input) ??

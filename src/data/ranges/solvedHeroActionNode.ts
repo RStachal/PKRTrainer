@@ -26,11 +26,24 @@ export type SolvedHero = NonNullable<NonNullable<TurnStrategyRule["spot"]>["hero
  */
 export function actionNodeForSolvedHero(
   hero: SolvedHero | undefined,
-  street: Extract<PostflopStreet, "TURN" | "RIVER">,
+  street: Extract<PostflopStreet, "FLOP" | "TURN" | "RIVER">,
+  potType?: string,
 ): PostflopActionNode | undefined {
   // Uzel, který neví, čí strategii drží, nepojmenuje žádné rozhodnutí. Tvářit
   // se, že ano, je horší než neodpovědět.
   if (hero === undefined) return undefined;
+  if (street === "FLOP") {
+    if (hero.facingBet) return "FLOP_FACING_BET";
+    // Kdo drží iniciativu, pokračuje v ní; jméno uzlu se liší podle typu potu,
+    // protože c-bet ve tříbetovém potu je jiná situace než v jednou zvýšeném.
+    if (hero.isAggressor) {
+      return potType === "THREE_BET_POT" ? "THREE_BET_POT_CBET" : "SINGLE_RAISED_POT_CBET";
+    }
+    // Bez iniciativy a na tahu první: lead. Produkt ho zná jen mimo pozici -
+    // hráč v pozici, který hraje po checku bez iniciativy, jméno nemá, a
+    // vyrobit mu ho by znamenalo dodat obsah, který trenažér nikdy nerozdá.
+    return hero.side === "OOP" ? "FLOP_OOP_LEAD" : undefined;
+  }
   if (hero.facingBet) return street === "TURN" ? "TURN_FACING_BET" : "RIVER_FACING_BET";
   // Na tahu první s iniciativou je pokračování v agresi; na tahu první bez ní je
   // lead do hráče, který ji má. Role, ne sedačka: small blind, který otevřel, je
