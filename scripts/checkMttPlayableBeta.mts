@@ -298,9 +298,10 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       + `${solvedFlopRules} solved decisions across ${solvedFlopBoards} distinct flops. `
       + "It answers those exact boards and declines every other; the texture-aggregate pilots "
       + "still answer everywhere else, so this is precision added, not coverage traded.",
-      "Solved FLOP content has no player-review path yet, so it stays LOW - while the "
-      + "texture-aggregate pilots in front of which it sits claim MEDIUM without a reader. "
-      + "The weaker content therefore outranks the stronger one on the confidence ladder.",
+      "Solved FLOP content has a review path (mtt:review-turn-family --street=FLOP) but no "
+      + "reader yet, so it stays LOW - while the texture-aggregate pilots in front of which it "
+      + "sits claim MEDIUM without a reader either. The weaker content therefore outranks the "
+      + "stronger one on the confidence ladder, and MEDIUM is the production gate.",
     ]),
     ...decisionLimit("TURN", turnDecisions),
     ...decisionLimit("RIVER", riverDecisions),
@@ -308,7 +309,8 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       `Solved RIVER content ships as ${riverFamilies.length} families, ` +
       `${riverSolvedRivers} solved rivers across ${riverDistinctBoards} distinct five-card boards. ` +
       "It answers only those exact boards and declines every other; the river is the narrowest content the app has.",
-      "Solved RIVER content has no player-review path yet, so it stays LOW and cannot reach production on its own.",
+      "Solved RIVER content has a review path (mtt:review-turn-family --street=RIVER) but no "
+      + "reader yet, so it stays LOW and cannot reach production on its own.",
     ]),
     ...(turnFamilies.some((family) => family.confidence !== "LOW") ? [] : [
       "No solved TURN family has been player-reviewed yet, so turn content is shipped content, not verified content.",

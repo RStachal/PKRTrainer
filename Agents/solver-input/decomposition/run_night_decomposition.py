@@ -38,6 +38,7 @@ import json
 from collections import defaultdict
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -46,11 +47,30 @@ from datetime import datetime, timedelta
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 # Nejdelší okno, které se ještě bere jako noční běh, v hodinách.
-MAX_WINDOW_HOURS = 11
+#
+# Dvanáct, ne jedenáct. Okno je dnes 21:00-08:00, tedy přesně jedenáct hodin, a
+# proti stropu jedenáct by o celé noci rozhodovaly zlomky vteřiny mezi spuštěním
+# úlohy a načtením skriptu. Guard má chytat spuštění mimo noc - devátou ranní,
+# která dá okno dvacet dva hodin - a to chytá dvanáctka stejně dobře.
+MAX_WINDOW_HOURS = 12
+
+# Kolik místa na disku musí zbývat, aby se pustila další deska, v gigabajtech.
+#
+# Solver na plný disk nereaguje chybou, kterou by šlo přečíst: zapíše, co se
+# vejde. Výsledek je useknutý soubor, a ten je horší než chybějící, protože
+# vypadá jako hotová práce. Osm gigabajtů je s rezervou: deska stojí kolem 34 MB,
+# ale číst se k ní musí monolitický checkpoint o 395 MB, a Windows na skoro plném
+# systémovém disku dělá vlastní problémy.
+MIN_FREE_GB = 8
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 OUTPUT_BASE = os.path.join(REPO, "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver")
 PARAM_ROOT = os.path.join(REPO, "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters")
 WORK = os.path.join(REPO, "artifacts/decomposition")
+
+
+def free_gb() -> float:
+    """Volné místo na svazku, kam se rozklad zapisuje."""
+    return shutil.disk_usage(WORK if os.path.isdir(WORK) else REPO).free / (1024 ** 3)
 
 
 def log(message: str) -> None:
@@ -115,6 +135,7 @@ def main():
         return
 
     os.makedirs(WORK, exist_ok=True)
+    log(f"na disku volno {free_gb():.1f} GB (hranice pro další desku je {MIN_FREE_GB} GB)")
     boards = board_parameter_files()
 
     def depth(key):
@@ -180,6 +201,17 @@ def main():
         remaining = (deadline - datetime.now()).total_seconds() / 60
         if remaining <= 0:
             log("deadline reached; stopping between boards")
+            turn_exhausted = False
+            break
+        available = free_gb()
+        if available < MIN_FREE_GB:
+            # Zastavit mezi deskami je jediné místo, kde plný disk nic nestojí.
+            # Uprostřed desky by solver zapsal, co se vejde, a useknutý dump
+            # vypadá jako hotová práce.
+            log(
+                f"stopping: na disku zbývá {available:.1f} GB, což je pod hranicí "
+                f"{MIN_FREE_GB} GB. Další deska by se nemusela dopsat celá."
+            )
             turn_exhausted = False
             break
         if board_minutes:
@@ -400,6 +432,10 @@ def run_river_phase(deadline, workers, coverage, budget):
     layer_minutes = []
     for row in picked:
         remaining = (deadline - datetime.now()).total_seconds() / 60
+        available = free_gb()
+        if available < MIN_FREE_GB:
+            log(f"  stopping river phase: na disku zbývá {available:.1f} GB")
+            break
         if remaining <= 0:
             log("  deadline reached; stopping river phase")
             break

@@ -99,10 +99,21 @@ def write_param(item, param_path, dump_path):
 def solve_one(item, out_dir, dry):
     name = item_id(item)
     dump_path = os.path.join(out_dir, f"{name}.json")
+    # Solver zapisuje vedle a pod finální jméno to jde až ověřené.
+    #
+    # Dosud psal rovnou do `<name>.json` a hotovost se poznávala podle "soubor
+    # existuje a není prázdný". Jenže tenhle běh se ukončuje zvenčí pořád: v
+    # deadlinu, po timeoutu, po zabití driveru, a nově i když dojde místo na
+    # disku. Useknutý zápis pak existuje, není prázdný - a počítá se jako hotová
+    # podhra. Deska se tím uzavře jako kompletní, na review bráně projde a chyba
+    # vyjde najevo až u generátoru packů, tedy o týdny později a na jiném místě.
+    #
+    # `.part` nekončí na `.json`, takže ho žádné počítání hotových podher nevidí.
+    part_path = f"{dump_path}.part"
     param_path = os.path.join(out_dir, f"{name}.txt")
     if os.path.exists(dump_path) and os.path.getsize(dump_path) > 0:
         return name, "skip", 0.0, ""
-    write_param(item, param_path, dump_path)
+    write_param(item, param_path, part_path)
     if dry:
         return name, "planned", 0.0, ""
 
@@ -121,10 +132,19 @@ def solve_one(item, out_dir, dry):
         if "Total exploitability" in line:
             exploitability = line.strip().split()[-2]
             break
-    if not os.path.exists(dump_path):
+    if not os.path.exists(part_path):
         # The solver dies silently on some trees. Say so rather than leaving a
         # gap that looks like it was never planned.
         return name, f"FAILED exit={result.returncode}", elapsed, exploitability
+    try:
+        json.load(open(part_path, encoding="utf8"))
+    except Exception:
+        # Rozparsovat se to musí tady, protože tohle je jediné místo, kde se ještě
+        # ví, že soubor právě vznikl. Stojí to jednotky milisekund proti solvu,
+        # který trvá minuty.
+        os.remove(part_path)
+        return name, f"TRUNCATED exit={result.returncode}", elapsed, exploitability
+    os.replace(part_path, dump_path)
     return name, "solved", elapsed, exploitability
 
 
