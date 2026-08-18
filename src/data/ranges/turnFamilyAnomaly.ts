@@ -43,6 +43,17 @@ export interface TurnFamilyProfile {
   /** Nejčastější akce a její podíl. */
   topAction: string;
   topShare: number;
+  /**
+   * O kolik se obrana proti sázce liší od kurzů, které ta sázka nabízí.
+   *
+   * Kdo sází `B` do potu `P - B`, potřebuje, aby soupeř složil `B / P`. Skutečná
+   * frekvence se odchýlí - obránce má pozici, equity a soupeřova range není
+   * čistě polární - ale je to jediné číslo o téhle strategii, které nepotřebuje
+   * čtenáře. Naměřeno napříč rodinami: 0,0 až 5,8 bodu.
+   *
+   * `undefined` znamená rodinu bez čelících rozhodnutí, ne nulovou odchylku.
+   */
+  defenceGap?: number;
   anomalies: readonly TurnAnomaly[];
 }
 
@@ -108,6 +119,43 @@ function outlierBoundsWithout(others: readonly number[]): { low: number; high: n
   };
 }
 
+const SIZED_ACTION = /^(BET|RAISE|ALLIN|ALL_IN)\s+([\d.]+)$/i;
+
+/**
+ * Rozdíl mezi tím, jak často se rodina proti sázce skládá, a kurzy, které jí ta
+ * sázka nabízí.
+ *
+ * Slouží k řazení fronty ke čtení. Čtení je jediná cesta z LOW ven a je to práce
+ * pro člověka; nabídnout mu osmnáct rodin bez pořadí znamená, že začne u té
+ * první. Tohle číslo řekne, kde je odchylka největší - a odchylka je přesně to,
+ * co má člověk posoudit.
+ */
+export function defenceGapOf(pack: TurnStrategyPack): number | undefined {
+  let odds = 0;
+  let folds = 0;
+  let count = 0;
+  for (const rule of pack.rules) {
+    if (rule.spot?.hero?.facingBet !== true) continue;
+    const pot = rule.spot.potChips;
+    if (pot <= 0) continue;
+    let bet: number | undefined;
+    for (let index = (rule.spot.priorLine ?? []).length - 1; index >= 0; index -= 1) {
+      const sized = SIZED_ACTION.exec(rule.spot.priorLine[index].trim());
+      if (sized !== null) { bet = Number(sized[2]); break; }
+    }
+    if (bet === undefined) continue;
+    const total = rule.buckets.reduce((sum, bucket) => sum + bucket.combos, 0);
+    if (total === 0) continue;
+    const folded = rule.buckets
+      .filter((bucket) => bucket.action.trim().toUpperCase() === "FOLD")
+      .reduce((sum, bucket) => sum + bucket.combos, 0);
+    odds += bet / pot;
+    folds += folded / total;
+    count += 1;
+  }
+  return count < 20 ? undefined : Math.abs(folds / count - odds / count);
+}
+
 export function profileTurnFamilies(
   packs: readonly TurnStrategyPack[],
 ): TurnFamilyProfile[] {
@@ -120,6 +168,7 @@ export function profileTurnFamilies(
     const [topAction, topCombos] = [...byAction].sort((a, b) => b[1] - a[1])[0] ?? ["", 0];
     return {
       familyId: pack.familyIds[0] ?? pack.id,
+      defenceGap: defenceGapOf(pack),
       // Uzel a strana stolu, protože jinak se srovnává neporovnatelné.
       //
       // U uzlu FACING_BET je „agrese" raise proti sázce, u CBET je to sázka do

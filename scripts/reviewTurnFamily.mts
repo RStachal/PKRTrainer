@@ -61,7 +61,21 @@ if (familyId === undefined) {
   // všechny stejný tvar: posunuté rozdělení akcí přes celou rodinu, ne špatné
   // jednotlivé pravidlo. Právě to jde porovnat strojově.
   const profiles = new Map(profileTurnFamilies(runtimeSolvedTurnPacks).map((row) => [row.familyId, row]));
-  for (const pack of [...runtimeSolvedTurnPacks].sort((a, b) => a.id.localeCompare(b.id))) {
+
+  // Pořadí podle měřené odchylky obrany, ne podle abecedy.
+  //
+  // Osmnáct rodin nikdo nepřečte najednou a seřazené podle jména znamená, že se
+  // začne u té první - tedy náhodně. Odchylka obrany od nabízených kurzů je
+  // jediné číslo o téhle strategii, které nepotřebuje čtenáře, takže je to
+  // nejlepší dostupné vodítko, kde se dívat dřív. Rodina bez čelících
+  // rozhodnutí jde na konec: o té tohle číslo neříká nic.
+  const gapOf = (pack: (typeof runtimeSolvedTurnPacks)[number]) => (
+    profiles.get(pack.familyIds[0] ?? pack.id)?.defenceGap ?? -1
+  );
+  for (const pack of [...runtimeSolvedTurnPacks].sort((a, b) => {
+    const byGap = gapOf(b) - gapOf(a);
+    return byGap !== 0 ? byGap : a.id.localeCompare(b.id);
+  })) {
     const family = pack.familyIds[0] ?? pack.id;
     const verdict = verdicts.find((item) => item.familyId === family);
     const stale = verdict !== undefined && verdict.contentHash !== pack.contentHash;
@@ -75,14 +89,24 @@ if (familyId === undefined) {
     const aggression = profile === undefined
       ? "         "
       : `${(profile.aggressionShare * 100).toFixed(0).padStart(3)} % sází`;
-    console.log(`${flag} ${pack.confidence.padEnd(6)} ${family.padEnd(42)} ${aggression}  ${state}`);
+    const gap = profile?.defenceGap;
+    const defence = gap === undefined
+      ? "     -    "
+      : `${(gap * 100).toFixed(1).padStart(5)} b obr.`;
+    console.log(`${flag} ${pack.confidence.padEnd(6)} ${family.padEnd(42)} ${aggression}  ${defence}  ${state}`);
     for (const anomaly of profile?.anomalies ?? []) console.log(`      -> ${anomaly.detail}`);
   }
 
   const flagged = [...profiles.values()].filter((row) => row.anomalies.length > 0).length;
   console.log(flagged === 0
-    ? "\nŽádná rodina se od ostatních nápadně neliší; čti v libovolném pořadí."
-    : `\n${flagged} rodin se liší od ostatních - začni u nich.`);
+    ? "\nŽádná rodina se nápadně neliší rozdělením akcí."
+    : `\n${flagged} rodin se liší rozdělením akcí - u těch je vykřičník.`);
+  console.log(
+    "Seřazeno podle sloupce \"b obr.\": o kolik procentních bodů se obrana proti sázce"
+    + "\nliší od kurzů, které ta sázka nabízí. Je to jediné číslo o téhle strategii,"
+    + "\nkteré nevzniklo čtením, takže je to nejlepší vodítko, kde začít. Malá"
+    + "\nodchylka neznamená, že je rodina v pořádku.",
+  );
   console.log("Čtení jedné rodiny: npm run mtt:turn-review -- --family=<ID>");
 } else {
   const pack = runtimeSolvedTurnPacks.find((item) => item.familyIds.includes(familyId));
