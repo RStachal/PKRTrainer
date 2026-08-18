@@ -19,6 +19,7 @@ import { solvedFlopManifest } from "../src/data/ranges/flopSolvedManifest.genera
 import { loadSolvedFlopPacks } from "../src/data/ranges/flopSolvedStrategyPacks.ts";
 import { runtimeSolvedFlopPacks } from "../src/data/ranges/flopSolvedRuntimeRegistry.ts";
 import { shippedContentRisks } from "./lib/mttContentRisks.mts";
+import { depthStrataLimit } from "./lib/preflopDepthStrata.mts";
 
 export const MTT_PLAYABLE_BETA_SCOPE = "MTT_PLAYABLE_BETA_V1" as const;
 
@@ -281,6 +282,10 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
     // rather than errors: the content is the best available, and blocking would
     // withhold the beta entirely rather than disclose what is in it.
     ...contentRisks.limits,
+    // Měřeno proti vlastněnému nezávislému zdroji, ne odvozeno z kódu: packy
+    // vypadají v pořádku, protože záznam pro každý kbelík existuje - jen jich
+    // několik vrací tutéž range.
+    ...(depthStrataLimit("OFF") === undefined ? [] : [depthStrataLimit("OFF") as string]),
     "The seven FLOP families are scoped pilots, not complete postflop coverage.",
     // Turn obsah se dodává a brána o něm dosud nevěděla. Je to nejrozsáhlejší
     // solverem podložený obsah v aplikaci a zároveň nejméně prověřený: review

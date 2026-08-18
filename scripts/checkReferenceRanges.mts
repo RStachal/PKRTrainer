@@ -4,7 +4,9 @@ import {
   CHART_SEAT_NAMES,
   combosInClass,
   packWidth,
+  shippedPreflopPack,
 } from "./lib/rangeChartComparison.mts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import type { Position, StackBucket } from "../src/core/types";
 
 /**
@@ -77,7 +79,12 @@ if (!existsSync(CORPUS)) {
 }
 const pages = (JSON.parse(readFileSync(CORPUS, "utf8")) as { pages: ReferencePage[] }).pages;
 
+// Bez tohohle se porovnává kandidátský pack, ne ten, který hráč dostane. Před
+// načtením registru totiž produkční verze v katalogu ještě není.
+await loadCompleteMttProductionRegistry();
+
 console.log("Naše otevírací ranges proti nezávislému vlastněnému zdroji");
+console.log(`měřený pack: ${shippedPreflopPack("OFF")?.id ?? "žádný"}`);
 console.log("");
 console.log(
   "spot".padEnd(22) + "zdroj".padStart(8) + "my".padStart(8) + "rozdíl".padStart(9)

@@ -1,5 +1,3 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
 import { createRangeStoreFromRangePack } from "../../src/data/rangeStore";
 import { allMttPreflopRangePacks } from "../../src/data/ranges/mttPreflopRangePacks";
 import type { AnteMode, Position, StackBucket } from "../../src/core/types";
@@ -136,13 +134,35 @@ export function playedHands(clusters: readonly Cluster[]): string[] {
   return clusters.filter((cluster) => cluster !== fold).flatMap((cluster) => cluster.hands);
 }
 
-export function packWidth(ante: AnteMode, position: Position, bucket: StackBucket): { pct: number; opens: string[] } | null {
-  const pack = allMttPreflopRangePacks.find((item) => (
+/**
+ * Pack, který se má měřit: ten, co se dodává, ne ten, ze kterého vznikl.
+ *
+ * `allMttPreflopRangePacks` obsahuje kandidáta i produkční verzi a `find` bral
+ * dosud první, co projde filtrem. Před načtením produkčního registru je to
+ * kandidát, po něm produkční pack - takže totéž volání vracelo jednou 507
+ * záznamů a jindy 487, podle toho, co se stihlo naimportovat dřív. Měření pak
+ * popisovalo obsah, který hráč nedostane.
+ *
+ * Rozdíl není kosmetický: kandidát rozlišuje na UTG čtyři hloubkové vrstvy,
+ * produkční pack dvě. Celá první várka porovnání s nezávislým zdrojem tím pádem
+ * měřila lepší data, než se doopravdy dodávají.
+ */
+export function shippedPreflopPack(ante: AnteMode) {
+  const matching = allMttPreflopRangePacks.filter((item) => (
     item.dimensions.tableFormat === "FULL_RING_9" &&
     item.dimensions.blindSpeed === "REGULAR" &&
     item.dimensions.ante === ante &&
     item.records.length > 0
   ));
+  // Žádný fallback na kandidáta. Když produkční pack v katalogu není, znamená to,
+  // že volající zapomněl načíst produkční registr - a tiché vrácení kandidáta
+  // udělá z té chyby měření, které vypadá stejně důvěryhodně jako správné.
+  // Prázdná odpověď je poznat hned; o deset bodů posunutá tabulka ne.
+  return matching.find((item) => item.id.includes("-production-"));
+}
+
+export function packWidth(ante: AnteMode, position: Position, bucket: StackBucket): { pct: number; opens: string[] } | null {
+  const pack = shippedPreflopPack(ante);
   if (pack === undefined) return null;
   const entry = createRangeStoreFromRangePack(pack).lookup({ ante, position, bucket, context: "RFI" });
   if (entry === undefined) return null;

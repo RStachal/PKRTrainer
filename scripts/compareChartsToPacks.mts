@@ -8,6 +8,7 @@ import {
   seatsForPage,
   type Cluster,
 } from "./lib/rangeChartComparison.mts";
+import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 
 /**
  * Compare the owner's purchased opening charts against the ranges we teach.
@@ -23,6 +24,10 @@ const jsonDir = jsonFlag === undefined ? "" : jsonFlag.slice("--json=".length);
 if (jsonDir === "" || !existsSync(jsonDir)) {
   throw new Error("--json=<dir> must point at the folder written by exportRangeChartGrids.ps1");
 }
+
+// Bez načteného registru není v katalogu produkční pack a porovnání by měřilo
+// kandidáta, ze kterého vznikl - tedy obsah, který hráč nedostane.
+await loadCompleteMttProductionRegistry();
 
 console.log("Purchased opening charts against the ranges we teach");
 console.log("");
