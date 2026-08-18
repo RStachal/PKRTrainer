@@ -251,14 +251,24 @@ def main():
     log(f"boards worked {done}, already complete {skipped}, failed {failed}")
 
     remaining = (deadline - datetime.now()).total_seconds() / 60
-    budget = river_budget_for(river_budget, turn_exhausted, remaining)
+    # Kolik desek s checkpointem je rozložených. Bez toho by se river pouštěl
+    # jen po úplně vyčerpané frontě, což při dlouhém ocase nenastane dlouho.
+    decomposed = len([
+        name for name in (os.listdir(WORK) if os.path.isdir(WORK) else [])
+        if "__" in name and os.path.exists(os.path.join(WORK, name, "plan.json"))
+    ])
+    turn_coverage = decomposed / len(boards) if boards else 0.0
+    budget = river_budget_for(river_budget, turn_exhausted, remaining, turn_coverage)
     if budget is None:
         log(f"river phase: turnová fronta vyčerpaná, zbývá {remaining:.0f} min okna")
         run_river_phase(deadline, workers, coverage, None)
     elif budget > 0:
         run_river_phase(deadline, workers, coverage, budget)
     elif not turn_exhausted:
-        log("river phase se nespouští: turn není hotový a má přednost")
+        log(
+            "river phase se nespouští: turn není hotový "
+            f"({turn_coverage * 100:.0f} % desek) a má přednost"
+        )
 
 
 # Kratší zbytek okna river nespouští: samotné plánování vrstvy něco stojí a
@@ -266,23 +276,34 @@ def main():
 RIVER_MIN_WINDOW_MIN = 10
 
 
-def river_budget_for(explicit, turn_exhausted, remaining_minutes):
+# Podíl rozložených turnových desek, od kterého se river pouští i s nedodělaným
+# turnem. Zdůvodnění je v `river_budget_for`.
+RIVER_TURN_COVERAGE_FLOOR = 0.9
+
+
+def river_budget_for(explicit, turn_exhausted, remaining_minutes, turn_coverage=0.0):
     """Kolik turnových podher dostane riverovou vrstvu. `None` znamená kolik stihne.
 
-    Rozpočet byl dosud nula a nikdo ho nenastavoval, takže riverová fáze od svého
-    opravení nikdy neběžela. Nula byla přitom správný default jen kvůli pořadí:
-    nedokončený turn blokuje celou rodinu na review bráně, kdežto chybějící river
-    neblokuje nic. To pořadí drží dál - river se pouští až když turnová fronta
-    došla, ne místo ní.
+    Pořadí „turn napřed" bylo správné, dokud turn chyběl po celých rodinách:
+    nedokončená rodina se zasekne na review bráně, kdežto chybějící river
+    neblokuje nic. Při 81 % rozložených desek to platilo.
 
-    Co nedrží, je nula i potom. Turnu zbývá 107 desek, tedy zhruba dvě noci; třetí
-    noc by při nule spálila osm jader na tom, že nemá co dělat. Ocas okna proto
-    dostane river a končí ho deadline, ne číslo vymyšlené dopředu - kolik vrstev
-    se stihne, ví až běh sám.
+    Při 93 % už ne, a je to změřené, ne odhadnuté. Turnu zbývá 41 desek ve třech
+    rodinách, z nichž dvě se už dodávají - je to tedy širší pokrytí u obsahu,
+    který hráč dostane i tak. Riverovou vrstvu má proti tomu **jedna turnová
+    podhra z 2 318** a sedmnáct rodin z osmnácti nemá river vůbec. Mezní hodnota
+    poslední turnové desky je tím pádem malá a mezní hodnota první riverové
+    vrstvy v rodině velká.
+
+    River se proto pouští, když turnová fronta došla **nebo** když je turn nad
+    devadesáti procenty. Ta hranice je volba, ne měření: je to bod, za kterým už
+    zbytek turnu je dlouhý ocas jednotlivých desek, ne chybějící rodiny.
+    Přednost turnu tím nemizí - turnová fáze běží první a river dostane až to,
+    co po ní z okna zbude.
     """
     if explicit > 0:
         return explicit
-    if not turn_exhausted:
+    if not turn_exhausted and turn_coverage < RIVER_TURN_COVERAGE_FLOOR:
         return 0
     return None if remaining_minutes >= RIVER_MIN_WINDOW_MIN else 0
 
