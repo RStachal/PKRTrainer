@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   depthStrataLimit,
+  missingOpenerDimensionLimit,
   preflopDepthStrata,
 } from "../../scripts/lib/preflopDepthStrata.mts";
 import { shippedPreflopPack } from "../../scripts/lib/rangeChartComparison.mts";
@@ -62,5 +63,15 @@ describe("hloubkové vrstvy preflopu", () => {
     );
     expect(limit).toContain(`${buckets} stack depths`);
     expect(limit).toContain(`at most ${most}`);
+  });
+
+  it("hlásí, že obrana proti openu neví, kdo otevřel", async () => {
+    await loadCompleteMttProductionRegistry();
+    const limit = missingOpenerDimensionLimit("OFF");
+    // Dnešní stav: dimenze chybí, takže se to musí hlásit. Až přibude, funkce
+    // vrátí undefined a tenhle test se změní na druhou větev - proto se tu
+    // nefixuje počet záznamů, jen ta vlastnost.
+    expect(limit).toBeDefined();
+    expect(limit).toContain("no dimension for which seat opened");
   });
 });

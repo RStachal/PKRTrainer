@@ -81,3 +81,37 @@ export function depthStrataLimit(ante: AnteMode): string | undefined {
     + "much shorter stack."
   );
 }
+
+
+/**
+ * Uzly, které nerozlišují, kdo hrál před hrdinou.
+ *
+ * `VS_OPEN` je klíčovaný jen podle pozice hrdiny a hloubky stacku. Kdo otevřel,
+ * v záznamu není - schéma pro to nemá místo. Obrana velkého blindu proti UTG a
+ * proti buttonu tak dostane tutéž odpověď, přestože jsou to dvě různé hry.
+ *
+ * Že to není detail, ukázal nezávislý zdroj: tentýž hrdina na téže hloubce se
+ * proti různým otevírajícím brání ranges, které se liší v průměru o 11,7 bodu a
+ * u BB na 22bb až o 26,9 (57 % proti buttonu, 30 % proti rané pozici). Tohle
+ * číslo sem ale nepatří natvrdo - korpus je lokální a brána nesmí věřit ničemu
+ * mimo repozitář. Ověřitelné odsud je to podstatné: dimenze chybí.
+ */
+export function missingOpenerDimensionLimit(ante: AnteMode): string | undefined {
+  const pack = shippedPreflopPack(ante);
+  if (pack === undefined) return undefined;
+  const facing = pack.records.filter((record) => record.context === "VS_OPEN");
+  if (facing.length === 0) return undefined;
+
+  const seats = new Set(facing.map((record) => record.position));
+  const buckets = new Set(facing.map((record) => record.bucket));
+  // Když by dimenze existovala, bylo by záznamů víc než průsečík pozic a
+  // hloubek - na každého možného otvírače jeden. Rovnost je ten důkaz.
+  if (facing.length > seats.size * buckets.size) return undefined;
+
+  return (
+    `Facing an open is keyed by hero seat and stack depth only: ${facing.length} VS_OPEN records `
+    + `for ${seats.size} seats x ${buckets.size} depths, with no dimension for which seat opened. `
+    + "Defending the big blind against an early-position raise and against a button steal therefore "
+    + "return the same range, though they are different games."
+  );
+}
