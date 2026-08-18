@@ -161,6 +161,38 @@ export function shippedPreflopPack(ante: AnteMode) {
   return matching.find((item) => item.id.includes("-production-"));
 }
 
+/**
+ * $EV (ICM) pack téhož formátu. Není produkční a nemá být - je odvozený z
+ * bubliny, tedy přesně ten druh dat, který produkční brána odmítá pustit dál než
+ * do náhledu. Měřit ho ale smysl má: dokud nevíme, jak daleko od nezávislého
+ * ICM zdroje leží, nevíme ani, jestli je náhled užitečný, nebo matoucí.
+ */
+export function icmPreflopPack(ante: AnteMode) {
+  return allMttPreflopRangePacks.find((item) => (
+    item.dimensions.tableFormat === "FULL_RING_9" &&
+    item.dimensions.blindSpeed === "REGULAR" &&
+    item.dimensions.ante === ante &&
+    item.dimensions.evModel === "DOLAR_EV" &&
+    item.records.length > 0
+  ));
+}
+
+/** Otevírací šířka konkrétního packu, aby šlo měřit i něco jiného než produkci. */
+export function openingWidthOf(
+  pack: ReturnType<typeof shippedPreflopPack>,
+  ante: AnteMode,
+  position: Position,
+  bucket: StackBucket,
+): { pct: number; opens: string[] } | null {
+  if (pack === undefined) return null;
+  const entry = createRangeStoreFromRangePack(pack).lookup({ ante, position, bucket, context: "RFI" });
+  if (entry === undefined) return null;
+  const opens = Object.entries(entry.actions)
+    .filter(([, actions]) => actions.some((action) => action !== "FOLD"))
+    .map(([handClass]) => handClass);
+  return { pct: opens.reduce((sum, h) => sum + combosInClass(h), 0) / TOTAL_COMBOS * 100, opens };
+}
+
 export function packWidth(ante: AnteMode, position: Position, bucket: StackBucket): { pct: number; opens: string[] } | null {
   const pack = shippedPreflopPack(ante);
   if (pack === undefined) return null;

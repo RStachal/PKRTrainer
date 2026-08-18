@@ -3,6 +3,8 @@ import { existsSync, readFileSync } from "node:fs";
 import {
   CHART_SEAT_NAMES,
   combosInClass,
+  icmPreflopPack,
+  openingWidthOf,
   packWidth,
   shippedPreflopPack,
 } from "./lib/rangeChartComparison.mts";
@@ -139,4 +141,93 @@ if (rows.length > 0) {
 if (unmatched.length > 0) {
   console.log("");
   console.log(`nespárováno (${unmatched.length}): ${unmatched.slice(0, 8).join(", ")}`);
+}
+
+
+/**
+ * ICM otevírání: náš $EV pack proti nezávislému ICM zdroji.
+ *
+ * Zdroj rozlišuje ICM stránky podle toho, čí je pohled, a pozná se to z legendy,
+ * ne z názvu. Stránka s `flatcall` popisuje hráče, který **brání** cizí open;
+ * stránka s `Fold vs 3bet` nebo `GTO all in` popisuje hráče, který **sám
+ * otevřel** a říká, co udělá, když ho někdo zvedne. Jen ta druhá skupina je RFI
+ * a jen ji tady porovnávám - první patří k `VS_OPEN` a je to samostatný uzel.
+ *
+ * Kdo je hrdina: první sedadlo v názvu. `ICM10-btn55bb-bb13bb` je butonových
+ * 55bb proti velkému blindu s třinácti. Druhé sedadlo je protihráč, jehož stack
+ * ICM rozhodnutí posouvá - a právě proto je ICM ICM.
+ *
+ * Stránky, u kterých si pohledem jistý nejsem, se nepočítají. Radši menší
+ * tabulka než tabulka, která tiše míchá dva různé uzly - to je stejné pravidlo,
+ * podle kterého vyřešený turn odmítá odpovídat na desky, na kterých neběžel.
+ */
+function icmHeroPerspective(page: ReferencePage): boolean {
+  const labels = Object.values(page.legend).join(" | ").toLowerCase();
+  if (labels.includes("flatcall") || labels.includes("flat call")) return false;
+  if (/vs\s*(all\s*in|allin|jam)/.test(labels)) return false;
+  return /fold vs 3bet|all in|jam|call/.test(labels);
+}
+
+const icmPack = icmPreflopPack("OFF");
+const icmPages = pages.filter((page) => (
+  page.group.startsWith("ICM") && page.stacks.length > 0 && icmHeroPerspective(page)
+));
+
+console.log("");
+console.log("");
+console.log("ICM otevírání proti nezávislému ICM zdroji");
+console.log(`měřený pack: ${icmPack?.id ?? "žádný"}`);
+console.log("");
+console.log(
+  "spot".padEnd(26) + "zdroj".padStart(8) + "my".padStart(8) + "rozdíl".padStart(9)
+  + "  jen zdroj / jen my",
+);
+
+const icmRows: { label: string; gap: number; detail: string }[] = [];
+const icmDeclined = new Map<string, number>();
+const decline = (why: string) => icmDeclined.set(why, (icmDeclined.get(why) ?? 0) + 1);
+
+for (const page of icmPages) {
+  const hero = page.stacks[0];
+  const seat = CHART_SEAT_NAMES[hero.seat.toLowerCase()];
+  if (seat === undefined) { decline(`neznámé sedadlo (${hero.seat})`); continue; }
+  if (seat === "SB" || (hero.seat.toUpperCase() === "BB")) { decline("blind neotevírá jako RFI"); continue; }
+  const ours = openingWidthOf(icmPack, "OFF", seat, hero.bb as never);
+  if (ours === null) { decline(`hloubku ${hero.bb}bb pack nezná`); continue; }
+
+  const theirs = raiseFirstHands(page);
+  const theirSet = new Set(theirs);
+  const ourSet = new Set(ours.opens);
+  const onlyTheirs = theirs.filter((hand) => !ourSet.has(hand));
+  const onlyOurs = ours.opens.filter((hand) => !theirSet.has(hand));
+  const gap = (
+    onlyTheirs.reduce((sum, hand) => sum + combosInClass(hand), 0)
+    + onlyOurs.reduce((sum, hand) => sum + combosInClass(hand), 0)
+  ) / TOTAL_COMBOS * 100;
+
+  const villain = page.stacks[1];
+  icmRows.push({
+    label: `${seat} ${hero.bb}bb`,
+    gap,
+    detail:
+      `${seat} ${hero.bb}bb${villain === undefined ? "" : ` vs ${villain.seat}${villain.bb}`}`.padEnd(26)
+      + `${widthOf(theirs).toFixed(1)}%`.padStart(8)
+      + `${ours.pct.toFixed(1)}%`.padStart(8)
+      + `${gap.toFixed(1)}b`.padStart(9)
+      + `  ${onlyTheirs.length} / ${onlyOurs.length}`,
+  });
+}
+
+for (const row of [...icmRows].sort((left, right) => right.gap - left.gap).slice(0, 20)) {
+  console.log(row.detail);
+}
+console.log("");
+console.log(`porovnáno ICM spotů: ${icmRows.length} z ${icmPages.length} stránek s pohledem otevírajícího`);
+if (icmRows.length > 0) {
+  const mean = icmRows.reduce((sum, row) => sum + row.gap, 0) / icmRows.length;
+  const worst = [...icmRows].sort((left, right) => right.gap - left.gap)[0];
+  console.log(`průměrná neshoda: ${mean.toFixed(1)} bodu, největší ${worst.gap.toFixed(1)} (${worst.label})`);
+}
+for (const [why, count] of [...icmDeclined].sort((left, right) => right[1] - left[1])) {
+  console.log(`  nepočítáno: ${count}x ${why}`);
 }
