@@ -33,7 +33,12 @@ function manifestsOnDisk(): string[] {
 }
 
 describe("dosažitelnost vyřešeného obsahu", () => {
-  it("každá ulice s manifestem umí vydat resolver", async () => {
+  // Vlastní limit, ne výchozích pět vteřin.
+  //
+  // Test načítá všechny dodávané packy tří ulic a to roste s každou rodinou; při
+  // 18+18+1 je na dvou vteřinách. Výchozí limit by z něj časem udělal test, který
+  // padá podle toho, co běží vedle - a takový test netvrdí o obsahu nic.
+  it("každá ulice s manifestem umí vydat resolver", { timeout: 60000 }, async () => {
     await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
     await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
     const present = manifestsOnDisk();
