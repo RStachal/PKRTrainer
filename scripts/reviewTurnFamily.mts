@@ -2,6 +2,11 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { runtimeSolvedTurnPacks } from "../src/data/ranges/turnSolvedRuntimeRegistry";
 import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks";
+import { runtimeSolvedFlopPacks } from "../src/data/ranges/flopSolvedRuntimeRegistry";
+import { loadSolvedFlopPacks } from "../src/data/ranges/flopSolvedStrategyPacks";
+import { runtimeSolvedRiverPacks } from "../src/data/ranges/riverSolvedRuntimeRegistry";
+import { loadSolvedRiverPacks } from "../src/data/ranges/riverSolvedStrategyPacks";
+import type { TurnStrategyPack } from "../src/data/ranges/turnStrategyPack";
 import { renderTurnFamilyDigest } from "../src/data/ranges/turnReviewDigest";
 import { profileTurnFamilies } from "../src/data/ranges/turnFamilyAnomaly";
 import {
@@ -49,18 +54,41 @@ function writeVerdicts(verdicts: readonly TurnReviewVerdictRecord[]): void {
   }, null, 2)}\n`, "utf8");
 }
 
+/**
+ * Která ulice se čte.
+ *
+ * Rodina má dnes pack na všech třech ulicích a jsou to tři různé obsahy s
+ * vlastními otisky. Číst šla jen turnová, takže flopový a riverový obsah neměl
+ * jak opustit LOW - a LOW nikde neprojde do produkce. Verdikt proto nese ulici a
+ * tenhle přepínač vybírá, čí frontu čteš.
+ */
+const street = ((): "FLOP" | "TURN" | "RIVER" => {
+  const value = (arg("street") ?? "TURN").toUpperCase();
+  return value === "FLOP" || value === "RIVER" ? value : "TURN";
+})();
+
 await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
+await loadSolvedFlopPacks("FULL_RING_9|REGULAR|CHIP_EV|FLOP|OFF");
+await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
+
+// Packy tří ulic mají týž tvar pravidla, takže digest i profil fungují na
+// všechny; liší se jen tím, ze kterého registru se berou.
+const packsForStreet = (street === "FLOP"
+  ? runtimeSolvedFlopPacks
+  : street === "RIVER" ? runtimeSolvedRiverPacks : runtimeSolvedTurnPacks
+) as readonly TurnStrategyPack[];
+
 const verdicts = readVerdicts();
 const familyId = arg("family");
 
 if (familyId === undefined) {
-  console.log("Vyřešené turn rodiny a stav jejich čtení\n");
+  console.log(`Vyřešené ${street} rodiny a stav jejich čtení\n`);
   // Rodiny, které se od svých sourozenců liší, jdou najevo hned. Čtení je práce,
   // kterou nikdo jiný neudělá, a jedenáct rodin po třech stech pravidlech nikdo
   // nepřečte celé - ale chyby, které jsme v tomhle obsahu doopravdy našli, měly
   // všechny stejný tvar: posunuté rozdělení akcí přes celou rodinu, ne špatné
   // jednotlivé pravidlo. Právě to jde porovnat strojově.
-  const profiles = new Map(profileTurnFamilies(runtimeSolvedTurnPacks).map((row) => [row.familyId, row]));
+  const profiles = new Map(profileTurnFamilies(packsForStreet).map((row) => [row.familyId, row]));
 
   // Pořadí podle měřené odchylky obrany, ne podle abecedy.
   //
@@ -69,10 +97,10 @@ if (familyId === undefined) {
   // jediné číslo o téhle strategii, které nepotřebuje čtenáře, takže je to
   // nejlepší dostupné vodítko, kde se dívat dřív. Rodina bez čelících
   // rozhodnutí jde na konec: o té tohle číslo neříká nic.
-  const gapOf = (pack: (typeof runtimeSolvedTurnPacks)[number]) => (
+  const gapOf = (pack: TurnStrategyPack) => (
     profiles.get(pack.familyIds[0] ?? pack.id)?.defenceGap ?? -1
   );
-  for (const pack of [...runtimeSolvedTurnPacks].sort((a, b) => {
+  for (const pack of [...packsForStreet].sort((a, b) => {
     const byGap = gapOf(b) - gapOf(a);
     return byGap !== 0 ? byGap : a.id.localeCompare(b.id);
   })) {
@@ -107,9 +135,9 @@ if (familyId === undefined) {
     + "\nkteré nevzniklo čtením, takže je to nejlepší vodítko, kde začít. Malá"
     + "\nodchylka neznamená, že je rodina v pořádku.",
   );
-  console.log("Čtení jedné rodiny: npm run mtt:turn-review -- --family=<ID>");
+  console.log(`Čtení jedné rodiny: npm run mtt:turn-review -- --street=${street} --family=<ID>`);
 } else {
-  const pack = runtimeSolvedTurnPacks.find((item) => item.familyIds.includes(familyId));
+  const pack = packsForStreet.find((item) => item.familyIds.includes(familyId));
   if (pack === undefined) {
     console.error(`Rodina ${familyId} se nedodává; přečíst jde jen to, co je v manifestu.`);
     process.exitCode = 2;
@@ -127,6 +155,7 @@ if (familyId === undefined) {
       const reviewer = arg("reviewer") ?? "neuvedeno";
       const note = arg("note");
       const record: TurnReviewVerdictRecord = {
+        street,
         familyId,
         contentHash,
         outcome,
@@ -134,9 +163,19 @@ if (familyId === undefined) {
         reviewer,
         ...(note ? { notes: note } : {}),
       };
-      writeVerdicts([...verdicts.filter((item) => item.familyId !== familyId), record]);
+      writeVerdicts([
+        ...verdicts.filter((item) => (
+          item.familyId !== familyId || (item.street ?? "TURN") !== street
+        )),
+        record,
+      ]);
       console.log(`Zapsáno: ${familyId} = ${outcome} (${reviewer}), otisk ${contentHash}`);
-      console.log("Přegeneruj pack, aby se důvěra propsala: npm run mtt:turn-pack -- --family=" + familyId + " --write");
+      // Přegenerovat se musí ten pack, který se četl - jinak verdikt visí u
+      // obsahu, do kterého se nepropsal.
+      const generator = street === "FLOP"
+        ? "mtt:flop-pack"
+        : street === "RIVER" ? "mtt:river-pack" : "mtt:turn-pack";
+      console.log(`Přegeneruj pack, aby se důvěra propsala: npm run ${generator} -- --family=${familyId} --write`);
     }
   }
 }

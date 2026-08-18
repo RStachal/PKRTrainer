@@ -31,6 +31,16 @@ import type { TurnStrategyRule } from "./turnStrategyRuleBuilder";
 export type TurnReviewOutcome = "ACCEPTED" | "NEEDS_WORK" | "REJECTED";
 
 export interface TurnReviewVerdictRecord {
+  /**
+   * Ulice, které se verdikt týká.
+   *
+   * Táž rodina má dnes pack na flopu, turnu i riveru a jsou to tři různé obsahy
+   * s vlastními otisky. Verdikt bez ulice by přečtený turn vydával za přečtený
+   * flop - tedy přesně za to, co člověk neviděl.
+   *
+   * Chybí-li, čte se jako `TURN`: v době, kdy vznikl, byla jediná.
+   */
+  street?: "FLOP" | "TURN" | "RIVER";
   familyId: string;
   /** Otisk obsahu, který byl čten. Změní se obsah, propadne verdikt. */
   contentHash: string;
@@ -87,8 +97,11 @@ export function confidenceForFamily(
   familyId: string,
   contentHash: string,
   verdicts: readonly TurnReviewVerdictRecord[],
+  street: "FLOP" | "TURN" | "RIVER" = "TURN",
 ): { confidence: "LOW" | "MEDIUM" | "HIGH"; reason: string } {
-  const verdict = verdicts.find((item) => item.familyId === familyId);
+  const verdict = verdicts.find((item) => (
+    item.familyId === familyId && (item.street ?? "TURN") === street
+  ));
   if (verdict === undefined) {
     return { confidence: "LOW", reason: "rodinu zatím nikdo nečetl" };
   }

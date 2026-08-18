@@ -1,6 +1,10 @@
 import type { FlopStrategyRule } from "./flopStrategyRuleBuilder";
 import { reviewTurnFamily, type TurnFamilyEvidence } from "./turnReviewGate";
-import { turnRuleContentHash } from "./turnReviewVerdict";
+import {
+  confidenceForFamily,
+  turnRuleContentHash,
+  type TurnReviewVerdictRecord,
+} from "./turnReviewVerdict";
 import type { TurnStrategyPack } from "./turnStrategyPack";
 
 /**
@@ -31,6 +35,8 @@ export interface FlopPackBuildInput {
   id: string;
   createdAt: string;
   evidence: TurnFamilyEvidence;
+  /** Zaznamenané verdikty hráčů. Bez nich zůstává rodina na LOW. */
+  verdicts?: readonly TurnReviewVerdictRecord[];
   rules: readonly FlopStrategyRule[];
 }
 
@@ -60,6 +66,15 @@ export function buildFlopSolvedStrategyPack(input: FlopPackBuildInput): FlopPack
   }
 
   const first = input.rules[0];
+  // Důvěra se řídí verdiktem, ne přáním, a stejným pravidlem jako u turnu.
+  // Natvrdo LOW znamenalo, že přečíst tuhle ulici nešlo ani teoreticky.
+  const contentHash = turnRuleContentHash(input.rules);
+  const { confidence, reason } = confidenceForFamily(
+    input.evidence.familyId,
+    contentHash,
+    input.verdicts ?? [],
+    "FLOP",
+  );
   const boardsAnswered = new Set(input.rules.map((rule) => rule.flopSpot.flop.join(""))).size;
 
   return {
@@ -69,8 +84,8 @@ export function buildFlopSolvedStrategyPack(input: FlopPackBuildInput): FlopPack
       version: "flop-solved-v1",
       createdAt: input.createdAt,
       provenance: "SOLVER_BACKED",
-      confidence: "LOW",
-      contentHash: turnRuleContentHash(input.rules),
+      confidence,
+      contentHash,
       dimensions: {
         gameVariant: "MTT",
         tableFormat: "FULL_RING_9",
@@ -89,7 +104,7 @@ export function buildFlopSolvedStrategyPack(input: FlopPackBuildInput): FlopPack
         `Position pattern ${verdict.positionPattern}, ${first.node}, ${first.stackBB}BB effective.`,
         "Velikosti sázek nesou solverovy vlastní popisky v žetonech; překlad potřebuje pot v uzlu.",
         "Frekvence uvnitř třídy ruk jsou průměr přes její kombinace, takže třída nerozliší preferenci mezi nimi.",
-        "Důvěra LOW: brána kontroluje tvar solvu, ne jestli je strategie dobrá.",
+        `Důvěra ${confidence}: ${reason}. Brána kontroluje tvar solvu, ne jestli je strategie dobrá - to pozná jen hráč.`,
         "Každé pravidlo nese rodinu, ve které vzniklo, takže každá odpověď je dohledatelná ke svému běhu.",
       ],
       rules: input.rules,

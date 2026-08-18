@@ -6,6 +6,10 @@ import { buildFlopStrategyRule } from "../src/data/ranges/flopStrategyRuleBuilde
 import { buildFlopSolvedStrategyPack } from "../src/data/ranges/flopSolvedStrategyPack";
 import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
 import { TURN_COVERAGE_TARGET, type TurnFamilyEvidence } from "../src/data/ranges/turnReviewGate";
+import {
+  parseTurnReviewVerdicts,
+  type TurnReviewVerdictRecord,
+} from "../src/data/ranges/turnReviewVerdict";
 
 /**
  * Postaví flopový pack z jedné rodiny.
@@ -101,6 +105,14 @@ export const solvedFlopManifest: readonly SolvedFlopManifestEntry[] = [
 ${body}
 ];
 `, "utf8");
+}
+
+const VERDICTS_PATH = "Agents/turn-review/verdicts.json";
+
+/** Zaznamenané verdikty hráčů; bez souboru se nic neděje a rodina zůstane LOW. */
+function readVerdicts(): TurnReviewVerdictRecord[] {
+  if (!existsSync(VERDICTS_PATH)) return [];
+  return parseTurnReviewVerdicts(readFileSync(VERDICTS_PATH, "utf8"));
 }
 
 const familyArg = process.argv.find((item) => item.startsWith("--family="));
@@ -261,6 +273,7 @@ if (family === undefined) {
     createdAt: new Date().toISOString().slice(0, 10),
     evidence,
     rules,
+    verdicts: readVerdicts(),
   });
 
   if (!result.ok) {

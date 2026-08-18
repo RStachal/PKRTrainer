@@ -1,6 +1,10 @@
 import type { RiverStrategyRule } from "./riverStrategyRuleBuilder";
 import { reviewTurnFamily, type TurnFamilyEvidence } from "./turnReviewGate";
-import { turnRuleContentHash } from "./turnReviewVerdict";
+import {
+  confidenceForFamily,
+  turnRuleContentHash,
+  type TurnReviewVerdictRecord,
+} from "./turnReviewVerdict";
 import type { TurnStrategyPack } from "./turnStrategyPack";
 
 /**
@@ -42,6 +46,8 @@ export interface RiverPackBuildInput {
    * jen ta slova znamenají o ulici dál.
    */
   evidence: TurnFamilyEvidence;
+  /** Zaznamenané verdikty hráčů. Bez nich zůstává rodina na LOW. */
+  verdicts?: readonly TurnReviewVerdictRecord[];
   rules: readonly RiverStrategyRule[];
 }
 
@@ -74,6 +80,15 @@ export function buildRiverStrategyPack(input: RiverPackBuildInput): RiverPackBui
   }
 
   const first = input.rules[0];
+  // Důvěra se řídí verdiktem, ne přáním, a stejným pravidlem jako u turnu.
+  // Natvrdo LOW znamenalo, že přečíst tuhle ulici nešlo ani teoreticky.
+  const contentHash = turnRuleContentHash(input.rules);
+  const { confidence, reason } = confidenceForFamily(
+    input.evidence.familyId,
+    contentHash,
+    input.verdicts ?? [],
+    "RIVER",
+  );
   const boardsAnswered = new Set(
     input.rules.map((rule) => `${rule.riverSpot.turnBoard.join("")}${rule.riverSpot.riverCard}`),
   ).size;
@@ -85,8 +100,8 @@ export function buildRiverStrategyPack(input: RiverPackBuildInput): RiverPackBui
       version: "river-solved-v1",
       createdAt: input.createdAt,
       provenance: "SOLVER_BACKED",
-      confidence: "LOW",
-      contentHash: turnRuleContentHash(input.rules),
+      confidence,
+      contentHash,
       dimensions: {
         gameVariant: "MTT",
         tableFormat: "FULL_RING_9",
@@ -105,7 +120,7 @@ export function buildRiverStrategyPack(input: RiverPackBuildInput): RiverPackBui
         `Position pattern ${verdict.positionPattern}, ${first.node}, ${first.stackBB}BB effective.`,
         "Velikosti sázek nesou solverovy vlastní popisky v žetonech; překlad potřebuje pot v uzlu.",
         "Frekvence uvnitř třídy ruk jsou průměr přes její kombinace, takže třída nerozliší preferenci mezi nimi.",
-        "Důvěra LOW: riverový obsah zatím nemá cestu k hráčovu čtení, kterou má turn.",
+        `Důvěra ${confidence}: ${reason}. Brána kontroluje tvar solvu, ne jestli je strategie dobrá - to pozná jen hráč.`,
         "Každé pravidlo nese adresář, ve kterém vzniklo, takže každá odpověď je dohledatelná ke svému běhu.",
       ],
       rules: input.rules,
