@@ -66,10 +66,29 @@ function writeVerdicts(verdicts: readonly TurnReviewVerdictRecord[]): void {
  * jak opustit LOW - a LOW nikde neprojde do produkce. Verdikt proto nese ulici a
  * tenhle přepínač vybírá, čí frontu čteš.
  */
-const street = ((): "FLOP" | "TURN" | "RIVER" => {
-  const value = (arg("street") ?? "TURN").toUpperCase();
-  return value === "FLOP" || value === "RIVER" ? value : "TURN";
+type Street = "FLOP" | "TURN" | "RIVER";
+const ALL_STREETS: readonly Street[] = ["FLOP", "TURN", "RIVER"];
+
+/**
+ * Která ulice se čte, nebo `undefined` když to čtenář neřekl.
+ *
+ * Dřív se nezadaná ulice tiše brala jako TURN, a to byla past přesně tam, kde
+ * bolí: kdo přečetl celou rodinu a zapsal verdikt, zapsal ho jen turnu. Flop a
+ * river zůstaly LOW a nic to neřeklo. Nezadaná ulice proto při **čtení**
+ * znamená "ukaž všechny" a při **zápisu** je chyba - verdikt musí říct, co
+ * člověk doopravdy viděl.
+ */
+const requestedStreet = ((): Street | "ALL" | undefined => {
+  const value = arg("street")?.toUpperCase();
+  if (value === undefined) return undefined;
+  if (value === "ALL") return "ALL";
+  return value === "FLOP" || value === "RIVER" || value === "TURN" ? value : undefined;
 })();
+// Fronta a profily potřebují jednu ulici; bez upřesnění je to turn, protože ta
+// má obsah na všech rodinách.
+const street: Street = requestedStreet === undefined || requestedStreet === "ALL"
+  ? "TURN"
+  : requestedStreet;
 
 await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
 await loadSolvedFlopPacks("FULL_RING_9|REGULAR|CHIP_EV|FLOP|OFF");
@@ -182,45 +201,90 @@ Dodávaných rozhodnutí: ${plan.shippedRules}, přečtených ${plan.readRules} 
   );
   console.log(`Čtení jedné rodiny: npm run mtt:turn-review -- --street=${street} --family=<ID>`);
 } else {
-  const pack = packsForStreet.find((item) => item.familyIds.includes(familyId));
-  if (pack === undefined) {
+  const registries: Record<Street, readonly TurnStrategyPack[]> = {
+    FLOP: runtimeSolvedFlopPacks as readonly TurnStrategyPack[],
+    TURN: runtimeSolvedTurnPacks as readonly TurnStrategyPack[],
+    RIVER: runtimeSolvedRiverPacks as readonly TurnStrategyPack[],
+  };
+  const packFor = (item: Street) => registries[item].find((row) => row.familyIds.includes(familyId));
+  const present = ALL_STREETS.filter((item) => packFor(item) !== undefined);
+
+  const outcome: TurnReviewOutcome | undefined =
+    process.argv.includes("--accept") ? "ACCEPTED"
+      : process.argv.includes("--needs-work") ? "NEEDS_WORK"
+        : process.argv.includes("--reject") ? "REJECTED"
+          : undefined;
+
+  if (present.length === 0) {
     console.error(`Rodina ${familyId} se nedodává; přečíst jde jen to, co je v manifestu.`);
     process.exitCode = 2;
+  } else if (outcome === undefined) {
+    // Čtení: bez upřesnění všechny ulice, které rodina má. Je to jeden spot -
+    // titíž hráči, tytéž stacky, jedna linka - takže je číst odděleně znamená
+    // třikrát se do něj dostávat znovu.
+    const streets = requestedStreet === undefined || requestedStreet === "ALL"
+      ? present
+      : [requestedStreet];
+    for (const item of streets) {
+      const pack = packFor(item);
+      if (pack === undefined) {
+        console.log(`
+### ${item}: tuhle ulici rodina nedodává.`);
+        continue;
+      }
+      console.log(`
+${"=".repeat(72)}
+### ${item}
+${"=".repeat(72)}`);
+      console.log(renderTurnFamilyDigest(pack, turnRuleContentHash(pack.rules)));
+    }
+    if (streets.length > 1) {
+      console.log(
+        `
+Přečteno ${streets.length} ulic. Verdikt za všechny najednou:`
+        + `
+  npm run mtt:turn-review -- --family=${familyId} --street=ALL --accept --reviewer="jméno"`,
+      );
+    }
+  } else if (requestedStreet === undefined) {
+    // Zápis bez ulice se dřív tiše uložil jako turn. Verdikt je záznam o tom, co
+    // člověk viděl, takže se radši neuloží nic, než aby se uložilo něco jiného.
+    console.error(
+      "Verdikt musí říct, kterou ulici jsi četl: --street=FLOP|TURN|RIVER, nebo --street=ALL"
+      + `
+Rodina ${familyId} dodává: ${present.join(", ")}.`,
+    );
+    process.exitCode = 2;
   } else {
-    const contentHash = turnRuleContentHash(pack.rules);
-    const outcome: TurnReviewOutcome | undefined =
-      process.argv.includes("--accept") ? "ACCEPTED"
-        : process.argv.includes("--needs-work") ? "NEEDS_WORK"
-          : process.argv.includes("--reject") ? "REJECTED"
-            : undefined;
+    const streets = requestedStreet === "ALL" ? present : [requestedStreet];
+    const reviewer = arg("reviewer") ?? "neuvedeno";
+    const note = arg("note");
+    const reviewedAt = new Date().toISOString().slice(0, 10);
 
-    if (outcome === undefined) {
-      console.log(renderTurnFamilyDigest(pack, contentHash));
-    } else {
-      const reviewer = arg("reviewer") ?? "neuvedeno";
-      const note = arg("note");
-      const record: TurnReviewVerdictRecord = {
-        street,
-        familyId,
-        contentHash,
-        outcome,
-        reviewedAt: new Date().toISOString().slice(0, 10),
-        reviewer,
+    let next = [...verdicts];
+    for (const item of streets) {
+      const pack = packFor(item);
+      if (pack === undefined) continue;
+      const contentHash = turnRuleContentHash(pack.rules);
+      next = next.filter((row) => (
+        row.familyId !== familyId || (row.street ?? "TURN") !== item
+      ));
+      next.push({
+        street: item, familyId, contentHash, outcome, reviewedAt, reviewer,
         ...(note ? { notes: note } : {}),
-      };
-      writeVerdicts([
-        ...verdicts.filter((item) => (
-          item.familyId !== familyId || (item.street ?? "TURN") !== street
-        )),
-        record,
-      ]);
-      console.log(`Zapsáno: ${familyId} = ${outcome} (${reviewer}), otisk ${contentHash}`);
-      // Přegenerovat se musí ten pack, který se četl - jinak verdikt visí u
-      // obsahu, do kterého se nepropsal.
-      const generator = street === "FLOP"
-        ? "mtt:flop-pack"
-        : street === "RIVER" ? "mtt:river-pack" : "mtt:turn-pack";
-      console.log(`Přegeneruj pack, aby se důvěra propsala: npm run ${generator} -- --family=${familyId} --write`);
+      });
+      console.log(`Zapsáno: ${familyId} ${item} = ${outcome} (${reviewer}), otisk ${contentHash}`);
+    }
+    writeVerdicts(next);
+
+    // Přegenerovat se musí ty packy, které se četly - jinak verdikt visí u
+    // obsahu, do kterého se nepropsal.
+    const generatorOf = (item: Street) => (
+      item === "FLOP" ? "mtt:flop-pack" : item === "RIVER" ? "mtt:river-pack" : "mtt:turn-pack"
+    );
+    console.log("Přegeneruj packy, aby se důvěra propsala:");
+    for (const item of streets) {
+      console.log(`  npm run ${generatorOf(item)} -- --family=${familyId} --write`);
     }
   }
 }
