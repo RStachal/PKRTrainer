@@ -51,6 +51,17 @@ export interface RiverEvInput {
   /** Range OOP a IP hráče: třída ruky na váhu 0-1. */
   oop: Readonly<Record<string, number>>;
   ip: Readonly<Record<string, number>>;
+  /**
+   * Akce od kořene k rozhodnutí, které se má spočítat.
+   *
+   * Pravidla nevznikají jen pro kořen: hráč, který na riveru čelí sázce, je o
+   * patro níž a jeho range i soupeřova jsou tam už zúžené tím, co se cestou
+   * stalo. Počítat takové rozhodnutí z kořenových rangí by znamenalo měřit
+   * situaci, která u stolu nenastala.
+   *
+   * Prázdná linka znamená kořen.
+   */
+  line?: readonly string[];
 }
 
 export interface ComboActionEv {
@@ -142,12 +153,39 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
   if (board.length !== 5) return [];
 
   const dead = new Set(board);
-  const heroIsOop = node.player === 1;
-  const heroRange = expandRange(heroIsOop ? input.oop : input.ip, dead);
-  const villainRange = expandRange(heroIsOop ? input.ip : input.oop, dead);
+
+  // Sejdi po lince k rozhodnutí, které se má spočítat, a cestou zužuj obě range
+  // podle strategie, kterou v každém uzlu hraje ten, kdo je na tahu. Bez toho by
+  // se čelící rozhodnutí počítalo z rangí, jaké byly na začátku ulice.
+  let current: SolverNode = node;
+  let oopWeights = expandRange(input.oop, dead);
+  let ipWeights = expandRange(input.ip, dead);
+  let startCommitted: [number, number] = [0, 0];
+  for (const step of input.line ?? []) {
+    if (current.node_type !== "action_node" || current.strategy === undefined) return [];
+    const index = current.strategy.actions.indexOf(step);
+    const child = current.childrens?.[step];
+    if (index < 0 || child === undefined) return [];
+    const acting = current.player ?? 0;
+    const narrow = (list: Weighted[]) => list
+      .map((item) => ({
+        ...item,
+        weight: item.weight * (current.strategy?.strategy[item.combo]?.[index] ?? 0),
+      }))
+      .filter((item) => item.weight > 0);
+    if (acting === 1) oopWeights = narrow(oopWeights);
+    else ipWeights = narrow(ipWeights);
+    startCommitted = committedAfter(step, acting, startCommitted);
+    current = child;
+  }
+  if (current.node_type !== "action_node" || current.strategy === undefined) return [];
+
+  const heroIsOop = current.player === 1;
+  const heroRange = heroIsOop ? oopWeights : ipWeights;
+  const villainRange = heroIsOop ? ipWeights : oopWeights;
   if (heroRange.length === 0 || villainRange.length === 0) return [];
 
-  const heroPlayer = node.player ?? 1;
+  const heroPlayer = current.player ?? 1;
 
   /**
    * Hodnota podstromu pro jednu hrdinovu kombinaci proti vážené soupeřově range.
@@ -231,7 +269,7 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
   if (rootWeight <= 0) return [];
 
   const results: ComboActionEv[] = [];
-  const rootActions = node.strategy.actions;
+  const rootActions = current.strategy.actions;
   for (const hero of heroRange) {
     // Soupeřovy kombinace, které sdílejí kartu s hrdinou, se odečtou: nemůže je
     // držet. Bez toho by EV počítalo s protivníkem, který drží tutéž kartu.
@@ -242,8 +280,8 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
     if (liveWeight <= 0) continue;
 
     for (const action of rootActions) {
-      const committed = committedAfter(action, heroPlayer, [0, 0]);
-      const child = node.childrens?.[action];
+      const committed = committedAfter(action, heroPlayer, startCommitted);
+      const child = current.childrens?.[action];
       const raw = /^FOLD$/i.test(action.trim())
         ? 0
         : child === undefined

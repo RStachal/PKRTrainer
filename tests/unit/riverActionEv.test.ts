@@ -164,7 +164,60 @@ describe("EV riverových akcí", () => {
     expect(combosOfClass("76s", new Set(BOARD)).length).toBe(4);
   });
 
-  it("uzel, který není rozhodnutí, nevrátí vymyšlenou nulu", () => {
+it("po lince zúží obě range, ne jen sejde o patro", () => {
+    // Hráč, který na riveru čelí sázce, je o patro níž a jeho range i soupeřova
+    // jsou tam zúžené tím, co se cestou stalo. Počítat takové rozhodnutí z
+    // kořenových rangí by měřilo situaci, která u stolu nenastala.
+    //
+    // Soupeř sází jen s trojicí králů, s 7-6 checkuje. Hrdina drží A-Q a čelí
+    // sázce 50 do potu 100. Po sázce je proti němu **jen** KK, takže dorovnání
+    // prohrává vždy: -50. Kdyby se braly kořenové range, počítalo by se i se
+    // 7-6, které hrdina bije, a číslo by vyšlo o dost lepší.
+    const heroCards = combosOfClass("AQs", new Set(BOARD));
+    const kings = combosOfClass("KK", new Set(BOARD));
+    const sevens = combosOfClass("76s", new Set(BOARD));
+
+    // Kořen: soupeř (IP, player 0) volí mezi checkem a sázkou podle své ruky.
+    const betting: Record<string, number[]> = {};
+    for (const combo of kings) betting[combo] = [0, 1];
+    for (const combo of sevens) betting[combo] = [1, 0];
+    const root: SolverNode = {
+      node_type: "action_node",
+      player: 0,
+      actions: ["CHECK", "BET 50"],
+      strategy: { actions: ["CHECK", "BET 50"], strategy: betting },
+      childrens: {
+        CHECK: { node_type: "action_node", player: 1, actions: ["CHECK"], strategy: { actions: ["CHECK"], strategy: Object.fromEntries(heroCards.map((c) => [c, [1]])) }, childrens: {} },
+        "BET 50": {
+          node_type: "action_node",
+          player: 1,
+          actions: ["CALL", "FOLD"],
+          strategy: { actions: ["CALL", "FOLD"], strategy: Object.fromEntries(heroCards.map((c) => [c, [1, 0]])) },
+          childrens: { CALL: {} },
+        },
+      },
+    };
+
+    const results = riverActionEv({
+      node: root, board: BOARD, potChips: POT,
+      oop: { AQs: 1 }, ip: { KK: 1, "76s": 1 },
+      line: ["BET 50"],
+    });
+    expect(evOf(results, "CALL")).toBeCloseTo(-50, 6);
+    // Složení nestojí nic navíc: hrdina do potu na téhle ulici nic nedal.
+    expect(evOf(results, "FOLD")).toBeCloseTo(0, 6);
+  });
+
+  it("linka, která ve stromě není, se přizná", () => {
+    const results = riverActionEv({
+      node: tree(1), board: BOARD, potChips: POT,
+      oop: { KK: 1 }, ip: { "76s": 1 },
+      line: ["BET 999"],
+    });
+    expect(results).toEqual([]);
+  });
+
+    it("uzel, který není rozhodnutí, nevrátí vymyšlenou nulu", () => {
     const results = riverActionEv({
       node: { node_type: "showdown" }, board: BOARD, potChips: POT,
       oop: { KK: 1 }, ip: { "76s": 1 },
