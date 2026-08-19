@@ -58,6 +58,7 @@ function spotTitle(rule: TurnStrategyRule): string {
 export function readableAction(
   action: string,
   spot?: { potChips?: number; potBB?: number },
+  options: { withPotShare?: boolean } = {},
 ): string {
   const match = /^(BET|RAISE)\s+([\d.]+)$/i.exec(action.trim());
   if (match === null) return action.trim();
@@ -77,7 +78,8 @@ export function readableAction(
 
   const bb = chips / blind;
   const amount = `${bb.toFixed(1)} BB`;
-  if (verb !== "BET" || potChips === undefined || potChips <= 0) {
+  const withPotShare = options.withPotShare ?? true;
+  if (verb !== "BET" || !withPotShare || potChips === undefined || potChips <= 0) {
     return `${verb} ${amount}`;
   }
   return `${verb} ${amount} (${Math.round((chips / potChips) * 100)} % potu)`;
@@ -253,7 +255,11 @@ export function renderTurnFamilyDigest(
     const byAction = new Map<string, number>();
     for (const rule of decision.rules) {
       for (const bucket of rule.buckets) {
-        const label = readableAction(bucket.action, rule.spot);
+        // Bez podílu potu. Souhrn sčítá desky s různými poty, takže tatáž
+        // sázka by vyšla na dva řádky s různými procenty a rozdělení by se
+        // roztříštilo. V blindech se slučuje správně; podíl potu patří k
+        // legendě konkrétní desky, kde je pot jediný.
+        const label = readableAction(bucket.action, rule.spot, { withPotShare: false });
         byAction.set(label, (byAction.get(label) ?? 0) + bucket.combos);
       }
     }
