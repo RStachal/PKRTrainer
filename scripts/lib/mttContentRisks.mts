@@ -116,8 +116,15 @@ export function shippedContentRisks(ruleIds: readonly string[]): ShippedContentR
       // přesně tohle vybírá a staguje. Chybělo jen to, aby ji někdo spustil.
       + "Their boards are staged for re-solve by mtt:texas-solver-uniform-tree-batch, "
       + "which copies the authoritative full-tree parameters; the solve itself is a "
-      + "monolithic run and is not automatically scheduled. The turn packs exclude "
-      + "the reduced-tree boards outright, so only the flop rules above carry the blend.",
+      + "monolithic run and is not automatically scheduled. "
+      // Potřetí. Věta tvrdila, že blend nesou jen pilotní flopová pravidla,
+      // protože turn packy redukované desky vylučují - a to platilo v den, kdy
+      // vznikla. Pak přibyl vyřešený flop a river, oba stavěné z týchž
+      // checkpointů a oba bez toho filtru, takže se tvrzení tiše rozešlo s
+      // obsahem. Filtr mají od 19. 8. všechny tři ulice; blend zůstává jen v
+      // pilotních agregátech, které se z checkpointů nestaví.
+      + "All three solved-street builders now drop reduced-tree boards outright, "
+      + "so the blend survives only in the texture-aggregate pilots above.",
     );
   }
   if (withheldRules.size > 0) {

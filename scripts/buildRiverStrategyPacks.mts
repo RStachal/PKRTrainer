@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { heroSideOfNode, seatsOfFamily,
   trimToModuleBudget,
   supersededByRepair,
+  fullTreeBoardsByFamily,
 } from "./lib/solvedPackBuilding.mts";
 import { subgameDecisions } from "./lib/subgameDecisions.mts";
 import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
@@ -59,6 +60,32 @@ const RULE_BUDGET = 300;
 interface ManifestEntry { familyId: string; packId: string; slug: string }
 
 /** Jak `solve_plan.py` pojmenoval soubor pro tuhle položku riverového plánu. */
+/**
+ * Adresáře desek rodiny, bez těch vyřešených na redukovaném stromě.
+ *
+ * Redukovaný strom je paměťově úsporná varianta pro review: nemá turnový donk
+ * ani pozdější zvýšení, takže je to jiná hra. Riverová vrstva z něj vychází
+ * stejně jako turnová, takže sem ten filtr patří ze stejného důvodu - a chyběl
+ * tu, přestože turnový generátor ho má od začátku.
+ */
+let reportedReducedDrop = false;
+
+function fullTreeBoardDirs(family: string): string[] {
+  const allowed = fullTreeBoardsByFamily().get(family.toUpperCase());
+  const all = readdirSync(ROOT).filter((name) => name.startsWith(`${family}__`));
+  if (allowed === undefined) return all;
+  const kept = all.filter((name) => allowed.has(name.split("__")[1] ?? ""));
+  // Vynechaná deska je vědomé rozhodnutí, ne chybějící data, a musí to být
+  // vidět. Bez hlášky vypadá výsledek jako neúplný rozklad a hledá se
+  // neexistující chyba jinde. Hlásí se jednou za běh, protože se adresáře
+  // procházejí dvakrát a dvojitý řádek by vypadal jako dvojí vynechání.
+  if (!reportedReducedDrop && kept.length < all.length) {
+    reportedReducedDrop = true;
+    console.log(`  ${all.length - kept.length} boardů vynecháno: vyřešené na redukovaném stromě`);
+  }
+  return kept;
+}
+
 function riverSubgameFileName(item: { line?: string[]; river: string }): string {
   const line = (item.line ?? []).map((action) => {
     const sized = /^(BET|RAISE|ALLIN|ALL_IN)\s+([\d.]+)$/i.exec(action.trim());
@@ -71,7 +98,7 @@ function riverSubgameFileName(item: { line?: string[]; river: string }): string 
 /** Adresáře s riverovou vrstvou pro tuhle rodinu, i s cestou k desce. */
 function riverDirectories(family: string): { boardDirectory: string; riverDirectory: string }[] {
   const found: { boardDirectory: string; riverDirectory: string }[] = [];
-  for (const boardName of readdirSync(ROOT).filter((name) => name.startsWith(`${family}__`))) {
+  for (const boardName of fullTreeBoardDirs(family)) {
     const riverRoot = join(ROOT, boardName, "river");
     if (!existsSync(riverRoot)) continue;
     for (const subgame of readdirSync(riverRoot)) {
@@ -93,7 +120,7 @@ function riverDirectories(family: string): { boardDirectory: string; riverDirect
  */
 function turnSubgamesAvailable(family: string): number {
   let total = 0;
-  for (const boardName of readdirSync(ROOT).filter((name) => name.startsWith(`${family}__`))) {
+  for (const boardName of fullTreeBoardDirs(family)) {
     const directory = join(ROOT, boardName);
     total += readdirSync(directory)
       .filter((name) => name.endsWith(".json") && name !== "plan.json").length;

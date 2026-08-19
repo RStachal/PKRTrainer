@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { seatsOfFamily,
   trimToModuleBudget,
   supersededByRepair,
+  fullTreeBoardsByFamily,
 } from "./lib/solvedPackBuilding.mts";
 import { subgameDecisions } from "./lib/subgameDecisions.mts";
 import { buildFlopStrategyRule } from "../src/data/ranges/flopStrategyRuleBuilder";
@@ -144,9 +145,24 @@ if (family === undefined) {
   const rawDirectory = join(CHECKPOINT_ROOT, family, "raw");
   const seats = seatsOfFamily(`${family}__probe`);
   const familyStackBB = Number(/_(\d+)BB_/.exec(family)?.[1] ?? 0);
-  const files = readdirSync(rawDirectory).filter((name) => (
+  // Desky vyřešené na redukovaném stromě se vynechávají, stejně jako u turnu.
+  //
+  // Redukovaný strom je paměťově úsporná varianta pro review; nemá turnový donk
+  // a nemá pozdější zvýšení, takže je to jiná hra. Agregát, do kterého spadnou
+  // obě, míchá dvě různé hry a v UI to nikdo nepozná. Turnový generátor tenhle
+  // filtr měl od začátku, flopový ne - a přitom čte tytéž checkpointy.
+  const fullTreeBoards = fullTreeBoardsByFamily().get(family.toUpperCase());
+  const allFiles = readdirSync(rawDirectory).filter((name) => (
     name.startsWith(`pkrtrainer_${family}_`) && name.endsWith(".json")
   ));
+  const boardOf = (name: string) => name.slice(`pkrtrainer_${family}_`.length, -".json".length);
+  const files = fullTreeBoards === undefined
+    ? allFiles
+    : allFiles.filter((name) => fullTreeBoards.has(boardOf(name)));
+  const droppedReduced = allFiles.length - files.length;
+  if (droppedReduced > 0) {
+    console.log(`  ${droppedReduced} boardů vynecháno: vyřešené na redukovaném stromě`);
+  }
 
   const evidence: TurnFamilyEvidence = {
     familyId: family,
