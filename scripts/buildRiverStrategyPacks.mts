@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { heroSideOfNode, seatsOfFamily,
   trimToModuleBudget,
@@ -8,6 +8,7 @@ import { heroSideOfNode, seatsOfFamily,
   PACK_ENVELOPE_BYTES,
 } from "./lib/solvedPackBuilding.mts";
 import { subgameDecisions } from "./lib/subgameDecisions.mts";
+import { riverActionEv } from "../src/core/riverActionEv";
 import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
 import { buildRiverStrategyRule } from "../src/data/ranges/riverStrategyRuleBuilder";
 import { buildRiverStrategyPack } from "../src/data/ranges/riverStrategyPack";
@@ -46,6 +47,15 @@ import {
 
 const ROOT = "artifacts/decomposition";
 const OUT_DIR = "src/data/ranges/river";
+const EV_OUT_DIR = "src/data/ranges/river-ev";
+
+/** `"AhKd"` na `"AKo"`; barvy rozhodují jen o tom, jestli je ruka v barvě. */
+function classOfCombo(combo: string): string | undefined {
+  if (combo.length < 4) return undefined;
+  const [rankOne, suitOne, rankTwo, suitTwo] = combo;
+  if (rankOne === rankTwo) return `${rankOne}${rankTwo}`;
+  return `${rankOne}${rankTwo}${suitOne === suitTwo ? "s" : "o"}`;
+}
 const MANIFEST_PATH = "src/data/ranges/riverSolvedManifest.generated.ts";
 const PROFILE_KEY = "FULL_RING_9|REGULAR|CHIP_EV|RIVER";
 
@@ -180,6 +190,8 @@ function readVerdicts(): TurnReviewVerdictRecord[] {
 
 const familyArg = process.argv.find((item) => item.startsWith("--family="));
 const write = process.argv.includes("--write");
+// EV je drahé (kolem pěti minut na rodinu), takže se nepočítá při každém běhu.
+const writeEv = write && process.argv.includes("--ev");
 const family = familyArg?.split("=")[1];
 
 if (family === undefined) {
@@ -210,6 +222,17 @@ if (family === undefined) {
     minCoverage: 1, coverageTarget: TURN_COVERAGE_TARGET, sampledRules: [],
   };
   const rules = [];
+  /** Vstupy pro dopočet EV, klíčované pravidlem. Nedodává se, jen se počítá. */
+  const evContext = new Map<object, {
+    node: unknown;
+    line: readonly string[];
+    board: readonly string[];
+    potChips: number;
+    oop: Record<string, number>;
+    ip: Record<string, number>;
+    /** Žetonů na blind pro tuhle desku; EV se dodává v BB, ne v žetonech. */
+    chipsPerBB: number;
+  }>();
   let unidentified = 0;
 
   for (const { boardDirectory, riverDirectory } of directories) {
@@ -287,7 +310,22 @@ if (family === undefined) {
             ? {}
             : { stackBehindBB: inBB(decision.stackChips) }),
         });
-        if (rule) rules.push(rule);
+        if (rule) {
+          rules.push(rule);
+          // Kontext pro dopočet EV. Do packu nepatří - je to vstup výpočtu, ne
+          // obsah - ale bez linky a kořenového uzlu se EV spočítat nedá a po
+          // ořezu už se k nim nedostaneme. Klíčem je samotné pravidlo, které
+          // filtry i ořez pouštějí dál jako tutéž referenci.
+          evContext.set(rule, {
+            node,
+            line: decision.line,
+            board: item.board ?? [],
+            potChips: item.pot ?? 0,
+            oop: item.oop ?? {},
+            ip: item.ip ?? {},
+            chipsPerBB,
+          });
+        }
       }
     }
   }
@@ -421,6 +459,92 @@ if (family === undefined) {
       writeFileSync(outPath, module, "utf8");
       writeManifestEntry({ familyId: family, packId: result.pack.id, slug });
       console.log(`  manifest updated: ${MANIFEST_PATH}`);
+
+      // EV do vlastního souboru, ne do packu, a jen na vyžádání.
+      //
+      // Po kombinacích by EV zabralo kolem 0,6 MB na rodinu, tedy víc než celý
+      // rozpočet modulu. EV je přitom funkce "po odpovědi" - hráč ji chce, až
+      // když už rozhodl - takže patří do vlastního líného chunku, který se
+      // natáhne jen když ho někdo otevře.
+      //
+      // Za přepínačem proto, že výpočet trvá kolem pěti minut na rodinu:
+      // generování packů se pouští v cyklech přes všechny rodiny a nesmí se
+      // tím zpomalit dvacetkrát.
+      //
+      // Formát je úsporný schválně. Hodnoty jdou ve stejném pořadí jako
+      // `rule.actions`, takže se jména akcí neopakují vůbec, a třídy ruk se
+      // odkazují indexem do jednoho seznamu. První verze psala jména akcí i tříd
+      // ke každému řádku a měla 844 KB - víc, než je rozpočet jednoho chunku.
+      //
+      // Soubor nese otisk packu. Kdyby se pack přegeneroval a EV ne, runtime to
+      // pozná a EV nepoužije, místo aby ukazoval čísla k jiné strategii.
+      if (writeEv) {
+        const classIndex = new Map<string, number>();
+        const classList: string[] = [];
+        const indexOfClass = (handClass: string) => {
+          const known = classIndex.get(handClass);
+          if (known !== undefined) return known;
+          classIndex.set(handClass, classList.length);
+          classList.push(handClass);
+          return classList.length - 1;
+        };
+
+        const evRules = rules.map((rule) => {
+          const context = evContext.get(rule);
+          if (context === undefined) return null;
+          const rows = riverActionEv({
+            node: context.node as never,
+            board: context.board,
+            potChips: context.potChips,
+            oop: context.oop,
+            ip: context.ip,
+            line: context.line,
+          });
+          if (rows.length === 0) return null;
+
+          // Průměr přes kombinace té třídy. Matrix je mřížka tříd, ne kombinací,
+          // takže je to granularita, kterou hráč doopravdy vidí.
+          const perClass = new Map<string, Map<string, { sum: number; count: number }>>();
+          for (const row of rows) {
+            const handClass = classOfCombo(row.combo);
+            if (handClass === undefined) continue;
+            const actions = perClass.get(handClass) ?? new Map();
+            const cell = actions.get(row.action) ?? { sum: 0, count: 0 };
+            cell.sum += row.evChips;
+            cell.count += 1;
+            actions.set(row.action, cell);
+            perClass.set(handClass, actions);
+          }
+          const perBB = context.chipsPerBB > 0 ? context.chipsPerBB : 1;
+          const out: (number | null)[][] = [];
+          for (const [handClass, actions] of perClass) {
+            const values = rule.actions.map((action) => {
+              const cell = actions.get(action);
+              return cell === undefined
+                ? null
+                : Math.round((cell.sum / cell.count / perBB) * 10) / 10;
+            });
+            out.push([indexOfClass(handClass), ...values] as (number | null)[]);
+          }
+          return out;
+        });
+
+        const evPath = join(EV_OUT_DIR, `${slug}.generated.json`);
+        mkdirSync(dirname(evPath), { recursive: true });
+        writeFileSync(evPath, JSON.stringify({
+          schemaVersion: "PKRTRAINER_RIVER_EV_V1",
+          familyId: family,
+          packId: result.pack.id,
+          contentHash: result.pack.contentHash,
+          unit: "BB",
+          source: "SOLVED_TREE",
+          classes: classList,
+          rules: evRules,
+        }), "utf8");
+        const evBytes = statSync(evPath).size;
+        const withEv = evRules.filter((row) => row !== null).length;
+        console.log(`  EV: ${withEv}/${rules.length} pravidel, ${(evBytes / 1024).toFixed(0)} KB -> ${evPath}`);
+      }
     }
   }
 }
