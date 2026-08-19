@@ -114,9 +114,20 @@ export function shippedContentRisks(ruleIds: readonly string[]): ShippedContentR
       // stromech neví a přesolvení není její práce. Pak tvrdil, že to nedělá
       // žádná úloha, což bylo příliš silné: `mtt:texas-solver-uniform-tree-batch`
       // přesně tohle vybírá a staguje. Chybělo jen to, aby ji někdo spustil.
+      // Věta tady tvrdila, že přesolvení jen nikdo nenaplánoval. To čtenáře -
+      // konkrétně mě, 19. 8. - poslalo instalovat úlohu, uspat kvůli ní noční
+      // dekompozici a teprve pak zjistit, že se ta práce na tomhle stroji
+      // nespustí za žádných okolností. Změřeno v `solver-cpu-window.ps1`:
+      // strom těch rodin má commit 25,9 GB při dvou vláknech, použitelné
+      // fyzické paměti je kolem 20 GB, a fitnout se do commit limitu nestačí -
+      // solve se pak jen stránkuje. Je to odpověď o hardwaru, ne o plánovači, a
+      // musí to tak být napsané, jinak to někdo zkusí znovu.
       + "Their boards are staged for re-solve by mtt:texas-solver-uniform-tree-batch, "
-      + "which copies the authoritative full-tree parameters; the solve itself is a "
-      + "monolithic run and is not automatically scheduled. "
+      + "which copies the authoritative full-tree parameters, but the solve cannot run "
+      + "on this machine: the deep families need about 25.9 GB of committed memory "
+      + "against roughly 20 GB of usable physical memory, so admitting one pages "
+      + "instead of solving. This is a hardware limit, not an unscheduled job - "
+      + "clearing it needs a machine with more RAM, not a free window. "
       // Potřetí. Věta tvrdila, že blend nesou jen pilotní flopová pravidla,
       // protože turn packy redukované desky vylučují - a to platilo v den, kdy
       // vznikla. Pak přibyl vyřešený flop a river, oba stavěné z týchž
