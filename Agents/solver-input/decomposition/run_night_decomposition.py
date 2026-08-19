@@ -271,7 +271,8 @@ def main():
         started = time.time()
         subprocess.run(
             [sys.executable, os.path.join(HERE, "solve_plan.py"),
-             plan_path, out_dir, f"--workers={workers}"],
+             plan_path, out_dir, f"--workers={workers}",
+             f"--deadline={deadline.timestamp()}"],
             capture_output=True, text=True,
         )
         after = len([f for f in os.listdir(out_dir) if f.endswith(".json") and f != "plan.json"])
@@ -466,7 +467,8 @@ def run_river_phase(deadline, workers, coverage, budget):
         started = time.time()
         subprocess.run(
             [sys.executable, os.path.join(HERE, "solve_plan.py"),
-             plan_path, out_dir, f"--workers={workers}"],
+             plan_path, out_dir, f"--workers={workers}",
+             f"--deadline={deadline.timestamp()}"],
             capture_output=True, text=True,
         )
         minutes = (time.time() - started) / 60

@@ -96,8 +96,21 @@ def write_param(item, param_path, dump_path):
     open(param_path, "w", newline="\n").write("\n".join(lines) + "\n")
 
 
-def solve_one(item, out_dir, dry):
+def solve_one(item, out_dir, dry, deadline=None):
     name = item_id(item)
+    # Konec okna se musí hlídat tady, ne jen mezi vrstvami.
+    #
+    # Noční běh dosud odhadoval délku další vrstvy z těch předchozích a podle
+    # toho se rozhodoval, jestli ji začít. 19.8. to selhalo: vrstva o 333
+    # podhrách začala v 07:13, historicky největší trvala 8,8 minuty, zbývalo 47
+    # - a běžela 78 minut, protože pár podher spadlo do třicetiminutového
+    # timeoutu a `--passes=4` je zkusilo znovu. Osm jader tím drželo stroj
+    # hodinu a půl do pracovního dne.
+    #
+    # Odhad se nedá spravit lepším odhadem. Tohle je tvrdá mez: po deadlinu se
+    # další podhra nezačne, rozdělaná se dopočítá a fáze doběhne sama.
+    if deadline is not None and time.time() >= deadline:
+        return name, "deadline", 0.0, ""
     dump_path = os.path.join(out_dir, f"{name}.json")
     # Solver zapisuje vedle a pod finální jméno to jde až ověřené.
     #
@@ -165,6 +178,9 @@ def main():
     limit = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--limit=")), 0))
     dry = "--dry" in sys.argv
     max_passes = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--passes=")), 4))
+    # Epocha, ne HH:MM: volající už deadline zná a překlad na místní čas by tady
+    # jen přidal druhé místo, kde se dá splést půlnoc.
+    deadline = float(next((a.split("=")[1] for a in sys.argv if a.startswith("--deadline=")), 0)) or None
 
     plan = json.load(open(plan_path, encoding="utf8"))
     items = plan["items"][:limit] if limit else plan["items"]
@@ -180,14 +196,21 @@ def main():
     attempt = 0
     while True:
         attempt += 1
-        done = failed = skipped = 0
+        done = failed = skipped = expired = 0
         failures = []
         with ThreadPoolExecutor(max_workers=workers) as pool:
-            for name, status, elapsed, expl in pool.map(lambda i: solve_one(i, out_dir, dry), items):
+            for name, status, elapsed, expl in pool.map(
+                lambda i: solve_one(i, out_dir, dry, deadline), items
+            ):
                 if status == "solved":
                     done += 1
                 elif status == "skip":
                     skipped += 1
+                elif status == "deadline":
+                    # Nedokončené kvůli konci okna, ne kvůli vadě. Kdyby se to
+                    # počítalo mezi selhání, `failed > 0` by spustilo další
+                    # průchod a mez by neplatila.
+                    expired += 1
                 elif status != "planned":
                     failed += 1
                     failures.append(name)
@@ -197,7 +220,11 @@ def main():
                     print(f"  {done} solved, {failed} failed, {skipped} skipped"
                           f"   last {elapsed:.0f}s expl={expl}   ~{left/60:.0f} min left")
 
-        print(f"pass {attempt}: solved {done}, failed {failed}, skipped {skipped}")
+        print(f"pass {attempt}: solved {done}, failed {failed}, skipped {skipped}"
+              + (f", {expired} po deadlinu" if expired else ""))
+        if expired:
+            print("konec okna: další průchod se nezačíná")
+            break
         if dry or failed == 0 or done == 0 or attempt >= max_passes:
             # done == 0 means the pass achieved nothing, so another would not either.
             if failed:
