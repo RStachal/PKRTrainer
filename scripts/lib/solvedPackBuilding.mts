@@ -216,6 +216,16 @@ export function fullTreeBoardsByFamily(): Map<string, Set<string>> {
 export const MODULE_BUDGET_BYTES = Math.floor(500 * 1024);
 
 /**
+ * Kolik z rozpočtu si vezme obálka packu kolem pravidel.
+ *
+ * Naměřeno na dodávaných packech: 1,2 KB (identifikátory, otisk, evidence,
+ * assumptions). Dvojnásobek jako rezerva, protože text v assumptions se mění -
+ * a právě tahle proměnlivost je důvod, proč se ořez měří na pravidlech a ne na
+ * hotovém packu; viz `trimToModuleBudget`.
+ */
+export const PACK_ENVELOPE_BYTES = 4 * 1024;
+
+/**
  * Ořež pravidla, dokud se modul nevejde do rozpočtu.
  *
  * Generátory se dosud řídily počtem pravidel (`RULE_BUDGET`), jenže rozpočet je
@@ -229,6 +239,19 @@ export const MODULE_BUDGET_BYTES = Math.floor(500 * 1024);
  * jedním rozhodnutím pokrytým a ostatními prázdnými.
  *
  * Hledá se půlením, aby se modul nesestavoval stokrát.
+ *
+ * ## Měřit pravidla, ne hotový pack
+ *
+ * První verze měřila celý sestavený pack, a to je zpětná vazba, která se nikdy
+ * neustálí. Pack totiž nese v `assumptions` větu o důvěře, a ta je u LOW jinak
+ * dlouhá než u MEDIUM. Přijatý verdikt tedy zvětšil modul, ořez ubral o pravidlo
+ * víc, otisk se změnil - a tím verdikt propadl, protože je na otisk vázaný.
+ * Rodina spadla zpátky na LOW, text se zase zkrátil a kolo se mohlo točit dál.
+ * Naměřeno na dvou riverových rodinách hned první den, co obojí existovalo
+ * současně.
+ *
+ * Velikost pravidel na důvěře nezávisí, takže se měří ta a obálka se odečte
+ * paušálem (`PACK_ENVELOPE_BYTES`).
  */
 export function trimToModuleBudget<R>(
   rules: readonly R[],

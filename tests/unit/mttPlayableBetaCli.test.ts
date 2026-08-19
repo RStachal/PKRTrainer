@@ -74,9 +74,20 @@ describe("mtt:playable-beta CLI", () => {
       parsed.turnFamilies.reduce((sum: number, family: { boards: number }) => sum + family.boards, 0),
     );
 
-    // Dodavany obsah, ne overeny. Dokud to zadny hrac neprosel, musi to brana
-    // rikat nahlas - jinak by nizka duvera zustala jen v datech.
-    expect(parsed.turnFamilies.every((family: { confidence: string }) => family.confidence === "LOW")).toBe(true);
+    // Dodavany obsah, ne overeny hracem.
+    //
+    // Do 19. 8. 2026 tady stalo, ze kazda rodina musi byt LOW: cesta z LOW vedla
+    // jen pres ctenare a zadny nebyl. Majitel produktu pak rozhodl, ze pri 10 447
+    // rozhodnutich ve 52 packach na cteni nema cas ani sily, a brana, kterou
+    // nikdo nemuze projit, drzi obsah mimo produkci navzdy. Duveru proto zveda i
+    // baterie mereni (`mechanicalReview`), ktera chyta hrube rozbiti.
+    //
+    // Co se tim NEzmenilo: brana musi porad nahlas rikat, ze to neni overeny
+    // obsah. Test proto hlida vetu, ne hodnotu - hodnota se posunula rozhodnutim,
+    // veta je to, co drzi produkt poctivy.
+    expect(parsed.turnFamilies.every(
+      (family: { confidence: string }) => family.confidence === "LOW" || family.confidence === "MEDIUM",
+    )).toBe(true);
     expect(parsed.knownLimits.join(" ")).toContain("Solved TURN content ships");
     expect(parsed.knownLimits.join(" ")).toContain("not verified content");
     // Dve z devíti rodin mají část boardů z redukovaného review stromu. Agregát

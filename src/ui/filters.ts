@@ -232,6 +232,129 @@ function sectionTitle(doc: Document, text: string): HTMLElement {
  * attributes, present in the DOM whether the group is open or shut. Nothing that
  * reads the filter state needs to know this exists.
  */
+/**
+ * Předvolba: pojmenovaná skupina souvisejících hodnot v jedné dimenzi.
+ *
+ * Filtr má jedenatřicet zaškrtávátek - devět pozic, třináct hloubek, devět
+ * situací - a než hráč rozdá první ruku, musí se prokousat všemi. Skládanka je
+ * to zbytečná, protože se skoro vždycky vybírá souvislá skupina: rané pozice,
+ * krátké stacky, obrana proti openu.
+ *
+ * Zaškrtávátka **zůstávají**, a to schválně ze dvou důvodů. Za prvé na jejich
+ * počty a `data-` atributy spoléhá kontrakt DOM testů. Za druhé předvolba pokrývá
+ * běžný případ, ne každý: kdo chce přesně UTG a button, musí mít pořád jak si to
+ * naklikat. Rozbalovátko je zkratka, ne náhrada.
+ */
+interface FilterPreset<K> {
+  id: string;
+  label: string;
+  /** Které klíče předvolba vybírá z těch, co zrovna existují. */
+  matches: (key: K) => boolean;
+}
+
+/**
+ * Rozbalovátko, které zaškrtne celou skupinu najednou.
+ *
+ * Drží se v obou směrech: výběr předvolby zaškrtne její hodnoty, a ruční změna
+ * zaškrtávátka přepne rozbalovátko na „vlastní výběr", pokud stav žádné
+ * předvolbě neodpovídá. Bez té druhé půlky by rozbalovátko tvrdilo „rané pozice"
+ * nad výběrem, který rané pozice není - a to je horší než žádná zkratka.
+ */
+function makePresetSelect<K>(
+  doc: Document,
+  className: string,
+  presets: readonly FilterPreset<K>[],
+  inputs: Map<K, HTMLInputElement>,
+  onApply: () => void,
+): { root: HTMLSelectElement; sync: () => void } {
+  const select = doc.createElement("select");
+  select.className = className;
+  select.style.fontSize = "12px";
+
+  const custom = doc.createElement("option");
+  custom.value = "";
+  custom.textContent = CS.filters.presetCustom;
+  select.appendChild(custom);
+  for (const preset of presets) {
+    const option = doc.createElement("option");
+    option.value = preset.id;
+    option.textContent = preset.label;
+    select.appendChild(option);
+  }
+
+  select.addEventListener("change", () => {
+    const preset = presets.find((item) => item.id === select.value);
+    if (preset === undefined) return;
+    for (const [key, input] of inputs) input.checked = preset.matches(key);
+    onApply();
+  });
+
+  const sync = () => {
+    const checked = [...inputs].filter(([, input]) => input.checked).map(([key]) => key);
+    const match = presets.find((preset) => {
+      const wanted = [...inputs.keys()].filter((key) => preset.matches(key));
+      return wanted.length === checked.length
+        && wanted.every((key) => checked.includes(key));
+    });
+    select.value = match?.id ?? "";
+  };
+  return { root: select, sync };
+}
+
+/** Obal, aby předvolba a hromadné přepínače seděly v hlavičce vedle sebe. */
+function withPreset(doc: Document, preset: HTMLElement, bulk: HTMLElement): HTMLElement {
+  const row = el(doc, "div", "filter-group__shortcuts");
+  row.style.display = "flex";
+  row.style.alignItems = "center";
+  row.style.gap = "6px";
+  row.appendChild(preset);
+  row.appendChild(bulk);
+  return row;
+}
+
+const POSITION_PRESETS: readonly FilterPreset<Position>[] = [
+  { id: "all", label: "Vše", matches: () => true },
+  {
+    id: "early",
+    label: "Rané pozice",
+    matches: (key) => key === "UTG" || key === "UTG+1" || key === "UTG+2",
+  },
+  { id: "middle", label: "Střední pozice", matches: (key) => key === "LJ" || key === "HJ" },
+  { id: "late", label: "Pozdní pozice", matches: (key) => key === "CO" || key === "BTN" },
+  { id: "blinds", label: "Blindy", matches: (key) => key === "SB" || key === "BB" },
+];
+
+/**
+ * Hranice hloubek jsou tytéž, kterými se řídí obsah.
+ *
+ * Krátký stack je tam, kde se hraje push/fold, hluboký tam, kde zbývá prostor na
+ * víc než jednu sázku. Kdyby si rozbalovátko zvolilo vlastní dělení, hráč by
+ * trénoval jinak rozdělené skupiny, než jak je rozdělená strategie.
+ */
+const BUCKET_PRESETS: readonly FilterPreset<StackBucket>[] = [
+  { id: "all", label: "Vše", matches: () => true },
+  { id: "short", label: "Krátké (≤ 20 BB)", matches: (key) => key <= 20 },
+  { id: "mid", label: "Střední (25–50 BB)", matches: (key) => key >= 25 && key <= 50 },
+  { id: "deep", label: "Hluboké (≥ 60 BB)", matches: (key) => key >= 60 },
+];
+
+const CONTEXT_PRESETS: readonly FilterPreset<ActionContext>[] = [
+  { id: "all", label: "Vše", matches: () => true },
+  { id: "open", label: "Otevírání", matches: (key) => key === "RFI" || key === "VS_LIMP" },
+  {
+    id: "vs-open",
+    label: "Proti otevření",
+    matches: (key) => key === "VS_OPEN" || key === "VS_3BET"
+      || key === "VS_4BET" || key === "SQUEEZE",
+  },
+  { id: "bvb", label: "Blind proti blindu", matches: (key) => key === "BVB" },
+  {
+    id: "short",
+    label: "Krátký stack",
+    matches: (key) => key === "PUSH_FOLD" || key === "VS_ALLIN",
+  },
+];
+
 interface FilterDisclosure {
   /** The element to append to the form. */
   root: HTMLElement;
@@ -429,14 +552,23 @@ export function renderFilters(
       posGroup.refresh();
     },
   );
+  const posPreset = makePresetSelect(
+    doc, "filter-position-preset", POSITION_PRESETS, positionInputs,
+    () => { hideWarning(); posGroup.refresh(); },
+  );
   const posGroup = makeDisclosure(
     doc,
     CS.filters.positions,
-    () => summariseSelection(
-      [...positionInputs].filter(([, inp]) => inp.checked).map(([pos]) => pos),
-      positionInputs.size,
-    ),
-    posBulk,
+    () => {
+      // Pozice se překreslují při změně formátu stolu, takže se předvolba
+      // porovnává s tím, co zrovna existuje - ne s pevným seznamem devíti.
+      posPreset.sync();
+      return summariseSelection(
+        [...positionInputs].filter(([, inp]) => inp.checked).map(([pos]) => pos),
+        positionInputs.size,
+      );
+    },
+    withPreset(doc, posPreset.root, posBulk),
     false,
   );
   const posBox = el(doc, "div", "filter-group--positions");
@@ -459,14 +591,21 @@ export function renderFilters(
       bucketGroup.refresh();
     },
   );
+  const bucketPreset = makePresetSelect(
+    doc, "filter-bucket-preset", BUCKET_PRESETS, bucketInputs,
+    () => { hideWarning(); bucketGroup.refresh(); },
+  );
   const bucketGroup = makeDisclosure(
     doc,
     CS.filters.stackDepths,
-    () => summariseSelection(
-      [...bucketInputs].filter(([, inp]) => inp.checked).map(([bb]) => `${bb} BB`),
-      bucketInputs.size,
-    ),
-    bucketBulk,
+    () => {
+      bucketPreset.sync();
+      return summariseSelection(
+        [...bucketInputs].filter(([, inp]) => inp.checked).map(([bb]) => `${bb} BB`),
+        bucketInputs.size,
+      );
+    },
+    withPreset(doc, bucketPreset.root, bucketBulk),
     false,
   );
   const bucketBox = el(doc, "div", "filter-group--buckets");
@@ -501,14 +640,21 @@ export function renderFilters(
       ctxGroup.refresh();
     },
   );
+  const ctxPreset = makePresetSelect(
+    doc, "filter-context-preset", CONTEXT_PRESETS, contextInputs,
+    () => { hideWarning(); ctxGroup.refresh(); },
+  );
   const ctxGroup = makeDisclosure(
     doc,
     CS.filters.actionContext,
-    () => summariseSelection(
-      [...contextInputs].filter(([, inp]) => inp.checked).map(([ctx]) => CONTEXT_LABEL[ctx]),
-      contextInputs.size,
-    ),
-    ctxBulk,
+    () => {
+      ctxPreset.sync();
+      return summariseSelection(
+        [...contextInputs].filter(([, inp]) => inp.checked).map(([ctx]) => CONTEXT_LABEL[ctx]),
+        contextInputs.size,
+      );
+    },
+    withPreset(doc, ctxPreset.root, ctxBulk),
     false,
   );
   const ctxBox = el(doc, "div", "filter-group--contexts");

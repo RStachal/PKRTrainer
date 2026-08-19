@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { buildMttActionEvReadinessReport } from "../src/data/ranges/mttActionEvReadiness.ts";
 import { MTT_POSTFLOP_PILOT_CATALOG } from "../src/data/ranges/mttPostflopPilotCatalog.ts";
@@ -22,6 +22,57 @@ import { shippedContentRisks } from "./lib/mttContentRisks.mts";
 import { depthStrataLimit, missingOpenerDimensionLimit } from "./lib/preflopDepthStrata.mts";
 
 export const MTT_PLAYABLE_BETA_SCOPE = "MTT_PLAYABLE_BETA_V1" as const;
+
+/**
+ * Čím je podložená důvěra dodávaného obsahu - měřením, nebo člověkem.
+ *
+ * Do 19. 8. 2026 stačila jedna věta: nikdo nečetl, takže obsah není ověřený. Pak
+ * začala důvěru zvedat i baterie měření a to jsou dvě různá tvrzení. Pack s
+ * `basis: MECHANICAL` prošel kontrolou hrubého rozbití - ne pokerovým úsudkem -
+ * a hráč za něj platí, takže se to musí říct nahlas a s počty.
+ *
+ * Čte se soubor verdiktů, ne packy: pack nese jen výslednou hodnotu, kdežto
+ * důvod, proč ji má, je právě v tom verdiktu.
+ */
+function mechanicalConfidenceLimits(): string[] {
+  const path = "Agents/turn-review/verdicts.json";
+  if (!existsSync(path)) {
+    return [
+      "No solved family has been reviewed at all, so solved content is shipped content, "
+      + "not verified content.",
+    ];
+  }
+  let verdicts: Array<{ basis?: string; outcome?: string }> = [];
+  try {
+    verdicts = (JSON.parse(readFileSync(path, "utf8")) as {
+      verdicts?: Array<{ basis?: string; outcome?: string }>;
+    }).verdicts ?? [];
+  } catch {
+    return ["The review verdict file could not be read, so confidence cannot be explained."];
+  }
+  const accepted = verdicts.filter((item) => item.outcome === "ACCEPTED");
+  const mechanical = accepted.filter((item) => (item.basis ?? "PLAYER_READ") === "MECHANICAL");
+  const human = accepted.length - mechanical.length;
+  if (accepted.length === 0) {
+    return [
+      "No solved family has been accepted yet, so solved content is shipped content, "
+      + "not verified content.",
+    ];
+  }
+  const limits: string[] = [];
+  if (mechanical.length > 0) {
+    limits.push(
+      `${mechanical.length} solved pack(s) reach MEDIUM through mechanical checks, not a player `
+      + "read: the battery catches gross breakage - defence against pot odds, action distribution "
+      + "against siblings, initiative ordering, collapsed decisions - and says nothing about "
+      + "whether the strategy plays well. This is shipped content, not verified content.",
+    );
+  }
+  if (human === 0) {
+    limits.push("No solved pack has been read by a player yet.");
+  }
+  return limits;
+}
 
 const TARGET_PREFLOP_PROFILE_KEYS = [
   "FULL_RING_9|REGULAR|CHIP_EV|PREFLOP|OFF",
@@ -320,9 +371,11 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       "Solved RIVER content has a review path (mtt:review-turn-family --street=RIVER) but no "
       + "reader yet, so it stays LOW and cannot reach production on its own.",
     ]),
-    ...(turnFamilies.some((family) => family.confidence !== "LOW") ? [] : [
-      "No solved TURN family has been player-reviewed yet, so turn content is shipped content, not verified content.",
-    ]),
+    // Dokud šla důvěra zvednout jen čtením, stačila jedna věta: nikdo nečetl,
+    // takže obsah není ověřený. Od 19. 8. 2026 ji zvedá i baterie měření, a tím
+    // se ta věta rozpadla na dvě různá tvrzení, která se nesmí splést. Mlčet o
+    // tom nelze: hráč platí za obsah, který v tomhle stavu neviděl žádný člověk.
+    ...mechanicalConfidenceLimits(),
   ];
 
   return {

@@ -148,7 +148,8 @@
     "mtt:strength-order": "node scripts/run-cli.mjs scripts/generatePreflopStrengthOrder.mts",
     "mtt:turn-review": "node scripts/run-cli.mjs scripts/reviewTurnFamily.mts",
     "mtt:confidence-backing": "node scripts/run-cli.mjs scripts/checkConfidenceBacking.mts",
-    "mtt:reference-check": "node scripts/run-cli.mjs scripts/checkReferenceRanges.mts"
+    "mtt:reference-check": "node scripts/run-cli.mjs scripts/checkReferenceRanges.mts",
+    "mtt:mechanical-review": "node scripts/run-cli.mjs scripts/runMechanicalReview.mts"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",

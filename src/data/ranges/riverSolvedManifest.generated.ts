@@ -18,12 +18,6 @@ export const solvedRiverManifest: readonly SolvedRiverManifestEntry[] = [
     load: () => import("./river/mtt9-100bb-btn-bb-srp-facing-highspr.generated.json").then((module) => module.default as unknown as RiverStrategyPack),
   },
   {
-    familyId: "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
-    packId: "mtt-full-ring-9-river-solved-mtt9-110bb-co-btn-3bp-facing-midhigh-v1",
-    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|RIVER",
-    load: () => import("./river/mtt9-110bb-co-btn-3bp-facing-midhigh.generated.json").then((module) => module.default as unknown as RiverStrategyPack),
-  },
-  {
     familyId: "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
     packId: "mtt-full-ring-9-river-solved-mtt9-150bb-co-btn-3bp-highspr-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|RIVER",

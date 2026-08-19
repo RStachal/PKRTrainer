@@ -5,6 +5,8 @@ import {
   seatsOfFamily,
   trimToModuleBudget,
   supersededByRepair,
+  MODULE_BUDGET_BYTES,
+  PACK_ENVELOPE_BYTES,
 } from "./lib/solvedPackBuilding.mts";
 import { subgameDecisions } from "./lib/subgameDecisions.mts";
 import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
@@ -414,10 +416,14 @@ if (family === undefined) {
   // Strop v bajtech, ne v pravidlech - viz `trimToModuleBudget`. Tahle ulice se
   // do rozpočtu dnes vejde, ale ze stejného důvodu jako river se vejít nemusí:
   // `RULE_BUDGET` neví, kolik místa pravidlo zabere.
-  const fitted = trimToModuleBudget(rules, (candidate) => {
-    const attempt = buildWith(candidate);
-    return attempt.ok ? JSON.stringify(attempt.pack).length : 0;
-  });
+  // Měří se pravidla, ne hotový pack: velikost packu závisí na textu o důvěře,
+  // takže by přijatý verdikt měnil ořez a tím i otisk, na který je verdikt
+  // vázaný. Viz `trimToModuleBudget`.
+  const fitted = trimToModuleBudget(
+    rules,
+    (candidate) => JSON.stringify(candidate).length,
+    MODULE_BUDGET_BYTES - PACK_ENVELOPE_BYTES,
+  );
   if (fitted.dropped > 0) {
     console.log(`  ${fitted.dropped} turnů vynecháno, aby se modul vešel do rozpočtu svazku`);
     rules.length = 0;

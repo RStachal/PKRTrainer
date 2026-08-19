@@ -32,7 +32,11 @@ function spotTitle(rule: TurnStrategyRule): string {
   const depth = spot.potBB === undefined || spot.stackBehindBB === undefined
     ? ""
     : `, pot ${spot.potBB} BB, za tím ${spot.stackBehindBB} BB`;
-  return `flop ${spot.flop.join(" ")}, turn ${solved}${alsoFor}${depth}`;
+  // Flopový pack žádnou turn kartu nemá a renderer to neošetřoval, takže výpis
+  // psal doslova "turn undefined". Vypadá to jako chybějící data, přitom je to
+  // správně: na flopu se ta karta ještě nerozdala.
+  const street = solved === undefined ? "" : `, turn ${solved}${alsoFor}`;
+  return `flop ${spot.flop.join(" ")}${street}${depth}`;
 }
 
 /**

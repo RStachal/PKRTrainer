@@ -48,6 +48,17 @@ export interface TurnReviewVerdictRecord {
   reviewedAt: string;
   /** Kdo četl. Jméno, ne role - u jednoho čtenáře je to totéž. */
   reviewer: string;
+  /**
+   * Čím je verdikt podložený.
+   *
+   * `PLAYER_READ` znamená, že se na strategii podíval člověk. `MECHANICAL`
+   * znamená, že prošla baterií měření (`mechanicalReview`) - ta chytá hrubé
+   * rozbití, ne kvalitu hry, a **nikde se nesmí vydávat za přečtení člověkem**.
+   *
+   * Chybí-li, čte se jako `PLAYER_READ`: v době, kdy formát vznikl, jiná cesta
+   * neexistovala a všechny tehdejší záznamy měly znamenat člověka.
+   */
+  basis?: "PLAYER_READ" | "MECHANICAL";
   /** Co si při čtení všiml. Prázdné u čistého přijetí. */
   notes?: string;
 }
@@ -115,6 +126,18 @@ export function confidenceForFamily(
     return {
       confidence: "LOW",
       reason: "obsah se od čtení změnil, verdikt propadl a rodina se musí přečíst znovu",
+    };
+  }
+  if ((verdict.basis ?? "PLAYER_READ") === "MECHANICAL") {
+    // MEDIUM i tady, a je to vědomé rozhodnutí. Alternativou totiž není přísnější
+    // brána, ale obsah, který se k hráči nedostane nikdy: čtení 10 447 rozhodnutí
+    // je práce, na kterou v tomhle projektu není člověk. Důvod ale musí říct, co
+    // za tou důvěrou stojí, jinak se měření níž v produktu k nerozeznání smíchá
+    // s pokerovým úsudkem.
+    return {
+      confidence: "MEDIUM",
+      reason: `mechanicky ověřeno ${verdict.reviewedAt} (${verdict.reviewer}); `
+        + "měření chytá hrubé rozbití, ne kvalitu hry - není to přečtení člověkem",
     };
   }
   return {
