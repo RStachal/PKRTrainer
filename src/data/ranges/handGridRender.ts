@@ -99,8 +99,13 @@ export function renderHandGridBlock(
 ): string {
   const grid = renderHandGrid(buckets, options);
   const total = grid.legend.reduce((sum, entry) => sum + entry.combos, 0) || 1;
+  // Šířka podle nejdelšího popisku, ne pevných dvacet znaků. Popisky se
+  // prodloužily převodem na blindy (`BET 3.4 BB (34 % potu)`) a sloupec s
+  // kombinacemi se rozjel - u tabulky, kterou má někdo hodiny číst, je to
+  // rozdíl mezi přehledem a hádankou.
+  const labelWidth = grid.legend.reduce((width, entry) => Math.max(width, entry.action.length), 0);
   const legendLines = grid.legend.map((entry) => (
-    `${entry.symbol}  ${entry.action.padEnd(20)} ${entry.combos} komb. (${((entry.combos / total) * 100).toFixed(0)} %)`
+    `${entry.symbol}  ${entry.action.padEnd(labelWidth)}  ${entry.combos} komb. (${((entry.combos / total) * 100).toFixed(0)} %)`
   ));
   return [
     ...grid.lines,

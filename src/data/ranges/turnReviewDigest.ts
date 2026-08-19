@@ -39,28 +39,48 @@ function spotTitle(rule: TurnStrategyRule): string {
  * Akce tak, jak ji čte pokerista, ne jak ji zapsal solver.
  *
  * Solver píše `BET 17.000000`: šest desetinných míst, která nic neznamenají, a
- * částku v žetonech, kdežto hloubka se vedle uvádí v blindech. Kdo tohle čte
+ * částku v **žetonech**, kdežto celý produkt mluví v blindech. Kdo výpis čte
  * hodiny, převádí si to v hlavě u každého řádku.
  *
- * Procenta potu se doplňují **jen tam, kde je pot jediný** - tedy u konkrétní
- * desky. V souhrnném rozdělení se sčítají spoty s různými poty, takže by tatáž
- * `BET 17` byla jednou třetina potu a jindy pětina; jedno číslo by tam lhalo.
- * Proto se v souhrnu jen zahodí desetinná místa.
+ * Blind se nebere z konfigurace, ale dopočítá se z toho pravidla: `potChips`
+ * děleno `potBB`. Obě čísla nese každé pravidlo (ověřeno na všech 10 558
+ * dodávaných), takže převod nemá kde selhat a nemusí se hádat. Poměr uvnitř
+ * rodiny mírně kolísá - 6,494 proti 6,522 - ale to je zaokrouhlení `potBB` na
+ * desetiny, ne jiný blind; po převodu na desetinu blindu ten rozdíl zmizí.
  *
- * Zvýšení dostane částku bez procent schválně: `RAISE 133` znamená "na 133", ne
- * "o 133", a pot už je v tu chvíli jiný než ten na uzlu. Poctivější je nechat
- * částku, než dopočítat podíl, který se vztahuje k něčemu jinému.
+ * Procenta potu se doplňují jen u sázky. `RAISE 133` znamená "na 133", ne "o
+ * 133", takže podíl by se vztahoval k jinému potu, než jaký má čtenář před
+ * očima; u zvýšení se proto uvádí jen částka v blindech.
+ *
+ * Když by převod nešel, částka se výslovně označí za žetony. Tvářit se, že je
+ * to blindy, je horší než přiznat jednotku, kterou produkt jinde nepoužívá.
  */
-export function readableAction(action: string, potChips?: number): string {
+export function readableAction(
+  action: string,
+  spot?: { potChips?: number; potBB?: number },
+): string {
   const match = /^(BET|RAISE)\s+([\d.]+)$/i.exec(action.trim());
   if (match === null) return action.trim();
   const verb = match[1].toUpperCase();
-  const amount = Number(match[2]);
-  const rounded = Number.isInteger(amount) ? String(amount) : amount.toFixed(1);
-  if (verb !== "BET" || potChips === undefined || potChips <= 0) {
-    return `${verb} ${rounded}`;
+  const chips = Number(match[2]);
+
+  const potChips = spot?.potChips;
+  const potBB = spot?.potBB;
+  const blind = potChips !== undefined && potBB !== undefined && potBB > 0
+    ? potChips / potBB
+    : undefined;
+
+  if (blind === undefined || blind <= 0) {
+    const raw = Number.isInteger(chips) ? String(chips) : chips.toFixed(1);
+    return `${verb} ${raw} žetonů`;
   }
-  return `${verb} ${rounded} (${Math.round((amount / potChips) * 100)} % potu)`;
+
+  const bb = chips / blind;
+  const amount = `${bb.toFixed(1)} BB`;
+  if (verb !== "BET" || potChips === undefined || potChips <= 0) {
+    return `${verb} ${amount}`;
+  }
+  return `${verb} ${amount} (${Math.round((chips / potChips) * 100)} % potu)`;
 }
 
 /** Podíl kombinací, které v tomhle pravidle sázejí. */
@@ -227,17 +247,21 @@ export function renderTurnFamilyDigest(
     // Rozdělení akcí odhalí obrácené znaménko: rozhodnutí, kde hráč bez
     // iniciativy sází ve třech čtvrtinách případů, je špatně, i kdyby každé
     // jednotlivé pravidlo vypadalo rozumně.
+    // Převádí se po pravidlech, ne po řetězci akce. Tatáž `BET 17` znamená v
+    // jiném spotu jiný podíl potu, ale v blindech vyjde stejně, takže se sloučí
+    // správně a bez rodinové konstanty.
     const byAction = new Map<string, number>();
     for (const rule of decision.rules) {
       for (const bucket of rule.buckets) {
-        byAction.set(bucket.action, (byAction.get(bucket.action) ?? 0) + bucket.combos);
+        const label = readableAction(bucket.action, rule.spot);
+        byAction.set(label, (byAction.get(label) ?? 0) + bucket.combos);
       }
     }
     const totalCombos = [...byAction.values()].reduce((sum, value) => sum + value, 0) || 1;
     lines.push("     rozdělení akcí podle kombinací:");
     for (const [action, combos] of [...byAction].sort((a, b) => b[1] - a[1])) {
       // Bez potu: souhrn míchá spoty s různými poty, viz `readableAction`.
-      lines.push(`       ${readableAction(action).padEnd(22)} ${((combos / totalCombos) * 100).toFixed(1)} %`);
+      lines.push(`       ${action.padEnd(26)} ${((combos / totalCombos) * 100).toFixed(1)} %`);
     }
 
     lines.push("     jak často která ruka sází nebo zvyšuje napříč deskami:");
@@ -252,11 +276,10 @@ export function renderTurnFamilyDigest(
       lines.push(`     ${sample.label}: ${spotTitle(sample.rule)}`);
       lines.push(`     (${sample.rule.sourceDirectory})`);
       // Tady je pot jediný, takže procenta potu platí a doplní se.
-      const pot = sample.rule.spot?.potChips;
       lines.push(renderHandGridBlock(
         sample.rule.buckets.map((bucket) => ({
           ...bucket,
-          action: readableAction(bucket.action, pot),
+          action: readableAction(bucket.action, sample.rule.spot),
         })),
         "       ",
       ));
