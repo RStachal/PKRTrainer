@@ -1,0 +1,183 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  combosOfClass,
+  riverActionEv,
+  type SolverNode,
+} from "../../src/core/riverActionEv";
+
+/**
+ * Dopočet EV riverových akcí.
+ *
+ * Ověřuje se na spotech, kde je odpověď známá dopředu z aritmetiky, ne na shodě
+ * výpočtu se sebou samým. Kdyby se testovalo srovnáním s vlastním mezivýsledkem,
+ * prošla by i systematická chyba - a EV je číslo, které hráč uvidí u každé akce,
+ * takže se na něm nesmí nic domýšlet.
+ *
+ * Deska `Kd 8s 5c 3d 2h`: žádná barva, žádná postupka. Trojice králů je jasně
+ * lepší než 7-6 bez páru, takže výsledek showdownu je v každém případě jistý a
+ * počítá se jen aritmetika potu.
+ */
+const BOARD = ["Kd", "8s", "5c", "3d", "2h"];
+const POT = 100;
+
+/** Uzel s pevnou strategií: každá kombinace hraje zadané frekvence. */
+function node(
+  player: number,
+  actions: string[],
+  frequencies: number[],
+  combos: string[],
+  childrens: Record<string, SolverNode> = {},
+): SolverNode {
+  const strategy: Record<string, number[]> = {};
+  for (const combo of combos) strategy[combo] = frequencies;
+  return { node_type: "action_node", player, actions, strategy: { actions, strategy }, childrens };
+}
+
+const heroCombos = combosOfClass("KK", new Set(BOARD));
+const villainCombos = combosOfClass("76s", new Set(BOARD));
+
+/** Kořen: hrdina (OOP, player 1) volí mezi checkem a sázkou 50. */
+function tree(villainCallFrequency: number): SolverNode {
+  return node(1, ["CHECK", "BET 50"], [0, 1], heroCombos, {
+    // Po checku soupeř checkne zpátky a jde se na showdown.
+    CHECK: node(0, ["CHECK"], [1], villainCombos, {}),
+    "BET 50": node(
+      0,
+      ["CALL", "FOLD"],
+      [villainCallFrequency, 1 - villainCallFrequency],
+      villainCombos,
+      { CALL: {} },
+    ),
+  });
+}
+
+const evOf = (results: ReturnType<typeof riverActionEv>, action: string) => {
+  const rows = results.filter((row) => row.action === action);
+  expect(rows.length, `akce ${action} chybí`).toBeGreaterThan(0);
+  // Všechny kombinace KK jsou na téhle desce stejně silné, takže se musí shodovat.
+  for (const row of rows) expect(row.evChips).toBeCloseTo(rows[0].evChips, 6);
+  return rows[0].evChips;
+};
+
+describe("EV riverových akcí", () => {
+  it("sázka s nejlepší rukou proti jistému dorovnání vynese pot i sázku", () => {
+    // Pot 100, sázka 50, soupeř vždy dorovná, hrdina vyhraje: bere 100 + 50.
+    const results = riverActionEv({
+      node: tree(1), board: BOARD, potChips: POT,
+      oop: { KK: 1 }, ip: { "76s": 1 },
+    });
+    expect(evOf(results, "BET 50")).toBeCloseTo(150, 6);
+  });
+
+  it("sázka proti jistému složení vynese jen pot", () => {
+    // Soupeř složí vždy: hrdina bere sto, vsazených padesát se mu vrací.
+    const results = riverActionEv({
+      node: tree(0), board: BOARD, potChips: POT,
+      oop: { KK: 1 }, ip: { "76s": 1 },
+    });
+    expect(evOf(results, "BET 50")).toBeCloseTo(100, 6);
+  });
+
+  it("check s nejlepší rukou proti checku vynese pot", () => {
+    const results = riverActionEv({
+      node: tree(1), board: BOARD, potChips: POT,
+      oop: { KK: 1 }, ip: { "76s": 1 },
+    });
+    expect(evOf(results, "CHECK")).toBeCloseTo(100, 6);
+  });
+
+  it("sázka s nejhorší rukou proti jistému dorovnání stojí sázku", () => {
+    // Role obrácené: hrdina drží 7-6 a prohraje, takže přijde o vsazených 50.
+    const swapped = node(1, ["CHECK", "BET 50"], [0, 1], villainCombos, {
+      CHECK: node(0, ["CHECK"], [1], heroCombos, {}),
+      "BET 50": node(0, ["CALL", "FOLD"], [1, 0], heroCombos, { CALL: {} }),
+    });
+    const results = riverActionEv({
+      node: swapped, board: BOARD, potChips: POT,
+      oop: { "76s": 1 }, ip: { KK: 1 },
+    });
+    expect(evOf(results, "BET 50")).toBeCloseTo(-50, 6);
+  });
+
+  it("poloviční dorovnání dá průměr obou konců", () => {
+    // Padesát procent call, padesát fold: (150 + 100) / 2.
+    const results = riverActionEv({
+      node: tree(0.5), board: BOARD, potChips: POT,
+      oop: { KK: 1 }, ip: { "76s": 1 },
+    });
+    expect(evOf(results, "BET 50")).toBeCloseTo(125, 6);
+  });
+
+  it("dělený pot vrátí polovinu, ne nulu", () => {
+    // Obě strany hrají A-K-Q-8-5 z desky a esa s dámou, takže showdown je remíza.
+    // Z potu 200 bere hrdina sto a vsadil padesát: čistá změna +50, tedy půlka
+    // původního potu. Nula by byla špatně - EV se měří jako změna hrdinových
+    // žetonů od začátku uzlu a půlka toho, co v potu leželo, se mu vrací.
+    //
+    // Původní verze tohohle testu stavěla remízu z KK na obou stranách. Deska
+    // bere jednoho krále, zbývají tři, a dvě kombinace KK se pak vždycky
+    // překrývají - takže scénář nešel sestavit a výpočet správně vrátil prázdno.
+    const aq = combosOfClass("AQs", new Set(BOARD));
+    const split = node(1, ["BET 50"], [1], aq, {
+      "BET 50": node(0, ["CALL"], [1], aq, { CALL: {} }),
+    });
+    const results = riverActionEv({
+      node: split, board: BOARD, potChips: POT, oop: { AQs: 1 }, ip: { AQs: 1 },
+    });
+    expect(results.length).toBeGreaterThan(0);
+    expect(evOf(results, "BET 50")).toBeCloseTo(50, 6);
+  });
+
+  it("odečet karet mění EV, ne jen počty", () => {
+    // Bez tohohle případu odečet karet nikdo nekontroluje: v ostatních testech
+    // se range nepřekrývají, takže vypnutí odečtu nezmění ani jedno číslo.
+    // Ověřeno falsifikací - první verze téhle sady prošla i s odečtem vypnutým.
+    //
+    // Hrdina drží K-Q v barvě, tedy pár králů. Soupeř má buď KK (trojice, bije
+    // hrdinu), nebo 7-6 v barvě (vysoká karta, prohrává). Deska bere jednoho
+    // krále, zbývají tři, a hrdinův král dva ze tří možných KK zablokuje: soupeř
+    // tedy může držet trojici jen jedním způsobem ze čtyř zbylých 7-6.
+    //
+    // Pot 100, sázka 50, soupeř vždy dorovná. Výhra dá 150, prohra -50:
+    //   s odečtem   (1 × -50 + 4 × 150) / 5 = 110
+    //   bez odečtu  (3 × -50 + 4 × 150) / 7 ≈ 64,3
+    const hero = combosOfClass("KQs", new Set(BOARD));
+    const villain = [
+      ...combosOfClass("KK", new Set(BOARD)),
+      ...combosOfClass("76s", new Set(BOARD)),
+    ];
+    const blocked = node(1, ["BET 50"], [1], hero, {
+      "BET 50": node(0, ["CALL"], [1], villain, { CALL: {} }),
+    });
+    const results = riverActionEv({
+      node: blocked, board: BOARD, potChips: POT,
+      oop: { KQs: 1 }, ip: { KK: 1, "76s": 1 },
+    });
+    expect(evOf(results, "BET 50")).toBeCloseTo(110, 6);
+  });
+
+  it("odečítá karty: soupeř nemůže držet totéž co hrdina", () => {
+    // Deska bere jednoho krále, hrdinovi zbývají tři, takže KK má tři kombinace
+    // a proti sobě může mít jen ty, co nesdílí kartu.
+    expect(combosOfClass("KK", new Set(BOARD)).length).toBe(3);
+    expect(combosOfClass("76s", new Set(BOARD)).length).toBe(4);
+  });
+
+  it("uzel, který není rozhodnutí, nevrátí vymyšlenou nulu", () => {
+    const results = riverActionEv({
+      node: { node_type: "showdown" }, board: BOARD, potChips: POT,
+      oop: { KK: 1 }, ip: { "76s": 1 },
+    });
+    expect(results).toEqual([]);
+  });
+
+  it("nedokončená deska se odmítne", () => {
+    // Bez páté karty není showdown rozhodnutelný a EV by bylo domyšlené.
+    const results = riverActionEv({
+      node: tree(1), board: BOARD.slice(0, 4), potChips: POT,
+      oop: { KK: 1 }, ip: { "76s": 1 },
+    });
+    expect(results).toEqual([]);
+  });
+});
