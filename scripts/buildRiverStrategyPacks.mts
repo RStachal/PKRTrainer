@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { dirname, join } from "node:path";
 import { heroSideOfNode, seatsOfFamily,
   trimToModuleBudget,
+  supersededByRepair,
 } from "./lib/solvedPackBuilding.mts";
 import { subgameDecisions } from "./lib/subgameDecisions.mts";
 import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
@@ -154,6 +155,18 @@ const family = familyArg?.split("=")[1];
 
 if (family === undefined) {
   console.error("Usage: npm run mtt:river-pack -- --family=<FAMILY_ID> [--write]");
+  process.exitCode = 2;
+} else if (
+  existsSync(MANIFEST_PATH) &&
+  supersededByRepair(family, readFileSync(MANIFEST_PATH, "utf8")) !== undefined
+) {
+  // Stejná kontrola jako na turnu. Bez ní se dodávala riverová strategie z
+  // rodiny, kterou produkt na ostatních ulicích odmítá.
+  const winner = supersededByRepair(family, readFileSync(MANIFEST_PATH, "utf8"));
+  console.error(
+    `${family} už nahradila ${winner}; obě řeší tentýž spot a resolver by odpověděl `
+    + "z té, která je v řetězci první. Postav a shipuj jen tu opravenou.",
+  );
   process.exitCode = 2;
 } else if (!existsSync(ROOT)) {
   console.error(`${ROOT} is absent; nothing to build from.`);

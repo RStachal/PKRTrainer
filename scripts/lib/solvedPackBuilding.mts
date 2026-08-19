@@ -247,3 +247,27 @@ export function trimToModuleBudget<R>(
   }
   return { kept: rules.slice(0, low), dropped: rules.length - low };
 }
+
+/**
+ * Rodina, která tuhle nahradila, nebo `undefined`.
+ *
+ * `_REPAIR` je přeřešená verze téhož spotu. Obě projdou review bránou a obě umí
+ * postavit pack - jenže resolver bere první pack v řetězci, který sedí, takže
+ * kdyby se dodávaly obě, odpovídala by ta zaregistrovaná dřív. To může být ta
+ * vadná, a poznat by to nešlo: obě nesou stejný pattern, stejnou hloubku a
+ * stejný typ potu, a v UI se liší jen identifikátorem, který hráč nevidí.
+ *
+ * Kontrola byla dosud jen v turnovém generátoru, takže `MTT9_35BB_CO_BTN_3BP`
+ * neprošla na turnu, ale na riveru ano - a produkt tak dodával riverovou
+ * strategii z rodiny, kterou na ostatních ulicích sám odmítá. Našel to až plán
+ * čtení, kde ta rodina svítila jako jediná se samotným riverem.
+ *
+ * Levnější je to zakázat než se na to spoléhat.
+ */
+export function supersededByRepair(
+  familyId: string,
+  manifestSource: string,
+): string | undefined {
+  const repair = `${familyId}_REPAIR`;
+  return manifestSource.includes(`familyId: "${repair}"`) ? repair : undefined;
+}

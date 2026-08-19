@@ -10,6 +10,10 @@ import type { TurnStrategyPack } from "../src/data/ranges/turnStrategyPack";
 import { renderTurnFamilyDigest } from "../src/data/ranges/turnReviewDigest";
 import { profileTurnFamilies } from "../src/data/ranges/turnFamilyAnomaly";
 import {
+  familiesNeededFor,
+  planReviewUnlock,
+} from "../src/data/ranges/reviewUnlockPlan";
+import {
   parseTurnReviewVerdicts,
   turnRuleContentHash,
   type TurnReviewOutcome,
@@ -81,7 +85,48 @@ const packsForStreet = (street === "FLOP"
 const verdicts = readVerdicts();
 const familyId = arg("family");
 
-if (familyId === undefined) {
+if (process.argv.includes("--plan")) {
+  // Fronta výš odpovídá na "kde hledat chybu". Tahle na "co přečíst, když mám
+  // dvě hodiny" - a to jsou dvě různé otázky s různým pořadím.
+  const plan = planReviewUnlock({
+    FLOP: runtimeSolvedFlopPacks as readonly TurnStrategyPack[],
+    TURN: runtimeSolvedTurnPacks as readonly TurnStrategyPack[],
+    RIVER: runtimeSolvedRiverPacks as readonly TurnStrategyPack[],
+  }, verdicts);
+
+  console.log("Co přečíst, aby se odemklo nejvíc\n");
+  console.log("  #  rodina                                      ulice      pravidel  podíl  souhrnně");
+  plan.rows.forEach((row, index) => {
+    const streets = (["FLOP", "TURN", "RIVER"] as const)
+      .map((street) => {
+        const found = row.streets.find((item) => item.street === street);
+        if (found === undefined) return "-";
+        return found.alreadyRead ? street[0].toLowerCase() : street[0];
+      })
+      .join("");
+    console.log(
+      `${String(index + 1).padStart(3)}  ${row.familyId.padEnd(42)} ${streets.padEnd(8)}`
+      + `${String(row.unlockableRules).padStart(9)}`
+      + `${(row.shareOfShipped * 100).toFixed(1).padStart(7)}%`
+      + `${(row.cumulativeShare * 100).toFixed(1).padStart(9)}%`,
+    );
+  });
+
+  const readShare = plan.shippedRules === 0 ? 0 : plan.readRules / plan.shippedRules;
+  console.log(`
+Dodávaných rozhodnutí: ${plan.shippedRules}, přečtených ${plan.readRules} (${(readShare * 100).toFixed(1)} %).`);
+  for (const target of [0.25, 0.5, 0.8]) {
+    console.log(
+      `  ${familiesNeededFor(plan, target)} rodin přečíst -> ${(target * 100).toFixed(0)} % obsahu opustí LOW`,
+    );
+  }
+  console.log([
+    "",
+    "Váha je objem, ne kvalita: odemyká se obsah k posouzení, ne k důvěře.",
+    "Velká písmena jsou ulice, které rodina má a nikdo je nečetl, malá přečtené.",
+    "Celá rodina najednou: npm run mtt:turn-review -- --family=<ID>",
+  ].join("\n"));
+} else if (familyId === undefined) {
   console.log(`Vyřešené ${street} rodiny a stav jejich čtení\n`);
   // Rodiny, které se od svých sourozenců liší, jdou najevo hned. Čtení je práce,
   // kterou nikdo jiný neudělá, a jedenáct rodin po třech stech pravidlech nikdo

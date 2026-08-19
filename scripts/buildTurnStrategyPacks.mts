@@ -2,8 +2,9 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import {
   fullTreeBoardsByFamily,
   heroSideOfNode,
-  seatsOfFamily,,
+  seatsOfFamily,
   trimToModuleBudget,
+  supersededByRepair,
 } from "./lib/solvedPackBuilding.mts";
 import { subgameDecisions } from "./lib/subgameDecisions.mts";
 import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
@@ -148,30 +149,15 @@ const familyArg = process.argv.find((item) => item.startsWith("--family="));
 const write = process.argv.includes("--write");
 const family = familyArg?.split("=")[1];
 
-/**
- * Rodiny, které jiná rodina nahradila.
- *
- * `_REPAIR` je přeřešená verze téhož spotu. Obě projdou review bránou a obě umí
- * postavit pack - jenže resolver bere první pack v řetězci, který sedí, takže
- * kdyby shipovaly obě, odpovídala by ta zaregistrovaná dřív. To může být ta
- * vadná, a poznat by to nešlo: obě nesou stejný pattern, stejnou hloubku a
- * stejný typ potu, a v UI se liší jen identifikátorem, který hráč nevidí.
- *
- * Levnější je to zakázat než se na to spoléhat.
- */
-function supersededBy(familyId: string, manifestSource: string): string | undefined {
-  const repair = `${familyId}_REPAIR`;
-  return manifestSource.includes(`familyId: "${repair}"`) ? repair : undefined;
-}
 
 if (family === undefined) {
   console.error("Usage: npm run mtt:turn-pack -- --family=<FAMILY_ID> [--write]");
   process.exitCode = 2;
 } else if (
   existsSync(MANIFEST_PATH) &&
-  supersededBy(family, readFileSync(MANIFEST_PATH, "utf8")) !== undefined
+  supersededByRepair(family, readFileSync(MANIFEST_PATH, "utf8")) !== undefined
 ) {
-  const winner = supersededBy(family, readFileSync(MANIFEST_PATH, "utf8"));
+  const winner = supersededByRepair(family, readFileSync(MANIFEST_PATH, "utf8"));
   console.error(
     `${family} už nahradila ${winner}; obě řeší tentýž spot a resolver by odpověděl `
     + "z té, která je v řetězci první. Postav a shipuj jen tu opravenou.",
