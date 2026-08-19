@@ -2,7 +2,8 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import {
   fullTreeBoardsByFamily,
   heroSideOfNode,
-  seatsOfFamily,
+  seatsOfFamily,,
+  trimToModuleBudget,
 } from "./lib/solvedPackBuilding.mts";
 import { subgameDecisions } from "./lib/subgameDecisions.mts";
 import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
@@ -417,13 +418,27 @@ if (family === undefined) {
     console.log(`  ${unidentified} turns left out: could not establish whose strategy the node holds`);
   }
 
-  const result = buildTurnStrategyPack({
-    id: `mtt-full-ring-9-turn-solved-${family.toLowerCase().replace(/_/g, "-")}-v1`,
-    createdAt: new Date().toISOString().slice(0, 10),
-    evidence,
-    rules,
-    verdicts: readVerdicts(),
+  const packId = `mtt-full-ring-9-turn-solved-${family.toLowerCase().replace(/_/g, "-")}-v1`;
+  const createdAt = new Date().toISOString().slice(0, 10);
+  const verdicts = readVerdicts();
+  const buildWith = (candidate: typeof rules) => buildTurnStrategyPack({
+    id: packId, createdAt, evidence, rules: candidate, verdicts,
   });
+
+  // Strop v bajtech, ne v pravidlech - viz `trimToModuleBudget`. Tahle ulice se
+  // do rozpočtu dnes vejde, ale ze stejného důvodu jako river se vejít nemusí:
+  // `RULE_BUDGET` neví, kolik místa pravidlo zabere.
+  const fitted = trimToModuleBudget(rules, (candidate) => {
+    const attempt = buildWith(candidate);
+    return attempt.ok ? JSON.stringify(attempt.pack).length : 0;
+  });
+  if (fitted.dropped > 0) {
+    console.log(`  ${fitted.dropped} turnů vynecháno, aby se modul vešel do rozpočtu svazku`);
+    rules.length = 0;
+    rules.push(...fitted.kept);
+  }
+
+  const result = buildWith(rules);
 
   if (!result.ok) {
     console.error(result.reason);

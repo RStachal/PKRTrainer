@@ -39,7 +39,13 @@ describe("vyřešený river odpovídá", () => {
     clearSolvedRiverPacksForTests();
   });
 
-  it("na desku, na které vznikl, vydá solverem podloženou akci", async () => {
+  // Vlastní limit, ne výchozích pět vteřin.
+  //
+  // Tenhle případ načítá všechny dodávané riverové rodiny a těch bylo jedna,
+  // dokud noční běh nedodal čtrnáct dalších. Výchozích pět vteřin pak přestalo
+  // stačit a test spadl na obsahu, který přibyl - ne na vadě. Roste to dál,
+  // takže limit musí být řádově jinde, ne o kousek výš.
+  it("na desku, na které vznikl, vydá solverem podloženou akci", { timeout: 60000 }, async () => {
     await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
     const answer = createRiverSolvedStrategyResolverChain()(solvedInput);
 

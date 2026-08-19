@@ -1,6 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { heroSideOfNode, seatsOfFamily } from "./lib/solvedPackBuilding.mts";
+import { heroSideOfNode, seatsOfFamily,
+  trimToModuleBudget,
+} from "./lib/solvedPackBuilding.mts";
 import { subgameDecisions } from "./lib/subgameDecisions.mts";
 import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
 import { buildRiverStrategyRule } from "../src/data/ranges/riverStrategyRuleBuilder";
@@ -333,13 +335,26 @@ if (family === undefined) {
     console.log(`  ${unidentified} riverů vynecháno: nešlo určit, čí strategii uzel drží`);
   }
 
-  const result = buildRiverStrategyPack({
-    id: `mtt-full-ring-9-river-solved-${family.toLowerCase().replace(/_/g, "-")}-v1`,
-    createdAt: new Date().toISOString().slice(0, 10),
-    evidence,
-    rules,
-    verdicts: readVerdicts(),
+  const packId = `mtt-full-ring-9-river-solved-${family.toLowerCase().replace(/_/g, "-")}-v1`;
+  const createdAt = new Date().toISOString().slice(0, 10);
+  const verdicts = readVerdicts();
+  const buildWith = (candidate: typeof rules) => buildRiverStrategyPack({
+    id: packId, createdAt, evidence, rules: candidate, verdicts,
   });
+
+  // Strop v bajtech, ne v pravidlech. `RULE_BUDGET` výš rozdělí rozpočet mezi
+  // rozhodnutí, ale kolik místa pravidlo zabere, o tom nevypovídá.
+  const fitted = trimToModuleBudget(rules, (candidate) => {
+    const attempt = buildWith(candidate);
+    return attempt.ok ? JSON.stringify(attempt.pack).length : 0;
+  });
+  if (fitted.dropped > 0) {
+    console.log(`  ${fitted.dropped} riverů vynecháno, aby se modul vešel do rozpočtu svazku`);
+    rules.length = 0;
+    rules.push(...fitted.kept);
+  }
+
+  const result = buildWith(rules);
 
   if (!result.ok) {
     console.error(result.reason);

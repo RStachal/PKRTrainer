@@ -78,6 +78,12 @@ export const solvedTurnManifest: readonly SolvedTurnManifestEntry[] = [
     load: () => import("./turn/mtt9-40bb-utg-bb-srp.generated.json").then((module) => module.default as unknown as TurnStrategyPack),
   },
   {
+    familyId: "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
+    packId: "mtt-full-ring-9-turn-solved-mtt9-45bb-co-btn-3bp-facing-lowspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",
+    load: () => import("./turn/mtt9-45bb-co-btn-3bp-facing-lowspr.generated.json").then((module) => module.default as unknown as TurnStrategyPack),
+  },
+  {
     familyId: "MTT9_50BB_BTN_BB_SRP",
     packId: "mtt-full-ring-9-turn-solved-mtt9-50bb-btn-bb-srp-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|TURN",

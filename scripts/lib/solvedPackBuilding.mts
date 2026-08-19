@@ -205,3 +205,45 @@ export function fullTreeBoardsByFamily(): Map<string, Set<string>> {
   return byFamily;
 }
 
+
+/**
+ * Kolik smí mít vygenerovaný modul bajtů, než ho rozpočet svazku odmítne.
+ *
+ * Musí sedět s `BUNDLE_MAX_LAZY_MTT_JS_KB` v `checkBundleBudget.mts`. Drobná
+ * rezerva je schválně: rozpočet měří hotový JS chunk po sestavení, tohle měří
+ * JSON před ním, a ty dvě čísla si nejsou rovna.
+ */
+export const MODULE_BUDGET_BYTES = Math.floor(500 * 1024);
+
+/**
+ * Ořež pravidla, dokud se modul nevejde do rozpočtu.
+ *
+ * Generátory se dosud řídily počtem pravidel (`RULE_BUDGET`), jenže rozpočet je
+ * v kilobajtech a velikost jednoho pravidla se rodinu od rodiny liší podle toho,
+ * kolik kombinací nese. Proxy proto neplatí: `MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR`
+ * se vešla do tří set pravidel a vyrobila modul o 527 KiB proti limitu 512.
+ *
+ * Ořezává se od konce, ne podle dosahu. Pořadí, ve kterém pravidla přišla, už je
+ * výsledkem rozdělení rozpočtu mezi jednotlivá rozhodnutí rovným dílem; setřídit
+ * je znovu podle dosahu by tu rovnováhu zahodilo a rodina by mohla skončit s
+ * jedním rozhodnutím pokrytým a ostatními prázdnými.
+ *
+ * Hledá se půlením, aby se modul nesestavoval stokrát.
+ */
+export function trimToModuleBudget<R>(
+  rules: readonly R[],
+  sizeOf: (candidate: readonly R[]) => number,
+  budgetBytes: number = MODULE_BUDGET_BYTES,
+): { kept: R[]; dropped: number } {
+  if (rules.length === 0 || sizeOf(rules) <= budgetBytes) {
+    return { kept: [...rules], dropped: 0 };
+  }
+  let low = 0;
+  let high = rules.length;
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    if (sizeOf(rules.slice(0, mid)) <= budgetBytes) low = mid;
+    else high = mid - 1;
+  }
+  return { kept: rules.slice(0, low), dropped: rules.length - low };
+}
