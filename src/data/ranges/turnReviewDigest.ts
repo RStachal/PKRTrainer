@@ -35,6 +35,34 @@ function spotTitle(rule: TurnStrategyRule): string {
   return `flop ${spot.flop.join(" ")}, turn ${solved}${alsoFor}${depth}`;
 }
 
+/**
+ * Akce tak, jak ji čte pokerista, ne jak ji zapsal solver.
+ *
+ * Solver píše `BET 17.000000`: šest desetinných míst, která nic neznamenají, a
+ * částku v žetonech, kdežto hloubka se vedle uvádí v blindech. Kdo tohle čte
+ * hodiny, převádí si to v hlavě u každého řádku.
+ *
+ * Procenta potu se doplňují **jen tam, kde je pot jediný** - tedy u konkrétní
+ * desky. V souhrnném rozdělení se sčítají spoty s různými poty, takže by tatáž
+ * `BET 17` byla jednou třetina potu a jindy pětina; jedno číslo by tam lhalo.
+ * Proto se v souhrnu jen zahodí desetinná místa.
+ *
+ * Zvýšení dostane částku bez procent schválně: `RAISE 133` znamená "na 133", ne
+ * "o 133", a pot už je v tu chvíli jiný než ten na uzlu. Poctivější je nechat
+ * částku, než dopočítat podíl, který se vztahuje k něčemu jinému.
+ */
+export function readableAction(action: string, potChips?: number): string {
+  const match = /^(BET|RAISE)\s+([\d.]+)$/i.exec(action.trim());
+  if (match === null) return action.trim();
+  const verb = match[1].toUpperCase();
+  const amount = Number(match[2]);
+  const rounded = Number.isInteger(amount) ? String(amount) : amount.toFixed(1);
+  if (verb !== "BET" || potChips === undefined || potChips <= 0) {
+    return `${verb} ${rounded}`;
+  }
+  return `${verb} ${rounded} (${Math.round((amount / potChips) * 100)} % potu)`;
+}
+
 /** Podíl kombinací, které v tomhle pravidle sázejí. */
 export function bettingShare(rule: TurnStrategyRule): number {
   let total = 0;
@@ -208,7 +236,8 @@ export function renderTurnFamilyDigest(
     const totalCombos = [...byAction.values()].reduce((sum, value) => sum + value, 0) || 1;
     lines.push("     rozdělení akcí podle kombinací:");
     for (const [action, combos] of [...byAction].sort((a, b) => b[1] - a[1])) {
-      lines.push(`       ${action.padEnd(22)} ${((combos / totalCombos) * 100).toFixed(1)} %`);
+      // Bez potu: souhrn míchá spoty s různými poty, viz `readableAction`.
+      lines.push(`       ${readableAction(action).padEnd(22)} ${((combos / totalCombos) * 100).toFixed(1)} %`);
     }
 
     lines.push("     jak často která ruka sází nebo zvyšuje napříč deskami:");
@@ -222,7 +251,15 @@ export function renderTurnFamilyDigest(
     if (sample !== undefined) {
       lines.push(`     ${sample.label}: ${spotTitle(sample.rule)}`);
       lines.push(`     (${sample.rule.sourceDirectory})`);
-      lines.push(renderHandGridBlock(sample.rule.buckets, "       "));
+      // Tady je pot jediný, takže procenta potu platí a doplní se.
+      const pot = sample.rule.spot?.potChips;
+      lines.push(renderHandGridBlock(
+        sample.rule.buckets.map((bucket) => ({
+          ...bucket,
+          action: readableAction(bucket.action, pot),
+        })),
+        "       ",
+      ));
     }
   }
 
