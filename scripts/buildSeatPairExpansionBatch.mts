@@ -96,8 +96,26 @@ const OPEN_TO_BB = 2.5;
  */
 const BOARD_IDS = ["A72r", "883r", "986tt", "AT4mono", "742r", "K98tt"] as const;
 
-/** Hloubky, na kterých má smysl zakládat: mělká, střední, hluboká. */
-const DEPTHS: readonly StackBucket[] = [25, 50, 100] as StackBucket[];
+/**
+ * Hloubky, které se zakládají. Jen mělká, a je to změřené.
+ *
+ * Solve jedné desky téhle rodiny trvá podle hloubky řádově jinak dlouho -
+ * naměřeno 20. 8. 2026 na `LJ_HJ_SRP`, deska A72r, plný strom, 1200 iterací:
+ *
+ * - **25BB: 148 vteřin**, commit 1,68 GB, doběhlo na exploitability 1,3 %
+ * - 50BB: po pěti minutách pořád pod stou iterací z dvanácti set
+ * - 100BB: po čtrnácti minutách totéž, commit 8,36 GB, odhad přes 2,5 hodiny
+ *
+ * Při jedenáctihodinovém okně to znamená kolem 260 desek za noc na 25BB, ale
+ * sotva čtyři na 100BB. Šířka vzorů je dnes to, co chybí - dvaatřicet vzorů
+ * proti pěti - takže mělká hloubka napříč vzory přinese mnohem víc než hloubka
+ * u jednoho. Hlubší jde zapnout přes `--depths`, ale má se to dělat vědomě.
+ */
+const DEPTHS: readonly StackBucket[] = ((): readonly StackBucket[] => {
+  const raw = process.argv.find((arg) => arg.startsWith("--depths="))?.split("=")[1];
+  if (raw === undefined) return [25] as StackBucket[];
+  return raw.split(",").map((value) => Number(value.trim())).filter((value) => value > 0) as StackBucket[];
+})();
 
 /** Sedačky v preflopovém pořadí; dvojice se berou jen "dřívější otevře". */
 const SEATS: readonly Position[] = [
@@ -220,6 +238,7 @@ console.log(demand.measured
 if (limit > 0 && planned.length > selected.length) {
   console.log(`omezeno:     ${selected.length} z ${planned.length} rodin (--limit)`);
 }
+console.log(`hloubky:     ${DEPTHS.join(", ")} BB (měřeno: 25BB je 148 s na desku, 100BB přes 2,5 h)`);
 console.log(`konvence:    pot ${SRP_POT_BB} BB (otevření na ${OPEN_TO_BB}, dorovnání, složený SB), ${CHIPS_PER_BB} žetonů na blind`);
 if (skipped.length > 0) {
   console.log("");
