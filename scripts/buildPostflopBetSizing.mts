@@ -113,11 +113,15 @@ export function familySizingFrom(
  * shodí sadu, protože se objeví rodiny bez jediného odsolvenoho boardu.
  */
 function hasCheckpoint(family: string): boolean {
-  return existsSync(join(
+  // Soubory, ne adresář. Generátor parametrů `raw/` zakládá prázdný, aby do něj
+  // solver měl kam psát; kdyby stačila existence adresáře, dostalo by se do
+  // tabulky devětadvacet rodin, které nikdo neodsolvil.
+  const raw = join(
     "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
     family,
     "raw",
-  ));
+  );
+  return existsSync(raw) && readdirSync(raw).some((name) => name.endsWith(".json"));
 }
 
 export function collectBetSizing(paramRoot = PARAM_ROOT): Map<string, FamilyBetSizing> {

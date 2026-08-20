@@ -103,7 +103,15 @@ def staged_families_without_checkpoint():
             if match is None:
                 continue
             family = match.group(1)
-            if not os.path.isdir(os.path.join(OUTPUT_BASE, family, "raw")):
+            # Soubory, ne adresář. Generátor parametrů `raw/` zakládá prázdný,
+            # aby do něj solver měl kam psát - takže existence adresáře o
+            # checkpointu neříká nic a tahle kontrola by tvrdila, že rodina je
+            # hotová, dokud by ji nikdo neodsolvil.
+            raw = os.path.join(OUTPUT_BASE, family, "raw")
+            solved = os.path.isdir(raw) and any(
+                name.endswith(".json") for name in os.listdir(raw)
+            )
+            if not solved:
                 pending.add(family)
     return pending
 
@@ -115,7 +123,15 @@ def monolithic_runner_installed():
     cennější - ne že se má stroj v noci vypnout, když ta cennější není čím
     spustit.
     """
-    for task in ("PKRTrainer-Weekend-UniformResolve", "PKRTrainer-TexasSolver-Autostart"):
+    # `PKRTrainer-Night-Expansion` je ten, který dnes tu práci doopravdy dělá;
+    # ostatní dvě jsou starší cesty k témuž oknu. Chybět tu nesmí ani jedna:
+    # kdyby seznam nesouhlasil s tím, co je nainstalované, rozklad by neustoupil
+    # a nastagovaná práce by čekala další noc.
+    for task in (
+        "PKRTrainer-Night-Expansion",
+        "PKRTrainer-Weekend-UniformResolve",
+        "PKRTrainer-TexasSolver-Autostart",
+    ):
         try:
             result = subprocess.run(
                 ["schtasks", "/query", "/tn", task],
@@ -126,6 +142,35 @@ def monolithic_runner_installed():
         if result.returncode == 0 and "Ready" in result.stdout:
             return True
     return False
+
+
+# Kolik desek musí čekat, aby se vyplatilo ustoupit na celé okno.
+#
+# Naměřeno 715 vteřin na desku, tedy osm desek jsou zhruba dvě hodiny. Pod tím by
+# rozklad uvolnil jedenáctihodinové okno kvůli hodině práce a zbytek noci by stál.
+YIELD_MIN_BOARDS = 8
+
+
+def staged_boards_without_checkpoint():
+    """Kolik nastagovaných desek ještě nemá checkpoint."""
+    count = 0
+    if not os.path.isdir(STAGED_PARAMS):
+        return count
+    for base, _dirs, files in os.walk(STAGED_PARAMS):
+        for name in files:
+            if not name.endswith(".txt"):
+                continue
+            stem = re.sub(r"^\d+_", "", name[:-4])
+            match = re.match(r"(MTT9_\d+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_([^_]+)$", stem)
+            if match is None:
+                continue
+            family, board = match.group(1), match.group(2)
+            checkpoint = os.path.join(
+                OUTPUT_BASE, family, "raw", f"pkrtrainer_{family}_{board}.json",
+            )
+            if not os.path.exists(checkpoint):
+                count += 1
+    return count
 
 
 def should_yield_to_new_families():
@@ -146,6 +191,12 @@ def should_yield_to_new_families():
         return None
     pending = staged_families_without_checkpoint()
     if not pending:
+        return None
+    boards = staged_boards_without_checkpoint()
+    if boards < YIELD_MIN_BOARDS:
+        # Ustoupit na celou noc kvůli hodině práce je horší než neustoupit
+        # vůbec: zbytek okna by stál prázdný. Naměřeno 715 s na desku, takže
+        # osm desek jsou zhruba dvě hodiny - pod tím se to nevyplatí.
         return None
     if not monolithic_runner_installed():
         # Ustoupit do prázdna je horší než prohlubovat tam, kde už odpověď je:
