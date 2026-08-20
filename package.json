@@ -149,7 +149,9 @@
     "mtt:turn-review": "node scripts/run-cli.mjs scripts/reviewTurnFamily.mts",
     "mtt:confidence-backing": "node scripts/run-cli.mjs scripts/checkConfidenceBacking.mts",
     "mtt:reference-check": "node scripts/run-cli.mjs scripts/checkReferenceRanges.mts",
-    "mtt:mechanical-review": "node scripts/run-cli.mjs scripts/runMechanicalReview.mts"
+    "mtt:mechanical-review": "node scripts/run-cli.mjs scripts/runMechanicalReview.mts",
+    "mtt:after-night": "node scripts/run-cli.mjs scripts/runAfterNight.mts",
+    "mtt:solved-coverage": "node scripts/run-cli.mjs scripts/checkSolvedSpotCoverage.mts"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",
