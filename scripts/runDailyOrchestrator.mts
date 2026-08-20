@@ -158,9 +158,24 @@ const asked = askedMatch === null ? null : Number(askedMatch[1]);
 const held = heldMatch === null ? null : Number(heldMatch[1]);
 
 say(`  rozklad drží ${pairs.size} dvojic sedaček: ${[...pairs.keys()].join(", ")}`);
+
+/**
+ * Rozhodnutí pro noc ve strojově čitelné podobě.
+ *
+ * Noc dělá dvě různé práce a **nemůže obě naráz**, protože každá si vezme celý
+ * stroj: rozkládat existující checkpointy na turnové a riverové podhry, nebo
+ * monoliticky odsolvit nové rodiny z nastagovaných parametrů. Runner rozkladu
+ * to dosud rozhodoval sám podle pravidla ve svém kódu a nevěděl, že vedle leží
+ * nastagované rodiny, které trenažér potřebuje víc.
+ */
+type NightPriority = "DECOMPOSITION" | "NEW_FAMILIES";
+let priority: NightPriority = "DECOMPOSITION";
+let priorityReason = "výchozí: prohlubovat, co je odsolvené";
+
 if (asked === null || held === null) {
   // Chybějící měření je informace, ne důvod si domyslet doporučení.
   say("  DOPORUČENÍ NEDÁM: měření pokrytí neproběhlo, takže nevím, kde je mezera.");
+  priorityReason = "měření pokrytí neproběhlo, zůstává výchozí práce";
 } else if (held < asked / 2) {
   say(`  DOPORUČENÍ: solvit nové dvojice sedaček, ne další desky ve stávajících.`);
   say(`  Důvod: trenažér se ptá na ${asked} vzorů, obsah drží ${held}.`);
@@ -170,12 +185,27 @@ if (asked === null || held === null) {
   say("  ranže vzít z produkčních preflop packů - RFI pro otvírače, VS_OPEN pro obranu.");
   say("  POZOR: VS_OPEN nerozlišuje, kdo otevřel (viz deník, bod 62), takže odvozená");
   say("  obranná range nese tuhle vadu dál. Je to vědomý ústupek, ne přehlédnutí.");
+  priority = "NEW_FAMILIES";
+  priorityReason = `trenažér se ptá na ${asked} vzorů, obsah drží ${held}`;
 } else {
   say("  DOPORUČENÍ: pokračovat v hloubce - šířka vzorů je pokrytá.");
 }
 
+say("");
+say(`  priorita pro noc: ${priority} (${priorityReason})`);
+
 if (write) {
   mkdirSync(REPORT_DIR, { recursive: true });
+  // Strojově čitelné rozhodnutí vedle lidského reportu. Runner ho čte, aby
+  // neprohluboval tam, kde chybí šířka - dosud to rozhodoval sám podle pravidla
+  // ve svém kódu, které nikdo od napsání nepřeměřil.
+  writeFileSync(join(REPORT_DIR, "tonight.json"), `${JSON.stringify({
+    schemaVersion: "PKRTRAINER_NIGHT_PRIORITY_V1",
+    decidedAt: today,
+    priority,
+    reason: priorityReason,
+  }, null, 2)}
+`, "utf8");
   const path = join(REPORT_DIR, `${today}.md`);
   writeFileSync(path, `${out.join("\n")}\n`, "utf8");
   console.log("");

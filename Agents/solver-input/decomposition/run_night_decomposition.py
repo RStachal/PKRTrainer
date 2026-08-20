@@ -78,6 +78,87 @@ def log(message: str) -> None:
     print(f"[{stamp}] {message}", flush=True)
 
 
+NIGHT_PRIORITY = os.path.join(REPO, "Agents", "daily", "tonight.json")
+STAGED_PARAMS = os.path.join(
+    REPO, "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters",
+)
+
+
+def staged_families_without_checkpoint():
+    """Rodiny, které mají nastagované parametry a žádný odsolvený board.
+
+    To je ta práce, kvůli které má smysl ustoupit. Kdyby se ustoupilo do
+    prázdna, noc by nepřinesla nic - a to je horší než prohlubovat tam, kde už
+    odpověď je.
+    """
+    pending = set()
+    if not os.path.isdir(STAGED_PARAMS):
+        return pending
+    for base, _dirs, files in os.walk(STAGED_PARAMS):
+        for name in files:
+            if not name.endswith(".txt"):
+                continue
+            stem = re.sub(r"^\d+_", "", name[:-4])
+            match = re.match(r"(MTT9_\d+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_[^_]+$", stem)
+            if match is None:
+                continue
+            family = match.group(1)
+            if not os.path.isdir(os.path.join(OUTPUT_BASE, family, "raw")):
+                pending.add(family)
+    return pending
+
+
+def monolithic_runner_installed():
+    """Je vedle úloha, která to okno umí převzít?
+
+    Bez tohohle by se ustupovalo do prázdna. Priorita říká, která práce je
+    cennější - ne že se má stroj v noci vypnout, když ta cennější není čím
+    spustit.
+    """
+    for task in ("PKRTrainer-Weekend-UniformResolve", "PKRTrainer-TexasSolver-Autostart"):
+        try:
+            result = subprocess.run(
+                ["schtasks", "/query", "/tn", task],
+                capture_output=True, text=True, timeout=30,
+            )
+        except Exception:
+            continue
+        if result.returncode == 0 and "Ready" in result.stdout:
+            return True
+    return False
+
+
+def should_yield_to_new_families():
+    """Hláška o ustoupení, nebo `None` když se má rozkládat.
+
+    Ustoupí se jen tehdy, když to priorita říká **a zároveň** je vedle co
+    spustit. Priorita bez nastagované práce znamená, že se má rozkládat dál:
+    prázdná noc nikomu nepomůže.
+    """
+    if not os.path.exists(NIGHT_PRIORITY):
+        return None
+    try:
+        with open(NIGHT_PRIORITY, encoding="utf8") as handle:
+            decision = json.load(handle)
+    except Exception:
+        return None
+    if decision.get("priority") != "NEW_FAMILIES":
+        return None
+    pending = staged_families_without_checkpoint()
+    if not pending:
+        return None
+    if not monolithic_runner_installed():
+        # Ustoupit do prázdna je horší než prohlubovat tam, kde už odpověď je:
+        # noc by neodvedla vůbec nic. Priorita říká, co je cennější, ne že se má
+        # stroj vypnout.
+        return None
+    return (
+        f"ustupuji: priorita je NEW_FAMILIES ({decision.get('reason', 'bez důvodu')}), "
+        f"nastagováno {len(pending)} rodin bez checkpointu. "
+        "Okno patří monolitickému solveru, rozklad by mu vzal stroj."
+    )
+
+
 def board_parameter_files():
     """Every board that has a monolithic checkpoint, with the parameters it used."""
     found = {}
@@ -136,6 +217,19 @@ def main():
 
     os.makedirs(WORK, exist_ok=True)
     log(f"na disku volno {free_gb():.1f} GB (hranice pro další desku je {MIN_FREE_GB} GB)")
+
+    # Priorita z denního vyhodnocení, ne z pravidla v tomhle souboru.
+    #
+    # Noc umí dvě práce a nemůže obě naráz, protože každá si vezme celý stroj:
+    # rozkládat existující checkpointy, nebo monoliticky odsolvit nové rodiny.
+    # Tenhle runner rozhodoval sám podle pravidla "turn napřed, pak river" - a
+    # to bylo správné, dokud turn chyběl. Po jeho dokončení pokračoval v riveru a
+    # dvě noci prohluboval pět dvojic sedaček, zatímco trenažér se ptá na
+    # dvaatřicet vzorů. Rozhodnutí proto přichází zvenčí, z měření.
+    yielded = should_yield_to_new_families()
+    if yielded is not None:
+        log(yielded)
+        return
     boards = board_parameter_files()
 
     def depth(key):
