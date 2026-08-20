@@ -151,7 +151,8 @@
     "mtt:reference-check": "node scripts/run-cli.mjs scripts/checkReferenceRanges.mts",
     "mtt:mechanical-review": "node scripts/run-cli.mjs scripts/runMechanicalReview.mts",
     "mtt:after-night": "node scripts/run-cli.mjs scripts/runAfterNight.mts",
-    "mtt:solved-coverage": "node scripts/run-cli.mjs scripts/checkSolvedSpotCoverage.mts"
+    "mtt:solved-coverage": "node scripts/run-cli.mjs scripts/checkSolvedSpotCoverage.mts",
+    "mtt:daily": "node scripts/run-cli.mjs scripts/runDailyOrchestrator.mts"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",
