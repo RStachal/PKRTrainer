@@ -1,8 +1,11 @@
 import type {
+  PostflopAction,
   PostflopRecommendation,
   PostflopStrategyInput,
   PostflopStrategyResolver,
 } from "../../core/postflopGenerator";
+import type { ActionEvSet } from "../../core/actionEv";
+import { primeRiverEvPack, readyRiverEvPack, riverActionEvRows } from "./riverEvRuntime";
 import { createPostflopResolverChain } from "./postflopResolverChain";
 import type { RiverStrategyPack } from "./riverSolvedRuntimeRegistry";
 import { runtimeSolvedRiverPacks } from "./riverSolvedRuntimeRegistry";
@@ -104,6 +107,61 @@ export function findRiverRuleIndex(
   return bestIndex;
 }
 
+/**
+ * Práh, pod kterým se dvě akce nedají rozlišit, v blindech.
+ *
+ * Dvě čísla se sčítají. Tabulka ukládá desetiny blindu, takže cokoli pod 0,1 BB
+ * je zaokrouhlení. A solve má vlastní nepřesnost, vyjádřenou jako podíl potu -
+ * při cíli kolem procenta je to na desetiblindovém potu zhruba další desetina.
+ * Brát menší rozdíl jako chybu hráče by znamenalo trestat ho za šum ve vlastních
+ * datech.
+ */
+const EV_EQUIVALENT_POT_SHARE = 0.01;
+const EV_EQUIVALENT_FLOOR_BB = 0.1;
+
+/**
+ * EV nabízených akcí, když už tabulka dorazila.
+ *
+ * Když ne, nastartuje se stahování a vrátí se nic: čekat na půl megabajtu
+ * uprostřed rozdání by byla prodleva přesně v tu chvíli, kdy hráč kouká na
+ * karty. Odpověď bez čísel je pořád odpověď.
+ */
+function actionEvsFor(
+  pack: RiverStrategyPack,
+  ruleIndex: number,
+  input: PostflopStrategyInput,
+  offered: readonly PostflopAction[],
+): { actionEvs: ActionEvSet<PostflopAction> } | undefined {
+  if (input.heroCards === undefined) return undefined;
+  const table = readyRiverEvPack(pack.id);
+  if (table === undefined) {
+    primeRiverEvPack(pack);
+    return undefined;
+  }
+
+  const rows = riverActionEvRows(pack, table, ruleIndex, input.heroCards, input.potBB);
+  if (rows === undefined) return undefined;
+
+  // Neúplnou sadu nemá smysl skládat: hráč by u některých akcí viděl číslo a u
+  // jiných ne, a rozdíl by vypadal jako vlastnost akce, ne jako mezera v datech.
+  const byAction = new Map(rows.map((row) => [row.action, row.evBB]));
+  if (offered.some((action) => !byAction.has(action))) return undefined;
+
+  const potBB = pack.rules[ruleIndex].spot?.potBB ?? input.potBB;
+  const equivalent = Math.max(EV_EQUIVALENT_FLOOR_BB, potBB * EV_EQUIVALENT_POT_SHARE);
+  return {
+    actionEvs: {
+      // Ne `SOLVER`: tohle je expektace nad soupeřovou range za předpokladu, že
+      // obě strany hrají zapsanou strategii, ne solverova counterfactual value.
+      source: "SOLVED_TREE",
+      unit: "BB",
+      values: offered.map((action) => ({ action, evBb: byAction.get(action)! })),
+      equivalentThresholdBb: equivalent,
+      acceptableThresholdBb: equivalent * 3,
+    },
+  };
+}
+
 export function createRiverStrategyResolver(pack: RiverStrategyPack): PostflopStrategyResolver {
   return (input: PostflopStrategyInput): PostflopRecommendation | null => {
     if (input.street !== "RIVER") return null;
@@ -141,6 +199,7 @@ export function createRiverStrategyResolver(pack: RiverStrategyPack): PostflopSt
 
     return {
       action: translated.action,
+      ...(actionEvsFor(pack, bestIndex, input, actions.map((item) => item.action)) ?? {}),
       explanation: [
         `Vyřešený river pro hloubku ${best.stackBB} BB.`,
         `Tahle ruka patří do skupiny, kterou solver hraje stejně: ${bucket.handClasses.length} tříd, ${bucket.combos} kombinací.`,

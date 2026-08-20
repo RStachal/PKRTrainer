@@ -1,4 +1,4 @@
-import { decodeComboMask, decodeEvTable, evTableLength } from "../../core/evCodec";
+import { decodeComboMask, decodeEvDeltas } from "../../core/evCodec";
 
 /**
  * EV riverových akcí jako samostatný obsah, čtený až když ho hráč chce.
@@ -26,7 +26,7 @@ import { decodeComboMask, decodeEvTable, evTableLength } from "../../core/evCode
  */
 
 export interface RiverEvPack {
-  schemaVersion: "PKRTRAINER_RIVER_EV_V2";
+  schemaVersion: "PKRTRAINER_RIVER_EV_V3";
   familyId: string;
   packId: string;
   /** Otisk packu, pro který tahle tabulka platí. */
@@ -56,8 +56,15 @@ export interface RiverEvRule {
    * neušetřila skoro nic: z 298 pravidel jich má 255 vlastní množinu.
    */
   m: string;
-  /** `combos × actions` hodnot, zapsaných kodekem. */
-  v: string;
+  /**
+   * `combos × actions` hodnot jako rozdíly v desetinách blindu.
+   *
+   * Rozdíl proti téže akci u předchozí kombinace, ne proti sousední hodnotě.
+   * Base64 nad celými čísly bylo raw menší, ale **nekomprimovatelné**: 170 KiB
+   * po gzipu proti stropu 128. Rozdíly dají 118,4 KiB, takže se vejdou všechna
+   * pravidla místo tří čtvrtin.
+   */
+  v: (number | null)[];
 }
 
 export interface RiverEvLookup {
@@ -88,13 +95,13 @@ export function readRiverEv(
 
       let byCombo = cache.get(ruleIndex);
       if (byCombo === undefined) {
-        // Skutečná délka zápisu, ne délka výsledku: `decodeEvTable` chybějící
-        // doplní `null`, takže délka výsledku sedí vždycky a posun by se
-        // nepoznal. Právě tenhle posun je ta tichá chyba, kvůli které je tady
-        // kontrola - hráč by u sázky viděl EV složení.
+        // Délka musí sedět na počet kombinací krát počet akcí. Nesedí-li,
+        // četly by se hodnoty posunuté o akci a hráč by u sázky viděl EV
+        // složení - tvar dat přitom zůstane platný, takže jinde by se to
+        // nepoznalo.
         const indices = decodeComboMask(rule.m, pack.combos.length);
-        if (evTableLength(rule.v) !== indices.length * actions) return undefined;
-        const values = decodeEvTable(rule.v, indices.length * actions);
+        if (rule.v.length !== indices.length * actions) return undefined;
+        const values = decodeEvDeltas(rule.v, actions);
         byCombo = new Map();
         for (const [position, comboIndex] of indices.entries()) {
           const name = pack.combos[comboIndex];

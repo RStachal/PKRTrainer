@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   decodeComboMask,
-  decodeEvTable,
+  decodeEvDeltas,
   encodeComboMask,
-  encodeEvTable,
+  encodeEvDeltas,
 } from "../../src/core/evCodec";
 
 /**
@@ -12,61 +12,64 @@ import {
  *
  * EV musí být po kombinacích, protože uvnitř jedné třídy ruk se rozchází až o
  * čtrnáct blindů - průměr přes třídu by hráči lhal. Po kombinacích je to ale
- * kolem 134 tisíc hodnot na rodinu, což jako obyčejná JSON čísla nevejde do
- * rozpočtu chunku. Tenhle zápis to řeší a nesmí přitom ztratit nic, co hráč
- * uvidí.
+ * kolem 134 tisíc hodnot na rodinu, a záleží nejen na tom, jak jsou velké, ale
+ * i jak se komprimují: rozpočet chunku má strop na raw i na gzip.
  */
 describe("zápis EV tabulky", () => {
   it("vrátí, co dostal, na desetinu blindu", () => {
     const values = [0, 1.2, -3.4, 12.5, -0.1, 150];
-    expect(decodeEvTable(encodeEvTable(values), values.length)).toEqual(values);
+    expect(decodeEvDeltas(encodeEvDeltas(values, 3), 3)).toEqual(values);
   });
 
   it("chybějící hodnotu odliší od nuly", () => {
     // Nula je platné EV a u složení dokonce to nejčastější. Kdyby se chybějící
     // akce ukládala jako nula, hráč by u nedostupné akce viděl číslo.
-    const decoded = decodeEvTable(encodeEvTable([null, 0, null, -0]), 4);
+    const decoded = decodeEvDeltas(encodeEvDeltas([null, 0, null, -0], 2), 2);
     expect(decoded[0]).toBeNull();
     expect(decoded[1]).toBe(0);
     expect(decoded[2]).toBeNull();
     expect(decoded[3]).toBe(0);
   });
 
+  it("mezera neposune hodnoty za sebou", () => {
+    // Rozdíl se počítá proti poslední známé hodnotě téže akce. Kdyby chybějící
+    // hodnota základ posunula nebo vynulovala, propsala by se jedna mezera do
+    // všech hodnot za ní - a vypadaly by naprosto věrohodně.
+    const values = [1, 5, null, 6, 3, 7];
+    expect(decodeEvDeltas(encodeEvDeltas(values, 2), 2)).toEqual(values);
+  });
+
+  it("rozdíl se počítá po akcích, ne přes sousední hodnotu", () => {
+    // Vedle sebe v poli leží různé akce, které spolu nesouvisejí. Tři
+    // kombinace, dvě akce: každá akce má vlastní řadu.
+    const values = [10, -10, 10.5, -9.5, 11, -9];
+    expect(decodeEvDeltas(encodeEvDeltas(values, 2), 2)).toEqual(values);
+  });
+
   it("zaokrouhlí na desetinu, ne na celé", () => {
     // Trenažér ukazuje jedno desetinné místo; jemnější uložení by platilo za
     // přesnost, kterou nikdo neuvidí, hrubší by ubralo, co vidí.
-    expect(decodeEvTable(encodeEvTable([1.24, 1.26]), 2)).toEqual([1.2, 1.3]);
+    expect(decodeEvDeltas(encodeEvDeltas([1.24, 1.26], 1), 1)).toEqual([1.2, 1.3]);
   });
 
   it("zvládne hloubku, jakou knihovna má", () => {
     // Nejhlubší spot je 150 BB, pot může být násobek. Strop int16 je 3276,7.
     const values = [3000, -3000, 1500.5];
-    expect(decodeEvTable(encodeEvTable(values), values.length)).toEqual(values);
+    expect(decodeEvDeltas(encodeEvDeltas(values, 1), 1)).toEqual(values);
   });
 
   it("hodnotu mimo rozsah ořízne, místo aby přetekla", () => {
     // Přetečení by z velkého kladného EV udělalo velké záporné - tichá záměna
     // nejlepší akce za nejhorší.
-    const decoded = decodeEvTable(encodeEvTable([99999, -99999]), 2);
+    const decoded = decodeEvDeltas(encodeEvDeltas([99999, -99999], 1), 1);
     expect(decoded[0]).toBeGreaterThan(3000);
     expect(decoded[1]).toBeLessThan(-3000);
   });
 
-  it("kratší zápis nedopočítá nulu", () => {
-    // Poškozený nebo useknutý řetězec musí vrátit "nevím", ne EV nula.
-    const encoded = encodeEvTable([1.5, 2.5]);
-    expect(decodeEvTable(encoded, 4)).toEqual([1.5, 2.5, null, null]);
-  });
-
   it("velká tabulka se zapíše i přečte", () => {
-    // Osm tisíc hodnot je hranice, za kterou naivní `fromCharCode(...bytes)`
-    // přeteče zásobník argumentů; tabulka rodiny je řádově větší.
-    //
-    // Hodnoty se skládají z celých desetin, ne výpočtem typu `index / 10 - 10`:
-    // ten dá -9.700000000000001, což se po zaokrouhlení na desetinu legitimně
-    // nerovná sobě samému a test by padal na plovoucí aritmetice, ne na kodeku.
+    // Tabulka rodiny má desítky tisíc hodnot; tohle je její řád.
     const values = Array.from({ length: 50000 }, (_, index) => Math.round(index % 200 - 100) / 10);
-    const decoded = decodeEvTable(encodeEvTable(values), values.length);
+    const decoded = decodeEvDeltas(encodeEvDeltas(values, 4), 4);
     // Porovnání po prvcích, ne `toEqual` nad padesáti tisíci: to sestavuje
     // rozdílový výpis a trvá déle než celý zbytek sady.
     expect(decoded.length).toBe(values.length);
@@ -74,12 +77,16 @@ describe("zápis EV tabulky", () => {
     expect(mismatch, `první rozdíl na indexu ${mismatch}`).toBe(-1);
   });
 
-  it("je podstatně menší než totéž v JSON", () => {
-    // Kvůli tomuhle to celé vzniklo: rozdíl musí být řádový, ne kosmetický.
-    const values = Array.from({ length: 20000 }, (_, index) => (index % 300) / 10 - 15);
-    const asJson = JSON.stringify(values).length;
-    const encoded = encodeEvTable(values).length;
-    expect(encoded).toBeLessThan(asJson * 0.55);
+  it("je znatelně menší než tytéž hodnoty zapsané naplno", () => {
+    // Kvůli tomuhle to celé vzniklo. Sousední kombinace jsou podobné ruce, takže
+    // rozdíly jsou malá čísla a často nuly - a právě to gzip umí, kdežto base64
+    // nad celými čísly ne: to spadlo na 170 KiB proti stropu 128.
+    const values = Array.from({ length: 20000 }, (_, index) => (
+      Math.round((index % 300) / 7) / 10 + Math.floor(index / 300) / 10
+    ));
+    const asWritten = JSON.stringify(values).length;
+    const asDeltas = JSON.stringify(encodeEvDeltas(values, 4)).length;
+    expect(asDeltas).toBeLessThan(asWritten * 0.8);
   });
 });
 

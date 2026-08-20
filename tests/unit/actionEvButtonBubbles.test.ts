@@ -102,6 +102,26 @@ describe("action EV button bubbles", () => {
     ))).toBe(true);
   });
 
+  it("odkryje EV i u zdrojů, které aplikace doopravdy vyrábí", () => {
+    // Tenhle test tu chyběl a stálo to celou funkci. Bubliny procházely bránou
+    // pro import packů, která vyžaduje `SOLVER` - jenže push/fold EV se počítá
+    // za běhu a nese `ALL_IN_EQUITY`, riverová `SOLVED_TREE`. Obojí brána
+    // zahazovala, takže hráč neviděl **žádné** EV, přestože se podle ní
+    // známkovalo. Fixtura výš má `SOLVER`, takže o tom mlčela.
+    for (const source of ["ALL_IN_EQUITY", "SOLVED_TREE"] as const) {
+      const set: ActionEvSet<TestAction> = { ...actionEvs, source };
+      const buttons = set.values.map(({ action }) => {
+        const button = document.createElement("button");
+        button.dataset.action = action;
+        setActionEvButtonContent(button, action);
+        return button;
+      });
+      const evaluation = evaluateActionEv(set, "CALL");
+      expect(revealActionEvButtonBubbles(buttons, set, evaluation ?? undefined), source).toBe(3);
+      expect(buttons.every((button) => button.dataset.evAvailable === "true"), source).toBe(true);
+    }
+  });
+
   it("formatuje kladne, zaporne i nulove BB hodnoty stabilne", () => {
     expect(formatActionEvBb(0.2044)).toBe("+0.204");
     expect(formatActionEvBb(-0.006)).toBe("-0.006");

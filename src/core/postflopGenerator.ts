@@ -11,6 +11,7 @@ import {
   bestActionsForActionEv,
   cloneActionEvSet,
   highestEvAction,
+  DISPLAYABLE_ACTION_EV_SOURCES,
   isActionEvSetComplete,
 } from "./actionEv";
 
@@ -204,6 +205,14 @@ export interface PostflopStrategyInput {
   heroOutOfPosition?: boolean;
   actionNode?: PostflopActionNode;
   heroHand?: HandLabel;
+  /**
+   * Konkrétní dvě karty hrdiny, když je volající zná.
+   *
+   * `heroHand` je třída, a EV se po třídách rozchází až o čtrnáct blindů -
+   * průměr přes třídu by hráči lhal. Vyřešená EV je proto po kombinacích a bez
+   * karet ji vydat nejde.
+   */
+  heroCards?: readonly [Card, Card];
   priorFlopAction?: PostflopAction;
   turnCardClass?: PostflopTurnCardClass;
   priorTurnAction?: PostflopAction;
@@ -592,6 +601,9 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
     config.strategyResolver?.({
       ...strategyInput,
       heroHand: postflopHandClassFromCards(heroCards),
+      // Konkrétní karty, ne jen třída: vyřešená EV je po kombinacích, protože
+      // uvnitř třídy se rozchází až o čtrnáct blindů.
+      heroCards,
     });
   const fallbackRecommendation = recommendPostflopActionForNode(actionNode, street, textures);
   const validResolvedRecommendation = (
@@ -604,7 +616,11 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
     throw new PostflopStrategyUnavailableError();
   }
   const recommendation = validResolvedRecommendation ?? fallbackRecommendation;
-  const actionEvs = isActionEvSetComplete(recommendation.actionEvs, actions)
+  // Doporučení může nést EV dopočítanou za běhu z vyřešeného stromu, ne jen
+  // prověřený export z packu; zobrazovací seznam obojí pustí, import ne.
+  const actionEvs = isActionEvSetComplete(
+    recommendation.actionEvs, actions, DISPLAYABLE_ACTION_EV_SOURCES,
+  )
     ? cloneActionEvSet(recommendation.actionEvs)
     : undefined;
   const equivalentBestActions = actionEvs ? bestActionsForActionEv(actionEvs) : [];

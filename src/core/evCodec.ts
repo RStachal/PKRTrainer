@@ -1,5 +1,5 @@
 /**
- * Zápis EV tabulky do řetězce, aby se vešla do rozpočtu chunku.
+ * Zápis EV tabulky, aby se vešla do rozpočtu chunku.
  *
  * ## Proč vůbec
  *
@@ -9,9 +9,12 @@
  * hodnot na rodinu, což jako obyčejná JSON čísla dá 650 až 780 KB proti rozpočtu
  * 512 KiB na jeden líný chunk.
  *
- * Šestnáctibitová celá čísla v base64 z toho udělají ~175 KB. Rozdíl není v
- * chytrosti, ale v tom, že se přestane platit za desetinné tečky, znaménka a
- * čárky, které nesou nula informace.
+ * První pokus byl base64 nad šestnáctibitovými celými čísly. Raw se to vešlo
+ * (496,7 KiB proti 512), ale **spadlo to na gzipu: 170 KiB proti stropu 128**,
+ * protože base64 nese šest bitů na znak a komprimovat na něm není co. Změřeno:
+ * pole celých čísel dá 582,7 / 134,7 KiB, rozdíly podél kombinací **463,8 /
+ * 118,4 KiB** - jediná ze tří variant, která projde oběma rozpočty se všemi
+ * pravidly.
  *
  * ## Jednotka a přesnost
  *
@@ -28,72 +31,64 @@
  * číslo.
  */
 
-const MISSING = -32768;
 const SCALE = 10;
 
 /** Největší a nejmenší EV, které se do zápisu vejde, v blindech. */
 export const EV_CODEC_RANGE_BB = { min: -3276.7, max: 3276.7 } as const;
 
-function toBytes(values: readonly (number | null)[]): Uint8Array {
-  const out = new Uint8Array(values.length * 2);
-  const view = new DataView(out.buffer);
+/**
+ * EV v blindech na rozdíly v desetinách blindu, po akcích.
+ *
+ * Rozdíl se počítá proti **předchozí kombinaci ve stejné akci**, ne proti
+ * sousední hodnotě v poli: vedle sebe leží různé akce, které spolu nesouvisejí,
+ * kdežto táž akce u sousední kombinace ano - kombinace jdou vzestupně podle
+ * indexu, takže sousedé bývají tatáž třída ruky. Z velkých čísel se tím stanou
+ * malé rozdíly a často nuly.
+ *
+ * Chybějící hodnota je `null`, ne nula. Nula je platné EV a u složení dokonce to
+ * nejčastější, takže by se nedaly rozeznat a hráč by u nedostupné akce viděl
+ * číslo. Chybějící hodnota základ pro další rozdíl **neposouvá** - jinak by se
+ * jedna mezera propsala do všech hodnot za ní.
+ */
+export function encodeEvDeltas(
+  values: readonly (number | null)[],
+  actionCount: number,
+): (number | null)[] {
+  if (actionCount <= 0) return [];
+  const out: (number | null)[] = [];
+  const previous = new Array<number | null>(actionCount).fill(null);
   for (const [index, value] of values.entries()) {
-    const scaled = value === null || Number.isNaN(value)
-      ? MISSING
-      : Math.max(-32767, Math.min(32767, Math.round(value * SCALE)));
-    view.setInt16(index * 2, scaled, true);
+    const slot = index % actionCount;
+    if (value === null || Number.isNaN(value)) {
+      out.push(null);
+      continue;
+    }
+    const scaled = Math.max(-32767, Math.min(32767, Math.round(value * SCALE)));
+    const base = previous[slot];
+    out.push(base === null ? scaled : scaled - base);
+    previous[slot] = scaled;
   }
   return out;
 }
 
-/** EV v blindech na base64 řetězec šestnáctibitových desetin. */
-export function encodeEvTable(values: readonly (number | null)[]): string {
-  const bytes = toBytes(values);
-  let binary = "";
-  // Po částech, protože `String.fromCharCode(...bytes)` na stovkách tisíc
-  // hodnot přeteče zásobník argumentů.
-  const step = 8192;
-  for (let start = 0; start < bytes.length; start += step) {
-    binary += String.fromCharCode(...bytes.subarray(start, start + step));
-  }
-  return typeof btoa === "function"
-    ? btoa(binary)
-    : Buffer.from(binary, "binary").toString("base64");
-}
-
-/**
- * Kolik hodnot zápis doopravdy nese.
- *
- * `decodeEvTable` chybějící doplní `null`, aby nedopočítávala nuly - jenže tím
- * délka výsledku vždycky sedí na to, co si volající vyžádal, a posunutý zápis se
- * nepozná. Kdo potřebuje ověřit, že tabulka odpovídá očekávanému tvaru, musí se
- * zeptat na skutečnou délku, ne na délku výsledku.
- */
-export function evTableLength(encoded: string): number {
-  const padding = encoded.endsWith("==") ? 2 : encoded.endsWith("=") ? 1 : 0;
-  const bytes = Math.floor(encoded.length / 4) * 3 - padding;
-  return Math.floor(bytes / 2);
-}
-
 /** Zpět na EV v blindech; `null` znamená akci, která pro tu kombinaci není. */
-export function decodeEvTable(encoded: string, count: number): (number | null)[] {
-  const binary = typeof atob === "function"
-    ? atob(encoded)
-    : Buffer.from(encoded, "base64").toString("binary");
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
-  }
-  const view = new DataView(bytes.buffer);
+export function decodeEvDeltas(
+  deltas: readonly (number | null)[],
+  actionCount: number,
+): (number | null)[] {
+  if (actionCount <= 0) return [];
   const out: (number | null)[] = [];
-  for (let index = 0; index < count; index += 1) {
-    if ((index + 1) * 2 > bytes.length) {
-      // Kratší zápis, než kolik se čeká: radši `null` než dopočítaná nula.
+  const previous = new Array<number | null>(actionCount).fill(null);
+  for (const [index, delta] of deltas.entries()) {
+    const slot = index % actionCount;
+    if (delta === null || delta === undefined) {
       out.push(null);
       continue;
     }
-    const raw = view.getInt16(index * 2, true);
-    out.push(raw === MISSING ? null : raw / SCALE);
+    const base = previous[slot];
+    const scaled = base === null ? delta : base + delta;
+    previous[slot] = scaled;
+    out.push(scaled / SCALE);
   }
   return out;
 }

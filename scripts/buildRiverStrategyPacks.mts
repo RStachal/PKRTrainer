@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { gzipSync } from "node:zlib";
 import { heroSideOfNode, seatsOfFamily,
   trimToModuleBudget,
   supersededByRepair,
@@ -9,7 +10,7 @@ import { heroSideOfNode, seatsOfFamily,
 } from "./lib/solvedPackBuilding.mts";
 import { subgameDecisions } from "./lib/subgameDecisions.mts";
 import { riverActionEv } from "../src/core/riverActionEv";
-import { encodeComboMask, encodeEvTable } from "../src/core/evCodec";
+import { encodeComboMask, encodeEvDeltas } from "../src/core/evCodec";
 import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
 import { buildRiverStrategyRule } from "../src/data/ranges/riverStrategyRuleBuilder";
 import { buildRiverStrategyPack } from "../src/data/ranges/riverStrategyPack";
@@ -572,7 +573,10 @@ if (family === undefined) {
               values.push(chips === undefined ? null : chips / perBB);
             }
           }
-          return { indices: ordered.map((row) => row.index), v: encodeEvTable(values) };
+          return {
+            indices: ordered.map((row) => row.index),
+            v: encodeEvDeltas(values, rule.actions.length),
+          };
         });
 
         // Masky až po průchodu: seznam kombinací roste s pravidly, takže jeho
@@ -586,7 +590,7 @@ if (family === undefined) {
         // Seznam kombinací se neořezává spolu s pravidly: masky jsou dlouhé
         // podle něj, takže zkrácený seznam by posunul význam bitů.
         const evDocument = (rows: readonly (typeof maskedRules)[number][]) => JSON.stringify({
-          schemaVersion: "PKRTRAINER_RIVER_EV_V2",
+          schemaVersion: "PKRTRAINER_RIVER_EV_V3",
           familyId: family,
           packId: result.pack.id,
           contentHash: result.pack.contentHash,
@@ -596,13 +600,24 @@ if (family === undefined) {
           rules: rows,
         });
 
-        // Rozpočet vynucuje generátor, ne naděje. Po zavedení bitmapy vyšel
-        // soubor na 497 KiB proti tvrdému stropu 512 - jedno pravidlo navíc a
-        // další rodina ho tiše přeteče. Ořezává se od konce, kam pack ukládá
-        // nejméně dosahované rivery, takže se ztrácí to nejméně ptané.
+        // Rozpočet vynucuje generátor, ne naděje - a hlídají se **obě** čísla,
+        // která kontroluje `bundle:budget`: raw i gzip. Na tom to poprvé spadlo:
+        // base64 se raw vešlo (496,7 KiB proti 512), ale po gzipu dalo 170 KiB
+        // proti stropu 128, protože nese šest bitů na znak a komprimovat na něm
+        // není co. Dvě podmínky se skládají do jednoho čísla přepočtem gzipu na
+        // měřítko raw, aby se dal použít týž ořez jako u packů.
+        //
+        // Ořezává se od konce, kam pack ukládá nejméně dosahované rivery, takže
+        // se ztrácí to nejméně ptané.
+        const GZIP_BUDGET_BYTES = 120 * 1024;
         const { kept: budgetedRules, dropped: droppedForBudget } = trimToModuleBudget(
           maskedRules,
-          (candidate) => Buffer.byteLength(evDocument(candidate), "utf8"),
+          (candidate) => {
+            const text = evDocument(candidate);
+            const raw = Buffer.byteLength(text, "utf8");
+            const gzip = gzipSync(Buffer.from(text, "utf8")).length;
+            return Math.max(raw, gzip * (MODULE_BUDGET_BYTES / GZIP_BUDGET_BYTES));
+          },
         );
 
         const evPath = join(EV_OUT_DIR, `${slug}.generated.json`);
@@ -610,9 +625,10 @@ if (family === undefined) {
         writeFileSync(evPath, evDocument(budgetedRules), "utf8");
         writeEvManifestEntry({ familyId: family, packId: result.pack.id, slug });
         const evBytes = statSync(evPath).size;
+        const evGzip = gzipSync(readFileSync(evPath)).length;
         const withEv = budgetedRules.filter((row) => row !== null).length;
         const overBudget = droppedForBudget > 0 ? `, ${droppedForBudget} kvůli rozpočtu` : "";
-        console.log(`  EV: ${withEv}/${rules.length} pravidel${overBudget}, ${(evBytes / 1024).toFixed(0)} KB -> ${evPath}`);
+        console.log(`  EV: ${withEv}/${rules.length} pravidel${overBudget}, ${(evBytes / 1024).toFixed(0)} KiB raw / ${(evGzip / 1024).toFixed(0)} KiB gzip -> ${evPath}`);
       }
     }
   }

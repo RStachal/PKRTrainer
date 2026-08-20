@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { decodeComboMask, evTableLength } from "../../src/core/evCodec";
+import { decodeComboMask } from "../../src/core/evCodec";
 import { riverEvManifest } from "../../src/data/ranges/riverEvManifest.generated";
 import { readRiverEv, riverEvMatchesPack, type RiverEvPack } from "../../src/data/ranges/riverEvPack";
 import { solvedRiverManifest } from "../../src/data/ranges/riverSolvedManifest.generated";
@@ -59,7 +59,7 @@ describe("vygenerovaná EV k vygenerované rodině", () => {
           expect(actions, `pravidlo ${index} chybí v rodině`).toBeGreaterThan(0);
           const combos = decodeComboMask(row.m, table.combos.length).length;
           // Nerovnost by znamenala posun o akci: EV složení u sázky.
-          expect(evTableLength(row.v), `řádek ${index}`).toBe(combos * actions!);
+          expect(row.v.length, `řádek ${index}`).toBe(combos * actions!);
           checked += 1;
         }
         expect(checked).toBeGreaterThan(0);

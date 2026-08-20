@@ -9,7 +9,22 @@
  * between ranges. Keeping the two apart means nobody has to guess which they are
  * looking at.
  */
-export type ActionEvSource = "SOLVER" | "ALL_IN_EQUITY";
+export type ActionEvSource = "SOLVER" | "ALL_IN_EQUITY" | "SOLVED_TREE";
+
+/**
+ * Zdroje, které se hráči smějí ukázat.
+ *
+ * Přísný seznam patří na import packů, ne na zobrazení. Dokud to bylo jedno a
+ * totéž, platilo `source must be SOLVER` i pro čísla dopočítaná za běhu -
+ * takže se **žádná EV typu `ALL_IN_EQUITY` nikdy neukázala**, přestože se
+ * počítala, ukládala do spotu a **známkovalo se podle ní**. Aplikace tím
+ * hodnotila hráče podle čísel, která před ním schovávala.
+ */
+export const DISPLAYABLE_ACTION_EV_SOURCES: readonly ActionEvSource[] = [
+  "SOLVER",
+  "ALL_IN_EQUITY",
+  "SOLVED_TREE",
+];
 export type ActionEvUnit = "BB";
 
 export interface ActionEvValue<Action extends string> {
@@ -92,22 +107,33 @@ export function highestEvAction<Action extends string>(
   return best?.action ?? null;
 }
 
+/**
+ * Je sada úplná pro tenhle uzel?
+ *
+ * `allowedSources` je schválně přísné ve výchozím stavu: většina volajících je
+ * import packu, kde smí projít jen prověřený export. Zobrazovací cesty si musí
+ * volnější seznam vyžádat, a je pak na jednom řádku vidět, že to dělají.
+ */
 export function isActionEvSetComplete<Action extends string>(
   set: ActionEvSet<Action> | undefined,
   legalActions: readonly Action[],
+  allowedSources: readonly ActionEvSource[] = ["SOLVER"],
 ): set is ActionEvSet<Action> {
-  return set !== undefined && validateActionEvSet(set, legalActions).length === 0;
+  return set !== undefined && validateActionEvSet(set, legalActions, allowedSources).length === 0;
 }
 
 export function validateActionEvSet<Action extends string>(
   set: ActionEvSet<Action>,
   legalActions: readonly Action[],
+  allowedSources: readonly ActionEvSource[] = ["SOLVER"],
 ): string[] {
   const errors: string[] = [];
   const legal = new Set<string>(legalActions);
   const seen = new Set<string>();
 
-  if (set.source !== "SOLVER") errors.push("source must be SOLVER");
+  if (!allowedSources.includes(set.source)) {
+    errors.push(`source must be one of ${allowedSources.join(", ")}`);
+  }
   if (set.unit !== "BB") errors.push("unit must be BB");
   if (!isNonNegativeFinite(set.equivalentThresholdBb)) {
     errors.push("equivalentThresholdBb must be a non-negative finite number");

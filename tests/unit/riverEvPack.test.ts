@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { encodeComboMask, encodeEvTable } from "../../src/core/evCodec";
+import { encodeComboMask, encodeEvDeltas } from "../../src/core/evCodec";
 import {
   readRiverEv,
   riverEvMatchesPack,
@@ -18,7 +18,7 @@ import {
  */
 function packOf(rules: RiverEvPack["rules"], combos: string[]): RiverEvPack {
   return {
-    schemaVersion: "PKRTRAINER_RIVER_EV_V2",
+    schemaVersion: "PKRTRAINER_RIVER_EV_V3",
     familyId: "TEST",
     packId: "pack-TEST",
     contentHash: "hash-1",
@@ -33,7 +33,7 @@ describe("čtení EV tabulky", () => {
   const combos = ["AhKh", "AsKs", "7d6d"];
   // Tři kombinace, dvě akce: hodnoty jdou po kombinacích.
   const values = [1.5, -2, 0, 3.2, null, 4.1];
-  const pack = packOf([{ m: encodeComboMask([0, 1, 2], combos.length), v: encodeEvTable(values) }], combos);
+  const pack = packOf([{ m: encodeComboMask([0, 1, 2], combos.length), v: encodeEvDeltas(values, 2) }], combos);
 
   it("vrátí EV akcí pro zadanou kombinaci", () => {
     const lookup = readRiverEv(pack, () => 2);
@@ -62,7 +62,7 @@ describe("čtení EV tabulky", () => {
     // náhodou. Tady drží EV jen první a poslední kombinace, takže záměna
     // pořadí za index by dala EV druhé ruky té třetí.
     const sparse = packOf(
-      [{ m: encodeComboMask([0, 2], combos.length), v: encodeEvTable([1, 2, 8, 9]) }],
+      [{ m: encodeComboMask([0, 2], combos.length), v: encodeEvDeltas([1, 2, 8, 9], 2) }],
       combos,
     );
     const lookup = readRiverEv(sparse, () => 2);
@@ -75,7 +75,7 @@ describe("čtení EV tabulky", () => {
     // Tohle je ten samý posun jako u počtu akcí, jen z druhé strany: pack
     // přegenerovaný s víc kombinacemi než EV tabulka.
     const mismatched = packOf(
-      [{ m: encodeComboMask([0, 1, 2], combos.length), v: encodeEvTable([1, 2, 3, 4]) }],
+      [{ m: encodeComboMask([0, 1, 2], combos.length), v: encodeEvDeltas([1, 2, 3, 4], 2) }],
       combos,
     );
     expect(readRiverEv(mismatched, () => 2).forCombo(0, "AhKh")).toBeUndefined();

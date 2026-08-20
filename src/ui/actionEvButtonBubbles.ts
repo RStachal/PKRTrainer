@@ -1,4 +1,5 @@
 import {
+  DISPLAYABLE_ACTION_EV_SOURCES,
   isActionEvSetComplete,
   type ActionEvEvaluation,
   type ActionEvSet,
@@ -56,7 +57,9 @@ export function revealActionEvButtonBubbles<Action extends string>(
   if (
     !evaluation ||
     actions.some((action) => action === undefined) ||
-    !isActionEvSetComplete(actionEvs, actions as Action[])
+    // Zobrazovací seznam, ne ten pro import packů: sem chodí i čísla dopočítaná
+    // za běhu a přísná podmínka je dřív zahazovala všechna.
+    !isActionEvSetComplete(actionEvs, actions as Action[], DISPLAYABLE_ACTION_EV_SOURCES)
   ) {
     return 0;
   }

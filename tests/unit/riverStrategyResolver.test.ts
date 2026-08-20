@@ -12,6 +12,10 @@ import {
 } from "../../src/data/ranges/riverStrategyResolver";
 import type { RiverStrategyPack } from "../../src/data/ranges/riverSolvedRuntimeRegistry";
 import type { PostflopStrategyInput } from "../../src/core/postflopGenerator";
+import { combosOfClass } from "../../src/core/riverActionEv";
+import { encodeComboMask, encodeEvDeltas } from "../../src/core/evCodec";
+import type { RiverEvPack } from "../../src/data/ranges/riverEvPack";
+import { loadRiverEvPack, resetRiverEvCache } from "../../src/data/ranges/riverEvRuntime";
 
 /**
  * Riverový resolver na skutečné vyřešené podhře.
@@ -85,6 +89,61 @@ describe("riverový resolver", () => {
     // Text je pro hráče: česky a bez interních enumů.
     expect(answer?.explanation).toContain("Vyřešený river");
     expect(answer?.explanation).not.toContain("SRP_");
+  });
+
+  it("k odpovědi přiloží EV ostatních akcí, jakmile tabulka dorazí", async () => {
+    // Tohle je celý důvod, proč EV vzniká: hráč po odpovědi vidí, co ho ostatní
+    // akce stály. Bez tabulky odpověď vyjde bez čísel a stahování se nastartuje
+    // na pozadí - čekat na půl megabajtu uprostřed rozdání by byla prodleva
+    // přesně v tu chvíli, kdy se kouká na karty.
+    resetRiverEvCache();
+    const heroCombo = combosOfClass(
+      rule.buckets[0].handClasses[0],
+      new Set(item.board),
+    )[0];
+    const heroCards = [
+      { rank: heroCombo[0], suit: heroCombo[1] },
+      { rank: heroCombo[2], suit: heroCombo[3] },
+    ] as never;
+
+    const withoutTable = createRiverStrategyResolver(pack)(input({ heroCards }));
+    expect(withoutTable?.actionEvs, "bez tabulky se čísla nevymýšlejí").toBeUndefined();
+
+    // To volání výš si zapamatovalo, že k tomuhle packu v ostrém manifestu
+    // tabulka není - a je to tak správně, aby se stahování nezkoušelo znovu při
+    // každém spotu. Test proto pokračuje s čistou cache.
+    resetRiverEvCache();
+
+    const table: RiverEvPack = {
+      schemaVersion: "PKRTRAINER_RIVER_EV_V3",
+      familyId: rule.familyId,
+      packId: pack.id,
+      contentHash: pack.contentHash,
+      unit: "BB",
+      source: "SOLVED_TREE",
+      combos: [heroCombo],
+      // Sestupně, ať je vidět, že se pořadí zachovává až do sady.
+      rules: [{
+        m: encodeComboMask([0], 1),
+        v: encodeEvDeltas(rule.actions.map((_, index) => 5 - index), rule.actions.length),
+      }],
+    };
+    await loadRiverEvPack(pack, [{
+      familyId: table.familyId, packId: table.packId, load: () => Promise.resolve(table),
+    }]);
+
+    const answer = createRiverStrategyResolver(pack)(input({ heroCards }));
+    const set = answer?.actionEvs;
+    expect(set, "s tabulkou musí EV být").toBeDefined();
+    // Ne `SOLVER`: je to expektace nad soupeřovou range, ne solverova
+    // counterfactual value, a splynout ta dvě tvrzení nesmí.
+    expect(set?.source).toBe("SOLVED_TREE");
+    expect(set?.unit).toBe("BB");
+    // Každá nabízená akce má číslo; půlka s čísly a půlka bez by vypadala jako
+    // vlastnost akce, ne jako mezera v datech.
+    const offered = new Set(set?.values.map((value) => value.action));
+    expect(offered.size).toBe(set?.values.length);
+    expect(set?.values.every((value) => Number.isFinite(value.evBb))).toBe(true);
   });
 
   it("při nepřeložitelném popisku odmítne, místo aby posunul odpověď", () => {

@@ -1,18 +1,27 @@
-import type { PostflopAction, PostflopStrategyInput } from "../../core/postflopGenerator";
+import type { PostflopAction } from "../../core/postflopGenerator";
+import type { Card } from "../../core/types";
 import { riverEvManifest, type RiverEvManifestEntry } from "./riverEvManifest.generated";
-import { readRiverEv, riverEvMatchesPack, type RiverEvLookup, type RiverEvPack } from "./riverEvPack";
+import { readRiverEv, riverEvMatchesPack, type RiverEvPack } from "./riverEvPack";
 import type { RiverStrategyPack } from "./riverSolvedRuntimeRegistry";
-import { findRiverRuleIndex } from "./riverStrategyResolver";
 import { translateTurnActions } from "./turnActionTranslation";
 
 /**
- * EV riverových akcí za běhu: stáhne se, až když ji hráč chce vidět.
+ * EV riverových akcí za běhu: stáhne se, až když ji hráč může chtít vidět.
  *
  * ## Proč vlastní stahování
  *
  * Tabulka je půl megabajtu na rodinu - zhruba jako celá rodina se strategií.
  * Kdyby se načítala s ní, platil by ji každý, kdo si otevře trénink, včetně
- * těch, kdo si EV nikdy nezobrazí. Proto vlastní chunk a vlastní manifest.
+ * těch, kdo se k riveru nikdy nedostanou. Proto vlastní chunk a vlastní
+ * manifest.
+ *
+ * ## Proč se nikde nečeká
+ *
+ * Resolver je synchronní a čekat na půl megabajtu uprostřed rozdání by znamenalo
+ * prodlevu přesně v tu chvíli, kdy hráč kouká na karty. Místo toho se stahování
+ * **nastartuje při prvním spotu rodiny** a použije se od chvíle, kdy dorazí. Kdo
+ * dostane úplně první riverový spot dřív, než chunk přiletí, uvidí odpověď bez
+ * čísel - a to je pořád lepší než čekání nebo vymyšlené EV.
  *
  * ## Proč se otisk ověřuje tady
  *
@@ -38,13 +47,7 @@ export interface RiverActionEvRow {
 }
 
 const loads = new Map<string, Promise<RiverEvPack | undefined>>();
-
-function entryFor(
-  packId: string,
-  manifest: readonly RiverEvManifestEntry[],
-): RiverEvManifestEntry | undefined {
-  return manifest.find((item) => item.packId === packId);
-}
+const ready = new Map<string, RiverEvPack>();
 
 /**
  * Načte tabulku k packu, nebo `undefined`, když k němu žádná neplatí.
@@ -59,7 +62,7 @@ export function loadRiverEvPack(
   const cached = loads.get(pack.id);
   if (cached) return cached;
 
-  const entry = entryFor(pack.id, manifest);
+  const entry = manifest.find((item) => item.packId === pack.id);
   if (entry === undefined) {
     const missing = Promise.resolve(undefined);
     loads.set(pack.id, missing);
@@ -67,7 +70,11 @@ export function loadRiverEvPack(
   }
 
   const pending = entry.load()
-    .then((table) => (riverEvMatchesPack(table, pack) ? table : undefined))
+    .then((table) => {
+      if (!riverEvMatchesPack(table, pack)) return undefined;
+      ready.set(pack.id, table);
+      return table;
+    })
     .catch((error: unknown) => {
       loads.delete(pack.id);
       throw error;
@@ -76,39 +83,61 @@ export function loadRiverEvPack(
   return pending;
 }
 
+/**
+ * Tabulka, která už dorazila, bez čekání.
+ *
+ * Rozhraní pro synchronní cesty: resolver se ptá uprostřed rozdání a nemůže
+ * čekat. `undefined` znamená „ještě není", ne „není".
+ */
+export function readyRiverEvPack(packId: string): RiverEvPack | undefined {
+  return ready.get(packId);
+}
+
+/** Nastartuje stahování a nečeká; chyba se spolkne, EV je nepovinná ozdoba. */
+export function primeRiverEvPack(pack: Pick<RiverStrategyPack, "id" | "contentHash">): void {
+  if (ready.has(pack.id) || loads.has(pack.id)) return;
+  void loadRiverEvPack(pack).catch(() => undefined);
+}
+
 /** Zapomene načtené tabulky; pro testy, které mění manifest mezi případy. */
 export function resetRiverEvCache(): void {
   loads.clear();
+  ready.clear();
 }
 
-function lookupFor(pack: RiverStrategyPack, table: RiverEvPack): RiverEvLookup {
-  // Počet akcí se bere z pravidla packu, ne z tabulky: tabulka nese jen hodnoty
-  // a kolik jich na kombinaci připadá, je odvozené. Kdyby se ty dva rozešly,
-  // četly by se posunuté - hráči by u sázky vyšlo EV složení.
-  return readRiverEv(table, (index) => pack.rules[index]?.actions.length);
+/** Kombinace tak, jak ji zapisuje tabulka: `"AhKh"`, v pořadí, které tam je. */
+function comboKeys(cards: readonly [Card, Card]): [string, string] {
+  const first = `${cards[0].rank}${cards[0].suit}`;
+  const second = `${cards[1].rank}${cards[1].suit}`;
+  return [`${first}${second}`, `${second}${first}`];
 }
 
 /**
- * EV akcí pro jednu kombinaci na spotu, na který pack odpovídá.
+ * EV akcí pro jednu kombinaci na pravidle, které už někdo našel.
+ *
+ * Index pravidla se předává, místo aby se hledalo znovu: hledá ho resolver a
+ * dvě hledání jsou dvě místa, kde se opravuje jedna chyba. Zároveň tím tenhle
+ * modul nemusí sáhnout na resolver, takže mezi nimi nevzniká kruh.
  *
  * Vrací akce ve slovníku trenažéru, ne solverovy popisky: hráč nikdy neuvidí
- * `BET 17.000000`. Když se dvě velikosti složí do jedné akce, zůstane ta s vyšším
- * EV a `mergedFrom` řekne, kolik jich za ní stojí.
+ * `BET 17.000000`.
  */
-export function riverActionEvForCombo(
+export function riverActionEvRows(
   pack: RiverStrategyPack,
   table: RiverEvPack,
-  input: PostflopStrategyInput,
-  combo: string,
+  ruleIndex: number,
+  heroCards: readonly [Card, Card],
+  potBBFallback: number,
 ): RiverActionEvRow[] | undefined {
-  const ruleIndex = findRiverRuleIndex(pack, input);
-  if (ruleIndex < 0) return undefined;
   const rule = pack.rules[ruleIndex];
+  if (rule === undefined) return undefined;
 
-  const values = lookupFor(pack, table).forCombo(ruleIndex, combo);
+  const lookup = readRiverEv(table, (index) => pack.rules[index]?.actions.length);
+  const [direct, swapped] = comboKeys(heroCards);
+  const values = lookup.forCombo(ruleIndex, direct) ?? lookup.forCombo(ruleIndex, swapped);
   if (values === undefined) return undefined;
 
-  const potForSizes = rule.riverSpot.potChips || input.potBB;
+  const potForSizes = rule.riverSpot.potChips || potBBFallback;
   const { actions } = translateTurnActions(rule.actions, potForSizes);
   // Tatáž past jako v resolveru: nepřeložitelný popisek se zahodí a pole se
   // zkrátí, takže by se hodnoty přiřadily o akci vedle. Radši nic než posun.
