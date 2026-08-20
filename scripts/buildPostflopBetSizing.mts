@@ -103,6 +103,23 @@ export function familySizingFrom(
   return { potChips, effectiveStackChips, smallPct, bigPct, bigIsAllIn, rule };
 }
 
+/**
+ * Byla ta rodina doopravdy odsolvená?
+ *
+ * Parametry jsou vstup, ne obsah. Od chvíle, co se dají generovat odvozením z
+ * preflop packů, jich může na disku ležet pět set - a všechny čekají na solve,
+ * který třeba nikdy neproběhne. Tabulka sizingů popisuje, co produkt dodává,
+ * takže nastagovaný vstup do ní nepatří: první ostré použití generátoru jinak
+ * shodí sadu, protože se objeví rodiny bez jediného odsolvenoho boardu.
+ */
+function hasCheckpoint(family: string): boolean {
+  return existsSync(join(
+    "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
+    family,
+    "raw",
+  ));
+}
+
 export function collectBetSizing(paramRoot = PARAM_ROOT): Map<string, FamilyBetSizing> {
   const found = new Map<string, FamilyBetSizing>();
   if (!existsSync(paramRoot)) return found;
@@ -113,7 +130,7 @@ export function collectBetSizing(paramRoot = PARAM_ROOT): Map<string, FamilyBetS
       const match = PARAM_FILE.exec(file);
       if (match?.groups === undefined) continue;
       const family = match.groups.family;
-      if (found.has(family)) continue;
+      if (found.has(family) || !hasCheckpoint(family)) continue;
       const sizing = familySizingFrom(readFileSync(join(dir, file), "utf8"), family, ruleForShippedFamily(family));
       if (sizing !== null) found.set(family, sizing);
     }

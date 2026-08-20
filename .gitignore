@@ -48,3 +48,8 @@ pnpm-debug.log*
 !.vscode/extensions.json
 .idea/
 .cache/
+
+# Generované vstupy pro solver: vznikají z preflop packů odvozením
+# (npm run mtt:seat-pair-expansion), takže je nemá cenu verzovat - při plném
+# běhu jich je 522 a přegenerují se kdykoli.
+Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_seat_pair_expansion_v1/

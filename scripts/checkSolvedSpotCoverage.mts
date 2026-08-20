@@ -35,6 +35,7 @@ import { runtimeSolvedRiverPacks } from "../src/data/ranges/riverSolvedRuntimeRe
  * skoro všechno, ale jsou to agregáty přes třídu textury, ne přesná deska.
  */
 
+const asJson = process.argv.includes("--json");
 const spots = Number(
   process.argv.find((arg) => arg.startsWith("--spots="))?.split("=")[1] ?? 1500,
 );
@@ -135,3 +136,15 @@ console.log(
   "Nula u ulice neznamená, že obsah odmítá desky. Znamená, že se ho trenažér\n"
   + "ptá na spoty, které nikdo neřešil - a to je jiný závěr než chybějící deska.",
 );
+
+if (asJson) {
+  // Strojový výstup pro ty, kdo podle poptávky řadí práci - zejména generátor
+  // rozšíření: 522 desek nikdo neodsolví najednou, takže musí vzniknout v
+  // pořadí, ve kterém se na ně trenažér doopravdy ptá.
+  console.log(JSON.stringify({
+    schemaVersion: "PKRTRAINER_SOLVED_COVERAGE_V1",
+    spotsPerStreet: spots,
+    coveredPatterns: [...covered].sort(),
+    askedPatterns: asked.map(([pattern, count]) => ({ pattern, count, held: covered.has(pattern) })),
+  }));
+}
