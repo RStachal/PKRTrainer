@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 import { texasSolverBoardForId } from "../src/core/texasSolverBoardCatalog.ts";
 import {
@@ -78,6 +78,18 @@ function demandByPattern(): { counts: Map<string, number>; measured: boolean } {
 const OUTPUT_DIR =
   "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_seat_pair_expansion_v1";
 const WORK = "artifacts/decomposition";
+
+/** Kam ukládá checkpointy zbytek řetězu; noční rozklad je hledá právě tady. */
+const CHECKPOINT_BASE =
+  "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
+
+/** Kam má solver zapsat checkpoint, absolutně a pod jménem, jaké se hledá. */
+function checkpointPath(familyId: string, boardId: string): string {
+  // Lomítka dopředu i na Windows: solver bere cestu jako řetězec a zpětné
+  // lomítko si v parametrovém souboru vyloží jako escape.
+  return resolve(CHECKPOINT_BASE, familyId, "raw", `pkrtrainer_${familyId}_${boardId}.json`)
+    .split("\\").join("/");
+}
 
 /** Sto žetonů na blind: váhy ranží se pak vejdou do celých čísel. */
 const CHIPS_PER_BB = 100;
@@ -204,8 +216,25 @@ for (const [openerIndex, opener] of SEATS.entries()) {
           "set_print_interval 100",
           "set_use_isomorphism 1",
           "start_solve",
-          "set_dump_rounds 1",
-          `dump_result ${familyId}_${boardId}.json`,
+          // Dvě kola, ne jedno.
+          //
+          // Existující rodiny mají všechny `set_dump_rounds 2` a jejich
+          // checkpointy mají desítky megabajtů. S jedním kolem vyšel dump na
+          // 204 kB - to je flopový uzel bez turnové vrstvy, tedy přesně to, co
+          // noční rozklad potřebuje a nenašel by. Solver na to neupozorní:
+          // soubor vznikne, jen je v něm míň, než kdo čeká.
+          "set_dump_rounds 2",
+          // Absolutní cesta a jméno, jaké čeká zbytek řetězu.
+          //
+          // Relativní cesta se u solveru vyhodnotí proti jeho vlastnímu kořeni,
+          // kde nic z tohohle neleží - a on na to neupozorní: nic nevypíše,
+          // vrátí nulu a soubor prostě nevznikne tam, kde ho někdo hledá. Tahle
+          // past už jednou stála jednu vrstvu odsolvovanou dvakrát.
+          //
+          // Jméno musí být `pkrtrainer_<rodina>_<deska>.json` a ležet v
+          // `<output>/<rodina>/raw/`, protože přesně to hledá noční rozklad i
+          // kontrola, jestli rodina vůbec má checkpoint.
+          `dump_result ${checkpointPath(familyId, boardId)}`,
           "",
         ].join("\n"),
       }));
@@ -264,6 +293,11 @@ if (!write) {
   console.log("Nic nezapsáno. Zápis: npm run mtt:seat-pair-expansion -- --write");
 } else {
   mkdirSync(OUTPUT_DIR, { recursive: true });
+  // Solver adresář sám nezaloží a na chybějící cestu neupozorní - jen soubor
+  // nevznikne.
+  for (const family of selected) {
+    mkdirSync(join(CHECKPOINT_BASE, family.familyId, "raw"), { recursive: true });
+  }
   let index = 0;
   for (const family of selected) {
     for (const file of family.files) {

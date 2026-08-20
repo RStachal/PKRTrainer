@@ -82,6 +82,14 @@ export const MTT_POSTFLOP_BET_SIZING: Readonly<Record<string, FamilyBetSizing>> 
     bigIsAllIn: true,
     rule: "LEGACY_CHIP_THRESHOLD",
   },
+  MTT9_25BB_LJ_HJ_SRP: {
+    potChips: 550,
+    effectiveStackChips: 2250,
+    smallPct: [],
+    bigPct: [33, 50],
+    bigIsAllIn: true,
+    rule: "LEGACY_CHIP_THRESHOLD",
+  },
   MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR: {
     potChips: 50,
     effectiveStackChips: 125,

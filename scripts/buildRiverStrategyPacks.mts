@@ -9,6 +9,7 @@ import { heroSideOfNode, seatsOfFamily,
 } from "./lib/solvedPackBuilding.mts";
 import { subgameDecisions } from "./lib/subgameDecisions.mts";
 import { riverActionEv } from "../src/core/riverActionEv";
+import { encodeEvTable } from "../src/core/evCodec";
 import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode";
 import { buildRiverStrategyRule } from "../src/data/ranges/riverStrategyRuleBuilder";
 import { buildRiverStrategyPack } from "../src/data/ranges/riverStrategyPack";
@@ -48,14 +49,6 @@ import {
 const ROOT = "artifacts/decomposition";
 const OUT_DIR = "src/data/ranges/river";
 const EV_OUT_DIR = "src/data/ranges/river-ev";
-
-/** `"AhKd"` na `"AKo"`; barvy rozhodují jen o tom, jestli je ruka v barvě. */
-function classOfCombo(combo: string): string | undefined {
-  if (combo.length < 4) return undefined;
-  const [rankOne, suitOne, rankTwo, suitTwo] = combo;
-  if (rankOne === rankTwo) return `${rankOne}${rankTwo}`;
-  return `${rankOne}${rankTwo}${suitOne === suitTwo ? "s" : "o"}`;
-}
 const MANIFEST_PATH = "src/data/ranges/riverSolvedManifest.generated.ts";
 const PROFILE_KEY = "FULL_RING_9|REGULAR|CHIP_EV|RIVER";
 
@@ -479,14 +472,24 @@ if (family === undefined) {
       // Soubor nese otisk packu. Kdyby se pack přegeneroval a EV ne, runtime to
       // pozná a EV nepoužije, místo aby ukazoval čísla k jiné strategii.
       if (writeEv) {
-        const classIndex = new Map<string, number>();
-        const classList: string[] = [];
-        const indexOfClass = (handClass: string) => {
-          const known = classIndex.get(handClass);
+        // Po kombinacích, ne po třídách ruk.
+        //
+        // Uvnitř jedné třídy se EV rozchází s mediánem 0,3 žetonu, ale p90 3,2 a
+        // maximem přes sedmdesát - tedy kolem čtrnácti blindů. Průměr přes třídu
+        // tam neodpovídá žádné konkrétní ruce, a EV je číslo, které hráč uvidí u
+        // každé akce. Vidět je to i na rovnováze: po kombinacích má ztráta hrané
+        // akce p90 nula, po třídách 3,5 BB.
+        //
+        // Jako obyčejná JSON čísla by to bylo přes 780 KB na rodinu proti
+        // rozpočtu 512 KiB na chunk; kodek z toho udělá zhruba 175 KB.
+        const comboIndex = new Map<string, number>();
+        const comboList: string[] = [];
+        const indexOfCombo = (combo: string) => {
+          const known = comboIndex.get(combo);
           if (known !== undefined) return known;
-          classIndex.set(handClass, classList.length);
-          classList.push(handClass);
-          return classList.length - 1;
+          comboIndex.set(combo, comboList.length);
+          comboList.push(combo);
+          return comboList.length - 1;
         };
 
         const evRules = rules.map((rule) => {
@@ -502,43 +505,37 @@ if (family === undefined) {
           });
           if (rows.length === 0) return null;
 
-          // Průměr přes kombinace té třídy. Matrix je mřížka tříd, ne kombinací,
-          // takže je to granularita, kterou hráč doopravdy vidí.
-          const perClass = new Map<string, Map<string, { sum: number; count: number }>>();
+          const byCombo = new Map<string, Map<string, number>>();
           for (const row of rows) {
-            const handClass = classOfCombo(row.combo);
-            if (handClass === undefined) continue;
-            const actions = perClass.get(handClass) ?? new Map();
-            const cell = actions.get(row.action) ?? { sum: 0, count: 0 };
-            cell.sum += row.evChips;
-            cell.count += 1;
-            actions.set(row.action, cell);
-            perClass.set(handClass, actions);
+            const actions = byCombo.get(row.combo) ?? new Map<string, number>();
+            actions.set(row.action, row.evChips);
+            byCombo.set(row.combo, actions);
           }
           const perBB = context.chipsPerBB > 0 ? context.chipsPerBB : 1;
-          const out: (number | null)[][] = [];
-          for (const [handClass, actions] of perClass) {
-            const values = rule.actions.map((action) => {
-              const cell = actions.get(action);
-              return cell === undefined
-                ? null
-                : Math.round((cell.sum / cell.count / perBB) * 10) / 10;
-            });
-            out.push([indexOfClass(handClass), ...values] as (number | null)[]);
+          const combos: number[] = [];
+          const values: (number | null)[] = [];
+          for (const [combo, actions] of byCombo) {
+            combos.push(indexOfCombo(combo));
+            for (const action of rule.actions) {
+              const chips = actions.get(action);
+              // `null`, ne nula: nula je platné EV a u složení dokonce
+              // nejčastější, takže by hráč u nedostupné akce viděl číslo.
+              values.push(chips === undefined ? null : chips / perBB);
+            }
           }
-          return out;
+          return { c: combos, v: encodeEvTable(values) };
         });
 
         const evPath = join(EV_OUT_DIR, `${slug}.generated.json`);
         mkdirSync(dirname(evPath), { recursive: true });
         writeFileSync(evPath, JSON.stringify({
-          schemaVersion: "PKRTRAINER_RIVER_EV_V1",
+          schemaVersion: "PKRTRAINER_RIVER_EV_V2",
           familyId: family,
           packId: result.pack.id,
           contentHash: result.pack.contentHash,
           unit: "BB",
           source: "SOLVED_TREE",
-          classes: classList,
+          combos: comboList,
           rules: evRules,
         }), "utf8");
         const evBytes = statSync(evPath).size;
