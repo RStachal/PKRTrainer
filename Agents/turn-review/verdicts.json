@@ -6,7 +6,7 @@
       "familyId": "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR",
       "contentHash": "68ce21e3-767f",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 2.2 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 29 %, bez iniciativy 7 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -14,19 +14,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR",
-      "contentHash": "f236150b-16fde",
+      "contentHash": "d7294169-16fc3",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 5.8 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 52 %, bez iniciativy 40 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 3.8 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 56 %, bez iniciativy 41 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR",
       "contentHash": "1aa5c88c-14366",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 1.6 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 43 %, bez iniciativy 47 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -36,7 +36,7 @@
       "familyId": "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
       "contentHash": "35899085-ac89",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 4.3 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 32 %, bez iniciativy 13 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -46,7 +46,7 @@
       "familyId": "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
       "contentHash": "ee9ca65a-1521a",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 1.2 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 43 %, bez iniciativy 37 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -56,7 +56,7 @@
       "familyId": "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
       "contentHash": "45759529-1b37e",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 2.4 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: rodina nedrží obě strany, pořadí se měřit nedá | NO_COLLAPSED_DECISION: 3 rozhodnutí, žádné zkolabované"
@@ -66,7 +66,7 @@
       "familyId": "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
       "contentHash": "ce9c53c9-1a59",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: rodina nemá dost čelících rozhodnutí, aby se dalo měřit | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 52 %, bez iniciativy 12 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -74,19 +74,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
-      "contentHash": "23ee8114-14d99",
+      "contentHash": "7197d54e-165ca",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 7.3 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 56 %, bez iniciativy 21 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 9.8 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 50 %, bez iniciativy 32 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
       "contentHash": "70697ce5-118f4",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 0.0 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 60 %, bez iniciativy 38 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -96,7 +96,7 @@
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "contentHash": "f0468e2a-4783",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 1.8 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 72 %, bez iniciativy 6 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -104,19 +104,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
-      "contentHash": "1972e7a0-15285",
+      "contentHash": "ea8221c2-15086",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 4.0 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 42 %, bez iniciativy 45 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 5.5 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 46 %, bez iniciativy 41 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
       "contentHash": "e459cdfa-f3e0",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 1.2 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 64 %, bez iniciativy 12 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -126,7 +126,7 @@
       "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
       "contentHash": "db4a65a0-8bec",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 4.7 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 48 %, bez iniciativy 6 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -134,19 +134,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
-      "contentHash": "f62afca6-173ce",
+      "contentHash": "a28b6688-172e2",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 6.9 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 57 %, bez iniciativy 43 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 6.0 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 58 %, bez iniciativy 44 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_20BB_BTN_BB_SRP_LOWSPR",
       "contentHash": "63fde040-13101",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 0.4 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 62 %, bez iniciativy 42 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -156,7 +156,7 @@
       "familyId": "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
       "contentHash": "38e6e4e1-6f64",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 5.0 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 37 %, bez iniciativy 18 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -164,19 +164,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
-      "contentHash": "3a43f781-17f89",
+      "contentHash": "99270723-17129",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 10.9 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 48 %, bez iniciativy 43 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 8.5 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 55 %, bez iniciativy 51 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
       "contentHash": "31c69940-12612",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 3.0 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 59 %, bez iniciativy 44 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -186,7 +186,7 @@
       "familyId": "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
       "contentHash": "b3f7dd2a-a407",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 9.7 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 44 %, bez iniciativy 31 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -194,19 +194,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
-      "contentHash": "93798ee4-18379",
+      "contentHash": "cd35d877-17eb8",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 10.0 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 53 %, bez iniciativy 34 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 7.1 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 57 %, bez iniciativy 44 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
       "contentHash": "7ccf69c8-132bf",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 3.4 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 60 %, bez iniciativy 48 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -216,7 +216,7 @@
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "contentHash": "ff2ac826-9ae3",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 13.1 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: rodina nedrží obě strany, pořadí se měřit nedá | NO_COLLAPSED_DECISION: 3 rozhodnutí, žádné zkolabované"
@@ -224,19 +224,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
-      "contentHash": "f0470d20-1d35d",
+      "contentHash": "c56957d0-1dae8",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 4.7 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: rodina nedrží obě strany, pořadí se měřit nedá | NO_COLLAPSED_DECISION: 3 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 4.9 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: rodina nedrží obě strany, pořadí se měřit nedá | NO_COLLAPSED_DECISION: 3 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
       "contentHash": "013ff2de-18f1b",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 4.3 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: rodina nedrží obě strany, pořadí se měřit nedá | NO_COLLAPSED_DECISION: 3 rozhodnutí, žádné zkolabované"
@@ -246,7 +246,7 @@
       "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
       "contentHash": "431d1d3c-6608",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 1.6 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 43 %, bez iniciativy 20 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -254,19 +254,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
-      "contentHash": "b129a2a2-121a1",
+      "contentHash": "83707ead-12071",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 6.9 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 48 %, bez iniciativy 37 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 5.1 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 51 %, bez iniciativy 40 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_35BB_CO_BTN_3BP_REPAIR",
       "contentHash": "323a190d-da52",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 5.8 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 62 %, bez iniciativy 36 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -276,7 +276,7 @@
       "familyId": "MTT9_40BB_UTG_BB_SRP",
       "contentHash": "3befd49f-7295",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 2.1 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 76 %, bez iniciativy 5 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -284,19 +284,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_40BB_UTG_BB_SRP",
-      "contentHash": "b2ea1baa-141f3",
+      "contentHash": "4131f8d3-15859",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 6.3 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 53 %, bez iniciativy 27 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 9.2 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 54 %, bez iniciativy 33 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_40BB_UTG_BB_SRP",
       "contentHash": "39a17695-10b0d",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 1.3 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 67 %, bez iniciativy 22 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -306,7 +306,7 @@
       "familyId": "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
       "contentHash": "bc36551b-6149",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 12.4 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 50 %, bez iniciativy 20 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -314,19 +314,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
-      "contentHash": "1bd4272a-14179",
+      "contentHash": "3404c868-13b68",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 8.3 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 51 %, bez iniciativy 33 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 6.7 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 56 %, bez iniciativy 40 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
       "contentHash": "10f38124-fbe2",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 4.5 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 65 %, bez iniciativy 43 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -336,17 +336,27 @@
       "familyId": "MTT9_50BB_BTN_BB_SRP",
       "contentHash": "02cee288-8cb2",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 1.6 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 75 %, bez iniciativy 0 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+    },
+    {
+      "street": "RIVER",
+      "familyId": "MTT9_50BB_BTN_BB_SRP",
+      "contentHash": "20819b84-1735d",
+      "outcome": "ACCEPTED",
+      "reviewedAt": "2026-08-20",
+      "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
+      "basis": "MECHANICAL",
+      "notes": "DEFENCE_VS_POT_ODDS: 6.8 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 53 %, bez iniciativy 41 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_50BB_BTN_BB_SRP",
       "contentHash": "93d81388-115a8",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 0.3 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 60 %, bez iniciativy 32 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -356,17 +366,27 @@
       "familyId": "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR",
       "contentHash": "b9a03f1e-7535",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 5.7 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 49 %, bez iniciativy 17 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+    },
+    {
+      "street": "RIVER",
+      "familyId": "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR",
+      "contentHash": "76149e5b-176a9",
+      "outcome": "ACCEPTED",
+      "reviewedAt": "2026-08-20",
+      "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
+      "basis": "MECHANICAL",
+      "notes": "DEFENCE_VS_POT_ODDS: 7.1 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 51 %, bez iniciativy 41 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR",
       "contentHash": "9cb896b4-13413",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 3.3 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 50 %, bez iniciativy 43 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -376,17 +396,27 @@
       "familyId": "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
       "contentHash": "070d0170-abd6",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 8.4 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 51 %, bez iniciativy 24 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+    },
+    {
+      "street": "RIVER",
+      "familyId": "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+      "contentHash": "d08926e3-181cf",
+      "outcome": "ACCEPTED",
+      "reviewedAt": "2026-08-20",
+      "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
+      "basis": "MECHANICAL",
+      "notes": "DEFENCE_VS_POT_ODDS: 9.1 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 51 %, bez iniciativy 48 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
       "contentHash": "c8acc8f9-14252",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 3.1 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 49 %, bez iniciativy 44 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -396,7 +426,7 @@
       "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
       "contentHash": "2f426f05-a62f",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 11.5 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: rodina nedrží obě strany, pořadí se měřit nedá | NO_COLLAPSED_DECISION: 3 rozhodnutí, žádné zkolabované"
@@ -404,19 +434,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
-      "contentHash": "2db2ae27-8748",
+      "contentHash": "68b5d0f0-1ada0",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 2.8 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: rodina nedrží obě strany, pořadí se měřit nedá | NO_COLLAPSED_DECISION: 3 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 2.9 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: rodina nedrží obě strany, pořadí se měřit nedá | NO_COLLAPSED_DECISION: 3 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
       "contentHash": "b6d364e9-19fdf",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 3.4 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: rodina nedrží obě strany, pořadí se měřit nedá | NO_COLLAPSED_DECISION: 3 rozhodnutí, žádné zkolabované"
@@ -426,7 +456,7 @@
       "familyId": "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
       "contentHash": "46622b6a-6a51",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 4.2 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 64 %, bez iniciativy 18 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -434,19 +464,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
-      "contentHash": "e20bbaef-a850",
+      "contentHash": "7738a98e-14c4e",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 9.0 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 54 %, bez iniciativy 53 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 9.9 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 51 %, bez iniciativy 34 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
       "contentHash": "6792e0b8-10355",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 3.8 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 73 %, bez iniciativy 33 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -456,7 +486,7 @@
       "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
       "contentHash": "6cc43f23-9126",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 0.7 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 80 %, bez iniciativy 0 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -464,19 +494,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
-      "contentHash": "0b048689-16f5f",
+      "contentHash": "fcff1c6d-17370",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 1.0 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 48 %, bez iniciativy 53 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 3.0 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 48 %, bez iniciativy 46 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
       "contentHash": "4e79c93d-134e5",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 1.6 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 60 %, bez iniciativy 17 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -486,7 +516,7 @@
       "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
       "contentHash": "bf02a772-64d2",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 6.2 b proti limitu 22 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 67 %, bez iniciativy 9 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
@@ -494,19 +524,19 @@
     {
       "street": "RIVER",
       "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
-      "contentHash": "e258aa98-94c6",
+      "contentHash": "b9263704-142ba",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
-      "notes": "DEFENCE_VS_POT_ODDS: 1.2 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 51 %, bez iniciativy 41 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+      "notes": "DEFENCE_VS_POT_ODDS: 6.3 b proti limitu 18 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 50 %, bez iniciativy 37 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
     },
     {
       "street": "TURN",
       "familyId": "MTT9_80BB_CO_BTN_3BP_MIDSPR",
       "contentHash": "c0d04941-df7c",
       "outcome": "ACCEPTED",
-      "reviewedAt": "2026-08-19",
+      "reviewedAt": "2026-08-20",
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 0.2 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině | INITIATIVE_ORDERING: agresor sází 56 %, bez iniciativy 28 % | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"

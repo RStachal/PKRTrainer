@@ -18,6 +18,12 @@ export const solvedRiverManifest: readonly SolvedRiverManifestEntry[] = [
     load: () => import("./river/mtt9-100bb-btn-bb-srp-facing-highspr.generated.json").then((module) => module.default as unknown as RiverStrategyPack),
   },
   {
+    familyId: "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
+    packId: "mtt-full-ring-9-river-solved-mtt9-110bb-co-btn-3bp-facing-midhigh-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|RIVER",
+    load: () => import("./river/mtt9-110bb-co-btn-3bp-facing-midhigh.generated.json").then((module) => module.default as unknown as RiverStrategyPack),
+  },
+  {
     familyId: "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
     packId: "mtt-full-ring-9-river-solved-mtt9-150bb-co-btn-3bp-highspr-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|RIVER",
@@ -64,6 +70,24 @@ export const solvedRiverManifest: readonly SolvedRiverManifestEntry[] = [
     packId: "mtt-full-ring-9-river-solved-mtt9-45bb-co-btn-3bp-facing-lowspr-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|RIVER",
     load: () => import("./river/mtt9-45bb-co-btn-3bp-facing-lowspr.generated.json").then((module) => module.default as unknown as RiverStrategyPack),
+  },
+  {
+    familyId: "MTT9_50BB_BTN_BB_SRP",
+    packId: "mtt-full-ring-9-river-solved-mtt9-50bb-btn-bb-srp-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|RIVER",
+    load: () => import("./river/mtt9-50bb-btn-bb-srp.generated.json").then((module) => module.default as unknown as RiverStrategyPack),
+  },
+  {
+    familyId: "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-50bb-btn-bb-srp-facing-midspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|RIVER",
+    load: () => import("./river/mtt9-50bb-btn-bb-srp-facing-midspr.generated.json").then((module) => module.default as unknown as RiverStrategyPack),
+  },
+  {
+    familyId: "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-50bb-co-bb-srp-cbet-midspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|RIVER",
+    load: () => import("./river/mtt9-50bb-co-bb-srp-cbet-midspr.generated.json").then((module) => module.default as unknown as RiverStrategyPack),
   },
   {
     familyId: "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
