@@ -97,3 +97,45 @@ export function decodeEvTable(encoded: string, count: number): (number | null)[]
   }
   return out;
 }
+
+/**
+ * Množina kombinací jako bitmapa, ne jako seznam indexů.
+ *
+ * Každé pravidlo pokrývá podmnožinu kombinací, které rodina zná - typicky 195
+ * z 315. Jako pole čísel v JSON to zabralo 205 kB na rodinu, tedy třetinu
+ * souboru, a **v prvním odhadu velikosti jsem na to úplně zapomněl**: počítal
+ * jsem jen hodnoty a vyšlo mi 175 kB proti skutečným 685.
+ *
+ * Bitmapa je 40 bajtů na pravidlo místo sedmi set: 16 kB na rodinu místo 205.
+ * Deduplikace seznamů by ušetřila jen 22 kB, protože se skoro neopakují -
+ * měřeno 255 různých z 298.
+ */
+export function encodeComboMask(indices: readonly number[], total: number): string {
+  const bytes = new Uint8Array(Math.ceil(total / 8));
+  for (const index of indices) {
+    if (index < 0 || index >= total) continue;
+    bytes[index >> 3] |= 1 << (index & 7);
+  }
+  let binary = "";
+  const step = 8192;
+  for (let start = 0; start < bytes.length; start += step) {
+    binary += String.fromCharCode(...bytes.subarray(start, start + step));
+  }
+  return typeof btoa === "function"
+    ? btoa(binary)
+    : Buffer.from(binary, "binary").toString("base64");
+}
+
+/** Zpět na indexy, vzestupně - v tom pořadí jdou i hodnoty. */
+export function decodeComboMask(encoded: string, total: number): number[] {
+  const binary = typeof atob === "function"
+    ? atob(encoded)
+    : Buffer.from(encoded, "base64").toString("binary");
+  const out: number[] = [];
+  for (let index = 0; index < total; index += 1) {
+    const byte = binary.charCodeAt(index >> 3);
+    if (Number.isNaN(byte)) break;
+    if ((byte >> (index & 7)) & 1) out.push(index);
+  }
+  return out;
+}

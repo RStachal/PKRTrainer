@@ -61,6 +61,48 @@ const evOf = (results: ReturnType<typeof riverActionEv>, action: string) => {
 };
 
 describe("EV riverových akcí", () => {
+  /**
+   * Dorovnání, po kterém strom končí.
+   *
+   * Solver za terminální akci nezapisuje potomka vůbec - dorovnáním hra končí a
+   * jde se ukazovat karty. Kořen na to místo dosazoval nulu, takže **EV
+   * dorovnání vycházelo stejné pro nuts i pro vzduch** ve všech 149 uzlech
+   * dodávaného obsahu, a sada přitom byla zelená: fixtura výš dává dorovnání
+   * prázdného potomka `{}`, což je jiná větev kódu.
+   */
+  const facingBet = (): SolverNode => node(1, ["BET 50"], [1], combosOfClass("AA", new Set(BOARD)), {
+    // Hrdina je IP a čelí sázce; jeho dorovnání i složení jsou konec hry.
+    "BET 50": node(0, ["CALL", "FOLD"], [1, 0], [
+      ...combosOfClass("KK", new Set(BOARD)),
+      ...combosOfClass("76s", new Set(BOARD)),
+    ]),
+  });
+
+  it("dorovnání, po kterém se ukazují karty, závisí na tom, co hrdina drží", () => {
+    const strong = riverActionEv({
+      node: facingBet(), board: BOARD, potChips: POT, line: ["BET 50"],
+      oop: { AA: 1 }, ip: { KK: 1 },
+    });
+    // Pot 100 plus dvakrát 50: vítěz bere 200, z toho 50 vsadil sám.
+    expect(evOf(strong, "CALL")).toBeCloseTo(150, 6);
+
+    const weak = riverActionEv({
+      node: facingBet(), board: BOARD, potChips: POT, line: ["BET 50"],
+      oop: { AA: 1 }, ip: { "76s": 1 },
+    });
+    // Vysoká karta proti páru es: dorovnání je vyhozených padesát.
+    expect(evOf(weak, "CALL")).toBeCloseTo(-50, 6);
+  });
+
+  it("složení stojí to, co hrdina na ulici vsadil, a nic víc", () => {
+    const results = riverActionEv({
+      node: facingBet(), board: BOARD, potChips: POT, line: ["BET 50"],
+      oop: { AA: 1 }, ip: { KK: 1 },
+    });
+    expect(evOf(results, "FOLD")).toBeCloseTo(0, 6);
+  });
+
+
   it("sázka s nejlepší rukou proti jistému dorovnání vynese pot i sázku", () => {
     // Pot 100, sázka 50, soupeř vždy dorovná, hrdina vyhraje: bere 100 + 50.
     const results = riverActionEv({

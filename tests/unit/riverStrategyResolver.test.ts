@@ -87,6 +87,22 @@ describe("riverový resolver", () => {
     expect(answer?.explanation).not.toContain("SRP_");
   });
 
+  it("při nepřeložitelném popisku odmítne, místo aby posunul odpověď", () => {
+    // Popisky se indexují proti původnímu seznamu, ale překlad nepřeložitelný
+    // popisek zahodí a pole se zkrátí. Tady je vadný popisek první, takže by se
+    // kbelík pro CHECK načetl z místa, kde leží sázka - hráč by dostal pokyn
+    // sázet, s cedulkou, že to spočítal solver.
+    const shifted: RiverStrategyRule = {
+      ...rule,
+      actions: ["ŽÁDNÁ TAKOVÁ AKCE", "CHECK", "BET 10"],
+      buckets: [{ ...rule.buckets[0], action: "CHECK" }],
+    };
+    const answer = createRiverStrategyResolver({ ...pack, rules: [shifted] })(input({
+      heroHand: shifted.buckets[0].handClasses[0] as never,
+    }));
+    expect(answer).toBeNull();
+  });
+
   it("odmítne jinou pátou kartu", () => {
     // Na riveru je pátá karta celá odpověď; sousední deska je jiná hra.
     const other = [...item.board];

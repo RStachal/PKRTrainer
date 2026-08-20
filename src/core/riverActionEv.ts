@@ -188,6 +188,35 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
   const heroPlayer = current.player ?? 1;
 
   /**
+   * Hodnota podívané pro jednu hrdinovu kombinaci proti vážené soupeřově range.
+   *
+   * Stojí zvlášť, ne uvnitř rekurze, protože ji potřebuje i kořen: `CALL` na
+   * riveru žádného potomka nemá - dorovnáním hra končí a jde se ukazovat karty.
+   * Dokud tahle funkce byla schovaná uvnitř, kořen za takovou akci dosazoval
+   * nulu, takže **EV dorovnání vyšlo stejné pro nuts i pro vzduch**. Změřeno:
+   * ploché ve všech 149 uzlech, které dorovnání nabízejí.
+   */
+  const showdownValue = (
+    heroCards: [string, string],
+    villains: readonly Weighted[],
+    committed: readonly [number, number],
+  ): number => {
+    let sum = 0;
+    for (const villain of villains) {
+      const result = compareShowdown(heroCards, villain.cards, board);
+      if (result === undefined) continue;
+      const pot = potChips + committed[0] + committed[1];
+      const net = result === 1
+        ? pot - committed[heroPlayer]
+        : result === -1
+          ? -committed[heroPlayer]
+          : pot / 2 - committed[heroPlayer];
+      sum += villain.weight * net;
+    }
+    return sum;
+  };
+
+  /**
    * Hodnota podstromu pro jednu hrdinovu kombinaci proti vážené soupeřově range.
    *
    * Váhy se dělí na soupeřových uzlech podle jeho strategie, takže součet vah
@@ -201,22 +230,7 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
     committed: readonly [number, number],
   ): number => {
     const total = () => villains.reduce((sum, item) => sum + item.weight, 0);
-
-    const showdown = (): number => {
-      let sum = 0;
-      for (const villain of villains) {
-        const result = compareShowdown(heroCards, villain.cards, board);
-        if (result === undefined) continue;
-        const pot = potChips + committed[0] + committed[1];
-        const net = result === 1
-          ? pot - committed[heroPlayer]
-          : result === -1
-            ? -committed[heroPlayer]
-            : pot / 2 - committed[heroPlayer];
-        sum += villain.weight * net;
-      }
-      return sum;
-    };
+    const showdown = () => showdownValue(heroCards, villains, committed);
 
     if (current.node_type !== "action_node" || current.strategy === undefined) {
       return showdown();
@@ -282,10 +296,15 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
     for (const action of rootActions) {
       const committed = committedAfter(action, heroPlayer, startCommitted);
       const child = current.childrens?.[action];
+      // Složení stojí to, co hrdina na téhle ulici vsadil; obvykle nic, ale kdo
+      // sázel a čelí zvýšení, o tu sázku přijde.
       const raw = /^FOLD$/i.test(action.trim())
-        ? 0
+        ? -startCommitted[heroPlayer] * liveWeight
         : child === undefined
-          ? 0
+          // Akce, po které se hra nevětví, je konec hry: dorovnání a check,
+          // kterým se sázení uzavírá. Dřív tu byla nula - tedy EV nezávislé na
+          // tom, co hrdina drží.
+          ? showdownValue(hero.cards, live, committed)
           : value(child, hero.cards, live, committed);
       results.push({ combo: hero.combo, action, evChips: raw / liveWeight });
     }

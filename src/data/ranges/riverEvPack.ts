@@ -1,4 +1,4 @@
-import { decodeEvTable, evTableLength } from "../../core/evCodec";
+import { decodeComboMask, decodeEvTable, evTableLength } from "../../core/evCodec";
 
 /**
  * EV riverových akcí jako samostatný obsah, čtený až když ho hráč chce.
@@ -47,8 +47,15 @@ export interface RiverEvPack {
 }
 
 export interface RiverEvRule {
-  /** Indexy kombinací do `combos`, v pořadí, v jakém jdou hodnoty. */
-  c: number[];
+  /**
+   * Bitmapa kombinací do `combos`; hodnoty jdou v pořadí vzestupných indexů.
+   *
+   * Jako pole čísel to zabíralo 205 kB na rodinu - třetinu souboru - protože
+   * pravidlo pokrývá typicky 195 z 315 kombinací a každý index stojí v JSON
+   * čtyři znaky. Bitmapa je 40 bajtů na pravidlo. Deduplikace seznamů by
+   * neušetřila skoro nic: z 298 pravidel jich má 255 vlastní množinu.
+   */
+  m: string;
   /** `combos × actions` hodnot, zapsaných kodekem. */
   v: string;
 }
@@ -85,10 +92,11 @@ export function readRiverEv(
         // doplní `null`, takže délka výsledku sedí vždycky a posun by se
         // nepoznal. Právě tenhle posun je ta tichá chyba, kvůli které je tady
         // kontrola - hráč by u sázky viděl EV složení.
-        if (evTableLength(rule.v) !== rule.c.length * actions) return undefined;
-        const values = decodeEvTable(rule.v, rule.c.length * actions);
+        const indices = decodeComboMask(rule.m, pack.combos.length);
+        if (evTableLength(rule.v) !== indices.length * actions) return undefined;
+        const values = decodeEvTable(rule.v, indices.length * actions);
         byCombo = new Map();
-        for (const [position, comboIndex] of rule.c.entries()) {
+        for (const [position, comboIndex] of indices.entries()) {
           const name = pack.combos[comboIndex];
           if (name === undefined) continue;
           byCombo.set(name, values.slice(position * actions, (position + 1) * actions));

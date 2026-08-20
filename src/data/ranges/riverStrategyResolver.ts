@@ -78,20 +78,38 @@ function ruleMatches(rule: RiverStrategyRule, input: PostflopStrategyInput): boo
   return boardMatches(rule, input);
 }
 
+/**
+ * Které pravidlo packu na tenhle spot odpovídá, nebo -1.
+ *
+ * Vrací se index, ne pravidlo: tabulka EV je zarovnaná s `pack.rules` podle
+ * pořadí a bez indexu by se musela hledat podruhé, vlastním porovnáváním. Dvě
+ * hledání jsou dvě místa, kde se opravuje jedna chyba - a rozejít se můžou tak,
+ * že hráč uvidí EV jiného spotu, než na který odpověděl.
+ */
+export function findRiverRuleIndex(
+  pack: RiverStrategyPack,
+  input: PostflopStrategyInput,
+): number {
+  if (input.street !== "RIVER") return -1;
+  let bestIndex = -1;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const [index, rule] of pack.rules.entries()) {
+    if (!ruleMatches(rule, input)) continue;
+    const distance = Math.abs(rule.stackBB - input.effectiveStackBB);
+    if (distance < bestDistance) {
+      bestIndex = index;
+      bestDistance = distance;
+    }
+  }
+  return bestIndex;
+}
+
 export function createRiverStrategyResolver(pack: RiverStrategyPack): PostflopStrategyResolver {
   return (input: PostflopStrategyInput): PostflopRecommendation | null => {
     if (input.street !== "RIVER") return null;
 
-    let best: RiverStrategyRule | null = null;
-    let bestDistance = Number.POSITIVE_INFINITY;
-    for (const rule of pack.rules) {
-      if (!ruleMatches(rule, input)) continue;
-      const distance = Math.abs(rule.stackBB - input.effectiveStackBB);
-      if (distance < bestDistance) {
-        best = rule;
-        bestDistance = distance;
-      }
-    }
+    const bestIndex = findRiverRuleIndex(pack, input);
+    const best: RiverStrategyRule | null = bestIndex < 0 ? null : pack.rules[bestIndex];
     if (best === null) return null;
 
     // Jmenovatelem je pot toho uzlu v žetonech, ne trenažérův pot v blindech.
@@ -103,6 +121,12 @@ export function createRiverStrategyResolver(pack: RiverStrategyPack): PostflopSt
     const potForSizes = best.riverSpot.potChips || input.potBB;
     const { actions, mergedCount } = translateTurnActions(best.actions, potForSizes);
     if (actions.length === 0) return null;
+    // Popisky se indexují proti původnímu seznamu, takže zkrácený překlad by
+    // posunul odpověď o akci - hráči by u sázky vyšlo CHECK, s cedulkou od
+    // solveru. `translateTurnActions` nepřeložitelný popisek zahodí, a to se
+    // odsud nepozná. Změřeno na dodávaném obsahu: 0 z 9836 pravidel má takový
+    // popisek, takže tahle větev dnes nenastává - proto se smí odmítnout.
+    if (actions.length !== best.actions.length) return null;
 
     const bucket = input.heroHand === undefined
       ? best.buckets[0]

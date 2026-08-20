@@ -151,6 +151,12 @@ export function createTurnStrategyResolver(pack: TurnStrategyPack): PostflopStra
     const potForSizes = rule.spot?.potChips ?? input.potBB;
     const { actions, mergedCount } = translateTurnActions(rule.actions, potForSizes);
     if (actions.length === 0) return null;
+    // Popisky se indexují proti původnímu seznamu, takže zkrácený překlad by
+    // posunul odpověď o akci - hráči by u sázky vyšlo CHECK, s cedulkou od
+    // solveru. `translateTurnActions` nepřeložitelný popisek zahodí, a to se
+    // odsud nepozná. Změřeno na dodávaném obsahu: 0 z 9836 pravidel má takový
+    // popisek, takže tahle větev dnes nenastává - proto se smí odmítnout.
+    if (actions.length !== rule.actions.length) return null;
 
     const bucket = input.heroHand === undefined
       ? rule.buckets[0]

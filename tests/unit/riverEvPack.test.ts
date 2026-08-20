@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { encodeEvTable } from "../../src/core/evCodec";
+import { encodeComboMask, encodeEvTable } from "../../src/core/evCodec";
 import {
   readRiverEv,
   riverEvMatchesPack,
@@ -33,7 +33,7 @@ describe("čtení EV tabulky", () => {
   const combos = ["AhKh", "AsKs", "7d6d"];
   // Tři kombinace, dvě akce: hodnoty jdou po kombinacích.
   const values = [1.5, -2, 0, 3.2, null, 4.1];
-  const pack = packOf([{ c: [0, 1, 2], v: encodeEvTable(values) }], combos);
+  const pack = packOf([{ m: encodeComboMask([0, 1, 2], combos.length), v: encodeEvTable(values) }], combos);
 
   it("vrátí EV akcí pro zadanou kombinaci", () => {
     const lookup = readRiverEv(pack, () => 2);
@@ -55,6 +55,30 @@ describe("čtení EV tabulky", () => {
     // Tohle je ta tichá chyba, kvůli které tam ta kontrola je: se třemi akcemi
     // by se šest hodnot rozdělilo na dvě kombinace a posunulo o jednu akci.
     expect(readRiverEv(pack, () => 3).forCombo(0, "AhKh")).toBeUndefined();
+  });
+
+  it("řídkou bitmapu přiřadí ke správným kombinacím", () => {
+    // Hustá množina 0,1,2 by tuhle chybu neukázala: index i pořadí by seděly
+    // náhodou. Tady drží EV jen první a poslední kombinace, takže záměna
+    // pořadí za index by dala EV druhé ruky té třetí.
+    const sparse = packOf(
+      [{ m: encodeComboMask([0, 2], combos.length), v: encodeEvTable([1, 2, 8, 9]) }],
+      combos,
+    );
+    const lookup = readRiverEv(sparse, () => 2);
+    expect(lookup.forCombo(0, "AhKh")).toEqual([1, 2]);
+    expect(lookup.forCombo(0, "7d6d")).toEqual([8, 9]);
+    expect(lookup.forCombo(0, "AsKs")).toBeUndefined();
+  });
+
+  it("bitmapa s víc bity, než kolik je hodnot, nevrátí nic", () => {
+    // Tohle je ten samý posun jako u počtu akcí, jen z druhé strany: pack
+    // přegenerovaný s víc kombinacemi než EV tabulka.
+    const mismatched = packOf(
+      [{ m: encodeComboMask([0, 1, 2], combos.length), v: encodeEvTable([1, 2, 3, 4]) }],
+      combos,
+    );
+    expect(readRiverEv(mismatched, () => 2).forCombo(0, "AhKh")).toBeUndefined();
   });
 
   it("pravidlo bez EV se přizná", () => {

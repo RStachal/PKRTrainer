@@ -113,6 +113,25 @@ describe("precache build manifest", () => {
     }
   });
 
+  it("tabulka EV se pozná taky, přestože leží vedle rodin", () => {
+    // `/ranges/river-ev/` neobsahuje `/ranges/river/`, takže naivní pořadí
+    // podmínek by ji nepoznalo vůbec: chunk by dostal jméno podle souboru,
+    // precache by ho vzal za nutný a půl megabajtu EV by přistálo na instalační
+    // cestě i tomu, kdo si otevře jen preflopový dril.
+    for (const path of [
+      "/repo/src/data/ranges/river-ev/mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+      "C:\\repo\\src\\data\\ranges\\river-ev\\mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+    ]) {
+      const name = mttProductionChunkNameForModuleId(path);
+      expect(name).toBe("mtt-river-ev-solved-mtt9-20bb-btn-bb-srp-lowspr");
+      expect(isDeferredAsset(`assets/${name}-AbCd1234.js`)).toBe(true);
+    }
+    // A rodina se nesmí schovat pod EV: jsou to dva různé chunky.
+    expect(mttProductionChunkNameForModuleId(
+      "/repo/src/data/ranges/river/mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+    )).toBe("mtt-river-solved-mtt9-20bb-btn-bb-srp-lowspr");
+  });
+
   it("realny Vite build emituje production modul jako lazy chunk mimo precache", async () => {
     const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-lazy-mtt-"));
     const packId = "mtt-six-max-turbo-turn-chip-ev-ante-off-production-v1";

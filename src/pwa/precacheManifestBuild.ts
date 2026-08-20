@@ -39,10 +39,14 @@ export function isPreflopEquityAsset(fileName: string): boolean {
  * Ulice je ve vzoru alternativa, ne druhá funkce. Riverové rodiny se emitují
  * stejně a jsou stejně velké; kdyby je predikát nepoznal, skončily by na
  * instalační cestě - a přesně tohle už jednou zvedlo rozpočet z 362 kB na 4,4 MB.
+ *
+ * `river-ev` je tabulka EV k riverové rodině: půl megabajtu, které hráč potřebuje
+ * teprve poté, co odpoví. Ve vzoru stojí před `river`, protože alternativa se
+ * zkouší zleva a `river` by na `-ev-solved-` jen ztroskotala.
  */
 export function isSolvedStreetAsset(fileName: string): boolean {
   const baseName = fileName.replace(/\\/g, "/").split("/").pop() ?? "";
-  return /^mtt-(flop|turn|river)-solved-[a-z0-9-]+-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
+  return /^mtt-(flop|turn|river-ev|river)-solved-[a-z0-9-]+-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
 }
 
 /** Assets the app fetches when it needs them, so they stay off the install path. */
@@ -70,7 +74,12 @@ export function mttProductionChunkNameForModuleId(moduleId: string): string | nu
   // po převodu přestala platit: chunky dostaly jméno podle souboru, precache
   // predikát je přestal poznávat jako odložené, a rozpočet vyskočil z 362 kB na
   // 4,4 MB - celý solverový obsah se ocitl na instalační cestě.
-  const street = normalized.includes("/ranges/turn/")
+  // `river-ev` napřed: `/ranges/river-ev/` neobsahuje `/ranges/river/`, takže by
+  // jinak propadlo až na `null`, chunk by dostal jméno podle souboru a precache
+  // by ho vzal za nutný - tedy potřetí tatáž past, jen o adresář vedle.
+  const street = normalized.includes("/ranges/river-ev/")
+    ? "river-ev"
+    : normalized.includes("/ranges/turn/")
     ? "turn"
     : normalized.includes("/ranges/river/")
       ? "river"

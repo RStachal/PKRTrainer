@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { decodeEvTable, encodeEvTable } from "../../src/core/evCodec";
+import {
+  decodeComboMask,
+  decodeEvTable,
+  encodeComboMask,
+  encodeEvTable,
+} from "../../src/core/evCodec";
 
 /**
  * Zápis EV tabulky.
@@ -75,5 +80,40 @@ describe("zápis EV tabulky", () => {
     const asJson = JSON.stringify(values).length;
     const encoded = encodeEvTable(values).length;
     expect(encoded).toBeLessThan(asJson * 0.55);
+  });
+});
+
+/**
+ * Bitmapa kombinací.
+ *
+ * V prvním odhadu velikosti EV souboru jsem na seznamy indexů úplně zapomněl a
+ * spletl se čtyřikrát: 175 kB proti skutečným 685. Samotné indexy zabíraly 205
+ * kB na rodinu, tedy třetinu souboru.
+ */
+describe("bitmapa kombinací", () => {
+  it("vrátí, co dostala, vzestupně", () => {
+    const indices = [0, 5, 7, 8, 200, 314];
+    expect(decodeComboMask(encodeComboMask(indices, 315), 315)).toEqual(indices);
+  });
+
+  it("pořadí na vstupu nerozhoduje, výstup je vždy vzestupný", () => {
+    // Hodnoty jdou ve stejném pořadí jako indexy, takže „vzestupně" není
+    // kosmetika - kdyby se pořadí lišilo, EV by se přiřadilo jiné ruce.
+    expect(decodeComboMask(encodeComboMask([9, 2, 40], 64), 64)).toEqual([2, 9, 40]);
+  });
+
+  it("prázdná množina projde", () => {
+    expect(decodeComboMask(encodeComboMask([], 315), 315)).toEqual([]);
+  });
+
+  it("index mimo rozsah zahodí, místo aby přepsal cizí bit", () => {
+    expect(decodeComboMask(encodeComboMask([-1, 5, 999], 64), 64)).toEqual([5]);
+  });
+
+  it("je řádově menší než seznam indexů v JSON", () => {
+    // Kvůli tomuhle to vzniklo: 195 z 315 kombinací je typické pravidlo.
+    const indices = Array.from({ length: 195 }, (_, i) => i);
+    const mask = encodeComboMask(indices, 315).length;
+    expect(mask).toBeLessThan(JSON.stringify(indices).length / 5);
   });
 });
