@@ -153,7 +153,8 @@
     "mtt:after-night": "node scripts/run-cli.mjs scripts/runAfterNight.mts",
     "mtt:solved-coverage": "node scripts/run-cli.mjs scripts/checkSolvedSpotCoverage.mts",
     "mtt:daily": "node scripts/run-cli.mjs scripts/runDailyOrchestrator.mts",
-    "mtt:seat-pair-expansion": "node scripts/run-cli.mjs scripts/buildSeatPairExpansionBatch.mts"
+    "mtt:seat-pair-expansion": "node scripts/run-cli.mjs scripts/buildSeatPairExpansionBatch.mts",
+    "mtt:processes": "node scripts/run-cli.mjs scripts/checkProcessRegistry.mts"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",

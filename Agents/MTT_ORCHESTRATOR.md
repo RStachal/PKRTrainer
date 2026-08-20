@@ -56,31 +56,31 @@ informace, ne důvod si domyslet.
 packy, pustí mechanickou kontrolu, přegeneruje znovu, ověří typy a rozpočty.
 Necommituje a nespouští sadu, obojí schválně.
 
-### 5. Rozšíření vzorů pozic — **nestojí, je to další krok**
+### 5. Rozšíření vzorů pozic — **stojí od 20. 8. 2026**
 
-Tady je dnes největší mezera a orchestrátor na ni umí ukázat, ale ne ji zavřít.
+Cesta je průchozí celá a ověřená na skutečném solvu: `srpSolverInputRanges`
+odvodí ranže z produkčních preflop packů, `mtt:seat-pair-expansion` z nich
+vyrobí parametry (řazené podle změřené poptávky trenažéru), `run_night_expansion.py`
+je odsolví a rozklad výsledný checkpoint vidí.
 
-Nové rodiny se vyrábějí skriptem typu `buildTexasSolver*ExpansionBatch.mts`, kde
-je scénář (rodina, pot, stack, desky) a **ranže napsané ručně**. Aby to šlo
-škálovat na 27 chybějících dvojic, musí ranže vzniknout odvozením z našich
-produkčních preflop packů: RFI pro otvírače, `VS_OPEN` pro obranu.
+Změřeno: **715 vteřin na desku** včetně zápisu dumpu, checkpoint 31 MB, commit
+1,7 GB. 173 desek je 34 hodin, tedy zhruba tři noci.
 
-Ústupek, který je nutné přiznat: `VS_OPEN` nerozlišuje, kdo otevřel, takže
-odvozená obranná range bude pro všechny otvírače stejná. Je to vada, kterou
-nese preflop, a rozšíření ji zdědí. Lepší než ji zdědit mlčky je vědět o ní.
+Dva ústupky, které se vracejí jako `caveats`, ne jen v komentáři:
+`VS_OPEN` nerozlišuje, kdo otevřel (rozdíl proti nezávislému zdroji je v průměru
+11,7 bodu), a preflop packy nesou čisté akce - měřeno 0 tříd z 1980, které by
+dorovnávaly i zvyšovaly.
 
-### 6. Evidence procesů — **částečně**
+### 6. Evidence procesů — **stojí od 20. 8. 2026**
 
-Dnes: noční úloha v plánovači (21:00-08:00, 8 workerů × 2 vlákna = 16 vláken na
-16 jádrech), `mtt:after-night` jako denní dávka, sada jako ruční krok.
+`npm run mtt:processes` ukáže naplánované úlohy s dalším během, běžící těžké
+procesy, délku front (nastagované desky, rozložené desky, riverové vrstvy) a
+třídy souběhu i s tím, proč jsou zakázané. Nic nespouští ani nezastavuje - je to
+pohled, ne řídicí panel.
 
-Co chybí: jedno místo, kde je vidět, co běží, co na co čeká a co smí paralelně.
-Prakticky jsou dnes tři třídy:
-
-- **výhradní** - noční solving (drží celý stroj), plná sada, balení
-- **paralelizovatelné** - generování packů po rodinách, měření, čtení
-- **zakázané souběhy** - editace zdrojů během běhu sady nebo generátorů, a
-  souběh sady s čímkoli náročným (změřeno: 250 s → 764 s a deset falešných pádů)
+Nejcennější je ta poslední část: **sada spuštěná vedle něčeho náročného trvala
+764 vteřin místo 250 a deset testů spadlo bez vady v kódu.** Tohle je jediné
+místo, kde je ta znalost napsaná tak, že se dá přečíst před spuštěním.
 
 ### 7. Zpětná vazba — **stojí v principu, chybí historie**
 
@@ -88,20 +88,34 @@ Prakticky jsou dnes tři třídy:
 přineslo doporučení z minulé noci to, co slibovalo? Do té doby je to jeden bod,
 ne trend, a tvářit se jinak by bylo klamání sebe sama.
 
-## Co orchestrátor vědomě nedělá
+## Co orchestrátor dělá sám a co ne
 
-**Nespouští solver a nemění plánovač.** Vydá doporučení; zapnout je je krok, u
-kterého má být člověk, protože se tím utrácí strojový čas na celou noc.
+**Sám rozhoduje, co se v noci solví.** Priorita z měření je ve strojově čitelné
+podobě a noční rozklad podle ní ustoupí monolitické expanzi - ale jen když platí
+čtyři podmínky zároveň: priorita to říká, je nastagovaná práce, desek je aspoň
+osm, a je nainstalovaná úloha, která okno převezme. Ta poslední je ta podstatná:
+ustoupit do prázdna je nejdražší možný výsledek, protože noc neodvede nic.
+
+**Sám nezakládá práci.** Vygenerovat parametry pro nové rodiny je krok, který
+spustí člověk: je to rozhodnutí o tom, co se bude solvit další tři noci.
 
 **Necommituje.** Co se změnilo a jestli je to v pořádku, je úsudek.
 
-**Nepočítá, co neměří.** Doporučení bez podkladu se nevydá.
+**Nepočítá, co neměří.** Doporučení bez podkladu se nevydá a řekne se proč.
 
 ## Pořadí prací
 
-1. **Odvození ranží z preflop packů** - odemyká rozšíření vzorů, tedy jedinou
-   cestu, jak zvednout těch 12 %.
-2. **Generátor rodin pro chybějící dvojice** ze scénářů, ne ručně psaných ranží.
-3. **Noční runner podle doporučení** - dnes má prioritu zadrátovanou.
-4. **Evidence procesů** na jedno místo.
-5. **Porovnání dnů**, až bude historie z čeho.
+1. ~~Odvození ranží z preflop packů~~ — hotovo
+2. ~~Generátor rodin pro chybějící dvojice~~ — hotovo
+3. ~~Noční runner podle měření~~ — hotovo
+4. ~~Evidence procesů~~ — hotovo (`mtt:processes`)
+5. **Porovnání dnů** — sbírá se od 20. 8., zatím jeden bod. Až bude historie,
+   půjde ptát: přineslo doporučení z minulé noci to, co slibovalo?
+
+## Co zůstává mimo dosah stroje
+
+Nic z toho nejde odvodit ani změřit; potřebuje to vstup zvenčí.
+
+- **six-max charty** (16 řádků knihovny) a **ICM data** (32 řádků)
+- **stroj s 48+ GB RAM** pro 51 desek s blendem plného a redukovaného stromu
+- **čtení hráči** - mechanická kontrola chytá hrubé rozbití, ne kvalitu hry
