@@ -244,10 +244,36 @@ for (const [openerIndex, opener] of SEATS.entries()) {
 }
 
 const demand = demandByPattern();
+
+/** Sedačka tak, jak ji píše jméno dvojice: `UTG+1` je v něm `UTG_1`. */
+const asToken = (seat: Position) => seat.replace("+", "_");
+
+/**
+ * Rozdělí `UTG_2_BTN_SRP` na otevírajícího a bránícího.
+ *
+ * Delší jméno se zkouší napřed, protože podtržítko je tu zároveň oddělovač i
+ * součást názvu sedačky. Líný regex `^(.+?)_(.+?)_SRP$` vzal první rozdělení,
+ * které projde, takže z `UTG_2_BTN_SRP` udělal `SRP_UTG_VS_2_BTN` - vzor, na
+ * který se trenažér nikdy nezeptá. Poptávka těch dvanácti rodin proto vyšla
+ * nula a seřadily se na konec, přestože se o ně hráči hlásí. **Stroj, který má
+ * rozhodovat podle měření, si tím měření pokazil sám.**
+ */
+function seatsOfPair(pair: string): { opener: Position; defender: Position } | undefined {
+  const body = pair.replace(/_(?:SRP|3BP)$/, "");
+  const byLongest = [...SEATS].sort((left, right) => asToken(right).length - asToken(left).length);
+  const opener = byLongest.find((seat) => body.startsWith(`${asToken(seat)}_`));
+  if (opener === undefined) return undefined;
+  const rest = body.slice(asToken(opener).length + 1);
+  const defender = SEATS.find((seat) => asToken(seat) === rest);
+  return defender === undefined ? undefined : { opener, defender };
+}
+
 /** `UTG_BB_SRP` na `SRP_UTG_VS_BB`, tedy tvar, jakým se ptá trenažér. */
 const askedForm = (pair: string) => {
-  const match = /^(.+?)_(.+?)_SRP$/.exec(pair);
-  return match === null ? pair : `SRP_${match[1]}_VS_${match[2]}`;
+  const seats = seatsOfPair(pair);
+  return seats === undefined
+    ? pair
+    : `SRP_${asToken(seats.opener)}_VS_${asToken(seats.defender)}`;
 };
 planned.sort((left, right) => {
   const byDemand = (demand.counts.get(askedForm(right.pair)) ?? 0)
@@ -278,7 +304,9 @@ if (skipped.length > 0) {
 const sample = selected[0];
 if (sample !== undefined) {
   const ranges = srpSolverInputRanges({
-    openerSeat: SEATS.find((seat) => sample.pair.startsWith(seat.replace("+", "_"))) ?? "UTG",
+    // Tatáž past jako u `askedForm`: `startsWith` uspěje na „UTG" i u dvojice,
+    // která začíná „UTG_1", takže by se ranže ukázaly za jinou sedačku.
+    openerSeat: seatsOfPair(sample.pair)?.opener ?? "UTG",
     defenderSeat: "BB",
     bucket: sample.depth as StackBucket,
     ante: "OFF",
