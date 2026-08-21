@@ -4,8 +4,12 @@ import type {
   PostflopStrategyInput,
   PostflopStrategyResolver,
 } from "../../core/postflopGenerator";
-import type { ActionEvSet } from "../../core/actionEv";
-import { primeRiverEvPack, readyRiverEvPack, riverActionEvRows } from "./riverEvRuntime";
+import {
+  primeRiverEvPack,
+  readyRiverEvPack,
+  riverActionEvRows,
+  riverComboEvTable,
+} from "./riverEvRuntime";
 import { createPostflopResolverChain } from "./postflopResolverChain";
 import type { RiverStrategyPack } from "./riverSolvedRuntimeRegistry";
 import { runtimeSolvedRiverPacks } from "./riverSolvedRuntimeRegistry";
@@ -131,7 +135,7 @@ function actionEvsFor(
   ruleIndex: number,
   input: PostflopStrategyInput,
   offered: readonly PostflopAction[],
-): { actionEvs: ActionEvSet<PostflopAction> } | undefined {
+): Pick<PostflopRecommendation, "actionEvs" | "comboEvs"> | undefined {
   if (input.heroCards === undefined) return undefined;
   const table = readyRiverEvPack(pack.id);
   if (table === undefined) {
@@ -149,7 +153,16 @@ function actionEvsFor(
 
   const potBB = pack.rules[ruleIndex].spot?.potBB ?? input.potBB;
   const equivalent = Math.max(EV_EQUIVALENT_FLOOR_BB, potBB * EV_EQUIVALENT_POT_SHARE);
+  // Celá tabulka uzlu, ne jen hrdinova ruka: matice ukazuje 169 tříd a hráč po
+  // odpovědi chce vidět i to, co by stálo držet jinou ruku. Dekóduje se přitom
+  // jednou, ne pro každou kombinaci zvlášť.
+  const comboEvs = (riverComboEvTable(pack, table, ruleIndex, input.potBB) ?? [])
+    .map((row) => ({
+      combo: row.combo,
+      values: row.rows.map((item) => ({ action: item.action, evBb: item.evBB })),
+    }));
   return {
+    ...(comboEvs.length > 0 ? { comboEvs } : {}),
     actionEvs: {
       // Ne `SOLVER`: tohle je expektace nad soupeřovou range za předpokladu, že
       // obě strany hrají zapsanou strategii, ne solverova counterfactual value.

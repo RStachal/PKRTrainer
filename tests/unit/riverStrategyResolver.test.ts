@@ -144,6 +144,11 @@ describe("riverový resolver", () => {
     const offered = new Set(set?.values.map((value) => value.action));
     expect(offered.size).toBe(set?.values.length);
     expect(set?.values.every((value) => Number.isFinite(value.evBb))).toBe(true);
+
+    // A celá tabulka uzlu, ne jen hrdinova ruka: matice z ní vypisuje EV
+    // jednotlivých kombinací, aby hráč viděl i to, co by stálo držet jinou.
+    expect(answer?.comboEvs?.map((row) => row.combo)).toEqual([heroCombo]);
+    expect(answer?.comboEvs?.[0].values.length).toBe(set?.values.length);
   });
 
   it("při nepřeložitelném popisku odmítne, místo aby posunul odpověď", () => {

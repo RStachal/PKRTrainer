@@ -265,3 +265,91 @@ describe("postflopRangeMatrixView", () => {
     }
   });
 });
+
+/**
+ * EV po kombinacích v matici.
+ *
+ * Buňka je třída ruky, ale číslo, které se v ní ukáže, musí patřit konkrétní
+ * kombinaci. Průměr přes třídu by neodpovídal žádné ruce: `76` se dvěma srdci na
+ * srdcové desce je jiná ruka než `76` bez nich a měřeno se uvnitř třídy EV
+ * rozchází až o čtrnáct blindů.
+ */
+describe("EV kombinací v matici", () => {
+  function spotWithEv() {
+    const spot = postflopSpotToTrainingSpot(generatePostflopSpot({
+      seed: 42,
+      street: "FLOP",
+      heroCards: [{ rank: "A", suit: "s" }, { rank: "K", suit: "s" }],
+    }));
+    return {
+      ...spot,
+      comboEvs: [
+        // Dvě kombinace téže třídy s velmi odlišnou EV - přesně ten případ,
+        // kdy by průměr lhal.
+        { combo: "AsKs", values: [
+          { action: "CHECK" as const, evBb: 1.2 },
+          { action: "BET_BIG" as const, evBb: 8.4 },
+        ] },
+        { combo: "AdKd", values: [
+          { action: "CHECK" as const, evBb: 1.1 },
+          { action: "BET_BIG" as const, evBb: -2.5 },
+        ] },
+        { combo: "7h6h", values: [{ action: "CHECK" as const, evBb: 0.4 }] },
+      ],
+    };
+  }
+
+  it("v buňce vypíše každou kombinaci zvlášť, ne jejich průměr", () => {
+    const root = document.createElement("div");
+    renderPostflopRangeMatrix(spotWithEv(), root);
+
+    const cell = root.querySelector<HTMLElement>('[data-hand="AKs"]');
+    expect(cell?.dataset.evCombos, "buňka nese počet kombinací s EV").toBe("2");
+    cell?.click();
+
+    const rows = [...root.querySelectorAll<HTMLElement>(".postflop-flopzilla__detail-ev-row")];
+    expect(rows.map((row) => row.dataset.combo)).toEqual(["AsKs", "AdKd"]);
+    // Osm a půl blindu proti minus dvěma a půl: průměr by byl kolem tří a
+    // neodpovídal by ani jedné z těch ruk.
+    expect(rows[0].textContent).toContain("+8.4 BB");
+    expect(rows[1].textContent).toContain("-2.5 BB");
+  });
+
+  it("na desetinu, ne na tisícinu: víc přesnosti ta data nemají", () => {
+    const root = document.createElement("div");
+    renderPostflopRangeMatrix(spotWithEv(), root);
+    root.querySelector<HTMLElement>('[data-hand="AKs"]')?.click();
+    const text = root.querySelector(".postflop-flopzilla__detail-ev")?.textContent ?? "";
+    expect(text).not.toMatch(/\d\.\d{2}/);
+  });
+
+  it("hrdinovu kombinaci odliší od ostatních", () => {
+    const root = document.createElement("div");
+    renderPostflopRangeMatrix(spotWithEv(), root);
+    root.querySelector<HTMLElement>('[data-hand="AKs"]')?.click();
+    const hero = root.querySelector<HTMLElement>(".postflop-flopzilla__detail-ev-row--hero");
+    expect(hero?.dataset.combo).toBe("AsKs");
+  });
+
+  it("buňka bez EV se netváří, že ji má", () => {
+    const root = document.createElement("div");
+    renderPostflopRangeMatrix(spotWithEv(), root);
+    const cell = root.querySelector<HTMLElement>('[data-hand="QQ"]');
+    expect(cell?.dataset.evCombos).toBeUndefined();
+    cell?.click();
+    expect(root.querySelector(".postflop-flopzilla__detail-ev")).toBeNull();
+  });
+
+  it("spot bez tabulky matici nerozbije", () => {
+    // Většina spotů EV nemá: flop a turn ji nedrží vůbec a river jen tam, kde
+    // tabulka dorazila.
+    const root = document.createElement("div");
+    const spot = postflopSpotToTrainingSpot(generatePostflopSpot({
+      seed: 7, street: "FLOP",
+      heroCards: [{ rank: "A", suit: "s" }, { rank: "K", suit: "s" }],
+    }));
+    renderPostflopRangeMatrix(spot, root);
+    expect(root.querySelectorAll(".postflop-flopzilla__cell").length).toBe(169);
+    expect(root.querySelector("[data-ev-combos]")).toBeNull();
+  });
+});

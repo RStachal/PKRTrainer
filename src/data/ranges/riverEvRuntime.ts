@@ -1,6 +1,7 @@
 import type { PostflopAction } from "../../core/postflopGenerator";
 import type { Card } from "../../core/types";
 import { riverEvManifest, type RiverEvManifestEntry } from "./riverEvManifest.generated";
+import { decodeComboMask } from "../../core/evCodec";
 import { readRiverEv, riverEvMatchesPack, type RiverEvPack } from "./riverEvPack";
 import type { RiverStrategyPack } from "./riverSolvedRuntimeRegistry";
 import { translateTurnActions } from "./turnActionTranslation";
@@ -129,13 +130,47 @@ export function riverActionEvRows(
   heroCards: readonly [Card, Card],
   potBBFallback: number,
 ): RiverActionEvRow[] | undefined {
+  const context = evContext(pack, table, ruleIndex, potBBFallback);
+  if (context === undefined) return undefined;
+  const [direct, swapped] = comboKeys(heroCards);
+  return context.rowsFor(direct) ?? context.rowsFor(swapped);
+}
+
+/**
+ * EV všech kombinací, které pravidlo drží.
+ *
+ * Pro matici: hráč po odpovědi chce vidět nejen svou ruku, ale i co by stálo
+ * držet jinou. Dekóduje se jednou, ne pro každou kombinaci zvlášť - pravidlo
+ * jich má kolem tří set a tři sta dekódování na jeden rozdaný spot by bylo
+ * znát.
+ */
+export function riverComboEvTable(
+  pack: RiverStrategyPack,
+  table: RiverEvPack,
+  ruleIndex: number,
+  potBBFallback: number,
+): { combo: string; rows: RiverActionEvRow[] }[] | undefined {
+  const context = evContext(pack, table, ruleIndex, potBBFallback);
+  if (context === undefined) return undefined;
+  const out: { combo: string; rows: RiverActionEvRow[] }[] = [];
+  for (const index of decodeComboMask(table.rules[ruleIndex]?.m ?? "", table.combos.length)) {
+    const combo = table.combos[index];
+    if (combo === undefined) continue;
+    const rows = context.rowsFor(combo);
+    if (rows !== undefined && rows.length > 0) out.push({ combo, rows });
+  }
+  return out;
+}
+
+/** Společná část obou pohledů: jedno dekódování a jeden překlad akcí. */
+function evContext(
+  pack: RiverStrategyPack,
+  table: RiverEvPack,
+  ruleIndex: number,
+  potBBFallback: number,
+): { rowsFor(combo: string): RiverActionEvRow[] | undefined } | undefined {
   const rule = pack.rules[ruleIndex];
   if (rule === undefined) return undefined;
-
-  const lookup = readRiverEv(table, (index) => pack.rules[index]?.actions.length);
-  const [direct, swapped] = comboKeys(heroCards);
-  const values = lookup.forCombo(ruleIndex, direct) ?? lookup.forCombo(ruleIndex, swapped);
-  if (values === undefined) return undefined;
 
   const potForSizes = rule.riverSpot.potChips || potBBFallback;
   const { actions } = translateTurnActions(rule.actions, potForSizes);
@@ -143,17 +178,24 @@ export function riverActionEvRows(
   // zkrátí, takže by se hodnoty přiřadily o akci vedle. Radši nic než posun.
   if (actions.length !== rule.actions.length) return undefined;
 
-  const byAction = new Map<PostflopAction, RiverActionEvRow>();
-  for (const [index, translated] of actions.entries()) {
-    const evBB = values[index];
-    if (evBB === null || evBB === undefined) continue;
-    const existing = byAction.get(translated.action);
-    if (existing === undefined) {
-      byAction.set(translated.action, { action: translated.action, evBB, mergedFrom: 1 });
-      continue;
-    }
-    existing.mergedFrom += 1;
-    if (evBB > existing.evBB) existing.evBB = evBB;
-  }
-  return [...byAction.values()];
+  const lookup = readRiverEv(table, (index) => pack.rules[index]?.actions.length);
+  return {
+    rowsFor(combo) {
+      const values = lookup.forCombo(ruleIndex, combo);
+      if (values === undefined) return undefined;
+      const byAction = new Map<PostflopAction, RiverActionEvRow>();
+      for (const [index, translated] of actions.entries()) {
+        const evBB = values[index];
+        if (evBB === null || evBB === undefined) continue;
+        const existing = byAction.get(translated.action);
+        if (existing === undefined) {
+          byAction.set(translated.action, { action: translated.action, evBB, mergedFrom: 1 });
+          continue;
+        }
+        existing.mergedFrom += 1;
+        if (evBB > existing.evBB) existing.evBB = evBB;
+      }
+      return [...byAction.values()];
+    },
+  };
 }

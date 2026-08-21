@@ -5,6 +5,7 @@ import type {
   BoardTexture,
   PostflopAction,
   PostflopCallerType,
+  PostflopComboEv,
   PostflopPotType,
   PostflopPositionPattern,
   PostflopRecommendationSource,
@@ -83,6 +84,8 @@ export interface PostflopTrainingSpot {
   actions: readonly PostflopActionOption[];
   recommendedAction: PostflopAction;
   actionEvs?: ActionEvSet<PostflopAction>;
+  /** EV po kombinacích, pro matici. Chybí, dokud obsah spot nedrží. */
+  comboEvs?: readonly PostflopComboEv[];
   explanation: PostflopExplanation;
 }
 
@@ -125,6 +128,7 @@ export function postflopSpotToTrainingSpot(
     })),
     recommendedAction: spot.recommendedAction,
     ...(spot.actionEvs ? { actionEvs: cloneActionEvSet(spot.actionEvs) } : {}),
+    ...(spot.comboEvs ? { comboEvs: spot.comboEvs } : {}),
     explanation: buildExplanation(spot, language),
   };
 }

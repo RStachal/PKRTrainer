@@ -177,6 +177,7 @@ export interface PostflopSpot {
   actions: readonly PostflopAction[];
   recommendedAction: PostflopAction;
   actionEvs?: ActionEvSet<PostflopAction>;
+  comboEvs?: readonly PostflopComboEv[];
   explanation: string;
   strategySource: PostflopRecommendationSource;
   trainingSpot?: PostflopTrainingSpot;
@@ -219,9 +220,25 @@ export interface PostflopStrategyInput {
   riverRunoutClass?: PostflopRiverRunoutClass;
 }
 
+/**
+ * EV akcí pro jednu konkrétní kombinaci karet.
+ *
+ * Vedle `ActionEvSet`, které platí pro hrdinovu ruku, tohle nese celou tabulku:
+ * matice ukazuje 169 tříd a hráč po odpovědi chce vidět i to, co by stálo držet
+ * jinou ruku. Průměr přes třídu se sem nesmí - uvnitř jedné třídy se EV rozchází
+ * až o čtrnáct blindů, takže by to nebylo číslo žádné konkrétní ruky.
+ */
+export interface PostflopComboEv {
+  /** Dvě karty tak, jak je zapisuje obsah: `"AhKh"`. */
+  combo: string;
+  values: readonly { action: PostflopAction; evBb: number }[];
+}
+
 export interface PostflopRecommendation {
   action: PostflopAction;
   actionEvs?: ActionEvSet<PostflopAction>;
+  /** EV po kombinacích pro tenhle uzel, když je obsah drží. */
+  comboEvs?: readonly PostflopComboEv[];
   explanation: string;
   source?: PostflopRecommendationSource;
 }
@@ -648,6 +665,9 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
     actions,
     recommendedAction,
     ...(actionEvs ? { actionEvs } : {}),
+    // Jen když je i `actionEvs`: tabulka bez hrdinovy vlastní hodnoty by
+    // znamenala, že se v matici čísla ukážou a u tlačítek ne.
+    ...(actionEvs && recommendation.comboEvs ? { comboEvs: recommendation.comboEvs } : {}),
     explanation: recommendation.explanation,
     strategySource: recommendation.source ?? fallbackStrategySource(),
   };

@@ -7,6 +7,11 @@ import {
 
 const BUBBLE_CLASS = "action-ev-bubble";
 
+/** Kolik desetinných míst nese který zdroj, aby se nepředstírala přesnost. */
+function decimalsFor(source: ActionEvSet<string>["source"]): number {
+  return source === "SOLVED_TREE" ? 1 : 3;
+}
+
 export const ACTION_EV_BUTTON_STYLES = `
 .action-button__label{line-height:1.15;text-align:center;overflow-wrap:anywhere;}
 .action-ev-bubble{box-sizing:border-box;display:grid;grid-template-columns:auto minmax(32px,1fr);
@@ -73,7 +78,7 @@ export function revealActionEvButtonBubbles<Action extends string>(
     const bubble = actionEvBubble(button);
     const isBest = evaluation.bestActions.includes(action);
     const isChosen = evaluation.chosenAction === action;
-    const formatted = formatActionEvBb(evBb);
+    const formatted = formatActionEvBb(evBb, decimalsFor(actionEvs.source));
 
     bubble.hidden = false;
     const strength = isBest ? 100 : relativeEvStrength(evBb, minimumEv, maximumEv);
@@ -94,9 +99,17 @@ export function revealActionEvButtonBubbles<Action extends string>(
   return buttons.length;
 }
 
-export function formatActionEvBb(value: number): string {
-  const rounded = Math.round(value * 1000) / 1000;
-  return `${rounded > 0 ? "+" : ""}${rounded.toFixed(3)}`;
+/**
+ * EV v blindech na pevný počet desetinných míst.
+ *
+ * Tři jsou tu kvůli preflopu, kde jsou rozdíly setinové a zaokrouhlení na
+ * desetinu by je smazalo. Vyřešená riverová EV se ale **ukládá po desetinách**,
+ * takže `+3,400` by u ní předstíralo přesnost, kterou ta data nemají.
+ */
+export function formatActionEvBb(value: number, decimals = 3): string {
+  const scale = 10 ** decimals;
+  const rounded = Math.round(value * scale) / scale;
+  return `${rounded > 0 ? "+" : ""}${rounded.toFixed(decimals)}`;
 }
 
 function resetActionEvButtonBubbles(buttons: readonly HTMLButtonElement[]): void {

@@ -2335,6 +2335,18 @@ ${ACTION_EV_BUTTON_STYLES}
 .postflop-flopzilla__detail-label{color:#9fb2d5;text-transform:uppercase;font-size:10px;
   font-weight:950;}
 .postflop-flopzilla__detail-value{color:#f4f7ff;}
+.postflop-flopzilla__detail-ev{margin-top:10px;padding-top:8px;
+  border-top:1px solid rgba(123,211,255,.24);}
+.postflop-flopzilla__detail-ev-title{color:#9fb2d5;text-transform:uppercase;font-size:10px;
+  font-weight:950;margin-bottom:6px;}
+.postflop-flopzilla__detail-ev-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;
+  padding:3px 0;font-size:11px;font-variant-numeric:tabular-nums;color:#dbe6fa;}
+.postflop-flopzilla__detail-ev-row--hero{color:#f8fbff;font-weight:950;}
+.postflop-flopzilla__detail-ev-combo{min-width:64px;font-weight:950;letter-spacing:.02em;}
+.postflop-flopzilla__detail-ev-action{color:#b9c8e4;}
+.postflop-flopzilla__detail-ev-action--best{color:#a8f2c3;font-weight:950;}
+/* Buňka, ke které EV existuje: proužek dole, ať se pozná bez proklikávání. */
+.postflop-flopzilla__cell[data-ev-combos]{box-shadow:inset 0 -3px 0 rgba(123,211,255,.55);}
 .postflop-result--correct{background:rgba(43,213,118,.13);border:1px solid rgba(43,213,118,.45);
   color:#9ff0bd;}
 .postflop-result--wrong{background:rgba(226,59,59,.13);border:1px solid rgba(226,59,59,.45);

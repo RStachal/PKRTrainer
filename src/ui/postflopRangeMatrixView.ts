@@ -150,6 +150,10 @@ export function renderPostflopRangeMatrix(
 
   const used = new Set<FlopzillaCategory>();
   const counts: CategoryCounts = {};
+  const evByHand = comboEvsByHandClass(spot);
+  const heroCombo = `${spot.heroCards[0].rank}${spot.heroCards[0].suit}`
+    + `${spot.heroCards[1].rank}${spot.heroCards[1].suit}`;
+  wrap.dataset.comboEvCount = String(spot.comboEvs?.length ?? 0);
 
   for (let i = 0; i < GRID_SIZE; i += 1) {
     matrix.appendChild(headerCell(doc, RANKS[i], "row"));
@@ -159,7 +163,11 @@ export function renderPostflopRangeMatrix(
       used.add(category);
       counts[category] = (counts[category] ?? 0) + 1;
       const cell = matrixCell(doc, hand, category, hand === heroHand, productionByHand.get(hand), spot.actionNode);
-      cell.addEventListener("click", () => showCellDetail(matrix, detail, cell));
+      const handEvs = evByHand.get(hand);
+      // Buňka s EV se pozná i bez kliknutí; bez toho by hráč musel proklikat
+      // sto šedesát devět políček, aby zjistil, která čísla vůbec drží.
+      if (handEvs !== undefined) cell.dataset.evCombos = String(handEvs.length);
+      cell.addEventListener("click", () => showCellDetail(matrix, detail, cell, handEvs, heroCombo));
       cell.addEventListener("keydown", (event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
@@ -249,10 +257,116 @@ function detailPanel(doc: Document): HTMLElement {
   return detail;
 }
 
+/**
+ * Kombinace jedné třídy s jejich EV, seřazené od nejlepší.
+ *
+ * Klíčem je třída ruky, protože matice ukazuje 169 buněk - ale uvnitř buňky se
+ * vypisují **jednotlivé kombinace**, ne jejich průměr. Průměr přes třídu by
+ * neodpovídal žádné konkrétní ruce: změřeno, uvnitř jedné třídy se EV rozchází
+ * až o čtrnáct blindů, protože `76` se dvěma srdci na srdcové desce je jiná ruka
+ * než `76` bez nich.
+ */
+function comboEvsByHandClass(
+  spot: PostflopTrainingSpot,
+): Map<HandLabel, { combo: string; values: readonly { action: PostflopAction; evBb: number }[] }[]> {
+  const byClass = new Map<HandLabel, {
+    combo: string; values: readonly { action: PostflopAction; evBb: number }[];
+  }[]>();
+  for (const row of spot.comboEvs ?? []) {
+    const cards = comboToCards(row.combo);
+    if (cards === undefined) continue;
+    const hand = postflopHandClassFromCards(cards);
+    const list = byClass.get(hand) ?? [];
+    list.push(row);
+    byClass.set(hand, list);
+  }
+  for (const list of byClass.values()) {
+    list.sort((left, right) => bestEvOf(right.values) - bestEvOf(left.values));
+  }
+  return byClass;
+}
+
+function bestEvOf(values: readonly { evBb: number }[]): number {
+  return values.reduce((best, item) => Math.max(best, item.evBb), Number.NEGATIVE_INFINITY);
+}
+
+/** `"AhKh"` na dvě karty, nebo `undefined`, když to není kombinace. */
+function comboToCards(combo: string): [Card, Card] | undefined {
+  if (combo.length !== 4) return undefined;
+  return [
+    { rank: combo[0] as Card["rank"], suit: combo[1] as Card["suit"] },
+    { rank: combo[2] as Card["rank"], suit: combo[3] as Card["suit"] },
+  ];
+}
+
+/**
+ * EV na jedno desetinné místo.
+ *
+ * Ne na tři, jak to dělají bubliny u tlačítek: vyřešená EV se ukládá po
+ * desetinách blindu, takže `+3,400` by předstíralo přesnost, kterou ta data
+ * nemají.
+ */
+function formatEvBB(value: number): string {
+  const rounded = Math.round(value * 10) / 10;
+  return `${rounded > 0 ? "+" : ""}${rounded.toFixed(1)} BB`;
+}
+
+const MATRIX_ACTION_LABEL: Record<PostflopAction, string> = {
+  CHECK: "check",
+  BET_SMALL: "malá sázka",
+  BET_BIG: "velká sázka",
+  CALL: "dorovnání",
+  RAISE: "zvýšení",
+  FOLD: "složení",
+};
+
+function comboEvSection(
+  doc: Document,
+  rows: { combo: string; values: readonly { action: PostflopAction; evBb: number }[] }[],
+  heroCombo: string,
+): HTMLElement {
+  const section = doc.createElement("div");
+  section.className = "postflop-flopzilla__detail-ev";
+
+  const title = doc.createElement("div");
+  title.className = "postflop-flopzilla__detail-ev-title";
+  title.textContent = rows.length === 1
+    ? "EV této kombinace"
+    : `EV jednotlivých kombinací (${rows.length})`;
+  section.appendChild(title);
+
+  for (const row of rows) {
+    const line = doc.createElement("div");
+    line.className = "postflop-flopzilla__detail-ev-row";
+    if (row.combo === heroCombo) line.classList.add("postflop-flopzilla__detail-ev-row--hero");
+    line.dataset.combo = row.combo;
+
+    const name = doc.createElement("span");
+    name.className = "postflop-flopzilla__detail-ev-combo";
+    name.textContent = `${row.combo.slice(0, 2)} ${row.combo.slice(2)}`;
+    line.appendChild(name);
+
+    const best = bestEvOf(row.values);
+    for (const value of [...row.values].sort((left, right) => right.evBb - left.evBb)) {
+      const item = doc.createElement("span");
+      item.className = "postflop-flopzilla__detail-ev-action";
+      if (value.evBb >= best) item.classList.add("postflop-flopzilla__detail-ev-action--best");
+      item.dataset.action = value.action;
+      item.dataset.evBb = String(value.evBb);
+      item.textContent = `${MATRIX_ACTION_LABEL[value.action]} ${formatEvBB(value.evBb)}`;
+      line.appendChild(item);
+    }
+    section.appendChild(line);
+  }
+  return section;
+}
+
 function showCellDetail(
   matrix: HTMLElement,
   detail: HTMLElement,
   cell: HTMLElement,
+  comboEvs?: { combo: string; values: readonly { action: PostflopAction; evBb: number }[] }[],
+  heroCombo = "",
 ): void {
   matrix.querySelectorAll<HTMLElement>(".postflop-flopzilla__cell--selected")
     .forEach((selected) => {
@@ -290,6 +404,9 @@ function showCellDetail(
   grid.appendChild(detailLine(doc, "Lane", laneLabel));
   grid.appendChild(detailLine(doc, "Plan", laneExplanation(lane)));
   detail.appendChild(grid);
+  if (comboEvs !== undefined && comboEvs.length > 0) {
+    detail.appendChild(comboEvSection(doc, comboEvs, heroCombo));
+  }
   detail.focus();
 }
 
