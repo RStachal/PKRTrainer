@@ -181,7 +181,11 @@ describe("release bundle metadata", () => {
     expect(handoffScript).toContain("PERMISSION_JSON_REQUIREMENTS.md");
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_JS_KB", 325)');
     expect(viteConfig).toContain('sourcemap: "hidden"');
-    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 86)');
+    // Zvednuto z 86 dne 21. 8. 2026. Hlavní balík nese manifesty vyřešených
+    // rodin a ty rostou s obsahem - naměřeno ~23 B gzipu na rodinu, takže 28
+    // rodin přidaných za jednu noc ho posunulo z 85,45 na 86,16 KiB. Instalační
+    // cestu hlídá součet (`BUNDLE_MAX_PRECACHE_GZIP_KB`, 128), a ten má rezervu.
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_GZIP_KB", 96)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_PRECACHE_GZIP_KB", 128)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 512)');

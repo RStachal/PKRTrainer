@@ -29,6 +29,11 @@ import {
   solvedTurnSpots,
 } from "../data/ranges/solvedTurnSpotCatalogue";
 import {
+  pickSolvedFlopSpot,
+  solvedFlopSpotConfig,
+  solvedFlopSpots,
+} from "../data/ranges/solvedFlopSpotCatalogue";
+import {
   pickSolvedRiverSpot,
   solvedRiversForTurnBoard,
 } from "../data/ranges/solvedRiverSpotCatalogue";
@@ -356,9 +361,18 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       // situation selector to reach solved content would answer a question they
       // did not ask, which is a worse failure than falling back to a heuristic on
       // the question they did.
-      const solvedTurn = street === "TURN" && options.initialPositionContext == null
-        ? solvedTurnConfigForSeed(seed, actionNode)
-        : undefined;
+      const dealsSolved = options.initialPositionContext == null;
+      // `Partial`, protože katalog nemusí nabídnout nic a pak se nepřebíjí nic:
+      // prázdný katalog nesmí znamenat, že se nedá hrát.
+      const solvedTurn: Partial<Parameters<typeof generatePostflopSpot>[0]> = (
+        dealsSolved && street === "TURN"
+          ? solvedTurnConfigForSeed(seed, actionNode)
+          // Flop ze stejného důvodu a od 21. 8. 2026: rodin se dodává 47 a bez
+          // katalogu se na vyřešenou desku trefil hráč v 0,0 % rozdání.
+          : dealsSolved && street === "FLOP"
+            ? solvedFlopConfigForSeed(seed, actionNode)
+            : undefined
+      ) ?? {};
       const spot = generatePostflopSpot({
         seed,
         street,
@@ -1907,6 +1921,23 @@ function actionLabel(action: PostflopAction): string {
  * value is close to linear in its seed, and consecutive seeds would otherwise
  * walk the catalogue in order rather than sample it.
  */
+/**
+ * Vyřešený flop pro tenhle seed, nebo nic, když žádný není načtený.
+ *
+ * Stejná úvaha jako u turnu a stejně měřená: dodává se 47 flopových rodin a
+ * trenažér rozdával náhodnou desku, takže se na vyřešenou trefil zhruba nikdy -
+ * změřeno 0,0 % z 1500 rozdaných flopů. Obsah existoval a byl nedosažitelný.
+ */
+function solvedFlopConfigForSeed(seed: number, actionNode: PostflopActionNode) {
+  const candidates = solvedFlopSpots().filter((spot) => spot.actionNode === actionNode);
+  if (candidates.length === 0) return undefined;
+  const rng = mulberry32(seed);
+  rng();
+  const spot = pickSolvedFlopSpot(rng(), candidates);
+  if (spot === undefined) return undefined;
+  return solvedFlopSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, rng());
+}
+
 function solvedTurnConfigForSeed(seed: number, actionNode: PostflopActionNode) {
   const candidates = solvedTurnSpots().filter((spot) => spot.actionNode === actionNode);
   if (candidates.length === 0) return undefined;
