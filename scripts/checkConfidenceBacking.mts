@@ -8,6 +8,8 @@ import {
   type ConfidenceClaim,
 } from "../src/data/ranges/confidenceBacking";
 import { parseTurnReviewVerdicts } from "../src/data/ranges/turnReviewVerdict";
+import { solvedFlopManifest } from "../src/data/ranges/flopSolvedManifest.generated";
+import { solvedRiverManifest } from "../src/data/ranges/riverSolvedManifest.generated";
 
 /**
  * Vypíše, čím je podložená důvěra každého dodávaného packu.
@@ -57,6 +59,37 @@ for (const entry of generatedMttPostflopPilotPacks) {
     confidence: pack.confidence,
     sourceEvidenceCount: pack.sourceEvidence?.length ?? 0,
   }, verdicts));
+}
+
+/**
+ * Vyřešené flopové a riverové rodiny.
+ *
+ * Chyběly tu, a byla to největší díra v tomhle výpisu: kontroloval turnové packy
+ * a flopové piloty, zatímco **vyřešených flopových rodin se dodává 35 a
+ * riverových 17**. Strážce, který nevidí většinu obsahu, dává falešný klid.
+ */
+for (const [street, entries] of [
+  ["FLOP", solvedFlopManifest],
+  ["RIVER", solvedRiverManifest],
+] as const) {
+  for (const entry of entries) {
+    const pack = await entry.load() as unknown as {
+      id: string;
+      confidence: "LOW" | "MEDIUM" | "HIGH";
+      contentHash: string;
+      familyIds: readonly string[];
+      rules: readonly unknown[];
+    };
+    claims.push(classifyConfidenceClaim({
+      packId: pack.id,
+      street,
+      confidence: pack.confidence,
+      familyId: pack.familyIds[0],
+      contentHash: pack.contentHash,
+      // Stejná úvaha jako u turnu: pravidlo nese adresář, ve kterém vzniklo.
+      sourceEvidenceCount: pack.rules.length,
+    }, verdicts));
+  }
 }
 
 console.log(renderConfidenceReport(claims));

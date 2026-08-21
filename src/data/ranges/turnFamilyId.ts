@@ -59,10 +59,45 @@ export interface TurnFamilyId {
   board?: string;
 }
 
+/**
+ * Sedačky, jak je píší jména rodin - v obou hláskováních, která v repozitáři jsou.
+ *
+ * `UTG1` je původní zápis téhle gramatiky. `UTG_1` je zápis, který používá
+ * postflopová vrstva (`PositionPatternToken`) a se kterým generátor dávek
+ * pojmenoval 163 checkpointů odsolvených v noci 20.-21. 8. 2026. Třetí zápis,
+ * `UTG+1`, je hodnota typu `Position` a do jména souboru se nedostane.
+ *
+ * Tři hláskování téže sedačky nejsou dobrý stav, ale opravit se to má sjednocením
+ * gramatiky, ne zahozením obsahu: přejmenovat by znamenalo sáhnout na sedmdesát
+ * checkpointů, za které je zaplacený strojový čas.
+ */
 const SEATS: Readonly<Record<string, Position>> = {
   UTG: "UTG", UTG1: "UTG+1", UTG2: "UTG+2",
+  UTG_1: "UTG+1", UTG_2: "UTG+2",
   LJ: "LJ", HJ: "HJ", CO: "CO", BTN: "BTN", SB: "SB", BB: "BB",
 };
+
+/**
+ * Vezmi ze zbytku jména jednu sedačku a řekni, kolik tokenů spotřebovala.
+ *
+ * Podtržítko je v týhle gramatice zároveň oddělovač polí i součást názvu
+ * sedačky, takže **pozice v poli nestačí**: `MTT9_25BB_UTG_2_BTN_SRP` má na
+ * indexu 2 „UTG" a na 3 „2", což není sedačka, a parser proto celou rodinu
+ * odmítl. Dvanáct rodin se sto dvaceti odsolvenými deskami tím propadlo z
+ * produkce.
+ *
+ * Zkouší se delší tvar napřed. Kratší by uspěl na „UTG" a nechal za sebou „2",
+ * takže by rodina spadla o krok dál - se stejným následkem, jen hůř dohledatelným.
+ * Nejednoznačnost tu nehrozí: samotné „1" ani „2" žádná sedačka není.
+ */
+function takeSeat(parts: readonly string[], at: number): { seat: Position; next: number } | undefined {
+  const joined = at + 1 < parts.length ? `${parts[at]}_${parts[at + 1]}` : undefined;
+  if (joined !== undefined && SEATS[joined] !== undefined) {
+    return { seat: SEATS[joined], next: at + 2 };
+  }
+  const single = SEATS[parts[at]];
+  return single === undefined ? undefined : { seat: single, next: at + 1 };
+}
 
 const SPR_BANDS: Readonly<Record<string, TurnSprBand>> = {
   LOWSPR: "LOW", MIDSPR: "MID", MIDHIGH: "MIDHIGH", HIGHSPR: "HIGH",
@@ -88,16 +123,20 @@ export function parseTurnFamilyId(directoryName: string): TurnFamilyId | undefin
   if (depth === null) return undefined;
   const stackBB = Number(depth[1]) as StackBucket;
 
-  const hero = SEATS[parts[2]];
-  const villain = SEATS[parts[3]];
-  if (hero === undefined || villain === undefined || hero === villain) return undefined;
+  const first = takeSeat(parts, 2);
+  const second = first === undefined ? undefined : takeSeat(parts, first.next);
+  if (first === undefined || second === undefined) return undefined;
+  const hero = first.seat;
+  const villain = second.seat;
+  if (hero === villain) return undefined;
 
-  const potType = parts[4] === "SRP"
+  const potTypeAt = second.next;
+  const potType = parts[potTypeAt] === "SRP"
     ? "SINGLE_RAISED"
-    : parts[4] === "3BP" ? "THREE_BET_POT" : undefined;
+    : parts[potTypeAt] === "3BP" ? "THREE_BET_POT" : undefined;
   if (potType === undefined) return undefined;
 
-  const modifiers = new Set(parts.slice(5));
+  const modifiers = new Set(parts.slice(potTypeAt + 1));
   for (const modifier of modifiers) {
     const known = modifier === "FACING" || modifier === "CBET" || modifier === "OOP" ||
       modifier === "REPAIR" || modifier in SPR_BANDS;

@@ -25,6 +25,17 @@ import type { TurnReviewVerdictRecord } from "./turnReviewVerdict";
 export type ConfidenceBacking =
   /** Obsah přečetl člověk a verdikt sedí na aktuální otisk. */
   | "PLAYER_REVIEW"
+  /**
+   * Obsah prošel měřením, ne čtením.
+   *
+   * Vlastní hodnota, ne podmnožina `PLAYER_REVIEW`, protože tenhle výpis existuje
+   * právě kvůli tomu, aby bylo poznat, co za důvěrou stojí. Mechanická kontrola
+   * chytá hrubé rozbití, ne kvalitu hry; dodávat se s ní smí - je to vědomé
+   * rozhodnutí, alternativou není přísnější brána, ale obsah, který se k hráči
+   * nedostane nikdy - ale říkat jí „přečteno" by byl přesně ten druh záměny,
+   * kvůli kterému je provenience v tomhle projektu strukturní pole.
+   */
+  | "MECHANICAL_REVIEW"
   /** Verdikt existuje, ale byl vydán na jiný obsah. */
   | "STALE_REVIEW"
   /** Pack se odvolává na solverový export nebo review soubor. */
@@ -58,15 +69,26 @@ export function classifyConfidenceClaim(
   input: ConfidenceClaimInput,
   verdicts: readonly TurnReviewVerdictRecord[],
 ): ConfidenceClaim {
+  // Rodina **a ulice**. Verdikty jsou po ulicích, takže hledání jen podle rodiny
+  // spároval turnový pack s flopovým verdiktem, otisky se nemohly shodovat a
+  // výpis hlásil 25 packů jako „verdikt byl vydán na jiný obsah". Ve
+  // skutečnosti byl zastaralý jediný. Strážce, který takhle křičí, je horší než
+  // žádný: opravdové zastarání se v tom šumu ztratí.
+  const street = input.street === "FLOP" || input.street === "RIVER" ? input.street : "TURN";
   const verdict = input.familyId === undefined
     ? undefined
-    : verdicts.find((item) => item.familyId === input.familyId);
+    : verdicts.find((item) => (
+      item.familyId === input.familyId && (item.street ?? "TURN") === street
+    ));
 
   let backing: ConfidenceBacking;
   let detail: string;
   if (verdict?.outcome === "ACCEPTED" && verdict.contentHash === input.contentHash) {
-    backing = "PLAYER_REVIEW";
-    detail = `přečteno ${verdict.reviewedAt} (${verdict.reviewer})`;
+    const mechanical = (verdict.basis ?? "PLAYER_READ") === "MECHANICAL";
+    backing = mechanical ? "MECHANICAL_REVIEW" : "PLAYER_REVIEW";
+    detail = mechanical
+      ? `měřením ověřeno ${verdict.reviewedAt} (${verdict.reviewer}); nikdo to nečetl`
+      : `přečteno ${verdict.reviewedAt} (${verdict.reviewer})`;
   } else if (verdict !== undefined) {
     backing = "STALE_REVIEW";
     detail = verdict.contentHash === input.contentHash
@@ -80,9 +102,14 @@ export function classifyConfidenceClaim(
     detail = "žádný doklad";
   }
 
-  // Nad LOW smí jít jen obsah, který četl člověk. Dohledatelnost solvu je doklad
-  // o tom, odkud data jsou, ne o tom, že jsou dobrá.
-  const overclaims = input.confidence !== "LOW" && backing !== "PLAYER_REVIEW";
+  // Nad LOW smí jít obsah, který někdo přečetl, nebo který prošel měřením.
+  // Mechanická kontrola je vědomě přijatý standard, ne výjimka - ale drží se
+  // stranou od čtení, aby šlo změřit, kolik obsahu stojí jen na ní.
+  //
+  // Dohledatelnost solvu mezi ně nepatří: to je doklad o tom, odkud data jsou,
+  // ne o tom, že jsou dobrá.
+  const reviewed = backing === "PLAYER_REVIEW" || backing === "MECHANICAL_REVIEW";
+  const overclaims = input.confidence !== "LOW" && !reviewed;
   return {
     packId: input.packId,
     street: input.street,
@@ -104,9 +131,14 @@ export function renderConfidenceReport(claims: readonly ConfidenceClaim[]): stri
     lines.push(`      ${claim.detail}`);
   }
   const over = claims.filter((claim) => claim.overclaims);
+  const mechanical = claims.filter((claim) => claim.backing === "MECHANICAL_REVIEW");
+  const read = claims.filter((claim) => claim.backing === "PLAYER_REVIEW");
   lines.push("");
   lines.push(over.length === 0
-    ? "Každý pack nad LOW má zapsané čtení hráčem."
-    : `${over.length} packů tvrdí víc než LOW, aniž by je někdo přečetl.`);
+    ? "Každý pack nad LOW má zapsaný doklad."
+    : `${over.length} packů tvrdí víc než LOW, aniž by za tím cokoli stálo.`);
+  // Dvě čísla, ne jedno: kolik obsahu stojí na měření a kolik na čtení, je ta
+  // otázka, kvůli které tenhle výpis vznikl.
+  lines.push(`z toho podloženo měřením ${mechanical.length}, čtením ${read.length}`);
   return lines.join("\n");
 }

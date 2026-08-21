@@ -140,12 +140,47 @@ export const HERO_EXCLUSIVE_RATIO = 3;
  */
 export const POSTFLOP_ORDER = ["SB", "BB", "UTG", "UTG_1", "UTG_2", "LJ", "HJ", "CO", "BTN"];
 
+/**
+ * Sedačka, jak ji píše jméno rodiny, na jedno hláskování.
+ *
+ * Jména rodin nesou brzké pozice dvěma způsoby - `UTG1` z původní gramatiky a
+ * `UTG_1`, kterým pojmenoval rodiny generátor dávek. Pořadí u stolu zná jen to
+ * druhé, takže bez tohohle převodu vrátila funkce `undefined` i pro jméno, které
+ * se jinak rozparsuje: rodina existovala, byla odsolvená a do packu se nedostala.
+ */
+function canonicalSeat(seat: string): string {
+  const match = /^UTG([12])$/.exec(seat);
+  return match === null ? seat : `UTG_${match[1]}`;
+}
+
 export function seatsOfFamily(
   directoryName: string,
 ): { oop: string; ip: string; aggressor: string } | undefined {
-  const match = /^MTT9_\d+BB_([A-Z0-9_]+?)_([A-Z0-9_]+?)_(SRP|3BP)/.exec(directoryName);
-  if (match === null) return undefined;
-  const [first, second, potType] = [match[1], match[2], match[3]];
+  // Sedačky se berou proti slovníku, ne líným regexem. `([A-Z0-9_]+?)_([A-Z0-9_]+?)`
+  // vezme první rozdělení, které projde, takže u `MTT9_25BB_UTG_2_BTN_SRP` dá
+  // `UTG` a `2_BTN` - a protože se pak jen zkontroluje pořadí, vrátí se
+  // `undefined` bez jediného slova o tom, že jméno bylo pochopeno špatně.
+  const head = /^MTT9_\d+BB_(.+?)_(SRP|3BP)(?:_|$)/.exec(directoryName);
+  if (head === null) return undefined;
+  const tokens = head[1].split("_");
+  const potType = head[2];
+  const known = new Set(POSTFLOP_ORDER);
+  const take = (at: number): { seat: string; next: number } | undefined => {
+    const joined = at + 1 < tokens.length ? `${tokens[at]}_${tokens[at + 1]}` : undefined;
+    // Delší tvar napřed, jinak by `UTG` uspělo a `2` zůstalo viset.
+    if (joined !== undefined && known.has(canonicalSeat(joined))) {
+      return { seat: canonicalSeat(joined), next: at + 2 };
+    }
+    const single = canonicalSeat(tokens[at]);
+    return known.has(single) ? { seat: single, next: at + 1 } : undefined;
+  };
+  const firstSeat = take(0);
+  const secondSeat = firstSeat === undefined ? undefined : take(firstSeat.next);
+  if (firstSeat === undefined || secondSeat === undefined) return undefined;
+  // Za druhou sedačkou už nesmí nic zbýt: jinak se jméno pochopilo jinak, než jak
+  // bylo míněné, a tichý omyl v sedačkách je to nejdražší, co tahle funkce umí.
+  if (secondSeat.next !== tokens.length) return undefined;
+  const [first, second] = [firstSeat.seat, secondSeat.seat];
   const rank = (seat: string) => POSTFLOP_ORDER.indexOf(seat);
   if (rank(first) < 0 || rank(second) < 0) return undefined;
   // The name lists the seats in the order they acted before the flop. In a

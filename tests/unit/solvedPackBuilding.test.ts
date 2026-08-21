@@ -42,6 +42,26 @@ describe("handClassOfCombo", () => {
   });
 });
 
+describe("seatsOfFamily a sedačky s podtržítkem", () => {
+  it("pozná brzkou pozici v obou hláskováních", () => {
+    // Líný regex `([A-Z0-9_]+?)_([A-Z0-9_]+?)` bral první rozdělení, které
+    // projde, takže u `UTG_2_BTN` vzal `UTG` a `2_BTN`. Pořadí u stolu pak `2_BTN`
+    // neznalo a funkce vrátila `undefined` - bez jediného slova o tom, že jméno
+    // pochopila špatně.
+    const expected = { oop: "UTG_2", ip: "BTN", aggressor: "UTG_2" };
+    expect(seatsOfFamily("MTT9_25BB_UTG_2_BTN_SRP__A72r")).toEqual(expected);
+    expect(seatsOfFamily("MTT9_25BB_UTG2_BTN_SRP__A72r")).toEqual(expected);
+  });
+
+  it("nedovolí, aby za sedačkami něco zbylo", () => {
+    // Zbytek znamená, že se jméno pochopilo jinak, než jak bylo míněné. Tichý
+    // omyl v sedačkách je to nejdražší, co tahle funkce umí: strategie by se
+    // dodala pod cizím spotem.
+    expect(seatsOfFamily("MTT9_25BB_UTG_ZZ_BTN_SRP__A72r")).toBeUndefined();
+    expect(seatsOfFamily("MTT9_25BB_ZZ_BTN_SRP__A72r")).toBeUndefined();
+  });
+});
+
 describe("seatsOfFamily", () => {
   it("v SRP je agresor ten, kdo otevrel", () => {
     expect(seatsOfFamily("MTT9_25BB_CO_BB_SRP_CBET_LOWSPR")).toEqual({

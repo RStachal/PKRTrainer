@@ -65,6 +65,43 @@ describe("turn family id", () => {
     expect(parseTurnFamilyId("MTT9_25BB_BTN_BB_SRP_SOMETHINGNEW")).toBeUndefined();
   });
 
+  it("čte brzkou pozici v obou hláskováních, která v repozitáři jsou", () => {
+    // `UTG_1` je zápis postflopové vrstvy a **takhle pojmenoval 163 checkpointů
+    // generátor dávek**; `UTG1` je původní zápis téhle gramatiky. Parser bral
+    // sedačku podle pozice v poli, takže u `UTG_2` viděl na místě druhé sedačky
+    // „2", celou rodinu odmítl - a dvanáct rodin se sto dvaceti odsolvenými
+    // deskami propadlo z produkce, přestože obsah existoval a byl zaplacený.
+    for (const [name, hero, villain] of [
+      ["MTT9_25BB_UTG_2_BTN_SRP", "UTG+2", "BTN"],
+      ["MTT9_25BB_UTG2_BTN_SRP", "UTG+2", "BTN"],
+      ["MTT9_25BB_UTG_1_HJ_SRP", "UTG+1", "HJ"],
+      ["MTT9_25BB_UTG1_HJ_SRP", "UTG+1", "HJ"],
+    ] as const) {
+      const parsed = parseTurnFamilyId(`${name}__A72r`);
+      expect(parsed, name).toBeDefined();
+      expect(parsed?.hero, name).toBe(hero);
+      expect(parsed?.villain, name).toBe(villain);
+      expect(parsed?.potType, name).toBe("SINGLE_RAISED");
+    }
+  });
+
+  it("zvládne obě sedačky s podtržítkem naráz", () => {
+    // Delší tvar se musí zkoušet napřed. Kdyby se bralo `UTG` a `2` zůstalo
+    // viset, rodina by spadla o krok dál - se stejným následkem, jen hůř
+    // dohledatelným.
+    const parsed = parseTurnFamilyId("MTT9_25BB_UTG_2_UTG_1_SRP__A72r");
+    expect(parsed?.hero).toBe("UTG+2");
+    expect(parsed?.villain).toBe("UTG+1");
+  });
+
+  it("modifikátory za sedačkou s podtržítkem se pořád čtou", () => {
+    // Pot type i modifikátory se hledají za sedačkami, ne na pevném indexu.
+    const parsed = parseTurnFamilyId("MTT9_25BB_UTG_1_BB_SRP_FACING_LOWSPR__A72r");
+    expect(parsed?.hero).toBe("UTG+1");
+    expect(parsed?.node).toBe("FACING_BET");
+    expect(parsed?.sprBand).toBe("LOW");
+  });
+
   it("spells the position pattern the way rules are matched", () => {
     // The same spelling postflopIntent now produces and the flop packs carry.
     // Getting this wrong is exactly what made two flop packs unreachable.

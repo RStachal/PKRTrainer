@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
 /**
  * Celý cyklus po noční práci jedním příkazem.
@@ -32,6 +33,7 @@ import { readdirSync } from "node:fs";
 const write = process.argv.includes("--write");
 const withEv = process.argv.includes("--ev");
 const WORK = "artifacts/decomposition";
+const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 
 /**
  * Skripty se volají přímo, ne přes `npm run`.
@@ -71,12 +73,30 @@ function snapshot(): Record<string, string> {
   return counts;
 }
 
+/**
+ * Rodiny, které cyklus zkusí přegenerovat.
+ *
+ * Sjednocení dvou zdrojů, a to je celý ten trik: **rozklad a checkpointy nejsou
+ * totéž**. Turnový a riverový pack potřebují rozložené podhry, ale flopový čte
+ * monolitický checkpoint přímo - takže rodina odsolvená v noci má flopovou
+ * odpověď hned, jenže rozkladový adresář dostane až o noc později.
+ *
+ * Dokud se četl jen rozklad, propadlo z tohohle cyklu **29 rodin se 192
+ * odsolvenými deskami**: obsah existoval, měřicí brána o něm nevěděla a do
+ * produktu se nedostal. Vyrobit ho a nedodat je horší než ho nevyrobit, protože
+ * se za něj zaplatil strojový čas.
+ */
 function families(): string[] {
-  return [...new Set(
-    readdirSync(WORK)
-      .filter((name) => name.includes("__"))
-      .map((name) => name.split("__")[0]),
-  )].sort();
+  const decomposed = readdirSync(WORK)
+    .filter((name) => name.includes("__"))
+    .map((name) => name.split("__")[0]);
+  const solved = existsSync(CHECKPOINT_ROOT)
+    ? readdirSync(CHECKPOINT_ROOT).filter((name) => (
+      existsSync(join(CHECKPOINT_ROOT, name, "raw"))
+      && readdirSync(join(CHECKPOINT_ROOT, name, "raw")).some((file) => file.endsWith(".json"))
+    ))
+    : [];
+  return [...new Set([...decomposed, ...solved])].sort();
 }
 
 function generateAll(list: readonly string[], label: string): void {
