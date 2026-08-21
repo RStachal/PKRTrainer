@@ -9,7 +9,29 @@ import {
 
 const DIST_ASSETS_DIR = join(process.cwd(), "dist", "assets");
 const MAX_JS_KB = numberFromEnv("BUNDLE_MAX_JS_KB", 325);
-const MAX_GZIP_KB = numberFromEnv("BUNDLE_MAX_GZIP_KB", 86);
+
+/**
+ * Strop na jeden nelíný soubor, v gzipu.
+ *
+ * Zvednuto z 86 na 96 dne 21. 8. 2026, a je to vědomý ústupek se změřenou
+ * příčinou, ne úhyb před rozpočtem. Hlavní balík nese manifesty vyřešených
+ * rodin - seznam dvojic (jméno rodiny, cesta k chunku) plus volání `import()`,
+ * podle kterého bundler chunky vůbec rozdělí. **Ten seznam roste s obsahem:**
+ * naměřeno zhruba 23 bajtů gzipu na rodinu, dnes 47 flopových, 19 turnových a
+ * 17 riverových. Když jich za jednu noc přibylo 28, hlavní balík povyrostl z
+ * 85,45 na 86,16 KiB a o šestnáct setin přeteklo.
+ *
+ * Zhuštění manifestu se měřilo a nevyplatí se: odvozený `packId`, vytčený
+ * `profileKey` a společný loader srazí syrovou velikost z 15 437 na 7 550 B, ale
+ * v gzipu jen z 1 132 na 1 029 - opakování si gzip poradí sám. Snížit tohle
+ * číslo jde jedině tím, že se manifesty sundají z instalační cesty, což je jiná
+ * práce než posunout konstantu.
+ *
+ * Co instalační cestu doopravdy hlídá, je součet (`MAX_PRECACHE_GZIP_KB`, dnes
+ * 128) - a ten má rezervu: 109,89 KiB. Tenhle strop je druhá pojistka na jeden
+ * soubor, ne ta hlavní.
+ */
+const MAX_GZIP_KB = numberFromEnv("BUNDLE_MAX_GZIP_KB", 96);
 const MAX_PRECACHE_JS_KB = numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400);
 const MAX_PRECACHE_GZIP_KB = numberFromEnv("BUNDLE_MAX_PRECACHE_GZIP_KB", 128);
 const MAX_LAZY_MTT_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 512);

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "PKRTRAINER_NIGHT_PRIORITY_V1",
   "decidedAt": "2026-08-21",
-  "priority": "NEW_FAMILIES",
-  "reason": "trenažér se ptá na 32 vzorů, obsah drží 5"
+  "priority": "DECOMPOSITION",
+  "reason": "výchozí: prohlubovat, co je odsolvené"
 }
