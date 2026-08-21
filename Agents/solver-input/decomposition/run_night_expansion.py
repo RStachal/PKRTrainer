@@ -16,21 +16,27 @@ Obě práce si berou celý stroj, takže se nedají spustit naráz. Který z nic
 dnešní noc, rozhoduje `mtt:daily` podle měření a rozklad se podle toho sám
 odsune.
 
-## Změřeno 20. 8. 2026, a rozhoduje to o rozvrhu
+## Změřeno na celé noci 20.-21. 8. 2026, a rozhoduje to o rozvrhu
 
-Jedna deska na 25 blindech trvá **715 vteřin** včetně zápisu dumpu a dá checkpoint
-o 31 MB, commit paměti kolem 1,7 GB. Do jedenáctihodinového okna se tedy vejde
-kolem padesáti desek a celé rozšíření - 174 desek - jsou zhruba tři noci.
+**163 desek za jedno okno**: průměr 4,0 min na desku, medián 3,7, rozsah 0,8 až
+9,1. Checkpointy 20-33 MB. Celé rozšíření tedy nejsou tři noci, jak stálo v
+odhadu, ale jedna.
 
-Dřívější měření tvrdilo 148 vteřin, ale to bylo bez zápisu dumpu, protože
-tehdejší parametry ho posílaly relativní cestou do kořene solveru. Číslo vypadalo
-věrohodně a bylo neúplné; proto je tady napsané to správné i s tím, co ho drží.
+Odhad říkal 715 vteřin a stál na **jediné desce**; skutečnost je třikrát rychlejší.
+Předtím tu bylo 148 vteřin, což bylo zase málo, protože se měřilo bez zápisu
+dumpu. Dvě chybná čísla v řadě ze stejného důvodu: jedno měření není měření.
 
 ## Pojistky, které má i rozklad a ze stejných důvodů
 
 Nezačne desku, kterou nestihne. Neběží mimo noční okno. Zastaví se, když dojde
 místo. A je resumovatelný: deska s hotovým checkpointem se přeskočí, takže
 přerušená noc stojí nejvýš jednu rozdělanou desku.
+
+## Co dělá navíc
+
+Spadlou desku zkusí podruhé a po druhém pádu ji odloží značkou `.failed`, aby ji
+fronta přestala nabízet. A když frontu vyprázdní dřív, než skončí okno, **předá
+zbytek noci rozkladu** - jinak by noc s krátkou frontou prostála.
 """
 import os
 import re
@@ -55,11 +61,27 @@ OUTPUT_BASE = os.path.join(
     REPO, "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver",
 )
 
-# Naměřeno: 715 s na desku. Patnáct minut je ta hodnota s rezervou - deska, která
-# se nestihne, znamená zahozený solve, ne uložený mezivýsledek.
-BOARD_MINUTES = 15
+# Naměřeno na 163 deskách za noc 20.-21. 8. 2026: průměr 4,0 min, medián 3,7,
+# maximum 9,1. Dřív tu stálo 15 podle jediného měření (715 s), a bylo to skoro
+# čtyřnásobek - noc kvůli tomu skončila 13 minut před deadlinem, přestože se
+# ještě tři desky vešly. Dvanáct je maximum plus rezerva; deska, která se
+# nestihne, znamená zahozený solve, ne uložený mezivýsledek.
+BOARD_MINUTES = 12
 MIN_FREE_GB = 8
 MAX_WINDOW_HOURS = 12
+
+# Kolikrát se deska zkusí, než se odloží natrvalo.
+#
+# Změřeno: 4 ze 177 desek spadly na `0xC0000005` (přístup do cizí paměti) po
+# dvanácti vteřinách, a nespojuje je ani rodina, ani deska, ani šířka ranží -
+# selhaly desky s 52 až 142 kombinacemi na užší straně, zatímco desky s 28
+# prošly. Vypadá to na nahodilý pád solveru, takže druhý pokus stojí čtyři
+# minuty a nejspíš desku zachrání.
+#
+# Značka o trvalém selhání je ta důležitější polovina: bez ní zůstane spadlá
+# deska navždy „nastagovaná bez checkpointu", takže by jí rozklad každou noc
+# znovu ustoupil - a noc by shořela na dvanácti vteřinách práce.
+BOARD_ATTEMPTS = 2
 
 
 def log(message: str) -> None:
@@ -90,8 +112,21 @@ def pending_boards():
         checkpoint = os.path.join(OUTPUT_BASE, family, "raw", f"pkrtrainer_{family}_{board}.json")
         if os.path.exists(checkpoint) and os.path.getsize(checkpoint) > 0:
             continue
+        # Deska, která opakovaně spadla, není čekající práce. Bez tohohle by ji
+        # fronta nabízela navždy a rozklad by jí každou noc ustupoval do prázdna.
+        if os.path.exists(checkpoint + ".failed"):
+            continue
         todo.append((os.path.join(PARAMS, name), family, board, checkpoint))
     return todo
+
+
+def solved(checkpoint: str) -> bool:
+    """Hotovost se pozná podle souboru, ne podle návratového kódu.
+
+    Solver vrací nulu i tehdy, když nic nezapsal - to už jednou stálo za tím, že
+    se useknuté běhy počítaly jako hotová práce.
+    """
+    return os.path.exists(checkpoint) and os.path.getsize(checkpoint) > 0
 
 
 def main():
@@ -133,24 +168,54 @@ def main():
 
         os.makedirs(os.path.dirname(checkpoint), exist_ok=True)
         log(f"solving {family} {board}")
-        started = time.time()
-        result = subprocess.run(
-            [os.path.join(SOLVER_ROOT, "console_solver.exe"), "-i", param],
-            cwd=SOLVER_ROOT, capture_output=True, text=True,
-            timeout=max(BOARD_MINUTES, 30) * 60,
-        )
-        minutes = (time.time() - started) / 60
-        # Hotovost se pozná podle souboru, ne podle návratového kódu: solver vrací
-        # nulu i tehdy, když nic nezapsal.
-        if os.path.exists(checkpoint) and os.path.getsize(checkpoint) > 0:
-            size = os.path.getsize(checkpoint) / (1024 ** 2)
-            done += 1
-            log(f"  hotovo za {minutes:.1f} min, checkpoint {size:.0f} MB")
-        else:
+        for attempt in range(1, BOARD_ATTEMPTS + 1):
+            started = time.time()
+            result = subprocess.run(
+                [os.path.join(SOLVER_ROOT, "console_solver.exe"), "-i", param],
+                cwd=SOLVER_ROOT, capture_output=True, text=True,
+                timeout=max(BOARD_MINUTES, 30) * 60,
+            )
+            minutes = (time.time() - started) / 60
+            if solved(checkpoint):
+                size = os.path.getsize(checkpoint) / (1024 ** 2)
+                done += 1
+                again = "" if attempt == 1 else " (napodruhé)"
+                log(f"  hotovo za {minutes:.1f} min, checkpoint {size:.0f} MB{again}")
+                break
+            if attempt < BOARD_ATTEMPTS:
+                log(f"  spadlo po {minutes:.1f} min (rc={result.returncode}); zkouším znovu")
+                continue
             failed += 1
-            log(f"  SELHALO po {minutes:.1f} min (rc={result.returncode}), checkpoint nevznikl")
+            with open(checkpoint + ".failed", "w", encoding="utf-8") as handle:
+                handle.write(f"{datetime.now():%Y-%m-%d %H:%M} rc={result.returncode} "
+                             f"po {BOARD_ATTEMPTS} pokusech\n")
+            log(f"  SELHALO po {BOARD_ATTEMPTS} pokusech (rc={result.returncode}); "
+                "odloženo natrvalo, smaž .failed pro další pokus")
 
     log(f"expansion: hotovo {done}, selhalo {failed}, zbývá {len(pending_boards())}")
+    hand_back(deadline)
+
+
+def hand_back(deadline) -> None:
+    """Zbytek okna předá rozkladu, když fronta došla.
+
+    Bez tohohle by noc s krátkou frontou shořela: čtrnáct desek je hodina a okno
+    má jedenáct. Rozklad si vlastní podmínky vyhodnotí sám a ustoupit už nemá
+    komu - fronta je prázdná, takže to není kruh.
+    """
+    remaining = (deadline - datetime.now()).total_seconds() / 60
+    if pending_boards():
+        log("fronta není prázdná, rozkladu okno nepředávám")
+        return
+    if remaining < 60:
+        log(f"zbývá {remaining:.0f} min, na rozklad je to málo; končím")
+        return
+    log(f"fronta prázdná, {remaining / 60:.1f} h okna předávám rozkladu")
+    subprocess.run(
+        [sys.executable, os.path.join(HERE, "run_night_decomposition.py"),
+         f"--until={deadline:%H:%M}"],
+        cwd=REPO,
+    )
 
 
 if __name__ == "__main__":

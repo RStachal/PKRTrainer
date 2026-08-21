@@ -79,8 +79,18 @@ def log(message: str) -> None:
 
 
 NIGHT_PRIORITY = os.path.join(REPO, "Agents", "daily", "tonight.json")
+"""Nastagované parametry, ze kterých se počítá čekající práce.
+
+Je to **ta dávka, kterou monolitický runner doopravdy bere**, ne celý adresář s
+parametry. Dokud se počítal celý, hlásil rozklad čekající práci i za dávky, do
+kterých se expanze nikdy nepodívá - a ustupoval by kvůli nim na celou noc. Dnes
+je taková deska jedna (`MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR 872r` z dávky
+`growth_board_review`), takže to nic nezpůsobilo; kdyby jich zbyly poslední tři,
+způsobilo by to prostátou noc.
+"""
 STAGED_PARAMS = os.path.join(
     REPO, "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters",
+    "pkrtrainer_mtt_seat_pair_expansion_v1",
 )
 
 
@@ -146,8 +156,11 @@ def monolithic_runner_installed():
 
 # Kolik desek musí čekat, aby se vyplatilo ustoupit na celé okno.
 #
-# Naměřeno 715 vteřin na desku, tedy osm desek jsou zhruba dvě hodiny. Pod tím by
-# rozklad uvolnil jedenáctihodinové okno kvůli hodině práce a zbytek noci by stál.
+# Původně odvozeno z jediného měření 715 s na desku. Skutečnost za noc 20.-21. 8.
+# 2026 na 163 deskách: **průměr 4,0 min**, takže osm desek je půl hodiny, ne dvě.
+# Práh přesto zůstává nízký, protože expanze od té noci **zbytek okna vrací**
+# rozkladu, jakmile jí dojde fronta - ustoupit kvůli hodině práce už tedy
+# neznamená prostát deset hodin.
 YIELD_MIN_BOARDS = 8
 
 
@@ -168,7 +181,11 @@ def staged_boards_without_checkpoint():
             checkpoint = os.path.join(
                 OUTPUT_BASE, family, "raw", f"pkrtrainer_{family}_{board}.json",
             )
-            if not os.path.exists(checkpoint):
+            # Deska odložená natrvalo není čekající práce. Bez tohohle by
+            # jediný opakovaný pád solveru držel prioritu NEW_FAMILIES navždy:
+            # rozklad by ustupoval každou noc a expanze by tu desku pokaždé
+            # přeskočila, takže by noc shořela na dvanácti vteřinách.
+            if not os.path.exists(checkpoint) and not os.path.exists(checkpoint + ".failed"):
                 count += 1
     return count
 
