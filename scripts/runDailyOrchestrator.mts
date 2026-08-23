@@ -221,7 +221,12 @@ section("pokrytí rozdávaných spotů");
 out.push("", "## Pokrytí rozdávaných spotů", "");
 const coverage = runScript("scripts/checkSolvedSpotCoverage.mts", ["--spots=200"]);
 for (const line of coverage.split("\n")) {
-  if (/vzorů|dotazů na vzor/.test(line)) say(`  ${line.trim()}`);
+  // Katalogové řádky patří do reportu taky, a to jsou ta čísla, která popisují
+  // produkt: trenažér desku vybírá, nelosuje ji. Bez nich by report ukazoval jen
+  // nulu z náhodného losování a vypadalo by to, že obsah nikdo nepotká.
+  if (/vzorů|dotazů na vzor|když desku vybíráme|^(FLOP|TURN|RIVER)\s/.test(line.trim())) {
+    say(`  ${line.trim()}`);
+  }
 }
 
 section("co má dělat dnešní noc");

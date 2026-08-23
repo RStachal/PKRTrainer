@@ -1,5 +1,6 @@
 import type { Card, Rank, Suit } from "../../core/types";
 import type {
+  PostflopPositionContext,
   PostflopPositionPattern,
   PostflopPotType,
 } from "../../core/postflopGenerator";
@@ -8,6 +9,7 @@ import { runtimeSolvedRiverPacks } from "./riverSolvedRuntimeRegistry";
 import type { RiverStrategyRule } from "./riverStrategyRuleBuilder";
 import { actionNodeForSolvedHero } from "./solvedHeroActionNode";
 import { heroCardsFromClasses } from "./solvedTurnSpotCatalogue";
+import { positionContextForSolvedSeats } from "./solvedSpotSeating";
 
 /**
  * Vyřešené rivery, nabídnuté jako něco, co jde rozdat.
@@ -139,6 +141,47 @@ export function solvedRiverHeroCards(
   random = 0.5,
 ): [Card, Card] | undefined {
   return heroCardsFromClasses(spot.heroHandClasses, spot.board, random);
+}
+
+/**
+ * Konfigurace generátoru, která tenhle river rozdá jako **jednotlivý spot**.
+ *
+ * Katalog se dosud používal jen uvnitř linky - pátá karta se brala z vyřešeného
+ * riveru, když pro tu desku nějaký byl. Hráč, který si vybral river jako
+ * samostatný dril, ale dostával náhodnou pětikartovou desku, takže se na jednu
+ * z 908 vyřešených trefil zhruba nikdy. **Sedmnáct riverových rodin bylo pro
+ * tenhle dril nedosažitelných**, přesně jako flop před svým katalogem.
+ *
+ * Vrací `undefined`, když se sedačky nedají přeložit: spot, jehož židle
+ * nesouhlasí s jeho strategií, je horší než náhodná deska.
+ */
+export function solvedRiverSpotConfig(
+  spot: SolvedRiverSpot,
+  contexts: readonly PostflopPositionContext[],
+  random = 0.5,
+): {
+  street: "RIVER";
+  board: Card[];
+  heroCards?: [Card, Card];
+  potType: PostflopPotType;
+  potBB: number;
+  effectiveStackBB: number;
+  actionNode: PostflopActionNode;
+  positionContext: PostflopPositionContext;
+} | undefined {
+  const positionContext = positionContextForSolvedSeats(spot, contexts);
+  if (positionContext === undefined) return undefined;
+  const heroCards = solvedRiverHeroCards(spot, random);
+  return {
+    street: "RIVER",
+    board: [...spot.board],
+    ...(heroCards ? { heroCards } : {}),
+    potType: spot.potType,
+    potBB: spot.potBB,
+    effectiveStackBB: spot.effectiveStackBB,
+    actionNode: spot.actionNode,
+    positionContext,
+  };
 }
 
 /** Váženo dosahem, stejně jako u turnu: častější spot se rozdá častěji. */

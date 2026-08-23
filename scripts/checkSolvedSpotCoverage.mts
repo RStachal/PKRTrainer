@@ -9,6 +9,18 @@ import type { TrainingProfile } from "../src/core/trainingProfile";
 import { runtimeSolvedFlopPacks } from "../src/data/ranges/flopSolvedRuntimeRegistry";
 import { runtimeSolvedTurnPacks } from "../src/data/ranges/turnSolvedRuntimeRegistry";
 import { runtimeSolvedRiverPacks } from "../src/data/ranges/riverSolvedRuntimeRegistry";
+import { POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS } from "../src/core/postflopGenerator";
+import { createDefaultPostflopStrategyResolver } from "../src/data/ranges/postflopStrategyRegistry";
+import { mulberry32 } from "../src/core/rng";
+import {
+  pickSolvedFlopSpot, solvedFlopSpotConfig, solvedFlopSpots,
+} from "../src/data/ranges/solvedFlopSpotCatalogue";
+import {
+  pickSolvedTurnSpot, solvedTurnSpotConfig, solvedTurnSpots,
+} from "../src/data/ranges/solvedTurnSpotCatalogue";
+import {
+  pickSolvedRiverSpot, solvedRiverSpotConfig, solvedRiverSpots,
+} from "../src/data/ranges/solvedRiverSpotCatalogue";
 
 /**
  * Kolik rozdávaných spotů vyřešený obsah doopravdy zodpoví.
@@ -108,6 +120,66 @@ for (const street of ["FLOP", "TURN", "RIVER"] as const) {
   );
 }
 
+/**
+ * Druhé měření: kolik odpovíme, když desku vybíráme my.
+ *
+ * To první losuje desku z balíčku a je poctivé pro otázku „co když si hráč
+ * situaci připne sám". **Přestalo ale popisovat produkt:** trenažér od 21. a
+ * 23. 8. 2026 rozdává z katalogu vyřešených spotů na všech třech ulicích, takže
+ * nula výš je protipól toho, co hráč doopravdy potká.
+ *
+ * Jedno číslo pro obojí by orchestrátor vedlo ke špatné práci - podle nuly by
+ * doporučoval solvit šířku, přestože chybí něco jiného. Měří se proto zvlášť a
+ * pojmenovaně.
+ */
+const CATALOGUES = [
+  { street: "FLOP", spots: solvedFlopSpots, pick: pickSolvedFlopSpot, config: solvedFlopSpotConfig },
+  { street: "TURN", spots: solvedTurnSpots, pick: pickSolvedTurnSpot, config: solvedTurnSpotConfig },
+  { street: "RIVER", spots: solvedRiverSpots, pick: pickSolvedRiverSpot, config: solvedRiverSpotConfig },
+] as const;
+
+console.log("");
+console.log("když desku vybíráme z katalogu (tak, jak rozdává trenažér)");
+console.log("ulice".padEnd(8) + "podloženo".padStart(11) + "nabízí spotů".padStart(14));
+const catalogueShare = new Map<string, number>();
+for (const entry of CATALOGUES) {
+  const available = entry.spots();
+  if (available.length === 0) {
+    console.log(`${entry.street.padEnd(8)}${"katalog prázdný".padStart(25)}`);
+    continue;
+  }
+  const sample = Math.min(spots, 300);
+  let backed = 0;
+  let dealt = 0;
+  for (let index = 0; index < sample; index += 1) {
+    const rng = mulberry32(2000 + index);
+    rng();
+    const chosen = (entry.pick as (r: number, s: readonly never[]) => unknown)(
+      rng(), available as readonly never[],
+    );
+    if (chosen === undefined) continue;
+    const config = (entry.config as (s: unknown, c: unknown, r: number) => unknown)(
+      chosen, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, rng(),
+    );
+    if (config === undefined) continue;
+    dealt += 1;
+    const generated = generatePostflopSpot({
+      seed: 2000 + index,
+      strategyResolver: createDefaultPostflopStrategyResolver(),
+      ...(config as object),
+    } as never);
+    const source = generated.strategySource;
+    if (source?.kind === "STRATEGY_PACK" && source.provenance === "SOLVER_BACKED") backed += 1;
+  }
+  const share = dealt === 0 ? 0 : (backed / dealt) * 100;
+  catalogueShare.set(entry.street, share);
+  console.log(
+    entry.street.padEnd(8)
+    + `${share.toFixed(1)} %`.padStart(11)
+    + `${available.length}`.padStart(14),
+  );
+}
+
 const covered = new Set<string>();
 for (const pack of [
   ...(runtimeSolvedFlopPacks as readonly { rules: { positionPattern?: string }[] }[]),
@@ -145,6 +217,9 @@ if (asJson) {
     schemaVersion: "PKRTRAINER_SOLVED_COVERAGE_V1",
     spotsPerStreet: spots,
     coveredPatterns: [...covered].sort(),
+    // Dvě různá čísla pod dvěma jmény: "když si hráč připne situaci sám" proti
+    // "když rozdáváme my". Slít je do jednoho by vedlo k špatnému rozvrhu noci.
+    catalogueBackedPct: Object.fromEntries(catalogueShare),
     askedPatterns: asked.map(([pattern, count]) => ({ pattern, count, held: covered.has(pattern) })),
   }));
 }

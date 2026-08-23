@@ -35,6 +35,8 @@ import {
 } from "../data/ranges/solvedFlopSpotCatalogue";
 import {
   pickSolvedRiverSpot,
+  solvedRiverSpotConfig,
+  solvedRiverSpots,
   solvedRiversForTurnBoard,
 } from "../data/ranges/solvedRiverSpotCatalogue";
 import { mulberry32 } from "../core/rng";
@@ -371,7 +373,10 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
           // katalogu se na vyřešenou desku trefil hráč v 0,0 % rozdání.
           : dealsSolved && street === "FLOP"
             ? solvedFlopConfigForSeed(seed, actionNode)
-            : undefined
+            // A river, poslední ulice, která katalog pro jednotlivý spot neměla.
+            : dealsSolved && street === "RIVER"
+              ? solvedRiverConfigForSeed(seed, actionNode)
+              : undefined
       ) ?? {};
       const spot = generatePostflopSpot({
         seed,
@@ -1936,6 +1941,24 @@ function solvedFlopConfigForSeed(seed: number, actionNode: PostflopActionNode) {
   const spot = pickSolvedFlopSpot(rng(), candidates);
   if (spot === undefined) return undefined;
   return solvedFlopSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, rng());
+}
+
+/**
+ * Vyřešený river pro tenhle seed, jako **jednotlivý spot**.
+ *
+ * Katalog se dosud používal jen uvnitř linky. Hráč, který si vybral river jako
+ * samostatný dril, dostával náhodnou pětikartovou desku - a šance, že padne
+ * jedna z 908 vyřešených, je mizivá. Sedmnáct riverových rodin se dodávalo,
+ * stahovalo a nikdo je nemohl potkat.
+ */
+function solvedRiverConfigForSeed(seed: number, actionNode: PostflopActionNode) {
+  const candidates = solvedRiverSpots().filter((spot) => spot.actionNode === actionNode);
+  if (candidates.length === 0) return undefined;
+  const rng = mulberry32(seed);
+  rng();
+  const spot = pickSolvedRiverSpot(rng(), candidates);
+  if (spot === undefined) return undefined;
+  return solvedRiverSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, rng());
 }
 
 function solvedTurnConfigForSeed(seed: number, actionNode: PostflopActionNode) {

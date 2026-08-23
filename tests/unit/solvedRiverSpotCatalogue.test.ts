@@ -6,9 +6,12 @@ import { createDefaultPostflopStrategyResolver } from "../../src/data/ranges/pos
 import {
   pickSolvedRiverSpot,
   solvedRiverHeroCards,
+  solvedRiverSpotConfig,
   solvedRiverSpots,
   solvedRiversForTurnBoard,
 } from "../../src/data/ranges/solvedRiverSpotCatalogue";
+import { POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS } from "../../src/core/postflopGenerator";
+import { mulberry32 } from "../../src/core/rng";
 import { loadSolvedRiverPacks } from "../../src/data/ranges/riverSolvedStrategyPacks";
 
 /**
@@ -94,5 +97,45 @@ describe("katalog vyřešených riverů", () => {
   it("stejné číslo vybere stejný spot", () => {
     expect(pickSolvedRiverSpot(0.31)?.sourceDirectory)
       .toBe(pickSolvedRiverSpot(0.31)?.sourceDirectory);
+  });
+
+  it("rozdá river i jako samostatný spot, ne jen jako konec linky", () => {
+    // Katalog se dosud používal jen uvnitř linky. Kdo si vybral river jako
+    // dril, dostával náhodnou pětikartovou desku - a šance, že padne jedna z
+    // 908 vyřešených, je mizivá. Sedmnáct rodin se dodávalo, stahovalo a hráč
+    // je nemohl potkat.
+    const resolver = createDefaultPostflopStrategyResolver();
+    const spots = solvedRiverSpots();
+    expect(spots.length).toBeGreaterThan(0);
+    let checked = 0;
+    for (let seed = 1; seed <= 25; seed += 1) {
+      const rng = mulberry32(seed);
+      rng();
+      const spot = pickSolvedRiverSpot(rng(), spots)!;
+      const config = solvedRiverSpotConfig(
+        spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, rng(),
+      );
+      expect(config, `${spot.sourceDirectory}: sedačky se nedaly přeložit`).toBeDefined();
+      expect(config!.board).toHaveLength(5);
+      const generated = generatePostflopSpot({ seed, strategyResolver: resolver, ...config! });
+      const source = generated.strategySource;
+      expect(source?.kind, spot.sourceDirectory).toBe("STRATEGY_PACK");
+      if (source?.kind === "STRATEGY_PACK") {
+        expect(source.provenance, spot.sourceDirectory).toBe("SOLVER_BACKED");
+      }
+      checked += 1;
+    }
+    expect(checked).toBe(25);
+  });
+
+  it("posadí hráče do židle, jejíž strategii mu ukazuje", () => {
+    for (const spot of solvedRiverSpots().slice(0, 30)) {
+      const config = solvedRiverSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS)!;
+      expect(config.positionContext.inPosition, spot.sourceDirectory).toBe(spot.heroInPosition);
+      expect(
+        config.positionContext.aggressorPosition === config.positionContext.heroPosition,
+        `${spot.sourceDirectory}: iniciativa nesedí`,
+      ).toBe(spot.heroIsAggressor);
+    }
   });
 });
