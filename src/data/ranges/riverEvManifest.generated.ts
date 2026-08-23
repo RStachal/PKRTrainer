@@ -12,8 +12,88 @@ export interface RiverEvManifestEntry {
 
 export const riverEvManifest: readonly RiverEvManifestEntry[] = [
   {
+    familyId: "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-100bb-btn-bb-srp-facing-highspr-v1",
+    load: () => import("./river-ev/mtt9-100bb-btn-bb-srp-facing-highspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_110BB_CO_BTN_3BP_FACING_MIDHIGH",
+    packId: "mtt-full-ring-9-river-solved-mtt9-110bb-co-btn-3bp-facing-midhigh-v1",
+    load: () => import("./river-ev/mtt9-110bb-co-btn-3bp-facing-midhigh.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_150BB_CO_BTN_3BP_HIGHSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-150bb-co-btn-3bp-highspr-v1",
+    load: () => import("./river-ev/mtt9-150bb-co-btn-3bp-highspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
     familyId: "MTT9_20BB_BTN_BB_SRP_LOWSPR",
     packId: "mtt-full-ring-9-river-solved-mtt9-20bb-btn-bb-srp-lowspr-v1",
     load: () => import("./river-ev/mtt9-20bb-btn-bb-srp-lowspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_25BB_BTN_BB_SRP_FACING_LOWSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-25bb-btn-bb-srp-facing-lowspr-v1",
+    load: () => import("./river-ev/mtt9-25bb-btn-bb-srp-facing-lowspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_25BB_CO_BB_SRP_CBET_LOWSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-25bb-co-bb-srp-cbet-lowspr-v1",
+    load: () => import("./river-ev/mtt9-25bb-co-bb-srp-cbet-lowspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-25bb-sb-bb-srp-oop-cbet-lowspr-v1",
+    load: () => import("./river-ev/mtt9-25bb-sb-bb-srp-oop-cbet-lowspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_35BB_CO_BTN_3BP_REPAIR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-35bb-co-btn-3bp-repair-v1",
+    load: () => import("./river-ev/mtt9-35bb-co-btn-3bp-repair.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_40BB_UTG_BB_SRP",
+    packId: "mtt-full-ring-9-river-solved-mtt9-40bb-utg-bb-srp-v1",
+    load: () => import("./river-ev/mtt9-40bb-utg-bb-srp.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-45bb-co-btn-3bp-facing-lowspr-v1",
+    load: () => import("./river-ev/mtt9-45bb-co-btn-3bp-facing-lowspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_50BB_BTN_BB_SRP",
+    packId: "mtt-full-ring-9-river-solved-mtt9-50bb-btn-bb-srp-v1",
+    load: () => import("./river-ev/mtt9-50bb-btn-bb-srp.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-50bb-btn-bb-srp-facing-midspr-v1",
+    load: () => import("./river-ev/mtt9-50bb-btn-bb-srp-facing-midspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_50BB_CO_BB_SRP_CBET_MIDSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-50bb-co-bb-srp-cbet-midspr-v1",
+    load: () => import("./river-ev/mtt9-50bb-co-bb-srp-cbet-midspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-50bb-sb-bb-srp-oop-cbet-midspr-v1",
+    load: () => import("./river-ev/mtt9-50bb-sb-bb-srp-oop-cbet-midspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-70bb-co-btn-3bp-facing-midspr-v1",
+    load: () => import("./river-ev/mtt9-70bb-co-btn-3bp-facing-midspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_80BB_BTN_BB_SRP_HIGHSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-80bb-btn-bb-srp-highspr-v1",
+    load: () => import("./river-ev/mtt9-80bb-btn-bb-srp-highspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
+    familyId: "MTT9_80BB_CO_BTN_3BP_MIDSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-80bb-co-btn-3bp-midspr-v1",
+    load: () => import("./river-ev/mtt9-80bb-co-btn-3bp-midspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
   },
 ];
