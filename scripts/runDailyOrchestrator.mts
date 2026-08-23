@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 /**
@@ -41,6 +41,7 @@ const write = process.argv.includes("--write");
 const REPORT_DIR = "Agents/daily";
 const WORK = "artifacts/decomposition";
 const NIGHT_LOG = "artifacts/decomposition/night.log";
+const EXPANSION_LOG = "artifacts/decomposition/expansion.log";
 
 function runScript(path: string, args: string[] = []): string {
   try {
@@ -74,6 +75,60 @@ function seatPairs(): Map<string, number> {
     pairs.set(match[1], (pairs.get(match[1]) ?? 0) + 1);
   }
   return pairs;
+}
+
+/**
+ * Kolik celých dní uplynulo od poslední noční práce.
+ *
+ * Řádky logu nesou jen `[HH:MM:SS]` bez data, takže stáří se čte z času souboru.
+ * Bere se novější z obou logů: od chvíle, kdy expanze předává zbytek okna
+ * rozkladu, může poslední zápis skončit v kterémkoli z nich.
+ *
+ * **Bez tohohle stroj nevidí noc, která nenastala.** Noc z 22. na 23. 8. 2026
+ * vypadla a denní report vypsal předevčerejší běh, jako by právě proběhl -
+ * jedenáct hodin placeného strojového času zmizelo a nic to neřeklo. U stroje,
+ * který je celý postavený na tom, že je ten čas drahý, je tichá ztráta noci to
+ * nejhorší, co se může stát.
+ *
+ * Příčina té konkrétní noci **zjištěná nebyla** a je fér to napsat sem, ne si
+ * ji domyslet: úloha je denní a zapnutá, `StartWhenAvailable` i `WakeToRun` mají
+ * `True`, stroj běžel od 21. 8. bez restartu a v žurnálu nemá kolem 21:00 ani
+ * uspání, ani jediný záznam plánovače o pokusu tu úlohu spustit. Vím tedy **co**
+ * se stalo, ne **proč**. Hláška níž proto radí, kde hledat, a netvrdí důvod.
+ */
+function nightAgeDays(): number | null {
+  const stamps = [NIGHT_LOG, EXPANSION_LOG]
+    .filter((path) => existsSync(path))
+    .map((path) => statSync(path).mtime);
+  if (stamps.length === 0) return null;
+  const newest = stamps.reduce((best, item) => (item > best ? item : best));
+  const day = (value: Date) => Date.UTC(value.getFullYear(), value.getMonth(), value.getDate());
+  return Math.round((day(new Date()) - day(newest)) / 86_400_000);
+}
+
+/**
+ * Skončil poslední zápis do logu odmítnutím, místo prací?
+ *
+ * Čas souboru sám nestačí a **přestal stačit deset minut poté, co se na něj
+ * detekce postavila.** Zmeškaná noc z 22. na 23. 8. se doháněla v 9:00 ráno,
+ * runner ji správně odmítl („okno by trvalo 23 h") - a tím se logu dotkl.
+ * Soubor tak vypadal čerstvě, přestože se neodpracovalo nic. Stáří souboru měří
+ * pokus, ne práci.
+ *
+ * Odmítnutí se pozná podle vlastní hlášky runneru. Kdyby se ta hláška
+ * přeformulovala, přestane to poznávat - proto se hledá i podle druhého,
+ * nezávislého znaku: běh, který něco udělal, vypíše řádek o odpracovaných
+ * deskách.
+ */
+function lastRunWasRefusal(): boolean {
+  const tails = [NIGHT_LOG, EXPANSION_LOG]
+    .filter((path) => existsSync(path))
+    .map((path) => ({ at: statSync(path).mtime, text: readFileSync(path, "utf8") }));
+  if (tails.length === 0) return false;
+  const newest = tails.reduce((best, item) => (item.at > best.at ? item : best));
+  const lines = newest.text.split("\n").filter((line) => line.trim() !== "");
+  const last = lines[lines.length - 1] ?? "";
+  return /spouští mimo noční okno|není co solvit|okno by trvalo/.test(last);
 }
 
 /** Jak dopadla poslední noc, přečtené z jejího vlastního logu. */
@@ -130,6 +185,26 @@ say(`  přiznaných limitů: ${limitCount}`);
 section("poslední noc");
 out.push("", "## Poslední noc", "");
 const night = lastNight();
+// Napřed stáří, teprve pak obsah. Vypsat běh starý dva dny bez tohohle řádku
+// vypadá úplně stejně jako noc, která právě proběhla - a rozdíl je jedenáct
+// hodin placeného strojového času.
+const nightAge = nightAgeDays();
+const refused = lastRunWasRefusal();
+if (nightAge === null) {
+  say("  NOC NEPROBĚHLA: log neexistuje, takže nikdy nic neběželo");
+} else if (refused) {
+  say("  NOC NEPROBĚHLA: poslední zápis do logu je odmítnutí, ne práce.");
+  say("  Zmeškaný spouštěč se dohnal mimo noční okno a runner se správně");
+  say("  nespustil - stroj by jinak počítal přes pracovní den.");
+  say("  Následuje poslední běh, který doopravdy proběhl:");
+} else if (nightAge >= 1) {
+  say(`  NOC NEPROBĚHLA: poslední práce je stará ${nightAge} ${nightAge === 1 ? "den" : "dny/dní"}.`);
+  say("  Co se hodí projít, v tomhle pořadí:");
+  say("    Get-ScheduledTaskInfo -TaskName PKRTrainer-Night-*   (LastRunTime, LastTaskResult)");
+  say("    žurnál Microsoft-Windows-TaskScheduler/Operational   (spustil se spouštěč vůbec?)");
+  say("    Kernel-Power 42/107 v žurnálu System                 (spal stroj ve 21:00?)");
+  say("  Následuje poslední běh, který doopravdy proběhl:");
+}
 for (const line of night.lines.slice(-6)) say(`  ${line.trim()}`);
 say(`  riverových vrstev: ${night.riverLayers}`);
 say(night.overrunMinutes === null
