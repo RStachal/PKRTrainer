@@ -81,11 +81,32 @@ describe("noční priorita", () => {
     expect(JSON.parse(out)).toBeNull();
   });
 
+  it("neustoupí kvůli hrstce desek: uvolnit noc kvůli hodině práce je horší", () => {
+    // Pod prahem se ustoupit nevyplatí. Expanze by frontu vyprázdnila za chvíli
+    // a zbytek okna by stál - proto se rozkládá dál.
+    if (python() === undefined || !existsSync(RUNNER)) return;
+    const out = evaluate([
+      "m.should_yield_to_new_families.__globals__['monolithic_runner_installed'] = lambda: True",
+      "m.should_yield_to_new_families.__globals__['staged_families_without_checkpoint'] = lambda: {'A', 'B'}",
+      "m.should_yield_to_new_families.__globals__['staged_boards_without_checkpoint'] = lambda: 3",
+      "import json, tempfile, os",
+      "path = os.path.join(tempfile.mkdtemp(), 'tonight.json')",
+      "open(path, 'w', encoding='utf8').write(json.dumps({'priority': 'NEW_FAMILIES', 'reason': 'test'}))",
+      "m.should_yield_to_new_families.__globals__['NIGHT_PRIORITY'] = path",
+      "print(json.dumps(m.should_yield_to_new_families()))",
+    ].join("\n"));
+    expect(JSON.parse(out)).toBeNull();
+  });
+
   it("ustoupí, jen když je priorita i nástupce i práce", () => {
     if (python() === undefined || !existsSync(RUNNER)) return;
     const out = evaluate([
       "m.should_yield_to_new_families.__globals__['monolithic_runner_installed'] = lambda: True",
       "m.should_yield_to_new_families.__globals__['staged_families_without_checkpoint'] = lambda: {'A', 'B'}",
+      // Počet desek se podstrkuje taky. Bez toho četl test skutečný disk a
+      // procházel jen proto, že tam zrovna čekalo dost práce - takže měřil
+      // prostředí, ne kód. Když se všechny nastagované desky odsolvily, spadl.
+      "m.should_yield_to_new_families.__globals__['staged_boards_without_checkpoint'] = lambda: 24",
       "import json, tempfile, os",
       "path = os.path.join(tempfile.mkdtemp(), 'tonight.json')",
       "open(path, 'w', encoding='utf8').write(json.dumps({'priority': 'NEW_FAMILIES', 'reason': 'malo vzoru'}))",
