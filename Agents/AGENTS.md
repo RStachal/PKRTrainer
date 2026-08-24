@@ -10,6 +10,48 @@ The original working app is stored under `legacy/`.
 
 Do not modify files under `legacy/` unless explicitly requested.
 
+## Postup práce: jak se pracuje dopředu, ne dokola
+
+Zapsáno 24. 8. 2026 po tom, co jedna relace ohlásila hotovo čtyřikrát a pokaždé
+se ukázalo něco dalšího. Příčina nebyla nešikovnost, ale **tři chybějící
+pravidla**. Nejsou to předsevzetí, jsou to podmínky.
+
+### 1. Do dokumentu jde jen změřené
+
+Tvrzení v plánu nebo v deníku musí nést **číslo a příkaz, který ho vyrobil**.
+Když ho nemá, nezapisuje se.
+
+Protipříklad, na kterém to vzniklo: do plánu se napsalo „pravidla jsou seřazená
+podle dosahu, takže část 1 pokryje to nejčastější". Znělo to samozřejmě, nikdo
+to neměřil a **bylo to špatně** - dosah je rozložený rovnoměrně, první polovina
+nese přesně 50 %. Doporučení postavené na tom by znamenalo postavit mechaniku,
+která nic nepřinese.
+
+### 2. Jedna definice hotového, jeden příkaz
+
+Blok je hotový, když projde **celý release řetěz**, ne když projdou testy.
+
+`release:check` dlouho neobsahoval E2E, takže „hotovo" bylo neúplné už z
+podstaty: testy prošly, ohlásilo se dokončení a teprve balíčkování spustilo
+Chrome a našlo, že stránka na mobilu 360 px přetéká o 39 px. To není smůla, to
+je chybějící brána.
+
+**Co z toho plyne:** dokud řetěz neprojde, blok není hotový a nehlásí se jako
+hotový. Ani „hotovo, ale ještě ověřím".
+
+### 3. Jedno hlášení na blok, ne na nález
+
+Zkoumat se má potichu a ohlásit **výsledek**. Nález uprostřed bloku je normální
+práce, ne novinka; když se každý odbočka popíše zvlášť, čte se to jako
+přeskakování, i když je postup správný.
+
+### Co tím nezmizí
+
+Zpětné kroky se nedají vypnout úplně. Když oprava odhalí hlubší vadu - třeba že
+**18 z 18 spotů ukazuje rozbité vysvětlení** - je zastavení správné rozhodnutí,
+ne selhání. Měřítkem profesionality tady není „nikdy neměnit směr", ale **nikdy
+nedodat rozbitou věc a nikdy netvrdit víc, než co je změřené**.
+
 ## Hard rules
 
 - Preserve existing behavior unless explicitly requested.
