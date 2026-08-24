@@ -162,6 +162,34 @@ describe("action EV button bubbles", () => {
     expect(known.dataset.evAvailable).toBe("true");
   });
 
+  it("bez vyhodnocení čísla nezmizí, jen se neoznačí nejlepší", () => {
+    // Vyhodnocení chybí právě tehdy, když hráč zvolil akci, kterou rozbor
+    // nemodeluje - a to je nejhorší chvíle EV schovat: zvolil něco, o čem nic
+    // nevíme, a chce vidět, co byly ostatní možnosti hodné. Dokud se volba
+    // nepředávala zvlášť, zmizela v tu chvíli všechna čísla, i ta, která máme.
+    const partial: ActionEvSet<TestAction> = {
+      ...actionEvs,
+      source: "SOLVED_TREE",
+      values: actionEvs.values.filter((item) => item.action !== "3BET"),
+    };
+    const buttons = actionEvs.values.map(({ action }) => {
+      const button = document.createElement("button");
+      button.dataset.action = action;
+      setActionEvButtonContent(button, action);
+      return button;
+    });
+
+    expect(revealActionEvButtonBubbles(buttons, partial, undefined, "3BET")).toBe(2);
+    const call = buttons.find((button) => button.dataset.action === "CALL")!;
+    expect(call.dataset.evAvailable).toBe("true");
+    expect(call.querySelector(".action-ev-bubble")?.textContent).toContain("EV");
+    // Bez vyhodnocení se nic neoznačí za nejlepší - to by bylo tvrzení navíc.
+    expect(buttons.some((button) => button.querySelector(".action-ev-bubble--best"))).toBe(false);
+    // Zvolená akce se pozná i tak.
+    const chosen = buttons.find((button) => button.dataset.action === "3BET")!;
+    expect(chosen.dataset.evAvailable).toBe("unsolved");
+  });
+
   it("formatuje kladne, zaporne i nulove BB hodnoty stabilne", () => {
     expect(formatActionEvBb(0.2044)).toBe("+0.204");
     expect(formatActionEvBb(-0.006)).toBe("-0.006");

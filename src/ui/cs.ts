@@ -116,6 +116,9 @@ const CZ_CATALOG = {
     incorrect: "Zatím ne.",
     equivalent: "Stejně dobrá akce.",
     acceptable: "Přijatelná akce s malou EV odchylkou.",
+    // Ani správně, ani chyba: rozbor tuhle akci nepočítal, takže o ní nevíme
+    // nic. Tvrdit, že je horší, by bylo tvrzení bez opory.
+    unsolved: "Tuhle akci rozbor nepočítal, takže ji neumíme posoudit.",
     recommended: "Doporučení",
     actionEv: {
       title: "Action EV",
@@ -164,6 +167,9 @@ const CZ_CATALOG = {
     incorrect: "Zatím ne.",
     equivalent: "Stejně dobrá akce.",
     acceptable: "Přijatelná akce s malou EV odchylkou.",
+    // Ani správně, ani chyba: rozbor tuhle akci nepočítal, takže o ní nevíme
+    // nic. Tvrdit, že je horší, by bylo tvrzení bez opory.
+    unsolved: "Tuhle akci rozbor nepočítal, takže ji neumíme posoudit.",
     recommended: "Doporučení",
     actionEv: {
       title: "Action EV",
@@ -425,6 +431,7 @@ const EN_CATALOG: UiCatalog = {
     incorrect: "Not quite.",
     equivalent: "Equally good action.",
     acceptable: "Acceptable action with a small EV difference.",
+    unsolved: "This action was not solved here, so it cannot be judged.",
     recommended: "Recommended",
     actionEv: {
       title: "Action EV",
@@ -472,6 +479,7 @@ const EN_CATALOG: UiCatalog = {
     incorrect: "Not quite.",
     equivalent: "Equally good action.",
     acceptable: "Acceptable action with a small EV difference.",
+    unsolved: "This action was not solved here, so it cannot be judged.",
     recommended: "Recommended",
     actionEv: {
       title: "Action EV",

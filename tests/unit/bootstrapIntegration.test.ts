@@ -292,7 +292,7 @@ describe("bootstrap - inicializacni tok", () => {
 
     await vi.waitFor(() => {
       expect(JSON.parse(storage.getItem(KEY_HH_REVIEWS) ?? "[]")).toHaveLength(1);
-    }, { timeout: 10000 });
+    }, { timeout: 25000 });
     const reviewRecords = JSON.parse(storage.getItem(KEY_HH_REVIEWS) ?? "[]") as Array<{
       street: string;
       savedToDrillStats: boolean;
@@ -613,7 +613,7 @@ describe("bootstrap - inicializacni tok", () => {
 
     await vi.waitFor(() => {
       expect(root.querySelector<HTMLElement>(".filter-empty-warning")?.hidden).toBe(false);
-    }, { timeout: 10000 });
+    }, { timeout: 25000 });
     const warning = root.querySelector<HTMLElement>(".filter-empty-warning");
     expect(warning?.hidden).toBe(false);
     expect(warning?.textContent).toContain("Referenční range nejsou dostupné");
@@ -636,14 +636,21 @@ async function waitForDashboard(root: HTMLElement): Promise<void> {
   // transformace zhruba megabajtového modulu, a deset naráz blokuje smyčku na
   // vteřiny. Výchozí limit `vi.waitFor` na to nestačí, takže test padal na tom,
   // že se dashboard nestihl vykreslit - ne na tom, že by se nevykreslil.
+  //
+  // Zvednuto z 10 s na 25 s dne 24. 8. 2026 ze stejného důvodu, jen o řád dál:
+  // dodávaného obsahu je 48 flopových, 32 turnových a 17 riverových rodin plus
+  // 6,6 MB tabulek EV, takže celá sada trvá 359 s a v tom soupeření se render
+  // přes deset vteřin protáhne. **Samostatně ten soubor projde** - ověřeno,
+  // 16 testů - takže je to zátěž, ne vada.
   await vi.waitFor(() => {
     expect(root.querySelector(".dashboard")).not.toBeNull();
-  }, { timeout: 10000 });
+  }, { timeout: 25000 });
 }
 
 async function waitForPreflopSession(root: HTMLElement): Promise<void> {
   await vi.waitFor(() => {
     expect(root.querySelector<HTMLElement>(".training__game")?.hidden).toBe(false);
     expect(root.querySelector(".poker-table")).not.toBeNull();
-  }, { timeout: 10000 });
+    // Stejná rezerva jako u dashboardu a ze stejného měřeného důvodu.
+  }, { timeout: 25000 });
 }

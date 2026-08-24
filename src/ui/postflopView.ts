@@ -1211,13 +1211,19 @@ function showResult(
       grade.recommended.includes(button.dataset.action as PostflopAction),
     );
   });
-  revealActionEvButtonBubbles(buttons, spot.actionEvs, grade.actionEv);
+  revealActionEvButtonBubbles(buttons, spot.actionEvs, grade.actionEv, chosen);
 
   const result = root.querySelector<HTMLElement>(".postflop-result");
   if (!result) return;
   const correct = grade.correct;
+  // Tři stavy, ne dva. Akci, kterou rozbor nemodeluje, nelze označit za chybu:
+  // solver na tom uzlu žádnou takovou větev nepočítal, takže „špatně" je
+  // tvrzení bez opory. Změřeno: týkalo se to 104 z 300 riverových spotů.
+  const verdict = grade.unsolved
+    ? "postflop-result--unsolved"
+    : correct ? "postflop-result--correct" : "postflop-result--wrong";
   result.hidden = false;
-  result.className = `postflop-result ${correct ? "postflop-result--correct" : "postflop-result--wrong"}`;
+  result.className = `postflop-result ${verdict}`;
   renderPracticalExplanation(result, spot, grade, chosen);
   options.onAnswered?.(spot, chosen, elapsedMs(questionStartedAt));
   focusElement(result);
@@ -1328,9 +1334,11 @@ function renderPracticalExplanation(
     ? CS.postflop.equivalent
     : grade.actionEv?.outcome === "ACCEPTABLE"
       ? CS.postflop.acceptable
-      : grade.correct
-        ? CS.postflop.correct
-        : CS.postflop.incorrect;
+      : grade.unsolved
+        ? CS.postflop.unsolved
+        : grade.correct
+          ? CS.postflop.correct
+          : CS.postflop.incorrect;
   summary.textContent =
     `${resultLabel} ${CS.postflop.recommended}: ` +
     `${grade.recommended.map(actionLabel).join(" / ")}. ${spot.explanation.summary}`;
@@ -2403,6 +2411,9 @@ ${ACTION_EV_BUTTON_STYLES}
 .postflop-flopzilla__cell[data-ev-combos]{box-shadow:inset 0 -3px 0 rgba(123,211,255,.55);}
 .postflop-result--correct{background:rgba(43,213,118,.13);border:1px solid rgba(43,213,118,.45);
   color:#9ff0bd;}
+/* Ani zelená, ani červená: o téhle akci nevíme nic. */
+.postflop-result--unsolved{background:rgba(159,178,213,.13);border:1px solid rgba(159,178,213,.45);
+  color:#dbe6fa;}
 .postflop-result--wrong{background:rgba(226,59,59,.13);border:1px solid rgba(226,59,59,.45);
   color:#ffb4b4;}
 @media (max-width:640px){

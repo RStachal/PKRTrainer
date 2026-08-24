@@ -57,13 +57,23 @@ export function revealActionEvButtonBubbles<Action extends string>(
   buttonsInput: Iterable<HTMLButtonElement>,
   actionEvs: ActionEvSet<Action> | undefined,
   evaluation: ActionEvEvaluation<Action> | undefined,
+  /**
+   * Co hráč zvolil, když se to nedá vyčíst z vyhodnocení.
+   *
+   * Vyhodnocení chybí právě tehdy, když hráč zvolil akci, kterou rozbor
+   * nemodeluje - a to je nejhorší možná chvíle EV schovat: hráč zvolil něco, o
+   * čem nic nevíme, a chce vidět, co byly ostatní možnosti hodné. Dokud tenhle
+   * parametr nebyl, zmizela v tu chvíli všechna čísla, i ta, která máme.
+   */
+  chosenAction?: Action,
 ): number {
   const buttons = [...buttonsInput];
   const actions = buttons.map((button) => button.dataset.action as Action | undefined);
   resetActionEvButtonBubbles(buttons);
 
+  const chosen = evaluation?.chosenAction ?? chosenAction;
   if (
-    !evaluation ||
+    chosen === undefined ||
     actions.some((action) => action === undefined) ||
     // Zobrazovací seznam, ne ten pro import packů: sem chodí i čísla dopočítaná
     // za běhu a přísná podmínka je dřív zahazovala všechna.
@@ -102,8 +112,8 @@ export function revealActionEvButtonBubbles<Action extends string>(
       continue;
     }
     const evBb = known;
-    const isBest = evaluation.bestActions.includes(action);
-    const isChosen = evaluation.chosenAction === action;
+    const isBest = evaluation?.bestActions.includes(action) ?? false;
+    const isChosen = chosen === action;
     const formatted = formatActionEvBb(evBb, decimalsFor(actionEvs.source));
 
     bubble.hidden = false;

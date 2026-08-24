@@ -1300,4 +1300,62 @@ describe("postflopView - DOM", () => {
     expect(result?.textContent).not.toContain("https://");
     expect(root.querySelector(".postflop-range-summary")).toBeNull();
   });
+
+  it("akci, kterou rozbor nepočítal, neoznačí za chybu", () => {
+    // Resolver se podstrkuje schválně. První verze tohohle testu procházela
+    // vzorek dvou set padesáti seedů a hledala nespočítanou akci ve skutečném
+    // obsahu - **nenašla ani jednu a tiše neotestovala nic**, protože tabulka EV
+    // se stahuje na pozadí a v synchronním testu nikdy nedorazí. Test, který se
+    // nemůže dostat ke stavu, který má hlídat, je horší než žádný.
+    const root = document.createElement("div");
+    renderPostflopView(root, {
+      initialSeed: 7,
+      initialStreet: "RIVER",
+      // Sada zná dvě akce ze tří: RAISE solver na tomhle uzlu nepočítal.
+      strategyResolver: () => ({
+        action: "CHECK",
+        explanation: "Vyřešený river.",
+        actionEvs: {
+          source: "SOLVED_TREE",
+          unit: "BB",
+          equivalentThresholdBb: 0.1,
+          acceptableThresholdBb: 0.3,
+          // Akce musí být z těch, které uzel nabízí, jinak sadu zamítne brána
+          // dřív, než se k třetímu stavu vůbec dojde.
+          values: [
+            { action: "CHECK", evBb: 3.4 },
+            { action: "BET_SMALL", evBb: 1.1 },
+          ],
+        },
+        source: {
+          kind: "STRATEGY_PACK",
+          provenance: "SOLVER_BACKED",
+          packId: "test-pack",
+          packVersion: "v1",
+          packVerifiedAt: "2026-08-24",
+          ruleId: "test",
+        },
+      }) as never,
+    });
+    root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+
+    // Nespočítaná akce se hledá, ne předpokládá: který uzel se rozdá, závisí na
+    // seedu, a napevno zvolené RAISE se na riverových uzlech téhle konfigurace
+    // vůbec nenabízí.
+    const known = new Set(["CHECK", "BET_SMALL"]);
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>(".postflop-action")];
+    const unsolvedAction = buttons.find((button) => !known.has(button.dataset.action ?? ""));
+    expect(unsolvedAction, "spot nenabídl akci mimo vloženou sadu").toBeDefined();
+    unsolvedAction!.click();
+
+    const result = root.querySelector<HTMLElement>(".postflop-result")!;
+    expect(result.classList.contains("postflop-result--unsolved")).toBe(true);
+    expect(result.classList.contains("postflop-result--wrong"), "nesmí to být chyba").toBe(false);
+    expect(result.classList.contains("postflop-result--correct")).toBe(false);
+    // Sada běží v anglické lokalizaci; česká věta zní „Tuhle akci rozbor
+    // nepočítal". Klíčové je, že verdikt nemluví o chybě.
+    expect(result.textContent).toContain("not solved");
+    // A u nespočítané akce musí být vidět, že hodnota chybí.
+    expect(unsolvedAction!.dataset.evAvailable).toBe("unsolved");
+  });
 });
