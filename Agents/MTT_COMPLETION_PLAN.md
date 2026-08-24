@@ -60,7 +60,30 @@ bez rekurze, turnový uzel má pod sebou celou riverovou vrstvu v jiném souboru
 **Než se rozhodne, fáze nezačíná.** Spočítat 11 MB, které se nedodají, je horší
 než nespočítat nic.
 
-## Fáze 3 — postflopové řádky knihovny — **na řadě, podmínka splněná**
+## Fáze 2b — posledních 12 % riverové EV — **zadání je změřené**
+
+EV se dnes ukáže u **87,7 %** rozdaných riverových spotů. Zbytek má jedinou
+příčinu a není to vada: **663 z 4902 pravidel nemá řádek EV**, protože se
+soubory ořezaly do rozpočtu.
+
+Váže **gzip, ne raw**: strop je 128 KiB na líný chunk a soubory sedí na 117.
+Kdyby se dodala úplná EV, nejhorší rodina by potřebovala **223 KiB gzip**,
+napříč knihovnou by to bylo 1 819 → 2 251 KiB.
+
+Dvě cesty, a ta druhá je lepší:
+
+1. **Zvednout strop na ~230 KiB.** Jednoduché, ale zdvojnásobí jedno stažení
+   všem, i těm, kdo z rodiny potkají tři spoty.
+2. **Rozdělit EV rodiny na části podle dosahu.** Pravidla jsou už seřazená od
+   nejdosahovanějších, takže část 1 pokryje to, co hráč potká skoro vždy, a
+   část 2 se stáhne, jen když na ni dojde. Většina relací pak zaplatí dnešních
+   117 KiB místo 223.
+
+Druhá cesta potřebuje: generátor psát části, manifest je vyjmenovat a runtime
+dotáhnout část, do které spadá pravidlo. Priming na to už vzor má - EV je
+nejlepší snaha, ne podmínka odpovědi.
+
+## Fáze 3 — postflopové řádky knihovny — **hotovo 24. 8. 2026**
 
 Řádky `FULL_RING_9|CHIP_EV|FLOP|*`, `TURN|*`, `RIVER|*` sledují
 `*ProductionStrategyPack`, ne `*SolvedStrategyPack` (ověřeno 24. 8. v
