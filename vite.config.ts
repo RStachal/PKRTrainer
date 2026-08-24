@@ -124,8 +124,19 @@ export default defineConfig({
      * i s dopočtem EV trvá **2,2 ms**, načtení všech sedmnácti tabulek 978 ms.
      * Roste čas na načtení obsahu v testu, ne práce na jedno rozdání.
      */
-    testTimeout: 20_000,
-    hookTimeout: 30_000,
+    testTimeout: 60_000,
+    hookTimeout: 60_000,
+    /*
+     * Zvednuto podruhé, 24. 8. 2026, a znovu proto, že **vyrostl obsah**.
+     *
+     * Celá sada dnes trvá 338 s, z toho 307 s transformace. Testy, které načtou
+     * sady packů (bootstrap, katalogy), sedí pod tou zátěží na hraně: samostatně
+     * projdou - ověřeno, 16 testů - a v plné sadě vyprší. Není to pomalost kódu:
+     * rozdání jednoho spotu i s dopočtem EV trvá 2,2 ms.
+     *
+     * Strop není kontrola správnosti, jen pojistka proti zaseknutí. Rozbitý test
+     * spadne na tvrzení, ne na čase, takže vyšší číslo nic neschovává.
+     */
     include: ["tests/**/*.{test,spec}.{ts,js}", "src/**/*.{test,spec}.{ts,js}"],
   },
 });
