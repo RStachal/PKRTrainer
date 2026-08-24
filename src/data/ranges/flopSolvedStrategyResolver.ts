@@ -8,6 +8,7 @@ import type { FlopStrategyRule } from "./flopStrategyRuleBuilder";
 import type { FlopSolvedStrategyPack } from "./flopSolvedStrategyPack";
 import { runtimeSolvedFlopPacks } from "./flopSolvedRuntimeRegistry";
 import { actionNodeForSolvedHero } from "./solvedHeroActionNode";
+import { solvedStrategySource } from "./solvedStrategySource";
 import { translateTurnActions } from "./turnActionTranslation";
 
 /**
@@ -105,15 +106,21 @@ export function createFlopSolvedStrategyResolver(
           ? `Solver nabídl víc velikostí sázky, než kolik jich trenažér rozlišuje; ${mergedCount} se sloučily do těch dvou, které má.`
           : "",
       ].filter(Boolean).join(" "),
-      source: {
-        kind: "STRATEGY_PACK",
-        provenance: "SOLVER_BACKED",
+      // Úplný zdroj, ne šest polí protlačených přes `as`. Kontrakt jich chce
+      // šestnáct a přetypování to umlčelo: obrazovka s výsledkem pak volala
+      // `.map()` nad `undefined` a **18 z 18 spotů mělo nula bloků vysvětlení**.
+      source: solvedStrategySource({
         packId: pack.id,
         packVersion: pack.version,
         packVerifiedAt: pack.createdAt,
+        confidence: pack.confidence,
+        assumptions: pack.assumptions,
+        positionPattern: best.positionPattern,
         ruleId: best.sourceDirectory,
-      },
-    } as PostflopRecommendation;
+        potBB: best.spot?.potBB,
+        stackBehindBB: best.spot?.stackBehindBB,
+      }),
+    };
   };
 }
 

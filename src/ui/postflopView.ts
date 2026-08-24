@@ -1794,6 +1794,10 @@ function textureItems(
   source: Extract<PostflopTrainingSpot["explanation"]["source"], { kind: "STRATEGY_PACK" }>,
 ): readonly string[] {
   const coverage = source.textureCoverage;
+  // Prázdný seznam znamená, že odpověď na texturách nestojí - vyřešená rodina
+  // odpovídá na jednu konkrétní desku, ne na třídu textur. Říct „shoda textury:"
+  // a nechat za dvojtečkou prázdno by bylo tvrzení, které se o nic neopírá.
+  if (source.matchedTextures.length === 0) return [];
   const matched = source.matchedTextures.map(textureLabel).join(", ");
   if (coverage === undefined) {
     return [localizedText(`Texture match: ${matched}`, `Shoda textury: ${matched}`)];

@@ -2,6 +2,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { renderPostflopView } from "../../src/ui/postflopView";
+import { loadSolvedRiverPacks } from "../../src/data/ranges/riverSolvedStrategyPacks";
+import { loadSolvedFlopPacks } from "../../src/data/ranges/flopSolvedStrategyPacks";
+import { loadAllSolvedTurnPacks } from "../../src/data/ranges/turnSolvedStrategyPacks";
 import type { PostflopStrategyResolver } from "../../src/core/postflopGenerator";
 import { isPostflopPositionPattern } from "../../src/core/postflopGenerator";
 
@@ -1357,5 +1360,31 @@ describe("postflopView - DOM", () => {
     expect(result.textContent).toContain("not solved");
     // A u nespočítané akce musí být vidět, že hodnota chybí.
     expect(unsolvedAction!.dataset.evAvailable).toBe("unsolved");
+  });
+
+  it("vyřešený spot vykreslí celé vysvětlení, ne jen půlku", async () => {
+    // Tohle byla nejzávažnější vada téhle relace a **byla latentní**: všechny tři
+    // vyřešené resolvery skládaly zdroj ze šesti polí a protlačily ho přes
+    // `as PostflopRecommendation`, ačkoli kontrakt jich chce šestnáct.
+    // Přetypování umlčelo kompilátor a renderer pak volal `.map()` nad
+    // `undefined`. Dokud se vyřešený obsah rozdával náhodnou deskou, resolver
+    // skoro nikdy neodpověděl a cesta se nespustila; katalogy ji zpřístupnily.
+    //
+    // Změřeno před opravou: **18 z 18 spotů mělo nula bloků vysvětlení**.
+    await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
+    await loadSolvedFlopPacks("FULL_RING_9|REGULAR|CHIP_EV|FLOP");
+    await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER");
+
+    for (const street of ["FLOP", "TURN", "RIVER"] as const) {
+      for (let seed = 1; seed <= 3; seed += 1) {
+        const root = document.createElement("div");
+        renderPostflopView(root, { initialSeed: seed, initialStreet: street });
+        root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+        root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
+        const blocks = root.querySelectorAll(".postflop-practical__block");
+        expect(blocks.length, `${street} seed ${seed}: vysvětlení se nevykreslilo`)
+          .toBeGreaterThan(0);
+      }
+    }
   });
 });

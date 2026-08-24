@@ -74,10 +74,17 @@ Dvě cesty, a ta druhá je lepší:
 
 1. **Zvednout strop na ~230 KiB.** Jednoduché, ale zdvojnásobí jedno stažení
    všem, i těm, kdo z rodiny potkají tři spoty.
-2. **Rozdělit EV rodiny na části podle dosahu.** Pravidla jsou už seřazená od
-   nejdosahovanějších, takže část 1 pokryje to, co hráč potká skoro vždy, a
-   část 2 se stáhne, jen když na ni dojde. Většina relací pak zaplatí dnešních
-   117 KiB místo 223.
+2. **Rozdělit EV rodiny na části podle dosahu.** Část 1 by pokryla to, co hráč
+   potká skoro vždy, a část 2 by se stáhla, jen když na ni dojde.
+
+   **Pozor - premisa, kterou jsem si sem napsal, byla špatná a měření ji
+   vyvrátilo:** pravidla **nejsou** seřazená podle dosahu. Změřeno na
+   `MTT9_50BB_BTN_BB_SRP`: první polovina pravidel nese přesně 50 % dosahu,
+   tedy rozložení je rovnoměrné. Dělit podle dnešního pořadí by neušetřilo nic.
+
+   Cesta proto musí začít **seřazením řádků EV podle dosahu**. To jde bez
+   zásahu do packu: části nesou pole plné délky s `null` mimo svůj rozsah, takže
+   se slučují podle indexu a nemusí být souvislé.
 
 Druhá cesta potřebuje: generátor psát části, manifest je vyjmenovat a runtime
 dotáhnout část, do které spadá pravidlo. Priming na to už vzor má - EV je
