@@ -192,8 +192,13 @@ describe("release bundle metadata", () => {
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128)');
     expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 32768');
     expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",');
+    // Řetěz je připnutý schválně: má se měnit vědomě, ne mimochodem. Poslední
+    // článek přibyl 24. 8. 2026 a je to oprava chybějící brány - Chrome E2E
+    // běželo dosud až uvnitř balíčkování, takže blok se hlásil jako hotový a
+    // teprve balíček našel, že stránka na mobilu 360 px přetéká o 39 px.
+    // Definice hotového je proto jeden příkaz, který E2E obsahuje.
     expect(pkg.scripts["release:check"])
-      .toBe("npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:release-gates && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget");
+      .toBe("npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:release-gates && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
   });
 
