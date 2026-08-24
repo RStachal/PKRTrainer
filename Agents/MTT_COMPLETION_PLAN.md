@@ -60,35 +60,27 @@ bez rekurze, turnový uzel má pod sebou celou riverovou vrstvu v jiném souboru
 **Než se rozhodne, fáze nezačíná.** Spočítat 11 MB, které se nedodají, je horší
 než nespočítat nic.
 
-## Fáze 2b — posledních 12 % riverové EV — **zadání je změřené**
+## Fáze 2b — posledních 12 % riverové EV — **uzavřeno měřením: nedělat**
 
-EV se dnes ukáže u **87,7 %** rozdaných riverových spotů. Zbytek má jedinou
-příčinu a není to vada: **663 z 4902 pravidel nemá řádek EV**, protože se
-soubory ořezaly do rozpočtu.
+EV se ukáže u **87,7 %** rozdaných riverových spotů. Zbylých 12,3 % má jedinou
+příčinu: **663 z 4902 pravidel nemá řádek EV**, protože se soubory ořezaly do
+rozpočtu. Váže **gzip, ne raw** - strop je 128 KiB na líný chunk a soubory sedí
+na 117.
 
-Váže **gzip, ne raw**: strop je 128 KiB na líný chunk a soubory sedí na 117.
-Kdyby se dodala úplná EV, nejhorší rodina by potřebovala **223 KiB gzip**,
-napříč knihovnou by to bylo 1 819 → 2 251 KiB.
+Byly tři cesty. **Dvě jsem změřil a obě padly:**
 
-Dvě cesty, a ta druhá je lepší:
+| cesta | měření | závěr |
+|---|---|---|
+| rozdělit na části podle dosahu | řazení podle dosahu získá **2,0 bodu** (86,7 → 88,7 % pokrytého dosahu) | nedělat: hráč by potřeboval část 2 skoro stejně často jako část 1, takže by se neušetřilo nic a přibyla by mechanika v generátoru, manifestu i runtime |
+| zmenšit zápis řídkou formou | **154 KiB proti dnešním 118** | nedělat: je to horší. Hodnoty jsou už rozdílové a z 36,7 % nulové, což gzip komprimuje líp než seznam indexů |
+| zvednout strop na ~230 KiB | úplná EV by u nejhorší rodiny potřebovala 223 KiB gzip | jediná zbývající cesta |
 
-1. **Zvednout strop na ~230 KiB.** Jednoduché, ale zdvojnásobí jedno stažení
-   všem, i těm, kdo z rodiny potkají tři spoty.
-2. **Rozdělit EV rodiny na části podle dosahu.** Část 1 by pokryla to, co hráč
-   potká skoro vždy, a část 2 by se stáhla, jen když na ni dojde.
+**Rozhodnutí: nezvedat, zůstat na 87,7 %.** Zbylých 12,3 % by stálo skoro
+zdvojnásobení jednoho stažení **všem** hráčům, včetně těch, kdo z rodiny potkají
+tři spoty. To je špatný poměr; 87,7 % je dobrý stav, ne nouzový.
 
-   **Pozor - premisa, kterou jsem si sem napsal, byla špatná a měření ji
-   vyvrátilo:** pravidla **nejsou** seřazená podle dosahu. Změřeno na
-   `MTT9_50BB_BTN_BB_SRP`: první polovina pravidel nese přesně 50 % dosahu,
-   tedy rozložení je rovnoměrné. Dělit podle dnešního pořadí by neušetřilo nic.
-
-   Cesta proto musí začít **seřazením řádků EV podle dosahu**. To jde bez
-   zásahu do packu: části nesou pole plné délky s `null` mimo svůj rozsah, takže
-   se slučují podle indexu a nemusí být souvislé.
-
-Druhá cesta potřebuje: generátor psát části, manifest je vyjmenovat a runtime
-dotáhnout část, do které spadá pravidlo. Priming na to už vzor má - EV je
-nejlepší snaha, ne podmínka odpovědi.
+Majitel to může přebít - je to rozhodnutí o šířce pásma, ne o kódu. Změna je
+pak jednořádková (`BUNDLE_MAX_LAZY_MTT_GZIP_KB`) plus přegenerování EV.
 
 ## Fáze 3 — postflopové řádky knihovny — **hotovo 24. 8. 2026**
 
