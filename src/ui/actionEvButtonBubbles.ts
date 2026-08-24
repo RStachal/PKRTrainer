@@ -1,6 +1,6 @@
 import {
   DISPLAYABLE_ACTION_EV_SOURCES,
-  isActionEvSetComplete,
+  isActionEvSetUsable,
   type ActionEvEvaluation,
   type ActionEvSet,
 } from "../core/actionEv";
@@ -25,6 +25,9 @@ export const ACTION_EV_BUTTON_STYLES = `
 .action-ev-bubble__fill{display:block;width:var(--action-ev-strength,0%);height:100%;border-radius:inherit;
   background:#7bd3ff;box-shadow:0 0 8px rgba(123,211,255,.34);transition:width 180ms ease;}
 .action-ev-bubble--best{color:#a8f2c3;border-top-color:rgba(43,213,118,.48);}
+/* Akce, kterou solve nepočítal: zřetelně jiná než číslo, ale ne prázdná. */
+.action-ev-bubble--unsolved{color:#9fb2d5;font-style:italic;font-weight:800;}
+.action-ev-bubble--unsolved .action-ev-bubble__meter{opacity:.25;}
 .action-ev-bubble--best .action-ev-bubble__fill{background:#2bd576;box-shadow:0 0 9px rgba(43,213,118,.42);}
 .action-ev-bubble--chosen .action-ev-bubble__value{text-decoration:underline;text-decoration-color:#7bd3ff;
   text-decoration-thickness:2px;text-underline-offset:3px;}
@@ -64,7 +67,11 @@ export function revealActionEvButtonBubbles<Action extends string>(
     actions.some((action) => action === undefined) ||
     // Zobrazovací seznam, ne ten pro import packů: sem chodí i čísla dopočítaná
     // za běhu a přísná podmínka je dřív zahazovala všechna.
-    !isActionEvSetComplete(actionEvs, actions as Action[], DISPLAYABLE_ACTION_EV_SOURCES)
+    // Použitelná, ne úplná. Solve nemusí obsahovat akci, kterou trenažér
+    // nabízí - typicky zvýšení tam, kde solver žádnou větev se zvýšením
+    // nepočítal. Trvat na úplnosti znamenalo zatajit i čísla, která máme:
+    // změřeno, EV se ukazovala jen ve 20 % riverových spotů.
+    !isActionEvSetUsable(actionEvs, actions as Action[], DISPLAYABLE_ACTION_EV_SOURCES)
   ) {
     return 0;
   }
@@ -72,10 +79,29 @@ export function revealActionEvButtonBubbles<Action extends string>(
   const values = new Map(actionEvs.values.map((item) => [item.action, item.evBb]));
   const minimumEv = Math.min(...actionEvs.values.map((item) => item.evBb));
   const maximumEv = Math.max(...actionEvs.values.map((item) => item.evBb));
+  let shown = 0;
   for (const [index, button] of buttons.entries()) {
     const action = actions[index]!;
-    const evBb = values.get(action)!;
     const bubble = actionEvBubble(button);
+    const known = values.get(action);
+    if (known === undefined) {
+      // Akce, kterou solve nepočítal. **Musí to být vidět**, ne zůstat prázdná:
+      // prázdno vedle čísel se čte jako „tahle akce nemá cenu", a to je nepravda
+      // jiného druhu než chybějící údaj.
+      bubble.hidden = false;
+      bubble.classList.add("action-ev-bubble--unsolved");
+      bubbleValue(bubble).textContent = "EV nespočítána";
+      bubble.style.setProperty("--action-ev-strength", "0%");
+      bubble.dataset.action = action;
+      bubble.dataset.evUnsolved = "true";
+      button.dataset.evAvailable = "unsolved";
+      button.setAttribute(
+        "aria-label",
+        `${button.dataset.actionLabel ?? action}, EV nespočítána`,
+      );
+      continue;
+    }
+    const evBb = known;
     const isBest = evaluation.bestActions.includes(action);
     const isChosen = evaluation.chosenAction === action;
     const formatted = formatActionEvBb(evBb, decimalsFor(actionEvs.source));
@@ -95,8 +121,9 @@ export function revealActionEvButtonBubbles<Action extends string>(
       "aria-label",
       `${button.dataset.actionLabel ?? action}, EV ${formatted} BB`,
     );
+    shown += 1;
   }
-  return buttons.length;
+  return shown;
 }
 
 /**

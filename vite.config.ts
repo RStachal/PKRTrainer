@@ -112,6 +112,20 @@ export default defineConfig({
     // vedle něčeho jiného a potřebuje ubrat.
     maxWorkers: Number(process.env.PKRTRAINER_TEST_WORKERS ?? 4),
     minWorkers: 1,
+    /**
+     * Limity zvednuté 24. 8. 2026, protože **vyrostl obsah, ne pomalost kódu**.
+     *
+     * Výchozích 5 s na test a 10 s na hook bylo kalibrováno na 19 dodávaných
+     * rodin. Dnes jich je 48 flopových, 32 turnových a 17 riverových a k tomu
+     * 6,6 MB tabulek EV, takže testy, které obsah načtou a rozdají z něj spoty,
+     * sedí těsně na hraně: naměřeno 5 188 ms na testu s limitem 5 000.
+     *
+     * Ověřeno, že to není zpomalení produktu: rozdání jednoho riverového spotu
+     * i s dopočtem EV trvá **2,2 ms**, načtení všech sedmnácti tabulek 978 ms.
+     * Roste čas na načtení obsahu v testu, ne práce na jedno rozdání.
+     */
+    testTimeout: 20_000,
+    hookTimeout: 30_000,
     include: ["tests/**/*.{test,spec}.{ts,js}", "src/**/*.{test,spec}.{ts,js}"],
   },
 });

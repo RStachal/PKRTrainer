@@ -3,6 +3,8 @@ import {
   bestActionsForActionEv,
   evaluateActionEv,
   isActionEvSetComplete,
+  isActionEvSetUsable,
+  DISPLAYABLE_ACTION_EV_SOURCES,
   validateActionEvSet,
   type ActionEvSet,
 } from "../../src/core/actionEv";
@@ -21,6 +23,59 @@ const set: ActionEvSet<Action> = {
     { action: "3BET", evBb: 0.21 },
   ],
 };
+
+/**
+ * Neúplná sada: co se smí zobrazit, i když nepokrývá všechny nabízené akce.
+ *
+ * Úplnost je správný požadavek na import packu a špatný na zobrazení. Změřeno:
+ * trvat na ní znamenalo ukázat EV jen ve 20 % riverových spotů, protože trenažér
+ * nabízí akce, které solve neobsahuje - typicky zvýšení tam, kde solver žádnou
+ * větev se zvýšením nepočítal.
+ */
+describe("použitelná sada EV", () => {
+  const partial: ActionEvSet<"CHECK" | "BET_SMALL" | "BET_BIG"> = {
+    source: "SOLVED_TREE",
+    unit: "BB",
+    equivalentThresholdBb: 0.1,
+    acceptableThresholdBb: 0.3,
+    values: [{ action: "CHECK", evBb: 1.2 }, { action: "BET_SMALL", evBb: 2.4 }],
+  };
+  const offered = ["CHECK", "BET_SMALL", "BET_BIG"] as const;
+
+  it("projde, i když jedné nabízené akci hodnota chybí", () => {
+    expect(isActionEvSetUsable(partial, offered, DISPLAYABLE_ACTION_EV_SOURCES)).toBe(true);
+    // Přísná brána ji naopak pustit nesmí: chrání import packů.
+    expect(isActionEvSetComplete(partial, offered, DISPLAYABLE_ACTION_EV_SOURCES)).toBe(false);
+  });
+
+  it("duplicitní akci nepustí", () => {
+    // Tohle byla skutečná vada: `covered` vznikalo z přeložených solverových
+    // akcí a překlad slévá dvě velikosti sázky do jedné, takže se akce v sadě
+    // objevila dvakrát. Padlo na tom 104 z 300 spotů.
+    const duplicated = {
+      ...partial,
+      values: [...partial.values, { action: "BET_SMALL" as const, evBb: 9 }],
+    };
+    expect(isActionEvSetUsable(duplicated, offered, DISPLAYABLE_ACTION_EV_SOURCES)).toBe(false);
+  });
+
+  it("jedna hodnota nestačí: není co seřadit", () => {
+    const single = { ...partial, values: [partial.values[0]] };
+    expect(isActionEvSetUsable(single, offered, DISPLAYABLE_ACTION_EV_SOURCES)).toBe(false);
+  });
+
+  it("akci, kterou uzel nenabízí, nepustí ani v neúplné sadě", () => {
+    const foreign = {
+      ...partial,
+      values: [...partial.values, { action: "FOLD" as never, evBb: 0 }],
+    };
+    expect(isActionEvSetUsable(foreign, offered, DISPLAYABLE_ACTION_EV_SOURCES)).toBe(false);
+  });
+
+  it("nepovolený zdroj neprojde ani neúplný", () => {
+    expect(isActionEvSetUsable(partial, offered, ["SOLVER"])).toBe(false);
+  });
+});
 
 describe("action EV", () => {
   it("keeps every action value and recognizes equivalent best actions", () => {

@@ -146,10 +146,25 @@ function actionEvsFor(
   const rows = riverActionEvRows(pack, table, ruleIndex, input.heroCards, input.potBB);
   if (rows === undefined) return undefined;
 
-  // Neúplnou sadu nemá smysl skládat: hráč by u některých akcí viděl číslo a u
-  // jiných ne, a rozdíl by vypadal jako vlastnost akce, ne jako mezera v datech.
+  // Neúplná sada se vydá taky, a je to vědomá změna proti původnímu pravidlu.
+  //
+  // Původně se při chybějící akci nevydalo nic, aby hráč neviděl číslo u jedné
+  // akce a prázdno u druhé. Jenže **změřeno: EV se pak ukázala jen ve 20 % z 300
+  // riverových spotů**, a největší díl chyběl proto, že trenažér nabízí akce,
+  // které solve neobsahuje - typicky zvýšení tam, kde solver žádnou větev se
+  // zvýšením nepočítal. Zatajit kvůli tomu i hodnoty, které máme, je horší.
+  //
+  // Podmínkou je, že chybějící hodnotu **pojmenuje UI**. Prázdno vedle čísel se
+  // čte jako „tahle akce nemá cenu", a to je nepravda jiného druhu.
   const byAction = new Map(rows.map((row) => [row.action, row.evBB]));
-  if (offered.some((action) => !byAction.has(action))) return undefined;
+  // Bez odstranění duplicit se sada rozsype na validaci. `offered` jsou
+  // **přeložené solverovy akce**, a překlad slévá: dvě velikosti sázky pod
+  // polovinou potu dají dvakrát `BET_SMALL`. Změřeno: takhle padlo 104 z 300
+  // riverových spotů s hláškou „action BET_BIG is duplicated" - tedy víc, než
+  // kolik jich EV vůbec dostalo.
+  const covered = [...new Set(offered.filter((action) => byAction.has(action)))];
+  // Jedna hodnota nedokáže nic seřadit; pod dvěma není co ukazovat.
+  if (covered.length < 2) return undefined;
 
   const potBB = pack.rules[ruleIndex].spot?.potBB ?? input.potBB;
   const equivalent = Math.max(EV_EQUIVALENT_FLOOR_BB, potBB * EV_EQUIVALENT_POT_SHARE);
@@ -168,7 +183,7 @@ function actionEvsFor(
       // obě strany hrají zapsanou strategii, ne solverova counterfactual value.
       source: "SOLVED_TREE",
       unit: "BB",
-      values: offered.map((action) => ({ action, evBb: byAction.get(action)! })),
+      values: covered.map((action) => ({ action, evBb: byAction.get(action)! })),
       equivalentThresholdBb: equivalent,
       acceptableThresholdBb: equivalent * 3,
     },

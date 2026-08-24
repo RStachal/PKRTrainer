@@ -82,17 +82,24 @@ describe("action EV button bubbles", () => {
     ))).toEqual(["100", "100", "100"]);
   });
 
-  it("zustane fail-closed pri neuplnem EV setu", () => {
+  it("zustane fail-closed pri vadnem EV setu", () => {
+    // Neúplná sada se od 24. 8. 2026 **zobrazuje** - chybějící akci pojmenuje
+    // vlastní bublina, viz test níž. Fail-closed zůstává pro sadu, která tvrdí
+    // nesmysl: duplicitní akce vzniká slitím dvou velikostí sázky při překladu
+    // a padlo na ní 104 z 300 riverových spotů.
     const buttons = actionEvs.values.map(({ action }) => {
       const button = document.createElement("button");
       button.dataset.action = action;
       setActionEvButtonContent(button, action);
       return button;
     });
-    const incomplete = { ...actionEvs, values: actionEvs.values.slice(1) };
+    const broken = {
+      ...actionEvs,
+      values: [...actionEvs.values, { action: "CALL" as TestAction, evBb: 9 }],
+    };
     const evaluation = evaluateActionEv(actionEvs, "CALL");
 
-    expect(revealActionEvButtonBubbles(buttons, incomplete, evaluation ?? undefined)).toBe(0);
+    expect(revealActionEvButtonBubbles(buttons, broken, evaluation ?? undefined)).toBe(0);
     expect(buttons.every((button) => button.dataset.evAvailable === "false")).toBe(true);
     expect(buttons.every((button) => (
       button.querySelector<HTMLElement>(".action-ev-bubble")?.hidden === true
@@ -120,6 +127,39 @@ describe("action EV button bubbles", () => {
       expect(revealActionEvButtonBubbles(buttons, set, evaluation ?? undefined), source).toBe(3);
       expect(buttons.every((button) => button.dataset.evAvailable === "true"), source).toBe(true);
     }
+  });
+
+  it("akci, kterou solve nepočítal, pojmenuje místo aby ji nechala prázdnou", () => {
+    // Prázdné místo vedle čísel se čte jako „tahle akce nemá cenu", a to je
+    // nepravda jiného druhu než chybějící údaj. Solve nemusí obsahovat akci,
+    // kterou trenažér nabízí - typicky zvýšení tam, kde solver žádnou větev se
+    // zvýšením nepočítal.
+    const partial: ActionEvSet<TestAction> = {
+      ...actionEvs,
+      source: "SOLVED_TREE",
+      values: actionEvs.values.filter((item) => item.action !== "3BET"),
+    };
+    const buttons = actionEvs.values.map(({ action }) => {
+      const button = document.createElement("button");
+      button.dataset.action = action;
+      setActionEvButtonContent(button, action);
+      return button;
+    });
+    const evaluation = evaluateActionEv(partial, "CALL");
+    // Vrací se počet akcí s hodnotou, ne počet tlačítek.
+    expect(revealActionEvButtonBubbles(buttons, partial, evaluation ?? undefined)).toBe(2);
+
+    const missing = buttons.find((button) => button.dataset.action === "3BET")!;
+    expect(missing.dataset.evAvailable).toBe("unsolved");
+    const bubble = missing.querySelector<HTMLElement>(".action-ev-bubble")!;
+    expect(bubble.hidden, "chybějící hodnota musí být vidět, ne schovaná").toBe(false);
+    expect(bubble.textContent).toContain("nespočítána");
+    expect(bubble.dataset.evUnsolved).toBe("true");
+    // A nesmí předstírat číslo.
+    expect(bubble.dataset.evBb).toBeUndefined();
+
+    const known = buttons.find((button) => button.dataset.action === "CALL")!;
+    expect(known.dataset.evAvailable).toBe("true");
   });
 
   it("formatuje kladne, zaporne i nulove BB hodnoty stabilne", () => {

@@ -122,6 +122,33 @@ export function isActionEvSetComplete<Action extends string>(
   return set !== undefined && validateActionEvSet(set, legalActions, allowedSources).length === 0;
 }
 
+/**
+ * Je sada použitelná k zobrazení, i když nepokrývá všechny nabízené akce?
+ *
+ * Úplnost je správný požadavek na import packu a **špatný na zobrazení.**
+ * Změřeno 23. 8. 2026 na 300 riverových spotech: EV se ukázala jen ve 20 %, a
+ * největší díl chyběl proto, že trenažér nabízí akce, které solve neobsahuje -
+ * typicky zvýšení na uzlu, kde solver žádnou větev se zvýšením nepočítal. Trvat
+ * na úplnosti tam znamená zatajit i ta čísla, která **máme**.
+ *
+ * Co se nesmí ztratit: hráč musí u akce bez hodnoty vidět, že hodnota chybí, ne
+ * prázdné místo. Prázdno vedle čísel se čte jako „tahle akce nemá cenu", a to je
+ * nepravda jiného druhu.
+ */
+export function isActionEvSetUsable<Action extends string>(
+  set: ActionEvSet<Action> | undefined,
+  legalActions: readonly Action[],
+  allowedSources: readonly ActionEvSource[] = ["SOLVER"],
+): set is ActionEvSet<Action> {
+  if (set === undefined) return false;
+  const errors = validateActionEvSet(set, legalActions, allowedSources)
+    // Jediná uvolněná podmínka je úplnost. Cizí akce, duplicita, nekonečno ani
+    // nepovolený zdroj neprojdou dál - sada, která tvrdí nesmysl, se nezobrazí.
+    .filter((error) => !/is missing an EV$/.test(error));
+  // Jedna hodnota nedokáže nic seřadit, takže není co ukazovat.
+  return errors.length === 0 && set.values.length >= 2;
+}
+
 export function validateActionEvSet<Action extends string>(
   set: ActionEvSet<Action>,
   legalActions: readonly Action[],

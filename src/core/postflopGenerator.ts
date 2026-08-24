@@ -12,7 +12,7 @@ import {
   cloneActionEvSet,
   highestEvAction,
   DISPLAYABLE_ACTION_EV_SOURCES,
-  isActionEvSetComplete,
+  isActionEvSetUsable,
 } from "./actionEv";
 
 export type PostflopStreet = "FLOP" | "TURN" | "RIVER";
@@ -635,7 +635,7 @@ export function generatePostflopSpot(config: PostflopConfig): PostflopSpot {
   const recommendation = validResolvedRecommendation ?? fallbackRecommendation;
   // Doporučení může nést EV dopočítanou za běhu z vyřešeného stromu, ne jen
   // prověřený export z packu; zobrazovací seznam obojí pustí, import ne.
-  const actionEvs = isActionEvSetComplete(
+  const actionEvs = isActionEvSetUsable(
     recommendation.actionEvs, actions, DISPLAYABLE_ACTION_EV_SOURCES,
   )
     ? cloneActionEvSet(recommendation.actionEvs)
