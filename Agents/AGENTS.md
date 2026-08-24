@@ -27,17 +27,27 @@ to neměřil a **bylo to špatně** - dosah je rozložený rovnoměrně, první 
 nese přesně 50 %. Doporučení postavené na tom by znamenalo postavit mechaniku,
 která nic nepřinese.
 
-### 2. Jedna definice hotového, jeden příkaz
+### 2. Jedna definice hotového, jeden příkaz: `npm run verify:block`
 
-Blok je hotový, když projde **celý release řetěz**, ne když projdou testy.
+Blok je hotový, když projde **celý ověřovací řetěz**, ne když projdou testy.
+Dokud neprojde, blok se nehlásí jako hotový - ani „hotovo, ale ještě ověřím".
 
-`release:check` dlouho neobsahoval E2E, takže „hotovo" bylo neúplné už z
-podstaty: testy prošly, ohlásilo se dokončení a teprve balíčkování spustilo
-Chrome a našlo, že stránka na mobilu 360 px přetéká o 39 px. To není smůla, to
-je chybějící brána.
+Ten řetěz je `verify:block`: typecheck, testy, `verify:ranges`, build,
+`verify:precache`, rozpočty a **Chrome E2E**. E2E tam patří proto, že dřív
+běželo až uvnitř balíčkování, takže se mobilní přetečení o 39 px na 360 px
+displeji našlo teprve při čtvrtém pokusu o ZIP. To nebyla smůla, to byla
+chybějící brána.
 
-**Co z toho plyne:** dokud řetěz neprojde, blok není hotový a nehlásí se jako
-hotový. Ani „hotovo, ale ještě ověřím".
+**`release:check` to není a nesmí se s tím zaměnit.** Měřeno 24. 8. 2026:
+padá na třech branách, které s kódem nesouvisí - „MTT completion production
+gate" (6 zablokovaných řádků, knihovna je 4/64), „MTT postflop final release
+gate" a „Android WebView preflight" (není připojené zařízení). První dvě měří
+úplnost knihovny, která čeká na data od majitele, takže `release:check`
+**v tomhle stavu projít nemůže** a jako denní brána je nepoužitelný.
+
+Mimochodem: tohle pravidlo tu nejdřív stálo s `release:check` a bylo tím
+porušením pravidla 1 - napsal jsem jako fakt něco, co jsem neověřil. Opraveno
+až poté, co to spadlo.
 
 ### 3. Jedno hlášení na blok, ne na nález
 

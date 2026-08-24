@@ -1,6 +1,6 @@
 {
-  "name": "PKR Trainer",
-  "short_name": "PKR Trainer",
+  "name": "DrillEV",
+  "short_name": "DrillEV",
   "description": "Offline trenažér pokerových rozhodnutí pro turnajovou hru.",
   "lang": "cs",
   "start_url": "./",

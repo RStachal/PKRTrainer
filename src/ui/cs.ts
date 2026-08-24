@@ -1,7 +1,7 @@
 /** Czech source strings used only for explanatory copy in CZ mode. */
 const CZ_CATALOG = {
   app: {
-    title: "PKR Trainer",
+    title: "DrillEV",
     subtitle: "Trenažér pokerových rozhodnutí pro turnajovou hru.",
     primarySections: "Hlavní sekce",
     tabs: {
@@ -317,7 +317,7 @@ export const APP_LANGUAGE_STORAGE_KEY = "pkrtrainer.ui.language.v1";
 
 const EN_CATALOG: UiCatalog = {
   app: {
-    title: "PKR Trainer",
+    title: "DrillEV",
     subtitle: "Poker decision trainer for tournament play.",
     primarySections: "Primary sections",
     tabs: {
