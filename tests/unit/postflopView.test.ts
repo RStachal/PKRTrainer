@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { renderPostflopView } from "../../src/ui/postflopView";
+import { solvedStrategySource } from "../../src/data/ranges/solvedStrategySource";
 import { loadSolvedRiverPacks } from "../../src/data/ranges/riverSolvedStrategyPacks";
 import { loadSolvedFlopPacks } from "../../src/data/ranges/flopSolvedStrategyPacks";
 import { loadAllSolvedTurnPacks } from "../../src/data/ranges/turnSolvedStrategyPacks";
@@ -1330,14 +1331,21 @@ describe("postflopView - DOM", () => {
             { action: "BET_SMALL", evBb: 1.1 },
           ],
         },
-        source: {
-          kind: "STRATEGY_PACK",
-          provenance: "SOLVER_BACKED",
+        // Úplný zdroj přes tutéž funkci, jakou používají resolvery. Dřív tu
+        // stálo šest polí protlačených přes `as never` - tedy obcházení
+        // kontraktu, který vyžaduje šestnáct, a renderer na tom padal. Test,
+        // který si vyrobí nemožný stav, hlásí vadu, která v produktu není.
+        source: solvedStrategySource({
           packId: "test-pack",
           packVersion: "v1",
           packVerifiedAt: "2026-08-24",
+          confidence: "MEDIUM",
+          assumptions: [],
+          positionPattern: "SRP_BTN_VS_BB",
           ruleId: "test",
-        },
+          potBB: 20,
+          stackBehindBB: 40,
+        }),
       }) as never,
     });
     root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
@@ -1362,7 +1370,11 @@ describe("postflopView - DOM", () => {
     expect(unsolvedAction!.dataset.evAvailable).toBe("unsolved");
   });
 
-  it("vyřešený spot vykreslí celé vysvětlení, ne jen půlku", async () => {
+  // Vlastní strop: tenhle jediný test načítá **všechny tři sady packů** (48
+  // flopových rodin, 32 turnových, 17 riverových) a to je jeho podstata, ne
+  // režie - bez načteného obsahu by vyřešený resolver neodpověděl a test by
+  // ověřoval heuristiku. Globálních 20 s na to nestačí.
+  it("vyřešený spot vykreslí celé vysvětlení, ne jen půlku", { timeout: 90_000 }, async () => {
     // Tohle byla nejzávažnější vada téhle relace a **byla latentní**: všechny tři
     // vyřešené resolvery skládaly zdroj ze šesti polí a protlačily ho přes
     // `as PostflopRecommendation`, ačkoli kontrakt jich chce šestnáct.
