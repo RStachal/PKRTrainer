@@ -663,3 +663,59 @@ describe("mttProductionReadiness", () => {
     expect(invalidFlopProductionPacks).toEqual([]);
   });
 });
+
+/**
+ * Co řádek knihovny říká o postflopu.
+ *
+ * Řádky sledují `*ProductionStrategyPack`, takže **97 vyřešených rodin je jim
+ * neviditelných** - a řádek u nich tvrdil, že trénink jede na heuristice. To
+ * přestalo platit ve chvíli, kdy trenažér začal rozdávat z katalogu vyřešených
+ * spotů: měřeno 100 % odpovědí podložených solverem na všech třech ulicích.
+ *
+ * Podcenit, co produkt umí, je nepravda stejného druhu jako nadsazení - jen
+ * opačným směrem. A rozhoduje se podle ní o tom, co se bude solvit dál.
+ */
+describe("postflopový řádek knihovny přizná vyřešený obsah", () => {
+  // Počty se vkládají, ne čtou z dodávaných manifestů. Test tím měří chování
+  // modulu, ne to, kolik rodin zrovna existuje - a nespadne, až jich noc přidá.
+  const counts = {
+    "FULL_RING_9|REGULAR|CHIP_EV|FLOP": 48,
+    "FULL_RING_9|REGULAR|CHIP_EV|TURN": 32,
+    "FULL_RING_9|REGULAR|CHIP_EV|RIVER": 17,
+  };
+  const rows = buildMttCompletionReadinessReport({ solvedFamilyCounts: counts })
+    .rows.filter((row) => (
+      row.tableFormat === "FULL_RING_9" && row.evModel === "CHIP_EV" && row.street !== "PREFLOP"
+    ));
+
+  it("řekne, kolik vyřešených rodin na profil odpovídá", () => {
+    const flop = rows.find((row) => row.street === "FLOP")!;
+    const reasons = flop.missingReasons.join(" ");
+    expect(reasons).toMatch(/\d+ solved families answer this profile/);
+    // A nesmí u toho tvrdit, že se jede na heuristice.
+    expect(reasons).not.toContain("currently uses public heuristic");
+  });
+
+  it("přesto zůstane kandidátem, ne produkcí", () => {
+    // Vyřešená rodina odpovídá jen na desky, na kterých vznikla. Prohlásit kvůli
+    // ní profil za pokrytý by bylo přehnané tvrzení - a brána by pak pustila do
+    // produkce něco, co na většině desek mlčí.
+    for (const row of rows) {
+      expect(row.status, `${row.street}`).toBe("CANDIDATE");
+      expect(row.productionReady, `${row.street}`).toBe(false);
+      // Tahle věta musí zaznít u každého postflopového řádku bez ohledu na to,
+      // jestli k profilu vyřešený obsah existuje. Turbo profily ho nemají.
+      expect(row.missingReasons.join(" "), `${row.street} ${row.blindSpeed}`)
+        .toContain("Dedicated production StrategyPack coverage is required");
+    }
+  });
+
+  it("u profilu bez vyřešeného obsahu mluví dál o heuristice", () => {
+    // Six-max vyřešené rodiny nemá, takže tam ta věta platí a musí zůstat.
+    const sixMax = buildMttCompletionReadinessReport({ solvedFamilyCounts: counts })
+      .rows.find((row) => (
+      row.tableFormat === "SIX_MAX" && row.evModel === "CHIP_EV" && row.street === "FLOP"
+    ));
+    expect(sixMax?.missingReasons.join(" ")).toContain("public heuristic");
+  });
+});

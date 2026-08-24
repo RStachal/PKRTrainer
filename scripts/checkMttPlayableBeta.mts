@@ -6,6 +6,20 @@ import { MTT_POSTFLOP_PILOT_CATALOG } from "../src/data/ranges/mttPostflopPilotC
 import { generatedMttPostflopPilotPacks } from "../src/data/ranges/mttPostflopPilotPacks.generated.ts";
 import { allMttPreflopRangePacks } from "../src/data/ranges/mttPreflopRangePacks.ts";
 import { buildMttCompletionReadinessReport } from "../src/data/ranges/mttProductionReadiness.ts";
+import { solvedFlopManifest } from "../src/data/ranges/flopSolvedManifest.generated.ts";
+import { solvedTurnManifest } from "../src/data/ranges/turnSolvedManifest.generated.ts";
+import { solvedRiverManifest } from "../src/data/ranges/riverSolvedManifest.generated.ts";
+
+/** Kolik vyřešených rodin odpovídá na který profil, podle manifestů. */
+function solvedFamilyCountsByProfile(): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const manifest of [solvedFlopManifest, solvedTurnManifest, solvedRiverManifest]) {
+    for (const entry of manifest) {
+      counts[entry.profileKey] = (counts[entry.profileKey] ?? 0) + 1;
+    }
+  }
+  return counts;
+}
 import type { MttCoreReleaseReport } from "./checkMttCoreRelease.mts";
 import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
 import { solvedTurnManifest } from "../src/data/ranges/turnSolvedManifest.generated.ts";
@@ -194,7 +208,12 @@ interface CliArgs {
 export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaReport> {
   const core = runCoreReleaseReport();
   await loadCompleteMttProductionRegistry();
-  const readiness = buildMttCompletionReadinessReport();
+  // Počty vyřešených rodin dodává brána, ne modul: import manifestů přímo v
+  // `mttProductionReadiness` nafoukl líný chunk přes strop 512 KiB. Skript se
+  // nebalí, takže je číst může.
+  const readiness = buildMttCompletionReadinessReport({
+    solvedFamilyCounts: solvedFamilyCountsByProfile(),
+  });
   const rowsByKey = new Map(readiness.rows.map((row) => [profileKey(row), row]));
   const targetRows = TARGET_PREFLOP_PROFILE_KEYS.map((key) => ({ key, row: rowsByKey.get(key) }));
   const missingTargetRows = targetRows.filter(({ row }) => row === undefined).map(({ key }) => key);
