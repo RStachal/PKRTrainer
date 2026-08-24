@@ -307,6 +307,14 @@ function withPreset(doc: Document, preset: HTMLElement, bulk: HTMLElement): HTML
   row.style.display = "flex";
   row.style.alignItems = "center";
   row.style.gap = "6px";
+  // Zalomit, když se to vedle sebe nevejde. Bez tohohle přetékala **celá
+  // stránka o 39 px** na mobilu 360 px: rozbalovátko předvolby a tři hromadné
+  // přepínače se do řádku nevejdou a `flex` je bez tohohle nezalomí, takže
+  // roztáhnou rodiče. Chytila to až E2E kontrola přetečení, ne oko.
+  row.style.flexWrap = "wrap";
+  // A samotné rozbalovátko se musí umět zúžit; `select` má vlastní vnitřní
+  // šířku, kterou by jinak vnutil řádku.
+  row.style.minWidth = "0";
   row.appendChild(preset);
   row.appendChild(bulk);
   return row;

@@ -1804,7 +1804,7 @@ body{margin:0;background:
 .profile-selector__note--missing{background:rgba(226,59,59,.08);border-color:rgba(226,59,59,.28);}
 .filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .filter-section-title{color:#f8fbff;}
-.filter-bulk{display:inline-flex;gap:5px;margin-left:0!important;}
+.filter-bulk{display:inline-flex;gap:5px;margin-left:0!important;flex-wrap:wrap;}
 .filter-bulk-all,.filter-bulk-none{appearance:none;border:1px solid rgba(148,163,184,.22);
   border-radius:8px;background:linear-gradient(180deg,#2a3448,#182235);color:#e8ecf7;
   font-size:12px;font-weight:850;padding:5px 9px;cursor:pointer;}
