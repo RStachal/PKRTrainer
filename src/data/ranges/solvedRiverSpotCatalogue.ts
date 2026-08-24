@@ -10,6 +10,8 @@ import type { RiverStrategyRule } from "./riverStrategyRuleBuilder";
 import { actionNodeForSolvedHero } from "./solvedHeroActionNode";
 import { heroCardsFromClasses } from "./solvedTurnSpotCatalogue";
 import { positionContextForSolvedSeats } from "./solvedSpotSeating";
+import { readyRiverEvPack } from "./riverEvRuntime";
+import { decodeComboMask } from "../../core/evCodec";
 
 /**
  * Vyřešené rivery, nabídnuté jako něco, co jde rozdat.
@@ -42,6 +44,9 @@ export interface SolvedRiverSpot {
   /** Jak často se sem hra dostane, 0 až 1. */
   reach: number;
   sourceDirectory: string;
+  /** Pack a pořadí pravidla, ze kterého spot je. Kvůli dohledání kombinací. */
+  packId: string;
+  ruleIndex: number;
   heroSeat: string;
   villainSeat: string;
   heroIsAggressor: boolean;
@@ -63,7 +68,7 @@ function card(text: string): Card | undefined {
 export function solvedRiverSpots(): readonly SolvedRiverSpot[] {
   const spots: SolvedRiverSpot[] = [];
   for (const pack of runtimeSolvedRiverPacks) {
-    for (const rule of pack.rules as readonly RiverStrategyRule[]) {
+    for (const [ruleIndex, rule] of (pack.rules as readonly RiverStrategyRule[]).entries()) {
       const solved = rule.spot;
       const hero = solved?.hero;
       if (solved === undefined || hero === undefined || solved.potBB === undefined) continue;
@@ -91,6 +96,8 @@ export function solvedRiverSpots(): readonly SolvedRiverSpot[] {
         heroHandClasses,
         reach: solved.reach,
         sourceDirectory: rule.sourceDirectory,
+        packId: pack.id,
+        ruleIndex,
         heroSeat: hero.seat,
         villainSeat: hero.villainSeat,
         heroIsAggressor: hero.isAggressor,
@@ -140,7 +147,75 @@ export function solvedRiverHeroCards(
   spot: SolvedRiverSpot,
   random = 0.5,
 ): [Card, Card] | undefined {
+  // Napřed kombinace, které do uzlu doopravdy došly, teprve pak třídy.
+  //
+  // Losovat podle třídy je **tatáž vada, jakou popisuje turnový katalog o
+  // úroveň výš**, jen přežila o patro níž: uvnitř jedné třídy se linky liší
+  // podle blokerů, takže `AQo` s pikovým esem může dorovnat a `AQo` bez něj
+  // složit. Rozdat tu druhou znamená ptát se na ruku, se kterou by hrdina na
+  // river nedošel - a odpověď se pak vydá podle kbelíku třídy, tedy s cedulkou
+  // od solveru za holding, který solve na tomhle uzlu nemodeloval.
+  //
+  // Změřeno 24. 8. 2026: **43 z 300 rozdaných riverových spotů** dostalo
+  // kombinaci, kterou uzel nedrží.
+  // Průnik dvou podmínek, ne jen jedna. Kombinace musí do uzlu dojít **a**
+  // zároveň patřit do třídy, které pravidlo přiřadilo akci. Bez té druhé
+  // podmínky ubyly čtyři spoty z tří set na heuristiku: kombinace do uzlu
+  // došla, ale její třída nemá kbelík, takže resolver neměl co vydat.
+  const classes = new Set(spot.heroHandClasses);
+  const reaching = (reachingCombos(spot) ?? [])
+    .filter((combo) => classes.has(handClassOfCombo(combo)));
+  if (reaching.length > 0) {
+    const combo = reaching[Math.min(Math.floor(random * reaching.length), reaching.length - 1)];
+    const cards = comboToCards(combo);
+    if (cards !== undefined) return cards;
+  }
   return heroCardsFromClasses(spot.heroHandClasses, spot.board, random);
+}
+
+const CLASS_RANKS = "23456789TJQKA";
+
+/** `"AhKh"` na třídu `"AKs"`, jak ji pojmenovávají kbelíky pravidla. */
+function handClassOfCombo(combo: string): string {
+  const first = combo[0].toUpperCase();
+  const second = combo[2].toUpperCase();
+  if (first === second) return `${first}${second}`;
+  const suited = combo[1].toLowerCase() === combo[3].toLowerCase();
+  const [high, low] = CLASS_RANKS.indexOf(first) > CLASS_RANKS.indexOf(second)
+    ? [first, second]
+    : [second, first];
+  return `${high}${low}${suited ? "s" : "o"}`;
+}
+
+/** `"AhKh"` na dvě karty. */
+function comboToCards(combo: string): [Card, Card] | undefined {
+  if (combo.length !== 4) return undefined;
+  const first = card(combo.slice(0, 2));
+  const second = card(combo.slice(2, 4));
+  return first === undefined || second === undefined ? undefined : [first, second];
+}
+
+/**
+ * Kombinace, které do uzlu došly, když je tabulka EV zrovna načtená.
+ *
+ * Bere se z ní, protože **nese přesně tu množinu** - vzniká z rangí zúžených
+ * linkou, takže kombinace, která se cestou složila, v ní není. Pack sám ji
+ * nenese: kbelíky jsou po třídách.
+ *
+ * Když tabulka ještě nedorazila, vrací se `undefined` a losuje se po třídách
+ * jako dřív. Je to horší, ale ne špatné - a čekat na půl megabajtu uprostřed
+ * rozdání by bylo horší než to.
+ */
+function reachingCombos(spot: SolvedRiverSpot): readonly string[] | undefined {
+  const table = readyRiverEvPack(spot.packId);
+  const row = table?.rules[spot.ruleIndex];
+  if (table === undefined || row === null || row === undefined) return undefined;
+  const combos: string[] = [];
+  for (const index of decodeComboMask(row.m, table.combos.length)) {
+    const combo = table.combos[index];
+    if (combo !== undefined) combos.push(combo);
+  }
+  return combos;
 }
 
 /**

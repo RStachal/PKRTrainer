@@ -12,6 +12,10 @@ import {
 } from "../../src/data/ranges/solvedRiverSpotCatalogue";
 import { POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS } from "../../src/core/postflopGenerator";
 import { mulberry32 } from "../../src/core/rng";
+import { loadRiverEvPack, readyRiverEvPack } from "../../src/data/ranges/riverEvRuntime";
+import { runtimeSolvedRiverPacks } from "../../src/data/ranges/riverSolvedRuntimeRegistry";
+import { decodeComboMask } from "../../src/core/evCodec";
+import { postflopHandClassFromCards } from "../../src/ui/postflopRangeMatrixView";
 import { loadSolvedRiverPacks } from "../../src/data/ranges/riverSolvedStrategyPacks";
 
 /**
@@ -137,5 +141,40 @@ describe("katalog vyřešených riverů", () => {
         `${spot.sourceDirectory}: iniciativa nesedí`,
       ).toBe(spot.heroIsAggressor);
     }
+  });
+
+  it("rozdá kombinaci, která do uzlu doopravdy došla", async () => {
+    // Losovat kombinaci podle třídy je tatáž vada, jakou popisuje turnový
+    // katalog o úroveň výš, jen o patro níž: uvnitř třídy se linky liší podle
+    // blokerů, takže `AQo` s pikovým esem může dorovnat a `AQo` bez něj složit.
+    // Rozdat tu druhou znamená ptát se na ruku, se kterou by hrdina na river
+    // nedošel - a odpověď se pak vydá podle kbelíku třídy, s cedulkou od
+    // solveru za holding, který solve nemodeloval. Změřeno: 43 z 300 spotů.
+    for (const pack of runtimeSolvedRiverPacks) await loadRiverEvPack(pack);
+    const spots = solvedRiverSpots();
+    let checked = 0;
+    for (let seed = 1; seed <= 40; seed += 1) {
+      const rng = mulberry32(seed);
+      rng();
+      const spot = pickSolvedRiverSpot(rng(), spots)!;
+      const table = readyRiverEvPack(spot.packId);
+      const row = table?.rules[spot.ruleIndex];
+      if (table === undefined || row === null || row === undefined) continue;
+      const cards = solvedRiverHeroCards(spot, rng());
+      expect(cards, spot.sourceDirectory).toBeDefined();
+      const combos = new Set(
+        decodeComboMask(row.m, table.combos.length).map((index) => table.combos[index]),
+      );
+      const [a, b] = cards!.map((card) => `${card.rank}${card.suit}`);
+      expect(
+        combos.has(`${a}${b}`) || combos.has(`${b}${a}`),
+        `${spot.sourceDirectory}: ${a}${b} do uzlu nedošla`,
+      ).toBe(true);
+      // A zároveň musí patřit do třídy, které pravidlo přiřadilo akci - jinak
+      // resolver nemá co vydat a spot spadne na heuristiku.
+      expect(spot.heroHandClasses).toContain(postflopHandClassFromCards(cards!));
+      checked += 1;
+    }
+    expect(checked, "žádný spot neměl načtenou tabulku EV").toBeGreaterThan(0);
   });
 });
