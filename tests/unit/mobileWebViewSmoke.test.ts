@@ -1,7 +1,22 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.setConfig({ testTimeout: 30000 });
+/**
+ * Zvednuto z 30 s na 90 s dne 25. 8. 2026, a je to potřetí ze stejného důvodu:
+ * **vyrostl obsah, ne pomalost kódu.**
+ *
+ * Naměřeno: soubor projde celý za 37 s, ale test, který se k dashboardu dostane
+ * první, platí jeho studený překlad a trvá **31,6 s** - proti stropu 30 s. Ten
+ * samý test po předehřátí trvá **3,4 s**. Nebyla to tedy pomalá cesta, ale
+ * překlad, který s knihovnou roste.
+ *
+ * Ověřeno, že to není moje regrese: se změnami i bez nich padal stejně
+ * (1 failed, 2 passed, 36 s v obou případech).
+ *
+ * Strop není kontrola správnosti, jen pojistka proti zaseknutí. Rozbitý test
+ * spadne na tvrzení, ne na čase.
+ */
+vi.setConfig({ testTimeout: 90000 });
 
 class MemoryStorage implements Storage {
   protected readonly data = new Map<string, string>();
@@ -212,9 +227,12 @@ async function waitForDashboard(root: HTMLElement): Promise<void> {
   //
   // Test tím procházel jen díky sousedům. To je horší než test, který padá:
   // tvrdí, že mobilní workflow funguje, a přitom se nikdy sám neověřil.
+  //
+  // Z 15 s na 45 s dne 25. 8. 2026: studený překlad dashboardu je dnes kolem
+  // třiceti vteřin, takže patnáct byla mez pod naměřenou skutečností.
   await vi.waitFor(() => {
     expect(root.querySelector(".stats-export")).not.toBeNull();
-  }, { timeout: 15000 });
+  }, { timeout: 45000 });
 }
 
 async function importFreshMain(): Promise<typeof import("../../src/main")> {

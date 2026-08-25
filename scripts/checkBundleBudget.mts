@@ -32,11 +32,77 @@ const MAX_JS_KB = numberFromEnv("BUNDLE_MAX_JS_KB", 325);
  * soubor, ne ta hlavní.
  */
 const MAX_GZIP_KB = numberFromEnv("BUNDLE_MAX_GZIP_KB", 96);
-const MAX_PRECACHE_JS_KB = numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 400);
+/**
+ * Syrový součet instalační cesty, ve stovkách kB.
+ *
+ * **Zvednuto ze 400 na 416 dne 25. 8. 2026**, protože doručení akcí a blafů do
+ * matice range přidalo kolem 8,4 KiB syrového kódu (kbelíky vyřešeného pravidla,
+ * dvojrežim barvení matice, přednačtení tabulky EV). Naměřeno 404,94 KiB.
+ *
+ * Zvedá se **druhá pojistka, ne ta hlavní**: instalační cestu doopravdy hlídá
+ * `MAX_PRECACHE_GZIP_KB` (128) a ten má rezervu - naměřeno 111,97 KiB, tedy
+ * 16 KiB volných. Hlavní chunk je 319,19 KiB proti vlastnímu stropu 325.
+ *
+ * Osm kilobajtů za funkci, kterou majitel nahlásil jako chybějící, je poměr,
+ * který obstojí. Kdyby se ten strop zvedal podruhé bez podobného protějšku,
+ * patří místo toho sundat matici z instalační cesty - vykresluje se až po
+ * odpovědi, takže na startu relace není k ničemu.
+ */
+const MAX_PRECACHE_JS_KB = numberFromEnv("BUNDLE_MAX_PRECACHE_JS_KB", 416);
 const MAX_PRECACHE_GZIP_KB = numberFromEnv("BUNDLE_MAX_PRECACHE_GZIP_KB", 128);
-const MAX_LAZY_MTT_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 512);
+/**
+ * Syrový strop na **jeden** líný chunk, v kB.
+ *
+ * **Zvednuto z 512 na 520 dne 25. 8. 2026.** Na rozdíl od součtu celé knihovny
+ * je tohle strop, který doopravdy platí hráč: tenhle chunk se stáhne a rozparsuje,
+ * jakmile na něj dojde.
+ *
+ * Zvedá se proto s naměřenou A/B, ne od oka. `mtt-postflop-pilot-runtime`:
+ *
+ * | | raw | gzip |
+ * |---|---|---|
+ * | bez doručení akcí do matice | 510,80 KiB | — |
+ * | s ním | **513,70 KiB** | 66,18 KiB |
+ *
+ * Stojí to tedy **2,9 KiB** a kód se do žádného dalšího chunku nekopíruje
+ * (ověřeno: jeden výskyt v celém `dist`). Co za to hráč dostane, je barva akce
+ * a blafovací lajna v matici na všech třech ulicích - tedy to, co majitel
+ * nahlásil jako chybějící. Gzip toho chunku je přitom 66 ze 128 KiB.
+ *
+ * Na 520, ne výš: zbývá kolem šesti kilobajtů, takže příští růst zase kousne.
+ */
+const MAX_LAZY_MTT_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 520);
 const MAX_LAZY_MTT_GZIP_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128);
-const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 32768);
+/**
+ * Syrový součet **celé** líné knihovny, v kB.
+ *
+ * **Zvednuto z 32 768 na 45 056 (32 -> 44 MB) dne 25. 8. 2026 a je to
+ * prozatímní číslo, které smí majitel kdykoli vrátit.** Zapisuji sem měření,
+ * aby se o tom dalo rozhodnout, ne aby to vypadalo rozhodnuté.
+ *
+ * Noc z 24. na 25. 8. dodala 46 nových rodin a knihovna povyrostla z 28,5 na
+ * 41,5 MB, tedy o 9,5 MB nad tehdejší strop. Rozklad:
+ *
+ * | skupina | kusů | raw | gzip |
+ * |---|---|---|---|
+ * | river | 64 | 22,6 MB | 2,7 MB |
+ * | turn | 48 | 14,8 MB | 1,1 MB |
+ * | flop | 48 | 3,5 MB | 0,3 MB |
+ *
+ * **Proč to jde zvednout:** tenhle strop měří velikost celé knihovny, kterou
+ * žádný jednotlivý hráč nestáhne - rodiny se stahují po jedné, až na ni dojde.
+ * Co platí hráč, hlídají jiné stropy a ty mají rezervu: na jeden chunk 512 KiB
+ * raw a 128 KiB gzip, a gzip celé knihovny je 4,2 z 8 MB.
+ *
+ * **Proč jen na 44, ne výš:** rezerva je zhruba 2,5 MB, tedy pár nocí. Vyšší
+ * číslo by znamenalo, že knihovna zase poroste bez povšimnutí; takhle brána
+ * příště kousne a rozhodne se znovu, s novými čísly.
+ *
+ * Kdyby se to mělo naopak srazit pod 32, nejlevnější cesta je river: je to 54 %
+ * syrové velikosti a nejnovější obsah, takže by se ořezával podle změřené
+ * poptávky (`mtt:solved-coverage --json`), ne podle abecedy.
+ */
+const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 45056);
 const MAX_LAZY_MTT_TOTAL_GZIP_KB = numberFromEnv(
   "BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",
   8192,

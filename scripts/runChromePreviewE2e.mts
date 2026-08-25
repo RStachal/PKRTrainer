@@ -4,13 +4,22 @@ import { resolve } from "node:path";
 
 const root = resolve(".");
 const nodeExecutable = process.execPath;
+/** Halda pro produkční build; drží se stejného čísla jako skript `build`. */
+const BUILD_HEAP_FLAG = "--max-old-space-size=8192";
 const viteCli = resolve("node_modules/vite/bin/vite.js");
 const viteNodeCli = resolve("scripts/run-cli.mjs");
 const previewPort = await findAvailablePort();
 let preview: ChildProcess | null = null;
 
 try {
-  runNode([viteCli, "build"], { NODE_ENV: "production" });
+  // `--max-old-space-size` musí být i tady, ne jen v npm skriptu `build`.
+  //
+  // Tenhle běh si staví vlastní produkční balík, takže výchozí čtyřgigabajtová
+  // halda ho potká stejně: naměřeno 25. 8. 2026, `vite build` spadl na
+  // „Ineffective mark-compacts near heap limit" a E2E se ani nespustilo.
+  // Opravit to jen v `package.json` by znamenalo, že brána projde jedním
+  // příkazem a spadne druhým na tomtéž.
+  runNode([BUILD_HEAP_FLAG, viteCli, "build"], { NODE_ENV: "production" });
   preview = spawn(nodeExecutable, [
     viteCli,
     "preview",

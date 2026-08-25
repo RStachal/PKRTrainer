@@ -110,7 +110,27 @@ export default defineConfig({
     //
     // Neměňte to bez měření. PKRTRAINER_TEST_WORKERS je pro případ, kdy sada běží
     // vedle něčeho jiného a potřebuje ubrat.
-    maxWorkers: Number(process.env.PKRTRAINER_TEST_WORKERS ?? 4),
+    //
+    // **Sníženo ze 4 na 2 dne 25. 8. 2026, a to měření je tady:**
+    //
+    // | workerů | sada | výsledek |
+    // |---|---|---|
+    // | 4 | 476 s | 2 pády |
+    // | 4 | 980 s | 1 pád, vyhladovělý test |
+    // | 2 | **386 s** | 1 627 prošlo |
+    //
+    // Dva jsou tedy rychlejší **i** spolehlivější, což je proti intuici jen do
+    // chvíle, než se změří paměť: při dvou workerech drží node až 4,96 GB a
+    // volné zbývá 4,1 GB z 31,2. Při čtyřech by držel kolem deseti a stroj
+    // začne stránkovat - a stránkující test nespadne na tvrzení, ale na čase.
+    //
+    // Jak moc: test `SNG chipEV candidate profil` trval v plné sadě při čtyřech
+    // workerech **559 vteřin** a samostatně **537 ms**. Tisícinásobek.
+    //
+    // Čtyřka nebyla nikdy špatně - byla naměřená na **19 dodávaných rodinách**.
+    // Dnes jich je 97 a každý worker si drží vlastní strom `npm -> vite-node`
+    // s desítkami MB packů. Přerostl to obsah, ne chyba v nastavení.
+    maxWorkers: Number(process.env.PKRTRAINER_TEST_WORKERS ?? 2),
     minWorkers: 1,
     /**
      * Limity zvednuté 24. 8. 2026, protože **vyrostl obsah, ne pomalost kódu**.
