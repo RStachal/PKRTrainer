@@ -53,3 +53,9 @@ pnpm-debug.log*
 # (npm run mtt:seat-pair-expansion), takže je nemá cenu verzovat - při plném
 # běhu jich je 522 a přegenerují se kdykoli.
 Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters/pkrtrainer_mtt_seat_pair_expansion_v1/
+
+# Bajtkód Pythonu. Byly verzované tři soubory, takže každé spuštění nočního
+# skriptu zašpinilo strom - a balení vyžaduje čistý strom, takže to opakovaně
+# blokovalo dodání.
+__pycache__/
+*.pyc
