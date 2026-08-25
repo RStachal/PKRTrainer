@@ -39,8 +39,7 @@ import {
   solvedRiverSpots,
   solvedRiversForTurnBoard,
 } from "../data/ranges/solvedRiverSpotCatalogue";
-import { runtimeSolvedRiverPacks } from "../data/ranges/riverSolvedRuntimeRegistry";
-import { loadRiverEvPack, readyRiverEvPack } from "../data/ranges/riverEvRuntime";
+import { primeRiverEvForPack } from "../data/ranges/riverEvPrefetch";
 import { mulberry32 } from "../core/rng";
 import { RANKS, SUITS } from "../core/poker";
 import { POSITION_ORDER, type Card, type Position, type Suit } from "../core/types";
@@ -1996,45 +1995,18 @@ function solvedRiverConfigForSeed(seed: number, actionNode: PostflopActionNode) 
 }
 
 /**
- * Jak dlouho se čeká na tabulku EV, než se rozdá i bez ní, v milisekundách.
- *
- * Čeká se **před** rozdáním, ne během odpovědi: v tu chvíli hráč ještě nekouká
- * na karty. Mez tu je proto, aby pomalé připojení nezmrazilo rozdání - odpověď
- * bez čísel je pořád odpověď, což je táž zásada jako v `actionEvsFor`.
- */
-const RIVER_EV_PREFETCH_MS = 2500;
-
-/**
  * Načíst tabulku EV rodiny, ze které se bude rozdávat, a teprve pak rozdat.
  *
- * ## Proč to musí být tady
- *
- * `actionEvsFor` se ptá `readyRiverEvPack` **uprostřed rozdání** a synchronně.
- * Když tabulka ještě nedorazila, vrátí nic a jen nastartuje stahování - takže
- * první spot z každé rodiny EV nikdy neukáže, i když je celá spočítaná.
- *
- * **Změřeno 25. 8. 2026:** studeně 0,0 % riverových spotů s EV, s načtenou
- * tabulkou 32,7 %. Tedy celá dodaná EV byla pro hráče neviditelná kvůli
- * načasování, ne kvůli chybějícím datům.
- *
- * Rozdání je tou správnou chvílí, protože je asynchronní už kvůli
- * `beforeGenerate` a hráč v ní ještě nic nečte.
+ * Vlastní práce bydlí v `riverEvPrefetch`, protože po ní sahá i
+ * `mtt:post-answer` - brána musí měřit tutéž cestu, kterou jde produkt.
+ * Kdyby to zůstalo tady, měřilo by se něco vedle.
  */
 function primeRiverEvForSeed(
   seed: number,
   actionNode: PostflopActionNode,
 ): Promise<unknown> | undefined {
   const picked = pickRiverSpotForSeed(seed, actionNode);
-  if (picked === undefined) return undefined;
-  const pack = runtimeSolvedRiverPacks.find((item) => item.id === picked.spot.packId);
-  if (pack === undefined) return undefined;
-  // Tabulka už je tady: čekat není na co a vracet splněný slib by stálo jeden
-  // mikrotask navíc, tedy přesně to, co dělá rozdání zbytečně asynchronní.
-  if (readyRiverEvPack(pack.id) !== undefined) return undefined;
-  return Promise.race([
-    loadRiverEvPack(pack).catch(() => undefined),
-    new Promise((resolve) => setTimeout(resolve, RIVER_EV_PREFETCH_MS)),
-  ]);
+  return picked === undefined ? undefined : primeRiverEvForPack(picked.spot.packId);
 }
 
 function solvedTurnConfigForSeed(seed: number, actionNode: PostflopActionNode) {

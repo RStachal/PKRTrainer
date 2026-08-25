@@ -15,11 +15,12 @@ Stav po opravě, změřeno `npm run mtt:post-answer`:
 |---|---|---|
 | tříd ze 169 s akcí (medián) | 0 | **50 / 40 / 34** (flop / turn / river) |
 | vysvětlení jmenuje blafy | 41 / 29 / 30 % | **71 / 78 / 70 %**, skutečnými třídami |
-| riverová EV doručuje | 3 packy, 896 pravidel | **16 packů, 4 643 pravidel** |
-| riverová EV u hráče | 0,0 % | **32,7 %** |
+| riverová EV doručuje | 3 packy, 896 pravidel | **17 packů, 4 906 pravidel** |
+| riverová EV u hráče | 0,0 % | **31,7 %** |
 
 Co zbývá a proč to nejde udělat potichu: **30 riverových rodin nemá tabulku EV
-vůbec.** Dopočet stojí ~12 MB proti **4,2 MB volným** v rozpočtu líného obsahu.
+vůbec.** Dopočet stojí ~12 MB, a v rozpočtu líného obsahu zbývá po zvednutí
+stropu na 44 MB zhruba **2,5 MB**.
 Je to tedy rozhodnutí o velikosti stahování - stejná otázka jako ve fázi 2, jen
 na riveru. Do rozhodnutí se nedopočítává.
 

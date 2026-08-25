@@ -8,7 +8,8 @@ import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPac
 import { loadSolvedFlopPacks } from "../src/data/ranges/flopSolvedStrategyPacks";
 import { loadSolvedRiverPacks, riverSolvedStrategyPacks } from "../src/data/ranges/riverSolvedStrategyPacks";
 import { riverEvManifest } from "../src/data/ranges/riverEvManifest.generated";
-import { loadRiverEvPack, readyRiverEvPack } from "../src/data/ranges/riverEvRuntime";
+import { loadRiverEvPack, readyRiverEvPack, resetRiverEvCache } from "../src/data/ranges/riverEvRuntime";
+import { primeRiverEvForPack } from "../src/data/ranges/riverEvPrefetch";
 import { mulberry32 } from "../src/core/rng";
 import {
   pickSolvedFlopSpot, solvedFlopSpotConfig, solvedFlopSpots,
@@ -80,12 +81,16 @@ const rows: Row[] = [];
 /**
  * Jedno kolo rozdávání nad jednou ulicí.
  *
- * Vytažené do funkce, aby šlo pustit dvakrát: jednou **studeně**, tak jak to
- * potká hráč u prvního spotu z rodiny, a jednou s **načtenými tabulkami EV**.
- * Rozdíl mezi těmi dvěma čísly je celá odpověď na otázku, jestli EV chybí,
- * nebo jestli jen nestihne dorazit.
+ * Vytažené do funkce, aby šlo pustit dvakrát: jednou **cestou produktu**, tedy
+ * s přednačtením tabulky EV, a jednou **bez něj**. Rozdíl mezi těmi dvěma čísly
+ * říká, co přednačtení kupuje - a tím pádem i to, o co by se přišlo, kdyby se
+ * rozbilo. Bez toho srovnání by regrese přednačtení vypadala jako chybějící
+ * obsah a hledalo by se v solveru.
  */
-function measureStreet(entry: (typeof CATALOGUES)[number]): Row {
+async function measureStreet(
+  entry: (typeof CATALOGUES)[number],
+  prefetch = true,
+): Promise<Row> {
   const available = entry.spots();
   const row: Row = {
     street: entry.street,
@@ -112,6 +117,16 @@ function measureStreet(entry: (typeof CATALOGUES)[number]): Row {
       chosen, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, rng(),
     );
     if (config === undefined) continue;
+
+    // Přednačtení tabulky EV, přesně jak to dělá trenažér před rozdáním.
+    //
+    // Bez tohohle by brána měřila cestu, kterou produkt od 25. 8. 2026 nejde -
+    // a to je tatáž vada, kvůli které vrstva doručení vznikla. Volá se sdílená
+    // funkce, ne kopie, aby se ty dvě cesty nemohly rozejít.
+    if (prefetch && entry.street === "RIVER") {
+      const packId = (chosen as { packId?: string }).packId;
+      if (packId !== undefined) await primeRiverEvForPack(packId);
+    }
 
     let generated;
     try {
@@ -166,7 +181,7 @@ function measureStreet(entry: (typeof CATALOGUES)[number]): Row {
   return row;
 }
 
-for (const entry of CATALOGUES) rows.push(measureStreet(entry));
+for (const entry of CATALOGUES) rows.push(await measureStreet(entry));
 
 function median(values: readonly number[]): number {
   if (values.length === 0) return 0;
@@ -365,32 +380,36 @@ if (!asJson) {
  * - **teplá >> studená** znamená, že data jsou a nestíhá načasování; pomůže
  *   přednačtení, ne další solvování.
  */
-const warmRiver = measureStreet(CATALOGUES[2]);
+resetRiverEvCache();
+const withoutPrefetch = await measureStreet(CATALOGUES[2], false);
 
 if (!asJson) {
-  const cold = rows.find((row) => row.street === "RIVER");
+  const shipped = rows.find((row) => row.street === "RIVER");
   console.log("");
-  console.log("EV na riveru: studeně proti načteným tabulkám");
+  console.log("Co na riveru kupuje přednačtení tabulky EV");
+  console.log("stav".padEnd(26) + "EV akcí".padStart(10) + "EV komb.".padStart(10));
   console.log(
-    "stav".padEnd(24) + "EV akcí".padStart(10) + "EV komb.".padStart(10),
+    "cesta produktu".padEnd(26)
+    + pct(shipped?.actionEv ?? 0, shipped?.dealt ?? 0).padStart(10)
+    + pct(shipped?.comboEv ?? 0, shipped?.dealt ?? 0).padStart(10),
   );
   console.log(
-    "jak to potká hráč".padEnd(24)
-    + pct(cold?.actionEv ?? 0, cold?.dealt ?? 0).padStart(10)
-    + pct(cold?.comboEv ?? 0, cold?.dealt ?? 0).padStart(10),
+    "bez přednačtení".padEnd(26)
+    + pct(withoutPrefetch.actionEv, withoutPrefetch.dealt).padStart(10)
+    + pct(withoutPrefetch.comboEv, withoutPrefetch.dealt).padStart(10),
   );
-  console.log(
-    "s načtenou tabulkou".padEnd(24)
-    + pct(warmRiver.actionEv, warmRiver.dealt).padStart(10)
-    + pct(warmRiver.comboEv, warmRiver.dealt).padStart(10),
-  );
-  const gap = (warmRiver.dealt === 0 ? 0 : warmRiver.actionEv / warmRiver.dealt)
-    - ((cold?.dealt ?? 0) === 0 ? 0 : (cold?.actionEv ?? 0) / (cold?.dealt ?? 1));
+  const shippedShare = (shipped?.dealt ?? 0) === 0
+    ? 0
+    : (shipped?.actionEv ?? 0) / (shipped?.dealt ?? 1);
+  const bareShare = withoutPrefetch.dealt === 0
+    ? 0
+    : withoutPrefetch.actionEv / withoutPrefetch.dealt;
   console.log("");
   console.log(
-    gap > 0.05
-      ? "Data jsou, nestíhá načasování: tabulka dorazí až po rozdání, takže"
-        + "\nprvní spot z rodiny EV nikdy neukáže. Pomůže přednačtení, ne solvování."
-      : "Rozdíl je malý, takže EV chybí v datech, ne v načasování.",
+    shippedShare - bareShare > 0.05
+      ? "Přednačtení drží. Bez něj se resolver ptá na tabulku uprostřed rozdání,"
+        + " kdy ještě nedorazila, a první spot z každé rodiny EV neukáže."
+      : "POZOR: přednačtení nic nepřidává. Buď se rozbilo, nebo EV chybí v datech"
+        + " - rozliší to rozpad výš.",
   );
 }

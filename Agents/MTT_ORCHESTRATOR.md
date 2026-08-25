@@ -83,8 +83,8 @@ tichá** - je to spočítaná a zahozená práce, a to je horší než chybějí
 |---|---|---|
 | tříd ze 169 s přiřazenou akcí (medián) | 0 | **50 flop / 40 turn / 34 river** |
 | vysvětlení jmenuje blafy | 41 / 29 / 30 % | **71 / 78 / 70 %**, a jmenuje skutečné třídy místo frází |
-| riverová EV: packů doručuje | 3 (896 pravidel) | **16 (4 643 pravidel)** |
-| riverová EV u hráče | 0,0 % studeně | **32,7 %** po přednačtení tabulky |
+| riverová EV: packů doručuje | 3 (896 pravidel) | **17 (4 906 pravidel)**, zastaralých 0 |
+| riverová EV u hráče | 0,0 % | **31,7 %** rozdaných riverových spotů |
 
 To poslední číslo je ta druhá polovina vady a nesouvisí s obsahem:
 `actionEvsFor` se ptá `readyRiverEvPack` **synchronně uprostřed rozdání**, takže
@@ -92,9 +92,10 @@ první spot z každé rodiny EV neukázal, i když byla celá spočítaná. Nač
 před rozdáním (`primeRiverEvForSeed`), kdy hráč ještě nic nečte, se stropem 2,5 s,
 aby pomalé připojení rozdání nezmrazilo.
 
-Zbývá 30 rodin bez tabulky vůbec. Dopočítat je stojí ~12 MB proti 4,2 MB volným
-v rozpočtu líného obsahu, takže je to **rozhodnutí majitele o velikosti
-stahování**, ne práce, kterou lze udělat potichu.
+Zbývá 30 rodin bez tabulky vůbec. Dopočítat je stojí ~12 MB, a v rozpočtu líného
+obsahu zbývá po zvednutí stropu na 44 MB zhruba **2,5 MB**. Je to tedy
+**rozhodnutí majitele o velikosti stahování**, ne práce, kterou lze udělat
+potichu - a znamenalo by to strop zvednout znovu.
 
 ### 1. Cíl a vzdálenost k němu — **stojí**
 
