@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "_build_note": "Halda 8 GB, ne vychozi 4: naměřeno 25. 8. 2026, že build na 4 GB spadne na 'Ineffective mark-compacts near heap limit' po 148 s, a s 8 GB projde za 2 m 22 s. Není to únik paměti, je to velikost obsahu - 301 modulů, z toho 29 MB líných packů a 7 MB tabulek EV. Volá se přes node, ne přes NODE_OPTIONS, protože prefix promenne v npm skriptu cmd.exe nepřevezme.",
+    "build": "tsc --noEmit && node --max-old-space-size=8192 node_modules/vite/bin/vite.js build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "verify:ranges": "node scripts/run-cli.mjs scripts/verifyRanges.mts",
@@ -136,7 +137,7 @@
     "e2e:chrome:production-fixture": "node scripts/run-cli.mjs scripts/runChromeProductionFixtureE2e.mts",
     "e2e:android:preflight": "node scripts/run-cli.mjs scripts/checkAndroidDeviceAvailability.mts",
     "release:mtt-core": "npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:core-release && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget",
-    "verify:block": "npm run typecheck && npm test && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview",
+    "verify:block": "npm run typecheck && npm test && npm run verify:ranges && npm run mtt:post-answer && npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview",
     "release:check": "npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:release-gates && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -153,6 +154,7 @@
     "mtt:mechanical-review": "node scripts/run-cli.mjs scripts/runMechanicalReview.mts",
     "mtt:after-night": "node scripts/run-cli.mjs scripts/runAfterNight.mts",
     "mtt:solved-coverage": "node scripts/run-cli.mjs scripts/checkSolvedSpotCoverage.mts",
+    "mtt:post-answer": "node scripts/run-cli.mjs scripts/measurePostAnswerFeedback.mts",
     "mtt:daily": "node scripts/run-cli.mjs scripts/runDailyOrchestrator.mts",
     "mtt:seat-pair-expansion": "node scripts/run-cli.mjs scripts/buildSeatPairExpansionBatch.mts",
     "mtt:processes": "node scripts/run-cli.mjs scripts/checkProcessRegistry.mts"

@@ -32,11 +32,22 @@ která nic nepřinese.
 Blok je hotový, když projde **celý ověřovací řetěz**, ne když projdou testy.
 Dokud neprojde, blok se nehlásí jako hotový - ani „hotovo, ale ještě ověřím".
 
-Ten řetěz je `verify:block`: typecheck, testy, `verify:ranges`, build,
-`verify:precache`, rozpočty a **Chrome E2E**. E2E tam patří proto, že dřív
-běželo až uvnitř balíčkování, takže se mobilní přetečení o 39 px na 360 px
-displeji našlo teprve při čtvrtém pokusu o ZIP. To nebyla smůla, to byla
-chybějící brána.
+Ten řetěz je `verify:block`: typecheck, testy, `verify:ranges`,
+**`mtt:post-answer`**, build, `verify:precache`, rozpočty a **Chrome E2E**. E2E
+tam patří proto, že dřív běželo až uvnitř balíčkování, takže se mobilní přetečení
+o 39 px na 360 px displeji našlo teprve při čtvrtém pokusu o ZIP. To nebyla
+smůla, to byla chybějící brána.
+
+`mtt:post-answer` přibyl 25. 8. 2026 ze stejného důvodu o patro výš: měřil se
+vyrobený obsah, ne to, co z něj dojde k hráči, a rozdíl mezi tím se dva týdny
+neprojevil nikde. Viz pravidlo 4.
+
+**Pozor, čím `typecheck` není:** `tsconfig.json` má
+`include: ["src", "tests", "vite.config.ts"]`, takže **`scripts/` se
+nekontroluje**. Změřeno 25. 8. 2026: v 91 souborech tam sedí **112 typových
+chyb**. Deník i plán přitom tvrdily „změřeno 0, hotovo" - to měření pustilo
+`tsc --noEmit` a nedívalo se do adresáře, o kterém mluvilo. Do doby, než se ty
+chyby uklidí, platí, že zelený `typecheck` o pipeline nevypovídá nic.
 
 **`release:check` to není a nesmí se s tím zaměnit.** Měřeno 24. 8. 2026:
 padá na třech branách, které s kódem nesouvisí - „MTT completion production
@@ -54,6 +65,61 @@ až poté, co to spadlo.
 Zkoumat se má potichu a ohlásit **výsledek**. Nález uprostřed bloku je normální
 práce, ne novinka; když se každý odbočka popíše zvlášť, čte se to jako
 přeskakování, i když je postup správný.
+
+### 4. Měří se, co dojde k hráči — ne co jsme vyrobili
+
+Přidáno 25. 8. 2026, po tom, co majitel nahlásil tři chybějící věci naráz a
+**všechny tři byly na obrazovce prázdné, přestože obsah je měl spočítaný.**
+
+Hotová práce je to, co hráč uvidí. Vyřešená rodina, která se nedostane na
+obrazovku, je nulová hodnota se stoprocentní cenou - solver ji počítal celou noc.
+
+Změřeno v ten den (`npm run mtt:post-answer`): akce v matici range dojdou k hráči
+v **0 %** rozdaných spotů, blafovací část range v **0 %**, EV akcí ve **4,7 %**
+riverových a **0 %** flopových a turnových. Ve stejný den hlásily produkční brány
+97 vyřešených rodin a 81,4 % pokrytí vzorů. Obě čísla byla pravdivá; dohromady
+dávala nepravdivý obrázek, protože měřila výrobu, ne doručení.
+
+Z toho plynou dvě povinnosti:
+
+- **Nová funkce se nehlásí jako hotová bez čísla, kolik rozdaných spotů ji
+  ukáže.** „Dodáno pro 17 rodin" není doručení, dokud se neví, kolik rodin je
+  celkem a kolik se jich rozdává.
+- **Tiché zneplatnění je vada, ne detail.** EV se váže na otisk packu a noční
+  přegenerování ji zahodí bez hlášky; naměřeno 14 packů se spočítanou a zahozenou
+  tabulkou. Kde se dá hodnota ztratit potichu, tam patří brána.
+
+### 5. Meze se dědí, ale nepřeměřují — a ozvou se až když blokují dodání
+
+Přidáno 25. 8. 2026, protože ten den **selhalo pět různých mezí za jediný den a
+všechny ze stejného důvodu**: byly nastavené kolem menší knihovny a nikdo je od
+té doby nepřeměřil. Ani jedna nebyla vada kódu.
+
+| mez | byla | je | co ji přerostlo |
+|---|---|---|---|
+| `testTimeout` sady | 5 s | 60 s | obsah (už 24. 8., dvakrát) |
+| `mobileWebViewSmoke` | 30 s / 15 s | 90 s / 45 s | studený překlad dashboardu: 31,6 s |
+| halda `vite build` | 4 GB (výchozí) | 8 GB | 301 modulů, 29 MB líných packů, 7 MB EV |
+| `bootstrapIntegration` | 30 s | 90 s | týž studený překlad v plné sadě |
+| `vi.waitFor` | 1 s (výchozí) | 20 s | dynamický import tabulky EV, ~400 kB |
+
+Tři věci, které z toho platí dál:
+
+1. **Výchozí hodnoty knihoven jsou taky meze.** `vi.waitFor` s výchozí vteřinou
+   nevypadá jako nastavení, a přesto to nastavení je - a padalo na něm tvrzení
+   „expected null not to be null", tedy hláška, která svádí hledat vadu
+   v produktu.
+2. **Vypršená mez se maskuje jako vada.** Rozeznat je od sebe jde jen měřením
+   téhož testu samostatně: ten, který v plné sadě vypršel na devíti minutách,
+   trvá sám **537 ms**. Bez toho srovnání by se opravoval kód, který je v pořádku.
+3. **Nezvedat naslepo.** Každé číslo výš má u sebe naměřenou hodnotu, proti
+   které stojí. Strop není kontrola správnosti, jen pojistka proti zaseknutí -
+   rozbitý test spadne na tvrzení, ne na čase.
+
+Otevřené ze stejné rodiny: `maxWorkers: 4` ve `vite.config.ts` je podložené
+měřením z doby **19 dodávaných rodin**; dnes jich je 97 a každý worker si drží
+vlastní strom `npm → vite-node` s desítkami MB packů. Komentář u toho čísla
+správně říká „neměňte to bez měření", takže se měří, ne přepisuje.
 
 ### Co tím nezmizí
 

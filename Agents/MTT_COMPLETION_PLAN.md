@@ -1,5 +1,56 @@
 # Plán dokončení MTT části
 
+> **Přeuspořádáno 25. 8. 2026.** Fáze níž popisují, jak dodělat *obsah*. Měření
+> z 25. 8. ale ukázalo, že úzké hrdlo není obsah, ale **doručení**: vyřešená
+> odpověď se z velké části nedostane hráči na obrazovku. Fáze 0 je proto nová a
+> má přednost před vším ostatním, včetně fáze 4, která běží sama.
+>
+> Zdůvodnění a čísla jsou ve `MTT_ORCHESTRATOR.md`, vrstva 0.
+
+## Fáze 0 — doručení k hráči — **z velké části dodáno 25. 8. 2026**
+
+Stav po opravě, změřeno `npm run mtt:post-answer`:
+
+| | před | po |
+|---|---|---|
+| tříd ze 169 s akcí (medián) | 0 | **50 / 40 / 34** (flop / turn / river) |
+| vysvětlení jmenuje blafy | 41 / 29 / 30 % | **71 / 78 / 70 %**, skutečnými třídami |
+| riverová EV doručuje | 3 packy, 896 pravidel | **16 packů, 4 643 pravidel** |
+| riverová EV u hráče | 0,0 % | **32,7 %** |
+
+Co zbývá a proč to nejde udělat potichu: **30 riverových rodin nemá tabulku EV
+vůbec.** Dopočet stojí ~12 MB proti **4,2 MB volným** v rozpočtu líného obsahu.
+Je to tedy rozhodnutí o velikosti stahování - stejná otázka jako ve fázi 2, jen
+na riveru. Do rozhodnutí se nedopočítává.
+
+Otevřené i to, že **linkový režim** (flop→turn→river v jedné ruce) přednačtení
+EV nemá; opravený je zatím jednotlivý riverový dril, tedy ta cesta, na kterou
+majitel upozornil.
+
+### Původní zadání fáze, pro pořádek
+
+Změřeno `npm run mtt:post-answer` na spotech rozdaných z katalogu:
+
+| co hráč po odpovědi nevidí | dojde | příčina | kde se opravuje |
+|---|---|---|---|
+| co dělat s každou kombinací matice | 0 % | `solvedStrategySource` nevyplňuje `rangeBuckets` | `src/data/ranges/solvedStrategySource.ts` |
+| blafovací část range | 0 % | matice se barví podle kategorie ruky, ne podle akce | `src/ui/postflopRangeMatrixView.ts` |
+| EV jednotlivých akcí | 4,7 % river, 0 % jinde | 30 rodin bez tabulky, **14 se zastaralou** po nočním přegenerování | `riverEvRuntime` + noční cyklus |
+
+Obsah přitom všechno tři **zná**: každé vyřešené pravidlo nese `buckets[]` s
+akcí, třídami rukou a frekvenční směsí. Není to práce pro solver, je to práce na
+cestě z packu na obrazovku.
+
+Pořadí je dané dopadem: první dva řádky se týkají **všech** rozdaných spotů na
+všech třech ulicích a data pro ně už na disku leží. Třetí řádek je dražší,
+protože EV se musí dopočítat a vejít do rozpočtu líného obsahu (viz fáze 2).
+
+**Cílový tvar matice je vlastníkův vlastní chart** (`Documents/Private/PKR/
+02_Openning ranges`): barva = akce, se čtyřmi stavy a legendou „3 bet for value /
+bluff 3 bet / defend / fold". Dnešní paleta z těch chartů vzala barvy, ale ne
+osu - obarvila se podle síly ruky místo podle toho, co se s ní dělá.
+
+
 Napsáno 19. 8. 2026 na zadání „vytvoř plán tak, abys byl schopen sám, bez mých
 vstupů, reálně dokončit MTT část". **Přepsáno 24. 8. 2026 podle měření** - tři
 body byly zastaralé a jedna fáze se ukázala jako nedodatelná tak, jak byla
@@ -113,7 +164,16 @@ Moje práce je dohled a dodání: `mtt:after-night -- --write` po každé noci.
 
 - Mechanická kontrola po každé noci, aby nový obsah nezůstal na LOW.
 - Kontrola, že každý řádek manifestu jde postavit.
-- ~~104 typových chyb ve `scripts/`~~ - **změřeno 24. 8.: 0.** Hotovo.
+- **112 typových chyb ve `scripts/` v 91 souborech** - otevřené, a zápis „změřeno
+  24. 8.: 0, hotovo" byl **nepravdivý**. To měření pustilo `tsc --noEmit`, jenže
+  `tsconfig.json` má `include: ["src", "tests", "vite.config.ts"]`, takže
+  `scripts/` nikdy nekontrolovalo. Nula neznamenala čisto, znamenala, že se
+  nedívala. Přeměřeno 25. 8. 2026 konfigurací, která `scripts` zahrne.
+
+  Je to tatáž třída chyby jako vrstva 0 orchestrátoru: **měřilo se něco vedle a
+  výsledek se vydal za odpověď na jinou otázku.** Zapnout `scripts` v tsconfigu
+  hned nejde - `npm run typecheck` je součástí `verify:block` i nočního cyklu a
+  spadl by. Pořadí je tedy: posbírat chyby, opravit, teprve pak zapnout bránu.
 
 ## Co zůstane nedokončené a čeká na majitele
 

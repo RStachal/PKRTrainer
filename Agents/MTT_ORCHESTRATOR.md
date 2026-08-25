@@ -28,6 +28,74 @@ To je celý důvod, proč má rozhodovat stroj s měřením, a ne pravidlo v kó
 
 ## Vrstvy
 
+### 0. Doručení — **chybělo do 25. 8. 2026, a byla to ta nejdražší mezera**
+
+Všech sedm vrstev níž měří **produkci**: kolik rodin je vyřešených, kolik desek
+rozložených, kolik vzorů pokrytých. Ani jedna neměřila **doručení**, tedy jestli
+se vyřešená odpověď dostane hráči na obrazovku. Rozdíl mezi tím se dva týdny
+neprojevil v žádné bráně a projevil se jako tři stížnosti majitele naráz.
+
+Změřeno 25. 8. 2026 přes `npm run mtt:post-answer`, rozdáno z katalogu tak, jak
+rozdává trenažér:
+
+| co má hráč po odpovědi vidět | obsah to ví | dojde k hráči |
+|---|---|---|
+| co dělat s každou kombinací matice | ano, každé vyřešené pravidlo nese `buckets[]` s akcí, třídami a frekvenční směsí | **0 %** |
+| blafovací část range | ano, tytéž kbelíky nesou lajnu VALUE/BLUFF | **0 %** |
+| EV jednotlivých akcí | zčásti - 17 rodin ze 47 má tabulku | **4,7 %** riverových spotů, 0 % flop a turn |
+
+Všechny tři jsou vady **doručení, ne obsahu**. Solvery spočítaly, co bylo třeba;
+cesta na obrazovku se přerušila jinde:
+
+1. `solvedStrategySource` nevyplňuje `rangeBuckets`, takže matice nemá jedinou
+   buňku s akcí. Dokud vyřešený obsah odpovídal zřídka, odpovídal chartový
+   resolver, který je vyplňuje - katalogy ho v srpnu vytlačily na 100 % spotů a
+   akce v matici zmizely, aniž by o tom cokoli řeklo.
+2. Matice se barví podle **kategorie ruky** (Set+, Top pair, Air). Blaf a stejně
+   silná ruka, která se vzdává, mají tím pádem stejnou barvu.
+3. Riverová EV se váže na `contentHash` packu. Noční `mtt:after-night` packy
+   přegeneruje, otisk se změní a EV se **tiše zahodí**. Naměřený stav: 30 packů
+   bez tabulky (7 309 pravidel), **14 packů se zastaralou tabulkou (4 010
+   pravidel)**, 3 packy doručují (896 pravidel).
+
+Ten třetí bod je ta podstatná část a je to systémová vada, ne jednorázová:
+**každá úspěšná noc snižuje doručení**, protože přegeneruje packy a tím zneplatní
+EV, kterou nikdo znovu nespočítá. Produkční čísla přitom rostou. Bez vrstvy 0 se
+dva týdny stavěl obsah, který se k hráči nedostával.
+
+**Upřesnění, aby to nebylo silnější, než jaké to je:** jedna brána to viděla.
+`riverEvGenerated.test.ts` zastaralou EV chytá a sada kvůli ní byla červená - 28
+pádů ve 14 rodinách. Jenže `mtt:after-night` sadu schválně nespouští, takže se
+to ozve až u příštího `verify:block`, o hodiny až dny později. U akcí v matici a
+u blafů žádná brána nebyla vůbec; to řeší `mtt:post-answer`.
+
+**Pravidlo, které z toho plyne:** noc, která zvedne produkci a sníží doručení,
+je špatná noc. Měřítko úspěchu je doručení; produkce je jen jeho vstup.
+
+**Nástroj:** `npm run mtt:post-answer` (skript
+`scripts/measurePostAnswerFeedback.mts`) měří ty čtyři věci na všech třech
+ulicích a patří do `verify:block` i do cyklu po noci. Zastaralá EV **nesmí být
+tichá** - je to spočítaná a zahozená práce, a to je horší než chybějící.
+
+#### Stav po opravě, tentýž den
+
+| | před | po |
+|---|---|---|
+| tříd ze 169 s přiřazenou akcí (medián) | 0 | **50 flop / 40 turn / 34 river** |
+| vysvětlení jmenuje blafy | 41 / 29 / 30 % | **71 / 78 / 70 %**, a jmenuje skutečné třídy místo frází |
+| riverová EV: packů doručuje | 3 (896 pravidel) | **16 (4 643 pravidel)** |
+| riverová EV u hráče | 0,0 % studeně | **32,7 %** po přednačtení tabulky |
+
+To poslední číslo je ta druhá polovina vady a nesouvisí s obsahem:
+`actionEvsFor` se ptá `readyRiverEvPack` **synchronně uprostřed rozdání**, takže
+první spot z každé rodiny EV neukázal, i když byla celá spočítaná. Načítá se teď
+před rozdáním (`primeRiverEvForSeed`), kdy hráč ještě nic nečte, se stropem 2,5 s,
+aby pomalé připojení rozdání nezmrazilo.
+
+Zbývá 30 rodin bez tabulky vůbec. Dopočítat je stojí ~12 MB proti 4,2 MB volným
+v rozpočtu líného obsahu, takže je to **rozhodnutí majitele o velikosti
+stahování**, ne práce, kterou lze udělat potichu.
+
 ### 1. Cíl a vzdálenost k němu — **stojí**
 
 Cíl je v `MTT_COMPLETION_PLAN.md`, vzdálenost měří `mtt:playable-beta` (stav a
@@ -103,13 +171,20 @@ spustí člověk: je to rozhodnutí o tom, co se bude solvit další tři noci.
 
 **Nepočítá, co neměří.** Doporučení bez podkladu se nevydá a řekne se proč.
 
+**Neprohlásí noc za úspěšnou podle produkce.** Od 25. 8. 2026 platí, že se po
+noci měří doručení (vrstva 0). Noc, po které je vyřešených rodin víc a doručení
+níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zeleně.
+
 ## Pořadí prací
 
 1. ~~Odvození ranží z preflop packů~~ — hotovo
 2. ~~Generátor rodin pro chybějící dvojice~~ — hotovo
 3. ~~Noční runner podle měření~~ — hotovo
 4. ~~Evidence procesů~~ — hotovo (`mtt:processes`)
-5. **Porovnání dnů** — sbírá se od 20. 8., zatím jeden bod. Až bude historie,
+5. **Doručení** — od 25. 8. 2026 nejvyšší priorita, protože je změřeně nejnižší
+   ze všech vrstev. Pořadí uvnitř podle dopadu: akce v matici (0 % → celá
+   knihovna), blafovací lajna (tatáž změna), EV (4,7 % river, 0 % jinde).
+6. **Porovnání dnů** — sbírá se od 20. 8., zatím jeden bod. Až bude historie,
    půjde ptát: přineslo doporučení z minulé noci to, co slibovalo?
 
 ## Co zůstává mimo dosah stroje
