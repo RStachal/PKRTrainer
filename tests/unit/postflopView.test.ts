@@ -1392,6 +1392,16 @@ describe("postflopView - DOM", () => {
         const root = document.createElement("div");
         renderPostflopView(root, { initialSeed: seed, initialStreet: street });
         root.querySelector<HTMLButtonElement>(".postflop-generate")?.click();
+        // Rozdání riveru od 25. 8. 2026 čeká na tabulku EV, takže se spot
+        // nevykreslí ve stejném ticku jako kliknutí. Čeká se na tlačítko akce,
+        // ne na pevný počet ticků: to druhé by prošlo jen shodou okolností.
+        // Strop explicitně: výchozí vteřina `vi.waitFor` stačila samostatně, ale
+        // v plné sadě se dynamický import tabulky EV (kolem 400 kB) nestihne a
+        // test spadl na „expected null not to be null". Dvacet vteřin je proti
+        // naměřeným jednotkám vteřin s rezervou na souběh.
+        await vi.waitFor(() => {
+          expect(root.querySelector(".postflop-action")).not.toBeNull();
+        }, { timeout: 20000 });
         root.querySelector<HTMLButtonElement>(".postflop-action")?.click();
         const blocks = root.querySelectorAll(".postflop-practical__block");
         expect(blocks.length, `${street} seed ${seed}: vysvětlení se nevykreslilo`)

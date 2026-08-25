@@ -75,7 +75,100 @@ function readableTextColor(hex: string): string {
   return luminance > 0.45 ? "#12161f" : "#ffffff";
 }
 
-const LEGEND_ORDER: readonly FlopzillaCategory[] = [
+/**
+ * Skupiny, podle kterých se matice barví: **co se s rukou dělá**, ne co to je.
+ *
+ * ## Proč se osa změnila
+ *
+ * Buňky měly barvu z `CATEGORY_DEFS`, tedy podle síly ruky. Důsledek nahlásil
+ * majitel: „zobrazují typy kombinací, které nás nezajímají" a „chybí blafovací
+ * range". Obojí je totéž - **blaf a stejně silná ruka, která se vzdává, měly
+ * identickou barvu**, takže blafovací část range nešla v matici najít.
+ * Změřeno 25. 8. 2026: 983 ze 7 306 tříd (13,5 %) hraje obsah agresivně,
+ * přestože je taxonomie nemá za hodnotu - přesně ty byly neviditelné.
+ *
+ * Paleta se z vlastníkových chartů brala už dřív, ale jen barvy, ne osa. Ty
+ * charty mají legendu **akcí**: „3 bet for value", „3b bluff", „call", fold -
+ * a blaf v nich má vždy vlastní barvu. Tohle je totéž o ulici dál.
+ *
+ * ## Proč se hodnota dělí podle velikosti a blaf ne
+ *
+ * Velikost sázky je u hodnoty rozhodnutí, které hráč dělá; u blafu je to spíš
+ * důsledek. Legenda by se zdvojnásobila, aniž by přibyla informace - přesná akce
+ * zůstává v popisku buňky i v detailu po kliknutí.
+ */
+type MatrixGroup =
+  | "VALUE_BIG"
+  | "VALUE_SMALL"
+  | "BLUFF"
+  | "CALL"
+  | "CHECK"
+  | "FOLD"
+  | "NONE";
+
+interface GroupDef {
+  label: string;
+  color: string;
+}
+
+const GROUP_DEFS: Record<MatrixGroup, GroupDef> = {
+  // Hodnota: sytá červená rodina z chartů, tmavší podle velikosti sázky.
+  VALUE_BIG: { label: "Hodnota - velká sázka", color: "#a63a32" },
+  VALUE_SMALL: { label: "Hodnota - malá sázka", color: "#d87878" },
+  // Blaf: jantarová, tedy tatáž volba jako „3b bluff" na vlastníkových chartech.
+  // Musí být čitelně jinde než hodnota, jinak se vrací původní vada.
+  BLUFF: { label: "Blaf", color: "#e0a13c" },
+  CALL: { label: "Dorovnání", color: "#4e7050" },
+  CHECK: { label: "Check", color: "#90a890" },
+  FOLD: { label: "Složení", color: "#f0f0f0" },
+  // Ne bílá jako fold: „tuhle ruku bys složil" a „tuhle ruku tady vůbec nedržíš"
+  // jsou dvě různá sdělení a splynout nesmí.
+  NONE: { label: "Mimo řešenou range", color: "#e2e5ea" },
+};
+
+const GROUP_ORDER: readonly MatrixGroup[] = [
+  "VALUE_BIG",
+  "VALUE_SMALL",
+  "BLUFF",
+  "CALL",
+  "CHECK",
+  "FOLD",
+  "NONE",
+];
+
+/**
+ * Text skupiny pro popisek buňky, s akcí jen tam, kde něco přidá.
+ *
+ * U blafu je podstatné, **kterou** akcí se blafuje, a u hodnoty jak velká sázka
+ * to je. U dorovnání, checku a složení je název skupiny už tou akcí.
+ */
+function cellGroupText(group: MatrixGroup, action: PostflopAction): string {
+  const label = GROUP_DEFS[group].label;
+  return group === "BLUFF" ? `${label} - ${MATRIX_ACTION_LABEL[action]}` : label;
+}
+
+function matrixGroup(cell: ProductionCell | undefined): MatrixGroup {
+  if (cell === undefined) return "NONE";
+  if (cell.lane === "BLUFF") return "BLUFF";
+  switch (cell.action) {
+    case "BET_BIG":
+    case "RAISE":
+      return "VALUE_BIG";
+    case "BET_SMALL":
+      return "VALUE_SMALL";
+    case "CALL":
+      return "CALL";
+    case "FOLD":
+      return "FOLD";
+    case "CHECK":
+    default:
+      return "CHECK";
+  }
+}
+
+
+/** Pořadí kategorií pro režim, ve kterém akci neznáme: od nejsilnější dolů. */
+const CATEGORY_ORDER: readonly FlopzillaCategory[] = [
   "SET_PLUS",
   "MADE_STRAIGHT",
   "TWO_PAIR",
@@ -91,7 +184,6 @@ const LEGEND_ORDER: readonly FlopzillaCategory[] = [
   "AIR",
 ];
 
-type CategoryCounts = Partial<Record<FlopzillaCategory, number>>;
 
 export function renderPostflopRangeMatrix(
   spot: PostflopTrainingSpot,
@@ -148,8 +240,17 @@ export function renderPostflopRangeMatrix(
     matrix.appendChild(headerCell(doc, RANKS[j], "column"));
   }
 
-  const used = new Set<FlopzillaCategory>();
-  const counts: CategoryCounts = {};
+  /**
+   * Barví se podle akce, když je co barvit.
+   *
+   * Když pravidlo kbelíky nemá - heuristická odpověď, spot mimo vyřešený obsah -
+   * byla by matice celá jednobarevná, tedy k ničemu. V takovém případě se ukáže
+   * to, co o rukou víme, tedy jejich síla, a **legenda to řekne**: dvě různé
+   * osy pod jedním nadpisem jsou horší než jedna přiznaná.
+   */
+  const byAction = productionByHand.size > 0;
+  const used = new Set<string>();
+  const counts: Record<string, number> = {};
   const evByHand = comboEvsByHandClass(spot);
   const heroCombo = `${spot.heroCards[0].rank}${spot.heroCards[0].suit}`
     + `${spot.heroCards[1].rank}${spot.heroCards[1].suit}`;
@@ -160,9 +261,13 @@ export function renderPostflopRangeMatrix(
     for (let j = 0; j < GRID_SIZE; j += 1) {
       const hand = handLabel(i, j);
       const category = classifyFlopHand(hand, spot.board);
-      used.add(category);
-      counts[category] = (counts[category] ?? 0) + 1;
-      const cell = matrixCell(doc, hand, category, hand === heroHand, productionByHand.get(hand), spot.actionNode);
+      const production = productionByHand.get(hand);
+      const key = byAction ? matrixGroup(production) : category;
+      used.add(key);
+      counts[key] = (counts[key] ?? 0) + 1;
+      const cell = matrixCell(
+        doc, hand, category, hand === heroHand, production, spot.actionNode, byAction,
+      );
       const handEvs = evByHand.get(hand);
       // Buňka s EV se pozná i bez kliknutí; bez toho by hráč musel proklikat
       // sto šedesát devět políček, aby zjistil, která čísla vůbec drží.
@@ -178,7 +283,7 @@ export function renderPostflopRangeMatrix(
   }
 
   wrap.appendChild(matrix);
-  wrap.appendChild(legend(doc, used, counts, matrix));
+  wrap.appendChild(legend(doc, used, counts, matrix, byAction));
   wrap.appendChild(detail);
   root.appendChild(wrap);
 }
@@ -190,6 +295,7 @@ function matrixCell(
   hero: boolean,
   production?: ProductionCell,
   actionNode?: PostflopActionNode,
+  byAction = true,
 ): HTMLElement {
   const productionLane = production?.lane;
   const cell = doc.createElement("div");
@@ -216,11 +322,25 @@ function matrixCell(
       `${hand}: ${flopzillaCategoryLabel(category)}, ${production.action}${hero ? ", Hero hand" : ""}`,
     );
   }
-  cell.title = production?.action !== undefined
-    ? `${hand}: ${flopzillaCategoryLabel(category)} - ${production.action}`
-    : `${hand}: ${flopzillaCategoryLabel(category)}`;
+  // Akce první, kategorie za ní. Hráč se ptá „co s tím mám dělat", ne „co to je".
+  //
+  // Konkrétní akce se dopisuje jen tam, kde skupina sama neříká všechno: u blafu
+  // (kterou akcí se blafuje) a u hodnoty (jak velká sázka). „Složení - složení"
+  // by bylo zbytečné dvakrát.
+  const group = matrixGroup(production);
+  cell.title = production === undefined
+    ? `${hand}: ${byAction ? "mimo řešenou range" : flopzillaCategoryLabel(category)}`
+      + (byAction ? ` (${flopzillaCategoryLabel(category)})` : "")
+    : `${hand}: ${cellGroupText(group, production.action)}`
+      + ` (${flopzillaCategoryLabel(category)})`;
   cell.textContent = hand;
-  const background = CATEGORY_DEFS[category].color;
+  // `dataset.group` je klíč, podle kterého legenda tlumí. V režimu podle síly
+  // ruky je jím kategorie, takže tlumení funguje v obou režimech jednou cestou.
+  cell.dataset.group = byAction ? group : category;
+  cell.dataset.groupLabel = byAction
+    ? GROUP_DEFS[group].label
+    : flopzillaCategoryLabel(category);
+  const background = byAction ? GROUP_DEFS[group].color : CATEGORY_DEFS[category].color;
   cell.style.background = background;
   cell.style.color = readableTextColor(background);
   // The shadow exists to lift white text off a dark fill; on a light fill it
@@ -459,45 +579,66 @@ function headerCell(
   return cell;
 }
 
+/**
+ * Legenda akcí, ne kategorií.
+ *
+ * Klikem se zvýrazní jedna skupina - to je ta nejrychlejší cesta k otázce
+ * „kterými koly tady blafuju": jeden klik na „Blaf" a matice ukáže právě je.
+ * Dřív se takhle vybírala kategorie ruky, což na tuhle otázku odpovědět neumělo.
+ */
 function legend(
   doc: Document,
-  used: ReadonlySet<FlopzillaCategory>,
-  counts: CategoryCounts,
+  used: ReadonlySet<string>,
+  counts: Record<string, number>,
   matrix: HTMLElement,
+  byAction = true,
 ): HTMLElement {
   const legendRoot = doc.createElement("div");
   legendRoot.className = "postflop-flopzilla__legend";
-  let activeCategory: FlopzillaCategory | null = null;
+  legendRoot.dataset.axis = byAction ? "action" : "handStrength";
+  let activeGroup: string | null = null;
 
-  for (const category of LEGEND_ORDER) {
-    if (!used.has(category)) continue;
+  const entries: readonly { key: string; label: string; color: string }[] = byAction
+    ? GROUP_ORDER.map((group) => ({
+      key: group, label: GROUP_DEFS[group].label, color: GROUP_DEFS[group].color,
+    }))
+    : CATEGORY_ORDER.map((category) => ({
+      key: category,
+      label: flopzillaCategoryLabel(category),
+      color: CATEGORY_DEFS[category].color,
+    }));
+
+  for (const entry of entries) {
+    const group = entry.key;
+    if (!used.has(group)) continue;
+    const label = entry.label;
     const item = doc.createElement("div");
     item.className = "postflop-flopzilla__legend-item";
     item.setAttribute("role", "button");
     item.setAttribute("tabindex", "0");
     item.setAttribute("aria-pressed", "false");
-    item.setAttribute("aria-label", `Highlight hands in category ${flopzillaCategoryLabel(category)}`);
-    item.dataset.category = category;
-    item.dataset.count = String(counts[category] ?? 0);
-    item.dataset.share = categoryShare(counts[category] ?? 0);
+    item.setAttribute("aria-label", `Zvýraznit ruce: ${label}`);
+    item.dataset.group = group;
+    item.dataset.count = String(counts[group] ?? 0);
+    item.dataset.share = categoryShare(counts[group] ?? 0);
 
     const swatch = doc.createElement("span");
     swatch.className = "postflop-flopzilla__legend-swatch";
-    swatch.style.background = CATEGORY_DEFS[category].color;
+    swatch.style.background = entry.color;
 
-    const label = doc.createElement("span");
-    label.textContent = flopzillaCategoryLabel(category);
+    const text = doc.createElement("span");
+    text.textContent = label;
 
     const count = doc.createElement("span");
     count.className = "postflop-flopzilla__legend-count";
-    count.textContent = `${counts[category] ?? 0}/169 (${categoryShare(counts[category] ?? 0)})`;
+    count.textContent = `${counts[group] ?? 0}/169 (${categoryShare(counts[group] ?? 0)})`;
 
     item.appendChild(swatch);
-    item.appendChild(label);
+    item.appendChild(text);
     item.appendChild(count);
     item.addEventListener("click", () => {
-      activeCategory = activeCategory === category ? null : category;
-      applyLegendHighlight(legendRoot, matrix, activeCategory);
+      activeGroup = activeGroup === group ? null : group;
+      applyLegendHighlight(legendRoot, matrix, activeGroup);
     });
     item.addEventListener("keydown", (event) => {
       if (event.key !== "Enter" && event.key !== " ") return;
@@ -513,18 +654,18 @@ function legend(
 function applyLegendHighlight(
   legendRoot: HTMLElement,
   matrix: HTMLElement,
-  activeCategory: FlopzillaCategory | null,
+  activeGroup: string | null,
 ): void {
   legendRoot.querySelectorAll<HTMLElement>(".postflop-flopzilla__legend-item")
     .forEach((item) => {
-      const active = item.dataset.category === activeCategory;
+      const active = item.dataset.group === activeGroup;
       item.classList.toggle("postflop-flopzilla__legend-item--active", active);
       item.setAttribute("aria-pressed", active ? "true" : "false");
     });
 
   matrix.querySelectorAll<HTMLElement>(".postflop-flopzilla__cell")
     .forEach((cell) => {
-      const muted = activeCategory !== null && cell.dataset.category !== activeCategory;
+      const muted = activeGroup !== null && cell.dataset.group !== activeGroup;
       cell.classList.toggle("postflop-flopzilla__cell--muted", muted);
     });
 }

@@ -1,9 +1,11 @@
-import type { Card, Position } from "./types";
+import type { Card, Position, Rank } from "./types";
+import { RANKS } from "./poker";
 import type { ActionEvSet } from "./actionEv";
 import { bestActionsForActionEv, cloneActionEvSet } from "./actionEv";
 import type {
   BoardTexture,
   PostflopAction,
+  PostflopRangeLane,
   PostflopCallerType,
   PostflopComboEv,
   PostflopPotType,
@@ -164,15 +166,79 @@ function roundedSpr(effectiveStackBB: number, potBB: number): number {
   return Math.round((effectiveStackBB / potBB) * 10) / 10;
 }
 
+/**
+ * Kolik tříd se v jedné lajně vypíše, než se zbytek shrne číslem.
+ *
+ * Blafovací kbelík má běžně přes čtyřicet tříd a vypsat je všechny by z lajny
+ * udělalo zeď textu, ve které se ta informace ztratí stejně jako dnes.
+ */
+const LANE_HAND_LIMIT = 12;
+
+/**
+ * Třídy rukou, které vyřešené pravidlo v téhle lajně doopravdy hraje.
+ *
+ * `undefined` znamená „pravidlo kbelíky nemá", tedy použij obecné fráze.
+ * Prázdné pole znamená „má je a v téhle lajně nemá nic", což je odpověď.
+ */
+function solvedLaneHands(
+  spot: PostflopSpot,
+  lane: PostflopRangeLane,
+  language: PostflopExplanationLanguage,
+): readonly string[] | undefined {
+  const source = spot.strategySource;
+  const buckets = source !== undefined && source.kind === "STRATEGY_PACK"
+    ? source.rangeBuckets
+    : undefined;
+  if (buckets === undefined || buckets.length === 0) return undefined;
+
+  const classes = new Set<string>();
+  for (const bucket of buckets) {
+    if (bucket.lane !== lane) continue;
+    for (const hand of bucket.handClasses) classes.add(hand);
+  }
+  const ordered = [...classes].sort(compareHandClasses);
+  if (ordered.length <= LANE_HAND_LIMIT) return ordered;
+  const rest = ordered.length - LANE_HAND_LIMIT;
+  return [
+    ...ordered.slice(0, LANE_HAND_LIMIT),
+    language === "EN" ? `and ${rest} more` : `a dalších ${rest}`,
+  ];
+}
+
+/** Pořadí, ve kterém se třídy čtou v matici: shora doleva, sufity před offsuity. */
+function compareHandClasses(left: string, right: string): number {
+  const rank = (hand: string, index: number) => RANKS.indexOf(hand[index] as Rank);
+  const high = rank(left, 0) - rank(right, 0);
+  if (high !== 0) return high;
+  const low = rank(left, 1) - rank(right, 1);
+  if (low !== 0) return low;
+  return (left.endsWith("s") ? 0 : 1) - (right.endsWith("s") ? 0 : 1);
+}
+
 function buildExplanation(
   spot: PostflopSpot,
   language: PostflopExplanationLanguage,
 ): PostflopExplanation {
+  // Vyřešené kbelíky mají přednost před obecnými frázemi.
+  //
+  // Fráze jako „overpairy" nebo „A-high backdoor blockery" popisují **typ ruky**,
+  // ne tuhle konkrétní range, a majitel na to upozornil přesně takhle: zajímá ho,
+  // co se s kombinací dělá, ne co to je. Když pravidlo drží kbelíky, dají se
+  // jmenovat skutečné třídy, které solver v téhle lajně hraje.
+  //
+  // Prázdná lajna se **vydá jako prázdná**, ne jako fráze: „solver tu neblafuje"
+  // je odpověď, a nahradit ji obecným popisem by byla nepravda.
+  const solvedValue = solvedLaneHands(spot, "VALUE", language);
+  const solvedBluff = solvedLaneHands(spot, "BLUFF", language);
+  const solvedCheck = solvedLaneHands(spot, "CHECK", language);
   return {
     summary: language === "EN" ? postflopSummaryEn(spot) : postflopSummaryCs(spot),
-    valueHands: language === "EN" ? valueHandsForSpotEn(spot) : valueHandsForSpot(spot),
-    bluffHands: language === "EN" ? bluffHandsForSpotEn(spot) : bluffHandsForSpot(spot),
-    checkHands: language === "EN" ? checkHandsForSpotEn(spot) : checkHandsForSpot(spot),
+    valueHands: solvedValue
+      ?? (language === "EN" ? valueHandsForSpotEn(spot) : valueHandsForSpot(spot)),
+    bluffHands: solvedBluff
+      ?? (language === "EN" ? bluffHandsForSpotEn(spot) : bluffHandsForSpot(spot)),
+    checkHands: solvedCheck
+      ?? (language === "EN" ? checkHandsForSpotEn(spot) : checkHandsForSpot(spot)),
     nextStreetPlan: language === "EN"
       ? nextStreetPlanForStreetEn(spot.street, spot.recommendedAction)
       : nextStreetPlanForStreet(spot.street, spot.recommendedAction),

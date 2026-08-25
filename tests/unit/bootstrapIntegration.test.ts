@@ -4,7 +4,18 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { KEY_EVENTS, KEY_HH_REVIEWS, KEY_POSTFLOP_EVENTS } from "../../src/persistence/keys";
 import { APP_LANGUAGE_STORAGE_KEY } from "../../src/ui/cs";
 
-vi.setConfig({ testTimeout: 30000 });
+/**
+ * Zvednuto z 30 s na 90 s dne 25. 8. 2026, potřetí ze stejného důvodu jako jinde:
+ * **vyrostl obsah, ne pomalost kódu.**
+ *
+ * Naměřeno: soubor sám o sobě projde celý, ale v plné sadě test, který se
+ * k dynamicky importovanému panelu dostane první, platí jeho studený překlad a
+ * vyprší na třicítce. Transform celé sady je dnes 636 s.
+ *
+ * Strop není kontrola správnosti, jen pojistka proti zaseknutí: rozbitý test
+ * spadne na tvrzení, ne na čase.
+ */
+vi.setConfig({ testTimeout: 90000 });
 
 class MemoryStorage implements Storage {
   protected readonly data = new Map<string, string>();
@@ -221,6 +232,13 @@ describe("bootstrap - inicializacni tok", () => {
     street!.dispatchEvent(new Event("change"));
     seed!.value = "321";
     root.querySelector<HTMLButtonElement>(".filter-start")?.click();
+
+    // Riverové rozdání od 25. 8. 2026 čeká na tabulku EV, takže se spot
+    // nevykreslí ve stejném ticku jako kliknutí. Čeká se na vykreslená
+    // metadata, ne na pevný počet ticků - to druhé projde jen náhodou.
+    await vi.waitFor(() => {
+      expect(root.querySelector(".postflop-meta")).not.toBeNull();
+    }, { timeout: 20000 });
 
     expect(root.querySelector<HTMLElement>(".app__panel--postflop")?.hidden).toBe(false);
     expect(root.querySelector<HTMLInputElement>(".postflop-seed")?.value).toBe("");

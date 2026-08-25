@@ -5,7 +5,7 @@ import type {
 } from "../../core/postflopGenerator";
 import { translateTurnActions } from "./turnActionTranslation";
 import { actionNodeForSolvedHero } from "./solvedHeroActionNode";
-import { solvedStrategySource } from "./solvedStrategySource";
+import { solvedRangeBuckets, solvedStrategySource } from "./solvedStrategySource";
 import type { TurnStrategyPack } from "./turnStrategyPack";
 import type { TurnStrategyRule } from "./turnStrategyRuleBuilder";
 
@@ -200,6 +200,10 @@ export function createTurnStrategyResolver(pack: TurnStrategyPack): PostflopStra
         ruleId: rule.sourceDirectory,
         potBB: rule.spot?.potBB,
         stackBehindBB: rule.spot?.stackBehindBB,
+        // Co se dělá s každou třídou rukou. Bez tohohle nemá matice range
+        // jedinou buňku s akcí a blafovací část je od složených rukou
+        // nerozeznatelná - změřeno 25. 8. 2026 na 0 tříd ze 169.
+        rangeBuckets: solvedRangeBuckets(rule.buckets, rule.actions, actions, input.board ?? []),
       }),
     };
   };

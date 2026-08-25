@@ -16,7 +16,7 @@ import { runtimeSolvedRiverPacks } from "./riverSolvedRuntimeRegistry";
 import type { RiverStrategyRule } from "./riverStrategyRuleBuilder";
 import { translateTurnActions } from "./turnActionTranslation";
 import { actionNodeForSolvedHero } from "./solvedHeroActionNode";
-import { solvedStrategySource } from "./solvedStrategySource";
+import { solvedRangeBuckets, solvedStrategySource } from "./solvedStrategySource";
 
 /**
  * Vyřešená riverová strategie, nebo odmítnutí.
@@ -249,6 +249,10 @@ export function createRiverStrategyResolver(pack: RiverStrategyPack): PostflopSt
         ruleId: best.sourceDirectory,
         potBB: best.spot?.potBB,
         stackBehindBB: best.spot?.stackBehindBB,
+        // Co se dělá s každou třídou rukou. Bez tohohle nemá matice range
+        // jedinou buňku s akcí a blafovací část je od složených rukou
+        // nerozeznatelná - změřeno 25. 8. 2026 na 0 tříd ze 169.
+        rangeBuckets: solvedRangeBuckets(best.buckets, best.actions, actions, input.board ?? []),
       }),
     };
   };

@@ -8,7 +8,7 @@ import type { FlopStrategyRule } from "./flopStrategyRuleBuilder";
 import type { FlopSolvedStrategyPack } from "./flopSolvedStrategyPack";
 import { runtimeSolvedFlopPacks } from "./flopSolvedRuntimeRegistry";
 import { actionNodeForSolvedHero } from "./solvedHeroActionNode";
-import { solvedStrategySource } from "./solvedStrategySource";
+import { solvedRangeBuckets, solvedStrategySource } from "./solvedStrategySource";
 import { translateTurnActions } from "./turnActionTranslation";
 
 /**
@@ -119,6 +119,10 @@ export function createFlopSolvedStrategyResolver(
         ruleId: best.sourceDirectory,
         potBB: best.spot?.potBB,
         stackBehindBB: best.spot?.stackBehindBB,
+        // Co se dělá s každou třídou rukou. Bez tohohle nemá matice range
+        // jedinou buňku s akcí a blafovací část je od složených rukou
+        // nerozeznatelná - změřeno 25. 8. 2026 na 0 tříd ze 169.
+        rangeBuckets: solvedRangeBuckets(best.buckets, best.actions, actions, input.board ?? []),
       }),
     };
   };

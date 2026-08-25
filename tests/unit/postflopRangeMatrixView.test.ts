@@ -120,7 +120,7 @@ describe("postflopRangeMatrixView", () => {
     expect(heroCell?.classList.contains("postflop-flopzilla__cell--selected")).toBe(true);
   });
 
-  it("umi legendou zvyraznit kategorii a ztlumit ostatni bunky", () => {
+  it("umi legendou zvyraznit skupinu akci a ztlumit ostatni bunky", () => {
     const root = document.createElement("div");
     const spot = postflopSpotToTrainingSpot(generatePostflopSpot({
       seed: 42,
@@ -139,15 +139,18 @@ describe("postflopRangeMatrixView", () => {
     expect(item?.getAttribute("tabindex")).toBe("0");
     expect(item?.getAttribute("aria-pressed")).toBe("false");
 
-    const category = item!.dataset.category;
+    // Legenda je od 25. 8. 2026 legendou **akcí**, ne kategorií rukou: hráč se
+    // ptá „kterými koly tady blafuju", a na to kategorie odpovědět neuměla.
+    const group = item!.dataset.group;
+    expect(group).toBeTruthy();
     item!.click();
 
     expect(item?.classList.contains("postflop-flopzilla__legend-item--active")).toBe(true);
     expect(item?.getAttribute("aria-pressed")).toBe("true");
     const cells = [...root.querySelectorAll<HTMLElement>(".postflop-flopzilla__cell")];
-    expect(cells.some((cell) => cell.dataset.category !== category &&
+    expect(cells.some((cell) => cell.dataset.group !== group &&
       cell.classList.contains("postflop-flopzilla__cell--muted"))).toBe(true);
-    expect(cells.every((cell) => cell.dataset.category === category ||
+    expect(cells.every((cell) => cell.dataset.group === group ||
       cell.classList.contains("postflop-flopzilla__cell--muted"))).toBe(true);
 
     item!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
@@ -170,6 +173,67 @@ describe("postflopRangeMatrixView", () => {
       expect(flopzillaLaneLabel("VALUE", node)).toBe("Value raise");
       expect(flopzillaLaneLabel("BLUFF", node)).toBe("Bluff raise");
     }
+  });
+
+  it("odlisi blaf od hodnoty, kdyz obe sazi stejnou akci", () => {
+    // Tohle je ta vlastnost, kvůli které se matice přebarvila. Obě ruce sázejí
+    // `BET_BIG`, takže podle akce samotné jsou k nerozeznání - a podle síly ruky
+    // byly k nerozeznání od stejně silných rukou, které se vzdávají. Rozdíl umí
+    // vyjádřit jedině lajna, a musí ho vyjádřit **barvou**, ne popiskem.
+    const root = document.createElement("div");
+    const spot = postflopSpotToTrainingSpot(generatePostflopSpot({
+      seed: 42,
+      street: "FLOP",
+      board: dryAceBoard,
+      heroCards: [
+        { rank: "A", suit: "s" },
+        { rank: "K", suit: "s" },
+      ],
+      strategyResolver: () => ({
+        action: "BET_BIG",
+        explanation: "Bluff versus value fixture.",
+        source: {
+          kind: "STRATEGY_PACK",
+          provenance: "SOLVER_BACKED",
+          packId: "bluff-fixture",
+          packVersion: "v1",
+          packVerifiedAt: "2026-08-25",
+          ruleId: "bluff-fixture-rule",
+          confidence: "HIGH",
+          matchedTextures: [],
+          sprMin: 0,
+          sprMax: 20,
+          positionPattern: "BTN_VS_BB",
+          sourceUrls: [],
+          assumptions: ["Bluff versus value fixture."],
+          selectionScore: 1,
+          tieBreak: "RULE_SCORE_THEN_PACK_ORDER",
+          rangeBuckets: [
+            { lane: "VALUE", label: "Sázka pro hodnotu", action: "BET_BIG", handClasses: ["AKs"], features: [] },
+            { lane: "BLUFF", label: "Blaf", action: "BET_BIG", handClasses: ["76s"], features: [] },
+            { lane: "CHECK", label: "Check", action: "CHECK", handClasses: ["72o"], features: [] },
+          ],
+        },
+      }),
+    }));
+
+    renderPostflopRangeMatrix(spot, root);
+
+    const cellFor = (hand: string) => root.querySelector<HTMLElement>(
+      `.postflop-flopzilla__cell[data-hand="${hand}"]`,
+    );
+    expect(cellFor("AKs")?.dataset.group).toBe("VALUE_BIG");
+    expect(cellFor("76s")?.dataset.group).toBe("BLUFF");
+    expect(cellFor("AKs")?.style.background).not.toBe(cellFor("76s")?.style.background);
+    // Blaf má vlastní položku legendy, tak jako na vlastníkových chartech.
+    const legendLabels = [...root.querySelectorAll<HTMLElement>(".postflop-flopzilla__legend-item")]
+      .map((item) => item.dataset.group);
+    expect(legendLabels).toContain("BLUFF");
+    expect(legendLabels).toContain("VALUE_BIG");
+    // Ruka, kterou pravidlo nedrží, není totéž co ruka, kterou skládáš.
+    expect(cellFor("32o")?.dataset.group).toBe("NONE");
+    expect(root.querySelector<HTMLElement>(".postflop-flopzilla__legend")?.dataset.axis)
+      .toBe("action");
   });
 
   it("nese solvenou akci v bunce, aby sel call odlisit od foldu", () => {
@@ -224,7 +288,14 @@ describe("postflopRangeMatrixView", () => {
     expect(cellFor("AKs")?.dataset.action).toBe("CALL");
     expect(cellFor("72o")?.dataset.action).toBe("FOLD");
     expect(cellFor("AKs")?.getAttribute("aria-label")).toContain("CALL");
-    expect(cellFor("72o")?.title).toContain("FOLD");
+    // Popisek mluví na hráče, ne interním enumem: `FOLD` mu neřekne nic a
+    // prozrazuje, jak je aplikace uvnitř poskládaná.
+    expect(cellFor("72o")?.title).toContain("Složení");
+    expect(cellFor("AKs")?.title).toContain("Dorovnání");
+    // A hlavně: odlišit je musí **barva**, ne až popisek po najetí myší. Tohle
+    // je ta vlastnost, kvůli které se matice přebarvila - dorovnání a složení
+    // sedí ve stejné lajně a dokud barvila kategorie ruky, splývaly.
+    expect(cellFor("AKs")?.style.background).not.toBe(cellFor("72o")?.style.background);
   });
 
   it("mapuje Flopzilla kategorie do value/bluff/check lanes", () => {
