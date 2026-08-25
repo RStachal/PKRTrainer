@@ -34,6 +34,7 @@ parent on Windows: kill this driver, then the `solve_plan.py` it launched, then
 spawning solvers, which looks exactly like solvers that refuse to die - taskkill
 reports success on each one and the count stays where it was.
 """
+import io
 import json
 from collections import defaultdict
 import os
@@ -225,6 +226,88 @@ def should_yield_to_new_families():
         f"nastagováno {len(pending)} rodin bez checkpointu. "
         "Okno patří monolitickému solveru, rozklad by mu vzal stroj."
     )
+
+
+# Kolik smí běh přetáhnout deadline, než ho rodič ukončí.
+#
+# Deadline dosud hlídalo jen dítě, a to **před spuštěním další podhry**. Běžící
+# podhra doběhne, na to je uvnitř strop 1800 s. Jenže noc z 24. na 25. 8.
+# přetáhla o **66 minut**, tedy o dvojnásobek toho stropu: vrstva začatá v 07:33
+# běžela 92 minut a stihla 40 ze 108 podher. Proč strop nedržel, se z logu
+# zjistit nedá - rodič výstup dítěte zahazuje.
+#
+# Příčinu tedy neznám a nebudu ji předstírat. Posouvám mez tam, kam patří:
+# **okno vlastní rodič, tak ho vynutí rodič**. Pět minut je prostor, aby
+# rozdělané podhry doběhly čistě; zabít běh je bezpečné, protože se píše do
+# `.part` a pod finální jméno jde až ověřený výsledek.
+OVERRUN_GRACE_MINUTES = 5
+
+
+def layer_timeout_seconds(deadline, now=None):
+    """Kolik vteřin smí jedna vrstva ještě běžet, než ji rodič ukončí."""
+    remaining = (deadline - (now or datetime.now())).total_seconds()
+    return max(60.0, remaining + OVERRUN_GRACE_MINUTES * 60)
+
+
+# Jak dlouho se po zabití čeká, než se strom solverů uklidí, ve vteřinách.
+LAYER_KILL_GRACE_SECONDS = 30
+
+
+def keep_child_output(out_dir, name, output):
+    """Uložit výstup dítěte, aby příští přesah nezůstal bez důkazů.
+
+    Dosud běželo `capture_output=True` a výsledek se zahazoval, takže po
+    šestašedesátiminutovém přesahu nebylo z čeho zjistit, co dítě dělalo.
+    """
+    if not output:
+        return
+    try:
+        with io.open(os.path.join(out_dir, name), "w", encoding="utf8") as handle:
+            handle.write(output[-200000:])
+    except OSError:
+        pass
+
+
+def run_solve_plan(plan_path, out_dir, workers, deadline):
+    """Odsolvit jednu vrstvu a vrátit okno rodiči, jakmile deadline vyprší.
+
+    Vrací True, když dítě doběhlo samo, False, když ho ukončil rodič.
+    """
+    command = [
+        # `-u` je tu kvůli důkazům, ne kvůli rychlosti. S bufferovaným stdoutem
+        # zabité dítě neodevzdá nic - naměřeno: kill vyšel, log měl 0 B - a to
+        # je přesně ten stav, kvůli kterému se příčina minulého přesahu
+        # nedala zjistit.
+        sys.executable, "-u", os.path.join(HERE, "solve_plan.py"),
+        plan_path, out_dir, f"--workers={workers}",
+        f"--deadline={deadline.timestamp()}",
+    ]
+    child = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+    )
+    try:
+        output, _ = child.communicate(timeout=layer_timeout_seconds(deadline))
+    except subprocess.TimeoutExpired:
+        # Zabít samotné `child` nestačí: solvery jsou jeho vnoučata a na Windows
+        # rodiče přežijí, takže by okno držely dál a přesah by trval stejně.
+        # `taskkill /T` bere celý strom - je to tentýž postup, který popisuje
+        # docstring modulu pro ruční zastavení.
+        subprocess.run(
+            ["taskkill", "/T", "/F", "/PID", str(child.pid)],
+            capture_output=True, text=True,
+        )
+        try:
+            output, _ = child.communicate(timeout=LAYER_KILL_GRACE_SECONDS)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            output = ""
+        keep_child_output(out_dir, "solve_plan.timeout.log", output)
+        log(f"    vrstvu ukončil rodič na deadlinu; výstup v {out_dir}")
+        return False
+    if child.returncode != 0:
+        keep_child_output(out_dir, "solve_plan.failed.log", output)
+        log(f"    solve_plan skončil rc={child.returncode}; výstup v {out_dir}")
+    return True
 
 
 def board_parameter_files():
@@ -431,17 +514,15 @@ def main():
 
         log(f"solving {family} {board}: {planned - solved} of {planned} subgames left")
         started = time.time()
-        subprocess.run(
-            [sys.executable, os.path.join(HERE, "solve_plan.py"),
-             plan_path, out_dir, f"--workers={workers}",
-             f"--deadline={deadline.timestamp()}"],
-            capture_output=True, text=True,
-        )
+        finished = run_solve_plan(plan_path, out_dir, workers, deadline)
         after = len([f for f in os.listdir(out_dir) if f.endswith(".json") and f != "plan.json"])
         minutes = (time.time() - started) / 60
         log(f"  {after}/{planned} after {minutes:.1f} min")
         board_minutes.append(minutes)
         done += 1
+        if not finished:
+            log("  deadline reached; board phase ukončena rodičem")
+            break
 
     log(f"boards worked {done}, already complete {skipped}, failed {failed}")
 
@@ -464,6 +545,24 @@ def main():
             "river phase se nespouští: turn není hotový "
             f"({turn_coverage * 100:.0f} % desek) a má přednost"
         )
+
+
+# Kolik okna musí zbývat, aby mělo smysl začínat další riverovou vrstvu.
+#
+# Nahradilo odhad `max(layer_minutes) > remaining`, který vrstvu odmítal začít,
+# dokud nezbývalo tolik, kolik trvala nejdelší dosud viděná. Měření za 505
+# vrstev ukazuje, proč to nemohlo fungovat: **délka vrstvy kolísá 28×** (medián
+# 3,3 min, maximum 92,2), protože položek na vrstvu je 148 až 407. Po jediné
+# dlouhé vrstvě by tedy brzda proidlila půldruhé hodiny každé noci.
+#
+# Odhadovat se to nemá čím zlepšit a hlavně už není potřeba: přetažení dnes
+# tvrdě omezuje dvojice mezí (položka končí do `deadline + 4 min`, rodič zabíjí
+# na `deadline + 5 min`), a useknutá vrstva není ztráta - položky se ukládají po
+# jedné a příští noc se pokračuje. Ta 92minutová vrstva odevzdala 40 podher.
+#
+# Zbývá jediný důvod nezačínat: samotné `plan_river.py` něco stojí a plán bez
+# jediné odsolvené položky je čistá režie. Pět minut je na plán a pár položek.
+RIVER_MIN_LAYER_START_MIN = 5
 
 
 # Kratší zbytek okna river nespouští: samotné plánování vrstvy něco stojí a
@@ -602,11 +701,8 @@ def run_river_phase(deadline, workers, coverage, budget):
         if remaining <= 0:
             log("  deadline reached; stopping river phase")
             break
-        if layer_minutes and max(layer_minutes) > remaining:
-            log(
-                f"  končím {remaining:.0f} min před deadline: další vrstva potřebuje "
-                f"asi {max(layer_minutes):.0f} min a přetáhla by ho"
-            )
+        if remaining < RIVER_MIN_LAYER_START_MIN:
+            log(f"  končím {remaining:.1f} min před deadline: na novou vrstvu je pozdě")
             break
         out_dir = os.path.join(row["directory"], "river", os.path.basename(row["path"])[:-5])
         plan_path = os.path.join(out_dir, "plan.json")
@@ -627,18 +723,26 @@ def run_river_phase(deadline, workers, coverage, budget):
             continue
         log(f"  solving river {os.path.basename(out_dir)}: {planned - solved} z {planned}")
         started = time.time()
-        subprocess.run(
-            [sys.executable, os.path.join(HERE, "solve_plan.py"),
-             plan_path, out_dir, f"--workers={workers}",
-             f"--deadline={deadline.timestamp()}"],
-            capture_output=True, text=True,
-        )
+        finished = run_solve_plan(plan_path, out_dir, workers, deadline)
         minutes = (time.time() - started) / 60
         after = len([f for f in os.listdir(out_dir) if f.endswith(".json") and f != "plan.json"])
         log(f"    {after}/{planned} za {minutes:.1f} min")
         layer_minutes.append(minutes)
         done += 1
-    log(f"river phase: {done} turnových podher dostalo riverovou vrstvu")
+        if not finished:
+            log("  deadline reached; river phase ukončena rodičem")
+            break
+    # Rozptyl délek patří do logu, ne do rozhodování o startu. Příští rozbor noci
+    # se tak nemusí dolovat z jednotlivých řádků, jak se to dolovalo teď.
+    if layer_minutes:
+        ordered = sorted(layer_minutes)
+        median = ordered[len(ordered) // 2]
+        log(
+            f"river phase: {done} turnových podher dostalo riverovou vrstvu"
+            f"; vrstva {median:.1f} min medián, {max(ordered):.1f} max"
+        )
+    else:
+        log(f"river phase: {done} turnových podher dostalo riverovou vrstvu")
 
 
 if __name__ == "__main__":

@@ -80,15 +80,76 @@ describe("solve_plan: konec okna", () => {
 
   it("deadline se předává do obou fází nočního běhu", () => {
     // Riverová fáze měla mez jen mezi vrstvami, a právě uvnitř vrstvy se
-    // přetáhlo. Obě volání `solve_plan.py` proto musí deadline nést.
+    // přetáhlo. Obě fáze proto musí `solve_plan.py` spouštět přes společný
+    // `run_solve_plan`, který deadline nese a okno vynucuje.
+    //
+    // Dřív se tu počítala dvě doslovná volání. Sjednocení do jedné funkce ten
+    // počet srazilo na jedno, aniž by se cokoli zhoršilo - proto se dnes hlídá,
+    // že mimo tu funkci žádné volání nezůstalo.
     const source = "Agents/solver-input/decomposition/run_night_decomposition.py";
     if (!existsSync(source)) return;
     const text = readFileSync(source, "utf8");
-    // Jen skutečná volání, ne zmínka v dokumentaci nahoře: ta popisuje pořadí
-    // zabíjení procesů a žádný deadline nepředává.
-    const calls = text.split('os.path.join(HERE, "solve_plan.py")').length - 1;
+    const spawns = text.split('os.path.join(HERE, "solve_plan.py")').length - 1;
     const deadlines = text.split("--deadline=").length - 1;
-    expect(calls).toBeGreaterThanOrEqual(2);
-    expect(deadlines).toBe(calls);
+    expect(spawns).toBe(1);
+    expect(deadlines).toBe(spawns);
+    // Obě fáze plus definice.
+    expect(text.split("run_solve_plan(").length - 1).toBeGreaterThanOrEqual(3);
+  });
+
+  /**
+   * Že se po deadlinu nezačíná, samo okno neudrží.
+   *
+   * `solve_one` odmítne *začít* po deadlinu, ale co běží, doběhne - a při osmi
+   * jádrech je to osm podher, každá až třicet minut po konci okna. Noc z 24. na
+   * 25. 8. přetáhla o 66 minut, tedy o dvojnásobek toho stropu, a z logu se
+   * příčina zjistit nedala.
+   *
+   * Meze jsou proto dvě a tenhle blok drží obě: podhra se ukončí sama do
+   * `deadline + 4 min`, rodič zabije celou vrstvu na `deadline + 5 min`.
+   */
+  const positions = [60, 40, 26, 10, 1, 0.1];
+
+  it("podhra skončí nejpozději čtyři minuty za deadlinem", () => {
+    if (python() === undefined || !existsSync(RUNNER)) return;
+    const out = run([
+      preamble,
+      "now = 1000000.0",
+      `ends = [(-left + m.item_timeout(now + left * 60, now) / 60) for left in ${JSON.stringify(positions)}]`,
+      "print(json.dumps([round(value, 3) for value in ends]))",
+    ].join("\n"));
+    const ends = JSON.parse(out.trim()) as number[];
+    for (const [index, end] of ends.entries()) {
+      expect(end, `${positions[index]} min do deadlinu`).toBeLessThanOrEqual(4);
+    }
+    // A zároveň se nesmí zkrátit tam, kde je okna dost: bez toho by šlo test
+    // splnit stropem jedné minuty a noc by nic nespočítala.
+    expect(ends[0]).toBe(-30);
+  });
+
+  it("bez deadlinu zůstává půlhodinový strop", () => {
+    if (python() === undefined || !existsSync(RUNNER)) return;
+    const out = run([preamble, "print(json.dumps(m.item_timeout(None)))"].join("\n"));
+    expect(JSON.parse(out.trim())).toBe(1800);
+  });
+
+  it("rodič vrstvu ukončí pět minut za deadlinem", () => {
+    if (python() === undefined) return;
+    const source = "Agents/solver-input/decomposition/run_night_decomposition.py";
+    if (!existsSync(source)) return;
+    const out = run([
+      "import importlib.util, json",
+      "from datetime import datetime, timedelta",
+      `spec = importlib.util.spec_from_file_location("night", ${JSON.stringify(source)})`,
+      "m = importlib.util.module_from_spec(spec)",
+      "spec.loader.exec_module(m)",
+      "now = datetime(2026, 8, 25, 3, 0, 0)",
+      `left = ${JSON.stringify(positions)}`,
+      "print(json.dumps([round(m.layer_timeout_seconds(now + timedelta(minutes=x), now) / 60 - x, 3) for x in left]))",
+    ].join("\n"));
+    // Kolik minut za deadlinem rodič zabíjí - vždy pět, ať vrstva začne kdykoli.
+    for (const overrun of JSON.parse(out.trim()) as number[]) {
+      expect(overrun).toBe(5);
+    }
   });
 });

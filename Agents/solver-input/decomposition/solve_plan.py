@@ -96,6 +96,28 @@ def write_param(item, param_path, dump_path):
     open(param_path, "w", newline="\n").write("\n".join(lines) + "\n")
 
 
+# Strop na jednu podhru, ve vteřinách, a kolik z něj smí přetéct za deadline.
+#
+# Půlhodina sama o sobě mez okna nedrží: `solve_one` odmítne *začít* po
+# deadlinu, jenže co už běží, doběhne - a při osmi jádrech je to osm podher,
+# každá až třicet minut po konci okna. Noc z 24. na 25. 8. přetáhla o 66 minut.
+#
+# Ořez na `deadline + 4 min` znamená, že se běh zastaví sám a čistě; rodičovský
+# kill v `run_night_decomposition.py` přijde na `deadline + 5 min` a je jen
+# záložní. Zabít rozdělaný solve je bezpečné: píše se do `.part` a pod finální
+# jméno jde až ověřený výsledek, takže useknutá podhra se nepočítá za hotovou.
+ITEM_TIMEOUT_SECONDS = 1800.0
+ITEM_GRACE_SECONDS = 240.0
+
+
+def item_timeout(deadline, now=None):
+    """Kolik vteřin smí jedna podhra běžet, aby okno přetekla nejvýš o grace."""
+    if deadline is None:
+        return ITEM_TIMEOUT_SECONDS
+    current = time.time() if now is None else now
+    return max(60.0, min(ITEM_TIMEOUT_SECONDS, deadline - current + ITEM_GRACE_SECONDS))
+
+
 def solve_one(item, out_dir, dry, deadline=None):
     name = item_id(item)
     # Konec okna se musí hlídat tady, ne jen mezi vrstvami.
@@ -134,7 +156,8 @@ def solve_one(item, out_dir, dry, deadline=None):
     try:
         result = subprocess.run(
             [os.path.join(SOLVER_ROOT, "console_solver.exe"), "-i", param_path],
-            cwd=SOLVER_ROOT, capture_output=True, text=True, timeout=1800,
+            cwd=SOLVER_ROOT, capture_output=True, text=True,
+            timeout=item_timeout(deadline),
         )
     except subprocess.TimeoutExpired:
         return name, "timeout", time.time() - started, ""
