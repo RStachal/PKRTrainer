@@ -24,9 +24,20 @@ stropu na 44 MB zhruba **2,5 MB**.
 Je to tedy rozhodnutí o velikosti stahování - stejná otázka jako ve fázi 2, jen
 na riveru. Do rozhodnutí se nedopočítává.
 
-Otevřené i to, že **linkový režim** (flop→turn→river v jedné ruce) přednačtení
-EV nemá; opravený je zatím jednotlivý riverový dril, tedy ta cesta, na kterou
-majitel upozornil.
+**Linkový režim** (flop→turn→river v jedné ruce) přednačtení EV **dostal
+26. 8. 2026**, ale změřený dopad je malý a je fér říct proč:
+
+| | bez přednačtení | s ním |
+|---|---|---|
+| riverových kroků linky | 80 | 80 |
+| z toho vyřešených | 1,3 % | 1,3 % |
+| z toho s EV | 0,0 % | **1,3 %** |
+
+EV se ukáže **všude, kde vyřešený obsah je** - ta dvě čísla sedí na sebe
+přesně. Strop je jinde: riverový uzel linky je vyřešený jen v 1,3 % případů.
+Vyřešená riverová karta se vybere v 8 z 80 linek a z těch osmi sedne uzel
+jednou. Není to vada načasování, ale **množství riverového obsahu** - 657
+vrstev proti 130 tisícům turnových podher. Na tom pracuje noc.
 
 ### Původní zadání fáze, pro pořádek
 

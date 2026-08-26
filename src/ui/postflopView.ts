@@ -324,6 +324,12 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
         // rozdá náhodná deska a resolver ji odmítne - měřeno 0 z 500 linek se
         // solverovým obsahem, přestože se dodává jedenáct rodin.
         const solved = solvedLineConfigForSeed(seed);
+        // Tabulka EV pro riverový uzel linky, stejně jako u jednotlivého spotu.
+        // Čeká se jen když je na co - viz `primeRiverEvForPack`.
+        const linePriming = solved?.riverPackId !== undefined
+          ? primeRiverEvForPack(solved.riverPackId)
+          : undefined;
+        if (linePriming) await linePriming;
         const line = generatePostflopLine({
           seed,
           potType: solved?.potType ?? options.initialPotType,
@@ -2043,6 +2049,14 @@ function solvedLineConfigForSeed(seed: number): {
   effectiveStackBB: number;
   positionContext: PostflopPositionContext;
   actionNode: PostflopActionNode;
+  /**
+   * Pack vyřešeného riveru, když se pátou kartu podařilo vybrat z obsahu.
+   *
+   * Vrací se ven kvůli přednačtení tabulky EV: bez něj se resolver ptá na
+   * tabulku uprostřed rozdání a první linka z každé rodiny čísla neukáže -
+   * tatáž vada, jaká byla u jednotlivého riverového drilu.
+   */
+  riverPackId?: string;
 } | undefined {
   const rng = mulberry32(seed);
   rng();
@@ -2067,7 +2081,8 @@ function solvedLineConfigForSeed(seed: number): {
   // stahuje a nikdo ho nepotká. Bez shody se dolosuje dál: vyrobit river, který
   // nikdo nespočítal, by bylo horší než heuristika.
   const solvedRivers = solvedRiversForTurnBoard(config.board);
-  const solvedRiver = pickSolvedRiverSpot(rng(), solvedRivers)?.board[4];
+  const picked = pickSolvedRiverSpot(rng(), solvedRivers);
+  const solvedRiver = picked?.board[4];
   const river = solvedRiver
     ?? deck[Math.min(Math.floor(rng() * deck.length), deck.length - 1)];
   if (river === undefined) return undefined;
@@ -2081,6 +2096,7 @@ function solvedLineConfigForSeed(seed: number): {
     // Linka začíná na flopu, takže uzel je flopový; turnový uzel si simulátor
     // odvodí sám z toho, jak se na flopu zahrálo.
     actionNode: config.potType === "THREE_BET_POT" ? "THREE_BET_POT_CBET" : "SINGLE_RAISED_POT_CBET",
+    ...(picked !== undefined ? { riverPackId: picked.packId } : {}),
   };
 }
 
