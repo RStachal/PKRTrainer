@@ -42,12 +42,29 @@ smůla, to byla chybějící brána.
 vyrobený obsah, ne to, co z něj dojde k hráči, a rozdíl mezi tím se dva týdny
 neprojevil nikde. Viz pravidlo 4.
 
-**Pozor, čím `typecheck` není:** `tsconfig.json` má
-`include: ["src", "tests", "vite.config.ts"]`, takže **`scripts/` se
-nekontroluje**. Změřeno 25. 8. 2026: v 91 souborech tam sedí **112 typových
-chyb**. Deník i plán přitom tvrdily „změřeno 0, hotovo" - to měření pustilo
-`tsc --noEmit` a nedívalo se do adresáře, o kterém mluvilo. Do doby, než se ty
-chyby uklidí, platí, že zelený `typecheck` o pipeline nevypovídá nic.
+**`typecheck` hlídá dvě konfigurace, a je to podstatné.** `tsconfig.json`
+kontroluje `src` a `tests` proti ES2020 kvůli Android WebView;
+`tsconfig.scripts.json` kontroluje `scripts/` proti ES2022, protože skripty
+běží na Node. Slévat je do jedné by znamenalo buď zakázat Node modernější API,
+nebo pustit do aplikace to, co starý WebView neumí.
+
+**Do 26. 8. 2026 se `scripts/` nekontroloval vůbec** a schovával 114 chyb.
+Deník i plán přitom tvrdily „změřeno 0, hotovo" - to měření pustilo
+`tsc --noEmit` a nedívalo se do adresáře, o kterém mluvilo.
+
+Za těch 114 chyb vypadlo **šest skutečných vad**, ne jen nepořádek:
+
+- `checkSolvedSpotCoverage` četl neexistující pole a hlásil **vždy 0,0 %**;
+- `extractReferenceRanges.py` zahazoval mixované strategie u 11,8 % rukou;
+- profiler stavěl neplatný `TableState` bez povinné hloubky;
+- `packageMttPlayableBeta` četl pole mimo vlastní deklaraci;
+- `isAutoDraftable` byl type guard, který tvrdil o typu víc, než ověřoval;
+- brána pilotů vracela report bez `provenanceFamilyIds`.
+
+**Poučení, které z toho platí dál:** nekontrolovaný adresář neznamená, že tam
+nic není - jen že to nikdo neuvidí. A **nástroj, kterým se měří, potřebuje
+bránu stejně jako produkt**: žádná z těch dvou měřicích chyb se neprojevila
+pádem, obě vracely čísla, která vypadala jako důkaz.
 
 **`release:check` to není a nesmí se s tím zaměnit.** Měřeno 24. 8. 2026:
 padá na třech branách, které s kódem nesouvisí - „MTT completion production
@@ -91,7 +108,7 @@ Z toho plynou dvě povinnosti:
 
 ### 5. Meze se dědí, ale nepřeměřují — a ozvou se až když blokují dodání
 
-Přidáno 25. 8. 2026, protože ten den **selhalo pět různých mezí za jediný den a
+Přidáno 25. 8. 2026, protože ten den **selhalo devět různých mezí za jediný den a
 všechny ze stejného důvodu**: byly nastavené kolem menší knihovny a nikdo je od
 té doby nepřeměřil. Ani jedna nebyla vada kódu.
 
@@ -102,6 +119,11 @@ té doby nepřeměřil. Ani jedna nebyla vada kódu.
 | halda `vite build` | 4 GB (výchozí) | 8 GB | 301 modulů, 29 MB líných packů, 7 MB EV |
 | `bootstrapIntegration` | 30 s | 90 s | týž studený překlad v plné sadě |
 | `vi.waitFor` | 1 s (výchozí) | 20 s | dynamický import tabulky EV, ~400 kB |
+| halda buildu v E2E | 4 GB (výchozí) | 8 GB | vlastní build uvnitř E2E, tentýž strop |
+| workery sady | 4 | **2** | paměť: čtyři workery ji vyčerpají |
+| precache raw | 400 KiB | 416 KiB | 8,4 KiB nového kódu |
+| chunk raw | 512 KiB | 520 KiB | 2,9 KiB, A/B změřeno |
+| knihovna raw | 32 MB | 44 MB | noc dodala 46 rodin: 28,5 → 41,5 MB |
 
 Tři věci, které z toho platí dál:
 
@@ -116,10 +138,12 @@ Tři věci, které z toho platí dál:
    které stojí. Strop není kontrola správnosti, jen pojistka proti zaseknutí -
    rozbitý test spadne na tvrzení, ne na čase.
 
-Otevřené ze stejné rodiny: `maxWorkers: 4` ve `vite.config.ts` je podložené
-měřením z doby **19 dodávaných rodin**; dnes jich je 97 a každý worker si drží
-vlastní strom `npm → vite-node` s desítkami MB packů. Komentář u toho čísla
-správně říká „neměňte to bez měření", takže se měří, ne přepisuje.
+U workerů vyšlo měření proti intuici a stojí za zapamatování: **méně je
+rychleji.** Čtyři workery daly 476 s se dvěma pády a později 980 s s jedním,
+dva workery 386 s a nula pádů. Test `SNG chipEV candidate` trval v plné sadě
+při čtyřech workerech **559 vteřin** a samostatně **537 ms** - tisícinásobek,
+protože stroj stránkoval. Čtyřka nebyla nikdy špatně; byla naměřená na 19
+dodávaných rodinách, dnes jich je 97.
 
 ### Co tím nezmizí
 

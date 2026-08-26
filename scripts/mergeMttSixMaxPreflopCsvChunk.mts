@@ -181,10 +181,14 @@ function run(args: CliArgs): MergeReport {
   }
 
   try {
+    // `proposedSha256` je tu jistě vyplněný: počítá se z `merged.document` a
+    // funkce se do téhle větve nedostane, dokud není ne-null (kontrola výš).
+    // TypeScript to přes pole reportu neuvidí, tak se to spočítá znovu z téhož
+    // dokumentu - je to levné a nelže to.
     report.finalSha256 = replaceFileWithBackup(
       args.workbenchPath,
       merged.document,
-      report.proposedSha256,
+      sha256(Buffer.from(merged.document, "utf8")),
     );
   } catch (error) {
     report.valid = false;

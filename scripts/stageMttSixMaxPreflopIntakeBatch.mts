@@ -99,7 +99,9 @@ function preflight(packId: string, args: CliArgs): StageRow {
   const candidatePermissionPath = join(args.draftDir, packId, "permission.candidate.json");
   const canonicalPermissionPath = join(args.rawRoot, packId, "permission.json");
   const candidateExists = existsSync(candidatePath);
-  const permissionSource = existsSync(canonicalPermissionPath)
+  // Literální typ, jinak se vnořený ternární výraz odvodí jako `string` a řádek
+  // se pak nedá přiřadit do `StageRow`.
+  const permissionSource: StageRow["permissionSource"] = existsSync(canonicalPermissionPath)
     ? "CANONICAL"
     : existsSync(candidatePermissionPath) ? "CANDIDATE" : "MISSING";
   const permissionPath = permissionSource === "CANONICAL" ? canonicalPermissionPath : candidatePermissionPath;

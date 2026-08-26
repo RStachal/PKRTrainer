@@ -296,7 +296,11 @@ function readSourceCandidates(
   const result = new Map<string, SourceCandidate[]>();
   for (const manifestPath of paths) {
     const parsed = parseJsonFile(manifestPath, blockers, "source manifest") as SourceManifest | null;
-    if (!isRecord(parsed)) continue;
+    // Kontrola na `null`, ne `isRecord`: ten zužuje na `Record<string, unknown>`
+    // a tím **zahodí** typ `SourceManifest`, takže `executionProfile` vyjde
+    // jako `{}` a nejde se ho zeptat na `treeProfile`. Přetypování o řádek výš
+    // už tvar slibuje; druhá stráž ho jen zahazovala.
+    if (parsed === null) continue;
     const packId = typeof parsed.packId === "string" ? parsed.packId : "";
     if (packId.length === 0 || parsed.executionProfile?.treeProfile !== TREE_PROFILE) {
       blockers.push(`${manifestPath}: source manifest is not explicitly ${TREE_PROFILE}.`);
