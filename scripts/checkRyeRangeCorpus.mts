@@ -159,7 +159,8 @@ if (process.argv.includes("--coverage")) {
     const situation = situationFromFileName(name);
     if (context === undefined || situation === undefined) continue;
     const key = `${situation.seat}|${bucketForStack(situation.stackBB)}|${context}`;
-    const cell = perCell.get(key) ?? { pages: [], answers: new Map() };
+    const cell = perCell.get(key)
+      ?? { pages: [] as string[], answers: new Map<string, Set<string>>() };
     cell.pages.push(name);
     for (const hand of grid.hands) {
       const set = cell.answers.get(hand.hand) ?? new Set<string>();

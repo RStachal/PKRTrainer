@@ -33,6 +33,13 @@ const FORBIDDEN_ARCHIVE_SEGMENTS = [
 
 interface CliArgs {
   confirm: string | null;
+  /**
+   * Znovu použít důkazy z předchozího běhu místo jejich sbírání.
+   *
+   * Pole se používalo a v rozhraní nebylo; TypeScript to neviděl, protože se
+   * `scripts/` nekontroloval.
+   */
+  reuseEvidence: boolean;
   label: string;
   manifestPath: string | null;
   outputPath: string | null;

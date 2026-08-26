@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { classifyBoard, type BoardTexture } from "../src/core/postflopGenerator.ts";
 import type { Card, Rank, Suit } from "../src/core/types.ts";
 

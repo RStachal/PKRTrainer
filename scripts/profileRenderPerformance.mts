@@ -23,6 +23,11 @@ const heroCards: [Card, Card] = [
 const tableState: TableState = {
   heroPos: "BTN",
   pushFold: false,
+  // Povinné pole, které tu chybělo. `TableState` ho zavedl místo dřívějšího
+  // `shortStack: boolean`, protože jediný příznak sléval tři různé hloubky, ve
+  // kterých shove končí. Profiler bez něj stavěl neplatný stav a jen díky
+  // nekontrolovanému `scripts/` to nikdo neviděl.
+  effectiveStackBB: 100,
   limpsBefore: 0,
   callsBefore: 1,
   facing: "OPEN",

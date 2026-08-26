@@ -231,7 +231,9 @@ function buildRow(
         : "WAITING_FOR_RAW";
   const familyDir = join(outputBase, scenario.familyId);
   const rootDecision = isRootDecisionFamily(scenario.familyId);
-  const reviewKind = rootDecision ? "ROOT" : "CHECK";
+  // Literální typ, ne `string`. Bez toho se ternární výraz odvodí jako `string`
+  // a nedá se přiřadit do pole, které chce `"ROOT" | "CHECK"`.
+  const reviewKind: "ROOT" | "CHECK" = rootDecision ? "ROOT" : "CHECK";
   const exposeDownstreamArtifacts = reviewOnlyTreeProfile === null;
   const review = exposeDownstreamArtifacts && existsSync(join(
     familyDir,

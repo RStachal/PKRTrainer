@@ -189,10 +189,13 @@ for (const entry of CATALOGUES) {
 }
 
 const covered = new Set<string>();
+// Bez přetypování: všechny tři druhy packu mají `rules` a každé pravidlo nese
+// `positionPattern`, takže je není proč popisovat znovu. Přetypování tu navíc
+// TypeScript odmítal - a obcházet ho přes `unknown` by jen umlčelo kontrolu.
 for (const pack of [
-  ...(runtimeSolvedFlopPacks as readonly { rules: { positionPattern?: string }[] }[]),
-  ...(runtimeSolvedTurnPacks as readonly { rules: { positionPattern?: string }[] }[]),
-  ...(runtimeSolvedRiverPacks as readonly { rules: { positionPattern?: string }[] }[]),
+  ...runtimeSolvedFlopPacks,
+  ...runtimeSolvedTurnPacks,
+  ...runtimeSolvedRiverPacks,
 ]) {
   for (const rule of pack.rules) if (rule.positionPattern) covered.add(rule.positionPattern);
 }

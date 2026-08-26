@@ -201,7 +201,9 @@ export function contextForVocabulary(actions: readonly string[]): MappedContext 
 export const STACK_BUCKETS = [5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 125, 150] as const;
 
 export function bucketForStack(stackBB: number): number {
-  let best = STACK_BUCKETS[0];
+  // Typ musí být `number`, ne odvozený literál: `STACK_BUCKETS` je konstantní
+  // pole, takže by se `best` odvodilo jako `5` a další kbelík by do něj nešel.
+  let best: number = STACK_BUCKETS[0];
   for (const bucket of STACK_BUCKETS) {
     if (Math.abs(bucket - stackBB) < Math.abs(best - stackBB)) best = bucket;
   }

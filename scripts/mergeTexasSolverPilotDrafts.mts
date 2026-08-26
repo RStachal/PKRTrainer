@@ -195,7 +195,7 @@ interface MergeReport {
   errors: readonly string[];
   warnings: readonly string[];
   skippedDefaultInputs: readonly string[];
-  plannedFiles: readonly Array<{ path: string; written: boolean }>;
+  plannedFiles: readonly { path: string; written: boolean }[];
 }
 
 try {
@@ -211,7 +211,9 @@ try {
 function parseArgs(argv: readonly string[]): CliArgs {
   const inputDirs: string[] = [];
   let outputDir: string | null = null;
-  let scope = DEFAULT_SCOPE;
+  // Typ musí být union, ne `string`: `DEFAULT_SCOPE` se odvodí jako `string`,
+  // a pak nejde ani indexovat `MERGE_PROFILES`, ani vrátit ven.
+  let scope: MttPostflopPilotScope = DEFAULT_SCOPE;
   let write = false;
   let summary = false;
   let json = false;

@@ -22,11 +22,22 @@
  * velikost sázky, než jakou solver počítal.
  */
 
+/**
+ * Uzel podhry tak, jak ho zapisuje solver.
+ *
+ * Typy polí jsou **shodné s `TurnSubgameNode`** schválně: je to tentýž JSON,
+ * jen čtený dvěma moduly. Dokud tu bylo `unknown`, nešel uzel předat čtečce
+ * pravidel bez přetypování - a přetypování mezi dvěma popisy téhož tvaru je
+ * horší než ty popisy srovnat, protože příště je nikdo nesrovná.
+ */
 export interface SubgameNode {
-  node_type?: unknown;
-  player?: unknown;
-  actions?: unknown;
-  strategy?: { actions?: unknown; strategy?: Record<string, unknown> };
+  node_type?: string;
+  player?: number;
+  actions?: readonly string[];
+  strategy?: {
+    actions?: readonly string[];
+    strategy?: Readonly<Record<string, readonly number[]>>;
+  };
   childrens?: Record<string, SubgameNode>;
 }
 

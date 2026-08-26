@@ -24,7 +24,6 @@ import { writeFileSync } from "node:fs";
  */
 
 const RANKS = "23456789TJQKA";
-const SUITS = "cdhs";
 
 /** A card is 0..51, rank = card >> 2, suit = card & 3. */
 const rankOf = (card: number) => card >> 2;
