@@ -53,10 +53,23 @@ const SCRIPT_PATH: Readonly<Record<string, string>> = {
   "bundle:budget": "scripts/checkBundleBudget.mts",
 };
 
+/**
+ * Halda pro potomky.
+ *
+ * Výchozí 4 GB přestaly stačit 26. 8. 2026, kdy EV dostalo všech 47 riverových
+ * rodin: přes `resolveJsonModule` se čte 14,4 MB JSONu a `tsc --noEmit` **spadl
+ * na haldě**. Hláška vypadá jako porucha buildu, přitom je to zděděná mez.
+ *
+ * Platí i pro generátor EV: rodina `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR` na
+ * čtyřech gigabajtech spadla a v opravné smyčce by se to zapsalo jako
+ * „generátor odmítl" - tedy tiše ztracená tabulka.
+ */
+const CHILD_HEAP = "--max-old-space-size=8192";
+
 function run(script: string, args: string[] = []): string {
   const path = SCRIPT_PATH[script];
   if (path === undefined) throw new Error(`neznámý skript ${script}`);
-  return execFileSync(process.execPath, ["scripts/run-cli.mjs", path, ...args], {
+  return execFileSync(process.execPath, [CHILD_HEAP, "scripts/run-cli.mjs", path, ...args], {
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
   });
@@ -128,6 +141,7 @@ if (!write) {
   console.log("Nic se nespustilo. Provedení: npm run mtt:after-night -- --write");
   console.log("Přidej --ev, když se má přepočítat EV **všech** riverových rodin.");
   console.log("Zastaralé tabulky se obnovují samy; vypnout jde --skip-ev-repair.");
+  console.log("Obnova má rozpočet 90 minut, jinak --ev-repair-minutes=N.");
 } else {
   const list = families();
   generateAll(list, "1/3");
@@ -149,7 +163,8 @@ if (!write) {
   // smaže celý předchozí přepočet.
   //
   // Proto se to **nedělá na požádání, ale vždycky** - jen zúženě. `--ev` na
-  // všech 47 rodinách stojí hodiny; zastaralých je hrstka a přepočítat se mají
+  // všech 47 rodinách stojí kolem 80 minut (změřeno 26. 8. 2026: 58 s na rodinu
+  // typicky, jedna 2 129 s); zastaralých bývá hrstka a přepočítat se mají
   // právě ony. `--skip-ev-repair` je pro případ, kdy je potřeba cyklus urychlit
   // a člověk ví, že EV dopočítá zvlášť.
   if (!process.argv.includes("--skip-ev-repair")) {
@@ -159,18 +174,51 @@ if (!write) {
     if (stale.length === 0) {
       console.log("  žádná tabulka nezastarala");
     } else {
-      console.log(`  zastaralo ${stale.length} tabulek, přepočítávám (kolem pěti minut na rodinu)`);
+      // Změřeno 26. 8. 2026 na všech 47 rodinách: **58 vteřin na rodinu**
+      // typicky, ale rozptyl je velký - nejrychlejší 37 s, nejpomalejší
+      // 2 129 s. Průměr by tady lhal, takže se říká obojí.
+      //
+      // Rozpočet času existuje proto, že od téhož dne může zastarat 47 tabulek
+      // místo sedmnácti; nejhorší případ je kolem 80 minut a to už je ráno,
+      // kdy majitel čeká na dodání. Kontroluje se **před** rodinou, ne během -
+      // dopředu se neví, jak dlouho poběží, takže se smí přetáhnout o jednu.
+      // Zbytek se nezamlčí: vypíše se, co zbývá, a čím to dokončit.
+      const budgetMinutes = Number(
+        process.argv.find((arg) => arg.startsWith("--ev-repair-minutes="))?.split("=")[1] ?? 90,
+      );
+      const deadline = Date.now() + budgetMinutes * 60_000;
+      console.log(
+        `  zastaralo ${stale.length} tabulek, přepočítávám`
+        + ` (58 s na rodinu typicky, nejhorší naměřená 2 129 s;`
+        + ` rozpočet ${budgetMinutes} min)`,
+      );
       let repaired = 0;
-      for (const family of stale) {
+      const skipped: string[] = [];
+      for (const [index, family] of stale.entries()) {
+        if (Date.now() >= deadline) {
+          skipped.push(...stale.slice(index));
+          break;
+        }
+        const started = Date.now();
         try {
           run("mtt:river-pack", [`--family=${family}`, "--write", "--ev"]);
           repaired += 1;
+          console.log(`  ${family}: ${Math.round((Date.now() - started) / 1000)} s`);
         } catch {
           // Odmítnutá rodina není chyba cyklu; generátor hlásí proč.
           console.log(`  ${family}: generátor odmítl`);
         }
       }
       console.log(`  přepočítáno ${repaired} z ${stale.length}`);
+      if (skipped.length > 0) {
+        console.log(`  ROZPOČET ČASU VYPRŠEL, zbývá ${skipped.length} rodin bez EV:`);
+        for (const family of skipped) console.log(`    ${family}`);
+        console.log("  dokončit jde po jedné:");
+        console.log(`    npm run mtt:river-pack -- --family=${skipped[0]} --write --ev`);
+        // Nedokončená obnova není v pořádku: hráč uvidí u těch rodin spot bez
+        // EV a nic mu neřekne proč. Cyklus proto skončí nenulově.
+        process.exitCode = 1;
+      }
     }
   }
 
@@ -185,7 +233,7 @@ if (!write) {
   try {
     // `tsc --noEmit` přímo: build je npm skript, ne `.mts`, a typová kontrola je
     // ta půlka, která po přegenerování obsahu může spadnout.
-    execFileSync(process.execPath, ["node_modules/typescript/bin/tsc", "--noEmit"], {
+    execFileSync(process.execPath, [CHILD_HEAP, "node_modules/typescript/bin/tsc", "--noEmit"], {
       encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
     });
     console.log("  typová kontrola: ok");
