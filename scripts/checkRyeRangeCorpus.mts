@@ -1,8 +1,9 @@
 import { readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { readRyeGrid, type RyeGrid } from "./lib/ryeRangeCorpus.mts";
 import {
-  REFUSED_VOCABULARIES, bucketForStack, contextForVocabulary, situationFromFileName,
+  REFUSED_VOCABULARIES, bucketForStack, contextForVocabulary, opponentFromFileName,
+  situationFromFileName,
 } from "./lib/ryeActionMapping.mts";
 
 /**
@@ -56,7 +57,7 @@ const failed = grids.filter((grid) => grid.mismatches.length > 0);
 
 /** Skupina podle předpony jména, tedy typu situace: ICM, OP, F3B, ... */
 function groupOf(grid: RyeGrid): string {
-  const name = grid.file.split(/[\\/]/).pop() ?? "";
+  const name = basename(grid.file);
   return (/^[A-Za-z0-9]+/.exec(name)?.[0] ?? "?").toUpperCase();
 }
 
@@ -103,7 +104,7 @@ if (process.argv.includes("--coverage")) {
   let refused = 0;
 
   for (const grid of verified) {
-    const name = grid.file.split(/[\/]/).pop() ?? "";
+    const name = basename(grid.file);
     const vocabulary = grid.legend.map((entry) => entry.action).sort().join(" | ");
     if (REFUSED_VOCABULARIES.has(vocabulary)) { refused += 1; continue; }
     const context = contextForVocabulary(grid.legend.map((entry) => entry.action));
@@ -139,7 +140,7 @@ if (process.argv.includes("--coverage")) {
   // který nikdo nespočítal.
   const perCell = new Map<string, { pages: string[]; answers: Map<string, Set<string>> }>();
   for (const grid of verified) {
-    const name = grid.file.split(/[\/]/).pop() ?? "";
+    const name = basename(grid.file);
     const vocabulary = grid.legend.map((entry) => entry.action).sort().join(" | ");
     if (REFUSED_VOCABULARIES.has(vocabulary)) continue;
     const context = contextForVocabulary(grid.legend.map((entry) => entry.action));
@@ -171,6 +172,78 @@ if (process.argv.includes("--coverage")) {
   }
   console.log(`buněk, do kterých padá víc stran: ${shared} | z toho s rozpornou odpovědí: ${conflicting}`);
   for (const line of examples) console.log(`    ${line}`);
+
+  // Který klíč ty rozpory odstraní.
+  //
+  // Tohle je to měření, které rozhoduje o rozšíření modelu. Zkoušejí se tři
+  // klíče vedle sebe, aby se nevybíralo podle dojmu: dnešní, dnešní plus
+  // sedačka soupeře, a ten plus jeho hloubka. Rozpor znamená, že dvě stránky
+  // dají téže třídě rukou jinou odpověď - tedy že klíč nerozlišuje něco, co
+  // zdroj rozlišuje.
+  console.log("");
+  console.log("Který klíč rozpory odstraní");
+  console.log("klíč".padEnd(34) + "buněk".padStart(8) + "sdílených".padStart(11) + "rozporných".padStart(12));
+  for (const variant of [
+    "dnešní",
+    "+ sedačka soupeře",
+    "+ sedačka i hloubka soupeře",
+    "+ sedačka soupeře a sada",
+  ] as const) {
+    const map = new Map<string, {
+      pages: number; answers: Map<string, Set<string>>; files: string[];
+    }>();
+    for (const grid of verified) {
+      const name = basename(grid.file);
+      const vocabulary = grid.legend.map((entry) => entry.action).sort().join(" | ");
+      if (REFUSED_VOCABULARIES.has(vocabulary)) continue;
+      const context = contextForVocabulary(grid.legend.map((entry) => entry.action));
+      const situation = situationFromFileName(name);
+      if (context === undefined || situation === undefined) continue;
+      const opponent = opponentFromFileName(name, situation);
+      if (variant !== "dnešní" && opponent === undefined) continue;
+      let key = `${situation.seat}|${bucketForStack(situation.stackBB)}|${context}`;
+      if (variant !== "dnešní") key += `|vs${opponent!.seat}`;
+      if (variant === "+ sedačka i hloubka soupeře") key += `@${bucketForStack(opponent!.stackBB)}`;
+      // „Sada" je předpona jména, tedy ICM, ICM2 ... ICM14 nebo F3B, OP a další.
+      // U ICM jde o **rozložení stacků u celého stolu**, které mění, co je
+      // správně, a v modelu produktu pro to není místo.
+      if (variant === "+ sedačka soupeře a sada") {
+        key += `#${/^[A-Za-z0-9]+/.exec(name)?.[0]?.toUpperCase() ?? "?"}`;
+      }
+      const cell = map.get(key) ?? { pages: 0, answers: new Map(), files: [] as string[] };
+      cell.pages += 1;
+      cell.files.push(name);
+      for (const hand of grid.hands) {
+        const set = cell.answers.get(hand.hand) ?? new Set<string>();
+        set.add(`${hand.color}:${Math.round(hand.weight * 100)}`);
+        cell.answers.set(hand.hand, set);
+      }
+      map.set(key, cell);
+    }
+    let sharedCells = 0;
+    let conflictCells = 0;
+    for (const cell of map.values()) {
+      if (cell.pages < 2) continue;
+      sharedCells += 1;
+      if ([...cell.answers.values()].some((set) => set.size > 1)) conflictCells += 1;
+    }
+    console.log(
+      variant.padEnd(34)
+      + String(map.size).padStart(8)
+      + String(sharedCells).padStart(11)
+      + String(conflictCells).padStart(12),
+    );
+    if (variant === "+ sedačka soupeře" && process.argv.includes("--why")) {
+      console.log("      zbylé rozpory a stránky, které je působí:");
+      for (const [key, cell] of map) {
+        if (cell.pages < 2) continue;
+        const bad = [...cell.answers.values()].filter((set) => set.size > 1).length;
+        if (bad === 0) continue;
+        console.log(`        ${key}  (${cell.pages} stran, ${bad} tříd se neshodne)`);
+        for (const file of cell.files ?? []) console.log(`            ${file}`);
+      }
+    }
+  }
   console.log(`řádků scaffoldu k vyplnění: ${rows} ze 118 638 na pack`);
   console.log(`stránek odmítnutých překladem: ${refused}`);
   console.log("");
@@ -185,7 +258,7 @@ if (process.argv.includes("--coverage")) {
     const row = vocab.get(key) ?? { pages: 0, combos: 0, example: "" };
     row.pages += 1;
     row.combos += grid.legend.reduce((sum, entry) => sum + entry.combos, 0);
-    if (row.example === "") row.example = grid.file.split(/[\/]/).pop() ?? "";
+    if (row.example === "") row.example = basename(grid.file);
     vocab.set(key, row);
   }
   console.log("Typy situací podle slovníku legendy (jen ověřené mřížky)");

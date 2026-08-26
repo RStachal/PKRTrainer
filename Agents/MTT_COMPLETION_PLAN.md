@@ -102,9 +102,36 @@ označit ho za měřený zdroj. To je přesně ta třída nepravdy, které se pr
 brání jinde.
 
 **Z toho plyne, co ICM doopravdy blokuje:** ne chybějící data, ale chybějící
-rozměr v preflop modelu - „proti komu" a u ICM „při jakém rozložení stacků".
-Dokud ten rozměr nebude, žádný ICM zdroj těch 32 řádků neodemkne, protože
-odpověď na tu otázku, kterou knihovna umí položit, prostě neexistuje jednoznačně.
+rozměr v preflop modelu. Které to jsou, se dá **změřit**, a změřené to je -
+zkusily se čtyři klíče vedle sebe:
+
+| klíč | buněk | sdílených | rozporných |
+|---|---|---|---|
+| dnešní `(sedačka, kbelík, kontext)` | 21 | 16 | **15** |
+| + sedačka soupeře | 38 | 8 | 8 |
+| + sedačka **i hloubka** soupeře | 39 | 8 | 8 |
+| **+ sedačka soupeře a sada** | **49** | **0** | **0** |
+
+Čte se z toho trojí:
+
+1. **Sedačka soupeře je nutná** - sama odstraní polovinu rozporů. Postflop ji
+   nese už dnes (`SRP_CO_VS_BB`), takže je to srovnání nesrovnalosti, ne nový
+   pojem.
+2. **Hloubka soupeře nutná není.** Přidá jednu buňku a nula rozporů, takže by
+   to byl rozměr navíc bez užitku.
+3. **Sada rozhodne o zbytku.** U ICM je to rozložení stacků u celého stolu
+   (`ICM3` proti `ICM5` proti `ICM7`), a právě to dělá z ICM ICM. Dvě stránky se
+   stejným hrdinou i soupeřem dávají jinou odpověď, protože stůl je jinak
+   rozdaný - a to je věcně správně, ne chyba zdroje.
+
+Se `vsSeat` a `scenarioId` je rozporů **nula** a korpus se dá dodat, aniž by se
+cokoli slévalo.
+
+**Co to ale neznamená:** 49 buněk ze 702 pořád není úplná mřížka a produkční
+brána žádá úplnost. Cesta tedy není „dodat ICM slot jako produkční", ale dodat
+ten obsah **jako vrstvu, která odpovídá jen tam, kde ví, a jinde se přizná** -
+tedy přesně tak, jak dnes funguje vyřešený postflop. Ten model už v produktu
+je a osvědčil se.
 
 Nástroj zůstává hotový a měří to znovu kdykoli:
 `npm run mtt:rye-corpus -- --source=... [--vocab|--coverage]`.

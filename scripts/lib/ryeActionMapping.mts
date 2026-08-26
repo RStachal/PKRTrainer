@@ -199,3 +199,32 @@ export function situationFromFileName(name: string): RyeSituation | undefined {
   const villains = versus[2].split(/[_]/).filter(Boolean).length;
   return { seat, stackBB: Number(depth[1]), villains: Math.max(1, villains) };
 }
+
+/**
+ * Soupeř, proti kterému range platí - to, co dnešnímu modelu chybí.
+ *
+ * Zdroj ho zná u obou svých konvencí jmen: `ICM-btn35bb-co60bb` říká hloubku
+ * obou, `F3B-100BB-BTN-vs-UTG` říká sedačku soupeře a společnou hloubku.
+ */
+export interface RyeOpponent {
+  seat: string;
+  /** Hloubka soupeře, když ji zdroj uvádí zvlášť. Jinak společná s hrdinou. */
+  stackBB: number;
+}
+
+export function opponentFromFileName(
+  name: string,
+  hero: RyeSituation,
+): RyeOpponent | undefined {
+  const stem = name.replace(/\.html$/i, "");
+  const paired = [...stem.matchAll(/(utg|ep|mp|lj|hj|co|bu|btn|sb|bb)(\d+)bb/gi)];
+  if (paired.length >= 2) {
+    const seat = SEAT_ALIASES.get(paired[1][1].toUpperCase());
+    return seat === undefined ? undefined : { seat, stackBB: Number(paired[1][2]) };
+  }
+  const versus = /(?:^|[-_])(?:UTG|EP|MP|LJ|HJ|CO|BU|BTN|SB|BB)[-_]vs[-_]([A-Za-z]+)/i.exec(stem);
+  if (versus === null) return undefined;
+  const seat = SEAT_ALIASES.get(versus[1].toUpperCase());
+  // Když zdroj hloubku soupeře neuvádí, je společná - je to jedna hloubka stolu.
+  return seat === undefined ? undefined : { seat, stackBB: hero.stackBB };
+}
