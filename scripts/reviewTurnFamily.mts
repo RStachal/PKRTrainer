@@ -6,7 +6,7 @@ import { runtimeSolvedFlopPacks } from "../src/data/ranges/flopSolvedRuntimeRegi
 import { loadSolvedFlopPacks } from "../src/data/ranges/flopSolvedStrategyPacks";
 import { runtimeSolvedRiverPacks } from "../src/data/ranges/riverSolvedRuntimeRegistry";
 import { loadSolvedRiverPacks } from "../src/data/ranges/riverSolvedStrategyPacks";
-import type { TurnStrategyPack } from "../src/data/ranges/turnStrategyPack";
+import type { TurnStrategyRule } from "../src/data/ranges/turnStrategyRuleBuilder";
 import { renderTurnFamilyDigest } from "../src/data/ranges/turnReviewDigest";
 import { profileTurnFamilies } from "../src/data/ranges/turnFamilyAnomaly";
 import {
@@ -96,12 +96,13 @@ await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
 
 // Packy tří ulic mají týž tvar pravidla, takže digest i profil fungují na
 // všechny; liší se jen tím, ze kterého registru se berou.
-// Vědomé přetypování, ze stejného důvodu jako u `registries` níž: pravidla
-// všech tří ulic jsou kompatibilní, liší se jen deklarovaná ulice.
-const packsForStreet: readonly TurnStrategyPack[] = (street === "FLOP"
-  ? runtimeSolvedFlopPacks as readonly TurnStrategyPack[]
+// Bez přetypování: `profileTurnFamilies` i `planReviewUnlock` si dnes říkají
+// o skutečnou potřebu (`FamilyProfilePack`, `ReviewUnlockPack`), a ta sedí na
+// všechny tři druhy packu sama.
+const packsForStreet = (street === "FLOP"
+  ? runtimeSolvedFlopPacks
   : street === "RIVER"
-    ? runtimeSolvedRiverPacks as readonly TurnStrategyPack[]
+    ? runtimeSolvedRiverPacks
     : runtimeSolvedTurnPacks
 );
 
@@ -165,7 +166,7 @@ Dodávaných rozhodnutí: ${plan.shippedRules}, přečtených ${plan.readRules} 
   // jediné číslo o téhle strategii, které nepotřebuje čtenáře, takže je to
   // nejlepší dostupné vodítko, kde se dívat dřív. Rodina bez čelících
   // rozhodnutí jde na konec: o té tohle číslo neříká nic.
-  const gapOf = (pack: TurnStrategyPack) => (
+  const gapOf = (pack: { id: string; familyIds: readonly string[] }) => (
     profiles.get(pack.familyIds[0] ?? pack.id)?.defenceGap ?? -1
   );
   for (const pack of [...packsForStreet].sort((a, b) => {
@@ -214,10 +215,20 @@ Dodávaných rozhodnutí: ${plan.shippedRules}, přečtených ${plan.readRules} 
   // ulice v `dimensions`. Rozšířit jeho API na všechny tři je samostatná
   // změna, ne úklid typů - a dělat ji mimochodem by znamenalo sáhnout na
   // měření odchylky obrany bez měření.
-  const registries: Record<Street, readonly TurnStrategyPack[]> = {
-    FLOP: runtimeSolvedFlopPacks as readonly TurnStrategyPack[],
+  //
+  // Tvar tu popisuje, co se z packu čte: rodinu a otisk. Víc `packFor` níž
+  // nepotřebuje, a slíbit turnový pack by znamenalo tvrdit o flopovém něco,
+  // co není pravda.
+  const registries: Record<Street, readonly {
+    id: string;
+    familyIds: readonly string[];
+    contentHash: string;
+    confidence: "LOW" | "MEDIUM" | "HIGH";
+    rules: readonly TurnStrategyRule[];
+  }[]> = {
+    FLOP: runtimeSolvedFlopPacks,
     TURN: runtimeSolvedTurnPacks,
-    RIVER: runtimeSolvedRiverPacks as readonly TurnStrategyPack[],
+    RIVER: runtimeSolvedRiverPacks,
   };
   const packFor = (item: Street) => registries[item].find((row) => row.familyIds.includes(familyId));
   const present = ALL_STREETS.filter((item) => packFor(item) !== undefined);

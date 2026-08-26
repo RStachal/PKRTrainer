@@ -226,8 +226,20 @@ export function digestDecisions(
     .sort((left, right) => reachOf(right.rules) - reachOf(left.rules));
 }
 
+/**
+ * Souhrn rodiny ke čtení člověkem.
+ *
+ * Bere jen to, co doopravdy čte - důvěru, rodinu a pravidla. Pravidla jsou
+ * u všech tří ulic kompatibilní, takže tenhle tvar sedí na flopový, turnový
+ * i riverový pack; vyžadovat celý `TurnStrategyPack` by nutilo volajícího
+ * k přetypování, které TypeScript stejně odmítá.
+ */
 export function renderTurnFamilyDigest(
-  pack: TurnStrategyPack,
+  pack: {
+    confidence: TurnStrategyPack["confidence"];
+    familyIds: readonly string[];
+    rules: readonly TurnStrategyRule[];
+  },
   contentHash: string,
 ): string {
   const first = pack.rules[0];

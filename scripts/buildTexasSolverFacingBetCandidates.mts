@@ -275,7 +275,17 @@ function writeBestAlias(args: CliArgs, bestCandidate: CandidateRow): string {
   return aliasDir;
 }
 
-function buildCandidate(args: CliArgs, betAction: string): CandidateRow {
+/**
+ * Kandidát bez `villainFrequency`; tu doplní volající z naměřeného mixu.
+ *
+ * Návratový typ tvrdil celý `CandidateRow`, ačkoli to pole nevyplňoval - takže
+ * slib byl silnější než skutečnost a jediné, co tomu bránilo, byla
+ * nekontrolovaná složka `scripts/`.
+ */
+function buildCandidate(
+  args: CliArgs,
+  betAction: string,
+): Omit<CandidateRow, "villainFrequency"> {
   const nodeHistory = `${args.sourceNode}>${betAction}`;
   const outputDir = resolve(args.outputRoot, `${args.familyId}-FACING-${betAction}`);
   const reviewPath = resolve(DEFAULT_SOLVER_OUTPUT_DIR, args.familyId, `strategy-export.${args.sourceNode}-${betAction}.review.json`);

@@ -1,4 +1,4 @@
-import type { TurnStrategyPack } from "./turnStrategyPack";
+import type { TurnStrategyRule } from "./turnStrategyRuleBuilder";
 
 /**
  * Co na rodině vypadá divně proti jejím sourozencům.
@@ -63,7 +63,26 @@ function isAggressive(action: string): boolean {
   return upper.startsWith("BET") || upper.startsWith("RAISE") || upper.startsWith("ALL");
 }
 
-function combosByAction(pack: TurnStrategyPack): Map<string, number> {
+/**
+ * Co profilování rodiny doopravdy potřebuje.
+ *
+ * Modul se jmenuje „turn", ale čte jen `id`, `familyIds` a `rules` - a pravidla
+ * jsou u všech tří ulic kompatibilní, protože `FlopStrategyRule` i
+ * `RiverStrategyRule` rozšiřují `TurnStrategyRule`. Liší se jen deklarovaná
+ * ulice v `dimensions`, na kterou se tady nikdo neptá.
+ *
+ * Volající proto dřív musel flopové a riverové packy **přetypovat na turnové**.
+ * TypeScript to i tak odmítal (`neither type sufficiently overlaps`), takže by
+ * to šlo protlačit jen přes `unknown` - tedy úplným umlčením kontroly. Popsat
+ * skutečnou potřebu je bezpečnější a čitelnější.
+ */
+export interface FamilyProfilePack {
+  id: string;
+  familyIds: readonly string[];
+  rules: readonly TurnStrategyRule[];
+}
+
+function combosByAction(pack: FamilyProfilePack): Map<string, number> {
   const byAction = new Map<string, number>();
   for (const rule of pack.rules) {
     for (const bucket of rule.buckets) {
@@ -130,7 +149,7 @@ const SIZED_ACTION = /^(BET|RAISE|ALLIN|ALL_IN)\s+([\d.]+)$/i;
  * první. Tohle číslo řekne, kde je odchylka největší - a odchylka je přesně to,
  * co má člověk posoudit.
  */
-export function defenceGapOf(pack: TurnStrategyPack): number | undefined {
+export function defenceGapOf(pack: FamilyProfilePack): number | undefined {
   let odds = 0;
   let folds = 0;
   let count = 0;
@@ -157,7 +176,7 @@ export function defenceGapOf(pack: TurnStrategyPack): number | undefined {
 }
 
 export function profileTurnFamilies(
-  packs: readonly TurnStrategyPack[],
+  packs: readonly FamilyProfilePack[],
 ): TurnFamilyProfile[] {
   const rows = packs.map((pack) => {
     const first = pack.rules[0];

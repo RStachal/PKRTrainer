@@ -194,7 +194,7 @@ function buildRow(profile: P1Profile, outDir: string): DraftSummaryRow {
   const paths = mttProductionImportSlotPaths(packId);
   const sourcePack = sourcePackForProfile(profile);
 
-  if (isAutoDraftable(profile, sourcePack)) {
+  if (sourcePack !== undefined && isAutoDraftable(profile, sourcePack)) {
     return writeDraftableRow({
       outDir,
       packId,
@@ -340,11 +340,23 @@ function sourcePackForProfile(profile: P1Profile): RangePack | undefined {
   ));
 }
 
-function isAutoDraftable(profile: P1Profile, pack: RangePack | undefined): pack is RangePack {
+/**
+ * Jde z tohohle profilu a packu udělat draft rovnou?
+ *
+ * **Není to type guard, a schválně.** Dřív se deklaroval jako `pack is
+ * RangePack`, jenže testuje i vlastnosti profilu - takže když vrátí `false`,
+ * neznamená to, že pack chybí, ale klidně jen že jde o six-max nebo turbo.
+ * TypeScript to přesto bral jako důkaz o typu a v další větvi zúžil `sourcePack`
+ * na nic, takže hlásil „vlastnost neexistuje na typu `never`" u kódu, který za
+ * běhu funguje správně.
+ *
+ * Type guard, který tvrdí o typu víc, než co ověřuje, je horší než žádný: mýlí
+ * se tiše a v tu stranu, kde se to nepozná.
+ */
+function isAutoDraftable(profile: P1Profile, pack: RangePack): boolean {
   return (
     profile.tableFormat === "FULL_RING_9" &&
     profile.blindSpeed === "REGULAR" &&
-    pack !== undefined &&
     pack.records.length > 0 &&
     pack.confidence !== "LOW"
   );
