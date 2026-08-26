@@ -378,6 +378,12 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
           ? solvedTurnConfigForSeed(seed, actionNode)
           // Flop ze stejného důvodu a od 21. 8. 2026: rodin se dodává 47 a bez
           // katalogu se na vyřešenou desku trefil hráč v 0,0 % rozdání.
+          //
+          // Pozn. k tomu číslu: platí pro turn a river, kde vyřešený pack
+          // odpovídá jen na desku, kterou solvil. U flopu je to 18,8 %,
+          // protože chartové packy odpovídají na třídu textury. Původní
+          // měření hlásilo nulu všude, protože se ptalo na neexistující pole
+          // `spot.recommendation` - opraveno 26. 8. 2026.
           : dealsSolved && street === "FLOP"
             ? solvedFlopConfigForSeed(seed, actionNode)
             // A river, poslední ulice, která katalog pro jednotlivý spot neměla.
@@ -1961,7 +1967,11 @@ function actionLabel(action: PostflopAction): string {
  *
  * Stejná úvaha jako u turnu a stejně měřená: dodává se 47 flopových rodin a
  * trenažér rozdával náhodnou desku, takže se na vyřešenou trefil zhruba nikdy -
- * změřeno 0,0 % z 1500 rozdaných flopů. Obsah existoval a byl nedosažitelný.
+ * změřeno 0,0 % z 1500 rozdaných flopů - **a to číslo bylo chybné**: měřicí
+ * skript se ptal na neexistující pole a hlásil nulu vždy. Po opravě
+ * (26. 8. 2026) je to u flopu 18,8 %, protože chartové packy odpovídají na
+ * třídu textury. Katalog má smysl dál - vyřešený flop odpovídá na konkrétní
+ * desku, kterou někdo spočítal, a na tu se hráč náhodou netrefí.
  */
 function solvedFlopConfigForSeed(seed: number, actionNode: PostflopActionNode) {
   const candidates = solvedFlopSpots().filter((spot) => spot.actionNode === actionNode);

@@ -216,7 +216,7 @@ Fáze měla začít měřením, jaký podíl rozdávaných spotů vyřešený ob
 
 | otázka | měřeno |
 |---|---|
-| když si hráč situaci připne sám (náhodná deska) | 0,0 % |
+| když si hráč situaci připne sám (náhodná deska) | **flop 18,8 %**, turn a river 0,0 % |
 | když desku vybírá trenažér z katalogu | **100 % na všech třech ulicích** |
 | dotazů na vzor pozic, který obsah drží | 81,4 % |
 

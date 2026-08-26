@@ -8,7 +8,6 @@ import {
 } from "../src/data/ranges/mttPostflopPilotGate.ts";
 import type { ProductionPermissionManifest } from "../src/data/ranges/productionPermissionManifest.ts";
 
-const DEFAULT_OUTPUT = "artifacts/mtt-postflop-pilot-suite/report.json";
 
 interface CliArgs {
   json: boolean;

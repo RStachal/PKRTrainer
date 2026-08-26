@@ -8,7 +8,6 @@ const DEFAULT_OUTPUT =
   "artifacts/texas-solver-coverage-v2-ingest/report.json";
 const NORMALIZED_DRAFT_ROOT =
   "artifacts/texas-solver-review-integration/normalized-drafts";
-const MIDSPR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_50BB_BTN_BB_SRP-CHECK");
 const LOWSPR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_20BB_BTN_BB_SRP_LOWSPR-CHECK");
 const HIGHSPR_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_80BB_BTN_BB_SRP_HIGHSPR-CHECK");
 const UTG_BB_SRP_DRAFT_DIR = join(NORMALIZED_DRAFT_ROOT, "MTT9_40BB_UTG_BB_SRP-CHECK");

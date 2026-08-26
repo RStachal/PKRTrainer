@@ -5,7 +5,6 @@ import type { Card, Rank, Suit } from "../src/core/types.ts";
 
 const DEFAULT_MANIFEST =
   "Agents/solver-input/texas-solver/mtt-safe-flops-v1/coverage-v2-manifest.json";
-const DEFAULT_OUTPUT =
   "artifacts/texas-solver-scenario-audit/report.json";
 
 type SprBand = "LOW" | "MID" | "HIGH";

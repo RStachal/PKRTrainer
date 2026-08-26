@@ -52,7 +52,6 @@ const DRAFT_BACKUP_ROOT = "artifacts/mtt-post-resolve/draft-backup";
 const ACCEPTANCE_DECISIONS = "artifacts/texas-solver-review-protocol/mechanical-acceptance-decisions.json";
 const PILOT_MODULE_DIR = "src/data/ranges/pilots";
 const DEFAULT_REPORT = "artifacts/mtt-post-resolve/report.json";
-const VITE_NODE = "scripts/run-cli.mjs";
 
 /** Scopes with several SPR bands merged into one pilot pack. */
 const MERGED_SCOPES = [
@@ -535,7 +534,7 @@ function shippedPilotRuleIds(): string[] {
 }
 
 /** Put back any draft the rebuild failed to recreate, so nothing is lost. */
-function restoreUnrebuiltDrafts(plan: ReturnType<typeof draftPlan>, write: boolean): Step {
+function restoreUnrebuiltDrafts(_plan: ReturnType<typeof draftPlan>, write: boolean): Step {
   const id = "restore-unrebuilt-drafts";
   const detail = "Restore any draft a failed rebuild left missing.";
   if (!write || !existsSync(DRAFT_BACKUP_ROOT)) {

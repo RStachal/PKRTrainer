@@ -231,8 +231,6 @@ if (family === undefined) {
       const node = JSON.parse(readFileSync(path, "utf8"));
       const potChips = item.pot ?? plan.pot ?? 0;
       const stackChips = item.stack ?? plan.stack ?? 0;
-      const potBB = inBB(potChips);
-      const stackBehindBB = inBB(stackChips);
 
       // Každé rozhodnutí v podhře, ne jen to kořenové.
       //

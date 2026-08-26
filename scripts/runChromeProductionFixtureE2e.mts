@@ -11,7 +11,6 @@ import { resolve, sep } from "node:path";
 const root = resolve(".");
 // The current Core preflop pack is deliberately real. This fixture supplements
 // only the unshipped FLOP/TURN/RIVER slots, then restores the generated registry.
-const packId = "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1";
 const flopPackId = "mtt-full-ring-9-regular-flop-chip-ev-ante-on-production-v1";
 const turnPackId = "mtt-full-ring-9-regular-turn-chip-ev-ante-on-production-v1";
 const riverPackId = "mtt-full-ring-9-regular-river-chip-ev-ante-on-production-v1";

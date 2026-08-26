@@ -103,7 +103,15 @@ for (const street of ["FLOP", "TURN", "RIVER"] as const) {
         strategyResolver: watching,
         allowFallback: false,
       });
-      if (spot.recommendation === undefined || spot.recommendation === null) missing += 1;
+      // `PostflopSpot` pole `recommendation` **nemá** - jmenuje se
+      // `recommendedAction` a zdroj je ve `strategySource`. Dokud se ptalo na
+      // neexistující pole, byla podmínka vždycky pravdivá, `answered` se
+      // nemohlo nikdy zvýšit a **skript hlásil 0,0 % bez ohledu na skutečnost**.
+      // To číslo se přitom citovalo v plánu jako měření.
+      //
+      // S `allowFallback: false` je vrácený spot sám o sobě odpovědí: odmítnutí
+      // hlásí generátor výjimkou, kterou chytá `catch` níž.
+      if (spot.strategySource === undefined) missing += 1;
       else answered += 1;
     } catch {
       // Bez fallbacku generátor odmítnutí hlásí výjimkou, ne spotem bez

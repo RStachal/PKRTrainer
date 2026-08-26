@@ -19,7 +19,9 @@ import {
  * Tentýž důvod, pro který vznikl turnový katalog, jen o ulici dřív a v mnohem
  * větším měřítku: **flopových rodin se dodává 47 a trenažér rozdával náhodné
  * desky**, takže se na vyřešenou trefil zhruba nikdy. Změřeno 21. 8. 2026 na
- * vzorku 1500 rozdaných flopů: odpověď 0,0 %. Resolver je přitom správně - a
+ * vzorku 1500 rozdaných flopů: odpověď 0,0 %. **To číslo bylo chybné** -
+ * skript se ptal na neexistující pole; po opravě 26. 8. 2026 je to 18,8 %,
+ * ovšem z chartových packů, ne z vyřešených. Resolver je přitom správně - a
  * zvenku vypadá správný resolver s nedosažitelným obsahem úplně stejně jako
  * žádný obsah. Hráč dostane heuristiku tak jako tak.
  *
