@@ -452,3 +452,100 @@ if (!asJson) {
         + " - rozliší to rozpad výš.",
   );
 }
+
+/**
+ * Totéž měření, ale na preflopu - tedy na hlavní ploše produktu.
+ *
+ * ## Proč to sem přibylo
+ *
+ * `mtt:post-answer` vznikl 25. 8. 2026 proto, že se měřil vyrobený obsah místo
+ * toho, co dojde k hráči. Jenže se ptal **jen na postflop**, a to je ta menší
+ * část: preflopová otázka je to, co trenažér rozdává od začátku a co hráč vidí
+ * nejčastěji. Měřit doručení jen tam, kde se zrovna staví nový obsah, je táž
+ * chyba o patro výš.
+ *
+ * Měří se stejnou podmínkou, jakou má UI (`revealActionEvButtonBubbles`), a
+ * rozdává se `spotSequence`, tedy tím, čím rozdává trenažér. Kdyby se sáhlo
+ * o vrstvu níž, měřilo by se něco, co hráč nikdy nedostane.
+ */
+{
+  const { buildPool } = await import("../src/core/drillEngine");
+  const { rangeStore } = await import("../src/data/rangeStore");
+  const { loadPreflopEquity } = await import("../src/core/preflopEquity");
+
+  // Tabulka ekvit se musí načíst, jinak měření lže.
+  //
+  // Aplikace ji natahuje při startu (`main.ts`), protože z ní se počítá cena
+  // jamu; bez ní vrací `shoveEv` prázdno a **každý** spot vypadá jako spot bez
+  // EV. Naměřeno oběma způsoby: bez tabulky 0 z 3 042 push/fold spotů, s ní
+  // 3 042 z 3 042. To není rozdíl v produktu, to je rozdíl v tom, jestli měřím
+  // aplikaci, nebo svoje vlastní zapomenutí.
+  await loadPreflopEquity();
+
+  const filters = {
+    positions: [], buckets: [], contexts: [], ante: "OFF", scoringMode: "LENIENT",
+  } as never;
+
+  // Celý pool, ne prvních N ze `spotSequence`.
+  //
+  // Fronta cykluje od indexu nula a je poskládaná po kontextech, takže prvních
+  // 300 spotů je **300x RFI**. První pokus tak naměřil „0,0 % EV" a znamenalo
+  // to jen to, že RFI na hloubce, kde se nejamuje, cenu nefixuje - tedy nic
+  // o produktu. Pool po kontextech je to, na co se trenažér doopravdy ptá.
+  const CONTEXTS = [
+    "PUSH_FOLD", "VS_ALLIN", "RFI", "VS_OPEN", "VS_3BET", "VS_4BET", "SQUEEZE",
+    "VS_LIMP", "BLIND_VS_BLIND",
+  ] as const;
+
+  const byContext = new Map<string, { dealt: number; ev: number; sources: Map<string, number> }>();
+  let dealt = 0;
+  let withEv = 0;
+  let withExplanation = 0;
+  const sources = new Map<string, number>();
+
+  const pool = CONTEXTS.flatMap((context) => {
+    try {
+      return buildPool(20260826, context as never, filters, rangeStore);
+    } catch {
+      return [];
+    }
+  });
+
+  for (const spot of pool) {
+    dealt += 1;
+    const row = byContext.get(spot.context)
+      ?? { dealt: 0, ev: 0, sources: new Map<string, number>() };
+    row.dealt += 1;
+
+    // Přesně podmínka z `revealActionEvButtonBubbles`: nabízené akce jsou ty na
+    // tlačítkách, tedy `answers`, a zdroje ty zobrazovací.
+    const offered = spot.answers.map((answer) => answer.key);
+    if (isActionEvSetUsable(spot.actionEvs, offered, DISPLAYABLE_ACTION_EV_SOURCES)) {
+      withEv += 1;
+      row.ev += 1;
+      const source = String(spot.actionEvs?.source ?? "?");
+      sources.set(source, (sources.get(source) ?? 0) + 1);
+      row.sources.set(source, (row.sources.get(source) ?? 0) + 1);
+    }
+    if (spot.explanation.trim().length > 0) withExplanation += 1;
+    byContext.set(spot.context, row);
+  }
+
+  console.log("");
+  console.log("Co hráč uvidí po odpovědi na preflopu (rozdáno `spotSequence`)");
+  console.log(`vzorek: ${dealt} spotů = celý pool přes ${CONTEXTS.length} kontextů`);
+  console.log("");
+  console.log("kontext".padEnd(14) + "rozdáno".padStart(9) + "EV akcí".padStart(10));
+  for (const [context, row] of [...byContext].sort((left, right) => right[1].dealt - left[1].dealt)) {
+    console.log(
+      context.padEnd(14) + String(row.dealt).padStart(9) + pct(row.ev, row.dealt).padStart(10),
+    );
+  }
+  console.log("");
+  console.log(`celkem: EV akcí ${pct(withEv, dealt)} | vysvětlení ${pct(withExplanation, dealt)}`);
+  console.log(
+    "odkud EV je: "
+    + ([...sources].sort((left, right) => right[1] - left[1])
+      .map(([source, count]) => `${source} ${count}`).join(", ") || "odnikud"),
+  );
+}
