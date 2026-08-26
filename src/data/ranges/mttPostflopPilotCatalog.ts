@@ -30,7 +30,17 @@ export interface MttPostflopPilotCatalogEntry {
   limitations: readonly string[];
 }
 
-export const MTT_POSTFLOP_PILOT_CATALOG = [
+/**
+ * Typová anotace je tu schválně, ne pro ozdobu.
+ *
+ * Bez ní TypeScript odvodí `status` z obsahu - a protože dnes mají všechny
+ * záznamy `READY`, zúží ho na literál `"READY"`. Pak ohlásí porovnání
+ * `status === "WAITING"` jako nemožné, takže se počítání čekajících a
+ * neplatných pilotů tváří jako chyba, ačkoli je správně (dnes jich je nula).
+ * Anotace drží deklarovaný typ `MttPostflopPilotStatus` a tím i to, že se ten
+ * kód nerozbije, až první pilot na `READY` nebude.
+ */
+export const MTT_POSTFLOP_PILOT_CATALOG: readonly MttPostflopPilotCatalogEntry[] = [
   {
     id: "btn-bb-srp-flop-cbet-low-mid-high",
     label: "BTN vs BB SRP flop c-bet pilot",

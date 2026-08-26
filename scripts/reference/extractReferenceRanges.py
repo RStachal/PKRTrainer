@@ -41,6 +41,34 @@ def text_of(html):
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html)).strip()
 
 
+WEIGHTED = re.compile(
+    r'<td id="cid_([0-9AKQJT]{1,2}[so]?)"([^>]*)>(.*?)</td>', re.S
+)
+WEIGHT_DIV = re.compile(
+    r'class="mdl-color--([a-z-]+) weighted"[^>]*data-weight="(\d+)"'
+)
+
+
+def weighted_cells(html):
+    """Ruka -> [(barva, váha 0..1)] pro buňky s mixem.
+
+    Zbytek do jedničky patří barvě samotného `<td>`; když žádnou nemá, je to
+    fold a do rozpisu nepatří - stránka ho taky neuvádí.
+    """
+    out = {}
+    for hand, attrs, inner in WEIGHTED.findall(html):
+        parts = [(colour, int(weight) / 100)
+                 for colour, weight in WEIGHT_DIV.findall(inner)]
+        if not parts:
+            continue
+        used = sum(weight for _, weight in parts)
+        base = re.search(r"mdl-color--([a-z-]+)", attrs)
+        if base is not None and used < 1:
+            parts.append((base.group(1), 1 - used))
+        out[hand] = parts
+    return out
+
+
 def parse_page(path):
     html = open(path, encoding="utf8", errors="replace").read()
     cells = CELL.findall(html)
@@ -56,6 +84,30 @@ def parse_page(path):
             continue                     # nebarevná buňka = mimo range
         key = colour.replace(" mdl-color--", "")
         hands[hand] = {"colour": key, "action": legend.get(key, key)}
+
+    # Vážené buňky, tedy mixovaná strategie.
+    #
+    # Buňka může nést překryv `<div class="mdl-color--blue weighted"
+    # data-weight="50">`, což znamená, že se ta akce hraje jen v části případů.
+    # Původní čtení bralo jen barvu samotného `<td>` a překryvy **tiše
+    # zahazovalo**.
+    #
+    # Změřeno 26. 8. 2026: mix má **60,3 % stránek** a u **11,8 % rukou** se
+    # čtení bez vah liší od skutečnosti. Korpus přitom slouží jako nezávislý
+    # signál, proti kterému se poměřuje naše vlastní strategie - takže chybné
+    # čtení tady vyrábí falešnou odchylku tam, kde žádná není.
+    for hand, entries in weighted_cells(html).items():
+        dominant = max(entries, key=lambda item: item[1])
+        hands[hand] = {
+            "colour": dominant[0],
+            "action": legend.get(dominant[0], dominant[0]),
+            # Celý mix zůstává vedle, aby si ho čtenář mohl ověřit a aby se
+            # nedal splést s čistou akcí.
+            "mix": [
+                {"colour": colour, "action": legend.get(colour, colour), "weight": weight}
+                for colour, weight in sorted(entries, key=lambda item: -item[1])
+            ],
+        }
 
     name = os.path.basename(path)[:-5]
     return {

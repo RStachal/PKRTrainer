@@ -40,7 +40,26 @@ interface ReferencePage {
   group: string;
   pctOfHands: number | null;
   legend: Record<string, string>;
-  hands: Record<string, { colour: string; action: string }>;
+  /**
+   * Sedačky a hloubky z názvu stránky, v pořadí hrdina, soupeř.
+   *
+   * Rozhraní je **nemělo** a skript je přitom četl. Nešlo o pád - data ta pole
+   * nesou - ale o díru v kontrole: dokud tu nebyla, TypeScript nemohl žádné
+   * použití ověřit. Adresář `scripts/` se navíc nekontroloval vůbec.
+   */
+  stacks: { seat: string; bb: number }[];
+  hands: Record<string, {
+    colour: string;
+    action: string;
+    /**
+     * Mixovaná strategie, když ji zdroj u té ruky má.
+     *
+     * Doplněno 26. 8. 2026: extraktor dřív vážené buňky tiše zahazoval, takže
+     * korpus u 11,8 % rukou tvrdil čistou akci tam, kde zdroj hraje dvě.
+     * `colour` zůstává převažující akcí kvůli zpětné kompatibilitě.
+     */
+    mix?: { colour: string; action: string; weight: number }[];
+  }>;
 }
 
 /** Seat a hloubka z názvu typu `OP-100BB-BU`. */
