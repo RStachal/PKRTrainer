@@ -96,10 +96,14 @@ await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
 
 // Packy tří ulic mají týž tvar pravidla, takže digest i profil fungují na
 // všechny; liší se jen tím, ze kterého registru se berou.
-const packsForStreet = (street === "FLOP"
-  ? runtimeSolvedFlopPacks
-  : street === "RIVER" ? runtimeSolvedRiverPacks : runtimeSolvedTurnPacks
-) as readonly TurnStrategyPack[];
+// Vědomé přetypování, ze stejného důvodu jako u `registries` níž: pravidla
+// všech tří ulic jsou kompatibilní, liší se jen deklarovaná ulice.
+const packsForStreet: readonly TurnStrategyPack[] = (street === "FLOP"
+  ? runtimeSolvedFlopPacks as readonly TurnStrategyPack[]
+  : street === "RIVER"
+    ? runtimeSolvedRiverPacks as readonly TurnStrategyPack[]
+    : runtimeSolvedTurnPacks
+);
 
 const verdicts = readVerdicts();
 const familyId = arg("family");
@@ -108,9 +112,9 @@ if (process.argv.includes("--plan")) {
   // Fronta výš odpovídá na "kde hledat chybu". Tahle na "co přečíst, když mám
   // dvě hodiny" - a to jsou dvě různé otázky s různým pořadím.
   const plan = planReviewUnlock({
-    FLOP: runtimeSolvedFlopPacks as readonly TurnStrategyPack[],
-    TURN: runtimeSolvedTurnPacks as readonly TurnStrategyPack[],
-    RIVER: runtimeSolvedRiverPacks as readonly TurnStrategyPack[],
+    FLOP: runtimeSolvedFlopPacks,
+    TURN: runtimeSolvedTurnPacks,
+    RIVER: runtimeSolvedRiverPacks,
   }, verdicts);
 
   console.log("Co přečíst, aby se odemklo nejvíc\n");
@@ -201,9 +205,18 @@ Dodávaných rozhodnutí: ${plan.shippedRules}, přečtených ${plan.readRules} 
   );
   console.log(`Čtení jedné rodiny: npm run mtt:turn-review -- --street=${street} --family=<ID>`);
 } else {
+  // Přetypování je tu vědomé a je jiného druhu než to, které zmizelo výš.
+  //
+  // `planReviewUnlock` si říkalo o celý turnový pack, ačkoli četlo tři pole -
+  // tam stačilo popsat skutečnou potřebu. Turnový profiler ale čte pravidla,
+  // a ta jsou u všech tří ulic kompatibilní (`RiverStrategyRule` i
+  // `FlopStrategyRule` rozšiřují `TurnStrategyRule`); liší se jen deklarovaná
+  // ulice v `dimensions`. Rozšířit jeho API na všechny tři je samostatná
+  // změna, ne úklid typů - a dělat ji mimochodem by znamenalo sáhnout na
+  // měření odchylky obrany bez měření.
   const registries: Record<Street, readonly TurnStrategyPack[]> = {
     FLOP: runtimeSolvedFlopPacks as readonly TurnStrategyPack[],
-    TURN: runtimeSolvedTurnPacks as readonly TurnStrategyPack[],
+    TURN: runtimeSolvedTurnPacks,
     RIVER: runtimeSolvedRiverPacks as readonly TurnStrategyPack[],
   };
   const packFor = (item: Street) => registries[item].find((row) => row.familyIds.includes(familyId));

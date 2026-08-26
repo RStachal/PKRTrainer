@@ -1,4 +1,3 @@
-import type { TurnStrategyPack } from "./turnStrategyPack";
 import type { TurnReviewVerdictRecord } from "./turnReviewVerdict";
 
 /**
@@ -46,7 +45,24 @@ export interface ReviewUnlockPlan {
   readRules: number;
 }
 
-function familyOf(pack: TurnStrategyPack): string {
+/**
+ * Co plán o packu doopravdy potřebuje.
+ *
+ * počet pravidel, rodinu a otisk. Volající proto musel flopové a riverové packy
+ * **přetypovat na turnové** - tedy tvrdit typu něco, co není pravda, jen aby
+ * prošla funkce, které na tom nezáleží.
+ *
+ * Popsat skutečnou potřebu je bezpečnější: přetypování umlčí kontrolu i tam,
+ * kde by se hodila, kdežto tenhle tvar sedí na všechny tři druhy packu sám.
+ */
+export interface ReviewUnlockPack {
+  id: string;
+  familyIds: readonly string[];
+  contentHash: string;
+  rules: readonly unknown[];
+}
+
+function familyOf(pack: ReviewUnlockPack): string {
   return pack.familyIds[0] ?? pack.id;
 }
 
@@ -58,7 +74,7 @@ function familyOf(pack: TurnStrategyPack): string {
  * by tvrdil, že je hotovo něco, co hotové není.
  */
 function hasValidVerdict(
-  pack: TurnStrategyPack,
+  pack: ReviewUnlockPack,
   street: ReviewStreet,
   verdicts: readonly TurnReviewVerdictRecord[],
 ): boolean {
@@ -71,7 +87,7 @@ function hasValidVerdict(
 }
 
 export function planReviewUnlock(
-  byStreet: Readonly<Record<ReviewStreet, readonly TurnStrategyPack[]>>,
+  byStreet: Readonly<Record<ReviewStreet, readonly ReviewUnlockPack[]>>,
   verdicts: readonly TurnReviewVerdictRecord[],
 ): ReviewUnlockPlan {
   const families = new Map<string, StreetUnlock[]>();
