@@ -126,7 +126,8 @@ for (const [key, value] of Object.entries(before)) console.log(`  ${key}: ${valu
 if (!write) {
   console.log("");
   console.log("Nic se nespustilo. Provedení: npm run mtt:after-night -- --write");
-  console.log("Přidej --ev, když se má přepočítat i EV (kolem pěti minut na rodinu).");
+  console.log("Přidej --ev, když se má přepočítat EV **všech** riverových rodin.");
+  console.log("Zastaralé tabulky se obnovují samy; vypnout jde --skip-ev-repair.");
 } else {
   const list = families();
   generateAll(list, "1/3");
@@ -138,6 +139,40 @@ if (!write) {
   }
 
   generateAll(list, "3/3");
+
+  // Obnovit EV, kterou tenhle cyklus sám zneplatnil.
+  //
+  // Přegenerování packu změní `contentHash` a tabulka EV přestane sedět;
+  // `loadRiverEvPack` tu neshodu **spolkne**, takže se za běhu tváří jako
+  // „ještě nedorazila". Změřeno na dvou nocích po sobě: doručení EV spadlo ze
+  // 17 packů na 3, tedy z 31,7 % na 5,8 % rozdaných riverových spotů. Jedna noc
+  // smaže celý předchozí přepočet.
+  //
+  // Proto se to **nedělá na požádání, ale vždycky** - jen zúženě. `--ev` na
+  // všech 47 rodinách stojí hodiny; zastaralých je hrstka a přepočítat se mají
+  // právě ony. `--skip-ev-repair` je pro případ, kdy je potřeba cyklus urychlit
+  // a člověk ví, že EV dopočítá zvlášť.
+  if (!process.argv.includes("--skip-ev-repair")) {
+    console.log("\n[4/4] obnova EV, kterou cyklus zneplatnil");
+    const { staleRiverEvFamilies } = await import("./lib/riverEvStaleness.mts");
+    const stale = await staleRiverEvFamilies();
+    if (stale.length === 0) {
+      console.log("  žádná tabulka nezastarala");
+    } else {
+      console.log(`  zastaralo ${stale.length} tabulek, přepočítávám (kolem pěti minut na rodinu)`);
+      let repaired = 0;
+      for (const family of stale) {
+        try {
+          run("mtt:river-pack", [`--family=${family}`, "--write", "--ev"]);
+          repaired += 1;
+        } catch {
+          // Odmítnutá rodina není chyba cyklu; generátor hlásí proč.
+          console.log(`  ${family}: generátor odmítl`);
+        }
+      }
+      console.log(`  přepočítáno ${repaired} z ${stale.length}`);
+    }
+  }
 
   const after = snapshot();
   console.log("\nstav po:");
