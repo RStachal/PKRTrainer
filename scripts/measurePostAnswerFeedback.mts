@@ -73,6 +73,10 @@ interface Row {
   bluffClasses: number[];
   bluffActions: Set<string>;
   explanationBluffs: number;
+  /** Spotů, kde **obsah** blafovací lajnu má - ať už se vysvětlení ozve, nebo ne. */
+  bluffsInContent: number;
+  /** Z toho těch, kde vysvětlení mlčí. To je ta vada; zbytek je správně prázdno. */
+  bluffsSilent: number;
   actionsSeen: Set<string>;
 }
 
@@ -102,6 +106,8 @@ async function measureStreet(
     bluffClasses: [],
     bluffActions: new Set(),
     explanationBluffs: 0,
+    bluffsInContent: 0,
+    bluffsSilent: 0,
     actionsSeen: new Set(),
   };
   if (available.length === 0) return row;
@@ -157,6 +163,20 @@ async function measureStreet(
     const source = spot.explanation.source;
     const buckets = source.kind === "STRATEGY_PACK" ? source.rangeBuckets ?? [] : [];
     if (buckets.length > 0) row.withBuckets += 1;
+
+    // Rozdíl mezi „blafy tu nejsou" a „blafy tu jsou a text o nich mlčí".
+    //
+    // Dokud se měřilo jen to druhé číslo, vypadaly obě možnosti stejně: spot bez
+    // blafovací lajny je **správně** bez zmínky - hrdina v něm nic nepředstírá.
+    // Zamlčený blaf je naopak přesně ta třída vady, kvůli které tenhle skript
+    // vznikl: obsah ho spočítal a k hráči nedošel.
+    const contentHasBluffs = buckets.some(
+      (bucket) => bucket.lane === "BLUFF" && bucket.handClasses.length > 0,
+    );
+    if (contentHasBluffs) {
+      row.bluffsInContent += 1;
+      if (spot.explanation.bluffHands.length === 0) row.bluffsSilent += 1;
+    }
 
     const byHand = new Map<string, { lane: string; action: string }>();
     for (const bucket of buckets) {
@@ -223,6 +243,25 @@ if (!asJson) {
       + ` | vysvětlení jmenuje blafy v ${pct(row.explanationBluffs, row.dealt)} spotů`,
     );
   }
+  console.log("");
+  console.log("Blafy: co je v obsahu proti tomu, co se řekne");
+  console.log(
+    "ulice".padEnd(8) + "obsah má blaf".padStart(15)
+    + "text mlčí".padStart(12) + "z toho".padStart(10),
+  );
+  for (const row of rows) {
+    console.log(
+      row.street.padEnd(8)
+      + pct(row.bluffsInContent, row.dealt).padStart(15)
+      + String(row.bluffsSilent).padStart(12)
+      + pct(row.bluffsSilent, row.bluffsInContent).padStart(10),
+    );
+  }
+  console.log(
+    "\nSpot bez blafovací lajny je správně bez zmínky - hrdina v něm nic\n"
+    + "nepředstírá. Vada je jen ten prostřední sloupec: obsah blaf spočítal\n"
+    + "a k hráči nedošel.",
+  );
   console.log("");
   console.log(
     "Pozn.: „tříd s akcí\" je medián počtu ze 169 buněk matice, které mají\n"
