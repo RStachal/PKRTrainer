@@ -38,29 +38,6 @@ export interface MappedAction {
 }
 
 /**
- * Kontext podle **celého slovníku** stránky, ne podle jedné akce.
- *
- * Klíč je seřazený seznam názvů akcí spojený svislítkem - tedy přesně to, co
- * vypíše `mtt:rye-corpus --vocab`. Co tu není, se nepřekládá.
- */
-const CONTEXT_BY_VOCABULARY = new Map<string, MappedContext>([
-  // Hráč čelí otevření: může složit, dorovnat, zvýšit nebo jamnout.
-  ["3b/call | 3b/f | Jam", "VS_OPEN"],
-  ["3b/f | 3bet/call | flatcall", "VS_OPEN"],
-  ["3B / Call 4B | 3B / Call 4B or Jam | 3B / Fold | Call", "VS_OPEN"],
-  ["3B / Call 4B | 3B / Call 4B or Jam | 3B / Fold | Call | Call 2x", "VS_OPEN"],
-  // Hráč čelí jamu. `All in` tu není jeho akce, ale soupeřova - jeho volba je
-  // dorovnat, nebo složit, takže `Call` je `CALL_JAM`.
-  ["All in | Call", "VS_ALLIN"],
-  // Hráč otevřel a čelí 3betu.
-  ["All in or call vs 3bet | Fold vs 3bet", "VS_3BET"],
-  ["All in or call vs 3bet | Call vs 3bet | Fold vs 3bet | GTO Jam", "VS_3BET"],
-  // Čistý push/fold: jediná barevná akce je jam, zbytek skládá.
-  ["All in", "PUSH_FOLD"],
-  ["Jam", "PUSH_FOLD"],
-]);
-
-/**
  * Slovníky, které se **schválně nepřekládají**, i když se ověřily.
  *
  * Není to opomenutí, je to odmítnutí. U každého je napsané proč, aby se to
@@ -84,52 +61,134 @@ export const REFUSED_VOCABULARIES = new Map<string, string>([
 ]);
 
 /**
- * Akce → klíč produktu, uvnitř daného kontextu.
+ * Překlad akcí uvnitř každého kontextu.
  *
- * Vrací `undefined`, když překlad neexistuje; volající takový řádek zahodí.
+ * **Přepsáno 26. 8. 2026 z tabulky celých slovníků.** Původně se kontext určoval
+ * shodou celé sady názvů, což bylo křehké: stránka `3b/f | 3bet/call | Jam |
+ * flatcall` propadla jen proto, že měla navíc `Jam`, přestože všechny čtyři
+ * akce překlad mají. Dnes platí kontext tehdy, když se v něm přeloží **každá**
+ * akce legendy - a když by vyhovovaly dva, stránka se nevydá, protože není jak
+ * rozhodnout, na kterou otázku odpovídá.
  */
-export function mapAction(context: MappedContext, action: string): MappedAction | undefined {
-  const name = action.trim().toLowerCase();
-  if (context === "VS_ALLIN") {
-    if (name === "call") return { action: "CALL_JAM", lost: "" };
-    // `All in` je tu soupeřova akce, ne hráčova.
-    if (name === "all in") return undefined;
-  }
-  if (context === "PUSH_FOLD") {
-    if (name === "all in" || name === "jam") return { action: "JAM", lost: "" };
-  }
-  if (context === "VS_3BET") {
-    if (name === "fold vs 3bet") return { action: "FOLD", lost: "" };
-    if (name === "call vs 3bet") return { action: "CALL", lost: "" };
-    if (name === "gto jam") return { action: "JAM", lost: "" };
-    // Zdroj tu spojuje dvě různé odpovědi do jedné barvy. Produkt čtyřbet a jam
-    // rozlišuje, takže se vydá ta konzervativnější a rozdíl se zapíše.
-    if (name === "all in or call vs 3bet") {
-      return { action: "CALL", lost: "zdroj tu spojuje dorovnání a jam do jedné barvy" };
-    }
-  }
-  if (context === "VS_OPEN") {
-    if (name === "flatcall" || name === "call") return { action: "CALL", lost: "" };
-    if (name === "call 2x") {
-      return { action: "CALL", lost: "zdroj rozlišuje dorovnání proti dvojnásobku" };
-    }
-    if (name === "jam") return { action: "JAM", lost: "" };
-    if (name === "3b/f" || name === "3b / fold") {
-      return { action: "3BET", lost: "zdroj říká, že proti 4betu se skládá" };
-    }
-    if (name === "3b/call" || name === "3bet/call" || name === "3b / call 4b") {
-      return { action: "3BET", lost: "zdroj říká, že proti 4betu se dorovnává" };
-    }
-    if (name === "3b / call 4b or jam") {
-      return { action: "3BET", lost: "zdroj říká, že proti 4betu se dorovnává nebo jamuje" };
-    }
-  }
-  return undefined;
+const ACTIONS_BY_CONTEXT: ReadonlyMap<MappedContext, ReadonlyMap<string, MappedAction>> =
+  new Map<MappedContext, ReadonlyMap<string, MappedAction>>([
+    ["VS_OPEN", new Map<string, MappedAction>([
+      ["flatcall", { action: "CALL", lost: "" }],
+      ["call", { action: "CALL", lost: "" }],
+      ["call 2x", { action: "CALL", lost: "zdroj rozlišuje dorovnání proti dvojnásobku" }],
+      ["jam", { action: "JAM", lost: "" }],
+      ["all in", { action: "JAM", lost: "" }],
+      ["3b/f", { action: "3BET", lost: "zdroj říká, že proti 4betu se skládá" }],
+      ["3b / fold", { action: "3BET", lost: "zdroj říká, že proti 4betu se skládá" }],
+      ["3b/call", { action: "3BET", lost: "zdroj říká, že proti 4betu se dorovnává" }],
+      ["3bet/call", { action: "3BET", lost: "zdroj říká, že proti 4betu se dorovnává" }],
+      ["3b / call 4b", { action: "3BET", lost: "zdroj říká, že proti 4betu se dorovnává" }],
+      ["3b / call 4b or jam", {
+        action: "3BET", lost: "zdroj říká, že proti 4betu se dorovnává nebo jamuje",
+      }],
+      // Hráč dorovná a počítá s tím, že za ním někdo squeezne. Jeho akcí je
+      // pořád dorovnání; plán na další ulici produkt v odpovědi nemá kam dát.
+      ["call / call squeeze", { action: "CALL", lost: "zdroj plánuje dorovnat i squeeze" }],
+      ["call / call squeeze if pfa folds", {
+        action: "CALL", lost: "zdroj plánuje dorovnat squeeze, když otvírající složí",
+      }],
+      ["call / fold vs squeeze", { action: "CALL", lost: "zdroj plánuje složit proti squeezi" }],
+      ["call / jam vs squeeze", { action: "CALL", lost: "zdroj plánuje jamnout proti squeezi" }],
+    ])],
+    // Squeeze: před hrdinou je otevření **a** dorovnání. Velikost v názvu
+    // (`to 11bb`) je sizing zdroje; produkt u squeeze jednu akci nerozlišuje
+    // podle velikosti, takže se zapíše do poznámky.
+    ["SQUEEZE", new Map<string, MappedAction>([
+      ["call", { action: "CALL", lost: "" }],
+      ["all in", { action: "JAM", lost: "" }],
+      ["squeeze/call", { action: "SQUEEZE", lost: "zdroj říká, že proti 4betu se dorovnává" }],
+      ["squeeze/fold", { action: "SQUEEZE", lost: "zdroj říká, že proti 4betu se skládá" }],
+    ])],
+    ["VS_3BET", new Map<string, MappedAction>([
+      ["fold vs 3bet", { action: "FOLD", lost: "" }],
+      ["call vs 3bet", { action: "CALL", lost: "" }],
+      ["gto jam", { action: "JAM", lost: "" }],
+      ["all in or call vs 3bet", {
+        action: "CALL", lost: "zdroj tu spojuje dorovnání a jam do jedné barvy",
+      }],
+    ])],
+    ["VS_ALLIN", new Map<string, MappedAction>([
+      ["call", { action: "CALL_JAM", lost: "" }],
+    ])],
+    ["PUSH_FOLD", new Map<string, MappedAction>([
+      ["all in", { action: "JAM", lost: "" }],
+      ["jam", { action: "JAM", lost: "" }],
+    ])],
+  ]);
+
+/**
+ * Akce se sizingem v názvu, který produkt nerozlišuje.
+ *
+ * `Bluff Squeeze to 11bb` a `Squeeze/call to 13bb` jsou tatáž akce s jinou
+ * velikostí. Velikost se zapíše do poznámky, ne do klíče: kdyby se z ní stal
+ * další rozměr, mřížka by narostla o něco, co produkt hráči stejně neukáže.
+ */
+function normalizeSizedAction(name: string): { base: string; lost: string } {
+  const sized = /^(.*?)\s+to\s+(\d+)bb$/.exec(name);
+  if (sized === null) return { base: name, lost: "" };
+  return { base: sized[1].trim(), lost: `zdroj uvádí velikost ${sized[2]} bb` };
 }
 
-/** Kontext stránky podle jejího slovníku, nebo `undefined`. */
+/** Squeeze s bluffovým záměrem je pořád squeeze; záměr jde do poznámky. */
+function normalizeBluffPrefix(name: string): { base: string; lost: string } {
+  return name.startsWith("bluff ")
+    ? { base: name.slice("bluff ".length), lost: "zdroj to řadí mezi blafy" }
+    : { base: name, lost: "" };
+}
+
+export function mapAction(context: MappedContext, action: string): MappedAction | undefined {
+  const table = ACTIONS_BY_CONTEXT.get(context);
+  if (table === undefined) return undefined;
+  const raw = action.trim().toLowerCase();
+  const sized = normalizeSizedAction(raw);
+  const bluff = normalizeBluffPrefix(sized.base);
+  const found = table.get(raw) ?? table.get(sized.base) ?? table.get(bluff.base);
+  if (found === undefined) return undefined;
+  const notes = [found.lost, sized.lost, bluff.lost].filter(Boolean).join("; ");
+  return { action: found.action, lost: notes };
+}
+
+/**
+ * Kontext stránky: ten, ve kterém se přeloží **všechny** akce legendy.
+ *
+ * Když vyhoví víc kontextů, stránka se nevydá. Není z čeho rozhodnout, na
+ * kterou otázku odpovídá, a vybrat jeden by znamenalo tipovat si situaci za
+ * hráče.
+ */
+/**
+ * Slovníky, u kterých pravidlo „všechny akce se přeloží" nestačí.
+ *
+ * Jsou to případy, kdy **táž slova znamenají jinou situaci**, a obecné pravidlo
+ * je proto nerozliší:
+ *
+ * - `All in | Call` sedí do `VS_OPEN` i do `SQUEEZE`, ale znamená něco třetího:
+ *   soupeř jamnul a hrdina dorovnává, nebo skládá. `All in` tu není hrdinova
+ *   akce. Bez téhle výjimky by se hráči nabídlo zvýšení tam, kde už je all-in.
+ * - `All in` samo o sobě je push/fold, ne „sázka v otevřeném potu".
+ *
+ * Naměřeno 26. 8. 2026: bez těchto dvou výjimek zmizely celé kontexty
+ * `VS_ALLIN` (10 stran) a `PUSH_FOLD` (17 stran) - přepis na obecné pravidlo je
+ * vyměnil za nejednoznačnost.
+ */
+const VOCABULARY_OVERRIDES = new Map<string, MappedContext>([
+  ["All in | Call", "VS_ALLIN"],
+  ["All in", "PUSH_FOLD"],
+  ["Jam", "PUSH_FOLD"],
+]);
+
 export function contextForVocabulary(actions: readonly string[]): MappedContext | undefined {
-  return CONTEXT_BY_VOCABULARY.get([...actions].sort().join(" | "));
+  if (actions.length === 0) return undefined;
+  const override = VOCABULARY_OVERRIDES.get([...actions].sort().join(" | "));
+  if (override !== undefined) return override;
+  const fits = [...ACTIONS_BY_CONTEXT.keys()].filter(
+    (context) => actions.every((action) => mapAction(context, action) !== undefined),
+  );
+  return fits.length === 1 ? fits[0] : undefined;
 }
 
 /**
@@ -158,9 +217,22 @@ export interface RyeSituation {
   villains: number;
 }
 
-/** Sedačky zdroje na sedačky produktu. `EP`/`MP` jsou skupiny, ne sedačky. */
+/**
+ * Sedačky zdroje na sedačky produktu.
+ *
+ * **Opraveno 26. 8. 2026.** Nejdřív jsem `MP` odmítal překládat jako „skupinu
+ * sedaček", a bylo to špatně. Navigace ne-ICM stránek jmenuje devět sedaček
+ * v pořadí `UTG UTG1 UTG2 MP HJ CO BU SB BB`, což sedí na naše
+ * `UTG UTG+1 UTG+2 LJ HJ CO BTN SB BB` seat po seatu. `MP` je tedy **čtvrtá
+ * sedačka**, ne skupina, a odmítat ji znamenalo zahodit celou třetinu korpusu.
+ *
+ * `EP` zůstává nepřeložené a je to jiný případ: objevuje se ve víceslovných
+ * multiway zápisech (`BB-vs-EP_MP`), kde označuje ranou pozici obecně, ne
+ * konkrétní místo u stolu.
+ */
 const SEAT_ALIASES = new Map<string, string>([
-  ["UTG", "UTG"], ["LJ", "LJ"], ["HJ", "HJ"], ["CO", "CO"],
+  ["UTG", "UTG"], ["UTG1", "UTG+1"], ["UTG2", "UTG+2"],
+  ["MP", "LJ"], ["LJ", "LJ"], ["HJ", "HJ"], ["CO", "CO"],
   ["BU", "BTN"], ["BTN", "BTN"], ["SB", "SB"], ["BB", "BB"],
 ]);
 
@@ -176,14 +248,19 @@ const SEAT_ALIASES = new Map<string, string>([
  * jen prvního podhodnotilo pokrytí zhruba desetinásobně a málem z toho vzniklo
  * špatné doporučení, jestli se import vyplatí.
  *
- * `EP` a `MP` se **nepřekládají**: jsou to skupiny sedaček („early", „middle"),
- * ne konkrétní místo u stolu. Tvrdit, že `MP` je `HJ`, by přiřadilo range
- * sedačce, pro kterou nevznikla.
+ * **Co se schválně nečte:** jména jako `SQU-40BBMais-BB-vs-CO-BU-SB` uvádějí
+ * hloubku `40BBMais`, tedy „40 bb a víc". To je **rozsah hloubek, ne bod**, a do
+ * jednoho kbelíku se nevejde; zvolit 40 by tvrdilo, že range platí přesně tam.
+ * Takové stránky proto situaci nevrátí a nevydají se - naměřeno, je to celý
+ * kontext `SQUEEZE` (10 stran, 774 kombinací), který tím zůstává stranou.
+ *
+ * `EP` se **nepřekládá**: je to skupina („early position"), ne konkrétní místo
+ * u stolu, a objevuje se ve víceslovných multiway zápisech (`BB-vs-EP_MP`).
  */
 export function situationFromFileName(name: string): RyeSituation | undefined {
   const stem = name.replace(/\.html$/i, "");
   // Tvar 1: sedačka se svou hloubkou, případně dvě takové.
-  const paired = [...stem.matchAll(/(utg|ep|mp|lj|hj|co|bu|btn|sb|bb)(\d+)bb/gi)];
+  const paired = [...stem.matchAll(/(utg1|utg2|utg|ep|mp|lj|hj|co|bu|btn|sb|bb)(\d+)bb/gi)];
   if (paired.length >= 1) {
     const seat = SEAT_ALIASES.get(paired[0][1].toUpperCase());
     if (seat === undefined) return undefined;
@@ -191,7 +268,7 @@ export function situationFromFileName(name: string): RyeSituation | undefined {
   }
   // Tvar 2: společná hloubka vpředu, pak `HRDINA-vs-SOUPEŘI`.
   const depth = /(?:^|[-_])(\d+)BB(?:[-_]|$)/i.exec(stem);
-  const versus = /(?:^|[-_])(UTG|EP|MP|LJ|HJ|CO|BU|BTN|SB|BB)[-_]vs[-_]([A-Za-z_]+)/i.exec(stem);
+  const versus = /(?:^|[-_])(UTG1|UTG2|UTG|EP|MP|LJ|HJ|CO|BU|BTN|SB|BB)[-_]vs[-_]([A-Za-z0-9_+]+)/i.exec(stem);
   if (depth === null || versus === null) return undefined;
   const seat = SEAT_ALIASES.get(versus[1].toUpperCase());
   if (seat === undefined) return undefined;
@@ -217,12 +294,12 @@ export function opponentFromFileName(
   hero: RyeSituation,
 ): RyeOpponent | undefined {
   const stem = name.replace(/\.html$/i, "");
-  const paired = [...stem.matchAll(/(utg|ep|mp|lj|hj|co|bu|btn|sb|bb)(\d+)bb/gi)];
+  const paired = [...stem.matchAll(/(utg1|utg2|utg|ep|mp|lj|hj|co|bu|btn|sb|bb)(\d+)bb/gi)];
   if (paired.length >= 2) {
     const seat = SEAT_ALIASES.get(paired[1][1].toUpperCase());
     return seat === undefined ? undefined : { seat, stackBB: Number(paired[1][2]) };
   }
-  const versus = /(?:^|[-_])(?:UTG|EP|MP|LJ|HJ|CO|BU|BTN|SB|BB)[-_]vs[-_]([A-Za-z]+)/i.exec(stem);
+  const versus = /(?:^|[-_])(?:UTG1|UTG2|UTG|EP|MP|LJ|HJ|CO|BU|BTN|SB|BB)[-_]vs[-_]([A-Za-z0-9+]+)/i.exec(stem);
   if (versus === null) return undefined;
   const seat = SEAT_ALIASES.get(versus[1].toUpperCase());
   // Když zdroj hloubku soupeře neuvádí, je společná - je to jedna hloubka stolu.

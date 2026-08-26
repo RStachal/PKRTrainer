@@ -33,6 +33,16 @@ if (source === undefined) {
   process.exit(2);
 }
 
+// Filtr na půlku korpusu. ICM jde do `DOLAR_EV` slotů, zbytek do `CHIP_EV` -
+// jsou to jiné řádky knihovny a slévat jejich čísla by zakrylo, která polovina
+// co umí.
+const only = process.argv.find((arg) => arg.startsWith("--only="))?.split("=")[1];
+function inScope(name: string): boolean {
+  if (only === undefined) return true;
+  const isIcm = /^ICM/i.test(name);
+  return only.toUpperCase() === "ICM" ? isIcm : !isIcm;
+}
+
 function htmlFiles(directory: string): string[] {
   const found: string[] = [];
   for (const entry of readdirSync(directory)) {
@@ -105,6 +115,7 @@ if (process.argv.includes("--coverage")) {
 
   for (const grid of verified) {
     const name = basename(grid.file);
+    if (!inScope(name)) continue;
     const vocabulary = grid.legend.map((entry) => entry.action).sort().join(" | ");
     if (REFUSED_VOCABULARIES.has(vocabulary)) { refused += 1; continue; }
     const context = contextForVocabulary(grid.legend.map((entry) => entry.action));
@@ -123,7 +134,7 @@ if (process.argv.includes("--coverage")) {
     target.set(key, row);
   }
 
-  console.log("Co by z korpusu vyplnilo intake scaffold");
+  console.log(`Co by z korpusu vyplnilo intake scaffold${only ? ` (jen ${only})` : ""}`);
   console.log("");
   console.log("kontext".padEnd(12) + "stran".padStart(7) + "řádků".padStart(9) + "kombinací".padStart(11));
   for (const [key, row] of [...mapped].sort((left, right) => right[1].rows - left[1].rows)) {
@@ -141,6 +152,7 @@ if (process.argv.includes("--coverage")) {
   const perCell = new Map<string, { pages: string[]; answers: Map<string, Set<string>> }>();
   for (const grid of verified) {
     const name = basename(grid.file);
+    if (!inScope(name)) continue;
     const vocabulary = grid.legend.map((entry) => entry.action).sort().join(" | ");
     if (REFUSED_VOCABULARIES.has(vocabulary)) continue;
     const context = contextForVocabulary(grid.legend.map((entry) => entry.action));
@@ -194,6 +206,7 @@ if (process.argv.includes("--coverage")) {
     }>();
     for (const grid of verified) {
       const name = basename(grid.file);
+      if (!inScope(name)) continue;
       const vocabulary = grid.legend.map((entry) => entry.action).sort().join(" | ");
       if (REFUSED_VOCABULARIES.has(vocabulary)) continue;
       const context = contextForVocabulary(grid.legend.map((entry) => entry.action));
