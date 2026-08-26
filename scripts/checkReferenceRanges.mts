@@ -250,3 +250,72 @@ if (icmRows.length > 0) {
 for (const [why, count] of [...icmDeclined].sort((left, right) => right[1] - left[1])) {
   console.log(`  nepočítáno: ${count}x ${why}`);
 }
+
+/**
+ * O kolik se liší obrana proti různým otevírajícím.
+ *
+ *   npm run mtt:reference-check -- --defence
+ *
+ * ## Proč to vzniklo až teď
+ *
+ * Deník tvrdí v bodě 62, že „tentýž hrdina na téže hloubce se proti různým
+ * otevírajícím brání ranges s rozptylem v průměru 11,7 bodu". To číslo je
+ * z 18. 8. 2026 a **žádný nástroj ho neuměl zopakovat** - což je porušení
+ * pravidla, že do dokumentu jde jen změřené, tedy číslo *a příkaz, který ho
+ * vyrobil*. Navíc vzniklo z korpusu, který tehdy zahazoval mixované strategie.
+ *
+ * Je to zároveň to nejdůležitější číslo pro rozhodnutí o `vsSeat`: říká, kolik
+ * stojí, že `VS_OPEN` neví, kdo otevřel.
+ */
+if (process.argv.includes("--defence")) {
+  const DEFENCE = /^F3B-(\d+)BB-([A-Z0-9+]+)-vs-([A-Z0-9+]+)$/i;
+  const byHero = new Map<string, { villain: string; width: number }[]>();
+  for (const page of pages) {
+    const match = DEFENCE.exec(page.id);
+    if (match === null || page.pctOfHands === null) continue;
+    const key = `${match[2].toUpperCase()} @ ${match[1]}bb`;
+    const list = byHero.get(key) ?? [];
+    list.push({ villain: match[3].toUpperCase(), width: page.pctOfHands });
+    byHero.set(key, list);
+  }
+
+  const rows = [...byHero]
+    .filter(([, list]) => list.length > 1)
+    .map(([key, list]) => {
+      const widths = list.map((item) => item.width);
+      const min = Math.min(...widths);
+      const max = Math.max(...widths);
+      const widest = list.find((item) => item.width === max);
+      const narrowest = list.find((item) => item.width === min);
+      return { key, spread: max - min, count: list.length, widest, narrowest };
+    })
+    .sort((left, right) => right.spread - left.spread);
+
+  console.log("O kolik se liší obrana podle toho, kdo otevřel");
+  console.log("");
+  console.log(
+    "hrdina".padEnd(16) + "otvír.".padStart(7) + "rozptyl".padStart(9)
+    + "  nejširší proti / nejužší proti",
+  );
+  for (const row of rows) {
+    console.log(
+      row.key.padEnd(16)
+      + String(row.count).padStart(7)
+      + `${row.spread.toFixed(1)}b`.padStart(9)
+      + `  ${row.widest?.width.toFixed(1)}% vs ${row.widest?.villain}`
+      + ` / ${row.narrowest?.width.toFixed(1)}% vs ${row.narrowest?.villain}`,
+    );
+  }
+  const average = rows.reduce((sum, row) => sum + row.spread, 0) / Math.max(rows.length, 1);
+  console.log("");
+  console.log(
+    `hrdinů s víc otevírajícími: ${rows.length}`
+    + ` | průměrný rozptyl: ${average.toFixed(1)} bodu`
+    + ` | největší: ${rows[0]?.spread.toFixed(1)} (${rows[0]?.key})`,
+  );
+  console.log("");
+  console.log(
+    "Tolik stojí, že `VS_OPEN` neví, kdo otevřel: hrdina dostane tutéž odpověď\n"
+    + "na situace, které se ve zdroji liší o tolik bodů.",
+  );
+}

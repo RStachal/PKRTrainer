@@ -106,7 +106,7 @@ U buňky `BB|50|VS_OPEN` se pět stran neshodne u **62 tříd ze 169**. Není to
 chyba zdroje: ten rozlišuje, **proti které sedačce** a v jaké ICM situaci range
 platí. Knihovna to nerozlišuje - `VS_OPEN` je jeden kontext bez ohledu na to,
 kdo otevřel. Je to tentýž nesoulad, který deník popisuje v bodě 62 („rozdíl
-proti nezávislému zdroji je v průměru 11,7 bodu"), jen teď změřený zevnitř.
+proti nezávislému zdroji je u BB 16,3 až 37,7 bodu"), jen teď změřený zevnitř.
 
 Sloučit ty odpovědi by znamenalo **vydat průměr, který nikdo nespočítal**, a
 označit ho za měřený zdroj. To je přesně ta třída nepravdy, které se produkt

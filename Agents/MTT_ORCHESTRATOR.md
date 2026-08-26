@@ -137,7 +137,7 @@ Změřeno: **715 vteřin na desku** včetně zápisu dumpu, checkpoint 31 MB, co
 
 Dva ústupky, které se vracejí jako `caveats`, ne jen v komentáři:
 `VS_OPEN` nerozlišuje, kdo otevřel (rozdíl proti nezávislému zdroji je v průměru
-11,7 bodu), a preflop packy nesou čisté akce - měřeno 0 tříd z 1980, které by
+9,4 bodu, u BB až 37,7 - `mtt:reference-check --defence`), a preflop packy nesou čisté akce - měřeno 0 tříd z 1980, které by
 dorovnávaly i zvyšovaly.
 
 ### 6. Evidence procesů — **stojí od 20. 8. 2026**
