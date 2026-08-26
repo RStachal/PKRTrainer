@@ -22,14 +22,11 @@ function solvedFamilyCountsByProfile(): Record<string, number> {
 }
 import type { MttCoreReleaseReport } from "./checkMttCoreRelease.mts";
 import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.mts";
-import { solvedTurnManifest } from "../src/data/ranges/turnSolvedManifest.generated.ts";
 import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks.ts";
 import { runtimeSolvedTurnPacks } from "../src/data/ranges/turnSolvedRuntimeRegistry.ts";
-import { solvedRiverManifest } from "../src/data/ranges/riverSolvedManifest.generated.ts";
 import { loadSolvedRiverPacks } from "../src/data/ranges/riverSolvedStrategyPacks.ts";
 import { runtimeSolvedRiverPacks } from "../src/data/ranges/riverSolvedRuntimeRegistry.ts";
 import { actionNodeForSolvedHero } from "../src/data/ranges/solvedHeroActionNode.ts";
-import { solvedFlopManifest } from "../src/data/ranges/flopSolvedManifest.generated.ts";
 import { loadSolvedFlopPacks } from "../src/data/ranges/flopSolvedStrategyPacks.ts";
 import { runtimeSolvedFlopPacks } from "../src/data/ranges/flopSolvedRuntimeRegistry.ts";
 import { shippedContentRisks } from "./lib/mttContentRisks.mts";

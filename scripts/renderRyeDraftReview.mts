@@ -106,14 +106,56 @@ const sorted = [...draft.records].sort((left, right) => (
   || left.bucket - right.bucket
 ));
 
-const blocks = sorted.map((record) => {
+/** Kotva pro odkaz z rozcestníku; musí být stabilní, ať se dá poslat odkaz. */
+function anchorOf(record: DraftRecord, index: number): string {
+  return `r${index}-${record.context}-${record.position}-${record.bucket}`
+    .toLowerCase().replace(/[^a-z0-9-]/g, "");
+}
+
+/**
+ * Rozcestník a přehled.
+ *
+ * 94 mřížek na jedné stránce bez navigace se kontroluje mizerně: čtenář neví,
+ * kolik toho zbývá, ani kde je co. Souhrn navíc dovolí rozhodnout, **kam se
+ * podívat nejdřív** - třeba na kontext s nejvíc mixy, protože tam se překlad
+ * splete nejsnáz.
+ */
+function overview(records: readonly DraftRecord[]): string {
+  const byContext = new Map<string, { count: number; mixed: number; setups: Set<string> }>();
+  for (const record of records) {
+    const row = byContext.get(record.context)
+      ?? { count: 0, mixed: 0, setups: new Set<string>() };
+    row.count += 1;
+    row.mixed += Object.values(record.lenient).filter((actions) => actions.length > 1).length;
+    row.setups.add(record.stackSetupId);
+    byContext.set(record.context, row);
+  }
+  const rows = [...byContext].sort((left, right) => right[1].count - left[1].count)
+    .map(([context, row]) => `<tr><td>${escapeHtml(context)}</td><td>${row.count}</td>`
+      + `<td>${row.mixed}</td><td>${[...row.setups].sort().join(", ")}</td></tr>`)
+    .join("");
+
+  const links = records.map((record, index) => {
+    const versus = record.vsSeat === "" ? "" : ` vs ${record.vsSeat}`;
+    return `<a href="#${anchorOf(record, index)}">${escapeHtml(record.context)}
+      ${escapeHtml(record.position)} ${record.bucket}${escapeHtml(versus)}</a>`;
+  }).join("");
+
+  return `<h2 class="plain">Přehled</h2>
+<table><thead><tr><th>kontext</th><th>mřížek</th><th>rukou s mixem</th><th>rozložení stacků</th></tr></thead>
+<tbody>${rows}</tbody></table>
+<h2 class="plain">Rozcestník</h2>
+<nav>${links}</nav>`;
+}
+
+const blocks = sorted.map((record, index) => {
   const mixed = Object.values(record.lenient).filter((actions) => actions.length > 1).length;
   const inRange = Object.keys(record.lenient).length;
   const versus = record.vsSeat === "" ? "proti všem za sebou" : `proti ${record.vsSeat}`;
   const notes = record.notes.length === 0
     ? ""
     : `<ul class="notes">${record.notes.map((note) => `<li>${escapeHtml(note)}</li>`).join("")}</ul>`;
-  return `<section>
+  return `<section id="${anchorOf(record, index)}">
   <h2>${escapeHtml(record.context)} &middot; ${escapeHtml(record.position)} ${record.bucket} BB &middot; ${escapeHtml(versus)}</h2>
   <p class="meta">rozložení stacků: <b>${escapeHtml(record.stackSetupId)}</b> &middot;
      hloubka ve zdroji: ${record.sourceStackBB} BB &middot;
@@ -146,6 +188,24 @@ const html = `<!doctype html>
  .key i{width:14px;height:14px;border-radius:2px;display:inline-block}
  .intro{background:#1a2130;padding:12px 16px;border-radius:8px;max-width:820px}
  code{background:#1a2130;padding:1px 4px;border-radius:3px}
+ h2.plain{font-size:16px;margin:28px 0 8px}
+ table{border-collapse:collapse;font-size:13px;margin-bottom:8px}
+ th,td{border:1px solid #2a3446;padding:4px 10px;text-align:left}
+ th{background:#1a2130;color:#9fb3cd}
+ nav{display:flex;flex-wrap:wrap;gap:6px;max-width:980px}
+ nav a{background:#1a2130;color:#9fb3cd;text-decoration:none;padding:3px 8px;
+       border-radius:4px;font-size:12px;white-space:nowrap}
+ nav a:hover{background:#24304a;color:#e8eef7}
+ section{scroll-margin-top:12px}
+ /* Tisk: mřížky musí zůstat čitelné i na papíře, proto světlé pozadí a
+    zákaz dělení mřížky přes stránku. */
+ @media print{
+   body{background:#fff;color:#000;margin:12mm}
+   .intro,nav{background:#f4f6fa;color:#000}
+   nav{display:none}
+   section{break-inside:avoid}
+   .meta{color:#444}
+ }
 </style></head><body>
 <h1>Draft ranží ke kontrole</h1>
 <div class="intro">
@@ -164,6 +224,7 @@ const html = `<!doctype html>
 <ul>${draft.assumptions.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
 <p>${legend}</p>
 </div>
+${overview(sorted)}
 ${blocks}
 </body></html>
 `;

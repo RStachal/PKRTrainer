@@ -1,0 +1,17 @@
+{
+  "// proč vlastní konfigurace": [
+    "Skripty běží na Node 24, aplikace míří na Android WebView. Jsou to dvě",
+    "různá prostředí a slévat je do jednoho `lib` znamená buď zakázat Node",
+    "modernější API, nebo pustit do aplikace to, co starý WebView neumí.",
+    "`tsconfig.json` proto zůstává na ES2020 a hlídá `src/`; tahle konfigurace",
+    "kontroluje `scripts/`, kde je ES2022 v pořádku.",
+    "Naměřeno 26. 8. 2026: samotné zvednutí `lib` odstraní 29 ze 114 chyb -",
+    "všechny hlásily chybějící `String.prototype.replaceAll`."
+  ],
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  },
+  "include": ["scripts"]
+}

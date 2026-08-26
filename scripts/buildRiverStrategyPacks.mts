@@ -1,3 +1,4 @@
+import type { RiverStrategyRule } from "../src/data/ranges/riverStrategyRuleBuilder";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { gzipSync } from "node:zlib";
@@ -260,7 +261,7 @@ if (family === undefined) {
     plannedItems: 0, writtenItems: 0,
     minCoverage: 1, coverageTarget: TURN_COVERAGE_TARGET, sampledRules: [],
   };
-  const rules = [];
+  const rules: RiverStrategyRule[] = [];
   /** Vstupy pro dopočet EV, klíčované pravidlem. Nedodává se, jen se počítá. */
   const evContext = new Map<object, {
     node: unknown;

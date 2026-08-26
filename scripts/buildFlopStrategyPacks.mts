@@ -1,3 +1,4 @@
+import type { FlopStrategyRule } from "../src/data/ranges/flopStrategyRuleBuilder";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { seatsOfFamily,
@@ -173,7 +174,7 @@ if (family === undefined) {
     plannedItems: 0, writtenItems: 0,
     minCoverage: 1, coverageTarget: TURN_COVERAGE_TARGET, sampledRules: [],
   };
-  const rules = [];
+  const rules: FlopStrategyRule[] = [];
   let unnamed = 0;
 
   for (const file of files) {

@@ -1,3 +1,4 @@
+import type { TurnStrategyRule } from "../src/data/ranges/turnStrategyRuleBuilder";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import {
   fullTreeBoardsByFamily,
@@ -192,7 +193,7 @@ if (family === undefined) {
     plannedItems: 0, writtenItems: 0,
     minCoverage: 1, coverageTarget: TURN_COVERAGE_TARGET, sampledRules: [],
   };
-  const rules = [];
+  const rules: TurnStrategyRule[] = [];
   let unidentified = 0;
 
   for (const directory of directories) {

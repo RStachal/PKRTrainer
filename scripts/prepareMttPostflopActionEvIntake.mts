@@ -249,7 +249,11 @@ function prepareTemplates(args: CliArgs) {
   });
   return {
     valid: templates.every((item) => !item.stale),
-    mode: "TEMPLATE",
+    // `as const` tu není kosmetika: bez něj TypeScript odvodí `mode: string`,
+    // což znemožní zúžení `report.mode === "TEMPLATE"` v `renderReport` - a
+    // ohlásí to jako dvacet chyb „vlastnost neexistuje na sjednocení", které
+    // vypadají jako dvacet různých vad místo jedné.
+    mode: "TEMPLATE" as const,
     schemaVersion: SCHEMA,
     strategyValues: "none",
     counts: {
@@ -332,7 +336,7 @@ function validateAndBuildCandidate(args: CliArgs) {
 
   return {
     valid,
-    mode: "VALIDATE",
+    mode: "VALIDATE" as const,
     schemaVersion: SCHEMA,
     catalogId: entry.catalogId,
     pilotScope: entry.scope,
