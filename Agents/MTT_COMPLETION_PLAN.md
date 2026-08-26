@@ -174,7 +174,33 @@ Dodáno 20.-24. 8. 2026. Ověřeno měřením, ne dojmem:
 - Akce, kterou rozbor nemodeluje, se jmenuje „EV nespočítána" a **nezakládá
   chybu hráče** - dřív za ni dostal „špatně" bez opory v čemkoli spočítaném.
 
-## Fáze 2 — EV pro turn a flop — **nedodatelná, jak byla napsaná**
+## Fáze 2 — EV pro turn a flop — **uzavřeno 26. 8. 2026: nedodávat**
+
+**Blokátor není velikost, jak se tu psalo, ale to, že ta čísla neexistují.**
+Odhad níž („11,2 + 3,4 MB") předpokládá, že EV je spočítaná a jde jen zapsat.
+Není. Změřeno 26. 8. 2026:
+
+| | |
+|---|---|
+| výskytů klíče `"ev` ve 12 dumpech solveru | **0** |
+| turnových podher, na které knihovna odpovídá | 15 008 |
+| z toho s riverovou vrstvou (bez ní EV nejde spočítat) | **588 = 3,9 %** |
+| tempo výroby vrstev | 74,3 za den |
+| kolik nocí by trval zbytek | **193**, a noc by nedělala nic jiného |
+
+Riverová EV se dopočítá proto, že po páté kartě je to showdown bez rekurze.
+Turnový uzel má pod sebou celou riverovou vrstvu - a ta pro 96,1 % podher
+neexistuje.
+
+**Rozhodnutí: nedodávat.** Odhad by byl jiné tvrzení než „EV ze solveru" a
+produkt stojí na tom, že tyhle dvě věci nesplývají. Dodat 3,9 % za cenu
+přepsání celého výpočtu je špatný poměr. Změnil by to solver, který
+counterfactual values vypisuje; pak je to práce, ne výzkum.
+
+Původní rozvaha, která tu stála, zůstává níž - je pořád platná pro tu část
+otázky, která je o velikosti.
+
+## Fáze 2 (původní zadání) — proč se zdálo, že jde o megabajty
 
 **Změřeno 24. 8. 2026 a mění to zadání fáze:** EV stojí 1,4 kB na pravidlo.
 Turn má 8 302 pravidel a flop 2 521, takže by to bylo **11,2 + 3,4 MB**. Líné
