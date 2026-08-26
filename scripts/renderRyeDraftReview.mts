@@ -1,5 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
+import { getRangeRecord } from "../src/data/ranges/index";
+import type { ActionContext, Position, StackBucket } from "../src/core/types";
 
 /**
  * Draft ranží k přečtení člověkem, jako mřížky - ne jako JSON.
@@ -100,7 +102,64 @@ function grid(record: DraftRecord): string {
   return `<div class="grid">${cells.join("")}</div>`;
 }
 
+/**
+ * O kolik by se změnila odpověď, kterou hráč dostane dnes.
+ *
+ * ## Proč to na té stránce musí být
+ *
+ * 94 mřížek je pořád moc na jedno sezení a **nejsou stejně důležité**. Některá
+ * jen potvrdí, co knihovna odpovídá; jiná přepíše odpověď u šedesáti tříd ze
+ * 169. Bez toho čísla se čte odshora dolů, tedy v pořadí, které nic neznamená.
+ *
+ * Měří se proti **obecnému** záznamu, tedy tomu, co hráč dostane teď - ne proti
+ * zpřesněnému. To je celý smysl `vsSeat`: dnešní odpověď na „kdo otevřel"
+ * nehledí, a tohle číslo říká, kolik ho to stojí u téhle konkrétní mřížky.
+ */
+interface DraftImpact {
+  /** Tříd, kde by se doporučená akce lišila od dnešní odpovědi. */
+  changed: number;
+  /** Tříd, které dnešní odpověď zná. Bez nich není s čím srovnávat. */
+  compared: number;
+  /** Buňka, kterou knihovna dnes nemá vůbec - draft by ji přidal. */
+  newCell: boolean;
+}
+
+function impactOf(record: DraftRecord): DraftImpact {
+  const current = getRangeRecord(
+    "OFF",
+    record.position as Position,
+    record.bucket as StackBucket,
+    record.context as ActionContext,
+  );
+  if (current === undefined) return { changed: 0, compared: 0, newCell: true };
+  let changed = 0;
+  let compared = 0;
+  for (const [hand, actions] of Object.entries(record.strict)) {
+    const mine = current.strict[hand];
+    // Ruka, kterou dnešní odpověď nezná, není neshoda - je to prázdno. Počítat
+    // ji jako změnu by nafouklo každou mřížku na stovku.
+    if (mine === undefined) continue;
+    compared += 1;
+    const same = mine.length === actions.length
+      && [...mine].sort().join("|") === [...actions].sort().join("|");
+    if (!same) changed += 1;
+  }
+  return { changed, compared, newCell: false };
+}
+
+const impacts = new Map<DraftRecord, DraftImpact>(
+  draft.records.map((record) => [record, impactOf(record)]),
+);
+
+/** Nejdřív to, co nejvíc změní; nová buňka je taky změna, jen jiného druhu. */
+function weight(record: DraftRecord): number {
+  const impact = impacts.get(record)!;
+  return impact.newCell ? 169 : impact.changed;
+}
+
 const sorted = [...draft.records].sort((left, right) => (
+  weight(right) - weight(left)
+  ||
   left.context.localeCompare(right.context)
   || left.position.localeCompare(right.position)
   || left.bucket - right.bucket
@@ -121,17 +180,23 @@ function anchorOf(record: DraftRecord, index: number): string {
  * splete nejsnáz.
  */
 function overview(records: readonly DraftRecord[]): string {
-  const byContext = new Map<string, { count: number; mixed: number; setups: Set<string> }>();
+  const byContext = new Map<string, {
+    count: number; mixed: number; setups: Set<string>; changed: number; newCells: number;
+  }>();
   for (const record of records) {
     const row = byContext.get(record.context)
-      ?? { count: 0, mixed: 0, setups: new Set<string>() };
+      ?? { count: 0, mixed: 0, setups: new Set<string>(), changed: 0, newCells: 0 };
     row.count += 1;
     row.mixed += Object.values(record.lenient).filter((actions) => actions.length > 1).length;
     row.setups.add(record.stackSetupId);
+    const impact = impacts.get(record)!;
+    row.changed += impact.changed;
+    if (impact.newCell) row.newCells += 1;
     byContext.set(record.context, row);
   }
-  const rows = [...byContext].sort((left, right) => right[1].count - left[1].count)
+  const rows = [...byContext].sort((left, right) => right[1].changed - left[1].changed)
     .map(([context, row]) => `<tr><td>${escapeHtml(context)}</td><td>${row.count}</td>`
+      + `<td><b>${row.changed}</b></td><td>${row.newCells}</td>`
       + `<td>${row.mixed}</td><td>${[...row.setups].sort().join(", ")}</td></tr>`)
     .join("");
 
@@ -142,7 +207,7 @@ function overview(records: readonly DraftRecord[]): string {
   }).join("");
 
   return `<h2 class="plain">Přehled</h2>
-<table><thead><tr><th>kontext</th><th>mřížek</th><th>rukou s mixem</th><th>rozložení stacků</th></tr></thead>
+<table><thead><tr><th>kontext</th><th>mřížek</th><th>změní odpověď</th><th>nových buněk</th><th>rukou s mixem</th><th>rozložení stacků</th></tr></thead>
 <tbody>${rows}</tbody></table>
 <h2 class="plain">Rozcestník</h2>
 <nav>${links}</nav>`;
@@ -155,8 +220,14 @@ const blocks = sorted.map((record, index) => {
   const notes = record.notes.length === 0
     ? ""
     : `<ul class="notes">${record.notes.map((note) => `<li>${escapeHtml(note)}</li>`).join("")}</ul>`;
+  const impact = impacts.get(record)!;
+  const impactText = impact.newCell
+    ? '<b class="new">buňku, kterou knihovna nemá</b> - přidal by novou odpověď'
+    : `<b class="${impact.changed > 0 ? "hot" : ""}">${impact.changed}</b> tříd`
+      + ` z ${impact.compared} porovnaných, kde by se odpověď lišila od dnešní`;
   return `<section id="${anchorOf(record, index)}">
   <h2>${escapeHtml(record.context)} &middot; ${escapeHtml(record.position)} ${record.bucket} BB &middot; ${escapeHtml(versus)}</h2>
+  <p class="meta">dopad: ${impactText}</p>
   <p class="meta">rozložení stacků: <b>${escapeHtml(record.stackSetupId)}</b> &middot;
      hloubka ve zdroji: ${record.sourceStackBB} BB &middot;
      tříd v range: ${inRange} ze 169 &middot; z toho mix: ${mixed} &middot;
@@ -189,6 +260,8 @@ const html = `<!doctype html>
  .intro{background:#1a2130;padding:12px 16px;border-radius:8px;max-width:820px}
  code{background:#1a2130;padding:1px 4px;border-radius:3px}
  h2.plain{font-size:16px;margin:28px 0 8px}
+ .hot{color:#ffb04a}
+ .new{color:#7fd18a}
  table{border-collapse:collapse;font-size:13px;margin-bottom:8px}
  th,td{border:1px solid #2a3446;padding:4px 10px;text-align:left}
  th{background:#1a2130;color:#9fb3cd}
@@ -215,6 +288,12 @@ const html = `<!doctype html>
    Mechanická kontrola ověřila, že se každá mřížka shoduje s počty kombinací,
    které uvádí její vlastní legenda - to ale říká jen, že se čtení nespletlo,
    ne že je ta strategie správná pro danou situaci.</p>
+<p><b>Mřížky jsou seřazené podle dopadu</b>, ne podle abecedy: nahoře je ta,
+   která by změnila nejvíc odpovědí proti tomu, co hráč dostane dnes. Kdo nemá
+   čas na všech ${draft.recordCount}, má odshora ty, na kterých záleží.
+   Dopad se počítá proti <b>obecnému</b> záznamu, tedy proti dnešní odpovědi,
+   která nehledí na to, kdo otevřel - to je přesně ta mezera, kvůli které draft
+   vznikl.</p>
 <p>Žlutý okraj znamená ruku, kterou zdroj hraje <b>víc způsoby</b>. Tam se
    překlad může splést nejsnáz, takže stojí za pohled jako první.</p>
 <p>Oranžové poznámky u mřížky říkají, <b>co se překladem ztratilo</b> - třeba že
