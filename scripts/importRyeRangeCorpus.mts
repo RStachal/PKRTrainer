@@ -58,7 +58,7 @@ interface DraftRecord {
   bucket: number;
   context: string;
   vsSeat: string;
-  scenarioId: string;
+  stackSetupId: string;
   sourceStackBB: number;
   /** ruka → akce s nejvyšší vahou; při shodě jich je víc. */
   strict: Record<string, string[]>;
@@ -164,7 +164,7 @@ for (const file of htmlFiles(source).sort()) {
     vsSeat: opponent?.seat ?? "",
     // Sada odlišuje rozložení stacků u stolu; bez ní si dvě ICM stránky
     // odporují. Bere se z předpony jména, protože tak je zdroj člení.
-    scenarioId: /^[A-Za-z0-9]+/.exec(name)?.[0]?.toUpperCase() ?? "?",
+    stackSetupId: /^[A-Za-z0-9]+/.exec(name)?.[0]?.toUpperCase() ?? "?",
     sourceStackBB: situation.stackBB,
     strict,
     lenient,

@@ -468,7 +468,7 @@ function coverageForPack(pack: RangePack): MttPreflopRangeAuditCoverage {
   // takže obecnou („co na BTN proti otevření") nezodpoví. Kdyby se do pokrytí
   // počítal, mohl by pack vypadat úplný a hráč by přesto dostal prázdno.
   const general = pack.records.filter(
-    (record) => record.vsSeat === undefined && record.scenarioId === undefined,
+    (record) => record.vsSeat === undefined && record.stackSetupId === undefined,
   );
   const refined = pack.records.length - general.length;
   const generalCells = new Set(
@@ -476,7 +476,7 @@ function coverageForPack(pack: RangePack): MttPreflopRangeAuditCoverage {
   );
   const refinedCells = new Set(
     pack.records
-      .filter((record) => record.vsSeat !== undefined || record.scenarioId !== undefined)
+      .filter((record) => record.vsSeat !== undefined || record.stackSetupId !== undefined)
       .map((record) => `${record.position}|${record.bucket}|${record.context}`)
       .filter((cell) => generalCells.has(cell)),
   );
@@ -518,7 +518,7 @@ function duplicateKeys(pack: RangePack): string[] {
     // dvakrát. Bez toho by je audit odmítl jako duplicitu.
     const key = `${record.position}|${record.bucket}|${record.context}`
       + `${record.vsSeat ? `|vs${record.vsSeat}` : ""}`
-      + `${record.scenarioId ? `|#${record.scenarioId}` : ""}`;
+      + `${record.stackSetupId ? `|#${record.stackSetupId}` : ""}`;
     if (seen.has(key)) duplicates.add(key);
     seen.add(key);
   }

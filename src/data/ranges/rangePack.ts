@@ -55,7 +55,7 @@ export interface RangePackRecord {
    */
   vsSeat?: Position;
   /** Rozložení stacků u stolu, pro které záznam platí. Viz `vsSeat`. */
-  scenarioId?: string;
+  stackSetupId?: string;
   lenient: Record<HandLabel, ActionKey[]>;
   strict: Record<HandLabel, ActionKey[]>;
   actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
@@ -118,7 +118,7 @@ export function rangePackRecordToRangeRecord(record: RangePackRecord): RangeReco
     // Zpřesnění musí projít i sem, jinak by se dva legitimní záznamy slily do
     // jednoho klíče a validace by je hlásila jako duplicitu.
     ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
-    ...(record.scenarioId ? { scenarioId: record.scenarioId } : {}),
+    ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
     ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
   };
 }

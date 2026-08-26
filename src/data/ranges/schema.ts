@@ -81,7 +81,7 @@ export interface RangeRecord {
    * Je to neprůhledný identifikátor, ne popis - produkt z něj nic neodvozuje,
    * jen podle něj vybírá. Hráči se nikdy neukáže.
    */
-  scenarioId?: string;
+  stackSetupId?: string;
   /** ruka → přijatelné Akční_klíče (LENIENT). Prázdné/chybějící = fold. */
   lenient: Record<HandLabel, ActionKey[]>;
   /** ruka → přesné Akční_klíče vč. sizingu (STRICT). */
@@ -243,7 +243,7 @@ export function validateRangeFile(f: RangeFile): string[] {
     // Zpřesnění patří do klíče duplicity, jinak by dva legitimní záznamy - týž
     // spot proti dvěma různým sedačkám - vypadaly jako jeden zapsaný dvakrát.
     const combo = `${r.position}/${r.bucket}/${r.context}`
-      + `${r.vsSeat ? `/vs${r.vsSeat}` : ""}${r.scenarioId ? `/#${r.scenarioId}` : ""}`;
+      + `${r.vsSeat ? `/vs${r.vsSeat}` : ""}${r.stackSetupId ? `/#${r.stackSetupId}` : ""}`;
     if (seen.has(combo)) {
       errors.push(
         `[${f.ante}] duplicate position x stack bucket x context combination: ${combo}.`,

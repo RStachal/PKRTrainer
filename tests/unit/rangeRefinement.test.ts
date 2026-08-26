@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { rangeIndexKey } from "../../src/data/ranges/index";
 import { validateRangeFile } from "../../src/data/ranges/schema";
+import { questionId } from "../../src/core/questionId";
+import { parseAnteFromQuestionId } from "../../src/persistence/statsRecordV2";
 import { auditMttPreflopRangePack } from "../../src/data/ranges/mttPreflopRangeAudit";
 import type { RangePack, RangePackRecord } from "../../src/data/ranges/rangePack";
 import type { RangeRecord } from "../../src/data/ranges/schema";
@@ -13,7 +15,7 @@ import type { RangeRecord } from "../../src/data/ranges/schema";
  * `VS_OPEN` byl jeden kontext bez ohledu na otvírajícího, jenže range proti
  * otevření z UTG a z BTN je jiná. Změřeno 26. 8. 2026 na vlastníkově korpusu
  * ranží: bez `vsSeat` si **15 z 16 sdílených buněk odporuje**, až u 62 tříd ze
- * 169. Se `vsSeat` jich zbude osm a s `scenarioId` (rozložení stacků u stolu)
+ * 169. Se `vsSeat` jich zbude osm a s `stackSetupId` (rozložení stacků u stolu)
  * **nula**.
  *
  * Postflop tenhle rozměr nese od začátku (`SRP_CO_VS_BB`).
@@ -46,7 +48,7 @@ describe("zpřesnění range podle otvírající sedačky", () => {
     const versus = rangeIndexKey("OFF", "BTN", 50, "VS_OPEN", { vsSeat: "UTG" });
     const scenario = rangeIndexKey("OFF", "BTN", 50, "VS_OPEN", {
       vsSeat: "UTG",
-      scenarioId: "ICM3",
+      stackSetupId: "ICM3",
     });
     expect(new Set([plain, versus, scenario]).size).toBe(3);
     expect(versus).toBe("OFF|BTN|50|VS_OPEN|vsUTG");
@@ -168,5 +170,56 @@ describe("zpřesnění a úplnost packu", () => {
       packRecord({ vsSeat: "CO" }),
     ]));
     expect(report.duplicateRecordKeys).toEqual([]);
+  });
+});
+
+/**
+ * Question_ID se zpřesněním.
+ *
+ * Dvě věci, které se tu dají tiše rozbít, a obojí by se projevilo až u hráčů:
+ *
+ * 1. **Změnit ID plošně** by zneplatnilo uloženou historii - lidem by zmizely
+ *    statistiky. Spot bez zpřesnění proto musí mít ID bajt po bajtu stejné.
+ * 2. **Připojit zpřesnění na konec** by rozbilo `parseAnteFromQuestionId`,
+ *    který čte poslední segment a čeká `ON`/`OFF`. Dashboard by přestal
+ *    rozlišovat ante a nikdo by nepoznal proč. Ante proto zůstává poslední.
+ */
+describe("Question_ID se zpřesněním", () => {
+  const base = {
+    context: "VS_OPEN" as const,
+    heroPos: "BTN" as const,
+    effStack: 50 as const,
+    hand: "AKs",
+    ante: "OFF" as const,
+  };
+
+  it("bez zpřesnění se ID nezmění", () => {
+    expect(questionId(base)).toBe("VS_OPEN|BTN|50|AKs|OFF");
+    expect(questionId({ ...base, vsSeat: undefined })).toBe("VS_OPEN|BTN|50|AKs|OFF");
+    expect(questionId({ ...base, stackSetupId: undefined })).toBe("VS_OPEN|BTN|50|AKs|OFF");
+  });
+
+  it("zpřesněný spot dostane vlastní ID", () => {
+    expect(questionId({ ...base, vsSeat: "UTG" })).toBe("VS_OPEN|BTN|50|AKs|vsUTG|OFF");
+    expect(questionId({ ...base, vsSeat: "UTG", stackSetupId: "ICM3" }))
+      .toBe("VS_OPEN|BTN|50|AKs|vsUTG|#ICM3|OFF");
+  });
+
+  it("ante zůstává poslední, takže se dá pořád přečíst", () => {
+    for (const id of [
+      questionId(base),
+      questionId({ ...base, vsSeat: "UTG" }),
+      questionId({ ...base, vsSeat: "UTG", stackSetupId: "ICM3" }),
+      questionId({ ...base, ante: "ON", vsSeat: "CO", stackSetupId: "F3B" }),
+    ]) {
+      expect(parseAnteFromQuestionId(id)).toBe(id.endsWith("ON") ? "ON" : "OFF");
+    }
+  });
+
+  it("dva různí otvírající dávají různá ID", () => {
+    const utg = questionId({ ...base, vsSeat: "UTG" });
+    const co = questionId({ ...base, vsSeat: "CO" });
+    expect(utg).not.toBe(co);
+    expect(new Set([questionId(base), utg, co]).size).toBe(3);
   });
 });

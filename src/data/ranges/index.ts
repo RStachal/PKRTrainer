@@ -61,7 +61,7 @@ export interface RangeRefinement {
   /** Sedačka, která jednala před hrdinou. */
   vsSeat?: Position;
   /** Rozložení stacků u stolu, pro které záznam platí. */
-  scenarioId?: string;
+  stackSetupId?: string;
 }
 
 /**
@@ -74,7 +74,7 @@ export interface RangeRefinement {
 function refinementSuffix(refinement?: RangeRefinement): string {
   if (refinement === undefined) return "";
   const vs = refinement.vsSeat ? `|vs${refinement.vsSeat}` : "";
-  const scenario = refinement.scenarioId ? `|#${refinement.scenarioId}` : "";
+  const scenario = refinement.stackSetupId ? `|#${refinement.stackSetupId}` : "";
   return `${vs}${scenario}`;
 }
 
@@ -138,7 +138,7 @@ function aggregate(variants: readonly RangeFile[]): AggregationResult {
           record.position,
           record.bucket,
           record.context,
-          { vsSeat: record.vsSeat, scenarioId: record.scenarioId },
+          { vsSeat: record.vsSeat, stackSetupId: record.stackSetupId },
         );
         if (index.has(key)) {
           errors.push(`duplicate index key during aggregation: ${key}.`);
@@ -238,11 +238,11 @@ export function getRangeRecord(
   // dnešní záznam - **nezpřesněná odpověď je pořád odpověď** a je lepší než
   // žádná. Je to tentýž postup, jakým vybírá vyřešený postflop.
   const attempts: RangeRefinement[] = [];
-  if (refinement?.vsSeat !== undefined || refinement?.scenarioId !== undefined) {
+  if (refinement?.vsSeat !== undefined || refinement?.stackSetupId !== undefined) {
     attempts.push(refinement);
     // Rozložení stacků se pouští dřív než sedačka: bez správné sedačky je
     // odpověď o jiné situaci, kdežto bez rozložení jen o něco méně přesná.
-    if (refinement.scenarioId !== undefined && refinement.vsSeat !== undefined) {
+    if (refinement.stackSetupId !== undefined && refinement.vsSeat !== undefined) {
       attempts.push({ vsSeat: refinement.vsSeat });
     }
   }
