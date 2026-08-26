@@ -45,6 +45,17 @@ export interface RangePackRecord {
   position: Position;
   bucket: StackBucket;
   context: ActionContext;
+  /**
+   * Sedačka, která jednala před hrdinou; chybí u obecného záznamu.
+   *
+   * **Nezapočítává se do úplnosti.** Pack, který má jen zpřesněné záznamy, na
+   * obecnou otázku „co s tím na BTN proti otevření" neodpoví, takže by prohlásit
+   * ho za pokrytý znamenalo tvrdit odpověď, kterou hráč nedostane. Zpřesnění
+   * je nadstavba nad obecnou odpovědí, ne její náhrada.
+   */
+  vsSeat?: Position;
+  /** Rozložení stacků u stolu, pro které záznam platí. Viz `vsSeat`. */
+  scenarioId?: string;
   lenient: Record<HandLabel, ActionKey[]>;
   strict: Record<HandLabel, ActionKey[]>;
   actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
@@ -104,6 +115,10 @@ export function rangePackRecordToRangeRecord(record: RangePackRecord): RangeReco
     context: record.context,
     lenient: record.lenient,
     strict: record.strict,
+    // Zpřesnění musí projít i sem, jinak by se dva legitimní záznamy slily do
+    // jednoho klíče a validace by je hlásila jako duplicitu.
+    ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
+    ...(record.scenarioId ? { scenarioId: record.scenarioId } : {}),
     ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
   };
 }

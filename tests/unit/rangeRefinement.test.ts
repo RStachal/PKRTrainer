@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { rangeIndexKey } from "../../src/data/ranges/index";
 import { validateRangeFile } from "../../src/data/ranges/schema";
+import { auditMttPreflopRangePack } from "../../src/data/ranges/mttPreflopRangeAudit";
+import type { RangePack, RangePackRecord } from "../../src/data/ranges/rangePack";
 import type { RangeRecord } from "../../src/data/ranges/schema";
 
 /**
@@ -80,5 +82,91 @@ describe("zpřesnění range podle otvírající sedačky", () => {
   it("obecná duplicita se pozná i beze zpřesnění", () => {
     const errors = validateRangeFile({ version: "test", ante: "OFF", entries: [record(), record()] });
     expect(errors.some((error) => error.includes("duplicate"))).toBe(true);
+  });
+});
+
+/**
+ * Zpřesnění se **nezapočítává do úplnosti**.
+ *
+ * Tohle je ta past, do které umí nový rozměr spadnout: kdyby se zpřesnění stalo
+ * požadavkem, mřížka by se u six-max zvětšila ze 702 buněk na 1 287 a **každý
+ * slot by se od produkce vzdálil** - z pokrytí 1,4 % by se stalo 0,8 %. Přidat
+ * rozměr a nezměnit bránu by problém zhoršilo, ne vyřešilo.
+ *
+ * Druhý směr je stejně důležitý: pack, který má **jen** zpřesněné záznamy, na
+ * obecnou otázku neodpoví, takže se nesmí tvářit jako pokrytý.
+ */
+describe("zpřesnění a úplnost packu", () => {
+  const base = {
+    id: "test-pack",
+    version: "v1",
+    createdAt: "2026-08-26",
+    verifiedAt: "2026-08-26",
+    confidence: "MEDIUM" as const,
+    assumptions: [],
+    searchQueries: [],
+    sourceEvidence: [],
+  };
+
+  function packWith(records: RangePackRecord[]): RangePack {
+    return {
+      ...base,
+      dimensions: {
+        gameVariant: "MTT",
+        tableFormat: "SIX_MAX",
+        blindSpeed: "REGULAR",
+        street: "PREFLOP",
+        evModel: "CHIP_EV",
+        ante: "OFF",
+        rakeMode: "NONE",
+      },
+      records,
+    } as unknown as RangePack;
+  }
+
+  function packRecord(overrides: Partial<RangePackRecord> = {}): RangePackRecord {
+    return {
+      position: "BTN",
+      bucket: 50,
+      context: "VS_OPEN",
+      lenient: { AA: ["3BET"] },
+      strict: { AA: ["3BET"] },
+      ...overrides,
+    };
+  }
+
+  it("zpřesněný záznam sám o sobě buňku nepokryje", () => {
+    const onlyRefined = auditMttPreflopRangePack(packWith([packRecord({ vsSeat: "UTG" })]));
+    expect(onlyRefined.coverage.positions).toEqual([]);
+    expect(onlyRefined.coverage.refinedRecords).toBe(1);
+    // Není ani mezi „pokrytými se zpřesněním": bez obecné odpovědi není co
+    // zpřesňovat.
+    expect(onlyRefined.coverage.refinedCells).toBe(0);
+  });
+
+  it("zpřesnění vedle obecného záznamu úplnost nezmění", () => {
+    const general = auditMttPreflopRangePack(packWith([packRecord()]));
+    const both = auditMttPreflopRangePack(packWith([
+      packRecord(),
+      packRecord({ vsSeat: "UTG" }),
+      packRecord({ vsSeat: "CO" }),
+    ]));
+    expect(both.coverage.positions).toEqual(general.coverage.positions);
+    expect(both.coverage.stackBuckets).toEqual(general.coverage.stackBuckets);
+    expect(both.coverage.contexts).toEqual(general.coverage.contexts);
+    expect(both.coverage.missingPositions).toEqual(general.coverage.missingPositions);
+    // A zároveň je vidět, že přibylo zpřesnění - jako druhé číslo, ne podmínka.
+    expect(both.coverage.refinedRecords).toBe(2);
+    expect(both.coverage.refinedCells).toBe(1);
+    expect(general.coverage.refinedRecords).toBe(0);
+  });
+
+  it("dva zpřesněné záznamy pro různé sedačky nejsou duplicita ani v auditu", () => {
+    const report = auditMttPreflopRangePack(packWith([
+      packRecord(),
+      packRecord({ vsSeat: "UTG" }),
+      packRecord({ vsSeat: "CO" }),
+    ]));
+    expect(report.duplicateRecordKeys).toEqual([]);
   });
 });

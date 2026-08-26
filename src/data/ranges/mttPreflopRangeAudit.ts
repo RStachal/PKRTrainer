@@ -59,6 +59,21 @@ export interface MttPreflopRangeAuditCoverage {
   missingPositions: Position[];
   missingStackBuckets: StackBucket[];
   missingContexts: ActionContext[];
+  /**
+   * Kolik záznamů je zpřesněných na otvírající sedačku nebo rozložení stacků.
+   *
+   * **Druhé číslo, ne druhá podmínka.** Úplnost se počítá dál z obecných
+   * záznamů, protože pack, který má jen zpřesněné, na obecnou otázku
+   * neodpoví - a prohlásit ho za pokrytý by tvrdilo odpověď, kterou hráč
+   * nedostane.
+   *
+   * Kdyby se zpřesnění stalo požadavkem, mřížka by se u six-max zvětšila z 702
+   * buněk na 1 287 a **každý slot by se od produkce vzdálil**. To je past, do
+   * které ten rozměr umí spadnout, a tohle je místo, kde se jí vyhýbá.
+   */
+  refinedRecords: number;
+  /** Kolik buněk má vedle obecné odpovědi i aspoň jednu zpřesněnou. */
+  refinedCells: number;
 }
 
 export interface MttPreflopSpeedDiffReport {
@@ -447,16 +462,34 @@ function mttProfile(
 
 function coverageForPack(pack: RangePack): MttPreflopRangeAuditCoverage {
   const requiredPositions = requiredPositionsForFormat(pack.dimensions.tableFormat);
+  // Úplnost se měří **jen z obecných záznamů**.
+  //
+  // Zpřesněný záznam odpovídá na užší otázku („co na BTN proti otevření z UTG"),
+  // takže obecnou („co na BTN proti otevření") nezodpoví. Kdyby se do pokrytí
+  // počítal, mohl by pack vypadat úplný a hráč by přesto dostal prázdno.
+  const general = pack.records.filter(
+    (record) => record.vsSeat === undefined && record.scenarioId === undefined,
+  );
+  const refined = pack.records.length - general.length;
+  const generalCells = new Set(
+    general.map((record) => `${record.position}|${record.bucket}|${record.context}`),
+  );
+  const refinedCells = new Set(
+    pack.records
+      .filter((record) => record.vsSeat !== undefined || record.scenarioId !== undefined)
+      .map((record) => `${record.position}|${record.bucket}|${record.context}`)
+      .filter((cell) => generalCells.has(cell)),
+  );
   const positions = uniqueInOrder(
-    pack.records.map((record) => record.position),
+    general.map((record) => record.position),
     requiredPositions,
   );
   const stackBuckets = uniqueInOrder(
-    pack.records.map((record) => record.bucket),
+    general.map((record) => record.bucket),
     STACK_BUCKETS,
   );
   const contexts = uniqueInOrder(
-    pack.records.map((record) => record.context),
+    general.map((record) => record.context),
     REQUIRED_CONTEXTS,
   );
 
@@ -467,6 +500,8 @@ function coverageForPack(pack: RangePack): MttPreflopRangeAuditCoverage {
     missingPositions: requiredPositions.filter((position) => !positions.includes(position)),
     missingStackBuckets: STACK_BUCKETS.filter((bucket) => !stackBuckets.includes(bucket)),
     missingContexts: REQUIRED_CONTEXTS.filter((context) => !contexts.includes(context)),
+    refinedRecords: refined,
+    refinedCells: refinedCells.size,
   };
 }
 
@@ -478,7 +513,12 @@ function duplicateKeys(pack: RangePack): string[] {
   const seen = new Set<string>();
   const duplicates = new Set<string>();
   for (const record of pack.records) {
-    const key = `${record.position}|${record.bucket}|${record.context}`;
+    // Zpřesnění patří do klíče: záznam pro BTN proti otevření z UTG a záznam
+    // pro BTN proti otevření z CO jsou dvě různé odpovědi, ne jedna zapsaná
+    // dvakrát. Bez toho by je audit odmítl jako duplicitu.
+    const key = `${record.position}|${record.bucket}|${record.context}`
+      + `${record.vsSeat ? `|vs${record.vsSeat}` : ""}`
+      + `${record.scenarioId ? `|#${record.scenarioId}` : ""}`;
     if (seen.has(key)) duplicates.add(key);
     seen.add(key);
   }
