@@ -115,6 +115,15 @@ export function readRyeGrid(path: string): RyeGrid | undefined {
   }
 
   const mismatches: string[] = [];
+  // Mřížka bez legendy není ověřená, je **neověřitelná**.
+  //
+  // Naměřeno 26. 8. 2026: 35 stránek korpusu má 169 buněk a žádnou legendu
+  // (jsou to rozcestníky s náhledem). Ty procházely kontrolou tím, že nebylo
+  // co porovnat - tedy nejhorší možný způsob, jak projít. Počítat je mezi
+  // ověřené by znamenalo tvrdit důvěru, kterou nic nepodkládá.
+  if (legend.length === 0) {
+    mismatches.push("stránka nemá legendu, takže se mřížka nemá proti čemu ověřit");
+  }
   for (const entry of legend) {
     const measured = Math.round((combosByColor.get(entry.color) ?? 0) * 10) / 10;
     // Tolerance jedné kombinace, ne nula.

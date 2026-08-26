@@ -76,7 +76,38 @@ for (const grid of verified) {
   }
 }
 
-if (asJson) {
+/**
+ * Slovníky akcí, tedy kolik různých **typů situace** korpus drží.
+ *
+ * Kontext se pozná z legendy, ne ze jména souboru: `flatcall / 3bet/call /
+ * 3b/f / Jam` je hráč, který čelí otevření, kdežto `Fold to 3bet` je ten, kdo
+ * otevřel a čelí zvýšení. Bez tohohle rozlišení by se obojí filovalo pod jeden
+ * kontext a produkt by hráči nabídl odpověď na jinou otázku, než položil.
+ */
+if (process.argv.includes("--vocab")) {
+  const vocab = new Map<string, { pages: number; combos: number; example: string }>();
+  for (const grid of verified) {
+    const key = grid.legend.map((entry) => entry.action).sort().join(" | ");
+    const row = vocab.get(key) ?? { pages: 0, combos: 0, example: "" };
+    row.pages += 1;
+    row.combos += grid.legend.reduce((sum, entry) => sum + entry.combos, 0);
+    if (row.example === "") row.example = grid.file.split(/[\/]/).pop() ?? "";
+    vocab.set(key, row);
+  }
+  console.log("Typy situací podle slovníku legendy (jen ověřené mřížky)");
+  console.log("");
+  console.log("stran".padStart(6) + "  kombinací".padStart(11) + "  slovník / příklad");
+  for (const [key, row] of [...vocab].sort((left, right) => right[1].pages - left[1].pages)) {
+    console.log(
+      String(row.pages).padStart(6)
+      + String(Math.round(row.combos)).padStart(11)
+      + `  ${key}`,
+    );
+    console.log(" ".repeat(17) + `  ${row.example}`);
+  }
+  console.log("");
+  console.log(`typů situace celkem: ${vocab.size}`);
+} else if (asJson) {
   console.log(JSON.stringify({
     files: files.length,
     grids: grids.length,
