@@ -1,6 +1,9 @@
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { readRyeGrid, type RyeGrid } from "./lib/ryeRangeCorpus.mts";
+import {
+  REFUSED_VOCABULARIES, bucketForStack, contextForVocabulary, situationFromFileName,
+} from "./lib/ryeActionMapping.mts";
 
 /**
  * Kolik mřížek ranží z vlastníkova korpusu se dá přečíst **prokazatelně**.
@@ -84,7 +87,98 @@ for (const grid of verified) {
  * otevřel a čelí zvýšení. Bez tohohle rozlišení by se obojí filovalo pod jeden
  * kontext a produkt by hráči nabídl odpověď na jinou otázku, než položil.
  */
-if (process.argv.includes("--vocab")) {
+/**
+ * Kolik řádků intake scaffoldu by korpus vyplnil, a co z něj vypadne.
+ *
+ * Tohle je to číslo, podle kterého se rozhoduje, jestli má import smysl.
+ * Scaffold má 118 638 řádků na pack (6 sedaček × 13 kbelíků × 9 kontextů ×
+ * 169 tříd); korpus pokryje jen část a je pošetilé stavět import dřív, než je
+ * vidět kolik.
+ */
+if (process.argv.includes("--coverage")) {
+  interface Row { pages: number; rows: number; combos: number }
+  const mapped = new Map<string, Row>();
+  const unmapped = new Map<string, Row>();
+  const cells = new Set<string>();
+  let refused = 0;
+
+  for (const grid of verified) {
+    const name = grid.file.split(/[\/]/).pop() ?? "";
+    const vocabulary = grid.legend.map((entry) => entry.action).sort().join(" | ");
+    if (REFUSED_VOCABULARIES.has(vocabulary)) { refused += 1; continue; }
+    const context = contextForVocabulary(grid.legend.map((entry) => entry.action));
+    const situation = situationFromFileName(name);
+    const target = context === undefined ? unmapped : mapped;
+    const key = context ?? vocabulary;
+    const row = target.get(key) ?? { pages: 0, rows: 0, combos: 0 };
+    row.pages += 1;
+    for (const entry of grid.legend) row.combos += entry.combos;
+    if (context !== undefined && situation !== undefined) {
+      const bucket = bucketForStack(situation.stackBB);
+      cells.add(`${situation.seat}|${bucket}|${context}`);
+      // Jeden řádek na třídu ruky, kterou stránka barví.
+      row.rows += new Set(grid.hands.map((hand) => hand.hand)).size;
+    }
+    target.set(key, row);
+  }
+
+  console.log("Co by z korpusu vyplnilo intake scaffold");
+  console.log("");
+  console.log("kontext".padEnd(12) + "stran".padStart(7) + "řádků".padStart(9) + "kombinací".padStart(11));
+  for (const [key, row] of [...mapped].sort((left, right) => right[1].rows - left[1].rows)) {
+    console.log(key.padEnd(12) + String(row.pages).padStart(7) + String(row.rows).padStart(9) + String(Math.round(row.combos)).padStart(11));
+  }
+  const rows = [...mapped.values()].reduce((sum, row) => sum + row.rows, 0);
+  console.log("");
+  console.log(`buněk (sedačka × kbelík × kontext), které korpus zasáhne: ${cells.size} z 702`);
+  // Kolik stránek padá do jedné buňky a jestli si odporují.
+  //
+  // Taxonomie knihovny nemá kam zapsat, **proti které sedačce** a v jaké ICM
+  // situaci range platí. Dvě různé odpovědi na stejnou buňku tedy nejsou chyba
+  // zdroje, ale nesoulad modelů - a slévat je by znamenalo vydat průměr,
+  // který nikdo nespočítal.
+  const perCell = new Map<string, { pages: string[]; answers: Map<string, Set<string>> }>();
+  for (const grid of verified) {
+    const name = grid.file.split(/[\/]/).pop() ?? "";
+    const vocabulary = grid.legend.map((entry) => entry.action).sort().join(" | ");
+    if (REFUSED_VOCABULARIES.has(vocabulary)) continue;
+    const context = contextForVocabulary(grid.legend.map((entry) => entry.action));
+    const situation = situationFromFileName(name);
+    if (context === undefined || situation === undefined) continue;
+    const key = `${situation.seat}|${bucketForStack(situation.stackBB)}|${context}`;
+    const cell = perCell.get(key) ?? { pages: [], answers: new Map() };
+    cell.pages.push(name);
+    for (const hand of grid.hands) {
+      const set = cell.answers.get(hand.hand) ?? new Set<string>();
+      set.add(`${hand.color}:${Math.round(hand.weight * 100)}`);
+      cell.answers.set(hand.hand, set);
+    }
+    perCell.set(key, cell);
+  }
+  let shared = 0;
+  let conflicting = 0;
+  const examples: string[] = [];
+  for (const [key, cell] of perCell) {
+    if (cell.pages.length < 2) continue;
+    shared += 1;
+    const disagreements = [...cell.answers.values()].filter((set) => set.size > 1).length;
+    if (disagreements > 0) {
+      conflicting += 1;
+      if (examples.length < 4) {
+        examples.push(`${key}: ${cell.pages.length} stran, neshoda u ${disagreements} tříd ze 169`);
+      }
+    }
+  }
+  console.log(`buněk, do kterých padá víc stran: ${shared} | z toho s rozpornou odpovědí: ${conflicting}`);
+  for (const line of examples) console.log(`    ${line}`);
+  console.log(`řádků scaffoldu k vyplnění: ${rows} ze 118 638 na pack`);
+  console.log(`stránek odmítnutých překladem: ${refused}`);
+  console.log("");
+  console.log("slovníky bez překladu (nevydají se):");
+  for (const [key, row] of [...unmapped].sort((left, right) => right[1].pages - left[1].pages).slice(0, 10)) {
+    console.log(`  ${String(row.pages).padStart(3)} stran  ${key.slice(0, 96)}`);
+  }
+} else if (process.argv.includes("--vocab")) {
   const vocab = new Map<string, { pages: number; combos: number; example: string }>();
   for (const grid of verified) {
     const key = grid.legend.map((entry) => entry.action).sort().join(" | ");

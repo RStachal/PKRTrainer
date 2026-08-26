@@ -67,7 +67,7 @@ Z těch 64 je **48 zablokovaných na datech nebo hardwaru, které si neopatřím
 | skupina | řádků | co chybí | proč si to neseženu |
 |---|---|---|---|
 | six-max | 16 | změřené preflop charty | odvozovat je brána zakazuje, a správně; vlastněné materiály jsou 9-max |
-| $EV / ICM | 32 | změřená ICM data | dnešní `bubble-derived` pack se od nezávislého ICM zdroje liší o 13,4 bodu a má jiný tvar |
+| $EV / ICM | 32 | **ne data - model.** Změřeno 26. 8. 2026, viz níž | majitel vlastní 116 ověřených ICM mřížek, ale knihovna nemá kam zapsat, proti komu range platí |
 | blend 51 desek | — | stroj s 48+ GB RAM | commit 25,9 GB proti ~20 GB použitelné paměti; hardwarová odpověď, ne plánovací |
 
 Tvrdit, že to dokončím, by znamenalo buď odvodit data, která brána odmítá, nebo
@@ -75,6 +75,39 @@ prohlásit za pokryté něco, co pokryté není. Ani jedno neudělám.
 
 **Co dokončit můžu, je full-ring 9 chipEV**, tedy 16 z těch 64 řádků, a k tomu
 funkce, které na datech nezávisí.
+
+## Co ukázal vlastníkův korpus ranží — **ICM blokuje model, ne data**
+
+Majitel potvrdil, že materiály vlastní, tak jsem je zpracoval. Čtou se
+prokazatelně: každá stránka nese mřížku i legendu s počty kombinací, takže se
+extrakce ověří sama proti sobě. **Ověřeno 395 z 536 mřížek, z toho 116 ICM.**
+
+Import přesto nevzniká, a důvod je věcný:
+
+| | |
+|---|---|
+| buněk (sedačka × kbelík × kontext), které korpus zasáhne | **21 ze 702** |
+| řádků intake scaffoldu k vyplnění | 4 171 ze 118 638 na pack |
+| buněk, do kterých padá víc stran | 16 |
+| **z toho s rozpornou odpovědí** | **15** |
+
+U buňky `BB|50|VS_OPEN` se pět stran neshodne u **62 tříd ze 169**. Není to
+chyba zdroje: ten rozlišuje, **proti které sedačce** a v jaké ICM situaci range
+platí. Knihovna to nerozlišuje - `VS_OPEN` je jeden kontext bez ohledu na to,
+kdo otevřel. Je to tentýž nesoulad, který deník popisuje v bodě 62 („rozdíl
+proti nezávislému zdroji je v průměru 11,7 bodu"), jen teď změřený zevnitř.
+
+Sloučit ty odpovědi by znamenalo **vydat průměr, který nikdo nespočítal**, a
+označit ho za měřený zdroj. To je přesně ta třída nepravdy, které se produkt
+brání jinde.
+
+**Z toho plyne, co ICM doopravdy blokuje:** ne chybějící data, ale chybějící
+rozměr v preflop modelu - „proti komu" a u ICM „při jakém rozložení stacků".
+Dokud ten rozměr nebude, žádný ICM zdroj těch 32 řádků neodemkne, protože
+odpověď na tu otázku, kterou knihovna umí položit, prostě neexistuje jednoznačně.
+
+Nástroj zůstává hotový a měří to znovu kdykoli:
+`npm run mtt:rye-corpus -- --source=... [--vocab|--coverage]`.
 
 ## Fáze 1 — EV dopočtem z riveru — **hotovo**
 
