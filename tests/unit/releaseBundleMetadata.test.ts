@@ -195,7 +195,14 @@ describe("release bundle metadata", () => {
     // má 510,80 KiB bez doručení akcí do matice a 513,70 s ním, tedy 2,9 KiB za
     // barvu akce a blafovací lajnu na všech třech ulicích. Kód se nekopíruje do
     // dalších chunků (jeden výskyt v dist) a gzip je 66 ze 128 KiB.
-    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 520)');
+    //
+    // Podruhé 26. 8. 2026, z 520 na 528: EV dostalo všech 47 riverových rodin
+    // místo sedmnácti, takže manifest v tomhle chunku povyrostl ze 5 147 na
+    // 12 695 bajtů a chunk z 513,70 na 520,26 KiB. Zaplatí se to **jen syrově**,
+    // gzip klesl z 66,18 na 65,34 KiB - třicet skoro identických položek se
+    // zkomprimuje pryč. Hráč za to dostane EV akcí na 89,7 % rozdaných riverů
+    // místo 30,0 % (`npm run mtt:post-answer`).
+    expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 528)');
     expect(budgetScript).toContain('numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128)');
     // Zvednuto z 32 768 na 45 056 (32 -> 44 MB) dne 25. 8. 2026 a je to
     // **prozatímní číslo, které patří majiteli** - plán ho na dvou místech
@@ -208,7 +215,16 @@ describe("release bundle metadata", () => {
     // chunk, a gzip celé knihovny je 4,2 z 8 MB.
     //
     // Jen na 44, ať brána za pár nocí kousne znovu a rozhodne se s novými čísly.
-    expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 45056');
+    //
+    // Podruhé 26. 8. 2026, z 45 056 na 54 272 (44 -> 53 MB). **Majitel tohle
+    // rozhodnutí předal** („To rozhodnutí je tvoje"), takže tady je i důvod,
+    // proč padlo takhle: knihovna vyrostla ze 44,07 na 52,27 MB tím, že EV akcí
+    // dostalo všech 47 riverových rodin místo sedmnácti, a doručení skočilo
+    // z 30,0 na 89,7 % rozdaných riverových spotů. Gzip celé knihovny je při tom
+    // 6,2 z 8 MB a jedna tabulka stojí hráče 74 KiB gzipu ze 128.
+    //
+    // Zase jen o kousek: rezerva je 1,96 MB, tedy zhruba jedna noc.
+    expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 54272');
     expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",');
     // Řetěz je připnutý schválně: má se měnit vědomě, ne mimochodem. Poslední
     // článek přibyl 24. 8. 2026 a je to oprava chybějící brány - Chrome E2E

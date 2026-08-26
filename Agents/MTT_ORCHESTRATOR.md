@@ -92,10 +92,10 @@ první spot z každé rodiny EV neukázal, i když byla celá spočítaná. Nač
 před rozdáním (`primeRiverEvForSeed`), kdy hráč ještě nic nečte, se stropem 2,5 s,
 aby pomalé připojení rozdání nezmrazilo.
 
-Zbývá 30 rodin bez tabulky vůbec. Dopočítat je stojí ~12 MB, a v rozpočtu líného
-obsahu zbývá po zvednutí stropu na 44 MB zhruba **2,5 MB**. Je to tedy
-**rozhodnutí majitele o velikosti stahování**, ne práce, kterou lze udělat
-potichu - a znamenalo by to strop zvednout znovu.
+Těch 30 rodin bez tabulky **dostalo EV 26. 8. 2026**: 47/47 rodin, 13 487
+pravidel, doručení 30,0 -> **89,7 %** rozdaných riverových spotů. Stálo to 8,2 MB
+syrové knihovny (strop 44 -> 53 MB) a žádný nový solve. Gzip celé knihovny je
+6,18 z 8 MB, takže druhý součtový strop se ani nehnul.
 
 ### 1. Cíl a vzdálenost k němu — **stojí**
 

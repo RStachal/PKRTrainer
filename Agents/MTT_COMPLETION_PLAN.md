@@ -18,11 +18,25 @@ Stav po opravě, změřeno `npm run mtt:post-answer`:
 | riverová EV doručuje | 3 packy, 896 pravidel | **17 packů, 4 906 pravidel** |
 | riverová EV u hráče | 0,0 % | **31,7 %** |
 
-Co zbývá a proč to nejde udělat potichu: **30 riverových rodin nemá tabulku EV
-vůbec.** Dopočet stojí ~12 MB, a v rozpočtu líného obsahu zbývá po zvednutí
-stropu na 44 MB zhruba **2,5 MB**.
-Je to tedy rozhodnutí o velikosti stahování - stejná otázka jako ve fázi 2, jen
-na riveru. Do rozhodnutí se nedopočítává.
+**Dopočítáno 26. 8. 2026.** Zbývalo 30 riverových rodin bez tabulky EV; majitel
+rozhodnutí o rozpočtu předal, tak padlo takhle:
+
+| | před | po |
+|---|---|---|
+| rodin s EV | 17 ze 47 | **47 ze 47** |
+| pravidel s EV | 4 908 | **13 487** |
+| EV u hráče (rozdané rivery) | 30,0 % | **89,7 %** |
+| líná knihovna raw | 44,07 MB | 52,27 MB (strop 44 -> 53) |
+| líná knihovna gzip | 4,41 MB | 6,18 MB (strop 8, beze změny) |
+
+Stálo to 8,2 MB syrové knihovny a **nula nového solvu** - `mtt:river-pack
+--family=X --write --ev` čte hotový strom, 58 vteřin na rodinu. Zvedal se jen
+součtový strop, tedy číslo o velikosti celé knihovny, kterou nikdo nestahuje
+najednou; stropy, které platí hráč, zůstaly (74 KiB gzipu na tabulku ze 128).
+
+Zbytek do stovky **není chybějící práce, ale platné rozhodnutí z fáze 2b**:
+u rodin, kde by úplná EV přerostla 128 KiB gzipu na chunk, se ořezávají méně
+dosahované rivery. U nejhorší z nich to je 102 pravidel z 224.
 
 **Linkový režim** (flop→turn→river v jedné ruce) přednačtení EV **dostal
 26. 8. 2026**, ale změřený dopad je malý a je fér říct proč:

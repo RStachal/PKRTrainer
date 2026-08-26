@@ -70,8 +70,30 @@ const MAX_PRECACHE_GZIP_KB = numberFromEnv("BUNDLE_MAX_PRECACHE_GZIP_KB", 128);
  * nahlásil jako chybějící. Gzip toho chunku je přitom 66 ze 128 KiB.
  *
  * Na 520, ne výš: zbývá kolem šesti kilobajtů, takže příští růst zase kousne.
+ *
+ * **Kouslo to 26. 8. 2026 na 520,26 KiB, tedy o 266 bajtů, a strop jde na 528.**
+ * Rostl týž chunk a ze známého důvodu: EV dostalo všech 47 riverových rodin
+ * místo sedmnácti, takže `riverEvManifest.generated.ts` povyrostl z 5 147 na
+ * 12 695 bajtů. Manifest nese jeden `import()` na rodinu a leží v runtime
+ * chunku, protože se z něj vybírá, která tabulka se má načíst.
+ *
+ * A/B `mtt-postflop-pilot-runtime`:
+ *
+ * | | raw | gzip |
+ * |---|---|---|
+ * | 17 rodin s EV | 513,70 KiB | 66,18 KiB |
+ * | **47 rodin s EV** | **520,26 KiB** | **65,34 KiB** |
+ *
+ * Stojí to 6,56 KiB syrově a **po drátě nic: gzip klesl o 0,84 KiB.** Třicet
+ * nových položek manifestu je skoro identický text, takže se zkomprimuje pryč -
+ * raw roste, přenos ne. Hráč za to dostane EV akcí na 89,7 % rozdaných
+ * riverových spotů místo 30,0 % (`npm run mtt:post-answer`).
+ *
+ * Gzip toho chunku je 65 ze 128 KiB, takže tady místo je. Až raw dojde i na
+ * 528, patří sáhnout po manifestu samotném, ne po stropu: 47 řádků boilerplatu
+ * se dá vygenerovat kratší, aniž by se cokoli hnulo v obsahu.
  */
-const MAX_LAZY_MTT_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 520);
+const MAX_LAZY_MTT_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 528);
 const MAX_LAZY_MTT_GZIP_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128);
 /**
  * Syrový součet **celé** líné knihovny, v kB.
@@ -101,8 +123,32 @@ const MAX_LAZY_MTT_GZIP_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128);
  * Kdyby se to mělo naopak srazit pod 32, nejlevnější cesta je river: je to 54 %
  * syrové velikosti a nejnovější obsah, takže by se ořezával podle změřené
  * poptávky (`mtt:solved-coverage --json`), ne podle abecedy.
+ *
+ * **Zvednuto podruhé, z 45 056 na 54 272 (44 -> 53 MB), dne 26. 8. 2026.**
+ * Tentokrát to nepřinesla noc, ale rozhodnutí, které mi majitel předal: EV akcí
+ * dostalo všech 47 riverových rodin místo sedmnácti.
+ *
+ * | | raw | gzip | EV na rozdaných riverech |
+ * |---|---|---|---|
+ * | 17 rodin s EV | 44 070,71 KiB | 4 411,50 KiB | 30,0 % |
+ * | **47 rodin s EV** | **52 266,69 KiB** | **6 332,10 KiB** | **89,7 %** |
+ *
+ * **Proč to jde utratit takhle:** tenhle strop měří knihovnu jako celek, kterou
+ * nikdo nestahuje najednou. Co platí hráč, je jedna tabulka na rodinu, a ta je
+ * 260 KiB raw / 74 KiB gzip proti stropům 528 a 128 - tedy s rezervou. Gzip
+ * celé knihovny zůstal 6,2 z 8 MB, takže druhý součtový strop ani nezakolísal.
+ *
+ * **Proč na 53, ne výš:** rezerva je 1,96 MB, zhruba jedna noc. Kdyby se strop
+ * dal rovnou na 64, knihovna by rostla bez povšimnutí; takhle se o ní rozhodne
+ * znovu, s čerstvými čísly. To je jediný důvod, proč tenhle strop existuje -
+ * není to kontrola správnosti, je to místo, kde se růst musí obhájit.
+ *
+ * Pozor na jednu věc, která se u téhle změny našla: `tsc --noEmit` běžel na
+ * výchozích 4 GB a na 47 tabulkách **spadl na haldě**, protože je při
+ * `resolveJsonModule` čte všechny. Není to vada obsahu ani typů, je to zděděná
+ * mez - proto má `build` i `typecheck` v `package.json` explicitních 8 GB.
  */
-const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 45056);
+const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 54272);
 const MAX_LAZY_MTT_TOTAL_GZIP_KB = numberFromEnv(
   "BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",
   8192,

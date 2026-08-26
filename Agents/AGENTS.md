@@ -122,8 +122,9 @@ té doby nepřeměřil. Ani jedna nebyla vada kódu.
 | halda buildu v E2E | 4 GB (výchozí) | 8 GB | vlastní build uvnitř E2E, tentýž strop |
 | workery sady | 4 | **2** | paměť: čtyři workery ji vyčerpají |
 | precache raw | 400 KiB | 416 KiB | 8,4 KiB nového kódu |
-| chunk raw | 512 KiB | 520 KiB | 2,9 KiB, A/B změřeno |
-| knihovna raw | 32 MB | 44 MB | noc dodala 46 rodin: 28,5 → 41,5 MB |
+| chunk raw | 512 KiB | **528 KiB** | manifest EV: 17 → 47 rodin, +6,56 KiB |
+| knihovna raw | 32 MB | **53 MB** | EV pro všech 47 rodin: 44,1 → 52,3 MB |
+| halda `tsc --noEmit` | 4 GB (výchozí) | 8 GB | 14,4 MB JSONu přes `resolveJsonModule` |
 
 Tři věci, které z toho platí dál:
 
@@ -137,6 +138,18 @@ Tři věci, které z toho platí dál:
 3. **Nezvedat naslepo.** Každé číslo výš má u sebe naměřenou hodnotu, proti
    které stojí. Strop není kontrola správnosti, jen pojistka proti zaseknutí -
    rozbitý test spadne na tvrzení, ne na čase.
+
+Podruhé to uhodilo hned nazítří, 26. 8. 2026, a **potvrdilo to pravidlo dvakrát**:
+doplnění EV pro všech 47 riverových rodin porazilo tři meze naráz a ani jedna
+nebyla vada. Dvě z nich brána hlásí a je to tak správně; třetí byla `tsc
+--noEmit` s výchozími 4 GB, který **spadl na haldě** a hláškou to vypadalo jako
+porucha buildu. Rozeznat to jde jediným způsobem: podívat se, o kolik dat víc
+nástroj čte, než když se ta mez nastavovala.
+
+A jedno číslo, které stojí za zapamatování při zvedání syrových stropů:
+třicet nových položek manifestu přidalo **6,56 KiB raw a gzip přitom klesl
+o 0,84 KiB** - skoro identický text se zkomprimuje pryč. Syrová velikost je
+proto špatný odhad toho, co hráč doopravdy zaplatí po drátě.
 
 U workerů vyšlo měření proti intuici a stojí za zapamatování: **méně je
 rychleji.** Čtyři workery daly 476 s se dvěma pády a později 980 s s jedním,
