@@ -55,6 +55,33 @@ export interface RangeRecord {
   position: Position;
   bucket: StackBucket;
   context: ActionContext;
+  /**
+   * Sedačka, která jednala před hrdinou. Chybí u záznamu, který platí bez
+   * ohledu na to, kdo otevřel.
+   *
+   * ## Proč přibyla
+   *
+   * `VS_OPEN` je dnes jeden kontext bez ohledu na otvírajícího, jenže range
+   * proti otevření z UTG a z BTN je jiná. Změřeno 26. 8. 2026 na vlastníkově
+   * korpusu: bez tohohle pole si **15 z 16 sdílených buněk odporuje**, až u 62
+   * tříd ze 169. Se sedačkou soupeře jich zbude osm.
+   *
+   * Postflop tenhle rozměr nese od začátku (`SRP_CO_VS_BB`), takže se tím jen
+   * srovnává nesrovnalost mezi ulicemi.
+   */
+  vsSeat?: Position;
+  /**
+   * Rozložení stacků u stolu, pro které záznam platí. Chybí, když na něm
+   * nezáleží.
+   *
+   * U ICM je to ta podstatná věc: `ICM3` a `ICM5` dají se stejným hrdinou i
+   * stejným soupeřem jinou odpověď, protože stůl je jinak rozdaný. Změřeno:
+   * se `vsSeat` samotným zbývá osm rozporných buněk, s obojím **nula**.
+   *
+   * Je to neprůhledný identifikátor, ne popis - produkt z něj nic neodvozuje,
+   * jen podle něj vybírá. Hráči se nikdy neukáže.
+   */
+  scenarioId?: string;
   /** ruka → přijatelné Akční_klíče (LENIENT). Prázdné/chybějící = fold. */
   lenient: Record<HandLabel, ActionKey[]>;
   /** ruka → přesné Akční_klíče vč. sizingu (STRICT). */
@@ -213,7 +240,10 @@ export function validateRangeFile(f: RangeFile): string[] {
   const seen = new Set<string>();
 
   for (const r of f.entries) {
-    const combo = `${r.position}/${r.bucket}/${r.context}`;
+    // Zpřesnění patří do klíče duplicity, jinak by dva legitimní záznamy - týž
+    // spot proti dvěma různým sedačkám - vypadaly jako jeden zapsaný dvakrát.
+    const combo = `${r.position}/${r.bucket}/${r.context}`
+      + `${r.vsSeat ? `/vs${r.vsSeat}` : ""}${r.scenarioId ? `/#${r.scenarioId}` : ""}`;
     if (seen.has(combo)) {
       errors.push(
         `[${f.ante}] duplicate position x stack bucket x context combination: ${combo}.`,

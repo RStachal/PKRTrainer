@@ -57,13 +57,35 @@ const REQUIRED_ANTE_MODES: readonly AnteMode[] = ["ON", "OFF"];
  * Tvar `${ante}|${position}|${bucket}|${context}` je jednoznačný: žádná z dílčích
  * hodnot neobsahuje znak `|`, takže nemůže dojít ke kolizi z konkatenace.
  */
+export interface RangeRefinement {
+  /** Sedačka, která jednala před hrdinou. */
+  vsSeat?: Position;
+  /** Rozložení stacků u stolu, pro které záznam platí. */
+  scenarioId?: string;
+}
+
+/**
+ * Zpřesnění se do klíče připojuje **jen když je**.
+ *
+ * Klíč záznamu bez zpřesnění tím zůstává bajt po bajtu tentýž jako dřív, takže
+ * dnešní obsah, uložená historie ani Question_ID se nehnou. Přesnější záznam
+ * dostane vlastní klíč vedle něj, ne místo něj.
+ */
+function refinementSuffix(refinement?: RangeRefinement): string {
+  if (refinement === undefined) return "";
+  const vs = refinement.vsSeat ? `|vs${refinement.vsSeat}` : "";
+  const scenario = refinement.scenarioId ? `|#${refinement.scenarioId}` : "";
+  return `${vs}${scenario}`;
+}
+
 export function rangeIndexKey(
   ante: AnteMode,
   position: Position,
   bucket: StackBucket,
   context: ActionContext,
+  refinement?: RangeRefinement,
 ): string {
-  return `${ante}|${position}|${bucket}|${context}`;
+  return `${ante}|${position}|${bucket}|${context}${refinementSuffix(refinement)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -108,11 +130,15 @@ function aggregate(variants: readonly RangeFile[]): AggregationResult {
 
       // Naplnění agregovaného indexu; kolize klíče je integritní chyba.
       for (const record of file.entries) {
+        // Zpřesněný záznam dostane vlastní klíč **vedle** obecného, ne místo
+        // něj: obecná odpověď musí zůstat dosažitelná pro spoty, kde se
+        // otvírající sedačka nezná.
         const key = rangeIndexKey(
           file.ante,
           record.position,
           record.bucket,
           record.context,
+          { vsSeat: record.vsSeat, scenarioId: record.scenarioId },
         );
         if (index.has(key)) {
           errors.push(`duplicate index key during aggregation: ${key}.`);
@@ -203,8 +229,31 @@ export function getRangeRecord(
   position: Position,
   bucket: StackBucket,
   context: ActionContext,
+  refinement?: RangeRefinement,
 ): RangeRecord | undefined {
-  return RANGE_INDEX.get(rangeIndexKey(ante, position, bucket, context));
+  // Od nejpřesnějšího k nejobecnějšímu.
+  //
+  // Pořadí je podstatné: range proti otevření z UTG a z BTN se liší, takže
+  // přesnější odpověď musí vyhrát, když existuje. Když neexistuje, vrátí se
+  // dnešní záznam - **nezpřesněná odpověď je pořád odpověď** a je lepší než
+  // žádná. Je to tentýž postup, jakým vybírá vyřešený postflop.
+  const attempts: RangeRefinement[] = [];
+  if (refinement?.vsSeat !== undefined || refinement?.scenarioId !== undefined) {
+    attempts.push(refinement);
+    // Rozložení stacků se pouští dřív než sedačka: bez správné sedačky je
+    // odpověď o jiné situaci, kdežto bez rozložení jen o něco méně přesná.
+    if (refinement.scenarioId !== undefined && refinement.vsSeat !== undefined) {
+      attempts.push({ vsSeat: refinement.vsSeat });
+    }
+  }
+  attempts.push({});
+  for (const attempt of attempts) {
+    const found = RANGE_INDEX.get(
+      rangeIndexKey(ante, position, bucket, context, attempt),
+    );
+    if (found !== undefined) return found;
+  }
+  return undefined;
 }
 
 /**
