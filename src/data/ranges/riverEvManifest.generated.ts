@@ -17,6 +17,11 @@ export const riverEvManifest: readonly RiverEvManifestEntry[] = [
     load: () => import("./river-ev/mtt9-100bb-btn-bb-srp-facing-highspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
   },
   {
+    familyId: "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-100bb-co-bb-srp-cbet-highspr-v1",
+    load: () => import("./river-ev/mtt9-100bb-co-bb-srp-cbet-highspr.generated.json").then((module) => module.default as unknown as RiverEvPack),
+  },
+  {
     familyId: "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
     packId: "mtt-full-ring-9-river-solved-mtt9-100bb-sb-bb-srp-oop-cbet-highspr-v1",
     load: () => import("./river-ev/mtt9-100bb-sb-bb-srp-oop-cbet-highspr.generated.json").then((module) => module.default as unknown as RiverEvPack),

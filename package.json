@@ -145,6 +145,7 @@
     "mtt:turn-review-gate": "node scripts/run-cli.mjs scripts/checkTurnReviewGate.mts",
     "mtt:turn-pack": "node scripts/run-cli.mjs scripts/buildTurnStrategyPacks.mts",
     "mtt:flop-pack": "node scripts/run-cli.mjs scripts/buildFlopStrategyPacks.mts",
+    "mtt:river-ev-stale": "node scripts/run-cli.mjs scripts/checkRiverEvStaleness.mts",
     "mtt:river-pack": "node scripts/run-cli.mjs scripts/buildRiverStrategyPacks.mts",
     "mtt:turn-reach": "node scripts/run-cli.mjs scripts/measureTurnSolvedReach.mts",
     "mtt:six-max-widths": "node scripts/run-cli.mjs scripts/checkSixMaxOpenWidths.mts",

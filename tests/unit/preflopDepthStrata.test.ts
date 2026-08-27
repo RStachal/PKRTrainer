@@ -43,6 +43,18 @@ describe("hloubkové vrstvy preflopu", () => {
     }
   });
 
+  it("výběr rukou nemůže rozlišit víc hloubek než celá odpověď", async () => {
+    // Invariant, ne dnešní číslo. Otisk výběru zahazuje jméno akce, takže může
+    // hloubky jen slévat, nikdy rozdělovat. Kdyby to někdy vyšlo naopak, měří
+    // se něco jiného, než co se tvrdí - a to je ta třída chyby, kde brána vrací
+    // čísla, která vypadají jako důkaz.
+    await loadCompleteMttProductionRegistry();
+    for (const row of preflopDepthStrata("OFF")) {
+      expect(row.distinctSelections).toBeGreaterThan(0);
+      expect(row.distinctSelections).toBeLessThanOrEqual(row.distinctRanges);
+    }
+  });
+
   it("brána mlčí jen tehdy, když každá hloubka má vlastní range", async () => {
     await loadCompleteMttProductionRegistry();
     const strata = preflopDepthStrata("OFF");

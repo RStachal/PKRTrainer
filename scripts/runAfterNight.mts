@@ -51,6 +51,7 @@ const SCRIPT_PATH: Readonly<Record<string, string>> = {
   "mtt:mechanical-review": "scripts/runMechanicalReview.mts",
   "mtt:playable-beta": "scripts/checkMttPlayableBeta.mts",
   "bundle:budget": "scripts/checkBundleBudget.mts",
+  "mtt:river-ev-stale": "scripts/checkRiverEvStaleness.mts",
 };
 
 /**
@@ -169,8 +170,20 @@ if (!write) {
   // a člověk ví, že EV dopočítá zvlášť.
   if (!process.argv.includes("--skip-ev-repair")) {
     console.log("\n[4/4] obnova EV, kterou cyklus zneplatnil");
-    const { staleRiverEvFamilies } = await import("./lib/riverEvStaleness.mts");
-    const stale = await staleRiverEvFamilies();
+    // Vlastní proces, ne import.
+    //
+    // Volané uvnitř tohohle procesu to **lhalo**: vstupní bod se balí esbuildem,
+    // takže obsah packů je do balíčku vložený při startu - tedy ve stavu před
+    // přegenerováním, které tenhle proces sám právě udělal. Kontrola porovnala
+    // staré packy se starou EV, všechno sedělo, cyklus ohlásil „žádná tabulka
+    // nezastarala" a sada pak spadla na 94 testech.
+    //
+    // Změřeno 27. 8. 2026 v jednu chvíli dvakrát: uvnitř 0 zastaralých, ve
+    // svěžím procesu 44 ze 48.
+    const stale = run("mtt:river-ev-stale")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
     if (stale.length === 0) {
       console.log("  žádná tabulka nezastarala");
     } else {
@@ -210,6 +223,15 @@ if (!write) {
         }
       }
       console.log(`  přepočítáno ${repaired} z ${stale.length}`);
+      // Zeptat se znovu, a zase zvenčí.
+      //
+      // Bez tohohle kroku cyklus tvrdil, že opravil, a nikdo to neověřil - což
+      // je táž chyba o patro výš než ta, kvůli které se sem oprava psala.
+      // Přepočet navíc mohl rodinu odmítnout, a to se pozná jen tady.
+      const left = run("mtt:river-ev-stale")
+        .split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
+      console.log(`  po opravě zůstává zastaralých: ${left.length}`);
+      if (left.length > 0) process.exitCode = 1;
       if (skipped.length > 0) {
         console.log(`  ROZPOČET ČASU VYPRŠEL, zbývá ${skipped.length} rodin bez EV:`);
         for (const family of skipped) console.log(`    ${family}`);

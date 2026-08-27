@@ -7,9 +7,23 @@
 >
 > Zdůvodnění a čísla jsou ve `MTT_ORCHESTRATOR.md`, vrstva 0.
 
-## Fáze 0 — doručení k hráči — **z velké části dodáno 25. 8. 2026**
+## Fáze 0 — doručení k hráči — **uzavřeno 26. 8. 2026**
 
-Stav po opravě, změřeno `npm run mtt:post-answer`:
+Stav k 26. 8. 2026 večer, celý `npm run mtt:post-answer`:
+
+| co | stav |
+|---|---|
+| akce v matici | dodáno na všech třech ulicích |
+| blafovací lajna | dodáno; **0 zamlčených z 900** spotů, kde ji obsah má |
+| EV river | **89,7 %** rozdaných riverových spotů, 47/47 rodin |
+| EV turn a flop | **rozhodnuto nedodávat** - vrstvu má 3,9 % podher, zbytek je 193 nocí |
+| EV preflop | **33,1 %**; zbytek není práce v kódu, ale chybějící export (bod 136) |
+
+Fáze je tím uzavřená v tom smyslu, v jakém uzavřít jde: co šlo doručit, doručeno
+je; co doručit nejde, je změřené a rozhodnuté; a jediná otevřená položka čeká na
+obsah zvenčí, ne na práci.
+
+Původní stav po opravě z 25. 8. 2026:
 
 | | před | po |
 |---|---|---|
@@ -57,7 +71,10 @@ vrstev proti 130 tisícům turnových podher. Na tom pracuje noc.
 
 Změřeno `npm run mtt:post-answer` na spotech rozdaných z katalogu:
 
-| co hráč po odpovědi nevidí | dojde | příčina | kde se opravuje |
+**Diagnóza z 25. 8. 2026.** Ponechána jako záznam o tom, jak se vada našla;
+dnešní čísla jsou v deníku (body 130-136) a v „Pořadí prací" orchestrátoru.
+
+| co hráč po odpovědi nevidí | dojde (25. 8.) | příčina | kde se opravuje |
 |---|---|---|---|
 | co dělat s každou kombinací matice | 0 % | `solvedStrategySource` nevyplňuje `rangeBuckets` | `src/data/ranges/solvedStrategySource.ts` |
 | blafovací část range | 0 % | matice se barví podle kategorie ruky, ne podle akce | `src/ui/postflopRangeMatrixView.ts` |
@@ -184,9 +201,9 @@ Není. Změřeno 26. 8. 2026:
 |---|---|
 | výskytů klíče `"ev` ve 12 dumpech solveru | **0** |
 | turnových podher, na které knihovna odpovídá | 15 008 |
-| z toho s riverovou vrstvou (bez ní EV nejde spočítat) | **588 = 3,9 %** |
-| tempo výroby vrstev | 74,3 za den |
-| kolik nocí by trval zbytek | **193**, a noc by nedělala nic jiného |
+| z toho s riverovou vrstvou (bez ní EV nejde spočítat) | **778 = 5,2 %** (27. 8.) |
+| tempo výroby vrstev | 80,1 za den v průměru; 207 za jednu soustředěnou noc |
+| kolik nocí by trval zbytek | **69 až 178**, a noc by nedělala nic jiného |
 
 Riverová EV se dopočítá proto, že po páté kartě je to showdown bez rekurze.
 Turnový uzel má pod sebou celou riverovou vrstvu - a ta pro 96,1 % podher

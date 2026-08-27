@@ -38,7 +38,11 @@ neprojevil v žádné bráně a projevil se jako tři stížnosti majitele nará
 Změřeno 25. 8. 2026 přes `npm run mtt:post-answer`, rozdáno z katalogu tak, jak
 rozdává trenažér:
 
-| co má hráč po odpovědi vidět | obsah to ví | dojde k hráči |
+**Tahle tabulka je diagnóza z 25. 8. 2026, ne dnešní stav.** Nechávám ji, protože
+popisuje, jak se ta vada našla; čísla, která platí teď, jsou v „Pořadí prací"
+níž - všechny tři řádky jsou od 26. 8. 2026 dodané nebo rozhodnuté.
+
+| co má hráč po odpovědi vidět | obsah to ví | dojde k hráči (25. 8.) |
 |---|---|---|
 | co dělat s každou kombinací matice | ano, každé vyřešené pravidlo nese `buckets[]` s akcí, třídami a frekvenční směsí | **0 %** |
 | blafovací část range | ano, tytéž kbelíky nesou lajnu VALUE/BLUFF | **0 %** |
@@ -182,9 +186,26 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
 2. ~~Generátor rodin pro chybějící dvojice~~ — hotovo
 3. ~~Noční runner podle měření~~ — hotovo
 4. ~~Evidence procesů~~ — hotovo (`mtt:processes`)
-5. **Doručení** — od 25. 8. 2026 nejvyšší priorita, protože je změřeně nejnižší
-   ze všech vrstev. Pořadí uvnitř podle dopadu: akce v matici (0 % → celá
-   knihovna), blafovací lajna (tatáž změna), EV (4,7 % river, 0 % jinde).
+5. **Doručení** — od 25. 8. 2026 nejvyšší priorita, protože bylo změřeně
+   nejnižší ze všech vrstev. Stav k 26. 8. 2026 večer:
+
+   | co | stav | čím změřeno |
+   |---|---|---|
+   | akce v matici | dodáno na všech třech ulicích | `mtt:post-answer` |
+   | blafovací lajna | dodáno, **0 zamlčených z 900** | totéž |
+   | EV river | 4,7 % → **89,7 %** | totéž |
+   | EV turn a flop | **rozhodnuto nedodávat** (bod 131) | 3,9 % podher má vrstvu |
+   | EV preflop | **33,1 %** ← nejnižší, nová priorita | `mtt:post-answer` |
+
+   Uvnitř preflopu je pořadí dané měřením: `VS_3BET` je 14 872 spotů (19 %
+   poolu) a **0 % EV**, protože se v něm nenabízí all-in větev, ze které by šla
+   cena spočítat. `VS_LIMP` je na tom stejně. Zbytek už 100 % má.
+
+   **A dál to kód nedotlačí** (bod 136). Zbylých 66,9 % poolu čeká na obsah, ne
+   na práci: `generateSpot` už dává přednost EV z packu, když ji pack nese, a
+   schéma pro ni má `source: "SOLVER"` - jenže v dodávaném preflop packu je
+   **0 výskytů `actionEvs`**. Preflopový export se solverovou EV je tedy jediná
+   věc, která to rozsvítí, a je to vstup zvenčí.
 6. **Porovnání dnů** — sbírá se od 20. 8., zatím jeden bod. Až bude historie,
    půjde ptát: přineslo doporučení z minulé noci to, co slibovalo?
 
@@ -195,3 +216,8 @@ Nic z toho nejde odvodit ani změřit; potřebuje to vstup zvenčí.
 - **six-max charty** (16 řádků knihovny) a **ICM data** (32 řádků)
 - **stroj s 48+ GB RAM** pro 51 desek s blendem plného a redukovaného stromu
 - **čtení hráči** - mechanická kontrola chytá hrubé rozbití, ne kvalitu hry
+- **preflopový export se solverovou EV** - kód ji umí přijmout i zobrazit,
+  dodávaný pack ji nenese (0 výskytů), a týká se to 66,9 % rozdávaných spotů
+- **hloubkově rozlišené otevírací charty** - produkční pack otevírá týchž rukou
+  na 15 i na 150 bb (1 výběr rukou z 11 hloubek, všech 8 sedaček, bod 137);
+  odvodit to nejde, chce to data

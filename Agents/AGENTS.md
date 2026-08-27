@@ -105,6 +105,13 @@ Z toho plynou dvě povinnosti:
 - **Tiché zneplatnění je vada, ne detail.** EV se váže na otisk packu a noční
   přegenerování ji zahodí bez hlášky; naměřeno 14 packů se spočítanou a zahozenou
   tabulkou. Kde se dá hodnota ztratit potichu, tam patří brána.
+- **Brána proti tiché ztrátě musí měřit z jiného procesu, než který tu hodnotu
+  měnil.** Přidáno 27. 8. 2026, když se ukázalo, že ta brána z předchozího bodu
+  sama lhala: `mtt:after-night` přegeneroval packy a pak se na zastaralost ptal
+  ve svém vlastním procesu, kde je obsah vložený esbuildem **při startu**.
+  Naměřeno v jednu chvíli dvakrát: uvnitř 0 zastaralých, ve svěžím procesu 44
+  ze 48. Kontrola tedy měřila vlastní paměť, ne disk - a hlásila klid přesně
+  v okamžiku ztráty. Našla to až sada, 94 spadlými testy.
 
 ### 5. Meze se dědí, ale nepřeměřují — a ozvou se až když blokují dodání
 

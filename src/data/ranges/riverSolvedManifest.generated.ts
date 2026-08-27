@@ -18,6 +18,12 @@ export const solvedRiverManifest: readonly SolvedRiverManifestEntry[] = [
     load: () => import("./river/mtt9-100bb-btn-bb-srp-facing-highspr.generated.json").then((module) => module.default as unknown as RiverStrategyPack),
   },
   {
+    familyId: "MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR",
+    packId: "mtt-full-ring-9-river-solved-mtt9-100bb-co-bb-srp-cbet-highspr-v1",
+    profileKey: "FULL_RING_9|REGULAR|CHIP_EV|RIVER",
+    load: () => import("./river/mtt9-100bb-co-bb-srp-cbet-highspr.generated.json").then((module) => module.default as unknown as RiverStrategyPack),
+  },
+  {
     familyId: "MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR",
     packId: "mtt-full-ring-9-river-solved-mtt9-100bb-sb-bb-srp-oop-cbet-highspr-v1",
     profileKey: "FULL_RING_9|REGULAR|CHIP_EV|RIVER",
