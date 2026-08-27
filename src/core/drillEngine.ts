@@ -129,8 +129,14 @@ const POS_BVB: Position[] = ["SB", "BB"];
  * Vrátí přípustné pozice hrdiny pro daný kontext. Množiny odpovídají
  * sémantice akčního stromu (Req 3) i pokrytí referenčních dat, takže lookup
  * Range_Store pro vybranou kombinaci uspěje.
+ *
+ * Exportované schválně: tohle je **jediná autorita** na to, na kterou dvojici
+ * (kontext, pozice) se trenažér umí zeptat, a testy se jí musí ptát, ne si ta
+ * pravidla opisovat. Opsaná kopie by znamenala dvě místa, kde se opravuje jedna
+ * změna - a přesně tenhle rozpor 27. 8. 2026 propustil 66 záznamů o spotu,
+ * který nemůže nastat.
  */
-function positionsForContext(context: ActionContext): Position[] {
+export function positionsForContext(context: ActionContext): Position[] {
   switch (context) {
     case "RFI":
     case "VS_3BET":
