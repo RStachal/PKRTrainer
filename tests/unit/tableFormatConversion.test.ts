@@ -48,8 +48,26 @@ describe("mapping seats between formats", () => {
 describe("the derived six-max packs", () => {
   it("have records now, where the candidates had none", () => {
     for (const pack of mttSixMaxDerivedRangePacks) {
-      expect(pack.records.length).toBeGreaterThan(400);
+      // Práh, ne přesné číslo: tvrzení je „nejsou prázdné", a to má zůstat
+      // pravdivé i když se obsah legitimně změní. Bylo tu 400, což spadlo
+      // 27. 8. 2026 na 392 - a ten pokles byl **správný**, viz test níž.
+      expect(pack.records.length).toBeGreaterThan(300);
       expect(pack.dimensions.tableFormat).toBe("SIX_MAX");
+    }
+  });
+
+  it("nenesou spot, který u první sedačky nemůže nastat", () => {
+    // Mapování dává šest-maxovému UTG devítistolový lojack, protože oba mají za
+    // sebou pět hráčů. U otevírání to sedí; u čelení ne, protože před prvním
+    // hráčem nikdo nejedná. Takhle vzniklo 33 záznamů na pack, které popisovaly
+    // nemožný spot - drill se na ně neptal, takže je nenašla žádná brána.
+    const first = sixMaxPositionMap()[0]!.sixMax;
+    for (const pack of mttSixMaxDerivedRangePacks) {
+      const impossible = pack.records.filter((record) => (
+        record.position === first
+        && ["VS_OPEN", "VS_4BET", "VS_LIMP", "SQUEEZE"].includes(record.context)
+      ));
+      expect(impossible.map((record) => `${record.context}|${record.bucket}`)).toEqual([]);
     }
   });
 
