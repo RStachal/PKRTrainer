@@ -85,6 +85,9 @@ const CZ_CATALOG = {
     start: "Spustit trénink",
     empty:
       "Vybrané filtry neodpovídají žádnému spotu. Upravte pozice, hloubky stacku nebo kontext akce.",
+    // Mezera je na naší straně, ne ve výběru hráče, tak se to tak i řekne.
+    emptyDepths: (depths: readonly number[]) =>
+      `Pro tenhle výběr zatím nemáme spoty. Funguje hloubka ${depths.join(", ")} BB.`,
   },
   training: {
     streak: (n: number) => (n === 0 ? "Série 0" : `Série ${n}`),
@@ -400,6 +403,8 @@ const EN_CATALOG: UiCatalog = {
     start: "Start training",
     empty:
       "The selected filters do not match any spot. Adjust positions, stack depths, or the action context.",
+    emptyDepths: (depths: readonly number[]) =>
+      `We do not have spots for this selection yet. Available depths: ${depths.join(", ")} BB.`,
   },
   training: {
     streak: (n: number) => (n === 0 ? "Streak 0" : `Streak ${n}`),

@@ -50,7 +50,7 @@ import {
   type TrainingProfile,
 } from "./core/trainingProfile";
 import { isFlowAllowed } from "./core/trainingCapability";
-import { resolveSeed, spotSequence } from "./core/drillEngine";
+import { bucketsWithSpots, resolveSeed, spotSequence } from "./core/drillEngine";
 import { postflopIntentFromFilters } from "./core/postflopIntent";
 import { grade } from "./core/scoring";
 import { buildPreflopExplanationForSpot } from "./core/preflopExplanation";
@@ -1320,10 +1320,18 @@ function setupTraining(
     const first = it.next();
 
     if (first.done) {
+      // Říct, co funguje, ne jen že nic nefunguje.
+      //
+      // Nabídka je širší než obsah: push/fold se nabízí na 5 až 25 BB a knihovna
+      // ho má na 5 a 10, takže relace „push/fold, 20 BB" rozdá nula spotů.
+      // Obecná hláška to svádí číst jako chybu výběru, přitom je to naše mezera.
+      const workingDepths = bucketsWithSpots(filters.contexts, filters.ante, profileRangeStore);
       // Req 13.6: prĂˇzdnĂ˝ prĹŻnik filtrĹŻ â‡’ upozornÄ›nĂ­, relaci nespouĹˇtÄ›j.
       clearActiveQuestion();
       gameBox.hidden = true;
-      filtersView.showEmptyResult();
+      filtersView.showEmptyResult(
+        workingDepths.length > 0 ? CS.filters.emptyDepths(workingDepths) : undefined,
+      );
       return;
     }
 

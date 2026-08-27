@@ -157,6 +157,37 @@ export function positionsForContext(context: ActionContext): Position[] {
   }
 }
 
+/**
+ * Hloubky, pro které daný výběr kontextů **doopravdy něco má**.
+ *
+ * Nabídka trenažéru je širší než obsah: push/fold se nabízí na 5 až 25 BB,
+ * knihovna ho má na 5 a 10. Změřeno 27. 8. 2026: ze 541 buněk, na které se drill
+ * podle vlastních pravidel ptá, jich **39 (7,2 %) nemá odpověď** - všechny
+ * v push/foldu a proti all-inu. Relace „push/fold, 20 BB" tak rozdá **nula
+ * spotů**.
+ *
+ * Prázdný výsledek se ošetřoval už předtím, ale hráč se dozvěděl jen „nic
+ * nenalezeno", což zní jako chyba jeho výběru. Tohle dovolí říct, co funguje -
+ * a je to poctivější, protože mezera je na naší straně, ne na jeho.
+ */
+export function bucketsWithSpots(
+  contexts: readonly ActionContext[],
+  ante: AnteMode,
+  store: RangeStore = rangeStore,
+): StackBucket[] {
+  const wanted = contexts.length > 0 ? contexts : ALL_CONTEXTS;
+  const found = new Set<StackBucket>();
+  for (const context of wanted) {
+    for (const bucket of bucketsForContext(context)) {
+      const hit = positionsForContext(context).some((position) => (
+        store.lookup({ ante, position, bucket, context }) !== undefined
+      ));
+      if (hit) found.add(bucket);
+    }
+  }
+  return [...found].sort((left, right) => left - right);
+}
+
 /** Vrátí přípustné hloubkové koše pro daný kontext (push/fold vs hluboké). */
 function bucketsForContext(context: ActionContext): StackBucket[] {
   return context === "PUSH_FOLD" || context === "VS_ALLIN"
