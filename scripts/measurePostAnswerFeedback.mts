@@ -548,4 +548,71 @@ if (!asJson) {
     + ([...sources].sort((left, right) => right[1] - left[1])
       .map(([source, count]) => `${source} ${count}`).join(", ") || "odnikud"),
   );
+
+  /**
+   * Dno, pod které doručení spadnout nesmí.
+   *
+   * ## Proč to přibylo až teď
+   *
+   * Tenhle skript se od 25. 8. 2026 jmenuje brána a v `verify:block` stojí mezi
+   * branami - jenže **nikdy nevrátil nenulový kód**. Byla to zpráva, kterou si
+   * nikdo nemusel přečíst, a přesně to se 27. 8. 2026 vymstilo: ranní cyklus
+   * odpojil 44 ze 48 tabulek EV, tenhle skript to ve svém výpisu **měl**
+   * („bez tabulky / zastaralá"), a chain přesto pokračoval. Zastavila to až
+   * sada, o dvě minuty a devadesát čtyři testů později.
+   *
+   * ## Jak jsou čísla zvolená
+   *
+   * Dvě podmínky jsou **přísné nuly**, protože každá jiná hodnota je vada:
+   * zastaralá tabulka EV je spočítaná a zahozená práce, zamlčený blaf je obsah,
+   * který se nedostal na obrazovku.
+   *
+   * Podíly mají rezervu, protože se legitimně hýbou s obsahem: noc přidá rodinu
+   * bez EV a doručení klesne, aniž by se cokoli pokazilo. Dno je proto pod
+   * naměřeným, ne na něm - má chytit propad, ne kolísání.
+   *
+   * | co | naměřeno 27. 8. 2026 | dno |
+   * |---|---|---|
+   * | EV na rozdaných riverech | 89,7 % | 75 % |
+   * | EV na preflopu | 33,1 % | 28 % |
+   * | zastaralých tabulek EV | 0 | 0 |
+   * | zamlčených blafů | 0 | 0 |
+   */
+  const floor = (name: string, fallback: number): number => {
+    const raw = process.env[name];
+    const parsed = raw === undefined ? Number.NaN : Number(raw);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const riverRow = rows.find((row) => row.street === "RIVER");
+  const riverEvShare = riverRow === undefined || riverRow.dealt === 0
+    ? 0
+    : (100 * riverRow.actionEv) / riverRow.dealt;
+  const preflopEvShare = dealt === 0 ? 0 : (100 * withEv) / dealt;
+  const silentBluffs = rows.reduce((sum, row) => sum + row.bluffsSilent, 0);
+
+  const failures: string[] = [];
+  if (riverEvShare < floor("POST_ANSWER_MIN_RIVER_EV_PCT", 75)) {
+    failures.push(`EV na riverech ${riverEvShare.toFixed(1)} % pod dnem ${floor("POST_ANSWER_MIN_RIVER_EV_PCT", 75)} %`);
+  }
+  if (preflopEvShare < floor("POST_ANSWER_MIN_PREFLOP_EV_PCT", 28)) {
+    failures.push(`EV na preflopu ${preflopEvShare.toFixed(1)} % pod dnem ${floor("POST_ANSWER_MIN_PREFLOP_EV_PCT", 28)} %`);
+  }
+  if (evStale > 0) {
+    failures.push(`${evStale} tabulek EV je spočítaných a zahozených (otisk nesedí na pack)`);
+  }
+  if (silentBluffs > 0) {
+    failures.push(`${silentBluffs} spotů má blaf v obsahu a mlčí o něm`);
+  }
+
+  console.log("");
+  if (failures.length === 0) {
+    console.log("Doručení drží nad dnem.");
+  } else {
+    console.log("DORUČENÍ SPADLO POD DNO:");
+    for (const line of failures) console.log(`  ${line}`);
+    console.log("");
+    console.log("Tohle není kosmetika: je to spočítaný obsah, který se k hráči nedostane.");
+    process.exitCode = 1;
+  }
 }

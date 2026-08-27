@@ -42,6 +42,13 @@ smůla, to byla chybějící brána.
 vyrobený obsah, ne to, co z něj dojde k hráči, a rozdíl mezi tím se dva týdny
 neprojevil nikde. Viz pravidlo 4.
 
+**Dno dostal až 27. 8. 2026** a do té doby to byla brána jen jménem: nikdy
+nevrátila nenulový kód. Ten den ráno odpojil cyklus 44 ze 48 tabulek EV, skript
+to ve výpisu měl, a řetěz pokračoval - zastavila to až sada. Dno je teď dvojí:
+přísná nula tam, kde je každá jiná hodnota vada, a podíl s rezervou tam, kde se
+čísla legitimně hýbou s obsahem. A je **ověřené selháním**, ne jen zeleným
+během; brána, u které se nikdy nevidělo kousnutí, není ověřená brána.
+
 **`typecheck` hlídá dvě konfigurace, a je to podstatné.** `tsconfig.json`
 kontroluje `src` a `tests` proti ES2020 kvůli Android WebView;
 `tsconfig.scripts.json` kontroluje `scripts/` proti ES2022, protože skripty
