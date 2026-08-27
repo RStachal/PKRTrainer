@@ -160,15 +160,18 @@ export function positionsForContext(context: ActionContext): Position[] {
 /**
  * Hloubky, pro které daný výběr kontextů **doopravdy něco má**.
  *
- * Nabídka trenažéru je širší než obsah: push/fold se nabízí na 5 až 25 BB,
- * knihovna ho má na 5 a 10. Změřeno 27. 8. 2026: ze 541 buněk, na které se drill
- * podle vlastních pravidel ptá, jich **39 (7,2 %) nemá odpověď** - všechny
- * v push/foldu a proti all-inu. Relace „push/fold, 20 BB" tak rozdá **nula
- * spotů**.
+ * Knihovna je na to, **na co se drill ptá, úplná**: změřeno 27. 8. 2026, že ze
+ * 487 dvojic (kontext, hloubka × sedačka), na které se podle vlastních pravidel
+ * ptá, chybí **nula**. Prázdné relace tedy nevznikají chybějícím obsahem.
  *
- * Prázdný výsledek se ošetřoval už předtím, ale hráč se dozvěděl jen „nic
- * nenalezeno", což zní jako chyba jeho výběru. Tohle dovolí říct, co funguje -
- * a je to poctivější, protože mezera je na naší straně, ne na jeho.
+ * Vznikají tím, že **filtry jsou tři nezávislé dimenze**. Hráč si může vybrat
+ * push/fold a k tomu 20 BB, jenže push/fold se hraje do 12 BB, takže se ta
+ * dvojice nikdy nesejde a relace rozdá nula spotů. Hláška přitom zněla „vybrané
+ * filtry neodpovídají žádnému spotu", což zní jako chyba jeho výběru - a je to
+ * chyba nabídky, která tu kombinaci vůbec dovolila.
+ *
+ * Tahle funkce dovolí říct, co funguje. Počítá se z obsahu, takže když obsah
+ * přibude, hláška se opraví sama.
  */
 export function bucketsWithSpots(
   contexts: readonly ActionContext[],
@@ -188,8 +191,16 @@ export function bucketsWithSpots(
   return [...found].sort((left, right) => left - right);
 }
 
-/** Vrátí přípustné hloubkové koše pro daný kontext (push/fold vs hluboké). */
-function bucketsForContext(context: ActionContext): StackBucket[] {
+/**
+ * Vrátí přípustné hloubkové koše pro daný kontext (push/fold vs hluboké).
+ *
+ * Exportované ze stejného důvodu jako `positionsForContext`: je to jediná
+ * autorita na to, na kterou hloubku se trenažér u daného kontextu ptá. Rozdíl
+ * mezi „hloubka se nabízí, ale nemáme obsah" a „hloubka se u tohohle kontextu
+ * vůbec nerozdává" je jinak nepoznatelný - a plete se: obojí vypadá jako nula
+ * spotů, přitom první se dá spravit obsahem a druhé ne.
+ */
+export function bucketsForContext(context: ActionContext): StackBucket[] {
   return context === "PUSH_FOLD" || context === "VS_ALLIN"
     ? PUSH_FOLD_BUCKETS
     : DEEP_BUCKETS;

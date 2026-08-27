@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
+import { bucketsForContext, bucketsWithSpots } from "../src/core/drillEngine";
 import { getRangeRecord } from "../src/data/ranges/index";
 import type { ActionContext, Position, StackBucket } from "../src/core/types";
 
@@ -122,6 +123,17 @@ interface DraftImpact {
   compared: number;
   /** Buňka, kterou knihovna dnes nemá vůbec - draft by ji přidal. */
   newCell: boolean;
+  /**
+   * Mřížka, která by rozsvítila kombinaci filtrů rozdávající dnes **nula** spotů.
+   *
+   * Změřeno 27. 8. 2026: nabídka trenažéru je širší než obsah, takže relace
+   * „push/fold, 20 BB" nerozdá nic - a v draftu je pro ni šest mřížek. To je ze
+   * všech dopadů ten nejhmatatelnější: nejde o přesnější odpověď, ale o to, že
+   * odpověď vůbec bude.
+   */
+  unlocksEmpty: boolean;
+  /** Hloubka, kterou trenažér u tohohle kontextu vůbec nerozdává. */
+  notDrilled: boolean;
 }
 
 function impactOf(record: DraftRecord): DraftImpact {
@@ -131,7 +143,21 @@ function impactOf(record: DraftRecord): DraftImpact {
     record.bucket as StackBucket,
     record.context as ActionContext,
   );
-  if (current === undefined) return { changed: 0, compared: 0, newCell: true };
+  // Dvě různé nuly, které vypadají stejně.
+  //
+  // „Nabízí se, ale nemáme obsah" se dá spravit tímhle draftem. „U tohohle
+  // kontextu se ta hloubka vůbec nerozdává" se spravit nedá a číst tu mřížku
+  // je dnes ztráta času. Prvních dvanáct označených obsahovalo čtyři z toho
+  // druhého druhu, než se to rozlišilo.
+  const context = record.context as ActionContext;
+  const bucket = record.bucket as StackBucket;
+  const offered = bucketsForContext(context).includes(bucket);
+  const live = bucketsWithSpots([context], "OFF").includes(bucket);
+  const unlocksEmpty = offered && !live;
+  const notDrilled = !offered;
+  if (current === undefined) {
+    return { changed: 0, compared: 0, newCell: true, unlocksEmpty, notDrilled };
+  }
   let changed = 0;
   let compared = 0;
   for (const [hand, actions] of Object.entries(record.strict)) {
@@ -144,7 +170,7 @@ function impactOf(record: DraftRecord): DraftImpact {
       && [...mine].sort().join("|") === [...actions].sort().join("|");
     if (!same) changed += 1;
   }
-  return { changed, compared, newCell: false };
+  return { changed, compared, newCell: false, unlocksEmpty, notDrilled };
 }
 
 const impacts = new Map<DraftRecord, DraftImpact>(
@@ -154,6 +180,11 @@ const impacts = new Map<DraftRecord, DraftImpact>(
 /** Nejdřív to, co nejvíc změní; nová buňka je taky změna, jen jiného druhu. */
 function weight(record: DraftRecord): number {
   const impact = impacts.get(record)!;
+  // Rozsvícená kombinace jde úplně nahoru: „odpověď bude" váží víc než
+  // „odpověď bude přesnější".
+  if (impact.unlocksEmpty) return 1000;
+  // Dolů, ne nahoru: přečíst ji dnes nic nezmění.
+  if (impact.notDrilled) return -1;
   return impact.newCell ? 169 : impact.changed;
 }
 
@@ -221,6 +252,13 @@ const blocks = sorted.map((record, index) => {
     ? ""
     : `<ul class="notes">${record.notes.map((note) => `<li>${escapeHtml(note)}</li>`).join("")}</ul>`;
   const impact = impacts.get(record)!;
+  const unlockText = impact.unlocksEmpty
+    ? '<p class="meta"><b class="unlock">Tahle kombinace dnes rozdá nula spotů.</b>'
+      + " Mřížka by ji rozsvítila.</p>"
+    : impact.notDrilled
+      ? '<p class="meta"><b class="skip">Tuhle hloubku trenažér u tohohle kontextu'
+        + " nerozdává</b>, takže by se dnes nic nezměnilo. Klidně přeskoč.</p>"
+      : "";
   const impactText = impact.newCell
     ? '<b class="new">buňku, kterou knihovna nemá</b> - přidal by novou odpověď'
     : `<b class="${impact.changed > 0 ? "hot" : ""}">${impact.changed}</b> tříd`
@@ -228,6 +266,7 @@ const blocks = sorted.map((record, index) => {
   return `<section id="${anchorOf(record, index)}">
   <h2>${escapeHtml(record.context)} &middot; ${escapeHtml(record.position)} ${record.bucket} BB &middot; ${escapeHtml(versus)}</h2>
   <p class="meta">dopad: ${impactText}</p>
+  ${unlockText}
   <p class="meta">rozložení stacků: <b>${escapeHtml(record.stackSetupId)}</b> &middot;
      hloubka ve zdroji: ${record.sourceStackBB} BB &middot;
      tříd v range: ${inRange} ze 169 &middot; z toho mix: ${mixed} &middot;
@@ -262,6 +301,8 @@ const html = `<!doctype html>
  h2.plain{font-size:16px;margin:28px 0 8px}
  .hot{color:#ffb04a}
  .new{color:#7fd18a}
+ .unlock{color:#ff8f6b}
+ .skip{color:#8a93a6}
  table{border-collapse:collapse;font-size:13px;margin-bottom:8px}
  th,td{border:1px solid #2a3446;padding:4px 10px;text-align:left}
  th{background:#1a2130;color:#9fb3cd}

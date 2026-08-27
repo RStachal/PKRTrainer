@@ -6,14 +6,14 @@ import { CS } from "../../src/ui/cs";
 /**
  * Prázdný výsledek, který řekne, co funguje.
  *
- * Nabídka trenažéru je širší než obsah: push/fold i obrana proti all-inu se
- * nabízejí na 5 až 25 BB, knihovna je má na 5 a 10. Relace „push/fold, 20 BB"
- * proto rozdá **nula spotů**. Změřeno 27. 8. 2026: ze 541 dvojic, na které se
- * drill podle vlastních pravidel ptá, jich 39 (7,2 %) nemá odpověď - všechny
- * v těchhle dvou kontextech.
+ * Filtry jsou tři nezávislé dimenze, takže si hráč může vybrat push/fold a
+ * k tomu 20 BB. Push/fold se ale hraje do 12 BB, takže se ta dvojice nikdy
+ * nesejde a relace rozdá **nula spotů**.
  *
- * Hláška „vybrané filtry neodpovídají žádnému spotu" to svádí číst jako chybu
- * výběru. Mezera je ale na naší straně, takže se to tak má i říct.
+ * Není to chybějící obsah: změřeno 27. 8. 2026, že ze 487 dvojic, na které se
+ * drill ptá, chybí nula. Je to nabídka, která dovolí kombinaci, jakou trenažér
+ * nikdy nerozdá - a hláška „vybrané filtry neodpovídají žádnému spotu" to svádí
+ * číst jako chybu hráčova výběru.
  */
 describe("prázdný výběr řekne, co funguje", () => {
   it("push/fold má obsah jen na mělkých hloubkách", () => {
