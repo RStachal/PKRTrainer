@@ -97,6 +97,7 @@ import {
   strongestSlice,
 } from "./preflopEquity";
 import { OPPONENT_STYLES, type OpponentStyleId } from "./opponentStyle";
+import { ACTION_KEY_LABEL } from "./actionKeyLabels";
 import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
 
 // ---------------------------------------------------------------------------
@@ -284,23 +285,6 @@ function facingFor(context: ActionContext, heroPos: Position): TableState["facin
 // ---------------------------------------------------------------------------
 
 /** Český popisek pro každý Akční_klíč (label v `Answer`). */
-const ACTION_KEY_LABEL: Record<ActionKey, string> = {
-  FOLD: "Fold",
-  CALL: "Call",
-  LIMP: "Limp / Check",
-  OVERLIMP: "Over-limp",
-  OPEN_2X: "Raise 2x",
-  OPEN_25X: "Raise 2.5x",
-  OPEN_3X: "Raise 3x",
-  ISO_2X: "Iso-raise 2x",
-  ISO_25X: "Iso-raise 2.5x",
-  ISO_3X: "Iso-raise 3x",
-  "3BET": "3-bet",
-  "4BET": "4-bet",
-  SQUEEZE: "Squeeze",
-  JAM: "All-in",
-  CALL_JAM: "Call all-in",
-};
 
 /** Český popisek akčního kontextu (pro zdůvodnění). */
 // ---------------------------------------------------------------------------

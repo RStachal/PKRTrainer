@@ -44,7 +44,10 @@ describe("preflopExplanation", () => {
     const text = explanation("STANDARD");
 
     expect(text).toContain("RFI / Open");
-    expect(text).toContain("Doporučení: Open 2x");
+    // „Raise 2x", ne „Open 2x": od 27. 8. 2026 se zdůvodnění jmenuje akci
+    // stejně jako tlačítko, na které hráč kliká. Dvojí slovník na jedné
+    // obrazovce se týkal 10,65 % spotů.
+    expect(text).toContain("Doporučení: Raise 2x");
     expect(text).toContain("Pozice:");
     expect(text).toContain("Stack:");
     expect(text).toContain("Třída handy:");

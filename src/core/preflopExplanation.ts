@@ -1,3 +1,4 @@
+import { ACTION_KEY_LABEL } from "./actionKeyLabels";
 import { callRequirement, explainCallPrice, explainShovePrice, shoveRequirement } from "./decisionMaths";
 import type {
   ActionContext,
@@ -25,23 +26,8 @@ export interface PreflopExplanationInput {
   importedFromHandHistory?: boolean;
 }
 
-const ACTION_LABEL: Record<ActionKey, string> = {
-  FOLD: "Fold",
-  CALL: "Call",
-  LIMP: "Limp / check",
-  OVERLIMP: "Over-limp",
-  OPEN_2X: "Open 2x",
-  OPEN_25X: "Open 2.5x",
-  OPEN_3X: "Open 3x",
-  ISO_2X: "Iso-raise 2x",
-  ISO_25X: "Iso-raise 2.5x",
-  ISO_3X: "Iso-raise 3x",
-  "3BET": "3-bet",
-  "4BET": "4-bet",
-  SQUEEZE: "Squeeze",
-  JAM: "Jam",
-  CALL_JAM: "Call jam",
-};
+/** Popisky akcí jsou sdílené s tlačítky, viz `actionKeyLabels`. */
+const ACTION_LABEL = ACTION_KEY_LABEL;
 
 const CONTEXT_LABEL: Record<ActionContext, string> = {
   RFI: "RFI / Open",
