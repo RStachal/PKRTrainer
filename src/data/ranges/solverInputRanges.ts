@@ -83,6 +83,37 @@ function shippedPack(ante: AnteMode) {
  * Vrací `undefined`, když některou z těch dvou ranží pack nemá - vymyslet ji by
  * znamenalo solvit hru, kterou nikdo netrénuje.
  */
+/**
+ * Která z těch dvou ranží chybí. Prázdné pole znamená, že jsou obě.
+ *
+ * Bez tohohle se dala hláška „preflop pack nemá obě ranže" číst jen tak, že se
+ * mezera vystopuje ručně - a stálo to hodinu, než se ukázalo, že chybí vždycky
+ * jen ta obranná (`VS_OPEN` pro UTG+1 a UTG+2, na všech hloubkách). Brána, která
+ * ví, co chybí, to má říct; hádat za ni je práce navíc pokaždé znovu.
+ */
+export function srpSolverInputGap(options: {
+  openerSeat: Position;
+  defenderSeat: Position;
+  bucket: StackBucket;
+  ante: AnteMode;
+}): string[] {
+  const pack = shippedPack(options.ante);
+  if (pack === undefined) return ["produkční preflop pack není načtený"];
+  const store = createRangeStoreFromRangePack(pack);
+  const missing: string[] = [];
+  if (store.lookup({
+    ante: options.ante, position: options.openerSeat, bucket: options.bucket, context: "RFI",
+  }) === undefined) {
+    missing.push(`RFI|${options.openerSeat}|${options.bucket}`);
+  }
+  if (store.lookup({
+    ante: options.ante, position: options.defenderSeat, bucket: options.bucket, context: "VS_OPEN",
+  }) === undefined) {
+    missing.push(`VS_OPEN|${options.defenderSeat}|${options.bucket}`);
+  }
+  return missing;
+}
+
 export function srpSolverInputRanges(options: {
   openerSeat: Position;
   defenderSeat: Position;

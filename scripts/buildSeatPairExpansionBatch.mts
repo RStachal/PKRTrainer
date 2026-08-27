@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 
 import { texasSolverBoardForId } from "../src/core/texasSolverBoardCatalog.ts";
 import {
+  srpSolverInputGap,
   srpSolverInputRanges,
   toSolverRangeSpec,
 } from "../src/data/ranges/solverInputRanges.ts";
@@ -171,7 +172,12 @@ for (const [openerIndex, opener] of SEATS.entries()) {
         openerSeat: opener, defenderSeat: defender, bucket: depth, ante: "OFF",
       });
       if (ranges === undefined) {
-        skipped.push(`${pair} @ ${depth}BB: preflop pack nemá obě ranže`);
+        // Říct **která** chybí. Bez toho se mezera stopuje ručně pokaždé znovu;
+        // změřeno 27. 8. 2026, že je to vždycky ta obranná.
+        const gap = srpSolverInputGap({
+          openerSeat: opener, defenderSeat: defender, bucket: depth, ante: "OFF",
+        });
+        skipped.push(`${pair} @ ${depth}BB: preflop pack nemá ${gap.join(" ani ")}`);
         continue;
       }
       const familyId = `MTT9_${depth}BB_${pair}`;
