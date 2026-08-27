@@ -235,12 +235,33 @@ function mttSixMaxCandidateRangePack(
  * chyba než ta, kterou komentář předpovídal. Zůstává odvozené a LOW, dokud ho
  * nenahradí měřená data; nově ale existuje kontrola, která to umí ukázat.
  */
+/**
+ * Kontexty, ve kterých hrdina **čelí** dobrovolné akci před sebou.
+ *
+ * Pro první sedačku u stolu nemohou nastat: před ní nikdo nejednal. Devítistolová
+ * data tenhle problém nemají, protože se obrana měří až od lojacku - jenže
+ * mapování sedaček přenáší lojack na **šest-maxový UTG**, který je první.
+ *
+ * Změřeno 27. 8. 2026: takhle vzniklo **66 záznamů popisujících spot, který
+ * nemůže nastat** (33 na pack, `VS_OPEN|UTG`, `VS_4BET|UTG` a `VS_LIMP|UTG` po
+ * jedenácti hloubkách). Drill se na ně nikdy nezeptá, protože jeho vlastní
+ * pravidla první sedačku z těchhle kontextů vylučují, takže to zatím nikoho
+ * nezranilo - ale nafukovalo to počet záznamů v packu o 7,8 % a čekalo to na
+ * den, kdy six-max dostane vlastní množiny pozic.
+ */
+const FACING_CONTEXTS = new Set(["VS_OPEN", "VS_4BET", "VS_LIMP", "SQUEEZE"]);
+
 function deriveSixMaxRecords(source: RangePack): RangePack["records"] {
-  const map = new Map(sixMaxPositionMap().map((pair) => [pair.fullRing, pair.sixMax]));
+  const pairs = sixMaxPositionMap();
+  const map = new Map(pairs.map((pair) => [pair.fullRing, pair.sixMax]));
+  // První sedačka se bere z mapování, ne natvrdo: kdyby se pořadí u stolu
+  // změnilo, tahle podmínka se změní s ním.
+  const firstSeat = pairs[0]?.sixMax;
   const out: RangePack["records"] = [];
   for (const record of source.records) {
     const seat = map.get(record.position);
     if (seat === undefined) continue;
+    if (seat === firstSeat && FACING_CONTEXTS.has(record.context)) continue;
     out.push({ ...record, position: seat });
   }
   return out;
@@ -263,6 +284,7 @@ export function mttSixMaxDerivedRangePack(
       "DERIVED, not measured: every record is a nine-handed record re-labelled to the six-max seat with the same number of opponents left to act.",
       `Seat mapping: ${sixMaxPositionMap().map((p) => `${p.sixMax}<-${p.fullRing}`).join(", ")}.`,
       `Nine-handed seats with no six-max counterpart, and so not carried over: ${dropped}.`,
+      "Záznamy, kde by první sedačka čelila akci před sebou, se nepřenášejí: před ní nikdo nejedná, takže by popisovaly spot, který nemůže nastat.",
       "Šířky otevírání byly porovnány s veřejně uváděnými šestistolovými frekvencemi: bez ante sedí do pásma na všech sedačkách, s ante leží při jeho horní hraně.",
     ],
     records,

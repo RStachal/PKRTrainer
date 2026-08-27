@@ -104,7 +104,11 @@ describe("mttPreflopRangeAudit", () => {
     // change, which is why turbo kept its empty candidate.
     expect(sixMaxOn).toMatchObject({
       status: "BLOCKED",
-      regularRecordCount: 425,
+      // 392, ne 425: od 27. 8. 2026 se nepřenášejí záznamy, kde by první
+      // sedačka čelila akci před sebou. Bylo jich 33 (`VS_OPEN|UTG`,
+      // `VS_4BET|UTG`, `VS_LIMP|UTG` po jedenácti hloubkách) a popisovaly spot,
+      // který u prvního hráče nemůže nastat.
+      regularRecordCount: 392,
       turboRecordCount: 0,
       regularPackId: "mtt-six-max-regular-preflop-chip-ev-ante-on-derived-v1",
       turboPackId: "mtt-six-max-turbo-preflop-chip-ev-ante-on-candidate-v0",
