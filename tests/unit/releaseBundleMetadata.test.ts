@@ -224,7 +224,16 @@ describe("release bundle metadata", () => {
     // 6,2 z 8 MB a jedna tabulka stojí hráče 74 KiB gzipu ze 128.
     //
     // Zase jen o kousek: rezerva je 1,96 MB, tedy zhruba jedna noc.
-    expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 54272');
+    //
+    // Potřetí 27. 8. 2026, z 54 272 na 65 536 (53 -> 64 MB), a tentokrát se tím
+    // mění role stropu. Změřená trajektorie ze dvou nocí: raw +1 232 KiB za noc,
+    // gzip +159 KiB. Rezerva po ranním dodání byla 773 KiB raw (méně než jedna
+    // noc) proti 1 700 KiB gzip (deset nocí). Zvedat raw každé dvě noci není
+    // strategie; jde rovnou tam, kde jako první kousne gzip - ten jediný ze dvou
+    // součtů měří, co se po drátě přenese. Raw zůstává pojistkou proti řádovému
+    // skoku. Až kousne gzip, odpovědí není další zvednutí, ale ořez podle
+    // změřené poptávky.
+    expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 65536');
     expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",');
     // Řetěz je připnutý schválně: má se měnit vědomě, ne mimochodem. Poslední
     // článek přibyl 24. 8. 2026 a je to oprava chybějící brány - Chrome E2E

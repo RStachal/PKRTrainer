@@ -124,6 +124,28 @@ const MAX_LAZY_MTT_GZIP_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128);
  * syrové velikosti a nejnovější obsah, takže by se ořezával podle změřené
  * poptávky (`mtt:solved-coverage --json`), ne podle abecedy.
  *
+ * **Potřetí, z 54 272 na 65 536 (53 -> 64 MB), dne 27. 8. 2026 - a naposled,
+ * protože se tím mění role tohohle stropu.** Změřena trajektorie na dvou
+ * po sobě jdoucích nocích: raw roste o **1 232 KiB za noc**, gzip o **159 KiB**.
+ * Po ranním dodání je raw 53 498,51 z 54 272 (rezerva 773 KiB, tedy **méně než
+ * jedna noc**) a gzip 6 491,54 z 8 192 (rezerva na deset nocí).
+ *
+ * Zvedat raw každé dvě noci není strategie, je to sesouvání. Proto jde rovnou
+ * tam, kde jako první kousne **gzip** - a to je správně, protože ze dvou
+ * součtových stropů jen gzip měří něco skutečného: kolik se toho po drátě
+ * přenese. Raw zůstává jako pojistka proti řádovému skoku (překlep v generátoru,
+ * nezmenšený formát), ne jako denní brzda.
+ *
+ * Až kousne gzip, **další zvednutí není odpověď**: tehdy se má ořezávat podle
+ * změřené poptávky (`mtt:solved-coverage --json`), protože v tu chvíli už jde
+ * o to, co hráč stahuje.
+ *
+ * Na co si dát pozor: halda buildu je na 8 GB a při 53 MB knihovny prošla; při
+ * 64 MB to nikdo neměřil, takže první pád buildu na paměti je očekávatelný jev,
+ * ne záhada.
+ *
+ * Historie:
+ *
  * **Zvednuto podruhé, z 45 056 na 54 272 (44 -> 53 MB), dne 26. 8. 2026.**
  * Tentokrát to nepřinesla noc, ale rozhodnutí, které mi majitel předal: EV akcí
  * dostalo všech 47 riverových rodin místo sedmnácti.
@@ -148,7 +170,7 @@ const MAX_LAZY_MTT_GZIP_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128);
  * `resolveJsonModule` čte všechny. Není to vada obsahu ani typů, je to zděděná
  * mez - proto má `build` i `typecheck` v `package.json` explicitních 8 GB.
  */
-const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 54272);
+const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 65536);
 const MAX_LAZY_MTT_TOTAL_GZIP_KB = numberFromEnv(
   "BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",
   8192,

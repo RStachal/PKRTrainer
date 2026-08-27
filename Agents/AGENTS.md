@@ -130,7 +130,7 @@ té doby nepřeměřil. Ani jedna nebyla vada kódu.
 | workery sady | 4 | **2** | paměť: čtyři workery ji vyčerpají |
 | precache raw | 400 KiB | 416 KiB | 8,4 KiB nového kódu |
 | chunk raw | 512 KiB | **528 KiB** | manifest EV: 17 → 47 rodin, +6,56 KiB |
-| knihovna raw | 32 MB | **53 MB** | EV pro všech 47 rodin: 44,1 → 52,3 MB |
+| knihovna raw | 32 MB | **64 MB** | 1,2 MB za noc; nově kousne dřív gzip |
 | halda `tsc --noEmit` | 4 GB (výchozí) | 8 GB | 14,4 MB JSONu přes `resolveJsonModule` |
 
 Tři věci, které z toho platí dál:
