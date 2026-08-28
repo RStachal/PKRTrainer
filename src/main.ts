@@ -126,6 +126,8 @@ import {
   revealActionEvButtonBubbles,
   setActionEvButtonContent,
 } from "./ui/actionEvButtonBubbles";
+import { ACTION_PRICE_STYLES, revealActionPriceLines } from "./ui/actionPriceLines";
+import { preflopDecisionPrices } from "./core/preflopDecisionPrice";
 import {
   CS,
   getAppLanguage,
@@ -1442,6 +1444,10 @@ function setupTraining(
       }
     });
     revealActionEvButtonBubbles(buttons, spot.actionEvs, result.actionEv);
+    // Cena vedle EV, ne místo ní. EV říká, co akce vynese; cena, kolik musí
+    // vydělat, aby se zaplatila - a je jich víc: přesnou EV má 33,1 % spotů,
+    // aspoň jednu cenu 100 %.
+    revealActionPriceLines(buttons, preflopDecisionPrices(spot, activeRangeStore));
 
     // VyhodnocenĂ­ (ÄŤistĂ© jĂˇdro).
     const responseMs = elapsedMs(activeQuestionStartedAt);
@@ -1876,6 +1882,7 @@ body{margin:0;background:
 .action-btn--chosen{outline:2px solid #2bd576;outline-offset:1px;}
 .action-btn--recommended{border-color:#2bd576;background:linear-gradient(180deg,rgba(43,213,118,.28),rgba(43,213,118,.14));}
 ${ACTION_EV_BUTTON_STYLES}
+${ACTION_PRICE_STYLES}
 /* The verdict is the moment the player is here for, so it gets a border that
    states it before any text is read - a stripe down the leading edge in the
    colour the answer earned. */
