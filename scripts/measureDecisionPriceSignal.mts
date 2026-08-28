@@ -26,7 +26,46 @@ import type { HandLabel } from "../src/core/types";
  */
 await loadPreflopEquity();
 
+
 const filters = { positions: [], buckets: [], contexts: [], ante: "OFF", scoringMode: "LENIENT" } as never;
+/**
+ * Nejdřív jednoduchá otázka: **kolik akcí vůbec dostane cenu**, ve všech
+ * kontextech. Bez toho se nedá říct, jestli má smysl to zobrazovat.
+ */
+{
+  const { preflopDecisionPrices } = await import("../src/core/preflopDecisionPrice");
+  const CONTEXTS = ["RFI", "VS_OPEN", "VS_3BET", "VS_4BET", "VS_LIMP", "SQUEEZE", "PUSH_FOLD", "VS_ALLIN"] as const;
+  console.log("Kolik nabízených akcí dostane cenu");
+  console.log("");
+  console.log("kontext".padEnd(12) + "spotů".padStart(8) + "akcí".padStart(8)
+    + "s cenou".padStart(9) + "spotů s aspoň jednou".padStart(22));
+  let allActions = 0, allPriced = 0, allSpots = 0, allCovered = 0;
+  for (const context of CONTEXTS) {
+    const pool = buildPool(20260828, context as never, filters, rangeStore);
+    let actions = 0, priced = 0, covered = 0;
+    for (const spot of pool) {
+      const prices = preflopDecisionPrices(spot, rangeStore);
+      actions += spot.answers.length;
+      // Základna (složení) se nepočítá jako cena: neříká, co musí akce vydělat.
+      const withPrice = prices.filter((price) => price.kind !== "BASELINE").length;
+      priced += withPrice;
+      if (withPrice > 0) covered += 1;
+    }
+    allActions += actions; allPriced += priced; allSpots += pool.length; allCovered += covered;
+    console.log(
+      context.padEnd(12) + String(pool.length).padStart(8) + String(actions).padStart(8)
+      + `${((100 * priced) / Math.max(actions, 1)).toFixed(0)} %`.padStart(9)
+      + `${((100 * covered) / Math.max(pool.length, 1)).toFixed(0)} %`.padStart(22),
+    );
+  }
+  console.log("");
+  console.log(
+    `celkem: ${allActions} nabízených akcí, cenu má ${((100 * allPriced) / allActions).toFixed(1)} %`
+    + `; aspoň jednu ocenitelnou akci má ${((100 * allCovered) / allSpots).toFixed(1)} % spotů`,
+  );
+  console.log("");
+}
+
 const pool = buildPool(20260828, "VS_OPEN" as never, filters, rangeStore);
 
 let priced = 0;

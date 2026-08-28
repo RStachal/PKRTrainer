@@ -98,6 +98,12 @@ import {
 } from "./preflopEquity";
 import { OPPONENT_STYLES, type OpponentStyleId } from "./opponentStyle";
 import { ACTION_KEY_LABEL } from "./actionKeyLabels";
+import {
+  FOUR_BET_MULTIPLE,
+  THREE_BET_MULTIPLE_IP,
+  THREE_BET_MULTIPLE_OOP,
+  isInPositionForThreeBet,
+} from "./preflopSizes";
 import { rangeStore, type RangeKey, type RangeStore } from "../data/rangeStore";
 
 // ---------------------------------------------------------------------------
@@ -773,14 +779,7 @@ function openerClasses(
  *
  * Chyba v potu posouvá cenu jamu o zlomek blindu. Chybějící číslo si hráč všiml.
  */
-const THREE_BET_MULTIPLE_IP = 2.2;
-const THREE_BET_MULTIPLE_OOP = 3;
-const FOUR_BET_MULTIPLE = 2.2;
 
-/** Sedačky, které po flopu hrají poslední, a tak tři-betují menší. */
-function isInPositionForThreeBet(heroPos: Position): boolean {
-  return heroPos === "BTN" || heroPos === "CO";
-}
 
 /**
  * Range, kterou soupeř čtyři-betuje, z měřených chartů.
