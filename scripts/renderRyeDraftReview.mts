@@ -203,6 +203,16 @@ function weight(record: DraftRecord): number {
   return impact.newCell ? 169 : impact.changed;
 }
 
+/**
+ * Původní pořadí záznamu v draftu.
+ *
+ * Stránka řadí podle dopadu, a ten se **mění s obsahem** - noc přidá rodinu
+ * a pořadí se přeskládá. Kdyby se odpovědi exportovaly podle pozice na
+ * stránce, sedly by po přegenerování na jiné mřížky. Identifikátor je proto
+ * index v draftu, který se nemění.
+ */
+const originalIndex = new Map(draft.records.map((record, index) => [record, index]));
+
 const sorted = [...draft.records].sort((left, right) => (
   weight(right) - weight(left)
   ||
@@ -472,6 +482,7 @@ ${overview(sorted)}
 ${blocks}
 
 <script>
+var ORDER = ${JSON.stringify(sorted.map((record) => originalIndex.get(record) ?? -1))};
 (function () {
   var KEY = "drillev-review-v1";
   var total = document.querySelectorAll(".verdict").length;
@@ -568,7 +579,15 @@ ${blocks}
     if (id === "share") {
       var box = document.getElementById("export");
       box.hidden = false;
-      box.value = "DRILLEV-REVIEW-V1 " + tokens().join("-");
+      var out = [];
+      var list = tokens();
+      for (var i = 0; i < list.length; i += 1) {
+        if (list[i] === ".") continue;
+        // Identifikátor je index v draftu, ne pozice na stránce: ta se
+        // s obsahem přeskládá a odpovědi by sedly na jiné mřížky.
+        out.push(ORDER[i] + list[i]);
+      }
+      box.value = "DRILLEV-REVIEW-V2 " + out.join(" ");
       box.focus();
       box.select();
       try { document.execCommand("copy"); } catch (error) { /* stačí označené */ }
