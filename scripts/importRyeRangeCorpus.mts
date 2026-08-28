@@ -64,6 +64,23 @@ interface DraftRecord {
   strict: Record<string, string[]>;
   /** ruka → všechny akce, které zdroj u ní hraje. */
   lenient: Record<string, string[]>;
+  /**
+   * ruka → akce a **jak často** ji zdroj hraje, v procentech.
+   *
+   * Zapisuje se jen u rukou, které zdroj hraje víc způsoby; u jednoznačné ruky
+   * by to byl šum („FOLD 100").
+   *
+   * ## Proč to tu musí být
+   *
+   * Do 28. 8. 2026 si import pamatoval jen **které** akce, ne jak často - a to
+   * je přesně ten signál, kvůli kterému mix vůbec existuje. Změřeno na 250
+   * stranách korpusu: 3 008 vážených buněk, z toho 2 577 je 50/50, ale **431
+   * (14,3 %) má skutečný poměr** - 25/75, 33/67, dokonce 49/51.
+   *
+   * Rozdíl mezi „hraj obojí" a „hraj to takhle často" je celý rozdíl mezi
+   * seznamem přijatelných odpovědí a strategií.
+   */
+  mix: Record<string, Record<string, number>>;
   /** Co se překladem ztratilo, po akcích. Pro člověka, který to bude číst. */
   notes: string[];
   sourceFile: string;
@@ -138,6 +155,7 @@ for (const file of htmlFiles(source).sort()) {
 
   const strict: Record<string, string[]> = {};
   const lenient: Record<string, string[]> = {};
+  const mix: Record<string, Record<string, number>> = {};
   for (const [hand, perHand] of weights) {
     const entries = [...perHand].filter(([, weight]) => weight > 0);
     if (entries.length === 0) continue;
@@ -146,6 +164,15 @@ for (const file of htmlFiles(source).sort()) {
     // jedna z těch dvou akcí chyba.
     const best = Math.max(...entries.map(([, weight]) => weight));
     lenient[hand] = entries.map(([action]) => action).sort();
+    if (entries.length > 1) {
+      // Váhy se normalizují na součet 100: zdroj je uvádí jako podíl buňky a
+      // zbytek do sta je fold, který v `entries` není. Bez normalizace by dvě
+      // stejné strategie vypadaly různě podle toho, kolik ruky je ve hře.
+      const sum = entries.reduce((total, [, weight]) => total + weight, 0);
+      mix[hand] = Object.fromEntries(entries
+        .map(([action, weight]) => [action, Math.round((100 * weight) / sum)])
+        .sort((left, right) => String(left[0]).localeCompare(String(right[0]))));
+    }
     strict[hand] = entries
       .filter(([, weight]) => Math.abs(weight - best) < 1e-9)
       .map(([action]) => action)
@@ -168,6 +195,7 @@ for (const file of htmlFiles(source).sort()) {
     sourceStackBB: situation.stackBB,
     strict,
     lenient,
+    mix,
     notes: [...new Set(notes)].sort(),
     sourceFile: name,
   });

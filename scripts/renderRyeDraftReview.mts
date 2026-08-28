@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { bucketsForContext, bucketsWithSpots } from "../src/core/drillEngine";
+import { bucketsForContext, bucketsWithSpots, positionsForContext } from "../src/core/drillEngine";
 import { getRangeRecord } from "../src/data/ranges/index";
 import type { ActionContext, Position, StackBucket } from "../src/core/types";
 
@@ -56,6 +56,8 @@ interface DraftRecord {
   sourceStackBB: number;
   strict: Record<string, string[]>;
   lenient: Record<string, string[]>;
+  /** ruka → akce a jak často ji zdroj hraje (jen u mixů). */
+  mix?: Record<string, Record<string, number>>;
   notes: string[];
   sourceFile: string;
 }
@@ -91,11 +93,19 @@ function grid(record: DraftRecord): string {
       const action = strict[0] ?? "";
       // Mix se pozná okrajem, ne jinou barvou: barva má dál znamenat akci.
       const mixed = lenient.length > 1;
+      // Poměr, ne jen výčet: „3BET 75 / CALL 25" je jiná strategie než totéž
+      // půl na půl, a do 28. 8. 2026 se to na stránce nedalo rozeznat.
+      const ratio = record.mix?.[hand];
+      const mixText = ratio === undefined
+        ? lenient.join(" / ")
+        : Object.entries(ratio).map(([action, share]) => `${action} ${share} %`).join(" / ");
       const title = lenient.length === 0
         ? `${hand}: mimo range (fold)`
-        : `${hand}: ${strict.join(" / ")}${mixed ? ` (mix: ${lenient.join(" / ")})` : ""}`;
+        : `${hand}: ${strict.join(" / ")}${mixed ? ` (mix: ${mixText})` : ""}`;
       cells.push(
-        `<div class="c${mixed ? " mix" : ""}" style="background:${COLORS[action] ?? "#e2e5ea"}"`
+        `<div class="c${mixed ? " mix" : ""}${ratio !== undefined
+          && new Set(Object.values(ratio)).size > 1 ? " uneven" : ""}"`
+        + ` style="background:${COLORS[action] ?? "#e2e5ea"}"`
         + ` title="${escapeHtml(title)}">${hand}</div>`,
       );
     }
@@ -151,7 +161,12 @@ function impactOf(record: DraftRecord): DraftImpact {
   // druhého druhu, než se to rozlišilo.
   const context = record.context as ActionContext;
   const bucket = record.bucket as StackBucket;
-  const offered = bucketsForContext(context).includes(bucket);
+  // Nabídnutá buňka musí sedět v **obou** rozměrech. Sedačka se sem doplnila
+  // 28. 8. 2026, když se ukázalo, že stránka tvrdila „přidal by novou odpověď"
+  // u `VS_OPEN|UTG+1` - jenže obranu proti otevření trenažér rozdává až od
+  // lojacku, takže by ta mřížka po schválení nezměnila nic.
+  const offered = bucketsForContext(context).includes(bucket)
+    && positionsForContext(context).includes(record.position as Position);
   const live = bucketsWithSpots([context], "OFF").includes(bucket);
   const unlocksEmpty = offered && !live;
   const notDrilled = !offered;
@@ -246,6 +261,8 @@ function overview(records: readonly DraftRecord[]): string {
 
 const blocks = sorted.map((record, index) => {
   const mixed = Object.values(record.lenient).filter((actions) => actions.length > 1).length;
+  const uneven = Object.values(record.mix ?? {})
+    .filter((ratio) => new Set(Object.values(ratio)).size > 1).length;
   const inRange = Object.keys(record.lenient).length;
   const versus = record.vsSeat === "" ? "proti všem za sebou" : `proti ${record.vsSeat}`;
   const notes = record.notes.length === 0
@@ -256,8 +273,9 @@ const blocks = sorted.map((record, index) => {
     ? '<p class="meta"><b class="unlock">Tahle kombinace dnes rozdá nula spotů.</b>'
       + " Mřížka by ji rozsvítila.</p>"
     : impact.notDrilled
-      ? '<p class="meta"><b class="skip">Tuhle hloubku trenažér u tohohle kontextu'
-        + " nerozdává</b>, takže by se dnes nic nezměnilo. Klidně přeskoč.</p>"
+      ? '<p class="meta"><b class="skip">Tuhle situaci trenažér nerozdává</b>'
+        + " (sedačka nebo hloubka mimo to, na co se v tomhle kontextu ptá),"
+        + " takže by se dnes nic nezměnilo. Klidně přeskoč.</p>"
       : "";
   const impactText = impact.newCell
     ? '<b class="new">buňku, kterou knihovna nemá</b> - přidal by novou odpověď'
@@ -269,7 +287,8 @@ const blocks = sorted.map((record, index) => {
   ${unlockText}
   <p class="meta">rozložení stacků: <b>${escapeHtml(record.stackSetupId)}</b> &middot;
      hloubka ve zdroji: ${record.sourceStackBB} BB &middot;
-     tříd v range: ${inRange} ze 169 &middot; z toho mix: ${mixed} &middot;
+     tříd v range: ${inRange} ze 169 &middot; z toho mix: ${mixed}
+     (nerovný poměr: ${uneven}) &middot;
      zdroj: <code>${escapeHtml(record.sourceFile)}</code></p>
   ${notes}
   ${grid(record)}
@@ -294,6 +313,9 @@ const html = `<!doctype html>
  .c{aspect-ratio:1;display:flex;align-items:center;justify-content:center;
     font-size:10px;font-weight:700;color:#12161f;border-radius:2px}
  .c.mix{outline:2px solid #ffd166;outline-offset:-2px}
+ /* Nerovný poměr má jinou barvu okraje: „hraj obojí stejně" a „hraj to takhle
+    často" jsou dvě různá tvrzení a na mřížce musí jít rozeznat. */
+ .c.uneven{outline:2px solid #ff8f6b;outline-offset:-2px}
  .key{display:inline-flex;align-items:center;gap:6px;margin-right:14px;font-size:12px}
  .key i{width:14px;height:14px;border-radius:2px;display:inline-block}
  .intro{background:#1a2130;padding:12px 16px;border-radius:8px;max-width:820px}
@@ -335,8 +357,11 @@ const html = `<!doctype html>
    Dopad se počítá proti <b>obecnému</b> záznamu, tedy proti dnešní odpovědi,
    která nehledí na to, kdo otevřel - to je přesně ta mezera, kvůli které draft
    vznikl.</p>
-<p>Žlutý okraj znamená ruku, kterou zdroj hraje <b>víc způsoby</b>. Tam se
-   překlad může splést nejsnáz, takže stojí za pohled jako první.</p>
+<p>Žlutý okraj znamená ruku, kterou zdroj hraje <b>víc způsoby</b> stejně často.
+   <b style="color:#ff8f6b">Oranžový okraj</b> znamená mix s <b>nerovným
+   poměrem</b> - třeba 3BET 75 % / CALL 25 %. Přesný poměr ukáže najetí myší.
+   Změřeno: 578 rukou v draftu má mix a 92 z nich nerovný poměr, takže „hraj
+   obojí" a „hraj to takhle často" se konečně dají rozeznat.</p>
 <p>Oranžové poznámky u mřížky říkají, <b>co se překladem ztratilo</b> - třeba že
    zdroj rozlišuje 3bet s dorovnáním 4betu od 3betu se složením, kdežto produkt
    má obojí jako <code>3BET</code>.</p>

@@ -191,6 +191,94 @@ Dodáno 20.-24. 8. 2026. Ověřeno měřením, ne dojmem:
 - Akce, kterou rozbor nemodeluje, se jmenuje „EV nespočítána" a **nezakládá
   chybu hráče** - dřív za ni dostal „špatně" bez opory v čemkoli spočítaném.
 
+## Fáze 5 — EV a cena rozhodnutí — **návrh z 28. 8. 2026**
+
+Majitel to označil za největší úkol a formuloval ho přesně: *„víc odpovědí může
+mít téměř stejnou EV, a podle situace a soupeře se může vyplatit jiná akce -
+klidně nechat víc akcí pro danou situaci, jen je musíme správně ohodnotit."*
+
+### Co je dnes
+
+| | pokrytí poolu (78 585 spotů) |
+|---|---|
+| přesná EV (akce má pevnou cenu, tedy all-in) | **33,1 %** |
+| EV z dodaného exportu (`SOLVER`) | **0 %** - v packech je `actionEvs` nula |
+| frekvence ze zdroje | v draftu 578 rukou s mixem, 92 s nerovným poměrem |
+
+### Co v materiálech je a co ne
+
+Změřeno 28. 8. 2026 nad vlastníkovým archivem: kurzy a poznámky (`PKR-EVRT`
+1,8 GB, GTO Wizard a spol.) jsou z 99,9 % obrázky a próza. Strojově čitelný je
+RYE korpus a ICM stránky - a ty nesou **frekvence, ne EV** (3 008 vážených buněk
+na 250 stranách: 86 % 50/50, 431 s nerovným poměrem).
+
+**Závěr: EV se z vlastněných materiálů vytáhnout nedá.** Buď ji spočítáme, nebo
+musí přijít export, který ji nese.
+
+### Návrh: tři druhy čísla, každé označené tím, co tvrdí
+
+Klíč je nemíchat je. Produkt na tom stojí jinde a tady to platí dvojnásob.
+
+1. **EV** - jen tam, kde je cena akce pevná (all-in). Přesná aritmetika nad
+   tabulkou ekvit. Dnes 33,1 %.
+2. **Cena akce** - kolik musí akce vydělat, aby se zaplatila. U dorovnání
+   požadovaná ekvita z pot odds, u zvýšení požadované složení soupeře. Je to
+   **požadavek, ne hodnota**, a nesmí se jmenovat EV. Počítá se z velikostí,
+   které produkt učí, nebo z přiznaných násobků - stejně jako se dnes počítá
+   cena pěti-betu.
+3. **Frekvence ze zdroje** - jak často zdroj kterou akci hraje. Není to EV a
+   nesmí se za ni vydávat; je to popis strategie.
+
+**Kolik by to pokrylo:** nabízí dorovnání 63,0 % spotů, zvýšení 78,1 %, složení
+97,6 % (základna nula) - **aspoň jedna cenitelná akce v 96,1 %**. Proti dnešním
+33,1 % s přesnou EV.
+
+### Proč zrovna takhle a ne modelováním
+
+Spočítat EV dorovnání mimo all-in znamená modelovat, co se stane po flopu -
+realizaci ekvity, sizing, dovednost soupeře. Vyšlo by číslo, které vypadá stejně
+autoritativně jako to přesné, a hráč by je nerozeznal. Panel ceny rozhodnutí to
+už jednou zapsal: *„made-up size produces a made-up requirement that reads
+exactly as authoritative as a real one."* Návrh tuhle hranici drží.
+
+**A přesně tenhle rám odpovídá majitelově námitce:** požadovaná ekvita a
+požadované složení jsou místa, kde typ soupeře doopravdy vstupuje do výpočtu -
+call station snižuje fold equity, nit ji zvyšuje. Produkt už soupeře modeluje
+jako jedno číslo (`opponentStyle`), takže se to nikam nedolepuje.
+
+### Ověřeno, že to není jen další číslo na obrazovce
+
+Než se práh pustí na obrazovku, musí se vědět, jestli něco vysvětluje.
+`npm run mtt:price-signal` porovnal na celém `VS_OPEN` poolu (11 154 spotů)
+„ekvita ruky je nad prahem" proti tomu, co strategie doopravdy radí:
+
+| hloubka | souhlas |
+|---|---|
+| 15-20 BB | 61-63 % |
+| 25 BB | 72,5 % |
+| 30-40 BB | **81-83 %** |
+| 50 BB a výš | 76,3 % |
+| **celkem** | **74,4 %** |
+
+Tři ze čtyř spotů tedy práh vysvětluje. To je dost na to, aby byl užitečný, a
+zároveň **málo na to, aby se směl číst jako doporučení** - v každém čtvrtém
+spotu by lhal. Přesně proto se jmenuje cena, ne rada.
+
+A ta čtvrtina je pedagogicky to nejcennější: ruce s dost ekvitou, které se přesto
+skládají (mimo pozici se z ní realizuje míň), a ruce pod prahem, které se hrají
+pro implied odds. Rozdíl mezi cenou teď a hodnotou celé ruky je přesně ta věc,
+kterou se hráč má naučit.
+
+Měřeno s přiznaným zjednodušením: otevírací range se bere z lojacku, stejně jako
+při dnešním počítání ceny re-jamu, protože spot neví, kdo otevřel (bod 140).
+
+### Co k tomu chybí a co je hotové
+
+Hotové je jádro: `decisionMaths` umí `callRequirement` (včetně ICM bubble
+factoru), `shoveRequirement` i minimální obrannou frekvenci. Chybí to použít
+mimo all-in spoty a zobrazit - a rozhodnout, jak to má vypadat vedle EV, aby se
+ty dva druhy čísla nespletly.
+
 ## Fáze 2 — EV pro turn a flop — **uzavřeno 26. 8. 2026: nedodávat**
 
 **Blokátor není velikost, jak se tu psalo, ale to, že ta čísla neexistují.**
