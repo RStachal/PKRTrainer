@@ -1,4 +1,4 @@
-import { classifyFlopHand } from "../src/core/flopHandCategory";
+import { MADE_VALUE_CATEGORIES, classifyFlopHand } from "../src/core/flopHandCategory";
 import type { Card, HandLabel } from "../src/core/types";
 
 /**
@@ -16,6 +16,14 @@ import type { Card, HandLabel } from "../src/core/types";
  *
  * Tenhle skript to rozpadne po kategoriích, aby se dalo říct, jestli ta lajna
  * odpovídá tomu, jak se blafovat má.
+ *
+ * ## Co tenhle skript **nevidí**
+ *
+ * Riverovou kartu. Vyřešená pravidla nesou flop a turnovou kartu, river ne -
+ * ten přidává až katalog při rozdávání. Riverová čísla proto popisují stav
+ * **po turnu**: draw, který v nich stojí, se na riveru buď dotáhl, nebo
+ * propadl, a tenhle skript neví který. Produkt sám klasifikuje proti desce,
+ * kterou hráč vidí, takže tohle omezení má jen měření.
  */
 
 interface Bucket { lane: string; action: string; handClasses: readonly string[] }
@@ -51,7 +59,10 @@ for (const street of ["flop", "turn", "river"] as const) {
       if (!/BET|RAISE|ALLIN/i.test(bucket.action ?? "")) continue;
       for (const hand of bucket.handClasses ?? []) {
         const category = classifyFlopHand(hand as HandLabel, board);
-        if (["SET_PLUS", "MADE_STRAIGHT", "TWO_PAIR", "OVERPAIR", "TOP_PAIR"].includes(category)) continue;
+        // Seznam se **neopisuje**: hodnotové kategorie drží `flopHandCategory`.
+        // Opsaná kopie tenhle skript jednou už zmátla - po přidání barvy počítal
+        // udělanou barvu mezi blafy, protože o ní nevěděl.
+        if (MADE_VALUE_CATEGORIES.includes(category)) continue;
         bluffClasses += 1;
         counts.set(category, (counts.get(category) ?? 0) + 1);
       }

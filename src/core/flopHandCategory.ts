@@ -12,6 +12,7 @@ import type { Card, HandLabel, Rank } from "./types";
 
 export type FlopzillaCategory =
   | "SET_PLUS"
+  | "MADE_FLUSH"
   | "MADE_STRAIGHT"
   | "TWO_PAIR"
   | "OVERPAIR"
@@ -30,6 +31,7 @@ export type FlopzillaLane = "VALUE" | "BLUFF" | "CHECK";
 /** Categories that are a made hand strong enough to bet for value. */
 export const MADE_VALUE_CATEGORIES: readonly FlopzillaCategory[] = [
   "SET_PLUS",
+  "MADE_FLUSH",
   "MADE_STRAIGHT",
   "TWO_PAIR",
   "OVERPAIR",
@@ -54,6 +56,14 @@ export function classifyFlopHand(
   const handValues = parsed.pair
     ? [R2V[parsed.high], R2V[parsed.high]]
     : [R2V[parsed.high], R2V[parsed.low]];
+  // Kolik karet ještě přijde. Na flopu dvě, na turnu jedna, na riveru žádná -
+  // a bez toho čísla se draw hlásí i tam, kde už není co dotáhnout.
+  const cardsToCome = Math.max(0, 5 - board.length);
+
+  // Barva se testuje **první**, protože bije pár i dva páry. Dokud se testovala
+  // až za párováním, vycházela nutová barva jako top pair.
+  const flushCategory = flushDrawCategory(parsed, board, cardsToCome);
+  if (flushCategory === "MADE_FLUSH") return "MADE_FLUSH";
 
   if (parsed.pair) {
     const pairValue = R2V[parsed.high];
@@ -72,24 +82,35 @@ export function classifyFlopHand(
     return "PAIR";
   }
 
-  const straightCategory = straightDrawCategory([...boardValues, ...handValues]);
-  if (straightCategory === "MADE_STRAIGHT") return "MADE_STRAIGHT";
+  // Postupka se počítá jen tehdy, když ji hrdinovy karty **zlepší**. Draw
+  // ležící celý na desce není hrdinův draw; dřív se počítal jemu.
+  const boardStraight = straightRank(straightDrawCategory(boardValues));
+  const handStraight = straightDrawCategory([...boardValues, ...handValues]);
+  const improves = straightRank(handStraight) > boardStraight;
+  if (improves && handStraight === "MADE_STRAIGHT") return "MADE_STRAIGHT";
 
-  const flushCategory = flushDrawCategory(parsed, board);
-  if (flushCategory) return flushCategory;
+  if (flushCategory === "FLUSH_DRAW") return "FLUSH_DRAW";
 
-  if (straightCategory === "OESD" || straightCategory === "GUTSHOT") {
-    return straightCategory;
+  if (cardsToCome > 0 && improves && (handStraight === "OESD" || handStraight === "GUTSHOT")) {
+    return handStraight;
   }
 
-  if (parsed.suited) return "BACKDOOR_DRAW";
+  if (parsed.suited && cardsToCome > 0) return "BACKDOOR_DRAW";
   if (handValues.every((value) => value > topBoard)) return "OVERCARDS";
   return "AIR";
+}
+
+/** Pořadí síly pro porovnání „zlepšuje to hrdinova ruka?". */
+function straightRank(category: "MADE_STRAIGHT" | "OESD" | "GUTSHOT" | null): number {
+  if (category === "MADE_STRAIGHT") return 3;
+  if (category === "OESD") return 2;
+  return category === "GUTSHOT" ? 1 : 0;
 }
 
 export function flopzillaLaneForCategory(category: FlopzillaCategory): FlopzillaLane {
   switch (category) {
     case "SET_PLUS":
+    case "MADE_FLUSH":
     case "MADE_STRAIGHT":
     case "TWO_PAIR":
     case "OVERPAIR":
@@ -150,32 +171,66 @@ function parseHand(hand: HandLabel): ParsedHand {
   };
 }
 
+/**
+ * Barva: udělaná, nebo rozehraná.
+ *
+ * Do 28. 8. 2026 tahle funkce **udělanou barvu neznala** - hledala na desce
+ * přesně dvě karty barvy, takže tři a víc vracelo `null` a ruka propadla dál.
+ * `AKs` na `Ah 7h 2h` tak vyšlo jako TOP_PAIR a `76s` na téže desce jako PAIR,
+ * čímž se **malá barva dostala do blafovací lajny**.
+ *
+ * Draw se navíc smí hlásit jen tehdy, když je co dotáhnout. Na dokončené desce
+ * není `FLUSH_DRAW` neúplná informace, je to nepravda.
+ */
 function flushDrawCategory(
   hand: ParsedHand,
   board: readonly Card[],
-): "FLUSH_DRAW" | null {
+  cardsToCome: number,
+): "MADE_FLUSH" | "FLUSH_DRAW" | null {
   if (!hand.suited) return null;
   const suitCounts = new Map<string, number>();
   for (const card of board) {
     suitCounts.set(card.suit, (suitCounts.get(card.suit) ?? 0) + 1);
   }
-  return [...suitCounts.values()].some((count) => count === 2) ? "FLUSH_DRAW" : null;
+  const counts = [...suitCounts.values()];
+  // Tři karty barvy na desce a obě hrdinovy v ní: třída `76s` si tu barvu vybere.
+  if (counts.some((count) => count >= 3)) return "MADE_FLUSH";
+  if (cardsToCome > 0 && counts.some((count) => count === 2)) return "FLUSH_DRAW";
+  return null;
 }
 
+/**
+ * Stav postupky pro danou množinu hodnot.
+ *
+ * Počítá se přes **doplňující karty**, ne přes pozici mezery v okně. Staré
+ * pravidlo („chybí na kraji okna ⇒ oboustranka") hlásilo oboustranku i u
+ * `A-2-3-4`, jenže pod eso se postupka prodloužit nedá - tam je jediná
+ * doplňující karta, tedy vnitřní. Změřeno na `72o` proti `Ah Kh 9c 3d 4s`:
+ * vycházelo OESD u ruky, která nemá ani vzdálený draw.
+ *
+ * Nová definice je ta učebnicová: kolik různých hodnot postupku dokončí.
+ * Dvě a víc je oboustranka, jedna je vnitřní, žádná není draw.
+ */
 function straightDrawCategory(values: readonly number[]): "MADE_STRAIGHT" | "OESD" | "GUTSHOT" | null {
   const valueSet = new Set<number>(values);
   if (valueSet.has(14)) valueSet.add(1);
 
-  let hasGutshot = false;
-  for (let start = 1; start <= 10; start += 1) {
-    const window = [start, start + 1, start + 2, start + 3, start + 4];
-    const present = window.filter((value) => valueSet.has(value));
-    if (present.length === 5) return "MADE_STRAIGHT";
-    if (present.length === 4) {
-      const missing = window.find((value) => !valueSet.has(value));
-      if (missing === window[0] || missing === window[4]) return "OESD";
-      hasGutshot = true;
+  const hasStraight = (set: ReadonlySet<number>): boolean => {
+    for (let start = 1; start <= 10; start += 1) {
+      if ([0, 1, 2, 3, 4].every((offset) => set.has(start + offset))) return true;
     }
+    return false;
+  };
+  if (hasStraight(valueSet)) return "MADE_STRAIGHT";
+
+  let outs = 0;
+  for (let rank = 2; rank <= 14; rank += 1) {
+    if (valueSet.has(rank)) continue;
+    const candidate = new Set(valueSet);
+    candidate.add(rank);
+    if (rank === 14) candidate.add(1);
+    if (hasStraight(candidate)) outs += 1;
   }
-  return hasGutshot ? "GUTSHOT" : null;
+  if (outs >= 2) return "OESD";
+  return outs === 1 ? "GUTSHOT" : null;
 }

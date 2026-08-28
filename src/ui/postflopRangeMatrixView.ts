@@ -41,6 +41,9 @@ interface CategoryDef {
 const CATEGORY_DEFS: Record<FlopzillaCategory, CategoryDef> = {
   // Made hands: the salmon-red family, darkening with strength.
   SET_PLUS: { label: "Set+", color: "#a63a32" },
+  // Barva sedí mezi setem a postupkou: silnější než postupka, slabší než set+
+  // (do kterého padá i full house a lepší).
+  MADE_FLUSH: { label: "Barva", color: "#b2423a" },
   MADE_STRAIGHT: { label: "Made straight", color: "#be4a3e" },
   TWO_PAIR: { label: "Two pair", color: "#cf5f50" },
   OVERPAIR: { label: "Overpair", color: "#d87878" },
