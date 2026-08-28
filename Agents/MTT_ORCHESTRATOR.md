@@ -192,10 +192,20 @@ níž, se hlásí jako ztrátová, i když všechny ostatní brány svítí zele
    | co | stav | čím změřeno |
    |---|---|---|
    | akce v matici | dodáno na všech třech ulicích | `mtt:post-answer` |
-   | blafovací lajna | dodáno, **0 zamlčených z 900** | totéž |
-   | EV river | 4,7 % → **89,7 %** | totéž |
-   | EV turn a flop | **rozhodnuto nedodávat** (bod 131) | 3,9 % podher má vrstvu |
-   | EV preflop | **33,1 %** ← nejnižší, nová priorita | `mtt:post-answer` |
+   | blafovací lajna | dodáno, **0 zamlčených**; od 28. 8. i pravdivá (bod 149) | totéž |
+   | EV river | 4,7 % → **92,0 %** | totéž |
+   | EV turn a flop | **rozhodnuto nedodávat** (bod 131) | 5,2 % podher má vrstvu |
+   | EV preflop | **33,1 %** | `mtt:post-answer` |
+   | **cena akce** | preflop **100 %**, flop 25,0 %, turn 36,3 %, river 53,3 % | totéž |
+   | **frekvence** | postflop 0 → **100 %** (bod 150) | totéž |
+
+   **Od 28. 8. 2026 má každý rozdaný spot na každé ploše aspoň jedno poctivé
+   číslo** - a každé říká něco jiného: EV co akce vynese, cena kolik musí
+   vydělat, aby se zaplatila, frekvence jak často to solver hraje. Všechna tři
+   mají v bráně dno a ta dna jsou ověřená vynuceným pádem, ne jen zeleným během.
+
+   Chybí jediné: **frekvence na preflopu**. Packy ji nenesou - a je to přesně
+   to, co přinese vlastníkův draft (578 rukou s mixem, 92 s nerovným poměrem).
 
    Uvnitř preflopu je pořadí dané měřením: `VS_3BET` je 14 872 spotů (19 %
    poolu) a **0 % EV**, protože se v něm nenabízí all-in větev, ze které by šla

@@ -259,6 +259,70 @@ function overview(records: readonly DraftRecord[]): string {
 <nav>${links}</nav>`;
 }
 
+/**
+ * Otázka a připravené odpovědi k jedné mřížce.
+ *
+ * ## Proč to má tvar formuláře, ne prosby
+ *
+ * „Prosím zkontroluj to" nad 94 mřížkami je fikce kontroly. Aby se to dalo
+ * odbavovat po kouskách - v MHD, mezi turnaji - musí být u každé mřížky
+ * **konkrétní otázka**, na kterou se dá odpovědět jedním klepnutím, a průběh
+ * se musí sám pamatovat.
+ *
+ * Otázky jsou tři a jsou to přesně ty, které stroj rozhodnout nesmí:
+ *
+ * 1. **Je ta range správná pro tenhle spot?** Mechanická kontrola ověřila, že
+ *    se čtení mřížky nespletlo - ne že je ta strategie správná.
+ * 2. **Sedí mixy?** Ruce, které zdroj hraje víc způsoby, jsou místo, kde se
+ *    překlad plete nejsnáz.
+ * 3. **Vadí sloučení akcí?** Zdroj rozlišuje víc, než produkt umí; jestli je ta
+ *    ztráta přijatelná, je rozhodnutí o produktu, ne o datech.
+ */
+function verdictBlock(record: DraftRecord, index: number, impact: DraftImpact): string {
+  const mixed = Object.keys(record.mix ?? {}).length;
+  const uneven = Object.values(record.mix ?? {})
+    .filter((ratio) => new Set(Object.values(ratio)).size > 1).length;
+  const lost = record.notes.length;
+  const focus = impact.notDrilled
+    ? "Tuhle situaci trenažér nerozdává, takže odpověď nic nezmění - klidně dej ‚přeskočit'."
+    : impact.newCell
+      ? "Knihovna na tuhle buňku dnes neodpovídá vůbec. Ptej se: <b>je tahle range ta, kterou bys hrál?</b>"
+      : `Knihovna už odpovídá, ale jinak: <b>u ${impact.changed} tříd z ${impact.compared}</b>`
+        + " by se doporučení lišilo. Ptej se, která z těch dvou odpovědí je správná.";
+  const mixNote = mixed === 0
+    ? ""
+    : `<p class="q-hint">Mixů: <b>${mixed}</b>${uneven > 0
+      ? `, z toho <b>${uneven} s nerovným poměrem</b> (oranžový okraj) - ty projdi jako první`
+      : " (všechny půl na půl)"}.</p>`;
+  const lostNote = lost === 0
+    ? ""
+    : `<p class="q-hint">Překladem se ztratilo <b>${lost}</b> rozlišení (oranžové poznámky výš).</p>`;
+
+  const option = (value: string, label: string): string =>
+    `<label class="opt"><input type="radio" name="v${index}" value="${value}"><span>${label}</span></label>`;
+  const flag = (value: string, label: string): string =>
+    `<label class="opt opt--flag"><input type="checkbox" name="f${index}" value="${value}"><span>${label}</span></label>`;
+
+  return `<div class="verdict" data-index="${index}">
+  <p class="q-focus">${focus}</p>
+  ${mixNote}${lostNote}
+  <div class="opts">
+    ${option("o", "✓ Sedí, dát do produktu")}
+    ${option("x", "✗ Nesedí")}
+    ${option("?", "? Nevím, ověřit později")}
+    ${option("s", "– Přeskočit")}
+  </div>
+  <div class="opts opts--flags" hidden>
+    <span class="q-hint">Co je špatně:</span>
+    ${flag("1", "moc široké")}
+    ${flag("2", "moc těsné")}
+    ${flag("3", "špatné ruce")}
+    ${flag("4", "špatný mix")}
+    ${flag("5", "sloučení akcí vadí")}
+  </div>
+</div>`;
+}
+
 const blocks = sorted.map((record, index) => {
   const mixed = Object.values(record.lenient).filter((actions) => actions.length > 1).length;
   const uneven = Object.values(record.mix ?? {})
@@ -292,6 +356,7 @@ const blocks = sorted.map((record, index) => {
      zdroj: <code>${escapeHtml(record.sourceFile)}</code></p>
   ${notes}
   ${grid(record)}
+  ${verdictBlock(record, index, impact)}
 </section>`;
 }).join("\n");
 
@@ -325,6 +390,32 @@ const html = `<!doctype html>
  .new{color:#7fd18a}
  .unlock{color:#ff8f6b}
  .skip{color:#8a93a6}
+ /* Odpovídání: velké terče, ať to jde palcem v tramvaji. */
+ .verdict{margin-top:10px;padding:10px;background:#161d2b;border-radius:8px;max-width:640px}
+ .q-focus{margin:0 0 6px;font-size:13px;color:#dce6f5}
+ .q-hint{margin:0 0 6px;font-size:12px;color:#9fb3cd}
+ .opts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+ .opts--flags{margin-top:8px;padding-top:8px;border-top:1px solid #2a3446}
+ .opt{display:inline-flex;align-items:center;gap:6px;padding:9px 12px;border-radius:999px;
+      background:#1f2839;color:#cfe0f5;font-size:13px;cursor:pointer;user-select:none;min-height:40px}
+ .opt input{width:16px;height:16px;margin:0}
+ .opt:has(input:checked){background:#2f4a7a;color:#fff}
+ .opt--flag:has(input:checked){background:#7a4a2f}
+ .bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+      padding:10px 12px;margin:0 -12px 12px;background:#0f141d;border-bottom:1px solid #2a3446}
+ .bar b{color:#7bd3ff}
+ #storage-warning{color:#ff8f6b;font-size:12px;max-width:420px}
+ .bar button{padding:9px 12px;border:0;border-radius:8px;background:#2f4a7a;color:#fff;
+             font-size:13px;cursor:pointer;min-height:40px}
+ .bar button.ghost{background:#1f2839;color:#cfe0f5}
+ #export{width:100%;max-width:640px;height:110px;margin-top:8px;background:#0f141d;color:#cfe0f5;
+         border:1px solid #2a3446;border-radius:8px;font:12px/1.4 ui-monospace,monospace;padding:8px}
+ @media(max-width:520px){
+   .grid{max-width:100%}
+   .c{font-size:8px}
+   section{scroll-margin-top:64px}
+ }
+
  table{border-collapse:collapse;font-size:13px;margin-bottom:8px}
  th,td{border:1px solid #2a3446;padding:4px 10px;text-align:left}
  th{background:#1a2130;color:#9fb3cd}
@@ -343,6 +434,14 @@ const html = `<!doctype html>
    .meta{color:#444}
  }
 </style></head><body>
+<div class="bar">
+  <span id="progress">hotovo <b>0</b> z ?</span>
+  <button id="next">Další nezodpovězená</button>
+  <button id="share" class="ghost">Zkopírovat odpovědi</button>
+  <span id="storage-warning" hidden>Pozor: tenhle prohlížeč tu stránku neuloží.
+    Odpovědi drží jen adresa - ulož si ji, nebo je průběžně kopíruj.</span>
+</div>
+<textarea id="export" hidden readonly></textarea>
 <h1>Draft ranží ke kontrole</h1>
 <div class="intro">
 <p><b>${draft.recordCount} záznamů</b>, vytvořeno ${escapeHtml(draft.createdAt)}, důvěra
@@ -371,6 +470,114 @@ const html = `<!doctype html>
 </div>
 ${overview(sorted)}
 ${blocks}
+
+<script>
+(function () {
+  var KEY = "drillev-review-v1";
+  var total = document.querySelectorAll(".verdict").length;
+
+  function tokens() {
+    var out = [];
+    for (var i = 0; i < total; i += 1) {
+      var v = document.querySelector('input[name="v' + i + '"]:checked');
+      var flags = document.querySelectorAll('input[name="f' + i + '"]:checked');
+      var code = v ? v.value : ".";
+      for (var j = 0; j < flags.length; j += 1) code += flags[j].value;
+      out.push(code);
+    }
+    return out;
+  }
+
+  function apply(list) {
+    for (var i = 0; i < list.length && i < total; i += 1) {
+      var code = list[i];
+      if (!code || code === ".") continue;
+      var v = document.querySelector('input[name="v' + i + '"][value="' + code[0] + '"]');
+      if (v) v.checked = true;
+      for (var k = 1; k < code.length; k += 1) {
+        var f = document.querySelector('input[name="f' + i + '"][value="' + code[k] + '"]');
+        if (f) f.checked = true;
+      }
+    }
+  }
+
+  function save() {
+    var text = tokens().join("-");
+    try { localStorage.setItem(KEY, text); } catch (error) { /* file:// bez úložiště */ }
+    // Fragment je záložní paměť: přežije i tam, kde úložiště nefunguje, a dá se
+    // poslat jako odkaz. Proto se do něj píše vždycky.
+    if (history.replaceState) history.replaceState(null, "", "#v=" + text);
+    refresh();
+  }
+
+  function refresh() {
+    var list = tokens();
+    var done = 0;
+    for (var i = 0; i < list.length; i += 1) if (list[i] !== ".") done += 1;
+    var counter = document.getElementById("progress");
+    if (counter) counter.innerHTML = "hotovo <b>" + done + "</b> z " + total;
+    var blocks = document.querySelectorAll(".verdict");
+    for (var b = 0; b < blocks.length; b += 1) {
+      var checked = blocks[b].querySelector('input[type="radio"]:checked');
+      var flags = blocks[b].querySelector(".opts--flags");
+      if (flags) flags.hidden = !(checked && checked.value === "x");
+    }
+  }
+
+  // Úložiště se zkusí, ne předpokládá. Z lokálního souboru ho prohlížeč na telefonu
+  // často nedovolí, a to se nesmí poznat až podle ztracené práce.
+  function storageWorks() {
+    try {
+      localStorage.setItem("drillev-probe", "1");
+      localStorage.removeItem("drillev-probe");
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function load() {
+    var fromHash = location.hash.indexOf("#v=") === 0 ? location.hash.slice(3) : "";
+    var stored = "";
+    try { stored = localStorage.getItem(KEY) || ""; } catch (error) { stored = ""; }
+    var text = fromHash || stored;
+    if (text) apply(text.split("-"));
+    if (!storageWorks()) {
+      var warn = document.getElementById("storage-warning");
+      if (warn) warn.hidden = false;
+    }
+    refresh();
+  }
+
+  document.addEventListener("change", function (event) {
+    if (event.target && event.target.name && /^[vf]\\d+$/.test(event.target.name)) save();
+  });
+
+  document.addEventListener("click", function (event) {
+    var id = event.target && event.target.id;
+    if (id === "next") {
+      var blocks = document.querySelectorAll(".verdict");
+      for (var i = 0; i < blocks.length; i += 1) {
+        if (!blocks[i].querySelector('input[type="radio"]:checked')) {
+          blocks[i].closest("section").scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+      }
+      alert("Hotovo, všechny mřížky mají odpověď.");
+    }
+    if (id === "share") {
+      var box = document.getElementById("export");
+      box.hidden = false;
+      box.value = "DRILLEV-REVIEW-V1 " + tokens().join("-");
+      box.focus();
+      box.select();
+      try { document.execCommand("copy"); } catch (error) { /* stačí označené */ }
+    }
+  });
+
+  load();
+})();
+</script>
 </body></html>
 `;
 

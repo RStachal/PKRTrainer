@@ -181,9 +181,13 @@ async function measureStreet(
     const heroBucket = spot.explanation.source.kind === "STRATEGY_PACK"
       ? spot.explanation.source.heroRangeBucket
       : undefined;
-    // Jen přesné frekvence: „mix je, ale čísla jsou skrytá" hráči neřekne, jak
-    // často co hrát, takže se jako doručené počítat nesmí.
-    if (heroBucket?.actionMix?.some((item) => item.visibility === "EXACT") === true) {
+    // **Podmínka UI, ne vlastní.** `actionMixText` ukáže procenta jen tehdy,
+    // když jsou přesné *všechny* položky mixu; při jediné skryté vypíše samé
+    // názvy akcí bez čísel. Měřit `some` by tenhle případ počítalo jako
+    // doručený, přestože by hráč žádnou frekvenci neviděl.
+    const mix = heroBucket?.actionMix;
+    if (mix !== undefined && mix.length > 0
+      && mix.every((item) => item.visibility === "EXACT")) {
       row.mixShown += 1;
     }
 
@@ -503,6 +507,7 @@ if (!asJson) {
   const { buildPool } = await import("../src/core/drillEngine");
   const { rangeStore } = await import("../src/data/rangeStore");
   const { loadPreflopEquity } = await import("../src/core/preflopEquity");
+  const { preflopDecisionPrices } = await import("../src/core/preflopDecisionPrice");
 
   // Tabulka ekvit se musí načíst, jinak měření lže.
   //
@@ -532,6 +537,7 @@ if (!asJson) {
   let dealt = 0;
   let withEv = 0;
   let withExplanation = 0;
+  let withPrice = 0;
   const sources = new Map<string, number>();
 
   const pool = CONTEXTS.flatMap((context) => {
@@ -559,6 +565,9 @@ if (!asJson) {
       row.sources.set(source, (row.sources.get(source) ?? 0) + 1);
     }
     if (spot.explanation.trim().length > 0) withExplanation += 1;
+    if (preflopDecisionPrices(spot, rangeStore).some((price) => price.kind !== "BASELINE")) {
+      withPrice += 1;
+    }
     byContext.set(spot.context, row);
   }
 
@@ -573,7 +582,10 @@ if (!asJson) {
     );
   }
   console.log("");
-  console.log(`celkem: EV akcí ${pct(withEv, dealt)} | vysvětlení ${pct(withExplanation, dealt)}`);
+  console.log(
+    `celkem: EV akcí ${pct(withEv, dealt)} | cena akce ${pct(withPrice, dealt)}`
+    + ` | vysvětlení ${pct(withExplanation, dealt)}`,
+  );
   console.log(
     "odkud EV je: "
     + ([...sources].sort((left, right) => right[1] - left[1])
@@ -633,6 +645,16 @@ if (!asJson) {
   const failures: string[] = [];
   if (riverEvShare < floor("POST_ANSWER_MIN_RIVER_EV_PCT", 75)) {
     failures.push(`EV na riverech ${riverEvShare.toFixed(1)} % pod dnem ${floor("POST_ANSWER_MIN_RIVER_EV_PCT", 75)} %`);
+  }
+  // Cena na preflopu se počítá z velikostí, které produkt učí, takže ji dostane
+  // každý spot. Dno je proto vysoko: propad by znamenal, že se rozpadl výpočet,
+  // ne že ubyl obsah. Naměřeno 100,0 % z 78 585 spotů.
+  const preflopPriceShare = dealt === 0 ? 0 : (100 * withPrice) / dealt;
+  if (preflopPriceShare < floor("POST_ANSWER_MIN_PREFLOP_PRICE_PCT", 95)) {
+    failures.push(
+      `cena akce na preflopu ${preflopPriceShare.toFixed(1)} %`
+      + ` pod dnem ${floor("POST_ANSWER_MIN_PREFLOP_PRICE_PCT", 95)} %`,
+    );
   }
   if (preflopEvShare < floor("POST_ANSWER_MIN_PREFLOP_EV_PCT", 28)) {
     failures.push(`EV na preflopu ${preflopEvShare.toFixed(1)} % pod dnem ${floor("POST_ANSWER_MIN_PREFLOP_EV_PCT", 28)} %`);
