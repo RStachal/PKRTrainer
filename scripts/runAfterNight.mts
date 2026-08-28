@@ -142,7 +142,7 @@ if (!write) {
   console.log("Nic se nespustilo. Provedení: npm run mtt:after-night -- --write");
   console.log("Přidej --ev, když se má přepočítat EV **všech** riverových rodin.");
   console.log("Zastaralé tabulky se obnovují samy; vypnout jde --skip-ev-repair.");
-  console.log("Obnova má rozpočet 90 minut, jinak --ev-repair-minutes=N.");
+  console.log("Obnova má rozpočet 150 minut, jinak --ev-repair-minutes=N.");
 } else {
   const list = families();
   generateAll(list, "1/3");
@@ -191,13 +191,19 @@ if (!write) {
       // typicky, ale rozptyl je velký - nejrychlejší 37 s, nejpomalejší
       // 2 129 s. Průměr by tady lhal, takže se říká obojí.
       //
+      // Rozpočet zvednut z 90 na 150 minut 28. 8. 2026: devadesát nestačilo.
+      // Ten den zastaralo 40 tabulek, cyklus stihl 29 a zbytek se dodělával
+      // ručně. Naměřený rozptyl na rodinu je 52 až 1 350 s, takže čtyřicet
+      // rodin vyjde na dvě hodiny a rezerva patří dovnitř rozpočtu, ne do
+      // ručního dodělávání po ránu.
+      //
       // Rozpočet času existuje proto, že od téhož dne může zastarat 47 tabulek
       // místo sedmnácti; nejhorší případ je kolem 80 minut a to už je ráno,
       // kdy majitel čeká na dodání. Kontroluje se **před** rodinou, ne během -
       // dopředu se neví, jak dlouho poběží, takže se smí přetáhnout o jednu.
       // Zbytek se nezamlčí: vypíše se, co zbývá, a čím to dokončit.
       const budgetMinutes = Number(
-        process.argv.find((arg) => arg.startsWith("--ev-repair-minutes="))?.split("=")[1] ?? 90,
+        process.argv.find((arg) => arg.startsWith("--ev-repair-minutes="))?.split("=")[1] ?? 150,
       );
       const deadline = Date.now() + budgetMinutes * 60_000;
       console.log(

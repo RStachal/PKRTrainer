@@ -22,15 +22,25 @@ import { loadRiverEvPack, readyRiverEvPack } from "../../src/data/ranges/riverEv
 export async function staleRiverEvFamilies(): Promise<string[]> {
   await loadSolvedRiverPacks("FULL_RING_9|REGULAR|CHIP_EV|RIVER|OFF");
   const familyOfPack = new Map(riverEvManifest.map((entry) => [entry.packId, entry.familyId]));
-  const stale: string[] = [];
-  for (const pack of riverSolvedStrategyPacks as readonly { id: string }[]) {
+  const stale: { family: string; rules: number }[] = [];
+  for (const pack of riverSolvedStrategyPacks as readonly { id: string; rules?: readonly unknown[] }[]) {
     const family = familyOfPack.get(pack.id);
     // Rodina bez záznamu v manifestu tabulku nikdy neměla. To není zastarání,
     // je to chybějící obsah - a dopočítat ho je rozhodnutí o rozpočtu, ne úklid
     // po noci.
     if (family === undefined) continue;
     await loadRiverEvPack(pack as never);
-    if (readyRiverEvPack(pack.id) === undefined) stale.push(family);
+    if (readyRiverEvPack(pack.id) === undefined) {
+      stale.push({ family, rules: pack.rules?.length ?? 0 });
+    }
   }
-  return stale;
+  // Nejdřív rodiny s nejvíc pravidly.
+  //
+  // Pořadí má smysl jen proto, že se **oprava nemusí dostat na konec**: 28. 8.
+  // 2026 stihl ranní cyklus 29 ze 40 a zbytek se dodělával ručně. Když se to
+  // stane znovu, ať zbudou ty, které odpovídají na nejmíň spotů. Počet pravidel
+  // je proxy poptávky, ne poptávka sama - rodina s víc pravidly odpovídá na víc
+  // desek, ale kolikrát ji trenažér rozdá, tohle číslo neví.
+  stale.sort((left, right) => right.rules - left.rules);
+  return stale.map((entry) => entry.family);
 }
