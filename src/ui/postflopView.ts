@@ -1,3 +1,5 @@
+import { ACTION_PRICE_STYLES, revealActionPriceLines } from "./actionPriceLines";
+import { postflopDecisionPrices } from "../core/postflopDecisionPrice";
 import {
   generatePostflopSpot,
   POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS,
@@ -1236,6 +1238,9 @@ function showResult(
     );
   });
   revealActionEvButtonBubbles(buttons, spot.actionEvs, grade.actionEv, chosen);
+  // Cena dorovnání ze skutečné linie, kterou solver hrál. Na flopu a turnu je
+  // to jediné číslo, které tam být může: EV se tam spočítat nedá (bod 131).
+  revealActionPriceLines(buttons, postflopDecisionPrices(spot));
 
   const result = root.querySelector<HTMLElement>(".postflop-result");
   if (!result) return;
@@ -2341,6 +2346,7 @@ function styles(doc: Document): HTMLStyleElement {
 .postflop-action--chosen{outline:2px solid #e8ecf7;outline-offset:2px;}
 .postflop-action--recommended{border-color:#2bd576;background:linear-gradient(180deg,rgba(43,213,118,.28),rgba(43,213,118,.14));}
 ${ACTION_EV_BUTTON_STYLES}
+${ACTION_PRICE_STYLES}
 .postflop-result{margin-top:12px;border-radius:12px;padding:12px 14px;font-size:13px;
   font-weight:700;line-height:1.45;}
 .postflop-result__summary{margin:0 0 10px;overflow-wrap:anywhere;}

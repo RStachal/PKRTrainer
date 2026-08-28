@@ -1,4 +1,5 @@
 import { generatePostflopSpot } from "../src/core/postflopGenerator";
+import { postflopDecisionPrices } from "../src/core/postflopDecisionPrice";
 import { POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS } from "../src/core/postflopGenerator";
 import { createDefaultPostflopStrategyResolver } from "../src/data/ranges/postflopStrategyRegistry";
 import { postflopSpotToTrainingSpot } from "../src/core/postflopTrainingSpot";
@@ -73,6 +74,14 @@ interface Row {
   bluffClasses: number[];
   bluffActions: Set<string>;
   explanationBluffs: number;
+  /**
+   * Spotů, kde hráč uvidí cenu dorovnání.
+   *
+   * Na flopu a turnu je to **jediné** číslo, které tam kdy bude: EV se tam
+   * spočítat nedá (bod 131), zatímco cena ano - ze skutečné linie, kterou
+   * solver hrál.
+   */
+  priced: number;
   /** Spotů, kde **obsah** blafovací lajnu má - ať už se vysvětlení ozve, nebo ne. */
   bluffsInContent: number;
   /** Z toho těch, kde vysvětlení mlčí. To je ta vada; zbytek je správně prázdno. */
@@ -106,6 +115,7 @@ async function measureStreet(
     bluffClasses: [],
     bluffActions: new Set(),
     explanationBluffs: 0,
+    priced: 0,
     bluffsInContent: 0,
     bluffsSilent: 0,
     actionsSeen: new Set(),
@@ -159,6 +169,7 @@ async function measureStreet(
     }
     if ((spot.comboEvs?.length ?? 0) > 0) row.comboEv += 1;
     if (spot.explanation.bluffHands.length > 0) row.explanationBluffs += 1;
+    if (postflopDecisionPrices(spot).length > 0) row.priced += 1;
 
     const source = spot.explanation.source;
     const buckets = source.kind === "STRATEGY_PACK" ? source.rangeBuckets ?? [] : [];
@@ -221,6 +232,7 @@ if (!asJson) {
     "ulice".padEnd(7)
     + "rozdáno".padStart(8)
     + "EV akcí".padStart(10)
+    + "cena".padStart(9)
     + "EV komb.".padStart(10)
     + "tříd s akcí".padStart(13)
     + "z toho blaf".padStart(13),
@@ -230,6 +242,7 @@ if (!asJson) {
       row.street.padEnd(7)
       + String(row.dealt).padStart(8)
       + pct(row.actionEv, row.dealt).padStart(10)
+      + pct(row.priced, row.dealt).padStart(9)
       + pct(row.comboEv, row.dealt).padStart(10)
       + String(median(row.bucketClasses)).padStart(13)
       + String(median(row.bluffClasses)).padStart(13),

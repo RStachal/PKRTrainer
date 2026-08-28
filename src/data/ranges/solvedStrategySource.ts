@@ -51,6 +51,13 @@ export interface SolvedSourceInput {
    * „všechny ruce se skládají". Sestavuje se `solvedRangeBuckets`.
    */
   rangeBuckets?: readonly PostflopRangeBucket[];
+  /**
+   * Kolik stojí dorovnat sázku, které hrdina čelí, v blindech.
+   *
+   * Ze **skutečné** linie, kterou solver hrál - ne z modelu. Chybí tam, kde
+   * hrdina sázce nečelí, a chybět má: prázdno se pozná, odhad ne.
+   */
+  facingBetBB?: number;
 }
 
 export function solvedStrategySource(
@@ -85,6 +92,14 @@ export function solvedStrategySource(
     ...(input.rangeBuckets !== undefined && input.rangeBuckets.length > 0
       ? { rangeBuckets: [...input.rangeBuckets] }
       : {}),
+    ...(input.facingBetBB !== undefined && input.facingBetBB > 0
+      ? { facingBetBB: input.facingBetBB }
+      : {}),
+    // Pot **uzlu**, ne obecný pot podle typu potu. Spot nese 6 / 18 / 4 BB
+    // podle toho, jestli je to SRP nebo tři-betovaný pot; vyřešené pravidlo
+    // nese pot, který na stole doopravdy byl. Cena dorovnání musí sedět na
+    // tenhle, jinak by se počítala sázka z jedné hry proti potu z jiné.
+    ...(input.potBB !== undefined && input.potBB > 0 ? { nodePotBB: input.potBB } : {}),
   };
 }
 

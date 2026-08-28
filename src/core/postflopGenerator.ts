@@ -275,6 +275,15 @@ export type PostflopRecommendationSource =
       selectionScore: number;
       tieBreak: "RULE_SCORE_THEN_PACK_ORDER";
       rangeBuckets?: readonly PostflopRangeBucket[];
+      /**
+       * Kolik stojí dorovnat sázku, které hrdina čelí, v blindech.
+       *
+       * Ze skutečné linie vyřešeného pravidla, ne z modelu. Chybí tam, kde
+       * hrdina sázce nečelí.
+       */
+      facingBetBB?: number;
+      /** Pot uzlu z vyřešeného pravidla, v blindech. */
+      nodePotBB?: number;
       heroRangeBucket?: PostflopHeroRangeBucket;
       opponentPolicy?: PostflopOpponentPolicyBranch;
       /**

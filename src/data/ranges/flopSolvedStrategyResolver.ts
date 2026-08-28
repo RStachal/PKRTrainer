@@ -1,3 +1,4 @@
+import { facingBetBB } from "./facingBetSize";
 import type {
   PostflopRecommendation,
   PostflopStrategyInput,
@@ -119,6 +120,8 @@ export function createFlopSolvedStrategyResolver(
         ruleId: best.sourceDirectory,
         potBB: best.spot?.potBB,
         stackBehindBB: best.spot?.stackBehindBB,
+        // Skutečná velikost sázky z linie, kterou solver hrál.
+        facingBetBB: facingBetBB(best.spot),
         // Co se dělá s každou třídou rukou. Bez tohohle nemá matice range
         // jedinou buňku s akcí a blafovací část je od složených rukou
         // nerozeznatelná - změřeno 25. 8. 2026 na 0 tříd ze 169.
