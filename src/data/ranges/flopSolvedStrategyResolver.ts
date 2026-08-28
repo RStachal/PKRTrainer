@@ -120,6 +120,8 @@ export function createFlopSolvedStrategyResolver(
         ruleId: best.sourceDirectory,
         potBB: best.spot?.potBB,
         stackBehindBB: best.spot?.stackBehindBB,
+        // Třída hrdinovy ruky, aby se k němu dostala frekvence jeho kbelíku.
+        heroHand: input.heroHand,
         // Skutečná velikost sázky z linie, kterou solver hrál.
         facingBetBB: facingBetBB(best.spot),
         // Co se dělá s každou třídou rukou. Bez tohohle nemá matice range

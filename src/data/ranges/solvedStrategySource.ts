@@ -58,6 +58,15 @@ export interface SolvedSourceInput {
    * hrdina sázce nečelí, a chybět má: prázdno se pozná, odhad ne.
    */
   facingBetBB?: number;
+  /**
+   * Třída hrdinovy ruky, aby se dal vybrat **jeho** kbelík.
+   *
+   * Bez ní se frekvence nedostane k hráči: `rangeBuckets` je nesou pro celou
+   * range, ale rozbor po odpovědi čte `heroRangeBucket`, a ten plnila jen
+   * agregátní cesta. Změřeno 28. 8. 2026: frekvence dojde k hráči v **0,0 %**
+   * rozdaných spotů na všech třech ulicích, přestože ji obsah má.
+   */
+  heroHand?: string;
 }
 
 export function solvedStrategySource(
@@ -69,6 +78,24 @@ export function solvedStrategySource(
   const spr = input.potBB !== undefined && input.potBB > 0 && input.stackBehindBB !== undefined
     ? Math.round((input.stackBehindBB / input.potBB) * 10) / 10
     : 0;
+
+  // Hrdinův kbelík se hledá mezi těmi, které se právě postavily - ne znovu
+  // z pravidla. Dvě cesty ke stejné odpovědi by se jednou rozešly.
+  const ownBucket = input.heroHand === undefined
+    ? undefined
+    : input.rangeBuckets?.find((bucket) => bucket.handClasses.includes(input.heroHand!));
+  const heroBucket = ownBucket === undefined || input.heroHand === undefined
+    ? undefined
+    : {
+      lane: ownBucket.lane,
+      label: ownBucket.label,
+      action: ownBucket.action,
+      handClass: input.heroHand,
+      features: [...ownBucket.features],
+      ...(ownBucket.actionMix === undefined
+        ? {}
+        : { actionMix: ownBucket.actionMix.map((item) => ({ ...item })) }),
+    };
   return {
     kind: "STRATEGY_PACK",
     provenance: "SOLVER_BACKED",
@@ -100,6 +127,11 @@ export function solvedStrategySource(
     // nese pot, který na stole doopravdy byl. Cena dorovnání musí sedět na
     // tenhle, jinak by se počítala sázka z jedné hry proti potu z jiné.
     ...(input.potBB !== undefined && input.potBB > 0 ? { nodePotBB: input.potBB } : {}),
+    // Kbelík hrdinovy vlastní ruky. Je to jediná cesta, kterou se k hráči
+    // dostane **frekvence** - jak často solver tu akci hraje - a na flopu
+    // a turnu je to jediné číslo, které tam vůbec být může: cenu neplatí, když
+    // jedná první, a EV se tam spočítat nedá (bod 131).
+    ...(heroBucket === undefined ? {} : { heroRangeBucket: heroBucket }),
   };
 }
 

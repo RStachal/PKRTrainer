@@ -82,6 +82,13 @@ interface Row {
    * solver hrál.
    */
   priced: number;
+  /**
+   * Spotů, kde hráč uvidí **frekvenci** - jak často solver tu akci hraje.
+   *
+   * Třetí druh čísla vedle EV a ceny, a jediný, který má co říct i tam, kde
+   * hrdina jedná první: tam žádnou cenu neplatí a EV se spočítat nedá.
+   */
+  mixShown: number;
   /** Spotů, kde **obsah** blafovací lajnu má - ať už se vysvětlení ozve, nebo ne. */
   bluffsInContent: number;
   /** Z toho těch, kde vysvětlení mlčí. To je ta vada; zbytek je správně prázdno. */
@@ -116,6 +123,7 @@ async function measureStreet(
     bluffActions: new Set(),
     explanationBluffs: 0,
     priced: 0,
+    mixShown: 0,
     bluffsInContent: 0,
     bluffsSilent: 0,
     actionsSeen: new Set(),
@@ -170,6 +178,14 @@ async function measureStreet(
     if ((spot.comboEvs?.length ?? 0) > 0) row.comboEv += 1;
     if (spot.explanation.bluffHands.length > 0) row.explanationBluffs += 1;
     if (postflopDecisionPrices(spot).length > 0) row.priced += 1;
+    const heroBucket = spot.explanation.source.kind === "STRATEGY_PACK"
+      ? spot.explanation.source.heroRangeBucket
+      : undefined;
+    // Jen přesné frekvence: „mix je, ale čísla jsou skrytá" hráči neřekne, jak
+    // často co hrát, takže se jako doručené počítat nesmí.
+    if (heroBucket?.actionMix?.some((item) => item.visibility === "EXACT") === true) {
+      row.mixShown += 1;
+    }
 
     const source = spot.explanation.source;
     const buckets = source.kind === "STRATEGY_PACK" ? source.rangeBuckets ?? [] : [];
@@ -233,6 +249,7 @@ if (!asJson) {
     + "rozdáno".padStart(8)
     + "EV akcí".padStart(10)
     + "cena".padStart(9)
+    + "frekvence".padStart(11)
     + "EV komb.".padStart(10)
     + "tříd s akcí".padStart(13)
     + "z toho blaf".padStart(13),
@@ -243,6 +260,7 @@ if (!asJson) {
       + String(row.dealt).padStart(8)
       + pct(row.actionEv, row.dealt).padStart(10)
       + pct(row.priced, row.dealt).padStart(9)
+      + pct(row.mixShown, row.dealt).padStart(11)
       + pct(row.comboEv, row.dealt).padStart(10)
       + String(median(row.bucketClasses)).padStart(13)
       + String(median(row.bluffClasses)).padStart(13),
@@ -603,6 +621,14 @@ if (!asJson) {
     : (100 * riverRow.actionEv) / riverRow.dealt;
   const preflopEvShare = dealt === 0 ? 0 : (100 * withEv) / dealt;
   const silentBluffs = rows.reduce((sum, row) => sum + row.bluffsSilent, 0);
+  // Cena akce má dno stejně jako EV, a ze stejného důvodu: je to spočítaný
+  // obsah, který se dá ztratit tiše. Naměřeno 28. 8. 2026 při zavedení -
+  // flop 25,0 %, turn 36,3 %, river 53,3 % - a dno je pod tím, ne na tom.
+  const priceFloors: Record<string, number> = { FLOP: 20, TURN: 30, RIVER: 45 };
+  const pricedShare = (street: string): number => {
+    const row = rows.find((item) => item.street === street);
+    return row === undefined || row.dealt === 0 ? 0 : (100 * row.priced) / row.dealt;
+  };
 
   const failures: string[] = [];
   if (riverEvShare < floor("POST_ANSWER_MIN_RIVER_EV_PCT", 75)) {
@@ -616,6 +642,23 @@ if (!asJson) {
   }
   if (silentBluffs > 0) {
     failures.push(`${silentBluffs} spotů má blaf v obsahu a mlčí o něm`);
+  }
+  // Frekvence má dno vysoko, protože se nedopočítává: buď kbelík hrdinovy ruky
+  // existuje, nebo pravidlo tu ruku vůbec neřešilo. Naměřeno 100,0 % na všech
+  // třech ulicích hned při zapojení.
+  for (const row of rows) {
+    const share = row.dealt === 0 ? 0 : (100 * row.mixShown) / row.dealt;
+    const limit = floor(`POST_ANSWER_MIN_${row.street}_MIX_PCT`, 90);
+    if (share < limit) {
+      failures.push(`frekvence na ${row.street} ${share.toFixed(1)} % pod dnem ${limit} %`);
+    }
+  }
+  for (const [street, floorPct] of Object.entries(priceFloors)) {
+    const limit = floor(`POST_ANSWER_MIN_${street}_PRICE_PCT`, floorPct);
+    const share = pricedShare(street);
+    if (share < limit) {
+      failures.push(`cena akce na ${street} ${share.toFixed(1)} % pod dnem ${limit} %`);
+    }
   }
 
   console.log("");

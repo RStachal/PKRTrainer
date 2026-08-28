@@ -201,6 +201,8 @@ export function createTurnStrategyResolver(pack: TurnStrategyPack): PostflopStra
         ruleId: rule.sourceDirectory,
         potBB: rule.spot?.potBB,
         stackBehindBB: rule.spot?.stackBehindBB,
+        // Třída hrdinovy ruky, aby se k němu dostala frekvence jeho kbelíku.
+        heroHand: input.heroHand,
         // Skutečná velikost sázky z linie, kterou solver hrál.
         facingBetBB: facingBetBB(rule.spot),
         // Co se dělá s každou třídou rukou. Bez tohohle nemá matice range
