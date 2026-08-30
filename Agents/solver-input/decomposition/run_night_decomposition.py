@@ -252,6 +252,38 @@ def layer_timeout_seconds(deadline, now=None):
 # Jak dlouho se po zabití čeká, než se strom solverů uklidí, ve vteřinách.
 LAYER_KILL_GRACE_SECONDS = 30
 
+# Po jak dlouhých krocích se kontroluje **hodinový** čas.
+#
+# Musí to být krátký krok, protože jediné, k čemu je: po probuzení stroje
+# poznat, že deadline mezitím uplynul. Minuta je dost jemná a přitom to nestojí
+# nic - kontrola je jedno porovnání.
+DEADLINE_POLL_SECONDS = 60
+
+
+def keep_system_awake(enable):
+    """Držet stroj vzhůru po dobu solvení. Vrací True, když se to povedlo.
+
+    ## Proč to tu je
+
+    Naměřeno 30. 8. 2026: stroj usnul 29. 8. v 7:46 uprostřed riverové vrstvy
+    a probudil se až o **31 hodin později**. Dvě noci tím přišly vniveč - běh
+    nedělal nic a další noc se nespustila, protože ta předchozí pořád "běžela".
+
+    Naplánovaná úloha stroj probudit umí (`WakeToRun`), ale nic mu nebrání zase
+    usnout, jakmile ho uživatel nechá být. Tohle je opačná strana: dokud běh
+    trvá, systém spát nesmí. Obrazovka se nechá zhasnout, drží se jen systém.
+    """
+    if os.name != "nt":
+        return False
+    try:
+        import ctypes
+        ES_CONTINUOUS = 0x80000000
+        ES_SYSTEM_REQUIRED = 0x00000001
+        flags = ES_CONTINUOUS | ES_SYSTEM_REQUIRED if enable else ES_CONTINUOUS
+        return ctypes.windll.kernel32.SetThreadExecutionState(flags) != 0
+    except Exception:
+        return False
+
 
 def keep_child_output(out_dir, name, output):
     """Uložit výstup dítěte, aby příští přesah nezůstal bez důkazů.
@@ -285,9 +317,23 @@ def run_solve_plan(plan_path, out_dir, workers, deadline):
     child = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
     )
-    try:
-        output, _ = child.communicate(timeout=layer_timeout_seconds(deadline))
-    except subprocess.TimeoutExpired:
+    # Čeká se po minutách a po každé se kouká na **hodiny**, ne na uplynulý čas.
+    #
+    # Monotonický timeout během spánku stroje stojí, takže by přesah nepoznal:
+    # 29. 8. 2026 vrstva takhle běžela 1 866 minut místo dvaačtyřiceti. Hodinová
+    # kontrola to zachytí do minuty po probuzení.
+    limit = time.time() + layer_timeout_seconds(deadline)
+    output = None
+    timed_out = False
+    while True:
+        try:
+            output, _ = child.communicate(timeout=DEADLINE_POLL_SECONDS)
+            break
+        except subprocess.TimeoutExpired:
+            if time.time() >= limit:
+                timed_out = True
+                break
+    if timed_out:
         # Zabít samotné `child` nestačí: solvery jsou jeho vnoučata a na Windows
         # rodiče přežijí, takže by okno držely dál a přesah by trval stejně.
         # `taskkill /T` bere celý strom - je to tentýž postup, který popisuje
@@ -367,7 +413,12 @@ def main():
         return
 
     os.makedirs(WORK, exist_ok=True)
+    # Držet stroj vzhůru po celé okno. Bez toho usne uprostřed vrstvy a okno se
+    # promarní: 29. 8. 2026 takhle přišly vniveč dvě noci po sobě.
+    awake = keep_system_awake(True)
     log(f"na disku volno {free_gb():.1f} GB (hranice pro další desku je {MIN_FREE_GB} GB)")
+    log("stroj se drží vzhůru po dobu běhu" if awake
+        else "POZOR: stroj se nedaří udržet vzhůru; okno může přerušit spánek")
 
     # Priorita z denního vyhodnocení, ne z pravidla v tomhle souboru.
     #
@@ -746,4 +797,9 @@ def run_river_phase(deadline, workers, coverage, budget):
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        # Uvolnit stroj i při pádu: držet ho vzhůru po skončení běhu by bylo
+        # horší než ho nedržet vůbec.
+        keep_system_awake(False)
