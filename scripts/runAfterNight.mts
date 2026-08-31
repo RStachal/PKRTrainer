@@ -64,8 +64,15 @@ const SCRIPT_PATH: Readonly<Record<string, string>> = {
  * Platí i pro generátor EV: rodina `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR` na
  * čtyřech gigabajtech spadla a v opravné smyčce by se to zapsalo jako
  * „generátor odmítl" - tedy tiše ztracená tabulka.
+ *
+ * **Zvednuto z 8 na 16 GB dne 31. 8. 2026, a nebylo to o pádech.** Generátor
+ * packů se na osmi gigabajtech nezastavil, jen se dusil: naměřeno 8 157 z 8 190
+ * MB obsazených a `average mu = 0,13`, tedy **87 % času v úklidu paměti místo
+ * v práci**. Odtud ty nesmyslné časy obnovy - jedna rodina 5 656 s. Stroj má
+ * přitom 31,2 GB a v tu chvíli **13,2 GB volných**, takže se dusil o strop,
+ * který jsme si nastavili sami, když byla knihovna poloviční.
  */
-const CHILD_HEAP = "--max-old-space-size=8192";
+const CHILD_HEAP = "--max-old-space-size=16384";
 
 function run(script: string, args: string[] = []): string {
   const path = SCRIPT_PATH[script];
@@ -116,11 +123,23 @@ function families(): string[] {
 function generateAll(list: readonly string[], label: string): void {
   console.log(`\n[${label}] generuji packy pro ${list.length} rodin`);
   let failed = 0;
+  // Kolik vyřešeného obsahu se nevešlo do rozpočtu chunku.
+  //
+  // Generátor to hlásí u každé rodiny, ale cyklus to dosud zahazoval - a byla
+  // to nejdůležitější věta z celého běhu. Změřeno 31. 8. 2026: riverové packy
+  // sedí na 496 až 497 kB proti stropu 512, jedna rodina zahodila 75 riverů,
+  // a dodávaných desek ubylo z 983 na 882 za tři dny, zatímco pravidel přibylo
+  // osm. Noc tedy přestala přidávat a začala vyměňovat; bez tohohle čísla to
+  // nebylo vidět.
+  const dropped = new Map<string, number>();
   for (const family of list) {
     for (const street of ["flop", "turn", "river"] as const) {
       const args = [`--family=${family}`, "--write", ...(withEv && street === "river" ? ["--ev"] : [])];
       try {
-        run(`mtt:${street}-pack`, args);
+        const out = run(`mtt:${street}-pack`, args);
+        for (const match of out.matchAll(/(\d+)\s+\S+\s+vynecháno/g)) {
+          dropped.set(street, (dropped.get(street) ?? 0) + Number(match[1]));
+        }
       } catch {
         // Odmítnutá rodina není chyba cyklu: generátor odmítá neúplné a nahrazené
         // rodiny schválně a hlásí proč. Cyklus jen nesmí kvůli tomu spadnout.
@@ -129,6 +148,14 @@ function generateAll(list: readonly string[], label: string): void {
     }
   }
   console.log(`[${label}] hotovo, ${failed} kombinací rodina+ulice generátor odmítl`);
+  const lost = [...dropped].filter(([, count]) => count > 0);
+  if (lost.length > 0) {
+    console.log(
+      `[${label}] do rozpočtu chunku se nevešlo: `
+      + lost.map(([street, count]) => `${street} ${count}`).join(", ")
+      + " - tolik vyřešeného obsahu k hráči nedojde",
+    );
+  }
 }
 
 const before = snapshot();

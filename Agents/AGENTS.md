@@ -84,6 +84,29 @@ Mimochodem: tohle pravidlo tu nejdřív stálo s `release:check` a bylo tím
 porušením pravidla 1 - napsal jsem jako fakt něco, co jsem neověřil. Opraveno
 až poté, co to spadlo.
 
+### 2b. Dlouhý běh se pouští odpojeně, ne na pozadí relace
+
+Přidáno 31. 8. 2026, po dvou zabitých cyklech za jedno dopoledne. Ranní
+`mtt:after-night` trvá **dvě až čtyři hodiny** a spuštěný jako úloha na pozadí
+relace zemře, jakmile relace skončí - bez záznamu, takže se to pozná až podle
+toho, že log přestal růst uprostřed fáze 1/3.
+
+Poprvé to vypadalo jako náhoda, podruhé už ne. Dlouhý běh proto patří
+**odpojený**, aby na relaci nezávisel:
+
+```
+Start-Process cmd.exe -ArgumentList "/c npm run mtt:after-night -- --write > log 2>&1" -WindowStyle Hidden
+```
+
+Postup je pak jiný: nečeká se na oznámení o dokončení, ale **čte se log**.
+A platí to i pro noční solving, který takhle běží odjakživa - proto přežije
+i konec relace.
+
+**A ještě jedna past ze stejného dne:** zastavit takový běh přes Git Bash
+nejde. `taskkill /T /F /PID` si shell přebere jako cestu a rodič přežije;
+naměřeno, že po „zabití" rozjel další rodinu. Přes PowerShell (`Stop-Process`)
+to projde napoprvé - je to tentýž typ chyby, jaký dřív pokazil `tasklist /FI`.
+
 ### 3. Jedno hlášení na blok, ne na nález
 
 Zkoumat se má potichu a ohlásit **výsledek**. Nález uprostřed bloku je normální
