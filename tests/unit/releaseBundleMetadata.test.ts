@@ -99,7 +99,13 @@ describe("release bundle metadata", () => {
     expect(cliScripts.length).toBeGreaterThan(50);
     for (const [name, command] of cliScripts) {
       expect(command, name).not.toContain("vite-node");
-      expect(command, name).toContain("node scripts/run-cli.mjs");
+      // Cesta, ne přesný začátek řádku. Tvrzení znělo „node scripts/run-cli.mjs"
+      // a spadlo 31. 8. 2026 na tom, že tři generátory dostaly mezi `node`
+      // a skript ještě `--max-old-space-size=16384`. To je legitimní změna -
+      // ručně spuštěný generátor jinak spadne na výchozích 4 GB - a test měl
+      // hlídat, že se běží přes `run-cli.mjs`, ne jakými přepínači.
+      expect(command.startsWith("node "), name).toBe(true);
+      expect(command, name).toContain("scripts/run-cli.mjs");
     }
     expect(pkg.scripts["mtt:texas-solver-accuracy-handoff"])
       .toContain("finalize-texas-solver-accuracy-recovery.ps1");
