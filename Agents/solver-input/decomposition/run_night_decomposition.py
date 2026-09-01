@@ -260,30 +260,89 @@ LAYER_KILL_GRACE_SECONDS = 30
 DEADLINE_POLL_SECONDS = 60
 
 
-def keep_system_awake(enable):
+def keep_system_awake(enable, _state={}):
     """Držet stroj vzhůru po dobu solvení. Vrací True, když se to povedlo.
 
     ## Proč to tu je
 
-    Naměřeno 30. 8. 2026: stroj usnul 29. 8. v 7:46 uprostřed riverové vrstvy
-    a probudil se až o **31 hodin později**. Dvě noci tím přišly vniveč - běh
-    nedělal nic a další noc se nespustila, protože ta předchozí pořád "běžela".
+    Naměřeno 30. 8. 2026: stroj usnul uprostřed riverové vrstvy a probudil se
+    až o 31 hodin později. Dvě noci tím přišly vniveč.
 
-    Naplánovaná úloha stroj probudit umí (`WakeToRun`), ale nic mu nebrání zase
-    usnout, jakmile ho uživatel nechá být. Tohle je opačná strana: dokud běh
-    trvá, systém spát nesmí. Obrazovka se nechá zhasnout, drží se jen systém.
+    ## Proč to podruhé nestačilo
+
+    První oprava použila `SetThreadExecutionState`. Ta drží **klasický** spánek,
+    ne Modern Standby - a tenhle stroj používá právě ten; systémový log mluví
+    o „moderním úsporném režimu". Změřeno 1. 9. 2026: běh ohlásil, že se drží
+    vzhůru, poslední dump se zapsal v 07:55:55, stroj šel do úsporného režimu
+    v 07:55:56 a další zápis přišel až v 09:51 - **dvě hodiny okna pryč**.
+
+    Správná cesta pro Modern Standby je `PowerSetRequest` s
+    `PowerRequestExecutionRequired`: ta říká „tenhle proces musí běžet dál",
+    kdežto `ES_SYSTEM_REQUIRED` jen „nezhasínej systém". Starší mechanismus
+    zůstává jako záloha pro stroje bez Modern Standby.
     """
     if os.name != "nt":
         return False
     try:
         import ctypes
+        from ctypes import wintypes
+
         ES_CONTINUOUS = 0x80000000
         ES_SYSTEM_REQUIRED = 0x00000001
-        flags = ES_CONTINUOUS | ES_SYSTEM_REQUIRED if enable else ES_CONTINUOUS
-        return ctypes.windll.kernel32.SetThreadExecutionState(flags) != 0
+        kernel32 = ctypes.windll.kernel32
+
+        # Záloha: drží klasický spánek. Sama nestačí, ale nic nestojí.
+        kernel32.SetThreadExecutionState(
+            ES_CONTINUOUS | ES_SYSTEM_REQUIRED if enable else ES_CONTINUOUS
+        )
+
+        if not enable:
+            handle = _state.pop("power_request", None)
+            if handle is None:
+                return True
+            kernel32.PowerClearRequest(handle, 3)  # PowerRequestExecutionRequired
+            kernel32.CloseHandle(handle)
+            return True
+
+        class REASON_CONTEXT_DETAIL(ctypes.Structure):
+            _fields_ = [
+                ("LocalizedReasonModule", wintypes.HMODULE),
+                ("LocalizedReasonId", wintypes.ULONG),
+                ("ReasonStringCount", wintypes.ULONG),
+                ("ReasonStrings", ctypes.POINTER(wintypes.LPWSTR)),
+            ]
+
+        class REASON_CONTEXT(ctypes.Structure):
+            _fields_ = [
+                ("Version", wintypes.ULONG),
+                ("Flags", wintypes.DWORD),
+                ("Reason", REASON_CONTEXT_DETAIL),
+            ]
+
+        POWER_REQUEST_CONTEXT_SIMPLE_STRING = 0x00000001
+        reason = ctypes.create_unicode_buffer("PKRTrainer noční solving")
+        context = REASON_CONTEXT()
+        context.Version = 0
+        context.Flags = POWER_REQUEST_CONTEXT_SIMPLE_STRING
+        # `SimpleReasonString` leží v unii na začátku detailu.
+        ctypes.memmove(
+            ctypes.byref(context.Reason),
+            ctypes.byref(ctypes.c_void_p(ctypes.addressof(reason))),
+            ctypes.sizeof(ctypes.c_void_p),
+        )
+
+        kernel32.PowerCreateRequest.restype = wintypes.HANDLE
+        handle = kernel32.PowerCreateRequest(ctypes.byref(context))
+        if not handle or handle == wintypes.HANDLE(-1).value:
+            return False
+        # 3 = PowerRequestExecutionRequired: proces musí běžet i v Modern Standby.
+        if not kernel32.PowerSetRequest(handle, 3):
+            kernel32.CloseHandle(handle)
+            return False
+        _state["power_request"] = handle
+        return True
     except Exception:
         return False
-
 
 def keep_child_output(out_dir, name, output):
     """Uložit výstup dítěte, aby příští přesah nezůstal bez důkazů.
