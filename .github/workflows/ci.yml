@@ -35,6 +35,19 @@ jobs:
         run: npm run typecheck
 
       - name: Full tests
+        # Halda a jeden worker, protože knihovna přerostla runner.
+        #
+        # CI padalo od 31. 8. 2026 na `FATAL ERROR: Reached heap limit` a exit
+        # kódu 134 - a padalo tiše, protože se na červený CI nikdo nedíval.
+        # Runner má 4 jádra a 16 GB; dva workery s výchozí haldou se do toho
+        # přestaly vejít, když líná knihovna narostla na 53 MB, kterou si testy
+        # přes `resolveJsonModule` natahují.
+        #
+        # Jeden worker je pomalejší, ale CI není úzké hrdlo - úzké hrdlo je
+        # noční solving a kontrola majitelem.
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+          PKRTRAINER_TEST_WORKERS: "1"
         run: |
           mkdir -p artifacts
           npm test -- --reporter=default --reporter=junit --outputFile=artifacts/vitest-junit.xml
