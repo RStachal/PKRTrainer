@@ -191,6 +191,45 @@ def staged_boards_without_checkpoint():
     return count
 
 
+def refresh_night_priority():
+    """Nechat denní vyhodnocení rozhodnout, co má tahle noc dělat.
+
+    ## Proč to musí spustit noc sama
+
+    Priorita se čte ze souboru, který zapisuje `npm run mtt:daily`. Ten ale
+    **není naplánovaný** - spouštěl ho člověk. Změřeno 1. 9. 2026: soubor měl
+    datum **23. 8. v 9:03**, tedy devět dní starý, a noc podle něj devět nocí
+    prohlubovala river. Denní zápisy končí týmž dnem.
+
+    Rozhodovací vrstva tím fakticky přestala existovat a zůstala jen vykonávací:
+    stroj běžel, ale nikdo mu neříkal kam. Nejlevnější oprava, která se nemůže
+    rozejít znovu, je nechat to spustit noc - v tu chvíli je vyhodnocení čerstvé
+    z definice.
+
+    Selhání se **nepřenáší dál**: když vyhodnocení spadne, noc pokračuje podle
+    toho, co v souboru je. Prázdná noc kvůli nefunkční poradě je horší než noc
+    podle starší rady.
+    """
+    started = time.time()
+    try:
+        result = subprocess.run(
+            ["npm", "run", "mtt:daily", "--", "--write"],
+            cwd=REPO, capture_output=True, text=True, shell=True,
+            timeout=DAILY_TIMEOUT_SECONDS,
+        )
+    except Exception as error:
+        log(f"denní vyhodnocení se nepodařilo spustit ({error}); jedu podle uloženého")
+        return
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "").strip()[-300:]
+        log(f"denní vyhodnocení skončilo rc={result.returncode}; jedu podle uloženého. {detail}")
+        return
+    for line in (result.stdout or "").splitlines():
+        if "DOPORUČENÍ" in line or "priorita pro noc" in line:
+            log(f"  {line.strip()}")
+    log(f"denní vyhodnocení hotové za {time.time() - started:.0f} s")
+
+
 def should_yield_to_new_families():
     """Hláška o ustoupení, nebo `None` když se má rozkládat.
 
@@ -248,6 +287,9 @@ def layer_timeout_seconds(deadline, now=None):
     remaining = (deadline - (now or datetime.now())).total_seconds()
     return max(60.0, remaining + OVERRUN_GRACE_MINUTES * 60)
 
+
+# Kolik nejvýš smí trvat denní vyhodnocení, než se noc rozjede bez něj.
+DAILY_TIMEOUT_SECONDS = 600
 
 # Jak dlouho se po zabití čeká, než se strom solverů uklidí, ve vteřinách.
 LAYER_KILL_GRACE_SECONDS = 30
@@ -384,14 +426,30 @@ def run_solve_plan(plan_path, out_dir, workers, deadline):
     limit = time.time() + layer_timeout_seconds(deadline)
     output = None
     timed_out = False
+    stalled = 0.0
+    last_tick = time.time()
     while True:
         try:
             output, _ = child.communicate(timeout=DEADLINE_POLL_SECONDS)
             break
         except subprocess.TimeoutExpired:
-            if time.time() >= limit:
+            # Kolik času stroj prostál.
+            #
+            # Tahle smyčka se probouzí každou minutu. Když od posledního
+            # probuzení uplynulo mnohem víc, nebyl to výpočet - byl to spánek
+            # nebo úsporný režim, ve kterém procesy stojí. Naměřeno 2. 9. 2026:
+            # noc přišla o 54 minut a poznalo se to až z windowsího event logu.
+            # Ztráta, kterou nikdo nevidí, se neopraví.
+            now = time.time()
+            gap = now - last_tick
+            if gap > DEADLINE_POLL_SECONDS * 3:
+                stalled += gap
+            last_tick = now
+            if now >= limit:
                 timed_out = True
                 break
+    if stalled > 60:
+        log(f"    POZOR: stroj během vrstvy stál {stalled / 60:.0f} min (spánek nebo úsporný režim)")
     if timed_out:
         # Zabít samotné `child` nestačí: solvery jsou jeho vnoučata a na Windows
         # rodiče přežijí, takže by okno držely dál a přesah by trval stejně.
@@ -474,6 +532,9 @@ def main():
     os.makedirs(WORK, exist_ok=True)
     # Držet stroj vzhůru po celé okno. Bez toho usne uprostřed vrstvy a okno se
     # promarní: 29. 8. 2026 takhle přišly vniveč dvě noci po sobě.
+    # Nejdřív porada, potom práce. Devět nocí se solvilo podle rady z 23. 8.,
+    # protože ji nikdo neaktualizoval - viz `refresh_night_priority`.
+    refresh_night_priority()
     awake = keep_system_awake(True)
     log(f"na disku volno {free_gb():.1f} GB (hranice pro další desku je {MIN_FREE_GB} GB)")
     log("stroj se drží vzhůru po dobu běhu" if awake
