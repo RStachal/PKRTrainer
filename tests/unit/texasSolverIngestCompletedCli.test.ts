@@ -3,6 +3,8 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { itWithSolverOutput } from "../solverInputs";
+
 const TMP_ROOT = join(process.cwd(), "artifacts", "test-texas-solver-ingest");
 
 afterEach(() => {
@@ -10,7 +12,7 @@ afterEach(() => {
 });
 
 describe("mtt:texas-solver-ingest-completed CLI", () => {
-  it("reviewuje SB vs BB OOP c-bet root node misto CHECK vetve", () => {
+  itWithSolverOutput("reviewuje SB vs BB OOP c-bet root node misto CHECK vetve", () => {
     const familyId = "MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR";
     const outputBase = join(TMP_ROOT, "output", "texas-solver");
     const rawDir = join(outputBase, familyId, "raw");

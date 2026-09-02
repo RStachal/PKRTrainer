@@ -1,7 +1,9 @@
 import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect } from "vitest";
+
+import { itWithArtifact } from "../solverInputs";
 
 // End-to-end proof of the action-EV turnkey chain: a reviewed action-EV candidate
 // on disk must reach the runtime pilot the module builder produces. The strategy
@@ -69,7 +71,7 @@ describe("MTT postflop pilot module action-EV overlay", () => {
     rmSync(dirname(CANDIDATE_PATH), { recursive: true, force: true });
   });
 
-  it("carries a reviewed action-EV candidate through to the runtime pilot", () => {
+  itWithArtifact(DRAFT_PATH)("carries a reviewed action-EV candidate through to the runtime pilot", () => {
     // Baseline: with no candidate on disk, the builder reports no EV.
     rmSync(dirname(CANDIDATE_PATH), { recursive: true, force: true });
     const before = parseJson(runBuilder().stdout);
@@ -85,7 +87,7 @@ describe("MTT postflop pilot module action-EV overlay", () => {
     expect(after.actionEvBuckets).toBe(bucketCount);
   });
 
-  it("fails the build when the candidate does not line up with the strategy pilot", () => {
+  itWithArtifact(DRAFT_PATH)("fails the build when the candidate does not line up with the strategy pilot", () => {
     const draft = JSON.parse(readFileSync(DRAFT_PATH, "utf8")) as DraftPack;
     // Drop one action from the priced set: the EV no longer covers every legal
     // action, so the overlay must refuse rather than ship a half-priced pilot.

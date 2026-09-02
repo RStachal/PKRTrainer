@@ -19,9 +19,16 @@ import { readFileSync } from "node:fs";
 // families the button read "big bet 4 BB" while the strategy behind it was the
 // solver shoving 65.
 
+// Parametrove soubory jsou mimo git (jsou to gigabajty), takze na CI nejsou.
+// Bez nich tenhle test nevidi zadnou rodinu a hlasil 49 rodin jako "neodpovidaji
+// parametrum" - chybejici vstup vydavany za vecnou neshodu. Kdyz parametry jsou,
+// tvrdi se dal presne jako driv.
+const BET_SIZING_FROM_DISK = collectBetSizing();
+const itWithParameters = BET_SIZING_FROM_DISK.size > 0 ? it : it.skip;
+
 describe("solved bet sizing", () => {
-  it("agrees with the parameter files it was generated from", () => {
-    const fromDisk = collectBetSizing();
+  itWithParameters("agrees with the parameter files it was generated from", () => {
+    const fromDisk = BET_SIZING_FROM_DISK;
     expect(Object.keys(MTT_POSTFLOP_BET_SIZING).sort()).toEqual([...fromDisk.keys()].sort());
     for (const [family, sizing] of fromDisk) {
       expect(MTT_POSTFLOP_BET_SIZING[family], family).toEqual({

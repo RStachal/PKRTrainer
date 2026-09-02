@@ -1,6 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 
+import { itWithSolverOutput } from "../solverInputs";
+
 import {
   MTT_POSTFLOP_MIXED_TREE_FAMILIES,
   treeIntegrityForRuleId,
@@ -39,7 +41,7 @@ describe("postflop tree integrity", () => {
     }
   });
 
-  it("agrees with what the tree-provenance audit reports", () => {
+  itWithSolverOutput("agrees with what the tree-provenance audit reports", () => {
     // The one that matters. If a re-solve clears a family, or a new one starts
     // mixing, this fails rather than letting the app quietly describe a library
     // it no longer has. Spawned directly rather than through `npm run`, because

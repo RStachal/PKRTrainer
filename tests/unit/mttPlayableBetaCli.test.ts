@@ -4,8 +4,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
+import { itWithSolverOutput } from "../solverInputs";
+
 describe("mtt:playable-beta CLI", () => {
-  it("keeps the current Core launchable while identifying the exact six-max target gap", () => {
+  itWithSolverOutput("keeps the current Core launchable while identifying the exact six-max target gap", () => {
     const result = invoke("--json");
 
     expect(result.status).toBe(0);
