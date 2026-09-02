@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,17 +18,21 @@ jobs:
   technical:
     name: Technical baseline (Node 22)
     runs-on: ubuntu-latest
-    # Zvednuto z 25 na 45 dne 2. 9. 2026, a nebylo to o pomalejsim stroji.
+    # Rozdeleno 2. 9. 2026 na zadost majitele: repozitar je privatni, takze se
+    # minuty uctuji, a plna pipeline na kazdy push je nejdrazsi mozna varianta.
     #
-    # Do petadvaceti minut se job vesel jen proto, ze **umiral na testech** a
-    # devet dalsich kroku - vcetne produkcniho buildu a Chrome E2E - se nikdy
-    # nespustilo. Jakmile testy prosly, dobehl do stropu a GitHub ho oznacil
-    # jako "cancelled", coz vypada jako rucni zruseni, ne jako vyprseni casu.
+    # Tady zustava rychla a informativni cast. Produkcni build a Chrome E2E se
+    # presunuly do `release-gates`, ktery bezi az pri merge do main nebo na
+    # vyzadani - lokalni `verify:block` je stejne pousti pred kazdym commitem.
     #
-    # Zruseny beh se pritom uctuje cely: petadvacet minut za nulovou informaci.
-    # Ctyricet pet je odhad, ne mereni - prvni dobehnuty beh ukaze skutecnou
-    # dobu a strop se ma podle nej stahnout.
-    timeout-minutes: 45
+    # Do puvodnich petadvaceti minut se job vesel jen proto, ze **umiral na
+    # testech** a devet dalsich kroku se nikdy nespustilo; jakmile testy prosly,
+    # dobehl do stropu a GitHub ho oznacil jako "cancelled". Zruseny beh se
+    # pritom uctuje cely, tedy petadvacet minut za nulovou informaci.
+    #
+    # Testy same trvaly 14 minut; tricet je na ne se zbytkem rychlych bran
+    # rezerva, ne mereni.
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -74,6 +79,45 @@ jobs:
       - name: Verify ranges
         run: npm run verify:ranges
 
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-report-node-22
+          path: artifacts/vitest-junit.xml
+          if-no-files-found: warn
+
+
+  release-gates:
+    name: Release gates (build, bundle, E2E)
+    runs-on: ubuntu-latest
+    # Nebezi na kazdy push, a je to rozhodnuti o penezich.
+    #
+    # Repozitar je privatni, takze se minuty uctuji: pri padesatiminutovem behu
+    # vychazi volnych 2 000 minut mesicne na zhruba ctyricet pushu, a tolik jich
+    # padne za par dni. Tyhle brany proto bezi az pri merge do main nebo na
+    # vyzadani (`workflow_dispatch`). Nocni rozvrh schvalne neni: stal by kolem
+    # 900 minut mesicne, tedy pulku kvoty, aniz by na nej cokoli cekalo.
+    #
+    # Nepokryte to nezustava: lokalni `verify:block` pousti tentyz retezec
+    # vcetne E2E pred kazdym commitem. CI navic prinasi cisty checkout a Linux -
+    # a prave to odhalilo petici testu, ktere tvrdily neco o vstupech mimo git.
+    if: github.event_name != 'pull_request'
+    needs: technical
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
       - name: Production build
         run: npm run build
 
@@ -94,14 +138,6 @@ jobs:
           done
           npm run e2e:chrome
           npm run e2e:chrome:production-fixture
-
-      - name: Upload test report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: vitest-report-node-22
-          path: artifacts/vitest-junit.xml
-          if-no-files-found: warn
 
       - name: Upload Chrome E2E artifacts
         if: always()
