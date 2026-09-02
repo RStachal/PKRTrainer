@@ -205,10 +205,26 @@ const answerable = asked.filter(([pattern]) => covered.has(pattern));
 const askedTotal = asked.reduce((sum, [, count]) => sum + count, 0);
 const answerableTotal = answerable.reduce((sum, [, count]) => sum + count, 0);
 
+// **Které cesty se tenhle rozbor týká.**
+//
+// Vzory se sbírají z holé cesty generátoru (`generatePostflopSpot` bez
+// dodaného kontextu), ne z té, kterou rozdává trenažér. Rozdíl je podstatný a
+// 2. 9. 2026 se na něm dal vyvodit špatný závěr: v rozboru vyšlo "18,5 %
+// dotazů míří na vzor, který nedržíme", což vypadá jako mezera u hráče.
+// Změřeno na katalogové cestě, kterou trenažér doopravdy rozdává, přitom
+// vyšlo: **žádný z těch vzorů se nerozdá a všechny rozdané spoty jsou ze
+// 100 % podložené solverem**.
+//
+// Obojí je pravda a měří se dvě různé věci: tenhle rozbor říká, na co by se
+// trenažér ptal, kdyby rozdával volně, a je to podklad pro rozvrh nocí. Číslo
+// o dodání hráči je to nahoře, u katalogu. Slít je do jednoho by vedlo k
+// rozhodnutí solvit něco, co nikdo nedostane.
 console.log("");
 console.log(`vzorů, na které se trenažér ptal: ${asked.length}`);
 console.log(`vzorů, které vyřešený obsah vůbec drží: ${covered.size}`);
 console.log(`dotazů na vzor, který držíme: ${(answerableTotal / Math.max(askedTotal, 1) * 100).toFixed(1)} %`);
+console.log("  (měřeno na volné cestě generátoru, ne na katalogové, kterou se rozdává;");
+console.log("   je to podklad pro rozvrh nocí, ne číslo o dodání hráči)");
 console.log("");
 console.log("nejčastější dotazy:");
 for (const [pattern, count] of asked.slice(0, 8)) {
