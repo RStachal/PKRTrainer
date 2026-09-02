@@ -17,7 +17,17 @@ jobs:
   technical:
     name: Technical baseline (Node 22)
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # Zvednuto z 25 na 45 dne 2. 9. 2026, a nebylo to o pomalejsim stroji.
+    #
+    # Do petadvaceti minut se job vesel jen proto, ze **umiral na testech** a
+    # devet dalsich kroku - vcetne produkcniho buildu a Chrome E2E - se nikdy
+    # nespustilo. Jakmile testy prosly, dobehl do stropu a GitHub ho oznacil
+    # jako "cancelled", coz vypada jako rucni zruseni, ne jako vyprseni casu.
+    #
+    # Zruseny beh se pritom uctuje cely: petadvacet minut za nulovou informaci.
+    # Ctyricet pet je odhad, ne mereni - prvni dobehnuty beh ukaze skutecnou
+    # dobu a strop se ma podle nej stahnout.
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
