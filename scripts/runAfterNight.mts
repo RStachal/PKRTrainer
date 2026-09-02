@@ -1,6 +1,8 @@
-import { execFileSync } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
+import { freemem } from "node:os";
 import { join } from "node:path";
+import { promisify } from "node:util";
 
 /**
  * Celý cyklus po noční práci jedním příkazem.
@@ -83,6 +85,20 @@ function run(script: string, args: string[] = []): string {
   });
 }
 
+const execFileAsync = promisify(execFile);
+
+/** Totéž jako `run`, ale nezdrží ostatní pruhy a haldu dostane přidělenou. */
+async function runAsync(script: string, args: string[], heapMb: number): Promise<string> {
+  const path = SCRIPT_PATH[script];
+  if (path === undefined) throw new Error(`neznámý skript ${script}`);
+  const { stdout } = await execFileAsync(
+    process.execPath,
+    [`--max-old-space-size=${heapMb}`, "scripts/run-cli.mjs", path, ...args],
+    { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+  );
+  return stdout;
+}
+
 /** Čísla, kterými se měří, jestli cyklus něco přinesl. */
 function snapshot(): Record<string, string> {
   const out = run("mtt:playable-beta");
@@ -120,8 +136,55 @@ function families(): string[] {
   return [...new Set([...decomposed, ...solved])].sort();
 }
 
-function generateAll(list: readonly string[], label: string): void {
-  console.log(`\n[${label}] generuji packy pro ${list.length} rodin`);
+// Bez zpětných lomítek schválně: v tomhle projektu se `\d` cestou přes vrstvy
+// escapování ztratilo dnes už potřetí. Třída `[0-9]` znamená totéž a nedá se
+// pokazit.
+const BUDGET_DROP = /([0-9]+) [^ ]+ vynecháno, aby se modul vešel/g;
+
+/**
+ * Ulice, ne rodiny.
+ *
+ * Souběžné generování se nabízí u rodin - je jich čtyřicet osm a jsou na sobě
+ * nezávislé. **Nesmí se to.** Manifest se přepisuje čtením a zápisem celého
+ * souboru, takže dva procesy nad touž ulicí si navzájem přepíšou položku a
+ * rodina z manifestu tiše zmizí: vyrobená, zaplacená strojovým časem,
+ * nedodaná. Přesně ta ztráta, kterou tenhle cyklus jinde hlídá.
+ *
+ * Ulice mají manifesty tři různé, a proto se paralelizují ony. Jeden pruh na
+ * ulici, uvnitř pruhu rodiny po jedné, žádné dva pruhy nesahají na týž soubor.
+ * Zrychlení je tedy nejvýš na nejdelší ulici, ne trojnásobné - a přesně proto
+ * se čas každého pruhu vypisuje, ať se to příště dá porovnat, ne odhadnout.
+ */
+const STREETS = ["flop", "turn", "river"] as const;
+
+/**
+ * Kolik pruhů poběží, rozhoduje **volná paměť, ne počet jader**.
+ *
+ * Změřeno 2. 9. 2026: stroj má 31,2 GB a 16 vláken, ale 14 GB držel virtuál a
+ * volné byly 2,2 GB. Tři pruhy by v takové chvíli stránkovaly, ne počítaly -
+ * tedy přesně ta situace z 31. 8., kdy generátor strávil 87 % času úklidem
+ * paměti. Proto se pruh pustí jen tehdy, když na něj i po rezervě pro systém
+ * zbývá halda nad podlahou; jinak jede cyklus po staru a nic se nezhorší.
+ */
+const SYSTEM_RESERVE_GB = 2;
+/** Pod osmi gigabajty se generátor dusil v úklidu paměti (změřeno 31. 8. 2026). */
+const LANE_HEAP_FLOOR_MB = 8192;
+
+function laneBudget(): { lanes: number; heapMb: number; freeGb: number } {
+  const freeGb = freemem() / 1024 ** 3;
+  const usableMb = Math.max(0, freeGb - SYSTEM_RESERVE_GB) * 1024;
+  const lanes = Math.min(STREETS.length, Math.max(1, Math.floor(usableMb / LANE_HEAP_FLOOR_MB)));
+  const heapMb = lanes === 1 ? 16384 : Math.min(16384, Math.floor(usableMb / lanes));
+  return { lanes, heapMb, freeGb };
+}
+
+async function generateAll(list: readonly string[], label: string): Promise<void> {
+  const { lanes, heapMb, freeGb } = laneBudget();
+  console.log(
+    `\n[${label}] generuji packy pro ${list.length} rodin:`
+    + ` ${lanes} ${lanes === 1 ? "pruh" : "pruhy"}, halda ${heapMb} MB,`
+    + ` volno ${freeGb.toFixed(1)} GB`,
+  );
   let failed = 0;
   // Kolik vyřešeného obsahu se nevešlo do rozpočtu chunku.
   //
@@ -132,22 +195,43 @@ function generateAll(list: readonly string[], label: string): void {
   // osm. Noc tedy přestala přidávat a začala vyměňovat; bez tohohle čísla to
   // nebylo vidět.
   const dropped = new Map<string, number>();
-  for (const family of list) {
-    for (const street of ["flop", "turn", "river"] as const) {
-      const args = [`--family=${family}`, "--write", ...(withEv && street === "river" ? ["--ev"] : [])];
-      try {
-        const out = run(`mtt:${street}-pack`, args);
-        for (const match of out.matchAll(/(\d+)\s+\S+\s+vynecháno/g)) {
-          dropped.set(street, (dropped.get(street) ?? 0) + Number(match[1]));
+  const queue: string[] = [...STREETS];
+  /** Čas na ulici - jediné číslo, kterým se dá paralelizace obhájit nebo vyvrátit. */
+  const spent = new Map<string, number>();
+
+  async function lane(): Promise<void> {
+    for (;;) {
+      const street = queue.shift();
+      if (street === undefined) return;
+      const started = Date.now();
+      for (const family of list) {
+        const args = [`--family=${family}`, "--write", ...(withEv && street === "river" ? ["--ev"] : [])];
+        try {
+          const out = await runAsync(`mtt:${street}-pack`, args, heapMb);
+        // **Jen rozpočet chunku.** V generátorech je „vynecháno" ve čtyřech
+        // různých hláškách a první verze tohohle počitadla je sečetla všechny -
+        // vyšlo 1 969 746 riverů, což je nesmysl: jedna rodina jich hlásí 75.
+        // Ty ostatní nejsou ztráta rozpočtem, ale odstraněné duplicity („tutéž
+        // desku dosahuje jiná linka") a uzly, u kterých nejde určit, čí je
+        // strategie. Počítá se proto jen věta o modulu.
+          for (const match of out.matchAll(BUDGET_DROP)) {
+            dropped.set(street, (dropped.get(street) ?? 0) + Number(match[1]));
+          }
+        } catch {
+          // Odmítnutá rodina není chyba cyklu: generátor odmítá neúplné a nahrazené
+          // rodiny schválně a hlásí proč. Cyklus jen nesmí kvůli tomu spadnout.
+          failed += 1;
         }
-      } catch {
-        // Odmítnutá rodina není chyba cyklu: generátor odmítá neúplné a nahrazené
-        // rodiny schválně a hlásí proč. Cyklus jen nesmí kvůli tomu spadnout.
-        failed += 1;
       }
+      spent.set(street, Math.round((Date.now() - started) / 1000));
     }
   }
-  console.log(`[${label}] hotovo, ${failed} kombinací rodina+ulice generátor odmítl`);
+
+  await Promise.all(Array.from({ length: lanes }, () => lane()));
+  console.log(
+    `[${label}] hotovo, ${failed} kombinací rodina+ulice generátor odmítl;`
+    + ` ${STREETS.map((street) => `${street} ${spent.get(street) ?? 0} s`).join(", ")}`,
+  );
   const lost = [...dropped].filter(([, count]) => count > 0);
   if (lost.length > 0) {
     console.log(
@@ -172,7 +256,7 @@ if (!write) {
   console.log("Obnova má rozpočet 150 minut, jinak --ev-repair-minutes=N.");
 } else {
   const list = families();
-  generateAll(list, "1/3");
+  await generateAll(list, "1/3");
 
   console.log("\n[2/3] mechanická kontrola");
   const review = run("mtt:mechanical-review", ["--write"]);
@@ -180,7 +264,7 @@ if (!write) {
     if (/prošlo měřením|neprošlo|čteno člověkem|Zapsáno/.test(line)) console.log(`  ${line.trim()}`);
   }
 
-  generateAll(list, "3/3");
+  await generateAll(list, "3/3");
 
   // Obnovit EV, kterou tenhle cyklus sám zneplatnil.
   //
