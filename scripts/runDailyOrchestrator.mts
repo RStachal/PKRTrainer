@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { MODULE_BUDGET_BYTES } from "./lib/solvedPackBuilding.mts";
 
 /**
@@ -232,6 +232,38 @@ for (const line of coverage.split("\n")) {
 
 section("co má dělat dnešní noc");
 out.push("", "## Co má dělat dnešní noc", "");
+/**
+ * Rodiny s nastagovanými parametry a bez jediné odsolvené desky.
+ *
+ * Čte se **týž adresář, kterým se řídí noční runner** (`STAGED_PARAMS` v
+ * `run_night_decomposition.py`). Kdyby si to tenhle skript počítal po svém,
+ * mohl by hlásit připravenou práci, na kterou runner nesáhne - a to je přesně
+ * ten druh věrohodně vypadajícího nesmyslu, který se tu už dvakrát stal.
+ */
+/** Kořen checkpointů solveru; táž cesta, jakou čte cyklus po noci. */
+const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
+
+function stagedFamiliesWithoutCheckpoint(): string[] {
+  const stagedRoot = join(
+    "Agents/solver-input/texas-solver/mtt-safe-flops-v1/parameters",
+    "pkrtrainer_mtt_seat_pair_expansion_v1",
+  );
+  if (!existsSync(stagedRoot)) return [];
+  const families = new Set<string>();
+  for (const name of readdirSync(stagedRoot, { recursive: true, encoding: "utf8" })) {
+    if (!name.endsWith(".txt")) continue;
+    const stem = basename(name, ".txt").replace(/^[0-9]+_/, "");
+    const match = /(MTT9_[0-9]+BB_[A-Z0-9_]+?_(?:SRP|3BP)[A-Z0-9_]*)_[^_]+$/.exec(stem);
+    if (match === null) continue;
+    const family = match[1];
+    const checkpoint = join(CHECKPOINT_ROOT, family, "raw");
+    const solved = existsSync(checkpoint)
+      && readdirSync(checkpoint).some((file) => file.endsWith(".json"));
+    if (!solved) families.add(family);
+  }
+  return [...families].sort();
+}
+
 const pairs = seatPairs();
 const askedMatch = /vzorů, na které se trenažér ptal: (\d+)/.exec(coverage);
 const heldMatch = /vzorů, které vyřešený obsah vůbec drží: (\d+)/.exec(coverage);
@@ -311,7 +343,33 @@ if (asked === null || held === null) {
   say("  Krok: poslat noc do šířky. Strop na chunk se zvedat nemá - změřeno");
   say("  2. 9. 2026: strategii váže raw (36 KiB gzip ze 128), EV váže gzip,");
   say("  takže zvednutí raw stropu by na hlavní ztrátu nesáhlo.");
+  // **Priorita musí říkat totéž co doporučení.**
+  //
+  // Do 2. 9. 2026 tady zůstávala výchozí `DECOMPOSITION`, zatímco text nad ní
+  // radil poslat noc do šířky. Runner přitom čte **jen** priority soubor a
+  // ustupuje jedině na `NEW_FAMILIES`, takže se noc řídila opakem toho, co se
+  // psalo majiteli. Doporučení, které stroj nečte, není doporučení.
+  //
+  // Ustoupit se tím nevynucuje: runner ustoupí jen tehdy, když je vedle co
+  // spustit (nastagované rodiny bez checkpointu nad `YIELD_MIN_BOARDS`).
+  // Když není, rozkládá dál - prázdná noc nikomu nepomůže.
+  priority = "NEW_FAMILIES";
   priorityReason = `river je nasycený: ${saturated.length}/${riverPacks.length} packů na stropu`;
+  // **Doporučení, které se nedá splnit, to má říct.**
+  //
+  // Runner ustoupí monolitickému solveru jen tehdy, když jsou nastagované
+  // parametry rodin bez checkpointu. Když nejsou, rozkládá dál - tedy přesně
+  // tu hloubku, které se tohle doporučení vyhýbá. Změřeno 2. 9. 2026: rodin
+  // nastagováno **nula**, takže priorita sama nezmění nic a čeká se na to,
+  // aby někdo parametry vyrobil.
+  const staged = stagedFamiliesWithoutCheckpoint();
+  if (staged.length === 0) {
+    say("  ALE: nastagováno je 0 rodin, takže noc stejně pojede rozklad -");
+    say("  priorita sama nic nezmění. Krok, který ji odemkne: vyrobit parametry");
+    say("  pro chybějící dvojice sedaček (viz *ExpansionBatch skripty).");
+  } else {
+    say(`  Nastagováno ${staged.length} rodin bez checkpointu, noc jim ustoupí.`);
+  }
 } else {
   say("  DOPORUČENÍ: pokračovat v hloubce - šířka vzorů je pokrytá.");
 }
