@@ -338,9 +338,31 @@ if (asked === null || held === null) {
   // pořád na 92 % rozdaných riverových spotů. Strop se proto nezvedá a noc
   // jde do šířky; kdyby EV měla růst, je to úloha pro hustší kódování nebo
   // rozdělení tabulky, ne pro strop.
+  // **Zeptat se nástroje, ne tvrdit za něj.**
+  //
+  // Doporučení „poslat noc do šířky" i krok, který ho měl odemknout, tu do
+  // 2. 9. 2026 stály natvrdo. Změřeno téhož dne: rozšíření hlásí **0 dvojic
+  // k založení** - šířka je na 25BB vyčerpaná (drženo 34) a poslední tři
+  // dvojice blokuje preflop pack, který nemá `VS_OPEN` pro UTG+1 a UTG+2, a to
+  // na všech hloubkách. Radit šířku a vedle toho jmenovat krok, který se nedá
+  // udělat, je táž vada jako v bodech 160 a 170 - tentokrát jsem si ji napsal
+  // sám.
+  //
+  // Proto se odpověď **čte z toho skriptu**, který by ten krok dělal. Stojí to
+  // jeden podproces navíc, ale orchestrátor běží jednou denně a tvrzení, které
+  // nikdo nepřeměřuje, tady vydrželo devět nocí.
+  const expansion = runScript("scripts/buildSeatPairExpansionBatch.mts");
+  const pairsToCreate = Number(/k založení:\s+([0-9]+) dvojic/.exec(expansion)?.[1] ?? "0");
+  const pairsBlocked = Number(/nezaloženo \(([0-9]+)\)/.exec(expansion)?.[1] ?? "0");
+
   say(`  DOPORUČENÍ: hloubku ne - ${saturated.length} z ${riverPacks.length} riverových packů`);
   say("  sedí na stropu modulu, takže nový obsah vytlačuje starý místo aby přibyl.");
-  say("  Krok: poslat noc do šířky. Strop na chunk se zvedat nemá - změřeno");
+  if (pairsToCreate > 0) {
+    say("  Krok: poslat noc do šířky. Strop na chunk se zvedat nemá - změřeno");
+  } else {
+    say("  Šířka ale došla taky, takže krok tudy nevede - viz níž.");
+    say("  Strop na chunk se přitom zvedat nemá - změřeno");
+  }
   say("  2. 9. 2026: strategii váže raw (36 KiB gzip ze 128), EV váže gzip,");
   say("  takže zvednutí raw stropu by na hlavní ztrátu nesáhlo.");
   // **Priorita musí říkat totéž co doporučení.**
@@ -365,8 +387,15 @@ if (asked === null || held === null) {
   const staged = stagedFamiliesWithoutCheckpoint();
   if (staged.length === 0) {
     say("  ALE: nastagováno je 0 rodin, takže noc stejně pojede rozklad -");
-    say("  priorita sama nic nezmění. Krok, který ji odemkne: vyrobit parametry");
-    say("  pro chybějící dvojice sedaček (viz *ExpansionBatch skripty).");
+    say("  priorita sama nic nezmění.");
+    if (pairsToCreate > 0) {
+      say(`  Krok, který ji odemkne: mtt:seat-pair-expansion -- --write založí ${pairsToCreate} dvojic.`);
+    } else {
+      say(`  Rozšíření dvojic sedaček je ale vyčerpané: 0 k založení, ${pairsBlocked} zablokováno`);
+      say("  chybějící obrannou preflop ranží (VS_OPEN pro UTG+1 a UTG+2 pack nemá");
+      say("  na žádné hloubce). Nové rodiny odsud nepřibudou a vymyslet tu ranži");
+      say("  nelze - je to rozhodnutí o zdroji dat, ne úloha na noc.");
+    }
   } else {
     say(`  Nastagováno ${staged.length} rodin bez checkpointu, noc jim ustoupí.`);
   }
