@@ -291,10 +291,26 @@ if (asked === null || held === null) {
   // a dodávaných desek ubylo z 983 na 882 za tři dny, zatímco pravidel přibylo
   // osm. Noc tedy přestala přidávat a začala vyměňovat - a rozhodovací vrstva
   // o tom nevěděla, protože měřila jen produkci.
+  // **Otázka po stropu je zodpovězená, měřeno 2. 9. 2026.** Dokud tu stálo
+  // "rozhodnout o stropu na jeden chunk", ptalo se na to každý den znovu.
+  //
+  // Změřeno na postavených chuncích: riverová strategie sedí na 456 KiB raw
+  // proti stropu 528, ale po drátě posílá **36 KiB gzip ze 128 dovolených** -
+  // je tedy vázaná raw stropem, který hráče skoro nic nestojí, a zahazuje jím
+  // 5 az 50 riverů na rodinu. Riverová EV je proti tomu na 120 KiB gzip
+  // nadoraz, protože base64 nese šest bitů na znak a nekomprimuje se; ta
+  // zahazuje **101 az 117 pravidel z ~250, tedy skoro polovinu**.
+  //
+  // Zvednout raw strop by tedy vrátilo desítky riverů a na EV by nesáhlo
+  // vůbec. K tomu ořez bere odspodu nejméně dosahované rivery a u hráče je EV
+  // pořád na 92 % rozdaných riverových spotů. Strop se proto nezvedá a noc
+  // jde do šířky; kdyby EV měla růst, je to úloha pro hustší kódování nebo
+  // rozdělení tabulky, ne pro strop.
   say(`  DOPORUČENÍ: hloubku ne - ${saturated.length} z ${riverPacks.length} riverových packů`);
   say("  sedí na stropu modulu, takže nový obsah vytlačuje starý místo aby přibyl.");
-  say("  Krok: rozhodnout o stropu na jeden chunk (platí ho každý hráč při stažení");
-  say("  rodiny), nebo poslat noc na jinou práci než prohlubování riveru.");
+  say("  Krok: poslat noc do šířky. Strop na chunk se zvedat nemá - změřeno");
+  say("  2. 9. 2026: strategii váže raw (36 KiB gzip ze 128), EV váže gzip,");
+  say("  takže zvednutí raw stropu by na hlavní ztrátu nesáhlo.");
   priorityReason = `river je nasycený: ${saturated.length}/${riverPacks.length} packů na stropu`;
 } else {
   say("  DOPORUČENÍ: pokračovat v hloubce - šířka vzorů je pokrytá.");

@@ -30,9 +30,11 @@ jobs:
     # dobehl do stropu a GitHub ho oznacil jako "cancelled". Zruseny beh se
     # pritom uctuje cely, tedy petadvacet minut za nulovou informaci.
     #
-    # Testy same trvaly 14 minut; tricet je na ne se zbytkem rychlych bran
-    # rezerva, ne mereni.
-    timeout-minutes: 30
+    # Zmereno na prvnim zelenem behu 2. 9. 2026: cely rychly job **13 minut**
+    # (12:20:46 -> 12:33:47), diagnosticky job 43 vterin. Petadvacet je tedy
+    # skoro dvojnasobna rezerva; strop tu neni na to, aby byl tesny, ale aby
+    # zastavil beh, ktery se zasekl.
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
