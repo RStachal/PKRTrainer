@@ -1,4 +1,5 @@
 import { facingBetBB } from "./facingBetSize";
+import { postflopPositionPatternMatches } from "../../core/postflopGenerator";
 import type {
   PostflopRecommendation,
   PostflopStrategyInput,
@@ -46,7 +47,10 @@ function boardMatches(rule: FlopStrategyRule, input: PostflopStrategyInput): boo
 
 function ruleMatches(rule: FlopStrategyRule, input: PostflopStrategyInput): boolean {
   if (input.street !== "FLOP") return false;
-  if (rule.positionPattern !== input.positionPattern) return false;
+  // Oba pravopisy téže dvojice. Generátor vydá `BTN_VS_BB`, pravidlo nese
+  // `SRP_BTN_VS_BB` - a bez překladu se vyřešená rodina na vlastní spot
+  // nechytne. Změřeno 2. 9. 2026: 230 z 2 400 dotazů volnou cestou.
+  if (!postflopPositionPatternMatches(rule.positionPattern, input.positionPattern)) return false;
   if (rule.potType !== input.potType) return false;
   if (input.actionNode === undefined) return false;
   const hero = rule.spot?.hero;

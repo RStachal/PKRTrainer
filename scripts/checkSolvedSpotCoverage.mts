@@ -1,4 +1,7 @@
-import { generatePostflopSpot } from "../src/core/postflopGenerator";
+import {
+  canonicalPostflopPositionPattern,
+  generatePostflopSpot,
+} from "../src/core/postflopGenerator";
 import { grantsForTier } from "../src/core/paymentEntitlements";
 import { buildMttPostflopTrainingRuntime } from "../src/data/ranges/mttPostflopTrainingRuntime";
 import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks";
@@ -197,11 +200,19 @@ for (const pack of [
   ...runtimeSolvedTurnPacks,
   ...runtimeSolvedRiverPacks,
 ]) {
-  for (const rule of pack.rules) if (rule.positionPattern) covered.add(rule.positionPattern);
+  // Kanonicky, ne doslova. Resolvery čtou oba pravopisy jedné dvojice sedaček,
+  // takže porovnávat syrová jména by tady hlásilo mezeru tam, kde je jen druhé
+  // jméno téhož - a tenhle rozbor je podklad pro rozvrh nocí, takže by se
+  // podle něj solvilo něco, co už hotové je. Změřeno 2. 9. 2026: takhle
+  // vznikalo 230 falešně chybějících dotazů z 2 400.
+  for (const rule of pack.rules) {
+    if (rule.positionPattern) covered.add(canonicalPostflopPositionPattern(rule.positionPattern));
+  }
 }
 
 const asked = [...askedPatterns].sort((left, right) => right[1] - left[1]);
-const answerable = asked.filter(([pattern]) => covered.has(pattern));
+const isHeld = (pattern: string) => covered.has(canonicalPostflopPositionPattern(pattern));
+const answerable = asked.filter(([pattern]) => isHeld(pattern));
 const askedTotal = asked.reduce((sum, [, count]) => sum + count, 0);
 const answerableTotal = answerable.reduce((sum, [, count]) => sum + count, 0);
 
@@ -228,7 +239,7 @@ console.log("   je to podklad pro rozvrh nocí, ne číslo o dodání hráči)")
 console.log("");
 console.log("nejčastější dotazy:");
 for (const [pattern, count] of asked.slice(0, 8)) {
-  console.log(`  ${covered.has(pattern) ? "máme " : "nemáme"} ${pattern.padEnd(20)} ${count}x`);
+  console.log(`  ${isHeld(pattern) ? "máme " : "nemáme"} ${pattern.padEnd(20)} ${count}x`);
 }
 console.log("");
 console.log(
@@ -247,6 +258,6 @@ if (asJson) {
     // Dvě různá čísla pod dvěma jmény: "když si hráč připne situaci sám" proti
     // "když rozdáváme my". Slít je do jednoho by vedlo k špatnému rozvrhu noci.
     catalogueBackedPct: Object.fromEntries(catalogueShare),
-    askedPatterns: asked.map(([pattern, count]) => ({ pattern, count, held: covered.has(pattern) })),
+    askedPatterns: asked.map(([pattern, count]) => ({ pattern, count, held: isHeld(pattern) })),
   }));
 }

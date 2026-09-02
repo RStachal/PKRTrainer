@@ -92,6 +92,54 @@ export const LEGACY_POSTFLOP_POSITION_PATTERNS = [
   "OOP_CALLER_VS_IP_3BETTOR",
 ] as const satisfies readonly PostflopPositionPattern[];
 
+/**
+ * Kanonické jméno pro dvojí zápis téže situace.
+ *
+ * Dva pravopisy jedné věci jsou v oběhu od začátku: generátor vydá `BTN_VS_BB`,
+ * pravidla nesou `SRP_BTN_VS_BB`. Přejmenovat všechno by znamenalo sáhnout na
+ * generátor, packy, už zapsané statistiky pod starými jmény i na citační
+ * politiku, která oba tvary vypisuje - a splést se v tom znamená tiše označit
+ * vyřešený obsah za heuristiku nebo naopak. Číst jedno jméno jako druhé stojí
+ * jedno vyhledání a splést se v tom nedá.
+ *
+ * `EP_VS_BB` ukazuje na UTG, protože to je sedačka, na kterou byl
+ * ranněpoziční pilot odsolvený. Zbylá dvě legacy jména,
+ * `OOP_RAISER_VS_IP_CALLER` a `OOP_CALLER_VS_IP_3BETTOR`, nejmenují žádné
+ * sedačky a schválně zůstávají nepřeložená: hádat, kterou dvojici myslela, by
+ * bylo přesně to vymýšlení, kterému se tímhle předchází.
+ *
+ * **Proč to bydlí tady a ne v resolveru.** Do 2. 9. 2026 existovaly tři různé
+ * kopie téhle znalosti a každá uměla něco jiného: flopová produkční znala
+ * všechna tři jména, ale produkčních packů je registrováno nula; pilotní
+ * runtime znal dvě z tří a na `EP_VS_BB` zapomněl, ačkoli UTG pilot existuje;
+ * a vyřešené resolvery - tedy celá knihovna 48/48 rodin - neznaly žádné.
+ * Změřeno na 2 400 dotazech volnou cestou generátoru: 230 z nich (9,6 %) míří
+ * na `BTN_VS_BB`, `SB_VS_BB` nebo `EP_VS_BB`, a vyřešený obsah pro ně existuje
+ * pod druhým jménem. Vypadalo to jako chybějící obsah a byl to překlad.
+ */
+export const LEGACY_POSTFLOP_PATTERN_EQUIVALENT: Readonly<Record<string, PostflopPositionPattern>> = {
+  BTN_VS_BB: "SRP_BTN_VS_BB",
+  SB_VS_BB: "SRP_SB_VS_BB",
+  EP_VS_BB: "SRP_UTG_VS_BB",
+};
+
+/** Jméno v kanonickém tvaru; co překlad nemá, se vrací beze změny. */
+export function canonicalPostflopPositionPattern(pattern: string): string {
+  return LEGACY_POSTFLOP_PATTERN_EQUIVALENT[pattern] ?? pattern;
+}
+
+/**
+ * Jmenují ta dvě jména tutéž dvojici sedaček?
+ *
+ * Porovnává se v obou směrech, ne jen dotaz proti pravidlu: v oběhu jsou oba
+ * pravopisy na obou stranách a jedním směrem by to spravilo jen polovinu.
+ * **Typ potu se tím neřeší** - ten si každý resolver kontroluje zvlášť, takže
+ * se pravidlo pro 3bet pot na dotaz o SRP nechytne ani po překladu.
+ */
+export function postflopPositionPatternMatches(left: string, right: string): boolean {
+  return canonicalPostflopPositionPattern(left) === canonicalPostflopPositionPattern(right);
+}
+
 const POSITION_PATTERN_TOKENS = [
   "UTG",
   "UTG_1",

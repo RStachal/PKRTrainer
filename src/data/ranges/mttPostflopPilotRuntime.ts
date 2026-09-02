@@ -3,6 +3,7 @@ import type {
   PostflopStrategyInput,
   PostflopStrategyResolver,
 } from "../../core/postflopGenerator";
+import { canonicalPostflopPositionPattern } from "../../core/postflopGenerator";
 import {
   evaluateEntitlementAccess,
   type EntitlementGrant,
@@ -158,9 +159,10 @@ export function normalizePilotPositionPattern(
   potType: PostflopStrategyInput["potType"],
 ): PostflopPositionPattern {
   if (potType !== "SINGLE_RAISED") return positionPattern;
-  if (positionPattern === "BTN_VS_BB") return "SRP_BTN_VS_BB";
-  if (positionPattern === "SB_VS_BB") return "SRP_SB_VS_BB";
-  return positionPattern;
+  // Sdílený překlad, ne vlastní seznam. Tenhle uměl `BTN_VS_BB` a
+  // `SB_VS_BB`, ale `EP_VS_BB` mu chybělo, ačkoli UTG pilot existuje -
+  // takže půlka spotů, pro které byl odsolvený, propadla na heuristiku.
+  return canonicalPostflopPositionPattern(positionPattern) as PostflopPositionPattern;
 }
 
 export function normalizePilotStrategyInput(

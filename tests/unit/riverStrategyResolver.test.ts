@@ -91,6 +91,28 @@ describe("riverový resolver", () => {
     expect(answer?.explanation).not.toContain("SRP_");
   });
 
+  // Dva zápisy jedné situace: generátor vydá `BTN_VS_BB`, pravidlo nese
+  // `SRP_BTN_VS_BB`. Do 2. 9. 2026 se vyřešená knihovna na ten první nechytla
+  // vůbec - změřeno 230 z 2 400 dotazů volnou cestou generátoru, tedy obsah,
+  // který existuje a hráč ho nedostal.
+  it("odpoví i na starší zápis téže dvojice sedaček", () => {
+    expect(rule.positionPattern, "fixture má nést kanonický tvar").toBe("SRP_BTN_VS_BB");
+    const answer = createRiverStrategyResolver(pack)(input({
+      positionPattern: "BTN_VS_BB" as never,
+    }));
+    expect(answer).not.toBeNull();
+    expect(answer?.source?.kind).toBe("STRATEGY_PACK");
+  });
+
+  // Druhá polovina téhož tvrzení: překlad se nesmí zvrhnout v to, že sedí
+  // všechno na všechno. Jiná dvojice sedaček zůstává odmítnutá.
+  it("na jinou dvojici sedaček neodpoví ani po překladu", () => {
+    const answer = createRiverStrategyResolver(pack)(input({
+      positionPattern: "SRP_CO_VS_BB" as never,
+    }));
+    expect(answer).toBeNull();
+  });
+
   it("k odpovědi přiloží EV ostatních akcí, jakmile tabulka dorazí", async () => {
     // Tohle je celý důvod, proč EV vzniká: hráč po odpovědi vidí, co ho ostatní
     // akce stály. Bez tabulky odpověď vyjde bez čísel a stahování se nastartuje

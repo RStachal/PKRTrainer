@@ -1,4 +1,5 @@
 import { facingBetBB } from "./facingBetSize";
+import { postflopPositionPatternMatches } from "../../core/postflopGenerator";
 import type {
   PostflopAction,
   PostflopRecommendation,
@@ -61,7 +62,10 @@ function boardMatches(rule: RiverStrategyRule, input: PostflopStrategyInput): bo
 
 function ruleMatches(rule: RiverStrategyRule, input: PostflopStrategyInput): boolean {
   if (input.street !== "RIVER") return false;
-  if (rule.positionPattern !== input.positionPattern) return false;
+  // Oba pravopisy téže dvojice. Generátor vydá `BTN_VS_BB`, pravidlo nese
+  // `SRP_BTN_VS_BB` - a bez překladu se vyřešená rodina na vlastní spot
+  // nechytne. Změřeno 2. 9. 2026: 230 z 2 400 dotazů volnou cestou.
+  if (!postflopPositionPatternMatches(rule.positionPattern, input.positionPattern)) return false;
   if (rule.potType !== input.potType) return false;
   // Které rozhodnutí uzel drží. Bez téhle kontroly odpovídal resolver na
   // kterýkoli riverový spot na správné desce - takže hráči, který čelí sázce,

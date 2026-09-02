@@ -13,7 +13,10 @@ import {
 } from "../../core/actionEv";
 import { assessSprFidelity } from "../../core/postflopSprFidelity";
 import { treeIntegrityForRuleId } from "./postflopTreeIntegrity";
-import { ALL_BOARD_TEXTURES } from "../../core/postflopGenerator";
+import {
+  ALL_BOARD_TEXTURES,
+  postflopPositionPatternMatches,
+} from "../../core/postflopGenerator";
 import {
   type FlopProductionStrategyPack,
   type FlopProductionStrategyRule,
@@ -116,36 +119,15 @@ export function createFlopProductionStrategyResolverChain(
 }
 
 /**
- * The seat pairing a legacy pattern name describes.
+ * Sedí pravidlo na dotaz, i když každý používá jiný zápis téže dvojice?
  *
- * Two spellings for the same situation have been in circulation: the generator
- * emits BTN_VS_BB where the rules say SRP_BTN_VS_BB, and so on. Measured over
- * 6000 flop spots, 746 carried a legacy name and 716 carried a matched one - so
- * the button-versus-blind pilot was answering roughly half the spots it exists
- * for and the rest fell through to the public heuristic, for no reason a player
- * could describe.
- *
- * Canonicalising here rather than renaming everywhere is deliberate. A rename
- * touches the generator, the packs, the stats records already written under the
- * old names and the UI citation policy that lists both spellings, and getting it
- * wrong silently mislabels solved content as heuristic or the reverse. Reading
- * one name as the other costs a lookup and cannot mislabel anything.
- *
- * EP_VS_BB maps to under the gun because that is the seat the early-position
- * pilot was solved for. The two remaining legacy names -
- * OOP_RAISER_VS_IP_CALLER and OOP_CALLER_VS_IP_3BETTOR - name no seats at all
- * and are deliberately left unmapped: guessing which pairing they meant would be
- * inventing the thing this avoids.
+ * Překlad sám bydlí v `postflopGenerator` vedle seznamu legacy jmen, protože
+ * tahle znalost tu do 2. 9. 2026 existovala ve třech rozcházejících se kopiích
+ * a vyřešená knihovna, kde je všechen obsah, neměla ani jednu. Důvod, proč se
+ * překládá místo přejmenování, je popsaný tam.
  */
-const LEGACY_PATTERN_EQUIVALENT: Readonly<Record<string, string>> = {
-  BTN_VS_BB: "SRP_BTN_VS_BB",
-  SB_VS_BB: "SRP_SB_VS_BB",
-  EP_VS_BB: "SRP_UTG_VS_BB",
-};
-
 function positionPatternMatches(rule: FlopProductionStrategyRule, pattern: string): boolean {
-  if (rule.positionPattern === pattern) return true;
-  return rule.positionPattern === LEGACY_PATTERN_EQUIVALENT[pattern];
+  return postflopPositionPatternMatches(rule.positionPattern, pattern);
 }
 
 export function matchingFlopProductionRules(
