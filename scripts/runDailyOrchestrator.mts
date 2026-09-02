@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { MODULE_BUDGET_BYTES } from "./lib/solvedPackBuilding.mts";
 
 /**
  * Denní vyhodnocení a rozvrh noční práce.
@@ -248,6 +249,20 @@ say(`  rozklad drží ${pairs.size} dvojic sedaček: ${[...pairs.keys()].join(",
  * to dosud rozhodoval sám podle pravidla ve svém kódu a nevěděl, že vedle leží
  * nastagované rodiny, které trenažér potřebuje víc.
  */
+/**
+ * Riverové packy, které už sedí na stropu modulu.
+ *
+ * Za nasycený se bere pack nad 97 % rozpočtu: generátor ořezává tak, aby se
+ * vešel, takže přesně na stropu neskončí skoro nikdy. Naměřeno 1. 9. 2026:
+ * největší packy 496 až 497 kB proti rozpočtu 500 kB.
+ */
+const riverPacks = existsSync("src/data/ranges/river")
+  ? readdirSync("src/data/ranges/river").filter((name) => name.endsWith(".json"))
+  : [];
+const saturated = riverPacks.filter((name) => (
+  statSync(join("src/data/ranges/river", name)).size > MODULE_BUDGET_BYTES * 0.97
+));
+
 type NightPriority = "DECOMPOSITION" | "NEW_FAMILIES";
 let priority: NightPriority = "DECOMPOSITION";
 let priorityReason = "výchozí: prohlubovat, co je odsolvené";
@@ -267,6 +282,20 @@ if (asked === null || held === null) {
   say("  obranná range nese tuhle vadu dál. Je to vědomý ústupek, ne přehlédnutí.");
   priority = "NEW_FAMILIES";
   priorityReason = `trenažér se ptá na ${asked} vzorů, obsah drží ${held}`;
+} else if (saturated.length > 0) {
+  // Hloubka, která se nevejde, není hloubka.
+  //
+  // Doporučení „pokračovat v hloubce" mlčky předpokládá, že se nový obsah
+  // k hráči dostane. Změřeno 1. 9. 2026, že se nedostane: riverové packy sedí
+  // na stropu modulu, generátor u nich vynechává nejméně dosahované rivery,
+  // a dodávaných desek ubylo z 983 na 882 za tři dny, zatímco pravidel přibylo
+  // osm. Noc tedy přestala přidávat a začala vyměňovat - a rozhodovací vrstva
+  // o tom nevěděla, protože měřila jen produkci.
+  say(`  DOPORUČENÍ: hloubku ne - ${saturated.length} z ${riverPacks.length} riverových packů`);
+  say("  sedí na stropu modulu, takže nový obsah vytlačuje starý místo aby přibyl.");
+  say("  Krok: rozhodnout o stropu na jeden chunk (platí ho každý hráč při stažení");
+  say("  rodiny), nebo poslat noc na jinou práci než prohlubování riveru.");
+  priorityReason = `river je nasycený: ${saturated.length}/${riverPacks.length} packů na stropu`;
 } else {
   say("  DOPORUČENÍ: pokračovat v hloubce - šířka vzorů je pokrytá.");
 }

@@ -26,6 +26,57 @@ nevšiml, protože to pravidlo nikdo od jeho napsání nepřeměřil.
 
 To je celý důvod, proč má rozhodovat stroj s měřením, a ne pravidlo v kódu.
 
+## Revize orchestrace, 1. 9. 2026
+
+Celková kontrola toho, jestli framework doopravdy řídí vývoj, nebo jen popisuje,
+jak by ho řídil. Odpověď: **řídil devět dní naslepo.**
+
+| vrstva | tvrdí | doopravdy |
+|---|---|---|
+| 0. doručení | stojí od 25. 8. | **stojí** - EV, cena i frekvence mají dno a to dno kouše |
+| 1. cíl a vzdálenost | stojí | stojí |
+| 2. znalost | stojí | stojí |
+| 3. **rozvrh noci** | stojí | **devět dní mrtvá** - viz níž |
+| 4. cyklus po noci | stojí | běží, ale **jen když ho někdo spustí**; naplánovaný není |
+| 5. rozšíření vzorů | stojí | **zablokované** - 0 ze 174 desek nastagováno, chybí preflop obrana |
+| 6. evidence procesů | stojí | stojí |
+| 7. zpětná vazba | „chybí historie" | **mrtvá** - denní zápisy končí 23. 8. |
+
+### Co se stalo s vrstvou 3
+
+`Agents/daily/tonight.json` měl datum **23. 8. v 9:03**. Naplánované úlohy jsou
+**jen dvě a obě jsou noční solving**; `mtt:daily` naplánovaný nebyl, spouštěl ho
+člověk. Noc tedy devět nocí četla devět dní starou radu „výchozí: prohlubovat,
+co je odsolvené" a poslušně prohlubovala river.
+
+Nejtrpčí na tom je, že ten nástroj **měl pravdu už tehdy**. Jeho vlastní
+hlavička říká: *„měření říká, že river do hloubky už nic neodemyká"*. Rozhodovací
+vrstva to věděla, přestala běžet, a vykonávací vrstva jela dál - stroj běžel
+každou noc jedenáct hodin a nikdo mu neříkal kam.
+
+**Opraveno tak, aby se to nemohlo rozejít znovu:** rozvrh si nespouští člověk
+ani plánovač, ale **noc sama** na svém začátku (`refresh_night_priority`).
+Čerstvost je tím dána z definice. Když vyhodnocení spadne, noc pokračuje podle
+uloženého - prázdná noc kvůli nefunkční poradě je horší než noc podle starší rady.
+
+### Druhá vada: rozhodnutí bylo slepé k doručení
+
+Doporučení znělo „pokračovat v hloubce - šířka vzorů je pokrytá" a mlčky
+předpokládalo, že se nová hloubka k hráči dostane. Změřeno, že se nedostane:
+**10 ze 48 riverových packů sedí na stropu modulu**, generátor u nich vynechává
+nejméně dosahované rivery, a dodávaných desek ubylo z 983 na 882 za tři dny,
+zatímco pravidel přibylo osm.
+
+Rozhodovací vrstva měřila **produkci** (kolik vzorů držíme), ne **doručení**
+(jestli se to vejde). Nově se ptá na obojí a při nasycení radí opak.
+
+### Co z revize zůstává otevřené
+
+- **Vrstva 4 není naplánovaná.** Dodání noci závisí na tom, že ho někdo spustí.
+  Dvakrát se stalo, že se nespustilo dva dny.
+- **Vrstva 5 je zablokovaná obsahem**, ne strojem (bod 140).
+- **Vrstva 7 nemá data** od 23. 8., takže „porovnání dnů" pořád nemá co porovnat.
+
 ## Vrstvy
 
 ### 0. Doručení — **chybělo do 25. 8. 2026, a byla to ta nejdražší mezera**
