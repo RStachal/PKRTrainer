@@ -89,6 +89,30 @@ const ACTIONS_BY_CONTEXT: ReadonlyMap<MappedContext, ReadonlyMap<string, MappedA
       // Hráč dorovná a počítá s tím, že za ním někdo squeezne. Jeho akcí je
       // pořád dorovnání; plán na další ulici produkt v odpovědi nemá kam dát.
       ["call / call squeeze", { action: "CALL", lost: "zdroj plánuje dorovnat i squeeze" }],
+      // „Broke" = jít do konce, nasadit celý stack.
+      //
+      // Význam potvrdil majitel 1. 9. 2026: je to stav, kdy hráč přijde o
+      // všechny žetony. V legendě je to plán do dalšího kola - táž třída
+      // poznámky jako „Call 4B", jen o stupeň dál: tam se dorovnává čtyři-bet,
+      // tady jde do potu zbytek stacku.
+      //
+      // Odemyká tři hloubky obrany raných pozic (20, 30 a 40 bb), které se
+      // četly prokazatelně - nula neshod proti legendě - a zastavil je jen
+      // neznámý výraz. Viz bod 163.
+      ["call / broke", { action: "CALL", lost: "zdroj plánuje dorovnat a jít o celý stack" }],
+      ["3b / broke", { action: "3BET", lost: "zdroj plánuje tři-bet a jít o celý stack" }],
+      ["call / fold", { action: "CALL", lost: "zdroj říká, že proti další agresi se skládá" }],
+      ["call and fold vs squeeze 4x", {
+        action: "CALL", lost: "zdroj říká, že proti squeezi na čtyřnásobek se skládá",
+      }],
+      ["call / jam vs squeeze if pfa folds", {
+        action: "CALL",
+        lost: "zdroj plánuje jamnout proti squeezi, když otvírající složí",
+      }],
+      // Exploitativní tři-bet: zdroj ho odlišuje od rovnovážného, produkt ne.
+      ["3b bluff exploit", {
+        action: "3BET", lost: "zdroj to označuje za exploitativní blaf, ne rovnovážnou hru",
+      }],
       ["call / call squeeze if pfa folds", {
         action: "CALL", lost: "zdroj plánuje dorovnat squeeze, když otvírající složí",
       }],
@@ -264,9 +288,24 @@ export function situationFromFileName(name: string): RyeSituation | undefined {
   // Tvar 1: sedačka se svou hloubkou, případně dvě takové.
   const paired = [...stem.matchAll(/(utg1|utg2|utg|ep|mp|lj|hj|co|bu|btn|sb|bb)(\d+)bb/gi)];
   if (paired.length >= 1) {
-    const seat = SEAT_ALIASES.get(paired[0][1].toUpperCase());
+    let label = paired[0][1].toUpperCase();
+    let stackBB = Number(paired[0][2]);
+    // `utg20bb` je „UTG, 20 bb", ne „UTG+2, 0 bb".
+    //
+    // Sedačka a hloubka se v tomhle tvaru dotýkají bez oddělovače, takže
+    // `utg2` snědlo dvojku z hloubky a na stack zbyla nula. Naměřeno 1. 9. 2026
+    // na `ICM14-utg20bb-btn8bb`: vyšlo UTG+2 na 0 bb, tedy **jiná sedačka
+    // i jiná hloubka**. V korpusu je dvanáct jmen tohohle tvaru.
+    //
+    // Oprava je čtení pozpátku: hloubka pod dva blindy neexistuje, takže když
+    // vyjde, patří ta číslice sedačce a čte se znovu bez ní.
+    if (stackBB < 2 && /^(UTG1|UTG2)$/.test(label)) {
+      label = "UTG";
+      stackBB = Number(`${paired[0][1].slice(-1)}${paired[0][2]}`);
+    }
+    const seat = SEAT_ALIASES.get(label);
     if (seat === undefined) return undefined;
-    return { seat, stackBB: Number(paired[0][2]), villains: Math.max(1, paired.length - 1) };
+    return { seat, stackBB, villains: Math.max(1, paired.length - 1) };
   }
   // Tvar 2: společná hloubka vpředu, pak `HRDINA-vs-SOUPEŘI`.
   const depth = /(?:^|[-_])(\d+)BB(?:[-_]|$)/i.exec(stem);
