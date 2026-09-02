@@ -111,6 +111,18 @@ function snapshot(): Record<string, string> {
 }
 
 /**
+ * Omezení na vyjmenované rodiny, `--family=A --family=B`.
+ *
+ * Kvůli ověřování, ne kvůli běžnému provozu: celý cyklus je 48 rodin krát tři
+ * ulice krát dva průchody, tedy hodiny, a zkoušet na něm změnu v generování je
+ * drahý způsob, jak zjistit překlep. Se dvěma rodinami je to pár minut a
+ * pruhy se chovají stejně.
+ */
+const onlyFamilies = process.argv
+  .filter((arg) => arg.startsWith("--family="))
+  .map((arg) => arg.slice("--family=".length));
+
+/**
  * Rodiny, které cyklus zkusí přegenerovat.
  *
  * Sjednocení dvou zdrojů, a to je celý ten trik: **rozklad a checkpointy nejsou
@@ -124,6 +136,7 @@ function snapshot(): Record<string, string> {
  * se za něj zaplatil strojový čas.
  */
 function families(): string[] {
+  if (onlyFamilies.length > 0) return [...onlyFamilies].sort();
   const decomposed = readdirSync(WORK)
     .filter((name) => name.includes("__"))
     .map((name) => name.split("__")[0]);
@@ -167,25 +180,130 @@ const STREETS = ["flop", "turn", "river"] as const;
  * zbývá halda nad podlahou; jinak jede cyklus po staru a nic se nezhorší.
  */
 const SYSTEM_RESERVE_GB = 2;
-/** Pod osmi gigabajty se generátor dusil v úklidu paměti (změřeno 31. 8. 2026). */
-const LANE_HEAP_FLOOR_MB = 8192;
 
-function laneBudget(): { lanes: number; heapMb: number; freeGb: number } {
+/**
+ * Kolik haldy která ulice **nejmíň potřebuje, aby nespadla**. Změřeno
+ * 2. 9. 2026 na nejtěžší rodině (`MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR`,
+ * 0,5 GB rozkladu na desku).
+ *
+ * Vrcholy pracovní množiny: flop 3 978 MB, turn 1 528 MB, river 4 090 MB. Dělit
+ * haldu na tři stejné díly je proto špatně - a nejen neefektivní: při 3 948 MB
+ * na pruh **riverový generátor spadl na haldě** (exit 134) a cyklus to zapsal
+ * jako „generátor odmítl", tedy tiše ztracenou tabulku. Přesně ta záměna, před
+ * kterou varuje komentář u `CHILD_HEAP`.
+ *
+ * River tedy chce osm gigabajtů (31. 8. naměřeno, že jich zaplní 8 157
+ * z 8 190, takže míň mu nestačí), flop čtyři a turn tři.
+ *
+ * **Je to podlaha, ne příděl.** Podlaha nad vrcholem pracovní množiny je totiž
+ * přesně ten stav, který 31. 8. stál nejvíc: generátor se nezastavil, jen
+ * strávil 87 % času úklidem paměti. U flopu je rozdíl 118 MB, takže dát mu
+ * 4 096 MB a skončit by bylo dusno na povel. Podlaha rozhoduje jen o tom,
+ * kolik pruhů se pustí; kolik halda opravdu dostane, říká `laneHeaps`.
+ */
+const LANE_HEAP_FLOOR_MB: Readonly<Record<(typeof STREETS)[number], number>> = {
+  river: 8192,
+  flop: 4096,
+  turn: 3072,
+};
+
+/**
+ * Strop na jednoho potomka, týž jako u `CHILD_HEAP` a ze stejného měření.
+ * Nad ním se halda zvyšovat nemá, protože stroj má 31,2 GB a část z nich
+ * drží virtuál (změřeno 2. 9. 2026: 14,03 GB).
+ */
+const LANE_HEAP_CEILING_MB = 16384;
+
+/**
+ * Ruční přepis počtu pruhů, `--lanes=N`.
+ *
+ * Rozpočet podle paměti je schválně přísný, takže když drží polovinu stroje
+ * virtuál (2. 9. 2026: volné 2,2 GB z 31,2), vyjde jeden pruh a souběžná cesta
+ * se nikdy nespustí - tedy ani neověří. Tohle je pro ověření a pro měření;
+ * v běžném provozu se nezadává.
+ *
+ * **Paměťovou bránu proto obchází, ne jen zpřísňuje.** Kdyby se s ní jen
+ * protínal, uměl by počet pruhů snížit a nikdy zvýšit - a to je právě ten
+ * jediný případ, kvůli kterému existuje. Halda pak spadne na podlahy: víc
+ * paměti si vynutit nelze, takže si vynucený souběh sáhne na odkládací
+ * soubor. To je při ověřování v pořádku a v provozu nepřijatelné.
+ */
+const lanesOverride = Number(
+  process.argv.find((arg) => arg.startsWith("--lanes="))?.split("=")[1] ?? 0,
+);
+
+/** Ulice od nejdražší po nejlevnější - pořadí, ve kterém se o paměť hlásí. */
+const BY_NEED = [...STREETS].sort(
+  (left, right) => LANE_HEAP_FLOOR_MB[right] - LANE_HEAP_FLOOR_MB[left],
+);
+
+/**
+ * Kolik pruhů poběží a jakou haldu dostane která ulice.
+ *
+ * Dvě různé otázky, a to je celý ten trik. **Počet pruhů** se odvodí z podlah:
+ * pustí se tolik ulic, kolik se jich podlahami vejde do volné paměti po
+ * rezervě pro systém. Když se nevejde ani ta nejdražší, pustí se stejně -
+ * sama: cyklus musí proběhnout i na stroji, kde je zrovna málo místa, a
+ * sekvenčně to bylo vždycky, takže se tím nic nezhoršuje.
+ *
+ * **Halda** se pak dopočítá z toho, co po podlahách zbylo: zbytek se rozdělí
+ * rovným dílem na pruh a přičte k podlaze, nejvýš do stropu. Součet přes
+ * souběžně běžící pruhy proto vyjde právě na použitelnou paměť - nic se
+ * nenechá ležet ladem a žádná ulice nesedí těsně nad svým vrcholem.
+ *
+ * Haldu dostane **každá** ulice, i ta, na kterou se pruh nenašel: pruhů může
+ * být míň než ulic a fronta je jedna, takže levnou ulici stejně obslouží ten
+ * pruh, který se zrovna uvolní. Souběžně jich přitom nikdy neběží víc než
+ * `lanes`, takže se rozpočet drží.
+ *
+ * Proto se počítání pruhů na první nevejdoucí ulici **zastaví** a nepřeskočí na
+ * levnější: fronta je jedna, takže se dvěma pruhy může běžet nejdražší dvojice.
+ * Rozpočet musí sedět na ni, ne na tu, která se do něj náhodou vešla.
+ */
+function laneBudget(): { lanes: number; heapMb: Map<string, number>; freeGb: number } {
   const freeGb = freemem() / 1024 ** 3;
   const usableMb = Math.max(0, freeGb - SYSTEM_RESERVE_GB) * 1024;
-  const lanes = Math.min(STREETS.length, Math.max(1, Math.floor(usableMb / LANE_HEAP_FLOOR_MB)));
-  const heapMb = lanes === 1 ? 16384 : Math.min(16384, Math.floor(usableMb / lanes));
+  let remainingMb = usableMb;
+  let lanes = 0;
+  for (const street of BY_NEED) {
+    if (lanesOverride > 0) {
+      if (lanes >= lanesOverride) break;
+    } else if (LANE_HEAP_FLOOR_MB[street] > remainingMb && lanes > 0) break;
+    remainingMb -= LANE_HEAP_FLOOR_MB[street];
+    lanes += 1;
+  }
+  const shareMb = Math.max(0, remainingMb) / lanes;
+  const heapMb = new Map<string, number>(
+    STREETS.map((street) => [
+      street,
+      Math.min(LANE_HEAP_CEILING_MB, Math.floor(LANE_HEAP_FLOOR_MB[street] + shareMb)),
+    ]),
+  );
   return { lanes, heapMb, freeGb };
 }
 
 async function generateAll(list: readonly string[], label: string): Promise<void> {
   const { lanes, heapMb, freeGb } = laneBudget();
+  const heapFor = (street: string): number => heapMb.get(street) ?? LANE_HEAP_CEILING_MB;
+  // Prázdný řádek zvlášť, ne `\n` v šabloně: přes vrstvy escapování se v tomhle
+  // projektu zpětné lomítko ztratilo dnes už podruhé a stane se z něj skutečný
+  // konec řádku uprostřed textu. Co se nedá pokazit, se nepokazí.
+  console.log("");
   console.log(
-    `\n[${label}] generuji packy pro ${list.length} rodin:`
-    + ` ${lanes} ${lanes === 1 ? "pruh" : "pruhy"}, halda ${heapMb} MB,`
+    `[${label}] generuji packy pro ${list.length} rodin:`
+    + ` ${lanes} ${lanes === 1 ? "pruh" : "pruhy"}`
+    + ` (${BY_NEED.map((street) => `${street} ${heapFor(street)} MB`).join(", ")}),`
     + ` volno ${freeGb.toFixed(1)} GB`,
   );
   let failed = 0;
+  // Pád na haldě **není odmítnutí**.
+  //
+  // Generátor odmítá neúplné rodiny schválně a hlásí proč; to je v pořádku a
+  // počítá se do `failed`. Když ale potomek umře na haldě (exit 134), tabulka
+  // se nevyrobí a dosud se to zapsalo týmž řádkem - tedy tiše ztracený obsah.
+  // Změřeno 2. 9. 2026: při 3 948 MB na pruh takhle zmizel riverový pack
+  // nejtěžší rodiny a v logu po něm zbylo jen „1 kombinace odmítnuta".
+  let crashed = 0;
   // Kolik vyřešeného obsahu se nevešlo do rozpočtu chunku.
   //
   // Generátor to hlásí u každé rodiny, ale cyklus to dosud zahazoval - a byla
@@ -195,7 +313,8 @@ async function generateAll(list: readonly string[], label: string): Promise<void
   // osm. Noc tedy přestala přidávat a začala vyměňovat; bez tohohle čísla to
   // nebylo vidět.
   const dropped = new Map<string, number>();
-  const queue: string[] = [...STREETS];
+  // Od nejdražší ulice: kdyby paměť došla, ať čeká ta levná, ne ta drahá.
+  const queue: string[] = [...BY_NEED];
   /** Čas na ulici - jediné číslo, kterým se dá paralelizace obhájit nebo vyvrátit. */
   const spent = new Map<string, number>();
 
@@ -207,7 +326,7 @@ async function generateAll(list: readonly string[], label: string): Promise<void
       for (const family of list) {
         const args = [`--family=${family}`, "--write", ...(withEv && street === "river" ? ["--ev"] : [])];
         try {
-          const out = await runAsync(`mtt:${street}-pack`, args, heapMb);
+          const out = await runAsync(`mtt:${street}-pack`, args, heapFor(street));
         // **Jen rozpočet chunku.** V generátorech je „vynecháno" ve čtyřech
         // různých hláškách a první verze tohohle počitadla je sečetla všechny -
         // vyšlo 1 969 746 riverů, což je nesmysl: jedna rodina jich hlásí 75.
@@ -217,10 +336,25 @@ async function generateAll(list: readonly string[], label: string): Promise<void
           for (const match of out.matchAll(BUDGET_DROP)) {
             dropped.set(street, (dropped.get(street) ?? 0) + Number(match[1]));
           }
-        } catch {
+        } catch (error) {
           // Odmítnutá rodina není chyba cyklu: generátor odmítá neúplné a nahrazené
           // rodiny schválně a hlásí proč. Cyklus jen nesmí kvůli tomu spadnout.
-          failed += 1;
+          //
+          // Pád na haldě je ale něco jiného a musí být slyšet: obsah se nevyrobil,
+          // ačkoli se vyrobit měl.
+          const detail = error as { code?: number; stderr?: string };
+          const heapDeath = detail.code === 134
+            || /Reached heap limit|heap out of memory|FATAL ERROR/.test(detail.stderr ?? "");
+          if (heapDeath) {
+            crashed += 1;
+            console.error(
+              `[${label}] POZOR: ${family} / ${street} spadlo na haldě`
+              + ` (${heapFor(street)} MB) - tabulka nevznikla`,
+            );
+            process.exitCode = 1;
+          } else {
+            failed += 1;
+          }
         }
       }
       spent.set(street, Math.round((Date.now() - started) / 1000));
@@ -229,8 +363,9 @@ async function generateAll(list: readonly string[], label: string): Promise<void
 
   await Promise.all(Array.from({ length: lanes }, () => lane()));
   console.log(
-    `[${label}] hotovo, ${failed} kombinací rodina+ulice generátor odmítl;`
-    + ` ${STREETS.map((street) => `${street} ${spent.get(street) ?? 0} s`).join(", ")}`,
+    `[${label}] hotovo, ${failed} kombinací rodina+ulice generátor odmítl`
+    + (crashed > 0 ? `, ${crashed} SPADLO NA HALDĚ` : "")
+    + `; ${STREETS.map((street) => `${street} ${spent.get(street) ?? 0} s`).join(", ")}`,
   );
   const lost = [...dropped].filter(([, count]) => count > 0);
   if (lost.length > 0) {
