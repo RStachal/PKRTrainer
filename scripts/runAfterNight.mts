@@ -195,6 +195,19 @@ const SYSTEM_RESERVE_GB = 2;
  * River tedy chce osm gigabajtů (31. 8. naměřeno, že jich zaplní 8 157
  * z 8 190, takže míň mu nestačí), flop čtyři a turn tři.
  *
+ * **Riverová podlaha zvednuta na 12 GB dne 3. 9. 2026, a vyvrací to měření
+ * výš.** Vrchol 4 090 MB byl naměřen na jediné rodině a zobecnil se; při ruční
+ * obnově spadly na osmi gigabajtech dvě jiné stobblindové rodiny s
+ * `FATAL ERROR: Ineffective mark-compacts near heap limit` (exit 134).
+ * `MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR` prošla na dvanácti. Že vrchol pracovní
+ * množiny vyšel na 4 GB a strop 8 GB nestačí, znamená jediné: to měření
+ * podměřilo - halda potřebuje nad pracovní množinou mnohem víc místa, než se
+ * z ní dá odhadnout.
+ *
+ * `MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR` nedoběhla ani na **14 GB** při 17,3 GB
+ * volných. Ta se na tomhle stroji přegenerovat nedá a je to mez železa, ne
+ * rozpočtu; zvedat podlahu kvůli ní by jen ubralo pruhy všem ostatním.
+ *
  * **Je to podlaha, ne příděl.** Podlaha nad vrcholem pracovní množiny je totiž
  * přesně ten stav, který 31. 8. stál nejvíc: generátor se nezastavil, jen
  * strávil 87 % času úklidem paměti. U flopu je rozdíl 118 MB, takže dát mu
@@ -202,7 +215,7 @@ const SYSTEM_RESERVE_GB = 2;
  * kolik pruhů se pustí; kolik halda opravdu dostane, říká `laneHeaps`.
  */
 const LANE_HEAP_FLOOR_MB: Readonly<Record<(typeof STREETS)[number], number>> = {
-  river: 8192,
+  river: 12288,
   flop: 4096,
   turn: 3072,
 };
