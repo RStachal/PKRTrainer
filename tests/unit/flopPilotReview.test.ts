@@ -1,5 +1,4 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
@@ -7,6 +6,7 @@ import { CLI_SPAWN_TIMEOUT_MS } from "../cliSpawnBudget";
 import { generatedMttPostflopPilotPacks } from "../../src/data/ranges/mttPostflopPilotPacks.generated";
 import { flopPilotContentHash } from "../../src/data/ranges/turnReviewVerdict";
 import { classifyConfidenceClaim } from "../../src/data/ranges/confidenceBacking";
+import { pilotReviewOrder, pilotReviewPageHash } from "../../scripts/lib/flopPilotReview.mts";
 
 /**
  * Cesta z `SOLVE_PROVENANCE` do `PLAYER_REVIEW` u flopových pilotů.
@@ -78,9 +78,13 @@ describe("čtení flopových pilotů", () => {
   });
 
   it("zápis odmítne verdikt bez toho, kdo četl", () => {
-    const page = readFileSync("artifacts/pilot-review/review.html", "utf8");
-    const hash = /var PAGE_HASH = "([a-f0-9]+)"/.exec(page)?.[1];
-    expect(hash, "stránka musí nést otisk; vygeneruj mtt:pilot-review").toBeDefined();
+    // Otisk se počítá ze sdílené knihovny, ne ze stránky na disku. První verze
+    // četla `artifacts/pilot-review/review.html` a prošla jen proto, že jsem ji
+    // chvíli předtím vygeneroval - `artifacts/` je gitignorovaný, takže na
+    // čistém checkoutu i v CI by test spadl na chybějícím souboru. Táž vada,
+    // před kterou varuje commit 8005caf: nepředstírat, že vygenerované vstupy
+    // v repozitáři jsou.
+    const hash = pilotReviewPageHash(pilotReviewOrder(generatedMttPostflopPilotPacks));
     const result = answers([`--answers=DRILLEV-PILOT-V1 ${hash} 0o`, "--write"]);
     expect(result.code).toBe(1);
     expect(result.out).toContain("povinné");
