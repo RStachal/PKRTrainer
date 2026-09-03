@@ -1,4 +1,5 @@
 import type { TurnStrategyRule } from "./turnStrategyRuleBuilder";
+import type { FlopProductionStrategyRule } from "./flopProductionStrategyPack";
 
 /**
  * Jak se solverový turn obsah dostane z LOW mezi ověřený.
@@ -144,6 +145,41 @@ export function confidenceForFamily(
     confidence: "MEDIUM",
     reason: `přečteno ${verdict.reviewedAt} (${verdict.reviewer}); jeden čtenář unese MEDIUM, ne HIGH`,
   };
+}
+
+/**
+ * Otisk flopového pilota, aby se na něj dal navázat verdikt.
+ *
+ * Piloty se do 3. 9. 2026 do žebříčku důvěry hlásily **bez rodiny a bez otisku**,
+ * a `classifyConfidenceClaim` říká rovnou, že pack bez rodiny verdikt mít nemůže.
+ * Přečíst pilota tedy nemohlo změnit nic - verdikt neměl kam sednout. Zjištěno
+ * při přípravě čtecí stránky, tedy **než se za to zaplatilo hodinami čtení**.
+ *
+ * Konstrukce je záměrně táž jako u `turnRuleContentHash`: stejný djb2 přes
+ * setříděné části, aby se otisky obou cest chovaly stejně a daly se porovnávat
+ * očima. Skládá se z toho, **co čtenář opravdu vidí** - které akce pravidlo
+ * nabízí, kterou doporučuje, na jakých texturách a v jakém pásmu SPR, a jak
+ * jsou třídy rukou rozdělené mezi akce. Změní-li se cokoli z toho, verdikt
+ * propadne, protože se změnilo přesně to, co se posuzovalo.
+ */
+export function flopPilotContentHash(rules: readonly FlopProductionStrategyRule[]): string {
+  const parts: string[] = [];
+  for (const rule of [...rules].sort((left, right) => left.id.localeCompare(right.id))) {
+    parts.push(rule.id, rule.actionNode, rule.potType, rule.positionPattern);
+    parts.push(String(rule.sprMin), String(rule.sprMax));
+    parts.push([...rule.boardTextures].sort().join(","));
+    parts.push(rule.actions.join(","), rule.recommendedAction);
+    for (const bucket of rule.rangeBuckets) {
+      parts.push(bucket.action, [...bucket.handClasses].sort().join(""));
+    }
+  }
+
+  let hash = 5381;
+  const text = parts.join("|");
+  for (let index = 0; index < text.length; index += 1) {
+    hash = ((hash * 33) ^ text.charCodeAt(index)) >>> 0;
+  }
+  return `${hash.toString(16).padStart(8, "0")}-${text.length.toString(16)}`;
 }
 
 export function parseTurnReviewVerdicts(raw: string): TurnReviewVerdictRecord[] {

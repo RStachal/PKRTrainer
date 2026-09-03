@@ -133,12 +133,34 @@ export function renderConfidenceReport(claims: readonly ConfidenceClaim[]): stri
   const over = claims.filter((claim) => claim.overclaims);
   const mechanical = claims.filter((claim) => claim.backing === "MECHANICAL_REVIEW");
   const read = claims.filter((claim) => claim.backing === "PLAYER_REVIEW");
+  const provenanceOnly = over.filter((claim) => claim.backing === "SOLVE_PROVENANCE");
+  const stale = over.filter((claim) => claim.backing === "STALE_REVIEW");
+  const unbacked = over.filter((claim) => claim.backing === "UNBACKED");
   lines.push("");
+  // **Říct, co chybí, ne že nechybí nic.**
+  //
+  // Tahle věta zněla „tvrdí víc než LOW, aniž by za tím cokoli stálo", což je o
+  // kategorii vedle: `UNBACKED` znamená „žádný doklad" a měřeno 3. 9. 2026 je
+  // prázdná. Všech sedm hlášených packů doklad o původu solvu **má** - jen ho
+  // nikdo nečetl, a tenhle modul schválně rozlišuje, že dohledatelnost není
+  // doklad kvality. Shrnutí to slévalo zpátky dohromady a poslalo by čtenáře
+  // hledat chybějící provenienci místo chybějícího čtenáře.
+  //
+  // Vlastní test tohohle výpisu se přitom celou dobu jmenuje správně: „kolik
+  // packů tvrdí víc, **než na co má doklad**". Odchýlila se hláška od něj.
   lines.push(over.length === 0
-    ? "Každý pack nad LOW má zapsaný doklad."
-    : `${over.length} packů tvrdí víc než LOW, aniž by za tím cokoli stálo.`);
+    ? "Každý pack nad LOW má zapsaný doklad o přečtení nebo měření."
+    : `${over.length} packů tvrdí víc než LOW, než na co má doklad`
+      + ` (jen původ solvu ${provenanceOnly.length},`
+      + ` propadlý verdikt ${stale.length}, bez dokladu ${unbacked.length}).`);
   // Dvě čísla, ne jedno: kolik obsahu stojí na měření a kolik na čtení, je ta
   // otázka, kvůli které tenhle výpis vznikl.
-  lines.push(`z toho podloženo měřením ${mechanical.length}, čtením ${read.length}`);
+  // Tři čísla, ne dvě. Kolik obsahu stojí jen na dohledatelnosti solvu je právě
+  // ten druhý standard, kvůli kterému `MEDIUM` znamená na dvou místech dvě
+  // různé věci - bez něj se ta nesrovnalost dá jen popsat, ne změřit.
+  lines.push(
+    `z toho podloženo měřením ${mechanical.length}, čtením ${read.length},`
+    + ` jen dohledatelností solvu ${claims.filter((c) => c.backing === "SOLVE_PROVENANCE").length}`,
+  );
   return lines.join("\n");
 }

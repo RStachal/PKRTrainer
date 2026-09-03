@@ -129,6 +129,8 @@ describe("čím je podložená důvěra", () => {
         packId: "b", street: "TURN", confidence: "LOW", sourceEvidenceCount: 1,
       }, []),
     ]);
-    expect(report).toContain("1 packů tvrdí víc než LOW");
+    expect(report).toContain("1 packů tvrdí víc než LOW, než na co má doklad");
+    // Chybějící čtenář, ne chybějící provenience - jsou to různé závěry.
+    expect(report).toContain("jen původ solvu 1");
   });
 });

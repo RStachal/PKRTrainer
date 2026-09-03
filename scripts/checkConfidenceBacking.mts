@@ -7,6 +7,7 @@ import {
   renderConfidenceReport,
   type ConfidenceClaim,
 } from "../src/data/ranges/confidenceBacking";
+import { flopPilotContentHash } from "../src/data/ranges/turnReviewVerdict";
 import { parseTurnReviewVerdicts } from "../src/data/ranges/turnReviewVerdict";
 import { solvedFlopManifest } from "../src/data/ranges/flopSolvedManifest.generated";
 import { solvedRiverManifest } from "../src/data/ranges/riverSolvedManifest.generated";
@@ -53,10 +54,18 @@ for (const entry of generatedMttPostflopPilotPacks) {
   // Piloty sdílejí jedno packId napříč rodinami; tvrzení o důvěře je jedno.
   if (seenFlop.has(`${pack.id}|${entry.catalogId}`)) continue;
   seenFlop.add(`${pack.id}|${entry.catalogId}`);
+  // **Rodina a otisk, jinak je čtení pilota k ničemu.**
+  //
+  // Do 3. 9. 2026 se tenhle claim stavěl bez obojího a `classifyConfidenceClaim`
+  // říká rovnou, že pack bez rodiny verdikt mít nemůže - přečtený pilot by tedy
+  // zůstal navěky na `SOLVE_PROVENANCE`. Identitou je `catalogId`: je stabilní,
+  // jedinečný a piloty sdílejí jedno `packId`, takže tím se rozlišit nedají.
   claims.push(classifyConfidenceClaim({
     packId: `${pack.id} (${entry.catalogId})`,
     street: "FLOP",
     confidence: pack.confidence,
+    familyId: entry.catalogId,
+    contentHash: flopPilotContentHash(entry.pack.rules),
     sourceEvidenceCount: pack.sourceEvidence?.length ?? 0,
   }, verdicts));
 }
