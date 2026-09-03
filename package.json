@@ -157,6 +157,7 @@
     "mtt:reference-check": "node scripts/run-cli.mjs scripts/checkReferenceRanges.mts",
     "mtt:mechanical-review": "node scripts/run-cli.mjs scripts/runMechanicalReview.mts",
     "mtt:after-night": "node scripts/run-cli.mjs scripts/runAfterNight.mts",
+    "mtt:known": "node scripts/run-cli.mjs scripts/searchProjectMemory.mts",
     "mtt:solved-coverage": "node scripts/run-cli.mjs scripts/checkSolvedSpotCoverage.mts",
     "mtt:post-answer": "node scripts/run-cli.mjs scripts/measurePostAnswerFeedback.mts",
     "mtt:rye-corpus": "node scripts/run-cli.mjs scripts/checkRyeRangeCorpus.mts",

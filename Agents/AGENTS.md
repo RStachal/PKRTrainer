@@ -195,6 +195,44 @@ při čtyřech workerech **559 vteřin** a samostatně **537 ms** - tisícináso
 protože stroj stránkoval. Čtyřka nebyla nikdy špatně; byla naměřená na 19
 dodávaných rodinách, dnes jich je 97.
 
+### 6. Nejdřív se zeptej paměti, teprve pak měř — `npm run mtt:known`
+
+Zapsáno 3. 9. 2026 po majitelově výtce, že se práce cyklí, opakují se vyvrácené
+závěry a vznikají nové chyby. Měl pravdu a příčina není nesoustředěnost.
+
+Pravidlo 1 říká „do dokumentu jde jen změřené". Chybělo k němu druhé půl věty:
+**nejdřív zjisti, jestli to není změřené dávno.** Bez něj vede pravidlo 1 přímo
+k tomu, že se každá relace rozjede měřením — a měření vypadá jako důkladnost,
+i když je to odvozování už odvozeného.
+
+Dvě selhání z 3. 9., obě zbytečná a obě chycená jedním dotazem:
+
+- Prohledal jsem celý internet kvůli tomu, že preflop pack nemá `VS_OPEN` pro
+  UTG+1 a UTG+2. Ten fakt ležel v repozitáři od **27. 8.** v komentáři u
+  `srpSolverInputGap` — a ten komentář dodává, že jeho zjištění stálo hodinu.
+  Zaplatilo se za něj tedy dvakrát.
+- Pustil jsem `mtt:rye-corpus` bez `--only` a dostal číslo, ze kterého plyne
+  „korpus to nespraví". U toho přepínače je komentář, že slévat ICM a chipEV
+  zakryje, která polovina co umí. Po rozdělení vyšel opak.
+
+Odtud dvě podmínky, ne předsevzetí:
+
+1. **Před měřením, hledáním na webu nebo zakládáním nového bodu deníku** se
+   pustí `npm run mtt:known -- "<téma>"`. Hledá ve čtyřech místech, kde znalost
+   tohohle projektu bydlí: deník, `Agents/*.md`, **komentáře v kódu** a zprávy
+   commitů. Řadí od nejstaršího nálezu, protože vyhrát má ten, kdo to zjistil
+   první — novější zápisy bývají jeho převyprávění.
+2. **Před spuštěním nástroje projektu se přečte jeho doc-komentář.** Skoro každý
+   tu nese přepínač nebo past, kterou už někdo zaplatil.
+
+Když `mtt:known` fakt najde, výstupem je **citace, ne nový řádek deníku**.
+Znovuobjevení se nezapisuje; zapisuje se jen to, co paměť opravdu nezná nebo co
+se přeměřilo jinak — a tehdy se řekne, který starší zápis se tím mění.
+
+Nástroj má vlastní bránu (`projectMemorySearch.test.ts`) ze stejného důvodu jako
+každé jiné měřidlo tady: nejhorší selhání není pád, ale **prázdný výsledek, který
+se čte jako „nic o tom nevíme"**.
+
 ### Co tím nezmizí
 
 Zpětné kroky se nedají vypnout úplně. Když oprava odhalí hlubší vadu - třeba že
