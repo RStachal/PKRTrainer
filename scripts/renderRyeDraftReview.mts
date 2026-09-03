@@ -34,6 +34,21 @@ const draftPath = process.argv.find((arg) => arg.startsWith("--draft="))?.split(
 const outPath = process.argv.find((arg) => arg.startsWith("--out="))?.split("=")[1]
   ?? "artifacts/rye-import/review.html";
 
+/**
+ * Půlka draftu ke čtení, `--only=CHIP` nebo `--only=ICM`. Stejné jméno i význam
+ * jako u `mtt:rye-corpus`, ať se dvě místa nechovají jinak.
+ *
+ * Čtení je u tohohle obsahu jediné úzké hrdlo a draft má 114 mřížek. Číst je
+ * všechny ve stejném pořadí znamená strávit 40 % času na ICM - a **ICM se do
+ * produkce dostat nemůže**: změřeno 3. 9. 2026, že rozpory v něm neodstraní
+ * žádný klíč odvoditelný ze jmen souborů, protože ICM range závisí na výplatní
+ * struktuře a rozložení stacků u celého stolu. ChipEV půlka je proti tomu po
+ * zpřesnění o sedačku soupeře **bez jediného rozporu** (67 buněk z 68 záznamů).
+ *
+ * Přednost tedy má ta půlka, která může dojít k hráči.
+ */
+const only = process.argv.find((arg) => arg.startsWith("--only="))?.split("=")[1]?.toUpperCase();
+
 const RANKS = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
 
 /** Barvy podle akce, stejné jako v matici produktu. */
@@ -213,7 +228,21 @@ function weight(record: DraftRecord): number {
  */
 const originalIndex = new Map(draft.records.map((record, index) => [record, index]));
 
-const sorted = [...draft.records].sort((left, right) => (
+/**
+ * Které mřížky se vykreslí. **Filtruje se výběr, ne číslování.**
+ *
+ * `originalIndex` výš zůstává nad celým draftem schválně: identifikátor
+ * odpovědi je index v draftu a kdyby se přečísloval podle filtru, sedly by
+ * odpovědi po přepnutí `--only` na jiné mřížky. To je táž vada jako v bodě 153,
+ * jen by ji tentokrát způsobil filtr místo přeskládání podle dopadu.
+ */
+const visible = draft.records.filter((record) => {
+  if (only === undefined) return true;
+  const isIcm = /^ICM/i.test(record.stackSetupId);
+  return only === "ICM" ? isIcm : !isIcm;
+});
+
+const sorted = [...visible].sort((left, right) => (
   weight(right) - weight(left)
   ||
   left.context.localeCompare(right.context)
@@ -602,5 +631,10 @@ var ORDER = ${JSON.stringify(sorted.map((record) => originalIndex.get(record) ??
 
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, html, "utf8");
-console.log(`Vykresleno ${draft.recordCount} mřížek do ${outPath}`);
+// Kolik se **vykreslilo**, ne kolik má draft. S `--only` se ta dvě čísla liší a
+// hláška, která to nerozlišuje, tvrdí o vlastní práci nepravdu.
+console.log(
+  `Vykresleno ${sorted.length} mřížek do ${outPath}`
+  + (only === undefined ? "" : ` (${only} z ${draft.recordCount} v draftu)`),
+);
 console.log("Otevři to v prohlížeči; stránka je statická a funguje offline.");
