@@ -1,8 +1,11 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { bucketsForContext, bucketsWithSpots, positionsForContext } from "../src/core/drillEngine";
-import { getRangeRecord } from "../src/data/ranges/index";
-import type { ActionContext, Position, StackBucket } from "../src/core/types";
+import {
+  type DraftFile,
+  type DraftImpact,
+  type DraftRecord,
+  impactOf,
+} from "./lib/ryeDraftImpact.mts";
 import {
   REVIEW_ANSWER_STYLES,
   reviewAnswerBar,
@@ -69,28 +72,7 @@ const COLORS: Record<string, string> = {
   "": "#e2e5ea",
 };
 
-interface DraftRecord {
-  position: string;
-  bucket: number;
-  context: string;
-  vsSeat: string;
-  stackSetupId: string;
-  sourceStackBB: number;
-  strict: Record<string, string[]>;
-  lenient: Record<string, string[]>;
-  /** ruka → akce a jak často ji zdroj hraje (jen u mixů). */
-  mix?: Record<string, Record<string, number>>;
-  notes: string[];
-  sourceFile: string;
-}
-
-const draft = JSON.parse(readFileSync(draftPath, "utf8")) as {
-  createdAt: string;
-  confidence: string;
-  assumptions: string[];
-  recordCount: number;
-  records: DraftRecord[];
-};
+const draft = JSON.parse(readFileSync(draftPath, "utf8")) as DraftFile;
 
 function handAt(row: number, column: number): string {
   if (row === column) return `${RANKS[row]}${RANKS[column]}`;
@@ -133,81 +115,6 @@ function grid(record: DraftRecord): string {
     }
   }
   return `<div class="grid">${cells.join("")}</div>`;
-}
-
-/**
- * O kolik by se změnila odpověď, kterou hráč dostane dnes.
- *
- * ## Proč to na té stránce musí být
- *
- * 94 mřížek je pořád moc na jedno sezení a **nejsou stejně důležité**. Některá
- * jen potvrdí, co knihovna odpovídá; jiná přepíše odpověď u šedesáti tříd ze
- * 169. Bez toho čísla se čte odshora dolů, tedy v pořadí, které nic neznamená.
- *
- * Měří se proti **obecnému** záznamu, tedy tomu, co hráč dostane teď - ne proti
- * zpřesněnému. To je celý smysl `vsSeat`: dnešní odpověď na „kdo otevřel"
- * nehledí, a tohle číslo říká, kolik ho to stojí u téhle konkrétní mřížky.
- */
-interface DraftImpact {
-  /** Tříd, kde by se doporučená akce lišila od dnešní odpovědi. */
-  changed: number;
-  /** Tříd, které dnešní odpověď zná. Bez nich není s čím srovnávat. */
-  compared: number;
-  /** Buňka, kterou knihovna dnes nemá vůbec - draft by ji přidal. */
-  newCell: boolean;
-  /**
-   * Mřížka, která by rozsvítila kombinaci filtrů rozdávající dnes **nula** spotů.
-   *
-   * Změřeno 27. 8. 2026: nabídka trenažéru je širší než obsah, takže relace
-   * „push/fold, 20 BB" nerozdá nic - a v draftu je pro ni šest mřížek. To je ze
-   * všech dopadů ten nejhmatatelnější: nejde o přesnější odpověď, ale o to, že
-   * odpověď vůbec bude.
-   */
-  unlocksEmpty: boolean;
-  /** Hloubka, kterou trenažér u tohohle kontextu vůbec nerozdává. */
-  notDrilled: boolean;
-}
-
-function impactOf(record: DraftRecord): DraftImpact {
-  const current = getRangeRecord(
-    "OFF",
-    record.position as Position,
-    record.bucket as StackBucket,
-    record.context as ActionContext,
-  );
-  // Dvě různé nuly, které vypadají stejně.
-  //
-  // „Nabízí se, ale nemáme obsah" se dá spravit tímhle draftem. „U tohohle
-  // kontextu se ta hloubka vůbec nerozdává" se spravit nedá a číst tu mřížku
-  // je dnes ztráta času. Prvních dvanáct označených obsahovalo čtyři z toho
-  // druhého druhu, než se to rozlišilo.
-  const context = record.context as ActionContext;
-  const bucket = record.bucket as StackBucket;
-  // Nabídnutá buňka musí sedět v **obou** rozměrech. Sedačka se sem doplnila
-  // 28. 8. 2026, když se ukázalo, že stránka tvrdila „přidal by novou odpověď"
-  // u `VS_OPEN|UTG+1` - jenže obranu proti otevření trenažér rozdává až od
-  // lojacku, takže by ta mřížka po schválení nezměnila nic.
-  const offered = bucketsForContext(context).includes(bucket)
-    && positionsForContext(context).includes(record.position as Position);
-  const live = bucketsWithSpots([context], "OFF").includes(bucket);
-  const unlocksEmpty = offered && !live;
-  const notDrilled = !offered;
-  if (current === undefined) {
-    return { changed: 0, compared: 0, newCell: true, unlocksEmpty, notDrilled };
-  }
-  let changed = 0;
-  let compared = 0;
-  for (const [hand, actions] of Object.entries(record.strict)) {
-    const mine = current.strict[hand];
-    // Ruka, kterou dnešní odpověď nezná, není neshoda - je to prázdno. Počítat
-    // ji jako změnu by nafouklo každou mřížku na stovku.
-    if (mine === undefined) continue;
-    compared += 1;
-    const same = mine.length === actions.length
-      && [...mine].sort().join("|") === [...actions].sort().join("|");
-    if (!same) changed += 1;
-  }
-  return { changed, compared, newCell: false, unlocksEmpty, notDrilled };
 }
 
 const impacts = new Map<DraftRecord, DraftImpact>(

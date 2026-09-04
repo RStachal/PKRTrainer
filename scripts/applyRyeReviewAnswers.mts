@@ -1,5 +1,12 @@
 import { readFileSync } from "node:fs";
 
+import {
+  type DraftFile,
+  type DraftRecord,
+  impactOf,
+  seatCollisions,
+} from "./lib/ryeDraftImpact.mts";
+
 /**
  * Co majitel u draftu odpověděl, přeložené do rozhodnutí.
  *
@@ -47,17 +54,7 @@ if (raw === undefined) {
   process.exit(2);
 }
 
-interface DraftRecord {
-  position: string;
-  bucket: number;
-  context: string;
-  vsSeat: string;
-  sourceFile: string;
-  strict: Record<string, string[]>;
-  mix?: Record<string, Record<string, number>>;
-}
-
-const draft = JSON.parse(readFileSync(draftPath, "utf8")) as { records: DraftRecord[] };
+const draft = JSON.parse(readFileSync(draftPath, "utf8")) as DraftFile;
 
 const body = raw.replace(/^DRILLEV-REVIEW-V\d+\s*/, "").trim();
 if (body.length === 0) {
@@ -98,6 +95,66 @@ if (unknown.length > 0) {
   console.log(`nepřečtené tokeny (${unknown.length}): ${unknown.slice(0, 8).join(", ")}`);
 }
 
+/**
+ * Co ze schváleného může dnes dojít k hráči.
+ *
+ * ## Proč to tady přibylo
+ *
+ * Do 4. 9. 2026 skript vypsal, kolik mřížek je schválených - a to je číslo o
+ * vyrobené práci, ne o doručení. Pravidlo 4 říká opak: měří se, co dojde
+ * k hráči. Rozdíl je tu velký a měřitelný, protože schválení samo o sobě
+ * nestačí ani jednou ze tří stran:
+ *
+ * 1. **Buňka se nemusí rozdávat.** Obranu proti otevření trenažér rozdává až
+ *    od lojacku, takže mřížka pro UTG+1 po schválení nezmění nic.
+ * 2. **Kombinace může být dnes prázdná** - schválení je pak to nejcennější, co
+ *    se může stát: odpověď nebude přesnější, ona vůbec bude.
+ * 3. **Dvě mřížky můžou mířit do jedné buňky**, protože se liší jen otvíračem
+ *    a produkt tu osu nemá (`TableState` nese `facing`, ne sedačku otvírače;
+ *    bod 140). Tohle je jediná část, která se importem vyřešit nedá.
+ */
+function reportDelivery(approved: readonly DraftRecord[]): void {
+  let landing = 0;
+  let unlocking = 0;
+  let notDrilled = 0;
+  let changedClasses = 0;
+  let newCells = 0;
+  for (const record of approved) {
+    const impact = impactOf(record);
+    if (impact.notDrilled) { notDrilled += 1; continue; }
+    if (impact.unlocksEmpty) unlocking += 1;
+    if (impact.newCell) newCells += 1;
+    changedClasses += impact.changed;
+    landing += 1;
+  }
+
+  console.log("");
+  console.log("co z toho může dnes dojít k hráči:");
+  console.log(`  rozdává se to                     ${String(landing).padStart(4)}`);
+  console.log(`    z toho rozsvítí prázdnou relaci ${String(unlocking).padStart(4)}`);
+  console.log(`    z toho buňka, kterou nemáme     ${String(newCells).padStart(4)}`);
+  console.log(`  tříd, kde by se odpověď změnila   ${String(changedClasses).padStart(4)}`);
+  console.log(`  nerozdává se, takže nezmění nic   ${String(notDrilled).padStart(4)}`);
+
+  const collisions = seatCollisions(approved);
+  if (collisions.length === 0) return;
+
+  const disagreeing = collisions.reduce((sum, row) => sum + row.disagreeing, 0);
+  console.log("");
+  console.log(`sráží se o otvírače: ${collisions.length} buněk, ${disagreeing} tříd v rozporu`);
+  for (const row of collisions.slice(0, 8)) {
+    console.log(`  ${row.cell.padEnd(22)} ${row.seats.join(", ").padEnd(18)} ${row.disagreeing} tříd`);
+  }
+  if (collisions.length > 8) console.log(`  … a dalších ${collisions.length - 8}`);
+  console.log("");
+  console.log(
+    "Tyhle mřížky se liší jen tím, kdo otevřel, a produkt tu osu nemá:\n"
+    + "`getRangeRecord` se ptá na sedačku, hloubku a kontext, `TableState` nese\n"
+    + "`facing` bez otvírače. Uložit se dá jen jedna z nich, a která to bude,\n"
+    + "je rozhodnutí o rozsahu produktu (bod 140), ne úloha importu.",
+  );
+}
+
 const approved = byVerdict.get("o") ?? [];
 if (approved.length > 0) {
   console.log("");
@@ -111,6 +168,7 @@ if (approved.length > 0) {
   }
   const mixes = approved.reduce((sum, record) => sum + Object.keys(record.mix ?? {}).length, 0);
   console.log(`  rukou s mixem v tom, co je schválené: ${mixes}`);
+  reportDelivery(approved);
 }
 
 console.log("");
