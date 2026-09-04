@@ -7,6 +7,12 @@ import { MTT_POSTFLOP_PILOT_CATALOG } from "../src/data/ranges/mttPostflopPilotC
 import { positionPatternLabel } from "../src/core/postflopGenerator";
 import type { FlopProductionStrategyRule } from "../src/data/ranges/flopProductionStrategyPack";
 import { pilotReviewOrder, pilotReviewPageHash } from "./lib/flopPilotReview.mts";
+import {
+  REVIEW_ANSWER_STYLES,
+  reviewAnswerBar,
+  reviewAnswerOption,
+  reviewAnswerScript,
+} from "./lib/reviewAnswerMemory.mts";
 
 /**
  * Flopové piloty k přečtení člověkem, jako mřížky - ne jako JSON.
@@ -35,6 +41,13 @@ import { pilotReviewOrder, pilotReviewPageHash } from "./lib/flopPilotReview.mts
  * U každého pravidla to, podle čeho se pozná dobrá hra od špatné: kterou akci
  * doporučuje, na jakých texturách a v jakém pásmu SPR platí, jak jsou třídy
  * rukou rozdělené mezi akce (mřížka), a co pilot sám o sobě přiznává za meze.
+ *
+ * ## Proč si pamatuje, kde jsi skončil
+ *
+ * Majitel 4. 9. 2026 řekl, že si stránky dá na FTP a bude je **vyplňovat
+ * postupně**. Do té doby si tahle nepamatovala nic - zavřená karta znamenala
+ * začít znovu. Paměť je společná s draftem ranží (`lib/reviewAnswerMemory.mts`),
+ * včetně toho, že se odpovědi váží na identitu pilota, ne na jeho pozici.
  *
  * ## Co to nedělá
  *
@@ -158,12 +171,14 @@ const cards = pilots.map((entry, index) => {
     ${limits === "" ? "" : `<details><summary>Co pilot sám přiznává (${catalog?.limitations.length})</summary><ul>${limits}</ul></details>`}
     ${assumptions === "" ? "" : `<details><summary>Předpoklady packu (${entry.pack.assumptions.length})</summary><ul>${assumptions}</ul></details>`}
     ${rules}
-    <div class="verdict" data-index="${index}">
-      <b>Verdikt:</b>
-      <label><input type="radio" name="v${index}" value="o"> hraje dobře, pustit do produkce</label>
-      <label><input type="radio" name="v${index}" value="x"> něco je špatně</label>
-      <label><input type="radio" name="v${index}" value="?"> nejsem si jistý</label>
-      <label><input type="radio" name="v${index}" value="s"> přeskočit</label>
+    <div class="verdict" data-id="${index}">
+      <p class="q-focus">Verdikt: <b>dala by se ta strategie hrát?</b></p>
+      <div class="opts">
+        ${reviewAnswerOption(index, "o", "✓ Hraje dobře, pustit do produkce")}
+        ${reviewAnswerOption(index, "x", "✗ Něco je špatně")}
+        ${reviewAnswerOption(index, "?", "? Nejsem si jistý")}
+        ${reviewAnswerOption(index, "s", "– Přeskočit")}
+      </div>
     </div>
   </section>`;
 }).join("");
@@ -186,12 +201,11 @@ const page = `<!doctype html>
  table.grid td.off{color:#767c86}
  .explain{color:#c3c8d0;margin:6px 0 0;font-size:13px}
  details{margin:6px 0;color:#c3c8d0} summary{cursor:pointer}
- .verdict{background:#1b1f26;border:1px solid #2a2e35;border-radius:6px;padding:10px;margin:16px 0}
- .verdict label{margin-right:16px;white-space:nowrap}
- #outbox{width:100%;height:70px;font-family:ui-monospace,Consolas,monospace;font-size:13px;
-   background:#0f1116;color:#e8eaed;border:1px solid #2a2e35;border-radius:6px;padding:8px}
  .note{color:#9aa3af;font-size:13px}
+${REVIEW_ANSWER_STYLES}
+ .verdict{margin:16px 0;max-width:none}
 </style></head><body>
+${reviewAnswerBar()}
 <header>
  <h1>Flopové piloty ke čtení — ${pilots.length} pilotů</h1>
  <p class="note">
@@ -204,32 +218,22 @@ const page = `<!doctype html>
   tady jde o to, jestli by se ta strategie dala hrát. Mřížka ukazuje, kterou akci
   pravidlo drží pro kterou třídu rukou; šedá je mimo range.
  </p>
- <p class="note">Stránka je statická a funguje offline. Odpovědi se nikam neodesílají.</p>
+ <p class="note">Stránka je statická a funguje offline. Odpovědi se nikam neodesílají:
+  drží je tenhle prohlížeč, takže se dá číst po kouskách a vracet se k tomu.
+  Až budeš hotový (nebo budeš chtít předat rozdělanou práci), zmáčkni nahoře
+  <b>Zkopírovat odpovědi</b> - vypadne token pro
+  <code>npm run mtt:pilot-answers</code>.</p>
 </header>
 ${cards}
-<section>
- <h2>Odpovědi</h2>
- <p class="note">Zkopíruj a předej: <code>npm run mtt:pilot-answers -- --answers="…"</code></p>
- <textarea id="outbox" readonly></textarea>
-</section>
-<script>
- // Index je pořadí pilota v tomhle výpisu a je stabilní: řadí se podle počtu
- // pravidel a jména, ne podle čehokoli, co se mění s obsahem.
- // Otisk obsahu, ze kterého stránka vznikla. Zapisovač odpovědí ho porovná a
- // odmítne zápis, když se piloty mezitím změnily.
- var PAGE_HASH = "${pageHash}";
- var box = document.getElementById("outbox");
- function refresh() {
-   var out = [];
-   document.querySelectorAll(".verdict").forEach(function (node) {
-     var picked = node.querySelector("input:checked");
-     if (picked) out.push(node.dataset.index + picked.value);
-   });
-   box.value = out.length === 0 ? "" : "DRILLEV-PILOT-V1 " + PAGE_HASH + " " + out.join(" ");
- }
- document.addEventListener("change", refresh);
- refresh();
-</script>
+${reviewAnswerScript({
+    // Index je pořadí pilota v tomhle výpisu a je stabilní: řadí se podle počtu
+    // pravidel a jména, ne podle čehokoli, co se mění s obsahem. Otisk obsahu
+    // navíc hlídá, že se piloty od uložení odpovědí nezměnily - zaškrtnout je
+    // nad jiným obsahem by tvrdilo „přečteno" o něčem, co nikdo neviděl.
+    storageKey: "drillev-pilot-answers-v1",
+    tokenPrefix: "DRILLEV-PILOT-V1",
+    pageHash,
+  })}
 </body></html>`;
 
 mkdirSync(dirname(outPath), { recursive: true });

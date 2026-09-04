@@ -160,6 +160,7 @@
     "mtt:known": "node scripts/run-cli.mjs scripts/searchProjectMemory.mts",
     "mtt:pilot-review": "node scripts/run-cli.mjs scripts/renderFlopPilotReview.mts",
     "mtt:pilot-answers": "node scripts/run-cli.mjs scripts/applyFlopPilotAnswers.mts",
+    "mtt:review-desk": "node scripts/run-cli.mjs scripts/buildReviewDesk.mts",
     "mtt:solved-coverage": "node scripts/run-cli.mjs scripts/checkSolvedSpotCoverage.mts",
     "mtt:post-answer": "node scripts/run-cli.mjs scripts/measurePostAnswerFeedback.mts",
     "mtt:rye-corpus": "node scripts/run-cli.mjs scripts/checkRyeRangeCorpus.mts",
