@@ -1,4 +1,9 @@
-import { bucketsForContext, bucketsWithSpots, positionsForContext } from "../../src/core/drillEngine";
+import {
+  REJAM_EV_OPENER_BY_HERO,
+  bucketsForContext,
+  bucketsWithSpots,
+  positionsForContext,
+} from "../../src/core/drillEngine";
 import { getRangeRecord } from "../../src/data/ranges/index";
 import type { ActionContext, Position, StackBucket } from "../../src/core/types";
 
@@ -134,6 +139,30 @@ export interface SeatCollision {
   seats: string[];
   /** Tříd rukou, kde se ty mřížky mezi sebou neshodnou. */
   disagreeing: number;
+  /**
+   * Otvírač, kterého produkt u téhle sedačky **už dnes předpokládá**, nebo
+   * `undefined`, když pro ni žádný předpoklad nemá.
+   */
+  assumedSeat?: string;
+  /** Sedí některá z těch mřížek na ten předpoklad? */
+  resolved: boolean;
+}
+
+/**
+ * Otvírač, proti kterému je chart pro tuhle sedačku kreslený.
+ *
+ * Není to konstanta a nesmí se za ni vydávat: mapování je **na sedačku hrdiny**
+ * (hijack pro blindy, button a cutoff; lojack pro hijack; UTG+1 pro lojack) a
+ * bydlí v `drillEngine`, protože podle něj se dnes počítá cena re-jamu. Volba
+ * „bezpečné konstanty" ho jednou přebila a při 15 BB označila 167 rukou za
+ * ztrátové, které chart jamuje.
+ *
+ * Majitel 4. 9. 2026 zvolil, že u sražené buňky se vezme mřížka proti tomuhle
+ * otvírači - tím se z dnešního předpokladu produktu stane pravda a nemění se
+ * nic z toho, co se rozdává.
+ */
+export function assumedOpenerFor(position: string): string | undefined {
+  return REJAM_EV_OPENER_BY_HERO[position];
 }
 
 export function seatCollisions(records: readonly DraftRecord[]): SeatCollision[] {
@@ -158,10 +187,18 @@ export function seatCollisions(records: readonly DraftRecord[]): SeatCollision[]
       if (answers.size > 1) disagreeing += 1;
     }
     if (disagreeing === 0) continue;
+    const seats = [...new Set(group.map((record) => record.vsSeat || "—"))].sort();
+    // Předpoklad se čte podle sedačky hrdiny, ne podle buňky jako celku.
+    const assumedSeat = assumedOpenerFor(group[0].position);
     collisions.push({
       cell,
-      seats: [...new Set(group.map((record) => record.vsSeat || "—"))].sort(),
+      seats,
       disagreeing,
+      assumedSeat,
+      // Fail-closed: když mezi mřížkami ta předpokládaná není, spor se
+      // nerozhoduje odhadem. Vybrat libovolnou by znamenalo tvrdit o range
+      // něco, co pro ni nikdo nezvolil.
+      resolved: assumedSeat !== undefined && seats.includes(assumedSeat),
     });
   }
   return collisions.sort((left, right) => right.disagreeing - left.disagreeing);

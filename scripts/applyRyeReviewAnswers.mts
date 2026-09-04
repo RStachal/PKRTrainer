@@ -140,18 +140,47 @@ function reportDelivery(approved: readonly DraftRecord[]): void {
   if (collisions.length === 0) return;
 
   const disagreeing = collisions.reduce((sum, row) => sum + row.disagreeing, 0);
+  const resolved = collisions.filter((row) => row.resolved);
+  const open = collisions.filter((row) => !row.resolved);
+
   console.log("");
   console.log(`sráží se o otvírače: ${collisions.length} buněk, ${disagreeing} tříd v rozporu`);
-  for (const row of collisions.slice(0, 8)) {
-    console.log(`  ${row.cell.padEnd(22)} ${row.seats.join(", ").padEnd(18)} ${row.disagreeing} tříd`);
+  console.log(`  rozhodne předpoklad produktu     ${String(resolved.length).padStart(4)}`);
+  console.log(`  zůstává na tobě                  ${String(open.length).padStart(4)}`);
+
+  if (resolved.length > 0) {
+    console.log("");
+    console.log("bere se mřížka proti tomu, koho produkt u té sedačky předpokládá:");
+    for (const row of resolved.slice(0, 8)) {
+      console.log(
+        `  ${row.cell.padEnd(22)} bereme vs ${String(row.assumedSeat).padEnd(6)}`
+        + ` (z ${row.seats.length} otvíračů) → ${row.disagreeing} tříd`,
+      );
+    }
+    if (resolved.length > 8) console.log(`  … a dalších ${resolved.length - 8}`);
   }
-  if (collisions.length > 8) console.log(`  … a dalších ${collisions.length - 8}`);
+
+  if (open.length > 0) {
+    console.log("");
+    console.log("bez předpokladu, takže se nerozhoduje odhadem:");
+    for (const row of open.slice(0, 8)) {
+      console.log(
+        `  ${row.cell.padEnd(22)} ${row.seats.join(", ").padEnd(24)} ${row.disagreeing} tříd`,
+      );
+    }
+    if (open.length > 8) console.log(`  … a dalších ${open.length - 8}`);
+  }
+
   console.log("");
   console.log(
     "Tyhle mřížky se liší jen tím, kdo otevřel, a produkt tu osu nemá:\n"
     + "`getRangeRecord` se ptá na sedačku, hloubku a kontext, `TableState` nese\n"
-    + "`facing` bez otvírače. Uložit se dá jen jedna z nich, a která to bude,\n"
-    + "je rozhodnutí o rozsahu produktu (bod 140), ne úloha importu.",
+    + "`facing` bez otvírače. Majitel 4. 9. 2026 zvolil, že se u sražené buňky\n"
+    + "vezme mřížka proti tomu otvírači, kterého produkt u té sedačky už dnes\n"
+    + "předpokládá (`REJAM_EV_OPENER_BY_HERO`) - tím se z předpokladu stane\n"
+    + "pravda a nemění se nic z toho, co se rozdává. Kde ten předpoklad není,\n"
+    + "spor zůstává otevřený; vybrat libovolnou mřížku by tvrdilo o range něco,\n"
+    + "co pro ni nikdo nezvolil.",
   );
 }
 

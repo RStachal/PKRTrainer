@@ -831,8 +831,16 @@ function comboCount(classes: readonly HandLabel[]): number {
  *
  * Where the source says who the opponent is, use it. A conservative default is
  * for when nothing is known, not for overruling a measurement.
+ *
+ * Exported since 2026-09-04, because a second place needs the same answer. The
+ * imported chart draft carries the opening seat and the product does not: two
+ * drafted grids for one cell differ only by who opened, and only one can be
+ * stored. The one to keep is the one this mapping already assumes, so that the
+ * product's standing assumption becomes true instead of approximate. Two copies
+ * of this table would drift apart silently and each side would then claim
+ * something different about the same range.
  */
-const REJAM_EV_OPENER_BY_HERO: Readonly<Record<string, Position>> = {
+export const REJAM_EV_OPENER_BY_HERO: Readonly<Record<string, Position>> = {
   BB: "HJ",
   BTN: "HJ",
   CO: "HJ",
