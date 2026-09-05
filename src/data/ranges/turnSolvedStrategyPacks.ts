@@ -1,9 +1,28 @@
 import type { PostflopStrategyResolver } from "../../core/postflopGenerator";
 import { createPostflopResolverChain } from "./postflopResolverChain";
-import { solvedTurnManifest, type SolvedTurnManifestEntry } from "./turnSolvedManifest.generated";
+import type { SolvedTurnManifestEntry } from "./turnSolvedManifest.generated";
 import { registerSolvedTurnPack, runtimeSolvedTurnPacks } from "./turnSolvedRuntimeRegistry";
 import type { TurnStrategyPack } from "./turnStrategyPack";
 import { createTurnStrategyResolver } from "./turnStrategyResolver";
+
+/**
+ * Manifest se stahuje zvlášť, ne s instalační cestou.
+ *
+ * Seznam vyřešených rodin **roste s obsahem** - naměřeno zhruba 23 B gzipu na
+ * rodinu (bod 107) - a staticky importovaný se usadil v hlavním balíku, který
+ * platí každý hráč hned při instalaci. Změřeno 5. 9. 2026: `main` byl na
+ * **324,08 z 325 KiB raw**, tedy necelý kilobajt pod stropem.
+ *
+ * Manifest čte jen asynchronní cesta, takže dynamický import nic nerozbije:
+ * synchronní resolver se ptá na už načtené packy, ne na seznam.
+ */
+let manifestPromise: Promise<readonly SolvedTurnManifestEntry[]> | undefined;
+
+function solvedTurnManifestAsync(): Promise<readonly SolvedTurnManifestEntry[]> {
+  manifestPromise ??= import("./turnSolvedManifest.generated").then((module) => module.solvedTurnManifest);
+  return manifestPromise;
+}
+
 
 /**
  * The solved turn packs the app ships, one downloadable chunk per family.
@@ -47,7 +66,7 @@ export const turnSolvedStrategyPacks: readonly TurnStrategyPack[] = runtimeSolve
  */
 export function solvedTurnEntriesForProfile(
   profileKey: string,
-  manifest: readonly SolvedTurnManifestEntry[] = solvedTurnManifest,
+  manifest: readonly SolvedTurnManifestEntry[],
 ): readonly SolvedTurnManifestEntry[] {
   const segments = profileKey.split("|");
   const withoutAnte = segments.length > 4 ? segments.slice(0, 4).join("|") : profileKey;
@@ -101,12 +120,13 @@ function loadOne(entry: SolvedTurnManifestEntry): Promise<TurnStrategyPack> {
  * první, a výběr se během chvíle rozšíří. To je vychýlení na pár vteřin, ne
  * chybný obsah - resolver dál odmítá všechno, co nevyřešil.
  */
-export function loadSolvedTurnPacks(
+export async function loadSolvedTurnPacks(
   profileKey: string,
-  manifest: readonly SolvedTurnManifestEntry[] = solvedTurnManifest,
+  manifest?: readonly SolvedTurnManifestEntry[],
 ): Promise<readonly TurnStrategyPack[]> {
-  const entries = solvedTurnEntriesForProfile(profileKey, manifest);
-  if (entries.length === 0) return Promise.resolve([]);
+  const list = manifest ?? await solvedTurnManifestAsync();
+  const entries = solvedTurnEntriesForProfile(profileKey, list);
+  if (entries.length === 0) return [];
 
   const [first, ...rest] = entries;
   for (const entry of rest) {
@@ -125,11 +145,12 @@ export function loadSolvedTurnPacks(
  * megabajtu před první rukou přesně ten problém, kvůli kterému se čeká jen na
  * jednu rodinu.
  */
-export function loadAllSolvedTurnPacks(
+export async function loadAllSolvedTurnPacks(
   profileKey: string,
-  manifest: readonly SolvedTurnManifestEntry[] = solvedTurnManifest,
+  manifest?: readonly SolvedTurnManifestEntry[],
 ): Promise<readonly TurnStrategyPack[]> {
-  return Promise.all(solvedTurnEntriesForProfile(profileKey, manifest).map(loadOne));
+  const all = manifest ?? await solvedTurnManifestAsync();
+  return Promise.all(solvedTurnEntriesForProfile(profileKey, all).map(loadOne));
 }
 
 /** Kolik rodin už dorazilo, pro testy a diagnostiku. */

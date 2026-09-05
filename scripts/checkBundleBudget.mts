@@ -4,6 +4,7 @@ import { gzipSync } from "node:zlib";
 import {
   isLazyMttProductionAsset,
   isPreflopEquityAsset,
+  isSolvedManifestAsset,
   isSolvedStreetAsset,
 } from "../src/pwa/precacheManifestBuild";
 
@@ -225,7 +226,11 @@ for (const file of jsFiles) {
   // per profile, never on the install path, and capped per chunk so one family
   // cannot grow without anyone noticing.
   const lazyMttProduction = isLazyMttProductionAsset(file) || isSolvedStreetAsset(file);
-  const deferred = isPreflopEquityAsset(file);
+  // Manifest je odložený stejně jako obsah, který popisuje: stahuje se teprve
+  // když se o vyřešené rodiny někdo přihlásí. Bez tohohle řádku by ho rozpočet
+  // počítal do instalační cesty, ačkoli tam není - tedy měřil něco jiného, než
+  // co hráč zaplatí.
+  const deferred = isPreflopEquityAsset(file) || isSolvedManifestAsset(file);
   if (lazyMttProduction) {
     lazyMttCount += 1;
     lazyMttRawKb += rawKb;

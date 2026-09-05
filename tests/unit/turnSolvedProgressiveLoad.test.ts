@@ -5,6 +5,7 @@ import {
   loadSolvedTurnPacks,
   solvedTurnEntriesForProfile,
 } from "../../src/data/ranges/turnSolvedStrategyPacks";
+import { solvedTurnManifest } from "../../src/data/ranges/turnSolvedManifest.generated";
 import { clearSolvedTurnPacksForTests, runtimeSolvedTurnPacks } from "../../src/data/ranges/turnSolvedRuntimeRegistry";
 
 /**
@@ -22,7 +23,7 @@ const TURN_KEY = "FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF";
 
 describe("postupné načítání turn packů", () => {
   it("vrátí se po jedné rodině, ne po všech", async () => {
-    const entries = solvedTurnEntriesForProfile(TURN_KEY);
+    const entries = solvedTurnEntriesForProfile(TURN_KEY, solvedTurnManifest);
     expect(entries.length).toBeGreaterThan(1);
 
     const packs = await loadSolvedTurnPacks(TURN_KEY);
@@ -32,7 +33,7 @@ describe("postupné načítání turn packů", () => {
   });
 
   it("nástroje si vyžádají všechno a dostanou všechno", async () => {
-    const entries = solvedTurnEntriesForProfile(TURN_KEY);
+    const entries = solvedTurnEntriesForProfile(TURN_KEY, solvedTurnManifest);
     const packs = await loadAllSolvedTurnPacks(TURN_KEY);
     expect(packs).toHaveLength(entries.length);
   });

@@ -49,12 +49,31 @@ export function isSolvedStreetAsset(fileName: string): boolean {
   return /^mtt-(flop|turn|river-ev|river)-solved-[a-z0-9-]+-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
 }
 
+/**
+ * Seznam vyřešených rodin - manifest, ne obsah.
+ *
+ * Manifest **roste s obsahem**: naměřeno zhruba 23 B gzipu na rodinu (bod 107),
+ * a staticky importovaný seděl v hlavním balíku, který platí každý hráč hned při
+ * instalaci. Změřeno 5. 9. 2026: čtyři manifesty nesly 59,8 kB zdroje a `main`
+ * byl na **324,08 z 325 KiB raw** - necelý kilobajt pod stropem.
+ *
+ * Odložit ho je konzistentní s tím, co popisuje `isSolvedStreetAsset`: samotné
+ * rodiny se stahují až když na ně dojde, takže seznam, podle kterého se stahují,
+ * nemá být na instalační cestě dřív než ony. Kdo otevře jen preflopový drill,
+ * nezaplatí ani rodiny, ani jejich seznam.
+ */
+export function isSolvedManifestAsset(fileName: string): boolean {
+  const baseName = fileName.replace(/\\/g, "/").split("/").pop() ?? "";
+  return /^mtt-manifest-[a-z-]+-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
+}
+
 /** Assets the app fetches when it needs them, so they stay off the install path. */
 export function isDeferredAsset(fileName: string): boolean {
   return (
     isLazyMttProductionAsset(fileName) ||
     isPreflopEquityAsset(fileName) ||
-    isSolvedStreetAsset(fileName)
+    isSolvedStreetAsset(fileName) ||
+    isSolvedManifestAsset(fileName)
   );
 }
 
@@ -77,6 +96,14 @@ export function mttProductionChunkNameForModuleId(moduleId: string): string | nu
   // `river-ev` napřed: `/ranges/river-ev/` neobsahuje `/ranges/river/`, takže by
   // jinak propadlo až na `null`, chunk by dostal jméno podle souboru a precache
   // by ho vzal za nutný - tedy potřetí tatáž past, jen o adresář vedle.
+  // Manifesty leží přímo v `ranges/`, ne v podadresáři ulice, takže je pravidlo
+  // níž nepozná - a bez vlastního jména by dostaly jméno podle souboru a
+  // precache by je vzal za nutné. To je přesně ta past, která je v tomhle
+  // souboru popsaná dvakrát; potřetí by byla jen o soubor vedle.
+  const manifestStreet = /^(flop|turn|river)SolvedManifest\.generated\.ts$/.exec(fileName)?.[1]
+    ?? (fileName === "riverEvManifest.generated.ts" ? "river-ev" : null);
+  if (manifestStreet !== null) return `mtt-manifest-${manifestStreet}`;
+
   const street = normalized.includes("/ranges/river-ev/")
     ? "river-ev"
     : normalized.includes("/ranges/turn/")

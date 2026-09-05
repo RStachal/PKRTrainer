@@ -1,4 +1,4 @@
-import { solvedRiverManifest, type SolvedRiverManifestEntry } from "./riverSolvedManifest.generated";
+import type { SolvedRiverManifestEntry } from "./riverSolvedManifest.generated";
 import { registerSolvedRiverPack, runtimeSolvedRiverPacks } from "./riverSolvedRuntimeRegistry";
 import type { RiverStrategyPack } from "./riverStrategyPack";
 
@@ -17,10 +17,31 @@ import type { RiverStrategyPack } from "./riverStrategyPack";
 
 export const riverSolvedStrategyPacks: readonly RiverStrategyPack[] = runtimeSolvedRiverPacks;
 
+/**
+ * Manifest se stahuje zvlášť, ne s instalační cestou.
+ *
+ * Seznam vyřešených rodin **roste s obsahem** - naměřeno zhruba 23 B gzipu na
+ * rodinu (bod 107) - a staticky importovaný se usadil v hlavním balíku, který
+ * platí každý hráč hned při instalaci. Změřeno 5. 9. 2026: `main` byl na
+ * **324,08 z 325 KiB raw**, tedy necelý kilobajt pod stropem, a čtyři manifesty
+ * dohromady nesly 59,8 kB zdroje.
+ *
+ * Dynamický import ho posune do vlastního chunku, který se stáhne teprve když
+ * se o vyřešený obsah někdo přihlásí. Synchronní cesta ho nepotřebuje: manifest
+ * čte jen tahle funkce a `loadSolvedRiverPacks`, obojí asynchronní.
+ */
+let manifestPromise: Promise<readonly SolvedRiverManifestEntry[]> | undefined;
+
+function solvedRiverManifestAsync(): Promise<readonly SolvedRiverManifestEntry[]> {
+  manifestPromise ??= import("./riverSolvedManifest.generated")
+    .then((module) => module.solvedRiverManifest);
+  return manifestPromise;
+}
+
 /** Položky manifestu, které profil chce; ante segment se ignoruje jako u turnu. */
 export function solvedRiverEntriesForProfile(
   profileKey: string,
-  manifest: readonly SolvedRiverManifestEntry[] = solvedRiverManifest,
+  manifest: readonly SolvedRiverManifestEntry[],
 ): readonly SolvedRiverManifestEntry[] {
   const segments = profileKey.split("|");
   const withoutAnte = segments.length > 4 ? segments.slice(0, 4).join("|") : profileKey;
@@ -68,11 +89,12 @@ function loadOne(entry: SolvedRiverManifestEntry): Promise<RiverStrategyPack> {
  * buď na tu desku odpoví, nebo se přizná - takže čekání by jen zdrželo první
  * ruku.
  */
-export function loadSolvedRiverPacks(
+export async function loadSolvedRiverPacks(
   profileKey: string,
-  manifest: readonly SolvedRiverManifestEntry[] = solvedRiverManifest,
+  manifest?: readonly SolvedRiverManifestEntry[],
 ): Promise<readonly RiverStrategyPack[]> {
-  return Promise.all(solvedRiverEntriesForProfile(profileKey, manifest).map(loadOne));
+  const entries = manifest ?? await solvedRiverManifestAsync();
+  return Promise.all(solvedRiverEntriesForProfile(profileKey, entries).map(loadOne));
 }
 
 /** Kolik rodin už dorazilo, pro testy a diagnostiku. */

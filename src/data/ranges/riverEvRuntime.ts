@@ -1,10 +1,29 @@
 import type { PostflopAction } from "../../core/postflopGenerator";
 import type { Card } from "../../core/types";
-import { riverEvManifest, type RiverEvManifestEntry } from "./riverEvManifest.generated";
+import type { RiverEvManifestEntry } from "./riverEvManifest.generated";
 import { decodeComboMask } from "../../core/evCodec";
 import { readRiverEv, riverEvMatchesPack, type RiverEvPack } from "./riverEvPack";
 import type { RiverStrategyPack } from "./riverSolvedRuntimeRegistry";
 import { translateTurnActions } from "./turnActionTranslation";
+
+/**
+ * Manifest se stahuje zvlášť, ne s instalační cestou.
+ *
+ * Seznam vyřešených rodin **roste s obsahem** - naměřeno zhruba 23 B gzipu na
+ * rodinu (bod 107) - a staticky importovaný se usadil v hlavním balíku, který
+ * platí každý hráč hned při instalaci. Změřeno 5. 9. 2026: `main` byl na
+ * **324,08 z 325 KiB raw**, tedy necelý kilobajt pod stropem.
+ *
+ * Manifest čte jen asynchronní cesta, takže dynamický import nic nerozbije:
+ * synchronní resolver se ptá na už načtené packy, ne na seznam.
+ */
+let manifestPromise: Promise<readonly RiverEvManifestEntry[]> | undefined;
+
+function riverEvManifestAsync(): Promise<readonly RiverEvManifestEntry[]> {
+  manifestPromise ??= import("./riverEvManifest.generated").then((module) => module.riverEvManifest);
+  return manifestPromise;
+}
+
 
 /**
  * EV riverových akcí za běhu: stáhne se, až když ji hráč může chtít vidět.
@@ -56,14 +75,15 @@ const ready = new Map<string, RiverEvPack>();
  * Neúspěch vypadne z cache, aby šel zkusit znovu; neshoda otisku ne - ta se
  * opakováním nespraví a druhý pokus by jen znovu stáhl půl megabajtu.
  */
-export function loadRiverEvPack(
+export async function loadRiverEvPack(
   pack: Pick<RiverStrategyPack, "id" | "contentHash">,
-  manifest: readonly RiverEvManifestEntry[] = riverEvManifest,
+  manifest?: readonly RiverEvManifestEntry[],
 ): Promise<RiverEvPack | undefined> {
   const cached = loads.get(pack.id);
   if (cached) return cached;
 
-  const entry = manifest.find((item) => item.packId === pack.id);
+  const list = manifest ?? await riverEvManifestAsync();
+  const entry = list.find((item) => item.packId === pack.id);
   if (entry === undefined) {
     const missing = Promise.resolve(undefined);
     loads.set(pack.id, missing);
