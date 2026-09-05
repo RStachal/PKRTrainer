@@ -63,7 +63,14 @@ const malformed = rows.filter((row) => row.cells !== 4);
  * to člověk. Tichá klasifikace do špatné přihrádky je horší než přiznané
  * neznámo, protože by se podle ní plánovalo.
  */
-type Owner = "MAJITEL" | "STROJ" | "UZAVŘENO" | "VOLNÉ" | "ZÁZNAM" | "NEZAŘAZENO";
+type Owner =
+  | "MAJITEL"
+  | "STROJ"
+  | "UZAVŘENO"
+  | "VOLNÉ"
+  | "ZÁZNAM"
+  | "HLÍDÁNO"
+  | "NEZAŘAZENO";
 
 function ownerOf(row: Row): Owner {
   const status = row.status.toLowerCase();
@@ -72,6 +79,9 @@ function ownerOf(row: Row): Owner {
   // splněný úkol, protože úkol to nikdy nebyl - přečteno po jednom 5. 9. 2026,
   // dvacet takových bodů z 18. az 24. 8.
   if (/^záznam$/.test(status)) return "ZÁZNAM";
+  // Mez, kterou drží brána, není práce ani čekání: ozve se sama, až dojde.
+  // Vypisovat ji mezi volnou prací by lákalo hlídat rukou něco, co je hlídané.
+  if (/hlídá|brána|bránou/.test(status)) return "HLÍDÁNO";
   // „Ponechat" a „otevřít až …" jsou taky rozhodnutí, jen opačným směrem:
   // vědomě se nic nedělá, dokud nenastane pojmenovaná podmínka. Kdyby padly do
   // nezařazených, četly by se jako práce, která na někoho čeká.
@@ -119,6 +129,7 @@ if (onlyFree) {
   show("VOLNÉ", "volné pro agenta - tady se dá pracovat bez majitele");
   show("MAJITEL", "čeká na majitele");
   show("STROJ", "čeká na stroj");
+  show("HLÍDÁNO", "hlídá brána - ozve se sama, není to práce");
   show("NEZAŘAZENO", "nezařazeno - stav se nedá přečíst, přečti to sám");
   show("UZAVŘENO", "uzavřeno měřením - neotevírat znovu");
   show("ZÁZNAM", "záznamy hotové práce - nejsou to úlohy, jen se nedaly škrtnout");
