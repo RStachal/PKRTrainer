@@ -130,9 +130,18 @@ export function mechanicalReview(
   checks.push({
     id: "NO_COHORT_ANOMALY",
     passed: anomalies.length === 0,
+    // Skupina je **celá ulice**, ne rodiny srovnatelné hloubky - a to je u
+    // hlubokých rodin podstatné. Změřeno 5. 9. 2026 na flopu: 32 ze 48 rodin je
+    // na 25 bb s mediánem agrese 30 %, na 50 bb je 23 % a na 100 bb 12 %.
+    // Stobblindová rodina se tedy poměřuje s populací, do které nepatří; ve
+    // skupině podle hloubky není označená ani jedna. Dokud se to nezmění, musí
+    // hláška říct, s kým se porovnávalo - viz bod 185.
     detail: anomalies.length === 0
-      ? "rozdělení akcí sedí ke skupině"
-      : anomalies.map((item) => item.detail).join("; "),
+      ? `rozdělení akcí sedí ke skupině (${cohort.length} rodin téže ulice, všechny hloubky)`
+      : `${anomalies.map((item) => item.detail).join("; ")}`
+        + ` — porovnáno s ${cohort.length} rodinami téže ulice přes všechny hloubky;`
+        + " agrese na flopu klesá s hloubkou, takže u hlubokých rodin to samo o sobě"
+        + " nemusí znamenat vadu obsahu",
   });
 
   // 3) Agresor má sázet víc než hráč bez iniciativy. Obrácené znaménko je ta
@@ -150,8 +159,17 @@ export function mechanicalReview(
     : {
       id: "INITIATIVE_ORDERING",
       passed: byAggressor >= byCaller - INITIATIVE_TOLERANCE,
+      // Kontrola porovnává s domněnkou „agresor sází víc", a ta neplatí všude.
+      // Změřeno 3. 9. 2026 napříč 27 rodinami: donk na flopu je spojitý gradient
+      // podle sedačky otvírače - BTN 66 %, CO 65 %, HJ 51 %, LJ 49 %, UTG+2 40 %,
+      // UTG 31 %, UTG+1 25 %, `_BB_SRP` rodiny 0 %. Blind mimo pozici proti
+      // pozdnímu otvírači je tedy krajní konec uspořádané řady, ne rozbitý obsah.
+      // Bez téhle věty vypadá odmítnutí jako vada dat a čtenář hledá chybu tam,
+      // kde žádná není - to je poučení bodu 179.
       detail: `agresor sází ${(byAggressor * 100).toFixed(0)} %, bez iniciativy `
-        + `${(byCaller * 100).toFixed(0)} %`,
+        + `${(byCaller * 100).toFixed(0)} %`
+        + " (domněnka „agresor sází víc“ neplatí pro blind mimo pozici proti"
+        + " pozdnímu otvírači - tam je vyšší donk měřený a očekávaný)",
     });
 
   // 4) Žádné rozhodnutí nesmí být zkolabované na jedinou akci. Strom, který se
