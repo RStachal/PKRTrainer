@@ -63,14 +63,23 @@ const malformed = rows.filter((row) => row.cells !== 4);
  * to člověk. Tichá klasifikace do špatné přihrádky je horší než přiznané
  * neznámo, protože by se podle ní plánovalo.
  */
-type Owner = "MAJITEL" | "STROJ" | "UZAVŘENO" | "VOLNÉ" | "NEZAŘAZENO";
+type Owner = "MAJITEL" | "STROJ" | "UZAVŘENO" | "VOLNÉ" | "ZÁZNAM" | "NEZAŘAZENO";
 
 function ownerOf(row: Row): Owner {
   const status = row.status.toLowerCase();
   if (status === "" || status === "—" || status === "-") return "NEZAŘAZENO";
-  if (/vyřešeno|rozhodnuto|hotovo|nedělat|nedodávat|nestavět/.test(status)) return "UZAVŘENO";
+  // Zápis o hotové práci nebo o měření, ne úloha. Nešlo ho škrtnout jako
+  // splněný úkol, protože úkol to nikdy nebyl - přečteno po jednom 5. 9. 2026,
+  // dvacet takových bodů z 18. az 24. 8.
+  if (/^záznam$/.test(status)) return "ZÁZNAM";
+  // „Ponechat" a „otevřít až …" jsou taky rozhodnutí, jen opačným směrem:
+  // vědomě se nic nedělá, dokud nenastane pojmenovaná podmínka. Kdyby padly do
+  // nezařazených, četly by se jako práce, která na někoho čeká.
+  if (/vyřešeno|rozhodnuto|hotovo|nedělat|nedodávat|nestavět|ponechat|otevřít až/.test(status)) {
+    return "UZAVŘENO";
+  }
+  if (/stroj|ram|halda|paměť|hardware|noc/.test(status)) return "STROJ";
   if (/majitel|čtení|čte|rozhodnutí|zdroj|data|čeká na obsah|koupit|licen/.test(status)) return "MAJITEL";
-  if (/stroj|ram|halda|paměť|hardware|větší stroj/.test(status)) return "STROJ";
   if (/^otevřené$|^otevřené[,:]/.test(status)) return "VOLNÉ";
   return "NEZAŘAZENO";
 }
@@ -95,7 +104,14 @@ function show(owner: Owner, headline: string): void {
 
 console.log("Otevřené položky a na kom visí");
 console.log("");
-console.log(`deník: ${rows.length} bodů, z toho otevřených ${open.length}`);
+// Záznam není otevřená práce, jen se nedal škrtnout jako splněný úkol - úkol
+// to nikdy nebyl. Počítá se proto zvlášť, jinak by agenda tvrdila, že je co
+// dělat, a byla by to dvacetina nepravdy hned v prvním řádku.
+const recordCount = (byOwner.get("ZÁZNAM") ?? []).length;
+console.log(
+  `deník: ${rows.length} bodů, neškrtnutých ${open.length}`
+  + ` - z toho ${open.length - recordCount} otevřené práce a ${recordCount} záznamů`,
+);
 
 if (onlyFree) {
   show("VOLNÉ", "volné pro agenta");
@@ -105,6 +121,7 @@ if (onlyFree) {
   show("STROJ", "čeká na stroj");
   show("NEZAŘAZENO", "nezařazeno - stav se nedá přečíst, přečti to sám");
   show("UZAVŘENO", "uzavřeno měřením - neotevírat znovu");
+  show("ZÁZNAM", "záznamy hotové práce - nejsou to úlohy, jen se nedaly škrtnout");
 }
 
 if (malformed.length > 0) {

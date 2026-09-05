@@ -46,16 +46,22 @@ describe("tabulka deníku", () => {
     expect(duplicates, "dva body s týmž číslem se v odkazech nedají rozlišit").toEqual([]);
   });
 
-  it("dává otevřenému bodu stav, ať se pozná, na kom visí", () => {
-    // Neškrtnutý název znamená otevřené. Prázdný stav je legitimní historie,
-    // takže se tu nehlídá počet - hlídá se, že se nezhoršuje.
+  it("dává neškrtnutému bodu stav, ať se pozná, na kom visí", () => {
+    // Bez stavu se nepozná, jestli bod čeká na majitele, na stroj, nebo na
+    // nikoho - a `mtt:agenda` ho pak vypíše jako nezařazený. Změřeno 5. 9.
+    // 2026: takových bylo **24 z 57**. Dvacet z nich byly záznamy hotové práce
+    // (dostaly stav `záznam`), zbytek se doplnil, a od té chvíle to má být nula:
+    // pravidlo 7 v `Agents/AGENTS.md` říká, že otevřený bod musí říct, na kom visí.
     const open = diaryRows().filter((row) => !/^~~/.test(row.line.split("|")[2].trim()));
-    const withoutStatus = open.filter((row) => {
-      const status = row.line.replace(/\\\|/g, "").split("|")[4]?.trim() ?? "";
-      return status === "" || status === "—" || status === "-";
-    });
-    // Změřeno 5. 9. 2026: 24 z 57 otevřených bodů stav nemá. Mez drží dnešní
-    // stav, aby další zápisy stav doplňovaly místo aby ho vynechávaly.
-    expect(withoutStatus.length).toBeLessThanOrEqual(24);
+    const withoutStatus = open
+      .filter((row) => {
+        const status = row.line.replace(/\\\|/g, "").split("|")[4]?.trim() ?? "";
+        return status === "" || status === "—" || status === "-";
+      })
+      .map((row) => row.number);
+    expect(
+      withoutStatus,
+      "neškrtnutý bod bez stavu: doplň, na kom visí, nebo mu dej stav `záznam`",
+    ).toEqual([]);
   });
 });
