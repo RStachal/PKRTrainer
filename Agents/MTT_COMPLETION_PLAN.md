@@ -191,7 +191,7 @@ Dodáno 20.-24. 8. 2026. Ověřeno měřením, ne dojmem:
 - Akce, kterou rozbor nemodeluje, se jmenuje „EV nespočítána" a **nezakládá
   chybu hráče** - dřív za ni dostal „špatně" bez opory v čemkoli spočítaném.
 
-## Fáze 5 — EV a cena rozhodnutí — **návrh z 28. 8. 2026**
+## Fáze 5 — EV a cena rozhodnutí — **na preflopu dodáno, ověřeno 4. 9. 2026**
 
 Majitel to označil za největší úkol a formuloval ho přesně: *„víc odpovědí může
 mít téměř stejnou EV, a podle situace a soupeře se může vyplatit jiná akce -
@@ -278,6 +278,34 @@ Hotové je jádro: `decisionMaths` umí `callRequirement` (včetně ICM bubble
 factoru), `shoveRequirement` i minimální obrannou frekvenci. Chybí to použít
 mimo all-in spoty a zobrazit - a rozhodnout, jak to má vypadat vedle EV, aby se
 ty dva druhy čísla nespletly.
+
+### Stav k 4. 9. 2026: na preflopu je to dodané, návrh je překonaný
+
+Odstavec nad tímhle popisuje stav k 28. 8. a **od té doby přestal platit**;
+zůstává tu proto, aby bylo vidět, z čeho se vycházelo. Změřeno
+`npm run mtt:post-answer` uvnitř `verify:block`, celý pool 78 585 spotů přes
+devět kontextů:
+
+| | 28. 8. (návrh) | 4. 9. (změřeno) |
+|---|---|---|
+| přesná EV | 33,1 % | **33,1 %** |
+| cena akce | cíl „aspoň jedna cenitelná akce v 96,1 %" | **100,0 %** |
+| vysvětlení | — | **100,0 %** |
+
+Dvě věci, které z toho plynou a nejsou samozřejmé:
+
+1. **Cíl 96,1 % je překonaný**, cena dojde ke hráči u **každého** rozdaného
+   preflopového spotu. Otázka „dostane hráč po odpovědi číslo, které něco
+   tvrdí" je tedy na preflopu zodpovězená.
+2. **EV se nikam nerozlila**: zůstává na 33,1 % a `odkud EV je: ALL_IN_EQUITY
+   26026`, tedy výhradně tam, kde je cena akce pevná. To je přesně ta hranice,
+   kterou návrh drží - EV se nedopočítává modelem, aby se nevyrobilo číslo,
+   které vypadá stejně autoritativně jako to přesné.
+
+**Co zůstává nezměřené:** jestli cena dojde k hráči i na postflopu. Preflopová
+část `mtt:post-answer` to hlásí zvlášť a postflopová sekce tenhle sloupec nemá,
+takže se to z dnešního výpisu nedá tvrdit ani vyvrátit. Než se to změří, nepatří
+sem číslo - a měřit se to má tam, kde se to ptá na hráče, ne na obsah.
 
 ## Fáze 2 — EV pro turn a flop — **uzavřeno 26. 8. 2026: nedodávat**
 
@@ -381,16 +409,21 @@ Moje práce je dohled a dodání: `mtt:after-night -- --write` po každé noci.
 
 - Mechanická kontrola po každé noci, aby nový obsah nezůstal na LOW.
 - Kontrola, že každý řádek manifestu jde postavit.
-- **112 typových chyb ve `scripts/` v 91 souborech** - otevřené, a zápis „změřeno
-  24. 8.: 0, hotovo" byl **nepravdivý**. To měření pustilo `tsc --noEmit`, jenže
-  `tsconfig.json` má `include: ["src", "tests", "vite.config.ts"]`, takže
-  `scripts/` nikdy nekontrolovalo. Nula neznamenala čisto, znamenala, že se
-  nedívala. Přeměřeno 25. 8. 2026 konfigurací, která `scripts` zahrne.
+- ~~**112 typových chyb ve `scripts/` v 91 souborech**~~ - **uzavřeno, brána
+  běží.** Zápis „změřeno 24. 8.: 0, hotovo" byl nepravdivý: to měření pustilo
+  `tsc --noEmit`, jenže `tsconfig.json` má `include: ["src", "tests",
+  "vite.config.ts"]`, takže `scripts/` nikdy nekontrolovalo. Nula neznamenala
+  čisto, znamenala, že se nedívala - tatáž třída chyby jako vrstva 0
+  orchestrátoru: **měřilo se něco vedle a výsledek se vydal za odpověď na jinou
+  otázku.**
 
-  Je to tatáž třída chyby jako vrstva 0 orchestrátoru: **měřilo se něco vedle a
-  výsledek se vydal za odpověď na jinou otázku.** Zapnout `scripts` v tsconfigu
-  hned nejde - `npm run typecheck` je součástí `verify:block` i nočního cyklu a
-  spadl by. Pořadí je tedy: posbírat chyby, opravit, teprve pak zapnout bránu.
+  Plánované pořadí „posbírat, opravit, teprve pak zapnout bránu" proběhlo.
+  `npm run typecheck` dnes pouští **dvě konfigurace** - `tsconfig.json` na
+  `src` a `tests` proti ES2020 kvůli Android WebView, `tsconfig.scripts.json` na
+  `scripts/` proti ES2022, protože skripty běží na Node. Ověřeno 4. 9. 2026:
+  obě vracejí 0 a `verify:block` je má jako první bránu. Za těmi chybami
+  mimochodem vypadlo šest skutečných vad, ne jen nepořádek - jsou vyjmenované
+  v `Agents/AGENTS.md`, pravidlo 2.
 
 ## Co zůstane nedokončené a čeká na majitele
 
@@ -398,6 +431,15 @@ Moje práce je dohled a dodání: `mtt:after-night -- --write` po každé noci.
 2. **ICM data** - 32 řádků.
 3. **Stroj s 48+ GB RAM** - 51 desek s blendem.
 4. **Čtení hráči** - mechanická kontrola chytá hrubé rozbití, ne kvalitu hry.
-   Dnes stojí na měření **67 packů a na čtení člověkem 0**.
+   Změřeno 4. 9. 2026 v `Agents/turn-review/verdicts.json`: **141 verdiktů,
+   z toho lidských 0** - všechny nesou `basis: MECHANICAL` (45 flop, 48 turn,
+   48 river). Tady se to nezmění samo a stroj to za majitele udělat nesmí.
+
+   **Co pro to je připravené:** `npm run mtt:review-desk` postaví složku
+   k nahrání na FTP se třemi dokumenty - chipEV půlka draftu ranží (68 mřížek),
+   flopové piloty (7) a celý draft včetně ICM (114). Stránky si pamatují
+   odpověď podle identity záznamu, takže se dají vyplňovat postupně; průběh
+   ukazuje rozcestník. Odpovědi se pak berou do `mtt:rye-answers`, resp.
+   `mtt:pilot-answers`.
 5. **Strop líného obsahu** - viz fáze 2. Bez rozhodnutí se EV na turn a flop
    dodat nedá.
