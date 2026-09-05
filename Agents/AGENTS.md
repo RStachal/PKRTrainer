@@ -226,6 +226,40 @@ Odtud dvě podmínky, ne předsevzetí:
    tu nese přepínač nebo past, kterou už někdo zaplatil.
 
 Když `mtt:known` fakt najde, výstupem je **citace, ne nový řádek deníku**.
+
+### 7. Když je práce blokovaná na majiteli — `npm run mtt:agenda`
+
+Zapsáno 5. 9. 2026. Většina toho, co by produkt posunulo, čeká na majitele:
+změřeno týž den, že **všech 60 importních slotů** čeká na jeho `normalized.json`
+a `permission.json` (`mtt:blockers`) a že ze 141 zapsaných verdiktů je
+**lidských 0**. `mtt:blockers` ale odpovídá jen na to, *co je zablokované* — na
+otázku „co tedy dělat" se pokaždé odvozovalo znovu: projít plán dokončení,
+deník, `mtt:next-action` a poskládat si to. Změřeno, že to zabere půlku relace.
+
+**Ptej se `npm run mtt:agenda`.** Čte deník a roztřídí otevřené body podle toho,
+na kom visí: volné pro agenta, na majiteli, na stroji, uzavřené měřením
+(neotevírat) a nezařazené. Zdrojem je deník, ne nový seznam — nový seznam by
+zestárl jako každý jiný, deník se píše tak jako tak.
+
+Dvě věci, které z toho plynou pro psaní deníku:
+
+1. **Otevřený bod musí ve čtvrtém sloupci říct, na kom visí.** Změřeno 5. 9.
+   2026: z 57 otevřených bodů jich **24 nemá stav** (jen „—"), takže se u nich
+   nedá poznat, jestli čekají na rozhodnutí, na data, na stroj, nebo na nikoho.
+   Nezařazený bod se v agendě vypíše zvlášť a přečte ho člověk; tichým
+   zařazením do špatné přihrádky by se plánovalo podle výmyslu.
+2. **Řádek deníku má čtyři buňky.** Svislítko uvnitř backticků
+   (`` `VS_OPEN|UTG+1|25` ``) z něj udělá osm, poslední sloupec se posune a jako
+   stav se čte útržek jména range. Takhle rozbité byly **čtyři řádky** (69, 140,
+   141, 172) a půl roku si toho nikdo nevšiml, protože oko si tabulku domyslí.
+   `mtt:agenda` proto skončí nenulovým kódem, dokud to platí, a `diaryTable`
+   v sadě hlídá totéž. Escapuj jako `\|`, nebo piš lomítkem.
+
+**Co je agentova práce, když je všechno ostatní blokované:** měření, ověřování a
+udržování záznamu pravdivého. Obsah vyrobit nelze — pravdu o obsahu ano, a je to
+ta část, která se jinak tiše rozchází. Změřeno 4. a 5. 9. 2026, že plán
+dokončení zestaral na třech místech a deník na čtyřech; obojí nutilo příští
+relaci odvozovat znovu, tedy přesně to, proti čemu stojí pravidlo 6.
 Znovuobjevení se nezapisuje; zapisuje se jen to, co paměť opravdu nezná nebo co
 se přeměřilo jinak — a tehdy se řekne, který starší zápis se tím mění.
 

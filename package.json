@@ -158,6 +158,7 @@
     "mtt:mechanical-review": "node scripts/run-cli.mjs scripts/runMechanicalReview.mts",
     "mtt:after-night": "node scripts/run-cli.mjs scripts/runAfterNight.mts",
     "mtt:known": "node scripts/run-cli.mjs scripts/searchProjectMemory.mts",
+    "mtt:agenda": "node scripts/run-cli.mjs scripts/reportOpenAgenda.mts",
     "mtt:pilot-review": "node scripts/run-cli.mjs scripts/renderFlopPilotReview.mts",
     "mtt:pilot-answers": "node scripts/run-cli.mjs scripts/applyFlopPilotAnswers.mts",
     "mtt:review-desk": "node scripts/run-cli.mjs scripts/buildReviewDesk.mts",
