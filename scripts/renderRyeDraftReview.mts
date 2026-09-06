@@ -4,7 +4,10 @@ import {
   type DraftFile,
   type DraftImpact,
   type DraftRecord,
+  cellOf,
+  draftLanding,
   impactOf,
+  seatCollisions,
 } from "./lib/ryeDraftImpact.mts";
 import {
   REVIEW_ANSWER_STYLES,
@@ -121,7 +124,16 @@ const impacts = new Map<DraftRecord, DraftImpact>(
   draft.records.map((record) => [record, impactOf(record)]),
 );
 
-/** Nejdřív to, co nejvíc změní; nová buňka je taky změna, jen jiného druhu. */
+/**
+ * Srážky se počítají nad **celým draftem**, ne nad vykreslenou půlkou.
+ *
+ * Buňka se sráží podle toho, co v draftu je, ne podle toho, co je zrovna na
+ * obrazovce. Kdyby se počítaly jen z půlky, vypadala by mřížka na chipEV
+ * stránce jako nesporná jen proto, že její protějšek je v ICM půlce.
+ */
+const collisions = seatCollisions(draft.records);
+
+/** Nejdřív to, co nejvíc změní **a zároveň přistane**. */
 function weight(record: DraftRecord): number {
   const impact = impacts.get(record)!;
   // Rozsvícená kombinace jde úplně nahoru: „odpověď bude" váží víc než
@@ -129,7 +141,12 @@ function weight(record: DraftRecord): number {
   if (impact.unlocksEmpty) return 1000;
   // Dolů, ne nahoru: přečíst ji dnes nic nezmění.
   if (impact.notDrilled) return -1;
-  return impact.newCell ? 169 : impact.changed;
+  const base = impact.newCell ? 169 : impact.changed;
+  // Dopad není doručení. Mřížka, která se sráží o otvírače, může změnit šedesát
+  // tříd a nedojít nikam - produkt tu osu nemá (bod 140), takže se do buňky
+  // vejde jen jedna. Čte se odshora, tak ať je nahoře to, co po schválení
+  // doopravdy dojde k hráči; sražené se nezahazují, jen jdou za to.
+  return draftLanding(record, collisions) === "PŘISTANE" ? base : base / 100;
 }
 
 /**
@@ -300,10 +317,25 @@ const blocks = sorted.map((record, index) => {
     ? '<b class="new">buňku, kterou knihovna nemá</b> - přidal by novou odpověď'
     : `<b class="${impact.changed > 0 ? "hot" : ""}">${impact.changed}</b> tříd`
       + ` z ${impact.compared} porovnaných, kde by se odpověď lišila od dnešní`;
+  // Dopad není doručení, a čtenář to musí vědět dřív, než tu mřížku přečte.
+  // Sražená buňka nese víc mřížek proti různým otvíračům a produkt tu osu nemá,
+  // takže se do ní vejde jen jedna - schválení téhle sama o sobě nestačí.
+  const collision = collisions.find((row) => row.cell === cellOf(record));
+  const landingText = collision === undefined || impact.notDrilled
+    ? ""
+    : draftLanding(record, collisions) === "PŘISTANE"
+      ? '<p class="meta"><b class="new">Do téhle buňky míří víc mřížek</b>'
+        + ` (proti ${escapeHtml(collision.seats.join(", "))}), ale tahle je ta, se kterou`
+        + " produkt u téhle sedačky už počítá - takže po schválení přistane.</p>"
+      : '<p class="meta"><b class="unlock">Tahle buňka se sráží o otvírače.</b>'
+        + ` Míří do ní mřížky proti ${escapeHtml(collision.seats.join(", "))}`
+        + ` a neshodnou se u ${collision.disagreeing} tříd. Uložit se dá jen jedna,`
+        + " a která, je rozhodnutí o rozsahu produktu - schválení téhle samo o sobě"
+        + " nestačí. Proto je níž v pořadí.</p>";
   return `<section id="${anchorOf(record, index)}">
   <h2>${escapeHtml(record.context)} &middot; ${escapeHtml(record.position)} ${record.bucket} BB &middot; ${escapeHtml(versus)}</h2>
   <p class="meta">dopad: ${impactText}</p>
-  ${unlockText}
+  ${unlockText}${landingText}
   <p class="meta">rozložení stacků: <b>${escapeHtml(record.stackSetupId)}</b> &middot;
      hloubka ve zdroji: ${record.sourceStackBB} BB &middot;
      tříd v range: ${inRange} ze 169 &middot; z toho mix: ${mixed}

@@ -165,6 +165,36 @@ export function assumedOpenerFor(position: string): string | undefined {
   return REJAM_EV_OPENER_BY_HERO[position];
 }
 
+/**
+ * Přistane schválení téhle mřížky, nebo se zastaví o srážku?
+ *
+ * Čtecí stránka řadí podle dopadu - kolik tříd by se změnilo. Jenže dopad není
+ * doručení: mřížka může změnit šedesát tříd a nedojít nikam, protože do její
+ * buňky míří i jiná mřížka proti jinému otvírači a produkt tu osu nemá
+ * (bod 140). Změřeno 5. 9. 2026: z 963 tříd, které by chipEV půlka změnila,
+ * jich **421 leží v 17 sražených buňkách**.
+ *
+ * Tohle rozlišení patří ke čtení, ne až k importu: majitel čte odshora a má mít
+ * nahoře to, co po schválení doopravdy dojde k hráči.
+ *
+ * - `PŘISTANE` - buňka je jen její, nebo je to ta mřížka, kterou by pravidlo
+ *   vybralo (proti otvírači, se kterým produkt u té sedačky už počítá).
+ * - `SRÁŽKA` - do buňky míří víc mřížek, které si odporují, a tahle není ta
+ *   vybraná. Schválení samo o sobě nestačí.
+ */
+export type DraftLanding = "PŘISTANE" | "SRÁŽKA";
+
+export function draftLanding(
+  record: DraftRecord,
+  collisions: readonly SeatCollision[],
+): DraftLanding {
+  const collision = collisions.find((row) => row.cell === cellOf(record));
+  if (collision === undefined) return "PŘISTANE";
+  // Sražená buňka: přistane jen ta mřížka, kterou by vybral předpoklad produktu.
+  // Když předpoklad chybí, nepřistane žádná - rozhodnout musí člověk.
+  return collision.resolved && record.vsSeat === collision.assumedSeat ? "PŘISTANE" : "SRÁŽKA";
+}
+
 export function seatCollisions(records: readonly DraftRecord[]): SeatCollision[] {
   const byCell = new Map<string, DraftRecord[]>();
   for (const record of records) {
