@@ -1,5 +1,5 @@
 import { generatePostflopSpot } from "../src/core/postflopGenerator";
-import { postflopDecisionPrices } from "../src/core/postflopDecisionPrice";
+import { postflopDecisionPrices, postflopPriceGap } from "../src/core/postflopDecisionPrice";
 import { POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS } from "../src/core/postflopGenerator";
 import { createDefaultPostflopStrategyResolver } from "../src/data/ranges/postflopStrategyRegistry";
 import { postflopSpotToTrainingSpot } from "../src/core/postflopTrainingSpot";
@@ -82,6 +82,7 @@ interface Row {
    * solver hrál.
    */
   priced: number;
+  priceGaps: Map<string, number>;
   /**
    * Spotů, kde hráč uvidí **frekvenci** - jak často solver tu akci hraje.
    *
@@ -123,6 +124,7 @@ async function measureStreet(
     bluffActions: new Set(),
     explanationBluffs: 0,
     priced: 0,
+    priceGaps: new Map<string, number>(),
     mixShown: 0,
     bluffsInContent: 0,
     bluffsSilent: 0,
@@ -178,6 +180,11 @@ async function measureStreet(
     if ((spot.comboEvs?.length ?? 0) > 0) row.comboEv += 1;
     if (spot.explanation.bluffHands.length > 0) row.explanationBluffs += 1;
     if (postflopDecisionPrices(spot).length > 0) row.priced += 1;
+    // Proč cena chybí, ne jen že chybí. `NEČELÍ_SÁZCE` je správně - hrdina
+    // nemá co dorovnávat; `NENÍ_VYŘEŠENÝ` je mez obsahu a `UZEL_NEZNÁ_POT`
+    // vada dat. Bez rozlišení vypadají všechny tři jako jedna nula.
+    const gap = postflopPriceGap(spot);
+    row.priceGaps.set(gap, (row.priceGaps.get(gap) ?? 0) + 1);
     const heroBucket = spot.explanation.source.kind === "STRATEGY_PACK"
       ? spot.explanation.source.heroRangeBucket
       : undefined;
@@ -270,6 +277,33 @@ if (!asJson) {
       + String(median(row.bluffClasses)).padStart(13),
     );
   }
+  console.log("");
+  console.log("Proč cena chybí (na flopu a turnu je to jediné číslo, které tam být může)");
+  console.log(
+    "ulice".padEnd(7)
+    + "oceněno".padStart(9)
+    + "nečelí sázce".padStart(14)
+    + "není vyřešený".padStart(15)
+    + "chybí sázka".padStart(13)
+    + "chybí pot".padStart(11),
+  );
+  for (const row of rows) {
+    const gap = (key: string): string => pct(row.priceGaps.get(key) ?? 0, row.dealt);
+    console.log(
+      row.street.padEnd(7)
+      + gap("OCENĚNO").padStart(9)
+      + gap("NEČELÍ_SÁZCE").padStart(14)
+      + gap("NENÍ_VYŘEŠENÝ").padStart(15)
+      + gap("CHYBÍ_SÁZKA").padStart(13)
+      + gap("CHYBÍ_POT").padStart(11),
+    );
+  }
+  console.log(
+    "„Nečelí sázce\" je správně: vlastní sázka hrdiny se neoceňuje, protože její\n"
+    + "velikost je model, ne solverovo číslo. Zbylé dva sloupce jsou mez obsahu\n"
+    + "a vada dat - ty se dají spravit.",
+  );
+
   console.log("");
   for (const row of rows) {
     console.log(
@@ -661,6 +695,25 @@ if (!asJson) {
   }
   if (evStale > 0) {
     failures.push(`${evStale} tabulek EV je spočítaných a zahozených (otisk nesedí na pack)`);
+  }
+  // **Přísná nula, ne podíl s rezervou.**
+  //
+  // Spot, který hrdinu staví před sázku a je vyřešený, má cenu spočitatelnou
+  // vždycky: velikost nese linie pravidla a pot uzel. Každý jiný výsledek je
+  // rozbitá data, ne kolísání obsahu - a proto tu nemá co dělat mez s rezervou.
+  //
+  // Změřeno 6. 9. 2026 při zavedení: obojí **0 na všech třech ulicích**.
+  // Nedodaná cena je jinde a je legitimní - 75 % flopových spotů hrdina jedná
+  // první, nemá co dorovnávat, a cena vlastní sázky by byla spočítaná
+  // z modelované velikosti, tedy vymyšlené číslo tvářící se jako to skutečné.
+  const brokenPrice = rows.reduce(
+    (sum, row) => sum + (row.priceGaps.get("CHYBÍ_SÁZKA") ?? 0) + (row.priceGaps.get("CHYBÍ_POT") ?? 0),
+    0,
+  );
+  if (brokenPrice > 0) {
+    failures.push(
+      `${brokenPrice} spotů čelí sázce z vyřešeného packu a přesto nezná její velikost nebo pot`,
+    );
   }
   if (silentBluffs > 0) {
     failures.push(`${silentBluffs} spotů má blaf v obsahu a mlčí o něm`);
