@@ -32,6 +32,8 @@ import { readFileSync } from "node:fs";
 
 const DIARY = "Agents/MTT_AUTONOMY.md";
 const onlyFree = process.argv.includes("--volne");
+/** Strojové čtení pro stránku se stavem; parsovat vlastní text by bylo křehké. */
+const asJson = process.argv.includes("--json");
 
 interface Row {
   number: number;
@@ -110,6 +112,25 @@ function show(owner: Owner, headline: string): void {
     console.log(`  ${String(row.number).padStart(3)}  ${row.title.slice(0, 68)}`);
     if (row.status !== "") console.log(`       ${row.status.slice(0, 96)}`);
   }
+}
+
+if (asJson) {
+  const bucket = (owner: Owner): unknown[] => (byOwner.get(owner) ?? [])
+    .sort((left, right) => right.number - left.number)
+    .map((row) => ({ number: row.number, title: row.title, status: row.status }));
+  console.log(JSON.stringify({
+    total: rows.length,
+    unstruck: open.length,
+    records: (byOwner.get("ZÁZNAM") ?? []).length,
+    malformed: malformed.map((row) => row.number),
+    volne: bucket("VOLNÉ"),
+    majitel: bucket("MAJITEL"),
+    stroj: bucket("STROJ"),
+    hlidano: bucket("HLÍDÁNO"),
+    uzavreno: bucket("UZAVŘENO"),
+    nezarazeno: bucket("NEZAŘAZENO"),
+  }, null, 2));
+  process.exit(malformed.length > 0 ? 1 : 0);
 }
 
 console.log("Otevřené položky a na kom visí");

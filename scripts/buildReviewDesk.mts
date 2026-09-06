@@ -162,6 +162,13 @@ const page = `<!doctype html>
 </div>
 ${cards}
 <section class="doc">
+ <h2>Kde projekt stojí</h2>
+ <p class="what">Čísla, ne dojem: co dostane hráč po odpovědi, stav obsahu, poslední noc
+    a na kom co visí. Staví se zvlášť přes <code>npm run mtt:state-page</code>, protože
+    to měření trvá minuty — když tam odkaz nevede, stránka ještě nebyla postavená.</p>
+ <p><a class="open" href="stav.html">Otevřít stav</a></p>
+</section>
+<section class="doc">
  <h2>Až budeš chtít předat, co máš</h2>
  <p class="what">Nemusí to být hotové. Tlačítko vypíše tokeny za všechno, co je
     zatím zodpovězené, a ty se dají poslat kdykoli.</p>
