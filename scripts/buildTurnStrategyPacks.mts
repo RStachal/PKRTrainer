@@ -34,6 +34,49 @@ import {
  * anything lands.
  */
 
+/**
+ * Které rozhodnutí uzel drží a na které straně stolu hrdina sedí.
+ *
+ * Přesně tyhle dva údaje porovnává resolver, takže se slučuje právě to, co by
+ * se u něj srazilo. Bez toho by se čtyři různé situace na téže desce - hraju
+ * první, sázím s iniciativou, čelím sázce v pozici, čelím sázce mimo pozici -
+ * přebily na jednu a zbyla by ta nejdosahovanější.
+ */
+function decisionKey(rule: TurnStrategyRule): string {
+  const hero = rule.spot?.hero;
+  return `${actionNodeForSolvedHero(hero, "TURN") ?? "?"}|${hero?.side ?? "?"}`;
+}
+
+/**
+ * Sloučí pravidla jedné desky a vrátí, kolik jich tím padlo.
+ *
+ * Slučovalo se to nad celou rodinou, tedy až potom, co všechna ležela v paměti
+ * naráz. Změřeno 7. 9. 2026 na `MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR`: generátor
+ * postavil **206 032 pravidel, aby dodal 260**, a 202 232 z nich zahodilo právě
+ * tohle slučování - při haldě 749 MB. Je to tatáž vada, na kterou u riveru
+ * padaly tři rodiny (bod 194), jen dvacetkrát mělčí; turnová knihovna ale roste
+ * každou noc.
+ *
+ * Posunout to dovnitř smyčky nic nemění, protože klíč **začíná adresářem
+ * desky** - dvě desky se v něm nikdy nepotkají. Pořadí zůstává pořadím prvního
+ * výskytu, jen počítaným po částech.
+ */
+function collapseBoardTail(rules: TurnStrategyRule[], from: number): number {
+  if (rules.length - from < 2) return 0;
+  const byLine = new Map<string, TurnStrategyRule>();
+  for (let at = from; at < rules.length; at += 1) {
+    const rule = rules[at];
+    const spot = rule.spot;
+    if (spot === undefined) continue;
+    const key = `${rule.sourceDirectory}|${spot.turnCards[0]}|${rule.node}|${decisionKey(rule)}`;
+    const held = byLine.get(key);
+    if (held === undefined || (spot.reach ?? 0) > (held.spot?.reach ?? 0)) byLine.set(key, rule);
+  }
+  const dropped = rules.length - from - byLine.size;
+  rules.length = from;
+  rules.push(...byLine.values());
+  return dropped;
+}
 const ROOT = "artifacts/decomposition";
 const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 const VERDICTS_PATH = "Agents/turn-review/verdicts.json";
@@ -195,6 +238,13 @@ if (family === undefined) {
   };
   const rules: TurnStrategyRule[] = [];
   let unidentified = 0;
+  /** Kolik se přečetlo a kolik pravidel z toho vzniklo, než se slučovalo. */
+  let subgameBytes = 0;
+  let subgames = 0;
+  let built = 0;
+  let collapsed = 0;
+  /** Kde v `rules` začala rozpracovaná deska. */
+  let boardStart = 0;
 
   for (const directory of directories) {
     const planPath = join(ROOT, directory, "plan.json");
@@ -228,7 +278,10 @@ if (family === undefined) {
       const fileName = subgameFileName(item);
       const path = join(ROOT, directory, fileName);
       if (!existsSync(path)) continue;
-      const node = JSON.parse(readFileSync(path, "utf8"));
+      const raw = readFileSync(path, "utf8");
+      subgameBytes += raw.length;
+      subgames += 1;
+      const node = JSON.parse(raw);
       const potChips = item.pot ?? plan.pot ?? 0;
       const stackChips = item.stack ?? plan.stack ?? 0;
 
@@ -289,9 +342,13 @@ if (family === undefined) {
           // až do tohohle uzlu.
           reach: (item.reach ?? 0) * decision.arrival,
         });
-        if (rule) rules.push(rule);
+        if (rule) { rules.push(rule); built += 1; }
       }
     }
+    // Konec desky je jediné místo, kde se smí slučovat: klíč začíná jejím
+    // adresářem, takže dál se nic srazit nemůže.
+    collapsed += collapseBoardTail(rules, boardStart);
+    boardStart = rules.length;
   }
 
   // Highest reach first within each board, then one board at a time until the
@@ -314,28 +371,13 @@ if (family === undefined) {
   // anyway. Keeping the highest-reach line spends the space on something a
   // player can actually be served.
   //
-  // Klíč nese i to, které rozhodnutí uzel drží a na které straně stolu sedí
-  // hrdina. Bez toho by se čtyři různé situace na téže desce - hraju první,
-  // sázím s iniciativou, čelím sázce v pozici, čelím sázce mimo pozici -
-  // přebily na jednu a zbyla by ta nejdosahovanější. Přesně tyhle dva údaje
-  // porovnává resolver, takže se slučuje právě to, co by se u něj srazilo.
-  const decisionKey = (rule: (typeof rules)[number]): string => {
-    const hero = rule.spot?.hero;
-    return `${actionNodeForSolvedHero(hero, "TURN") ?? "?"}|${hero?.side ?? "?"}`;
-  };
-  const byLine = new Map<string, (typeof rules)[number]>();
-  for (const rule of rules) {
-    const spot = rule.spot;
-    if (spot === undefined) continue;
-    const key = `${rule.sourceDirectory}|${spot.turnCards[0]}|${rule.node}|${decisionKey(rule)}`;
-    const held = byLine.get(key);
-    if (held === undefined || (spot.reach ?? 0) > (held.spot?.reach ?? 0)) {
-      byLine.set(key, rule);
-    }
-  }
-  const collapsed = rules.length - byLine.size;
-  rules.length = 0;
-  rules.push(...byLine.values());
+  // Klíč rozhodnutí bydlí nad modulem, protože ho potřebuje i slučování po deskách.
+  console.log(
+    `  halda po sběru ${Math.round(process.memoryUsage().heapUsed / 1048576)} MB: `
+    + `${built} pravidel postaveno, ${subgames} podher přečteno `
+    + `(${Math.round(subgameBytes / 1048576)} MB textu)`,
+  );
+
   if (collapsed > 0) {
     console.log(`  ${collapsed} turns dropped: another flop line reaches the same board more often`);
   }
