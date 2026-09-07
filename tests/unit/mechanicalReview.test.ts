@@ -123,4 +123,33 @@ describe("měřitelná kontrola", () => {
     expect(result.passed).toBe(false);
     expect(result.checks.some((check) => !check.passed)).toBe(true);
   });
+
+  it("hláška o skupině uvádí sousedy, se kterými se doopravdy porovnávalo", () => {
+    // Uváděla velikost celé ulice, jenže profil si skupinu dělí podle uzlu a
+    // strany stolu. Změřeno 7. 9. 2026: 48 flopových rodin se dělí na 39 / 6 / 3
+    // a označená stobblindová měla **dva** sousedy, oba mělčí - propadla o jediný
+    // procentní bod proti mezi, kterou ti dva spočítali. Číslo v hlášce musí být
+    // to, kterým se měřilo, jinak čtenář váží nález podle populace, která u toho
+    // nebyla.
+    const family = (familyId: string, node: string, bets: number) => ({
+      ...pack([rule({ node, actions: { "BET 25.000000": bets, CHECK: 1000 - bets } })]),
+      familyIds: [familyId],
+    }) as unknown as TurnStrategyPack;
+
+    const subject = family("MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR", "CBET", 80);
+    const street = [
+      subject,
+      family("MTT9_25BB_SB_BB_SRP_OOP_CBET_LOWSPR", "CBET", 290),
+      family("MTT9_50BB_SB_BB_SRP_OOP_CBET_MIDSPR", "CBET", 220),
+      family("MTT9_45BB_CO_BTN_3BP_FACING", "FACING_BET", 250),
+      family("MTT9_70BB_CO_BTN_3BP_FACING_MIDSPR", "FACING_BET", 270),
+    ];
+
+    const check = checkOf(mechanicalReview(subject, "FLOP", street), "NO_COHORT_ANOMALY");
+    expect(check?.detail).toContain("2 rodinami téhož uzlu a strany stolu");
+    expect(check?.detail).toContain("25, 50 bb");
+    expect(check?.detail).toContain("z 5 na ulici");
+    // A hlavně: nesmí tvrdit, že se porovnávalo s celou ulicí.
+    expect(check?.detail).not.toContain("5 rodinami");
+  });
 });

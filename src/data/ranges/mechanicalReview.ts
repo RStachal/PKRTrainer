@@ -101,6 +101,16 @@ function aggressionShare(rules: readonly TurnStrategyPack["rules"][number][]): n
   return total === 0 ? undefined : bets / total;
 }
 
+/**
+ * Hloubka v blindech ze jména rodiny; 0, když ji jméno nenese.
+ *
+ * Slouží jen hlášce - aby čtenář viděl, že sousedé leží na jiných hloubkách
+ * než posuzovaná rodina. Na to, co projde, nemá vliv.
+ */
+function stackDepthOf(row: { familyId: string }): number {
+  return Number(/_([0-9]+)BB_/.exec(row.familyId)?.[1] ?? 0);
+}
+
 export function mechanicalReview(
   pack: TurnStrategyPack,
   street: ReviewStreet,
@@ -125,21 +135,34 @@ export function mechanicalReview(
     });
 
   // 2) Rozdělení akcí se nesmí nápadně lišit od sourozenců v téže skupině.
-  const profile = profileTurnFamilies(cohort).find((row) => row.familyId === familyId);
+  const profiles = profileTurnFamilies(cohort);
+  const profile = profiles.find((row) => row.familyId === familyId);
   const anomalies = profile?.anomalies ?? [];
+  // Sousedé, se kterými se **doopravdy** porovnávalo.
+  //
+  // Hláška uváděla `cohort.length`, tedy celou ulici. Jenže
+  // `profileTurnFamilies` si skupinu dál dělí podle uzlu a strany stolu, takže
+  // se srovnávalo s hrstkou. Změřeno 7. 9. 2026 na flopu: 48 rodin se dělí na
+  // 39 / 6 / 3 a označená `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR` měla **dva**
+  // sousedy, oba mělčí (25 a 50 bb) - a propadla o **jediný procentní bod**
+  // (8 % proti oknu 9..42 %), které ti dva spočítali. Číslo v hlášce musí být
+  // to, kterým se měřilo; jinak čtenář váží nález podle populace, která se ho
+  // neúčastnila. Viz bod 185.
+  const peers = profile === undefined
+    ? []
+    : profiles.filter((row) => row !== profile && row.cohort === profile.cohort);
+  const peerDepths = [...new Set(peers.map(stackDepthOf).filter((depth) => depth > 0))]
+    .sort((left, right) => left - right);
+  const withWhom = `${peers.length} rodinami téhož uzlu a strany stolu`
+    + (peerDepths.length === 0 ? "" : ` (${peerDepths.join(", ")} bb)`)
+    + ` z ${cohort.length} na ulici`;
   checks.push({
     id: "NO_COHORT_ANOMALY",
     passed: anomalies.length === 0,
-    // Skupina je **celá ulice**, ne rodiny srovnatelné hloubky - a to je u
-    // hlubokých rodin podstatné. Změřeno 5. 9. 2026 na flopu: 32 ze 48 rodin je
-    // na 25 bb s mediánem agrese 30 %, na 50 bb je 23 % a na 100 bb 12 %.
-    // Stobblindová rodina se tedy poměřuje s populací, do které nepatří; ve
-    // skupině podle hloubky není označená ani jedna. Dokud se to nezmění, musí
-    // hláška říct, s kým se porovnávalo - viz bod 185.
     detail: anomalies.length === 0
-      ? `rozdělení akcí sedí ke skupině (${cohort.length} rodin téže ulice, všechny hloubky)`
+      ? `rozdělení akcí sedí ke skupině - porovnáno s ${withWhom}`
       : `${anomalies.map((item) => item.detail).join("; ")}`
-        + ` — porovnáno s ${cohort.length} rodinami téže ulice přes všechny hloubky;`
+        + ` — porovnáno s ${withWhom};`
         + " agrese na flopu klesá s hloubkou, takže u hlubokých rodin to samo o sobě"
         + " nemusí znamenat vadu obsahu",
   });

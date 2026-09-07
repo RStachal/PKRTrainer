@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 
 /**
  * Jedna složka na FTP se vším, co čeká na majitelovo potvrzení.
@@ -31,6 +31,27 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
  * složku a řekne, co s ní.
  */
 
+/**
+ * Kdy byla stránka stavu postavená, slovy.
+ *
+ * Staví se zvlášť, protože to měření trvá minuty - a přesně proto může odejít
+ * na FTP o den starší než zbytek složky. Čtenář by četl včerejší čísla a nic by
+ * mu to neřeklo. Datum tedy stojí rovnou u odkazu, a když je starší než tenhle
+ * rozcestník, řekne se to nahlas.
+ */
+function statePageAge(path: string, builtAt: Date): string {
+  if (!existsSync(path)) {
+    return "Zatím nepostavená - spusť <code>npm run mtt:state-page</code>.";
+  }
+  const stamp = statSync(path).mtime;
+  const day = (value: Date) => value.toLocaleDateString("cs-CZ");
+  const stale = builtAt.getTime() - stamp.getTime() > 6 * 60 * 60 * 1000;
+  return stale
+    ? `<strong>Postavená ${day(stamp)}, tenhle rozcestník ${day(builtAt)}</strong> -`
+      + " čísla na ní jsou starší než zbytek složky; přestav ji přes"
+      + " <code>npm run mtt:state-page</code>."
+    : `Postavená ${day(stamp)}, tedy spolu s tímhle rozcestníkem.`;
+}
 const outDir = process.argv.find((arg) => arg.startsWith("--out="))?.split("=")[1]
   ?? "artifacts/review-desk";
 
@@ -166,6 +187,7 @@ ${cards}
  <p class="what">Čísla, ne dojem: co dostane hráč po odpovědi, stav obsahu, poslední noc
     a na kom co visí. Staví se zvlášť přes <code>npm run mtt:state-page</code>, protože
     to měření trvá minuty — když tam odkaz nevede, stránka ještě nebyla postavená.</p>
+ <p class="what">${statePageAge(`${outDir}/stav.html`, new Date())}</p>
  <p><a class="open" href="stav.html">Otevřít stav</a></p>
 </section>
 <section class="doc">
