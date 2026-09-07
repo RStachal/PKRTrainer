@@ -48,6 +48,70 @@ import {
  * jednoho skriptu by znamenalo v každé větvi ptát se, která to je.
  */
 
+/**
+ * Kolik haldy drží stavba v daném okamžiku.
+ *
+ * Není to ozdoba běhu. Tři rodiny se do haldy nevejdou (bod 193) a čtyři
+ * záznamy deníku před tím jen zvedly strop, protože nikdo neměřil, co ho plní.
+ * Fáze se tisknou vždy, aby další zvedání stropu muselo argumentovat číslem.
+ */
+function heapMB(): number {
+  return Math.round(process.memoryUsage().heapUsed / 1048576);
+}
+
+/**
+ * Které rozhodnutí uzel drží a na které straně stolu hrdina sedí.
+ *
+ * Přesně tohle porovnává resolver, takže se podle toho slučuje to, co by se u
+ * něj srazilo. Bez toho by se čtyři situace na téže desce přebily na jednu.
+ */
+function decisionKey(rule: RiverStrategyRule): string {
+  const hero = rule.spot?.hero;
+  return `${actionNodeForSolvedHero(hero, "RIVER") ?? "?"}|${hero?.side ?? "?"}`;
+}
+
+/**
+ * Sloučí pravidla jedné desky na jednu linku na river a zahodí kontext těch,
+ * co tím padla.
+ *
+ * ## Proč po deskách, a ne až nakonec
+ *
+ * Slučovalo se to nad celou rodinou, a to je celý důvod, proč se tři rodiny
+ * nevešly do haldy (bod 193). Změřeno 7. 9. 2026 na
+ * `MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR`: generátor postavil **502 060
+ * pravidel, aby si nechal 263**, a 490 980 z nich zahodilo právě tohle
+ * slučování - až potom, co všechna naráz ležela v paměti (13 979 MB).
+ *
+ * Posunout to dovnitř smyčky nic nemění, protože klíč **nikdy nepřekročí
+ * desku**: nese turnový board, a ten začíná flopem, který desku pojmenovává.
+ * Pořadí zůstane taky - `Map.set` na známý klíč pozici nemění, takže je to
+ * dál pořadí prvního výskytu, jen počítané po částech.
+ */
+function collapseBoardTail(
+  rules: RiverStrategyRule[],
+  from: number,
+  evContext: Map<object, unknown>,
+): number {
+  if (rules.length - from < 2) return 0;
+  const byLine = new Map<string, RiverStrategyRule>();
+  for (let at = from; at < rules.length; at += 1) {
+    const rule = rules[at];
+    const key = `${rule.riverSpot.turnBoard.join("")}|${rule.riverSpot.riverCard}`
+      + `|${rule.node}|${decisionKey(rule)}`;
+    const held = byLine.get(key);
+    if (held === undefined || (rule.spot?.reach ?? 0) > (held.spot?.reach ?? 0)) {
+      if (held !== undefined) evContext.delete(held);
+      byLine.set(key, rule);
+    } else {
+      evContext.delete(rule);
+    }
+  }
+  const dropped = rules.length - from - byLine.size;
+  rules.length = from;
+  rules.push(...byLine.values());
+  return dropped;
+}
+
 const ROOT = "artifacts/decomposition";
 const OUT_DIR = "src/data/ranges/river";
 const EV_OUT_DIR = "src/data/ranges/river-ev";
@@ -264,7 +328,18 @@ if (family === undefined) {
   const rules: RiverStrategyRule[] = [];
   /** Vstupy pro dopočet EV, klíčované pravidlem. Nedodává se, jen se počítá. */
   const evContext = new Map<object, {
-    node: unknown;
+    /**
+     * Cesta k podhře, ne její obsah.
+     *
+     * Uzel se tu držel rozparsovaný, a tím přežil do konce běhu každý soubor,
+     * ze kterého vzniklo aspoň jedno pravidlo. Změřeno 7. 9. 2026: 22 901
+     * podher, 5 583 MB holého textu, v objektech násobek - a spotřebitel je
+     * dopočet EV o dvě stě řádků níž, který běží až po ořezu a ptá se jen těch
+     * pár set pravidel, co zbyla. Načte se tedy až tam. Je to bezpečné: sběr
+     * uzel jen čte (`subgameDecisions` i `heroSideOfNode`), takže znovu
+     * načtený soubor je tentýž uzel.
+     */
+    path: string;
     line: readonly string[];
     board: readonly string[];
     potChips: number;
@@ -274,8 +349,23 @@ if (family === undefined) {
     chipsPerBB: number;
   }>();
   let unidentified = 0;
+  /** Kolik se přečetlo z disku a kolik pravidel z toho vzniklo, než se slučovalo. */
+  let subgameBytes = 0;
+  let subgames = 0;
+  let built = 0;
+  let collapsed = 0;
+  /** Kde v `rules` začala rozpracovaná deska; slučuje se po ní, ne až nakonec. */
+  let currentBoard = "";
+  let boardStart = 0;
 
   for (const { boardDirectory, riverDirectory } of directories) {
+    // `riverDirectories` vrací podhry seskupené po deskách, takže změna jména
+    // desky je konec té předchozí a jediné místo, kde se smí slučovat.
+    if (boardDirectory !== currentBoard) {
+      collapsed += collapseBoardTail(rules, boardStart, evContext);
+      currentBoard = boardDirectory;
+      boardStart = rules.length;
+    }
     const plan = JSON.parse(readFileSync(join(riverDirectory, "plan.json"), "utf8"));
     const files = readdirSync(riverDirectory)
       .filter((name) => name.endsWith(".json") && name !== "plan.json");
@@ -304,7 +394,10 @@ if (family === undefined) {
     for (const item of plan.items ?? []) {
       const path = join(riverDirectory, riverSubgameFileName(item));
       if (!existsSync(path)) continue;
-      const node = JSON.parse(readFileSync(path, "utf8"));
+      const raw = readFileSync(path, "utf8");
+      subgameBytes += raw.length;
+      subgames += 1;
+      const node = JSON.parse(raw);
 
       // Každé rozhodnutí v podhře, ne jen to kořenové - stejně jako na turnu a ze
       // stejného důvodu: hráč, který na riveru čelí sázce, jinak nedostane
@@ -352,12 +445,13 @@ if (family === undefined) {
         });
         if (rule) {
           rules.push(rule);
+          built += 1;
           // Kontext pro dopočet EV. Do packu nepatří - je to vstup výpočtu, ne
           // obsah - ale bez linky a kořenového uzlu se EV spočítat nedá a po
           // ořezu už se k nim nedostaneme. Klíčem je samotné pravidlo, které
           // filtry i ořez pouštějí dál jako tutéž referenci.
           evContext.set(rule, {
-            node,
+            path,
             line: decision.line,
             board: item.board ?? [],
             potChips: item.pot ?? 0,
@@ -370,33 +464,18 @@ if (family === undefined) {
     }
   }
 
-  // Jedna linka na desku a riverovou kartu, ta nejčastěji hraná.
-  //
-  // Tentýž river se dá dosáhnout několika turnovými linkami a resolver je od
-  // sebe nerozliší, protože trenažér mu neřekne, kterou rozdal. Dodat obě by
-  // znamenalo odmítnout každou desku, kde existují dvě - přesně to stálo u turnu
-  // 5,7 % dosahu a pravidla zůstala v balíku.
-  // Klíč nese i to, které rozhodnutí uzel drží a na které straně stolu hrdina
-  // sedí - přesně to porovnává resolver, takže se slučuje to, co by se u něj
-  // srazilo. Bez toho by se čtyři situace na téže desce přebily na jednu.
-  const decisionKey = (rule: (typeof rules)[number]): string => {
-    const hero = rule.spot?.hero;
-    return `${actionNodeForSolvedHero(hero, "RIVER") ?? "?"}|${hero?.side ?? "?"}`;
-  };
-  const byLine = new Map<string, (typeof rules)[number]>();
-  for (const rule of rules) {
-    const key = `${rule.riverSpot.turnBoard.join("")}|${rule.riverSpot.riverCard}|${rule.node}|${decisionKey(rule)}`;
-    const held = byLine.get(key);
-    if (held === undefined || (rule.spot?.reach ?? 0) > (held.spot?.reach ?? 0)) {
-      byLine.set(key, rule);
-    }
-  }
-  const collapsed = rules.length - byLine.size;
-  rules.length = 0;
-  rules.push(...byLine.values());
+  collapsed += collapseBoardTail(rules, boardStart, evContext);
+
+  console.log(
+    `  halda po sběru ${heapMB()} MB: ${rules.length} pravidel z ${built} postavených, `
+    + `${subgames} podher přečteno (${Math.round(subgameBytes / 1048576)} MB textu)`,
+  );
   if (collapsed > 0) {
     console.log(`  ${collapsed} riverů vynecháno: tutéž desku dosahuje jiná linka častěji`);
   }
+
+  // Jedna linka na desku a riverovou kartu už drží `collapseBoardTail` výš,
+  // rovnou uvnitř smyčky.
 
   // Po jednom z každé turnové podhry, uvnitř podhry podle dosahu. Řadit celou
   // rodinu podle dosahu a uříznout by rozpočet utratilo na jedné podhře.
@@ -438,6 +517,8 @@ if (family === undefined) {
   evidence.sampledRules = rules.slice(0, 1);
   if (dropped > 0) console.log(`  ${dropped} méně dosahovaných riverů vynecháno kvůli rozpočtu`);
 
+  console.log(`  halda po ořezu dosahu ${heapMB()} MB: ${rules.length} pravidel`);
+
   // Komu vyřešené rivery patří, vypsané při každém běhu. Tohle je fakt, kterému
   // se u jména adresáře věřit nedalo, takže se hlásí, ne předpokládá.
   const identities = new Map<string, number>();
@@ -456,6 +537,7 @@ if (family === undefined) {
   }
 
   const packId = `mtt-full-ring-9-river-solved-${family.toLowerCase().replace(/_/g, "-")}-v1`;
+  console.log(`  halda před stavbou packu ${heapMB()} MB`);
   const createdAt = new Date().toISOString().slice(0, 10);
   const verdicts = readVerdicts();
   const buildWith = (candidate: typeof rules) => buildRiverStrategyPack({
@@ -477,6 +559,8 @@ if (family === undefined) {
     rules.length = 0;
     rules.push(...fitted.kept);
   }
+
+  console.log(`  halda po rozpočtu svazku ${heapMB()} MB: ${rules.length} pravidel`);
 
   const result = buildWith(rules);
 
@@ -543,7 +627,7 @@ if (family === undefined) {
           const context = evContext.get(rule);
           if (context === undefined) return null;
           const rows = riverActionEv({
-            node: context.node as never,
+            node: JSON.parse(readFileSync(context.path, "utf8")) as never,
             board: context.board,
             potChips: context.potChips,
             oop: context.oop,
