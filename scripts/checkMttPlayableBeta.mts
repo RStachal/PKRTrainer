@@ -45,6 +45,27 @@ export const MTT_PLAYABLE_BETA_SCOPE = "MTT_PLAYABLE_BETA_V1" as const;
  * Čte se soubor verdiktů, ne packy: pack nese jen výslednou hodnotu, kdežto
  * důvod, proč ji má, je právě v tom verdiktu.
  */
+/**
+ * How confidence actually splits across a street's solved packs.
+ *
+ * Three limit sentences asserted "confidence stays LOW" - written before the
+ * mechanical battery existed (19 Aug 2026). The battery was added below them and
+ * the sentences were not, so the gate stated both "stays LOW" and "141 packs
+ * reach MEDIUM" about the same content. Measured 8 Sep 2026: TURN 48/48 MEDIUM,
+ * FLOP and RIVER 45/48. A gate that contradicts itself teaches the reader to
+ * skip its limits, which is worse than any single wrong number.
+ */
+function confidenceSplit(families: readonly { confidence?: string }[]): string {
+  const counts = new Map<string, number>();
+  for (const family of families) {
+    const key = family.confidence ?? "UNKNOWN";
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const parts = [...counts].sort((left, right) => right[1] - left[1])
+    .map(([key, count]) => `${count} ${key}`);
+  return `${parts.join(", ")} of ${families.length}`;
+}
+
 function mechanicalConfidenceLimits(): string[] {
   const path = "Agents/turn-review/verdicts.json";
   if (!existsSync(path)) {
@@ -365,7 +386,7 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       `Solved TURN content ships as ${turnFamilies.length} families, ` +
       `${turnSolvedTurns} solved turns across ${turnDistinctFlops} distinct flops. ` +
       "It answers only the exact boards it was solved on and declines every other; " +
-      "confidence stays LOW until a player reviews it. " +
+      `confidence by pack: ${confidenceSplit(turnFamilies)}, raised by the mechanical battery and not by a reader. ` +
       "Boards solved on the reduced review-only tree are excluded, so no turn pack blends two trees.",
     ]),
     ...(solvedFlopFamilies.length === 0 ? [] : [
@@ -374,9 +395,9 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       + "It answers those exact boards and declines every other; the texture-aggregate pilots "
       + "still answer everywhere else, so this is precision added, not coverage traded.",
       "Solved FLOP content has a review path (mtt:review-turn-family --street=FLOP) but no "
-      + "reader yet, so it stays LOW - while the texture-aggregate pilots in front of which it "
-      + "sits claim MEDIUM without a reader either. The weaker content therefore outranks the "
-      + "stronger one on the confidence ladder, and MEDIUM is the production gate.",
+      + `reader yet; confidence by pack: ${confidenceSplit(solvedFlopFamilies)}. `
+      + "MEDIUM is the production gate, so most of this content clears it on measurement "
+      + "alone - as do the texture-aggregate pilots in front of which it sits.",
     ]),
     ...decisionLimit("TURN", turnDecisions),
     ...decisionLimit("RIVER", riverDecisions),
@@ -385,7 +406,8 @@ export async function buildMttPlayableBetaReport(): Promise<MttPlayableBetaRepor
       `${riverSolvedRivers} solved rivers across ${riverDistinctBoards} distinct five-card boards. ` +
       "It answers only those exact boards and declines every other; the river is the narrowest content the app has.",
       "Solved RIVER content has a review path (mtt:review-turn-family --street=RIVER) but no "
-      + "reader yet, so it stays LOW and cannot reach production on its own.",
+      + `reader yet; confidence by pack: ${confidenceSplit(riverFamilies)}, raised by the `
+      + "mechanical battery rather than by a player read.",
     ]),
     // Dokud šla důvěra zvednout jen čtením, stačila jedna věta: nikdo nečetl,
     // takže obsah není ověřený. Od 19. 8. 2026 ji zvedá i baterie měření, a tím
