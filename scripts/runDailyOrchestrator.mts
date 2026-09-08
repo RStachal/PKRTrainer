@@ -315,7 +315,15 @@ say(`  rozklad drží ${pairs.size} dvojic sedaček: ${[...pairs.keys()].join(",
  * nastagované rodiny, které trenažér potřebuje víc.
  */
 /**
- * Riverové packy, které už sedí na stropu modulu.
+ * Riverové packy, které už sedí na stropu.
+ *
+ * Stropy jsou **dva** a packu stačí jeden: bajtový rozpočet modulu a strop
+ * počtu pravidel (`RULE_BUDGET` = 300 v `buildRiverStrategyPacks.mts`). Dokud
+ * se tu počítal jen ten bajtový, hlásil report **10 ze 48** a psal to číslo
+ * i do `tonight.json` - jenže suchá zkouška z téhož dne (bod 201) změřila, že
+ * místo nemá **žádná ze 48 rodin**: 39 na počtu pravidel, 10 bajtově, jedna na
+ * obojím. Doporučení z toho vycházelo správné, ale číslo pod ním pětkrát
+ * mírnější než skutečnost - a majitel podle něj rozhoduje o rozpočtu.
  *
  * Za nasycený se bere pack nad 97 % rozpočtu: generátor ořezává tak, aby se
  * vešel, takže přesně na stropu neskončí skoro nikdy. Naměřeno 1. 9. 2026:
@@ -324,9 +332,23 @@ say(`  rozklad drží ${pairs.size} dvojic sedaček: ${[...pairs.keys()].join(",
 const riverPacks = existsSync("src/data/ranges/river")
   ? readdirSync("src/data/ranges/river").filter((name) => name.endsWith(".json"))
   : [];
-const saturated = riverPacks.filter((name) => (
+const RIVER_RULE_BUDGET = 300;
+const ruleCountOf = (name: string): number => {
+  try {
+    const pack = JSON.parse(readFileSync(join("src/data/ranges/river", name), "utf8")) as {
+      rules?: unknown[];
+    };
+    return pack.rules?.length ?? 0;
+  } catch {
+    // Nečitelný pack není nasycený pack; ať se to pozná jinde než tady.
+    return 0;
+  }
+};
+const saturatedByBytes = riverPacks.filter((name) => (
   statSync(join("src/data/ranges/river", name)).size > MODULE_BUDGET_BYTES * 0.97
 ));
+const saturatedByRules = riverPacks.filter((name) => ruleCountOf(name) >= RIVER_RULE_BUDGET);
+const saturated = [...new Set([...saturatedByBytes, ...saturatedByRules])];
 
 type NightPriority = "DECOMPOSITION" | "NEW_FAMILIES";
 let priority: NightPriority = "DECOMPOSITION";
@@ -389,7 +411,9 @@ if (asked === null || held === null) {
   const pairsBlocked = Number(/nezaloženo \(([0-9]+)\)/.exec(expansion)?.[1] ?? "0");
 
   say(`  DOPORUČENÍ: hloubku ne - ${saturated.length} z ${riverPacks.length} riverových packů`);
-  say("  sedí na stropu modulu, takže nový obsah vytlačuje starý místo aby přibyl.");
+  say(`  sedí na stropu (${saturatedByRules.length} na počtu pravidel,`
+    + ` ${saturatedByBytes.length} bajtově), takže nový obsah vytlačuje starý`);
+  say("  místo aby přibyl.");
   if (pairsToCreate > 0) {
     say("  Krok: poslat noc do šířky. Strop na chunk se zvedat nemá - změřeno");
   } else {
@@ -409,7 +433,8 @@ if (asked === null || held === null) {
   // spustit (nastagované rodiny bez checkpointu nad `YIELD_MIN_BOARDS`).
   // Když není, rozkládá dál - prázdná noc nikomu nepomůže.
   priority = "NEW_FAMILIES";
-  priorityReason = `river je nasycený: ${saturated.length}/${riverPacks.length} packů na stropu`;
+  priorityReason = `river je nasycený: ${saturated.length}/${riverPacks.length} packů na stropu`
+    + ` (${saturatedByRules.length} na pravidlech, ${saturatedByBytes.length} bajtově)`;
   // **Doporučení, které se nedá splnit, to má říct.**
   //
   // Runner ustoupí monolitickému solveru jen tehdy, když jsou nastagované
