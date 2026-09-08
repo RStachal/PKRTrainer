@@ -176,13 +176,20 @@ if (family === undefined) {
   };
   const rules: FlopStrategyRule[] = [];
   let unnamed = 0;
+  /** Kolik se přečetlo a postavilo, než se slučovalo. Viz body 194 a 197. */
+  let subgameBytes = 0;
+  let built = 0;
+  let boards = 0;
 
   for (const file of files) {
     const board = file.slice(`pkrtrainer_${family}_`.length, -".json".length);
     const parameters = parametersFor(family, board);
     if (parameters === undefined || parameters.flop.length !== 3) continue;
-    const node = JSON.parse(readFileSync(join(rawDirectory, file), "utf8"));
+    const raw = readFileSync(join(rawDirectory, file), "utf8");
+    subgameBytes += raw.length;
+    const node = JSON.parse(raw);
     evidence.boards += 1;
+    boards += 1;
 
     const chipsPerBB = familyStackBB > 0 ? parameters.stackChips / familyStackBB : 0;
     const inBB = (chips: number) => (
@@ -230,6 +237,7 @@ if (family === undefined) {
       evidence.plannedItems += 1;
       evidence.writtenItems += 1;
       rules.push(rule);
+      built += 1;
     }
   }
 
@@ -240,6 +248,19 @@ if (family === undefined) {
 
   // Jedno pravidlo na desku a rozhodnutí, to nejčastěji dosahované: resolver
   // linky nerozlišuje, takže dodat dvě znamená odmítnout obě.
+  // Bez úklidu měří `heapUsed` i odpad, který jen ještě nikdo nesebral - a to je
+  // rozdíl mezi „něco se drží" a „něco se právě alokovalo a zahodilo". Když je
+  // úklid k dispozici (--expose-gc), měří se až po něm.
+  const gc = (globalThis as { gc?: () => void }).gc;
+  const before = Math.round(process.memoryUsage().heapUsed / 1048576);
+  gc?.();
+  const live = Math.round(process.memoryUsage().heapUsed / 1048576);
+  console.log(
+    `  halda po sběru ${before} MB, po úklidu ${gc === undefined ? "neměřeno" : `${live} MB`}: `
+    + `${built} pravidel postaveno, ${boards} desek `
+    + `(${Math.round(subgameBytes / 1048576)} MB textu)`,
+  );
+
   const byLine = new Map<string, (typeof rules)[number]>();
   for (const rule of rules) {
     const key = `${rule.flopSpot.flop.join("")}|${decisionKey(rule)}`;

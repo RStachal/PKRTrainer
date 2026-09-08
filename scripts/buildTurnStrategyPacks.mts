@@ -372,8 +372,15 @@ if (family === undefined) {
   // player can actually be served.
   //
   // Klíč rozhodnutí bydlí nad modulem, protože ho potřebuje i slučování po deskách.
+  // Bez úklidu měří `heapUsed` i odpad, který jen ještě nikdo nesebral - a to je
+  // rozdíl mezi „něco se drží" a „něco se právě alokovalo a zahodilo". Když je
+  // úklid k dispozici (--expose-gc), měří se až po něm.
+  const gc = (globalThis as { gc?: () => void }).gc;
+  const before = Math.round(process.memoryUsage().heapUsed / 1048576);
+  gc?.();
+  const live = Math.round(process.memoryUsage().heapUsed / 1048576);
   console.log(
-    `  halda po sběru ${Math.round(process.memoryUsage().heapUsed / 1048576)} MB: `
+    `  halda po sběru ${before} MB, po úklidu ${gc === undefined ? "neměřeno" : `${live} MB`}: `
     + `${built} pravidel postaveno, ${subgames} podher přečteno `
     + `(${Math.round(subgameBytes / 1048576)} MB textu)`,
   );

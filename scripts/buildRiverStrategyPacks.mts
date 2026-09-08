@@ -466,8 +466,16 @@ if (family === undefined) {
 
   collapsed += collapseBoardTail(rules, boardStart, evContext);
 
+  // Bez úklidu měří `heapUsed` i odpad, který jen ještě nikdo nesebral - a to je
+  // rozdíl mezi „něco se drží" a „něco se právě alokovalo a zahodilo". Když je
+  // úklid k dispozici (--expose-gc), měří se až po něm.
+  const gc = (globalThis as { gc?: () => void }).gc;
+  const before = heapMB();
+  gc?.();
+  const live = heapMB();
   console.log(
-    `  halda po sběru ${heapMB()} MB: ${rules.length} pravidel z ${built} postavených, `
+    `  halda po sběru ${before} MB, po úklidu ${gc === undefined ? "neměřeno" : `${live} MB`}: `
+    + `${rules.length} pravidel z ${built} postavených, `
     + `${subgames} podher přečteno (${Math.round(subgameBytes / 1048576)} MB textu)`,
   );
   if (collapsed > 0) {
