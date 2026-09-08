@@ -160,6 +160,7 @@
     "mtt:known": "node scripts/run-cli.mjs scripts/searchProjectMemory.mts",
     "mtt:agenda": "node scripts/run-cli.mjs scripts/reportOpenAgenda.mts",
     "mtt:turn-ev-quality": "node --max-old-space-size=8192 scripts/run-cli.mjs scripts/measureTurnEvQuality.mts",
+    "mtt:turn-ev-pack": "node --max-old-space-size=8192 scripts/run-cli.mjs scripts/buildTurnEvPacks.mts",
     "mtt:pilot-review": "node scripts/run-cli.mjs scripts/renderFlopPilotReview.mts",
     "mtt:pilot-answers": "node scripts/run-cli.mjs scripts/applyFlopPilotAnswers.mts",
     "mtt:review-desk": "node scripts/run-cli.mjs scripts/buildReviewDesk.mts",

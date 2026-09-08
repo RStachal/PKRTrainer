@@ -39,6 +39,27 @@ describe("turnShowdownEquity", () => {
     expect(trips ?? 0).toBeGreaterThan(0.9);
   });
 
+  it("equity vyjde na papírem spočtenou hodnotu 43/44", () => {
+    // Jediná zkouška, která nekontroluje výpočet sebou samým: odpověď se dá
+    // odvodit z pravidel pokeru.
+    //
+    // Deska `2c 7d 9h Kc`, hrdina `KsKh` (trojice králů), soupeř `9c9d`
+    // (trojice devítek). Postupka ani barva nejsou možné - deska drží 2, 7, 9, K
+    // a jen dva kluby. Zbývá 44 karet, které mohou přijít.
+    //
+    // - `9s` dá soupeři čtyři devítky: **jediná prohra**,
+    // - `Kd` dá hrdinovi čtyři krále,
+    // - dvojka nebo sedmička spáruje desku a oba mají full house, ale KKK+X
+    //   poráží 999+X,
+    // - cokoli jiného nechá trojici králů nad trojicí devítek.
+    //
+    // Hrdina tedy vyhrává 43 ze 44 dojezdů. Remíza nepřipadá v úvahu.
+    const equity = turnShowdownEquity(BOARD)("KsKh", [{ combo: "9c9d", weight: 1 }]);
+
+    expect(equity).toBeDefined();
+    expect(equity ?? 0).toBeCloseTo(43 / 44, 9);
+  });
+
   it("prázdná soupeřova range nedá nulu, ale žádnou odpověď", () => {
     // Blokátory vyřazuje volající. Když po filtraci nezbude nikdo, musí přijít
     // `undefined` - nula by znamenala „hrdina vždy prohraje".
