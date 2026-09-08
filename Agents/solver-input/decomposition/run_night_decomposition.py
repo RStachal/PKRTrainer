@@ -868,6 +868,9 @@ def run_river_phase(deadline, workers, coverage, budget):
     # co mají místo, nebo do těch, které už sedí na stropu modulu a ořez je
     # stejně zahodí. Přesně na tom visí rozhodnutí o rozpočtu (bod 157).
     by_family = {}
+    # Podhry, ne jen vrstvy: nasycené rodiny jsou ty hluboké s největšími
+    # podhrami, takže podíl vrstev podceňuje, kolik strojového času tam padlo.
+    games_by_family = {}
     for row in picked:
         remaining = (deadline - datetime.now()).total_seconds() / 60
         available = free_gb()
@@ -910,6 +913,7 @@ def run_river_phase(deadline, workers, coverage, budget):
         layer_minutes.append(minutes)
         family = board.split("__")[0]
         by_family[family] = by_family.get(family, 0) + 1
+        games_by_family[family] = games_by_family.get(family, 0) + after
         done += 1
         if not finished:
             log("  deadline reached; river phase ukončena rodičem")
@@ -928,7 +932,7 @@ def run_river_phase(deadline, workers, coverage, budget):
     # Rozpis, ne jen součet: noc vybírá podhry podle reach napříč rodinami, takže
     # se výsledek může celý slít do dvou nejhlubších, aniž by to ze součtu šlo poznat.
     for name, count in sorted(by_family.items(), key=lambda item: -item[1]):
-        log(f"  {count:4d} vrstev do {name}")
+        log(f"  {count:4d} vrstev, {games_by_family.get(name, 0):6d} podher do {name}")
 
 
 if __name__ == "__main__":

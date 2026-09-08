@@ -133,6 +133,37 @@ function lastRunWasRefusal(): boolean {
 }
 
 /** Jak dopadla poslední noc, přečtené z jejího vlastního logu. */
+/**
+ * Kolik noční práce padlo do rodin, které už sedí na stropu modulu.
+ *
+ * Přírůstek a výměna vypadají v logu stejně: obojí je „vrstva hotová". Rozdíl
+ * je v tom, jestli se nový obsah do packu vejde, nebo jestli ořez musí něco
+ * vyhodit, aby se vešel. Změřeno 8. 9. 2026 (bod 198): 80 vrstev z 203, ale
+ * **56,6 % vyřešených podher**, protože nasycené rodiny jsou ty hluboké
+ * s největšími podhrami. Bez téhle věty vypadá noc pokaždé stejně produktivně.
+ */
+function nightIntoFullFamilies(run: readonly string[]): string | undefined {
+  const rows = run
+    .map((line) => /^s*(d+) vrstev,s*(d+) podher do (S+)/.exec(line))
+    .filter((match): match is RegExpExecArray => match !== null)
+    .map((match) => ({ layers: Number(match[1]), games: Number(match[2]), family: match[3] }));
+  if (rows.length === 0) return undefined;
+  let fullLayers = 0, fullGames = 0, layers = 0, games = 0, full = 0;
+  for (const row of rows) {
+    layers += row.layers;
+    games += row.games;
+    const slug = `src/data/ranges/river/${row.family.toLowerCase().replace(/_/g, "-")}.generated.json`;
+    if (!existsSync(slug)) continue;
+    // Na stropu = do 20 KiB pod rozpočtem modulu; níž se nový obsah ještě vejde.
+    if (statSync(slug).size / 1024 <= 480) continue;
+    full += 1;
+    fullLayers += row.layers;
+    fullGames += row.games;
+  }
+  if (games === 0) return undefined;
+  return `  do rodin na stropu: ${fullLayers} z ${layers} vrstev, ale ${fullGames} z ${games} podher`
+    + ` (${((100 * fullGames) / games).toFixed(1)} % práce stroje, ${full} rodin) - tam je to výměna, ne přírůstek`;
+}
 function lastNight(): { lines: string[]; riverLayers: number; overrunMinutes: number | null } {
   if (!existsSync(NIGHT_LOG)) return { lines: ["night.log chybí"], riverLayers: 0, overrunMinutes: null };
   const all = readFileSync(NIGHT_LOG, "utf8").split("\n");
@@ -156,6 +187,8 @@ function lastNight(): { lines: string[]; riverLayers: number; overrunMinutes: nu
     const actual = Number(lastStamp[1]) * 60 + Number(lastStamp[2]);
     overrun = actual >= target ? actual - target : null;
   }
+  const split = nightIntoFullFamilies(run);
+  if (split !== undefined) summary.push(split);
   return { lines: summary, riverLayers: layers, overrunMinutes: overrun };
 }
 
