@@ -269,6 +269,10 @@ function buildPack(packPath: string): {
     const planStack = planOf(directory).stack;
     const chipsPerBB = stackBB > 0 && planStack > 0 ? planStack / stackBB : 0;
     if (chipsPerBB <= 0) continue;
+    // Pot a stack **na kořeni podhry**, v blindech. Odtud se EV měří, takže
+    // odtud se berou i meze.
+    const rootStackBB = (item.stack ?? 0) / chipsPerBB;
+    const rootPotBB = (item.pot ?? 0) / chipsPerBB;
 
     const node = JSON.parse(readFileSync(path, "utf8")) as SolverNode;
     const held = new SubgameLayers(join(ROOT, directory, "river", subgame));
@@ -312,16 +316,18 @@ function buildPack(packPath: string): {
         }
       }
       // Fyzikální mez: víc než svůj stack hrdina prohrát nemůže a víc než pot
-      // plus soupeřův stack vyhrát taky ne. EV se měří **od kořene podhry**,
-      // takže se porovnává se stackem rodiny, ne se zbytkem u rozhodnutí -
-      // hrdina má cestou k rozhodnutí co vsadit. Tahle mez je jediné, co odliší
-      // špatnou EV od správné bez druhého výpočtu: obojí přijde v blindech.
-      const ceiling = (rule.spot?.potBB ?? 0) + stackBB + 1;
+      // plus soupeřův stack vyhrát taky ne. Měří se **od kořene podhry**, takže
+      // se bere pot i stack tam, ne stack celé rodiny - ten je většinou větší a
+      // mez by tím jen změkla. Tahle mez je jediné, co odliší špatnou EV od
+      // správné bez druhého výpočtu: obojí přijde v blindech a obojí vypadá
+      // rozumně. Chytila tak chybu v jednotkách, viz `chipsPerBB` výš.
+      const floor = -(rootStackBB + 1);
+      const ceiling = rootPotBB + rootStackBB + 1;
       for (const value of values) {
         if (value === null) continue;
-        if (value < -(stackBB + 1) || value > ceiling) {
+        if (value < floor || value > ceiling) {
           throw new Error(`EV ${value.toFixed(1)} BB je mimo mez `
-            + `${(-(stackBB + 1)).toFixed(1)} az ${ceiling.toFixed(1)}`
+            + `${floor.toFixed(1)} az ${ceiling.toFixed(1)}`
             + ` u pravidla ${index} rodiny ${familyId}`);
         }
       }
