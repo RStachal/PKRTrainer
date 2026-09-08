@@ -37,8 +37,8 @@ export interface TurnEvInput {
    * Hodnota riverové vrstvy pro jednu hrdinovu kombinaci, na jednotku range.
    *
    * `undefined` znamená, že pro tuhle turnovou linku vrstva neexistuje - a to
-   * **není nula**. Rozhodnutí, pod kterým chybí byť jedna linka, se nedodává
-   * vůbec, protože EV spočtená z části stromu se od správné nedá rozeznat.
+   * **není nula**. Chybějící linka se nezaokrouhluje ani nedosazuje; místo toho
+   * se sečte, kolik dosahu na ni připadlo, a vrátí se to jako `coveredReach`.
    */
   riverValue: (turnLine: readonly string[], heroCombo: string) => number | undefined;
 }
@@ -76,15 +76,35 @@ const sumOf = (rows: readonly Weighted[]): number => (
   rows.reduce((sum, row) => sum + row.weight, 0)
 );
 
+export interface TurnEvResult {
+  /** EV každé akce hrdiny, po kombinacích. Prázdné, když se nedá spočítat. */
+  rows: ComboActionEv[];
+  /**
+   * Jakou část hrdinovy hry vrácené akce popisují, 0 az 1.
+   *
+   * Akce, pod kterou chybí byť jedna riverová vrstva, se **nevrací vůbec** -
+   * EV z části stromu se od správné nedá rozeznat. Jenže noc neřeší všechny
+   * turnové linky, jen ty nejdosahovanější: změřeno 8. 9. 2026 na
+   * `MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR__532mono`, kde plán vybral **8 linek
+   * z 37 živých a ty nesou 99,4 % dosahu**. Zahodit celé rozhodnutí kvůli
+   * jedné vzácné větvi by tedy zahodilo skoro všechno.
+   *
+   * Číslo říká, kolik z toho, co hrdina podle solveru doopravdy hraje, má
+   * spočítanou EV. Práh si volí ten, kdo EV dodává, a musí ho umět obhájit.
+   */
+  coveredReach: number;
+}
+
 /**
  * EV každé akce hrdiny v jednom turnovém rozhodnutí, po kombinacích.
  *
- * Prázdné pole znamená „nedá se spočítat" - buď uzel není rozhodnutí, nebo pod
- * ním chybí riverová vrstva. Nikdy ne nulu vydávanou za výsledek.
+ * Prázdné `rows` znamená „nedá se spočítat" - uzel není rozhodnutí, nebo pod
+ * ním nestojí ani kus vrstvy. Nikdy ne nula vydávaná za výsledek.
  */
-export function turnActionEv(input: TurnEvInput): ComboActionEv[] {
+export function turnActionEv(input: TurnEvInput): TurnEvResult {
   const { board, potChips, riverValue } = input;
-  if (board.length !== 4) return [];
+  const empty: TurnEvResult = { rows: [], coveredReach: 0 };
+  if (board.length !== 4) return empty;
 
   const dead = new Set(board);
   let current: SolverNode = input.node;
@@ -97,10 +117,10 @@ export function turnActionEv(input: TurnEvInput): ComboActionEv[] {
   // kdo je na tahu - stejně jako na riveru a ze stejného důvodu: čelící
   // rozhodnutí se nesmí počítat z rangí, jaké byly na začátku ulice.
   for (const step of input.line ?? []) {
-    if (current.node_type !== "action_node" || current.strategy === undefined) return [];
+    if (current.node_type !== "action_node" || current.strategy === undefined) return empty;
     const strategy = current.strategy;
     const index = strategy.actions.indexOf(step);
-    if (index < 0) return [];
+    if (index < 0) return empty;
     const acting = current.player ?? 0;
     const narrow = (list: readonly Weighted[]): Weighted[] => list
       .map((row) => ({ combo: row.combo, weight: row.weight * (strategy.strategy[row.combo]?.[index] ?? 0) }))
@@ -114,21 +134,23 @@ export function turnActionEv(input: TurnEvInput): ComboActionEv[] {
     committed = committedAfter(step, acting, committed);
     prefix.push(step);
     const child = current.childrens?.[step];
-    if (child === undefined) return [];
+    if (child === undefined) return empty;
     current = child;
   }
 
   const decisionStrategy = current.strategy;
-  if (current.node_type !== "action_node" || decisionStrategy === undefined) return [];
+  if (current.node_type !== "action_node" || decisionStrategy === undefined) return empty;
   const decision = current;
   const heroPlayer = decision.player ?? 0;
   const heroIsOop = heroPlayer === 1;
   const heroes = heroIsOop ? oopWeights : ipWeights;
   const villains = heroIsOop ? ipWeights : oopWeights;
   const reach = sumOf(villains);
-  if (reach === 0) return [];
+  if (reach === 0) return empty;
 
-  let missing = false;
+  // Narazila tahle jedna akce na chybějící vrstvu? Resetuje se u každé zvlášť,
+  // protože EV se počítá po akcích a díra v jedné větvi neznehodnocuje sestru.
+  let hitMissing = false;
 
   const value = (
     node: SolverNode,
@@ -143,7 +165,7 @@ export function turnActionEv(input: TurnEvInput): ComboActionEv[] {
     // Pahýl riveru: dál strom nevede a hodnotu dodá vyřešená vrstva.
     if (node.node_type !== "action_node" || node.strategy === undefined) {
       const perUnit = riverValue(line, heroCombo);
-      if (perUnit === undefined) { missing = true; return 0; }
+      if (perUnit === undefined) { hitMissing = true; return 0; }
       return weight * (perUnit - held[heroPlayer]);
     }
 
@@ -184,14 +206,23 @@ export function turnActionEv(input: TurnEvInput): ComboActionEv[] {
   };
 
   const rows: ComboActionEv[] = [];
+  let covered = 0;
+  let total = 0;
   for (const hero of heroes) {
-    for (const action of decisionStrategy.actions) {
+    let kept = 0;
+    for (const [index, action] of decisionStrategy.actions.entries()) {
+      hitMissing = false;
       const next = committedAfter(action, heroPlayer, committed);
       const weighted = isFold(action)
         ? -committed[heroPlayer] * reach
         : value(decision.childrens?.[action] ?? {}, hero.combo, villains, next, [...prefix, action]);
+      if (hitMissing) continue;
       rows.push({ combo: hero.combo, action, evChips: weighted / reach });
+      kept += decisionStrategy.strategy[hero.combo]?.[index] ?? 0;
     }
+    covered += hero.weight * kept;
+    total += hero.weight;
   }
-  return missing ? [] : rows;
+  if (rows.length === 0) return empty;
+  return { rows, coveredReach: total === 0 ? 0 : covered / total };
 }

@@ -74,7 +74,7 @@ function checkThrough(): SolverNode {
 describe("turnActionEv", () => {
   it("check-check vrátí hodnotu riverové vrstvy beze změny", () => {
     // Nikdo nic nepřidal, takže se od hodnoty nemá co odečítat: EV = 120.
-    const rows = turnActionEv({
+    const { rows } = turnActionEv({
       node: checkThrough(),
       board: BOARD,
       potChips: 100,
@@ -91,7 +91,7 @@ describe("turnActionEv", () => {
     // Hrdina sází 40 a soupeř vždy dorovná. Vrstva vrací 150, takže hrdina
     // končí na 150 - 40 = 110. Bez odečtu by vyšlo 150 a sázka by vypadala
     // lépe, než je.
-    const rows = turnActionEv({
+    const { rows } = turnActionEv({
       node: node({
         player: 1,
         actions: ["BET 40.000000"],
@@ -118,7 +118,7 @@ describe("turnActionEv", () => {
   it("složení soupeře dá hrdinovi pot i s tím, co tam soupeř nechal", () => {
     // Hrdina sází 40, soupeř má v potu 0 a v polovině případů skládá. Složení:
     // 100 + 40 + 0 - 40 = 100. Dorovnání: 150 - 40 = 110. Čekáme 105.
-    const rows = turnActionEv({
+    const { rows } = turnActionEv({
       node: node({
         player: 1,
         actions: ["BET 40.000000"],
@@ -147,7 +147,7 @@ describe("turnActionEv", () => {
     // Hrdina vsadil 40, soupeř zvýšil na 120 a hrdina skládá - přišel tedy
     // přesně o svých 40. Kdyby se do toho připletl pot nebo soupeřův vklad,
     // vyšlo by číslo, které pořád vypadá jako EV.
-    const rows = turnActionEv({
+    const { rows } = turnActionEv({
       node: node({
         player: 1,
         actions: ["BET 40.000000"],
@@ -184,7 +184,7 @@ describe("turnActionEv", () => {
   it("chybějící riverová vrstva nedá nulu, ale žádnou odpověď", () => {
     // Nejdůležitější případ celého modulu. Nula je platná EV, takže by se
     // chybějící vrstva tvářila jako spočítaný výsledek.
-    const rows = turnActionEv({
+    const { rows } = turnActionEv({
       node: checkThrough(),
       board: BOARD,
       potChips: 100,
@@ -196,12 +196,52 @@ describe("turnActionEv", () => {
     expect(rows).toEqual([]);
   });
 
+  it("částečně pokrytá vrstva vrátí EV i to, kolik dosahu na ní stojí", () => {
+    // Noc neřeší všechny turnové linky, ale ty nejdosahovanější - 8 z 37 živých
+    // nese 99,4 % dosahu. Přísné „chybí linka, nedodává se nic" by proto
+    // neodpovědělo skoro nikde. Číslo o pokrytí se tedy vrací a práh si volí
+    // ten, kdo EV dodává.
+    const result = turnActionEv({
+      node: node({
+        player: 1,
+        actions: ["CHECK", "BET 40.000000"],
+        strategy: everyCombo("AKo", [0.75, 0.25]),
+        childrens: {
+          CHECK: node({
+            player: 0,
+            actions: ["CHECK"],
+            strategy: everyCombo("QQ", [1]),
+            childrens: { CHECK: riverStub },
+          }),
+          "BET 40.000000": node({
+            player: 0,
+            actions: ["CALL"],
+            strategy: everyCombo("QQ", [1]),
+            childrens: { CALL: riverStub },
+          }),
+        },
+      }),
+      board: BOARD,
+      potChips: 100,
+      oop: ACE_KING,
+      ip: QUEENS,
+      // Vrstva existuje jen pro linku bez sázky.
+      riverValue: (line) => (line.includes("BET 40.000000") ? undefined : 120),
+    });
+
+    expect(result.rows.length).toBeGreaterThan(0);
+    // Hrdina checkne v 75 % a sází ve 25 %, takže na vrstvu stojí tři čtvrtiny.
+    expect(result.coveredReach).toBeCloseTo(0.75, 6);
+    const checks = result.rows.filter((row) => row.action === "CHECK");
+    for (const row of checks) expect(row.evChips).toBeCloseTo(120, 6);
+  });
+
   it("hráč 1 je OOP, takže dostane OOP range - ne soupeřovu", () => {
     // Konvenci určuje `riverActionEv` (`heroIsOop = player === 1`) a obrácená
     // se nepozná na číslech: EV zůstane v žetonech i v rozumném rozsahu, jen
     // patří jiné ruce. Test proto nekontroluje hodnotu, ale **čí kombinace** se
     // vrátily. Modul to měl nejdřív obráceně a ostatní testy prošly.
-    const rows = turnActionEv({
+    const { rows } = turnActionEv({
       node: checkThrough(),
       board: BOARD,
       potChips: 100,
@@ -229,8 +269,8 @@ describe("turnActionEv", () => {
       riverValue: () => 120,
     });
 
-    const full = build(1);
-    const half = build(0.5);
+    const full = build(1).rows;
+    const half = build(0.5).rows;
     expect(half.length).toBe(full.length);
     for (const [index, row] of half.entries()) {
       expect(row.evChips).toBeCloseTo(full[index].evChips, 6);
