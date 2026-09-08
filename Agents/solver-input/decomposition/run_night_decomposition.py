@@ -863,6 +863,11 @@ def run_river_phase(deadline, workers, coverage, budget):
     # začne pět minut před koncem okna, drží jádra dál do pracovního dne - přesně
     # to okno mělo řešit.
     layer_minutes = []
+    # Do které rodiny vrstva padla. Bez toho log říkal jen jméno turnové
+    # podhry, takže se z deseti hodin běhu nedalo zjistit, jestli šly do rodin,
+    # co mají místo, nebo do těch, které už sedí na stropu modulu a ořez je
+    # stejně zahodí. Přesně na tom visí rozhodnutí o rozpočtu (bod 157).
+    by_family = {}
     for row in picked:
         remaining = (deadline - datetime.now()).total_seconds() / 60
         available = free_gb()
@@ -892,13 +897,19 @@ def run_river_phase(deadline, workers, coverage, budget):
         solved = len([f for f in os.listdir(out_dir) if f.endswith(".json") and f != "plan.json"])
         if solved >= planned:
             continue
-        log(f"  solving river {os.path.basename(out_dir)}: {planned - solved} z {planned}")
+        board = os.path.basename(row["directory"])
+        log(
+            f"  solving river {board} / {os.path.basename(out_dir)}:"
+            f" {planned - solved} z {planned}"
+        )
         started = time.time()
         finished = run_solve_plan(plan_path, out_dir, workers, deadline)
         minutes = (time.time() - started) / 60
         after = len([f for f in os.listdir(out_dir) if f.endswith(".json") and f != "plan.json"])
         log(f"    {after}/{planned} za {minutes:.1f} min")
         layer_minutes.append(minutes)
+        family = board.split("__")[0]
+        by_family[family] = by_family.get(family, 0) + 1
         done += 1
         if not finished:
             log("  deadline reached; river phase ukončena rodičem")
@@ -914,6 +925,10 @@ def run_river_phase(deadline, workers, coverage, budget):
         )
     else:
         log(f"river phase: {done} turnových podher dostalo riverovou vrstvu")
+    # Rozpis, ne jen součet: noc vybírá podhry podle reach napříč rodinami, takže
+    # se výsledek může celý slít do dvou nejhlubších, aniž by to ze součtu šlo poznat.
+    for name, count in sorted(by_family.items(), key=lambda item: -item[1]):
+        log(f"  {count:4d} vrstev do {name}")
 
 
 if __name__ == "__main__":
