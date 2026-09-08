@@ -1,4 +1,5 @@
 import { combosOfClass, type ComboActionEv, type SolverNode } from "./riverActionEv";
+import { turnShowdownEquity } from "./turnShowdownEquity";
 
 /**
  * EV akcí na turnu, dopočtená přes vyřešenou riverovou vrstvu.
@@ -34,6 +35,15 @@ export interface TurnEvInput {
   /** Akce od kořene k rozhodnutí, které se má spočítat. Prázdná znamená kořen. */
   line?: readonly string[];
   /**
+   * Stack obou hráčů na začátku podhry, v žetonech.
+   *
+   * Slouží k jedinému: poznat all-in. Po něm se na riveru nerozhoduje, takže
+   * vrstva nevzniká a **nechybí** - hodnotu dodá showdown. Bez tohohle čísla se
+   * all-in větev hlásí jako nepokrytá, a protože na 20 bb je all-in většina
+   * stromu, nedostane se žádná kombinace ani nad 90 % pokrytí (bod 205).
+   */
+  stackChips?: number;
+  /**
    * Hodnota riverové vrstvy pro jednu hrdinovu kombinaci, na jednotku range.
    *
    * `undefined` znamená, že pro tuhle turnovou linku vrstva neexistuje - a to
@@ -44,6 +54,9 @@ export interface TurnEvInput {
 }
 
 interface Weighted { combo: string; weight: number }
+
+/** Dvě karty kombinace `"AhKd"`. */
+const cardsOf = (combo: string): [string, string] => [combo.slice(0, 2), combo.slice(2, 4)];
 
 function expandRange(
   range: Readonly<Record<string, number>>,
@@ -76,21 +89,36 @@ const sumOf = (rows: readonly Weighted[]): number => (
   rows.reduce((sum, row) => sum + row.weight, 0)
 );
 
+export interface TurnComboActionEv extends ComboActionEv {
+  /**
+   * Podíl dosahu, na kterém tahle jedna EV stojí, 0 az 1.
+   *
+   * Patří ke každému řádku zvlášť, ne k celému rozhodnutí: pod jednou akcí může
+   * ležet vyřešená vrstva celá a pod její sestrou skoro nic. Souhrnné číslo by
+   * ten rozdíl schovalo, a přitom je to jediné, podle čeho jde poznat, kterému
+   * řádku se dá věřit.
+   */
+  coveredShare: number;
+}
+
 export interface TurnEvResult {
   /** EV každé akce hrdiny, po kombinacích. Prázdné, když se nedá spočítat. */
-  rows: ComboActionEv[];
+  rows: TurnComboActionEv[];
   /**
-   * Jakou část hrdinovy hry vrácené akce popisují, 0 az 1.
+   * Nejmenší podíl dosahu, na kterém stojí kterákoli z vrácených EV, 0 az 1.
    *
-   * Akce, pod kterou chybí byť jedna riverová vrstva, se **nevrací vůbec** -
-   * EV z části stromu se od správné nedá rozeznat. Jenže noc neřeší všechny
-   * turnové linky, jen ty nejdosahovanější: změřeno 8. 9. 2026 na
-   * `MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR__532mono`, kde plán vybral **8 linek
-   * z 37 živých a ty nesou 99,4 % dosahu**. Zahodit celé rozhodnutí kvůli
-   * jedné vzácné větvi by tedy zahodilo skoro všechno.
+   * Noc neřeší všechny turnové linky, jen ty nejdosahovanější. Změřeno 8. 9.
+   * 2026 na `MTT9_100BB_CO_BB_SRP_CBET_HIGHSPR__532mono`: plán vybral **8 linek
+   * ze 43 (37 živých) a ty nesou 99,4 % dosahu**. První verze tohohle modulu
+   * proto akci s jedinou nepokrytou větví nevracela vůbec - a na skutečných
+   * datech nevrátila **nic**, protože pod každou akcí kořene leží nějaká vzácná
+   * linka, kterou noc neřešila.
    *
-   * Číslo říká, kolik z toho, co hrdina podle solveru doopravdy hraje, má
-   * spočítanou EV. Práh si volí ten, kdo EV dodává, a musí ho umět obhájit.
+   * EV se tedy počítá přes pokrytou část a **normalizuje pokrytou vahou**, ne
+   * celou. Je to podmíněná střední hodnota a jako taková je vychýlená přesně
+   * o to, co chybí - proto se vrací i tohle číslo, a to jako **minimum přes
+   * všechny řádky**, ne průměr. Průměr by schoval jednu děravou akci mezi devíti
+   * úplnými. Práh si volí ten, kdo EV dodává, a musí ho umět obhájit.
    */
   coveredReach: number;
 }
@@ -148,9 +176,20 @@ export function turnActionEv(input: TurnEvInput): TurnEvResult {
   const reach = sumOf(villains);
   if (reach === 0) return empty;
 
-  // Narazila tahle jedna akce na chybějící vrstvu? Resetuje se u každé zvlášť,
-  // protože EV se počítá po akcích a díra v jedné větvi neznehodnocuje sestru.
-  let hitMissing = false;
+  // Váha, která u téhle jedné akce dorazila na river bez vyřešené vrstvy.
+  // Resetuje se u každé akce zvlášť: díra v jedné větvi neznehodnocuje sestru.
+  let missingWeight = 0;
+  // Váha soupeřových kombinací, které solver v uzlu vůbec nevede. Je to něco
+  // jiného než chybějící vrstva: tahle váha do hry nepatří, takže se odečítá
+  // z obou stran zlomku a **pokrytí nesnižuje**.
+  let absentWeight = 0;
+
+  const stackChips = input.stackChips ?? 0;
+  /** Nikdo nemá za čím sedět, takže se na riveru nerozhoduje. */
+  const isAllIn = (held: readonly [number, number]): boolean => (
+    stackChips > 0 && held[0] >= stackChips - 1e-6 && held[1] >= stackChips - 1e-6
+  );
+  const showdown = turnShowdownEquity(board);
 
   const value = (
     node: SolverNode,
@@ -158,6 +197,9 @@ export function turnActionEv(input: TurnEvInput): TurnEvResult {
     live: readonly Weighted[],
     held: readonly [number, number],
     line: readonly string[],
+    // Součin hrdinových frekvencí po cestě sem. Soupeřovy frekvence už sedí ve
+    // vahách v `live`, hrdinovy ne - ty se násobí až u návratu z rekurze.
+    heroShare: number,
   ): number => {
     const weight = sumOf(live);
     if (weight === 0) return 0;
@@ -165,8 +207,24 @@ export function turnActionEv(input: TurnEvInput): TurnEvResult {
     // Pahýl riveru: dál strom nevede a hodnotu dodá vyřešená vrstva.
     if (node.node_type !== "action_node" || node.strategy === undefined) {
       const perUnit = riverValue(line, heroCombo);
-      if (perUnit === undefined) { hitMissing = true; return 0; }
-      return weight * (perUnit - held[heroPlayer]);
+      // Nepokrytá váha se musí vážit stejně jako čitatel, tedy i hrdinovou
+      // frekvencí. Bez toho ubere větev hraná v pěti procentech sto procent
+      // pokrytí, jmenovatel `reach - missingWeight` klesne pod pravdu a EV se
+      // nafoukne. Změřeno 8. 9. 2026 na dvou podherách s **plně vyřešeným**
+      // plánem: pokrytí hlásilo 7,4 % a 12,2 % a EV šla do 565 žetonů na potu
+      // 50 a 1 836 na potu 315 - přesně o ten podíl vedle.
+      if (perUnit !== undefined) return weight * (perUnit - held[heroPlayer]);
+      // Po all-inu vrstva nechybí - nikdy nevznikla, protože na riveru už není
+      // co rozhodnout. Hodnotu dodá dojezd, a ten je spočitatelný přesně.
+      if (isAllIn(held)) {
+        const equity = showdown(heroCombo, live);
+        if (equity !== undefined) {
+          const finalPot = potChips + held[0] + held[1];
+          return weight * (finalPot * equity - held[heroPlayer]);
+        }
+      }
+      missingWeight += heroShare * weight;
+      return 0;
     }
 
     const strategy = node.strategy;
@@ -181,15 +239,28 @@ export function turnActionEv(input: TurnEvInput): TurnEvResult {
         const next = committedAfter(action, acting, held);
         sum += frequency * (isFold(action)
           ? -held[heroPlayer] * weight
-          : value(node.childrens?.[action] ?? {}, heroCombo, live, next, [...line, action]));
+          : value(node.childrens?.[action] ?? {}, heroCombo, live, next, [...line, action],
+            heroShare * frequency));
       }
       return sum;
+    }
+
+    // Kombinace, kterou solver na tomhle uzlu nevede, v range není - má nulový
+    // dosah, ne neznámou hodnotu. Musí proto zmizet i ze jmenovatele. Dokud
+    // zůstávala, dostala u každé akce frekvenci nula, vypadla z čitatele a EV
+    // vyšla tiše nižší, zatímco pokrytí hlásilo 100 %. Změřeno 8. 9. 2026 na
+    // `222r/CHECK_CHECK__3c`: rozvinutá range dala 182 kombinací, strategie
+    // uzlu jich vede 152, tedy 16 % váhy stranou.
+    const present: Weighted[] = [];
+    for (const villain of live) {
+      if (strategy.strategy[villain.combo] === undefined) absentWeight += heroShare * villain.weight;
+      else present.push(villain);
     }
 
     let sum = 0;
     for (const [index, action] of strategy.actions.entries()) {
       const branch: Weighted[] = [];
-      for (const villain of live) {
+      for (const villain of present) {
         const frequency = strategy.strategy[villain.combo]?.[index] ?? 0;
         if (frequency > 0) branch.push({ combo: villain.combo, weight: villain.weight * frequency });
       }
@@ -200,29 +271,47 @@ export function turnActionEv(input: TurnEvInput): TurnEvResult {
         sum += sumOf(branch) * (potChips + held[0] + held[1] - held[heroPlayer]);
         continue;
       }
-      sum += value(node.childrens?.[action] ?? {}, heroCombo, branch, next, [...line, action]);
+      sum += value(node.childrens?.[action] ?? {}, heroCombo, branch, next, [...line, action],
+        heroShare);
     }
     return sum;
   };
 
-  const rows: ComboActionEv[] = [];
-  let covered = 0;
-  let total = 0;
+  const rows: TurnComboActionEv[] = [];
+  let worstCovered = 1;
+  const villainCards = villains.map((villain) => ({ ...villain, cards: cardsOf(villain.combo) }));
   for (const hero of heroes) {
-    let kept = 0;
-    for (const [index, action] of decisionStrategy.actions.entries()) {
-      hitMissing = false;
+    // Soupeř nemůže držet kartu, kterou drží hrdina. Táž filtrace jako v
+    // `riverActionEv` - a hlavně tentýž jmenovatel, protože vrstva vrací
+    // expektaci na jednotku **odfiltrované** range. Bez toho by hrdina bral pot
+    // i proti rukám, které sám blokuje, a obě strany zlomku by měřily jinou
+    // range.
+    const heroCards = cardsOf(hero.combo);
+    const against = villainCards.filter((villain) => (
+      villain.cards[0] !== heroCards[0] && villain.cards[0] !== heroCards[1]
+      && villain.cards[1] !== heroCards[0] && villain.cards[1] !== heroCards[1]
+    ));
+    const heroReach = sumOf(against);
+    if (heroReach <= 0) continue;
+
+    for (const action of decisionStrategy.actions) {
+      missingWeight = 0;
+      absentWeight = 0;
       const next = committedAfter(action, heroPlayer, committed);
       const weighted = isFold(action)
-        ? -committed[heroPlayer] * reach
-        : value(decision.childrens?.[action] ?? {}, hero.combo, villains, next, [...prefix, action]);
-      if (hitMissing) continue;
-      rows.push({ combo: hero.combo, action, evChips: weighted / reach });
-      kept += decisionStrategy.strategy[hero.combo]?.[index] ?? 0;
+        ? -committed[heroPlayer] * heroReach
+        : value(decision.childrens?.[action] ?? {}, hero.combo, against, next, [...prefix, action], 1);
+      // Váha, kterou solver vůbec nevede, není součástí hry - odečítá se z obou
+      // stran. Nepokrytá váha se vyřadí taky, ale ta pokrytí snižuje: výsledek
+      // je střední hodnota podmíněná tím, že větev vyřešená je.
+      const inGame = heroReach - absentWeight;
+      const covered = inGame - missingWeight;
+      if (covered <= 0 || inGame <= 0) continue;
+      const coveredShare = covered / inGame;
+      rows.push({ combo: hero.combo, action, evChips: weighted / covered, coveredShare });
+      worstCovered = Math.min(worstCovered, coveredShare);
     }
-    covered += hero.weight * kept;
-    total += hero.weight;
   }
   if (rows.length === 0) return empty;
-  return { rows, coveredReach: total === 0 ? 0 : covered / total };
+  return { rows, coveredReach: worstCovered };
 }

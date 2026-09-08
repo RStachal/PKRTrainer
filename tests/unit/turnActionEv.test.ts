@@ -196,11 +196,10 @@ describe("turnActionEv", () => {
     expect(rows).toEqual([]);
   });
 
-  it("částečně pokrytá vrstva vrátí EV i to, kolik dosahu na ní stojí", () => {
-    // Noc neřeší všechny turnové linky, ale ty nejdosahovanější - 8 z 37 živých
-    // nese 99,4 % dosahu. Přísné „chybí linka, nedodává se nic" by proto
-    // neodpovědělo skoro nikde. Číslo o pokrytí se tedy vrací a práh si volí
-    // ten, kdo EV dodává.
+  it("akce bez jediné vyřešené větve se nevrátí, sestra ano", () => {
+    // Noc neřeší všechny turnové linky, jen ty nejdosahovanější - 8 ze 43 nese
+    // 99,4 % dosahu. Díra pod jednou akcí proto nesmí zahodit sestru; kdyby
+    // ano, na skutečných datech nevyjde nic (a přesně to se stalo).
     const result = turnActionEv({
       node: node({
         player: 1,
@@ -230,9 +229,14 @@ describe("turnActionEv", () => {
     });
 
     expect(result.rows.length).toBeGreaterThan(0);
-    // Hrdina checkne v 75 % a sází ve 25 %, takže na vrstvu stojí tři čtvrtiny.
-    expect(result.coveredReach).toBeCloseTo(0.75, 6);
+    // CHECK stojí na vrstvě celý, BET nemá pokrytou ani část - a protože se
+    // hlásí minimum přes řádky, musí být pokrytí nula u obou. Sázka se proto
+    // nevrátí vůbec: nemá z čeho počítat.
     const checks = result.rows.filter((row) => row.action === "CHECK");
+    const bets = result.rows.filter((row) => row.action !== "CHECK");
+    expect(checks.length).toBeGreaterThan(0);
+    expect(bets).toEqual([]);
+    expect(result.coveredReach).toBeCloseTo(1, 6);
     for (const row of checks) expect(row.evChips).toBeCloseTo(120, 6);
   });
 
@@ -254,6 +258,172 @@ describe("turnActionEv", () => {
     const combos = new Set(rows.map((row) => row.combo));
     expect([...combos].sort()).toEqual([...combosOfClass("AKo", dead)].sort());
     for (const combo of combosOfClass("QQ", dead)) expect(combos.has(combo)).toBe(false);
+  });
+
+  it("nepokrytá větev ubere jen tolik pokrytí, kolik se hraje", () => {
+    // Hrdina checkne, soupeř sází 40. Hrdina pak v 90 % dorovná (vrstva je) a
+    // v 10 % zvýší (vrstva není). Chybí tedy **desetina** hry, ne celá.
+    //
+    // Čitatel se hrdinovou frekvencí násobí, jmenovatel se jí dřív nenásobil,
+    // takže větev hraná v deseti procentech ubrala sto procent pokrytí. Řádek
+    // pak buď vypadl úplně, nebo se EV vydělila příliš malým číslem a nafoukla.
+    // Na skutečných datech to hlásilo 7,4 % pokrytí tam, kde měl plán vyřešené
+    // všechny živé linky, a EV 565 žetonů na potu 50.
+    //
+    // Ruční výpočet: EV dorovnání je 150 - 40 = 110, váží se 0,9 a dělí se
+    // pokrytou vahou 0,9 - takže přesně 110, a pokrytí 0,9.
+    const { rows, coveredReach } = turnActionEv({
+      node: node({
+        player: 1,
+        actions: ["CHECK"],
+        strategy: everyCombo("AKo", [1]),
+        childrens: {
+          CHECK: node({
+            player: 0,
+            actions: ["BET 40.000000"],
+            strategy: everyCombo("QQ", [1]),
+            childrens: {
+              "BET 40.000000": node({
+                player: 1,
+                actions: ["CALL", "RAISE 120.000000"],
+                strategy: everyCombo("AKo", [0.9, 0.1]),
+                childrens: {
+                  CALL: riverStub,
+                  "RAISE 120.000000": node({
+                    player: 0,
+                    actions: ["CALL"],
+                    strategy: everyCombo("QQ", [1]),
+                    childrens: { CALL: riverStub },
+                  }),
+                },
+              }),
+            },
+          }),
+        },
+      }),
+      board: BOARD,
+      potChips: 100,
+      oop: ACE_KING,
+      ip: QUEENS,
+      riverValue: (line) => (line.includes("RAISE 120.000000") ? undefined : 150),
+    });
+
+    expect(rows.length).toBeGreaterThan(0);
+    expect(coveredReach).toBeCloseTo(0.9, 6);
+    for (const row of rows) {
+      expect(row.coveredShare).toBeCloseTo(0.9, 6);
+      expect(row.evChips).toBeCloseTo(110, 6);
+    }
+  });
+
+  it("kombinace, kterou solver nevede, nepatří ani do jmenovatele", () => {
+    // Range se sem předává po třídách, ale solver vede konkrétní kombinace a
+    // některé z té třídy vůbec nemá - na `222r/CHECK_CHECK__3c` je to 30 ze
+    // 182, tedy 16 % váhy. Takové kombinaci vyjde u každé akce frekvence nula:
+    // z čitatele vypadne, a dokud zůstávala ve jmenovateli, EV vycházela tiše
+    // nižší, zatímco pokrytí hlásilo 100 %.
+    //
+    // Tady soupeř drží `QQ` i `33`, ale strategie zná jen `QQ`. Vrstva vrací
+    // 120, takže správná odpověď je 120 - ne 60.
+    const { rows, coveredReach } = turnActionEv({
+      node: node({
+        player: 1,
+        actions: ["CHECK"],
+        strategy: everyCombo("AKo", [1]),
+        childrens: {
+          CHECK: node({
+            player: 0,
+            actions: ["CHECK"],
+            strategy: everyCombo("QQ", [1]),
+            childrens: { CHECK: riverStub },
+          }),
+        },
+      }),
+      board: BOARD,
+      potChips: 100,
+      oop: ACE_KING,
+      ip: { QQ: 1, 33: 1 },
+      riverValue: () => 120,
+    });
+
+    expect(rows.length).toBeGreaterThan(0);
+    // Nevedená kombinace není díra v datech, takže pokrytí zůstává plné.
+    expect(coveredReach).toBeCloseTo(1, 9);
+    for (const row of rows) expect(row.evChips).toBeCloseTo(120, 6);
+  });
+
+  /** Hrdina jde na turnu all-in a soupeř dorovná; vrstva pro takovou linku není. */
+  function shoveCalled(): SolverNode {
+    return node({
+      player: 1,
+      actions: ["BET 100.000000"],
+      strategy: everyCombo("AKo", [1]),
+      childrens: {
+        "BET 100.000000": node({
+          player: 0,
+          actions: ["CALL"],
+          strategy: everyCombo("QQ", [1]),
+          childrens: { CALL: riverStub },
+        }),
+      },
+    });
+  }
+
+  it("po all-inu se hodnota vezme z dojezdu, ne z chybějící vrstvy", () => {
+    // Solver po all-inu žádnou riverovou vrstvu nedělá, a **nedělá ji právem**:
+    // není co rozhodnout. Dokud to jádro nevědělo, hlásilo takovou větev jako
+    // nepokrytou - a na 20 bb je all-in většina stromu, takže se ani jedna
+    // kombinace nedostala nad 90 % pokrytí (bod 205).
+    const heroes = { AKo: 1, 33: 1 };
+    const { rows, coveredReach } = turnActionEv({
+      node: shoveCalled(),
+      board: BOARD,
+      potChips: 100,
+      stackChips: 100,
+      oop: heroes,
+      ip: QUEENS,
+      riverValue: () => undefined,
+    });
+
+    expect(rows.length).toBeGreaterThan(0);
+    // Nic nechybí: hodnotu dodal dojezd, ne vrstva.
+    expect(coveredReach).toBeCloseTo(1, 9);
+    for (const row of rows) expect(row.coveredShare).toBeCloseTo(1, 9);
+
+    // Pot 100 plus dva stacky po 100; hrdina vloží 100. Víc než 200 vyhrát
+    // nejde a víc než 100 prohrát taky ne - špatné měřítko by z toho vypadlo.
+    for (const row of rows) {
+      expect(row.evChips).toBeGreaterThanOrEqual(-100);
+      expect(row.evChips).toBeLessThanOrEqual(200);
+    }
+
+    // A hlavně: EV musí záviset na tom, co hrdina drží. `Kc` leží na desce,
+    // takže `AKo` je pár králů a `33` malý pár - plochý výsledek by znamenal,
+    // že se dojezd počítá bez hrdinovy ruky.
+    const dead = new Set(BOARD);
+    const kings = new Set(combosOfClass("AKo", dead));
+    const evOf = (which: ReadonlySet<string>): number => {
+      const picked = rows.filter((row) => which.has(row.combo));
+      return picked.reduce((sum, row) => sum + row.evChips, 0) / picked.length;
+    };
+    const small = new Set(combosOfClass("33", dead));
+    expect(evOf(kings)).toBeGreaterThan(evOf(small) + 20);
+  });
+
+  it("bez zadaného stacku se all-in nepozná a EV se nedodá", () => {
+    // `stackChips` je jediné, podle čeho jde all-in poznat. Kdyby se dojezd
+    // dosazoval i bez něj, spočítal by se showdown i tam, kde se ještě sází -
+    // tedy hodnota hry, která pokračuje, jako by skončila.
+    const { rows } = turnActionEv({
+      node: shoveCalled(),
+      board: BOARD,
+      potChips: 100,
+      oop: ACE_KING,
+      ip: QUEENS,
+      riverValue: () => undefined,
+    });
+
+    expect(rows).toEqual([]);
   });
 
   it("dosah se vydělí zpátky, takže EV nezávisí na váze soupeřovy range", () => {
