@@ -102,17 +102,19 @@ interface TurnPack {
 }
 
 /** Plán desky, načtený jednou na adresář. */
-const boardPlans = new Map<string, BoardPlanItem[]>();
-function boardPlanOf(directory: string): BoardPlanItem[] {
+const boardPlans = new Map<string, { stack: number; items: BoardPlanItem[] }>();
+function planOf(directory: string): { stack: number; items: BoardPlanItem[] } {
   const held = boardPlans.get(directory);
   if (held !== undefined) return held;
   const path = join(ROOT, directory, "plan.json");
-  const items = existsSync(path)
-    ? ((JSON.parse(readFileSync(path, "utf8")) as { items?: BoardPlanItem[] }).items ?? [])
-    : [];
-  boardPlans.set(directory, items);
-  return items;
+  const plan = existsSync(path)
+    ? (JSON.parse(readFileSync(path, "utf8")) as { stack?: number; items?: BoardPlanItem[] })
+    : {};
+  const loaded = { stack: plan.stack ?? 0, items: plan.items ?? [] };
+  boardPlans.set(directory, loaded);
+  return loaded;
 }
+const boardPlanOf = (directory: string): BoardPlanItem[] => planOf(directory).items;
 
 /** Stack rodiny v blindech, z jejího jména. */
 const stackBBOf = (directory: string): number => Number(/_(\d+)BB_/.exec(directory)?.[1] ?? "0");
@@ -257,7 +259,15 @@ function buildPack(packPath: string): {
     if (item === undefined) continue;
 
     const stackBB = stackBBOf(directory);
-    const chipsPerBB = stackBB > 0 && (item.stack ?? 0) > 0 ? (item.stack ?? 0) / stackBB : 0;
+    // Blind se počítá ze **stacku desky**, ne z toho, co zbývá u téhle podhry.
+    // `item.stack` klesá s tím, co se stihlo vsadit dřív - na
+    // `MTT9_35BB_CO_BTN_3BP_REPAIR__622r` je 207, 247 nebo 286 proti plánovým
+    // 286 - takže dělení jím nafoukne blindy až o 38 %. Generátor strategie
+    // dělí plánovým stackem a `potBB` v packu z něj vychází, takže jinak by EV
+    // a pot v témž pravidle měřily jinou jednotkou. Chytila to fyzikální mez:
+    // EV 75,5 BB proti stropu 74,5.
+    const planStack = planOf(directory).stack;
+    const chipsPerBB = stackBB > 0 && planStack > 0 ? planStack / stackBB : 0;
     if (chipsPerBB <= 0) continue;
 
     const node = JSON.parse(readFileSync(path, "utf8")) as SolverNode;
@@ -446,6 +456,7 @@ for (const name of chosen) {
   console.log(`${result.familyId}`);
   console.log(`  pravidel s EV ${result.filled} z ${result.total}`
     + ` (${(100 * result.filled / Math.max(1, result.total)).toFixed(1)} %)`
+    + `, spočteno ${result.filled + result.dropped}`
     + `, z toho jen z dojezdu ${result.fromShowdownOnly}`
     + `, vrstev ${result.layers}`
     + (result.dropped > 0 ? `, ${result.dropped} zahozeno kvůli rozpočtu` : "")
