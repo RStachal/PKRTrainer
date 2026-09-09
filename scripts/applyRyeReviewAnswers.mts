@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 
 import {
   type DraftFile,
@@ -56,7 +57,33 @@ if (raw === undefined) {
 
 const draft = JSON.parse(readFileSync(draftPath, "utf8")) as DraftFile;
 
-const body = raw.replace(/^DRILLEV-REVIEW-V\d+\s*/, "").trim();
+/**
+ * Soubor s odpověďmi rozdělený na varianty.
+ *
+ * Majitel 9. 9. 2026 poslal soubor se **dvěma** tokeny a komentářem mezi nimi:
+ * hlavní odpověď a citlivostní variantu. Do té chvíle skript odřízl jen první
+ * předponu a zbytek četl dál, takže obě varianty **splynuly v jeden součet** -
+ * mřížka schválená v jedné a zamítnutá v druhé se započítala dvakrát a nikde by
+ * to nebylo vidět. Komentář by navíc skončil mezi nepřečtenými tokeny.
+ */
+const variants = raw
+  .split(/\r?\n/)
+  .filter((line) => !line.trimStart().startsWith("#"))
+  .join("\n")
+  .split(/DRILLEV-REVIEW-V\d+\s*/)
+  .map((part) => part.trim())
+  .filter((part) => part.length > 0);
+
+const variantArg = process.argv.find((arg) => arg.startsWith("--variant="))?.split("=")[1];
+if (variants.length > 1 && variantArg === undefined) {
+  console.error(`Soubor nese ${variants.length} variant odpovědí. Vyber jednu: --variant=1 az ${variants.length}.`);
+  for (const [index, part] of variants.entries()) {
+    console.error(`  ${index + 1}: ${part.slice(0, 72)}…`);
+  }
+  process.exit(2);
+}
+
+const body = variants[variantArg === undefined ? 0 : Number(variantArg) - 1] ?? "";
 if (body.length === 0) {
   console.log("Odpovědi jsou prázdné - nic k vyhodnocení.");
   process.exit(0);
@@ -65,6 +92,7 @@ if (body.length === 0) {
 const byVerdict = new Map<string, DraftRecord[]>();
 const flagCounts = new Map<string, number>();
 const unknown: string[] = [];
+const resolved: { sourceFile: string; verdict: string; flags: string[] }[] = [];
 
 for (const token of body.split(/\s+/)) {
   const match = /^(\d+)([ox?s])([1-5]*)$/.exec(token);
@@ -73,6 +101,34 @@ for (const token of body.split(/\s+/)) {
   if (record === undefined) { unknown.push(token); continue; }
   byVerdict.set(match[2], [...(byVerdict.get(match[2]) ?? []), record]);
   for (const flag of match[3]) flagCounts.set(flag, (flagCounts.get(flag) ?? 0) + 1);
+  resolved.push({
+    sourceFile: record.sourceFile,
+    verdict: VERDICT_LABEL[match[2]] ?? match[2],
+    flags: [...match[3]].map((flag) => FLAG_LABEL[flag] ?? flag),
+  });
+}
+
+/**
+ * Odpovědi přepsané z pozice na identitu mřížky.
+ *
+ * Token nese index v draftu, a ten je stabilní jen dokud se draft skládá ze
+ * stejných stránek. Jakmile jedna vypadne - třeba proto, že ji nově shodí
+ * nepřeložitelná barva - všechny další se posunou a odpovědi sednou na cizí
+ * mřížku, aniž by to bylo poznat. Vyřeší se to jednou: token se přeloží proti
+ * draftu, **nad kterým se četlo**, a uloží se pod jménem zdrojového souboru.
+ * Ten se s přeimportováním nemění.
+ */
+const outPath = process.argv.find((arg) => arg.startsWith("--out="))?.split("=")[1];
+if (outPath !== undefined) {
+  mkdirSync(dirname(outPath), { recursive: true });
+  writeFileSync(outPath, `${JSON.stringify({
+    schemaVersion: "PKRTRAINER_RYE_ANSWERS_V1",
+    draftCreatedAt: draft.createdAt,
+    draftRecordCount: draft.records.length,
+    answers: [...resolved].sort((left, right) => left.sourceFile.localeCompare(right.sourceFile)),
+  }, null, 2)}\n`, "utf8");
+  console.log(`Odpovědi přepsané na identitu mřížky: ${outPath} (${resolved.length})`);
+  console.log("");
 }
 
 const answered = [...byVerdict.values()].reduce((sum, list) => sum + list.length, 0);

@@ -6,7 +6,12 @@ import { generatedMttPostflopPilotPacks } from "../src/data/ranges/mttPostflopPi
 import { MTT_POSTFLOP_PILOT_CATALOG } from "../src/data/ranges/mttPostflopPilotCatalog";
 import { positionPatternLabel } from "../src/core/postflopGenerator";
 import type { FlopProductionStrategyRule } from "../src/data/ranges/flopProductionStrategyPack";
-import { pilotReviewOrder, pilotReviewPageHash } from "./lib/flopPilotReview.mts";
+import {
+  PILOT_REVIEW_FLAGS,
+  pilotHeroSeat,
+  pilotReviewOrder,
+  pilotReviewPageHash,
+} from "./lib/flopPilotReview.mts";
 import {
   REVIEW_ANSWER_STYLES,
   reviewAnswerBar,
@@ -227,9 +232,18 @@ const cards = pilots.map((entry, index) => {
   const limits = (catalog?.limitations ?? []).map((line) => `<li>${escape(line)}</li>`).join("");
   const assumptions = entry.pack.assumptions.map((line) => `<li>${escape(line)}</li>`).join("");
 
+  // Jméno pilota je vzor spotu, ne hrdina - `3BP_BTN_VS_CO` proti sázce drží
+  // cutoffa. Bez téhle věty čtenář posuzuje range v přesvědčení, že patří
+  // buttonu, a přesně to se 9. 9. 2026 stalo.
+  const seat = pilotHeroSeat(
+    catalog?.positionPattern ?? "",
+    catalog?.actionNode ?? "",
+  );
+
   return `
   <section class="pilot" id="p${index}">
     <h2>${index}. ${escape(catalog?.label ?? entry.catalogId)}</h2>
+    <p class="seat">Čí strategii vidíš: <b>${escape(seat.seat)}</b> - ${escape(seat.role)}</p>
     <p class="meta">
       ${escape(positionPatternLabel(catalog?.positionPattern ?? "BTN_VS_BB"))}
       · ${escape(catalog?.actionNode ?? "?")}
@@ -248,11 +262,7 @@ const cards = pilots.map((entry, index) => {
         ${reviewAnswerOption(index, "s", "– Přeskočit")}
       </div>
       <div class="opts opts--flags" hidden>
-        ${reviewAnswerFlag(index, "1", "poměr akcí nesedí")}
-        ${reviewAnswerFlag(index, "2", "konkrétní ruka v cizí akci")}
-        ${reviewAnswerFlag(index, "3", "chybí velikost sázky")}
-        ${reviewAnswerFlag(index, "4", "přes hloubky si to odporuje")}
-        ${reviewAnswerFlag(index, "5", "málo desek v agregátu")}
+        ${[...PILOT_REVIEW_FLAGS].map(([code, label]) => reviewAnswerFlag(index, code, label)).join("\n        ")}
       </div>
     </div>
   </section>`;
@@ -269,6 +279,9 @@ const page = `<!doctype html>
  h4{font-size:13px;margin:16px 0 4px;color:#9aa3af;font-weight:600}
  .pilot{border-bottom:1px solid #2a2e35}
  .meta{color:#9aa3af;margin:4px 0}
+ .seat{margin:4px 0;padding:6px 10px;background:#1a2331;border-left:3px solid #7bd3ff;
+       border-radius:4px;color:#dce6f5;font-size:13px}
+ .seat b{color:#7bd3ff}
  .tags{margin:6px 0}
  .tag{display:inline-block;border:1px solid;border-radius:3px;padding:1px 6px;margin:2px 4px 2px 0;font-size:12px}
  table.grid{border-collapse:collapse;margin:8px 0}

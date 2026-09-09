@@ -6,7 +6,11 @@ import { CLI_SPAWN_TIMEOUT_MS } from "../cliSpawnBudget";
 import { generatedMttPostflopPilotPacks } from "../../src/data/ranges/mttPostflopPilotPacks.generated";
 import { flopPilotContentHash } from "../../src/data/ranges/turnReviewVerdict";
 import { classifyConfidenceClaim } from "../../src/data/ranges/confidenceBacking";
-import { pilotReviewOrder, pilotReviewPageHash } from "../../scripts/lib/flopPilotReview.mts";
+import {
+  pilotHeroSeat,
+  pilotReviewOrder,
+  pilotReviewPageHash,
+} from "../../scripts/lib/flopPilotReview.mts";
 
 /**
  * Cesta z `SOLVE_PROVENANCE` do `PLAYER_REVIEW` u flopových pilotů.
@@ -75,6 +79,47 @@ describe("čtení flopových pilotů", () => {
     const result = answers(['--answers=DRILLEV-PILOT-V1 deadbeef 0o', "--write", "--reviewer=Test"]);
     expect(result.code, "fail-closed, ne varování").toBe(1);
     expect(result.out).toContain("Otisk stránky nesedí");
+  });
+
+  it("u čelení sázce hraje ten druhý v názvu vzoru", () => {
+    // Vzor je `<agresor>_VS_<dorovnávající>`. Druhé čtení 9. 9. 2026 přečetlo
+    // `3BP_BTN_VS_CO` jako „hrdina BTN" a vytklo jako blokující nález, že range
+    // nemá AA, KK ani AK - jenže u čelení sázce drží cutoffa, který 3bet
+    // dorovnal, a tam ty ruce nepatří. Data byla správně, jméno zavádělo.
+    const facing = pilotHeroSeat("3BP_BTN_VS_CO", "FLOP_FACING_BET");
+    expect(facing.seat).toBe("CO");
+    expect(facing.role).toContain("dorovnal 3bet");
+
+    const cbet = pilotHeroSeat("3BP_BTN_VS_CO", "THREE_BET_POT_CBET");
+    expect(cbet.seat).toBe("BTN");
+
+    // Ze small blindu je agresor mimo pozici, proti big blindu v ní - a čtenář
+    // to na mřížce nepozná, takže to musí být napsané.
+    expect(pilotHeroSeat("SRP_SB_VS_BB", "SINGLE_RAISED_POT_CBET").role).toContain("mimo pozici");
+    expect(pilotHeroSeat("SRP_BTN_VS_BB", "SINGLE_RAISED_POT_CBET").role).toContain("v pozici");
+  });
+
+  it("výtka připnutá k „něco je špatně“ se přečte a pojmenuje", () => {
+    // Stránka výtky nabízí a do tokenu je zapisuje. Do 9. 9. 2026 je zapisovač
+    // nepřipouštěl, takže `0x13` skončilo mezi nepřečtenými tokeny a celý
+    // vyplněný draft se tvářil jako nezodpovězený - bez jediné chybové hlášky.
+    const hash = pilotReviewPageHash(pilotReviewOrder(generatedMttPostflopPilotPacks));
+    const result = answers([`--answers=DRILLEV-PILOT-V1 ${hash} 0x13`]);
+    expect(result.code).toBe(0);
+    expect(result.out).not.toContain("nepřečtené tokeny");
+    expect(result.out).toContain("NEEDS_WORK");
+    expect(result.out, "verdikt bez diagnózy se příště nedá zkontrolovat")
+      .toContain("chybí velikost sázky");
+  });
+
+  it("zápis odmítne token, kterému nerozumí celý", () => {
+    // Zapsat jen tu část, které skript rozumí, by v souboru vypadalo úplně.
+    const hash = pilotReviewPageHash(pilotReviewOrder(generatedMttPostflopPilotPacks));
+    const result = answers([
+      `--answers=DRILLEV-PILOT-V1 ${hash} 0x1 1y9`, "--write", "--reviewer=Test",
+    ]);
+    expect(result.code).toBe(1);
+    expect(result.out).toContain("Zápis odmítnut");
   });
 
   it("zápis odmítne verdikt bez toho, kdo četl", () => {

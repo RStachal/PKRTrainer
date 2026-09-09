@@ -98,11 +98,15 @@ function grid(record: DraftRecord): string {
       const strict = record.strict[hand] ?? [];
       const lenient = record.lenient[hand] ?? [];
       const action = strict[0] ?? "";
-      // Mix se pozná okrajem, ne jinou barvou: barva má dál znamenat akci.
-      const mixed = lenient.length > 1;
       // Poměr, ne jen výčet: „3BET 75 / CALL 25" je jiná strategie než totéž
       // půl na půl, a do 28. 8. 2026 se to na stránce nedalo rozeznat.
       const ratio = record.mix?.[hand];
+      // Mix se pozná okrajem, ne jinou barvou: barva má dál znamenat akci.
+      //
+      // Rozhoduje o něm `mix`, ne počet akcí. Ruka hraná ze čtvrtiny má jedinou
+      // akci, takže se do 9. 9. 2026 malovala plnou barvou jako každá jiná -
+      // a čtenář neměl jak poznat, že se tři čtvrtiny času foldne.
+      const mixed = lenient.length > 1 || ratio !== undefined;
       const mixText = ratio === undefined
         ? lenient.join(" / ")
         : Object.entries(ratio).map(([action, share]) => `${action} ${share} %`).join(" / ");
@@ -347,6 +351,19 @@ const blocks = sorted.map((record, index) => {
 </section>`;
 }).join("\n");
 
+// Čísla v úvodu se počítají z draftu, ne z paměti. Napsané natvrdo zestárnou
+// s prvním přeimportováním a nikdo si toho nevšimne.
+let mixedHands = 0;
+let unevenHands = 0;
+let partialHands = 0;
+for (const record of visible) {
+  for (const ratio of Object.values(record.mix ?? {})) {
+    mixedHands += 1;
+    if (new Set(Object.values(ratio)).size > 1) unevenHands += 1;
+    if (Object.keys(ratio).includes("FOLD")) partialHands += 1;
+  }
+}
+
 const legend = Object.entries(COLORS)
   .filter(([action]) => action !== "")
   .map(([action, color]) => `<span class="key"><i style="background:${color}"></i>${action}</span>`)
@@ -422,8 +439,12 @@ ${reviewAnswerBar()}
 <p>Žlutý okraj znamená ruku, kterou zdroj hraje <b>víc způsoby</b> stejně často.
    <b style="color:#ff8f6b">Oranžový okraj</b> znamená mix s <b>nerovným
    poměrem</b> - třeba 3BET 75 % / CALL 25 %. Přesný poměr ukáže najetí myší.
-   Změřeno: 578 rukou v draftu má mix a 92 z nich nerovný poměr, takže „hraj
-   obojí" a „hraj to takhle často" se konečně dají rozeznat.</p>
+   Změřeno: ${mixedHands} rukou v draftu má mix a ${unevenHands} z nich nerovný
+   poměr, takže „hraj obojí" a „hraj to takhle často" se dají rozeznat.
+   <b>Mixem je i ruka, kterou zdroj hraje jen zčásti</b> - pak je jednou
+   z položek <code>FOLD</code>. Do 9. 9. 2026 se taková ruka kreslila plnou
+   barvou, jako by se ta akce hrála vždycky; ve zdroji je takových tříd
+   ${partialHands}.</p>
 <p>Oranžové poznámky u mřížky říkají, <b>co se překladem ztratilo</b> - třeba že
    zdroj rozlišuje 3bet s dorovnáním 4betu od 3betu se složením, kdežto produkt
    má obojí jako <code>3BET</code>.</p>

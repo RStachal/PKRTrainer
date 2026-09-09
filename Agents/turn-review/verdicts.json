@@ -3,6 +3,56 @@
   "verdicts": [
     {
       "street": "FLOP",
+      "familyId": "btn-bb-srp-flop-cbet-low-mid-high",
+      "contentHash": "39bcc89c-ab8",
+      "outcome": "NEEDS_WORK",
+      "reviewedAt": "2026-09-09",
+      "reviewer": "Radim (druhé čtení DrillEV)",
+      "basis": "PLAYER_READ",
+      "notes": "poměr akcí nesedí, konkrétní ruka v cizí akci, chybí velikost sázky"
+    },
+    {
+      "street": "FLOP",
+      "familyId": "btn-bb-srp-flop-facing-bet-low-mid-high",
+      "contentHash": "a32d8c6e-947",
+      "outcome": "NEEDS_WORK",
+      "reviewedAt": "2026-09-09",
+      "reviewer": "Radim (druhé čtení DrillEV)",
+      "basis": "PLAYER_READ",
+      "notes": "poměr akcí nesedí"
+    },
+    {
+      "street": "FLOP",
+      "familyId": "btn-co-3bp-flop-cbet-low-mid-high",
+      "contentHash": "55978a46-791",
+      "outcome": "NEEDS_WORK",
+      "reviewedAt": "2026-09-09",
+      "reviewer": "Radim (druhé čtení DrillEV)",
+      "basis": "PLAYER_READ",
+      "notes": "poměr akcí nesedí, konkrétní ruka v cizí akci, přes hloubky si to odporuje"
+    },
+    {
+      "street": "FLOP",
+      "familyId": "btn-co-3bp-flop-facing-bet-low-mid-high",
+      "contentHash": "073ec99a-700",
+      "outcome": "NEEDS_WORK",
+      "reviewedAt": "2026-09-09",
+      "reviewer": "Radim (druhé čtení DrillEV)",
+      "basis": "PLAYER_READ",
+      "notes": "poměr akcí nesedí, konkrétní ruka v cizí akci, málo desek v agregátu"
+    },
+    {
+      "street": "FLOP",
+      "familyId": "co-bb-srp-flop-cbet-low-mid-high",
+      "contentHash": "b24070a3-ae4",
+      "outcome": "NEEDS_WORK",
+      "reviewedAt": "2026-09-09",
+      "reviewer": "Radim (druhé čtení DrillEV)",
+      "basis": "PLAYER_READ",
+      "notes": "poměr akcí nesedí, chybí velikost sázky"
+    },
+    {
+      "street": "FLOP",
       "familyId": "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR",
       "contentHash": "68ce21e3-767f",
       "outcome": "ACCEPTED",
@@ -1410,6 +1460,26 @@
       "reviewer": "PKRTRAINER_MECHANICAL_REVIEW_V1",
       "basis": "MECHANICAL",
       "notes": "DEFENCE_VS_POT_ODDS: 0.2 b proti limitu 12 b | NO_COHORT_ANOMALY: rozdělení akcí sedí ke skupině (48 rodin téže ulice, všechny hloubky) | INITIATIVE_ORDERING: agresor sází 56 %, bez iniciativy 28 % (domněnka „agresor sází víc“ neplatí pro blind mimo pozici proti pozdnímu otvírači - tam je vyšší donk měřený a očekávaný) | NO_COLLAPSED_DECISION: 4 rozhodnutí, žádné zkolabované"
+    },
+    {
+      "street": "FLOP",
+      "familyId": "sb-bb-srp-oop-flop-cbet-low-mid-high",
+      "contentHash": "df1caf48-eaf",
+      "outcome": "NEEDS_WORK",
+      "reviewedAt": "2026-09-09",
+      "reviewer": "Radim (druhé čtení DrillEV)",
+      "basis": "PLAYER_READ",
+      "notes": "poměr akcí nesedí, chybí velikost sázky"
+    },
+    {
+      "street": "FLOP",
+      "familyId": "utg-bb-srp-flop-cbet",
+      "contentHash": "6b01aa18-2ec",
+      "outcome": "NEEDS_WORK",
+      "reviewedAt": "2026-09-09",
+      "reviewer": "Radim (druhé čtení DrillEV)",
+      "basis": "PLAYER_READ",
+      "notes": "poměr akcí nesedí, chybí velikost sázky, málo desek v agregátu"
     }
   ]
 }

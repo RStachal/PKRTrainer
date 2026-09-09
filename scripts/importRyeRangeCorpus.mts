@@ -67,8 +67,9 @@ interface DraftRecord {
   /**
    * ruka → akce a **jak často** ji zdroj hraje, v procentech.
    *
-   * Zapisuje se jen u rukou, které zdroj hraje víc způsoby; u jednoznačné ruky
-   * by to byl šum („FOLD 100").
+   * Zapisuje se u ruky, kterou zdroj hraje víc způsoby, **a u ruky hrané jen
+   * zčásti** - tam je jednou z položek `FOLD`. U ruky hrané naplno jedinou
+   * akcí se nezapisuje nic; tam by to byl šum.
    *
    * ## Proč to tu musí být
    *
@@ -104,7 +105,11 @@ const dropped = {
   noSituation: 0,
   noOpponent: 0,
   noMappedHands: 0,
+  unmappableAction: 0,
 };
+
+/** Které stránky spadly na nepřeložitelné barvě. Bez toho se to nedá spravit. */
+const unmappableExamples: string[] = [];
 
 const records: DraftRecord[] = [];
 
@@ -135,10 +140,27 @@ for (const file of htmlFiles(source).sort()) {
   }
 
   // Barva → akce produktu, jednou na stránku.
+  //
+  // Barva, kterou kontext neumí přeložit, **shodí celou mřížku**. Do 9. 9. 2026
+  // se jen přeskočila, a to je nejhorší možný výsledek: ruce té barvy neměly
+  // kam sednout, takže tiše spadly do foldu a mřížka se vydala jako úplná.
+  // Druhé čtení to našlo na obou stránkách kontextu `VS_ALLIN` - jediných dvou,
+  // které ten kontext má. Slovník k němu zná jen `Call`, takže z legendy
+  // `All in | Call` zmizelo **75 a 29 tříd** do foldu. Situace ve zdroji přitom
+  // ani jednou není čelení all-inu (jedna je squeeze, druhá obrana proti 2,5x),
+  // takže ta stránka nepatří tomu kontextu vůbec - ale to je rozhodnutí o
+  // slovníku, ne něco, co se dá dopočítat. Do té doby se nevydá.
   const actionOfColor = new Map<string, { action: string; lost: string }>();
+  let unmappable = "";
   for (const entry of grid.legend) {
     const mapped = mapAction(context, entry.action);
-    if (mapped !== undefined) actionOfColor.set(entry.color, mapped);
+    if (mapped === undefined) { unmappable = entry.action; break; }
+    actionOfColor.set(entry.color, mapped);
+  }
+  if (unmappable !== "") {
+    dropped.unmappableAction += 1;
+    unmappableExamples.push(`${name}: ${context} neumí „${unmappable}“`);
+    continue;
   }
 
   // Ruka → akce s váhami. Vážená buňka je mixovaná strategie, takže ruka může
@@ -164,13 +186,28 @@ for (const file of htmlFiles(source).sort()) {
     // jedna z těch dvou akcí chyba.
     const best = Math.max(...entries.map(([, weight]) => weight));
     lenient[hand] = entries.map(([action]) => action).sort();
-    if (entries.length > 1) {
-      // Váhy se normalizují na součet 100: zdroj je uvádí jako podíl buňky a
-      // zbytek do sta je fold, který v `entries` není. Bez normalizace by dvě
-      // stejné strategie vypadaly různě podle toho, kolik ruky je ve hře.
-      const sum = entries.reduce((total, [, weight]) => total + weight, 0);
-      mix[hand] = Object.fromEntries(entries
-        .map(([action, weight]) => [action, Math.round((100 * weight) / sum)])
+    const played = entries.reduce((total, [, weight]) => total + weight, 0);
+    // Fold je akce jako každá jiná a zbytek váhy patří jemu.
+    //
+    // Do 9. 9. 2026 se `mix` psal jen u ruky s víc nefoldovými akcemi a váhy se
+    // normalizovaly na sto. Obojí mazalo tutéž věc. Ruka hraná ze čtvrtiny
+    // vešla do draftu jako **čistá akce**, protože měla jedinou položku; a ruka
+    // s dvěma akcemi po čtvrtině se normalizací nafoukla na 50/50, takže z ní
+    // polovina foldu zmizela. Změřeno na zdroji (`npm run mtt:rye-weight-loss`):
+    // **1 175 tříd** se hraje jen zčásti, z toho **1 109 tiše** - a je to 4 680
+    // kombinací. Nejčastěji jde o polovinu (730x), pak čtvrtinu (135x) a
+    // třetinu (103x).
+    //
+    // Rozdíl mezi „3BET" a „3BET v polovině případů, jinak fold" je celá
+    // strategie, a čtenář ho na stránce neměl jak poznat.
+    const folded = Math.max(0, 1 - played);
+    if (entries.length > 1 || folded > 0.005) {
+      const shares: [string, number][] = entries.map(([action, weight]) => [
+        action,
+        Math.round(100 * weight),
+      ]);
+      if (folded > 0.005) shares.push(["FOLD", Math.round(100 * folded)]);
+      mix[hand] = Object.fromEntries(shares
         .sort((left, right) => String(left[0]).localeCompare(String(right[0]))));
     }
     strict[hand] = entries
@@ -230,6 +267,11 @@ console.log("");
 console.log("co propadlo sítem:");
 for (const [reason, count] of Object.entries(dropped)) {
   if (count > 0) console.log(`  ${reason.padEnd(20)} ${count}`);
+}
+if (unmappableExamples.length > 0) {
+  console.log("");
+  console.log("stránky shozené nepřeložitelnou barvou (ruce té barvy by tiše spadly do foldu):");
+  for (const line of unmappableExamples) console.log(`  ${line}`);
 }
 console.log("");
 console.log("po kontextech: " + [...byContext].sort().map(([k, v]) => `${k} ${v}`).join(", "));

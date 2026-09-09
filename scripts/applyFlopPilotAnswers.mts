@@ -8,7 +8,7 @@ import {
   parseTurnReviewVerdicts,
   type TurnReviewVerdictRecord,
 } from "../src/data/ranges/turnReviewVerdict";
-import { pilotReviewOrder, pilotReviewPageHash } from "./lib/flopPilotReview.mts";
+import { PILOT_REVIEW_FLAGS, pilotReviewOrder, pilotReviewPageHash } from "./lib/flopPilotReview.mts";
 
 /**
  * Co majitel u flopových pilotů odpověděl, zapsané jako verdikt.
@@ -85,12 +85,17 @@ let written = 0;
 let held = 0;
 
 for (const token of tokens) {
-  const match = /^([0-9]+)([oxs?])$/.exec(token);
+  // Výtky jsou součástí odpovědi, ne ozdoba. Do 9. 9. 2026 je tenhle výraz
+  // nepřipouštěl, takže vyplněný draft - kde je u „něco je špatně" zaškrtnutá
+  // aspoň jedna - propadl **celý** do nepřečtených tokenů a skript oznámil
+  // „verdiktů k zápisu: 0", jako by čtenář neodpověděl nic.
+  const match = /^([0-9]+)([oxs?])([1-5]*)$/.exec(token);
   if (match === null) { unknown.push(token); continue; }
   const entry = order[Number(match[1])];
   if (entry === undefined) { unknown.push(token); continue; }
   const outcome = OUTCOME[match[2]];
   const label = catalogById.get(entry.catalogId)?.label ?? entry.catalogId;
+  const flags = [...match[3]].map((code) => PILOT_REVIEW_FLAGS.get(code) ?? code);
   if (outcome === null) {
     // „Nejsem si jistý" a „přeskočit" **nejsou verdikt**. Zapsat je jako cokoli
     // by z nerozhodnutí udělalo rozhodnutí, a to je přesně ten druh tichého
@@ -111,14 +116,29 @@ for (const token of tokens) {
     reviewedAt,
     reviewer,
     basis: "PLAYER_READ",
+    // Bez výtek je „NEEDS_WORK" verdikt bez diagnózy: příště se neví, co se
+    // hledalo a jestli se to spravilo. `confidenceForFamily` je vypisuje
+    // v důvodu, takže se dostanou i tam, kde se o důvěře rozhoduje.
+    ...(flags.length > 0 ? { notes: flags.join(", ") } : {}),
   });
   written += 1;
-  console.log(`  ${outcome.padEnd(11)} ${label} (otisk ${contentHash})`);
+  console.log(`  ${outcome.padEnd(11)} ${label} (otisk ${contentHash})`
+    + (flags.length > 0 ? ` - ${flags.join(", ")}` : ""));
 }
 
 console.log("");
 if (unknown.length > 0) console.log(`nepřečtené tokeny (${unknown.length}): ${unknown.join(", ")}`);
 console.log(`verdiktů k zápisu: ${written}, ponecháno beze změny: ${held}`);
+
+if (write && unknown.length > 0) {
+  // Zapsat část odpovědí a zbytek zahodit je horší než nezapsat nic: verdikty
+  // by v souboru vypadaly úplně a nikdo by se nedozvěděl, že čtenář odpověděl
+  // i na piloty, které v něm chybí.
+  console.error("");
+  console.error("Zápis odmítnut: části tokenu nerozumím, a zapsat jen zbytek by tvrdilo, že");
+  console.error("čtenář odpověděl méně, než odpověděl. Oprav token, nebo vygeneruj stránku znovu.");
+  process.exit(1);
+}
 
 if (!write) {
   console.log("");

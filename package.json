@@ -167,6 +167,8 @@
     "mtt:turn-ev-stale": "node scripts/run-cli.mjs scripts/checkTurnEvStaleness.mts",
     "mtt:pilot-review": "node scripts/run-cli.mjs scripts/renderFlopPilotReview.mts",
     "mtt:pilot-answers": "node scripts/run-cli.mjs scripts/applyFlopPilotAnswers.mts",
+    "mtt:pilot-hero-seat": "node scripts/run-cli.mjs scripts/checkPilotHeroSeat.mts",
+    "mtt:rye-weight-loss": "node scripts/run-cli.mjs scripts/measureRyeWeightLoss.mts",
     "mtt:review-desk": "node scripts/run-cli.mjs scripts/buildReviewDesk.mts",
     "mtt:state-page": "node scripts/run-cli.mjs scripts/buildStatePage.mts",
     "mtt:solved-coverage": "node scripts/run-cli.mjs scripts/checkSolvedSpotCoverage.mts",
