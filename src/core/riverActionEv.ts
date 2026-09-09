@@ -180,12 +180,23 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
   }
   if (current.node_type !== "action_node" || current.strategy === undefined) return [];
 
+  // Uzel, který neřekne, čí je to rozhodnutí, se nedá zodpovědět.
+  //
+  // Dosud si tu dva řádky odporovaly: z chybějícího pole vyšlo `heroIsOop`
+  // jako `false` (hrdina v pozici), ale `heroPlayer` jako `1` (mimo pozici) -
+  // range by se tedy vzala jedné straně a vklady i EV složení počítaly druhé.
+  // Číslo by přišlo v žetonech a vypadalo by správně.
+  //
+  // Změřeno 9. 9. 2026: takový uzel v datech není (0 z 5 600 riverových a
+  // 0 z 8 936 turnových se strategií), takže se tím dnes nic nedodává ani
+  // neztrácí. Je to díra v ošetření, ne ztráta obsahu.
+  if (current.player === undefined) return [];
   const heroIsOop = current.player === 1;
   const heroRange = heroIsOop ? oopWeights : ipWeights;
   const villainRange = heroIsOop ? ipWeights : oopWeights;
   if (heroRange.length === 0 || villainRange.length === 0) return [];
 
-  const heroPlayer = current.player ?? 1;
+  const heroPlayer = current.player;
 
   /**
    * Hodnota podívané pro jednu hrdinovu kombinaci proti vážené soupeřově range.

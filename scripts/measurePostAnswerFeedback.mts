@@ -10,6 +10,7 @@ import { loadSolvedFlopPacks } from "../src/data/ranges/flopSolvedStrategyPacks"
 import { loadSolvedRiverPacks, riverSolvedStrategyPacks } from "../src/data/ranges/riverSolvedStrategyPacks";
 import { riverEvManifest } from "../src/data/ranges/riverEvManifest.generated";
 import { loadRiverEvPack, readyRiverEvPack, resetRiverEvCache } from "../src/data/ranges/riverEvRuntime";
+import { primeTurnEvForFamily } from "../src/data/ranges/turnEvPrefetch";
 import { primeRiverEvForPack } from "../src/data/ranges/riverEvPrefetch";
 import { mulberry32 } from "../src/core/rng";
 import {
@@ -77,9 +78,14 @@ interface Row {
   /**
    * Spotů, kde hráč uvidí cenu dorovnání.
    *
-   * Na flopu a turnu je to **jediné** číslo, které tam kdy bude: EV se tam
-   * spočítat nedá (bod 131), zatímco cena ano - ze skutečné linie, kterou
-   * solver hrál.
+   * Na flopu je to zatím jediné číslo, které tam je: cena jde ze skutečné
+   * linie, kterou solver hrál, kdežto EV by se musela složit ze dvou pater
+   * vrstev pod ní.
+   *
+   * **U turnu to od 8. 9. 2026 neplatí.** Bod 131 tvrdil, že se EV na turnu
+   * spočítat nedá; body 203 az 211 ji spočítaly a změřily, že je zhruba tak
+   * přesná jako riverová, kterou hráč už dostává. Nedodává se kvůli místu a
+   * strojovému času, ne kvůli tomu, že by nešla spočítat.
    */
   priced: number;
   priceGaps: Map<string, number>;
@@ -152,6 +158,14 @@ async function measureStreet(
     if (prefetch && entry.street === "RIVER") {
       const packId = (chosen as { packId?: string }).packId;
       if (packId !== undefined) await primeRiverEvForPack(packId);
+    }
+    // Turn od 9. 9. 2026 taky. Turnový spot nenese packId, tak se hledá přes
+    // rodinu - viz primeTurnEvForFamily. Dokud manifest nemá záznam, vrátí to
+    // undefined a nečeká se; nula v turnovém sloupci pak znamená chybějící
+    // obsah, ne chybějící cestu.
+    if (prefetch && entry.street === "TURN") {
+      const directory = (chosen as { sourceDirectory?: string }).sourceDirectory;
+      if (directory !== undefined) await primeTurnEvForFamily(directory);
     }
 
     let generated;

@@ -316,6 +316,25 @@ describe("turnActionEv", () => {
     }
   });
 
+  it("uzel bez údaje o tom, kdo je na tahu, se nezodpoví", () => {
+    // Pole `player` říká, čí je to rozhodnutí, a tím i čí range se vezme a čí
+    // vklady se odečtou. Bez něj by se to muselo domyslet - a domyšlená strana
+    // dá EV v žetonech, věrohodnou a patřící druhému hráči.
+    const withoutPlayer = { ...checkThrough() } as SolverNode & { player?: number };
+    delete withoutPlayer.player;
+
+    const { rows } = turnActionEv({
+      node: withoutPlayer,
+      board: BOARD,
+      potChips: 100,
+      oop: ACE_KING,
+      ip: QUEENS,
+      riverValue: () => 120,
+    });
+
+    expect(rows).toEqual([]);
+  });
+
   it("kombinace, kterou solver nevede, nepatří ani do jmenovatele", () => {
     // Range se sem předává po třídách, ale solver vede konkrétní kombinace a
     // některé z té třídy vůbec nemá - na `222r/CHECK_CHECK__3c` je to 30 ze

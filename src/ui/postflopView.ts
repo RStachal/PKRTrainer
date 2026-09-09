@@ -42,6 +42,7 @@ import {
   solvedRiversForTurnBoard,
 } from "../data/ranges/solvedRiverSpotCatalogue";
 import { primeRiverEvForPack } from "../data/ranges/riverEvPrefetch";
+import { primeTurnEvForFamily } from "../data/ranges/turnEvPrefetch";
 import { mulberry32 } from "../core/rng";
 import { RANKS, SUITS } from "../core/poker";
 import { POSITION_ORDER, type Card, type Position, type Suit } from "../core/types";
@@ -402,7 +403,9 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       // tabulka nenačítá - a spot by se přestal vykreslovat synchronně.
       const priming = dealsSolved && street === "RIVER"
         ? primeRiverEvForSeed(seed, actionNode)
-        : undefined;
+        : dealsSolved && street === "TURN"
+          ? primeTurnEvForSeed(seed, actionNode)
+          : undefined;
       if (priming) await priming;
       const spot = generatePostflopSpot({
         seed,
@@ -2030,14 +2033,37 @@ function primeRiverEvForSeed(
   return picked === undefined ? undefined : primeRiverEvForPack(picked.spot.packId);
 }
 
-function solvedTurnConfigForSeed(seed: number, actionNode: PostflopActionNode) {
+/**
+ * Spot, ze kterého se turn rozdá - jedno místo pro obojí.
+ *
+ * Předčítání tabulky i samotné rozdání musí sáhnout po **téže** rodině. Kdyby
+ * si každé losovalo zvlášť, předčetla by se jiná než ta rozdaná a EV by chyběla
+ * přesně tak, jako by řetěz nebyl - a zvenku by to vypadalo stejně.
+ */
+function pickTurnSpotForSeed(seed: number, actionNode: PostflopActionNode) {
   const candidates = solvedTurnSpots().filter((spot) => spot.actionNode === actionNode);
   if (candidates.length === 0) return undefined;
   const rng = mulberry32(seed);
   rng();
   const spot = pickSolvedTurnSpot(rng(), candidates);
-  if (spot === undefined) return undefined;
-  return solvedTurnSpotConfig(spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, rng());
+  return spot === undefined ? undefined : { spot, rng };
+}
+
+function solvedTurnConfigForSeed(seed: number, actionNode: PostflopActionNode) {
+  const picked = pickTurnSpotForSeed(seed, actionNode);
+  if (picked === undefined) return undefined;
+  return solvedTurnSpotConfig(
+    picked.spot, POSTFLOP_FULL_RING_ALL_POSITION_CONTEXTS, picked.rng(),
+  );
+}
+
+/** Totéž co `primeRiverEvForSeed`, jen o ulici dřív. */
+function primeTurnEvForSeed(
+  seed: number,
+  actionNode: PostflopActionNode,
+): Promise<unknown> | undefined {
+  const picked = pickTurnSpotForSeed(seed, actionNode);
+  return picked === undefined ? undefined : primeTurnEvForFamily(picked.spot.sourceDirectory);
 }
 
 /**

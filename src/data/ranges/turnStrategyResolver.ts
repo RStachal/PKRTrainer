@@ -1,6 +1,7 @@
 import { facingBetBB } from "./facingBetSize";
 import { postflopPositionPatternMatches } from "../../core/postflopGenerator";
 import type {
+  PostflopAction,
   PostflopRecommendation,
   PostflopStrategyInput,
   PostflopStrategyResolver,
@@ -8,6 +9,12 @@ import type {
 import { translateTurnActions } from "./turnActionTranslation";
 import { actionNodeForSolvedHero } from "./solvedHeroActionNode";
 import { solvedRangeBuckets, solvedStrategySource } from "./solvedStrategySource";
+import {
+  primeTurnEvPack,
+  readyTurnEvPack,
+  turnActionEvRows,
+  turnComboEvTable,
+} from "./turnEvRuntime";
 import type { TurnStrategyPack } from "./turnStrategyPack";
 import type { TurnStrategyRule } from "./turnStrategyRuleBuilder";
 
@@ -142,6 +149,64 @@ function bestRule(
   return best;
 }
 
+const EV_EQUIVALENT_POT_SHARE = 0.01;
+const EV_EQUIVALENT_FLOOR_BB = 0.1;
+
+/**
+ * EV akcí pro tenhle spot, když tabulka rodiny už dorazila.
+ *
+ * Když ne, nastartuje se stahování a vrátí se nic: čekat uprostřed rozdání by
+ * byla prodleva přesně v tu chvíli, kdy hráč kouká na karty. Odpověď bez čísel
+ * je pořád odpověď.
+ *
+ * Tvar je stejný jako u riveru včetně dvou pravidel, která tam vznikla měřením:
+ * neúplná sada se vydá taky (jinak EV zmizí u většiny spotů, protože trenažér
+ * nabízí akce, které solve neobsahuje), a duplicity z překladu se odstraní
+ * (dvě solverovy velikosti pod polovinou potu dají dvakrát `BET_SMALL` a sada
+ * by padla na validaci).
+ */
+function actionEvsFor(
+  pack: TurnStrategyPack,
+  ruleIndex: number,
+  input: PostflopStrategyInput,
+  offered: readonly PostflopAction[],
+): Pick<PostflopRecommendation, "actionEvs" | "comboEvs"> | undefined {
+  if (input.heroCards === undefined || ruleIndex < 0) return undefined;
+  const table = readyTurnEvPack(pack.id);
+  if (table === undefined) {
+    primeTurnEvPack(pack);
+    return undefined;
+  }
+
+  const rows = turnActionEvRows(pack, table, ruleIndex, input.heroCards, input.potBB);
+  if (rows === undefined) return undefined;
+
+  const byAction = new Map(rows.map((row) => [row.action, row.evBB]));
+  const covered = [...new Set(offered.filter((action) => byAction.has(action)))];
+  // Jedna hodnota nedokáže nic seřadit; pod dvěma není co ukazovat.
+  if (covered.length < 2) return undefined;
+
+  const potBB = pack.rules[ruleIndex].spot?.potBB ?? input.potBB;
+  const equivalent = Math.max(EV_EQUIVALENT_FLOOR_BB, potBB * EV_EQUIVALENT_POT_SHARE);
+  const comboEvs = (turnComboEvTable(pack, table, ruleIndex, input.potBB) ?? [])
+    .map((row) => ({
+      combo: row.combo,
+      values: row.rows.map((item) => ({ action: item.action, evBb: item.evBB })),
+    }));
+  return {
+    ...(comboEvs.length > 0 ? { comboEvs } : {}),
+    actionEvs: {
+      // Ne `SOLVER`: tohle je expektace nad soupeřovou range za předpokladu, že
+      // obě strany hrají zapsanou strategii, ne solverova counterfactual value.
+      source: "SOLVED_TREE",
+      unit: "BB",
+      values: covered.map((action) => ({ action, evBb: byAction.get(action)! })),
+      equivalentThresholdBb: equivalent,
+      acceptableThresholdBb: equivalent * 3,
+    },
+  };
+}
+
 export function createTurnStrategyResolver(pack: TurnStrategyPack): PostflopStrategyResolver {
   return (input: PostflopStrategyInput): PostflopRecommendation | null => {
     if (input.street !== "TURN") return null;
@@ -214,6 +279,8 @@ export function createTurnStrategyResolver(pack: TurnStrategyPack): PostflopStra
         // nerozeznatelná - změřeno 25. 8. 2026 na 0 tříd ze 169.
         rangeBuckets: solvedRangeBuckets(rule.buckets, rule.actions, actions, input.board ?? []),
       }),
+      ...(actionEvsFor(pack, pack.rules.indexOf(rule), input,
+        actions.map((item) => item.action)) ?? {}),
     };
   };
 }

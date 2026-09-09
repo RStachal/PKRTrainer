@@ -169,7 +169,13 @@ export function turnActionEv(input: TurnEvInput): TurnEvResult {
   const decisionStrategy = current.strategy;
   if (current.node_type !== "action_node" || decisionStrategy === undefined) return empty;
   const decision = current;
-  const heroPlayer = decision.player ?? 0;
+  // Táž zásada jako v `riverActionEv`: uzel, který neřekne, čí je to
+  // rozhodnutí, se nezodpoví. Tady si to sice neodporovalo - `?? 0` dalo
+  // hrdinu v pozici a `heroIsOop` z toho vyšlo souhlasně - ale byla to tichá
+  // domněnka o tom, koho se ptáme. Změřeno: 0 z 8 936 turnových uzlů se
+  // strategií pole postrádá.
+  if (decision.player === undefined) return empty;
+  const heroPlayer = decision.player;
   const heroIsOop = heroPlayer === 1;
   const heroes = heroIsOop ? oopWeights : ipWeights;
   const villains = heroIsOop ? ipWeights : oopWeights;
