@@ -162,6 +162,7 @@
     "mtt:turn-ev-quality": "node --max-old-space-size=8192 scripts/run-cli.mjs scripts/measureTurnEvQuality.mts",
     "mtt:turn-ev-pack": "node --max-old-space-size=8192 scripts/run-cli.mjs scripts/buildTurnEvPacks.mts",
     "mtt:turn-ev-priority": "node scripts/run-cli.mjs scripts/measureTurnEvFamilyPriority.mts",
+    "mtt:flop-ev-feasibility": "node scripts/run-cli.mjs scripts/measureFlopEvFeasibility.mts",
     "mtt:ev-bounds": "node scripts/run-cli.mjs scripts/checkShippedEvBounds.mts",
     "mtt:turn-ev-stale": "node scripts/run-cli.mjs scripts/checkTurnEvStaleness.mts",
     "mtt:pilot-review": "node scripts/run-cli.mjs scripts/renderFlopPilotReview.mts",
