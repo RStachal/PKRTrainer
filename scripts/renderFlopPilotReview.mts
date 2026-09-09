@@ -10,6 +10,7 @@ import { pilotReviewOrder, pilotReviewPageHash } from "./lib/flopPilotReview.mts
 import {
   REVIEW_ANSWER_STYLES,
   reviewAnswerBar,
+  reviewAnswerFlag,
   reviewAnswerOption,
   reviewAnswerScript,
 } from "./lib/reviewAnswerMemory.mts";
@@ -83,35 +84,69 @@ function colorOf(action: string): string {
   return COLORS[""];
 }
 
+interface MixSlice { action: string; frequencyPct: number }
+
 /**
- * Ruka → akce, kterou pro ni pravidlo drží.
+ * Ruka → **celý mix**, ne jen ta nejčastější akce.
  *
- * Kbelíky se čtou v pořadí, v jakém je pack nese, a **první zápis vyhrává**:
- * kdyby se přepisovalo, poslední kbelík by přebil dřívější a mřížka by ukázala
- * jinou strategii, než jakou resolver vydá. Ten totiž bere první sedící kbelík.
+ * Tohle je jádro celé stránky a dřív tu nebylo. Mřížka kreslila `bucket.action`,
+ * tedy jednu akci na třídu, a mix pod ní zahazovala - jenže **žádná třída rukou
+ * v žádném pilotu nehraje čistě**. Změřeno 9. 9. 2026 na všech sedmi pilotech:
+ * 972 kbelíků, z toho 0 čistých, medián nejsilnější akce **57,3 %** a u 214
+ * z nich (22 %) se zobrazená akce hraje **méně než v polovině** případů.
+ *
+ * Stránka tedy malovala plnou barvou akci, kterou solver hraje menšinu času, a
+ * ptala se „dala by se ta strategie hrát?". Na to se z takového obrázku
+ * odpovědět nedá: vyvážený mix 45/35/20 a „sázej vždycky" vypadaly stejně.
+ * Majitel to 9. 9. přečetl a zamítl všech sedm pilotů - správně.
  */
-function handActions(rule: FlopProductionStrategyRule): Map<string, string> {
-  const byHand = new Map<string, string>();
+function handMix(rule: FlopProductionStrategyRule): Map<string, MixSlice[]> {
+  const byHand = new Map<string, MixSlice[]>();
   for (const bucket of rule.rangeBuckets) {
+    // Bez mixu zbývá jen dominantní akce; pak se kreslí jako sto procent, což
+    // je pravda o tom, co pack nese, ne domněnka.
+    const mix: MixSlice[] = [...(bucket.actionMix ?? [{ action: bucket.action, frequencyPct: 100 }])]
+      .filter((slice) => slice.frequencyPct > 0)
+      .sort((left, right) => right.frequencyPct - left.frequencyPct);
     for (const hand of bucket.handClasses) {
-      if (!byHand.has(hand)) byHand.set(hand, bucket.action);
+      if (!byHand.has(hand)) byHand.set(hand, mix);
     }
   }
   return byHand;
 }
 
+/** Mix jako proužek: každá akce zabírá tolik místa, kolik se hraje. */
+function mixBackground(mix: readonly MixSlice[]): string {
+  const total = mix.reduce((sum, slice) => sum + slice.frequencyPct, 0);
+  if (total <= 0) return COLORS[""];
+  const stops: string[] = [];
+  let at = 0;
+  for (const slice of mix) {
+    const width = (slice.frequencyPct / total) * 100;
+    stops.push(`${colorOf(slice.action)} ${at.toFixed(1)}%`);
+    at += width;
+    stops.push(`${colorOf(slice.action)} ${at.toFixed(1)}%`);
+  }
+  return `linear-gradient(90deg,${stops.join(",")})`;
+}
+
+const mixTitle = (hand: string, mix: readonly MixSlice[]): string => (
+  `${hand} — ${mix.map((slice) => `${slice.action} ${slice.frequencyPct.toFixed(0)} %`).join(", ")}`
+);
+
 function grid(rule: FlopProductionStrategyRule): string {
-  const byHand = handActions(rule);
+  const byHand = handMix(rule);
   const rows: string[] = [];
   for (let i = 0; i < 13; i += 1) {
     const cells: string[] = [];
     for (let j = 0; j < 13; j += 1) {
       const hand = handLabel(i, j);
-      const action = byHand.get(hand);
-      const background = action === undefined ? COLORS[""] : colorOf(action);
-      const dim = action === undefined ? ' class="off"' : "";
+      const mix = byHand.get(hand);
+      const background = mix === undefined ? COLORS[""] : mixBackground(mix);
+      const dim = mix === undefined ? ' class="off"' : "";
+      const title = mix === undefined ? `${hand} — mimo range` : mixTitle(hand, mix);
       cells.push(
-        `<td style="background:${background}"${dim} title="${escape(hand)}${action ? ` — ${escape(action)}` : " — mimo range"}">${escape(hand)}</td>`,
+        `<td style="background:${background}"${dim} title="${escape(title)}">${escape(hand)}</td>`,
       );
     }
     rows.push(`<tr>${cells.join("")}</tr>`);
@@ -119,18 +154,50 @@ function grid(rule: FlopProductionStrategyRule): string {
   return `<table class="grid">${rows.join("")}</table>`;
 }
 
-/** Kolik tříd která akce drží - číslo, které z mřížky nejde spočítat okem. */
+/**
+ * Kolik se která akce **doopravdy hraje**, průměrem přes třídy v range.
+ *
+ * Dřív se tu počítaly třídy, u kterých je akce nejčastější, a vycházelo z toho
+ * „BET_SMALL 50 tříd (100 %)" i tam, kde se ta sázka hraje v 57 % případů.
+ * Součet přes třídy dá skutečný poměr akcí a nezakrývá, že se všechno mixuje.
+ */
 function actionSummary(rule: FlopProductionStrategyRule): string {
-  const counts = new Map<string, number>();
-  for (const [, action] of handActions(rule)) counts.set(action, (counts.get(action) ?? 0) + 1);
-  const total = [...counts.values()].reduce((sum, value) => sum + value, 0);
-  return [...counts]
+  const byHand = handMix(rule);
+  const sums = new Map<string, number>();
+  for (const [, mix] of byHand) {
+    for (const slice of mix) {
+      sums.set(slice.action, (sums.get(slice.action) ?? 0) + slice.frequencyPct);
+    }
+  }
+  const hands = Math.max(1, byHand.size);
+  return [...sums]
     .sort((left, right) => right[1] - left[1])
-    .map(([action, count]) => (
+    .map(([action, sum]) => (
       `<span class="tag" style="border-color:${colorOf(action)}">${escape(action)} `
-      + `${count} tříd (${Math.round((count / Math.max(total, 1)) * 100)} %)</span>`
+      + `${(sum / hands).toFixed(0)} % range</span>`
     ))
     .join(" ");
+}
+
+/**
+ * Jak moc se v tomhle pravidle mixuje, a z kolika desek stojí.
+ *
+ * Obojí čtenář potřebuje, aby věděl, co drží v ruce: mřížka plná proužků je
+ * jiné tvrzení než mřížka plných barev, a agregát ze šesti desek je jiné
+ * tvrzení než agregát ze třiceti. Počet desek se čte z vysvětlení, protože
+ * jinde v pravidle není - viz `explanation`.
+ */
+function mixNote(rule: FlopProductionStrategyRule): string {
+  const tops = [...handMix(rule).values()]
+    .map((mix) => Math.max(...mix.map((slice) => slice.frequencyPct)))
+    .sort((left, right) => left - right);
+  const boards = /aggregated across ([A-Za-z0-9_]+):/.exec(rule.explanation)?.[1].split("_").length;
+  if (tops.length === 0) return "";
+  const median = tops[Math.floor(tops.length / 2)];
+  const minority = tops.filter((value) => value < 50).length;
+  return `<p class="note">Nejsilnější akce drží medián <b>${median.toFixed(0)} %</b>`
+    + `; u ${minority} z ${tops.length} tříd se nejsilnější akce hraje méně než v polovině případů`
+    + `${boards === undefined ? "" : `. Agregát z <b>${boards}</b> desek`}.</p>`;
 }
 
 const catalogById = new Map(MTT_POSTFLOP_PILOT_CATALOG.map((entry) => [entry.id, entry]));
@@ -153,6 +220,7 @@ const cards = pilots.map((entry, index) => {
       </p>
       <div class="tags">${actionSummary(rule)}</div>
       ${grid(rule)}
+      ${mixNote(rule)}
       <p class="explain">${escape(rule.explanation)}</p>
     </div>`).join("");
 
@@ -179,6 +247,13 @@ const cards = pilots.map((entry, index) => {
         ${reviewAnswerOption(index, "?", "? Nejsem si jistý")}
         ${reviewAnswerOption(index, "s", "– Přeskočit")}
       </div>
+      <div class="opts opts--flags" hidden>
+        ${reviewAnswerFlag(index, "1", "poměr akcí nesedí")}
+        ${reviewAnswerFlag(index, "2", "konkrétní ruka v cizí akci")}
+        ${reviewAnswerFlag(index, "3", "chybí velikost sázky")}
+        ${reviewAnswerFlag(index, "4", "přes hloubky si to odporuje")}
+        ${reviewAnswerFlag(index, "5", "málo desek v agregátu")}
+      </div>
     </div>
   </section>`;
 }).join("");
@@ -197,7 +272,8 @@ const page = `<!doctype html>
  .tags{margin:6px 0}
  .tag{display:inline-block;border:1px solid;border-radius:3px;padding:1px 6px;margin:2px 4px 2px 0;font-size:12px}
  table.grid{border-collapse:collapse;margin:8px 0}
- table.grid td{width:36px;height:22px;text-align:center;font-size:10px;color:#10131a;border:1px solid #14161a}
+ table.grid td{width:36px;height:22px;text-align:center;font-size:10px;color:#10131a;border:1px solid #14161a;
+                text-shadow:0 0 3px rgba(255,255,255,.9)}
  table.grid td.off{color:#767c86}
  .explain{color:#c3c8d0;margin:6px 0 0;font-size:13px}
  details{margin:6px 0;color:#c3c8d0} summary{cursor:pointer}
@@ -215,8 +291,17 @@ ${reviewAnswerBar()}
  </p>
  <p class="note">
   Posuzuje se <b>hra, ne tvar dat</b>. Rozbité tvary chytá mechanická kontrola;
-  tady jde o to, jestli by se ta strategie dala hrát. Mřížka ukazuje, kterou akci
-  pravidlo drží pro kterou třídu rukou; šedá je mimo range.
+  tady jde o to, jestli by se ta strategie dala hrát. Každá buňka mřížky je
+  <b>proužek celého mixu</b>: každá akce v ní zabírá tolik místa, kolik se hraje.
+  Šedá je mimo range, přesná procenta ukáže najetí myší.
+ </p>
+ <p class="note">
+  <b>Do 9. 9. 2026 tahle stránka kreslila jen nejčastější akci</b> a mix pod ní
+  zahazovala. Vypadalo to, že se každá ruka hraje čistě - přitom ze 972 tříd
+  napříč piloty nehraje čistě <b>ani jedna</b> a nejsilnější akce drží medián
+  57 %. Vyvážený mix 45/35/20 tak vypadal stejně jako „sázej vždycky" a otázka
+  „dala by se ta strategie hrát" se z toho zodpovědět nedala. Odpovědi z minulé
+  verze se proto nepřebírají.
  </p>
  <p class="note">Stránka je statická a funguje offline. Odpovědi se nikam neodesílají:
   drží je tenhle prohlížeč, takže se dá číst po kouskách a vracet se k tomu.
