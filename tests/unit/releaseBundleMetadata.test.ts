@@ -250,8 +250,12 @@ describe("release bundle metadata", () => {
     // platí totéž co u `release:check`: má se měnit vědomě, ne mimochodem.
     // Připnuto 25. 8. 2026, když do řetězu přibyl `mtt:post-answer` - brána na
     // doručení, bez které se dva týdny stavěl obsah, co se k hráči nedostal.
+    // 9. 9. 2026 přibyl `mtt:ev-bounds`: fyzická mez na EV přes obě ulice, která
+    // chytila jednotkovou chybu až o 38 % ve 3bet potech. Tenhle test si toho
+    // **nevšiml až teď**, protože se článek přidal a připnutí neaktualizovalo -
+    // brána od té chvíle padala a hlásilo se, že prošla. Proto se mění vědomě.
     expect(pkg.scripts["verify:block"])
-      .toBe("npm run typecheck && npm test && npm run verify:ranges && npm run mtt:post-answer && npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview");
+      .toBe("npm run typecheck && npm test && npm run verify:ranges && npm run mtt:post-answer && npm run mtt:ev-bounds && npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview");
     expect(pkg.scripts["release:check"])
       .toBe("npm run typecheck && npm test && npm run mtt:refresh-registry -- --check && npm run mtt:release-gates && npm run verify:ranges && npm run build && npm run verify:precache && npm run bundle:budget && npm run e2e:chrome:preview");
     expect(`${html}\n${manifest.description}\n${pkg.description}`).not.toMatch(/[ĂĹÄŤĹˇĹľ]/);
