@@ -352,6 +352,44 @@ describe("turnActionEv", () => {
     for (const row of rows) expect(row.evChips).toBeCloseTo(120, 6);
   });
 
+  it("hrdinova kombinace mimo strategii uzlu nedá nulu, ale žádnou odpověď", () => {
+    // Protějšek testu o soupeřově kombinaci, jen o patro jinde. Hrdina checkne,
+    // soupeř sází a hrdina se ocitne v uzlu, kde ho solver **nevede** - třeba
+    // proto, že se tam jeho ruka nedostane. Všechny frekvence jsou pak nula,
+    // podstrom se sečte na nulu a bez ošetření by se to vrátilo jako spočítaná
+    // EV s plným pokrytím. Nula je přitom platná EV, takže by to nešlo poznat.
+    const { rows } = turnActionEv({
+      node: node({
+        player: 1,
+        actions: ["CHECK"],
+        strategy: everyCombo("AKo", [1]),
+        childrens: {
+          CHECK: node({
+            player: 0,
+            actions: ["BET 40.000000"],
+            strategy: everyCombo("QQ", [1]),
+            childrens: {
+              // Uzel hrdiny, ale strategii má pro cizí třídu: `AKo` tam není.
+              "BET 40.000000": node({
+                player: 1,
+                actions: ["CALL"],
+                strategy: everyCombo("QQ", [1]),
+                childrens: { CALL: riverStub },
+              }),
+            },
+          }),
+        },
+      }),
+      board: BOARD,
+      potChips: 100,
+      oop: ACE_KING,
+      ip: QUEENS,
+      riverValue: () => 150,
+    });
+
+    expect(rows).toEqual([]);
+  });
+
   /** Hrdina jde na turnu all-in a soupeř dorovná; vrstva pro takovou linku není. */
   function shoveCalled(): SolverNode {
     return node({

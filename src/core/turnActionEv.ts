@@ -232,6 +232,17 @@ export function turnActionEv(input: TurnEvInput): TurnEvResult {
 
     if (acting === heroPlayer) {
       const own = strategy.strategy[heroCombo];
+      // Kombinace, kterou solver v tomhle uzlu **nevede**, nemá nulovou EV -
+      // nemá žádnou. Všechny frekvence by vyšly nula, součet taky, a podstrom by
+      // se tiše sečetl na nulu **s plným pokrytím**, tedy jako spočítaný
+      // výsledek. Je to táž vada, jaká byla o patro níž u soupeře (bod 204),
+      // jen na hrdinově straně; na dnešních datech se neprojeví, protože
+      // rozvinutá range je podmnožinou solverovy (278 z 332 na
+      // `222r/CHECK_CHECK__3c`), ale to je vlastnost dat, ne záruka.
+      let played = 0;
+      for (const [index] of strategy.actions.entries()) played += own?.[index] ?? 0;
+      if (played <= 0) { missingWeight += heroShare * weight; return 0; }
+
       let sum = 0;
       for (const [index, action] of strategy.actions.entries()) {
         const frequency = own?.[index] ?? 0;
