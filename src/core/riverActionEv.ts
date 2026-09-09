@@ -1,4 +1,4 @@
-import { compareShowdown } from "./showdownRank";
+import { showdownRank } from "./showdownRank";
 
 /**
  * EV jednotlivých akcí na riverovém uzlu, dopočítaná ze solverovy strategie.
@@ -207,22 +207,49 @@ export function riverActionEv(input: RiverEvInput): ComboActionEv[] {
    * nulu, takže **EV dorovnání vyšlo stejné pro nuts i pro vzduch**. Změřeno:
    * ploché ve všech 149 uzlech, které dorovnání nabízejí.
    */
+  /**
+   * Síla kombinace na téhle desce, spočtená jednou.
+   *
+   * Deska je na riveru hotová, takže síla ruky je vlastnost **jedné**
+   * kombinace, ne dvojice. Dosud se volalo `compareShowdown` pro každý pár
+   * hrdina × soupeř, a to uvnitř pokaždé postavilo obě sedmikaretní ruce znovu:
+   * při třech stech kombinacích na straně to je čtvrt milionu výpočtů místo
+   * šesti set. Změřeno 9. 9. 2026 na vzorku šedesáti vrstev z nejdražších
+   * stobiglindových rodin: 6 197 ms na vrstvu před, viz bod 220.
+   *
+   * `undefined` znamená nečitelnou ruku a zachovává se: taková dvojice se
+   * přeskočí, jako ji přeskakoval `compareShowdown`.
+   */
+  const ranks = new Map<string, number | undefined>();
+  const rankOf = (cards: readonly [string, string]): number | undefined => {
+    const key = `${cards[0]}${cards[1]}`;
+    const held = ranks.get(key);
+    if (held !== undefined || ranks.has(key)) return held;
+    const value = showdownRank([cards[0], cards[1], ...board]);
+    ranks.set(key, value);
+    return value;
+  };
+
   const showdownValue = (
     heroCards: [string, string],
     villains: readonly Weighted[],
     committed: readonly [number, number],
   ): number => {
+    const heroRank = rankOf(heroCards);
+    // Dřív se v tomhle případě přeskočila každá dvojice zvlášť a součet vyšel
+    // nula; tady se to jen řekne jednou.
+    if (heroRank === undefined) return 0;
+    const pot = potChips + committed[0] + committed[1];
+    const win = pot - committed[heroPlayer];
+    const lose = -committed[heroPlayer];
+    const split = pot / 2 - committed[heroPlayer];
     let sum = 0;
     for (const villain of villains) {
-      const result = compareShowdown(heroCards, villain.cards, board);
-      if (result === undefined) continue;
-      const pot = potChips + committed[0] + committed[1];
-      const net = result === 1
-        ? pot - committed[heroPlayer]
-        : result === -1
-          ? -committed[heroPlayer]
-          : pot / 2 - committed[heroPlayer];
-      sum += villain.weight * net;
+      const villainRank = rankOf(villain.cards);
+      if (villainRank === undefined) continue;
+      sum += villain.weight * (heroRank > villainRank
+        ? win
+        : heroRank < villainRank ? lose : split);
     }
     return sum;
   };

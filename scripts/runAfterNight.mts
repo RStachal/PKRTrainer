@@ -450,6 +450,13 @@ if (!write) {
       // typicky, ale rozptyl je velký - nejrychlejší 37 s, nejpomalejší
       // 2 129 s. Průměr by tady lhal, takže se říká obojí.
       //
+      // **Pozor: tahle čísla jsou od 9. 9. 2026 horní mez, ne odhad.** Bod 220
+      // zrychlil `riverActionEv`, který je na obnově to hlavní, **44x** při
+      // nezměněném výstupu. Přeměřit se to dá jedině skutečnou obnovou, a ta
+      // přegeneruje obsah - takže se nová čísla doplní až u nejbližšího cyklu,
+      // který spustí majitel. Do té doby platí, že rozpočet je spíš velkorysý
+      // než těsný.
+      //
       // Rozpočet zvednut z 90 na 150 minut 28. 8. 2026: devadesát nestačilo.
       // Ten den zastaralo 40 tabulek, cyklus stihl 29 a zbytek se dodělával
       // ručně. Naměřený rozptyl na rodinu je 52 až 1 350 s, takže čtyřicet
