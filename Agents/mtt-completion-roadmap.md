@@ -321,9 +321,10 @@ correct engineering call.
 | `Solver-CpuWindow` | the applier that stopped every console_solver on the machine, including subgames it did not start |
 | `MTT-Task-Agent-10m` | woke every ten minutes and mostly deferred for resource pressure caused by its own siblings |
 
-What remains is `PKRTrainer-Night-Decomposition`: daily at 21:00, eight workers, an
-eleven-hour limit so it stops at 08:00, and IgnoreNew so a second trigger cannot
-start a rival run.
+What remains is `PKRTrainer-Night-Decomposition`: daily at 21:00, eight workers, a
+ten-and-a-half-hour limit so it stops at 07:00, and IgnoreNew so a second trigger
+cannot start a rival run. The window was 21:00-08:00 until 10 September 2026, when
+the owner shortened it by an hour to have the machine back at seven.
 
 The cost of the old arrangement was not idle CPU. Three of those tasks measured
 each other's load and stood down, and a fourth killed work in progress - which is

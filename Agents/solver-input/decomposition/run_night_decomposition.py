@@ -49,11 +49,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 # Nejdelší okno, které se ještě bere jako noční běh, v hodinách.
 #
-# Dvanáct, ne jedenáct. Okno je dnes 21:00-08:00, tedy přesně jedenáct hodin, a
-# proti stropu jedenáct by o celé noci rozhodovaly zlomky vteřiny mezi spuštěním
+# O hodinu víc, než je okno samo. Okno je od 10. 9. 2026 **21:00-07:00**, tedy
+# přesně deset hodin (majitel si zkrátil noc o hodinu, aby měl stroj v sedm),
+# a proti stropu deset by o celé noci rozhodovaly zlomky vteřiny mezi spuštěním
 # úlohy a načtením skriptu. Guard má chytat spuštění mimo noc - devátou ranní,
-# která dá okno dvacet dva hodin - a to chytá dvanáctka stejně dobře.
-MAX_WINDOW_HOURS = 12
+# která dá okno dvacet dva hodin - a na to ta rezerva stačí.
+MAX_WINDOW_HOURS = 11
 
 # Kolik místa na disku musí zbývat, aby se pustila další deska, v gigabajtech.
 #
@@ -501,7 +502,11 @@ def read_parameters(path: str):
 
 
 def main():
-    until = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--until=")), "08:45")
+    # Výchozí konec je konec okna, ne pozdější čas. Ruční spuštění bez `--until`
+    # dřív mířilo na 08:45, tedy o hodinu a tři čtvrtě za okno; naplánovaná úloha
+    # ho předává vždycky, takže se to projevilo jen tam, kde si toho nikdo
+    # nevšimne - při spuštění rukou.
+    until = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--until=")), "07:00")
     workers = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--workers=")), "8")
     coverage = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--coverage=")), "0.99")
     # Riverová vrstva je vypnutá, dokud se nezadá rozpočet. Zapnutá naslepo by

@@ -68,7 +68,9 @@ OUTPUT_BASE = os.path.join(
 # nestihne, znamená zahozený solve, ne uložený mezivýsledek.
 BOARD_MINUTES = 12
 MIN_FREE_GB = 8
-MAX_WINDOW_HOURS = 12
+# O hodinu víc, než je okno. Od 10. 9. 2026 je okno 21:00-07:00, tedy deset
+# hodin; guard má chytat spuštění mimo noc, ne noc samotnou.
+MAX_WINDOW_HOURS = 11
 
 # Kolikrát se deska zkusí, než se odloží natrvalo.
 #
@@ -130,7 +132,8 @@ def solved(checkpoint: str) -> bool:
 
 
 def main():
-    until = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--until=")), "08:00")
+    # Výchozí konec je konec okna. Od 10. 9. 2026 je to sedmá, ne osmá.
+    until = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--until=")), "07:00")
     limit = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--limit=")), "0"))
 
     hour, minute = (int(x) for x in until.split(":"))
