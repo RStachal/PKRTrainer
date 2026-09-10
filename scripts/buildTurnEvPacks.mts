@@ -67,6 +67,14 @@ const limit = Number(/--limit=([0-9]+)/.exec(argv.join(" "))?.[1] ?? "0");
 const budgetGzipKib = Number(/--budget-gzip-kib=([0-9]+)/.exec(argv.join(" "))?.[1] ?? "0");
 /** Průměr ze šesti změřených rodin (bod 228), jen na odhad zbývajícího místa. */
 const AVERAGE_TABLE_GZIP_BYTES = 84 * 1024;
+/**
+ * Přeskočit rodiny, které už tabulku mají.
+ *
+ * Celá dávka je sedm hodin jednoho jádra a denní okno končí ve 21:00, takže se
+ * skoro jistě bude pokračovat druhý den. Bez tohohle by se běh pokaždé rozjel
+ * odznova od nejrozdávanější rodiny - tedy hodiny práce na tom, co už hotové je.
+ */
+const skipExisting = argv.includes("--skip-existing");
 
 /** Jak `solve_plan.py` pojmenoval akci v cestě k podhře. */
 const encode = (line: readonly string[]): string => line.map((action) => {
@@ -468,6 +476,8 @@ const familyOfFile = (name: string): string =>
 const chosen = packs
   .filter((name) => familyFilter === undefined
     || name.toLowerCase().includes(familyFilter.toLowerCase().replace(/_/g, "-")))
+  // Tabulka má stejné jméno jako pack, jen v jiném adresáři.
+  .filter((name) => !skipExisting || !existsSync(join(OUT_DIR, name)))
   .sort((left, right) => (
     (reachByFamily.get(familyOfFile(right)) ?? 0) - (reachByFamily.get(familyOfFile(left)) ?? 0)
   ))

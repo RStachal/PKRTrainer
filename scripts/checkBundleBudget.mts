@@ -147,6 +147,37 @@ const MAX_LAZY_MTT_GZIP_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128);
  *
  * Historie:
  *
+ * **Zvednuto potřetí, raw 65 536 -> 76 800 a gzip 8 192 -> 11 264, dne
+ * 10. 9. 2026.** Majitel zvolil dodat turnovou EV **všem 48 rodinám**, a tohle
+ * je poprvé, kdy se zvedá i gzip. Neodporuje to větě výš („až kousne gzip,
+ * další zvednutí není odpověď"): ta míří na růst z nocí, tedy na sesouvání.
+ * Tohle je jednorázové rozhodnutí o obsahu, změřené předem a se známou cenou.
+ *
+ * Změřeno **dřív, než ta data vznikla** - sondou, která nasadí kopie skutečných
+ * tabulek pod jmény zbylých rodin (`npm run mtt:turn-ev-build-probe`):
+ *
+ * | | před | s 48 tabulkami |
+ * |---|---|---|
+ * | lazy raw | 53 674 KiB | **74 012 KiB** |
+ * | lazy gzip | 6 570 KiB | **10 410 KiB** |
+ * | chunků | 197 | 245 |
+ *
+ * **Proč gzip na 11 264, a ne na 10 496, jak vycházelo ze sondy:** sonda
+ * kopírovala čtyři nejmenší změřené tabulky (průměr 80 KiB gzip), kdežto průměr
+ * ze šesti skutečně změřených rodin je **84,7**. Skutečný součet tedy vyjde
+ * kolem 10 640 KiB a strop 10 496 by byl **pod ním**. Jedenáct MiB nechává
+ * rezervu ~620 KiB, tedy zhruba čtyři noci při naměřených 159 KiB za noc.
+ *
+ * **A co sonda našla vedle toho** (bod 230): tabulky se do součtu líné knihovny
+ * vůbec nedostaly, protože `mttProductionChunkNameForModuleId` neznalo
+ * `/ranges/turn-ev/`. Chunky dostaly jméno podle souboru, precache je vzal za
+ * nutné a **instalační cesta vyskočila z 386 KiB na 20 732 KiB raw / 3 953 KiB
+ * gzip**. Ten soubor přitom u téhož pravidla varuje, že je to potřetí táž past.
+ *
+ * **Halda buildu:** při 74 MB knihovny `vite build` na 8 GB **spadl**
+ * („Ineffective mark-compacts near heap limit"), na 12 GB projde za 2 m 9 s.
+ * Varování o tom stálo v tomhle souboru od 26. 8. a teď je změřené.
+ *
  * **Zvednuto podruhé, z 45 056 na 54 272 (44 -> 53 MB), dne 26. 8. 2026.**
  * Tentokrát to nepřinesla noc, ale rozhodnutí, které mi majitel předal: EV akcí
  * dostalo všech 47 riverových rodin místo sedmnácti.
@@ -171,10 +202,10 @@ const MAX_LAZY_MTT_GZIP_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128);
  * `resolveJsonModule` čte všechny. Není to vada obsahu ani typů, je to zděděná
  * mez - proto má `build` i `typecheck` v `package.json` explicitních 8 GB.
  */
-const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 65536);
+const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 76800);
 const MAX_LAZY_MTT_TOTAL_GZIP_KB = numberFromEnv(
   "BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",
-  8192,
+  11264,
 );
 // The equity table is fetched when a session starts, so it is off the install
 // path and does not belong in the precache totals - but it is not an MTT

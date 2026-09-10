@@ -132,6 +132,32 @@ describe("precache build manifest", () => {
     )).toBe("mtt-river-solved-mtt9-20bb-btn-bb-srp-lowspr");
   });
 
+  it("turnová tabulka EV a její manifest jsou taky odložené", () => {
+    // Potřetí tatáž past, a tentokrát změřená dřív, než ta data vznikla:
+    // `/ranges/turn-ev/` v pravidle chybělo, takže 48 tabulek dostalo jméno
+    // podle souboru a instalační cesta vyskočila z 386 KiB na **20,7 MB raw /
+    // 3,95 MB gzip** (bod 230). Zaplatil by to každý hráč při instalaci.
+    for (const path of [
+      "/repo/src/data/ranges/turn-ev/mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+      "C:\\repo\\src\\data\\ranges\\turn-ev\\mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+    ]) {
+      const name = mttProductionChunkNameForModuleId(path);
+      expect(name).toBe("mtt-turn-ev-solved-mtt9-20bb-btn-bb-srp-lowspr");
+      expect(isDeferredAsset(`assets/${name}-AbCd1234.js`)).toBe(true);
+    }
+    // Rodina se nesmí schovat pod EV ani tady.
+    expect(mttProductionChunkNameForModuleId(
+      "/repo/src/data/ranges/turn/mtt9-20bb-btn-bb-srp-lowspr.generated.json",
+    )).toBe("mtt-turn-solved-mtt9-20bb-btn-bb-srp-lowspr");
+    // Manifest je seznam, podle kterého se tabulky stahují - nesmí být na
+    // instalační cestě dřív než ony.
+    const manifest = mttProductionChunkNameForModuleId(
+      "/repo/src/data/ranges/turnEvManifest.generated.ts",
+    );
+    expect(manifest).toBe("mtt-manifest-turn-ev");
+    expect(isDeferredAsset(`assets/${manifest}-AbCd1234.js`)).toBe(true);
+  });
+
   it("realny Vite build emituje production modul jako lazy chunk mimo precache", async () => {
     const directory = mkdtempSync(join(tmpdir(), "pkrtrainer-lazy-mtt-"));
     const packId = "mtt-six-max-turbo-turn-chip-ev-ante-off-production-v1";

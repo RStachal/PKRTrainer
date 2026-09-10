@@ -46,7 +46,11 @@ export function isPreflopEquityAsset(fileName: string): boolean {
  */
 export function isSolvedStreetAsset(fileName: string): boolean {
   const baseName = fileName.replace(/\\/g, "/").split("/").pop() ?? "";
-  return /^mtt-(flop|turn|river-ev|river)-solved-[a-z0-9-]+-[a-zA-Z0-9_-]{8,}\.js$/.test(baseName);
+  // Pořadí v alternaci není kosmetika: `turn` by na `turn-ev-solved-…` sedlo
+  // dřív a pak by `-solved-` nesedělo, takže by chunk propadl mezi nutné.
+  // Delší varianta proto vždycky napřed.
+  return /^mtt-(flop|turn-ev|turn|river-ev|river)-solved-[a-z0-9-]+-[a-zA-Z0-9_-]{8,}\.js$/
+    .test(baseName);
 }
 
 /**
@@ -100,12 +104,25 @@ export function mttProductionChunkNameForModuleId(moduleId: string): string | nu
   // níž nepozná - a bez vlastního jména by dostaly jméno podle souboru a
   // precache by je vzal za nutné. To je přesně ta past, která je v tomhle
   // souboru popsaná dvakrát; potřetí by byla jen o soubor vedle.
+  // A potřetí, přesně jak to tenhle komentář předpovídal: `turn-ev` chybělo na
+  // obou místech. Změřeno 10. 9. 2026 sondou na plnou knihovnu (bod 230) -
+  // 48 turnových tabulek dostalo jméno podle souboru, precache je vzal za nutné
+  // a **instalační cesta vyskočila z 386 KiB na 20,7 MB raw / 3,95 MB gzip**.
+  // Zaplatil by to každý hráč při instalaci, včetně toho, kdo otevře jen
+  // preflopový drill. Chyceno dřív, než ta data vůbec vznikla.
   const manifestStreet = /^(flop|turn|river)SolvedManifest\.generated\.ts$/.exec(fileName)?.[1]
-    ?? (fileName === "riverEvManifest.generated.ts" ? "river-ev" : null);
+    ?? (fileName === "riverEvManifest.generated.ts" ? "river-ev" : null)
+    ?? (fileName === "turnEvManifest.generated.ts" ? "turn-ev" : null);
   if (manifestStreet !== null) return `mtt-manifest-${manifestStreet}`;
 
+  // Ulice s `-ev` musí být napřed. `/ranges/turn-ev/` sice `/ranges/turn/`
+  // neobsahuje, ale pořadí je tu jediná ochrana proti tomu, aby se to při
+  // příštím přejmenování adresáře tiše rozešlo - a tahle past už stála tři
+  // opravy.
   const street = normalized.includes("/ranges/river-ev/")
     ? "river-ev"
+    : normalized.includes("/ranges/turn-ev/")
+    ? "turn-ev"
     : normalized.includes("/ranges/turn/")
     ? "turn"
     : normalized.includes("/ranges/river/")

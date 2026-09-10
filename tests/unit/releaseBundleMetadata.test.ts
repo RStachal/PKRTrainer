@@ -239,7 +239,7 @@ describe("release bundle metadata", () => {
     // součtů měří, co se po drátě přenese. Raw zůstává pojistkou proti řádovému
     // skoku. Až kousne gzip, odpovědí není další zvednutí, ale ořez podle
     // změřené poptávky.
-    expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 65536');
+    expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 76800');
     expect(budgetScript).toContain('"BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",');
     // Řetěz je připnutý schválně: má se měnit vědomě, ne mimochodem. Poslední
     // článek přibyl 24. 8. 2026 a je to oprava chybějící brány - Chrome E2E

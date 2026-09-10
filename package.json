@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "_build_note": "Halda 8 GB, ne vychozi 4: naměřeno 25. 8. 2026, že build na 4 GB spadne na 'Ineffective mark-compacts near heap limit' po 148 s, a s 8 GB projde za 2 m 22 s. Není to únik paměti, je to velikost obsahu - 301 modulů, z toho 29 MB líných packů a 7 MB tabulek EV. Volá se přes node, ne přes NODE_OPTIONS, protože prefix promenne v npm skriptu cmd.exe nepřevezme.",
-    "build": "node --max-old-space-size=8192 node_modules/typescript/bin/tsc --noEmit && node --max-old-space-size=8192 node_modules/vite/bin/vite.js build",
+    "_build_note": "Halda 8 GB, ne vychozi 4: naměřeno 25. 8. 2026, že build na 4 GB spadne na 'Ineffective mark-compacts near heap limit' po 148 s, a s 8 GB projde za 2 m 22 s. Není to únik paměti, je to velikost obsahu - 301 modulů, z toho 29 MB líných packů a 7 MB tabulek EV. Zvednuto 10. 9. 2026 na 12 GB u vite: pri 74 MB knihovny (turnova EV vsem 48 rodinam) spadl build i na 8 GB toutez hlaskou, na 12 GB projde za 2 m 9 s. tsc zustava na 8, tam 8 staci (93 s). Zmereno sondou drive, nez ta data vznikla. Volá se přes node, ne přes NODE_OPTIONS, protože prefix promenne v npm skriptu cmd.exe nepřevezme.",
+    "build": "node --max-old-space-size=8192 node_modules/typescript/bin/tsc --noEmit && node --max-old-space-size=12288 node_modules/vite/bin/vite.js build",
     "preview": "vite preview",
     "_typecheck_note": "Dvě konfigurace, ne jedna: `tsconfig.json` hlídá `src`/`tests` na ES2020 kvůli Android WebView, `tsconfig.scripts.json` hlídá `scripts/` na ES2022, protože skripty běží na Node. Adresář `scripts/` se do 26. 8. 2026 nekontroloval vůbec a schovával 114 chyb, mezi nimi šest skutečných vad včetně dvou měřicích nástrojů, které vracely nesmyslná čísla.",
     "typecheck": "node --max-old-space-size=8192 node_modules/typescript/bin/tsc --noEmit && node --max-old-space-size=8192 node_modules/typescript/bin/tsc --noEmit -p tsconfig.scripts.json",
@@ -162,6 +162,7 @@
     "mtt:turn-ev-quality": "node --max-old-space-size=8192 scripts/run-cli.mjs scripts/measureTurnEvQuality.mts",
     "mtt:turn-ev-pack": "node --max-old-space-size=8192 scripts/run-cli.mjs scripts/buildTurnEvPacks.mts",
     "mtt:turn-ev-priority": "node scripts/run-cli.mjs scripts/measureTurnEvFamilyPriority.mts",
+    "mtt:turn-ev-build-probe": "node scripts/run-cli.mjs scripts/measureFullTurnEvBuild.mts",
     "mtt:flop-ev-feasibility": "node scripts/run-cli.mjs scripts/measureFlopEvFeasibility.mts",
     "mtt:ev-bounds": "node scripts/run-cli.mjs scripts/checkShippedEvBounds.mts",
     "mtt:turn-ev-stale": "node scripts/run-cli.mjs scripts/checkTurnEvStaleness.mts",
