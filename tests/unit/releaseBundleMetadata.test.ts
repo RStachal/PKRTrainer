@@ -111,6 +111,15 @@ describe("release bundle metadata", () => {
       .toContain("finalize-texas-solver-accuracy-recovery.ps1");
     expect(chromePreviewE2eScript).toContain('NODE_ENV: "production"');
     expect(chromePreviewE2eScript).toContain('"--strictPort"');
+    // Halda pro build smí být napsaná **jen jednou**, ve skriptu `build`.
+    // E2E si staví vlastní balík a mělo to číslo opsané; 10. 9. 2026 se halda
+    // kvůli turnové EV zvedla na 12 GB v `package.json` a tady zůstalo osm,
+    // takže `npm run build` prošel a brána spadla o krok dál na tomtéž.
+    expect(
+      /BUILD_HEAP_FLAG\s*=\s*"--max-old-space-size=\d+"/.test(chromePreviewE2eScript),
+      "halda v E2E nesmí být napsaná číslem, čte se ze skriptu build",
+    ).toBe(false);
+    expect(chromePreviewE2eScript).toContain("pkg.scripts.build");
     expect(ftpPackageScript).toContain('!source.path.endsWith(".map")');
     expect(ftpPackageScript).toContain("Source map must not enter the FTP package");
     expect(pkg.scripts["release:mtt-core"])

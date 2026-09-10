@@ -1,11 +1,30 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { resolve } from "node:path";
 
 const root = resolve(".");
 const nodeExecutable = process.execPath;
-/** Halda pro produkční build; drží se stejného čísla jako skript `build`. */
-const BUILD_HEAP_FLAG = "--max-old-space-size=8192";
+/**
+ * Halda pro produkční build, **přečtená ze skriptu `build`**, ne opsaná.
+ *
+ * Číslo tu bylo napsané dvakrát a komentář níž varoval přesně před tím, co se
+ * pak stalo: 10. 9. 2026 se halda kvůli turnové EV zvedla na 12 GB v
+ * `package.json` a **tady zůstalo osm**, takže `npm run build` prošel a brána
+ * spadla o krok dál na tomtéž - `Ineffective mark-compacts near heap limit`
+ * uvnitř E2E. Dvě kopie téhož čísla se rozejdou vždycky; jedna se rozejít
+ * nemůže.
+ */
+const BUILD_HEAP_FLAG = (() => {
+  const pkg = JSON.parse(readFileSync(resolve("package.json"), "utf8")) as {
+    scripts: Record<string, string>;
+  };
+  const flag = /--max-old-space-size=\d+(?=[^&]*vite)/.exec(pkg.scripts.build ?? "")?.[0];
+  if (flag === undefined) {
+    throw new Error("ve skriptu `build` není halda pro vite; E2E si ji nemá odkud vzít");
+  }
+  return flag;
+})();
 const viteCli = resolve("node_modules/vite/bin/vite.js");
 const viteNodeCli = resolve("scripts/run-cli.mjs");
 const previewPort = await findAvailablePort();
