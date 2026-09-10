@@ -35,6 +35,9 @@ import { gzipSync } from "node:zlib";
 import { join } from "node:path";
 
 import { MODULE_BUDGET_BYTES } from "./lib/solvedPackBuilding.mts";
+import { windowNotice } from "./lib/machineWindow.mts";
+import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks";
+import { solvedTurnSpots } from "../src/data/ranges/solvedTurnSpotCatalogue";
 import { decodeComboMask, decodeEvDeltas, encodeComboMask, encodeEvDeltas } from "../src/core/evCodec";
 import { turnActionEv } from "../src/core/turnActionEv";
 import type { SolverNode } from "../src/core/riverActionEv";
@@ -54,6 +57,16 @@ const shouldWrite = argv.includes("--write");
 // "--family=X --write" hledalo rodinu jménem "X --write" a nenašlo nic.
 const familyFilter = /--family=(\S+)/.exec(argv.join(" "))?.[1];
 const limit = Number(/--limit=([0-9]+)/.exec(argv.join(" "))?.[1] ?? "0");
+/**
+ * Kolik KiB gzip smí dávka dohromady zabrat; 0 vypíná.
+ *
+ * Volno v součtu líné knihovny se čte z `bundle:budget` a k 10. 9. 2026 je to
+ * 1 622 KiB. Rozhoduje **gzip**, ne raw - viz bod 228 a hlavička
+ * `checkBundleBudget`.
+ */
+const budgetGzipKib = Number(/--budget-gzip-kib=([0-9]+)/.exec(argv.join(" "))?.[1] ?? "0");
+/** Průměr ze šesti změřených rodin (bod 228), jen na odhad zbývajícího místa. */
+const AVERAGE_TABLE_GZIP_BYTES = 84 * 1024;
 
 /** Jak `solve_plan.py` pojmenoval akci v cestě k podhře. */
 const encode = (line: readonly string[]): string => line.map((action) => {
@@ -430,9 +443,34 @@ function buildPack(packPath: string): {
 const packs = existsSync(PACK_DIR)
   ? readdirSync(PACK_DIR).filter((name) => name.endsWith(".json")).sort()
   : [];
+/**
+ * Rodiny v pořadí, ve kterém se hráči rozdávají.
+ *
+ * Pořadí podle jména souboru je abecedа, tedy náhoda vůči tomu, co hráč
+ * dostane. Když se nevejdou všechny (a nevejdou - viz bod 228), rozhoduje o
+ * hodnotě právě tohle pořadí: prvních devatenáct rodin podle dosahu pokrývá
+ * 48,8 % rozdaných turnových spotů, kdežto devatenáct podle abecedy nepokrývá
+ * nic konkrétního.
+ *
+ * Váží se **dosahem**, ne počtem spotů: trenažér losuje přes
+ * `pickSolvedSpotByReach`. Měřit kusy by dalo plochých 2,1 % na rodinu, protože
+ * každý pack dodá ~260 pravidel podle stropu (bod 214).
+ */
+await loadAllSolvedTurnPacks("FULL_RING_9|REGULAR|CHIP_EV|TURN|OFF");
+const reachByFamily = new Map<string, number>();
+for (const spot of solvedTurnSpots()) {
+  const family = spot.sourceDirectory.split("__")[0];
+  reachByFamily.set(family, (reachByFamily.get(family) ?? 0) + spot.reach);
+}
+const familyOfFile = (name: string): string =>
+  name.replace(/\.generated\.json$/, "").replace(/-/g, "_").toUpperCase();
+
 const chosen = packs
   .filter((name) => familyFilter === undefined
     || name.toLowerCase().includes(familyFilter.toLowerCase().replace(/_/g, "-")))
+  .sort((left, right) => (
+    (reachByFamily.get(familyOfFile(right)) ?? 0) - (reachByFamily.get(familyOfFile(left)) ?? 0)
+  ))
   .slice(0, limit > 0 ? limit : undefined);
 
 if (chosen.length === 0) {
@@ -448,7 +486,23 @@ let filledTotal = 0;
 let ruleTotal = 0;
 const written: { familyId: string; packId: string; slug: string }[] = [];
 
+// Odhad délky z šesti změřených rodin (bod 228): 485 az 789 s u hlubokých,
+// méně u mělkých. Deset minut na rodinu je střed, se kterým se dá počítat.
+console.log(windowNotice(1, chosen.length * 10));
+console.log("");
+
+let stoppedAt = 0;
+
 for (const name of chosen) {
+  // Součtový rozpočet ukončí dávku podle **skutečných** velikostí, ne podle
+  // průměru. Odhad z průměru dal 19 rodin, jenže hluboké rodiny jsou dražší
+  // (86 a 102 KiB proti průměru 84) a zrovna ty jsou v první dvacítce - takže
+  // by se buď nevešly, nebo by se místo nechalo ležet. Staví se v pořadí podle
+  // dosahu a přestane se, až je plno.
+  if (budgetGzipKib > 0 && (gzipTotal + AVERAGE_TABLE_GZIP_BYTES) / 1024 > budgetGzipKib) {
+    console.log(`rozpočet ${budgetGzipKib} KiB gzip je plný, končím na ${stoppedAt} rodinách`);
+    break;
+  }
   const started = Date.now();
   const result = buildPack(join(PACK_DIR, name));
   if (result === undefined) {
@@ -461,6 +515,7 @@ for (const name of chosen) {
   gzipTotal += gzip;
   filledTotal += result.filled;
   ruleTotal += result.total;
+  stoppedAt += 1;
   console.log(`${result.familyId}`);
   console.log(`  pravidel s EV ${result.filled} z ${result.total}`
     + ` (${(100 * result.filled / Math.max(1, result.total)).toFixed(1)} %)`
