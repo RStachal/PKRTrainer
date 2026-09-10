@@ -301,5 +301,29 @@ for (const document of rendered) {
 }
 console.log("  index.html            rozcestník s průběhem");
 console.log("");
+
+/**
+ * Složka se nevydá, když stránka kreslí míň, než data nesou.
+ *
+ * Brána tady, ne až v `verify:block`: čtecí stránky se stavějí mimo blok a na
+ * FTP je nahrává člověk. Kontrola, kterou lze zapomenout spustit, by přesně tu
+ * čtyřikrát opakovanou vadu (body 221, 223, 224, 225) nechytila v okamžiku,
+ * kdy vzniká. Běží ve **vlastním procesu** ze stejného důvodu jako u
+ * zastaralosti EV: měřit vlastní paměť místo disku znamená hlásit klid přesně
+ * v okamžiku ztráty.
+ */
+try {
+  execFileSync(
+    process.execPath,
+    ["scripts/run-cli.mjs", "scripts/checkReviewDeskFidelity.mts", `--desk=${outDir}`],
+    { stdio: "inherit" },
+  );
+} catch {
+  console.error("");
+  console.error("Složka NENÍ k nahrání: kontrola věrnosti neprošla (viz výš).");
+  process.exit(1);
+}
+
+console.log("");
 console.log("Nahraj celou složku na FTP a otevírej index.html. Odpovědi drží prohlížeč,");
 console.log("takže se dá vyplňovat postupně; nic se nikam neodesílá.");

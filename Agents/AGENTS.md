@@ -267,6 +267,39 @@ Nástroj má vlastní bránu (`projectMemorySearch.test.ts`) ze stejného důvod
 každé jiné měřidlo tady: nejhorší selhání není pád, ale **prázdný výsledek, který
 se čte jako „nic o tom nevíme"**.
 
+### 8. Stránka, která se ptá, musí umět ukázat to, na co se ptá — `npm run mtt:review-fidelity`
+
+Zapsáno 10. 9. 2026, po dvou dnech, ve kterých se našly **čtyři vady a všechny
+ležely mezi daty a čtenářem, ani jedna v datech**:
+
+- piloti kreslili `bucket.action` a `actionMix` pod ním zahazovali, takže se
+  menšinová akce malovala plnou barvou (bod 221) — z 972 kbelíků nebyl čistý
+  ani jeden a u 214 se zobrazená akce hraje pod 50 %;
+- stránka neřekla, čí strategii čtenář vidí, a vzor je `<agresor>_VS_<caller>`,
+  takže u čelení sázce hraje ten druhý — stálo to nález označený za blokující
+  (bod 223);
+- ruka hraná ze čtvrtiny se v draftu ranží kreslila jako jistota (bod 224):
+  1 175 tříd ve zdroji, 1 109 z nich tiše;
+- barva, kterou kontext neuměl přeložit, se přeskočila a 104 tříd spadlo do
+  foldu, přičemž mřížka se vydala jako úplná (bod 225).
+
+**Čtení je jediná cesta, jak se obsah dostane z LOW do produkce.** Čtecí stránka
+je tedy brána — a byla to jediná brána v projektu, kterou nic neměřilo. Proto:
+
+1. **Co stránka kreslí, se porovnává s tím, co data nesou.**
+   `mtt:review-fidelity` měří zachování informace, ne vzhled: každý mix v datech
+   musí být na stránce mix, každý pilot musí mít napsanou sedačku, žádná hraná
+   buňka nesmí být malovaná jednou barvou. Běží uvnitř `mtt:review-desk` ve
+   **vlastním procesu**, takže složka, která ztrácí informaci, se nevydá.
+2. **Verdikt nad rozbitou stránkou je horší než žádný verdikt.** Zapíše se jako
+   „přečteno" o obsahu, který čtenář neviděl, a nikdo to pak nerozliší. Proto je
+   ta brána fail-closed a proto zápis odpovědí odmítne token, kterému nerozumí.
+3. **Nula z kontroly musí být doložená nula.** Tahle kontrola sama v první verzi
+   hledala buňky přes `class="cell"`, jenže buňky mřížky žádnou třídu nemají —
+   vracela tedy nulu vždycky a nad úmyslně rozbitou stránkou prošla. Chytila to
+   teprve falzifikace: stránka rozbitá schválně **musí** spadnout, jinak se
+   neměří nic. Platí to pro každé měřidlo tady, viz pravidlo 6.
+
 ### Co tím nezmizí
 
 Zpětné kroky se nedají vypnout úplně. Když oprava odhalí hlubší vadu - třeba že

@@ -170,6 +170,7 @@
     "mtt:pilot-hero-seat": "node scripts/run-cli.mjs scripts/checkPilotHeroSeat.mts",
     "mtt:rye-weight-loss": "node scripts/run-cli.mjs scripts/measureRyeWeightLoss.mts",
     "mtt:review-desk": "node scripts/run-cli.mjs scripts/buildReviewDesk.mts",
+    "mtt:review-fidelity": "node scripts/run-cli.mjs scripts/checkReviewDeskFidelity.mts",
     "mtt:state-page": "node scripts/run-cli.mjs scripts/buildStatePage.mts",
     "mtt:solved-coverage": "node scripts/run-cli.mjs scripts/checkSolvedSpotCoverage.mts",
     "mtt:post-answer": "node scripts/run-cli.mjs scripts/measurePostAnswerFeedback.mts",

@@ -16,6 +16,7 @@ import {
   reviewAnswerOption,
   reviewAnswerScript,
 } from "./lib/reviewAnswerMemory.mts";
+import { loadAnswerHistory, partialWeightCells } from "./lib/ryeAnswerHistory.mts";
 
 /**
  * Draft ranží k přečtení člověkem, jako mřížky - ne jako JSON.
@@ -299,6 +300,40 @@ function verdictBlock(record: DraftRecord, id: number, impact: DraftImpact): str
 </div>`;
 }
 
+const history = loadAnswerHistory();
+
+/**
+ * Co se o téhle mřížce dá říct z dřívějšího čtení.
+ *
+ * Tři stavy, a rozdíl mezi nimi je celý smysl téhle vrstvy: mřížka bez
+ * částečné váhy se od odpovědi nezměnila a číst se znovu nemusí; mřížka
+ * s částečnou váhou se kreslí jinak právě v tom, co se posuzovalo; mřížka bez
+ * odpovědi čeká na první čtení.
+ */
+function answerNote(record: DraftRecord): { html: string; stale: boolean; kept: boolean } {
+  const answer = history.bySourceFile.get(record.sourceFile);
+  if (answer === undefined) return { html: "", stale: false, kept: false };
+  const changed = partialWeightCells(record);
+  const flags = answer.flags.length === 0 ? "" : ` (${escapeHtml(answer.flags.join(", "))})`;
+  if (changed === 0) {
+    return {
+      html: `<p class="meta answered"><b>Odpověď z ${escapeHtml(history.readAt)}:`
+        + ` ${escapeHtml(answer.verdict)}</b>${flags}. Na téhle mřížce se od té doby`
+        + " nezměnilo nic - číst znovu netřeba.</p>",
+      stale: false,
+      kept: true,
+    };
+  }
+  return {
+    html: `<p class="meta stale"><b>Odpověď z ${escapeHtml(history.readAt)}:`
+      + ` ${escapeHtml(answer.verdict)}</b>${flags}, jenže <b>${changed}</b> buněk`
+      + " se od té doby kreslí jinak: ruka hraná jen zčásti měla plnou barvu, teď má"
+      + " mix s foldem. Tahle mřížka chce přečíst znovu.</p>",
+    stale: true,
+    kept: false,
+  };
+}
+
 const blocks = sorted.map((record, index) => {
   const mixed = Object.values(record.lenient).filter((actions) => actions.length > 1).length;
   const uneven = Object.values(record.mix ?? {})
@@ -338,6 +373,7 @@ const blocks = sorted.map((record, index) => {
         + " nestačí. Proto je níž v pořadí.</p>";
   return `<section id="${anchorOf(record, index)}">
   <h2>${escapeHtml(record.context)} &middot; ${escapeHtml(record.position)} ${record.bucket} BB &middot; ${escapeHtml(versus)}</h2>
+  ${answerNote(record).html}
   <p class="meta">dopad: ${impactText}</p>
   ${unlockText}${landingText}
   <p class="meta">rozložení stacků: <b>${escapeHtml(record.stackSetupId)}</b> &middot;
@@ -356,6 +392,15 @@ const blocks = sorted.map((record, index) => {
 let mixedHands = 0;
 let unevenHands = 0;
 let partialHands = 0;
+let keptAnswers = 0;
+let staleAnswers = 0;
+let unanswered = 0;
+for (const record of visible) {
+  const note = answerNote(record);
+  if (note.kept) keptAnswers += 1;
+  else if (note.stale) staleAnswers += 1;
+  else unanswered += 1;
+}
 for (const record of visible) {
   for (const ratio of Object.values(record.mix ?? {})) {
     mixedHands += 1;
@@ -388,6 +433,9 @@ const html = `<!doctype html>
  .key{display:inline-flex;align-items:center;gap:6px;margin-right:14px;font-size:12px}
  .key i{width:14px;height:14px;border-radius:2px;display:inline-block}
  .intro{background:#1a2130;padding:12px 16px;border-radius:8px;max-width:820px}
+ .recall{border-left:3px solid #7bd3ff;padding-left:10px}
+ .answered{border-left:3px solid #5fbf7f;padding-left:10px;color:#9fd6ae}
+ .stale{border-left:3px solid #e0a13c;padding-left:10px;color:#f0c477}
  code{background:#1a2130;padding:1px 4px;border-radius:3px}
  h2.plain{font-size:16px;margin:28px 0 8px}
  .hot{color:#ffb04a}
@@ -426,6 +474,12 @@ ${reviewAnswerBar()}
 <div class="intro">
 <p><b>${draft.recordCount} záznamů</b>, vytvořeno ${escapeHtml(draft.createdAt)}, důvěra
    <b>${escapeHtml(draft.confidence)}</b>. Nic z toho zatím není v produktu.</p>
+${history.origin === "" ? "" : `<p class="recall"><b>Co už jsi přečetl (${escapeHtml(history.readAt)}):</b>
+   z ${keptAnswers + staleAnswers + unanswered} mřížek na téhle stránce má
+   <b>${keptAnswers}</b> odpověď, která platí dál - ty se číst znovu nemusí.
+   <b>${staleAnswers}</b> se od tvého čtení kreslí jinak, protože ruka hraná jen
+   zčásti měla plnou barvu a teď má mix s foldem; ty chtějí přečíst znovu.
+   <b>${unanswered}</b> čeká na první čtení. U každé mřížky je to napsané nahoře.</p>`}
 <p>Co je potřeba posoudit: <b>jestli ty mřížky odpovídají tomu, co jsi koupil</b>.
    Mechanická kontrola ověřila, že se každá mřížka shoduje s počty kombinací,
    které uvádí její vlastní legenda - to ale říká jen, že se čtení nespletlo,
