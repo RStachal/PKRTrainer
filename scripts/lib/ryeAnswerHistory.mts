@@ -31,6 +31,54 @@ export interface RecordedAnswer {
   sourceFile: string;
   verdict: string;
   flags: string[];
+  /** Datum čtení, ze kterého tahle odpověď je. Různé mřížky se čtou různě dlouho. */
+  readAt: string;
+  /** Otisk mřížky v době odpovědi. Chybí u čtení z 9. 9. 2026, viz `isStale`. */
+  contentHash?: string;
+}
+
+/**
+ * Otisk toho, co čtenář na mřížce vidí.
+ *
+ * Skládá se z akcí a poměrů, ne z celého záznamu: jméno souboru, poznámky ani
+ * pořadí klíčů nemají odpověď shodit. Změní ho jen to, co mění obrázek - které
+ * ruce co hrají a jak často. Táž konstrukce jako `flopPilotContentHash`, aby se
+ * obě cesty chovaly stejně.
+ */
+export function gridContentHash(record: DraftRecord): string {
+  const parts: string[] = [];
+  for (const hand of Object.keys(record.lenient).sort()) {
+    parts.push(hand, (record.lenient[hand] ?? []).join(","));
+    const mix = record.mix?.[hand];
+    if (mix !== undefined) {
+      parts.push(Object.entries(mix).sort().map(([action, share]) => `${action}${share}`).join(""));
+    }
+  }
+  let hash = 5381;
+  const text = parts.join("|");
+  for (let index = 0; index < text.length; index += 1) {
+    hash = ((hash * 33) ^ text.charCodeAt(index)) >>> 0;
+  }
+  return `${hash.toString(16).padStart(8, "0")}-${text.length.toString(16)}`;
+}
+
+/**
+ * Změnila se mřížka od chvíle, kdy na ni majitel odpověděl?
+ *
+ * **S otiskem** je to přesné: liší se, tedy se změnilo právě to, co se
+ * posuzovalo. **Bez otisku** (čtení z 9. 9. 2026, které se na identitu
+ * překládalo až po opravě vah) se musí odhadovat, a jediná pravdivá věc, která
+ * se o té verzi stránky ví, je že kreslila ruku hranou zčásti jako jistotu -
+ * takže se za změněné berou právě mřížky s částečnou váhou.
+ *
+ * První verze používala tenhle odhad na **všechny** odpovědi, a bylo to špatně:
+ * po druhém čtení 10. 9., které už proběhlo nad opravenou stránkou, hlásila
+ * stránka pořád 29 mřížek k přečtení znovu. Odhad platí jen tam, kde se nedá
+ * měřit.
+ */
+export function isStale(record: DraftRecord, answer: RecordedAnswer): boolean {
+  if (answer.contentHash !== undefined) return answer.contentHash !== gridContentHash(record);
+  return partialWeightCells(record) > 0;
 }
 
 export interface AnswerHistory {
@@ -44,41 +92,56 @@ export interface AnswerHistory {
 const EMPTY: AnswerHistory = { origin: "", readAt: "", bySourceFile: new Map() };
 
 /**
- * Nejnovější zapsané odpovědi z `Agents/range-intake`.
+ * Zapsané odpovědi z `Agents/range-intake`, **poskládané přes sebe**.
  *
- * Bere se poslední podle jména (jsou datovaná), ne slučují se. Sloučení dvou
- * čtení by tiše vyrobilo verdikt, který nikdo nevydal.
+ * Čte se od nejstaršího k nejnovějšímu a novější odpověď na tutéž mřížku
+ * přebíjí starší. Není to slučování názorů - je to jeden verdikt na mřížku,
+ * ten poslední vydaný.
+ *
+ * ## Proč ne jen ten nejnovější soubor
+ *
+ * Do 10. 9. 2026 se bral poslední soubor podle jména. To fungovalo, dokud každé
+ * čtení pokrývalo celý draft. Ten den ale majitel přečetl **jen chipEV půlku**
+ * (67 mřížek ze 112), takže by se tím zahodily odpovědi na 45 ICM mřížek
+ * z 9. 9. - stránka by o nich tvrdila „bez odpovědi" a poslala ho číst znovu
+ * něco, co už přečetl.
+ *
+ * Datum se u každé mřížky nese vlastní, protože právě to čtenář potřebuje
+ * vědět: která odpověď je odkdy.
  */
 export function loadAnswerHistory(directory = "Agents/range-intake"): AnswerHistory {
   if (!existsSync(directory)) return EMPTY;
   const files = readdirSync(directory)
     .filter((name) => /^answers-\d{4}-\d{2}-\d{2}\.json$/.test(name))
     .sort();
-  const newest = files[files.length - 1];
-  if (newest === undefined) return EMPTY;
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(readFileSync(join(directory, newest), "utf8"));
-  } catch {
-    return EMPTY;
-  }
-  const file = parsed as { answers?: unknown };
-  if (!Array.isArray(file.answers)) return EMPTY;
+  if (files.length === 0) return EMPTY;
 
   const bySourceFile = new Map<string, RecordedAnswer>();
-  for (const row of file.answers) {
-    const answer = row as Partial<RecordedAnswer>;
-    if (typeof answer.sourceFile !== "string" || typeof answer.verdict !== "string") continue;
-    bySourceFile.set(answer.sourceFile, {
-      sourceFile: answer.sourceFile,
-      verdict: answer.verdict,
-      flags: Array.isArray(answer.flags) ? answer.flags.map(String) : [],
-    });
+  for (const name of files) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(readFileSync(join(directory, name), "utf8"));
+    } catch {
+      continue;
+    }
+    const file = parsed as { answers?: unknown };
+    if (!Array.isArray(file.answers)) continue;
+    const readAt = name.slice("answers-".length, "answers-".length + 10);
+    for (const row of file.answers) {
+      const answer = row as Partial<RecordedAnswer>;
+      if (typeof answer.sourceFile !== "string" || typeof answer.verdict !== "string") continue;
+      bySourceFile.set(answer.sourceFile, {
+        sourceFile: answer.sourceFile,
+        verdict: answer.verdict,
+        flags: Array.isArray(answer.flags) ? answer.flags.map(String) : [],
+        readAt,
+        ...(typeof answer.contentHash === "string" ? { contentHash: answer.contentHash } : {}),
+      });
+    }
   }
   return {
-    origin: join(directory, newest),
-    readAt: newest.slice("answers-".length, "answers-".length + 10),
+    origin: files.map((name) => join(directory, name)).join(", "),
+    readAt: files[files.length - 1].slice("answers-".length, "answers-".length + 10),
     bySourceFile,
   };
 }

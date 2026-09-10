@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
+import { gridContentHash } from "./lib/ryeAnswerHistory.mts";
 import {
   type DraftFile,
   type DraftRecord,
@@ -92,7 +93,9 @@ if (body.length === 0) {
 const byVerdict = new Map<string, DraftRecord[]>();
 const flagCounts = new Map<string, number>();
 const unknown: string[] = [];
-const resolved: { sourceFile: string; verdict: string; flags: string[] }[] = [];
+const resolved: {
+  sourceFile: string; verdict: string; flags: string[]; contentHash: string;
+}[] = [];
 
 for (const token of body.split(/\s+/)) {
   const match = /^(\d+)([ox?s])([1-5]*)$/.exec(token);
@@ -105,6 +108,10 @@ for (const token of body.split(/\s+/)) {
     sourceFile: record.sourceFile,
     verdict: VERDICT_LABEL[match[2]] ?? match[2],
     flags: [...match[3]].map((flag) => FLAG_LABEL[flag] ?? flag),
+    // Otisk toho, nad čím se odpovídalo. Bez něj se dá jen odhadovat, jestli
+    // odpověď ještě platí - a odhad z 9. 9. 2026 poslal majitele číst znovu
+    // 29 mřížek, které se od jeho čtení nezměnily.
+    contentHash: gridContentHash(record),
   });
 }
 

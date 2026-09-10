@@ -16,7 +16,7 @@ import {
   reviewAnswerOption,
   reviewAnswerScript,
 } from "./lib/reviewAnswerMemory.mts";
-import { loadAnswerHistory, partialWeightCells } from "./lib/ryeAnswerHistory.mts";
+import { isStale, loadAnswerHistory, partialWeightCells } from "./lib/ryeAnswerHistory.mts";
 
 /**
  * Draft ranží k přečtení člověkem, jako mřížky - ne jako JSON.
@@ -313,11 +313,11 @@ const history = loadAnswerHistory();
 function answerNote(record: DraftRecord): { html: string; stale: boolean; kept: boolean } {
   const answer = history.bySourceFile.get(record.sourceFile);
   if (answer === undefined) return { html: "", stale: false, kept: false };
-  const changed = partialWeightCells(record);
+  const changed = isStale(record, answer) ? Math.max(1, partialWeightCells(record)) : 0;
   const flags = answer.flags.length === 0 ? "" : ` (${escapeHtml(answer.flags.join(", "))})`;
   if (changed === 0) {
     return {
-      html: `<p class="meta answered"><b>Odpověď z ${escapeHtml(history.readAt)}:`
+      html: `<p class="meta answered"><b>Odpověď z ${escapeHtml(answer.readAt)}:`
         + ` ${escapeHtml(answer.verdict)}</b>${flags}. Na téhle mřížce se od té doby`
         + " nezměnilo nic - číst znovu netřeba.</p>",
       stale: false,
@@ -325,7 +325,7 @@ function answerNote(record: DraftRecord): { html: string; stale: boolean; kept: 
     };
   }
   return {
-    html: `<p class="meta stale"><b>Odpověď z ${escapeHtml(history.readAt)}:`
+    html: `<p class="meta stale"><b>Odpověď z ${escapeHtml(answer.readAt)}:`
       + ` ${escapeHtml(answer.verdict)}</b>${flags}, jenže <b>${changed}</b> buněk`
       + " se od té doby kreslí jinak: ruka hraná jen zčásti měla plnou barvu, teď má"
       + " mix s foldem. Tahle mřížka chce přečíst znovu.</p>",
@@ -474,7 +474,7 @@ ${reviewAnswerBar()}
 <div class="intro">
 <p><b>${draft.recordCount} záznamů</b>, vytvořeno ${escapeHtml(draft.createdAt)}, důvěra
    <b>${escapeHtml(draft.confidence)}</b>. Nic z toho zatím není v produktu.</p>
-${history.origin === "" ? "" : `<p class="recall"><b>Co už jsi přečetl (${escapeHtml(history.readAt)}):</b>
+${history.origin === "" ? "" : `<p class="recall"><b>Co už jsi přečetl (naposled ${escapeHtml(history.readAt)}):</b>
    z ${keptAnswers + staleAnswers + unanswered} mřížek na téhle stránce má
    <b>${keptAnswers}</b> odpověď, která platí dál - ty se číst znovu nemusí.
    <b>${staleAnswers}</b> se od tvého čtení kreslí jinak, protože ruka hraná jen
