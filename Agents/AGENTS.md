@@ -300,6 +300,38 @@ je tedy brána — a byla to jediná brána v projektu, kterou nic neměřilo. P
    teprve falzifikace: stránka rozbitá schválně **musí** spadnout, jinak se
    neměří nic. Platí to pro každé měřidlo tady, viz pravidlo 6.
 
+### 9. Než postavíš výrobce, najdi odběratele — a ověř, že mu to vydrží
+
+Zapsáno 10. 9. 2026, po dvou nálezech téhož dne, které se liší jen tím, na které
+straně řetězu chybí konec.
+
+**První: výrobce bez odběratele.** Majitel schválil 61 mřížek obrany proti
+otevření a chystal jsem se postavit importér. Zeptal jsem se nejdřív, kudy by
+ten obsah šel k hráči, a odpověď byla **nikudy**: `RangeRecord` nese `vsSeat`,
+`getRangeRecord` ho v žebříčku upřesnění umí použít, ale **jediné volání
+v produktu ho nepředává** a `RangeKey` to pole nemá. Produkční cesta ho navíc
+při kopírování zahazuje, takže dvě mřížky lišící se otvíračem by shodily
+načtení packu duplicitním klíčem. Importér by byl den práce na obsah, o který si
+nikdo neřekne. Změřeno (`mtt:opener-axis`), že z 61 mřížek by pod dnešním
+předpokladem dorazilo **6**.
+
+**Druhé: odběratel, kterému to vezme noc.** Turnová EV se dodala týž den
+(49 % rozdaných spotů) a váže se na otisk turnového packu. `mtt:after-night`
+packy přegenerovává a o turnové EV **nevěděl** - první noc po dodání by tedy
+každé přestavěné rodině tabulku odpojila a EV by zmizela **bez hlášky**.
+Riverová obdoba tam byla od 27. 8., turnová chyběla, protože vznikla o tři
+hodiny dřív než ten nález.
+
+Z toho dvě povinnosti, obě levné a obě se dají udělat **před** prací:
+
+1. **Najdi volání, které si o ten obsah řekne.** Ne pole ve schématu, ne funkci,
+   která by to uměla - skutečné volání na cestě k hráči. Když neexistuje, je
+   práce na obsahu předčasná a patří nejdřív ta cesta.
+2. **Najdi, co ten obsah zneplatní, a ověř, že to někdo uklidí.** Všechno, co
+   se váže na otisk, zastarává při první přestavbě. Cyklus, který přestavuje,
+   musí o každé takové vazbě vědět - jinak se hodnota tiše vrátí na nulu a
+   měření to ukáže až za den.
+
 ### Co tím nezmizí
 
 Zpětné kroky se nedají vypnout úplně. Když oprava odhalí hlubší vadu - třeba že

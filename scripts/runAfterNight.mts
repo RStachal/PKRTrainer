@@ -54,6 +54,8 @@ const SCRIPT_PATH: Readonly<Record<string, string>> = {
   "mtt:playable-beta": "scripts/checkMttPlayableBeta.mts",
   "bundle:budget": "scripts/checkBundleBudget.mts",
   "mtt:river-ev-stale": "scripts/checkRiverEvStaleness.mts",
+  "mtt:turn-ev-stale": "scripts/checkTurnEvStaleness.mts",
+  "mtt:turn-ev-pack": "scripts/buildTurnEvPacks.mts",
 };
 
 /**
@@ -511,6 +513,69 @@ if (!write) {
         console.log(`    npm run mtt:river-pack -- --family=${skipped[0]} --write --ev`);
         // Nedokončená obnova není v pořádku: hráč uvidí u těch rodin spot bez
         // EV a nic mu neřekne proč. Cyklus proto skončí nenulově.
+        process.exitCode = 1;
+      }
+    }
+  }
+
+  /**
+   * Turnová EV zastarává úplně stejně jako riverová - jen o ni cyklus do
+   * 10. 9. 2026 nevěděl.
+   *
+   * Tabulka se váže na otisk turnového packu (`matchesTurnPack`), a tenhle
+   * cyklus packy **přegenerovává**. Každá přestavěná rodina by tím svou tabulku
+   * odpojila a EV by hráči zmizela **bez jediné hlášky** - přesně ta tichá
+   * ztráta, kvůli které vznikla riverová obdoba o pár řádků výš. Turnová EV
+   * vznikla teprve dnes a dodává **49 % rozdaných turnových spotů**, takže by
+   * první noc po dodání tiše sebrala skoro všechno.
+   *
+   * Ptá se **z vlastního procesu** ze stejného důvodu jako river: uvnitř tohohle
+   * je obsah vložený esbuildem při startu, tedy před přegenerováním.
+   */
+  console.log("\nturnová EV");
+  {
+    // Souhrn detektor píše na stderr, jména rodin na stdout - a `run` vrací jen
+    // stdout, takže se nic filtrovat nemusí. Táž dvojice jako u riveru, a
+    // schválně stejná: dvě různá parsování téhož tvaru se rozejdou.
+    const stale = run("mtt:turn-ev-stale")
+      .split("\n").map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    if (stale.length === 0) {
+      console.log("  žádná tabulka nezastarala");
+    } else {
+      // Rozpočet zvlášť, ne sdílený s riverem: měřeno 10. 9. 2026 na šesti
+      // rodinách 95 az 1 242 s, medián kolem 300. Osmačtyřicet rodin je tím
+      // sedm hodin, takže se stejně jako u riveru počítá s tím, že se dávka
+      // nemusí stihnout - a co zbylo, se řekne nahlas.
+      const budgetMinutes = Number(
+        process.argv.find((arg) => arg.startsWith("--turn-ev-minutes="))?.split("=")[1] ?? 120,
+      );
+      const deadline = Date.now() + budgetMinutes * 60_000;
+      console.log(`  zastaralo ${stale.length} tabulek, přepočítávám (rozpočet ${budgetMinutes} min)`);
+      let repaired = 0;
+      const skipped: string[] = [];
+      for (const [index, family] of stale.entries()) {
+        if (Date.now() >= deadline) { skipped.push(...stale.slice(index)); break; }
+        const started = Date.now();
+        try {
+          run("mtt:turn-ev-pack", [`--family=${family}`, "--write", "--no-manifest"]);
+          repaired += 1;
+          console.log(`  ${family}: ${Math.round((Date.now() - started) / 1000)} s`);
+        } catch {
+          console.log(`  ${family}: generátor odmítl`);
+        }
+      }
+      // Manifest až na konec a z disku: běhy ho nepíšou, aby si ho nepřepsaly.
+      if (repaired > 0) run("mtt:turn-ev-pack", ["--manifest-only"]);
+      const left = run("mtt:turn-ev-stale")
+        .split("\n").map((line) => line.trim())
+        .filter((line) => line.length > 0);
+      console.log(`  přepočítáno ${repaired} z ${stale.length}, zůstává zastaralých: ${left.length}`);
+      if (left.length > 0 || skipped.length > 0) {
+        if (skipped.length > 0) {
+          console.log(`  ROZPOČET ČASU VYPRŠEL, zbývá ${skipped.length} rodin bez turnové EV:`);
+          console.log(`    npm run mtt:turn-ev-pack -- --family=${skipped[0]} --write`);
+        }
         process.exitCode = 1;
       }
     }
