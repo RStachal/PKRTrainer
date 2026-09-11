@@ -95,6 +95,25 @@ const MAX_PRECACHE_GZIP_KB = numberFromEnv("BUNDLE_MAX_PRECACHE_GZIP_KB", 128);
  * se dá vygenerovat kratší, aniž by se cokoli hnulo v obsahu.
  */
 const MAX_LAZY_MTT_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_JS_KB", 528);
+/**
+ * Strop na **jeden chunk tabulky turnové EV**, zvlášť od strategických packů.
+ *
+ * **Přidáno 11. 9. 2026 na rozhodnutí majitele („zvednout obojí").** Do té doby
+ * platil pro tabulky týž strop jako pro packy (528 / 128) a generátor na něj
+ * ořezával: 21 ze 48 rodin sedělo na stropu a z řádků, které jsou nad prahem
+ * a tedy dodatelné, **zahodil ořez čtvrtinu** (bod 236). Rozpočtová křivka
+ * (`mtt:turn-ev-pack -- --budget-curve`, 24 rodin) ukázala lineární výnos:
+ * 1 024 KiB koupí +28,1 % dodaných řádků za +25,8 % velikosti.
+ *
+ * Tohle je ten strop, který **platí hráč**: chunk se stáhne, když na rodinu
+ * dojde. Při 1 024 raw je gzip kolem 150 az 200 KiB na rodinu. Dvojnásobek by
+ * dodal zbylých 7 % za 300 az 400 KiB - to se nechává na příště, s čísly.
+ *
+ * Generátor ořezává na 1 024 KiB raw a 256 gzip (`TURN_EV_BUDGET_BYTES`);
+ * tady je rezerva na obálku chunku, stejně jako u packů (500 proti 528).
+ */
+const MAX_TURN_EV_JS_KB = numberFromEnv("BUNDLE_MAX_TURN_EV_JS_KB", 1100);
+const MAX_TURN_EV_GZIP_KB = numberFromEnv("BUNDLE_MAX_TURN_EV_GZIP_KB", 272);
 const MAX_LAZY_MTT_GZIP_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128);
 /**
  * Syrový součet **celé** líné knihovny, v kB.
@@ -146,6 +165,16 @@ const MAX_LAZY_MTT_GZIP_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128);
  * ne záhada.
  *
  * Historie:
+ *
+ * **Počtvrté, raw 76 800 -> 84 992 a gzip 11 264 -> 12 288, dne 11. 9. 2026.**
+ * Den po dodání turnové EV se změřilo, že z řádků nad prahem zahodí ořez na
+ * 500 KiB čtvrtinu (bod 236). Majitel rozhodl zvednout strop modulu i součtu -
+ * a zároveň řekl, že při dalším narážení přijde na řadu silnější stroj a že
+ * se chystá **cash game a SNG**, tedy další násobky celé knihovny. Tohle je
+ * tedy vědomě krátkodobé zvednutí konstanty, ne strategie; příští návrh má
+ * obsahovat i dělení knihovny po variantách (profil se vybírá při startu
+ * relace, hráč nikdy nepotřebuje víc než jednu). Očekáváno po přestavbě:
+ * raw kolem 80 000 KiB (rezerva ~4 noci), gzip kolem 10 800 (rezerva ~9).
  *
  * **Zvednuto potřetí, raw 65 536 -> 76 800 a gzip 8 192 -> 11 264, dne
  * 10. 9. 2026.** Majitel zvolil dodat turnovou EV **všem 48 rodinám**, a tohle
@@ -202,10 +231,10 @@ const MAX_LAZY_MTT_GZIP_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_GZIP_KB", 128);
  * `resolveJsonModule` čte všechny. Není to vada obsahu ani typů, je to zděděná
  * mez - proto má `build` i `typecheck` v `package.json` explicitních 8 GB.
  */
-const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 76800);
+const MAX_LAZY_MTT_TOTAL_JS_KB = numberFromEnv("BUNDLE_MAX_LAZY_MTT_TOTAL_JS_KB", 84992);
 const MAX_LAZY_MTT_TOTAL_GZIP_KB = numberFromEnv(
   "BUNDLE_MAX_LAZY_MTT_TOTAL_GZIP_KB",
-  11264,
+  12288,
 );
 // The equity table is fetched when a session starts, so it is off the install
 // path and does not belong in the precache totals - but it is not an MTT
@@ -275,12 +304,20 @@ for (const file of jsFiles) {
     precacheGzipKb += gzipKb;
   }
 
-  const rawLimit = lazyMttProduction
-    ? MAX_LAZY_MTT_JS_KB
-    : deferred ? MAX_DEFERRED_JS_KB : MAX_JS_KB;
-  const gzipLimit = lazyMttProduction
-    ? MAX_LAZY_MTT_GZIP_KB
-    : deferred ? MAX_DEFERRED_GZIP_KB : MAX_GZIP_KB;
+  // Tabulka turnové EV má vlastní strop na chunk. Je to jediný druh obsahu,
+  // u kterého majitel 11. 9. 2026 rozhodl vyměnit místo za dodání (viz
+  // MAX_TURN_EV_JS_KB níž); strategické packy zůstávají na 528 / 128.
+  const turnEv = /^mtt-turn-ev-solved-/.test(file);
+  const rawLimit = turnEv
+    ? MAX_TURN_EV_JS_KB
+    : lazyMttProduction
+      ? MAX_LAZY_MTT_JS_KB
+      : deferred ? MAX_DEFERRED_JS_KB : MAX_JS_KB;
+  const gzipLimit = turnEv
+    ? MAX_TURN_EV_GZIP_KB
+    : lazyMttProduction
+      ? MAX_LAZY_MTT_GZIP_KB
+      : deferred ? MAX_DEFERRED_GZIP_KB : MAX_GZIP_KB;
   if (rawKb > rawLimit) {
     hasFailure = true;
     console.error(`${file} exceeds raw JS budget: ${rawKb.toFixed(2)} KiB > ${rawLimit} KiB`);

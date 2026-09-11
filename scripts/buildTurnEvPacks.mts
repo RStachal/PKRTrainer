@@ -34,7 +34,6 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { gzipSync } from "node:zlib";
 import { join } from "node:path";
 
-import { MODULE_BUDGET_BYTES } from "./lib/solvedPackBuilding.mts";
 import { windowNotice } from "./lib/machineWindow.mts";
 import { loadAllSolvedTurnPacks } from "../src/data/ranges/turnSolvedStrategyPacks";
 import { solvedTurnSpots } from "../src/data/ranges/solvedTurnSpotCatalogue";
@@ -50,6 +49,36 @@ const MANIFEST_PATH = "src/data/ranges/turnEvManifest.generated.ts";
 
 /** Pokrytí, pod kterým se EV nedodá. */
 const MIN_COVERED = 0.99;
+
+/**
+ * Vlastní strop tabulky turnové EV, ne sdílený `MODULE_BUDGET_BYTES`.
+ *
+ * **Zvednuto 11. 9. 2026 z 500 na 1 024 KiB raw a ze 120 na 256 KiB gzip na
+ * rozhodnutí majitele** („zvednout obojí"). Důvod je změřený, ne odhadnutý:
+ * při 500 KiB sedělo 21 ze 48 rodin na stropu a z řádků, které jsou nad prahem
+ * a tedy dodatelné, **zahodil ořez čtvrtinu** (bod 236). Rozpočtová křivka
+ * (`--budget-curve`) na 24 rodinách:
+ *
+ * | strop | +řádků EV | +velikost |
+ * |---|---|---|
+ * | 640 | +13,2 % | +11,6 % |
+ * | 768 | +19,7 % | +17,5 % |
+ * | **1024** | **+28,1 %** | **+25,8 %** |
+ * | 1280 | +32,2 % | +30,4 % |
+ * | 2048 | +35,0 % (nic se neořezává) | +34,2 % |
+ *
+ * Výnos je lineární - žádné koleno - takže volba je jen o tom, kolik knihovny
+ * a kolik stahování na rodinu si dovolit. 1 024 bere 80 % možného zisku za
+ * chunk, který hráč stáhne v gzipu kolem 150 az 200 KiB; 2 048 by bral všechno
+ * za 300 az 400 KiB na rodinu. Strop sdílený se strategickými packy se
+ * nezvedá: tam to nikdo neměřil a bod 157 říká, že river na něm sedí.
+ *
+ * Gzip strop se zvedá úměrně, protože `sizeOf` přepočítává gzip na měřítko raw
+ * poměrem těch dvou čísel - kdyby zůstal na 120, stal by se z něj tichý ořez
+ * o patro níž.
+ */
+const TURN_EV_BUDGET_BYTES = 1024 * 1024;
+const TURN_EV_GZIP_BUDGET_BYTES = 256 * 1024;
 
 const argv = process.argv.slice(2);
 const shouldWrite = argv.includes("--write");
@@ -470,12 +499,11 @@ function buildPack(packPath: string): {
   // `MTT9_25BB_BTN_SB_SRP` dala 543 KiB raw, tedy **přes strop chunku 528**,
   // takže bez ořezu by pack neprošel branou. Gzip se přepočte na měřítko raw,
   // aby šla obě omezení porovnat jedním číslem.
-  const GZIP_BUDGET_BYTES = 120 * 1024;
   const sizeOf = (rows: readonly (EvRule | null)[]): number => {
     const text = documentOf(rows);
     return Math.max(
       Buffer.byteLength(text, "utf8"),
-      gzipSync(Buffer.from(text, "utf8")).length * (MODULE_BUDGET_BYTES / GZIP_BUDGET_BYTES),
+      gzipSync(Buffer.from(text, "utf8")).length * (TURN_EV_BUDGET_BYTES / TURN_EV_GZIP_BUDGET_BYTES),
     );
   };
   // Ořezává se od nejméně dosahovaného pravidla, ne od konce pole: turnový pack
@@ -511,7 +539,7 @@ function buildPack(packPath: string): {
     curveByFamily.set(familyId, trace);
   }
 
-  while (dropped < byReach.length && sizeOf(rules) > MODULE_BUDGET_BYTES) {
+  while (dropped < byReach.length && sizeOf(rules) > TURN_EV_BUDGET_BYTES) {
     // Po deseti, aby se dokument nestavěl pro každé jedno pravidlo znovu.
     for (let step = 0; step < 10 && dropped < byReach.length; step += 1) {
       rules[byReach[dropped]] = null;
