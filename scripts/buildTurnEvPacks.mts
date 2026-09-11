@@ -77,6 +77,10 @@ const AVERAGE_TABLE_GZIP_BYTES = 84 * 1024;
 const skipExisting = argv.includes("--skip-existing");
 /** Vypsat rozložení pokrytí u řádků, místo aby se jen zahodily. */
 const coverageReport = argv.includes("--coverage-report");
+/** Projit orez cely a vypsat, co by ktera vyse stropu koupila. */
+const budgetCurve = argv.includes("--budget-curve");
+const curveByFamily = new Map<string, { kept: number; rows: number; bytes: number }[]>();
+
 const COVERAGE_EDGES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.01];
 const COVERAGE_LABELS = [
   "0,0-0,1", "0,1-0,2", "0,2-0,3", "0,3-0,4", "0,4-0,5", "0,5-0,6",
@@ -479,6 +483,34 @@ function buildPack(packPath: string): {
   const byReach = [...built.keys()]
     .sort((left, right) => (pack.rules[left].spot?.reach ?? 0) - (pack.rules[right].spot?.reach ?? 0));
   let dropped = 0;
+  /**
+   * Křivka: co by která výše stropu koupila.
+   *
+   * Majitel 11. 9. 2026 rozhodl zvednout strop modulu i součtu a chtěl vědět
+   * na kolik. Odhadnout to nejde - tabulka není lineární v počtu pravidel,
+   * protože delta-kódování a gzip závisí na tom, **která** pravidla zůstanou.
+   * Jediný poctivý způsob je projít ořez celý a zapsat, kde se protne s jakým
+   * stropem. Stojí to tentýž průchod, co ořez dělá tak jako tak.
+   */
+  if (budgetCurve) {
+    const trace: { kept: number; rows: number; bytes: number }[] = [];
+    const scratch = [...rules];
+    let cut = 0;
+    const rowsOf = (list: readonly (EvRule | null)[]): number => list.reduce(
+      (sum, rule) => sum + (rule === null ? 0 : rule.v.filter((value) => value !== null).length),
+      0,
+    );
+    while (true) {
+      trace.push({ kept: built.size - cut, rows: rowsOf(scratch), bytes: sizeOf(scratch) });
+      if (cut >= byReach.length) break;
+      for (let step = 0; step < 10 && cut < byReach.length; step += 1) {
+        scratch[byReach[cut]] = null;
+        cut += 1;
+      }
+    }
+    curveByFamily.set(familyId, trace);
+  }
+
   while (dropped < byReach.length && sizeOf(rules) > MODULE_BUDGET_BYTES) {
     // Po deseti, aby se dokument nestavěl pro každé jedno pravidlo znovu.
     for (let step = 0; step < 10 && dropped < byReach.length; step += 1) {
@@ -649,6 +681,30 @@ if (coverageReport) {
       + `  ${(100 * count / Math.max(1, total)).toFixed(1)} %`);
   }
   console.log("  pásmo 0,95-0,99 je to, co se spočítalo a zahodilo o poslední procenta");
+}
+if (budgetCurve) {
+  const LEVELS_KIB = [500, 640, 768, 1024, 1280, 1536, 2048];
+  console.log("");
+  console.log("co by koupila která výše stropu modulu (dnes 500 KiB):");
+  console.log("  strop    pravidel   řádků EV   skutečně KiB");
+  for (const level of LEVELS_KIB) {
+    let kept = 0;
+    let rows = 0;
+    let bytes = 0;
+    for (const trace of curveByFamily.values()) {
+      // První bod odshora, který se do stropu vejde. Křivka jde od „všechno
+      // ponecháno" dolů, takže se hledá první, co projde.
+      const point = trace.find((item) => item.bytes <= level * 1024) ?? trace[trace.length - 1];
+      kept += point.kept;
+      rows += point.rows;
+      bytes += point.bytes / 1024;
+    }
+    console.log(
+      `  ${String(level).padStart(4)} KiB ${String(kept).padStart(9)} ${String(rows).padStart(10)}`
+      + ` ${bytes.toFixed(0).padStart(13)}`,
+    );
+  }
+  console.log("  (součty přes rodiny v tomhle běhu, ne přes všech 48)");
 }
 if (!shouldWrite) console.log("Nezapsáno. Zápis: přidat --write");
 if (written.length > 0) console.log(`zapsáno ${written.length} tabulek do ${OUT_DIR}`);

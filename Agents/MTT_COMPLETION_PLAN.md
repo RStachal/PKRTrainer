@@ -16,12 +16,21 @@ Stav k 26. 8. 2026 večer, celý `npm run mtt:post-answer`:
 | akce v matici | dodáno na všech třech ulicích |
 | blafovací lajna | dodáno; **0 zamlčených z 900** spotů, kde ji obsah má |
 | EV river | **89,7 %** rozdaných riverových spotů, 47/47 rodin |
-| EV turn a flop | **rozhodnuto nedodávat** - vrstvu má 3,9 % podher, zbytek je 193 nocí |
+| EV turn | **dodáno 10. 9. 2026: 49,0 %** rozdaných turnových spotů, 48/48 rodin (body 231, 236). Rozhodnutí z 26. 8. padlo: pokrytí nebylo 3,9 %, ale sedminásobek |
+| EV flop | **nedodává se**, a je to změřené (bod 218): ocenitelných je 15,0 % turnových karet a žádná ze 751 desek nemá ani čtvrtinu |
 | EV preflop | **33,1 %**; zbytek není práce v kódu, ale chybějící export (bod 136) |
 
 Fáze je tím uzavřená v tom smyslu, v jakém uzavřít jde: co šlo doručit, doručeno
 je; co doručit nejde, je změřené a rozhodnuté; a jediná otevřená položka čeká na
 obsah zvenčí, ne na práci.
+
+> **Doplněno 11. 9. 2026.** Turnová EV se mezitím dodala a tím se ukázalo,
+> že doručení má ještě jedno patro: z toho, co je nad prahem a tedy
+> dodatelné, **zahodí čtvrtinu rozpočet modulu** (bod 236). Majitel téhož
+> dne rozhodl zvednout strop modulu i součtu a zároveň poznamenal, že při
+> dalším narážení přijde na řadu silnější stroj - a že se časem chystá
+> **cash game a SNG**, tedy další násobky celé knihovny. Stropy jsou dnes
+> kalibrované na jedinou variantu.
 
 Původní stav po opravě z 25. 8. 2026:
 
