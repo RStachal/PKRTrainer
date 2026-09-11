@@ -75,6 +75,19 @@ const AVERAGE_TABLE_GZIP_BYTES = 84 * 1024;
  * odznova od nejrozdávanější rodiny - tedy hodiny práce na tom, co už hotové je.
  */
 const skipExisting = argv.includes("--skip-existing");
+/** Vypsat rozložení pokrytí u řádků, místo aby se jen zahodily. */
+const coverageReport = argv.includes("--coverage-report");
+const COVERAGE_EDGES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.01];
+const COVERAGE_LABELS = [
+  "0,0-0,1", "0,1-0,2", "0,2-0,3", "0,3-0,4", "0,4-0,5", "0,5-0,6",
+  "0,6-0,7", "0,7-0,8", "0,8-0,9", "0,9-0,95", "0,95-0,99", "0,99 a vys (DODANO)",
+];
+const coverageBuckets = new Array<number>(COVERAGE_EDGES.length).fill(0);
+function bucketOf(share: number): number {
+  for (const [index, edge] of COVERAGE_EDGES.entries()) if (share < edge) return index;
+  return COVERAGE_EDGES.length - 1;
+}
+
 /**
  * Rozdělení dávky na běhy, `--shard=1/4` az `--shard=4/4`.
  *
@@ -341,6 +354,21 @@ function buildPack(packPath: string): {
       });
       // Řádek pod prahem se nedodá. Prahuje se po řádcích, ne přes celé
       // pravidlo: pod jednou akcí může ležet vrstva celá a pod sestrou nic.
+      // Rozložení pokrytí u řádků pod prahem.
+      //
+      // Bez něj se nedá odpovědět na otázku, která rozhoduje o rozvrhu nocí:
+      // **jak daleko** jsou nedodané řádky. Změřeno 11. 9. 2026, že jedenáct
+      // nových riverových vrstev pod jednou rodinou nezměnilo ani jednu
+      // hodnotu - a z toho se nepozná, jestli jsou ty řádky na 0,2 nebo na
+      // 0,98. První případ znamená roky nocí, druhý pár týdnů.
+      if (coverageReport) {
+        for (const row of result.rows) {
+          // Horní pásmo se dělí jemněji schválně: práh je 0,99, takže
+          // „0,9 az 1,0" míchá dodané řádky s těmi, kterým chybí poslední
+          // procento - a to je celý rozdíl mezi „hotovo" a „zahozeno".
+          coverageBuckets[bucketOf(row.coveredShare)] += 1;
+        }
+      }
       const usable = result.rows.filter((row) => row.coveredShare >= MIN_COVERED);
       if (usable.length === 0) continue;
 
@@ -611,6 +639,17 @@ console.log("");
 console.log(`celkem ${chosen.length} packů: pravidel s EV ${filledTotal} z ${ruleTotal}`
   + ` (${(100 * filledTotal / Math.max(1, ruleTotal)).toFixed(1)} %)`);
 console.log(`  raw ${(rawTotal / 1024 / 1024).toFixed(2)} MB, gzip ${(gzipTotal / 1024 / 1024).toFixed(2)} MB`);
+if (coverageReport) {
+  const total = coverageBuckets.reduce((sum, value) => sum + value, 0);
+  console.log("");
+  console.log(`rozložení pokrytí řádků (celkem ${total}):`);
+  for (const [index, count] of coverageBuckets.entries()) {
+    if (count === 0) continue;
+    console.log(`  ${(COVERAGE_LABELS[index] ?? "?").padEnd(20)} ${String(count).padStart(8)}`
+      + `  ${(100 * count / Math.max(1, total)).toFixed(1)} %`);
+  }
+  console.log("  pásmo 0,95-0,99 je to, co se spočítalo a zahodilo o poslední procenta");
+}
 if (!shouldWrite) console.log("Nezapsáno. Zápis: přidat --write");
 if (written.length > 0) console.log(`zapsáno ${written.length} tabulek do ${OUT_DIR}`);
 /**
