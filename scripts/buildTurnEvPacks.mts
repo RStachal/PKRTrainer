@@ -104,6 +104,19 @@ const AVERAGE_TABLE_GZIP_BYTES = 84 * 1024;
  * odznova od nejrozdávanější rodiny - tedy hodiny práce na tom, co už hotové je.
  */
 const skipExisting = argv.includes("--skip-existing");
+/**
+ * Seznam rodin ze souboru, jedna na řádek.
+ *
+ * Kvůli přerušené dávce: 11. 9. 2026 musela přestavba uhnout paměti (VMware
+ * majitele 17 GB) po sedmi rodinách ze 48. `--skip-existing` tu nepomůže,
+ * tabulku má každá rodina - jen sedm na novém stropu a zbytek na starém, a to
+ * se ze souboru nepozná. Seznam říká přesně, které dodělat, a nic se
+ * nepřepočítává dvakrát.
+ */
+const familiesFile = /--families-file=(\S+)/.exec(argv.join(" "))?.[1];
+const familiesWanted = familiesFile === undefined
+  ? undefined
+  : new Set(readFileSync(familiesFile, "utf8").split(/\r?\n/).map((line) => line.trim()).filter(Boolean));
 /** Vypsat rozložení pokrytí u řádků, místo aby se jen zahodily. */
 const coverageReport = argv.includes("--coverage-report");
 /** Projit orez cely a vypsat, co by ktera vyse stropu koupila. */
@@ -617,6 +630,7 @@ const chosen = packs
     || name.toLowerCase().includes(familyFilter.toLowerCase().replace(/_/g, "-")))
   // Tabulka má stejné jméno jako pack, jen v jiném adresáři.
   .filter((name) => !skipExisting || !existsSync(join(OUT_DIR, name)))
+  .filter((name) => familiesWanted === undefined || familiesWanted.has(familyOfFile(name)))
   .sort((left, right) => (
     (reachByFamily.get(familyOfFile(right)) ?? 0) - (reachByFamily.get(familyOfFile(left)) ?? 0)
   ))
