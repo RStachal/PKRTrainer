@@ -230,6 +230,25 @@ def refresh_night_priority():
             log(f"  {line.strip()}")
     log(f"denní vyhodnocení hotové za {time.time() - started:.0f} s")
 
+    # A hned za ním seznam, kam mají jít riverové vrstvy kvůli turnové EV.
+    # Píše se tady, ne ráno: mezi ránem a nocí se packy přestaví, takže by
+    # ranní seznam mířil na pravidla, která už neexistují. Stejná nefatální
+    # sémantika jako u vyhodnocení výš - bez seznamu se jede podle dosahu.
+    try:
+        result = subprocess.run(
+            ["npm", "run", "mtt:night-turn-ev", "--", "--write"],
+            cwd=REPO, capture_output=True, text=True, shell=True,
+            timeout=DAILY_TIMEOUT_SECONDS,
+        )
+        if result.returncode == 0:
+            for line in (result.stdout or "").splitlines():
+                if "prioritní seznam" in line or "bez vrstvy" in line:
+                    log(f"  {line.strip()}")
+        else:
+            log(f"prioritní seznam turnové EV se nezapsal (rc={result.returncode}); jedu podle dosahu")
+    except Exception as error:
+        log(f"prioritní seznam turnové EV se nepodařilo spustit ({error}); jedu podle dosahu")
+
 
 def should_yield_to_new_families():
     """Hláška o ustoupení, nebo `None` když se má rozkládat.
@@ -822,7 +841,26 @@ def turn_subgames_by_reach(limit):
         bucket.sort(key=lambda row: row["reach"], reverse=True)
 
     queues = sorted(by_directory.values(), key=lambda bucket: bucket[0]["reach"], reverse=True)
+    # Nejdřív podhry, ve kterých sedí dodávané turnové pravidlo bez vrstvy.
+    #
+    # Změřeno 12. 9. 2026 (`npm run mtt:night-turn-ev`): z 9 663 podher, které
+    # hostí dodávané pravidlo, má vrstvu 2 224 a 7 439 žádnou - a z včerejších
+    # 145 vrstev padlo pod dodávané pravidlo jen 52. Zbytek šel do podher, ve
+    # kterých se nic nerozdává, protože dosah podhry a dosah pravidla není
+    # totéž: pack drží ~260 pravidel na rodinu, podher je násobek. Turnová EV
+    # od bodu 237 nemá strop, takže každá vrstva pod dodávaným pravidlem se
+    # dodá. Seznam píše denní skript, noc ho bere před vlastní výběr; když
+    # chybí nebo dojde, jede se postaru.
     picked = []
+    seen = set()
+    for row in turn_ev_priority(rows):
+        if limit is not None and len(picked) >= limit:
+            break
+        picked.append(row)
+        seen.add(row["path"])
+    if picked:
+        log(f"  {len(picked)} podher napřed podle dodávaných turnových pravidel bez vrstvy")
+
     index = 0
     # `limit=None` znamená všechny; pořadí platí dál, jen konec určí deadline.
     while limit is None or len(picked) < limit:
@@ -832,12 +870,38 @@ def turn_subgames_by_reach(limit):
                 continue
             if limit is not None and len(picked) >= limit:
                 break
+            if bucket[index]["path"] in seen:
+                placed += 1
+                continue
             picked.append(bucket[index])
             placed += 1
         if placed == 0:
             break
         index += 1
     return picked
+
+
+TURN_EV_PRIORITY = os.path.join(WORK, "turn-ev-priority.json")
+
+
+def turn_ev_priority(rows):
+    """Řádky z `rows` v pořadí prioritního seznamu; prázdné, když seznam není."""
+    if not os.path.exists(TURN_EV_PRIORITY):
+        return []
+    try:
+        with open(TURN_EV_PRIORITY, encoding="utf8") as handle:
+            entries = json.load(handle).get("entries", [])
+    except Exception as error:
+        log(f"  prioritní seznam turnové EV se nedá přečíst ({error}); jedu podle dosahu")
+        return []
+    by_path = {row["path"]: row for row in rows}
+    ordered = []
+    for entry in entries:
+        path = os.path.join(WORK, entry.get("directory", ""), entry.get("subgame", "") + ".json")
+        row = by_path.get(path)
+        if row is not None:
+            ordered.append(row)
+    return ordered
 
 
 def subgame_file_name(item):
