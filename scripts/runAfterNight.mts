@@ -1,5 +1,5 @@
 import { execFile, execFileSync } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { freemem } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -30,6 +30,13 @@ import { promisify } from "node:util";
  * Druhý průchod už otisk nemění: velikost packu na důvěře nezávisí, o což se
  * stará `trimToModuleBudget`. Kdyby závisela, točilo by se to donekonečna, a
  * přesně to se jednou stalo.
+ *
+ * **Od 12. 9. 2026 jen pro rodiny, kterým kontrola verdikt změnila.** Pack z
+ * prvního průchodu už čte verdikt při generování, takže u nezměněného verdiktu
+ * by druhý průchod vyrobil bajt po bajtu týž soubor. Změřeno: river trvá
+ * 97 minut na průchod a kontrola vydala 141 přijatých stejně jako předtím -
+ * hodina a půl práce bez výsledku. Porovnává se výsledek, otisk a základ
+ * verdiktu po (ulice, rodina).
  */
 
 const write = process.argv.includes("--write");
@@ -297,6 +304,27 @@ function laneBudget(): { lanes: number; heapMb: Map<string, number>; freeGb: num
   return { lanes, heapMb, freeGb };
 }
 
+/**
+ * Otisk verdiktů po (ulice, rodina), aby se dalo poznat, kterým se kontrola
+ * hnula. Porovnává se výsledek, otisk obsahu a základ - to jsou přesně ta pole,
+ * ze kterých generátor odvozuje důvěru packu.
+ */
+function verdictSnapshot(): Map<string, string> {
+  const path = "Agents/turn-review/verdicts.json";
+  const out = new Map<string, string>();
+  if (!existsSync(path)) return out;
+  const file = JSON.parse(readFileSync(path, "utf8")) as {
+    verdicts?: { street?: string; familyId: string; outcome: string; contentHash: string; basis?: string }[];
+  };
+  for (const row of file.verdicts ?? []) {
+    out.set(
+      `${row.street ?? "TURN"}|${row.familyId}`,
+      `${row.outcome}|${row.contentHash}|${row.basis ?? "PLAYER_READ"}`,
+    );
+  }
+  return out;
+}
+
 async function generateAll(list: readonly string[], label: string): Promise<void> {
   const { lanes, heapMb, freeGb } = laneBudget();
   const heapFor = (street: string): number => heapMb.get(street) ?? LANE_HEAP_CEILING_MB;
@@ -409,12 +437,40 @@ if (!write) {
   await generateAll(list, "1/3");
 
   console.log("\n[2/3] mechanická kontrola");
+  const verdictsBefore = verdictSnapshot();
   const review = run("mtt:mechanical-review", ["--write"]);
   for (const line of review.split("\n")) {
     if (/prošlo měřením|neprošlo|čteno člověkem|Zapsáno/.test(line)) console.log(`  ${line.trim()}`);
   }
 
-  await generateAll(list, "3/3");
+  /**
+   * Druhý průchod jen tam, kde se verdikt hnul.
+   *
+   * Průchod existuje kvůli propsání důvěry do packu (viz hlavička). Jenže
+   * důvěra rodiny se čte z verdiktu při generování - takže pack z prvního
+   * průchodu už nese správnou důvěru u každé rodiny, jejíž verdikt kontrola
+   * **nezměnila**: starý verdikt seděl na starý otisk a pack dostal LOW,
+   * nebo seděl na nový a pack dostal MEDIUM; kontrola pak zapsala totéž.
+   * Přegenerovat ji znovu vyrobí bajt po bajtu týž soubor.
+   *
+   * Změřeno 12. 9. 2026: celý cyklus 6,5 h, z toho river **97 minut na
+   * průchod, dvakrát** - a kontrola přitom vydala 141 přijatých, stejně jako
+   * předtím. Druhý průchod pro všech 49 rodin byl tedy hodina a půl práce,
+   * která nezměnila nic. Přegeneruje se jen rodina, u které se liší verdikt
+   * na kterékoli ulici (nový, změněný, nebo zmizelý).
+   */
+  const verdictsAfter = verdictSnapshot();
+  const changed = list.filter((family) => (
+    ["FLOP", "TURN", "RIVER"].some((street) => (
+      verdictsBefore.get(`${street}|${family}`) !== verdictsAfter.get(`${street}|${family}`)
+    ))
+  ));
+  if (changed.length === 0) {
+    console.log("\n[3/3] žádné rodině se verdikt nezměnil, druhý průchod není potřeba");
+  } else {
+    console.log(`\n[3/3] verdikt se změnil u ${changed.length} z ${list.length} rodin, přegenerovávám jen ty`);
+    await generateAll(changed, "3/3");
+  }
 
   // Obnovit EV, kterou tenhle cyklus sám zneplatnil.
   //
