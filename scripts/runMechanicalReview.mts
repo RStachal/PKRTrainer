@@ -106,7 +106,14 @@ const total = accepted.length + refused.length + humanKept;
 console.log(`packů: ${total}`);
 console.log(`  prošlo měřením:   ${accepted.length}`);
 console.log(`  neprošlo:         ${refused.length}`);
-console.log(`  čteno člověkem:   ${humanKept} (měření je nepřepisuje)`);
+// Dvě čísla, ne jedno. `humanKept` počítá lidské verdikty **mezi kontrolovanými
+// packy**; flopoví piloti mají verdikt pod katalogovým id a tady nejsou, takže
+// řádek hlásil „čteno člověkem: 0" i ve chvíli, kdy v souboru leželo sedm
+// lidských verdiktů (9. 9. 2026). Nula, která vypadá jako „nikdo nic nečetl",
+// je přesně ten prázdný výsledek, před kterým varuje pravidlo 6.
+const humanTotal = existing.filter((item) => (item.basis ?? "PLAYER_READ") === "PLAYER_READ").length;
+console.log(`  čteno člověkem:   ${humanKept} z kontrolovaných (měření je nepřepisuje);`
+  + ` v souboru celkem ${humanTotal} lidských verdiktů`);
 
 if (refused.length > 0) {
   console.log("");
