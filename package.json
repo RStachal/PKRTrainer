@@ -184,6 +184,7 @@
     "mtt:daily": "node scripts/run-cli.mjs scripts/runDailyOrchestrator.mts",
     "mtt:seat-pair-expansion": "node scripts/run-cli.mjs scripts/buildSeatPairExpansionBatch.mts",
     "mtt:board-growth": "node scripts/run-cli.mjs scripts/buildBoardGrowthBatch.mts",
+    "mtt:flop-ev-nights": "python Agents/solver-input/decomposition/measure_flop_ev_nights.py",
     "mtt:processes": "node scripts/run-cli.mjs scripts/checkProcessRegistry.mts"
   },
   "devDependencies": {
