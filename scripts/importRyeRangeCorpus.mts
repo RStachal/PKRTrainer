@@ -121,10 +121,10 @@ for (const file of htmlFiles(source).sort()) {
   const vocabulary = grid.legend.map((entry) => entry.action).sort().join(" | ");
   if (REFUSED_VOCABULARIES.has(vocabulary)) { dropped.refusedVocabulary += 1; continue; }
 
-  const context = contextForVocabulary(grid.legend.map((entry) => entry.action));
+  const name = basename(file);
+  const context = contextForVocabulary(grid.legend.map((entry) => entry.action), name);
   if (context === undefined) { dropped.noContext += 1; continue; }
 
-  const name = basename(file);
   const situation = situationFromFileName(name);
   if (situation === undefined) { dropped.noSituation += 1; continue; }
   // Soupeře vyžadují jen kontexty, kde hrdina **čelí akci**.
@@ -148,8 +148,10 @@ for (const file of htmlFiles(source).sort()) {
   // které ten kontext má. Slovník k němu zná jen `Call`, takže z legendy
   // `All in | Call` zmizelo **75 a 29 tříd** do foldu. Situace ve zdroji přitom
   // ani jednou není čelení all-inu (jedna je squeeze, druhá obrana proti 2,5x),
-  // takže ta stránka nepatří tomu kontextu vůbec - ale to je rozhodnutí o
-  // slovníku, ne něco, co se dá dopočítat. Do té doby se nevydá.
+  // takže ta stránka nepatří tomu kontextu vůbec. Rozhodl to majitel 14. 9.
+  // 2026 (bod 249) a od té doby tu legendu rozhoduje jméno souboru
+  // (`contextForVocabulary` s `name`); tahle brána zůstává pro každou další
+  // barvu, kterou by kontext neuměl.
   const actionOfColor = new Map<string, { action: string; lost: string }>();
   let unmappable = "";
   for (const entry of grid.legend) {

@@ -190,9 +190,10 @@ export function mapAction(context: MappedContext, action: string): MappedAction 
  * Jsou to případy, kdy **táž slova znamenají jinou situaci**, a obecné pravidlo
  * je proto nerozliší:
  *
- * - `All in | Call` sedí do `VS_OPEN` i do `SQUEEZE`, ale znamená něco třetího:
- *   soupeř jamnul a hrdina dorovnává, nebo skládá. `All in` tu není hrdinova
- *   akce. Bez téhle výjimky by se hráči nabídlo zvýšení tam, kde už je all-in.
+ * - `All in | Call` sedí do `VS_OPEN` i do `SQUEEZE` a slova samotná nerozhodnou,
+ *   ve které situaci hrdina stojí. Rozhoduje **jméno souboru** (níž); bez něj
+ *   se čte jako čelení all-inu, kde `All in` není hrdinova akce a slovník ho
+ *   proto nezná - stránka se pak nevydá, místo aby jam zmizel do foldu.
  * - `All in` samo o sobě je push/fold, ne „sázka v otevřeném potu".
  *
  * Naměřeno 26. 8. 2026: bez těchto dvou výjimek zmizely celé kontexty
@@ -205,9 +206,39 @@ const VOCABULARY_OVERRIDES = new Map<string, MappedContext>([
   ["Jam", "PUSH_FOLD"],
 ]);
 
-export function contextForVocabulary(actions: readonly string[]): MappedContext | undefined {
+/**
+ * Co říká jméno souboru o situaci, když legenda `All in | Call` neříká nic.
+ *
+ * Rozhodl majitel 14. 9. 2026 nad oběma stránkami, které na té legendě spadly
+ * (bod 249): `MUL-20BB-BB-vs-MP_LP` je squeeze multiway - BB proti otevření
+ * MP a dorovnání LP, `All in` je vlastní squeeze-jam; `ICM11-bb13bb-sb9bb-r` je
+ * obrana BB proti 2,5x od SB, `All in` je 3bet-jam. Přípony zdroje:
+ * `-l` proti limpu, `-r` proti raisu, `-ai` proti all-inu.
+ *
+ * Změřeno na zdroji: legendu `All in | Call` má 11 stránek `MUL-*` a 3 stránky
+ * `ICM*-r`, žádná `-l` ani `-ai` (jediná `-ai` stránka v db mřížku nemá).
+ * `-l` by patřila kontextu `VS_LIMP`, který slovník zatím nezná - a bez
+ * stránky, která by ho potřebovala, se nezakládá.
+ */
+function contextFromFileName(name: string): MappedContext | undefined {
+  const stem = name.replace(/\.html$/i, "");
+  if (/^MUL-/i.test(stem)) return "SQUEEZE";
+  if (/^ICM/i.test(stem) && /-r$/i.test(stem)) return "VS_OPEN";
+  if (/^ICM/i.test(stem) && /-ai$/i.test(stem)) return "VS_ALLIN";
+  return undefined;
+}
+
+export function contextForVocabulary(
+  actions: readonly string[],
+  fileName?: string,
+): MappedContext | undefined {
   if (actions.length === 0) return undefined;
-  const override = VOCABULARY_OVERRIDES.get([...actions].sort().join(" | "));
+  const vocabulary = [...actions].sort().join(" | ");
+  if (vocabulary === "All in | Call" && fileName !== undefined) {
+    const byName = contextFromFileName(fileName);
+    if (byName !== undefined) return byName;
+  }
+  const override = VOCABULARY_OVERRIDES.get(vocabulary);
   if (override !== undefined) return override;
   const fits = [...ACTIONS_BY_CONTEXT.keys()].filter(
     (context) => actions.every((action) => mapAction(context, action) !== undefined),

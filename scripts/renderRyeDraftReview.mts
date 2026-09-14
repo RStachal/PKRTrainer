@@ -315,6 +315,18 @@ function answerNote(record: DraftRecord): { html: string; stale: boolean; kept: 
   if (answer === undefined) return { html: "", stale: false, kept: false };
   const changed = isStale(record, answer) ? Math.max(1, partialWeightCells(record)) : 0;
   const flags = answer.flags.length === 0 ? "" : ` (${escapeHtml(answer.flags.join(", "))})`;
+  const hidden = answer.readWithoutActions ?? [];
+  if (hidden.length > 0) {
+    // Stránka tehdy tu barvu vůbec nekreslila; ruce s ní spadly do foldu.
+    return {
+      html: `<p class="meta stale"><b>Odpověď z ${escapeHtml(answer.readAt)}:`
+        + ` ${escapeHtml(answer.verdict)}</b>${flags}, jenže stránka tehdy nekreslila barvu`
+        + ` „${escapeHtml(hidden.join(", "))}“ - ruce s ní spadly do foldu.`
+        + " Teď je mřížka celá a chce přečíst znovu.</p>",
+      stale: true,
+      kept: false,
+    };
+  }
   if (changed === 0) {
     return {
       html: `<p class="meta answered"><b>Odpověď z ${escapeHtml(answer.readAt)}:`

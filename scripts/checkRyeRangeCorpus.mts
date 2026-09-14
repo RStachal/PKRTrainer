@@ -118,7 +118,7 @@ if (process.argv.includes("--coverage")) {
     if (!inScope(name)) continue;
     const vocabulary = grid.legend.map((entry) => entry.action).sort().join(" | ");
     if (REFUSED_VOCABULARIES.has(vocabulary)) { refused += 1; continue; }
-    const context = contextForVocabulary(grid.legend.map((entry) => entry.action));
+    const context = contextForVocabulary(grid.legend.map((entry) => entry.action), name);
     const situation = situationFromFileName(name);
     const target = context === undefined ? unmapped : mapped;
     const key = context ?? vocabulary;
@@ -155,7 +155,7 @@ if (process.argv.includes("--coverage")) {
     if (!inScope(name)) continue;
     const vocabulary = grid.legend.map((entry) => entry.action).sort().join(" | ");
     if (REFUSED_VOCABULARIES.has(vocabulary)) continue;
-    const context = contextForVocabulary(grid.legend.map((entry) => entry.action));
+    const context = contextForVocabulary(grid.legend.map((entry) => entry.action), name);
     const situation = situationFromFileName(name);
     if (context === undefined || situation === undefined) continue;
     const key = `${situation.seat}|${bucketForStack(situation.stackBB)}|${context}`;
@@ -210,7 +210,7 @@ if (process.argv.includes("--coverage")) {
       if (!inScope(name)) continue;
       const vocabulary = grid.legend.map((entry) => entry.action).sort().join(" | ");
       if (REFUSED_VOCABULARIES.has(vocabulary)) continue;
-      const context = contextForVocabulary(grid.legend.map((entry) => entry.action));
+      const context = contextForVocabulary(grid.legend.map((entry) => entry.action), name);
       const situation = situationFromFileName(name);
       if (context === undefined || situation === undefined) continue;
       const opponent = opponentFromFileName(name, situation);

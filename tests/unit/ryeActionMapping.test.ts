@@ -21,16 +21,13 @@ describe("slovník importu ranží", () => {
     expect(mapAction("VS_OPEN", "tohle zdroj neříká")).toBeUndefined();
   });
 
-  it("pravidlo „All in | Call“ vybere kontext, který „All in“ neumí", () => {
-    // Tohle je stav, kvůli kterému import ty dvě stránky odmítá. Není to
-    // v pořádku, jen je to poctivě zavřené: `VS_ALLIN` je slovníková výjimka,
-    // která té dvojici barev přiřkne čelení all-inu, jenže tam jam není
-    // hrdinova akce, takže ho slovník nezná.
+  it("pravidlo „All in | Call“ bez jména souboru zůstává zavřené", () => {
+    // Slova samotná situaci neřeknou. Bez jména se legenda čte jako čelení
+    // all-inu, kde `All in` není hrdinova akce a slovník ho nezná - stránka
+    // se nevydá, místo aby jam zmizel do foldu.
     //
     // Kdyby to někdo chtěl „spravit" přidáním `all in` do slovníku `VS_ALLIN`,
-    // udělal by z jamů dorovnání. Opravit se to dá jen tím, že se rozhodne, čemu
-    // ty stránky odpovídají - obě jsou ve skutečnosti squeeze nebo obrana proti
-    // otevření, ne čelení all-inu. Do té doby se nevydávají.
+    // udělal by z jamů dorovnání.
     const context = contextForVocabulary(["All in", "Call"]);
     expect(context).toBe("VS_ALLIN");
     expect(mapAction("VS_ALLIN", "Call")).toEqual({ action: "CALL_JAM", lost: "" });
@@ -38,6 +35,23 @@ describe("slovník importu ranží", () => {
       mapAction("VS_ALLIN", "All in"),
       "kdyby to začalo mapovat, musí se nejdřív rozhodnout kontext",
     ).toBeUndefined();
+  });
+
+  it("„All in | Call“ se jménem souboru rozhodne tak, jak rozhodl majitel", () => {
+    // Bod 249, 14. 9. 2026: `MUL-*` je squeeze multiway a `All in` je vlastní
+    // squeeze-jam; `ICM*-r` je obrana proti raisu a `All in` je 3bet-jam.
+    // V obou kontextech se obě barvy přeloží, takže stránky projdou celé.
+    expect(contextForVocabulary(["All in", "Call"], "MUL-20BB-BB-vs-MP_LP.html")).toBe("SQUEEZE");
+    expect(mapAction("SQUEEZE", "All in")?.action).toBe("JAM");
+    expect(mapAction("SQUEEZE", "Call")?.action).toBe("CALL");
+    expect(contextForVocabulary(["All in", "Call"], "ICM11-bb13bb-sb9bb-r.html")).toBe("VS_OPEN");
+    expect(mapAction("VS_OPEN", "All in")?.action).toBe("JAM");
+    // `-ai` je opravdu čelení all-inu; `-l` by byl `VS_LIMP`, který slovník
+    // nezná a žádná stránka s touhle legendou ho nepotřebuje.
+    expect(contextForVocabulary(["All in", "Call"], "ICM11-bb13bb-sb9bb-ai.html")).toBe("VS_ALLIN");
+    expect(contextForVocabulary(["All in", "Call"], "ICM11-bb13bb-sb9bb-l.html")).toBe("VS_ALLIN");
+    // Jméno rozhoduje jen tuhle legendu; push/fold se jím nemění.
+    expect(contextForVocabulary(["All in"], "MUL-20BB-BB-vs-MP_LP.html")).toBe("PUSH_FOLD");
   });
 
   it("push/fold slovník svoje barvy přeloží celé", () => {

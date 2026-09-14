@@ -35,6 +35,17 @@ export interface RecordedAnswer {
   readAt: string;
   /** Otisk mřížky v době odpovědi. Chybí u čtení z 9. 9. 2026, viz `isStale`. */
   contentHash?: string;
+  /**
+   * Barvy legendy, které stránka v době odpovědi **nekreslila**.
+   *
+   * Do 9. 9. 2026 barva, kterou kontext neuměl přeložit, tiše spadla do foldu.
+   * Stalo se to na dvou stránkách (`All in | Call` čtené jako čelení all-inu):
+   * majitel je 9. 9. posoudil bez 29 a 74 tříd jamu a vytkl jim „moc těsné".
+   * Zapsáno u té odpovědi, protože je to vlastnost čtení, ne mřížky - a bez
+   * toho by po návratu těch stránek (bod 249) odhad podle částečných vah tvrdil
+   * „beze změny" o mřížce, která má o třetinu tříd víc.
+   */
+  readWithoutActions?: string[];
 }
 
 /**
@@ -78,6 +89,8 @@ export function gridContentHash(record: DraftRecord): string {
  */
 export function isStale(record: DraftRecord, answer: RecordedAnswer): boolean {
   if (answer.contentHash !== undefined) return answer.contentHash !== gridContentHash(record);
+  // Čtenář neviděl celou legendu - mřížka se od té doby kreslí jinak jistě.
+  if ((answer.readWithoutActions ?? []).length > 0) return true;
   return partialWeightCells(record) > 0;
 }
 
@@ -136,6 +149,9 @@ export function loadAnswerHistory(directory = "Agents/range-intake"): AnswerHist
         flags: Array.isArray(answer.flags) ? answer.flags.map(String) : [],
         readAt,
         ...(typeof answer.contentHash === "string" ? { contentHash: answer.contentHash } : {}),
+        ...(Array.isArray(answer.readWithoutActions)
+          ? { readWithoutActions: answer.readWithoutActions.map(String) }
+          : {}),
       });
     }
   }
