@@ -36,6 +36,7 @@ import type { ActionEvSet } from "../core/actionEv";
 import {
   getRangeRecord,
   isRangeDataLoaded,
+  type RangeRefinement,
 } from "./ranges";
 import type { RangeRecord } from "./ranges/schema";
 import type { RangePack } from "./ranges/rangePack";
@@ -55,6 +56,17 @@ export interface RangeKey {
   bucket: StackBucket;
   context: ActionContext;
   ante: AnteMode;
+  /**
+   * Sedačka, která jednala před hrdinou - osa otvírače (bod 234, rozhodnuto
+   * 14. 9. 2026).
+   *
+   * Range proti otevření z UTG a z BTN se liší, a bez téhle osy je z koupené
+   * knihovny dosažitelná ~desetina. Klíč bez ní vrací dnešní záznam beze změny;
+   * s ní se zkusí přesnější záznam a když není, **vrátí se obecný** - týž pád
+   * jako v `getRangeRecord`. Dnešní obsah, uložená historie ani Question_ID
+   * se tím nehnou.
+   */
+  vsSeat?: Position;
 }
 
 /**
@@ -124,6 +136,7 @@ export interface RangeStoreDeps {
     position: Position,
     bucket: StackBucket,
     context: ActionContext,
+    refinement?: RangeRefinement,
   ) => RangeRecord | undefined;
   /** Signál celkové načtenosti dat (Req 4.6). */
   isLoaded: () => boolean;
@@ -148,6 +161,7 @@ export function createRangeStore(deps: RangeStoreDeps = DEFAULT_DEPS): RangeStor
         key.position,
         key.bucket,
         key.context,
+        key.vsSeat === undefined ? undefined : { vsSeat: key.vsSeat },
       );
       return record === undefined ? undefined : toRangeEntry(record);
     },
@@ -167,7 +181,7 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
   const errors = validateRangePack(pack);
 
   for (const record of pack.records) {
-    const key = packRecordKey(record.position, record.bucket, record.context);
+    const key = packRecordKey(record.position, record.bucket, record.context, record.vsSeat);
     if (records.has(key)) {
       errors.push(`Duplicate RangePack runtime key: ${key}.`);
       continue;
@@ -178,6 +192,7 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
       context: record.context,
       lenient: record.lenient,
       strict: record.strict,
+      ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
       ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
     });
   }
@@ -186,11 +201,11 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
   return {
     lookup(key: RangeKey): RangeEntry | undefined {
       if (!loaded || key.ante !== pack.dimensions.ante) return undefined;
-      const record = records.get(packRecordKey(
-        key.position,
-        key.bucket,
-        key.context,
-      ));
+      // Od nejpřesnějšího k obecnému, stejně jako `getRangeRecord`.
+      const record = (key.vsSeat === undefined
+        ? undefined
+        : records.get(packRecordKey(key.position, key.bucket, key.context, key.vsSeat)))
+        ?? records.get(packRecordKey(key.position, key.bucket, key.context));
       return record === undefined ? undefined : toRangeEntry(record);
     },
     isLoaded(): boolean {
@@ -203,8 +218,10 @@ function packRecordKey(
   position: Position,
   bucket: StackBucket,
   context: ActionContext,
+  vsSeat?: Position,
 ): string {
-  return `${position}|${bucket}|${context}`;
+  // Zpřesnění se připojuje jen když je - klíč obecného záznamu zůstává týž.
+  return `${position}|${bucket}|${context}${vsSeat === undefined ? "" : `|vs${vsSeat}`}`;
 }
 
 // ---------------------------------------------------------------------------
