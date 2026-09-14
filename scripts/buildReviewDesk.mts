@@ -133,7 +133,8 @@ interface RenderedDocument extends DeskDocument {
  */
 function recordedProgress(html: string): { settled: number; reread: number } {
   return {
-    settled: (html.match(/class="meta answered"/g) ?? []).length,
+    settled: (html.match(/class="meta answered"/g) ?? []).length
+      + (html.match(/class="previous settled"/g) ?? []).length,
     reread: (html.match(/class="meta stale"/g) ?? []).length + (html.match(/class="previous"/g) ?? []).length,
   };
 }

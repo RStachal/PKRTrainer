@@ -239,6 +239,13 @@ function previousReadNote(catalogId: string, currentHash: string): string {
   const outcome = verdict.outcome === "NEEDS_WORK" ? "Něco je špatně" : verdict.outcome === "ACCEPTED" ? "Hraje dobře" : verdict.outcome;
   const notes = verdict.notes === undefined ? "" : ` (${escape(verdict.notes)})`;
   const same = verdict.contentHash === currentHash;
+  // Stránka kreslí mix od 9. 9. 2026 večer; čtení od 10. 9. už bylo nad ním
+  // a ptát se znovu by znamenalo ptát se dvakrát na totéž.
+  const overMix = verdict.reviewedAt >= "2026-09-10";
+  if (same && overMix) {
+    return `<p class="previous settled"><b>Přečteno ${escape(verdict.reviewedAt)} nad mixem: ${escape(outcome)}</b>${notes}.`
+      + " Data pilota se od té doby nezměnila - číst znovu netřeba.</p>";
+  }
   return `<p class="previous"><b>Tvoje odpověď z ${escape(verdict.reviewedAt)}: ${escape(outcome)}</b>${notes}.`
     + (same
       ? " Data pilota jsou od té doby stejná, ale stránka tehdy kreslila jednu barvu na třídu a mix zahazovala;"
@@ -325,6 +332,8 @@ const page = `<!doctype html>
  .seat b{color:#7bd3ff}
  .previous{margin:4px 0;padding:6px 10px;background:#2a2412;border-left:3px solid #f0c14b;color:#e8dfc0}
  .previous b{color:#f0c14b}
+ .previous.settled{background:#12261c;border-left-color:#5ad18f;color:#cfe8d8}
+ .previous.settled b{color:#5ad18f}
  .tags{margin:6px 0}
  .tag{display:inline-block;border:1px solid;border-radius:3px;padding:1px 6px;margin:2px 4px 2px 0;font-size:12px}
  table.grid{border-collapse:collapse;margin:8px 0}
