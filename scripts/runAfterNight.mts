@@ -41,6 +41,20 @@ import { promisify } from "node:util";
 
 const write = process.argv.includes("--write");
 const withEv = process.argv.includes("--ev");
+/**
+ * Jen turnová EV, bez přegenerování packů.
+ *
+ * Noc od bodu 238 dodává riverové vrstvy kvůli turnové EV, a ta se k hráči
+ * dostane jedinou cestou: zastaralá tabulka → přepočet → manifest. Packy
+ * strategie se přitom nemění (turnová fronta je vyčerpaná, riverové packy sedí
+ * na stropu a jejich přegenerování je výměna, bod 219). Celý cyklus stojí
+ * 4 az 6 h a river se generuje s haldou 16 GB - s virtuálem majitele (17 GB) to
+ * na 31 GB stroji nejde souběžně, což je důvod, proč ranní cyklus nikdo
+ * nespouštěl (bod 239). Tahle cesta stojí 4 běhy x ~0,6 GB a nejvýš 150 min,
+ * takže se dá naplánovat na 07:05 bez ohledu na to, co jinak na stroji běží.
+ * Plný cyklus zůstává na vyžádání.
+ */
+const turnEvOnly = process.argv.includes("--turn-ev-only");
 const WORK = "artifacts/decomposition";
 const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 
@@ -441,15 +455,19 @@ if (!write) {
   console.log("Přidej --ev, když se má přepočítat EV **všech** riverových rodin.");
   console.log("Zastaralé tabulky se obnovují samy; vypnout jde --skip-ev-repair.");
   console.log("Obnova má rozpočet 150 minut, jinak --ev-repair-minutes=N.");
+  console.log("Jen turnová EV po noci, bez packů: --turn-ev-only (4 běhy, do 150 min).");
 } else {
   const list = families();
-  await generateAll(list, "1/3");
+  if (turnEvOnly) console.log("\n--turn-ev-only: packy se negenerují, jde se rovnou na turnovou EV");
+  if (!turnEvOnly) await generateAll(list, "1/3");
 
-  console.log("\n[2/3] mechanická kontrola");
   const verdictsBefore = verdictSnapshot();
-  const review = run("mtt:mechanical-review", ["--write"]);
-  for (const line of review.split("\n")) {
-    if (/prošlo měřením|neprošlo|čteno člověkem|Zapsáno/.test(line)) console.log(`  ${line.trim()}`);
+  if (!turnEvOnly) {
+    console.log("\n[2/3] mechanická kontrola");
+    const review = run("mtt:mechanical-review", ["--write"]);
+    for (const line of review.split("\n")) {
+      if (/prošlo měřením|neprošlo|čteno člověkem|Zapsáno/.test(line)) console.log(`  ${line.trim()}`);
+    }
   }
 
   /**
@@ -474,7 +492,9 @@ if (!write) {
       verdictsBefore.get(`${street}|${family}`) !== verdictsAfter.get(`${street}|${family}`)
     ))
   ));
-  if (changed.length === 0) {
+  if (turnEvOnly) {
+    // Bez kontroly se verdikt hnout nemohl; hláška by jen mátla.
+  } else if (changed.length === 0) {
     console.log("\n[3/3] žádné rodině se verdikt nezměnil, druhý průchod není potřeba");
   } else {
     console.log(`\n[3/3] verdikt se změnil u ${changed.length} z ${list.length} rodin, přegenerovávám jen ty`);
@@ -494,7 +514,7 @@ if (!write) {
   // typicky, jedna 2 129 s); zastaralých bývá hrstka a přepočítat se mají
   // právě ony. `--skip-ev-repair` je pro případ, kdy je potřeba cyklus urychlit
   // a člověk ví, že EV dopočítá zvlášť.
-  if (!process.argv.includes("--skip-ev-repair")) {
+  if (!process.argv.includes("--skip-ev-repair") && !turnEvOnly) {
     console.log("\n[4/4] obnova EV, kterou cyklus zneplatnil");
     // Vlastní proces, ne import.
     //
