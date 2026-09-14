@@ -7,7 +7,7 @@ are 577 such boards, so this is not a job that finishes; it is a job that makes
 progress and stops when told.
 
   python run_night_decomposition.py [--until=HH:MM] [--workers=N] [--coverage=0.99]
-                                    [--river-budget=N]
+                                    [--river-budget=N] [--river-workers=N] [--river-threads=N]
 
 Design notes worth keeping:
 
@@ -421,7 +421,7 @@ def keep_child_output(out_dir, name, output):
         pass
 
 
-def run_solve_plan(plan_path, out_dir, workers, deadline):
+def run_solve_plan(plan_path, out_dir, workers, deadline, threads=2):
     """Odsolvit jednu vrstvu a vrátit okno rodiči, jakmile deadline vyprší.
 
     Vrací True, když dítě doběhlo samo, False, když ho ukončil rodič.
@@ -432,7 +432,7 @@ def run_solve_plan(plan_path, out_dir, workers, deadline):
         # je přesně ten stav, kvůli kterému se příčina minulého přesahu
         # nedala zjistit.
         sys.executable, "-u", os.path.join(HERE, "solve_plan.py"),
-        plan_path, out_dir, f"--workers={workers}",
+        plan_path, out_dir, f"--workers={workers}", f"--threads={threads}",
         f"--deadline={deadline.timestamp()}",
     ]
     child = subprocess.Popen(
@@ -527,6 +527,13 @@ def main():
     # nevšimne - při spuštění rukou.
     until = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--until=")), "07:00")
     workers = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--workers=")), "8")
+    # Tvar riverové fáze zvlášť. Riverová podhra trvá ~10 s a solver na ní
+    # vlákna škáluje špatně: změřeno 14. 9. 2026 na 48 podhrách, 8 procesů x 1
+    # vlákno 64-66 s proti 4 x 2 vlákna 87-90 s, výstupy bajtově shodné. Turnová
+    # fáze zůstává u svého tvaru: její podhry jsou řádově větší a šestnáct
+    # procesů vedle sebe by se nemuselo vejít do paměti.
+    river_workers = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--river-workers=")), workers)
+    river_threads = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--river-threads=")), "2"))
     coverage = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--coverage=")), "0.99")
     # Riverová vrstva je vypnutá, dokud se nezadá rozpočet. Zapnutá naslepo by
     # spolkla celé okno turnové fázi, a nedokončený turn blokuje review bránu.
@@ -732,9 +739,9 @@ def main():
     budget = river_budget_for(river_budget, turn_exhausted, remaining, turn_coverage)
     if budget is None:
         log(f"river phase: turnová fronta vyčerpaná, zbývá {remaining:.0f} min okna")
-        run_river_phase(deadline, workers, coverage, None)
+        run_river_phase(deadline, river_workers, coverage, None, river_threads)
     elif budget > 0:
-        run_river_phase(deadline, workers, coverage, budget)
+        run_river_phase(deadline, river_workers, coverage, budget, river_threads)
     elif not turn_exhausted:
         log(
             "river phase se nespouští: turn není hotový "
@@ -917,7 +924,7 @@ def subgame_file_name(item):
     return "__".join(["_".join(parts), item["turn"]]) + ".json"
 
 
-def run_river_phase(deadline, workers, coverage, budget):
+def run_river_phase(deadline, workers, coverage, budget, threads=2):
     """Riverová vrstva pro nejčastěji dosahované turny, dokud vydrží okno.
 
     Běží až po turnové fázi schválně. Nedokončený turn blokuje celou rodinu na
@@ -925,6 +932,7 @@ def run_river_phase(deadline, workers, coverage, budget):
     není hotový, je river ta levnější věc, kterou lze odložit.
     """
     log(f"river phase: rozpočet {'kolik stihne' if budget is None else budget} turnových podher")
+    log(f"  {workers} procesů x {threads} vláken na podhru")
     picked = turn_subgames_by_reach(budget)
     log(f"  {len(picked)} podher vybráno podle reach")
     done = 0
@@ -975,7 +983,7 @@ def run_river_phase(deadline, workers, coverage, budget):
             f" {planned - solved} z {planned}"
         )
         started = time.time()
-        finished = run_solve_plan(plan_path, out_dir, workers, deadline)
+        finished = run_solve_plan(plan_path, out_dir, workers, deadline, threads)
         minutes = (time.time() - started) / 60
         after = len([f for f in os.listdir(out_dir) if f.endswith(".json") and f != "plan.json"])
         log(f"    {after}/{planned} za {minutes:.1f} min")

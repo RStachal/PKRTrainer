@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { nightFamilyRows } from "../../scripts/lib/nightLog.mts";
+import { nightFamilyRows, riverPhaseRate } from "../../scripts/lib/nightLog.mts";
 
 /**
  * Souhrn noci po rodinách se od 8. do 14. 9. 2026 nečetl vůbec: výraz přišel
@@ -23,5 +23,25 @@ describe("nightFamilyRows", () => {
 
   it("řádek bez časové značky není řádek runneru", () => {
     expect(nightFamilyRows(["     1 vrstev,    140 podher do MTT9_25BB_CO_BTN_SRP"])).toEqual([]);
+  });
+
+  it("propustnost riverové fáze se počítá přes půlnoc a bere tvar fáze, když je v logu", () => {
+    const rate = riverPhaseRate([
+      "[21:01:22] river phase: rozpočet kolik stihne turnových podher",
+      "[21:01:22]   16 procesů x 1 vláken na podhru",
+      "[21:01:26]   solving river MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR__JJ2tt / CHECK_CHECK__Kc: 74 z 74",
+      "[21:03:01]     74/74 za 1.6 min",
+      "[06:56:47] river phase: 2 turnových podher dostalo riverovou vrstvu; vrstva 2.7 min medián, 9.9 max",
+      "[06:56:47]      1 vrstev,     74 podher do MTT9_45BB_CO_BTN_3BP_FACING_LOWSPR",
+      "[06:56:47]      1 vrstev,    126 podher do MTT9_25BB_CO_BTN_SRP",
+    ]);
+    expect(rate).toBeDefined();
+    expect(rate?.games).toBe(200);
+    expect(rate?.minutes).toBeCloseTo(9 * 60 + 55 + 21 / 60, 2);
+    expect(rate?.shape).toBe("16 procesů x 1 vláken");
+  });
+
+  it("bez jediné vrstvy propustnost není", () => {
+    expect(riverPhaseRate(["[21:01:22] river phase: rozpočet kolik stihne turnových podher"])).toBeUndefined();
   });
 });

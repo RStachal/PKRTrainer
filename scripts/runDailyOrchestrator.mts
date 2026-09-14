@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { nightFamilyRows } from "./lib/nightLog.mts";
+import { nightFamilyRows, riverPhaseRate } from "./lib/nightLog.mts";
 import { MODULE_BUDGET_BYTES } from "./lib/solvedPackBuilding.mts";
 
 /**
@@ -229,6 +229,13 @@ function lastNight(): { lines: string[]; riverLayers: number; overrunMinutes: nu
   }
   const split = nightIntoFullFamilies(run);
   if (split !== undefined) summary.push(split);
+  // Propustnost, ne počet vrstev: vrstvy mají 26 až 185 podher, takže „223
+  // vrstev" proti „254" neříká, jestli noc jela rychleji. Podher za minutu ano.
+  const rate = riverPhaseRate(run);
+  if (rate !== undefined && rate.minutes > 0) {
+    summary.push(`  riverová fáze: ${rate.games} podher za ${rate.minutes.toFixed(0)} min`
+      + ` = ${(rate.games / rate.minutes).toFixed(1)}/min${rate.shape === undefined ? "" : ` (${rate.shape})`}`);
+  }
   return { lines: summary, riverLayers: layers, overrunMinutes: overrun, startLine: start };
 }
 
@@ -310,7 +317,7 @@ if (nightAge === null) {
   say("    Kernel-Power 42/107 v žurnálu System                 (spal stroj ve 21:00?)");
   say("  Následuje poslední běh, který doopravdy proběhl:");
 }
-for (const line of night.lines.slice(-6)) say(`  ${line.trim()}`);
+for (const line of night.lines.slice(-8)) say(`  ${line.trim()}`);
 say(`  riverových vrstev: ${night.riverLayers}`);
 say(night.overrunMinutes === null
   ? "  přetažení okna: nezjištěno z logu"

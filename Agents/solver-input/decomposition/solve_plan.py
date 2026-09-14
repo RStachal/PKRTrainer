@@ -9,7 +9,7 @@ The action set is the one the owner asked for and is deliberately richer than th
 monolithic trees carry: on each street, for both positions, a small bet, a big
 bet, a small raise, a big raise and a shove.
 
-  python solve_plan.py <plan.json> <out-dir> [--workers=N] [--limit=N] [--passes=N] [--dry]
+  python solve_plan.py <plan.json> <out-dir> [--workers=N] [--threads=N] [--limit=N] [--passes=N] [--dry]
 """
 import json
 import os
@@ -63,7 +63,7 @@ def dump_rounds_for(board):
     return 2 if len(board) >= 5 else 1
 
 
-def write_param(item, param_path, dump_path):
+def write_param(item, param_path, dump_path, threads=2):
     def spec(side):
         return ",".join(f"{n}:{w}" for n, w in sorted(item[side].items()))
 
@@ -84,7 +84,7 @@ def write_param(item, param_path, dump_path):
     lines += [
         "set_allin_threshold 0.67",
         "build_tree",
-        "set_thread_num 2",
+        f"set_thread_num {threads}",
         "set_accuracy 0.3",
         "set_max_iteration 200",
         "set_print_interval 50",
@@ -118,7 +118,7 @@ def item_timeout(deadline, now=None):
     return max(60.0, min(ITEM_TIMEOUT_SECONDS, deadline - current + ITEM_GRACE_SECONDS))
 
 
-def solve_one(item, out_dir, dry, deadline=None):
+def solve_one(item, out_dir, dry, deadline=None, threads=2):
     name = item_id(item)
     # Konec okna se musí hlídat tady, ne jen mezi vrstvami.
     #
@@ -148,7 +148,7 @@ def solve_one(item, out_dir, dry, deadline=None):
     param_path = os.path.join(out_dir, f"{name}.txt")
     if os.path.exists(dump_path) and os.path.getsize(dump_path) > 0:
         return name, "skip", 0.0, ""
-    write_param(item, param_path, part_path)
+    write_param(item, param_path, part_path, threads)
     if dry:
         return name, "planned", 0.0, ""
 
@@ -198,6 +198,10 @@ def main():
     # Noční běh si absolutní cesty skládá sám, takže tohle chrání ruční spuštění.
     out_dir = os.path.abspath(out_dir)
     workers = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--workers=")), 4))
+    # Vláken na jednu podhru. Dvojka byla od začátku zapsaná natvrdo a nikdo ji
+    # neměřil; riverová podhra trvá ~10 s, takže o propustnosti noci rozhoduje
+    # i to, kolik procesů běží vedle sebe - a to se bez přepínače nedá změřit.
+    threads = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--threads=")), 2))
     limit = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--limit=")), 0))
     dry = "--dry" in sys.argv
     max_passes = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--passes=")), 4))
@@ -208,7 +212,7 @@ def main():
     plan = json.load(open(plan_path, encoding="utf8"))
     items = plan["items"][:limit] if limit else plan["items"]
     os.makedirs(out_dir, exist_ok=True)
-    print(f"{len(items)} subgames, {workers} at a time, into {out_dir}")
+    print(f"{len(items)} subgames, {workers} at a time x {threads} threads, into {out_dir}")
 
     started = time.time()
     # The solver dies at random on some trees - the same node fails on one run and
@@ -223,7 +227,7 @@ def main():
         failures = []
         with ThreadPoolExecutor(max_workers=workers) as pool:
             for name, status, elapsed, expl in pool.map(
-                lambda i: solve_one(i, out_dir, dry, deadline), items
+                lambda i: solve_one(i, out_dir, dry, deadline, threads), items
             ):
                 if status == "solved":
                     done += 1

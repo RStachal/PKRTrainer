@@ -33,3 +33,43 @@ export function nightFamilyRows(lines: readonly string[]): NightFamilyRow[] {
     // Log je CRLF; bez ořezu by jméno rodiny neslo `\r` a nikde by nesedlo.
     .map((match) => ({ layers: Number(match[1]), games: Number(match[2]), family: match[3].trim() }));
 }
+
+export interface RiverPhaseRate {
+  /** Podher vyřešených v riverové fázi (součet řádků po rodinách). */
+  games: number;
+  /** Minuty od první vrstvy po souhrn; přes půlnoc se počítá správně. */
+  minutes: number;
+  /** Tvar fáze, pokud ho runner zapsal (od 14. 9. 2026). */
+  shape?: string;
+}
+
+const STAMP = /^\[(\d{2}):(\d{2}):(\d{2})\]/;
+const SHAPE = /^\[\d{2}:\d{2}:\d{2}\]\s*(\d+ procesů x \d+ vláken)/;
+
+function minuteOf(line: string): number | undefined {
+  const match = STAMP.exec(line);
+  if (match === null) return undefined;
+  return Number(match[1]) * 60 + Number(match[2]) + Number(match[3]) / 60;
+}
+
+/**
+ * Propustnost riverové fáze: podher za minutu.
+ *
+ * Je to jediné číslo, kterým se dá porovnat noc s nocí, když se změní tvar
+ * fáze (procesy x vlákna) - počet vrstev to neumí, protože vrstvy mají 26 až
+ * 185 podher. Poprvé potřeba 15. 9. 2026: noc 14./15. jede 16 x 1 místo 8 x 2
+ * na základě denního měření (bod 242) a ráno se má vidět, jestli to platí
+ * i na celém stroji.
+ */
+export function riverPhaseRate(lines: readonly string[]): RiverPhaseRate | undefined {
+  const first = lines.find((line) => line.includes("solving river "));
+  const rows = nightFamilyRows(lines);
+  if (first === undefined || rows.length === 0) return undefined;
+  const start = minuteOf(first);
+  const lastRow = lines.filter((line) => /\d+ vrstev,\s*\d+ podher do /.test(line)).pop();
+  const end = lastRow === undefined ? undefined : minuteOf(lastRow);
+  if (start === undefined || end === undefined) return undefined;
+  const minutes = end >= start ? end - start : end + 24 * 60 - start;
+  const shape = lines.map((line) => SHAPE.exec(line)?.[1]).find((match) => match !== undefined);
+  return { games: rows.reduce((sum, row) => sum + row.games, 0), minutes, shape };
+}
