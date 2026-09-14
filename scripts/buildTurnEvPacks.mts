@@ -625,7 +625,7 @@ for (const spot of solvedTurnSpots()) {
 const familyOfFile = (name: string): string =>
   name.replace(/\.generated\.json$/, "").replace(/-/g, "_").toUpperCase();
 
-const chosen = packs
+const eligible = packs
   .filter((name) => familyFilter === undefined
     || name.toLowerCase().includes(familyFilter.toLowerCase().replace(/_/g, "-")))
   // Tabulka má stejné jméno jako pack, jen v jiném adresáři.
@@ -633,8 +633,41 @@ const chosen = packs
   .filter((name) => familiesWanted === undefined || familiesWanted.has(familyOfFile(name)))
   .sort((left, right) => (
     (reachByFamily.get(familyOfFile(right)) ?? 0) - (reachByFamily.get(familyOfFile(left)) ?? 0)
-  ))
-  .filter((_, index) => index % shardCount === shardIndex)
+  ));
+
+/**
+ * Rozdělení mezi běhy podle **ceny**, ne dokola.
+ *
+ * Dělení „i mod n" nad pořadím podle dosahu dalo 11. i 14. 9. 2026 jednomu
+ * běhu tři stobiglindové rodiny za sebou (každá 40 minut i víc), zatímco
+ * ostatní běhy skončily o dvě hodiny dřív a stály. Cena rodiny se přitom dá
+ * odhadnout ze jména: hloubka stacku - naměřeno 25 bb 100 az 500 s, 50 bb
+ * 500 az 800, 80 az 100 bb 1 200 az 2 500 a 100 bb SB OOP 18 000. Rodiny se
+ * seřadí od nejdražší a rozdají hadem (1,2,3,4,4,3,2,1,…), takže každý běh
+ * dostane podobný součet.
+ *
+ * Pořadí podle dosahu zůstává uvnitř běhu: u jednoho běhu bez shardování je
+ * to to jediné, na čem záleží (rozpočet součtu se plní odshora).
+ */
+function costOf(name: string): number {
+  const stack = Number(/(\d+)bb/.exec(name)?.[1] ?? "0");
+  // SB OOP rodiny jsou násobně dražší než stejná hloubka jinde.
+  const oop = /-sb-bb-srp-oop-/.test(name) ? 4 : 1;
+  return stack * oop;
+}
+const chosen = (shardCount === 1
+  ? eligible
+  : [...eligible]
+    .map((name, index) => ({ name, index }))
+    .sort((left, right) => costOf(right.name) - costOf(left.name) || left.index - right.index)
+    .filter((_, position) => {
+      const round = Math.floor(position / shardCount);
+      const slot = position % shardCount;
+      const lane = round % 2 === 0 ? slot : shardCount - 1 - slot;
+      return lane === shardIndex;
+    })
+    .sort((left, right) => left.index - right.index)
+    .map((item) => item.name))
   .slice(0, limit > 0 ? limit : undefined);
 
 if (chosen.length === 0) {

@@ -1,6 +1,6 @@
 import { execFile, execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { freemem } from "node:os";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { cpus, freemem } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 
@@ -603,35 +603,41 @@ if (!write) {
       // rodinách 95 az 1 242 s, medián kolem 300. Osmačtyřicet rodin je tím
       // sedm hodin, takže se stejně jako u riveru počítá s tím, že se dávka
       // nemusí stihnout - a co zbylo, se řekne nahlas.
-      const budgetMinutes = Number(
-        process.argv.find((arg) => arg.startsWith("--turn-ev-minutes="))?.split("=")[1] ?? 120,
+      /**
+       * Paralelně, ne po jedné.
+       *
+       * Od 14. 9. 2026 zastarává tabulka i novými vrstvami (viz
+       * `turnEvStaleness`), a cílená noc jich dá 30 az 40 rodinám. Po jedné je
+       * to 4 az 8 hodin a rozpočet 120 minut by nechal většinu tabulek
+       * starých - tedy přesně ta tichá ztráta, kvůli které tahle fáze vznikla.
+       * Rodiny na sobě nezávisí, takže se rozdělí mezi běhy stejně jako při
+       * stavbě knihovny (bod 238): každý běh dostane seznam a svůj díl,
+       * manifest se složí z disku až na konec. Čtyři běhy jsou půlka denního
+       * stropu na jádra a dohromady kolem 2,5 GB paměti.
+       */
+      const lanes = Math.max(1, Math.min(4, Math.floor(cpus().length / 4)));
+      const listPath = "artifacts/turn-ev-stale.txt";
+      writeFileSync(listPath, `${stale.join("\n")}\n`, "utf8");
+      console.log(`  zastaralo ${stale.length} tabulek, přepočítávám ve ${lanes} bězích`);
+      const started = Date.now();
+      const results = await Promise.allSettled(
+        Array.from({ length: lanes }, (_, index) => runAsync("mtt:turn-ev-pack", [
+          `--families-file=${listPath}`, `--shard=${index + 1}/${lanes}`, "--write", "--no-manifest",
+        ], 8192)),
       );
-      const deadline = Date.now() + budgetMinutes * 60_000;
-      console.log(`  zastaralo ${stale.length} tabulek, přepočítávám (rozpočet ${budgetMinutes} min)`);
-      let repaired = 0;
-      const skipped: string[] = [];
-      for (const [index, family] of stale.entries()) {
-        if (Date.now() >= deadline) { skipped.push(...stale.slice(index)); break; }
-        const started = Date.now();
-        try {
-          run("mtt:turn-ev-pack", [`--family=${family}`, "--write", "--no-manifest"]);
-          repaired += 1;
-          console.log(`  ${family}: ${Math.round((Date.now() - started) / 1000)} s`);
-        } catch {
-          console.log(`  ${family}: generátor odmítl`);
-        }
+      for (const [index, result] of results.entries()) {
+        if (result.status === "rejected") console.log(`  běh ${index + 1}/${lanes} selhal`);
       }
       // Manifest až na konec a z disku: běhy ho nepíšou, aby si ho nepřepsaly.
-      if (repaired > 0) run("mtt:turn-ev-pack", ["--manifest-only"]);
+      run("mtt:turn-ev-pack", ["--manifest-only"]);
       const left = run("mtt:turn-ev-stale")
         .split("\n").map((line) => line.trim())
         .filter((line) => line.length > 0);
-      console.log(`  přepočítáno ${repaired} z ${stale.length}, zůstává zastaralých: ${left.length}`);
-      if (left.length > 0 || skipped.length > 0) {
-        if (skipped.length > 0) {
-          console.log(`  ROZPOČET ČASU VYPRŠEL, zbývá ${skipped.length} rodin bez turnové EV:`);
-          console.log(`    npm run mtt:turn-ev-pack -- --family=${skipped[0]} --write`);
-        }
+      console.log(`  hotovo za ${Math.round((Date.now() - started) / 60_000)} min,`
+        + ` zůstává zastaralých: ${left.length}`);
+      if (left.length > 0) {
+        console.log(`  zbývá ${left.length} rodin bez turnové EV, první: ${left[0]}`);
+        console.log(`    npm run mtt:turn-ev-pack -- --family=${left[0]} --write`);
         process.exitCode = 1;
       }
     }
