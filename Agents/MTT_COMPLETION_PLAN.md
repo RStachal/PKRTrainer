@@ -412,7 +412,10 @@ Noc rozhoduje podle měření: `mtt:daily` vydá prioritu, rozklad podle ní ust
 monolitické expanzi a po vyprázdnění fronty jí okno vrátí. Za tři noci to dalo
 163 nových desek, 28 rodin a posun pokrytí vzorů z 11,3 % na 81,4 %.
 
-Moje práce je dohled a dodání: `mtt:after-night -- --write` po každé noci.
+Moje práce je dohled a dodání. Od 15. 9. 2026 obnovuje turnovou EV po noci
+úloha v 07:05 sama (`--turn-ev-only`, bod 244); plný cyklus s packy
+(`mtt:after-night -- --write`, nebo `--streets=flop` po dosolvených deskách,
+bod 245) spouštím já, protože river se generuje s haldou 16 GB.
 
 ## Průběžně
 

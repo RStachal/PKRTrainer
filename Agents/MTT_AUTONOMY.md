@@ -365,7 +365,16 @@ neudělal (stavba tabulek pro 26 rodin, bod 214), a body, jejichž vlastní mě�
   běh, který si vezme víc jader.
 - **21:00–07:00** solver na plný výkon. Okno bylo do 18. 8. do 07:00, pak do
   08:00 a od 10. 9. 2026 zase do **07:00** (bod 226). Pokud ve 21:00 běží
-  vývojový blok, solving počká na jeho dokončení.
+  vývojový blok, solving počká na jeho dokončení. Ve 21:00 si noc sama
+  napíše denní zprávu (`mtt:daily --write`), prioritní seznam turnové EV
+  a jeho ocenění (body 238, 243); riverová fáze jede 16 procesů × 1 vlákno
+  (bod 242). Když je nastagováno 8+ desek bez checkpointu, rozklad ustoupí
+  monolitické expanzi (bod 245) a ta mu po vyprázdnění fronty okno vrátí.
+- **07:05** lehký ranní cyklus `PKRTrainer-After-Night-TurnEv`
+  (`mtt:after-night --write --turn-ev-only`, bod 244): jen zastaralé turnové
+  tabulky, 4 běhy × ~0,6 GB, strop 210 min, necommituje. Plný cyklus s packy
+  (`--write`, případně `--streets=flop`) spouští člověk - river se generuje
+  s haldou 16 GB a vedle virtuálu majitele se nevejde.
 - ZIP balíček jen na vyžádání, orientačně jednou týdně. Nedělat automaticky.
 
 ## Co hlásit uživateli
