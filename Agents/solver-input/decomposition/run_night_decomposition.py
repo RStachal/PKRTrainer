@@ -525,6 +525,32 @@ def run_solve_plan(plan_path, out_dir, workers, deadline, threads=2):
     return True
 
 
+# Desky, které mají zůstat jen flopové: monolit ano, turnová vrstva ne.
+#
+# Flopový pack se staví z monolitu, turnová vrstva k němu je turnový obsah -
+# a turnové packy sedí na 260 pravidlech na rodinu, takže vrstva pod novou
+# deskou většinou vymění pravidlo za pravidlo. Rozklad 174 desek z
+# `mtt:board-growth` by přitom stál ~2 noci, během kterých riverová fáze
+# (turnová EV) neběží. Seznam tu je, aby to bylo rozhodnutí, ne důsledek:
+# deska v něm se nerozkládá a nepočítá se do pokrytí turnu. Prázdný nebo
+# chybějící soubor nic nemění.
+FLOP_ONLY_BOARDS = os.path.join(WORK, "flop-only-boards.txt")
+
+
+def flop_only_boards():
+    """Dvojice (rodina, deska) ze seznamu; řádek je `RODINA__DESKA`, `#` je komentář."""
+    out = set()
+    if not os.path.exists(FLOP_ONLY_BOARDS):
+        return out
+    for line in open(FLOP_ONLY_BOARDS, encoding="utf8"):
+        text = line.split("#", 1)[0].strip()
+        if "__" not in text:
+            continue
+        family, board = text.split("__", 1)
+        out.add((family.strip(), board.strip()))
+    return out
+
+
 def board_parameter_files():
     """Every board that has a monolithic checkpoint, with the parameters it used."""
     found = {}
@@ -539,6 +565,11 @@ def board_parameter_files():
             checkpoint = os.path.join(OUTPUT_BASE, family, "raw", f"pkrtrainer_{family}_{board}.json")
             if os.path.exists(checkpoint):
                 found.setdefault((family, board), os.path.join(root, name))
+    excluded = flop_only_boards()
+    if excluded:
+        before = len(found)
+        found = {key: path for key, path in found.items() if key not in excluded}
+        log(f"  {before - len(found)} desek vynecháno z rozkladu: jen flop ({os.path.basename(FLOP_ONLY_BOARDS)})")
     return found
 
 

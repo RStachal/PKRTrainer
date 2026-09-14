@@ -25,6 +25,7 @@ import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.m
  *
  *   npm run mtt:board-growth                       # co by vzniklo
  *   npm run mtt:board-growth -- --boards=6 --write # zapsat parametry pro noc
+ *   npm run mtt:board-growth -- --write --flop-only # a rozklad ať je vynechá
  *
  * ## Proč to musí vzniknout
  *
@@ -60,6 +61,16 @@ import { loadCompleteMttProductionRegistry } from "./loadMttProductionRegistry.m
  */
 
 const write = process.argv.includes("--write");
+/**
+ * `--flop-only`: zapsat desky i do seznamu, který noční rozklad vynechá.
+ *
+ * Monolit dá flopový pack; turnová vrstva k němu je turnový obsah a stojí
+ * ~8 min na desku (174 desek = ~2 noci bez turnové EV), přičemž turnové packy
+ * sedí na 260 pravidlech, takže by většinou jen vyměnila pravidlo za pravidlo.
+ * Seznam `artifacts/decomposition/flop-only-boards.txt` čte runner; přidat
+ * i odebrat řádek jde kdykoli, rozklad vynechané desky dožene, až se odeberou.
+ */
+const flopOnly = process.argv.includes("--flop-only");
 const boardsPerFamily = Number(
   process.argv.find((arg) => arg.startsWith("--boards="))?.split("=")[1] ?? 6,
 );
@@ -67,6 +78,7 @@ const maxExisting = Number(
   process.argv.find((arg) => arg.startsWith("--max-boards="))?.split("=")[1] ?? 6,
 );
 const WORK = "artifacts/decomposition";
+const FLOP_ONLY_LIST = join(WORK, "flop-only-boards.txt");
 
 /** Kohorty od nejčastěji rozdávané textury; ta pořadí je volba, ne měření. */
 const COHORT_ORDER: readonly SolverBoardCohortId[] = [
@@ -272,6 +284,13 @@ if (!write) {
   for (const file of files) {
     index += 1;
     writeFileSync(join(EXPANSION_PARAMS_DIR, `${String(index).padStart(4, "0")}_${file.name}`), file.body, "utf8");
+  }
+  if (flopOnly) {
+    const existing = existsSync(FLOP_ONLY_LIST) ? readFileSync(FLOP_ONLY_LIST, "utf8").split(/\r?\n/) : [];
+    const lines = new Set(existing.map((line) => line.trim()).filter((line) => line.length > 0));
+    for (const plan of plans) for (const boardId of plan.boards) lines.add(`${plan.familyId}__${boardId}`);
+    writeFileSync(FLOP_ONLY_LIST, `${[...lines].join("\n")}\n`, "utf8");
+    console.log(`Desky zapsány i do ${FLOP_ONLY_LIST}: rozklad je vynechá (${lines.size} řádků)`);
   }
   console.log("");
   console.log(`Zapsáno ${files.length} parametrů do ${EXPANSION_PARAMS_DIR} (čísla od ${String(index - files.length + 1).padStart(4, "0")})`);
