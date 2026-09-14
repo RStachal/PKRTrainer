@@ -97,13 +97,22 @@ function run(script: string, args: string[] = []): string {
 const execFileAsync = promisify(execFile);
 
 /** Totéž jako `run`, ale nezdrží ostatní pruhy a haldu dostane přidělenou. */
-async function runAsync(script: string, args: string[], heapMb: number): Promise<string> {
+async function runAsync(
+  script: string,
+  args: string[],
+  heapMb: number,
+  timeoutMs?: number,
+): Promise<string> {
   const path = SCRIPT_PATH[script];
   if (path === undefined) throw new Error(`neznámý skript ${script}`);
   const { stdout } = await execFileAsync(
     process.execPath,
     [`--max-old-space-size=${heapMb}`, "scripts/run-cli.mjs", path, ...args],
-    { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+    {
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+      ...(timeoutMs === undefined ? {} : { timeout: timeoutMs }),
+    },
   );
   return stdout;
 }
@@ -618,15 +627,27 @@ if (!write) {
       const lanes = Math.max(1, Math.min(4, Math.floor(cpus().length / 4)));
       const listPath = "artifacts/turn-ev-stale.txt";
       writeFileSync(listPath, `${stale.join("\n")}\n`, "utf8");
-      console.log(`  zastaralo ${stale.length} tabulek, přepočítávám ve ${lanes} bězích`);
+      // Časový strop na celou fázi, ne na rodinu. Změřeno 14. 9. 2026:
+      // `MTT9_100BB_SB_BB_SRP_OOP_CBET_HIGHSPR` stojí kolem tří hodin sama
+      // (0,9 s na vrstvu proti mediánu 0,037), a bez stropu by jedna rodina
+      // držela ranní cyklus přes celé dopoledne. Po vypršení se běh ukončí;
+      // rodina, kterou zrovna počítal, zůstane u starší tabulky - ta je platná,
+      // jen bez posledních vrstev - a detektor ji ohlásí zase zítra.
+      const budgetMinutes = Number(
+        process.argv.find((arg) => arg.startsWith("--turn-ev-minutes="))?.split("=")[1] ?? 150,
+      );
+      console.log(`  zastaralo ${stale.length} tabulek, přepočítávám ve ${lanes} bězích (strop ${budgetMinutes} min)`);
       const started = Date.now();
       const results = await Promise.allSettled(
         Array.from({ length: lanes }, (_, index) => runAsync("mtt:turn-ev-pack", [
           `--families-file=${listPath}`, `--shard=${index + 1}/${lanes}`, "--write", "--no-manifest",
-        ], 8192)),
+        ], 8192, budgetMinutes * 60_000)),
       );
       for (const [index, result] of results.entries()) {
-        if (result.status === "rejected") console.log(`  běh ${index + 1}/${lanes} selhal`);
+        if (result.status === "rejected") {
+          const killed = (result.reason as { killed?: boolean } | undefined)?.killed === true;
+          console.log(`  běh ${index + 1}/${lanes} ${killed ? "vypršel strop" : "selhal"}`);
+        }
       }
       // Manifest až na konec a z disku: běhy ho nepíšou, aby si ho nepřepsaly.
       run("mtt:turn-ev-pack", ["--manifest-only"]);
