@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
+import { nightFamilyRows } from "./lib/nightLog.mts";
 import { MODULE_BUDGET_BYTES } from "./lib/solvedPackBuilding.mts";
 
 /**
@@ -44,11 +45,14 @@ const WORK = "artifacts/decomposition";
 const NIGHT_LOG = "artifacts/decomposition/night.log";
 const EXPANSION_LOG = "artifacts/decomposition/expansion.log";
 
-function runScript(path: string, args: string[] = []): string {
+function runScript(path: string, args: string[] = [], quietStderr = false): string {
   try {
     return execFileSync(process.execPath, ["scripts/run-cli.mjs", path, ...args], {
       encoding: "utf8",
       maxBuffer: 64 * 1024 * 1024,
+      // Kontrola zastaralosti hlásí součet na stderr; ve zprávě má být jen
+      // řádek odsud, ne dvakrát.
+      stdio: quietStderr ? ["ignore", "pipe", "ignore"] : undefined,
     });
   } catch (error) {
     return String((error as { stdout?: string }).stdout ?? "");
@@ -134,6 +138,42 @@ function lastRunWasRefusal(): boolean {
 
 /** Jak dopadla poslední noc, přečtené z jejího vlastního logu. */
 /**
+ * Riverové packy, které už sedí na stropu.
+ *
+ * Stropy jsou **dva** a packu stačí jeden: bajtový rozpočet modulu a strop
+ * počtu pravidel (`RULE_BUDGET` = 300 v `buildRiverStrategyPacks.mts`). Dokud
+ * se tu počítal jen ten bajtový, hlásil report **10 ze 48** a psal to číslo
+ * i do `tonight.json` - jenže suchá zkouška z téhož dne (bod 201) změřila, že
+ * místo nemá **žádná ze 48 rodin**: 39 na počtu pravidel, 10 bajtově, jedna na
+ * obojím. Doporučení z toho vycházelo správné, ale číslo pod ním pětkrát
+ * mírnější než skutečnost - a majitel podle něj rozhoduje o rozpočtu.
+ *
+ * Za nasycený se bere pack nad 97 % rozpočtu: generátor ořezává tak, aby se
+ * vešel, takže přesně na stropu neskončí skoro nikdy. Naměřeno 1. 9. 2026:
+ * největší packy 496 až 497 kB proti rozpočtu 500 kB.
+ */
+const riverPacks = existsSync("src/data/ranges/river")
+  ? readdirSync("src/data/ranges/river").filter((name) => name.endsWith(".json"))
+  : [];
+const RIVER_RULE_BUDGET = 300;
+const ruleCountOf = (name: string): number => {
+  try {
+    const pack = JSON.parse(readFileSync(join("src/data/ranges/river", name), "utf8")) as {
+      rules?: unknown[];
+    };
+    return pack.rules?.length ?? 0;
+  } catch {
+    // Nečitelný pack není nasycený pack; ať se to pozná jinde než tady.
+    return 0;
+  }
+};
+const saturatedByBytes = riverPacks.filter((name) => (
+  statSync(join("src/data/ranges/river", name)).size > MODULE_BUDGET_BYTES * 0.97
+));
+const saturatedByRules = riverPacks.filter((name) => ruleCountOf(name) >= RIVER_RULE_BUDGET);
+const saturated = [...new Set([...saturatedByBytes, ...saturatedByRules])];
+
+/**
  * Kolik noční práce padlo do rodin, které už sedí na stropu modulu.
  *
  * Přírůstek a výměna vypadají v logu stejně: obojí je „vrstva hotová". Rozdíl
@@ -143,29 +183,29 @@ function lastRunWasRefusal(): boolean {
  * s největšími podhrami. Bez téhle věty vypadá noc pokaždé stejně produktivně.
  */
 function nightIntoFullFamilies(run: readonly string[]): string | undefined {
-  const rows = run
-    .map((line) => /^s*(d+) vrstev,s*(d+) podher do (S+)/.exec(line))
-    .filter((match): match is RegExpExecArray => match !== null)
-    .map((match) => ({ layers: Number(match[1]), games: Number(match[2]), family: match[3] }));
+  const rows = nightFamilyRows(run);
   if (rows.length === 0) return undefined;
   let fullLayers = 0, fullGames = 0, layers = 0, games = 0, full = 0;
   for (const row of rows) {
     layers += row.layers;
     games += row.games;
-    const slug = `src/data/ranges/river/${row.family.toLowerCase().replace(/_/g, "-")}.generated.json`;
-    if (!existsSync(slug)) continue;
-    // Na stropu = do 20 KiB pod rozpočtem modulu; níž se nový obsah ještě vejde.
-    if (statSync(slug).size / 1024 <= 480) continue;
+    // Táž definice stropu jako u doporučení níž (bajty **nebo** počet pravidel).
+    // Do 14. 9. 2026 se tu bral jen bajtový strop do 480 KiB, tedy 4 ze 48
+    // rodin místo 48 - stejná vada, kterou bod 207 opravil o pár řádků níž.
+    if (!saturated.includes(`${row.family.toLowerCase().replace(/_/g, "-")}.generated.json`)) continue;
     full += 1;
     fullLayers += row.layers;
     fullGames += row.games;
   }
   if (games === 0) return undefined;
   return `  do rodin na stropu: ${fullLayers} z ${layers} vrstev, ale ${fullGames} z ${games} podher`
-    + ` (${((100 * fullGames) / games).toFixed(1)} % práce stroje, ${full} rodin) - tam je to výměna, ne přírůstek`;
+    + ` (${((100 * fullGames) / games).toFixed(1)} % práce stroje, ${full} rodin)`
+    // Od bodu 238 noc míří na turnovou EV, která z vrstvy bere hodnoty a strop
+    // riverové strategie ji nezajímá; výměna je to jen pro riverový pack.
+    + " - pro riverovou strategii výměna, ne přírůstek; turnová EV z nich bere hodnoty";
 }
-function lastNight(): { lines: string[]; riverLayers: number; overrunMinutes: number | null } {
-  if (!existsSync(NIGHT_LOG)) return { lines: ["night.log chybí"], riverLayers: 0, overrunMinutes: null };
+function lastNight(): { lines: string[]; riverLayers: number; overrunMinutes: number | null; startLine: number } {
+  if (!existsSync(NIGHT_LOG)) return { lines: ["night.log chybí"], riverLayers: 0, overrunMinutes: null, startLine: 0 };
   const all = readFileSync(NIGHT_LOG, "utf8").split("\n");
   // Poslední běh začíná posledním řádkem o volném místě.
   let start = all.length - 1;
@@ -189,7 +229,38 @@ function lastNight(): { lines: string[]; riverLayers: number; overrunMinutes: nu
   }
   const split = nightIntoFullFamilies(run);
   if (split !== undefined) summary.push(split);
-  return { lines: summary, riverLayers: layers, overrunMinutes: overrun };
+  return { lines: summary, riverLayers: layers, overrunMinutes: overrun, startLine: start };
+}
+
+/**
+ * Dvě čísla, která se po noci jinak ověřovala rukou.
+ *
+ * Mířila noc na dodávaná turnová pravidla (bod 238), a čeká něco na ranní
+ * cyklus (bod 239)? Obě otázky měly od 12. 9. 2026 vlastní příkaz a stály
+ * v plánu dne jako „co ověřit zítra ráno" - tedy jako úkol pro paměť člověka.
+ * Zpráva, která se píše každý den sama, je jediné místo, kde se odpověď
+ * nemůže zapomenout; a stojí to 4 + 35 s proti stropu 600 s.
+ *
+ * Zastaralost se měří ve vlastním procesu ze stejného důvodu jako v cyklu:
+ * balíček by jinak nesl packy ze startu procesu (`checkTurnEvStaleness`).
+ */
+function turnEvAfterNight(startLine: number): string[] {
+  const lines: string[] = [];
+  const alignment = runScript("scripts/measureNightTurnEvAlignment.mts", [`--since=${startLine}`]);
+  const layers = /nočních vrstev v logu od řádku \d+: (\d+)/.exec(alignment);
+  const hits = /pod podhrou s dodávaným pravidlem: (\d+) \((\d+) %\)/.exec(alignment);
+  if (layers === null || hits === null) {
+    lines.push("  vrstev pod dodávaným turnovým pravidlem: nezměřeno (mtt:night-turn-ev nevydal čísla)");
+  } else if (layers[1] === "0") {
+    lines.push("  vrstev pod dodávaným turnovým pravidlem: noc žádnou vrstvu nedala");
+  } else {
+    lines.push(`  vrstev pod dodávaným turnovým pravidlem: ${hits[1]} z ${layers[1]} (${hits[2]} %)`);
+  }
+  const stale = runScript("scripts/checkTurnEvStaleness.mts", [], true).split("\n").filter((line) => /^MTT/.test(line.trim()));
+  lines.push(stale.length === 0
+    ? "  zastaralých turnových tabulek EV: 0"
+    : `  zastaralých turnových tabulek EV: ${stale.length} - obnoví je až mtt:after-night (bod 239)`);
+  return lines;
 }
 
 function section(title: string): void {
@@ -244,6 +315,7 @@ say(`  riverových vrstev: ${night.riverLayers}`);
 say(night.overrunMinutes === null
   ? "  přetažení okna: nezjištěno z logu"
   : `  přetažení okna: ${night.overrunMinutes} min`);
+for (const line of turnEvAfterNight(night.startLine)) say(line);
 
 section("den vývoje");
 out.push("", "## Den vývoje", "");
@@ -314,42 +386,6 @@ say(`  rozklad drží ${pairs.size} dvojic sedaček: ${[...pairs.keys()].join(",
  * to dosud rozhodoval sám podle pravidla ve svém kódu a nevěděl, že vedle leží
  * nastagované rodiny, které trenažér potřebuje víc.
  */
-/**
- * Riverové packy, které už sedí na stropu.
- *
- * Stropy jsou **dva** a packu stačí jeden: bajtový rozpočet modulu a strop
- * počtu pravidel (`RULE_BUDGET` = 300 v `buildRiverStrategyPacks.mts`). Dokud
- * se tu počítal jen ten bajtový, hlásil report **10 ze 48** a psal to číslo
- * i do `tonight.json` - jenže suchá zkouška z téhož dne (bod 201) změřila, že
- * místo nemá **žádná ze 48 rodin**: 39 na počtu pravidel, 10 bajtově, jedna na
- * obojím. Doporučení z toho vycházelo správné, ale číslo pod ním pětkrát
- * mírnější než skutečnost - a majitel podle něj rozhoduje o rozpočtu.
- *
- * Za nasycený se bere pack nad 97 % rozpočtu: generátor ořezává tak, aby se
- * vešel, takže přesně na stropu neskončí skoro nikdy. Naměřeno 1. 9. 2026:
- * největší packy 496 až 497 kB proti rozpočtu 500 kB.
- */
-const riverPacks = existsSync("src/data/ranges/river")
-  ? readdirSync("src/data/ranges/river").filter((name) => name.endsWith(".json"))
-  : [];
-const RIVER_RULE_BUDGET = 300;
-const ruleCountOf = (name: string): number => {
-  try {
-    const pack = JSON.parse(readFileSync(join("src/data/ranges/river", name), "utf8")) as {
-      rules?: unknown[];
-    };
-    return pack.rules?.length ?? 0;
-  } catch {
-    // Nečitelný pack není nasycený pack; ať se to pozná jinde než tady.
-    return 0;
-  }
-};
-const saturatedByBytes = riverPacks.filter((name) => (
-  statSync(join("src/data/ranges/river", name)).size > MODULE_BUDGET_BYTES * 0.97
-));
-const saturatedByRules = riverPacks.filter((name) => ruleCountOf(name) >= RIVER_RULE_BUDGET);
-const saturated = [...new Set([...saturatedByBytes, ...saturatedByRules])];
-
 type NightPriority = "DECOMPOSITION" | "NEW_FAMILIES";
 let priority: NightPriority = "DECOMPOSITION";
 let priorityReason = "výchozí: prohlubovat, co je odsolvené";
