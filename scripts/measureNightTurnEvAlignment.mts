@@ -102,6 +102,12 @@ missing.sort((left, right) => right.reach - left.reach || right.rules - left.rul
  * pravidlo a vrstvu nemají, v pořadí podle dosahu těch pravidel - tedy podle
  * toho, co hráč dostane. Noc ho vezme před svůj vlastní výběr a zbytek okna
  * dál rozděluje postaru.
+ *
+ * Pořadí podle dosahu je jen výchozí: runner soubor hned ocení
+ * (`price_river_layers.py` doplní `cost` = kolik riverových podher vrstva
+ * stojí) a přerovná podle `reach / cost`. Změřeno 14. 9. 2026 simulací nad
+ * nocí 13./14.: o 79 % víc dosahu za stejnou noc. Cena se počítá v Pythonu
+ * schválně - týmiž funkcemi jako plánovač, aby nebyly dvě definice.
  */
 if (process.argv.includes("--write")) {
   const out = join(ROOT, "turn-ev-priority.json");

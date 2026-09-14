@@ -244,10 +244,35 @@ def refresh_night_priority():
             for line in (result.stdout or "").splitlines():
                 if "prioritní seznam" in line or "bez vrstvy" in line:
                     log(f"  {line.strip()}")
+            price_turn_ev_priority()
         else:
             log(f"prioritní seznam turnové EV se nezapsal (rc={result.returncode}); jedu podle dosahu")
     except Exception as error:
         log(f"prioritní seznam turnové EV se nepodařilo spustit ({error}); jedu podle dosahu")
+
+
+def price_turn_ev_priority():
+    """Seřadit prioritní seznam podle dosahu za podhru, ne podle dosahu.
+
+    Cena vrstvy se liší až sedmkrát a dosah na podhru třiatřicetkrát; simulace
+    nad nocí 13./14. 2026 dala pořadí dosah/cena o 79 % víc dosahu za stejnou
+    noc (`price_river_layers.py`). Stojí to ~10 s. Selhání se nepřenáší dál:
+    bez ocenění zůstává pořadí podle dosahu, což je stav před 14. 9.
+    """
+    try:
+        result = subprocess.run(
+            [sys.executable, os.path.join(HERE, "price_river_layers.py"), TURN_EV_PRIORITY],
+            cwd=REPO, capture_output=True, text=True, timeout=DAILY_TIMEOUT_SECONDS,
+        )
+        if result.returncode == 0:
+            for line in (result.stdout or "").splitlines():
+                if "oceněno" in line:
+                    log(f"  {line.strip()}")
+        else:
+            detail = (result.stderr or result.stdout or "").strip()[-200:]
+            log(f"ocenění prioritního seznamu selhalo (rc={result.returncode}); pořadí podle dosahu. {detail}")
+    except Exception as error:
+        log(f"ocenění prioritního seznamu se nepodařilo spustit ({error}); pořadí podle dosahu")
 
 
 def should_yield_to_new_families():
@@ -903,6 +928,8 @@ def turn_ev_priority(rows):
         return []
     by_path = {row["path"]: row for row in rows}
     ordered = []
+    priced = sum(1 for entry in entries if isinstance(entry.get("cost"), int))
+    log(f"  prioritní seznam: {len(entries)} podher, oceněno {priced}, pořadí {'dosah/cena' if priced else 'dosah'}")
     for entry in entries:
         path = os.path.join(WORK, entry.get("directory", ""), entry.get("subgame", "") + ".json")
         row = by_path.get(path)
