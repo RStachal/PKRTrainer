@@ -1,6 +1,6 @@
 """Kolik nocí by stála flopová EV, deska po desce, v pořadí podle dosahu.
 
-  python measure_flop_ev_nights.py [--rate=55] [--workers=8]
+  python measure_flop_ev_nights.py [--rate=55] [--workers=8] [--coverage=0.99]
 
 ## Proč to musí vzniknout
 
@@ -61,8 +61,12 @@ def subgame_name(item):
 
 
 def cost_of(args):
-    """Cena riverové vrstvy jedné turnové podhry, nebo 0, když ji už má / nepotřebuje."""
-    directory, item = args
+    """Cena riverové vrstvy jedné turnové podhry, nebo 0, když ji už má / nepotřebuje.
+
+    Pokrytí se předává v úloze, ne globálem: pracovní procesy si modul
+    načítají znovu (spawn), takže by globál z `main` neviděly.
+    """
+    directory, item, coverage = args
     name = subgame_name(item)
     dump_path = os.path.join(WORK, directory, name + ".json")
     if not os.path.exists(dump_path):
@@ -85,7 +89,7 @@ def cost_of(args):
         for line in live:
             chosen += 1
             running += line["weight"]
-            if running / total >= COVERAGE:
+            if running / total >= coverage:
                 break
         return directory, name, chosen * len(plan_river.distinct_rivers(item["board"]))
     except Exception:  # noqa: BLE001
@@ -94,6 +98,9 @@ def cost_of(args):
 
 def main():
     rate = float(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--rate=")), "55"))
+    # Hrubší vrstva = méně vybraných linek. Přepínač je tu pro jedinou otázku:
+    # kolik by koupilo snížení pokrytí, kdyby se flopová EV měla dělat přibližně.
+    coverage = float(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--coverage=")), str(COVERAGE)))
     workers = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--workers=")), "8"))
     night_minutes = 595
 
@@ -120,12 +127,12 @@ def main():
             boards_without_plan += 1
             continue
         for item in json.load(open(plan_path, encoding="utf8")).get("items", []):
-            jobs.append((directory, item))
+            jobs.append((directory, item, coverage))
 
     started = time.time()
     with ProcessPoolExecutor(max_workers=workers) as pool:
         results = list(pool.map(cost_of, jobs, chunksize=64))
-    print(f"oceněno {len(results)} turnových podher pod {len(reach_by_board)} dodávanými deskami za {time.time() - started:.0f} s")
+    print(f"oceněno {len(results)} turnových podher pod {len(reach_by_board)} dodávanými deskami za {time.time() - started:.0f} s (pokrytí linek {coverage})")
 
     cost_by_board = defaultdict(int)
     layered_by_board = defaultdict(int)
