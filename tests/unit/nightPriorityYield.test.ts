@@ -67,11 +67,13 @@ describe("noční priorita", () => {
   });
 
   it("neustoupí, když není nastagovaná práce", () => {
-    // Priorita bez čekající práce znamená, že se má rozkládat dál.
+    // Priorita bez čekající práce znamená, že se má rozkládat dál. Práce jsou
+    // desky bez checkpointu (od 14. 9. 2026), ne rodiny bez jediného.
     if (python() === undefined || !existsSync(RUNNER)) return;
     const out = evaluate([
       "m.should_yield_to_new_families.__globals__['monolithic_runner_installed'] = lambda: True",
       "m.should_yield_to_new_families.__globals__['staged_families_without_checkpoint'] = lambda: set()",
+      "m.should_yield_to_new_families.__globals__['staged_boards_without_checkpoint'] = lambda: 0",
       "import json, tempfile, os",
       "path = os.path.join(tempfile.mkdtemp(), 'tonight.json')",
       "open(path, 'w', encoding='utf8').write(json.dumps({'priority': 'NEW_FAMILIES', 'reason': 'test'}))",
@@ -119,6 +121,27 @@ describe("noční priorita", () => {
     // nerozkládalo, aniž by dohledával, co bylo v prioritě.
     expect(message).toContain("malo vzoru");
     expect(message).toContain("2 rodin");
+  });
+
+  it("ustoupí kvůli deskám i tam, kde každá rodina už nějaký checkpoint má", () => {
+    // Dosolvení dalších desek existujícím rodinám (`mtt:board-growth`): žádná
+    // rodina není „bez jediného checkpointu", a přesto čeká 174 desek. Do
+    // 14. 9. 2026 by se tu neustoupilo a oba runnery by jely naráz.
+    if (python() === undefined || !existsSync(RUNNER)) return;
+    const out = evaluate([
+      "m.should_yield_to_new_families.__globals__['monolithic_runner_installed'] = lambda: True",
+      "m.should_yield_to_new_families.__globals__['staged_families_without_checkpoint'] = lambda: set()",
+      "m.should_yield_to_new_families.__globals__['staged_boards_without_checkpoint'] = lambda: 174",
+      "import json, tempfile, os",
+      "path = os.path.join(tempfile.mkdtemp(), 'tonight.json')",
+      "open(path, 'w', encoding='utf8').write(json.dumps({'priority': 'NEW_FAMILIES', 'reason': 'river nasycený'}))",
+      "m.should_yield_to_new_families.__globals__['NIGHT_PRIORITY'] = path",
+      "print(json.dumps(m.should_yield_to_new_families()))",
+    ].join("\n"));
+    const message = JSON.parse(out) as string | null;
+    expect(message).not.toBeNull();
+    expect(message).toContain("174 desek");
+    expect(message).toContain("0 rodin bez jediného");
   });
 
   it("priorita DECOMPOSITION nechá rozklad běžet", () => {

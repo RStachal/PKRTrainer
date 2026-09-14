@@ -291,9 +291,15 @@ def should_yield_to_new_families():
         return None
     if decision.get("priority") != "NEW_FAMILIES":
         return None
-    pending = staged_families_without_checkpoint()
-    if not pending:
-        return None
+    # Desky, ne rodiny.
+    #
+    # Do 14. 9. 2026 se ustupovalo jen kvůli rodinám **bez jediného**
+    # checkpointu - to sedělo na zakládání dvojic sedaček. Dosolvení dalších
+    # desek rodině, která už šest má (`mtt:board-growth`), by tím prošlo jako
+    # „nic nastagováno": oba runnery by se ve 21:00 rozjely naráz, monolit
+    # s dvanácti vlákny vedle šestnácti riverových procesů, a obě práce by
+    # jely na půl. Čekající práce je deska bez checkpointu, ať rodina má
+    # ostatní desky nebo ne.
     boards = staged_boards_without_checkpoint()
     if boards < YIELD_MIN_BOARDS:
         # Ustoupit na celou noc kvůli hodině práce je horší než neustoupit
@@ -305,9 +311,10 @@ def should_yield_to_new_families():
         # noc by neodvedla vůbec nic. Priorita říká, co je cennější, ne že se má
         # stroj vypnout.
         return None
+    pending = staged_families_without_checkpoint()
     return (
         f"ustupuji: priorita je NEW_FAMILIES ({decision.get('reason', 'bez důvodu')}), "
-        f"nastagováno {len(pending)} rodin bez checkpointu. "
+        f"nastagováno {boards} desek bez checkpointu ({len(pending)} rodin bez jediného). "
         "Okno patří monolitickému solveru, rozklad by mu vzal stroj."
     )
 

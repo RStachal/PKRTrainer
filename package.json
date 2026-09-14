@@ -183,6 +183,7 @@
     "mtt:rye-review": "node scripts/run-cli.mjs scripts/renderRyeDraftReview.mts",
     "mtt:daily": "node scripts/run-cli.mjs scripts/runDailyOrchestrator.mts",
     "mtt:seat-pair-expansion": "node scripts/run-cli.mjs scripts/buildSeatPairExpansionBatch.mts",
+    "mtt:board-growth": "node scripts/run-cli.mjs scripts/buildBoardGrowthBatch.mts",
     "mtt:processes": "node scripts/run-cli.mjs scripts/checkProcessRegistry.mts"
   },
   "devDependencies": {

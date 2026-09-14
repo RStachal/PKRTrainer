@@ -55,6 +55,20 @@ const withEv = process.argv.includes("--ev");
  * Plný cyklus zůstává na vyžádání.
  */
 const turnEvOnly = process.argv.includes("--turn-ev-only");
+/**
+ * Jen některé ulice, `--streets=flop,turn`.
+ *
+ * Flopový pack se staví z monolitických checkpointů, takže po noci, která
+ * dosolvila desky (`mtt:board-growth`), je flop k dodání hned ráno - bez
+ * turnové vrstvy a bez riveru. Přestavět kvůli tomu river (97 min, halda
+ * 16 GB) by bylo přesně to, kvůli čemu ranní cyklus nikdo nespouštěl.
+ * Vynechaná ulice se negeneruje ani ve druhém průchodu a její EV se
+ * neobnovuje - nezměnila se.
+ */
+const streetsWanted = new Set(
+  (process.argv.find((arg) => arg.startsWith("--streets="))?.split("=")[1] ?? "flop,turn,river")
+    .split(",").map((value) => value.trim().toLowerCase()).filter((value) => value.length > 0),
+);
 const WORK = "artifacts/decomposition";
 const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 
@@ -380,7 +394,7 @@ async function generateAll(list: readonly string[], label: string): Promise<void
   // nebylo vidět.
   const dropped = new Map<string, number>();
   // Od nejdražší ulice: kdyby paměť došla, ať čeká ta levná, ne ta drahá.
-  const queue: string[] = [...BY_NEED];
+  const queue: string[] = BY_NEED.filter((street) => streetsWanted.has(street));
   /** Čas na ulici - jediné číslo, kterým se dá paralelizace obhájit nebo vyvrátit. */
   const spent = new Map<string, number>();
 
@@ -456,6 +470,7 @@ if (!write) {
   console.log("Zastaralé tabulky se obnovují samy; vypnout jde --skip-ev-repair.");
   console.log("Obnova má rozpočet 150 minut, jinak --ev-repair-minutes=N.");
   console.log("Jen turnová EV po noci, bez packů: --turn-ev-only (4 běhy, do 150 min).");
+  console.log("Jen některé ulice: --streets=flop,turn (river se pak negeneruje ani neobnovuje EV).");
 } else {
   const list = families();
   if (turnEvOnly) console.log("\n--turn-ev-only: packy se negenerují, jde se rovnou na turnovou EV");
@@ -514,7 +529,7 @@ if (!write) {
   // typicky, jedna 2 129 s); zastaralých bývá hrstka a přepočítat se mají
   // právě ony. `--skip-ev-repair` je pro případ, kdy je potřeba cyklus urychlit
   // a člověk ví, že EV dopočítá zvlášť.
-  if (!process.argv.includes("--skip-ev-repair") && !turnEvOnly) {
+  if (!process.argv.includes("--skip-ev-repair") && !turnEvOnly && streetsWanted.has("river")) {
     console.log("\n[4/4] obnova EV, kterou cyklus zneplatnil");
     // Vlastní proces, ne import.
     //

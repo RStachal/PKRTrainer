@@ -1,6 +1,6 @@
 """Odsolvit nastagované rodiny, dokud vydrží noční okno.
 
-  python run_night_expansion.py [--until=HH:MM] [--limit=N]
+  python run_night_expansion.py [--until=HH:MM] [--limit=N] [--workers=N] [--river-workers=N] [--river-threads=N]
 
 Sourozenec `run_night_decomposition.py`. Ten rozkládá existující checkpointy na
 turnové a riverové podhry; tenhle vyrábí checkpointy, které ještě neexistují.
@@ -155,6 +155,16 @@ def main():
         log("není co solvit; vygeneruj parametry přes npm run mtt:seat-pair-expansion -- --write")
         return
 
+    # Držet stroj vzhůru po celé okno - stejně jako rozklad, a ze stejného
+    # důvodu. Tenhle runner to do 14. 9. 2026 neuměl: expanzní noci byly od
+    # 1. 9. krátké (10 desek), takže se to neprojevilo; s frontou 174 desek
+    # (`mtt:board-growth`) je to celá noc a Modern Standby by ji sebral
+    # uprostřed monolitu, jako 30. 8. rozkladu.
+    from run_night_decomposition import keep_system_awake
+    awake = keep_system_awake(True)
+    log("stroj se drží vzhůru po dobu běhu" if awake
+        else "POZOR: stroj se nedaří udržet vzhůru; okno může přerušit spánek")
+
     done = failed = 0
     for param, family, board, checkpoint in (todo[:limit] if limit else todo):
         remaining = (deadline - datetime.now()).total_seconds() / 60
@@ -196,6 +206,8 @@ def main():
                 "odloženo natrvalo, smaž .failed pro další pokus")
 
     log(f"expansion: hotovo {done}, selhalo {failed}, zbývá {len(pending_boards())}")
+    # Pustit, než okno převezme rozklad: ten si drží vzhůru sám.
+    keep_system_awake(False)
     hand_back(deadline)
 
 
@@ -214,9 +226,13 @@ def hand_back(deadline) -> None:
         log(f"zbývá {remaining:.0f} min, na rozklad je to málo; končím")
         return
     log(f"fronta prázdná, {remaining / 60:.1f} h okna předávám rozkladu")
+    # Tvar rozkladu se předává dál, ne vymýšlí tady: bez toho by předaná
+    # půlka noci jela riverovou fázi 8 x 2 místo 16 x 1 z naplánované úlohy
+    # rozkladu (bod 242), a obě půlky noci by měly jinou propustnost.
+    forwarded = [a for a in sys.argv if a.startswith(("--workers=", "--river-workers=", "--river-threads="))]
     subprocess.run(
         [sys.executable, os.path.join(HERE, "run_night_decomposition.py"),
-         f"--until={deadline:%H:%M}"],
+         f"--until={deadline:%H:%M}", *forwarded],
         cwd=REPO,
     )
 

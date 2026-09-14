@@ -74,24 +74,24 @@ interface DeskDocument {
 
 const documents: readonly DeskDocument[] = [
   {
+    file: "piloty.html",
+    title: "Flopové piloty",
+    decides: "jestli sedm pilotů, které dnes drží MEDIUM jen původem solvu, hraje dobře - třetí čtení, teď nad mixem",
+    command: 'npm run mtt:pilot-answers -- --answers="…" --reviewer="Radim" --write',
+    storageKey: "drillev-pilot-answers-v1",
+    hashed: true,
+    priority: "první - flop",
+    renderer: ["scripts/renderFlopPilotReview.mts"],
+  },
+  {
     file: "ranze-chipev.html",
     title: "Ranže z chartů — chipEV půlka",
     decides: "jestli koupené mřížky odpovídají tomu, co má trenažér radit preflop",
     command: 'npm run mtt:rye-answers -- --answers="…"',
     storageKey: "drillev-rye-answers-v2",
     hashed: false,
-    priority: "první",
+    priority: "přečteno 10. 9.",
     renderer: ["scripts/renderRyeDraftReview.mts", "--only=CHIP"],
-  },
-  {
-    file: "piloty.html",
-    title: "Flopové piloty",
-    decides: "jestli sedm pilotů, které dnes drží MEDIUM jen původem solvu, hraje dobře",
-    command: 'npm run mtt:pilot-answers -- --answers="…" --reviewer="Radim" --write',
-    storageKey: "drillev-pilot-answers-v1",
-    hashed: true,
-    priority: "druhé",
-    renderer: ["scripts/renderFlopPilotReview.mts"],
   },
   {
     file: "ranze-vse.html",
@@ -116,6 +116,26 @@ mkdirSync(outDir, { recursive: true });
 interface RenderedDocument extends DeskDocument {
   /** Identity záznamů na té stránce, přečtené z ní. */
   ids: readonly number[];
+  /** Zodpovězeno a od té doby beze změny - číst znovu netřeba. */
+  settled: number;
+  /** Zodpovězeno, ale obsah nebo kreslení se od té doby změnilo - číst znovu. */
+  reread: number;
+}
+
+/**
+ * Co na stránce ještě čeká, **přečtené ze stránky**, ne z paměti prohlížeče.
+ *
+ * Průběh v localStorage je na jednom zařízení; zapsané odpovědi
+ * (`Agents/range-intake/answers-*.json`, `Agents/turn-review/verdicts.json`)
+ * platí všude. Stránky je samy vypisují u záznamu (`meta answered`,
+ * `meta stale`, `previous`), takže rozcestník jen počítá tytéž značky -
+ * kdyby počítal jinak než stránka, rozešel by se s ní.
+ */
+function recordedProgress(html: string): { settled: number; reread: number } {
+  return {
+    settled: (html.match(/class="meta answered"/g) ?? []).length,
+    reread: (html.match(/class="meta stale"/g) ?? []).length + (html.match(/class="previous"/g) ?? []).length,
+  };
 }
 
 const rendered: RenderedDocument[] = [];
@@ -132,7 +152,18 @@ for (const document of documents) {
     console.error(`${document.file}: žádný odpovídací blok - stránka by se nedala vyplnit.`);
     process.exit(1);
   }
-  rendered.push({ ...document, ids });
+  rendered.push({ ...document, ids, ...recordedProgress(html) });
+}
+
+/** Věta o tom, co z té stránky ještě chci - z čísel, která stránka sama nese. */
+function remainingLine(document: RenderedDocument): string {
+  const open = document.ids.length - document.settled - document.reread;
+  const parts: string[] = [];
+  if (document.settled > 0) parts.push(`<b>${document.settled}</b> zapsáno a beze změny`);
+  if (document.reread > 0) parts.push(`<b>${document.reread}</b> k přečtení znovu`);
+  if (open > 0) parts.push(`<b>${open}</b> bez odpovědi`);
+  if (document.settled === document.ids.length) return "Hotovo - nic tu nečeká.";
+  return `Čeká: ${parts.join(" &middot; ")}.`;
 }
 
 const cards = rendered.map((document, index) => `
@@ -141,6 +172,7 @@ const cards = rendered.map((document, index) => `
     <p class="meta">${escapeHtml(document.priority)} &middot;
        <b>${document.ids.length}</b> ${document.ids.length === 7 ? "pilotů" : "mřížek"} &middot;
        <span class="done" id="done${index}">průběh se načítá…</span></p>
+    <p class="remaining">${remainingLine(document)}</p>
     <p class="what">${escapeHtml(document.decides)}</p>
     <p><a class="open" href="${escapeHtml(document.file)}">Otevřít a pokračovat</a></p>
     <p class="meta">odpovědi se pak zapisují: <code>${escapeHtml(document.command)}</code></p>
@@ -160,6 +192,8 @@ const page = `<!doctype html>
  .meta{color:#9fb3cd;font-size:13px;margin:2px 0}
  .what{margin:6px 0}
  .done b{color:#7bd3ff}
+ .remaining{margin:4px 0;color:#f0c14b}
+ .remaining b{color:#fff}
  a.open{display:inline-block;margin:8px 0 2px;padding:10px 14px;border-radius:8px;
         background:#2f4a7a;color:#fff;text-decoration:none;font-size:14px;min-height:40px}
  code{background:#0f141d;padding:1px 5px;border-radius:3px;font-size:12px}
@@ -182,6 +216,11 @@ const page = `<!doctype html>
     odpovědi si podrží jen adresa - kopíruj je průběžně.</p>
 </div>
 ${cards}
+<section class="doc">
+ <h2>Tři rozhodnutí, na kterých visí obsah</h2>
+ <p class="what">Žádná mřížka - tři otázky s doměřenou cenou. Odpovídá se zprávou, ne tokenem.</p>
+ <p><a class="open" href="rozhodnuti.html">Otevřít rozhodnutí</a></p>
+</section>
 <section class="doc">
  <h2>Kde projekt stojí</h2>
  <p class="what">Čísla, ne dojem: co dostane hráč po odpovědi, stav obsahu, poslední noc
@@ -293,12 +332,81 @@ ${cards}
 </body></html>
 `;
 
+/**
+ * Rozhodnutí, která nejsou mřížka.
+ *
+ * Tři otázky visí na majiteli od 9. az 10. 9. 2026 a stály v deníku a v plánu
+ * dne - tedy tam, kde se na ně čte stroj, ne člověk. Text je opsaný z měření
+ * v bodech 225, 234 a z čtení chipEV půlky; čísla se tu nepočítají znovu,
+ * a proto u každé stojí, odkud jsou.
+ */
+function decisionsPage(): string {
+  return `<!doctype html>
+<html lang="cs"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tři rozhodnutí</title>
+<style>
+ body{font:15px/1.6 system-ui,Segoe UI,sans-serif;margin:0;background:#12161f;color:#e8eef7}
+ main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+ h1{font-size:21px;margin:0 0 6px} h2{font-size:17px;margin:18px 0 4px}
+ .doc{background:#161d2b;border-radius:10px;padding:14px 16px;margin:12px 0}
+ .meta{color:#9fb3cd;font-size:13px} .rec{color:#f0c14b}
+ code{background:#0f141d;padding:1px 5px;border-radius:3px;font-size:12px}
+ a{color:#7bd3ff}
+</style></head><body><main>
+<h1>Tři rozhodnutí, na kterých visí obsah</h1>
+<p class="meta">Odpovídá se zprávou („1: A, 2: B, 3: squeeze"). Čísla jsou z měření uvedených u každé otázky.</p>
+
+<section class="doc">
+<h2>1. Osa otvírače v klíči ranže (deník 234)</h2>
+<p>Schválil jsi 61 chipEV mřížek „proti otevření". Produkt se ale u ranže ptá jen na
+sedačku hrdiny a hloubku - <b>ne na to, kdo otevřel</b>. Změřeno
+(<code>npm run mtt:opener-axis</code>): na dnešní předpoklad sedí <b>6 mřížek a 118 tříd</b>,
+<b>51 mřížek a 845 tříd</b> míří proti otvírači, na kterého se produkt nikdy nezeptá.
+Absurdní na tom je, že ocenění re-jamu otvírače zná (<code>REJAM_EV_OPENER_BY_HERO</code>) - situace se
+tedy ocení proti konkrétnímu otvírači a naučí z range, která otvírače ignoruje.</p>
+<p><b>A)</b> dát <code>RangeKey</code> osu otvírače - 2 az 3 dny práce, otázka pro hráče se změní
+(„BB proti otevření z UTG" místo „BB proti otevření"), a schválených 845 tříd se dodá.<br>
+<b>B)</b> nechat, jak je - dodá se 118 tříd, zbytek zůstane nedosažitelný a přiznaný jako limit.</p>
+<p class="rec">Doporučení: A. Bez osy koupí import skoro nic; hodnota schváleného čtení je v ose samotné.</p>
+</section>
+
+<section class="doc">
+<h2>2. Šest zamítnutých push/fold mřížek na 20 bb („moc těsné")</h2>
+<p>Z chipEV půlky jsi 10. 9. zamítl 6 mřížek PUSH_FOLD 20 bb. Trenažér dnes na 20 bb radí
+z produkčního packu, který na tyhle spoty odpovídá jinak než koupený chart - a ty jsi řekl,
+že koupený je moc těsný.</p>
+<p><b>A)</b> nechat produkční pack (nic se nemění; koupený chart se na 20 bb nepoužije).<br>
+<b>B)</b> vzít koupený chart i tak a přiznat u něj „těsnější než bys hrál".<br>
+<b>C)</b> dodáš jiný zdroj pro 20 bb push/fold (jaký?).</p>
+<p class="rec">Doporučení: A, dokud není jiný zdroj - zamítnutý chart nemá co učit.</p>
+</section>
+
+<section class="doc">
+<h2>3. Dvě stránky, které import vyřadil (deník 225)</h2>
+<p>Import shodil dvě stránky, protože měly barvu, kterou slovník kontextu neuměl přeložit:
+<code>MUL-20BB-BB-vs-MP_LP</code> a <code>ICM11-bb13bb-sb9bb-r</code>. Ani jedna není čelení all-inu -
+první vypadá jako <b>squeeze</b> proti otevření a dorovnání, druhá jako <b>obrana big blindu proti 2,5x</b>.
+Slovník se bez tvé odpovědi určit nedá a dnes je kontext <code>VS_ALLIN</code> prázdný.</p>
+<p><b>Otázka:</b> čemu ty dvě stránky odpovídají - squeeze, obrana proti otevření, nebo něco jiného?
+(Stačí dvě slova ke každé.)</p>
+</section>
+<p class="meta"><a href="index.html">zpět na rozcestník</a></p>
+</main></body></html>
+`;
+}
+
 writeFileSync(`${outDir}/index.html`, page, "utf8");
 
 console.log(`Složka k nahrání: ${outDir}`);
 for (const document of rendered) {
-  console.log(`  ${document.file.padEnd(20)} ${String(document.ids.length).padStart(4)} k odpovědi  (${document.priority})`);
+  const open = document.ids.length - document.settled - document.reread;
+  console.log(`  ${document.file.padEnd(20)} ${String(document.ids.length).padStart(4)} celkem,`
+    + ` ${String(document.settled).padStart(3)} zapsáno, ${String(document.reread).padStart(3)} znovu,`
+    + ` ${String(open).padStart(3)} bez odpovědi  (${document.priority})`);
 }
+writeFileSync(`${outDir}/rozhodnuti.html`, decisionsPage(), "utf8");
+console.log("  rozhodnuti.html       tři rozhodnutí s doměřenou cenou");
 console.log("  index.html            rozcestník s průběhem");
 console.log("");
 

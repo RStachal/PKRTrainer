@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 import { handLabel } from "../src/core/poker";
@@ -6,6 +6,7 @@ import { generatedMttPostflopPilotPacks } from "../src/data/ranges/mttPostflopPi
 import { MTT_POSTFLOP_PILOT_CATALOG } from "../src/data/ranges/mttPostflopPilotCatalog";
 import { positionPatternLabel } from "../src/core/postflopGenerator";
 import type { FlopProductionStrategyRule } from "../src/data/ranges/flopProductionStrategyPack";
+import { flopPilotContentHash } from "../src/data/ranges/turnReviewVerdict";
 import {
   PILOT_REVIEW_FLAGS,
   pilotHeroSeat,
@@ -207,6 +208,45 @@ function mixNote(rule: FlopProductionStrategyRule): string {
 
 const catalogById = new Map(MTT_POSTFLOP_PILOT_CATALOG.map((entry) => [entry.id, entry]));
 
+/**
+ * Co už o pilotovi řekl člověk.
+ *
+ * Verdikty z `mtt:pilot-answers` leží v `Agents/turn-review/verdicts.json`
+ * s otiskem dat, ne stránky. Druhé čtení 9. 9. 2026 dalo všem sedmi
+ * NEEDS_WORK s výtkami - jenže stránka tehdy kreslila jednu barvu na třídu
+ * a mix zahazovala (bod 221), takže výtky mířily na artefakt kreslení.
+ * Data se od té doby nezměnila (otisk sedí), stránka ano. Čtenář má vidět
+ * svou minulou odpověď i to, proč se ptá znovu; jinak se ptá dvakrát na
+ * totéž, aniž řekne, co se mezitím stalo.
+ */
+interface HumanVerdict { outcome: string; reviewedAt: string; reviewer: string; notes?: string; contentHash: string }
+function humanVerdicts(): Map<string, HumanVerdict> {
+  const path = "Agents/turn-review/verdicts.json";
+  const out = new Map<string, HumanVerdict>();
+  if (!existsSync(path)) return out;
+  const file = JSON.parse(readFileSync(path, "utf8")) as { verdicts?: (HumanVerdict & { street?: string; familyId: string; basis?: string })[] };
+  for (const row of file.verdicts ?? []) {
+    if ((row.street ?? "TURN") !== "FLOP" || row.basis !== "PLAYER_READ") continue;
+    out.set(row.familyId, row);
+  }
+  return out;
+}
+const humanByPilot = humanVerdicts();
+
+function previousReadNote(catalogId: string, currentHash: string): string {
+  const verdict = humanByPilot.get(catalogId);
+  if (verdict === undefined) return "";
+  const outcome = verdict.outcome === "NEEDS_WORK" ? "Něco je špatně" : verdict.outcome === "ACCEPTED" ? "Hraje dobře" : verdict.outcome;
+  const notes = verdict.notes === undefined ? "" : ` (${escape(verdict.notes)})`;
+  const same = verdict.contentHash === currentHash;
+  return `<p class="previous"><b>Tvoje odpověď z ${escape(verdict.reviewedAt)}: ${escape(outcome)}</b>${notes}.`
+    + (same
+      ? " Data pilota jsou od té doby stejná, ale stránka tehdy kreslila jednu barvu na třídu a mix zahazovala;"
+        + " teď kreslí celý mix. Proto se ptám znovu - posuď proužky, ne barvy."
+      : " Data pilota se od té doby změnila, takže odpověď neplatí a čte se znovu.")
+    + "</p>";
+}
+
 // Pořadí i otisk stránky se počítají ve sdílené knihovně, ne tady: zapisovač
 // odpovědí je potřebuje taky a dvě kopie by se rozešly tiše.
 const pilots = pilotReviewOrder(generatedMttPostflopPilotPacks);
@@ -244,6 +284,7 @@ const cards = pilots.map((entry, index) => {
   <section class="pilot" id="p${index}">
     <h2>${index}. ${escape(catalog?.label ?? entry.catalogId)}</h2>
     <p class="seat">Čí strategii vidíš: <b>${escape(seat.seat)}</b> - ${escape(seat.role)}</p>
+    ${previousReadNote(entry.catalogId, flopPilotContentHash(entry.pack.rules))}
     <p class="meta">
       ${escape(positionPatternLabel(catalog?.positionPattern ?? "BTN_VS_BB"))}
       · ${escape(catalog?.actionNode ?? "?")}
@@ -282,6 +323,8 @@ const page = `<!doctype html>
  .seat{margin:4px 0;padding:6px 10px;background:#1a2331;border-left:3px solid #7bd3ff;
        border-radius:4px;color:#dce6f5;font-size:13px}
  .seat b{color:#7bd3ff}
+ .previous{margin:4px 0;padding:6px 10px;background:#2a2412;border-left:3px solid #f0c14b;color:#e8dfc0}
+ .previous b{color:#f0c14b}
  .tags{margin:6px 0}
  .tag{display:inline-block;border:1px solid;border-radius:3px;padding:1px 6px;margin:2px 4px 2px 0;font-size:12px}
  table.grid{border-collapse:collapse;margin:8px 0}
