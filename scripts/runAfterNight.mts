@@ -1,5 +1,5 @@
 import { execFile, execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { cpus, freemem } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -65,12 +65,52 @@ const turnEvOnly = process.argv.includes("--turn-ev-only");
  * Vynechaná ulice se negeneruje ani ve druhém průchodu a její EV se
  * neobnovuje - nezměnila se.
  */
+const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 const streetsWanted = new Set(
-  (process.argv.find((arg) => arg.startsWith("--streets="))?.split("=")[1] ?? "flop,turn,river")
+  (process.argv.find((arg) => arg.startsWith("--streets="))?.split("=")[1]
+    ?? (process.argv.some((arg) => arg.startsWith("--streets-if-new=")) ? "" : "flop,turn,river"))
     .split(",").map((value) => value.trim().toLowerCase()).filter((value) => value.length > 0),
 );
+/**
+ * Ulice jen tehdy, když jí noc něco přinesla: `--streets-if-new=flop`.
+ *
+ * Ranní úloha v 07:05 nemá generovat 49 flopových packů každý den kvůli tomu,
+ * že jednou za čas přibudou desky (`mtt:board-growth`): stojí to 11 minut,
+ * haldu 4 GB a přepíše `createdAt` v 49 souborech, které se jinak nezměnily.
+ * Ulice se proto vezme jen tehdy, když je v `CHECKPOINT_ROOT` checkpoint
+ * novější než nejnovější pack té ulice - tedy noc doopravdy něco dosolvila.
+ * Bez toho by nový flopový obsah čekal na ruku (bod 239 o ulici dřív).
+ */
+const STREET_PACK_DIR: Readonly<Record<string, string>> = {
+  flop: "src/data/ranges/flop",
+  turn: "src/data/ranges/turn",
+  river: "src/data/ranges/river",
+};
+function newestMtime(directory: string, filter: (name: string) => boolean): number {
+  if (!existsSync(directory)) return 0;
+  let newest = 0;
+  for (const name of readdirSync(directory)) {
+    const path = join(directory, name);
+    if (statSync(path).isDirectory()) {
+      newest = Math.max(newest, newestMtime(path, filter));
+    } else if (filter(name)) {
+      newest = Math.max(newest, statSync(path).mtimeMs);
+    }
+  }
+  return newest;
+}
+for (const street of (process.argv.find((arg) => arg.startsWith("--streets-if-new="))?.split("=")[1] ?? "")
+  .split(",").map((value) => value.trim().toLowerCase()).filter((value) => value.length > 0)) {
+  const packs = newestMtime(STREET_PACK_DIR[street] ?? "", (name) => name.endsWith(".generated.json"));
+  const checkpoints = newestMtime(CHECKPOINT_ROOT, (name) => name.startsWith("pkrtrainer_") && name.endsWith(".json"));
+  if (checkpoints > packs) {
+    streetsWanted.add(street);
+    console.log(`--streets-if-new: ${street} - checkpoint novější než pack, ulice se generuje`);
+  } else {
+    console.log(`--streets-if-new: ${street} - žádný checkpoint novější než pack, ulice se přeskočí`);
+  }
+}
 const WORK = "artifacts/decomposition";
-const CHECKPOINT_ROOT = "Agents/solver-input/gto-plus/sample-postflop-v1/output/texas-solver";
 
 /**
  * Skripty se volají přímo, ne přes `npm run`.
@@ -471,13 +511,16 @@ if (!write) {
   console.log("Obnova má rozpočet 150 minut, jinak --ev-repair-minutes=N.");
   console.log("Jen turnová EV po noci, bez packů: --turn-ev-only (4 běhy, do 150 min).");
   console.log("Jen některé ulice: --streets=flop,turn (river se pak negeneruje ani neobnovuje EV).");
+  console.log("Ulice jen když noc něco dosolvila: --streets-if-new=flop (ranní úloha).");
 } else {
   const list = families();
+  const generateNothing = turnEvOnly || streetsWanted.size === 0;
   if (turnEvOnly) console.log("\n--turn-ev-only: packy se negenerují, jde se rovnou na turnovou EV");
-  if (!turnEvOnly) await generateAll(list, "1/3");
+  else if (streetsWanted.size === 0) console.log("\nžádná ulice ke generování, jde se rovnou na turnovou EV");
+  if (!generateNothing) await generateAll(list, "1/3");
 
   const verdictsBefore = verdictSnapshot();
-  if (!turnEvOnly) {
+  if (!generateNothing) {
     console.log("\n[2/3] mechanická kontrola");
     const review = run("mtt:mechanical-review", ["--write"]);
     for (const line of review.split("\n")) {
@@ -507,7 +550,7 @@ if (!write) {
       verdictsBefore.get(`${street}|${family}`) !== verdictsAfter.get(`${street}|${family}`)
     ))
   ));
-  if (turnEvOnly) {
+  if (generateNothing) {
     // Bez kontroly se verdikt hnout nemohl; hláška by jen mátla.
   } else if (changed.length === 0) {
     console.log("\n[3/3] žádné rodině se verdikt nezměnil, druhý průchod není potřeba");
