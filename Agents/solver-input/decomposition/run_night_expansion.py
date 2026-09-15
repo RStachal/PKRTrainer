@@ -183,11 +183,22 @@ def main():
         log(f"solving {family} {board}")
         for attempt in range(1, BOARD_ATTEMPTS + 1):
             started = time.time()
-            result = subprocess.run(
-                [os.path.join(SOLVER_ROOT, "console_solver.exe"), "-i", param],
-                cwd=SOLVER_ROOT, capture_output=True, text=True,
-                timeout=max(BOARD_MINUTES, 30) * 60,
-            )
+            # Timeout je selhání desky, ne noci. V noci na 15. 9. 2026 běžela
+            # `MTT9_25BB_BTN_SB_SRP J73r` přes třicet minut, `TimeoutExpired`
+            # nikdo nechytil a runner spadl v 01:48 - zbylých pět hodin okna
+            # (asi 35 desek) shořelo a rozklad okno nedostal. Deska, která
+            # timeout přesáhne jednou, ho přesáhne i podruhé (solver je
+            # deterministický), takže se neopakuje a rovnou se odloží.
+            try:
+                result = subprocess.run(
+                    [os.path.join(SOLVER_ROOT, "console_solver.exe"), "-i", param],
+                    cwd=SOLVER_ROOT, capture_output=True, text=True,
+                    timeout=max(BOARD_MINUTES, 30) * 60,
+                )
+                rc = result.returncode
+            except subprocess.TimeoutExpired:
+                rc = "timeout"
+                attempt = BOARD_ATTEMPTS
             minutes = (time.time() - started) / 60
             if solved(checkpoint):
                 size = os.path.getsize(checkpoint) / (1024 ** 2)
@@ -196,14 +207,15 @@ def main():
                 log(f"  hotovo za {minutes:.1f} min, checkpoint {size:.0f} MB{again}")
                 break
             if attempt < BOARD_ATTEMPTS:
-                log(f"  spadlo po {minutes:.1f} min (rc={result.returncode}); zkouším znovu")
+                log(f"  spadlo po {minutes:.1f} min (rc={rc}); zkouším znovu")
                 continue
             failed += 1
             with open(checkpoint + ".failed", "w", encoding="utf-8") as handle:
-                handle.write(f"{datetime.now():%Y-%m-%d %H:%M} rc={result.returncode} "
-                             f"po {BOARD_ATTEMPTS} pokusech\n")
-            log(f"  SELHALO po {BOARD_ATTEMPTS} pokusech (rc={result.returncode}); "
+                handle.write(f"{datetime.now():%Y-%m-%d %H:%M} rc={rc} "
+                             f"po {attempt} pokusech\n")
+            log(f"  SELHALO po {minutes:.1f} min (rc={rc}); "
                 "odloženo natrvalo, smaž .failed pro další pokus")
+            break
 
     log(f"expansion: hotovo {done}, selhalo {failed}, zbývá {len(pending_boards())}")
     # Pustit, než okno převezme rozklad: ten si drží vzhůru sám.
