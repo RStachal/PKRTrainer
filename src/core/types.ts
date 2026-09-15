@@ -174,6 +174,17 @@ export interface TableState {
   callsBefore: number; // 0..7
   facing: FacingAction;
   isBvB: boolean;
+  /**
+   * Sedačka, která jednala proti hrdinovi: otvírač u `VS_OPEN` a `SQUEEZE`,
+   * tříbetující u `VS_3BET`. Osa otvírače (bod 234, rozhodnuto 14. 9. 2026).
+   *
+   * Do 15. 9. 2026 spot věděl jen, že hrdina čelí otevření, ne od koho; obrázek
+   * dával otvírače na sedačku těsně před hrdinou, EV počítala s jinou
+   * (`REJAM_EV_OPENER_BY_HERO`) a range platila proti třetí. Chybí u kontextů
+   * bez protihráče a u spotů, u kterých ho nikdo neurčil - ty se kreslí i
+   * počítají jako dřív.
+   */
+  vsSeat?: Position;
 }
 
 // ---------------------------------------------------------------------------

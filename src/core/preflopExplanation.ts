@@ -105,8 +105,11 @@ function buildPreflopExplanationCs(
   mode: PreflopExplanationMode,
 ): string {
   const recommended = input.recommended.map((action) => ACTION_LABEL[action]).join(" / ");
+  // Jmenovaný protihráč patří do věty: range proti UTG a proti BTN je jiná.
+  const seat = input.tableState.vsSeat;
+  const versus = seat === undefined ? "" : input.context === "VS_3BET" ? ` od ${seat}` : ` z ${seat}`;
   const intro =
-    `${CONTEXT_LABEL[input.context]}${input.importedFromHandHistory ? " HH spot" : ""}: ` +
+    `${CONTEXT_LABEL[input.context]}${versus}${input.importedFromHandHistory ? " HH spot" : ""}: ` +
     `${input.heroPos}, ${input.effStack} BB, ${input.hand}. Doporučení: ${recommended}.`;
 
   if (mode === "BEGINNER") {
@@ -147,8 +150,10 @@ function buildPreflopExplanationEn(
     VS_ALLIN: "Versus all-in",
   };
   const recommended = input.recommended.map((action) => ACTION_LABEL[action]).join(" / ");
+  const seat = input.tableState.vsSeat;
+  const versus = seat === undefined ? "" : input.context === "VS_3BET" ? ` by ${seat}` : ` from ${seat}`;
   const intro =
-    `${contextLabel[input.context]}${input.importedFromHandHistory ? " HH spot" : ""}: ` +
+    `${contextLabel[input.context]}${versus}${input.importedFromHandHistory ? " HH spot" : ""}: ` +
     `${input.heroPos}, ${input.effStack} BB, ${input.hand}. Recommended: ${recommended}.`;
 
   if (mode === "BEGINNER") return `${intro} ${beginnerReasonEn(input)}`;

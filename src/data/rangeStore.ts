@@ -83,6 +83,14 @@ export interface RangeEntry {
   /** Přesné doporučené akce vč. sizingu (mapování ruka → akce) — STRICT množina. */
   strict: Record<HandLabel, ActionKey[]>;
   actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
+  /**
+   * Sedačka, proti které záznam platí; chybí u obecného záznamu.
+   *
+   * Klíč se sedačkou může dostat obecný záznam (pád v `lookup`), a volající
+   * musí poznat, který z těch dvou dostal: jen zpřesněná odpověď mění
+   * Question_ID (viz `questionId`).
+   */
+  vsSeat?: Position;
 }
 
 /** Lookup API nad referenčními ranges (čtení; žádné I/O). */
@@ -116,6 +124,7 @@ function toRangeEntry(record: RangeRecord): RangeEntry {
     actions: record.lenient,
     strict: record.strict,
     ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
+    ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
   };
 }
 

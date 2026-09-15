@@ -22,6 +22,13 @@
  *    chronologicky a přiřadí se k sedadlům **bezprostředně před hrdinou**
  *    (nejbližší agresor je nejblíž hrdinovi). Jde o vizuální pomůcku, nikoli
  *    o rekonstrukci přesných sedadel skutečné akce.
+ *  - Když spot **jmenuje** protihráče (`tableState.vsSeat`, osa otvírače od
+ *    15. 9. 2026), otvírač sedí tam, kde ho spot říká: otevření je u té
+ *    sedačky, dorovnání u sedaček mezi ní a hrdinou, ostatní před hrdinou
+ *    složili. U čelení 3betu je otevření u hrdiny a 3bet u jmenované sedačky
+ *    za ním; všichni ostatní složili. Do té doby obrázek dával otvírače na
+ *    sedačku těsně před hrdinou - u BB tedy na SB - zatímco range i EV platily
+ *    proti jiné, a hráč odpovídal na jinou otázku, než jakou viděl.
  *  - Sedadla před hrdinou bez přiřazené akce se považují za **složená**.
  *  - Sedadla za hrdinou (dosud nejednala) zůstávají **aktivní** (na tahu).
  *  - V režimu Blind-vs-blind je aktivní pouze SB a BB; ostatních 7 sedadel je
@@ -225,6 +232,39 @@ function deriveSeats(
       byPos(opponent).active = true;
     }
     return seats;
+  }
+
+  // Jmenovaný protihráč: akce sedí tam, kde ji spot říká, ne těsně před hrdinou.
+  const vsSeat = spot.tableState.vsSeat;
+  const vsIdx = vsSeat === undefined ? -1 : positionOrder.indexOf(vsSeat);
+  if (vsIdx >= 0 && vsIdx !== heroIdx) {
+    const facing = spot.tableState.facing;
+    if ((facing === "OPEN") && vsIdx < heroIdx) {
+      // Před otvíračem všichni složili; mezi ním a hrdinou dorovnali ti, které
+      // spot počítá (`callsBefore`), zbytek složil; za hrdinou se ještě hraje.
+      for (let i = 0; i < heroIdx; i++) {
+        const seat = seats[i];
+        if (i < vsIdx) {
+          seat.active = false;
+        } else if (i === vsIdx) {
+          seat.badge = EVENT_KEY.OPEN;
+        } else if (i - vsIdx <= spot.tableState.callsBefore) {
+          seat.badge = EVENT_KEY.CALL;
+        } else {
+          seat.active = false;
+        }
+      }
+      return seats;
+    }
+    if (facing === "3BET" && vsIdx > heroIdx) {
+      // Hrdina otevřel, jmenovaná sedačka za ním zvýšila, ostatní složili.
+      for (const seat of seats) {
+        if (seat.isHero) seat.badge = EVENT_KEY.OPEN;
+        else if (seat.position === vsSeat) seat.badge = EVENT_KEY["3BET"];
+        else seat.active = false;
+      }
+      return seats;
+    }
   }
 
   // Standardní (ne-BvB) rozmístění: události na sedadla bezprostředně před hrdinou.

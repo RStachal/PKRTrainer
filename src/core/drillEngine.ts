@@ -37,11 +37,16 @@
  *   1. pozice hrdiny,
  *   2. efektivní stack (hloubkový koš),
  *   3. (kontextově) počet limperů / callerů,
+ *   3b. (kontextově) protihráč - otvírač u `VS_OPEN` a `SQUEEZE`, tříbetující
+ *       u `VS_3BET`; losuje se jen mezi sedačkami, o kterých knihovna něco
+ *       tvrdí (`opponentSeatCandidates`), a bez kandidáta se `rng()` nevolá,
  *   4. třída ruky,
  *   5. barvy karet.
  *
- * Pro daný `context` je počet i pořadí volání `rng()` jednoznačné, takže stejná
- * sekvence `rng()` ⇒ bitově shodný Spot.
+ * Pro daný `context` a obsah knihovny je počet i pořadí volání `rng()`
+ * jednoznačné, takže stejná sekvence `rng()` ⇒ bitově shodný Spot. Krok 3b
+ * přibyl 15. 9. 2026 (osa otvírače, bod 234): sekvence pro daný seed se u
+ * `VS_OPEN` a `SQUEEZE` od té verze liší, obsah odpovědí ne.
  *
  * ## Konzistence kontextu a stavu stolu
  *
@@ -390,6 +395,57 @@ function pickCallsBefore(rng: () => number, heroPos: Position): number {
   return 1 + randIndex(rng, maxCalls);
 }
 
+/**
+ * Sedačky, které mohly jednat proti hrdinovi a mezi kterými se losuje.
+ *
+ * Losuje se jen mezi sedačkami, **o kterých knihovna něco tvrdí**: buď má
+ * proti nim zpřesněný záznam (`RangeEntry.vsSeat`), nebo je to otvírač, proti
+ * kterému je obecný záznam kalibrovaný (`REJAM_EV_OPENER_BY_HERO`). Losovat
+ * libovolnou sedačku před hrdinou by otázka říkala „UTG otevírá“ a odpověď
+ * brala z range proti HJ - hráč by odpovídal na jinou otázku než range
+ * (bod 234). Takhle obrázek, text otázky i EV jmenují téhož otvírače a z
+ * předpokladu produktu se stává pravda na stole (rozhodnutí majitele
+ * 4. 9. 2026).
+ *
+ * `VS_3BET` kalibrovaného protihráče nemá (EV se tam nepočítá), takže se losuje
+ * jen mezi zpřesněnými záznamy; bez nich zůstává spot bez sedačky jako dřív.
+ * SB proti BB se nelosuje: to je vlastní kontext `BVB`.
+ */
+export function opponentSeatCandidates(
+  context: ActionContext,
+  heroPos: Position,
+  bucket: StackBucket,
+  ante: AnteMode,
+  store: RangeStore,
+): Position[] {
+  const heroIdx = POSITION_ORDER.indexOf(heroPos);
+  let seats: Position[];
+  switch (context) {
+    case "VS_OPEN":
+    case "SQUEEZE":
+      seats = POSITION_ORDER.slice(0, heroIdx)
+        .filter((seat) => !(heroPos === "BB" && seat === "SB"));
+      break;
+    case "VS_3BET":
+      seats = POSITION_ORDER.slice(heroIdx + 1);
+      break;
+    default:
+      return [];
+  }
+  const candidates = new Set<Position>(seats.filter((seat) => (
+    store.lookup({ ante, position: heroPos, bucket, context, vsSeat: seat })?.vsSeat === seat
+  )));
+  if (context !== "VS_3BET") {
+    const calibrated = REJAM_EV_OPENER_BY_HERO[heroPos];
+    const general = store.lookup({ ante, position: heroPos, bucket, context });
+    if (calibrated !== undefined && seats.includes(calibrated)
+      && general !== undefined && general.vsSeat === undefined) {
+      candidates.add(calibrated);
+    }
+  }
+  return POSITION_ORDER.filter((seat) => candidates.has(seat));
+}
+
 // ---------------------------------------------------------------------------
 // Startovní pot (Req 5.3, Property 13)
 // ---------------------------------------------------------------------------
@@ -435,6 +491,7 @@ function computeActionEvs(
   store: RangeStore,
   opponentStyle?: OpponentStyleId,
   callsBefore = 0,
+  opponentSeat?: Position,
 ): ActionEvSet<ActionKey> | undefined {
   // An open-shove at fifteen big blinds is the same decision as a push/fold
   // shove, just reached from a different context: the hero is first in, the pot
@@ -502,7 +559,7 @@ function computeActionEvs(
     // The opener has already raised, so they do not hold a random hand. Fold
     // equity has to be measured against what they can actually have, which is
     // their opening range at this depth - not against the deck.
-    const opener = openerClasses(heroPos, effStack, ante, store);
+    const opener = openerClasses(heroPos, effStack, ante, store, opponentSeat);
     const openerCombos = comboCount(opener);
     if (openerCombos === 0) return undefined;
     // Here the pool is what the opener can hold, not the deck: they have already
@@ -756,14 +813,22 @@ function shoveCallerClasses(
   return [];
 }
 
-/** The opener's own range at this depth, from the seat the sheets calibrate to. */
+/**
+ * The opener's own range at this depth.
+ *
+ * From the seat the spot names when it names one (`TableState.vsSeat`, drawn
+ * only among seats the library says something about), otherwise from the seat
+ * the sheets calibrate to. Since 2026-09-15 the two agree for today's content:
+ * a spot without a refined record draws the calibrated opener.
+ */
 function openerClasses(
   heroPos: Position,
   bucket: StackBucket,
   ante: AnteMode,
   store: RangeStore,
+  opponentSeat?: Position,
 ): HandLabel[] {
-  const opener = REJAM_EV_OPENER_BY_HERO[heroPos];
+  const opener = opponentSeat ?? REJAM_EV_OPENER_BY_HERO[heroPos];
   if (opener === undefined) return [];
   return playedClasses(store.lookup({ ante, position: opener, bucket, context: "RFI" }));
 }
@@ -928,6 +993,10 @@ export function generateSpot(
     callsBefore = pickCallsBefore(rng, heroPos);
   }
 
+  // (3b) protihráč, jen mezi sedačkami, o kterých knihovna něco tvrdí.
+  const opponents = opponentSeatCandidates(context, heroPos, effStack, ante, store);
+  const vsSeat = opponents.length === 0 ? undefined : pickFrom(rng, opponents);
+
   const tableState: TableState = {
     heroPos,
     pushFold,
@@ -936,14 +1005,18 @@ export function generateSpot(
     callsBefore,
     facing: facingFor(context, heroPos),
     isBvB: context === "BVB",
+    ...(vsSeat === undefined ? {} : { vsSeat }),
   };
 
   // (4) ruka + (5) karty.
   const hand = pickFrom(rng, ALL_HAND_CLASSES);
   const heroCards = dealCards(rng, hand);
 
-  // Lookup Range_Store; chybějící kombinace ⇒ null (Req 4.8).
-  const key: RangeKey = { position: heroPos, bucket: effStack, context, ante };
+  // Lookup Range_Store; chybějící kombinace ⇒ null (Req 4.8). Se sedačkou se
+  // zkusí zpřesněný záznam a bez něj se vrátí obecný (`RangeKey.vsSeat`).
+  const key: RangeKey = {
+    position: heroPos, bucket: effStack, context, ante, ...(vsSeat === undefined ? {} : { vsSeat }),
+  };
   const entry = store.lookup(key);
   if (entry === undefined) return null;
 
@@ -975,7 +1048,11 @@ export function generateSpot(
   });
   const candidateActionEvs = entry.actionEvs?.[hand];
   const offeredActionKeys = answers.map((answer) => answer.key);
-  const id = questionId({ context, heroPos, effStack, hand, ante });
+  // Zpřesněná odpověď je jiná otázka a dostane jiné ID; obecná odpověď pod
+  // vylosovanou sedačkou má ID bajt po bajtu jako dřív (viz `questionId`).
+  const id = questionId({
+    context, heroPos, effStack, hand, ante, ...(entry.vsSeat === undefined ? {} : { vsSeat: entry.vsSeat }),
+  });
   const startingPot = startingPotFor(ante);
 
   // A reviewed export wins where one exists; otherwise the two contexts whose
@@ -993,6 +1070,7 @@ export function generateSpot(
       store,
       filters.opponentStyle,
       tableState.callsBefore,
+      vsSeat,
     );
   const explanation = buildPreflopExplanation({
     context,

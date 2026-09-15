@@ -181,6 +181,27 @@ function actionContextLabel(context: ActionContext): string {
   return ACTION_CONTEXT_LABEL[context] ?? context;
 }
 
+/**
+ * Nadpis otázky: kontext, a když spot jmenuje protihráče, i on.
+ *
+ * „Proti openu - BB - AKs" neříká, kdo otevřel, a range proti UTG a proti BTN
+ * je jiná (bod 234). Od 15. 9. 2026 spot otvírače nese (`tableState.vsSeat`)
+ * a hráč ho musí číst dřív, než odpoví - jinak odpovídá na jinou otázku než
+ * range. Bez sedačky zůstává nadpis jako dřív.
+ */
+function spotTitle(spot: Spot): string {
+  const seat = spot.tableState.vsSeat;
+  const context = actionContextLabel(spot.context);
+  const situation = seat === undefined
+    ? context
+    : spot.context === "VS_3BET"
+      ? `${context} od ${seat}`
+      : spot.context === "SQUEEZE"
+        ? `${context} (${seat} otevírá, ${spot.tableState.callsBefore}x call)`
+        : `${context} z ${seat}`;
+  return `${situation} - ${spot.heroPos} - ${spot.hand}`;
+}
+
 // ---------------------------------------------------------------------------
 // DOM helpery
 // ---------------------------------------------------------------------------
@@ -1387,7 +1408,7 @@ function setupTraining(
     activeFilters = filters;
     activeQuestionStartedAt = nowMs();
 
-    sessionTitle.textContent = `${actionContextLabel(spot.context)} - ${spot.heroPos} - ${spot.hand}`;
+    sessionTitle.textContent = spotTitle(spot);
     sessionMeta.textContent =
       `${spot.effStack} BB - ${filters.ante === "ON" ? "ante ON" : "ante OFF"} - ` +
       `seed ${filtersView.getSeed() ?? CS.filters.random}`;
