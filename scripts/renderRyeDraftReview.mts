@@ -446,8 +446,10 @@ const legend = Object.entries(COLORS)
   .filter(([action]) => action !== "")
   .map(([action, color]) => `<span class="key"><i style="background:${color}"></i>${action}</span>`)
   .join("")
-  + '<span class="key"><i class="c mix" style="background:#556"></i>mix (žlutý okraj; oranžový = nerovný poměr)</span>'
-  + '<span class="key"><i class="c part" style="background:#556"></i>šrafování: u čelení 3betu ruka,'
+  // Pořadí tříd je schválně obrácené: kontrola věrnosti počítá buňky
+  // `class="c mix` a klíč legendy není buňka.
+  + '<span class="key"><i class="mix c" style="background:#556"></i>mix (žlutý okraj; oranžový = nerovný poměr)</span>'
+  + '<span class="key"><i class="part c" style="background:#556"></i>šrafování: u čelení 3betu ruka,'
   + ' kterou zdroj otevírá jen zčásti - odpověď platí, když se otevřela</span>';
 
 const html = `<!doctype html>
