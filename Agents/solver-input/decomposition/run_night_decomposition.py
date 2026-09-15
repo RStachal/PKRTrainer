@@ -151,9 +151,26 @@ def monolithic_runner_installed():
             )
         except Exception:
             continue
-        if result.returncode == 0 and "Ready" in result.stdout:
+        if task_usable(result.returncode, result.stdout):
             return True
     return False
+
+
+def task_usable(returncode, stdout) -> bool:
+    """Je naplánovaná úloha nainstalovaná a zapnutá?
+
+    Do 15. 9. 2026 se brala jen se stavem `Ready`. Jenže expanze startuje ve
+    21:01 a tahle otázka se pokládá až po denním vyhodnocení, tedy kolem
+    21:01:42 - ve chvíli, kdy úloha už běží a `schtasks` hlásí `Running`.
+    Rozklad ji proto v noci na 15. 9. neuznal, neustoupil, a obě práce jely
+    naráz: 16 riverových procesů vedle monolitu. Deska stála 8,9 min místo
+    čtyř, jedna přesáhla třicetiminutový timeout a expanzní runner na ní
+    spadl. Úloha, která právě běží, je ten nejsilnější doklad, že je
+    nainstalovaná.
+    """
+    if returncode != 0:
+        return False
+    return "Disabled" not in stdout and ("Ready" in stdout or "Running" in stdout)
 
 
 # Kolik desek musí čekat, aby se vyplatilo ustoupit na celé okno.

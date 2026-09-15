@@ -144,6 +144,24 @@ describe("noční priorita", () => {
     expect(message).toContain("0 rodin bez jediného");
   });
 
+  it("běžící úloha nástupce platí jako nainstalovaná", () => {
+    // Noc na 15. 9. 2026: expanze startuje ve 21:01 a rozklad se ptá až po
+    // denním vyhodnocení, kolem 21:01:42 - `schtasks` už hlásí `Running`,
+    // ne `Ready`. Rozklad úlohu neuznal, neustoupil, a obě práce jely naráz;
+    // deska pak stála 8,9 min místo čtyř a jedna přes timeout shodila
+    // expanzní runner. Vypnutá úloha naopak nainstalovaná není.
+    if (python() === undefined || !existsSync(RUNNER)) return;
+    const out = evaluate([
+      "print(json.dumps([",
+      "  m.task_usable(0, 'TaskName  Next Run Time  Status\\nPKRTrainer-Night-Expansion  15.09.2026 21:01:00  Ready'),",
+      "  m.task_usable(0, 'TaskName  Next Run Time  Status\\nPKRTrainer-Night-Expansion  15.09.2026 21:01:00  Running'),",
+      "  m.task_usable(0, 'TaskName  Next Run Time  Status\\nPKRTrainer-Night-Expansion  N/A  Disabled'),",
+      "  m.task_usable(1, ''),",
+      "]))",
+    ].join("\n"));
+    expect(JSON.parse(out)).toEqual([true, true, false, false]);
+  });
+
   it("priorita DECOMPOSITION nechá rozklad běžet", () => {
     if (python() === undefined || !existsSync(RUNNER)) return;
     const out = evaluate([
