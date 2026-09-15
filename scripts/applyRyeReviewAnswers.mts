@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
-import { gridContentHash } from "./lib/ryeAnswerHistory.mts";
+import { gridContentHash, gridQuestion } from "./lib/ryeAnswerHistory.mts";
 import {
   type DraftFile,
   type DraftRecord,
@@ -94,7 +94,7 @@ const byVerdict = new Map<string, DraftRecord[]>();
 const flagCounts = new Map<string, number>();
 const unknown: string[] = [];
 const resolved: {
-  sourceFile: string; verdict: string; flags: string[]; contentHash: string;
+  sourceFile: string; verdict: string; flags: string[]; contentHash: string; question: string;
 }[] = [];
 
 for (const token of body.split(/\s+/)) {
@@ -112,6 +112,10 @@ for (const token of body.split(/\s+/)) {
     // odpověď ještě platí - a odhad z 9. 9. 2026 poslal majitele číst znovu
     // 29 mřížek, které se od jeho čtení nezměnily.
     contentHash: gridContentHash(record),
+    // A otázka, na kterou mřížka odpovídala. Otisk hlídá jen obrázek; kontext
+    // se může změnit i pod stejnými barvami (15. 9. 2026: devět push/fold
+    // mřížek, které byly jamy proti otevření).
+    question: gridQuestion(record),
   });
 }
 

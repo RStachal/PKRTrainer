@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { gridContentHash, isStale } from "../../scripts/lib/ryeAnswerHistory.mts";
+import { gridContentHash, gridQuestion, isStale } from "../../scripts/lib/ryeAnswerHistory.mts";
 import type { DraftRecord } from "../../scripts/lib/ryeDraftImpact.mts";
 
 const record = {
@@ -22,6 +22,19 @@ describe("isStale", () => {
     const hash = gridContentHash(record);
     expect(isStale(record, { sourceFile: record.sourceFile, verdict: "sedí", flags: [], readAt: "2026-09-10", contentHash: hash })).toBe(false);
     expect(isStale(record, { sourceFile: record.sourceFile, verdict: "sedí", flags: [], readAt: "2026-09-10", contentHash: "jiný" })).toBe(true);
+  });
+
+  it("stejný obrázek pod jinou otázkou je zastaralý", () => {
+    // 15. 9. 2026: devět mřížek s verdiktem „sloučení akcí vadí" mělo správné
+    // barvy a špatný kontext (push/fold místo čelení otevření). Po opravě se
+    // překreslily se stejným otiskem; odmítnutí na nich držet nesmí, protože
+    // teď odpovídají na jinou otázku, než jakou majitel posuzoval.
+    const hash = gridContentHash(record);
+    const answered = { sourceFile: record.sourceFile, verdict: "nesedí", flags: ["sloučení akcí vadí"], readAt: "2026-09-15", contentHash: hash };
+    expect(isStale(record, { ...answered, question: gridQuestion(record) })).toBe(false);
+    expect(isStale(record, { ...answered, question: "PUSH_FOLD|BB|20|" })).toBe(true);
+    // Odpověď bez otázky (čtení před 15. 9.) se posuzuje jen otiskem.
+    expect(isStale(record, answered)).toBe(false);
   });
 
   it("bez otisku a bez částečných vah platí odpověď dál", () => {

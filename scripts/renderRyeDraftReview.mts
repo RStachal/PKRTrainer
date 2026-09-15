@@ -16,7 +16,7 @@ import {
   reviewAnswerOption,
   reviewAnswerScript,
 } from "./lib/reviewAnswerMemory.mts";
-import { isStale, loadAnswerHistory, partialWeightCells } from "./lib/ryeAnswerHistory.mts";
+import { gridQuestion, isStale, loadAnswerHistory, partialWeightCells } from "./lib/ryeAnswerHistory.mts";
 
 /**
  * Draft ranží k přečtení člověkem, jako mřížky - ne jako JSON.
@@ -111,12 +111,18 @@ function grid(record: DraftRecord): string {
       const mixText = ratio === undefined
         ? lenient.join(" / ")
         : Object.entries(ratio).map(([action, share]) => `${action} ${share} %`).join(" / ");
+      // U čelení 3betu je váha buňky ve zdroji frekvence **otevření**, ne
+      // odpovědi; odpověď je podmíněná tím, že se ruka otevřela. Čtenář to
+      // musí vidět, jinak by „FOLD" u ruky otevírané ze třetiny četl jako
+      // „skládá ze třetiny" - přesně to draft do 15. 9. 2026 tvrdil.
+      const opened = record.openedShare?.[hand];
+      const openedText = opened === undefined ? "" : `; zdroj ji otevírá jen z ${opened} %`;
       const title = lenient.length === 0
         ? `${hand}: mimo range (fold)`
-        : `${hand}: ${strict.join(" / ")}${mixed ? ` (mix: ${mixText})` : ""}`;
+        : `${hand}: ${strict.join(" / ")}${mixed ? ` (mix: ${mixText})` : ""}${openedText}`;
       cells.push(
         `<div class="c${mixed ? " mix" : ""}${ratio !== undefined
-          && new Set(Object.values(ratio)).size > 1 ? " uneven" : ""}"`
+          && new Set(Object.values(ratio)).size > 1 ? " uneven" : ""}${opened === undefined ? "" : " part"}"`
         + ` style="background:${COLORS[action] ?? "#e2e5ea"}"`
         + ` title="${escapeHtml(title)}">${hand}</div>`,
       );
@@ -336,11 +342,26 @@ function answerNote(record: DraftRecord): { html: string; stale: boolean; kept: 
       kept: true,
     };
   }
+  // Stejné barvy, jiná otázka: kontext nebo otvírač se od odpovědi změnil.
+  // 15. 9. 2026 to bylo devět mřížek čtených jako push/fold, které jsou jamy
+  // proti otevření; verdikt „sloučení akcí vadí" mířil na ten starý kontext.
+  if (answer.question !== undefined && answer.question !== gridQuestion(record)) {
+    const [context, position, bucket, vsSeat] = answer.question.split("|");
+    const was = `${context} · ${position} ${bucket} BB${vsSeat ? ` · proti ${vsSeat}` : ""}`;
+    return {
+      html: `<p class="meta stale"><b>Odpověď z ${escapeHtml(answer.readAt)}:`
+        + ` ${escapeHtml(answer.verdict)}</b>${flags}, jenže tehdy mřížka odpovídala na`
+        + ` jinou otázku (<b>${escapeHtml(was)}</b>). Teď je zařazená jinak a chce`
+        + " přečíst znovu.</p>",
+      stale: true,
+      kept: false,
+    };
+  }
   return {
     html: `<p class="meta stale"><b>Odpověď z ${escapeHtml(answer.readAt)}:`
-      + ` ${escapeHtml(answer.verdict)}</b>${flags}, jenže <b>${changed}</b> buněk`
-      + " se od té doby kreslí jinak: ruka hraná jen zčásti měla plnou barvu, teď má"
-      + " mix s foldem. Tahle mřížka chce přečíst znovu.</p>",
+      + ` ${escapeHtml(answer.verdict)}</b>${flags}, jenže mřížka se od té doby kreslí`
+      + " jinak - změnilo se právě to, co se posuzovalo (které ruce co hrají a jak"
+      + " často). Tahle mřížka chce přečíst znovu.</p>",
     stale: true,
     kept: false,
   };
@@ -424,7 +445,10 @@ for (const record of visible) {
 const legend = Object.entries(COLORS)
   .filter(([action]) => action !== "")
   .map(([action, color]) => `<span class="key"><i style="background:${color}"></i>${action}</span>`)
-  .join("");
+  .join("")
+  + '<span class="key"><i class="c mix" style="background:#556"></i>mix (žlutý okraj; oranžový = nerovný poměr)</span>'
+  + '<span class="key"><i class="c part" style="background:#556"></i>šrafování: u čelení 3betu ruka,'
+  + ' kterou zdroj otevírá jen zčásti - odpověď platí, když se otevřela</span>';
 
 const html = `<!doctype html>
 <html lang="cs"><head><meta charset="utf-8">
@@ -442,6 +466,7 @@ const html = `<!doctype html>
  /* Nerovný poměr má jinou barvu okraje: „hraj obojí stejně" a „hraj to takhle
     často" jsou dvě různá tvrzení a na mřížce musí jít rozeznat. */
  .c.uneven{outline:2px solid #ff8f6b;outline-offset:-2px}
+ .c.part{background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(0,0,0,.28) 6px 8px)}
  .key{display:inline-flex;align-items:center;gap:6px;margin-right:14px;font-size:12px}
  .key i{width:14px;height:14px;border-radius:2px;display:inline-block}
  .intro{background:#1a2130;padding:12px 16px;border-radius:8px;max-width:820px}

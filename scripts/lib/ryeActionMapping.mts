@@ -1,3 +1,5 @@
+import { POSITION_ORDER, type Position } from "../../src/core/types";
+
 /**
  * Překlad akcí z vlastníkova korpusu do slovníku produktu.
  *
@@ -178,68 +180,73 @@ export function mapAction(context: MappedContext, action: string): MappedAction 
 }
 
 /**
+ * Legendy, u kterých slova situaci neřeknou: `All in`, `Jam`, `All in | Call`.
+ *
+ * Jam je jam, ať hrdina otevírá, čelí otevření nebo squeezuje. Do 15. 9. 2026
+ * se `All in` a `Jam` samy o sobě četly jako push/fold a jméno souboru
+ * rozhodovalo jen `All in | Call`. Vlastníkova strojová kontrola proti zdroji
+ * (15. 9. 2026) tím pravidlem propadla u **všech devíti** push/fold záznamů
+ * draftu: `F3B-20BB-SB-vs-BTN` je z nabídky „Flatting & 3Betting", tedy SB
+ * čelí otevření BTN a `Jam` je 3bet-jam; `ICM11-sb9bb-btn55bb` je SB s devíti
+ * blindy proti otevření BTN; `MUL-20BB-BB-vs-CO_BTN` je squeeze proti otevření
+ * a dorovnání. Ani jedna nebyla push/fold, a produkt by se hráče ptal na
+ * situaci bez otvírače, kterou zdroj neřeší. Skutečné push/fold stránky
+ * (`PU-10bb-*`) draft naopak neměl vůbec - jejich jméno nemá `-vs-` a situace
+ * se z něj nečetla.
+ *
+ * Proto u těchhle legend rozhoduje **výhradně jméno souboru**, a co jméno
+ * neřekne, se nevydá:
+ *
+ * - `PU-`  push/fold, hrdina jde první do potu.
+ * - `F3B-` hrdina čelí otevření (nabídka „Flatting & 3Betting").
+ * - `MUL-` squeeze, před hrdinou je otevření a dorovnání.
+ * - `ICM*-r` obrana proti raisu, `ICM*-ai` čelení all-inu (přípony zdroje;
+ *   `-l` by byl `VS_LIMP`, který slovník nezná).
+ * - `ICM*` bez přípony s pojmenovaným soupeřem, který **jedná před hrdinou**:
+ *   hrdina čelí jeho otevření. Soupeř za hrdinou by znamenal, že jde první do
+ *   potu hrdina - takovou stránku zdroj nemá a nevydá se.
+ *
+ * `All in | Call` bez jména zůstává čelením all-inu, kde `All in` není
+ * hrdinova akce a slovník ho nezná - stránka se pak nevydá, místo aby jam
+ * zmizel do foldu (viz test).
+ */
+const JAM_VOCABULARIES = new Set(["All in", "Jam", "All in | Call"]);
+
+function contextFromFileName(name: string): MappedContext | undefined {
+  const stem = name.replace(/\.html$/i, "");
+  if (/^PU-/i.test(stem)) return "PUSH_FOLD";
+  if (/^F3B-/i.test(stem)) return "VS_OPEN";
+  if (/^MUL-/i.test(stem)) return "SQUEEZE";
+  if (!/^ICM/i.test(stem)) return undefined;
+  if (/-r$/i.test(stem)) return "VS_OPEN";
+  if (/-ai$/i.test(stem)) return "VS_ALLIN";
+  if (/-l$/i.test(stem)) return undefined;
+  const hero = situationFromFileName(name);
+  if (hero === undefined) return undefined;
+  const opponent = opponentFromFileName(name, hero);
+  if (opponent === undefined) return undefined;
+  const heroIndex = POSITION_ORDER.indexOf(hero.seat as Position);
+  const opponentIndex = POSITION_ORDER.indexOf(opponent.seat as Position);
+  return opponentIndex >= 0 && opponentIndex < heroIndex ? "VS_OPEN" : undefined;
+}
+
+/**
  * Kontext stránky: ten, ve kterém se přeloží **všechny** akce legendy.
  *
  * Když vyhoví víc kontextů, stránka se nevydá. Není z čeho rozhodnout, na
  * kterou otázku odpovídá, a vybrat jeden by znamenalo tipovat si situaci za
  * hráče.
  */
-/**
- * Slovníky, u kterých pravidlo „všechny akce se přeloží" nestačí.
- *
- * Jsou to případy, kdy **táž slova znamenají jinou situaci**, a obecné pravidlo
- * je proto nerozliší:
- *
- * - `All in | Call` sedí do `VS_OPEN` i do `SQUEEZE` a slova samotná nerozhodnou,
- *   ve které situaci hrdina stojí. Rozhoduje **jméno souboru** (níž); bez něj
- *   se čte jako čelení all-inu, kde `All in` není hrdinova akce a slovník ho
- *   proto nezná - stránka se pak nevydá, místo aby jam zmizel do foldu.
- * - `All in` samo o sobě je push/fold, ne „sázka v otevřeném potu".
- *
- * Naměřeno 26. 8. 2026: bez těchto dvou výjimek zmizely celé kontexty
- * `VS_ALLIN` (10 stran) a `PUSH_FOLD` (17 stran) - přepis na obecné pravidlo je
- * vyměnil za nejednoznačnost.
- */
-const VOCABULARY_OVERRIDES = new Map<string, MappedContext>([
-  ["All in | Call", "VS_ALLIN"],
-  ["All in", "PUSH_FOLD"],
-  ["Jam", "PUSH_FOLD"],
-]);
-
-/**
- * Co říká jméno souboru o situaci, když legenda `All in | Call` neříká nic.
- *
- * Rozhodl majitel 14. 9. 2026 nad oběma stránkami, které na té legendě spadly
- * (bod 249): `MUL-20BB-BB-vs-MP_LP` je squeeze multiway - BB proti otevření
- * MP a dorovnání LP, `All in` je vlastní squeeze-jam; `ICM11-bb13bb-sb9bb-r` je
- * obrana BB proti 2,5x od SB, `All in` je 3bet-jam. Přípony zdroje:
- * `-l` proti limpu, `-r` proti raisu, `-ai` proti all-inu.
- *
- * Změřeno na zdroji: legendu `All in | Call` má 11 stránek `MUL-*` a 3 stránky
- * `ICM*-r`, žádná `-l` ani `-ai` (jediná `-ai` stránka v db mřížku nemá).
- * `-l` by patřila kontextu `VS_LIMP`, který slovník zatím nezná - a bez
- * stránky, která by ho potřebovala, se nezakládá.
- */
-function contextFromFileName(name: string): MappedContext | undefined {
-  const stem = name.replace(/\.html$/i, "");
-  if (/^MUL-/i.test(stem)) return "SQUEEZE";
-  if (/^ICM/i.test(stem) && /-r$/i.test(stem)) return "VS_OPEN";
-  if (/^ICM/i.test(stem) && /-ai$/i.test(stem)) return "VS_ALLIN";
-  return undefined;
-}
-
 export function contextForVocabulary(
   actions: readonly string[],
   fileName?: string,
 ): MappedContext | undefined {
   if (actions.length === 0) return undefined;
   const vocabulary = [...actions].sort().join(" | ");
-  if (vocabulary === "All in | Call" && fileName !== undefined) {
-    const byName = contextFromFileName(fileName);
-    if (byName !== undefined) return byName;
+  if (JAM_VOCABULARIES.has(vocabulary)) {
+    if (fileName !== undefined) return contextFromFileName(fileName);
+    return vocabulary === "All in | Call" ? "VS_ALLIN" : undefined;
   }
-  const override = VOCABULARY_OVERRIDES.get(vocabulary);
-  if (override !== undefined) return override;
   const fits = [...ACTIONS_BY_CONTEXT.keys()].filter(
     (context) => actions.every((action) => mapAction(context, action) !== undefined),
   );
@@ -263,6 +270,28 @@ export function bucketForStack(stackBB: number): number {
     if (Math.abs(bucket - stackBB) < Math.abs(best - stackBB)) best = bucket;
   }
   return best;
+}
+
+/**
+ * Kbelík, do kterého se zdrojová hloubka **smí** zapsat - nebo žádný.
+ *
+ * Nejbližší kbelík není totéž co kbelík, který range vystihuje. Sedm blindů
+ * má nejblíž k pěti, ale strategie na pěti a na sedmi blindech se liší o
+ * víc než čtyřicet procent stacku, a tvrdit, že sedmiblindová range platí
+ * na pěti, je jiné tvrzení než to, které zdroj dělá. Přesně tak to vyšlo
+ * z vlastníkovy kontroly 15. 9. 2026: dvě stránky `ICM7-bb7bb-*` v kbelíku
+ * 5 bb dostaly „moc těsné", zatímco všech 21 stránek do 17 % od kbelíku
+ * (35→30, 13→15, 18→20, 45→40) prošlo.
+ *
+ * Hranice je pětina kbelíku. Není odvozená z jedné stránky: leží mezi tím,
+ * co prošlo (17 %), a tím, co neprošlo (40 %), s odstupem na obě strany.
+ * Co je dál, se nevydá a import to spočítá jako samostatný důvod.
+ */
+export const BUCKET_TOLERANCE = 0.2;
+
+export function bucketForSource(stackBB: number): number | undefined {
+  const bucket = bucketForStack(stackBB);
+  return Math.abs(bucket - stackBB) <= BUCKET_TOLERANCE * bucket ? bucket : undefined;
 }
 
 export interface RyeSituation {
@@ -341,12 +370,25 @@ export function situationFromFileName(name: string): RyeSituation | undefined {
   // Tvar 2: společná hloubka vpředu, pak `HRDINA-vs-SOUPEŘI`.
   const depth = /(?:^|[-_])(\d+)BB(?:[-_]|$)/i.exec(stem);
   const versus = /(?:^|[-_])(UTG1|UTG2|UTG|EP|MP|LJ|HJ|CO|BU|BTN|SB|BB)[-_]vs[-_]([A-Za-z0-9_+]+)/i.exec(stem);
-  if (depth === null || versus === null) return undefined;
-  const seat = SEAT_ALIASES.get(versus[1].toUpperCase());
-  if (seat === undefined) return undefined;
-  // `EP_MP` znamená dva soupeře, tedy multiway.
-  const villains = versus[2].split(/[_]/).filter(Boolean).length;
-  return { seat, stackBB: Number(depth[1]), villains: Math.max(1, villains) };
+  if (depth !== null && versus !== null) {
+    const seat = SEAT_ALIASES.get(versus[1].toUpperCase());
+    if (seat === undefined) return undefined;
+    // `EP_MP` znamená dva soupeře, tedy multiway.
+    const villains = versus[2].split(/[_]/).filter(Boolean).length;
+    return { seat, stackBB: Number(depth[1]), villains: Math.max(1, villains) };
+  }
+  // Tvar 3: push/fold, `PU-10bb-BU` - hloubka a hrdina, žádný soupeř.
+  //
+  // Do 15. 9. 2026 tenhle tvar propadal jako „bez situace" a draft tak neměl
+  // ani jednu skutečnou push/fold stránku; devět, které za ni vydával, byly
+  // jamy proti otevření (viz `contextFromFileName`).
+  const push = /^PU-(\d+)bb-(UTG1|UTG2|UTG|MP|LJ|HJ|CO|BU|BTN|SB)$/i.exec(stem);
+  if (depth !== null && push !== null) {
+    const seat = SEAT_ALIASES.get(push[2].toUpperCase());
+    if (seat === undefined) return undefined;
+    return { seat, stackBB: Number(push[1]), villains: 0 };
+  }
+  return undefined;
 }
 
 /**

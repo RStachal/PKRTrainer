@@ -3,7 +3,7 @@ import { basename, dirname, join } from "node:path";
 import { readRyeGrid, type RyeGrid } from "./lib/ryeRangeCorpus.mts";
 import {
   REFUSED_VOCABULARIES,
-  bucketForStack,
+  bucketForSource,
   contextForVocabulary,
   mapAction,
   opponentFromFileName,
@@ -82,6 +82,16 @@ interface DraftRecord {
    * seznamem přijatelných odpovědí a strategií.
    */
   mix: Record<string, Record<string, number>>;
+  /**
+   * ruka → jak často ji zdroj vůbec **otevírá**, v procentech; jen u ruky
+   * otevírané zčásti a jen u kontextů, kde hrdina už jednal (`VS_3BET`).
+   *
+   * Tam je váha buňky frekvence otevření, ne odpovědi - viz „Kde je fold"
+   * níž. Odpověď proti 3betu je podmíněná tím, že se ruka otevřela, a tahle
+   * frekvence je to, co by se jinak ztratilo. Do produktu nepatří (je to údaj
+   * o `RFI`, ne o `VS_3BET`); je tu pro člověka, který mřížku čte.
+   */
+  openedShare?: Record<string, number>;
   /** Co se překladem ztratilo, po akcích. Pro člověka, který to bude číst. */
   notes: string[];
   sourceFile: string;
@@ -103,6 +113,7 @@ const dropped = {
   refusedVocabulary: 0,
   noContext: 0,
   noSituation: 0,
+  depthOffBucket: 0,
   noOpponent: 0,
   noMappedHands: 0,
   unmappableAction: 0,
@@ -127,6 +138,11 @@ for (const file of htmlFiles(source).sort()) {
 
   const situation = situationFromFileName(name);
   if (situation === undefined) { dropped.noSituation += 1; continue; }
+  // Hloubka dál než pětinu od nejbližšího kbelíku se nevydá - viz
+  // `bucketForSource`. Naměřeno 15. 9. 2026 na `ICM7-bb7bb-*`: sedm blindů
+  // v kbelíku 5 bb dostalo od vlastníka „moc těsné".
+  const bucket = bucketForSource(situation.stackBB);
+  if (bucket === undefined) { dropped.depthOffBucket += 1; continue; }
   // Soupeře vyžadují jen kontexty, kde hrdina **čelí akci**.
   //
   // U `PUSH_FOLD` žádný jeden soupeř není: hrdina jamuje proti všem za sebou,
@@ -180,42 +196,63 @@ for (const file of htmlFiles(source).sort()) {
   const strict: Record<string, string[]> = {};
   const lenient: Record<string, string[]> = {};
   const mix: Record<string, Record<string, number>> = {};
+  const openedShare: Record<string, number> = {};
+  // Kde je fold.
+  //
+  // Váha buňky je podíl, ve kterém zdroj ruku **hraje**; nevybarvený zbytek
+  // je to, co s ní nedělá. Co to znamená, závisí na tom, kde hrdina stojí:
+  //
+  // - Kde hrdina jedná poprvé (`VS_OPEN`, `SQUEEZE`, `PUSH_FOLD`, `VS_ALLIN`),
+  //   je zbytek **fold** - akce jako každá jiná, a zbytek váhy patří jemu.
+  //   Do 9. 9. 2026 se `mix` psal jen u ruky s víc nefoldovými akcemi a váhy
+  //   se normalizovaly na sto; ruka hraná ze čtvrtiny tak vešla do draftu jako
+  //   čistá akce. Změřeno (`npm run mtt:rye-weight-loss`): 1 175 tříd se hraje
+  //   jen zčásti, 4 680 kombinací.
+  //
+  // - Kde hrdina **už jednal** (`VS_3BET`: otevřel a čelí 3betu), je váha
+  //   buňky frekvence **otevření** a barva říká, co dělá, když otevřel a
+  //   přišel 3bet. `K6s` s modrou třetinou znamená „otevírá ze třetiny, a když
+  //   otevřel, proti 3betu skládá" - ne „proti 3betu skládá ze třetiny".
+  //   Odpověď je podmíněná otevřením, takže se váhy dělí tím, co se otevřelo,
+  //   a zbytek do sta **není fold proti 3betu** - ta ruka žádnému 3betu
+  //   nečelila. Frekvence otevření jde zvlášť do `openedShare`, pro čtenáře.
+  //
+  //   Do 15. 9. 2026 se i tu zbytek psal jako fold, a navíc se srazil s modrou
+  //   „Fold vs 3bet": obě položky měly klíč `FOLD` a `Object.fromEntries`
+  //   nechal jen tu druhou, takže `K6s` vyšlo jako `FOLD 67` - váha barvy
+  //   pryč, součet mimo sto. Vlastníkova strojová kontrola to našla na všech
+  //   13 mřížkách `VS_3BET` s částečně otevíranou rukou („špatný mix").
+  const heroAlreadyActed = context === "VS_3BET" || context === "VS_4BET";
   for (const [hand, perHand] of weights) {
     const entries = [...perHand].filter(([, weight]) => weight > 0);
     if (entries.length === 0) continue;
-    // Lenient je všechno, co zdroj u té ruky hraje. Strict je to, co hraje
+    const played = entries.reduce((total, [, weight]) => total + weight, 0);
+    const shares = new Map<string, number>();
+    if (heroAlreadyActed) {
+      for (const [action, weight] of entries) shares.set(action, weight / played);
+      if (played < 0.995) openedShare[hand] = Math.round(100 * played);
+    } else {
+      for (const [action, weight] of entries) shares.set(action, weight);
+      const folded = Math.max(0, 1 - played);
+      if (folded > 0.005) shares.set("FOLD", (shares.get("FOLD") ?? 0) + folded);
+    }
+    // Lenient je všechno, co zdroj u té ruky **barví**. Strict je to, co barví
     // nejčastěji - a při rovnosti obojí, protože u poctivého mixu 50/50 není
-    // jedna z těch dvou akcí chyba.
+    // jedna z těch dvou akcí chyba. Fold ze zbytku je jen v `mix`: tak se
+    // draft kreslil, když ho vlastník četl, a přesunout ho do `strict` by
+    // změnilo odpověď u každé zčásti hrané ruky, kterou už schválil.
     const best = Math.max(...entries.map(([, weight]) => weight));
     lenient[hand] = entries.map(([action]) => action).sort();
-    const played = entries.reduce((total, [, weight]) => total + weight, 0);
-    // Fold je akce jako každá jiná a zbytek váhy patří jemu.
-    //
-    // Do 9. 9. 2026 se `mix` psal jen u ruky s víc nefoldovými akcemi a váhy se
-    // normalizovaly na sto. Obojí mazalo tutéž věc. Ruka hraná ze čtvrtiny
-    // vešla do draftu jako **čistá akce**, protože měla jedinou položku; a ruka
-    // s dvěma akcemi po čtvrtině se normalizací nafoukla na 50/50, takže z ní
-    // polovina foldu zmizela. Změřeno na zdroji (`npm run mtt:rye-weight-loss`):
-    // **1 175 tříd** se hraje jen zčásti, z toho **1 109 tiše** - a je to 4 680
-    // kombinací. Nejčastěji jde o polovinu (730x), pak čtvrtinu (135x) a
-    // třetinu (103x).
-    //
-    // Rozdíl mezi „3BET" a „3BET v polovině případů, jinak fold" je celá
-    // strategie, a čtenář ho na stránce neměl jak poznat.
-    const folded = Math.max(0, 1 - played);
-    if (entries.length > 1 || folded > 0.005) {
-      const shares: [string, number][] = entries.map(([action, weight]) => [
-        action,
-        Math.round(100 * weight),
-      ]);
-      if (folded > 0.005) shares.push(["FOLD", Math.round(100 * folded)]);
-      mix[hand] = Object.fromEntries(shares
-        .sort((left, right) => String(left[0]).localeCompare(String(right[0]))));
-    }
     strict[hand] = entries
       .filter(([, weight]) => Math.abs(weight - best) < 1e-9)
       .map(([action]) => action)
       .sort();
+    const actions = [...shares].filter(([, share]) => share > 0.005);
+    if (actions.length > 1) {
+      mix[hand] = Object.fromEntries(actions
+        .map(([action, share]): [string, number] => [action, Math.round(100 * share)])
+        .sort((left, right) => left[0].localeCompare(right[0])));
+    }
   }
 
   const notes = [...actionOfColor.values()]
@@ -224,7 +261,7 @@ for (const file of htmlFiles(source).sort()) {
 
   records.push({
     position: situation.seat,
-    bucket: bucketForStack(situation.stackBB),
+    bucket,
     context,
     // Prázdné u kontextů, kde soupeř není - viz `facingContexts` výš.
     vsSeat: opponent?.seat ?? "",
@@ -235,6 +272,7 @@ for (const file of htmlFiles(source).sort()) {
     strict,
     lenient,
     mix,
+    ...(Object.keys(openedShare).length > 0 ? { openedShare } : {}),
     notes: [...new Set(notes)].sort(),
     sourceFile: name,
   });

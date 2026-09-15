@@ -36,6 +36,17 @@ export interface RecordedAnswer {
   /** Otisk mřížky v době odpovědi. Chybí u čtení z 9. 9. 2026, viz `isStale`. */
   contentHash?: string;
   /**
+   * Otázka, na kterou mřížka v době odpovědi odpovídala: kontext, sedačka,
+   * kbelík a otvírač (`gridQuestion`). Chybí u čtení před 15. 9. 2026.
+   *
+   * Otisk hlídá obrázek, ne otázku. Devět mřížek, které vlastník 15. 9. 2026
+   * odmítl jako „sloučení akcí vadí", mělo správné barvy a špatný kontext -
+   * push/fold místo čelení otevření. Po opravě importu se překreslily se
+   * stejným otiskem a bez tohohle pole by na nich odmítnutí drželo dál, ačkoli
+   * odpovídají na jinou otázku, než jakou vlastník posuzoval.
+   */
+  question?: string;
+  /**
    * Barvy legendy, které stránka v době odpovědi **nekreslila**.
    *
    * Do 9. 9. 2026 barva, kterou kontext neuměl přeložit, tiše spadla do foldu.
@@ -87,7 +98,12 @@ export function gridContentHash(record: DraftRecord): string {
  * stránka pořád 29 mřížek k přečtení znovu. Odhad platí jen tam, kde se nedá
  * měřit.
  */
+export function gridQuestion(record: DraftRecord): string {
+  return `${record.context}|${record.position}|${record.bucket}|${record.vsSeat}`;
+}
+
 export function isStale(record: DraftRecord, answer: RecordedAnswer): boolean {
+  if (answer.question !== undefined && answer.question !== gridQuestion(record)) return true;
   if (answer.contentHash !== undefined) return answer.contentHash !== gridContentHash(record);
   // Čtenář neviděl celou legendu - mřížka se od té doby kreslí jinak jistě.
   if ((answer.readWithoutActions ?? []).length > 0) return true;
@@ -149,6 +165,7 @@ export function loadAnswerHistory(directory = "Agents/range-intake"): AnswerHist
         flags: Array.isArray(answer.flags) ? answer.flags.map(String) : [],
         readAt,
         ...(typeof answer.contentHash === "string" ? { contentHash: answer.contentHash } : {}),
+        ...(typeof answer.question === "string" ? { question: answer.question } : {}),
         ...(Array.isArray(answer.readWithoutActions)
           ? { readWithoutActions: answer.readWithoutActions.map(String) }
           : {}),

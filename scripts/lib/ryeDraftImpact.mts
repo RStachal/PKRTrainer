@@ -32,6 +32,8 @@ export interface DraftRecord {
   lenient: Record<string, string[]>;
   /** ruka → akce a jak často ji zdroj hraje (jen u mixů). */
   mix?: Record<string, Record<string, number>>;
+  /** ruka → jak často ji zdroj otevírá; jen u `VS_3BET` a jen u ruky otevírané zčásti. */
+  openedShare?: Record<string, number>;
   notes: string[];
   sourceFile: string;
 }
