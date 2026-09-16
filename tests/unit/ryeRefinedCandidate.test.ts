@@ -51,31 +51,39 @@ describe("výběr zpřesněných záznamů", () => {
     expect(Object.keys(out.lenient)).toHaveLength(ALL_HAND_CLASSES.length);
   });
 
+  it("BB proti SB jde jako VS_OPEN z SB - rozhodnutí vlastníka 16. 9. 2026 držet RYE", () => {
+    const bvb = grid({ sourceFile: "F3B-20BB-BB-vs-SB.html", vsSeat: "SB" });
+    const { accepted, refused } = selectRefinedRecords([bvb], history([approved(bvb)]));
+    expect(refused).toEqual([]);
+    expect(accepted[0]?.vsSeat).toBe("SB");
+  });
+
   it("každý důvod odmítnutí se počítá zvlášť", () => {
     const rejected = grid({ sourceFile: "F3B-20BB-BB-vs-CO.html", vsSeat: "CO" });
     const stale = grid({ sourceFile: "F3B-20BB-BB-vs-HJ.html", vsSeat: "HJ" });
     const icm = grid({ sourceFile: "ICM3-bb20bb-btn30bb.html", stackSetupId: "ICM3" });
-    const bvb = grid({ sourceFile: "F3B-20BB-BB-vs-SB.html", vsSeat: "SB" });
     const pushFold = grid({ sourceFile: "PU-10bb-BU.html", context: "PUSH_FOLD", position: "BTN", bucket: 10, vsSeat: "", stackSetupId: "PU" });
-    // Jam proti otevření na 40 bb produkt nenabízí (`RE_JAM_MAX`).
+    // Jam proti otevření na 40 bb produkt nenabízí (`RE_JAM_MAX` = 30).
     const jamDeep = grid({ sourceFile: "F3B-40BB-BB-vs-BTN.html", bucket: 40, sourceStackBB: 40, strict: { AA: ["JAM"] }, lenient: { AA: ["JAM"] } });
     const twin = grid({ sourceFile: "F3B-20BB-BB-vs-BTN-dup.html" });
     const first = grid({});
     const unanswered = grid({ sourceFile: "F3B-20BB-BB-vs-LJ.html", vsSeat: "LJ" });
+    // Obranu proti otevření drill rozdává až od lojacku.
+    const notDealt = grid({ sourceFile: "F3B-20BB-UTG1-vs-UTG.html", position: "UTG+1", vsSeat: "UTG" });
 
     const answers = [
       approved(rejected, { verdict: "nesedí" }),
       approved(stale, { contentHash: "jiný" }),
-      approved(icm), approved(bvb), approved(pushFold), approved(jamDeep), approved(twin), approved(first),
+      approved(icm), approved(pushFold), approved(jamDeep), approved(twin), approved(first), approved(notDealt),
     ];
     const { accepted, counts, refused } = selectRefinedRecords(
-      [rejected, stale, icm, bvb, pushFold, jamDeep, first, twin, unanswered],
+      [rejected, stale, icm, pushFold, jamDeep, first, twin, unanswered, notDealt],
       history(answers),
     );
     expect(accepted.map((record) => record.provenance)).toHaveLength(1);
     expect(counts).toEqual({
       unanswered: 1, rejected: 1, stale: 1, icm: 1, noOpponent: 0, contextNotRefined: 1,
-      pendingBvb: 1, actionNotOffered: 1, duplicateCell: 1,
+      actionNotOffered: 1, notDealt: 1, duplicateCell: 1,
     });
     expect(refused.find((row) => row.reason === "actionNotOffered")?.detail).toContain("AA:JAM");
     expect(refused.find((row) => row.reason === "duplicateCell")?.detail).toContain("F3B-20BB-BB-vs-BTN.html");

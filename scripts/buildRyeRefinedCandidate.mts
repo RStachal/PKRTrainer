@@ -53,7 +53,23 @@ if (!existsSync(draftPath) || !existsSync(basePath)) {
 }
 
 const draft = JSON.parse(readFileSync(draftPath, "utf8")) as DraftFile;
-const base = JSON.parse(readFileSync(basePath, "utf8")) as MttPreflopRangePackImportInput;
+const stored = JSON.parse(readFileSync(basePath, "utf8")) as MttPreflopRangePackImportInput;
+
+// Idempotence: po povýšení je v `raw/` už pack se zpřesněnými záznamy z
+// minula. Základ je vždy jen jeho obecná část - zpřesněné záznamy, jejich
+// předpoklady i důkaz zdroje se skládají znovu z dnešního draftu a odpovědí,
+// jinak by druhý běh vyrobil duplicity (změřeno 16. 9. 2026: 57 duplicit).
+const REFINED_ASSUMPTION = /^(Zpřesněné záznamy \(vsSeat\)|Zdroj zpřesněných záznamů|Mix ve zdroji)/;
+const RYE_EVIDENCE_TITLE = "RYE Rangeviewer 2021 Updated with ICM Ranges";
+const RYE_LICENSE_SENTENCE = / Zpřesněné záznamy \(vsSeat\) pocházejí z .*$/;
+const base: MttPreflopRangePackImportInput = {
+  ...stored,
+  version: stored.version.replace(/(\+rye-refined-\d{4}-\d{2}-\d{2})+$/, ""),
+  licenseNote: stored.licenseNote.replace(RYE_LICENSE_SENTENCE, ""),
+  assumptions: stored.assumptions.filter((line) => !REFINED_ASSUMPTION.test(line)),
+  sourceEvidence: stored.sourceEvidence.filter((source) => source.title !== RYE_EVIDENCE_TITLE),
+  records: stored.records.filter((record) => record.vsSeat === undefined),
+};
 const outPath = arg("out") ?? `artifacts/rye-import/candidate/${base.id}/normalized.json`;
 const history = loadAnswerHistory();
 
@@ -112,8 +128,8 @@ const REASON_LABEL: Record<RefusalReason, string> = {
   icm: "ICM - produkční pack pro $EV není",
   noOpponent: "bez protihráče (push/fold)",
   contextNotRefined: "kontext bez osy otvírače",
-  pendingBvb: "BB proti SB - v produktu BVB, rozhodne vlastník",
   actionNotOffered: "doporučení, které produkt nenabízí",
+  notDealt: "sedačka nebo hloubka, na kterou se drill v tom kontextu neptá",
   duplicateCell: "táž buňka a otvírač podruhé",
 };
 
@@ -150,7 +166,11 @@ for (const line of report.warnings.slice(0, 12)) console.log(`  varování: ${li
 if (report.warnings.length > 12) console.log(`  … a dalších ${report.warnings.length - 12} varování`);
 
 console.log("");
-if (write) {
+if (write && !(report.valid && report.productionReady)) {
+  // Nezapisovat kandidáta, který by neprošel branou: zapsaný soubor vypadá
+  // jako hotová věc a někdo ho zkopíruje do `raw/` (stalo se 16. 9. 2026).
+  console.log("nezapsáno: kandidát není valid a productionReady, viz chyby a varování výš");
+} else if (write) {
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, JSON.stringify(candidate, null, 2), "utf8");
   console.log(`zapsáno: ${outPath}`);
@@ -161,4 +181,4 @@ console.log("");
 console.log("Do produkce to nejde samo. Pack mění původ dat (koupené charty vedle");
 console.log("vlastního exportu), takže permission.json produkčního packu musí vlastník");
 console.log("přečíst znovu pro novou verzi; teprve pak validate:range-import a");
-console.log("build:range-module. BB proti SB čeká na rozhodnutí, kam patří (BVB).");
+console.log("build:range-module.");

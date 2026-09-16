@@ -9,6 +9,7 @@ import {
   type StackBucket,
   type TableState,
 } from "../../src/core/types";
+import { bucketsForContext, positionsForContext } from "../../src/core/drillEngine";
 import type { MttPreflopImportRecord } from "../../src/data/ranges/mttPreflopRangePackImport";
 import type { AnswerHistory } from "./ryeAnswerHistory.mts";
 import { isStale } from "./ryeAnswerHistory.mts";
@@ -30,9 +31,8 @@ import type { DraftRecord } from "./ryeDraftImpact.mts";
  * otvírače nedává smysl a ICM mřížky nemají produkční pack (`DOLAR_EV` sloty
  * jsou prázdné), takže zůstávají v draftu.
  *
- * BB proti SB se **nevydává**: v RYE je to `VS_OPEN` (`F3B-*-BB-vs-SB`),
- * v produktu kontext `BVB`, a spot SB jako otvírače u BB nelosuje. Kam ty
- * mřížky patří, je rozhodnutí vlastníka, ne převodu.
+ * BB proti SB jde jako `VS_OPEN` z SB - tak to čte RYE a vlastník 16. 9. 2026
+ * rozhodl RYE držet; drill SB u BB losuje právě přes tenhle zpřesněný záznam.
  */
 
 export type RefusalReason =
@@ -42,8 +42,8 @@ export type RefusalReason =
   | "icm"
   | "noOpponent"
   | "contextNotRefined"
-  | "pendingBvb"
   | "actionNotOffered"
+  | "notDealt"
   | "duplicateCell";
 
 export interface Refusal {
@@ -125,7 +125,7 @@ export function selectRefinedRecords(
   const refused: Refusal[] = [];
   const counts: Record<RefusalReason, number> = {
     unanswered: 0, rejected: 0, stale: 0, icm: 0, noOpponent: 0, contextNotRefined: 0,
-    pendingBvb: 0, actionNotOffered: 0, duplicateCell: 0,
+    actionNotOffered: 0, notDealt: 0, duplicateCell: 0,
   };
   const takenCells = new Map<string, string>();
 
@@ -142,7 +142,14 @@ export function selectRefinedRecords(
     if (/^ICM/i.test(record.stackSetupId)) { refuse(record, "icm", record.stackSetupId); continue; }
     if (!REFINED_CONTEXTS.has(record.context)) { refuse(record, "contextNotRefined", record.context); continue; }
     if (record.vsSeat === "") { refuse(record, "noOpponent"); continue; }
-    if (record.position === "BB" && record.vsSeat === "SB") { refuse(record, "pendingBvb"); continue; }
+    // Záznam, na který se drill nikdy nezeptá, je mrtvý obsah
+    // (`shippedRecordsAreDealable`): obranu proti otevření drill rozdává
+    // až od lojacku, UTG+1 a UTG+2 by v packu jen ležely.
+    if (!positionsForContext(record.context as ActionContext).includes(record.position as Position)
+      || !bucketsForContext(record.context as ActionContext).includes(record.bucket as StackBucket)) {
+      refuse(record, "notDealt", `${record.context}|${record.position}|${record.bucket}`);
+      continue;
+    }
     const notOffered = actionsNotOffered(record);
     if (notOffered.length > 0) {
       refuse(record, "actionNotOffered", notOffered.slice(0, 6).join(", ") + (notOffered.length > 6 ? ", …" : ""));

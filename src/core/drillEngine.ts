@@ -409,7 +409,12 @@ function pickCallsBefore(rng: () => number, heroPos: Position): number {
  *
  * `VS_3BET` kalibrovaného protihráče nemá (EV se tam nepočítá), takže se losuje
  * jen mezi zpřesněnými záznamy; bez nich zůstává spot bez sedačky jako dřív.
- * SB proti BB se nelosuje: to je vlastní kontext `BVB`.
+ *
+ * SB jako otvírač u BB se losuje jen se zpřesněným záznamem: kalibrovaný
+ * otvírač BB je HJ a obecný záznam o SB nic netvrdí. Vlastník 16. 9. 2026
+ * rozhodl, že se tu drží RYE: otevření SB proti BB je `VS_OPEN` z SB, ne
+ * zvláštní kontext. `BVB` v drillu zůstává vedle toho; sjednocení je
+ * samostatný krok (bod 254).
  */
 export function opponentSeatCandidates(
   context: ActionContext,
@@ -423,8 +428,7 @@ export function opponentSeatCandidates(
   switch (context) {
     case "VS_OPEN":
     case "SQUEEZE":
-      seats = POSITION_ORDER.slice(0, heroIdx)
-        .filter((seat) => !(heroPos === "BB" && seat === "SB"));
+      seats = POSITION_ORDER.slice(0, heroIdx);
       break;
     case "VS_3BET":
       seats = POSITION_ORDER.slice(heroIdx + 1);

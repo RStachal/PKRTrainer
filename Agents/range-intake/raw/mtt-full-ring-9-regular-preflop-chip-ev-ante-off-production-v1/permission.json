@@ -1,7 +1,7 @@
 {
   "packId": "mtt-full-ring-9-regular-preflop-chip-ev-ante-off-production-v1",
-  "version": "permission-user-confirmed-v1",
-  "reviewedAt": "2026-07-10",
+  "version": "permission-user-confirmed-v2",
+  "reviewedAt": "2026-09-16",
   "reviewer": "PKRTrainer owner (user-confirmed)",
   "rightsOwner": "PKRTrainer owner (user-confirmed owned solver export)",
   "licenseKind": "OWNED_SOLVER_EXPORT",
@@ -11,6 +11,14 @@
   "notes": [
     "User confirmed: source is owned solver export.",
     "User confirmed right to distribute in PKRTrainer runtime bundle.",
-    "No third-party chart values are claimed or required for this permission manifest."
+    "User confirmed 2026-09-16: refined records (vsSeat) derived from the owner's purchased RYE Rangeviewer 2021 charts may ship in the PKRTrainer runtime bundle; see additionalSources."
+  ],
+  "additionalSources": [
+    {
+      "source": "RYE Rangeviewer 2021 (koupené charty vlastníka)",
+      "reviewedAt": "2026-09-16",
+      "reviewer": "PKRTrainer owner (user-confirmed)",
+      "rationale": "Vlastník 16. 9. 2026: zdroj uznává, RYE si koupil, protože tyhle range jsou optimální, a bere ho i do budoucna jako referenci. Přenášejí se seznamy akcí po třídách rukou (strict/lenient), ne obrázky ani soubory zdroje; každý záznam nese provenance."
+    }
   ]
 }

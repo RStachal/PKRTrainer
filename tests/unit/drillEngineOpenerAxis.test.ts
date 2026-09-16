@@ -70,11 +70,14 @@ describe("kandidáti na protihráče", () => {
     expect(opponentSeatCandidates("VS_3BET", "UTG", 20, "OFF", store)).toEqual([]);
   });
 
-  it("SB proti BB se nelosuje - to je kontext BVB", () => {
+  it("SB proti BB se losuje jen se zpřesněným záznamem - podle RYE je to VS_OPEN z SB", () => {
+    // Rozhodnutí vlastníka 16. 9. 2026: držet RYE. Obecný záznam o SB nic
+    // netvrdí (kalibrovaný otvírač BB je HJ), zpřesněný ano.
     const withSb = createRangeStoreFromRangePack(pack([
       { position: "BB", bucket: 20, context: "VS_OPEN", vsSeat: "SB", lenient: vsBtn, strict: vsBtn },
     ] as RangePack["records"]));
-    expect(opponentSeatCandidates("VS_OPEN", "BB", 20, "OFF", withSb)).toEqual([]);
+    expect(opponentSeatCandidates("VS_OPEN", "BB", 20, "OFF", withSb)).toEqual(["SB"]);
+    expect(opponentSeatCandidates("VS_OPEN", "BB", 20, "OFF", store)).toEqual(["HJ", "BTN"]);
   });
 });
 
