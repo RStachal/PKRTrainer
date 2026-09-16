@@ -178,6 +178,7 @@
     "mtt:post-answer": "node scripts/run-cli.mjs scripts/measurePostAnswerFeedback.mts",
     "mtt:rye-corpus": "node scripts/run-cli.mjs scripts/checkRyeRangeCorpus.mts",
     "mtt:rye-import": "node scripts/run-cli.mjs scripts/importRyeRangeCorpus.mts",
+    "mtt:rye-candidate": "node scripts/run-cli.mjs scripts/buildRyeRefinedCandidate.mts",
     "mtt:rye-answers": "node scripts/run-cli.mjs scripts/applyRyeReviewAnswers.mts",
     "mtt:opener-axis": "node scripts/run-cli.mjs scripts/measureOpenerAxisValue.mts",
     "mtt:rye-review": "node scripts/run-cli.mjs scripts/renderRyeDraftReview.mts",

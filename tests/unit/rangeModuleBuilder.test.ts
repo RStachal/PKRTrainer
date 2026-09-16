@@ -508,6 +508,46 @@ describe("rangeModuleBuilder", () => {
     }).moduleText).toBe(result.moduleText);
   });
 
+  it("zaznam z jineho zdroje blokuje promotion, dokud ho manifest neuzna", () => {
+    // 16. 9. 2026: schválené mřížky z koupených chartů vlastníka vedle
+    // vlastního exportu. Pack má jeden licenseKind; záznam z jiného zdroje ho
+    // jmenuje sám (`provenance`) a manifest ho musí uznat zvlášť - jinak by
+    // povolení tvrdilo o původu části packu něco, co pro ni neplatí.
+    const base = validMttImport();
+    const general = base.records.find((record) => record.context === "VS_OPEN")!;
+    const input = {
+      ...base,
+      records: [...base.records, {
+        ...general,
+        vsSeat: "BTN" as const,
+        provenance: "RYE Rangeviewer 2021 (koupené charty vlastníka), F3B-20BB-BB-vs-BTN.html, schváleno 2026-09-15",
+      }],
+    };
+    const blocked = buildRangeModule({
+      kind: "mtt-preflop", input, permissionManifest: permissionManifest(input.id), exportName: "fixture",
+    });
+    expect(blocked.writeReady).toBe(false);
+    expect(blocked.blockers.join("\n")).toContain('acknowledge record-level source "RYE Rangeviewer 2021 (koupené charty vlastníka)"');
+
+    const acknowledged = buildRangeModule({
+      kind: "mtt-preflop", input, exportName: "fixture",
+      permissionManifest: {
+        ...permissionManifest(input.id),
+        additionalSources: [{
+          source: "RYE Rangeviewer 2021 (koupené charty vlastníka)",
+          reviewedAt: "2026-09-16", reviewer: "PKRTrainer owner (user-confirmed)",
+          rationale: "Koupený produkt vlastníka; přenášejí se seznamy akcí po třídách rukou.",
+        }],
+      },
+    });
+    expect(acknowledged.blockers).toEqual([]);
+    expect(acknowledged.writeReady).toBe(true);
+    // Zpřesnění i původ přežijí kompaktní zápis modulu.
+    expect(acknowledged.moduleText).toContain('"vsSeat":"BTN"');
+    expect(acknowledged.moduleText).toContain('"provenance":"RYE Rangeviewer 2021');
+    expect(acknowledged.moduleText).toContain("...(refinement ?? {})");
+  });
+
   it("blokuje promotion bez ceskeho contentLanguage deklarovaneho pro hracske texty", () => {
     const input = validMttImport();
     delete input.contentLanguage;

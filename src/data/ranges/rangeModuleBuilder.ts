@@ -3,6 +3,7 @@ import type { RangePack } from "./rangePack";
 import {
   buildMttPreflopImportReadinessReport,
   normalizeMttPreflopRangePackImport,
+  recordProvenanceSources,
   type MttPreflopRangePackImportInput,
 } from "./mttPreflopRangePackImport";
 import {
@@ -135,6 +136,7 @@ function buildMttPreflopRangeModule(
     licenseKind: input.licenseKind,
     blindSpeeds: [input.dimensions.blindSpeed],
     evModels: [input.dimensions.evModel],
+    additionalSources: recordProvenanceSources(input.records),
   });
   const slotReport = buildMttPreflopImportSlotValidationReport(input);
   const languageBlockers = playerFacingLanguageBlockers(input.contentLanguage);
@@ -369,7 +371,8 @@ function renderMttPreflopRangePackModule(
     'import type { RangePack } from "./rangePack";',
     "",
     "type EncodedHandMap = Array<[actionSet: number, hands: string]>;",
-    "type EncodedRecord = [position: string, bucket: number, context: string, lenient: number, strict: number, actionEvs?: RangePack[\"records\"][number][\"actionEvs\"]];",
+    "type Refinement = Pick<RangePack[\"records\"][number], \"vsSeat\" | \"stackSetupId\" | \"provenance\">;",
+    "type EncodedRecord = [position: string, bucket: number, context: string, lenient: number, strict: number, actionEvs?: RangePack[\"records\"][number][\"actionEvs\"] | null, refinement?: Refinement];",
     "",
     `const encodedActions: string[][] = ${jsonForModule(encoded.actionSets)};`,
     `const encodedHandMaps: EncodedHandMap[] = ${jsonForModule(encoded.handMaps)};`,
@@ -386,10 +389,11 @@ function renderMttPreflopRangePackModule(
     "const decodedHandMaps = encodedHandMaps.map(decodeHandMap);",
     `export const ${exportName} = {`,
     `  ...${jsonForModule(metadata)},`,
-    "  records: encodedRecords.map(([position, bucket, context, lenient, strict, actionEvs]) => ({",
+    "  records: encodedRecords.map(([position, bucket, context, lenient, strict, actionEvs, refinement]) => ({",
     "    position,",
     "    bucket,",
     "    context,",
+    "    ...(refinement ?? {}),",
     "    lenient: decodedHandMaps[lenient],",
     "    strict: decodedHandMaps[strict],",
     "    ...(actionEvs ? { actionEvs } : {}),",
@@ -407,7 +411,9 @@ type EncodedMttPreflopRecord = [
   context: MttPreflopRecord["context"],
   lenient: number,
   strict: number,
-  actionEvs?: MttPreflopRecord["actionEvs"],
+  /** `null` drží místo, když záznam EV nemá, ale nese zpřesnění za ním. */
+  actionEvs?: MttPreflopRecord["actionEvs"] | null,
+  refinement?: Pick<MttPreflopRecord, "vsSeat" | "stackSetupId" | "provenance">,
 ];
 
 function encodeMttPreflopRuntime(records: readonly MttPreflopRecord[]): {
@@ -451,7 +457,18 @@ function encodeMttPreflopRuntime(records: readonly MttPreflopRecord[]): {
         indexHandMap(record.lenient),
         indexHandMap(record.strict),
       ];
+      // Zpřesnění (osa otvírače) a původ záznamu musí přežít i kompaktní
+      // zápis: do 16. 9. 2026 je tahle cesta tiše zahodila, takže by pack
+      // s uznaným zdrojem vyšel z modulu jako pack bez něj (bod 234).
+      const refinement = {
+        ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
+        ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
+        ...(record.provenance ? { provenance: record.provenance } : {}),
+      };
+      const refined = Object.keys(refinement).length > 0;
       if (record.actionEvs) encoded.push(record.actionEvs);
+      else if (refined) encoded.push(null);
+      if (refined) encoded.push(refinement);
       return encoded;
     }),
   };

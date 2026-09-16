@@ -29,6 +29,22 @@ export interface ProductionPermissionReusePolicy {
   sourceMaterialReferenceIds: readonly string[];
 }
 
+/**
+ * Zdroj, ze kterého jsou **jen některé záznamy** packu (`RangePackRecord.provenance`).
+ *
+ * Pack má jeden `licenseKind` a ten platí pro jeho hlavní zdroj. Záznam z
+ * jiného zdroje - koupené charty vlastníka vedle vlastního exportu - musí
+ * manifest jmenovat zvlášť, jinak by povolení tvrdilo o původu dat něco, co
+ * pro část packu neplatí (pravidlo dvě: pravda o původu dat se neohýbá).
+ */
+export interface ProductionPermissionAdditionalSource {
+  /** Přesně ten text, kterým záznamy zdroj jmenují (před první čárkou `provenance`). */
+  source: string;
+  reviewedAt: string;
+  reviewer: string;
+  rationale: string;
+}
+
 export interface ProductionPermissionManifest {
   packId: string;
   version: string;
@@ -41,6 +57,7 @@ export interface ProductionPermissionManifest {
   evidence: readonly ProductionPermissionEvidence[];
   notes: readonly string[];
   reusePolicy?: ProductionPermissionReusePolicy;
+  additionalSources?: readonly ProductionPermissionAdditionalSource[];
 }
 
 export interface ProductionPermissionManifestReport {
@@ -64,6 +81,8 @@ interface PermissionManifestTarget {
   licenseKind: string;
   blindSpeeds?: readonly BlindSpeed[];
   evModels?: readonly EvModel[];
+  /** Zdroje jmenované na úrovni záznamů (`provenance`); každý musí manifest uznat. */
+  additionalSources?: readonly string[];
 }
 
 const LEGAL_LICENSE_KINDS: readonly ProductionPermissionLicenseKind[] = [
@@ -200,6 +219,26 @@ export function validateProductionPermissionManifest(
   }
   if (manifest.reusePolicy !== undefined) {
     errors.push(...validateReusePolicy(manifest));
+  }
+
+  // Zdroj na úrovni záznamů bez uznání v manifestu je tichá změna původu dat.
+  // Poprvé to nastalo 16. 9. 2026: schválené mřížky z koupených chartů
+  // vedle vlastního exportu, a manifest packu říkal „žádné hodnoty z chartů
+  // třetí strany“. Uznání je krok člověka, ne skriptu.
+  const acknowledged = new Set((manifest.additionalSources ?? []).map((item) => item.source));
+  for (const source of target.additionalSources ?? []) {
+    if (!acknowledged.has(source)) {
+      errors.push(
+        `Permission manifest must acknowledge record-level source "${source}" in additionalSources before promotion.`,
+      );
+    }
+  }
+  for (const [index, item] of (manifest.additionalSources ?? []).entries()) {
+    const tag = `additionalSources[${index}]`;
+    if (item.source.trim().length === 0) errors.push(`${tag}.source is required.`);
+    if (item.reviewedAt.trim().length === 0) errors.push(`${tag}.reviewedAt is required.`);
+    if (item.reviewer.trim().length === 0) errors.push(`${tag}.reviewer is required.`);
+    if (item.rationale.trim().length === 0) errors.push(`${tag}.rationale is required.`);
   }
 
   const forbiddenPaths = findForbiddenSourceKeyPaths(manifest);

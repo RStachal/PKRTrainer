@@ -37,6 +37,22 @@ export interface MttPreflopImportRecord {
   sourceStackBB: number;
   bucket: StackBucket;
   context: ActionContext;
+  /**
+   * Zpřesnění (osa otvírače, bod 234): sedačka, která jednala proti hrdinovi,
+   * a rozložení stacků. Do 16. 9. 2026 je produkční cesta při normalizaci
+   * **zahazovala** a dva záznamy téže buňky lišící se otvíračem hlásila jako
+   * duplicitu - přesně to, co bod 234 naměřil. Zpřesněný záznam je nadstavba
+   * nad obecným: do úplnosti packu se nepočítá a obecný záznam téže buňky
+   * musí existovat dál.
+   */
+  vsSeat?: Position;
+  stackSetupId?: string;
+  /**
+   * Odkud záznam je, když to není odkud je celý pack. Pack má jeden
+   * `licenseKind`; záznam z jiného zdroje (koupené charty vlastníka) to musí
+   * říct sám, jinak by pack tvrdil o jeho původu něco jiného.
+   */
+  provenance?: string;
   lenient: Partial<Record<HandLabel, readonly ActionKey[]>>;
   strict: Partial<Record<HandLabel, readonly ActionKey[]>>;
   actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
@@ -165,6 +181,23 @@ const LEGAL_LICENSE_KINDS: readonly MttPreflopImportLicenseKind[] = [
   "PUBLIC_CHART_WITH_PERMISSION",
   "EXPLICIT_WRITTEN_PERMISSION",
 ];
+
+/**
+ * Zdroje jmenované na úrovni záznamů: text `provenance` před první čárkou.
+ *
+ * Manifest povolení je musí uznat každý zvlášť
+ * (`ProductionPermissionManifest.additionalSources`).
+ */
+export function recordProvenanceSources(
+  records: readonly Pick<MttPreflopImportRecord, "provenance">[],
+): string[] {
+  const sources = new Set<string>();
+  for (const record of records) {
+    if (record.provenance === undefined) continue;
+    sources.add(record.provenance.split(",")[0].trim());
+  }
+  return [...sources].sort();
+}
 
 export function normalizeMttPreflopRangePackImport(
   input: MttPreflopRangePackImportInput,
@@ -296,6 +329,9 @@ function normalizeRecord(record: MttPreflopImportRecord): RangePackRecord {
     position: record.position,
     bucket: record.bucket,
     context: record.context,
+    ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
+    ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
+    ...(record.provenance ? { provenance: record.provenance } : {}),
     lenient: normalizeActionMap(record.lenient),
     strict: normalizeActionMap(record.strict),
     ...(record.actionEvs ? { actionEvs: normalizeActionEvMap(record.actionEvs) } : {}),
@@ -526,7 +562,8 @@ function missingHandClasses(record: MttPreflopImportRecord): HandLabel[] {
 }
 
 function recordKey(record: MttPreflopImportRecord): string {
-  return `${record.position}|${record.bucket}|${record.context}`;
+  return `${record.position}|${record.bucket}|${record.context}`
+    + `${record.vsSeat ? `|vs${record.vsSeat}` : ""}${record.stackSetupId ? `|#${record.stackSetupId}` : ""}`;
 }
 
 function semanticWarningsForRecord(record: MttPreflopImportRecord): string[] {

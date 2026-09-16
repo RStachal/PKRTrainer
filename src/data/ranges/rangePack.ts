@@ -56,6 +56,12 @@ export interface RangePackRecord {
   vsSeat?: Position;
   /** Rozložení stacků u stolu, pro které záznam platí. Viz `vsSeat`. */
   stackSetupId?: string;
+  /**
+   * Odkud záznam je, když to není odkud je celý pack (zdroj, soubor, kdy a
+   * kým schváleno). Pack nese jeden `licenseKind`; záznam z jiného zdroje to
+   * říká sám. Produkt z toho nic neodvozuje.
+   */
+  provenance?: string;
   lenient: Record<HandLabel, ActionKey[]>;
   strict: Record<HandLabel, ActionKey[]>;
   actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
