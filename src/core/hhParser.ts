@@ -934,6 +934,39 @@ function deriveContext(
   return { context, facing, limps, calls, isBvB };
 }
 
+/**
+ * Kdo jednal proti hrdinovi - z historie, ne z losu (osa otvírače, krok (c)).
+ *
+ * Drill otvírače losuje jen mezi sedačkami, o kterých knihovna něco tvrdí
+ * (`opponentSeatCandidates`). Historie ho **zná**: u čelení otevření je to
+ * první raise před hrdinou, u čelení 3betu druhý. Spot proto nese skutečnou
+ * sedačku; když pro ni knihovna zpřesněný záznam nemá, odpověď spadne na
+ * obecnou (`RangeKey.vsSeat`) a Question_ID zůstane bez sedačky - stejně jako
+ * v drillu se zpřesní jen zpřesněná odpověď.
+ */
+function deriveOpponentSeat(
+  hand: ParsedHand,
+  tableFormat: TableFormat | undefined,
+  context: ActionContext,
+): Position | undefined {
+  if (tableFormat === undefined || hand.heroName === undefined) return undefined;
+  const wanted = context === "VS_OPEN" || context === "SQUEEZE" ? 1 : context === "VS_3BET" ? 2 : 0;
+  if (wanted === 0) return undefined;
+  let raises = 0;
+  for (const action of hand.preflopActionDetails) {
+    if (action.actor === hand.heroName) return undefined;
+    if (action.kind !== "RAISE" && action.kind !== "BET") continue;
+    raises += 1;
+    // Historie říká pravdu i tam, kde se drill neptá: otevření SB proti BB je
+    // tu `VS_OPEN` s otvíračem SB (parser bere BvB jen bez raise), zatímco drill
+    // SB u BB nelosuje. Kam BB proti SB patří, rozhoduje vlastník (bod 253);
+    // do té doby se sedačka nezamlčuje - bez zpřesněného záznamu stejně padá
+    // na obecnou odpověď.
+    if (raises === wanted) return derivePositionForPlayer(hand, tableFormat, action.actor);
+  }
+  return undefined;
+}
+
 // ---------------------------------------------------------------------------
 // Sestavení zobrazitelného Spotu (Req 11.4)
 // ---------------------------------------------------------------------------
@@ -956,7 +989,10 @@ function buildSpot(
   bucket: StackBucket,
   heroCards: [Card, Card],
   ante: AnteMode,
-  ctx: { context: ActionContext; facing: FacingAction; limps: number; calls: number; isBvB: boolean },
+  ctx: {
+    context: ActionContext; facing: FacingAction; limps: number; calls: number; isBvB: boolean;
+    vsSeat?: Position;
+  },
   store: RangeStore,
   // Fails closed. Without a range record for the spot there is no strategy to
   // report, and the alternative was to synthesise one - the default action, a
@@ -977,12 +1013,17 @@ function buildSpot(
     callsBefore: ctx.calls,
     facing: ctx.facing,
     isBvB: ctx.isBvB,
+    ...(ctx.vsSeat === undefined ? {} : { vsSeat: ctx.vsSeat }),
   };
 
   const offeredKinds = offeredActions(tableState);
 
-  // Lookup doporučení (může chybět ⇒ fallback).
-  const key: RangeKey = { position: heroPos, bucket, context: ctx.context, ante };
+  // Lookup doporučení (může chybět ⇒ fallback). Se sedačkou se zkusí zpřesněný
+  // záznam a bez něj se vrátí obecný.
+  const key: RangeKey = {
+    position: heroPos, bucket, context: ctx.context, ante,
+    ...(ctx.vsSeat === undefined ? {} : { vsSeat: ctx.vsSeat }),
+  };
   const entry = store.isLoaded() ? store.lookup(key) : undefined;
   if (requireRangeRecord && entry === undefined) return undefined;
   const handStrict = entry?.strict[hand] as ActionKey[] | undefined;
@@ -1005,7 +1046,11 @@ function buildSpot(
     return { key: akey, label: ACTION_KEY_LABEL[akey] };
   });
 
-  const id = questionId({ context: ctx.context, heroPos, effStack: bucket, hand, ante });
+  // Zpřesněná odpověď je jiná otázka; obecná pod skutečnou sedačkou má ID jako dřív.
+  const id = questionId({
+    context: ctx.context, heroPos, effStack: bucket, hand, ante,
+    ...(entry?.vsSeat === undefined ? {} : { vsSeat: entry.vsSeat }),
+  });
   const explanation = buildPreflopExplanation({
     context: ctx.context,
     heroPos,
@@ -1316,7 +1361,9 @@ export function parseHandHistory(
       bucket !== undefined
     ) {
       // Kompatibilní a úplná data ⇒ sestav Spot (Req 11.4).
-      const ctx = deriveContext(hand, heroPos, bucket <= PUSH_FOLD_MAX);
+      const derived = deriveContext(hand, heroPos, bucket <= PUSH_FOLD_MAX);
+      const vsSeat = deriveOpponentSeat(hand, tableFormat, derived.context);
+      const ctx = { ...derived, ...(vsSeat === undefined ? {} : { vsSeat }) };
       const spot = buildSpot(
         heroPos,
         bucket,
