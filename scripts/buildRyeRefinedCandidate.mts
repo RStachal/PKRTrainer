@@ -126,6 +126,20 @@ const generalCells = new Set(base.records
 const withoutGeneral = selection.accepted
   .filter((record) => !generalCells.has(`${record.context}|${record.position}|${record.bucket}`));
 
+// Datum čtení se bere z odpovědí, ne z textu: do 17. 9. 2026 tu stálo
+// „10. a 15. 9." natvrdo a třetí čtení (17. 9., celý draft znovu) by pack
+// tvrdil o jiném dni, než ze kterého odpovědi jsou.
+function approvalDates(records: readonly MttPreflopImportRecord[]): string {
+  const dates = new Set<string>();
+  for (const record of records) {
+    const match = /schváleno (\d{4}-\d{2}-\d{2})/.exec(record.provenance ?? "");
+    if (match !== null) dates.add(match[1]);
+  }
+  return [...dates].sort()
+    .map((date) => `${Number(date.slice(8, 10))}. ${Number(date.slice(5, 7))}. ${date.slice(0, 4)}`)
+    .join(" a ");
+}
+
 const candidate: MttPreflopRangePackImportInput = {
   ...base,
   version: `${base.version}+rye-refined-${today}`,
@@ -135,7 +149,7 @@ const candidate: MttPreflopRangePackImportInput = {
   assumptions: [
     ...base.assumptions,
     `Zpřesněné záznamy (vsSeat): ${selection.accepted.length} mřížek z ${RYE_PROVENANCE}, `
-      + "schválených vlastníkem 10. a 15. 9. 2026 (Agents/range-intake/answers-*.json); každý záznam nese provenance.",
+      + `schválených vlastníkem ${approvalDates(selection.accepted)} (Agents/range-intake/answers-*.json); každý záznam nese provenance.`,
     "Zdroj zpřesněných záznamů neuvádí ante ani rychlost blindů; přebírá se předpoklad draftu (REGULAR, OFF)."
       + (reused
         ? ` Do profilu ${dims.blindSpeed} / ante ${dims.ante} se přebírají rozhodnutím vlastníka ze 17. 9. 2026 (reuse), ne podle zdroje.`

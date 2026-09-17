@@ -1,0 +1,836 @@
+{
+  "schemaVersion": "PKRTRAINER_RYE_ANSWERS_V1",
+  "draftCreatedAt": "2026-09-15",
+  "draftRecordCount": 118,
+  "answers": [
+    {
+      "sourceFile": "F3B-100BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a431ce90-577",
+      "question": "VS_OPEN|BB|100|BTN"
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "ce9fcbc9-514",
+      "question": "VS_OPEN|BB|100|CO"
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5c68103c-4de",
+      "question": "VS_OPEN|BB|100|HJ"
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "622c6e7d-48d",
+      "question": "VS_OPEN|BB|100|LJ"
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-SB.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3b98cf64-56e",
+      "question": "VS_OPEN|BB|100|SB"
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "72acc57e-3c6",
+      "question": "VS_OPEN|BB|100|UTG"
+    },
+    {
+      "sourceFile": "F3B-100BB-BB-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "1cb4984d-460",
+      "question": "VS_OPEN|BB|100|UTG+2"
+    },
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5f8ce726-3e1",
+      "question": "VS_OPEN|BTN|100|HJ"
+    },
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3ab278df-3ae",
+      "question": "VS_OPEN|BTN|100|LJ"
+    },
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "c4fdefd5-39a",
+      "question": "VS_OPEN|BTN|100|UTG"
+    },
+    {
+      "sourceFile": "F3B-100BB-BTN-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f19b63cd-2fa",
+      "question": "VS_OPEN|BTN|100|UTG+2"
+    },
+    {
+      "sourceFile": "F3B-100BB-CO-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5724e96c-2fb",
+      "question": "VS_OPEN|CO|100|HJ"
+    },
+    {
+      "sourceFile": "F3B-100BB-CO-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "d1102ed2-2bc",
+      "question": "VS_OPEN|CO|100|UTG+2"
+    },
+    {
+      "sourceFile": "F3B-100BB-HJ-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "2de1b341-23e",
+      "question": "VS_OPEN|HJ|100|UTG"
+    },
+    {
+      "sourceFile": "F3B-100BB-HJ-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5d4f3e0d-2ee",
+      "question": "VS_OPEN|HJ|100|UTG+2"
+    },
+    {
+      "sourceFile": "F3B-100BB-MP-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "93f353b4-183",
+      "question": "VS_OPEN|LJ|100|UTG"
+    },
+    {
+      "sourceFile": "F3B-100BB-MP-vs-UTG2.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "9efac5a7-233",
+      "question": "VS_OPEN|LJ|100|UTG+2"
+    },
+    {
+      "sourceFile": "F3B-100BB-UTG2-vs-UTG.html",
+      "verdict": "přeskočeno",
+      "flags": [],
+      "contentHash": "6bd830ea-131",
+      "question": "VS_OPEN|UTG+2|100|UTG"
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "195f2381-519",
+      "question": "VS_OPEN|BB|20|BTN"
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "c504d8d7-50b",
+      "question": "VS_OPEN|BB|20|CO"
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "57978bc8-4cf",
+      "question": "VS_OPEN|BB|20|LJ"
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-SB.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "4aea593b-5cf",
+      "question": "VS_OPEN|BB|20|SB"
+    },
+    {
+      "sourceFile": "F3B-20BB-BB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "cf83629a-479",
+      "question": "VS_OPEN|BB|20|UTG"
+    },
+    {
+      "sourceFile": "F3B-20BB-SB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "4a07c86b-1ba",
+      "question": "VS_OPEN|SB|20|BTN"
+    },
+    {
+      "sourceFile": "F3B-20BB-SB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3d59a792-16a",
+      "question": "VS_OPEN|SB|20|CO"
+    },
+    {
+      "sourceFile": "F3B-20BB-SB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a1f460f1-1bb",
+      "question": "VS_OPEN|SB|20|LJ"
+    },
+    {
+      "sourceFile": "F3B-30BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "9b43cb34-539",
+      "question": "VS_OPEN|BB|30|BTN"
+    },
+    {
+      "sourceFile": "F3B-30BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "70392080-51b",
+      "question": "VS_OPEN|BB|30|CO"
+    },
+    {
+      "sourceFile": "F3B-30BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "619eae37-4ea",
+      "question": "VS_OPEN|BB|30|LJ"
+    },
+    {
+      "sourceFile": "F3B-30BB-BTN-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "e32a6adb-22b",
+      "question": "VS_OPEN|BTN|30|LJ"
+    },
+    {
+      "sourceFile": "F3B-30BB-BTN-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "b5446c24-270",
+      "question": "VS_OPEN|BTN|30|UTG"
+    },
+    {
+      "sourceFile": "F3B-30BB-CO-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a2431d94-196",
+      "question": "VS_OPEN|CO|30|HJ"
+    },
+    {
+      "sourceFile": "F3B-30BB-CO-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "56041832-189",
+      "question": "VS_OPEN|CO|30|UTG"
+    },
+    {
+      "sourceFile": "F3B-30BB-MP-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "72792bf3-be",
+      "question": "VS_OPEN|LJ|30|UTG"
+    },
+    {
+      "sourceFile": "F3B-30BB-SB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3d04ea95-291",
+      "question": "VS_OPEN|SB|30|BTN"
+    },
+    {
+      "sourceFile": "F3B-30BB-SB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "66fd8481-21c",
+      "question": "VS_OPEN|SB|30|CO"
+    },
+    {
+      "sourceFile": "F3B-30BB-SB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "12033ca6-216",
+      "question": "VS_OPEN|SB|30|LJ"
+    },
+    {
+      "sourceFile": "F3B-30BB-SB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "8ec4f9c7-26e",
+      "question": "VS_OPEN|SB|30|UTG"
+    },
+    {
+      "sourceFile": "F3B-30BB-UTG1-vs-UTG.html",
+      "verdict": "přeskočeno",
+      "flags": [],
+      "contentHash": "a95325e9-b9",
+      "question": "VS_OPEN|UTG+1|30|UTG"
+    },
+    {
+      "sourceFile": "F3B-40BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "9b43cb34-539",
+      "question": "VS_OPEN|BB|40|BTN"
+    },
+    {
+      "sourceFile": "F3B-40BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f0803979-577",
+      "question": "VS_OPEN|BB|40|CO"
+    },
+    {
+      "sourceFile": "F3B-40BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "96427e7a-5ec",
+      "question": "VS_OPEN|BB|40|LJ"
+    },
+    {
+      "sourceFile": "F3B-40BB-BB-vs-SB.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5a714fd9-5e3",
+      "question": "VS_OPEN|BB|40|SB"
+    },
+    {
+      "sourceFile": "F3B-40BB-BTN-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "23bb0b02-283",
+      "question": "VS_OPEN|BTN|40|LJ"
+    },
+    {
+      "sourceFile": "F3B-40BB-BTN-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "ccf488c1-2c2",
+      "question": "VS_OPEN|BTN|40|UTG"
+    },
+    {
+      "sourceFile": "F3B-40BB-CO-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "243bedce-25f",
+      "question": "VS_OPEN|CO|40|LJ"
+    },
+    {
+      "sourceFile": "F3B-40BB-CO-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a9a2e9c8-20d",
+      "question": "VS_OPEN|CO|40|UTG"
+    },
+    {
+      "sourceFile": "F3B-40BB-HJ-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a1ea121e-1c7",
+      "question": "VS_OPEN|HJ|40|LJ"
+    },
+    {
+      "sourceFile": "F3B-40BB-HJ-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f1f44e50-1db",
+      "question": "VS_OPEN|HJ|40|UTG"
+    },
+    {
+      "sourceFile": "F3B-40BB-SB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "8c0d6847-23f",
+      "question": "VS_OPEN|SB|40|BTN"
+    },
+    {
+      "sourceFile": "F3B-40BB-SB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "d9a47ab1-279",
+      "question": "VS_OPEN|SB|40|CO"
+    },
+    {
+      "sourceFile": "F3B-40BB-SB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "43c3866b-20e",
+      "question": "VS_OPEN|SB|40|LJ"
+    },
+    {
+      "sourceFile": "F3B-40BB-SB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "9e29ec0b-22c",
+      "question": "VS_OPEN|SB|40|UTG"
+    },
+    {
+      "sourceFile": "F3B-40BB-UTG1-vs-UTG.html",
+      "verdict": "přeskočeno",
+      "flags": [],
+      "contentHash": "3a167f25-166",
+      "question": "VS_OPEN|UTG+1|40|UTG"
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f2fb076f-646",
+      "question": "VS_OPEN|BB|50|BTN"
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "17f4d5dd-610",
+      "question": "VS_OPEN|BB|50|CO"
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-HJ.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "13c6456f-66a",
+      "question": "VS_OPEN|BB|50|HJ"
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5f4a5d2f-589",
+      "question": "VS_OPEN|BB|50|LJ"
+    },
+    {
+      "sourceFile": "F3B-50BB-BB-vs-UTG1.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "68f325dd-62b",
+      "question": "VS_OPEN|BB|50|UTG+1"
+    },
+    {
+      "sourceFile": "F3B-50BB-BTN-vs-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "712c57cf-303",
+      "question": "VS_OPEN|BTN|50|CO"
+    },
+    {
+      "sourceFile": "F3B-50BB-BTN-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5072edae-303",
+      "question": "VS_OPEN|BTN|50|UTG"
+    },
+    {
+      "sourceFile": "F3B-50BB-SB-vs-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "20de3307-232",
+      "question": "VS_OPEN|SB|50|UTG"
+    },
+    {
+      "sourceFile": "F3B-50BB-UTG1-vs-UTG.html",
+      "verdict": "přeskočeno",
+      "flags": [],
+      "contentHash": "7b25b97a-1c1",
+      "question": "VS_OPEN|UTG+1|50|UTG"
+    },
+    {
+      "sourceFile": "ICM-btn35bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "0f52f1f6-197",
+      "question": "VS_OPEN|BTN|30|CO"
+    },
+    {
+      "sourceFile": "ICM-btn35bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "8a391ba7-1a6",
+      "question": "VS_OPEN|BTN|30|HJ"
+    },
+    {
+      "sourceFile": "ICM-co60bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "eba5d07c-148",
+      "question": "VS_OPEN|CO|60|HJ"
+    },
+    {
+      "sourceFile": "ICM-sb18bb-btn35bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "edeca592-18e",
+      "question": "VS_OPEN|SB|20|BTN"
+    },
+    {
+      "sourceFile": "ICM-sb18bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "e8daff13-19a",
+      "question": "VS_OPEN|SB|20|CO"
+    },
+    {
+      "sourceFile": "ICM-sb18bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "20137b77-1d1",
+      "question": "VS_OPEN|SB|20|HJ"
+    },
+    {
+      "sourceFile": "ICM10-hj25bb-bb13bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "7fa23698-17a",
+      "question": "VS_3BET|HJ|25|BB"
+    },
+    {
+      "sourceFile": "ICM10-hj25bb-btn55bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "f42ee5bf-177",
+      "question": "VS_3BET|HJ|25|BTN"
+    },
+    {
+      "sourceFile": "ICM10-hj25bb-co11bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "8e9d0b4a-168",
+      "question": "VS_3BET|HJ|25|CO"
+    },
+    {
+      "sourceFile": "ICM10-hj25bb-sb9bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "bae367c0-18c",
+      "question": "VS_3BET|HJ|25|SB"
+    },
+    {
+      "sourceFile": "ICM10-utg50bb-bb13bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5b2b6ad1-1c0",
+      "question": "VS_3BET|UTG|50|BB"
+    },
+    {
+      "sourceFile": "ICM10-utg50bb-btn55bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "8d053f5a-1f3",
+      "question": "VS_3BET|UTG|50|BTN"
+    },
+    {
+      "sourceFile": "ICM10-utg50bb-co11bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5c0a05e3-1d2",
+      "question": "VS_3BET|UTG|50|CO"
+    },
+    {
+      "sourceFile": "ICM10-utg50bb-hj25bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "d2ebcb8c-227",
+      "question": "VS_3BET|UTG|50|HJ"
+    },
+    {
+      "sourceFile": "ICM10-utg50bb-sb9bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "ecc36d50-208",
+      "question": "VS_3BET|UTG|50|SB"
+    },
+    {
+      "sourceFile": "ICM11-bb13bb-sb9bb-r.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "cfa36595-4ec",
+      "question": "VS_OPEN|BB|15|SB"
+    },
+    {
+      "sourceFile": "ICM11-sb9bb-btn55bb.html",
+      "verdict": "přeskočeno",
+      "flags": [],
+      "contentHash": "f4c11770-1ce",
+      "question": "VS_OPEN|SB|10|BTN"
+    },
+    {
+      "sourceFile": "ICM11-sb9bb-hj25bb.html",
+      "verdict": "přeskočeno",
+      "flags": [],
+      "contentHash": "9be5d8f8-eb",
+      "question": "VS_OPEN|SB|10|HJ"
+    },
+    {
+      "sourceFile": "ICM11-sb9bb-utg50bb.html",
+      "verdict": "přeskočeno",
+      "flags": [],
+      "contentHash": "4b8e1246-f9",
+      "question": "VS_OPEN|SB|10|UTG"
+    },
+    {
+      "sourceFile": "ICM14-utg20bb-btn8bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "26ae5ae1-121",
+      "question": "VS_3BET|UTG|20|BTN"
+    },
+    {
+      "sourceFile": "ICM14-utg20bb-co15bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a049ca10-10f",
+      "question": "VS_3BET|UTG|20|CO"
+    },
+    {
+      "sourceFile": "ICM3-co60bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "31b6d48f-2d5",
+      "question": "VS_OPEN|CO|60|HJ"
+    },
+    {
+      "sourceFile": "ICM3-sb18bb-btn75bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "04292e81-25f",
+      "question": "VS_OPEN|SB|20|BTN"
+    },
+    {
+      "sourceFile": "ICM3-sb18bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "b0e57850-187",
+      "question": "VS_OPEN|SB|20|CO"
+    },
+    {
+      "sourceFile": "ICM3-sb18bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "09f46f2d-175",
+      "question": "VS_OPEN|SB|20|HJ"
+    },
+    {
+      "sourceFile": "ICM4-utg75bb-btn30bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "531ef2c7-311",
+      "question": "VS_3BET|UTG|75|BTN"
+    },
+    {
+      "sourceFile": "ICM4-utg75bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "92d31260-287",
+      "question": "VS_3BET|UTG|75|CO"
+    },
+    {
+      "sourceFile": "ICM4-utg75bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a890a060-2a9",
+      "question": "VS_3BET|UTG|75|HJ"
+    },
+    {
+      "sourceFile": "ICM5-btn30bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "cf03a08b-225",
+      "question": "VS_OPEN|BTN|30|CO"
+    },
+    {
+      "sourceFile": "ICM5-co60bb-utg75bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "def950bc-289",
+      "question": "VS_OPEN|CO|60|UTG"
+    },
+    {
+      "sourceFile": "ICM5-hj45bb-utg75bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "accedfed-221",
+      "question": "VS_OPEN|HJ|40|UTG"
+    },
+    {
+      "sourceFile": "ICM5-sb18bb-btn30bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a73c7131-228",
+      "question": "VS_OPEN|SB|20|BTN"
+    },
+    {
+      "sourceFile": "ICM5-sb18bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "3478fb53-1dc",
+      "question": "VS_OPEN|SB|20|CO"
+    },
+    {
+      "sourceFile": "ICM5-sb18bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "aebd389b-16a",
+      "question": "VS_OPEN|SB|20|HJ"
+    },
+    {
+      "sourceFile": "ICM5-sb18bb-utg75bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "4101b141-13d",
+      "question": "VS_OPEN|SB|20|UTG"
+    },
+    {
+      "sourceFile": "ICM6-utg75bb-btn30bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "e68a27c1-266",
+      "question": "VS_3BET|UTG|75|BTN"
+    },
+    {
+      "sourceFile": "ICM6-utg75bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "e1e8ab72-257",
+      "question": "VS_3BET|UTG|75|CO"
+    },
+    {
+      "sourceFile": "ICM6-utg75bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "b4665151-23a",
+      "question": "VS_3BET|UTG|75|HJ"
+    },
+    {
+      "sourceFile": "ICM7-btn30bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "9fb3c32b-1f7",
+      "question": "VS_OPEN|BTN|30|CO"
+    },
+    {
+      "sourceFile": "ICM7-hj45bb-utg75bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "b92266b0-1a0",
+      "question": "VS_OPEN|HJ|40|UTG"
+    },
+    {
+      "sourceFile": "ICM7-sb18bb-btn30bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "fca59bd4-194",
+      "question": "VS_OPEN|SB|20|BTN"
+    },
+    {
+      "sourceFile": "ICM7-sb18bb-co60bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "83987384-175",
+      "question": "VS_OPEN|SB|20|CO"
+    },
+    {
+      "sourceFile": "ICM7-sb18bb-hj45bb.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "178bf338-168",
+      "question": "VS_OPEN|SB|20|HJ"
+    },
+    {
+      "sourceFile": "ICM9-sb40bb-btn80bb.html",
+      "verdict": "nesedí",
+      "flags": [
+        "moc těsné",
+        "sloučení akcí vadí"
+      ],
+      "contentHash": "97613e78-2e9",
+      "question": "VS_OPEN|SB|40|BTN"
+    },
+    {
+      "sourceFile": "MUL-20BB-BB-vs-CO_BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "08db95c8-1b2",
+      "question": "SQUEEZE|BB|20|CO"
+    },
+    {
+      "sourceFile": "MUL-20BB-BB-vs-MP_LP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "2122eb71-455",
+      "question": "SQUEEZE|BB|20|LJ"
+    },
+    {
+      "sourceFile": "MUL-20BB-SB-vs-CO_BTN.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "08db95c8-1b2",
+      "question": "SQUEEZE|SB|20|CO"
+    },
+    {
+      "sourceFile": "PU-10bb-BU.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "71a3a6c9-26a",
+      "question": "PUSH_FOLD|BTN|10|"
+    },
+    {
+      "sourceFile": "PU-10bb-CO.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "27b27b27-202",
+      "question": "PUSH_FOLD|CO|10|"
+    },
+    {
+      "sourceFile": "PU-10bb-HJ.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "0dea362a-1d2",
+      "question": "PUSH_FOLD|HJ|10|"
+    },
+    {
+      "sourceFile": "PU-10bb-MP.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "868ebc2c-16a",
+      "question": "PUSH_FOLD|LJ|10|"
+    },
+    {
+      "sourceFile": "PU-10bb-SB.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "a50829dc-39a",
+      "question": "PUSH_FOLD|SB|10|"
+    },
+    {
+      "sourceFile": "PU-10bb-UTG.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "5f092e93-f4",
+      "question": "PUSH_FOLD|UTG|10|"
+    },
+    {
+      "sourceFile": "PU-10bb-UTG1.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "1d6b4c84-12b",
+      "question": "PUSH_FOLD|UTG+1|10|"
+    },
+    {
+      "sourceFile": "PU-10bb-UTG2.html",
+      "verdict": "sedí",
+      "flags": [],
+      "contentHash": "e40a4c76-142",
+      "question": "PUSH_FOLD|UTG+2|10|"
+    }
+  ]
+}
