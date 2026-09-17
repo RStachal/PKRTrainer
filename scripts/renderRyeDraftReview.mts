@@ -7,6 +7,7 @@ import {
   cellOf,
   draftLanding,
   impactOf,
+  loadProductionStoreForImpact,
   seatCollisions,
 } from "./lib/ryeDraftImpact.mts";
 import {
@@ -77,6 +78,8 @@ const COLORS: Record<string, string> = {
 };
 
 const draft = JSON.parse(readFileSync(draftPath, "utf8")) as DraftFile;
+// Dopad se měří proti produkčnímu packu, ne legacy indexu (bod 256).
+await loadProductionStoreForImpact();
 
 function handAt(row: number, column: number): string {
   if (row === column) return `${RANKS[row]}${RANKS[column]}`;
@@ -153,10 +156,11 @@ function weight(record: DraftRecord): number {
   // Dolů, ne nahoru: přečíst ji dnes nic nezmění.
   if (impact.notDrilled) return -1;
   const base = impact.newCell ? 169 : impact.changed;
-  // Dopad není doručení. Mřížka, která se sráží o otvírače, může změnit šedesát
-  // tříd a nedojít nikam - produkt tu osu nemá (bod 140), takže se do buňky
-  // vejde jen jedna. Čte se odshora, tak ať je nahoře to, co po schválení
-  // doopravdy dojde k hráči; sražené se nezahazují, jen jdou za to.
+  // Dopad není doručení. Mřížka, která se sráží o rozložení stacků (ICM
+  // scénář v buňce, kterou má i chipEV mřížka), může změnit šedesát tříd a
+  // nedojít nikam - klíč packu scénář nemá. Čte se odshora, tak ať je nahoře
+  // to, co po schválení doopravdy dojde k hráči; sražené se nezahazují, jen
+  // jdou za to.
   return draftLanding(record, collisions) === "PŘISTANE" ? base : base / 100;
 }
 
@@ -390,20 +394,20 @@ const blocks = sorted.map((record, index) => {
     : `<b class="${impact.changed > 0 ? "hot" : ""}">${impact.changed}</b> tříd`
       + ` z ${impact.compared} porovnaných, kde by se odpověď lišila od dnešní`;
   // Dopad není doručení, a čtenář to musí vědět dřív, než tu mřížku přečte.
-  // Sražená buňka nese víc mřížek proti různým otvíračům a produkt tu osu nemá,
-  // takže se do ní vejde jen jedna - schválení téhle sama o sobě nestačí.
+  // Otvírač je od 16. 9. 2026 v klíči, takže se buňka sráží už jen o rozložení
+  // stacků (hloubka protihráče, scénář ICM) - a tu osu klíč packu nemá.
   const collision = collisions.find((row) => row.cell === cellOf(record));
   const landingText = collision === undefined || impact.notDrilled
     ? ""
     : draftLanding(record, collisions) === "PŘISTANE"
       ? '<p class="meta"><b class="new">Do téhle buňky míří víc mřížek</b>'
-        + ` (proti ${escapeHtml(collision.seats.join(", "))}), ale tahle je ta, se kterou`
-        + " produkt u téhle sedačky už počítá - takže po schválení přistane.</p>"
-      : '<p class="meta"><b class="unlock">Tahle buňka se sráží o otvírače.</b>'
-        + ` Míří do ní mřížky proti ${escapeHtml(collision.seats.join(", "))}`
-        + ` a neshodnou se u ${collision.disagreeing} tříd. Uložit se dá jen jedna,`
-        + " a která, je rozhodnutí o rozsahu produktu - schválení téhle samo o sobě"
-        + " nestačí. Proto je níž v pořadí.</p>";
+        + ` (rozložení ${escapeHtml(collision.setups.join(", "))}), ale tahle je jediná chipEV,`
+        + " takže po schválení přistane; ICM čekají na $EV pack se scénářem v klíči.</p>"
+      : '<p class="meta"><b class="unlock">Tahle buňka se sráží o rozložení stacků.</b>'
+        + ` Míří do ní mřížky pro ${escapeHtml(collision.setups.join(", "))}`
+        + ` a neshodnou se u ${collision.disagreeing} tříd. Klíč packu scénář nemá,`
+        + " takže tahle sama nepřistane - schválení je platné, ale doručení čeká na"
+        + " $EV pack se scénářem v klíči. Proto je níž v pořadí.</p>";
   return `<section id="${anchorOf(record, index)}">
   <h2>${escapeHtml(record.context)} &middot; ${escapeHtml(record.position)} ${record.bucket} BB &middot; ${escapeHtml(versus)}</h2>
   ${answerNote(record).html}

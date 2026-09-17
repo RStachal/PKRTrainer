@@ -5,6 +5,7 @@ import {
   type DraftFile,
   type DraftRecord,
   impactOf,
+  loadProductionStoreForImpact,
 } from "./lib/ryeDraftImpact.mts";
 import { loadAnswerHistory } from "./lib/ryeAnswerHistory.mts";
 
@@ -34,12 +35,21 @@ import { loadAnswerHistory } from "./lib/ryeAnswerHistory.mts";
  * Rozhodnutí v bodech 62, 140 a 182 tím dostává cenu: nejde o nový herní stav,
  * jen o protažení předpokladu, který v produktu už je. Tenhle skript měří, co
  * by to koupilo - a co ne.
+ *
+ * ## Od 16. 9. 2026 je to historické měření
+ *
+ * Osa otvírače je v klíči (bod 253) a zpřesněné záznamy v produkčním packu;
+ * „co by se dalo doručit bez dalšího rozhodnutí" už není otázka. Co k hráči
+ * doopravdy dojde, měří `npm run mtt:refined-delivery` (bod 256). Skript
+ * zůstává jako doklad, na čem to rozhodnutí stálo.
  */
 
 const draftPath = process.argv.find((arg) => arg.startsWith("--draft="))?.split("=")[1]
   ?? "artifacts/rye-import/draft.json";
 
 const draft = JSON.parse(readFileSync(draftPath, "utf8")) as DraftFile;
+// Dopad se měří proti produkčnímu packu, ne legacy indexu (bod 256).
+await loadProductionStoreForImpact();
 const history = loadAnswerHistory();
 
 const approved: DraftRecord[] = draft.records.filter((record) => (

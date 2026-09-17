@@ -181,6 +181,7 @@
     "mtt:rye-candidate": "node scripts/run-cli.mjs scripts/buildRyeRefinedCandidate.mts",
     "mtt:rye-answers": "node scripts/run-cli.mjs scripts/applyRyeReviewAnswers.mts",
     "mtt:opener-axis": "node scripts/run-cli.mjs scripts/measureOpenerAxisValue.mts",
+    "mtt:refined-delivery": "node scripts/run-cli.mjs scripts/measureRefinedDelivery.mts",
     "mtt:rye-review": "node scripts/run-cli.mjs scripts/renderRyeDraftReview.mts",
     "mtt:daily": "node scripts/run-cli.mjs scripts/runDailyOrchestrator.mts",
     "mtt:seat-pair-expansion": "node scripts/run-cli.mjs scripts/buildSeatPairExpansionBatch.mts",

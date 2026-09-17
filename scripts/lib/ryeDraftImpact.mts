@@ -4,8 +4,10 @@ import {
   bucketsWithSpots,
   positionsForContext,
 } from "../../src/core/drillEngine";
-import { getRangeRecord } from "../../src/data/ranges/index";
 import type { ActionContext, Position, StackBucket } from "../../src/core/types";
+import { createRangeStoreFromRangePack, type RangeStore } from "../../src/data/rangeStore";
+import { mttPreflopRangePackForProfile } from "../../src/data/ranges/mttPreflopRangePacks";
+import { createMttProductionLazyLoader } from "../../src/data/ranges/mttProductionLazyLoader";
 
 /**
  * Co by schválená mřížka draftu udělala s odpovědí, kterou hráč dostane dnes.
@@ -49,9 +51,15 @@ export interface DraftFile {
 /**
  * O kolik by se změnila odpověď, kterou hráč dostane dnes.
  *
- * Měří se proti **obecnému** záznamu, tedy tomu, co hráč dostane teď - ne proti
- * zpřesněnému. To je celý smysl `vsSeat`: dnešní odpověď na „kdo otevřel"
- * nehledí, a tohle číslo říká, kolik ho to stojí u téhle konkrétní mřížky.
+ * Měří se proti tomu, co hráč dostane **teď** na tutéž otázku: proti
+ * produkčnímu packu REGULAR / ante OFF, se sedačkou otvírače v klíči. Kde už
+ * v packu zpřesněný záznam z téhle mřížky je, vyjde nula - a to je správně,
+ * dopad schválení je nulový, protože je doručené.
+ *
+ * Do 17. 9. 2026 se měřilo proti obecnému záznamu legacy indexu
+ * (`getRangeRecord("OFF", …)` bez otvírače). Dokud produkt osu otvírače
+ * neměl, bylo to totéž; po bodu 253 to tvrdilo o 65 mřížkách, které v
+ * produkci už byly, 1 391 tříd „kde by se odpověď změnila" (bod 256).
  */
 export interface DraftImpact {
   /** Tříd, kde by se doporučená akce lišila od dnešní odpovědi. */
@@ -73,13 +81,43 @@ export interface DraftImpact {
   notDrilled: boolean;
 }
 
+/**
+ * Produkční pack, proti kterému se dopad měří.
+ *
+ * `mttPreflopRangePackForProfile` vrací produkční pack až po registraci lazy
+ * loaderem - v aplikaci to dělá `main.ts`, v CLI nikdo. Bez téhle registrace
+ * by se měřilo nad převedeným legacy packem (1.0.0), který má ze zpřesněných
+ * záznamů jen obranu BB proti SB; změřeno 17. 9. 2026 nad týmž obsahem 8,8 %
+ * proti 30,4 % doručení. Proto se `impactOf` bez registrace odmítne: číslo z
+ * jiného packu vypadá jako měření.
+ */
+let productionStore: RangeStore | undefined;
+
+export async function loadProductionStoreForImpact(): Promise<RangeStore> {
+  if (productionStore !== undefined) return productionStore;
+  await createMttProductionLazyLoader().loadAll();
+  const pack = mttPreflopRangePackForProfile({
+    gameVariant: "MTT", tableFormat: "FULL_RING_9", blindSpeed: "REGULAR", street: "PREFLOP",
+    evModel: "CHIP_EV", ante: "OFF", rakeMode: "NONE",
+  });
+  if (pack === undefined || !/-production-v\d+$/.test(pack.id)) {
+    throw new Error(`Produkční pack REGULAR / ante OFF není registrovaný (našel se ${pack?.id ?? "žádný"}).`);
+  }
+  productionStore = createRangeStoreFromRangePack(pack);
+  return productionStore;
+}
+
 export function impactOf(record: DraftRecord): DraftImpact {
-  const current = getRangeRecord(
-    "OFF",
-    record.position as Position,
-    record.bucket as StackBucket,
-    record.context as ActionContext,
-  );
+  if (productionStore === undefined) {
+    throw new Error("impactOf: nejdřív await loadProductionStoreForImpact() - jinak by se měřilo nad legacy packem.");
+  }
+  const current = productionStore.lookup({
+    ante: "OFF",
+    position: record.position as Position,
+    bucket: record.bucket as StackBucket,
+    context: record.context as ActionContext,
+    ...(record.vsSeat === "" ? {} : { vsSeat: record.vsSeat as Position }),
+  });
   // Dvě různé nuly, které vypadají stejně.
   //
   // „Nabízí se, ale nemáme obsah" se dá spravit tímhle draftem. „U tohohle
@@ -115,74 +153,79 @@ export function impactOf(record: DraftRecord): DraftImpact {
   return { changed, compared, newCell: false, unlocksEmpty, notDrilled };
 }
 
-/** Buňka, kterou produkt umí adresovat: sedačka, hloubka, kontext. Bez otvírače. */
+/**
+ * Buňka, kterou produkt umí adresovat: kontext, sedačka, hloubka **a otvírač**.
+ *
+ * Do 16. 9. 2026 bez otvírače - produkt tu osu neměl (bod 140) a dvě mřížky
+ * lišící se jen otvíračem mířily do jedné buňky. Od bodu 253 je otvírač v
+ * klíči (`RangeKey.vsSeat`, zpřesněný záznam v packu), takže se ty mřížky
+ * nesráží: každá je vlastní odpověď na vlastní otázku.
+ */
 export function cellOf(record: DraftRecord): string {
-  return `${record.context}|${record.position}|${record.bucket}`;
+  return `${record.context}|${record.position}|${record.bucket}|vs${record.vsSeat || "—"}`;
+}
+
+/** Rozložení stacků, které je chipEV: všechno kromě scénářů ICM. */
+export function isChipEvSetup(stackSetupId: string): boolean {
+  return !/^ICM/i.test(stackSetupId);
 }
 
 /**
- * Mřížky, které se v produktu srazí, protože se liší jen otvíračem.
+ * Mřížky, které se v produktu srazí, protože se liší jen **rozložením stacků**.
  *
- * ## Proč tohle číslo musí zaznít dřív, než se něco zapíše
+ * ## Co zbylo ze srážek po ose otvírače
  *
- * Draft je cenný právě tím, že rozlišuje, **kdo otevřel** - audit zdrojů z
- * 3. 9. 2026 to vyčíslil na 11,7 bodu v průměru a 26,9 u big blindu. Jenže
- * produkt tu osu nemá: `TableState` nese `facing`, ne sedačku otvírače, a
- * `getRangeRecord` se ptá jen na (sedačka, hloubka, kontext). Dvě schválené
- * mřížky proti různým otvíračům tedy míří do jedné buňky.
+ * Do 16. 9. 2026 se tu počítaly mřížky lišící se otvíračem - změřeno 5. 9.
+ * 2026: 17 sražených buněk, 421 tříd. Osa otvírače (bod 253) je rozpustila.
+ * Co zbývá, je druhá osa, kterou klíč produktu nemá: **hloubka protihráče a
+ * scénář ICM**. Změřeno 17. 9. 2026 nad draftem 118 mřížek: 10 klíčů nese víc
+ * mřížek a v každém z nich je aspoň jedna ICM (`ICM-sb18bb-btn35bb`,
+ * `ICM3-sb18bb-btn75bb`, `ICM5-…`, `ICM7-…` všechny na `VS_OPEN|SB|20|vsBTN`).
  *
- * Sráží se ale jen tehdy, když si **odporují**. Dvě mřížky se stejným
- * doporučením se dají uložit obě a nic se nerozhoduje; teprve neshoda nutí
- * vybrat, a to je rozhodnutí o rozsahu produktu (bod 140), ne úloha importu.
+ * Pro chipEV pack to srážka není: ICM mřížka do něj nejde vůbec (bod 253,
+ * `icm`), takže chipEV mřížka přistane sama. Srážka je to teprve pro $EV pack,
+ * až bude - a řeší se tím, že klíč dostane scénář (`RangeRefinement.stackSetupId`
+ * už existuje, jen ho žádný pack nenese).
+ *
+ * Sráží se jen tehdy, když si **odporují**. Dvě mřížky se stejným doporučením
+ * se dají uložit obě a nic se nerozhoduje.
  */
 export interface SeatCollision {
   cell: string;
-  /** Otvírači, proti kterým draft tu buňku popisuje. */
-  seats: string[];
+  /** Rozložení stacků, pro která draft tu buňku popisuje. */
+  setups: string[];
   /** Tříd rukou, kde se ty mřížky mezi sebou neshodnou. */
   disagreeing: number;
   /**
-   * Otvírač, kterého produkt u téhle sedačky **už dnes předpokládá**, nebo
-   * `undefined`, když pro ni žádný předpoklad nemá.
+   * Rozložení, které v chipEV packu přistane samo - jediné chipEV v té buňce.
+   * `undefined`, když jsou v buňce dvě chipEV, nebo žádné (samé ICM).
    */
-  assumedSeat?: string;
-  /** Sedí některá z těch mřížek na ten předpoklad? */
+  chipEvSetup?: string;
+  /** Přistane v chipEV packu bez rozhodování? */
   resolved: boolean;
 }
 
 /**
- * Otvírač, proti kterému je chart pro tuhle sedačku kreslený.
+ * Otvírač, kterého produkt u téhle sedačky předpokládá při ocenění re-jamu.
  *
- * Není to konstanta a nesmí se za ni vydávat: mapování je **na sedačku hrdiny**
- * (hijack pro blindy, button a cutoff; lojack pro hijack; UTG+1 pro lojack) a
- * bydlí v `drillEngine`, protože podle něj se dnes počítá cena re-jamu. Volba
- * „bezpečné konstanty" ho jednou přebila a při 15 BB označila 167 rukou za
- * ztrátové, které chart jamuje.
- *
- * Majitel 4. 9. 2026 zvolil, že u sražené buňky se vezme mřížka proti tomuhle
- * otvírači - tím se z dnešního předpokladu produktu stane pravda a nemění se
- * nic z toho, co se rozdává.
+ * Do 16. 9. 2026 rozhodoval o sražené buňce (volba majitele ze 4. 9. 2026);
+ * s otvíračem v klíči už nerozhoduje nic, zůstává jako údaj o ceně.
  */
 export function assumedOpenerFor(position: string): string | undefined {
   return REJAM_EV_OPENER_BY_HERO[position];
 }
 
 /**
- * Přistane schválení téhle mřížky, nebo se zastaví o srážku?
+ * Přistane schválení téhle mřížky v chipEV packu, nebo se zastaví o srážku?
  *
  * Čtecí stránka řadí podle dopadu - kolik tříd by se změnilo. Jenže dopad není
- * doručení: mřížka může změnit šedesát tříd a nedojít nikam, protože do její
- * buňky míří i jiná mřížka proti jinému otvírači a produkt tu osu nemá
- * (bod 140). Změřeno 5. 9. 2026: z 963 tříd, které by chipEV půlka změnila,
- * jich **421 leží v 17 sražených buňkách**.
+ * doručení. Tohle rozlišení patří ke čtení, ne až k importu: majitel čte
+ * odshora a má mít nahoře to, co po schválení doopravdy dojde k hráči.
  *
- * Tohle rozlišení patří ke čtení, ne až k importu: majitel čte odshora a má mít
- * nahoře to, co po schválení doopravdy dojde k hráči.
- *
- * - `PŘISTANE` - buňka je jen její, nebo je to ta mřížka, kterou by pravidlo
- *   vybralo (proti otvírači, se kterým produkt u té sedačky už počítá).
- * - `SRÁŽKA` - do buňky míří víc mřížek, které si odporují, a tahle není ta
- *   vybraná. Schválení samo o sobě nestačí.
+ * - `PŘISTANE` - buňka je jen její, nebo je to jediná chipEV mřížka v buňce.
+ * - `SRÁŽKA` - do buňky míří víc mřížek, které si odporují, a tahle sama
+ *   nepřistane: buď je ICM (čeká na $EV pack se scénářem v klíči), nebo jsou v
+ *   buňce dvě chipEV a rozhodnout musí člověk.
  */
 export type DraftLanding = "PŘISTANE" | "SRÁŽKA";
 
@@ -192,9 +235,7 @@ export function draftLanding(
 ): DraftLanding {
   const collision = collisions.find((row) => row.cell === cellOf(record));
   if (collision === undefined) return "PŘISTANE";
-  // Sražená buňka: přistane jen ta mřížka, kterou by vybral předpoklad produktu.
-  // Když předpoklad chybí, nepřistane žádná - rozhodnout musí člověk.
-  return collision.resolved && record.vsSeat === collision.assumedSeat ? "PŘISTANE" : "SRÁŽKA";
+  return collision.resolved && record.stackSetupId === collision.chipEvSetup ? "PŘISTANE" : "SRÁŽKA";
 }
 
 export function seatCollisions(records: readonly DraftRecord[]): SeatCollision[] {
@@ -219,18 +260,17 @@ export function seatCollisions(records: readonly DraftRecord[]): SeatCollision[]
       if (answers.size > 1) disagreeing += 1;
     }
     if (disagreeing === 0) continue;
-    const seats = [...new Set(group.map((record) => record.vsSeat || "—"))].sort();
-    // Předpoklad se čte podle sedačky hrdiny, ne podle buňky jako celku.
-    const assumedSeat = assumedOpenerFor(group[0].position);
+    const setups = [...new Set(group.map((record) => record.stackSetupId))].sort();
+    const chipEv = setups.filter(isChipEvSetup);
     collisions.push({
       cell,
-      seats,
+      setups,
       disagreeing,
-      assumedSeat,
-      // Fail-closed: když mezi mřížkami ta předpokládaná není, spor se
-      // nerozhoduje odhadem. Vybrat libovolnou by znamenalo tvrdit o range
-      // něco, co pro ni nikdo nezvolil.
-      resolved: assumedSeat !== undefined && seats.includes(assumedSeat),
+      // Fail-closed: dvě chipEV mřížky v jedné buňce se nerozhodují odhadem.
+      // Vybrat libovolnou by znamenalo tvrdit o range něco, co pro ni nikdo
+      // nezvolil.
+      ...(chipEv.length === 1 ? { chipEvSetup: chipEv[0] } : {}),
+      resolved: chipEv.length === 1,
     });
   }
   return collisions.sort((left, right) => right.disagreeing - left.disagreeing);

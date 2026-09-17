@@ -6,6 +6,7 @@ import {
   type DraftFile,
   type DraftRecord,
   impactOf,
+  loadProductionStoreForImpact,
   seatCollisions,
 } from "./lib/ryeDraftImpact.mts";
 
@@ -57,6 +58,8 @@ if (raw === undefined) {
 }
 
 const draft = JSON.parse(readFileSync(draftPath, "utf8")) as DraftFile;
+// Dopad se měří proti produkčnímu packu, ne legacy indexu (bod 256).
+await loadProductionStoreForImpact();
 
 /**
  * Soubor s odpověďmi rozdělený na varianty.
@@ -176,9 +179,10 @@ if (unknown.length > 0) {
  *    od lojacku, takže mřížka pro UTG+1 po schválení nezmění nic.
  * 2. **Kombinace může být dnes prázdná** - schválení je pak to nejcennější, co
  *    se může stát: odpověď nebude přesnější, ona vůbec bude.
- * 3. **Dvě mřížky můžou mířit do jedné buňky**, protože se liší jen otvíračem
- *    a produkt tu osu nemá (`TableState` nese `facing`, ne sedačku otvírače;
- *    bod 140). Tohle je jediná část, která se importem vyřešit nedá.
+ * 3. **Dvě mřížky můžou mířit do jedné buňky.** Do 16. 9. 2026 proto, že se
+ *    lišily jen otvíračem a produkt tu osu neměl (bod 140); osa otvírače
+ *    (bod 253) to rozpustila. Zbývá rozložení stacků - scénář ICM - a to je
+ *    jediná část, která se importem vyřešit nedá (bod 256).
  */
 function reportDelivery(approved: readonly DraftRecord[]): void {
   let landing = 0;
@@ -211,17 +215,17 @@ function reportDelivery(approved: readonly DraftRecord[]): void {
   const open = collisions.filter((row) => !row.resolved);
 
   console.log("");
-  console.log(`sráží se o otvírače: ${collisions.length} buněk, ${disagreeing} tříd v rozporu`);
-  console.log(`  rozhodne předpoklad produktu     ${String(resolved.length).padStart(4)}`);
+  console.log(`sráží se o rozložení stacků: ${collisions.length} buněk, ${disagreeing} tříd v rozporu`);
+  console.log(`  chipEV mřížka přistane sama      ${String(resolved.length).padStart(4)}`);
   console.log(`  zůstává na tobě                  ${String(open.length).padStart(4)}`);
 
   if (resolved.length > 0) {
     console.log("");
-    console.log("bere se mřížka proti tomu, koho produkt u té sedačky předpokládá:");
+    console.log("v chipEV packu přistane jediná chipEV mřížka v buňce, ICM čekají na $EV pack:");
     for (const row of resolved.slice(0, 8)) {
       console.log(
-        `  ${row.cell.padEnd(22)} bereme vs ${String(row.assumedSeat).padEnd(6)}`
-        + ` (z ${row.seats.length} otvíračů) → ${row.disagreeing} tříd`,
+        `  ${row.cell.padEnd(26)} bereme ${String(row.chipEvSetup).padEnd(4)}`
+        + ` (z ${row.setups.length} rozložení) → ${row.disagreeing} tříd`,
       );
     }
     if (resolved.length > 8) console.log(`  … a dalších ${resolved.length - 8}`);
@@ -229,10 +233,10 @@ function reportDelivery(approved: readonly DraftRecord[]): void {
 
   if (open.length > 0) {
     console.log("");
-    console.log("bez předpokladu, takže se nerozhoduje odhadem:");
+    console.log("bez chipEV mřížky (samé ICM) nebo s dvěma, takže se nerozhoduje odhadem:");
     for (const row of open.slice(0, 8)) {
       console.log(
-        `  ${row.cell.padEnd(22)} ${row.seats.join(", ").padEnd(24)} ${row.disagreeing} tříd`,
+        `  ${row.cell.padEnd(26)} ${row.setups.join(", ").padEnd(24)} ${row.disagreeing} tříd`,
       );
     }
     if (open.length > 8) console.log(`  … a dalších ${open.length - 8}`);
@@ -240,14 +244,11 @@ function reportDelivery(approved: readonly DraftRecord[]): void {
 
   console.log("");
   console.log(
-    "Tyhle mřížky se liší jen tím, kdo otevřel, a produkt tu osu nemá:\n"
-    + "`getRangeRecord` se ptá na sedačku, hloubku a kontext, `TableState` nese\n"
-    + "`facing` bez otvírače. Majitel 4. 9. 2026 zvolil, že se u sražené buňky\n"
-    + "vezme mřížka proti tomu otvírači, kterého produkt u té sedačky už dnes\n"
-    + "předpokládá (`REJAM_EV_OPENER_BY_HERO`) - tím se z předpokladu stane\n"
-    + "pravda a nemění se nic z toho, co se rozdává. Kde ten předpoklad není,\n"
-    + "spor zůstává otevřený; vybrat libovolnou mřížku by tvrdilo o range něco,\n"
-    + "co pro ni nikdo nezvolil.",
+    "Otvírač je od 16. 9. 2026 v klíči (bod 253), takže mřížky lišící se jen\n"
+    + "otvíračem se už nesráží. Tyhle se liší rozložením stacků - hloubkou\n"
+    + "protihráče nebo scénářem ICM - a tu osu klíč packu nemá. Pro chipEV pack\n"
+    + "to nevadí: ICM mřížka do něj nejde vůbec. Srážka to bude pro $EV pack, až\n"
+    + "bude, a řeší se scénářem v klíči (`RangeRefinement.stackSetupId`).",
   );
 }
 
