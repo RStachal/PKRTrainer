@@ -702,7 +702,13 @@ if (!write) {
        * manifest se složí z disku až na konec. Čtyři běhy jsou půlka denního
        * stropu na jádra a dohromady kolem 2,5 GB paměti.
        */
-      const lanes = Math.max(1, Math.min(4, Math.floor(cpus().length / 4)));
+      // Počet běhů podle jader **a paměti**. Ráno 17. 9. 2026 skončily čtyři
+      // běhy po 17 minutách s kódem 0 a polovinou tabulek nedodělanou, stroj
+      // měl 2,4 GB volných (virtuál a Obsidian majitele drží 13 GB, bod 244).
+      // Běh turnové EV bere kolem 3 GB; víc běhů, než se vejde do volné
+      // paměti, si navzájem vezmou stroj, ne práci.
+      const memoryLanes = Math.floor(freemem() / (3 * 1024 ** 3));
+      const lanes = Math.max(1, Math.min(4, Math.floor(cpus().length / 4), memoryLanes));
       const listPath = "artifacts/turn-ev-stale.txt";
       writeFileSync(listPath, `${stale.join("\n")}\n`, "utf8");
       // Časový strop na celou fázi, ne na rodinu. Změřeno 14. 9. 2026:
@@ -714,18 +720,26 @@ if (!write) {
       const budgetMinutes = Number(
         process.argv.find((arg) => arg.startsWith("--turn-ev-minutes="))?.split("=")[1] ?? 150,
       );
-      console.log(`  zastaralo ${stale.length} tabulek, přepočítávám ve ${lanes} bězích (strop ${budgetMinutes} min)`);
+      console.log(`  zastaralo ${stale.length} tabulek, přepočítávám ve ${lanes} bězích`
+        + ` (strop ${budgetMinutes} min, volná paměť ${(freemem() / 1024 ** 3).toFixed(1)} GB)`);
       const started = Date.now();
       const results = await Promise.allSettled(
         Array.from({ length: lanes }, (_, index) => runAsync("mtt:turn-ev-pack", [
           `--families-file=${listPath}`, `--shard=${index + 1}/${lanes}`, "--write", "--no-manifest",
         ], 8192, budgetMinutes * 60_000)),
       );
+      // Výstup každého běhu na disk. Do 17. 9. 2026 se zahazoval, takže ráno,
+      // kdy běhy skončily v půlce s kódem 0, nebylo z čeho číst proč.
       for (const [index, result] of results.entries()) {
-        if (result.status === "rejected") {
-          const killed = (result.reason as { killed?: boolean } | undefined)?.killed === true;
-          console.log(`  běh ${index + 1}/${lanes} ${killed ? "vypršel strop" : "selhal"}`);
+        const logPath = `artifacts/turn-ev-run-${index + 1}.log`;
+        if (result.status === "fulfilled") {
+          writeFileSync(logPath, result.value, "utf8");
+          continue;
         }
+        const reason = result.reason as { killed?: boolean; message?: string; stdout?: string; stderr?: string } | undefined;
+        const killed = reason?.killed === true;
+        writeFileSync(logPath, `${reason?.stdout ?? ""}\n--- stderr ---\n${reason?.stderr ?? ""}\n--- ${reason?.message ?? ""}\n`, "utf8");
+        console.log(`  běh ${index + 1}/${lanes} ${killed ? "vypršel strop" : "selhal"} (${logPath})`);
       }
       // Manifest až na konec a z disku: běhy ho nepíšou, aby si ho nepřepsaly.
       run("mtt:turn-ev-pack", ["--manifest-only"]);
