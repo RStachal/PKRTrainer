@@ -206,6 +206,16 @@ na kontext a profil, nad produkčními packy):
 | SQUEEZE | 2,4 % | 2 |
 | VS_3BET | 0 % (všech 17 schválených je ICM) | 0 |
 
+**A jedna oprava, která patří sem, protože mění, co „doručeno" znamená
+(bod 257, 17. 9. 2026 večer):** produkční preflop packy byly od 16. 7. snímek
+legacy dat. Sada, `mtt:post-answer` i všechny brány měřily legacy pack; hráč
+dostával produkční. Opravy z tvých chartů z 30. 7. az 7. 8. (re-jam, calling
+range, BB proti limpu, push/fold na baseline) tak dva měsíce k hráči nedošly -
+rozdíl 2 971 tříd v ante OFF. Přestagováno, `mtt:preflop-drift` ve
+`verify:block` hlídá, že se to nestane znovu. Cenou je, že 29 rodin na 25 bb
+je solvených ze snímku (BB proti otevření o 94 tříd jinak) - přesolvení je
+rozhodnutí vlastníka (rozhodnutí 10).
+
 Druhá osa - **sada, tedy scénář ICM** - dodaná není a je to ta, na které
 stojí 40 schválených ICM mřížek: v chipEV packu nemají co dělat (bod 253,
 `icm`) a $EV pack, který by je nesl, potřebuje scénář v klíči.

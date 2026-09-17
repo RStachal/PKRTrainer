@@ -150,7 +150,14 @@ answers files in this folder are the audit trail of that path.
    number about production packs: without lazy-loader registration a CLI measures the legacy pack.
 
 State on 17. 9. 2026: 110 of 118 grids approved, 61 refined records in all four chipEV packs,
-VS_OPEN 30,4 % / SQUEEZE 2,4 % of dealt spots refined (diary 253-256).
+VS_OPEN 30,4 % / SQUEEZE 2,4 % of dealt spots refined (diary 253-256). Push/fold 10 bb: the 8 approved
+RYE grids replace the pack's own general records (owner's decision 17. 9., `selectPushFoldOverrides`).
+
+The base under the RYE layer is the legacy pack staged through the P1 pipeline
+(`mtt:p1-preflop-drafts`, then `mtt:p1-stage-reviewed-preflop --pack-id <packId> --permission raw/<packId>/permission.json --write --confirm=STAGE_REVIEWED_MTT_P1_PREFLOP`).
+It went stale for two months once (diary 257); `npm run mtt:preflop-drift` (in `verify:block`) fails when
+production general records differ from the legacy pack. After any legacy range change: restage, then
+step 4 onwards.
 
 ## Required Permission Manifest Fields
 
