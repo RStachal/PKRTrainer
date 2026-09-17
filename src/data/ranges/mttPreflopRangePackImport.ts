@@ -190,11 +190,17 @@ const LEGAL_LICENSE_KINDS: readonly MttPreflopImportLicenseKind[] = [
  */
 export function recordProvenanceSources(
   records: readonly Pick<MttPreflopImportRecord, "provenance">[],
+  ownSource?: string,
 ): string[] {
   const sources = new Set<string>();
   for (const record of records) {
     if (record.provenance === undefined) continue;
-    sources.add(record.provenance.split(",")[0].trim());
+    const source = record.provenance.split(",")[0].trim();
+    // Záznam, který jen říká, že je z vlastního zdroje packu (`licenseKind`
+    // jako první položka `provenance`), není cizí zdroj: převedený záznam
+    // (bod 254, BVB|BB → VS_OPEN z SB) má stejný původ jako celý pack.
+    if (ownSource !== undefined && source === ownSource) continue;
+    sources.add(source);
   }
   return [...sources].sort();
 }

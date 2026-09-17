@@ -126,7 +126,9 @@ const REPRESENTATIVE_ACTIONS: Record<ActionContext, readonly ActionKey[]> = {
   VS_3BET: ["4BET", "CALL"],
   VS_4BET: ["JAM", "CALL"],
   SQUEEZE: ["SQUEEZE", "CALL"],
-  BVB: ["OPEN_2X", "OPEN_25X", "3BET", "CALL"],
+  // Od 17. 9. 2026 jen SB (otevření); obrana BB proti SB je `VS_OPEN` z SB
+  // se zpřesněným záznamem (bod 254), takže 3BET a CALL patří tam.
+  BVB: ["OPEN_2X", "OPEN_25X"],
   PUSH_FOLD: ["JAM"],
   VS_ALLIN: ["CALL_JAM"],
 };

@@ -136,7 +136,7 @@ function buildMttPreflopRangeModule(
     licenseKind: input.licenseKind,
     blindSpeeds: [input.dimensions.blindSpeed],
     evModels: [input.dimensions.evModel],
-    additionalSources: recordProvenanceSources(input.records),
+    additionalSources: recordProvenanceSources(input.records, input.licenseKind),
   });
   const slotReport = buildMttPreflopImportSlotValidationReport(input);
   const languageBlockers = playerFacingLanguageBlockers(input.contentLanguage);

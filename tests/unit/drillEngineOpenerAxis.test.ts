@@ -118,8 +118,8 @@ describe("spot s protihráčem", () => {
   });
 });
 
-describe("dnešní obsah: bez zpřesněných záznamů jmenuje spot kalibrovaného otvírače", () => {
-  it("VS_OPEN i SQUEEZE nesou otvírače z REJAM_EV_OPENER_BY_HERO a ID beze změny", () => {
+describe("dnešní obsah: spot jmenuje kalibrovaného otvírače, nebo sedačku se zpřesněným záznamem", () => {
+  it("VS_OPEN i SQUEEZE: obecná odpověď jen pod kalibrovaným otvíračem, zpřesněná s |vs v ID", () => {
     if (!rangeStore.isLoaded()) return;
     for (const context of ["VS_OPEN", "SQUEEZE"] as const) {
       const rng = mulberry32(11);
@@ -127,8 +127,13 @@ describe("dnešní obsah: bez zpřesněných záznamů jmenuje spot kalibrované
       for (let i = 0; i < 80; i += 1) {
         const spot = generateSpot(rng, context, filters, rangeStore);
         if (spot === null) continue;
-        expect(spot.tableState.vsSeat).toBe(REJAM_EV_OPENER_BY_HERO[spot.heroPos]);
-        expect(spot.id).not.toContain("|vs");
+        const seat = spot.tableState.vsSeat;
+        if (spot.id.includes("|vs")) {
+          // Zpřesněná odpověď (od 17. 9. 2026 i obrana BB proti SB): ID nese sedačku.
+          expect(spot.id).toContain(`|vs${seat}|`);
+        } else {
+          expect(seat).toBe(REJAM_EV_OPENER_BY_HERO[spot.heroPos]);
+        }
       }
     }
   });
@@ -138,6 +143,30 @@ describe("dnešní obsah: bez zpřesněných záznamů jmenuje spot kalibrované
       const opener = REJAM_EV_OPENER_BY_HERO[hero];
       expect(opener, hero).toBeDefined();
     }
+  });
+});
+
+describe("obrana BB proti SB je VS_OPEN z SB, ne BvB (bod 254)", () => {
+  it("drill se na BB v BvB neptá a v produkci má BB proti SB zpřesněný záznam na každé hloubce", () => {
+    expect(positionsForContext("BVB")).toEqual(["SB"]);
+    if (!rangeStore.isLoaded()) return;
+    for (const bucket of [15, 20, 25, 30, 40, 50, 60, 75, 100, 125, 150] as const) {
+      const entry = rangeStore.lookup({ ante: "OFF", position: "BB", bucket, context: "VS_OPEN", vsSeat: "SB" });
+      expect(entry?.vsSeat, `BB ${bucket} bb vs SB`).toBe("SB");
+      expect(rangeStore.lookup({ ante: "OFF", position: "BB", bucket, context: "BVB" }), `BVB|BB|${bucket}`).toBeUndefined();
+    }
+    const rng = mulberry32(5);
+    const filters = makeFilters({ positions: ["BB"], contexts: ["VS_OPEN"] });
+    let vsSb = 0;
+    for (let i = 0; i < 300; i += 1) {
+      const spot = generateSpot(rng, "VS_OPEN", filters, rangeStore);
+      if (spot?.tableState.vsSeat === "SB") {
+        vsSb += 1;
+        expect(spot.id).toContain("|vsSB|");
+        expect(spot.explanation).toContain("Proti openu z SB");
+      }
+    }
+    expect(vsSb).toBeGreaterThan(0);
   });
 });
 

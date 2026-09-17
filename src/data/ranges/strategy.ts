@@ -876,11 +876,12 @@ export function buildAnteRangeFile(ante: AnteMode, version: string): RangeFile {
     }
   }
 
-  // BVB (Req 3.11) — SB open / BB obrana.
-  for (const pos of ["SB", "BB"] as Position[]) {
-    for (const bucket of DEEP_BUCKETS) {
-      entries.push(makeRecord(pos, bucket, "BVB", bvbSegments(pos, bucket, wide)));
-    }
+  // BVB (Req 3.11) — SB open. Obrana BB proti otevření SB je od 17. 9. 2026
+  // `VS_OPEN` z SB (zpřesněný záznam s `vsSeat`), ne vlastní kontext: tak to
+  // čte RYE i parser historie a drill se ptá jen tak (bod 254).
+  for (const bucket of DEEP_BUCKETS) {
+    entries.push(makeRecord("SB", bucket, "BVB", bvbSegments("SB", bucket, wide)));
+    entries.push({ ...makeRecord("BB", bucket, "VS_OPEN", bvbSegments("BB", bucket, wide)), vsSeat: "SB" });
   }
 
   // PUSH_FOLD (Req 3.9) — všechny pozice × krátké koše.

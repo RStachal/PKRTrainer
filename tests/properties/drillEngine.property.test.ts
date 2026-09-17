@@ -171,14 +171,16 @@ describe("drillEngine - generateSpot properties", () => {
     );
   });
 
-  // Feature: mtt-preflop-trainer, Property 7: Blind-vs-blind stavi hrdinu mezi SB a BB
+  // Feature: mtt-preflop-trainer, Property 7: Blind-vs-blind stavi hrdinu do SB
   // Validates: Requirements 3.11
-  it("Property 7: BVB generuje pouze SB nebo BB", () => {
+  it("Property 7: BVB generuje pouze SB - obrana BB proti SB je VS_OPEN z SB", () => {
+    // Od 17. 9. 2026 (bod 254): jedna situace, jedna otázka. BB proti otevření
+    // SB se ptá jako `VS_OPEN|BB|vsSB` se zpřesněným záznamem, ne jako BvB.
     fc.assert(
       fc.property(arbSeed, arbAnte, (seed, ante) => {
         const spot = expectGeneratedSpot(seed, "BVB", 15, ante);
 
-        expect(["SB", "BB"]).toContain(spot.heroPos);
+        expect(spot.heroPos).toBe("SB");
         expect(spot.tableState.isBvB).toBe(true);
       }),
       { numRuns: 100 },

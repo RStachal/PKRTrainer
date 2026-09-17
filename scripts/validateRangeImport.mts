@@ -141,7 +141,7 @@ function run(): void {
         licenseKind: typedInput.licenseKind,
         blindSpeeds: [typedInput.dimensions.blindSpeed],
         evModels: [typedInput.dimensions.evModel],
-        additionalSources: recordProvenanceSources(typedInput.records),
+        additionalSources: recordProvenanceSources(typedInput.records, typedInput.licenseKind),
       },
     );
     const slotReport = buildMttPreflopImportSlotValidationReport(typedInput);

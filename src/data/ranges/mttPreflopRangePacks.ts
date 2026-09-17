@@ -171,6 +171,10 @@ export function rangeFileToMttPreflopRangePack(file: RangeFile): RangePack {
           position: record.position,
           bucket: record.bucket,
           context: record.context,
+          // Zpřesnění musí projít i sem: bez něj by se obrana BB proti SB
+          // (`VS_OPEN|BB|vsSB`) slila s obecným záznamem téže buňky.
+          ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
+          ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
           lenient: record.lenient,
           strict: record.strict,
         }));

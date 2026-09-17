@@ -407,6 +407,11 @@ function normalizedCandidateFromSourcePack(input: {
       sourceStackBB: record.bucket,
       bucket: record.bucket,
       context: record.context,
+      // Zpřesnění projde i sem: od 17. 9. 2026 má zdrojový pack obranu BB
+      // proti SB jako `VS_OPEN|BB|vsSB` vedle obecného záznamu (bod 254);
+      // bez sedačky by z toho byl duplicitní klíč.
+      ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
+      ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
       strict: withExplicitFoldDefaults(record.context, record.strict),
       lenient: withExplicitFoldDefaults(record.context, record.lenient),
     })),

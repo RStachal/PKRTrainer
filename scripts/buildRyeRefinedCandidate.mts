@@ -3,6 +3,7 @@ import { dirname } from "node:path";
 
 import {
   buildMttPreflopImportReadinessReport,
+  type MttPreflopImportRecord,
   type MttPreflopRangePackImportInput,
 } from "../src/data/ranges/mttPreflopRangePackImport";
 import { loadAnswerHistory } from "./lib/ryeAnswerHistory.mts";
@@ -59,7 +60,7 @@ const stored = JSON.parse(readFileSync(basePath, "utf8")) as MttPreflopRangePack
 // minula. Základ je vždy jen jeho obecná část - zpřesněné záznamy, jejich
 // předpoklady i důkaz zdroje se skládají znovu z dnešního draftu a odpovědí,
 // jinak by druhý běh vyrobil duplicity (změřeno 16. 9. 2026: 57 duplicit).
-const REFINED_ASSUMPTION = /^(Zpřesněné záznamy \(vsSeat\)|Zdroj zpřesněných záznamů|Mix ve zdroji)/;
+const REFINED_ASSUMPTION = /^(Zpřesněné záznamy \(vsSeat\)|Zdroj zpřesněných záznamů|Mix ve zdroji|Obrana BB proti otevření SB)/;
 const RYE_EVIDENCE_TITLE = "RYE Rangeviewer 2021 Updated with ICM Ranges";
 const RYE_LICENSE_SENTENCE = / Zpřesněné záznamy \(vsSeat\) pocházejí z .*$/;
 const base: MttPreflopRangePackImportInput = {
@@ -70,6 +71,12 @@ const base: MttPreflopRangePackImportInput = {
   sourceEvidence: stored.sourceEvidence.filter((source) => source.title !== RYE_EVIDENCE_TITLE),
   records: stored.records.filter((record) => record.vsSeat === undefined),
 };
+// Zpřesněné záznamy z vlastního zdroje packu (převedená obrana BB proti SB)
+// nejsou z draftu a musí přežít další běh; poznají se podle `provenance`,
+// která začíná `licenseKind` packu.
+const ownRefined = stored.records.filter((record) => (
+  record.vsSeat !== undefined && (record.provenance ?? "").startsWith(`${stored.licenseKind},`)
+));
 const outPath = arg("out") ?? `artifacts/rye-import/candidate/${base.id}/normalized.json`;
 const history = loadAnswerHistory();
 
@@ -88,6 +95,28 @@ const reused = dims.blindSpeed !== "REGULAR" || dims.ante !== "OFF";
 
 const selection = selectRefinedRecords(draft.records, history);
 const today = new Date().toISOString().slice(0, 10);
+
+// Obrana BB proti otevření SB: z `BVB|BB` na `VS_OPEN|BB|vsSB`.
+//
+// Rozhodnutí vlastníka 17. 9. 2026 (bod 254): jedna situace, jedna otázka.
+// RYE ji čte jako čelení otevření z SB, parser historie taky, a drill se od
+// 17. 9. ptá jen tak - `BVB|BB` by v packu byl mrtvý obsah. Záznamy z
+// vlastního exportu se proto překlápějí jako zpřesněné záznamy s původem;
+// kde má hloubku RYE, vyhrává RYE (je reference).
+const ryeCells = new Set(selection.accepted.map((record) => `${record.context}|${record.position}|${record.bucket}|${record.vsSeat}`));
+const bvbDropped = base.records.filter((record) => record.context === "BVB" && record.position === "BB").length;
+const convertedBvb: MttPreflopImportRecord[] = [
+  ...base.records
+    .filter((record) => record.context === "BVB" && record.position === "BB")
+    .map((record): MttPreflopImportRecord => ({
+      ...record,
+      context: "VS_OPEN",
+      vsSeat: "SB",
+      provenance: `${base.licenseKind}, vlastní export packu, původně BVB|BB|${record.bucket}, převedeno ${today} na VS_OPEN z SB (bod 254)`,
+    })),
+  ...ownRefined,
+].filter((record) => !ryeCells.has(`${record.context}|${record.position}|${record.bucket}|${record.vsSeat}`));
+base.records = base.records.filter((record) => !(record.context === "BVB" && record.position === "BB"));
 
 // Obecný záznam téže buňky musí v základu být: zpřesnění je nadstavba a bez
 // obecného by spot bez zpřesněného protihráče neměl na co spadnout.
@@ -112,6 +141,7 @@ const candidate: MttPreflopRangePackImportInput = {
         ? ` Do profilu ${dims.blindSpeed} / ante ${dims.ante} se přebírají rozhodnutím vlastníka ze 17. 9. 2026 (reuse), ne podle zdroje.`
         : ""),
     "Mix ve zdroji (ruka hraná zčásti) se přenáší jako nejčastější akce ve strict a všechny barvené akce v lenient; podíl foldu se nepřenáší.",
+    `Obrana BB proti otevření SB je VS_OPEN z SB (zpřesněný záznam), ne kontext BVB: ${convertedBvb.length} hloubek z vlastního exportu (původně BVB|BB), zbytek z RYE (rozhodnutí vlastníka 17. 9. 2026, bod 254).`,
   ],
   sourceEvidence: [
     ...base.sourceEvidence,
@@ -123,7 +153,7 @@ const candidate: MttPreflopRangePackImportInput = {
       licenseNote: "Koupený produkt vlastníka; přenášejí se seznamy akcí po třídách rukou, ne obrázky ani soubory zdroje.",
     },
   ],
-  records: [...base.records, ...selection.accepted],
+  records: [...base.records, ...selection.accepted, ...convertedBvb],
 };
 
 const report = buildMttPreflopImportReadinessReport(candidate);
@@ -146,6 +176,8 @@ console.log(`základ: ${base.id} (${base.version}, ${base.records.length} zázna
 console.log(`draft: ${draft.records.length} mřížek, odpovědi z ${history.readAt}`);
 console.log("");
 console.log(`přijato jako zpřesněný záznam: ${selection.accepted.length}`);
+console.log(`obrana BB proti SB: ${bvbDropped} záznamů BVB|BB z packu, ${ownRefined.length} už převedených z minula, `
+  + `${convertedBvb.length} zpřesněných z vlastního zdroje v packu (zbytek hloubek má RYE)`);
 const byContext = new Map<string, number>();
 for (const record of selection.accepted) {
   const key = `${record.context}|${record.position}`;

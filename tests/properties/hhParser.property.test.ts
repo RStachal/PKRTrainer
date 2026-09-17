@@ -61,6 +61,10 @@ function validNineHandedText(position: Position, cards: [Card, Card]): string {
     `${bbName}: posts big blind 20`,
     "*** HOLE CARDS ***",
     `Dealt to Hero [${cardToken(cards[0])} ${cardToken(cards[1])}]`,
+    // Hrdina ve velkém blindu bez akce před sebou žádné rozhodnutí nemá (všichni
+    // složili). Aby ruka byla platná i pro BB, otevře před ním SB: od 17. 9. 2026
+    // je to `VS_OPEN` z SB (bod 254), ne BvB.
+    ...(position === "BB" ? [`${sbName}: raises 40 to 60`] : []),
     "Hero: folds",
     "*** SUMMARY ***",
   ].join("\n");

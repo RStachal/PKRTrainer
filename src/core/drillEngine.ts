@@ -134,8 +134,17 @@ const POS_DEFEND: Position[] = ["LJ", "HJ", "CO", "BTN", "SB", "BB"];
 /** Pozice, kde se může nabídnout squeeze (open + 1–7 callerů před hrdinou). */
 const POS_SQUEEZE: Position[] = ["HJ", "CO", "BTN", "SB", "BB"];
 
-/** Blind-vs-blind: hrdina je výhradně SB nebo BB (Req 3.11, Property 7). */
-const POS_BVB: Position[] = ["SB", "BB"];
+/**
+ * Blind-vs-blind: hrdina je SB, který jde první do potu (Req 3.11, Property 7).
+ *
+ * Do 17. 9. 2026 sem patřil i BB, který brání proti otevření SB. Tatáž
+ * situace ale od 16. 9. existuje jako `VS_OPEN` z SB se zpřesněným záznamem
+ * (osa otvírače, RYE ji čte tak, parser historie taky), takže jedna otázka
+ * měla dvě ID a dvě odpovědi. Vlastník rozhodl držet RYE: obrana BB proti SB
+ * je `VS_OPEN|BB|vsSB`, `BVB` zůstává jen pro SB. Uložené výsledky BB v BvB
+ * tím dostaly jiné ID (bod 254).
+ */
+const POS_BVB: Position[] = ["SB"];
 
 /**
  * Vrátí přípustné pozice hrdiny pro daný kontext. Množiny odpovídají
