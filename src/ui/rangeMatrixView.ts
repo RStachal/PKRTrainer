@@ -683,11 +683,19 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
       return;
     }
 
+    // Matice musí ukázat tu range, ze které se odpověď hodnotila. Spot s
+    // jmenovaným protihráčem (osa otvírače, od 16. 9. 2026 se zpřesněnými
+    // záznamy v packu) má odpověď z záznamu proti té sedačce; bez sedačky v
+    // klíči by hráč po odpovědi „Proti openu z BTN“ viděl obecnou matici
+    // proti kalibrovanému otvírači - jinou range, než podle které byl
+    // ohodnocen. Bez zpřesněného záznamu padá klíč na obecný jako všude.
+    const vsSeat = spot.tableState.vsSeat;
     const key: RangeKey = {
       position: spot.heroPos,
       bucket: spot.effStack,
       context: spot.context,
       ante: spot.ante,
+      ...(vsSeat === undefined ? {} : { vsSeat }),
     };
 
     const entry = store.lookup(key);
@@ -737,7 +745,12 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
 
     const meta = doc.createElement("div");
     meta.className = "range-matrix-meta";
-    meta.textContent = `${spot.context} | ${spot.heroPos} | ${spot.effStack} BB | Hero: ${spot.hand}`;
+    // Kdo jednal proti hrdinovi, a jestli je matice proti němu zpřesněná,
+    // nebo obecná (spot sedačku zná, knihovna pro ni záznam nemá).
+    const versus = vsSeat === undefined
+      ? ""
+      : ` | vs ${vsSeat}${entry.vsSeat === vsSeat ? "" : localizedText(" (general)", " (obecná)")}`;
+    meta.textContent = `${spot.context} | ${spot.heroPos} | ${spot.effStack} BB${versus} | Hero: ${spot.hand}`;
     meta.style.fontSize = "11px";
     meta.style.fontWeight = "850";
     meta.style.color = "#b9cff4";

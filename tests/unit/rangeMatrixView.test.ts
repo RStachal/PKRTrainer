@@ -151,6 +151,39 @@ describe("rangeMatrixView - DOM", () => {
     expect(aces?.classList.contains("matrix-cell--selected")).toBe(true);
   });
 
+  it("matice s jmenovaným otvíračem se hledá proti němu a říká, jestli je zpřesněná", () => {
+    // Od 16. 9. 2026 jsou v packu zpřesněné záznamy; hráč ohodnocený podle
+    // range proti BTN musí po odpovědi vidět tu samou range, ne obecnou.
+    const keys: string[] = [];
+    const refinedStore: RangeStore = {
+      isLoaded: () => true,
+      lookup: (key) => {
+        keys.push(`${key.context}|${key.position}|${key.bucket}|${key.vsSeat ?? "-"}`);
+        return key.vsSeat === "BTN"
+          ? { actions: { AKs: ["3BET"] }, strict: { AKs: ["3BET"] }, vsSeat: "BTN" }
+          : { actions: { AKs: ["CALL"] }, strict: { AKs: ["CALL"] } };
+      },
+    };
+    const facing: Spot = {
+      ...spot, id: "VS_OPEN|BB|25|AKs|vsBTN|OFF", context: "VS_OPEN", heroPos: "BB",
+      tableState: { ...tableState, heroPos: "BB", facing: "OPEN", vsSeat: "BTN" },
+    };
+    const root = document.createElement("div");
+    renderMatrix(facing, refinedStore, root);
+    expect(keys).toEqual(["VS_OPEN|BB|25|BTN"]);
+    expect(root.querySelector(".range-matrix-meta")?.textContent).toContain("vs BTN");
+    expect(root.querySelector(".range-matrix-meta")?.textContent).not.toContain("obecná");
+
+    // Sedačka bez zpřesněného záznamu: obecná matice, a řekne to.
+    const generalOnly: RangeStore = {
+      isLoaded: () => true,
+      lookup: () => ({ actions: { AKs: ["CALL"] }, strict: { AKs: ["CALL"] } }),
+    };
+    const root2 = document.createElement("div");
+    renderMatrix({ ...facing, tableState: { ...facing.tableState, vsSeat: "UTG" } }, generalOnly, root2);
+    expect(root2.querySelector(".range-matrix-meta")?.textContent).toContain("vs UTG (obecná)");
+  });
+
   it("pri nedostupnych datech zobrazi indikaci bez mrizky", () => {
     const root = document.createElement("div");
     renderMatrix(spot, missingStore, root);
