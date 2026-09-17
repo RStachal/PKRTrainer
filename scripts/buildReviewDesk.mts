@@ -1,6 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 
+import { OWNER_DECISIONS_2026_09_17, OWNER_DECISIONS_INTRO, renderOwnerDecisionsPage } from "./lib/ownerDecisions.mts";
+
 /**
  * Jedna složka na FTP se vším, co čeká na majitelovo potvrzení.
  *
@@ -218,8 +220,8 @@ const page = `<!doctype html>
 </div>
 ${cards}
 <section class="doc">
- <h2>Tři rozhodnutí, na kterých visí obsah</h2>
- <p class="what">Žádná mřížka - tři otázky s doměřenou cenou. Odpovídá se zprávou, ne tokenem.</p>
+ <h2>Rozhodnutí, na kterých visí obsah</h2>
+ <p class="what">Žádná mřížka - otázky s doměřenou cenou a doporučením. Odpověď se pamatuje jako u mřížek a exportuje tlačítkem.</p>
  <p><a class="open" href="rozhodnuti.html">Otevřít rozhodnutí</a></p>
 </section>
 <section class="doc">
@@ -333,70 +335,6 @@ ${cards}
 </body></html>
 `;
 
-/**
- * Rozhodnutí, která nejsou mřížka.
- *
- * Tři otázky visí na majiteli od 9. az 10. 9. 2026 a stály v deníku a v plánu
- * dne - tedy tam, kde se na ně čte stroj, ne člověk. Text je opsaný z měření
- * v bodech 225, 234 a z čtení chipEV půlky; čísla se tu nepočítají znovu,
- * a proto u každé stojí, odkud jsou.
- */
-function decisionsPage(): string {
-  return `<!doctype html>
-<html lang="cs"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tři rozhodnutí</title>
-<style>
- body{font:15px/1.6 system-ui,Segoe UI,sans-serif;margin:0;background:#12161f;color:#e8eef7}
- main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
- h1{font-size:21px;margin:0 0 6px} h2{font-size:17px;margin:18px 0 4px}
- .doc{background:#161d2b;border-radius:10px;padding:14px 16px;margin:12px 0}
- .meta{color:#9fb3cd;font-size:13px} .rec{color:#f0c14b}
- code{background:#0f141d;padding:1px 5px;border-radius:3px;font-size:12px}
- a{color:#7bd3ff}
-</style></head><body><main>
-<h1>Tři rozhodnutí, na kterých visí obsah</h1>
-<p class="meta">Odpovídá se zprávou („1: A, 2: B, 3: squeeze"). Čísla jsou z měření uvedených u každé otázky.</p>
-
-<section class="doc">
-<h2>1. Osa otvírače v klíči ranže (deník 234)</h2>
-<p>Schválil jsi 61 chipEV mřížek „proti otevření". Produkt se ale u ranže ptá jen na
-sedačku hrdiny a hloubku - <b>ne na to, kdo otevřel</b>. Změřeno
-(<code>npm run mtt:opener-axis</code>): na dnešní předpoklad sedí <b>6 mřížek a 118 tříd</b>,
-<b>51 mřížek a 845 tříd</b> míří proti otvírači, na kterého se produkt nikdy nezeptá.
-Absurdní na tom je, že ocenění re-jamu otvírače zná (<code>REJAM_EV_OPENER_BY_HERO</code>) - situace se
-tedy ocení proti konkrétnímu otvírači a naučí z range, která otvírače ignoruje.</p>
-<p><b>A)</b> dát <code>RangeKey</code> osu otvírače - 2 az 3 dny práce, otázka pro hráče se změní
-(„BB proti otevření z UTG" místo „BB proti otevření"), a schválených 845 tříd se dodá.<br>
-<b>B)</b> nechat, jak je - dodá se 118 tříd, zbytek zůstane nedosažitelný a přiznaný jako limit.</p>
-<p class="rec">Doporučení: A. Bez osy koupí import skoro nic; hodnota schváleného čtení je v ose samotné.</p>
-</section>
-
-<section class="doc">
-<h2>2. Šest zamítnutých push/fold mřížek na 20 bb („moc těsné")</h2>
-<p>Z chipEV půlky jsi 10. 9. zamítl 6 mřížek PUSH_FOLD 20 bb. Trenažér dnes na 20 bb radí
-z produkčního packu, který na tyhle spoty odpovídá jinak než koupený chart - a ty jsi řekl,
-že koupený je moc těsný.</p>
-<p><b>A)</b> nechat produkční pack (nic se nemění; koupený chart se na 20 bb nepoužije).<br>
-<b>B)</b> vzít koupený chart i tak a přiznat u něj „těsnější než bys hrál".<br>
-<b>C)</b> dodáš jiný zdroj pro 20 bb push/fold (jaký?).</p>
-<p class="rec">Doporučení: A, dokud není jiný zdroj - zamítnutý chart nemá co učit.</p>
-</section>
-
-<section class="doc">
-<h2>3. Dvě stránky, které import vyřadil (deník 225)</h2>
-<p>Import shodil dvě stránky, protože měly barvu, kterou slovník kontextu neuměl přeložit:
-<code>MUL-20BB-BB-vs-MP_LP</code> a <code>ICM11-bb13bb-sb9bb-r</code>. Ani jedna není čelení all-inu -
-první vypadá jako <b>squeeze</b> proti otevření a dorovnání, druhá jako <b>obrana big blindu proti 2,5x</b>.
-Slovník se bez tvé odpovědi určit nedá a dnes je kontext <code>VS_ALLIN</code> prázdný.</p>
-<p><b>Otázka:</b> čemu ty dvě stránky odpovídají - squeeze, obrana proti otevření, nebo něco jiného?
-(Stačí dvě slova ke každé.)</p>
-</section>
-<p class="meta"><a href="index.html">zpět na rozcestník</a></p>
-</main></body></html>
-`;
-}
-
 writeFileSync(`${outDir}/index.html`, page, "utf8");
 
 console.log(`Složka k nahrání: ${outDir}`);
@@ -406,8 +344,14 @@ for (const document of rendered) {
     + ` ${String(document.settled).padStart(3)} zapsáno, ${String(document.reread).padStart(3)} znovu,`
     + ` ${String(open).padStart(3)} bez odpovědi  (${document.priority})`);
 }
-writeFileSync(`${outDir}/rozhodnuti.html`, decisionsPage(), "utf8");
-console.log("  rozhodnuti.html       tři rozhodnutí s doměřenou cenou");
+// Rozhodnutí, která nejsou mřížka: od 17. 9. 2026 jedna definice otázek
+// (`lib/ownerDecisions.mts`), tatáž stránka jako `npm run mtt:decisions`.
+writeFileSync(`${outDir}/rozhodnuti.html`, renderOwnerDecisionsPage(OWNER_DECISIONS_2026_09_17, {
+  dateLabel: "17. 9. 2026",
+  intro: OWNER_DECISIONS_INTRO,
+  storageKey: "drillev-decisions-2026-09-17",
+}), "utf8");
+console.log(`  rozhodnuti.html       ${OWNER_DECISIONS_2026_09_17.length} rozhodnutí s doměřenou cenou`);
 console.log("  index.html            rozcestník s průběhem");
 console.log("");
 
