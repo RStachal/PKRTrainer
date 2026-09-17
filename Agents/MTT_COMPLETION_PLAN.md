@@ -187,6 +187,32 @@ je a osvědčil se.
 Nástroj zůstává hotový a měří to znovu kdykoli:
 `npm run mtt:rye-corpus -- --source=... [--vocab|--coverage]`.
 
+### Stav k 17. 9. 2026: sedačka soupeře je dodaná, sada ne
+
+První z těch dvou os je v produktu: `RangeKey.vsSeat` (bod 253, 16. 9.),
+spot jmenuje otvírače a losuje jen mezi sedačkami, o kterých knihovna něco
+tvrdí, matice po odpovědi ukazuje range proti němu (bod 255). Vlastník přečetl
+draft RYE třikrát (9., 15. a 17. 9.) a po třetím čtení sedí **110 ze 118**
+mřížek; v produkčním packu je **61 z nich jako zpřesněné záznamy** ve všech
+čtyřech chipEV profilech (bod 256; ante ON a turbo rozhodnutím o reuse, bod
+255).
+
+Co z toho dojde k hráči, změřeno `npm run mtt:refined-delivery` (4 000 spotů
+na kontext a profil, nad produkčními packy):
+
+| kontext | rozdaných spotů se zpřesněnou odpovědí | buněk |
+|---|---|---|
+| VS_OPEN | **30,4 %** | 26 |
+| SQUEEZE | 2,4 % | 2 |
+| VS_3BET | 0 % (všech 17 schválených je ICM) | 0 |
+
+Druhá osa - **sada, tedy scénář ICM** - dodaná není a je to ta, na které
+stojí 40 schválených ICM mřížek: v chipEV packu nemají co dělat (bod 253,
+`icm`) a $EV pack, který by je nesl, potřebuje scénář v klíči.
+`RangeRefinement.stackSetupId` v `getRangeRecord` už existuje, žádný pack ho
+nenese. Bez něj by se v 6 buňkách sráželo po 2 az 4 ICM mřížkách (bod 256).
+Je to rozhodnutí o rozsahu, ne import - a je na majiteli.
+
 ## Fáze 1 — EV dopočtem z riveru — **hotovo**
 
 Dodáno 20.-24. 8. 2026. Ověřeno měřením, ne dojmem:
@@ -412,10 +438,18 @@ Noc rozhoduje podle měření: `mtt:daily` vydá prioritu, rozklad podle ní ust
 monolitické expanzi a po vyprázdnění fronty jí okno vrátí. Za tři noci to dalo
 163 nových desek, 28 rodin a posun pokrytí vzorů z 11,3 % na 81,4 %.
 
-Moje práce je dohled a dodání. Od 15. 9. 2026 obnovuje turnovou EV po noci
-úloha v 07:05 sama (`--turn-ev-only`, bod 244); plný cyklus s packy
-(`mtt:after-night -- --write`, nebo `--streets=flop` po dosolvených deskách,
-bod 245) spouštím já, protože river se generuje s haldou 16 GB.
+Moje práce je dohled a dodání. Ověřeno v Plánovači úloh 17. 9. 2026: v 07:05
+běží `PKRTrainer-After-Night-TurnEv` s `mtt:after-night --write
+--streets-if-new=flop --turn-ev-minutes=210` (limit 5 h, log
+`artifacts/after-night-turn-ev.log`) - tedy plný cyklus packů, flopová ulice
+jen když noc přinesla nové desky, a obnova turnové EV do 210 minut (běhy od
+17. 9. logují do `artifacts/turn-ev-run-<k>.log`, počet běhů podle volné paměti,
+bod 255). River se v cyklu negeneruje (`--streets-if-new=flop`); ten
+spouštím já. Noc: `PKRTrainer-Night-Decomposition` 21:00 a
+`PKRTrainer-Night-Expansion` 21:01, obě `--until=07:00`, limit 10,5 h; s
+prázdnou frontou expanze skončí hned („není co solvit") a rozklad při
+prioritě `NEW_FAMILIES` bez nastagovaných desek neustoupí a jede celou noc
+riverové vrstvy podle oceněného prioritního seznamu.
 
 ## Průběžně
 
@@ -446,6 +480,8 @@ bod 245) spouštím já, protože river se generuje s haldou 16 GB.
    Změřeno 4. 9. 2026 v `Agents/turn-review/verdicts.json`: **141 verdiktů,
    z toho lidských 0** - všechny nesou `basis: MECHANICAL` (45 flop, 48 turn,
    48 river). Tady se to nezmění samo a stroj to za majitele udělat nesmí.
+   K 17. 9. 2026: draft ranží přečtený celý (110 ze 118 sedí, bod 256),
+   lidských verdiktů nad pilotními packy 7 (bod 248, 6 ✗ a 1 ✓).
 
    **Co pro to je připravené:** `npm run mtt:review-desk` postaví složku
    k nahrání na FTP se třemi dokumenty - chipEV půlka draftu ranží (68 mřížek),

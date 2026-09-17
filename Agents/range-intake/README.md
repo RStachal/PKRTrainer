@@ -123,6 +123,35 @@ MTT postflop slot paths use:
 
 Postflop production inputs (`flop-production`, `turn-production`, `river-production`) must declare profile coverage in `dimensions.blindSpeeds` and `dimensions.antes`. The MTT completion gate only treats a pack as covering rows whose `tableFormat`, `evModel`, `street`, `blindSpeed` and `ante` are all explicitly declared.
 
+## RYE refined records (vsSeat) - the flow that ran 9.-17. 9. 2026
+
+Owner-purchased RYE Rangeviewer charts reach the product as **refined records** (`vsSeat` = the
+seat that opened) layered on top of the pack's general records, not as a replacement pack. The
+answers files in this folder are the audit trail of that path.
+
+1. `npm run mtt:rye-import -- --source=<RYE db path> --write` builds `artifacts/rye-import/draft.json`.
+2. `npm run mtt:rye-review` renders the draft as grids (`artifacts/rye-import/review.html`); the
+   owner fills in verdicts and the page emits a `DRILLEV-REVIEW-V2 ...` token (index in draft,
+   never page position).
+3. Save the token as `odpovedi-YYYY-MM-DD.txt` here and translate it to grid identity:
+   `npm run mtt:rye-answers -- --answers-file=Agents/range-intake/odpovedi-YYYY-MM-DD.txt --out=Agents/range-intake/answers-YYYY-MM-DD.json`.
+   Answer files stack: the newest verdict per `sourceFile` wins, and a verdict goes stale when the
+   grid's content hash or question changes.
+4. `npm run mtt:rye-candidate -- --base=Agents/range-intake/raw/<packId>/normalized.json --out=artifacts/rye-import/candidate/<packId>/normalized.json --write`
+   for each chipEV pack (regular/turbo x ante OFF/ON; reuse into ante ON and turbo is the owner's
+   scope decision of 17. 9. 2026). It is idempotent: the base is the pack's general part, refined
+   records are rebuilt from today's draft and answers. Refuses ICM grids (no $EV pack), push/fold
+   (no opener), actions the drill does not offer, and duplicate cells - each reason is counted.
+5. Copy the candidate over `raw/<packId>/normalized.json`, then `validate:range-import` and
+   `build:range-module --force` as above. `permission.json` must list the source under
+   `additionalSources` (owner acknowledged RYE on 16. 9. 2026).
+6. Measure delivery, not production: `npm run mtt:refined-delivery` - share of dealt spots whose
+   answer is a refined record, per profile. Read its doc-comment before trusting any other CLI
+   number about production packs: without lazy-loader registration a CLI measures the legacy pack.
+
+State on 17. 9. 2026: 110 of 118 grids approved, 61 refined records in all four chipEV packs,
+VS_OPEN 30,4 % / SQUEEZE 2,4 % of dealt spots refined (diary 253-256).
+
 ## Required Permission Manifest Fields
 
 - `packId`
