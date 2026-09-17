@@ -8,7 +8,9 @@ import {
 } from "../src/data/ranges/mttPreflopRangePackImport";
 import { loadAnswerHistory } from "./lib/ryeAnswerHistory.mts";
 import type { DraftFile } from "./lib/ryeDraftImpact.mts";
-import { RYE_PROVENANCE, selectRefinedRecords, type RefusalReason } from "./lib/ryeRefinedCandidate.mts";
+import {
+  RYE_PROVENANCE, selectPushFoldOverrides, selectRefinedRecords, type RefusalReason,
+} from "./lib/ryeRefinedCandidate.mts";
 
 /**
  * Kandidát produkčního packu se **zpřesněnými záznamy** ze schválených mřížek.
@@ -60,7 +62,7 @@ const stored = JSON.parse(readFileSync(basePath, "utf8")) as MttPreflopRangePack
 // minula. Základ je vždy jen jeho obecná část - zpřesněné záznamy, jejich
 // předpoklady i důkaz zdroje se skládají znovu z dnešního draftu a odpovědí,
 // jinak by druhý běh vyrobil duplicity (změřeno 16. 9. 2026: 57 duplicit).
-const REFINED_ASSUMPTION = /^(Zpřesněné záznamy \(vsSeat\)|Zdroj zpřesněných záznamů|Mix ve zdroji|Obrana BB proti otevření SB)/;
+const REFINED_ASSUMPTION = /^(Zpřesněné záznamy \(vsSeat\)|Zdroj zpřesněných záznamů|Mix ve zdroji|Obrana BB proti otevření SB|Push\/fold)/;
 const RYE_EVIDENCE_TITLE = "RYE Rangeviewer 2021 Updated with ICM Ranges";
 const RYE_LICENSE_SENTENCE = / Zpřesněné záznamy \(vsSeat\) pocházejí z .*$/;
 const base: MttPreflopRangePackImportInput = {
@@ -71,12 +73,17 @@ const base: MttPreflopRangePackImportInput = {
   sourceEvidence: stored.sourceEvidence.filter((source) => source.title !== RYE_EVIDENCE_TITLE),
   records: stored.records.filter((record) => record.vsSeat === undefined),
 };
-// Zpřesněné záznamy z vlastního zdroje packu (převedená obrana BB proti SB)
-// nejsou z draftu a musí přežít další běh; poznají se podle `provenance`,
-// která začíná `licenseKind` packu.
-const ownRefined = stored.records.filter((record) => (
-  record.vsSeat !== undefined && (record.provenance ?? "").startsWith(`${stored.licenseKind},`)
-));
+// Zpřesněné záznamy z vlastního zdroje packu (obrana BB proti SB) nejsou
+// z draftu a musí přežít další běh. Do 17. 9. 2026 se poznávaly podle
+// `provenance` začínající `licenseKind`; po přestagování základu z legacy dat
+// (`mtt:p1-stage-reviewed-preflop`) přijdou **bez provenance** - legacy pack
+// ji nenese - a bez téhle větve by 8 z 11 hloubek BB proti SB tiše zmizelo.
+// Vlastní je tedy každý zpřesněný záznam, který není z RYE.
+const ownRefined = stored.records
+  .filter((record) => record.vsSeat !== undefined && !(record.provenance ?? "").startsWith(RYE_PROVENANCE))
+  .map((record): MttPreflopImportRecord => (record.provenance === undefined
+    ? { ...record, provenance: `${stored.licenseKind}, vlastní export packu (legacy data, ${record.context}|${record.position}|${record.bucket} vs ${record.vsSeat})` }
+    : record));
 const outPath = arg("out") ?? `artifacts/rye-import/candidate/${base.id}/normalized.json`;
 const history = loadAnswerHistory();
 
@@ -95,6 +102,19 @@ const reused = dims.blindSpeed !== "REGULAR" || dims.ante !== "OFF";
 
 const selection = selectRefinedRecords(draft.records, history);
 const today = new Date().toISOString().slice(0, 10);
+
+// Push/fold 10 bb: schválené mřížky RYE nahrazují obecný záznam packu
+// (rozhodnutí vlastníka 17. 9. 2026, bod 256). Obecný záznam z vlastního
+// exportu se tím z packu ztrácí; zpátky ho vrátí jen přestagování základu
+// z legacy dat, a drift proti legacy hlídá `mtt:preflop-drift`.
+const overrides = selectPushFoldOverrides(draft.records, history);
+const overriddenCells = new Set(overrides.accepted.map((record) => `${record.context}|${record.position}|${record.bucket}`));
+const replaced = base.records.filter((record) => (
+  record.vsSeat === undefined && overriddenCells.has(`${record.context}|${record.position}|${record.bucket}`)
+));
+base.records = base.records.filter((record) => !(
+  record.vsSeat === undefined && overriddenCells.has(`${record.context}|${record.position}|${record.bucket}`)
+));
 
 // Obrana BB proti otevření SB: z `BVB|BB` na `VS_OPEN|BB|vsSB`.
 //
@@ -156,6 +176,9 @@ const candidate: MttPreflopRangePackImportInput = {
         : ""),
     "Mix ve zdroji (ruka hraná zčásti) se přenáší jako nejčastější akce ve strict a všechny barvené akce v lenient; podíl foldu se nepřenáší.",
     `Obrana BB proti otevření SB je VS_OPEN z SB (zpřesněný záznam), ne kontext BVB: ${convertedBvb.length} hloubek z vlastního exportu (původně BVB|BB), zbytek z RYE (rozhodnutí vlastníka 17. 9. 2026, bod 254).`,
+    ...(overrides.accepted.length > 0
+      ? [`Push/fold: ${overrides.accepted.length} obecných záznamů (${[...overriddenCells].map((cell) => cell.split("|").slice(1).join(" ")).join(", ")} bb) je z ${RYE_PROVENANCE} a nahrazuje vlastní export - rozhodnutí vlastníka 17. 9. 2026 (bod 256); každý nese provenance.`]
+      : []),
   ],
   sourceEvidence: [
     ...base.sourceEvidence,
@@ -167,7 +190,7 @@ const candidate: MttPreflopRangePackImportInput = {
       licenseNote: "Koupený produkt vlastníka; přenášejí se seznamy akcí po třídách rukou, ne obrázky ani soubory zdroje.",
     },
   ],
-  records: [...base.records, ...selection.accepted, ...convertedBvb],
+  records: [...base.records, ...overrides.accepted, ...selection.accepted, ...convertedBvb],
 };
 
 const report = buildMttPreflopImportReadinessReport(candidate);
@@ -190,6 +213,7 @@ console.log(`základ: ${base.id} (${base.version}, ${base.records.length} zázna
 console.log(`draft: ${draft.records.length} mřížek, odpovědi z ${history.readAt}`);
 console.log("");
 console.log(`přijato jako zpřesněný záznam: ${selection.accepted.length}`);
+console.log(`push/fold nahrazuje obecný záznam: ${overrides.accepted.length} (nahrazeno ${replaced.length} záznamů z ${base.licenseKind})`);
 console.log(`obrana BB proti SB: ${bvbDropped} záznamů BVB|BB z packu, ${ownRefined.length} už převedených z minula, `
   + `${convertedBvb.length} zpřesněných z vlastního zdroje v packu (zbytek hloubek má RYE)`);
 const byContext = new Map<string, number>();

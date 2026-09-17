@@ -117,6 +117,72 @@ export function refinedCellKey(record: Pick<DraftRecord, "position" | "bucket" |
   return `${record.context}|${record.position}|${record.bucket}|vs${record.vsSeat}`;
 }
 
+/**
+ * Schválené push/fold mřížky, které **nahrazují** obecný záznam packu.
+ *
+ * Push/fold nemá otvírače, takže zpřesněný záznam nedává smysl - a přesto má
+ * ten obsah odběratele: rozhodnutí vlastníka 17. 9. 2026 (bod 256), že vlastní
+ * export na 10 bb nahradí RYE. Do té doby byl vlastníkův chart baseline
+ * (Kompendium 4.2, `btnOpenRangeWidth`); RYE je od 16. 9. reference a tohle je
+ * první místo, kde přepisuje obecný záznam, ne jen přidává vrstvu. Proto nese
+ * provenance i obecný záznam - jinak by se v packu nedalo poznat, odkud je.
+ *
+ * Sítko je totéž jako u zpřesněných: schváleno nad dnešní podobou, ne ICM,
+ * rozdává se, nabízené akce, jedna mřížka na buňku.
+ */
+export function selectPushFoldOverrides(
+  records: readonly DraftRecord[],
+  history: AnswerHistory,
+): RefinedSelection {
+  const accepted: MttPreflopImportRecord[] = [];
+  const refused: Refusal[] = [];
+  const counts: Record<RefusalReason, number> = {
+    unanswered: 0, rejected: 0, stale: 0, icm: 0, noOpponent: 0, contextNotRefined: 0,
+    actionNotOffered: 0, notDealt: 0, duplicateCell: 0,
+  };
+  const takenCells = new Map<string, string>();
+  const refuse = (record: DraftRecord, reason: RefusalReason, detail = ""): void => {
+    counts[reason] += 1;
+    refused.push({ sourceFile: record.sourceFile, reason, detail });
+  };
+
+  for (const record of records) {
+    if (record.context !== "PUSH_FOLD") continue;
+    const answer = history.bySourceFile.get(record.sourceFile);
+    if (answer === undefined) { refuse(record, "unanswered"); continue; }
+    if (answer.verdict !== "sedí") { refuse(record, "rejected", answer.verdict); continue; }
+    if (isStale(record, answer)) { refuse(record, "stale", `odpověď z ${answer.readAt}`); continue; }
+    if (/^ICM/i.test(record.stackSetupId)) { refuse(record, "icm", record.stackSetupId); continue; }
+    if (!positionsForContext("PUSH_FOLD").includes(record.position as Position)
+      || !bucketsForContext("PUSH_FOLD").includes(record.bucket as StackBucket)) {
+      refuse(record, "notDealt", `${record.context}|${record.position}|${record.bucket}`);
+      continue;
+    }
+    const notOffered = actionsNotOffered(record);
+    if (notOffered.length > 0) {
+      refuse(record, "actionNotOffered", notOffered.slice(0, 6).join(", ") + (notOffered.length > 6 ? ", …" : ""));
+      continue;
+    }
+    const cell = `${record.context}|${record.position}|${record.bucket}`;
+    const taken = takenCells.get(cell);
+    if (taken !== undefined) { refuse(record, "duplicateCell", `táž buňka jako ${taken}`); continue; }
+    takenCells.set(cell, record.sourceFile);
+
+    accepted.push({
+      position: record.position as Position,
+      sourceStackBB: record.sourceStackBB,
+      bucket: record.bucket as StackBucket,
+      context: "PUSH_FOLD",
+      provenance: `${RYE_PROVENANCE}, ${record.sourceFile}, schváleno ${answer.readAt}`
+        + `${answer.contentHash ? ` (otisk ${answer.contentHash})` : ""}; nahrazuje vlastní export (rozhodnutí vlastníka 17. 9. 2026, bod 256)`,
+      strict: fillFolds(record.strict),
+      lenient: fillFolds(record.lenient),
+    });
+  }
+
+  return { accepted, refused, counts };
+}
+
 export function selectRefinedRecords(
   records: readonly DraftRecord[],
   history: AnswerHistory,
