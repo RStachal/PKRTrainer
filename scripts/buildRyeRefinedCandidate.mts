@@ -73,14 +73,18 @@ const base: MttPreflopRangePackImportInput = {
 const outPath = arg("out") ?? `artifacts/rye-import/candidate/${base.id}/normalized.json`;
 const history = loadAnswerHistory();
 
-// Draft předpokládá REGULAR / OFF; pack s jiným rozměrem by dostal obsah,
-// který o něm nikdo netvrdil.
+// Draft předpokládá REGULAR / OFF. Do 17. 9. 2026 se jiný pack odmítal;
+// vlastník ten den rozhodl, že zpřesněné záznamy jdou i do ante ON a turbo
+// profilů (reuse) - zdroj ante ani rychlost neuvádí, takže je to jeho
+// rozhodnutí o rozsahu, ne údaj ze zdroje, a pack to říká v `assumptions`.
+// Formát stolu a model EV se nepřebírají: šestistolové a $EV packy by
+// dostaly obsah, který o nich nikdo netvrdil.
 const dims = base.dimensions;
-if (dims.tableFormat !== "FULL_RING_9" || dims.evModel !== "CHIP_EV"
-  || dims.blindSpeed !== "REGULAR" || dims.ante !== "OFF") {
-  console.error(`Základ ${base.id} má rozměry ${JSON.stringify(dims)}; draft předpokládá FULL_RING_9 / REGULAR / CHIP_EV / OFF.`);
+if (dims.tableFormat !== "FULL_RING_9" || dims.evModel !== "CHIP_EV") {
+  console.error(`Základ ${base.id} má rozměry ${JSON.stringify(dims)}; draft je FULL_RING_9 / CHIP_EV.`);
   process.exit(2);
 }
+const reused = dims.blindSpeed !== "REGULAR" || dims.ante !== "OFF";
 
 const selection = selectRefinedRecords(draft.records, history);
 const today = new Date().toISOString().slice(0, 10);
@@ -103,7 +107,10 @@ const candidate: MttPreflopRangePackImportInput = {
     ...base.assumptions,
     `Zpřesněné záznamy (vsSeat): ${selection.accepted.length} mřížek z ${RYE_PROVENANCE}, `
       + "schválených vlastníkem 10. a 15. 9. 2026 (Agents/range-intake/answers-*.json); každý záznam nese provenance.",
-    "Zdroj zpřesněných záznamů neuvádí ante ani rychlost blindů; přebírá se předpoklad draftu (REGULAR, OFF).",
+    "Zdroj zpřesněných záznamů neuvádí ante ani rychlost blindů; přebírá se předpoklad draftu (REGULAR, OFF)."
+      + (reused
+        ? ` Do profilu ${dims.blindSpeed} / ante ${dims.ante} se přebírají rozhodnutím vlastníka ze 17. 9. 2026 (reuse), ne podle zdroje.`
+        : ""),
     "Mix ve zdroji (ruka hraná zčásti) se přenáší jako nejčastější akce ve strict a všechny barvené akce v lenient; podíl foldu se nepřenáší.",
   ],
   sourceEvidence: [

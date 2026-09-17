@@ -689,7 +689,9 @@ export function renderMatrix(spot: Spot, store: RangeStore, root: HTMLElement): 
     // klíči by hráč po odpovědi „Proti openu z BTN“ viděl obecnou matici
     // proti kalibrovanému otvírači - jinou range, než podle které byl
     // ohodnocen. Bez zpřesněného záznamu padá klíč na obecný jako všude.
-    const vsSeat = spot.tableState.vsSeat;
+    // Volitelný přístup schválně: matici volají i spoty poskládané mimo drill
+    // (kompoziční lišta, historie) bez `tableState`.
+    const vsSeat = spot.tableState?.vsSeat;
     const key: RangeKey = {
       position: spot.heroPos,
       bucket: spot.effStack,

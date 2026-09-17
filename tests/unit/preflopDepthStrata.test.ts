@@ -77,14 +77,12 @@ describe("hloubkové vrstvy preflopu", () => {
     expect(limit).toContain(`at most ${most}`);
   });
 
-  it("obrana proti openu u ante OFF ví, kdo otevřel; u ante ON to dál hlásí", async () => {
+  it("obrana proti openu ví, kdo otevřel - u obou ante", async () => {
     await loadCompleteMttProductionRegistry();
     // Druhá větev, na kterou test čekal od 26. 8. 2026: 16. 9. 2026 dostal
-    // pack ante OFF zpřesněné záznamy s otvíračem (bod 253), takže limit
-    // přestal platit. Pack ante ON je zatím bez nich a musí to hlásit dál.
+    // pack ante OFF zpřesněné záznamy s otvíračem (bod 253), 17. 9. i ante ON
+    // a turbo (rozhodnutí vlastníka o reuse), takže limit přestal platit.
     expect(missingOpenerDimensionLimit("OFF")).toBeUndefined();
-    const limitOn = missingOpenerDimensionLimit("ON");
-    expect(limitOn).toBeDefined();
-    expect(limitOn).toContain("no dimension for which seat opened");
+    expect(missingOpenerDimensionLimit("ON")).toBeUndefined();
   });
 });
