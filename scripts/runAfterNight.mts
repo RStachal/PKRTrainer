@@ -1,5 +1,5 @@
-import { execFile, execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { execFile, execFileSync, spawn } from "node:child_process";
+import { createWriteStream, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { cpus, freemem } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -183,6 +183,43 @@ async function runAsync(
     },
   );
   return stdout;
+}
+
+/**
+ * Jeden běh turnové EV s výstupem streamovaným do souboru.
+ *
+ * `execFile` vrací stdout až na konci, takže dvouhodinový běh po sobě nenechá
+ * nic, dokud neskončí - a když ho něco zabije, nenechá nic vůbec. Tady jde
+ * stdout i stderr rovnou do `artifacts/turn-ev-run-<k>.log`, ať se dá číst za
+ * běhu i po pádu. Kód a délka výstupu se vrací, ne vyhazují: běh, který
+ * skončil s nulou a bez jediného bajtu, je vada, ne úspěch (18. 9. 2026).
+ */
+function runLane(
+  lane: number,
+  lanes: number,
+  args: string[],
+  timeoutMs: number,
+): Promise<{ lane: number; logPath: string; exitCode: number | null; killed: boolean; bytes: number }> {
+  const logPath = `artifacts/turn-ev-run-${lane}.log`;
+  const path = SCRIPT_PATH["mtt:turn-ev-pack"];
+  return new Promise((resolvePromise) => {
+    const out = createWriteStream(logPath, { encoding: "utf8" });
+    out.write(`# běh ${lane}/${lanes}, start ${new Date().toISOString()}\n`);
+    let bytes = 0;
+    let killed = false;
+    const child = spawn(process.execPath, ["--max-old-space-size=8192", "scripts/run-cli.mjs", path, ...args], {
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    const forward = (chunk: Buffer): void => { bytes += chunk.length; out.write(chunk); };
+    child.stdout.on("data", forward);
+    child.stderr.on("data", forward);
+    const timer = setTimeout(() => { killed = true; child.kill(); }, timeoutMs);
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      out.write(`\n# konec ${new Date().toISOString()}, kód ${code}${killed ? ", vypršel strop" : ""}\n`);
+      out.end(() => resolvePromise({ lane, logPath, exitCode: code, killed, bytes }));
+    });
+  });
 }
 
 /** Čísla, kterými se měří, jestli cyklus něco přinesl. */
@@ -723,23 +760,21 @@ if (!write) {
       console.log(`  zastaralo ${stale.length} tabulek, přepočítávám ve ${lanes} bězích`
         + ` (strop ${budgetMinutes} min, volná paměť ${(freemem() / 1024 ** 3).toFixed(1)} GB)`);
       const started = Date.now();
-      const results = await Promise.allSettled(
-        Array.from({ length: lanes }, (_, index) => runAsync("mtt:turn-ev-pack", [
+      // Výstup každého běhu jde na disk **průběžně** (`artifacts/turn-ev-run-<k>.log`).
+      // Do 17. 9. 2026 se zahazoval; od 17. 9. se psal až po doběhnutí všech
+      // běhů, takže se v půlce dopoledne nedalo přečíst, který běh co dělá, a
+      // zabitý cyklus po sobě nenechal nic. Prázdný log s kódem 0 (18. 9. 2026,
+      // dva ze čtyř běhů) byl závod o bundle v `run-cli.mjs`, bod 258.
+      const results = await Promise.all(
+        Array.from({ length: lanes }, (_, index) => runLane(index + 1, lanes, [
           `--families-file=${listPath}`, `--shard=${index + 1}/${lanes}`, "--write", "--no-manifest",
-        ], 8192, budgetMinutes * 60_000)),
+        ], budgetMinutes * 60_000)),
       );
-      // Výstup každého běhu na disk. Do 17. 9. 2026 se zahazoval, takže ráno,
-      // kdy běhy skončily v půlce s kódem 0, nebylo z čeho číst proč.
-      for (const [index, result] of results.entries()) {
-        const logPath = `artifacts/turn-ev-run-${index + 1}.log`;
-        if (result.status === "fulfilled") {
-          writeFileSync(logPath, result.value, "utf8");
-          continue;
-        }
-        const reason = result.reason as { killed?: boolean; message?: string; stdout?: string; stderr?: string } | undefined;
-        const killed = reason?.killed === true;
-        writeFileSync(logPath, `${reason?.stdout ?? ""}\n--- stderr ---\n${reason?.stderr ?? ""}\n--- ${reason?.message ?? ""}\n`, "utf8");
-        console.log(`  běh ${index + 1}/${lanes} ${killed ? "vypršel strop" : "selhal"} (${logPath})`);
+      for (const result of results) {
+        if (result.exitCode === 0 && !result.killed && result.bytes > 0) continue;
+        const why = result.killed ? "vypršel strop" : result.bytes === 0 ? "skončil bez výstupu" : `selhal (kód ${result.exitCode})`;
+        console.log(`  běh ${result.lane}/${lanes} ${why} (${result.logPath})`);
+        process.exitCode = 1;
       }
       // Manifest až na konec a z disku: běhy ho nepíšou, aby si ho nepřepsaly.
       run("mtt:turn-ev-pack", ["--manifest-only"]);

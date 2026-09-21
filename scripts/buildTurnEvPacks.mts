@@ -642,32 +642,47 @@ const eligible = packs
  * běhu tři stobiglindové rodiny za sebou (každá 40 minut i víc), zatímco
  * ostatní běhy skončily o dvě hodiny dřív a stály. Cena rodiny se přitom dá
  * odhadnout ze jména: hloubka stacku - naměřeno 25 bb 100 az 500 s, 50 bb
- * 500 az 800, 80 az 100 bb 1 200 az 2 500 a 100 bb SB OOP 18 000. Rodiny se
- * seřadí od nejdražší a rozdají hadem (1,2,3,4,4,3,2,1,…), takže každý běh
- * dostane podobný součet.
+ * 500 az 800, 80 az 100 bb 1 200 az 2 500 a 100 bb SB OOP 18 000.
+ *
+ * Do 21. 9. 2026 se rozdávalo hadem (1,2,3,4,4,3,2,1,…) a SB OOP rodina měla
+ * váhu 4x. Had ale nevyrovnává součty, jen střídá, a 4x je proti měření
+ * (18 000 s proti 1 200 az 2 500 je 7x az 15x): běh s tou rodinou dostal
+ * 21. 9. ještě deset dalších, tříhodinová rodina začala až po nich a strop
+ * 210 min ji uřízl i se dvěma za ní - tři tabulky zůstaly zastaralé, ačkoli
+ * ostatní tři běhy skončily o hodinu a půl dřív. Teď se rodiny seřadí od
+ * nejdražší a každá jde do běhu s **nejmenším dosavadním součtem** (LPT):
+ * nejdražší rodina tak dostane běh skoro sama a strop běhu ji nepotká.
  *
  * Pořadí podle dosahu zůstává uvnitř běhu: u jednoho běhu bez shardování je
  * to to jediné, na čem záleží (rozpočet součtu se plní odshora).
  */
 function costOf(name: string): number {
   const stack = Number(/(\d+)bb/.exec(name)?.[1] ?? "0");
-  // SB OOP rodiny jsou násobně dražší než stejná hloubka jinde.
-  const oop = /-sb-bb-srp-oop-/.test(name) ? 4 : 1;
+  // SB OOP rodiny jsou násobně dražší než stejná hloubka jinde: 18 000 s
+  // proti 1 200 az 2 500 na stejné hloubce (bod 244), tedy řádově 10x.
+  const oop = /-sb-bb-srp-oop-/.test(name) ? 10 : 1;
   return stack * oop;
 }
+function laneOf(names: readonly string[], lanes: number): Map<string, number> {
+  const sums = Array.from({ length: lanes }, () => 0);
+  const assignment = new Map<string, number>();
+  const byCost = names.map((name, index) => ({ name, index }))
+    .sort((left, right) => costOf(right.name) - costOf(left.name) || left.index - right.index);
+  for (const { name } of byCost) {
+    let lane = 0;
+    for (let candidate = 1; candidate < lanes; candidate += 1) {
+      if (sums[candidate] < sums[lane]) lane = candidate;
+    }
+    sums[lane] += costOf(name);
+    assignment.set(name, lane);
+  }
+  return assignment;
+}
+
+const laneAssignment = laneOf(eligible, shardCount);
 const chosen = (shardCount === 1
   ? eligible
-  : [...eligible]
-    .map((name, index) => ({ name, index }))
-    .sort((left, right) => costOf(right.name) - costOf(left.name) || left.index - right.index)
-    .filter((_, position) => {
-      const round = Math.floor(position / shardCount);
-      const slot = position % shardCount;
-      const lane = round % 2 === 0 ? slot : shardCount - 1 - slot;
-      return lane === shardIndex;
-    })
-    .sort((left, right) => left.index - right.index)
-    .map((item) => item.name))
+  : eligible.filter((name) => laneAssignment.get(name) === shardIndex))
   .slice(0, limit > 0 ? limit : undefined);
 
 if (chosen.length === 0) {

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -81,9 +81,17 @@ const outfile = join(CACHE_DIR, `${name}-${cacheKey()}.mjs`);
 
 if (!existsSync(outfile)) {
   mkdirSync(dirname(outfile), { recursive: true });
+  // Build to a private file and rename it into place. The bundle is imported
+  // by whoever finds it on disk, and four `mtt:turn-ev-pack` lanes start at
+  // the same instant after a cache-key change: on 2026-09-18 two of them found
+  // the file esbuild had just created but not yet filled, imported an empty
+  // module and exited 0 having done nothing - half the morning's turn EV
+  // tables stayed stale with no error anywhere (diary 258). A rename is atomic
+  // on the same volume, so a reader sees either no file or the whole bundle.
+  const partial = `${outfile}.${process.pid}.part`;
   await build({
     entryPoints: [entryPath],
-    outfile,
+    outfile: partial,
     bundle: true,
     platform: "node",
     format: "esm",
@@ -93,6 +101,13 @@ if (!existsSync(outfile)) {
     packages: "external",
     logLevel: "error",
   });
+  try {
+    renameSync(partial, outfile);
+  } catch (error) {
+    // Another lane won the race with an identical bundle; ours is redundant.
+    if (!existsSync(outfile)) throw error;
+    rmSync(partial, { force: true });
+  }
 }
 
 // The script reads process.argv as though it had been invoked directly, so it
