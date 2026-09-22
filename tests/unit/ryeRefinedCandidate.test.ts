@@ -4,7 +4,7 @@ import { ALL_HAND_CLASSES } from "../../src/core/poker";
 import type { AnswerHistory, RecordedAnswer } from "../../scripts/lib/ryeAnswerHistory.mts";
 import { gridContentHash, gridQuestion } from "../../scripts/lib/ryeAnswerHistory.mts";
 import type { DraftRecord } from "../../scripts/lib/ryeDraftImpact.mts";
-import { selectRefinedRecords } from "../../scripts/lib/ryeRefinedCandidate.mts";
+import { selectGeneralOverrides, selectRefinedRecords } from "../../scripts/lib/ryeRefinedCandidate.mts";
 
 /**
  * Sítko mezi schváleným draftem a produkčním packem (osa otvírače, bod 234).
@@ -88,5 +88,42 @@ describe("výběr zpřesněných záznamů", () => {
     });
     expect(refused.find((row) => row.reason === "actionNotOffered")?.detail).toContain("AA:JAM");
     expect(refused.find((row) => row.reason === "duplicateCell")?.detail).toContain("F3B-20BB-BB-vs-BTN.html");
+  });
+});
+
+describe("obecné záznamy nahrazené RYE (push/fold, otevření)", () => {
+  // Rozhodnutí vlastníka 17. 9. 2026 (push/fold 10 bb) a 22. 9. 2026 (6a: RFI).
+  const pushFold = grid({
+    sourceFile: "PU-10bb-BU.html", context: "PUSH_FOLD", position: "BTN", bucket: 10, sourceStackBB: 10,
+    vsSeat: "", stackSetupId: "PU", strict: { AA: ["JAM"], "72o": ["FOLD"] }, lenient: { AA: ["JAM"], "72o": ["FOLD"] },
+  });
+  const open100 = grid({
+    sourceFile: "OP-100BB-BU.html", context: "RFI", position: "BTN", bucket: 100, sourceStackBB: 100,
+    vsSeat: "", stackSetupId: "OP", strict: { AA: ["OPEN_25X"], "76s": ["OPEN_25X"] }, lenient: { AA: ["OPEN_25X"], "76s": ["OPEN_25X"] },
+  });
+  // Na 20 bb kreslí RYE u části rukou open-shove; nad listy (15 bb) se nabízí
+  // jen tam, kde ho range učí (`jamTaught`, OPEN_SHOVE_TAUGHT_MAX = 20).
+  const open20 = grid({
+    sourceFile: "OP-20BB-BU.html", context: "RFI", position: "BTN", bucket: 20, sourceStackBB: 20,
+    vsSeat: "", stackSetupId: "OP", strict: { AA: ["OPEN_2X"], "22": ["JAM"] }, lenient: { AA: ["OPEN_2X"], "22": ["JAM"] },
+  });
+  // Na 25 bb už shove místo otevření nikdo nekreslí a produkt ho nenabízí.
+  const open25 = grid({
+    sourceFile: "OP-25BB-BU.html", context: "RFI", position: "BTN", bucket: 25, sourceStackBB: 25,
+    vsSeat: "", stackSetupId: "OP", strict: { AA: ["OPEN_2X"], "22": ["JAM"] }, lenient: { AA: ["OPEN_2X"], "22": ["JAM"] },
+  });
+  const defence = grid({});
+
+  it("bere push/fold i otevření, otevření s jamem na 20 bb, a odmítne jam na 25 bb", () => {
+    const { accepted, counts, refused } = selectGeneralOverrides(
+      [pushFold, open100, open20, open25, defence],
+      history([approved(pushFold), approved(open100), approved(open20), approved(open25), approved(defence)]),
+    );
+    expect(accepted.map((record) => `${record.context}|${record.position}|${record.bucket}`))
+      .toEqual(["PUSH_FOLD|BTN|10", "RFI|BTN|100", "RFI|BTN|20"]);
+    expect(accepted.every((record) => record.vsSeat === undefined)).toBe(true);
+    expect(accepted[1].provenance).toContain("22. 9. 2026, 6a");
+    expect(counts.actionNotOffered).toBe(1);
+    expect(refused.find((row) => row.reason === "actionNotOffered")?.sourceFile).toBe("OP-25BB-BU.html");
   });
 });

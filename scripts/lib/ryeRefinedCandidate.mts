@@ -74,7 +74,7 @@ function tableStateFor(record: DraftRecord): TableState {
     effectiveStackBB: bucket,
     limpsBefore: 0,
     callsBefore: context === "SQUEEZE" ? 1 : 0,
-    facing: context === "VS_3BET" ? "3BET" : "OPEN",
+    facing: context === "VS_3BET" ? "3BET" : context === "RFI" || context === "PUSH_FOLD" ? "NONE" : "OPEN",
     isBvB: false,
     vsSeat: record.vsSeat as Position,
     // Shove nad listy vlastníka se nabízí jen tam, kde ho mřížka kreslí
@@ -120,22 +120,31 @@ export function refinedCellKey(record: Pick<DraftRecord, "position" | "bucket" |
   return `${record.context}|${record.position}|${record.bucket}|vs${record.vsSeat}`;
 }
 
+/** Kontexty bez otvírače, kde schválená mřížka RYE nahrazuje obecný záznam packu. */
+export const OVERRIDE_CONTEXTS: ReadonlyMap<string, string> = new Map([
+  ["PUSH_FOLD", "rozhodnutí vlastníka 17. 9. 2026, bod 256"],
+  ["RFI", "rozhodnutí vlastníka 22. 9. 2026, 6a"],
+]);
+
 /**
- * Schválené push/fold mřížky, které **nahrazují** obecný záznam packu.
+ * Schválené mřížky kontextů bez otvírače, které **nahrazují** obecný záznam packu.
  *
- * Push/fold nemá otvírače, takže zpřesněný záznam nedává smysl - a přesto má
- * ten obsah odběratele: rozhodnutí vlastníka 17. 9. 2026 (bod 256), že vlastní
- * export na 10 bb nahradí RYE. Do té doby byl vlastníkův chart baseline
- * (Kompendium 4.2, `btnOpenRangeWidth`); RYE je od 16. 9. reference a tohle je
- * první místo, kde přepisuje obecný záznam, ne jen přidává vrstvu. Proto nese
- * provenance i obecný záznam - jinak by se v packu nedalo poznat, odkud je.
+ * Push/fold ani otevření nemají otvírače, takže zpřesněný záznam nedává smysl
+ * - a přesto má ten obsah odběratele: rozhodnutí vlastníka 17. 9. 2026 (bod
+ * 256), že vlastní export na 10 bb nahradí RYE, a 22. 9. 2026 (6a), že totéž
+ * platí pro otevření (a dál rejam, BB proti limpu, squeeze). Do té doby byl
+ * vlastníkův chart baseline (Kompendium 4.2, `btnOpenRangeWidth`); RYE je od
+ * 16. 9. reference a tady přepisuje obecný záznam, ne jen přidává vrstvu.
+ * Proto nese provenance i obecný záznam - jinak by se v packu nedalo poznat,
+ * odkud je.
  *
  * Sítko je totéž jako u zpřesněných: schváleno nad dnešní podobou, ne ICM,
  * rozdává se, nabízené akce, jedna mřížka na buňku.
  */
-export function selectPushFoldOverrides(
+export function selectGeneralOverrides(
   records: readonly DraftRecord[],
   history: AnswerHistory,
+  contexts: ReadonlyMap<string, string> = OVERRIDE_CONTEXTS,
 ): RefinedSelection {
   const accepted: MttPreflopImportRecord[] = [];
   const refused: Refusal[] = [];
@@ -150,14 +159,16 @@ export function selectPushFoldOverrides(
   };
 
   for (const record of records) {
-    if (record.context !== "PUSH_FOLD") continue;
+    const decision = contexts.get(record.context);
+    if (decision === undefined) continue;
+    const context = record.context as ActionContext;
     const answer = history.bySourceFile.get(record.sourceFile);
     if (answer === undefined) { refuse(record, "unanswered"); continue; }
     if (answer.verdict !== "sedí") { refuse(record, "rejected", answer.verdict); continue; }
     if (isStale(record, answer)) { refuse(record, "stale", `odpověď z ${answer.readAt}`); continue; }
     if (/^ICM/i.test(record.stackSetupId)) { refuse(record, "icm", record.stackSetupId); continue; }
-    if (!positionsForContext("PUSH_FOLD").includes(record.position as Position)
-      || !bucketsForContext("PUSH_FOLD").includes(record.bucket as StackBucket)) {
+    if (!positionsForContext(context).includes(record.position as Position)
+      || !bucketsForContext(context).includes(record.bucket as StackBucket)) {
       refuse(record, "notDealt", `${record.context}|${record.position}|${record.bucket}`);
       continue;
     }
@@ -175,9 +186,9 @@ export function selectPushFoldOverrides(
       position: record.position as Position,
       sourceStackBB: record.sourceStackBB,
       bucket: record.bucket as StackBucket,
-      context: "PUSH_FOLD",
+      context,
       provenance: `${RYE_PROVENANCE}, ${record.sourceFile}, schváleno ${answer.readAt}`
-        + `${answer.contentHash ? ` (otisk ${answer.contentHash})` : ""}; nahrazuje vlastní export (rozhodnutí vlastníka 17. 9. 2026, bod 256)`,
+        + `${answer.contentHash ? ` (otisk ${answer.contentHash})` : ""}; nahrazuje vlastní export (${decision})`,
       strict: fillFolds(record.strict),
       lenient: fillFolds(record.lenient),
     });

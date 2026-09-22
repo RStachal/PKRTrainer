@@ -83,6 +83,16 @@ export const RE_JAM_SHEET_MAX = 30;
 export const OPEN_SHOVE_MAX = 15;
 
 /**
+ * Hloubka (včetně), do které se open-shove nabízí tam, kde ho **range spotu
+ * učí** (`TableState.jamTaught`), nad listy vlastníka. RYE kreslí `OpenJam` na
+ * 20 bb u části rukou (`OP-20BB-*`: BTN 7 tříd); nabízet ho všem by na 20 bb
+ * znamenalo tlačítko bez range, nenabízet ho nikomu by range RYE nešla učit.
+ * Táž konstrukce jako `RE_JAM_MAX` proti `RE_JAM_SHEET_MAX` (rozhodnutí 6a a
+ * 8a, 22. 9. 2026).
+ */
+export const OPEN_SHOVE_TAUGHT_MAX = 20;
+
+/**
  * Horní hranice (včetně) pro shove přes limp, v BB.
  *
  * Chart BB vs SB limp shovuje v pásmech 15-20 a 20-25 BB; od 30 BB výš žádný

@@ -82,6 +82,23 @@ describe("slovník importu ranží", () => {
     expect(situationFromFileName("PU-10bb-BB.html")).toBeUndefined();
   });
 
+  it("otevírací stránka: každá barva je otevření s plánem proti 3betu v poznámce, OpenJam je shove, limp/raise SB se nevydá", () => {
+    // Nabídka „Openraising" (rozhodnutí 6a, 22. 9. 2026): barva říká, co
+    // s rukou po 3betu, ne jestli se otevírá - otevírá se každá barvená.
+    expect(situationFromFileName("OP-100BB-BU.html")).toEqual({ seat: "BTN", stackBB: 100, villains: 0 });
+    expect(situationFromFileName("OP-30BB-BTN.html")).toEqual({ seat: "BTN", stackBB: 30, villains: 0 });
+    expect(situationFromFileName("OP-40BB-MP.html")).toEqual({ seat: "LJ", stackBB: 40, villains: 0 });
+    expect(contextForVocabulary(["Call 3B", "Fold vs 3B", "4B Bluff"], "OP-100BB-BU.html")).toBe("RFI");
+    expect(mapAction("RFI", "Call 3B or 4B")).toEqual({ action: "OPEN", lost: "plán proti 3betu: Call 3B or 4B" });
+    expect(mapAction("RFI", "Broke vs BU - BB")).toEqual({ action: "OPEN", lost: "plán proti 3betu: Broke vs BU - BB" });
+    expect(mapAction("RFI", "Call 3B (&lt;4x)")?.action).toBe("OPEN");
+    expect(mapAction("RFI", "OpenJam")).toEqual({ action: "JAM", lost: "" });
+    // Limp/raise strategie SB je blind proti blindu s vlastním slovníkem; tady
+    // se nevydá, místo aby limpy spadly do otevření.
+    expect(mapAction("RFI", "Limp / Call")).toBeUndefined();
+    expect(mapAction("RFI", "Raise / Fold vs 3B")).toBeUndefined();
+  });
+
   it("hloubka dál než pětinu od kbelíku nedostane žádný", () => {
     // 15. 9. 2026: `ICM7-bb7bb-*` v kbelíku 5 bb dostalo „moc těsné", zatímco
     // 35→30, 13→15, 18→20 a 45→40 prošly. Nejbližší kbelík není totéž co

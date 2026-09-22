@@ -167,7 +167,36 @@ function normalizeBluffPrefix(name: string): { base: string; lost: string } {
     : { base: name, lost: "" };
 }
 
+/**
+ * Otevírací stránky (`OP-<hloubka>BB-<sedačka>`, nabídka „Openraising").
+ *
+ * Barva na nich neříká „otevři", to říká každá barva; říká, **co s rukou po
+ * 3betu**: `Call 3B`, `Fold vs 3B`, `4B Bluff`, `Call 3B or 4B`, `Broke vs 3B`,
+ * `Call 3B vs BU`. Pro range otevření je tedy každá barvená ruka otevření a
+ * plán proti 3betu jde do poznámky - produkt ho v odpovědi na otevření nemá
+ * kam dát (patří kontextu `VS_3BET`, který se z téže stránky čte zvlášť, až
+ * na to dojde). Jediná výjimka je `OpenJam` na 20 bb: to není otevření, ale
+ * shove místo něj.
+ *
+ * Velikost otevření zdroj na téhle stránce neuvádí; klíč (`OPEN_2X` do 25 bb,
+ * `OPEN_25X` od 30) doplní importér podle hloubky tak, jak ji učí produkt.
+ * Limp/raise strategie SB (`Limp / Call`, `Raise / Fold`) sem nepatří - je to
+ * blind proti blindu s vlastním slovníkem a vlastním krokem (rozhodnutí 6a:
+ * RFI, rejam, BB proti limpu, squeeze); vzor je nezná a stránka se nevydá.
+ *
+ * Rozhodnutí vlastníka 22. 9. 2026 (6a): RYE nahrazuje vlastní export i u RFI.
+ */
+const RFI_PLAN_PATTERN = /^(call 3b|fold vs 3b|4b|4bet|broke vs|call or jam vs 3b|jam vs)/;
+
+function mapOpenRaisingAction(action: string): MappedAction | undefined {
+  const raw = action.trim().toLowerCase().replace(/&lt;/g, "<");
+  if (raw === "openjam") return { action: "JAM", lost: "" };
+  if (RFI_PLAN_PATTERN.test(raw)) return { action: "OPEN", lost: `plán proti 3betu: ${action.trim()}` };
+  return undefined;
+}
+
 export function mapAction(context: MappedContext, action: string): MappedAction | undefined {
+  if (context === "RFI") return mapOpenRaisingAction(action);
   const table = ACTIONS_BY_CONTEXT.get(context);
   if (table === undefined) return undefined;
   const raw = action.trim().toLowerCase();
@@ -215,6 +244,7 @@ const JAM_VOCABULARIES = new Set(["All in", "Jam", "All in | Call"]);
 function contextFromFileName(name: string): MappedContext | undefined {
   const stem = name.replace(/\.html$/i, "");
   if (/^PU-/i.test(stem)) return "PUSH_FOLD";
+  if (/^OP-/i.test(stem)) return "RFI";
   if (/^F3B-/i.test(stem)) return "VS_OPEN";
   if (/^MUL-/i.test(stem)) return "SQUEEZE";
   if (!/^ICM/i.test(stem)) return undefined;
@@ -242,6 +272,10 @@ export function contextForVocabulary(
   fileName?: string,
 ): MappedContext | undefined {
   if (actions.length === 0) return undefined;
+  // Otevírací stránky mají slovník o plánu proti 3betu, ne o otevření; jejich
+  // kontext říká jméno souboru. Bez toho by je vzor `VS_3BET` četl jako
+  // odpověď na 3bet, což je jiná otázka (viz `mapOpenRaisingAction`).
+  if (fileName !== undefined && /^OP-/i.test(fileName)) return "RFI";
   const vocabulary = [...actions].sort().join(" | ");
   if (JAM_VOCABULARIES.has(vocabulary)) {
     if (fileName !== undefined) return contextFromFileName(fileName);
@@ -387,6 +421,13 @@ export function situationFromFileName(name: string): RyeSituation | undefined {
     const seat = SEAT_ALIASES.get(push[2].toUpperCase());
     if (seat === undefined) return undefined;
     return { seat, stackBB: Number(push[1]), villains: 0 };
+  }
+  // Tvar 4: otevření, `OP-100BB-BU` - hloubka a hrdina, žádný soupeř (22. 9. 2026, 6a).
+  const open = /^OP-(\d+)BB-(UTG1|UTG2|UTG|MP|LJ|HJ|CO|BU|BTN|SB)$/i.exec(stem);
+  if (open !== null) {
+    const seat = SEAT_ALIASES.get(open[2].toUpperCase());
+    if (seat === undefined) return undefined;
+    return { seat, stackBB: Number(open[1]), villains: 0 };
   }
   return undefined;
 }

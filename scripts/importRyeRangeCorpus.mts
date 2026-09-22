@@ -173,7 +173,13 @@ for (const file of htmlFiles(source).sort()) {
   for (const entry of grid.legend) {
     const mapped = mapAction(context, entry.action);
     if (mapped === undefined) { unmappable = entry.action; break; }
-    actionOfColor.set(entry.color, mapped);
+    // Otevření nese velikost, kterou zdroj na otevírací stránce neuvádí;
+    // bere se ta, kterou produkt na té hloubce učí (2x do 25 bb, 2,5x od 30 -
+    // změřeno nad produkčním packem 22. 9. 2026), jinak by se range učila
+    // s tlačítkem, které spot nenabízí.
+    actionOfColor.set(entry.color, mapped.action === "OPEN"
+      ? { ...mapped, action: bucket <= 25 ? "OPEN_2X" : "OPEN_25X" }
+      : mapped);
   }
   if (unmappable !== "") {
     dropped.unmappableAction += 1;

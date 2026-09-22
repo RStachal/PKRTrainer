@@ -9,7 +9,7 @@ import {
 import { loadAnswerHistory } from "./lib/ryeAnswerHistory.mts";
 import type { DraftFile } from "./lib/ryeDraftImpact.mts";
 import {
-  RYE_PROVENANCE, selectPushFoldOverrides, selectRefinedRecords, type RefusalReason,
+  RYE_PROVENANCE, selectGeneralOverrides, selectRefinedRecords, type RefusalReason,
 } from "./lib/ryeRefinedCandidate.mts";
 
 /**
@@ -118,7 +118,7 @@ const today = new Date().toISOString().slice(0, 10);
 // (rozhodnutí vlastníka 17. 9. 2026, bod 256). Obecný záznam z vlastního
 // exportu se tím z packu ztrácí; zpátky ho vrátí jen přestagování základu
 // z legacy dat, a drift proti legacy hlídá `mtt:preflop-drift`.
-const overrides = selectPushFoldOverrides(draft.records, history);
+const overrides = selectGeneralOverrides(draft.records, history);
 const overriddenCells = new Set(overrides.accepted.map((record) => `${record.context}|${record.position}|${record.bucket}`));
 const replaced = base.records.filter((record) => (
   record.vsSeat === undefined && overriddenCells.has(`${record.context}|${record.position}|${record.bucket}`)
@@ -224,7 +224,13 @@ console.log(`základ: ${base.id} (${base.version}, ${base.records.length} zázna
 console.log(`draft: ${draft.records.length} mřížek, odpovědi z ${history.readAt}`);
 console.log("");
 console.log(`přijato jako zpřesněný záznam: ${selection.accepted.length}`);
-console.log(`push/fold nahrazuje obecný záznam: ${overrides.accepted.length} (nahrazeno ${replaced.length} záznamů z ${base.licenseKind})`);
+console.log(`obecné záznamy nahrazené RYE (push/fold, RFI): ${overrides.accepted.length} (nahrazeno ${replaced.length} záznamů z ${base.licenseKind})`);
+for (const [reason, count] of Object.entries(overrides.counts) as [RefusalReason, number][]) {
+  if (count > 0) console.log(`  propadlo: ${REASON_LABEL[reason]} ${count}`);
+}
+for (const item of overrides.refused.filter((row) => row.reason === "actionNotOffered")) {
+  console.log(`    ${item.sourceFile}: ${item.detail}`);
+}
 console.log(`obrana BB proti SB: ${bvbDropped} záznamů BVB|BB z packu, ${ownRefined.length} už převedených z minula, `
   + `${convertedBvb.length} zpřesněných z vlastního zdroje v packu (zbytek hloubek má RYE)`);
 const byContext = new Map<string, number>();

@@ -30,6 +30,7 @@
 import {
   LIMP_SHOVE_MAX,
   OPEN_SHOVE_MAX,
+  OPEN_SHOVE_TAUGHT_MAX,
   RE_JAM_MAX,
   RE_JAM_SHEET_MAX,
   type ActionKind,
@@ -85,7 +86,7 @@ export function offeredActions(state: TableState): ActionKind[] {
 
   switch (facing) {
     case "NONE":
-      return offeredWhenUnopened(heroIsBB, limpsBefore, state.effectiveStackBB);
+      return offeredWhenUnopened(heroIsBB, limpsBefore, state.effectiveStackBB, state.jamTaught === true);
 
     case "OPEN": {
       // Req 3.5 — vs-open: Fold / Call / 3bet.
@@ -132,6 +133,7 @@ function offeredWhenUnopened(
   heroIsBB: boolean,
   limpsBefore: number,
   effectiveStackBB: number,
+  jamTaught: boolean,
 ): ActionKind[] {
   const hasLimps = limpsBefore >= MIN_LIMPS && limpsBefore <= MAX_LIMPS;
 
@@ -155,7 +157,9 @@ function offeredWhenUnopened(
     // twenty big blinds the owner's sheets do not draw one opening range: they
     // draw a raising band and shove thresholds, and the small pairs are past
     // theirs at fifteen big blinds.
-    return effectiveStackBB <= OPEN_SHOVE_MAX
+    // Above the sheets (16-20BB) only where the range this spot teaches draws
+    // an open shove - RYE does at 20BB for a few hands per seat (decision 6a).
+    return effectiveStackBB <= OPEN_SHOVE_MAX || (effectiveStackBB <= OPEN_SHOVE_TAUGHT_MAX && jamTaught)
       ? ["OPEN", "LIMP", "JAM", "FOLD"]
       : ["OPEN", "LIMP", "FOLD"];
   }
