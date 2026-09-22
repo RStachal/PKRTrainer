@@ -20,7 +20,7 @@ describe("mtt:registry-integrity CLI", () => {
     expect(result.stdout).toContain("MTT production registry integrity");
     expect(result.stdout).toContain("valid: true");
     expect(result.stdout).toContain("legal import slots: 64");
-    expect(result.stdout).toContain("registered runtime packs: 12");
+    expect(result.stdout).toContain("registered runtime packs: 13");
     expect(result.stdout).toContain("generated production modules: 4");
     expect(result.stdout).toContain("permission manifests: 8");
     expect(result.stdout).toContain("errors: 0");
@@ -59,7 +59,10 @@ describe("mtt:registry-integrity CLI", () => {
     expect(parsed.valid).toBe(true);
     expect(parsed.counts).toEqual({
       legalImportSlots: 64,
-      registeredRuntimePacks: 12,
+      // Třináctý je ICM preview vrstva ze schválených mřížek RYE (22. 9. 2026,
+      // rozhodnutí 3a a 4a): registrovaná, ale PREVIEW_ONLY - legal slot pro
+      // šestistolový $EV čeká na úplný pack, ne na tuhle vrstvu.
+      registeredRuntimePacks: 13,
       generatedProductionModules: 4,
       permissionManifests: 8,
       errors: 0,

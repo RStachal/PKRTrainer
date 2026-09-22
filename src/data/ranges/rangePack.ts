@@ -67,6 +67,21 @@ export interface RangePackRecord {
   actionEvs?: Partial<Record<HandLabel, ActionEvSet<ActionKey>>>;
 }
 
+/**
+ * Scénář: rozložení stacků u stolu, pod kterým zpřesněné záznamy platí.
+ *
+ * ICM range se liší podle toho, jak je stůl rozdaný (bod 256: šest buněk se
+ * sráží jen o scénář). Katalog žije v packu, aby stůl uměl nakreslit, pod čím
+ * range platí, a Question_ID neslo, na co se ptalo (`questionId` má
+ * `stackSetupId` od 16. 9. 2026, žádný pack ho do 22. 9. nenesl).
+ */
+export interface RangeStackSetup {
+  /** Čitelný popis: „UTG 75 / HJ 45 / CO 60 / BTN 30 / SB 18 / BB 22 bb". */
+  label: string;
+  /** Stacky po sedačkách v bb. Sedačka mimo katalog stůl nekreslí. */
+  stacksBB: Partial<Record<Position, number>>;
+}
+
 export interface RangePack {
   id: string;
   version: string;
@@ -79,6 +94,8 @@ export interface RangePack {
   sourceEvidence: RangeSourceEvidence[];
   icmContext?: SngIcmContext;
   icmSpotTypes?: readonly IcmSpotType[];
+  /** Scénáře, na které se odkazují záznamy přes `stackSetupId`. */
+  stackSetups?: Readonly<Record<string, RangeStackSetup>>;
   records: RangePackRecord[];
 }
 
@@ -111,6 +128,29 @@ export function validateRangePack(pack: RangePack): string[] {
     errors.push(...validateRangeRecord(rangePackRecordToRangeRecord(record)));
   }
 
+  errors.push(...validateStackSetups(pack));
+
+  return errors;
+}
+
+/**
+ * Záznam se scénářem musí mít scénář v katalogu, a katalog musí umět stůl
+ * nakreslit. Bez toho by spot nesl klíč, ke kterému stůl nemá stacky - hráč by
+ * viděl range pro rozložení, které mu nikdo neukázal.
+ */
+function validateStackSetups(pack: RangePack): string[] {
+  const errors: string[] = [];
+  const catalog = pack.stackSetups ?? {};
+  for (const [id, setup] of Object.entries(catalog)) {
+    if (setup.label.trim().length === 0) errors.push(`stackSetups.${id}.label is required.`);
+    const seats = Object.entries(setup.stacksBB).filter(([, bb]) => typeof bb === "number" && bb > 0);
+    if (seats.length < 2) errors.push(`stackSetups.${id} must list at least two seats with positive stacks.`);
+  }
+  for (const record of pack.records) {
+    if (record.stackSetupId !== undefined && catalog[record.stackSetupId] === undefined) {
+      errors.push(`${record.position}/${record.bucket}/${record.context} references unknown stackSetupId ${record.stackSetupId}.`);
+    }
+  }
   return errors;
 }
 
@@ -135,6 +175,11 @@ export function rangePackToRangeFile(pack: RangePack): RangeFile {
     ante: pack.dimensions.ante,
     entries: pack.records.map(rangePackRecordToRangeRecord),
   };
+}
+
+/** Stacky scénáře, na který spot ukazuje; `undefined`, když pack katalog nemá. */
+export function stackSetupOf(pack: Pick<RangePack, "stackSetups">, id: string | undefined): RangeStackSetup | undefined {
+  return id === undefined ? undefined : pack.stackSetups?.[id];
 }
 
 function isHttpUrl(url: string): boolean {

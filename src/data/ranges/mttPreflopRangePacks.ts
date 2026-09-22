@@ -13,6 +13,7 @@ import { anteOnRanges } from "./ante-on";
 import { runtimeMttPreflopRangePacks } from "./mttProductionRuntimeRegistry";
 import { isPlayableMttPreflopPreview } from "./trainingCapability";
 import { buildMttIcmDerivedRangePacks } from "./mttIcmDerivedRangePacks";
+import { mttIcmPreviewRangePack } from "./mttIcmPreviewRangePack.generated";
 
 const VERIFIED_AT = "2026-06-01";
 
@@ -353,10 +354,19 @@ const mutableAllMttPreflopRangePacks =
 // Odvozené ICM packy pro bublinový scénář jdou stejnou cestou jako šestistolové:
 // zablokovaný profil bez dat nahradí odvozený s poctivou nálepkou. Platí jen pro
 // scénář pojmenovaný v jejich `assumptions` a zůstávají preview.
+// Šestistolový $EV profil s ante: schválené ICM mřížky RYE, se scénářem v klíči.
+//
+// Rozhodnutí vlastníka 22. 9. 2026 (3a, 4a, 5b). Na rozdíl od odvozených packů
+// tohle nejsou přeznačené devítistolové záznamy - sedačky zdroje sedí na
+// šestistolovou sadu 1:1 a hodnoty jsou z koupených chartů vlastníka. Pack je
+// **neúplný schválně**: odpovídá jen na buňky, které zdroj tvrdí, a pod
+// scénářem nic neoceňuje. Produkční brána ho nepustí (LOW, chybí sedačky
+// i hloubky), a to je ta dohoda, ne nedodělek.
 mutableAllMttPreflopRangePacks.push(
   ...mttPreflopRangePacks,
   ...mttSixMaxExposedPacks,
   ...buildMttIcmDerivedRangePacks(mttPreflopAnteOffRangePack, mttPreflopAnteOnRangePack),
+  mttIcmPreviewRangePack,
 );
 
 export const allMttPreflopRangePacks: readonly RangePack[] =

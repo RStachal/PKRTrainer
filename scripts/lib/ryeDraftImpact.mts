@@ -29,6 +29,8 @@ export interface DraftRecord {
   /** Sedačka, která otevřela. Prázdná u kontextů, kde otvírač není. */
   vsSeat: string;
   stackSetupId: string;
+  /** Stacky u stolu podle scénáře ICM (sedačka → bb); jen u ICM stránek. */
+  stackSetup?: Record<string, number>;
   sourceStackBB: number;
   strict: Record<string, string[]>;
   lenient: Record<string, string[]>;

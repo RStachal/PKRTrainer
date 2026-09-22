@@ -358,16 +358,52 @@ function buildPostflopSlotReport(
   });
 }
 
+/**
+ * Modul **preview** packu: tentýž kód jako produkční, bez otisku povolení.
+ *
+ * Preview pack z podstaty neprojde produkční cestou: `writeReady` chce
+ * `productionReady`, a ten chce každou sedačku × hloubku × kontext. Vrstva, co
+ * odpovídá jen tam, kde ví (rozhodnutí vlastníka 22. 9. 2026, 4a), to nikdy
+ * mít nebude - a přesto má jít k hráči. Tahle cesta je pro ni, a je úmyslně
+ * úzká: pack musí být platný a nálepkovaný `LOW`, jinak se modul nevykreslí.
+ * Produkci to neotvírá: kde se pack smí hrát, rozhoduje `startableMttPreflopRangePack`
+ * proti měřené připravenosti, ne existence modulu.
+ */
+export function renderPreviewMttPreflopRangePackModule(
+  input: MttPreflopRangePackImportInput,
+  exportName = defaultExportName(input.id, "RangePack"),
+  banner: readonly string[] = [],
+): { moduleText: string | null; errors: readonly string[] } {
+  const readiness = buildMttPreflopImportReadinessReport(input);
+  const errors = [
+    ...readiness.errors,
+    ...(input.confidence === "LOW" ? [] : [`Preview module needs confidence LOW, not ${input.confidence}.`]),
+    ...playerFacingLanguageBlockers(input.contentLanguage),
+  ];
+  if (errors.length > 0) return { moduleText: null, errors };
+  const header = ["// preview module: no production permission fingerprint", ...banner.map((line) => `// ${line}`)];
+  return {
+    moduleText: renderMttPreflopRangePackModule(
+      normalizeMttPreflopRangePackImport(input),
+      exportName,
+      null,
+      header,
+    ),
+    errors: [],
+  };
+}
+
 function renderMttPreflopRangePackModule(
   pack: RangePack,
   exportName: string,
-  fingerprint: string,
+  fingerprint: string | null,
+  header: readonly string[] = [],
 ): string {
   const runtimePack = compactMttPreflopRangePack(pack);
   const { records, ...metadata } = runtimePack;
   const encoded = encodeMttPreflopRuntime(records);
   return [
-    `// provenance-fingerprint: sha256:${fingerprint}`,
+    ...(fingerprint === null ? header : [`// provenance-fingerprint: sha256:${fingerprint}`]),
     'import type { RangePack } from "./rangePack";',
     "",
     "type EncodedHandMap = Array<[actionSet: number, hands: string]>;",

@@ -1,7 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 
-import { OWNER_DECISIONS_2026_09_17, OWNER_DECISIONS_INTRO, renderOwnerDecisionsPage } from "./lib/ownerDecisions.mts";
+import {
+  OWNER_DECISIONS_2026_09_22, OWNER_DECISIONS_2026_09_22_INTRO, renderOwnerDecisionsPage,
+} from "./lib/ownerDecisions.mts";
 
 /**
  * Jedna složka na FTP se vším, co čeká na majitelovo potvrzení.
@@ -346,12 +348,12 @@ for (const document of rendered) {
 }
 // Rozhodnutí, která nejsou mřížka: od 17. 9. 2026 jedna definice otázek
 // (`lib/ownerDecisions.mts`), tatáž stránka jako `npm run mtt:decisions`.
-writeFileSync(`${outDir}/rozhodnuti.html`, renderOwnerDecisionsPage(OWNER_DECISIONS_2026_09_17, {
-  dateLabel: "17. 9. 2026",
-  intro: OWNER_DECISIONS_INTRO,
-  storageKey: "drillev-decisions-2026-09-17",
+writeFileSync(`${outDir}/rozhodnuti.html`, renderOwnerDecisionsPage(OWNER_DECISIONS_2026_09_22, {
+  dateLabel: "22. 9. 2026",
+  intro: OWNER_DECISIONS_2026_09_22_INTRO,
+  storageKey: "drillev-decisions-2026-09-22",
 }), "utf8");
-console.log(`  rozhodnuti.html       ${OWNER_DECISIONS_2026_09_17.length} rozhodnutí s doměřenou cenou`);
+console.log(`  rozhodnuti.html       ${OWNER_DECISIONS_2026_09_22.length} rozhodnutí s doměřenou cenou`);
 console.log("  index.html            rozcestník s průběhem");
 console.log("");
 

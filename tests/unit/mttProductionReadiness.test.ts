@@ -268,11 +268,13 @@ describe("mttProductionReadiness", () => {
 
     expect(report.rows).toHaveLength(64);
     expect(report.productionRows).toBe(0);
-    // Dva devítistolové DOLAR_EV sloty se posunuly z MISSING na CANDIDATE:
-    // mají odvozený bublinový pack. Nic se tím nedostalo do produkce - odvozené
-    // hodnoty produkční brána dál odmítá - ale slot s daty už není prázdný.
-    expect(report.missingRows).toBe(8);
-    expect(report.candidateRows).toBe(56);
+    // Tři DOLAR_EV sloty se posunuly z MISSING na CANDIDATE: dva devítistolové
+    // mají odvozený bublinový pack a šestistolový regular s ante má od 22. 9.
+    // 2026 ICM vrstvu ze schválených mřížek RYE (rozhodnutí vlastníka 3a a 4a).
+    // Nic se tím nedostalo do produkce - odvozené ani neúplné packy produkční
+    // brána dál odmítá - ale slot s daty už není prázdný.
+    expect(report.missingRows).toBe(7);
+    expect(report.candidateRows).toBe(57);
 
     const production = report.rows.filter((row) => row.status === "PRODUCTION");
     expect(production).toEqual([]);
@@ -300,15 +302,15 @@ describe("mttProductionReadiness", () => {
     expect(dolarPreflop).toHaveLength(8);
     // Devítistolové regular sloty mají odvozený bublinový pack, zbytek ne.
     // Podstatné je, že žádný z nich není produkční - to drží řádek pod tímhle.
-    expect(dolarPreflop.filter((row) => row.status === "CANDIDATE")).toHaveLength(2);
-    expect(dolarPreflop.filter((row) => row.status === "MISSING")).toHaveLength(6);
+    expect(dolarPreflop.filter((row) => row.status === "CANDIDATE")).toHaveLength(3);
+    expect(dolarPreflop.filter((row) => row.status === "MISSING")).toHaveLength(5);
     expect(dolarPreflop.every((row) => row.productionReady === false)).toBe(true);
     // Šest slotů bez packu ten důvod pořád nese; dva odvozené už ne, protože
     // pack mají. Jejich důvod je jiný a jde o ten, na kterém záleží: odvozená
     // data produkční brána nepustí.
     expect(dolarPreflop.filter((row) => row.missingReasons.some((reason) => (
       reason.includes("No dedicated DOLAR_EV MTT preflop RangePack")
-    )))).toHaveLength(6);
+    )))).toHaveLength(5);
     expect(dolarPreflop.find((row) => (
       row.tableFormat === "SIX_MAX" && row.blindSpeed === "TURBO" && row.ante === "OFF"
     ))?.importSlot).toMatchObject({
@@ -375,11 +377,13 @@ describe("mttProductionReadiness", () => {
     });
 
     expect(report.productionRows).toBe(0);
-    // Dva devítistolové DOLAR_EV sloty se posunuly z MISSING na CANDIDATE:
-    // mají odvozený bublinový pack. Nic se tím nedostalo do produkce - odvozené
-    // hodnoty produkční brána dál odmítá - ale slot s daty už není prázdný.
-    expect(report.candidateRows).toBe(56);
-    expect(report.missingRows).toBe(8);
+    // Tři DOLAR_EV sloty se posunuly z MISSING na CANDIDATE: dva devítistolové
+    // mají odvozený bublinový pack a šestistolový regular s ante má od 22. 9.
+    // 2026 ICM vrstvu ze schválených mřížek RYE (rozhodnutí vlastníka 3a a 4a).
+    // Nic se tím nedostalo do produkce - odvozené ani neúplné packy produkční
+    // brána dál odmítá - ale slot s daty už není prázdný.
+    expect(report.candidateRows).toBe(57);
+    expect(report.missingRows).toBe(7);
 
     const flopRows = report.rows.filter((row) => (
       row.tableFormat === "FULL_RING_9" &&
@@ -427,11 +431,13 @@ describe("mttProductionReadiness", () => {
     expect(gate.mode).toBe("PRODUCTION");
     expect(gate.totalRows).toBe(64);
     expect(gate.productionReadyRows).toBe(0);
-    // Dva devítistolové DOLAR_EV sloty se posunuly z MISSING na CANDIDATE:
-    // mají odvozený bublinový pack. Nic se tím nedostalo do produkce - odvozené
-    // hodnoty produkční brána dál odmítá - ale slot s daty už není prázdný.
-    expect(gate.previewRows).toBe(56);
-    expect(gate.blockedRows).toBe(8);
+    // Tři DOLAR_EV sloty se posunuly z MISSING na CANDIDATE: dva devítistolové
+    // mají odvozený bublinový pack a šestistolový regular s ante má od 22. 9.
+    // 2026 ICM vrstvu ze schválených mřížek RYE (rozhodnutí vlastníka 3a a 4a).
+    // Nic se tím nedostalo do produkce - odvozené ani neúplné packy produkční
+    // brána dál odmítá - ale slot s daty už není prázdný.
+    expect(gate.previewRows).toBe(57);
+    expect(gate.blockedRows).toBe(7);
     expect(gate.errors).toHaveLength(64);
     expect(gate.errors[0]).toContain("row is not production-ready");
     expect(rendered).toContain("mode: PRODUCTION");
@@ -451,11 +457,13 @@ describe("mttProductionReadiness", () => {
     expect(gate.mode).toBe("PREVIEW");
     expect(gate.totalRows).toBe(64);
     expect(gate.productionReadyRows).toBe(0);
-    // Dva devítistolové DOLAR_EV sloty se posunuly z MISSING na CANDIDATE:
-    // mají odvozený bublinový pack. Nic se tím nedostalo do produkce - odvozené
-    // hodnoty produkční brána dál odmítá - ale slot s daty už není prázdný.
-    expect(gate.previewRows).toBe(56);
-    expect(gate.blockedRows).toBe(8);
+    // Tři DOLAR_EV sloty se posunuly z MISSING na CANDIDATE: dva devítistolové
+    // mají odvozený bublinový pack a šestistolový regular s ante má od 22. 9.
+    // 2026 ICM vrstvu ze schválených mřížek RYE (rozhodnutí vlastníka 3a a 4a).
+    // Nic se tím nedostalo do produkce - odvozené ani neúplné packy produkční
+    // brána dál odmítá - ale slot s daty už není prázdný.
+    expect(gate.previewRows).toBe(57);
+    expect(gate.blockedRows).toBe(7);
     expect(gate.errors).toEqual([]);
     expect(rendered).toContain("mode: PREVIEW");
     expect(rendered).toContain("valid: true");
@@ -589,11 +597,12 @@ describe("mttProductionReadiness", () => {
   it("vytvori import-readiness report pro vsechny registrovane MTT preflop packy", () => {
     const report = buildMttPreflopPackImportReadinessReport();
 
-    // Šest chipEV a šestistolových packů plus dva odvozené ICM.
-    expect(report.rows).toHaveLength(8);
+    // Šest chipEV a šestistolových packů, dva odvozené ICM a od 22. 9. 2026
+    // ICM preview vrstva ze schválených mřížek RYE (rozhodnutí 3a a 4a).
+    expect(report.rows).toHaveLength(9);
     expect(report.productionReadyRows).toBe(0);
-    expect(report.candidateRows).toBe(8);
-    expect(report.lowConfidenceRows).toBe(6);
+    expect(report.candidateRows).toBe(9);
+    expect(report.lowConfidenceRows).toBe(7);
     // Two, not four: six-max regular is populated and six-max turbo is not.
     expect(report.emptyRecordRows).toBe(2);
     expect(report.missingExpectedProfiles).toHaveLength(2);

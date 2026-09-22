@@ -22,7 +22,7 @@ import type {
   RangePackRecord,
   RangeSourceEvidence,
 } from "./rangePack";
-import { validateRangePack } from "./rangePack";
+import { validateRangePack, type RangeStackSetup } from "./rangePack";
 import { findPlaceholderStringPaths } from "./placeholderText";
 
 export type MttPreflopImportLicenseKind =
@@ -71,6 +71,8 @@ export interface MttPreflopRangePackImportInput {
   assumptions: readonly string[];
   searchQueries: readonly string[];
   sourceEvidence: readonly RangeSourceEvidence[];
+  /** Scénáře (rozložení stacků), na které se záznamy odkazují přes `stackSetupId`. */
+  stackSetups?: Readonly<Record<string, RangeStackSetup>>;
   records: readonly MttPreflopImportRecord[];
 }
 
@@ -218,6 +220,10 @@ export function normalizeMttPreflopRangePackImport(
     assumptions: [...input.assumptions, `License: ${input.licenseKind}. ${input.licenseNote}`],
     searchQueries: [...input.searchQueries],
     sourceEvidence: input.sourceEvidence.map((source) => ({ ...source })),
+    ...(input.stackSetups === undefined ? {} : {
+      stackSetups: Object.fromEntries(Object.entries(input.stackSetups)
+        .map(([id, setup]) => [id, { label: setup.label, stacksBB: { ...setup.stacksBB } }])),
+    }),
     records: input.records.map(normalizeRecord),
   };
 }

@@ -7,6 +7,7 @@ import {
   createPostflopStrategyResolverWithProductionFallback,
 } from "../../src/data/ranges/postflopStrategyRegistry";
 import { btnBbSrpFlopCbetPilotPack } from "../../src/data/ranges/pilots/btnBbSrpFlopCbetPilot.generated";
+import { utgBbSrpFlopCbetPilotPack } from "../../src/data/ranges/pilots/utgBbSrpFlopCbetPilot.generated";
 import { flopSingleRaisedPrototypeStrategyPack } from "../../src/data/ranges/postflopStrategyPack";
 import type { FlopProductionStrategyPack } from "../../src/data/ranges/flopProductionStrategyPack";
 
@@ -22,15 +23,33 @@ const flopInput = {
 
 describe("postflop strategy provenance", () => {
   it("marks a solved pilot pack as solver backed", () => {
+    const rule = utgBbSrpFlopCbetPilotPack.rules[0];
     const resolver = createFlopProductionStrategyResolver(
-      btnBbSrpFlopCbetPilotPack as unknown as FlopProductionStrategyPack,
+      utgBbSrpFlopCbetPilotPack as unknown as FlopProductionStrategyPack,
     );
-    const result = resolver(flopInput);
+    const result = resolver({
+      ...flopInput,
+      textures: rule.boardTextures,
+      positionPattern: rule.positionPattern,
+      actionNode: rule.actionNode,
+      effectiveStackBB: ((rule.sprMin + rule.sprMax) / 2) * flopInput.potBB,
+    });
 
     expect(result?.source?.kind).toBe("STRATEGY_PACK");
     if (result?.source?.kind === "STRATEGY_PACK") {
       expect(result.source.provenance).toBe("SOLVER_BACKED");
     }
+  });
+
+  it("nechá pilota, kterého čtenář odmítl, mlčet místo tvrzení „solver backed“", () => {
+    // Rozhodnutí vlastníka 9a (22. 9. 2026): šest pilotů odmítnutých při čtení
+    // nese LOW. Resolver na LOW pack neodpovídá - obsah, o kterém čtenář řekl
+    // „nesedí", se k hráči nedostane ani s poctivou nálepkou.
+    expect(btnBbSrpFlopCbetPilotPack.confidence).toBe("LOW");
+    const resolver = createFlopProductionStrategyResolver(
+      btnBbSrpFlopCbetPilotPack as unknown as FlopProductionStrategyPack,
+    );
+    expect(resolver(flopInput)).toBeNull();
   });
 
   it("marks the public heuristic model as heuristic, whatever its assumptions say", () => {

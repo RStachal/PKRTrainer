@@ -9,6 +9,7 @@ import type {
   StackBucket,
   TableState,
 } from "./types";
+import { POSITION_ORDER } from "./types";
 import { bestActionsForActionEv } from "./actionEv";
 
 export type PreflopExplanationMode = "BEGINNER" | "STANDARD" | "ADVANCED";
@@ -23,6 +24,14 @@ export interface PreflopExplanationInput {
   hand: HandLabel;
   recommended: readonly ActionKey[];
   tableState: TableState;
+  /**
+   * Stacky sedaček podle scénáře (ICM), když spot scénář nese.
+   *
+   * Bez nich by text tvrdil jednu hloubku pro celý stůl, což je model chipEV
+   * packů; pod scénářem to pravda není a hráč to na obrázku vidí. Viz
+   * `scenarioNote`.
+   */
+  seatStacks?: Partial<Record<Position, number>>;
   importedFromHandHistory?: boolean;
 }
 
@@ -55,7 +64,7 @@ export function buildPreflopExplanationForSpot(
   spot: Pick<
     Spot,
     "context" | "heroPos" | "effStack" | "hand" | "strictCorrect" | "tableState" | "actionEvs"
-  > & Partial<Pick<Spot, "startingPot">>,
+  > & Partial<Pick<Spot, "startingPot" | "seatStacks">>,
   language: PreflopExplanationLanguage,
   mode: PreflopExplanationMode = "STANDARD",
 ): string {
@@ -69,6 +78,7 @@ export function buildPreflopExplanationForSpot(
       ? bestActionsForActionEv(spot.actionEvs)
       : spot.strictCorrect,
     tableState: spot.tableState,
+    ...(spot.seatStacks === undefined ? {} : { seatStacks: spot.seatStacks }),
   }, mode, language);
 }
 
@@ -118,6 +128,7 @@ function buildPreflopExplanationCs(
 
   const parts = [
     intro,
+    ...(scenarioNoteCs(input) === "" ? [] : [scenarioNoteCs(input)]),
     `Pozice: ${positionReason(input.heroPos, input.context)}.`,
     `Stack: ${stackReason(input.effStack, input.context)}.`,
     `Třída handy: ${handReason(input.hand)}.`,
@@ -159,6 +170,7 @@ function buildPreflopExplanationEn(
   if (mode === "BEGINNER") return `${intro} ${beginnerReasonEn(input)}`;
   const parts = [
     intro,
+    ...(scenarioNoteEn(input) === "" ? [] : [scenarioNoteEn(input)]),
     `Position: ${positionReasonEn(input.heroPos, input.context)}.`,
     `Stack: ${stackReasonEn(input.effStack, input.context)}.`,
     `Hand class: ${handReasonEn(input.hand)}.`,
@@ -166,6 +178,55 @@ function buildPreflopExplanationEn(
   ];
   if (mode === "ADVANCED") parts.push(`Range note: ${advancedRangeNoteEn(input)}.`);
   return parts.join(" ");
+}
+
+/**
+ * Rozložení stacků u stolu, když spot hraje pod scénářem (ICM).
+ *
+ * Tři věci, které by si jinak odporovaly, a hráč by nevěděl které věřit:
+ *
+ *  - **stůl** kreslí stacky scénáře (18 BB na SB), kdežto text mluvil o koši
+ *    drillu (20 BB) - koš je osa knihovny, ne údaj zdroje, tak to text říká;
+ *  - **efektivní hloubka** je pod scénářem daná kratším stackem, a ten bývá
+ *    soupeřův: hrdina s 50 BB proti 3betu od sedačky s 9 BB hraje o 9 BB;
+ *  - **cena** se pod scénářem neukazuje vůbec (rozhodnutí vlastníka 5b), takže
+ *    tohle je jediné místo, kde se hráč hloubky dozví.
+ *
+ * Bez scénáře vrací prázdno a text zůstává znak po znaku jako dřív.
+ */
+function scenarioNote(input: PreflopExplanationInput, language: PreflopExplanationLanguage): string {
+  const stacks = input.seatStacks;
+  if (stacks === undefined) return "";
+  const listed = POSITION_ORDER.filter((position) => stacks[position] !== undefined);
+  if (listed.length === 0) return "";
+  const table = listed.map((position) => `${position} ${stacks[position]}`).join(" / ");
+  const hero = stacks[input.heroPos];
+  const seat = input.tableState.vsSeat;
+  const villain = seat === undefined ? undefined : stacks[seat];
+  const effective = hero === undefined
+    ? undefined
+    : villain === undefined ? hero : Math.min(hero, villain);
+  const cs = language !== "EN";
+  const clauses = [`${cs ? "Scénář (ICM)" : "Scenario (ICM)"}: ${table} BB`];
+  if (hero !== undefined && hero !== input.effStack) {
+    clauses.push(cs
+      ? `hloubka ${input.effStack} BB je nejbližší koš hrdinových ${hero} BB`
+      : `depth ${input.effStack} BB is the nearest bucket to the hero's ${hero} BB`);
+  }
+  if (effective !== undefined && hero !== undefined && effective !== hero && seat !== undefined) {
+    clauses.push(cs
+      ? `proti ${seat} se hraje o ${effective} BB, protože tolik má ${seat}`
+      : `against ${seat} only ${effective} BB is at stake, because that is ${seat}'s stack`);
+  }
+  return `${clauses.join("; ")}.`;
+}
+
+function scenarioNoteCs(input: PreflopExplanationInput): string {
+  return scenarioNote(input, "CZ");
+}
+
+function scenarioNoteEn(input: PreflopExplanationInput): string {
+  return scenarioNote(input, "EN");
 }
 
 function beginnerReason(input: PreflopExplanationInput): string {

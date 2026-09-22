@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 import {
-  DECISIONS_TOKEN_PREFIX, OWNER_DECISIONS_2026_09_17, decisionsHash,
+  DECISIONS_TOKEN_PREFIX, OWNER_DECISIONS_2026_09_17, OWNER_DECISIONS_2026_09_22, decisionsHash,
 } from "./lib/ownerDecisions.mts";
 
 /**
@@ -27,7 +27,10 @@ if (raw === undefined) {
   process.exit(2);
 }
 
-const decisions = OWNER_DECISIONS_2026_09_17;
+// Sada se vybírá podle otisku v tokenu, ne podle data: odpovědi ze 17. 9. se
+// musí dát přečíst i po přidání dalších otázek, jinak by starší token po každé
+// nové sadě hlásil „patří k jiné verzi stránky".
+const DECISION_SETS = [OWNER_DECISIONS_2026_09_22, OWNER_DECISIONS_2026_09_17];
 const lines = raw.split(/\r?\n/).map((line) => line.trim()).filter((line) => line.length > 0 && !line.startsWith("#"));
 const tokenLine = lines.find((line) => line.startsWith(DECISIONS_TOKEN_PREFIX));
 if (tokenLine === undefined) {
@@ -35,9 +38,10 @@ if (tokenLine === undefined) {
   process.exit(2);
 }
 const [, hash, ...parts] = tokenLine.split(/\s+/);
-const expected = decisionsHash(decisions);
-if (hash !== expected) {
-  console.error(`Otisk otázek nesedí: token ${hash}, dnešní otázky ${expected}. Odpovědi patří k jiné verzi stránky.`);
+const decisions = DECISION_SETS.find((set) => decisionsHash(set) === hash);
+if (decisions === undefined) {
+  console.error(`Otisk otázek nesedí: token ${hash}, známé sady ${DECISION_SETS.map(decisionsHash).join(", ")}. `
+    + "Odpovědi patří k jiné verzi stránky.");
   process.exit(2);
 }
 

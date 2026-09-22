@@ -408,13 +408,16 @@ function renderSeat(
     const stackChip = el("span", "seat__stack-chip");
     stackChip.setAttribute("aria-hidden", "true");
     const stackValue = el("span", "seat__stack-value");
-    stackValue.textContent = `${formatBB(spot.effStack)} BB`;
+    // Se scénářem (ICM) má každá sedačka vlastní stack; bez něj se kreslí
+    // efektivní hloubka, protože o ostatních stacích spot nic netvrdí.
+    const seatStackBB = spot.seatStacks?.[seat.position] ?? spot.effStack;
+    stackValue.textContent = `${formatBB(seatStackBB)} BB`;
     stack.appendChild(stackChip);
     stack.appendChild(stackValue);
     node.appendChild(stack);
     const stackBar = el("div", "seat__stack-bar");
     const stackFill = el("span");
-    stackFill.style.width = `${Math.max(18, Math.min(100, (spot.effStack / 150) * 100))}%`;
+    stackFill.style.width = `${Math.max(18, Math.min(100, (seatStackBB / 150) * 100))}%`;
     stackBar.appendChild(stackFill);
     node.appendChild(stackBar);
   } else {
@@ -467,6 +470,8 @@ function tableStyles(): HTMLStyleElement {
   border:1px solid rgba(203,255,226,.13);box-shadow:0 8px 18px rgba(0,0,0,.18);}
 .poker-table .pot{color:#f2f7ff;font-weight:950;font-size:16px;text-align:center;
   text-shadow:0 1px 8px rgba(0,0,0,.45);}
+.poker-table__scenario{color:#ffe39a;font-size:10px;font-weight:900;letter-spacing:.02em;
+  max-width:190px;line-height:1.35;text-shadow:0 1px 6px rgba(0,0,0,.5);}
 .poker-table__chip-stack{display:flex;align-items:flex-end;justify-content:center;gap:4px;height:21px;}
 .poker-table__chip-stack span{display:block;width:23px;height:10px;border-radius:999px;
   background:linear-gradient(180deg,#f8fbff,#9fb2d5 48%,#53617a);
@@ -567,6 +572,16 @@ export function renderTable(
   pot.dataset.potBb = String(potBB);
   pot.textContent = `Pot: ${formatBB(potBB)} BB`;
   center.appendChild(pot);
+  // Scénář: hráč musí vidět, pod jakým rozložením stacků range platí - to je
+  // celý rozdíl mezi dvěma ICM mřížkami téže buňky (bod 256).
+  if (spot.seatStacks !== undefined) {
+    const scenario = el("div", "poker-table__scenario");
+    scenario.textContent = `ICM: ${positionOrder
+      .filter((position) => spot.seatStacks?.[position] !== undefined)
+      .map((position) => `${position} ${formatBB(spot.seatStacks?.[position] ?? 0)}`)
+      .join(" · ")} BB`;
+    center.appendChild(scenario);
+  }
 
   const chipStack = el("div", "poker-table__chip-stack");
   for (let i = 0; i < 3; i += 1) {

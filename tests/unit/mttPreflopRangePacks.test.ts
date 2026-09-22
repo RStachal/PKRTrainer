@@ -57,8 +57,11 @@ describe("mttPreflopRangePacks", () => {
 
   it("pripravuje 6-max candidate RangePacky bez produkcnich records", () => {
     expect(mttSixMaxPreflopRangePackCandidates).toHaveLength(4);
-    // Dva měřené chipEV, dva odvozené šestistolové, dva odvozené ICM.
-    expect(allMttPreflopRangePacks).toHaveLength(8);
+    // Dva měřené chipEV, dva odvozené šestistolové, dva odvozené ICM a od
+    // 22. 9. 2026 jedna ICM preview vrstva ze schválených mřížek RYE
+    // (rozhodnutí vlastníka 3a a 4a) - šestistolový $EV profil s ante.
+    expect(allMttPreflopRangePacks).toHaveLength(9);
+    expect(allMttPreflopRangePacks.filter((pack) => pack.dimensions.evModel === "DOLAR_EV")).toHaveLength(3);
 
     for (const pack of mttSixMaxPreflopRangePackCandidates) {
       expect(validateRangePack(pack)).toEqual([]);

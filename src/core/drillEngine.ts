@@ -446,8 +446,16 @@ export function opponentSeatCandidates(
     default:
       return [];
   }
+  // Sedačka je kandidát, když o ní knihovna něco tvrdí - ať bez scénáře, nebo
+  // pod některým scénářem. Pack se scénáři (ICM) obecné záznamy nemá, takže
+  // hledat jen bez scénáře by o jeho sedačkách nenašlo nic a profil by
+  // nerozdal ani jeden spot. Prázdný katalog scénářů se chová jako dřív.
+  const setups = Object.keys(store.stackSetups ?? {});
   const candidates = new Set<Position>(seats.filter((seat) => (
     store.lookup({ ante, position: heroPos, bucket, context, vsSeat: seat })?.vsSeat === seat
+    || setups.some((stackSetupId) => (
+      store.lookup({ ante, position: heroPos, bucket, context, vsSeat: seat, stackSetupId })?.vsSeat === seat
+    ))
   )));
   if (context !== "VS_3BET") {
     const calibrated = REJAM_EV_OPENER_BY_HERO[heroPos];
@@ -458,6 +466,31 @@ export function opponentSeatCandidates(
     }
   }
   return POSITION_ORDER.filter((seat) => candidates.has(seat));
+}
+
+/**
+ * Scénáře (rozložení stacků), pro které knihovna v téhle buňce něco tvrdí.
+ *
+ * Táž konstrukce jako `opponentSeatCandidates`: losuje se jen mezi scénáři se
+ * záznamem pro tu sedačku, hloubku, kontext a otvírače - vylosovat scénář bez
+ * záznamu by stůl kreslil rozložení, na které odpověď neplatí. Pack bez
+ * katalogu scénářů (všechny chipEV packy) vrací prázdno a `rng()` se nevolá,
+ * takže seedované sekvence zůstávají bajt po bajtu jako dřív.
+ */
+export function scenarioCandidates(
+  context: ActionContext,
+  heroPos: Position,
+  bucket: StackBucket,
+  ante: AnteMode,
+  store: RangeStore,
+  vsSeat?: Position,
+): string[] {
+  const catalog = store.stackSetups ?? {};
+  return Object.keys(catalog).sort().filter((stackSetupId) => (
+    store.lookup({
+      ante, position: heroPos, bucket, context, stackSetupId, ...(vsSeat === undefined ? {} : { vsSeat }),
+    })?.stackSetupId === stackSetupId
+  ));
 }
 
 // ---------------------------------------------------------------------------
@@ -1052,6 +1085,9 @@ export function generateSpot(
   // (3b) protihráč, jen mezi sedačkami, o kterých knihovna něco tvrdí.
   const opponents = opponentSeatCandidates(context, heroPos, effStack, ante, store);
   const vsSeat = opponents.length === 0 ? undefined : pickFrom(rng, opponents);
+  // (3c) scénář (rozložení stacků), jen mezi těmi, pro které je záznam.
+  const scenarios = scenarioCandidates(context, heroPos, effStack, ante, store, vsSeat);
+  const stackSetupId = scenarios.length === 0 ? undefined : pickFrom(rng, scenarios);
 
   // (4) ruka + (5) karty.
   const hand = pickFrom(rng, ALL_HAND_CLASSES);
@@ -1060,7 +1096,9 @@ export function generateSpot(
   // Lookup Range_Store; chybějící kombinace ⇒ null (Req 4.8). Se sedačkou se
   // zkusí zpřesněný záznam a bez něj se vrátí obecný (`RangeKey.vsSeat`).
   const key: RangeKey = {
-    position: heroPos, bucket: effStack, context, ante, ...(vsSeat === undefined ? {} : { vsSeat }),
+    position: heroPos, bucket: effStack, context, ante,
+    ...(vsSeat === undefined ? {} : { vsSeat }),
+    ...(stackSetupId === undefined ? {} : { stackSetupId }),
   };
   const entry = store.lookup(key);
   if (entry === undefined) return null;
@@ -1076,8 +1114,12 @@ export function generateSpot(
     facing: facingFor(context, heroPos),
     isBvB: context === "BVB",
     ...(vsSeat === undefined ? {} : { vsSeat }),
+    ...(entry.stackSetupId === undefined ? {} : { stackSetupId: entry.stackSetupId }),
     jamTaught: rangeTeachesJam(entry),
   };
+  const seatStacks = entry.stackSetupId === undefined
+    ? undefined
+    : store.stackSetups?.[entry.stackSetupId]?.stacksBB;
 
   const handStrict = entry.strict[hand] as ActionKey[] | undefined;
   const handLenient = entry.actions[hand] as ActionKey[] | undefined;
@@ -1110,15 +1152,20 @@ export function generateSpot(
   // Zpřesněná odpověď je jiná otázka a dostane jiné ID; obecná odpověď pod
   // vylosovanou sedačkou má ID bajt po bajtu jako dřív (viz `questionId`).
   const id = questionId({
-    context, heroPos, effStack, hand, ante, ...(entry.vsSeat === undefined ? {} : { vsSeat: entry.vsSeat }),
+    context, heroPos, effStack, hand, ante,
+    ...(entry.vsSeat === undefined ? {} : { vsSeat: entry.vsSeat }),
+    ...(entry.stackSetupId === undefined ? {} : { stackSetupId: entry.stackSetupId }),
   });
   const startingPot = startingPotFor(ante);
 
   // A reviewed export wins where one exists; otherwise the two contexts whose
   // price the spot fixes are computed. Nothing is invented for the rest.
+  // Under an ICM scenario nothing is priced at all: the chip-EV equity model
+  // would put a chip price on a $EV question (owner's decision 5b, 2026-09-22:
+  // ranges only, no price, until payouts are known).
   const actionEvs = isActionEvSetComplete(candidateActionEvs, offeredActionKeys)
     ? cloneActionEvSet(candidateActionEvs)
-    : computeActionEvs(
+    : entry.stackSetupId !== undefined ? undefined : computeActionEvs(
       context,
       heroPos,
       hand,
@@ -1138,6 +1185,7 @@ export function generateSpot(
     hand,
     recommended: strictCorrect,
     tableState,
+    ...(seatStacks === undefined ? {} : { seatStacks }),
   });
 
   return {
@@ -1150,6 +1198,7 @@ export function generateSpot(
     hand,
     heroCards,
     tableState,
+    ...(seatStacks === undefined ? {} : { seatStacks }),
     answers,
     correctKeys,
     strictCorrect,

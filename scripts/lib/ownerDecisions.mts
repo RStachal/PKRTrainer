@@ -201,6 +201,93 @@ export const OWNER_DECISIONS_2026_09_17: readonly OwnerDecision[] = [
   },
 ];
 
+/**
+ * Otázky, které vyplynuly z práce 22. 9. 2026.
+ *
+ * Každá z nich je místo, kde měření došlo na hranici a dál rozhoduje vlastník:
+ * dvě z dodání ICM vrstvy (jam přes 3bet, povolení pro nový pack), jedna
+ * z pokračování 6a (rejam), jedna z důsledku 9a (šest pilotů mlčí).
+ */
+export const OWNER_DECISIONS_2026_09_22: readonly OwnerDecision[] = [
+  {
+    id: 1,
+    title: "ICM: devět mřížek učí jam přes 3bet, produkt ho nenabízí",
+    context: "Ze 40 schválených ICM mřížek jich 31 dodáno; zbylých <b>9</b> propadlo na jediné věci: "
+      + "zdroj u nich učí <b>jam přes 3bet</b> (hrdina otevřel, někdo 3betoval, RYE kreslí all-in), "
+      + "a produkt u čelení 3betu nabízí jen fold, call a 4bet. Doporučení, které nejde zvolit, "
+      + "se nedodává - proto leží. Jde o hloubky 20, 25, 50 a 75 bb, kde má 3bettor často míň než "
+      + "hrdina (třeba UTG 50 bb proti SB s 9 bb), takže „4bet“ je tam fakticky all-in.",
+    options: [
+      { code: "a", label: "Nabídnout jam i proti 3betu, kde ho range učí", detail: "stejná konstrukce jako 8a u openu: tlačítko se objeví jen tam, kde ho mřížka spotu kreslí; 9 mřížek se dodá." },
+      { code: "b", label: "Nabízet jam proti 3betu vždy do 30 bb", detail: "jednodušší pravidlo, ale nabídne tlačítko i tam, kde o něm zdroj nic neříká." },
+      { code: "c", label: "Nechat ležet", detail: "9 mřížek zůstane v draftu, dokud pro ně nebude nabídka akcí." },
+    ],
+    recommended: "a",
+    diary: "260",
+  },
+  {
+    id: 2,
+    title: "ICM: povolení pro nový pack v balíku produktu",
+    context: "Vrstva jde do profilu jako nový pack <code>mtt-six-max-regular-preflop-dolar-ev-ante-on-icm-preview-v1</code>. "
+      + "Povolení, které jsi potvrdil 17. 9., mluví o <b>devítistolových</b> profilech "
+      + "(<code>permission.json</code>, <code>additionalSources</code>: RYE). Obsah je týž zdroj a týž "
+      + "způsob přenosu (seznamy akcí po třídách rukou, žádné obrázky ani soubory), jen jiný profil.",
+    options: [
+      { code: "a", label: "Ano, totéž povolení platí i pro tenhle profil", detail: "dopíšu permission.json s odkazem na tohle rozhodnutí a pack zůstane preview." },
+      { code: "b", label: "Ne, ICM vrstvu z balíku vyndat", detail: "modul se smaže, mřížky zůstanou v artefaktech." },
+    ],
+    recommended: "a",
+    diary: "260",
+  },
+  {
+    id: 3,
+    title: "6a rejam: mapa hloubek místo range - co s ní",
+    context: "Rejam stránky RYE (33 mřížek) <b>nekreslí celou obranu</b>, ale mapu „do jaké hloubky se ruka "
+      + "rejamuje“: barva 30bb znamená jam do 30 bb, 15bb jen do 15 bb, k tomu <code>3B/Call</code> "
+      + "u prémií. Rozložit se to dá na koše 15, 20, 25 a 30 bb - to je <b>127 buněk</b>, z toho "
+      + "<b>24 už pokrývají stránky F3B</b> (ty nesou obranu celou: call, 3bet i jam). "
+      + "U zbylých <b>103</b> je jen jamová mapa, takže dodat ji jako celou range by učilo "
+      + "„proti openu se nikdy nedorovnává“ - na 15 bb možná pravda, na 25 bb nejspíš ne.",
+    options: [
+      { code: "a", label: "Dodat jen tam, kde F3B nic nemá, a jen na 15 bb", detail: "nejkratší stack, kde je jam-or-fold obhajitelný; zbytek počká na F3B." },
+      { code: "b", label: "Dodat všech 103 buněk jako jamovou mapu", detail: "rychlé, ale hráč se u nich dorovnání nenaučí." },
+      { code: "c", label: "Přeskočit rejam a jít na BB proti limpu a squeeze", detail: "rejam se vrátí, až bude jasné, jak ho spojit s F3B." },
+    ],
+    recommended: "c",
+    freeText: "Kdyby platilo a) nebo b): má se u těch buněk psát, že jde jen o jamovou vrstvu?",
+    diary: "260",
+  },
+  {
+    id: 4,
+    title: "Šest pilotů mlčí - co má vidět platící hráč",
+    context: "Po 9a nese šest ze sedmi flopových pilotů LOW (čtenář je 14. 9. odmítl) a resolver na LOW "
+      + "neodpovídá. Řetěz je fail-close: placený tier v těch buňkách <b>nedostane heuristiku</b>, "
+      + "ale ani spot - generátor odmítne rozdat. Zbývá jeden pilot (UTG vs BB). Přesolv těch "
+      + "šesti je ve frontě za 10a (25bb rodiny), tedy řádově týden.",
+    options: [
+      { code: "a", label: "Nechat mlčet a napsat to v UI", detail: "„tenhle pilot se přesolvuje“ místo spotu; poctivé, ale lab je do přesolvu skoro prázdný." },
+      { code: "b", label: "Pustit je zpátky s nálepkou LOW", detail: "hráč dostane obsah, který čtení neprošlo, ale vidí u něj „nízká spolehlivost“." },
+      { code: "c", label: "Předřadit přesolv pilotů před 25bb rodiny", detail: "lab bude celý dřív, přesolv 25bb rodin se posune o pár nocí." },
+    ],
+    recommended: "a",
+    diary: "260",
+  },
+];
+
+/** Úvod stránky k rozhodnutím z 22. 9. 2026. */
+export const OWNER_DECISIONS_2026_09_22_INTRO = `<p><b>Čtyři otázky z práce 22. 9. 2026.</b> Každá je místo, kde měření došlo na hranici
+a dál rozhoduješ ty.</p>
+<ol>
+<li><b>ICM vrstva je dodaná</b> (rozhodnutí 3a, 4a, 5b z 22. 9.): profil MTT / 6-max / $EV / ante ON rozdává
+31 schválených mřížek v 6 scénářích, stůl kreslí stacky scénáře, nic se neoceňuje. Otázky 1 a 2 jsou zbytek:
+devět mřížek, které produkt neumí položit jako otázku, a povolení pro nový pack.</li>
+<li><b>6a pokračuje</b>: otevírací stránky (34 mřížek RFI) čekají na tvoje čtení - stránka je odeslaná.
+Rejam je otázka 3: jeho stránky nejsou range, ale mapa hloubek.</li>
+<li><b>Piloty</b> (otázka 4): 9a znamená, že šest z nich mlčí, dokud se nepřesolví a nepřečtou.</li>
+</ol>
+<p>U každé otázky je doporučení a číslo, ze kterého plyne. Vyplň, ulož stránku (Ctrl+S) nebo zkopíruj
+odpovědi tlačítkem, a pošli.</p>`;
+
 /** Úvod stránky: co je potřeba pro dokončení, k 17. 9. 2026. */
 export const OWNER_DECISIONS_INTRO = `<p><b>Co je potřeba pro úspěšné dokončení</b> - stav k 17. 9. 2026, po třetím čtení draftu
 (110 ze 118 sedí) a dnešním nálezu, že produkční packy byly dva měsíce snímek starých dat.</p>

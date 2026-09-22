@@ -159,6 +159,34 @@ It went stale for two months once (diary 257); `npm run mtt:preflop-drift` (in `
 production general records differ from the legacy pack. After any legacy range change: restage, then
 step 4 onwards.
 
+## RYE ICM grids - the $EV preview layer (owner's decisions 3a, 4a, 5b of 22. 9. 2026)
+
+ICM grids carry a **scenario**: the stack distribution the range was solved for. Two grids of the
+same cell and the same opener differ by nothing else (diary 256), so the scenario is part of the
+key, not a note. They do **not** belong in a chipEV pack - a different EV model with no way to tell.
+
+1. Same draft and answers as above; ICM grids are the ones whose `stackSetupId` starts with `ICM`,
+   and the importer reads the scenario tables from the corpus navigation (`readIcmScenarios`).
+2. `npm run mtt:rye-icm-candidate -- --write --module=src/data/ranges/mttIcmPreviewRangePack.generated.ts`
+   builds the candidate in `artifacts/rye-import/icm-candidate/<packId>/normalized.json` and renders
+   the preview module. Same sieve as the refined records (approved over today's grid, dealt seat and
+   depth, actions the drill offers, one grid per cell) plus: both seats must exist six-handed, and
+   the scenario must name at least two seats the table can draw.
+3. Register the module in `mttPreflopRangePacks.ts`. Nothing else is needed: the profile picks it up
+   through `mttPreflopRangePackForProfile` and `isPlayableMttPreflopPreview` already allows
+   SIX_MAX / $EV / REGULAR.
+
+**This path never reaches production, by construction.** `build:range-module` requires
+`productionReady` (every seat x depth x context) and a matching import slot; a layer that answers
+only where it knows will never have either. `renderPreviewMttPreflopRangePackModule` renders the same
+module without a permission fingerprint and refuses anything not labelled `LOW` or failing validation.
+Where a pack may be played is still decided by `startableMttPreflopRangePack` against measured
+readiness, so a preview module cannot become production by existing.
+
+State on 22. 9. 2026: 31 of 40 approved ICM grids ship in 6 scenarios; 451 dealt spots in a seeded
+run, all 31 records asked for, 0 priced (decision 5b). The 9 that did not ship all teach a jam over a
+3-bet, which the drill does not offer facing a 3-bet - an owner question, not a gate to loosen.
+
 ## Required Permission Manifest Fields
 
 - `packId`

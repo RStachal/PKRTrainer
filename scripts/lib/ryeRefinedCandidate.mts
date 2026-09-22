@@ -91,7 +91,7 @@ function tableStateFor(record: DraftRecord): TableState {
  * `adviceMatchesButtons` to hlídá nad rozdávaným poolem; tady se to
  * hlídá dřív, než se mřížka do poolu dostane.
  */
-function actionsNotOffered(record: DraftRecord): string[] {
+export function actionsNotOffered(record: DraftRecord): string[] {
   const state = tableStateFor(record);
   const bucket = record.bucket as StackBucket;
   const problems: string[] = [];
@@ -107,7 +107,7 @@ function actionsNotOffered(record: DraftRecord): string[] {
 }
 
 /** Ruce bez záznamu jsou fold - a pack chce každou ze 169 tříd výslovně. */
-function fillFolds(map: Record<string, string[]>): Partial<Record<HandLabel, readonly ActionKey[]>> {
+export function fillFolds(map: Record<string, string[]>): Partial<Record<HandLabel, readonly ActionKey[]>> {
   const out: Partial<Record<HandLabel, readonly ActionKey[]>> = {};
   for (const hand of ALL_HAND_CLASSES) {
     const actions = map[hand];

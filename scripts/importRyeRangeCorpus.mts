@@ -1,6 +1,7 @@
 import { mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { readRyeGrid, type RyeGrid } from "./lib/ryeRangeCorpus.mts";
+import { readIcmScenarios, type IcmScenario } from "./lib/ryeIcmScenarios.mts";
 import {
   REFUSED_VOCABULARIES,
   bucketForSource,
@@ -59,6 +60,12 @@ interface DraftRecord {
   context: string;
   vsSeat: string;
   stackSetupId: string;
+  /**
+   * Stacky u stolu podle scénáře ICM (sedačka → bb), jen u ICM stránek.
+   * Zdroj je nese v navigaci (`ryeIcmScenarios`); do packu jdou jako katalog
+   * scénářů, ať stůl umí nakreslit, pod čím range platí.
+   */
+  stackSetup?: Record<string, number>;
   sourceStackBB: number;
   /** ruka → akce s nejvyšší vahou; při shodě jich je víc. */
   strict: Record<string, string[]>;
@@ -116,6 +123,8 @@ const dropped = {
   depthOffBucket: 0,
   noOpponent: 0,
   noMappedHands: 0,
+  scenarioUnknown: 0,
+  scenarioMismatch: 0,
   unmappableAction: 0,
 };
 
@@ -124,6 +133,13 @@ const unmappableExamples: string[] = [];
 
 const records: DraftRecord[] = [];
 
+// Scénáře ICM z navigace: rozcestník `ICM5` → stůl. Stránky bez čísla
+// (`ICM-btn35bb-co60bb`) patří rozcestníku `ICM1`, ověřeno podle stacků
+// sedaček v jejich jméně (kontrola níž).
+const icm = readIcmScenarios(source);
+const scenarioOfPrefix = (prefix: string): IcmScenario | undefined => (
+  icm.byMenu.get(prefix) ?? (prefix === "ICM" ? icm.byMenu.get("ICM1") : undefined)
+);
 for (const file of htmlFiles(source).sort()) {
   const grid: RyeGrid | undefined = readRyeGrid(file);
   if (grid === undefined) { dropped.notAGrid += 1; continue; }
@@ -153,6 +169,22 @@ for (const file of htmlFiles(source).sort()) {
   if (facingContexts.has(context) && opponent === undefined) {
     dropped.noOpponent += 1;
     continue;
+  }
+  // Scénář ICM: stůl, pod kterým stránka platí. Bez něj by dvě ICM stránky
+  // téže buňky byly nerozlišitelné (bod 256, 6 sražených buněk). Stacky
+  // hrdiny a soupeře ve jméně musí sedět na stůl z navigace - jinak stránka
+  // patří jinému stolu, než jaký by se nakreslil, a nevydá se.
+  const prefix = /^[A-Za-z0-9]+/.exec(name)?.[0]?.toUpperCase() ?? "?";
+  let scenario: IcmScenario | undefined;
+  if (/^ICM/i.test(prefix)) {
+    scenario = scenarioOfPrefix(prefix);
+    if (scenario === undefined) { dropped.scenarioUnknown += 1; continue; }
+    const seatsInName: { seat: string; stackBB: number }[] = [situation, ...(opponent === undefined ? [] : [opponent])];
+    if (seatsInName.some((seat) => scenario!.stacksBB[seat.seat] !== seat.stackBB)) {
+      dropped.scenarioMismatch += 1;
+      unmappableExamples.push(`${name}: stacky ve jméně nesedí na stůl ${scenario.label}`);
+      continue;
+    }
   }
 
   // Barva → akce produktu, jednou na stránku.
@@ -273,7 +305,8 @@ for (const file of htmlFiles(source).sort()) {
     vsSeat: opponent?.seat ?? "",
     // Sada odlišuje rozložení stacků u stolu; bez ní si dvě ICM stránky
     // odporují. Bere se z předpony jména, protože tak je zdroj člení.
-    stackSetupId: /^[A-Za-z0-9]+/.exec(name)?.[0]?.toUpperCase() ?? "?",
+    stackSetupId: scenario?.id ?? prefix,
+    ...(scenario === undefined ? {} : { stackSetup: { ...scenario.stacksBB } }),
     sourceStackBB: situation.stackBB,
     strict,
     lenient,

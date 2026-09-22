@@ -39,10 +39,35 @@ describe("MTT postflop training runtime", () => {
       grants: grantsForTier("PRO_PLUS", { startsAt: "2026-07-08T00:00:00.000Z" }),
       now: "2026-07-08T12:00:00.000Z",
     });
-    const sbRule = findMttPostflopPilotRuntimeEntry("SB_vs_BB_SRP_OOP_FLOP_CBET")
+    const utgRule = findMttPostflopPilotRuntimeEntry("UTG_vs_BB_SRP_FLOP_CBET")
       ?.packEntry.pack.rules[0];
-    expect(sbRule).toBeDefined();
+    expect(utgRule).toBeDefined();
     const recommendation = runtime.resolver?.({
+      street: "FLOP",
+      textures: utgRule!.boardTextures,
+      potType: utgRule!.potType,
+      potBB: 6,
+      effectiveStackBB: ((utgRule!.sprMin + utgRule!.sprMax) / 2) * 6,
+      positionPattern: "SRP_UTG_VS_BB",
+      actionNode: utgRule!.actionNode,
+    });
+
+    expect(runtime.mode).toBe("SCOPED_PILOT");
+    expect(runtime.allowFallback).toBe(false);
+    expect(runtime.pilotScopes).toContain("SB_vs_BB_SRP_OOP_FLOP_CBET");
+    expect(runtime.activeEntitlements).toContain("mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot");
+    // Přijatý pilot odpovídá strategií.
+    expect(recommendation?.source?.kind).toBe("STRATEGY_PACK");
+
+    // Pilot, jehož obsah čtenář odmítl, mlčí: nárok na něj hráč má dál (scope
+    // i entitlement výš), ale pack nese LOW a resolver na LOW neodpovídá -
+    // rozhodnutí vlastníka 9a (22. 9. 2026). Heuristiku placený tier nedostane,
+    // spot se v té buňce nerozdá vůbec.
+    const sbEntry = findMttPostflopPilotRuntimeEntry("SB_vs_BB_SRP_OOP_FLOP_CBET");
+    const sbRule = sbEntry?.packEntry.pack.rules[0];
+    expect(sbRule).toBeDefined();
+    expect(sbEntry?.packEntry.pack.confidence).toBe("LOW");
+    const silent = runtime.resolver?.({
       street: "FLOP",
       textures: sbRule!.boardTextures,
       potType: sbRule!.potType,
@@ -51,12 +76,7 @@ describe("MTT postflop training runtime", () => {
       positionPattern: "SB_VS_BB",
       actionNode: sbRule!.actionNode,
     });
-
-    expect(runtime.mode).toBe("SCOPED_PILOT");
-    expect(runtime.allowFallback).toBe(false);
-    expect(runtime.pilotScopes).toContain("SB_vs_BB_SRP_OOP_FLOP_CBET");
-    expect(runtime.activeEntitlements).toContain("mtt.postflop.flop.srp_sb_bb_oop.cbet.pilot");
-    expect(recommendation?.source?.kind).toBe("STRATEGY_PACK");
+    expect(silent ?? null).toBeNull();
   });
 
   it("zamkne pilot lab pro FREE tier misto ticheho padu na heuristiku", () => {
@@ -88,10 +108,12 @@ describe("MTT postflop training runtime", () => {
     expect(entries.length).toBeGreaterThan(0);
 
     let answered = 0;
+    let silentPilots = 0;
     for (const entry of entries) {
       const positionPattern = PILOT_SCOPE_POSITION_PATTERNS[entry.packEntry.scope];
       expect(positionPattern, `no position pattern mapped for ${entry.packEntry.scope}`)
         .toBeDefined();
+      let answeredHere = 0;
       for (const rule of entry.packEntry.pack.rules) {
         const potBB = 6;
         const recommendation = runtime.resolver?.({
@@ -104,16 +126,25 @@ describe("MTT postflop training runtime", () => {
           actionNode: rule.actionNode,
         });
         if (recommendation?.source === undefined) continue;
-        answered += 1;
+        answeredHere += 1;
         expect(recommendation.source.kind).toBe("STRATEGY_PACK");
         if (recommendation.source.kind === "STRATEGY_PACK") {
           expect(recommendation.source.provenance).toBe("SOLVER_BACKED");
         }
       }
+      // Mlčet smí právě pilot odmítnutý čtenářem (LOW). Každý dodávaný musí
+      // odpovědět aspoň jednou, jinak by sweep prošel prázdný.
+      if (entry.packEntry.pack.confidence === "LOW") {
+        expect(answeredHere, entry.packEntry.scope).toBe(0);
+        silentPilots += 1;
+      } else {
+        expect(answeredHere, entry.packEntry.scope).toBeGreaterThan(0);
+        answered += answeredHere;
+      }
     }
 
-    // A guard on the guard: if the sweep ever stopped matching rules it would
-    // pass vacuously, so require every pilot to have answered at least once.
-    expect(answered).toBeGreaterThanOrEqual(entries.length);
+    expect(answered).toBeGreaterThan(0);
+    expect(silentPilots + entries.filter((entry) => entry.packEntry.pack.confidence !== "LOW").length)
+      .toBe(entries.length);
   });
 });

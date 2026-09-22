@@ -39,7 +39,7 @@ import {
   type RangeRefinement,
 } from "./ranges";
 import type { RangeRecord } from "./ranges/schema";
-import type { RangePack } from "./ranges/rangePack";
+import type { RangePack, RangeStackSetup } from "./ranges/rangePack";
 import { validateRangePack } from "./ranges/rangePack";
 
 // ---------------------------------------------------------------------------
@@ -67,6 +67,12 @@ export interface RangeKey {
    * se tím nehnou.
    */
   vsSeat?: Position;
+  /**
+   * Scénář - rozložení stacků u stolu (ICM). Zkusí se záznam pro sedačku
+   * i scénář, pak pro sedačku, pak obecný; klíč bez scénáře se chová jako
+   * dřív. Katalog scénářů nese pack (`RangeStore.stackSetups`).
+   */
+  stackSetupId?: string;
 }
 
 /**
@@ -91,6 +97,8 @@ export interface RangeEntry {
    * Question_ID (viz `questionId`).
    */
   vsSeat?: Position;
+  /** Scénář, pro který záznam platí; chybí u záznamů bez scénáře. Viz `vsSeat`. */
+  stackSetupId?: string;
 }
 
 /** Lookup API nad referenčními ranges (čtení; žádné I/O). */
@@ -106,6 +114,11 @@ export interface RangeStore {
   lookup(key: RangeKey): RangeEntry | undefined;
   /** True, pokud jsou data konzistentně načtena jako celek (Req 4.6). */
   isLoaded(): boolean;
+  /**
+   * Katalog scénářů packu (id → stacky u stolu), prázdný u úložišť bez
+   * scénářů. Drill z něj losuje scénář buňky a stůl z něj kreslí stacky.
+   */
+  stackSetups?: Readonly<Record<string, RangeStackSetup>>;
 }
 
 // ---------------------------------------------------------------------------
@@ -125,6 +138,7 @@ function toRangeEntry(record: RangeRecord): RangeEntry {
     strict: record.strict,
     ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
     ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
+    ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
   };
 }
 
@@ -170,7 +184,9 @@ export function createRangeStore(deps: RangeStoreDeps = DEFAULT_DEPS): RangeStor
         key.position,
         key.bucket,
         key.context,
-        key.vsSeat === undefined ? undefined : { vsSeat: key.vsSeat },
+        key.vsSeat === undefined && key.stackSetupId === undefined
+          ? undefined
+          : { ...(key.vsSeat === undefined ? {} : { vsSeat: key.vsSeat }), ...(key.stackSetupId === undefined ? {} : { stackSetupId: key.stackSetupId }) },
       );
       return record === undefined ? undefined : toRangeEntry(record);
     },
@@ -190,7 +206,7 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
   const errors = validateRangePack(pack);
 
   for (const record of pack.records) {
-    const key = packRecordKey(record.position, record.bucket, record.context, record.vsSeat);
+    const key = packRecordKey(record.position, record.bucket, record.context, record.vsSeat, record.stackSetupId);
     if (records.has(key)) {
       errors.push(`Duplicate RangePack runtime key: ${key}.`);
       continue;
@@ -202,6 +218,7 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
       lenient: record.lenient,
       strict: record.strict,
       ...(record.vsSeat ? { vsSeat: record.vsSeat } : {}),
+      ...(record.stackSetupId ? { stackSetupId: record.stackSetupId } : {}),
       ...(record.actionEvs ? { actionEvs: record.actionEvs } : {}),
     });
   }
@@ -210,16 +227,26 @@ export function createRangeStoreFromRangePack(pack: RangePack): RangeStore {
   return {
     lookup(key: RangeKey): RangeEntry | undefined {
       if (!loaded || key.ante !== pack.dimensions.ante) return undefined;
-      // Od nejpřesnějšího k obecnému, stejně jako `getRangeRecord`.
-      const record = (key.vsSeat === undefined
-        ? undefined
-        : records.get(packRecordKey(key.position, key.bucket, key.context, key.vsSeat)))
-        ?? records.get(packRecordKey(key.position, key.bucket, key.context));
-      return record === undefined ? undefined : toRangeEntry(record);
+      // Od nejpřesnějšího k obecnému, stejně jako `getRangeRecord`: scénář a
+      // sedačka, pak scénář sám, pak sedačka, pak obecný záznam. Scénář stojí
+      // výš než sedačka: pod jiným rozložením stacků platí jiná range i proti
+      // témuž otvírači, a pack se scénáři obecné záznamy nemá.
+      const { position, bucket, context, vsSeat, stackSetupId } = key;
+      const candidates: string[] = [];
+      if (vsSeat !== undefined && stackSetupId !== undefined) candidates.push(packRecordKey(position, bucket, context, vsSeat, stackSetupId));
+      if (stackSetupId !== undefined) candidates.push(packRecordKey(position, bucket, context, undefined, stackSetupId));
+      if (vsSeat !== undefined) candidates.push(packRecordKey(position, bucket, context, vsSeat));
+      candidates.push(packRecordKey(position, bucket, context));
+      for (const candidate of candidates) {
+        const record = records.get(candidate);
+        if (record !== undefined) return toRangeEntry(record);
+      }
+      return undefined;
     },
     isLoaded(): boolean {
       return loaded;
     },
+    stackSetups: pack.stackSetups ?? {},
   };
 }
 
@@ -228,9 +255,10 @@ function packRecordKey(
   bucket: StackBucket,
   context: ActionContext,
   vsSeat?: Position,
+  stackSetupId?: string,
 ): string {
   // Zpřesnění se připojuje jen když je - klíč obecného záznamu zůstává týž.
-  return `${position}|${bucket}|${context}${vsSeat === undefined ? "" : `|vs${vsSeat}`}`;
+  return `${position}|${bucket}|${context}${vsSeat === undefined ? "" : `|vs${vsSeat}`}${stackSetupId === undefined ? "" : `|#${stackSetupId}`}`;
 }
 
 // ---------------------------------------------------------------------------

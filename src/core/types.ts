@@ -215,6 +215,14 @@ export interface TableState {
    * kandidát draftu si ho doplňuje z mřížky).
    */
   jamTaught?: boolean;
+  /**
+   * Scénář - rozložení stacků u stolu, pod kterým range spotu platí (ICM).
+   * Losuje se jen mezi scénáři, pro které má knihovna záznam v té buňce
+   * (`scenarioCandidates`), stejně jako `vsSeat`; chybí u packů bez
+   * katalogu scénářů, a spot se pak chová jako dřív. Od 22. 9. 2026
+   * (rozhodnutí 3a, 4a).
+   */
+  stackSetupId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -240,6 +248,11 @@ export interface Spot {
   hand: HandLabel;
   heroCards: [Card, Card]; // konkrétní karty pro vykreslení
   tableState: TableState; // pro render + odvození nabídky akcí
+  /**
+   * Stacky sedaček podle scénáře (sedačka → bb), když spot scénář nese. Stůl
+   * je kreslí místo jednotné efektivní hloubky; bez scénáře chybí.
+   */
+  seatStacks?: Partial<Record<Position, number>>;
   answers: Answer[]; // nabízené možnosti (1 ActionKey každá)
   correctKeys: ActionKey[]; // LENIENT (Req 7.3)
   strictCorrect: ActionKey[]; // STRICT (Req 7.2)

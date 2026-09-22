@@ -30,7 +30,22 @@ function paidRuntime() {
   });
 }
 
+// Přijatý pilot (UTG vs BB). Do 22. 9. 2026 tu stál BTN vs BB; toho čtenář
+// 14. 9. odmítl, modul proto nese LOW (rozhodnutí vlastníka 9a) a resolver na
+// něj neodpovídá. Řetěz placeného pilota se tedy zkouší na tom, který se
+// doopravdy dodává - a že odmítnutý spot místo degradace **odmítne**, hlídá
+// vlastní test níž.
 const POSITION = {
+  heroPosition: "UTG",
+  villainPosition: "BB",
+  aggressorPosition: "UTG",
+  callerPosition: "BB",
+  inPosition: false,
+  callerType: "BIG_BLIND",
+  positionPattern: "SRP_UTG_VS_BB",
+} as const;
+
+const REJECTED_POSITION = {
   heroPosition: "BTN",
   villainPosition: "BB",
   aggressorPosition: "BTN",
@@ -103,6 +118,23 @@ describe("paid flop pilot, end to end", () => {
         expect(source.heroRangeBucket, `seed ${seed}`).toBeDefined();
       }
     }
+  });
+
+  it("odmítne spot v pilotu, kterého čtenář odmítl, místo tiché heuristiky", () => {
+    // Placený tier má na ten pilot nárok dál, ale jeho obsah čtení neprošel.
+    // Správná odpověď je „tady nic nemám", ne heuristika pod hlavičkou pilota:
+    // řetěz s `allowFallback: false` proto padne, a to je ten fail-close.
+    const runtime = paidRuntime();
+    expect(() => generatePostflopSpot({
+      seed: 1,
+      street: "FLOP",
+      potType: "SINGLE_RAISED",
+      potBB: 6,
+      effectiveStackBB: 40,
+      positionContext: REJECTED_POSITION,
+      strategyResolver: (input) => runtime.resolver?.(input) ?? null,
+      allowFallback: runtime.allowFallback,
+    })).toThrow(/No production postflop strategy matched/);
   });
 
   it("refuses the same profile without an active entitlement", () => {
