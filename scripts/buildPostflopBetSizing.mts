@@ -121,7 +121,17 @@ function hasCheckpoint(family: string): boolean {
     family,
     "raw",
   );
-  return existsSync(raw) && readdirSync(raw).some((name) => name.endsWith(".json"));
+  if (existsSync(raw) && readdirSync(raw).some((name) => name.endsWith(".json"))) return true;
+  // Rodina, která se přesolvuje (`mtt:resolve-stage`, rozhodnutí 10a): její
+  // checkpointy leží stranou v záloze a packy dál dodává. Velikosti sázek plynou
+  // z parametrů, které jsou pro starý i nový solve stejné, takže tabulka o ni
+  // nemá na dva dny přijít - hráč by na tlačítku četl pevná procenta místo solvu.
+  const backups = "artifacts/resolve-backup";
+  if (!existsSync(backups)) return false;
+  return readdirSync(backups).some((day) => {
+    const moved = join(backups, day, "checkpoints", family);
+    return existsSync(moved) && readdirSync(moved).some((name) => name.endsWith(".json"));
+  });
 }
 
 export function collectBetSizing(paramRoot = PARAM_ROOT): Map<string, FamilyBetSizing> {

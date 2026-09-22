@@ -1,0 +1,9 @@
+# Noční expanze (monolitické solvy), spouštěná Plánovačem úloh (PKRTrainer-Night-Expansion, 21:01).
+# Skryté okno ze stejného důvodu jako after-night.ps1. Argumenty přesně jako v úloze do 22. 9. 2026.
+$repo = "C:\Users\stachal\PKRTrainer\PKRTrainer"
+$python = "C:\Users\stachal\AppData\Local\Microsoft\WindowsApps\python3.exe"
+$script = Join-Path $repo "Agents\solver-input\decomposition\run_night_expansion.py"
+$log = Join-Path $repo "artifacts\decomposition\expansion.log"
+$command = "/c set PYTHONIOENCODING=utf-8 && `"$python`" `"$script`" --until=07:00 --workers=8 --river-workers=16 --river-threads=1 >> `"$log`" 2>&1"
+$process = Start-Process -FilePath "cmd.exe" -ArgumentList $command -WindowStyle Hidden -Wait -PassThru
+exit $process.ExitCode
