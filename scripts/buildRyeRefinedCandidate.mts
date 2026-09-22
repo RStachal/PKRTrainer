@@ -37,8 +37,9 @@ import {
  *
  * ## Co se přiznává
  *
- * Zdroj neuvádí ante ani rychlost blindů; přebírá se předpoklad draftu
- * (REGULAR, OFF) a pack to říká v `assumptions`. Mix ve zdroji (ruka hraná
+ * Zdroj počítá s BB ante (vlastník 22. 9. 2026, rozhodnutí 7a), takže vrstva
+ * jde jen do profilů s ante ON; ante OFF zůstává u vlastního exportu. Rychlost
+ * blindů zdroj neuvádí, turbo ji přebírá rozhodnutím o reuse (17. 9. 2026). Mix ve zdroji (ruka hraná
  * zčásti) jde do packu jako nejčastější akce ve strict a všechny barvené
  * akce v lenient; podíl foldu pack nemá kam dát. Každý záznam nese, odkud je.
  */
@@ -98,7 +99,17 @@ if (dims.tableFormat !== "FULL_RING_9" || dims.evModel !== "CHIP_EV") {
   console.error(`Základ ${base.id} má rozměry ${JSON.stringify(dims)}; draft je FULL_RING_9 / CHIP_EV.`);
   process.exit(2);
 }
-const reused = dims.blindSpeed !== "REGULAR" || dims.ante !== "OFF";
+// Ante: RYE charty počítají s BB ante - údaj vlastníka 22. 9. 2026
+// (rozhodnutí 7a). Vrstva RYE tedy patří jen do profilů s ante ON; ante OFF
+// zůstává u vlastního exportu, který byl proti ante ON držený užší. Do 22. 9.
+// šla táž vrstva do všech čtyř profilů (reuse ze 17. 9.), a ante OFF tím učil
+// range počítané s větším potem.
+if (dims.ante !== "ON") {
+  console.error(`Základ ${base.id} má ante ${dims.ante}; vrstva RYE jde jen do profilů s ante ON (rozhodnutí vlastníka 22. 9. 2026, 7a).`);
+  console.error("Ante OFF se staví jen z legacy dat: mtt:p1-preflop-drafts, mtt:p1-stage-reviewed-preflop, build:range-module.");
+  process.exit(2);
+}
+const reused = dims.blindSpeed !== "REGULAR";
 
 const selection = selectRefinedRecords(draft.records, history);
 const today = new Date().toISOString().slice(0, 10);
@@ -170,9 +181,9 @@ const candidate: MttPreflopRangePackImportInput = {
     ...base.assumptions,
     `Zpřesněné záznamy (vsSeat): ${selection.accepted.length} mřížek z ${RYE_PROVENANCE}, `
       + `schválených vlastníkem ${approvalDates(selection.accepted)} (Agents/range-intake/answers-*.json); každý záznam nese provenance.`,
-    "Zdroj zpřesněných záznamů neuvádí ante ani rychlost blindů; přebírá se předpoklad draftu (REGULAR, OFF)."
+    "Zdroj zpřesněných záznamů počítá s BB ante (údaj vlastníka 22. 9. 2026), proto jde vrstva RYE jen do profilů s ante ON; rychlost blindů zdroj neuvádí."
       + (reused
-        ? ` Do profilu ${dims.blindSpeed} / ante ${dims.ante} se přebírají rozhodnutím vlastníka ze 17. 9. 2026 (reuse), ne podle zdroje.`
+        ? ` Do profilu ${dims.blindSpeed} se přebírá rozhodnutím vlastníka ze 17. 9. 2026 (reuse), ne podle zdroje.`
         : ""),
     "Mix ve zdroji (ruka hraná zčásti) se přenáší jako nejčastější akce ve strict a všechny barvené akce v lenient; podíl foldu se nepřenáší.",
     `Obrana BB proti otevření SB je VS_OPEN z SB (zpřesněný záznam), ne kontext BVB: ${convertedBvb.length} hloubek z vlastního exportu (původně BVB|BB), zbytek z RYE (rozhodnutí vlastníka 17. 9. 2026, bod 254).`,
