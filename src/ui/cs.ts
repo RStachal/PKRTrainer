@@ -157,6 +157,9 @@ const CZ_CATALOG = {
     generate: "Vygenerovat spot",
     unavailable:
       "Pro tuto situaci není dostupná produkční strategie. Vyberte jiný profil nebo akci zopakujte po instalaci produkčních dat.",
+    unavailableResolvingPilot:
+      "Tenhle pilot se přesolvuje: jeho strategii čtenář odmítl, takže se do nového solvu a čtení nerozdává. "
+      + "Heuristiku místo ní schválně nedostanete. Vyberte jinou situaci, nebo se vraťte, až bude přesolvený.",
     question: "Otázka",
     newSpot: "Nový spot",
     changeSituation: "Změnit situaci",
@@ -471,6 +474,9 @@ const EN_CATALOG: UiCatalog = {
     generate: "Generate spot",
     unavailable:
       "No production strategy is available for this situation. Select another profile or retry after production data is installed.",
+    unavailableResolvingPilot:
+      "This pilot is being re-solved: its strategy was rejected on review, so it is not dealt until it is solved and read again. "
+      + "You are deliberately not given a heuristic instead. Pick another situation, or come back once it is re-solved.",
     question: "Question",
     newSpot: "New spot",
     changeSituation: "Change situation",

@@ -1,0 +1,25 @@
+{
+  "packId": "mtt-six-max-regular-preflop-dolar-ev-ante-on-icm-preview-v1",
+  "version": "permission-user-confirmed-v1",
+  "reviewedAt": "2026-09-22",
+  "reviewer": "PKRTrainer owner (user-confirmed)",
+  "rightsOwner": "PKRTrainer owner (user-confirmed purchased RYE Rangeviewer charts)",
+  "licenseKind": "OWNED_SOLVER_EXPORT",
+  "allowedRedistributionScope": "PKRTRAINER_RUNTIME_BUNDLE",
+  "sourceMaterialLocation": "artifacts/rye-import/icm-candidate/mtt-six-max-regular-preflop-dolar-ev-ante-on-icm-preview-v1/normalized.json",
+  "evidence": [],
+  "notes": [
+    "User confirmed 2026-09-22 (decision 3a and 4a): the approved ICM grids ship in the six-max $EV profile as a preview layer.",
+    "User confirmed 2026-09-22 (second decision set, answer 2a): the RYE permission acknowledged on 2026-09-17 for the nine-handed profiles covers this profile too - same source, same transfer (action lists per hand class), different profile.",
+    "Preview only: the pack is deliberately incomplete (it answers only the cells the source states) and carries LOW confidence, so the production gate refuses it by construction.",
+    "No price is shown under a scenario (decision 5b): the source states stack distributions, not payouts or player counts."
+  ],
+  "additionalSources": [
+    {
+      "source": "RYE Rangeviewer 2021 (koupené charty vlastníka)",
+      "reviewedAt": "2026-09-22",
+      "reviewer": "PKRTrainer owner (user-confirmed)",
+      "rationale": "Vlastník 16. 9. 2026 zdroj uznal (RYE je reference), 17. 9. 2026 povolil jeho hodnoty v balíku produktu u devítistolových profilů a 22. 9. 2026 potvrdil, že totéž povolení platí i pro šestistolový $EV profil (odpověď 2a). Přenášejí se seznamy akcí po třídách rukou (strict/lenient), ne obrázky ani soubory zdroje; každý záznam nese provenance a scénář, pro který platí."
+    }
+  ]
+}

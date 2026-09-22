@@ -297,6 +297,16 @@ for (const file of htmlFiles(source).sort()) {
     .filter((mapped) => mapped.lost !== "")
     .map((mapped) => `${mapped.action}: ${mapped.lost}`);
 
+  // Squeeze stránky zdroje platí „od 40 bb výš" (`SQU-40BBMais-…`), ale záznam
+  // umí nést jednu hloubku. Bere se spodní hranice a čtenář se o rozsahu
+  // dozví - jinak by posuzoval range jako by platila jen na 40 bb, a hlubší
+  // koše by zůstaly prázdné, aniž by kdokoli věděl proč.
+  const squeezeFloor = /^SQU-(\d+)BBMais-(?!\d+BB-)/i.exec(name);
+  if (squeezeFloor !== null) {
+    notes.push(`Zdroj uvádí ${squeezeFloor[1]} bb a víc; záznam je na nejnižší hloubce rozsahu`
+      + " (hlubší koše z téhle stránky zatím nevznikají).");
+  }
+
   records.push({
     position: situation.seat,
     bucket,

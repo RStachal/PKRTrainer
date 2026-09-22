@@ -109,9 +109,21 @@ export function offeredActions(state: TableState): ActionKind[] {
       return actions;
     }
 
-    case "3BET":
+    case "3BET": {
       // Req 3.7 — vs-3bet: Fold / Call / 4bet.
-      return ["FOLD", "CALL", "4BET"];
+      const actions: ActionKind[] = ["FOLD", "CALL", "4BET"];
+      // A shove, where the range this spot teaches draws one (decision 1a,
+      // 2026-09-22). Same construction as facing an open: the button appears
+      // only where the grid itself shows a jam, never as a depth rule of our
+      // own. It matters most in the ICM spots the owner approved, where the
+      // 3-bettor is often shorter than the hero - UTG with 50BB against a
+      // small blind holding 9BB is playing for 9, and "4bet" there is a shove
+      // in everything but name. Measured before the change: of 822 VS_3BET
+      // records in the registry, zero drew a jam, so nothing that ships today
+      // gains a button; the nine ICM grids that teach one stop being refused.
+      if (state.jamTaught === true) actions.push("JAM");
+      return actions;
+    }
 
     case "4BET":
       // Req 3.8 — vs-4bet: Fold / Call / Jam.

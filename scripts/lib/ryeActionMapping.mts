@@ -124,11 +124,19 @@ const ACTIONS_BY_CONTEXT: ReadonlyMap<MappedContext, ReadonlyMap<string, MappedA
     // Squeeze: před hrdinou je otevření **a** dorovnání. Velikost v názvu
     // (`to 11bb`) je sizing zdroje; produkt u squeeze jednu akci nerozlišuje
     // podle velikosti, takže se zapíše do poznámky.
+    // Squeeze má v korpusu čtyři pravopisy téhož: `squeeze/call`, `Squeeze call`,
+    // `Squeeze / Fold`, `SQUEEZE/FOLD`. Mezery kolem lomítka srovnává
+    // `normalizeSeparators`, zbytek je tady - a schválně vyjmenovaný, ne přes
+    // vzor: barva, kterou slovník nezná, musí stránku shodit, ne spadnout do
+    // foldu (bod 225).
     ["SQUEEZE", new Map<string, MappedAction>([
       ["call", { action: "CALL", lost: "" }],
       ["all in", { action: "JAM", lost: "" }],
       ["squeeze/call", { action: "SQUEEZE", lost: "zdroj říká, že proti 4betu se dorovnává" }],
       ["squeeze/fold", { action: "SQUEEZE", lost: "zdroj říká, že proti 4betu se skládá" }],
+      ["squeeze/call range", { action: "SQUEEZE", lost: "zdroj říká, že proti 4betu se dorovnává" }],
+      ["squeeze for value but fold", { action: "SQUEEZE", lost: "zdroj říká, že proti 4betu se skládá" }],
+      ["bluff squeezes", { action: "SQUEEZE", lost: "zdroj to vede jako bluffovou část range" }],
     ])],
     ["VS_3BET", new Map<string, MappedAction>([
       ["fold vs 3bet", { action: "FOLD", lost: "" }],
@@ -154,6 +162,19 @@ const ACTIONS_BY_CONTEXT: ReadonlyMap<MappedContext, ReadonlyMap<string, MappedA
  * velikostí. Velikost se zapíše do poznámky, ne do klíče: kdyby se z ní stal
  * další rozměr, mřížka by narostla o něco, co produkt hráči stejně neukáže.
  */
+/**
+ * Mezery kolem lomítka a zdvojené mezery.
+ *
+ * `Squeeze / Fold` a `squeeze/fold` je táž barva; korpus je píše obojím
+ * způsobem a `Squeeze call` dokonce bez lomítka. Sjednotit to ve slovníku by
+ * znamenalo psát každou barvu čtyřikrát, a na čtvrtý pravopis by se stejně
+ * zapomnělo. Spojka `and` se schválně nepřekládá - `Call and 3bet` je jiná
+ * věta než `Call / 3bet` a hádat, která platí, není překlad.
+ */
+function normalizeSeparators(name: string): string {
+  return name.replace(/\s*\/\s*/g, "/").replace(/\s+/g, " ").trim();
+}
+
 function normalizeSizedAction(name: string): { base: string; lost: string } {
   const sized = /^(.*?)\s+to\s+(\d+)bb$/.exec(name);
   if (sized === null) return { base: name, lost: "" };
@@ -202,7 +223,16 @@ export function mapAction(context: MappedContext, action: string): MappedAction 
   const raw = action.trim().toLowerCase();
   const sized = normalizeSizedAction(raw);
   const bluff = normalizeBluffPrefix(sized.base);
-  const found = table.get(raw) ?? table.get(sized.base) ?? table.get(bluff.base);
+  // Pravopisné varianty se zkoušejí **až po** doslovném klíči, nikdy místo něj.
+  // Sjednotit mezery kolem lomítka rovnou by rozbilo klíče, které mezery mají
+  // (`call / fold vs squeeze`): změřeno 22. 9. 2026 - VS_OPEN spadl z 90 na 34
+  // stránek, protože slovník přestal svoje vlastní klíče poznávat.
+  const spaced = normalizeSeparators(raw);
+  // `squeeze call` bez lomítka je týž pojem jako `squeeze/call`; zkusí se až
+  // nakonec, aby dvouslovné barvy jako `all in` zůstaly samy sebou.
+  const joined = spaced.replace(/^(squeeze) (call|fold)$/, "$1/$2");
+  const found = table.get(raw) ?? table.get(sized.base) ?? table.get(bluff.base)
+    ?? table.get(spaced) ?? table.get(joined);
   if (found === undefined) return undefined;
   const notes = [found.lost, sized.lost, bluff.lost].filter(Boolean).join("; ");
   return { action: found.action, lost: notes };
@@ -247,6 +277,10 @@ function contextFromFileName(name: string): MappedContext | undefined {
   if (/^OP-/i.test(stem)) return "RFI";
   if (/^F3B-/i.test(stem)) return "VS_OPEN";
   if (/^MUL-/i.test(stem)) return "SQUEEZE";
+  // `SQU-` je táž situace jako `MUL-`, jen z jiné nabídky zdroje: před hrdinou
+  // je otevření a aspoň jedno dorovnání. Rozcestník nabídky (`SQU-menu-…`)
+  // mřížka není a spadne dřív, na kontrole legendy.
+  if (/^SQU-/i.test(stem)) return "SQUEEZE";
   if (!/^ICM/i.test(stem)) return undefined;
   if (/-r$/i.test(stem)) return "VS_OPEN";
   if (/-ai$/i.test(stem)) return "VS_ALLIN";
@@ -379,6 +413,27 @@ const SEAT_ALIASES = new Map<string, string>([
  */
 export function situationFromFileName(name: string): RyeSituation | undefined {
   const stem = name.replace(/\.html$/i, "");
+  // Tvar 4: squeeze stránky zdroje, `SQU-40BBMais-BU-vs-HJ-CO`.
+  //
+  // `40BBMais` je „40 bb a víc", tedy **rozsah hloubek, ne bod**. Do 22. 9. 2026
+  // se takové jméno schválně nečetlo a celý kontext SQUEEZE zůstával stranou;
+  // vlastník toho dne rozhodl (odpověď 3c), že se squeeze rodina dodá. Čte se
+  // proto spodní hranice rozsahu - `40` - a že jde o rozsah, nese záznam
+  // v poznámce. Jméno s vlastní hloubkou (`SQU-40BBMais-90BB-CO-vs-…`) vyhraje
+  // tu svou: je konkrétnější než hranice nabídky.
+  const squeeze = /^SQU-(\d+)BBMais-(?:(\d+)BB-)?([A-Za-z0-9+]+)-vs-/i.exec(stem);
+  if (squeeze !== null) {
+    const seat = SEAT_ALIASES.get(squeeze[3].toUpperCase());
+    if (seat === undefined) return undefined;
+    // Soupeři před hrdinou: otvírač a každý dorovnávající, tedy všechno za
+    // „vs“ kromě slov, která sedačku nejmenují (`OPEN`, `Fish`, `Flat`).
+    // Nejmíň dva: squeeze bez otevření a dorovnání není squeeze, a jméno, ze
+    // kterého by vyšel jeden, by popisovalo jinou situaci, než na kterou se
+    // produkt v tomhle kontextu ptá.
+    const after = stem.slice(stem.toLowerCase().indexOf('-vs-') + 4).split('-');
+    const villains = after.filter((part) => SEAT_ALIASES.has(part.toUpperCase())).length;
+    return { seat, stackBB: Number(squeeze[2] ?? squeeze[1]), villains: Math.max(2, villains) };
+  }
   // Tvar 1: sedačka se svou hloubkou, případně dvě takové.
   const paired = [...stem.matchAll(/(utg1|utg2|utg|ep|mp|lj|hj|co|bu|btn|sb|bb)(\d+)bb/gi)];
   if (paired.length >= 1) {

@@ -58,6 +58,22 @@ export function findMttPostflopPilotRuntimeEntry(
     .find((entry) => entry.catalog.scope === scope) ?? null;
 }
 
+/**
+ * Piloty, které mlčí, protože je čtenář odmítl a čekají na přesolvení.
+ *
+ * Rozhodnutí vlastníka 9a (22. 9. 2026) jim dalo `LOW` a resolver na `LOW`
+ * neodpovídá; odpověď 4a z téhož dne pak říká, že se to má napsat hráči.
+ * Bez tohohle seznamu by UI mohlo jen hádat, jestli spot chybí kvůli přesolvu,
+ * nebo proto, že pro tu situaci nikdy obsah nebyl - a to jsou dvě různé věty.
+ */
+export function resolvingMttPostflopPilotScopes(
+  packEntries: readonly GeneratedMttPostflopPilotPackEntry[] = generatedMttPostflopPilotPacks,
+): readonly MttPostflopPilotScope[] {
+  return mttPostflopPilotRuntimeEntries(packEntries)
+    .filter((entry) => entry.packEntry.pack.confidence === "LOW")
+    .map((entry) => entry.catalog.scope);
+}
+
 export function createMttPostflopPilotResolver(
   scope: MttPostflopPilotScope,
   grants: readonly EntitlementGrant[],

@@ -15,7 +15,7 @@ import { renderTable } from "../../src/ui/tableRenderer";
 import { DEFAULT_TRAINING_PROFILE } from "../../src/core/trainingProfile";
 
 /**
- * ICM preview vrstva: 31 schválených mřížek RYE v šestistolovém $EV profilu.
+ * ICM preview vrstva: 40 schválených mřížek RYE v šestistolovém $EV profilu.
  *
  * Rozhodnutí vlastníka 22. 9. 2026 - 3a (scénář v klíči), 4a (vrstva/preview,
  * profil odpovídá jen tam, kde ví), 5b (bez ceny). Co se tu hlídá, je právě to,
@@ -56,6 +56,7 @@ describe("pack ICM preview", () => {
     expect(validateRangePack(pack)).toEqual([]);
     expect(pack.dimensions).toMatchObject({ tableFormat: "SIX_MAX", evModel: "DOLAR_EV", ante: "ON" });
     expect(pack.confidence).toBe("LOW");
+    expect(pack.records).toHaveLength(40);
     expect(Object.keys(pack.stackSetups ?? {}).length).toBeGreaterThanOrEqual(6);
     for (const record of pack.records) {
       expect(SIX_MAX_POSITION_ORDER).toContain(record.position);
@@ -105,6 +106,23 @@ describe("co z vrstvy dojde k hráči", () => {
         expect(offered.has(action), `${spot.id}: ${action} není na tlačítku`).toBe(true);
       }
     }
+  });
+
+  it("shove proti 3betu je na tlačítku právě tam, kde ho mřížka kreslí (1a)", () => {
+    // Do 22. 9. 2026 se devět mřížek nedodávalo, protože jejich doporučení
+    // nešlo zvolit: produkt u čelení 3betu nabízel jen fold, call a 4bet.
+    // Odpověď vlastníka 1a je otevřela - ale jen tam, kde jam kreslí range
+    // spotu, ne jako hloubkové pravidlo produktu.
+    const vs3bet = spots.filter((spot) => spot.context === "VS_3BET");
+    expect(vs3bet.length).toBeGreaterThan(0);
+    let withJam = 0;
+    for (const spot of vs3bet) {
+      const offered = new Set(spot.answers.map((answer) => answer.key));
+      const teaches = spot.tableState.jamTaught === true;
+      expect(offered.has("JAM"), `${spot.id} (jamTaught=${teaches})`).toBe(teaches);
+      if (teaches) withJam += 1;
+    }
+    expect(withJam, "aspoň jedna mřížka VS_3BET kreslí jam").toBeGreaterThan(0);
   });
 
   it("text říká rozložení stacků, i když se koš liší od stacku hrdiny", () => {

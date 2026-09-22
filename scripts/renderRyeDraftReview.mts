@@ -61,6 +61,12 @@ const outPath = process.argv.find((arg) => arg.startsWith("--out="))?.split("=")
  * zpřesnění o sedačku soupeře **bez jediného rozporu** (67 buněk z 68 záznamů).
  *
  * Přednost tedy má ta půlka, která může dojít k hráči.
+ *
+ * `--only=NOVE` je třetí výběr a je o čase čtenáře, ne o obsahu: **jen mřížky
+ * bez odpovědi**, tedy ty, na kterých se dá něco získat. Draft roste s každou
+ * přeloženou rodinou (152 → 161 mřížek 22. 9. 2026) a posílat pokaždé celou
+ * stránku znamená, že čtenář prochází stovku už zodpovězených, aby našel osm
+ * nových. Zodpovězené zůstávají v `ranze-vse.html`, tohle je pracovní seznam.
  */
 const only = process.argv.find((arg) => arg.startsWith("--only="))?.split("=")[1]?.toUpperCase();
 
@@ -175,6 +181,10 @@ function weight(record: DraftRecord): number {
  * export; úložiště zůstávalo poziční a přepnutí na půlku `--only` by odpovědi
  * přiřadilo cizím mřížkám.
  */
+// Odpovědi z dřívějších čtení: potřebuje je výběr (`--only=NOVE`) i popisek
+// u každé mřížky, takže se načtou dřív, než se podle nich filtruje.
+const history = loadAnswerHistory();
+
 const originalIndex = new Map(draft.records.map((record, index) => [record, index]));
 
 /**
@@ -187,6 +197,12 @@ const originalIndex = new Map(draft.records.map((record, index) => [record, inde
  */
 const visible = draft.records.filter((record) => {
   if (only === undefined) return true;
+  if (only === "NOVE") {
+    // Zastaralá odpověď (mřížka se od přečtení překreslila) je taky práce, která
+    // čeká - `answerNote` ji umí odlišit, tak ať je vidět.
+    const answer = history.bySourceFile.get(record.sourceFile);
+    return answer === undefined || isStale(record, answer);
+  }
   const isIcm = /^ICM/i.test(record.stackSetupId);
   return only === "ICM" ? isIcm : !isIcm;
 });
@@ -310,7 +326,6 @@ function verdictBlock(record: DraftRecord, id: number, impact: DraftImpact): str
 </div>`;
 }
 
-const history = loadAnswerHistory();
 
 /**
  * Co se o téhle mřížce dá říct z dřívějšího čtení.

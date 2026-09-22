@@ -13,7 +13,10 @@ describe("range:intake:guard CLI", () => {
     expect(result.stdout).toContain("valid: true");
     expect(result.stdout).toContain("raw folder: Agents/range-intake/raw");
     expect(result.stdout).toContain("tracked raw files:");
-    expect(result.stdout).toContain("local raw folders: 8");
+    // Osm produkčních slotů a od 22. 9. 2026 devátá složka: povolení ICM
+    // preview vrstvy. Preview pack produkční slot nemá a mít nebude, ale
+    // povolení doložit musí (rozhodnutí vlastníka 2a).
+    expect(result.stdout).toContain("local raw folders: 9");
     expect(result.stdout).toContain("legal slots: 60");
     expect(result.stdout).toContain("ready for validation: 0");
     expect(result.stdout).toContain("waiting for files: 60");
@@ -52,10 +55,13 @@ describe("range:intake:guard CLI", () => {
       "Agents/range-intake/raw/.gitignore",
       "Agents/range-intake/raw/README.md",
     ]));
-    expect(parsed.localRawFolders).toHaveLength(8);
-    expect(parsed.localRawFolders.every((folder) => folder.includes("preflop-chip-ev"))).toBe(true);
+    expect(parsed.localRawFolders).toHaveLength(9);
+    // Osm chipEV slotů plus jedna preview složka ($EV ICM vrstva): jiné než
+    // preflopové složky v raw workspace nepatří.
+    expect(parsed.localRawFolders.filter((folder) => folder.includes("preflop-chip-ev"))).toHaveLength(8);
+    expect(parsed.localRawFolders.every((folder) => folder.includes("-preflop-"))).toBe(true);
     expect(parsed.counts.legalSlots).toBe(60);
-    expect(parsed.counts.localFolders).toBe(8);
+    expect(parsed.counts.localFolders).toBe(9);
     expect(parsed.counts.readyForValidation).toBe(0);
     expect(parsed.counts.waitingForFiles).toBe(60);
     expect(parsed.counts.missingNormalized).toBe(60);

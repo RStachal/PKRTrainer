@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 
 import {
-  OWNER_DECISIONS_2026_09_22, OWNER_DECISIONS_2026_09_22_INTRO, renderOwnerDecisionsPage,
+  OWNER_DECISIONS_2026_09_22_EVENING, OWNER_DECISIONS_2026_09_22_EVENING_INTRO, renderOwnerDecisionsPage,
 } from "./lib/ownerDecisions.mts";
 
 /**
@@ -86,6 +86,19 @@ const documents: readonly DeskDocument[] = [
     hashed: true,
     priority: "první - flop",
     renderer: ["scripts/renderFlopPilotReview.mts"],
+  },
+  {
+    // Pracovní seznam: co čeká na první čtení (a co se od přečtení překreslilo).
+    // Draft roste s každou přeloženou rodinou, takže posílat pokaždé celou
+    // stránku znamená hledat osm nových mezi stovkou hotových.
+    file: "ranze-nove.html",
+    title: "Ranže z chartů — jen nepřečtené",
+    decides: "totéž, ale jen u mřížek, na kterých se dá něco získat",
+    command: 'npm run mtt:rye-answers -- --answers="…"',
+    storageKey: "drillev-rye-answers-v2",
+    hashed: false,
+    priority: "první - ranže",
+    renderer: ["scripts/renderRyeDraftReview.mts", "--only=NOVE"],
   },
   {
     file: "ranze-chipev.html",
@@ -348,12 +361,12 @@ for (const document of rendered) {
 }
 // Rozhodnutí, která nejsou mřížka: od 17. 9. 2026 jedna definice otázek
 // (`lib/ownerDecisions.mts`), tatáž stránka jako `npm run mtt:decisions`.
-writeFileSync(`${outDir}/rozhodnuti.html`, renderOwnerDecisionsPage(OWNER_DECISIONS_2026_09_22, {
-  dateLabel: "22. 9. 2026",
-  intro: OWNER_DECISIONS_2026_09_22_INTRO,
-  storageKey: "drillev-decisions-2026-09-22",
+writeFileSync(`${outDir}/rozhodnuti.html`, renderOwnerDecisionsPage(OWNER_DECISIONS_2026_09_22_EVENING, {
+  dateLabel: "22. 9. 2026 (večer)",
+  intro: OWNER_DECISIONS_2026_09_22_EVENING_INTRO,
+  storageKey: "drillev-decisions-2026-09-22-vecer",
 }), "utf8");
-console.log(`  rozhodnuti.html       ${OWNER_DECISIONS_2026_09_22.length} rozhodnutí s doměřenou cenou`);
+console.log(`  rozhodnuti.html       ${OWNER_DECISIONS_2026_09_22_EVENING.length} rozhodnutí s doměřenou cenou`);
 console.log("  index.html            rozcestník s průběhem");
 console.log("");
 

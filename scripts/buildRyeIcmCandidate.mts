@@ -41,6 +41,8 @@ const arg = (name: string): string | undefined => process.argv
 const write = process.argv.includes("--write");
 const draftPath = arg("draft") ?? "artifacts/rye-import/draft.json";
 const packId = "mtt-six-max-regular-preflop-dolar-ev-ante-on-icm-preview-v1";
+/** Povolení vlastníka pro tenhle pack; pack se na něj odkazuje v licenseNote. */
+const PERMISSION_PATH = `Agents/range-intake/raw/${packId}/permission.json`;
 const outPath = arg("out") ?? `artifacts/rye-import/icm-candidate/${packId}/normalized.json`;
 /** Kam vykreslit modul do `src/`; bez toho zůstane kandidát jen v `artifacts/`. */
 const modulePath = arg("module");
@@ -93,10 +95,13 @@ const candidate: MttPreflopRangePackImportInput = {
   licenseKind: "OWNED_SOLVER_EXPORT",
   licenseNote: `Záznamy pocházejí z ${RYE_PROVENANCE}; přenášejí se seznamy akcí po třídách rukou `
     + "(strict/lenient), ne obrázky ani soubory zdroje. Každý záznam nese provenance. Šíření v balíku "
-    + "produktu stojí na permission.json tohoto packu.",
+    + "produktu povolil vlastník 22. 9. 2026 (odpověď 2a): totéž povolení jako u devítistolových profilů "
+    + `ze 17. 9. 2026, týž zdroj a týž způsob přenosu; manifest ${PERMISSION_PATH}.`,
   assumptions: [
     "PREVIEW, ne produkce: profil rozdává jen buňky, které zdroj tvrdí, a zbytek nedopočítává "
       + "(rozhodnutí vlastníka 22. 9. 2026, 4a).",
+    "Shove proti 3betu se nabízí tam, kde ho mřížka spotu kreslí (rozhodnutí vlastníka 22. 9. 2026, "
+      + "odpověď 1a); do té doby devět mřížek leželo, protože jejich doporučení nešlo zvolit.",
     `Záznamy jsou ICM mřížky z ${RYE_PROVENANCE}, schválené vlastníkem ${approvalDates()} `
       + "(Agents/range-intake/answers-*.json).",
     "Scénář (rozložení stacků u stolu) je součástí klíče: dvě mřížky téže buňky a téhož otvírače se "

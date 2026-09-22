@@ -2,7 +2,8 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 import {
-  DECISIONS_TOKEN_PREFIX, OWNER_DECISIONS_2026_09_17, OWNER_DECISIONS_2026_09_22, decisionsHash,
+  DECISIONS_TOKEN_PREFIX, OWNER_DECISIONS_2026_09_17, OWNER_DECISIONS_2026_09_22,
+  OWNER_DECISIONS_2026_09_22_EVENING, decisionsHash,
 } from "./lib/ownerDecisions.mts";
 
 /**
@@ -30,7 +31,7 @@ if (raw === undefined) {
 // Sada se vybírá podle otisku v tokenu, ne podle data: odpovědi ze 17. 9. se
 // musí dát přečíst i po přidání dalších otázek, jinak by starší token po každé
 // nové sadě hlásil „patří k jiné verzi stránky".
-const DECISION_SETS = [OWNER_DECISIONS_2026_09_22, OWNER_DECISIONS_2026_09_17];
+const DECISION_SETS = [OWNER_DECISIONS_2026_09_22_EVENING, OWNER_DECISIONS_2026_09_22, OWNER_DECISIONS_2026_09_17];
 const lines = raw.split(/\r?\n/).map((line) => line.trim()).filter((line) => line.length > 0 && !line.startsWith("#"));
 const tokenLine = lines.find((line) => line.startsWith(DECISIONS_TOKEN_PREFIX));
 if (tokenLine === undefined) {

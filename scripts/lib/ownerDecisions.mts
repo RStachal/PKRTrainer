@@ -274,6 +274,61 @@ export const OWNER_DECISIONS_2026_09_22: readonly OwnerDecision[] = [
   },
 ];
 
+/**
+ * Otázky z překladu squeeze rodiny (22. 9. 2026 večer).
+ *
+ * Obě jsou o tom, co se zdrojem, který mluví jinak než produkt: jedna stránka
+ * platí pro rozsah hloubek, a jedna rodina z poloviny neobsahuje range, ale
+ * pokyn „vyrob si vlastní".
+ */
+export const OWNER_DECISIONS_2026_09_22_EVENING: readonly OwnerDecision[] = [
+  {
+    id: 1,
+    title: "Squeeze: stránka platí „od 40 bb výš“, záznam vzniká na 40",
+    context: "Osm přeložených squeeze mřížek má ve jméně <code>40BBMais</code>, tedy „40 bb a víc“. "
+      + "Záznam ale nese jednu hloubku, takže jde do koše 40 a hlubší koše (50, 60, 75, 100, 125, 150) "
+      + "zůstávají prázdné; každý záznam to má v poznámce. Rozšířit tutéž range na všechny hlubší koše "
+      + "je <b>48 buněk</b> (6 košů × 8 stránek) a je to přesně to, co stránka tvrdí - ale je to jedna "
+      + "range na 40 i 150 bb, a to zdroj sám nerozlišuje.",
+    options: [
+      { code: "a", label: "Rozšířit na všechny koše od 40 bb výš", detail: "48 buněk navíc; každá nese, že pochází ze stránky „40 bb a víc“." },
+      { code: "b", label: "Nechat jen na 40 bb", detail: "hlubší koše zůstanou na vlastním exportu, squeeze z RYE bude jen na jedné hloubce." },
+      { code: "c", label: "Rozšířit jen po 75 bb", detail: "kompromis: 3 koše navíc (24 buněk), 100+ zůstává vlastní." },
+    ],
+    recommended: "a",
+    diary: "262",
+  },
+  {
+    id: 2,
+    title: "BB proti limpu: polovina rodiny není range",
+    context: "Ze 14 stránek <code>BBSTR-*</code> jsou <b>2</b> přeložitelné (sizing 3.5x a check behind), "
+      + "<b>4</b> místo range říkají „Defend (Create your own Ranges)“ - tedy pokyn, ne obsah - a zbylých "
+      + "<b>8</b> je táž mapa hloubek jako rejam (barva = do jaké hloubky se ruka jamuje), u které jsi "
+      + "rejam odložil. Dvě stránky samy o sobě jsou BB proti limpu na 20-25 a 30-40 bb.",
+    options: [
+      { code: "a", label: "Přeložit ty dvě a rodinu zavřít", detail: "malý zisk, ale hotová věc; mapy hloubek počkají na rozhodnutí o rejamu." },
+      { code: "b", label: "Nechat celou rodinu ležet", detail: "vrátí se, až bude jasné, co s mapami hloubek." },
+      { code: "c", label: "Vyřešit mapy hloubek teď (i pro rejam)", detail: "jedno pravidlo pro obě rodiny; 103 buněk rejamu a 8 stránek BB proti limpu." },
+    ],
+    recommended: "a",
+    diary: "262",
+  },
+];
+
+/** Úvod stránky k rozhodnutím z 22. 9. 2026 večer. */
+export const OWNER_DECISIONS_2026_09_22_EVENING_INTRO = `<p><b>Dvě otázky z překladu squeeze rodiny.</b> Obě jsou o zdroji, který mluví jinak
+než produkt.</p>
+<ol>
+<li><b>Hotovo od minulé stránky:</b> jam proti 3betu otevřel posledních devět ICM mřížek (pack má 40 ze 40,
+508 spotů, nic se neoceňuje), povolení pro nový pack je zapsané, piloty čekající na přesolv to teď říkají
+hráči vlastní větou, a squeeze rodina je přeložená - draft vyrostl ze 152 na 161 mřížek.</li>
+<li><b>Ke čtení máš 43 mřížek</b> (34 otevíracích, 8 squeeze, 1 obrana BB): stránka <code>ranze-nove.html</code>
+je jen z nich, zodpovězené jsou pořád v <code>ranze-vse.html</code>.</li>
+<li><b>Rejam</b> zůstává odložený podle tvého 3c; mapy hloubek se ho a BB proti limpu týkají obou (otázka 2).</li>
+</ol>
+<p>U každé otázky je doporučení a číslo, ze kterého plyne. Vyplň, ulož stránku (Ctrl+S) nebo zkopíruj
+odpovědi tlačítkem, a pošli.</p>`;
+
 /** Úvod stránky k rozhodnutím z 22. 9. 2026. */
 export const OWNER_DECISIONS_2026_09_22_INTRO = `<p><b>Čtyři otázky z práce 22. 9. 2026.</b> Každá je místo, kde měření došlo na hranici
 a dál rozhoduješ ty.</p>

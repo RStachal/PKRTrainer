@@ -26,6 +26,10 @@ import {
 } from "../core/postflopTrainingSpot";
 import { createDefaultPostflopStrategyResolver } from "../data/ranges/postflopStrategyRegistry";
 import {
+  mttPostflopPilotScopeForInput,
+  resolvingMttPostflopPilotScopes,
+} from "../data/ranges/mttPostflopPilotRuntime";
+import {
   pickSolvedTurnSpot,
   solvedTurnSpotConfig,
   solvedTurnSpots,
@@ -318,6 +322,15 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
     // jej vyčistíme, aby další generování nebo nový spot nevytvořily znovu
     // tutéž situaci, ale sáhl po novém náhodném seedu.
     seedInput.value = "";
+    // Vybraná situace se čte ještě před pokusem o rozdání: když se spot odmítne,
+    // musí odmítnutí vědět, na kterou buňku hráč mířil, jinak by se pilot
+    // čekající na přesolv nedal odlišit od chybějící produkce.
+    const street = parseStreet(streetSelect.value);
+    const actionNode = selectedActionNode(
+      street,
+      situationSelect.value,
+      options.initialPotType,
+    );
     try {
       const mode = modeSelect.value === "line" ? "line" : "single";
       const preparation = options.beforeGenerate?.(mode);
@@ -357,12 +370,8 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
         return;
       }
 
-      const street = parseStreet(streetSelect.value);
-      const actionNode = selectedActionNode(
-        street,
-        situationSelect.value,
-        options.initialPotType,
-      );
+      // `street` a `actionNode` se počítají nad `try` (viz tam): ví o nich
+      // i větev, která spot odmítne.
       // A solved turn answers one board and refuses every other, so dealing at
       // random reaches it about never - the content being unreachable and the
       // resolver being broken look identical from the player's side. When solved
@@ -435,7 +444,15 @@ export function renderPostflopView(root: HTMLElement, options: PostflopViewOptio
       if (!(error instanceof PostflopStrategyUnavailableError)) throw error;
       controls.hidden = false;
       output.hidden = false;
-      renderUnavailable(output);
+      // Dvě různá „tady nic nemám" se nesmějí slít do jedné věty. Pilot, jehož
+      // strategii čtenář odmítl, se nerozdává schválně a čeká na přesolvení
+      // (rozhodnutí vlastníka 9a a odpověď 4a, 22. 9. 2026); všude jinde jde
+      // o chybějící produkční obsah. Hráč, který za pilota platí, má vědět,
+      // které z toho se mu právě stalo.
+      renderUnavailable(output, isResolvingPilotSpot(street, actionNode, {
+        potType: options.initialPotType ?? "SINGLE_RAISED",
+        positionPattern: options.initialPositionContext?.positionPattern,
+      }));
     }
   };
 
@@ -460,13 +477,41 @@ function renderRuntimeNotice(
   return element;
 }
 
-function renderUnavailable(root: HTMLElement): void {
+/**
+ * Míří tenhle spot na pilota, který se přesolvuje?
+ *
+ * Scope se skládá z toho, co hráč vybral (ulice, typ potu, dvojice sedaček,
+ * uzel) - textury na něj vliv nemají, takže se posílá prázdné pole. Když
+ * mapování scope nenajde, nejde o pilotní buňku a platí obecná hláška.
+ */
+function isResolvingPilotSpot(
+  street: PostflopStreet,
+  actionNode: PostflopActionNode | undefined,
+  options: { potType: PostflopPotType; positionPattern: string | undefined },
+): boolean {
+  if (actionNode === undefined || options.positionPattern === undefined) return false;
+  const scope = mttPostflopPilotScopeForInput({
+    street,
+    textures: [],
+    potType: options.potType,
+    potBB: 1,
+    effectiveStackBB: 1,
+    positionPattern: options.positionPattern as never,
+    actionNode,
+  });
+  return scope !== null && resolvingMttPostflopPilotScopes().includes(scope);
+}
+
+function renderUnavailable(root: HTMLElement, resolvingPilot = false): void {
   const doc = root.ownerDocument ?? document;
   root.innerHTML = "";
   const notice = doc.createElement("div");
   notice.className = "postflop-unavailable";
+  notice.dataset.reason = resolvingPilot ? "PILOT_RESOLVING" : "NO_PRODUCTION_STRATEGY";
   notice.setAttribute("role", "alert");
-  notice.textContent = CS.postflop.unavailable;
+  notice.textContent = resolvingPilot
+    ? CS.postflop.unavailableResolvingPilot
+    : CS.postflop.unavailable;
   root.appendChild(notice);
 }
 
