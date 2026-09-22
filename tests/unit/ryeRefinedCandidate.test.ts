@@ -63,8 +63,9 @@ describe("výběr zpřesněných záznamů", () => {
     const stale = grid({ sourceFile: "F3B-20BB-BB-vs-HJ.html", vsSeat: "HJ" });
     const icm = grid({ sourceFile: "ICM3-bb20bb-btn30bb.html", stackSetupId: "ICM3" });
     const pushFold = grid({ sourceFile: "PU-10bb-BU.html", context: "PUSH_FOLD", position: "BTN", bucket: 10, vsSeat: "", stackSetupId: "PU" });
-    // Jam proti otevření na 40 bb produkt nenabízí (`RE_JAM_MAX` = 30).
-    const jamDeep = grid({ sourceFile: "F3B-40BB-BB-vs-BTN.html", bucket: 40, sourceStackBB: 40, strict: { AA: ["JAM"] }, lenient: { AA: ["JAM"] } });
+    // Jam proti otevření na 50 bb produkt nenabízí (`RE_JAM_MAX` = 40; na 40 bb
+    // se od 22. 9. 2026 nabízí tam, kde ho mřížka kreslí - rozhodnutí 8a).
+    const jamDeep = grid({ sourceFile: "F3B-50BB-BB-vs-BTN.html", bucket: 50, sourceStackBB: 50, strict: { AA: ["JAM"] }, lenient: { AA: ["JAM"] } });
     const twin = grid({ sourceFile: "F3B-20BB-BB-vs-BTN-dup.html" });
     const first = grid({});
     const unanswered = grid({ sourceFile: "F3B-20BB-BB-vs-LJ.html", vsSeat: "LJ" });

@@ -55,10 +55,22 @@ export const PUSH_FOLD_MAX = 12;
  *
  * Nad Push/Fold, ale stále krátký stack: mezi 12 a 30 BB je shove přes open
  * reálná odpověď a majitelovy charty pro ni dávají prahy po jednotlivých rukách.
- * Třicet je nejhlubší práh, který listy kreslí - hlouběji už žádný re-jam
- * nenabízejí.
+ * Třicet je nejhlubší práh, který jeho listy kreslí. RYE (reference od 16. 9.
+ * 2026) jamuje přes otevření ještě na 40 BB (`F3B-40BB-BB-vs-BTN`: 22-77,
+ * AJo, ATo) a od 22. 9. 2026 se ten shove cení proti dorovnávací range
+ * odvozené z equity (rozhodnutí 8a), protože list na 40 BB neexistuje.
+ * Na 50 BB RYE přímý jam nekreslí, takže tam hranice končí.
  */
-export const RE_JAM_MAX = 30;
+export const RE_JAM_MAX = 40;
+
+/**
+ * Hloubka (včetně), do které se re-jam nabízí každému: nejhlubší práh
+ * vlastníkových listů. Nad ní (do `RE_JAM_MAX`) se shove nabízí jen tam, kde
+ * ho učí range spotu (`TableState.jamTaught`) - RYE ho kreslí na 40 BB jen u
+ * BB proti BTN a nabízet ho všem by znamenalo tlačítko, které žádná ruka
+ * nedoporučí a které se nedá ocenit (dorovnávací range se odvozuje z jamovací).
+ */
+export const RE_JAM_SHEET_MAX = 30;
 
 /**
  * Horní hranice (včetně) pro open-shove místo open-raisu, v BB.
@@ -185,6 +197,14 @@ export interface TableState {
    * počítají jako dřív.
    */
   vsSeat?: Position;
+  /**
+   * Range, kterou spot učí, obsahuje shove. Rozhoduje o nabídce jamu mezi
+   * `RE_JAM_SHEET_MAX` a `RE_JAM_MAX` (od 22. 9. 2026, rozhodnutí 8a): pod
+   * listy vlastníka se shove nabízí každému, hlouběji jen tam, kde ho range
+   * doopravdy kreslí. Chybí u stavů postavených bez záznamu (validace importu,
+   * kandidát draftu si ho doplňuje z mřížky).
+   */
+  jamTaught?: boolean;
 }
 
 // ---------------------------------------------------------------------------

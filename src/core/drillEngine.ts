@@ -89,7 +89,7 @@ import {
   type TableState,
 } from "./types";
 import { ALL_HAND_CLASSES, SUITS, isPair, isSuited } from "./poker";
-import { offeredActions } from "./actionTree";
+import { offeredActions, rangeTeachesJam } from "./actionTree";
 import { preflopActionKindToKey } from "./preflopActionOptions";
 import { questionId } from "./questionId";
 import { mulberry32, hashStr } from "./rng";
@@ -98,6 +98,7 @@ import { cloneActionEvSet, isActionEvSetComplete, type ActionEvSet } from "./act
 import {
   callAllInEv,
   combosInClass,
+  equityCallers,
   shoveEv,
   strongestSlice,
 } from "./preflopEquity";
@@ -567,14 +568,23 @@ function computeActionEvs(
   if (context === "VS_OPEN" && offered.includes("JAM") && offered.includes("FOLD")) {
     const openBB = openSizeAtDepth(effStack, ante, store);
     if (openBB === undefined) return undefined;
-    const measured = callRejamClasses(effStack, ante, store);
-    if (measured.length === 0) return undefined;
     // The opener has already raised, so they do not hold a random hand. Fold
     // equity has to be measured against what they can actually have, which is
     // their opening range at this depth - not against the deck.
     const opener = openerClasses(heroPos, effStack, ante, store, opponentSeat);
     const openerCombos = comboCount(opener);
     if (openerCombos === 0) return undefined;
+    // The charted caller where a sheet exists (up to 30BB); past the sheets the
+    // caller is derived from equity against the hero's own jam range (decision
+    // 8a, 2026-09-22): the opener calls the shove with whatever of their opening
+    // range shows a non-negative call. Pot at the call: blinds, the open and the
+    // hero's stack; to call: the rest of the opener's stack.
+    const charted = callRejamClasses(effStack, ante, store);
+    const measured = charted.length > 0 ? charted : equityCallers(
+      jamClasses(context, heroPos, effStack, ante, store, opponentSeat),
+      opener, effStack - openBB, startingPot + openBB + effStack,
+    );
+    if (measured.length === 0) return undefined;
     // Here the pool is what the opener can hold, not the deck: they have already
     // raised. A calling station calls a larger share of that, a rock a smaller
     // one, and both are slices of the same range rather than new charts.
@@ -699,12 +709,21 @@ function computeActionEvs(
     offered.includes("JAM") &&
     offered.includes("FOLD")
   ) {
-    const caller = shoveCallerClasses(effStack, ante, store);
-    if (caller.length === 0) return undefined;
     const openBB = openSizeAtDepth(effStack, ante, store) ?? 0;
     const pot = context === "SQUEEZE"
       ? startingPot + openBB * (1 + callsBefore)
       : startingPot;
+    // Charted caller up to 30BB; beyond the sheets, derived from equity against
+    // the hero's jam range (decision 8a). The pool is the whole deck here: blind
+    // versus blind the opponent holds anything, and facing a squeeze the callers
+    // are not one named range either. To call: the stack behind whatever they
+    // already put in, which the open size stands for.
+    const charted = shoveCallerClasses(effStack, ante, store);
+    const caller = charted.length > 0 ? charted : equityCallers(
+      jamClasses(context, heroPos, effStack, ante, store, opponentSeat),
+      ALL_HAND_CLASSES, effStack - openBB, pot + effStack,
+    );
+    if (caller.length === 0) return undefined;
     // One opponent blind versus blind; everyone still in the hand facing a
     // squeeze, since any of them can call.
     const opponents = context === "SQUEEZE" ? 1 + callsBefore : 1;
@@ -774,6 +793,30 @@ function callRejamClasses(
     bucket,
     context: "VS_ALLIN",
   }));
+}
+
+/**
+ * The hero's own jam range at this spot: what the derived caller answers.
+ *
+ * Read from the record the spot teaches - refined by opener where one exists,
+ * general otherwise - so the caller is derived against exactly the shove the
+ * player is being taught to make.
+ */
+function jamClasses(
+  context: ActionContext,
+  heroPos: Position,
+  bucket: StackBucket,
+  ante: AnteMode,
+  store: RangeStore,
+  opponentSeat?: Position,
+): HandLabel[] {
+  const entry = store.lookup({
+    ante, position: heroPos, bucket, context, ...(opponentSeat === undefined ? {} : { vsSeat: opponentSeat }),
+  });
+  if (entry === undefined) return [];
+  return Object.entries(entry.strict)
+    .filter(([, keys]) => keys.includes("JAM" as ActionKey))
+    .map(([hand]) => hand as HandLabel);
 }
 
 /**
@@ -1010,17 +1053,6 @@ export function generateSpot(
   const opponents = opponentSeatCandidates(context, heroPos, effStack, ante, store);
   const vsSeat = opponents.length === 0 ? undefined : pickFrom(rng, opponents);
 
-  const tableState: TableState = {
-    heroPos,
-    pushFold,
-    effectiveStackBB: effStack,
-    limpsBefore,
-    callsBefore,
-    facing: facingFor(context, heroPos),
-    isBvB: context === "BVB",
-    ...(vsSeat === undefined ? {} : { vsSeat }),
-  };
-
   // (4) ruka + (5) karty.
   const hand = pickFrom(rng, ALL_HAND_CLASSES);
   const heroCards = dealCards(rng, hand);
@@ -1032,6 +1064,20 @@ export function generateSpot(
   };
   const entry = store.lookup(key);
   if (entry === undefined) return null;
+
+  // Stav stolu až po záznamu: nabídka shove nad listy vlastníka závisí na tom,
+  // jestli ho tahle range učí (`jamTaught`, rozhodnutí 8a).
+  const tableState: TableState = {
+    heroPos,
+    pushFold,
+    effectiveStackBB: effStack,
+    limpsBefore,
+    callsBefore,
+    facing: facingFor(context, heroPos),
+    isBvB: context === "BVB",
+    ...(vsSeat === undefined ? {} : { vsSeat }),
+    jamTaught: rangeTeachesJam(entry),
+  };
 
   const handStrict = entry.strict[hand] as ActionKey[] | undefined;
   const handLenient = entry.actions[hand] as ActionKey[] | undefined;

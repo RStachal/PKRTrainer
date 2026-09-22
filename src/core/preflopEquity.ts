@@ -242,3 +242,31 @@ export function callAllInEv(
   const finalPot = potBB + toCallBB;
   return { callBB: equity * finalPot - toCallBB, foldBB: 0, equity };
 }
+
+/**
+ * The calling range a shove implies, derived from equity instead of a chart.
+ *
+ * The owner's calling-rejam sheets stop at 30 big blinds, and his purchased
+ * charts re-jam at 40 (`F3B-40BB-BB-vs-BTN`: 22-77, AJo, ATo). Pricing that
+ * shove needs a caller, and there is no sheet to read one from. The owner chose
+ * on 2026-09-22 (decision 8a) to derive it the same way the shove itself is
+ * priced: the opponent calls with every hand in `pool` whose call shows a
+ * non-negative expectation against the shoving range - one method, not two.
+ *
+ * The sanity check the owner wrote down for the 40-big-blind button: against
+ * the 60-combination jam the caller needs about 47 percent equity, which pairs
+ * from 44 up, AJs+ and AQo+ have and KQs, ATs or JTs do not. A derived range
+ * full of suited broadways would be a defect in this function, not in the chart.
+ */
+export function equityCallers(
+  shovingRange: readonly HandLabel[],
+  pool: readonly HandLabel[],
+  toCallBB: number,
+  potBB: number,
+): HandLabel[] {
+  if (shovingRange.length === 0) return [];
+  return pool.filter((hand) => {
+    const ev = callAllInEv(hand, shovingRange, toCallBB, potBB);
+    return ev !== undefined && ev.callBB >= 0;
+  });
+}

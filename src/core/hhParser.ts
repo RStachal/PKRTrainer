@@ -73,7 +73,7 @@ import {
   type TableState,
 } from "./types";
 import { RANKS } from "./poker";
-import { offeredActions } from "./actionTree";
+import { offeredActions, rangeTeachesJam } from "./actionTree";
 import { preflopActionKindToKey } from "./preflopActionOptions";
 import { questionId } from "./questionId";
 import {
@@ -1005,6 +1005,15 @@ function buildSpot(
   const hand = handLabelFromCards(heroCards);
   const pushFold = bucket <= PUSH_FOLD_MAX;
 
+  // Lookup doporučení (může chybět ⇒ fallback). Se sedačkou se zkusí zpřesněný
+  // záznam a bez něj se vrátí obecný.
+  const key: RangeKey = {
+    position: heroPos, bucket, context: ctx.context, ante,
+    ...(ctx.vsSeat === undefined ? {} : { vsSeat: ctx.vsSeat }),
+  };
+  const entry = store.isLoaded() ? store.lookup(key) : undefined;
+  if (requireRangeRecord && entry === undefined) return undefined;
+
   const tableState: TableState = {
     heroPos,
     pushFold,
@@ -1014,18 +1023,11 @@ function buildSpot(
     facing: ctx.facing,
     isBvB: ctx.isBvB,
     ...(ctx.vsSeat === undefined ? {} : { vsSeat: ctx.vsSeat }),
+    // Stejné pravidlo jako v drillu: shove nad listy jen tam, kde ho range učí.
+    jamTaught: rangeTeachesJam(entry),
   };
 
   const offeredKinds = offeredActions(tableState);
-
-  // Lookup doporučení (může chybět ⇒ fallback). Se sedačkou se zkusí zpřesněný
-  // záznam a bez něj se vrátí obecný.
-  const key: RangeKey = {
-    position: heroPos, bucket, context: ctx.context, ante,
-    ...(ctx.vsSeat === undefined ? {} : { vsSeat: ctx.vsSeat }),
-  };
-  const entry = store.isLoaded() ? store.lookup(key) : undefined;
-  if (requireRangeRecord && entry === undefined) return undefined;
   const handStrict = entry?.strict[hand] as ActionKey[] | undefined;
   const handLenient = entry?.actions[hand] as ActionKey[] | undefined;
 

@@ -31,6 +31,7 @@ import {
   LIMP_SHOVE_MAX,
   OPEN_SHOVE_MAX,
   RE_JAM_MAX,
+  RE_JAM_SHEET_MAX,
   type ActionKind,
   type FacingAction,
   type TableState,
@@ -55,6 +56,18 @@ const MAX_SQUEEZE_CALLS = 7;
  * @param state Stav stolu před rozhodnutím hrdiny.
  * @returns Pole nabízených druhů akcí bez duplicit.
  */
+/**
+ * Kreslí range spotu aspoň jednu ruku jako shove? Rozhoduje o nabídce jamu
+ * nad listy vlastníka (`TableState.jamTaught`); bydlí tady, protože to čte
+ * drill i přehrání historie a strom je jediné místo bez závislostí.
+ */
+export function rangeTeachesJam(
+  entry: { strict: Record<string, readonly string[]> } | undefined,
+): boolean {
+  if (entry === undefined) return false;
+  return Object.values(entry.strict).some((keys) => keys.includes("JAM"));
+}
+
 export function offeredActions(state: TableState): ActionKind[] {
   const { facing, pushFold, heroPos, limpsBefore, callsBefore } = state;
 
@@ -85,8 +98,13 @@ export function offeredActions(state: TableState): ActionKind[] {
       // and 30BB the owner's charts make re-jamming the main answer to an open,
       // and the ranges now say so; without offering it here the recommendation
       // would not be among the options a player can pick. Listed last, as the
-      // action that ends the hand.
-      if (state.effectiveStackBB <= RE_JAM_MAX) actions.push("JAM");
+      // action that ends the hand. Above the sheets (31-40BB) only where the
+      // range this spot teaches draws a shove - RYE does at 40BB for the big
+      // blind against the button (decision 8a, 2026-09-22).
+      if (
+        state.effectiveStackBB <= RE_JAM_SHEET_MAX
+        || (state.effectiveStackBB <= RE_JAM_MAX && state.jamTaught === true)
+      ) actions.push("JAM");
       return actions;
     }
 

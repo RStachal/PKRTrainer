@@ -77,6 +77,9 @@ function tableStateFor(record: DraftRecord): TableState {
     facing: context === "VS_3BET" ? "3BET" : "OPEN",
     isBvB: false,
     vsSeat: record.vsSeat as Position,
+    // Shove nad listy vlastníka se nabízí jen tam, kde ho mřížka kreslí
+    // (rozhodnutí 8a) - a mřížka to o sobě ví.
+    jamTaught: Object.values(record.strict).some((actions) => actions.includes("JAM")),
   };
 }
 
