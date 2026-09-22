@@ -15,8 +15,14 @@ import {
 import { buildMttPostflopPilotGateReport } from "../src/data/ranges/mttPostflopPilotGate.ts";
 import type { ProductionPermissionManifest } from "../src/data/ranges/productionPermissionManifest.ts";
 import { mergeActionEvIntoPilotPack } from "../src/data/ranges/mttPostflopActionEvMerge.ts";
+import {
+  flopPilotContentHash,
+  type TurnReviewVerdictFile,
+  type TurnReviewVerdictRecord,
+} from "../src/data/ranges/turnReviewVerdict.ts";
 
 const GENERATED_INDEX = "src/data/ranges/mttPostflopPilotPacks.generated.ts";
+const VERDICTS_PATH = "Agents/turn-review/verdicts.json";
 const ACTION_EV_INTAKE_DIR = "artifacts/mtt-action-ev-intake";
 
 interface PilotModuleSource {
@@ -199,19 +205,50 @@ function buildPilotModules(): BuiltPilotModule[] {
         `(catalog ${catalog.rules}/${catalog.rangeBuckets}, gate ${gate.counts.rules}/${gate.counts.rangeBuckets}).`,
       );
     }
-    const fingerprint = pilotFingerprint(pack, permission, catalog);
+    // Verdikt čtenáře až po bráně: brána ověřuje tvar kandidáta (MEDIUM), vydaný
+    // modul říká, co o obsahu ví člověk. Šest pilotů čtenář 14. 9. 2026 odmítl
+    // (bod 248) a modul přesto tvrdil MEDIUM - hráč viděl „spolehlivost: střední"
+    // u obsahu, který čtení neprošlo. Vlastník 22. 9. 2026 (rozhodnutí 9a):
+    // přeznačit na LOW, dokud se rodiny nepřesolví a nepřečtou znovu.
+    const rejected = rejectingVerdict(source.catalogId, pack);
+    const labelled: FlopProductionStrategyPack = rejected === undefined ? pack : {
+      ...pack,
+      confidence: "LOW",
+      assumptions: [
+        ...pack.assumptions,
+        `Čtení hráčem ${rejected.reviewedAt} (${rejected.reviewer}): neprošlo - ${rejected.notes ?? "bez poznámky"}. `
+          + "Spolehlivost LOW, dokud se rodina nepřesolví s produkční range a nepřečte znovu (rozhodnutí vlastníka 22. 9. 2026, 9a).",
+      ],
+    };
+    const fingerprint = pilotFingerprint(labelled, permission, catalog);
     built.push({
       source,
       catalog,
-      pack,
+      pack: labelled,
       fingerprint,
-      moduleText: renderPilotModule(pack, source.exportName, catalog, fingerprint),
+      moduleText: renderPilotModule(labelled, source.exportName, catalog, fingerprint),
       actionEvBuckets,
       totalBuckets,
     });
   }
 
   return built;
+}
+
+/**
+ * Poslední lidský verdikt „neprošlo" nad přesně tímhle obsahem, nebo nic.
+ *
+ * Váže se na otisk obsahu: přesolvený pilot má jiný otisk a verdikt na něj
+ * nesedí - je nepřečtený, ne odmítnutý, a čtecí stránka si o čtení řekne.
+ */
+function rejectingVerdict(catalogId: string, pack: FlopProductionStrategyPack): TurnReviewVerdictRecord | undefined {
+  if (!existsSync(VERDICTS_PATH)) return undefined;
+  const file = readJson<TurnReviewVerdictFile>(VERDICTS_PATH);
+  const hash = flopPilotContentHash(pack.rules);
+  return [...file.verdicts]
+    .filter((row) => row.street === "FLOP" && row.familyId === catalogId && row.basis === "PLAYER_READ"
+      && row.outcome === "NEEDS_WORK" && row.contentHash === hash)
+    .sort((left, right) => right.reviewedAt.localeCompare(left.reviewedAt))[0];
 }
 
 function actionEvCandidatePath(catalogId: string): string {

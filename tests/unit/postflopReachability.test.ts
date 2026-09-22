@@ -131,9 +131,12 @@ describe("postflop reachability", () => {
       }
     }
     expect(legacySpots, "no legacy-named spots generated").toBeGreaterThan(100);
-    // Not all of them - SPR and texture still have to match - but most, where
-    // before the repair it was none.
-    expect(legacySolved / legacySpots).toBeGreaterThan(0.5);
+    // Not all of them - SPR and texture still have to match - but a real share,
+    // where before the repair it was none. Measured 2026-09-22: 36.2 % with six
+    // of the seven pilots labelled LOW after the reader rejected them (decision
+    // 9a, diary 248/259) - a LOW pack does not resolve, so only the UTG vs BB
+    // pilot answers here until the BTN-BB families are re-solved and re-read.
+    expect(legacySolved / legacySpots).toBeGreaterThan(0.25);
   });
 
   it("reaches the four patterns that do have rules", () => {

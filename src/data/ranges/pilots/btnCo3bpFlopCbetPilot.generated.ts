@@ -11,7 +11,7 @@ export const btnCo3bpFlopCbetPilotPack = {
   "version": "btn-co-3bp-flop-cbet-pilot-merged-draft-v1",
   "createdAt": "2026-07-02",
   "verifiedAt": "2026-07-02",
-  "confidence": "MEDIUM",
+  "confidence": "LOW",
   "licenseKind": "OWNED_SOLVER_EXPORT",
   "licenseNote": "Review-only draft generated from local TexasSolver exports owned by the PKRTrainer operator.",
   "dimensions": {
@@ -103,7 +103,8 @@ export const btnCo3bpFlopCbetPilotPack = {
     "MTT9_80BB_CO_BTN_3BP_MIDSPR is mapped to FULL_RING_9 3BP_BTN_VS_CO THREE_BET_POT THREE_BET_POT_CBET training context.",
     "MTT9_150BB_CO_BTN_3BP_HIGHSPR is mapped to FULL_RING_9 3BP_BTN_VS_CO THREE_BET_POT THREE_BET_POT_CBET training context.",
     "Merged LOW/MID/HIGH SPR candidates are still scoped to BTN vs CO 3bet-pot flop c-bet training only.",
-    "This merged draft must stay behind the pilot gate until full postflop production coverage is imported."
+    "This merged draft must stay behind the pilot gate until full postflop production coverage is imported.",
+    "Čtení hráčem 2026-09-14 (Radim (třetí čtení, nad mixem)): neprošlo - poměr akcí nesedí, přes hloubky si to odporuje. Spolehlivost LOW, dokud se rodina nepřesolví s produkční range a nepřečte znovu (rozhodnutí vlastníka 22. 9. 2026, 9a)."
   ],
   "rules": [
     {

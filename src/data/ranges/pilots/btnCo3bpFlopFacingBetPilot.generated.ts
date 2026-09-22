@@ -11,7 +11,7 @@ export const btnCo3bpFlopFacingBetPilotPack = {
   "version": "btn-co-3bp-flop-facing-bet-pilot-merged-draft-v1",
   "createdAt": "2026-07-02",
   "verifiedAt": "2026-07-02",
-  "confidence": "MEDIUM",
+  "confidence": "LOW",
   "licenseKind": "OWNED_SOLVER_EXPORT",
   "licenseNote": "Review-only draft generated from local TexasSolver exports owned by the PKRTrainer operator.",
   "dimensions": {
@@ -104,7 +104,8 @@ export const btnCo3bpFlopFacingBetPilotPack = {
     "MTT9_150BB_CO_BTN_3BP_HIGHSPR is mapped to FULL_RING_9 3BP_BTN_VS_CO THREE_BET_POT FLOP_FACING_BET training context.",
     "CHECK > BET_39 node is treated as the hero decision node selected for review.",
     "Merged LOW/MID/HIGH SPR candidates are still scoped to BTN vs CO 3bet-pot flop facing-bet response training only.",
-    "This merged draft must stay behind the pilot gate until broader position/node coverage and full postflop production coverage are imported."
+    "This merged draft must stay behind the pilot gate until broader position/node coverage and full postflop production coverage are imported.",
+    "Čtení hráčem 2026-09-14 (Radim (třetí čtení, nad mixem)): neprošlo - poměr akcí nesedí, přes hloubky si to odporuje, málo desek v agregátu. Spolehlivost LOW, dokud se rodina nepřesolví s produkční range a nepřečte znovu (rozhodnutí vlastníka 22. 9. 2026, 9a)."
   ],
   "rules": [
     {

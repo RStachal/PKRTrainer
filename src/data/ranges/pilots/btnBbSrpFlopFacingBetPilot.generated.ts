@@ -11,7 +11,7 @@ export const btnBbSrpFlopFacingBetPilotPack = {
   "version": "btn-bb-srp-flop-facing-bet-pilot-merged-draft-v1",
   "createdAt": "2026-07-02",
   "verifiedAt": "2026-07-02",
-  "confidence": "MEDIUM",
+  "confidence": "LOW",
   "licenseKind": "OWNED_SOLVER_EXPORT",
   "licenseNote": "Review-only draft generated from local TexasSolver exports owned by the PKRTrainer operator.",
   "dimensions": {
@@ -103,7 +103,8 @@ export const btnBbSrpFlopFacingBetPilotPack = {
     "MTT9_50BB_BTN_BB_SRP_FACING_MIDSPR is mapped to FULL_RING_9 SRP_BTN_VS_BB SINGLE_RAISED FLOP_FACING_BET training context.",
     "MTT9_100BB_BTN_BB_SRP_FACING_HIGHSPR is mapped to FULL_RING_9 SRP_BTN_VS_BB SINGLE_RAISED FLOP_FACING_BET training context.",
     "Merged LOW/MID/HIGH SPR candidates are scoped to BTN vs BB SRP flop facing-bet response training only.",
-    "This merged draft must stay behind the pilot gate until broader position/node coverage is imported."
+    "This merged draft must stay behind the pilot gate until broader position/node coverage is imported.",
+    "Čtení hráčem 2026-09-14 (Radim (třetí čtení, nad mixem)): neprošlo - poměr akcí nesedí, konkrétní ruka v cizí akci. Spolehlivost LOW, dokud se rodina nepřesolví s produkční range a nepřečte znovu (rozhodnutí vlastníka 22. 9. 2026, 9a)."
   ],
   "rules": [
     {
