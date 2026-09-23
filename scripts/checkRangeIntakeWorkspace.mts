@@ -124,13 +124,6 @@ function buildIntakeWorkspaceReport(): IntakeWorkspaceReport {
   for (const slot of legalSlots) {
     sourceSafePermissionFiles.add(slot.importSlot.permissionManifestPath.replaceAll("\\", "/"));
   }
-  const disallowedTrackedRawFiles = trackedRawFiles.filter((file) => (
-    !allowedTrackedRawFiles.has(file) && !sourceSafePermissionFiles.has(file)
-  ));
-  if (disallowedTrackedRawFiles.length > 0) {
-    errors.push(`Disallowed tracked raw intake files: ${disallowedTrackedRawFiles.join(", ")}`);
-  }
-
   const legalSlotByRawFolder = new Map(legalSlots.map((slot) => [slot.importSlot.rawInputFolder, slot]));
   const productionPackByRawFolder = new Map(generatedMttProductionManifest.map((entry) => [
     `${rawFolder}/${entry.packId}`,
@@ -146,6 +139,20 @@ function buildIntakeWorkspaceReport(): IntakeWorkspaceReport {
       && !productionPackByRawFolder.has(`${rawFolder}/${pack.id}`)
       && !legalSlotByRawFolder.has(`${rawFolder}/${pack.id}`))
     .map((pack) => [`${rawFolder}/${pack.id}`, pack.id]));
+  // Manifest preview packu do gitu patří ze stejného důvodu jako produkční: je
+  // to doklad povolení bez jediné hodnoty ze zdroje. Proto se seznam povolených
+  // sledovaných souborů dokončuje až tady, kde jsou preview packy známé; do
+  // 23. 9. 2026 brána vlastní manifest hlásila jako „disallowed tracked file".
+  for (const folder of previewPackByRawFolder.keys()) {
+    sourceSafePermissionFiles.add(`${folder}/permission.json`);
+  }
+  const disallowedTrackedRawFiles = trackedRawFiles.filter((file) => (
+    !allowedTrackedRawFiles.has(file) && !sourceSafePermissionFiles.has(file)
+  ));
+  if (disallowedTrackedRawFiles.length > 0) {
+    errors.push(`Disallowed tracked raw intake files: ${disallowedTrackedRawFiles.join(", ")}`);
+  }
+
   const localRawFolders = listLocalRawFolders();
   for (const folder of localRawFolders) {
     const slot = legalSlotByRawFolder.get(folder);

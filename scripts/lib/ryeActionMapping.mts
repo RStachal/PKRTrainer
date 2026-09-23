@@ -29,6 +29,7 @@ export type MappedContext =
   | "VS_3BET"
   | "VS_4BET"
   | "SQUEEZE"
+  | "VS_LIMP"
   | "PUSH_FOLD"
   | "VS_ALLIN";
 
@@ -138,6 +139,35 @@ const ACTIONS_BY_CONTEXT: ReadonlyMap<MappedContext, ReadonlyMap<string, MappedA
       ["squeeze for value but fold", { action: "SQUEEZE", lost: "zdroj říká, že proti 4betu se skládá" }],
       ["bluff squeezes", { action: "SQUEEZE", lost: "zdroj to vede jako bluffovou část range" }],
     ])],
+    // BB proti limpu malého blindu (odpověď vlastníka 2a, 22. 9. 2026).
+    //
+    // Produkt tu nabízí `LIMP` (check zdarma), `ISO` a do 25 bb `JAM`. Zdroj
+    // maluje čtyři až pět barev, ale rozdíl mezi nimi není v tom, **co hrdina
+    // udělá teď**, nýbrž co udělá proti 3betu - a to se sizingem (3.5x, 4x)
+    // patří do poznámky, protože iso-raise má produkt jeden. Barvy jsou
+    // vyjmenované celé, ne přes vzor: kdyby zdroj přidal šestou, musí stránka
+    // spadnout, ne ji tiše vzít jako fold (bod 225).
+    //
+    // Velikost: zdroj isuje na 3,5x a hlouběji na 4x, produkt zná ISO_2X, ISO_25X
+    // a ISO_3X. Bere se ISO_3X - největší, kterou produkt nabízí, tedy nejblíž
+    // tomu, co zdroj kreslí - a přesná velikost zdroje jde do poznámky. Zaokrouhlit
+    // dolů na ISO_25X by hráče učilo menší iso, než jaké range předpokládá.
+    ["VS_LIMP", new Map<string, MappedAction>([
+      ["check behind", { action: "LIMP", lost: "" }],
+      ["all-in", { action: "JAM", lost: "" }],
+      ["all in", { action: "JAM", lost: "" }],
+      ["3.5x bluff", { action: "ISO_3X", lost: "zdroj isuje na 3,5x a vede to jako blaf" }],
+      ["3.5x + broke", { action: "ISO_3X", lost: "zdroj isuje na 3,5x a proti 3betu dá stack do potu" }],
+      ["3.5x + call reraise", { action: "ISO_3X", lost: "zdroj isuje na 3,5x a proti 3betu dorovnává" }],
+      ["3.5x + call 3b", { action: "ISO_3X", lost: "zdroj isuje na 3,5x a proti 3betu dorovnává" }],
+      ["3.5x + 4bet all in", { action: "ISO_3X", lost: "zdroj isuje na 3,5x a proti 3betu jde 4bet all-in" }],
+      ["3.5x + all in vs 3bet", { action: "ISO_3X", lost: "zdroj isuje na 3,5x a proti 3betu jde all-in" }],
+      ["3.5x + 4b < 100bb", { action: "ISO_3X", lost: "zdroj isuje na 3,5x a 4betuje do 100 bb" }],
+      ["3.5x + small 4bet vs sb 3bet", { action: "ISO_3X", lost: "zdroj isuje na 3,5x a proti 3betu dělá malý 4bet" }],
+      ["4x+ call 3b", { action: "ISO_3X", lost: "zdroj isuje na 4x a proti 3betu dorovnává" }],
+      ["4x + small 4bet bluff", { action: "ISO_3X", lost: "zdroj isuje na 4x a dělá malý 4bet jako blaf" }],
+      ["4x+ small 4bet vs 3bet and broke", { action: "ISO_3X", lost: "zdroj isuje na 4x, dělá malý 4bet a dá stack do potu" }],
+    ])],
     ["VS_3BET", new Map<string, MappedAction>([
       ["fold vs 3bet", { action: "FOLD", lost: "" }],
       ["call vs 3bet", { action: "CALL", lost: "" }],
@@ -220,7 +250,11 @@ export function mapAction(context: MappedContext, action: string): MappedAction 
   if (context === "RFI") return mapOpenRaisingAction(action);
   const table = ACTIONS_BY_CONTEXT.get(context);
   if (table === undefined) return undefined;
-  const raw = action.trim().toLowerCase();
+  // `3.5x + 4B &lt; 100bb` je `3.5x + 4b < 100bb`: text legendy je kus HTML.
+  // Do 23. 9. 2026 entitu dekódovala jen větev otevíracích stránek, takže
+  // `BBSTR-vs-SB-Limp-40-50BB` propadla na „kontext nenalezen" - dvě z jejích
+  // šesti barev slovník nepoznal, ačkoli je zná.
+  const raw = action.trim().toLowerCase().replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
   const sized = normalizeSizedAction(raw);
   const bluff = normalizeBluffPrefix(sized.base);
   // Pravopisné varianty se zkoušejí **až po** doslovném klíči, nikdy místo něj.
@@ -281,6 +315,11 @@ function contextFromFileName(name: string): MappedContext | undefined {
   // je otevření a aspoň jedno dorovnání. Rozcestník nabídky (`SQU-menu-…`)
   // mřížka není a spadne dřív, na kontrole legendy.
   if (/^SQU-/i.test(stem)) return "SQUEEZE";
+  // BB proti limpu SB. Ostatní `BBSTR-` stránky kontext nedostanou schválně:
+  // čtyři místo range říkají „Defend (Create your own Ranges)", tedy pokyn, ne
+  // obsah, a dvě jsou mapa hloubek jako rejam, který vlastník 22. 9. 2026
+  // odložil (3c). Rozcestníky nabídky mřížka nejsou a spadnou dřív.
+  if (/^BBSTR-vs-SB-Limp-/i.test(stem)) return "VS_LIMP";
   if (!/^ICM/i.test(stem)) return undefined;
   if (/-r$/i.test(stem)) return "VS_OPEN";
   if (/-ai$/i.test(stem)) return "VS_ALLIN";
@@ -413,6 +452,14 @@ const SEAT_ALIASES = new Map<string, string>([
  */
 export function situationFromFileName(name: string): RyeSituation | undefined {
   const stem = name.replace(/\.html$/i, "");
+  // Tvar 5: BB proti limpu SB, `BBSTR-vs-SB-Limp-20-25BB` nebo `-50BBMAIS`.
+  //
+  // Jméno nese **pásmo hloubek**, ne bod: stránka platí od spodní hranice po
+  // horní. Bere se spodní hranice (tam range začíná platit) a celé pásmo si
+  // záznam odnese v `bucketSpan`, ať se pack může doplnit i na hloubky mezi.
+  const limp = /^BBSTR-vs-SB-Limp-(\d+)(?:-(\d+))?BB/i.exec(stem);
+  if (limp !== null) return { seat: "BB", stackBB: Number(limp[1]), villains: 1 };
+
   // Tvar 4: squeeze stránky zdroje, `SQU-40BBMais-BU-vs-HJ-CO`.
   //
   // `40BBMais` je „40 bb a víc", tedy **rozsah hloubek, ne bod**. Do 22. 9. 2026
@@ -499,6 +546,43 @@ export interface RyeOpponent {
   stackBB: number;
 }
 
+/**
+ * Koše, na které stránka platí, když její jméno mluví o **pásmu** hloubek.
+ *
+ * Dvě rodiny zdroje to dělají: squeeze (`SQU-40BBMais-…`, „40 bb a víc") a BB
+ * proti limpu (`BBSTR-vs-SB-Limp-20-25BB`, `-50BBMAIS`). Záznam nese jednu
+ * hloubku, takže bez tohohle by stránka platná od 40 do 75 bb obsadila jediný
+ * koš a zbytek pásma zůstal prázdný, aniž by kdokoli věděl proč.
+ *
+ * **Strop otevřeného pásma je 75 bb**, ne 150. Vlastník to rozhodl 22. 9. 2026
+ * (odpověď 1c) a doložil měřením zdroje: nejhlubší číslo v názvech všech 720
+ * stránek korpusu je 100 (jednou 90), nabídky končí na „100BB", a draft o 161
+ * mřížkách nemá v koších 125 ani 150 jediný záznam v žádném kontextu. Rozšířit
+ * squeeze až na 150 by ze zdroje udělalo autoritu pro hloubky, o kterých celý
+ * korpus mlčí. Koše 100 a hlubší proto zůstávají na vlastním exportu.
+ *
+ * Stránka s vlastní hloubkou ve jméně (`SQU-40BBMais-90BB-CO-vs-…`) pásmo
+ * nemá: konkrétní číslo je konkrétnější než hranice nabídky.
+ */
+export function bucketSpanFromFileName(name: string, buckets: readonly number[]): number[] {
+  const stem = name.replace(/\.html$/i, "");
+  const open = /^SQU-(\d+)BBMais-(?!\d+BB-)/i.exec(stem)
+    ?? /^BBSTR-vs-SB-Limp-(\d+)BBMAIS/i.exec(stem);
+  if (open !== null) {
+    const floor = Number(open[1]);
+    return buckets.filter((bucket) => bucket >= floor && bucket <= OPEN_SPAN_MAX);
+  }
+  const range = /^BBSTR-vs-SB-Limp-(\d+)-(\d+)BB/i.exec(stem);
+  if (range !== null) {
+    const [floor, ceiling] = [Number(range[1]), Number(range[2])];
+    return buckets.filter((bucket) => bucket >= floor && bucket <= ceiling);
+  }
+  return [];
+}
+
+/** Dokud zdroj o hlubších hloubkách mlčí, otevřené pásmo končí tady. */
+const OPEN_SPAN_MAX = 75;
+
 export function opponentFromFileName(
   name: string,
   hero: RyeSituation,
@@ -509,6 +593,10 @@ export function opponentFromFileName(
     const seat = SEAT_ALIASES.get(paired[1][1].toUpperCase());
     return seat === undefined ? undefined : { seat, stackBB: Number(paired[1][2]) };
   }
+  // `BBSTR-vs-SB-Limp-…` nemá sedačku hrdiny ve jméně (nese ji rodina stránek),
+  // takže obecný vzor níž by za „vs" našel `SB` jen náhodou - a u jiné rodiny
+  // se stejným tvarem by našel něco jiného. Vyjmenované to je jisté.
+  if (/^BBSTR-vs-SB-Limp-/i.test(stem)) return { seat: "SB", stackBB: hero.stackBB };
   const versus = /(?:^|[-_])(?:UTG1|UTG2|UTG|EP|MP|LJ|HJ|CO|BU|BTN|SB|BB)[-_]vs[-_]([A-Za-z0-9+]+)/i.exec(stem);
   if (versus === null) return undefined;
   const seat = SEAT_ALIASES.get(versus[1].toUpperCase());

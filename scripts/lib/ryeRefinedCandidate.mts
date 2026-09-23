@@ -60,7 +60,7 @@ export interface RefinedSelection {
   counts: Record<RefusalReason, number>;
 }
 
-const REFINED_CONTEXTS = new Set<string>(["VS_OPEN", "SQUEEZE", "VS_3BET"]);
+const REFINED_CONTEXTS = new Set<string>(["VS_OPEN", "SQUEEZE", "VS_3BET", "VS_LIMP"]);
 
 /** Zdroj, který se u každého záznamu jmenuje - pack má jinou licenci. */
 export const RYE_PROVENANCE = "RYE Rangeviewer 2021 (koupené charty vlastníka)";
@@ -72,9 +72,15 @@ function tableStateFor(record: DraftRecord): TableState {
     heroPos: record.position as Position,
     pushFold: bucket <= PUSH_FOLD_MAX,
     effectiveStackBB: bucket,
-    limpsBefore: 0,
+    // Proti limpu nikdo nenavýšil (`facing: NONE`) a aspoň jeden hráč dolimpoval;
+    // bez toho by strom nabídl obranu proti otevření a `LIMP` ani `ISO` by na
+    // tlačítku nebyly - mřížka by propadla na „doporučení, které produkt
+    // nenabízí", ačkoli produkt obojí umí (odpověď vlastníka 2a, 22. 9. 2026).
+    limpsBefore: context === "VS_LIMP" ? 1 : 0,
     callsBefore: context === "SQUEEZE" ? 1 : 0,
-    facing: context === "VS_3BET" ? "3BET" : context === "RFI" || context === "PUSH_FOLD" ? "NONE" : "OPEN",
+    facing: context === "VS_3BET"
+      ? "3BET"
+      : context === "RFI" || context === "PUSH_FOLD" || context === "VS_LIMP" ? "NONE" : "OPEN",
     isBvB: false,
     vsSeat: record.vsSeat as Position,
     // Shove nad listy vlastníka se nabízí jen tam, kde ho mřížka kreslí
@@ -222,6 +228,7 @@ export function selectRefinedRecords(
     if (/^ICM/i.test(record.stackSetupId)) { refuse(record, "icm", record.stackSetupId); continue; }
     if (!REFINED_CONTEXTS.has(record.context)) { refuse(record, "contextNotRefined", record.context); continue; }
     if (record.vsSeat === "") { refuse(record, "noOpponent"); continue; }
+    const context = record.context as ActionContext;
     // Záznam, na který se drill nikdy nezeptá, je mrtvý obsah
     // (`shippedRecordsAreDealable`): obranu proti otevření drill rozdává
     // až od lojacku, UTG+1 a UTG+2 by v packu jen ležely.
@@ -240,17 +247,50 @@ export function selectRefinedRecords(
     if (taken !== undefined) { refuse(record, "duplicateCell", `táž buňka jako ${taken}`); continue; }
     takenCells.set(cell, record.sourceFile);
 
+    const provenance = `${RYE_PROVENANCE}, ${record.sourceFile}, schváleno ${answer.readAt}`
+      + `${answer.contentHash ? ` (otisk ${answer.contentHash})` : ""}`;
+    const strict = fillFolds(record.strict);
+    const lenient = fillFolds(record.lenient);
     accepted.push({
       position: record.position as Position,
       sourceStackBB: record.sourceStackBB,
       bucket: record.bucket as StackBucket,
-      context: record.context as ActionContext,
+      context,
       vsSeat: record.vsSeat as Position,
-      provenance: `${RYE_PROVENANCE}, ${record.sourceFile}, schváleno ${answer.readAt}`
-        + `${answer.contentHash ? ` (otisk ${answer.contentHash})` : ""}`,
-      strict: fillFolds(record.strict),
-      lenient: fillFolds(record.lenient),
+      provenance,
+      strict,
+      lenient,
     });
+
+    // Stránka, která platí pro pásmo hloubek, obsadí celé pásmo.
+    //
+    // Squeeze („40 bb a víc") a BB proti limpu („20-25BB") mluví o rozsahu, ne
+    // o bodu; jeden záznam na spodní hranici by nechal zbytek pásma prázdný,
+    // přestože zdroj o něm mluví. Kopie nese v provenience, odkud a proč je -
+    // a nikdy nepřepíše buňku, kterou už drží jiná stránka: ta je konkrétnější.
+    // Strop pásma je 75 bb (rozhodnutí vlastníka 1c, 22. 9. 2026).
+    for (const bucket of record.bucketSpan ?? []) {
+      if (bucket === record.bucket) continue;
+      if (!bucketsForContext(context).includes(bucket as StackBucket)) continue;
+      const spanCell = refinedCellKey({ ...record, bucket });
+      const spanTaken = takenCells.get(spanCell);
+      if (spanTaken !== undefined) {
+        refuse(record, "duplicateCell", `${bucket} bb z pásma už drží ${spanTaken}`);
+        continue;
+      }
+      takenCells.set(spanCell, record.sourceFile);
+      accepted.push({
+        position: record.position as Position,
+        sourceStackBB: record.sourceStackBB,
+        bucket: bucket as StackBucket,
+        context,
+        vsSeat: record.vsSeat as Position,
+        provenance: `${provenance}; stránka platí pro pásmo `
+          + `${(record.bucketSpan ?? []).join("-")} bb, tohle je ${bucket} bb z něj`,
+        strict,
+        lenient,
+      });
+    }
   }
 
   return { accepted, refused, counts };

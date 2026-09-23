@@ -91,6 +91,63 @@ describe("výběr zpřesněných záznamů", () => {
   });
 });
 
+describe("pásmo hloubek: stránka platná od-do obsadí celé pásmo", () => {
+  /**
+   * Rozhodnutí vlastníka 1c a 2a (22. 9. 2026). Squeeze stránky zdroje platí
+   * „od 40 bb výš", BB proti limpu „20-25BB"; jeden záznam na spodní hranici by
+   * nechal zbytek pásma prázdný, ačkoli o něm zdroj mluví. Strop je 75 bb:
+   * nad 100 bb korpus mlčí a odvozovat tam range by bylo tvrzení bez zdroje.
+   */
+  const squeeze = (overrides: Partial<DraftRecord> = {}): DraftRecord => grid({
+    context: "SQUEEZE", position: "BTN", bucket: 40, vsSeat: "HJ", sourceStackBB: 40,
+    stackSetupId: "SQU", sourceFile: "SQU-40BBMais-BU-vs-HJ-CO.html",
+    bucketSpan: [40, 50, 60, 75],
+    strict: { AA: ["SQUEEZE"], KQs: ["SQUEEZE"] }, lenient: { AA: ["SQUEEZE"], KQs: ["SQUEEZE"] },
+    ...overrides,
+  });
+
+  it("squeeze ze stránky „40 bb a víc“ obsadí 40, 50, 60 i 75 a nic hlubšího", () => {
+    const record = squeeze();
+    const { accepted, refused } = selectRefinedRecords([record], history([approved(record)]));
+    expect(refused).toEqual([]);
+    expect(accepted.map((row) => row.bucket)).toEqual([40, 50, 60, 75]);
+    expect(accepted.every((row) => row.vsSeat === "HJ" && row.context === "SQUEEZE")).toBe(true);
+    // Kopie musí říct, že je z pásma, jinak by v packu vypadala jako vlastní měření.
+    expect(accepted[0].provenance).not.toContain("pásmo");
+    expect(accepted[3].provenance).toContain("pásmo 40-50-60-75 bb, tohle je 75 bb");
+    // Obsah je tentýž, jen hloubka jiná.
+    expect(accepted[3].strict.AA).toEqual(["SQUEEZE"]);
+  });
+
+  it("konkrétnější stránka drží buňku; z pásma se kopie nepřepíše", () => {
+    const span = squeeze();
+    const exact = squeeze({
+      bucket: 60, sourceStackBB: 60, sourceFile: "SQU-60BB-BU-vs-HJ-CO.html",
+      bucketSpan: undefined,
+      strict: { AA: ["SQUEEZE"], KQs: ["FOLD"] }, lenient: { AA: ["SQUEEZE"], KQs: ["FOLD"] },
+    });
+    const { accepted, refused } = selectRefinedRecords([exact, span], history([approved(exact), approved(span)]));
+    const at60 = accepted.filter((row) => row.bucket === 60);
+    expect(at60).toHaveLength(1);
+    expect(at60[0].provenance).toContain("SQU-60BB-BU-vs-HJ-CO.html");
+    expect(refused.map((row) => row.reason)).toContain("duplicateCell");
+    expect(refused.find((row) => row.reason === "duplicateCell")?.detail).toContain("60 bb z pásma");
+  });
+
+  it("BB proti limpu jde jako VS_LIMP z SB a obsadí své pásmo", () => {
+    const limp = grid({
+      context: "VS_LIMP", position: "BB", bucket: 20, vsSeat: "SB", sourceStackBB: 20,
+      stackSetupId: "BBSTR", sourceFile: "BBSTR-vs-SB-Limp-20-25BB.html",
+      bucketSpan: [20, 25],
+      strict: { AA: ["ISO_3X"], KQs: ["LIMP"] }, lenient: { AA: ["ISO_3X"], KQs: ["LIMP"] },
+    });
+    const { accepted, refused } = selectRefinedRecords([limp], history([approved(limp)]));
+    expect(refused).toEqual([]);
+    expect(accepted.map((row) => row.bucket)).toEqual([20, 25]);
+    expect(accepted.every((row) => row.context === "VS_LIMP" && row.vsSeat === "SB")).toBe(true);
+  });
+});
+
 describe("obecné záznamy nahrazené RYE (push/fold, otevření)", () => {
   // Rozhodnutí vlastníka 17. 9. 2026 (push/fold 10 bb) a 22. 9. 2026 (6a: RFI).
   const pushFold = grid({

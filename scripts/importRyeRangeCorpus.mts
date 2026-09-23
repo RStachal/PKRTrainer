@@ -5,11 +5,13 @@ import { readIcmScenarios, type IcmScenario } from "./lib/ryeIcmScenarios.mts";
 import {
   REFUSED_VOCABULARIES,
   bucketForSource,
+  bucketSpanFromFileName,
   contextForVocabulary,
   mapAction,
   opponentFromFileName,
   situationFromFileName,
 } from "./lib/ryeActionMapping.mts";
+import { STACK_BUCKETS } from "../src/core/types";
 
 /**
  * Draft záznamů ranží z vlastníkova korpusu.
@@ -297,14 +299,15 @@ for (const file of htmlFiles(source).sort()) {
     .filter((mapped) => mapped.lost !== "")
     .map((mapped) => `${mapped.action}: ${mapped.lost}`);
 
-  // Squeeze stránky zdroje platí „od 40 bb výš" (`SQU-40BBMais-…`), ale záznam
-  // umí nést jednu hloubku. Bere se spodní hranice a čtenář se o rozsahu
-  // dozví - jinak by posuzoval range jako by platila jen na 40 bb, a hlubší
-  // koše by zůstaly prázdné, aniž by kdokoli věděl proč.
-  const squeezeFloor = /^SQU-(\d+)BBMais-(?!\d+BB-)/i.exec(name);
-  if (squeezeFloor !== null) {
-    notes.push(`Zdroj uvádí ${squeezeFloor[1]} bb a víc; záznam je na nejnižší hloubce rozsahu`
-      + " (hlubší koše z téhle stránky zatím nevznikají).");
+  // Stránka, jejíž jméno mluví o pásmu hloubek, si pásmo odnese s sebou -
+  // a čtenář se o něm dozví. Bez toho by posuzoval range, jako by platila jen
+  // na spodní hranici, a hlubší koše by buď zůstaly prázdné, nebo by se
+  // doplnily potichu; obojí je horší než to napsat.
+  const bucketSpan = bucketSpanFromFileName(name, STACK_BUCKETS);
+  if (bucketSpan.length > 1) {
+    notes.push(`Zdroj uvádí pásmo hloubek; záznam je na ${bucket} bb a do packu jde i na `
+      + `${bucketSpan.filter((item) => item !== bucket).join(", ")} bb `
+      + "(rozhodnutí vlastníka 1c a 2a, 22. 9. 2026). Hlubší koše zůstávají na vlastním exportu.");
   }
 
   records.push({
@@ -318,6 +321,7 @@ for (const file of htmlFiles(source).sort()) {
     stackSetupId: scenario?.id ?? prefix,
     ...(scenario === undefined ? {} : { stackSetup: { ...scenario.stacksBB } }),
     sourceStackBB: situation.stackBB,
+    ...(bucketSpan.length > 1 ? { bucketSpan } : {}),
     strict,
     lenient,
     mix,

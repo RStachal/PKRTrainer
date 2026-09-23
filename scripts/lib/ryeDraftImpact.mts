@@ -32,6 +32,12 @@ export interface DraftRecord {
   /** Stacky u stolu podle scénáře ICM (sedačka → bb); jen u ICM stránek. */
   stackSetup?: Record<string, number>;
   sourceStackBB: number;
+  /**
+   * Koše, na které stránka platí, když její jméno mluví o pásmu hloubek
+   * (`SQU-40BBMais-…`, `BBSTR-vs-SB-Limp-20-25BB`). Chybí u stránek s jednou
+   * hloubkou; `bucket` je vždycky jedním z nich.
+   */
+  bucketSpan?: number[];
   strict: Record<string, string[]>;
   lenient: Record<string, string[]>;
   /** ruka → akce a jak často ji zdroj hraje (jen u mixů). */
