@@ -142,47 +142,89 @@ function readSign(
   const threshold = background - 25;
   const ink = (x: number, y: number): boolean => lum(x0 + x, y0 + y) < threshold;
 
-  // Řádky s inkoustem, bez okrajových dvou pixelů (tam je rámeček buňky).
-
+  // Kde v buňce je řádek s EV.
+  //
+  // Nehledá se shluky inkoustu, bere se **poměrem**. Buňka má dva řádky textu
+  // v pevném rastru: jméno ruky kolem třetiny výšky, EV kolem čtyř pětin.
+  // Hledání shluků selhalo dvakrát - poslední shluk bývá spodní rámeček, a
+  // když se rámečky filtrovaly (podle šířky, pak podle výšky), zmizely i husté
+  // číslice: nečitelných 45 %, pak 64 %, pak 67 %. Poměr je na obrázcích RYE
+  // stabilní, protože všechny vznikly týmž generátorem.
+  // Kde v buňce je řádek s EV.
+  //
+  // Dvě věci musí platit naráz, a každá z nich sama selhala:
+  //
+  // 1. **Odsadit od rámečku.** Zelená buňka má tmavě zelený rámeček, který
+  //    projde prahem inkoustu; jeho spodní linka vypadá jako vodorovná čárka,
+  //    tedy jako minus. Bez odsazení hlásilo všech 39 zelených buněk v
+  //    `20bb_reshove_BBvsBTN` „jam se znaménkem -".
+  // 2. **Hledat shluky, ne pevný poměr.** Rodiny obrázků mají text jinde:
+  //    v rejamu je EV na 54-81 % výšky buňky, v open-shove na 68-95 %. Pevné
+  //    okno proto jednu z nich rozřízne v půlce slova a znaménko se pak čte
+  //    z jeho spodní poloviny - naměřeno 23. 9. 2026, že pak sedí zhruba
+  //    každé druhé.
+  // Rámeček se **najde**, ne odhadne: je jednou pixel široký, jinde tři, a
+  // pevné odsazení ho proto jednou minulo a jindy ukouslo text. Sloupec
+  // rámečku má inkoust skoro po celé výšce buňky, textový nikdy.
+  const fullColumn = (x: number): boolean => {
+    let count = 0;
+    for (let y = 0; y < h; y += 1) if (ink(x, y)) count += 1;
+    return count >= h * 0.7;
+  };
+  let inset = 1;
+  while (inset < w / 3 && fullColumn(inset - 1)) inset += 1;
+  inset = Math.max(inset, 2);
   const inkRows: boolean[] = [];
   for (let y = 0; y < h; y += 1) {
     let count = 0;
-    for (let x = 2; x < w - 2; x += 1) if (ink(x, y)) count += 1;
-    inkRows.push(count >= 2);
+    for (let x = inset; x < w - inset; x += 1) if (ink(x, y)) count += 1;
+    inkRows.push(y >= inset && y < h - inset && count >= 2);
   }
   const groups: { from: number; to: number }[] = [];
-  for (let y = 2; y < h - 2; y += 1) {
+  for (let y = 0; y < h; y += 1) {
     if (!inkRows[y]) continue;
     const last = groups[groups.length - 1];
     if (last !== undefined && y - last.to <= 1) last.to = y;
     else groups.push({ from: y, to: y });
   }
   const evLine = groups[groups.length - 1];
-  // Jeden shluk znamená, že se řádky slily nebo že EV chybí - nehádat.
+  // Buňka má dva řádky textu; jeden shluk znamená, že se slily nebo že EV chybí.
   if (evLine === undefined || groups.length < 2) return "?";
+  const from = evLine.from;
+  const to = evLine.to;
 
-  // Nejlevější glyf toho řádku: první sloupec s inkoustem a jeho shluk.
+  // Nejlevější inkoust toho řádku je znaménko - a pozná se podle **svislého
+  // rozsahu**, ne podle mezer mezi glyfy. Mezery nefungují: u 73 % buněk splyne
+  // znaménko s první číslicí do jednoho shluku. Rozsah je jednoznačný, protože
+  // každý ze tří tvarů zabírá jinou část výšky řádku: minus je čárka uprostřed,
+  // plus kříž, číslice celou výšku.
   let first = -1;
-  for (let x = 2; x < w - 2; x += 1) {
+  for (let x = inset; x < w - inset; x += 1) {
     let count = 0;
-    for (let y = evLine.from; y <= evLine.to; y += 1) if (ink(x, y)) count += 1;
+    for (let y = from; y <= to; y += 1) if (ink(x, y)) count += 1;
     if (count > 0) { first = x; break; }
   }
   if (first < 0) return "?";
-  let glyphWidth = 0;
-  let tallest = 0;
-  for (let x = first; x < w - 2; x += 1) {
-    let count = 0;
-    for (let y = evLine.from; y <= evLine.to; y += 1) if (ink(x, y)) count += 1;
-    if (count === 0) break;
-    glyphWidth += 1;
-    tallest = Math.max(tallest, count);
+
+  const lineHeight = to - from + 1;
+  let signExtent = 0;
+  for (let x = first; x < w - inset; x += 1) {
+    let lowest = -1;
+    let highest = -1;
+    for (let y = from; y <= to; y += 1) {
+      if (!ink(x, y)) continue;
+      if (lowest < 0) lowest = y;
+      highest = y;
+    }
+    if (lowest < 0) break;
+    const extent = highest - lowest + 1;
+    // Sloupec vysoký jako číslice: znaménko skončilo.
+    if (extent >= lineHeight * 0.8) break;
+    signExtent = Math.max(signExtent, extent);
   }
-  // Plus je kříž: aspoň tři řádky ve svislé části. Minus je čárka: jeden dva.
-  // Číslice jsou vyšší i širší, takže když glyf začíná rovnou číslicí, není
-  // to znaménko a buňka se nečte.
-  if (tallest >= 3 && glyphWidth <= Math.max(3, Math.round(w * 0.14))) return "+";
-  if (tallest <= 2) return "-";
+  if (signExtent === 0) return "?";
+  if (signExtent <= Math.max(2, lineHeight * 0.3)) return "-";
+  if (signExtent < lineHeight * 0.8) return "+";
   return "?";
 }
 
