@@ -315,6 +315,87 @@ export const OWNER_DECISIONS_2026_09_22_EVENING: readonly OwnerDecision[] = [
   },
 ];
 
+/**
+ * Otázky z měření zbytku korpusu (23. 9. 2026).
+ *
+ * Tři věci, kde měření došlo na hranici: půlka zdroje nejsou mřížky, ale
+ * obrázky; čtyřicet čtyři stránek jmenuje otvírače skupinou, ne sedačkou; a
+ * noci se dělí mezi přesolv a rozklad podle mého odhadu, ne podle rozhodnutí.
+ */
+export const OWNER_DECISIONS_2026_09_23: readonly OwnerDecision[] = [
+  {
+    id: 1,
+    title: "Rejam a open-shove jsou v korpusu obrázky, ne mřížky - číst je?",
+    context: "Změřeno dnes: rodiny <code>RESHOVING</code> (82 souborů), <code>OPENSHOVING</code> (17) "
+      + "a <code>HU</code> (24) nedávají <b>ani jednu</b> čitelnou mřížku - jsou to rozcestníky, které "
+      + "místo tabulky ukazují <b>PNG obrázek</b>. Ty obrázky v korpusu jsou: <b>505 rejamových</b> "
+      + "(14 hloubek od 5 do 20 bb × ~36 dvojic sedaček) a <b>120 open-shove</b> (15 hloubek × 8 sedaček). "
+      + "Každý je mřížka 13×13, kde poloha buňky říká ruku, barva akci, a <b>v hlavičce stojí šířka range</b> "
+      + "(„BB calls 18875 against BU: 17,5 %“) - tedy kontrola, kterou si dekodér ověří sám na každém obrázku. "
+      + "Prototyp jsem dnes napsal: geometrie sedí, rukám rozumí, barvu zatím plete u sousedních buněk "
+      + "(zelená je v rámečku, ne ve výplni). Doladit a ověřit je blok práce. "
+      + "<b>Proč to není maličkost:</b> je to přesně rejam - rodina, kterou ti vytkl kouč a kterou jsme "
+      + "22. 9. odložili (3c), protože její HTML stránky jsou jen mapy hloubek. Obrázky mají hloubku po "
+      + "jednom blindu, ne v pásmech.",
+    options: [
+      { code: "a", label: "Číst obojí: rejam i open-shove", detail: "625 obrázků, kontrola šířky range u každého; nejvíc obsahu, jeden až dva bloky práce." },
+      { code: "b", label: "Jen rejam (505 obrázků)", detail: "rodina, kterou vytkl kouč; open-shove má produkt z vlastního exportu." },
+      { code: "c", label: "Nečíst je", detail: "rejam zůstane u map hloubek, open-shove u vlastního exportu; obrázky zůstanou nepoužité." },
+    ],
+    recommended: "b",
+    freeText: "Kdyby se četly: mají se brát i čísla EV z obrázků (u každé ruky je napsané), nebo jen barva = akce?",
+    diary: "264",
+  },
+  {
+    id: 2,
+    title: "Čtyřicet čtyři stránek jmenuje otvírače skupinou („EP“, „LP“)",
+    context: "Jména jako <code>MUL-40BB-BB-vs-EP_CO-BTN</code> nebo <code>SQU-40BBMais-HJ-vs-EP-MP</code> "
+      + "říkají „otevřel někdo z rané pozice“, ne kterou sedačku. Produkt zná UTG, UTG+1 a UTG+2, takže se "
+      + "takové stránky dosud nevydávaly - je jich <b>44</b> (multiway 36, squeeze 5, BB proti limpu 3). "
+      + "Překlad <code>MP</code> → LJ máme od 26. 8. doložený navigací zdroje (devět sedaček sedí na naši "
+      + "sadu seat po seatu), ale <code>EP</code> navigace jako sedačku neuvádí - je to skupina tří.",
+    options: [
+      { code: "a", label: "EP = UTG (nejranější sedačka)", detail: "44 stránek se vydá; range proti UTG je nejužší z trojice, takže hráč dostane spíš opatrnější obranu." },
+      { code: "b", label: "Vydat je pro všechny tři rané sedačky", detail: "jedna mřížka obsadí UTG, UTG+1 i UTG+2 - víc buněk, ale tvrdí to, co zdroj neřekl." },
+      { code: "c", label: "Nechat je ležet", detail: "44 stránek zůstane mimo; platí dnešní stav." },
+    ],
+    recommended: "a",
+    diary: "264",
+  },
+  {
+    id: 3,
+    title: "Jak dělit noci mezi přesolv a rozklad",
+    context: "Přesolv (10a) má za sebou 4 rodiny z 29; zbývá <b>23 rodin = 276 desek ≈ 35 h</b> monolitu, "
+      + "tedy čtyři až pět celých nocí. Jenže přesolvená rodina není hotová: její turn a river vzniknou až "
+      + "z <b>rozkladu</b>, a ten ustoupí celou noc, když je nastagováno aspoň osm desek. Čtyři hotové rodiny "
+      + "mají dnes rozložených 6 z 12 desek, takže jejich turn a river pořád stojí na starých ranžích. "
+      + "Dnes v noci jsem proto nastagoval jen dvě rodiny (24 desek ≈ 3 h) a zbytek okna nechal rozkladu - "
+      + "byl to můj odhad, ne tvoje rozhodnutí.",
+    options: [
+      { code: "a", label: "Takhle dál: dvě rodiny za noc, zbytek rozklad", detail: "přesolv hotový za ~12 nocí, ale turn a river drží krok." },
+      { code: "b", label: "Nejdřív přesolvit všechno, rozklad potom", detail: "přesolv hotový za 4-5 nocí, ale turn a river celé knihovny stojí na starých ranžích do té doby." },
+      { code: "c", label: "Nejdřív dorozložit, co je přesolvené, pak dál", detail: "čtyři hotové rodiny budou celé (flop, turn i river) do dvou nocí; přesolv se o ty noci posune." },
+    ],
+    recommended: "a",
+    diary: "264",
+  },
+];
+
+/** Úvod stránky k rozhodnutím z 23. 9. 2026. */
+export const OWNER_DECISIONS_2026_09_23_INTRO = `<p><b>Tři otázky z měření zbytku korpusu.</b> Všechny vznikly dnes, když jsem
+zjišťoval, co ze zdroje ještě nikdo nepřečetl.</p>
+<ol>
+<li><b>Hotovo od minulé stránky:</b> squeeze i BB proti limpu jsou přeložené, pásma hloubek jdou do packu
+podle tvého 1c (strop 75 bb), a noc přesolvila 48 z 48 desek bez jediného selhání - doporučení se nezměnilo
+ani jednou, ale range, pro kterou platí, vzrostla o 56 %.</li>
+<li><b>Nález dne:</b> velká část korpusu nejsou mřížky, ale obrázky - 625 z nich, a je v nich přesně ta
+rodina, kterou ti vytkl kouč (otázka 1).</li>
+<li><b>Ke čtení máš pořád 48 mřížek</b> (<code>ranze-nove.html</code>); dokud je nepřečteš, squeeze ani BB
+proti limpu se do packu nedostanou.</li>
+</ol>
+<p>U každé otázky je doporučení a číslo, ze kterého plyne. Vyplň, ulož stránku (Ctrl+S) nebo zkopíruj
+odpovědi tlačítkem, a pošli.</p>`;
+
 /** Úvod stránky k rozhodnutím z 22. 9. 2026 večer. */
 export const OWNER_DECISIONS_2026_09_22_EVENING_INTRO = `<p><b>Dvě otázky z překladu squeeze rodiny.</b> Obě jsou o zdroji, který mluví jinak
 než produkt.</p>
