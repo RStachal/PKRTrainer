@@ -179,6 +179,7 @@
     "mtt:rye-corpus": "node scripts/run-cli.mjs scripts/checkRyeRangeCorpus.mts",
     "mtt:rye-import": "node scripts/run-cli.mjs scripts/importRyeRangeCorpus.mts",
     "mtt:rye-candidate": "node scripts/run-cli.mjs scripts/buildRyeRefinedCandidate.mts",
+    "mtt:rye-images": "node scripts/run-cli.mjs scripts/readRyeRangeImages.mts",
     "mtt:rye-icm-candidate": "node scripts/run-cli.mjs scripts/buildRyeIcmCandidate.mts",
     "mtt:rye-answers": "node scripts/run-cli.mjs scripts/applyRyeReviewAnswers.mts",
     "mtt:opener-axis": "node scripts/run-cli.mjs scripts/measureOpenerAxisValue.mts",
