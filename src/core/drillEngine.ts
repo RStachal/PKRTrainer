@@ -1135,7 +1135,7 @@ export function generateSpot(
     : offeredKinds.includes("LIMP")
       ? "LIMP"
       : offeredKinds[0];
-  const defaultKey = preflopActionKindToKey(defaultKind, handStrict, effStack);
+  const defaultKey = preflopActionKindToKey(defaultKind, handStrict, effStack, handLenient);
 
   const strictCorrect: ActionKey[] =
     handStrict && handStrict.length > 0 ? [...handStrict] : [defaultKey];
@@ -1144,7 +1144,7 @@ export function generateSpot(
 
   // answers: bijekce nabízená akce → právě jeden Akční_klíč (Property 8).
   const answers: Answer[] = offeredKinds.map((kind) => {
-    const akey = preflopActionKindToKey(kind, handStrict, effStack);
+    const akey = preflopActionKindToKey(kind, handStrict, effStack, handLenient);
     return { key: akey, label: ACTION_KEY_LABEL[akey] };
   });
   const candidateActionEvs = entry.actionEvs?.[hand];

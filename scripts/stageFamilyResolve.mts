@@ -47,9 +47,61 @@ const write = argv.includes("--write");
 const families = new Set(argv.filter((arg) => arg.startsWith("--family=")).map((arg) => arg.slice("--family=".length)));
 const depth = argv.find((arg) => arg.startsWith("--depth="))?.slice("--depth=".length);
 const defender = argv.find((arg) => arg.startsWith("--defender="))?.slice("--defender=".length);
+/**
+ * Vrácení nastagovaných desek zpět: `--restore=2026-09-23 [--write]`.
+ *
+ * Nastagovat je rozhodnutí o **jedné noci**, ne o týdnu: expanze si vezme
+ * okno celé, protože rozklad jí ustoupí, jakmile čeká osm desek bez
+ * checkpointu. Když se ta priorita mezitím otočí - vlastník 23. 9. 2026
+ * zvolil 3c, tedy „nejdřív dorozložit, co je přesolvené" - musí jít fronta
+ * vyprázdnit, jinak by se obě práce praly o stroj.
+ *
+ * Vrací se checkpoint a rozklad z `artifacts/resolve-backup/<den>`; tím deska
+ * přestane být čekající prací a noc zůstane rozkladu. Parametry se schválně
+ * nevracejí: nové ranže jsou správný vstup pro chvíli, kdy na tu rodinu dojde.
+ */
+const restore = argv.find((arg) => arg.startsWith("--restore="))?.slice("--restore=".length);
 const WORK = "artifacts/decomposition";
 const today = new Date().toISOString().slice(0, 10);
 const BACKUP = join("artifacts/resolve-backup", today);
+
+if (restore !== undefined) {
+  const folder = join("artifacts/resolve-backup", restore);
+  const manifestPath = join(folder, "resolve-manifest.json");
+  if (!existsSync(manifestPath)) {
+    console.error(`Záloha ${manifestPath} neexistuje.`);
+    process.exit(2);
+  }
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {
+    boards: { family: string; board: string }[];
+  };
+  let checkpoints = 0;
+  let works = 0;
+  let missing = 0;
+  for (const board of manifest.boards) {
+    const backupCheckpoint = join(folder, "checkpoints", board.family, `pkrtrainer_${board.family}_${board.board}.json`);
+    const liveCheckpoint = join(CHECKPOINT_BASE, board.family, "raw", `pkrtrainer_${board.family}_${board.board}.json`);
+    const backupWork = join(folder, "decomposition", `${board.family}__${board.board}`);
+    const liveWork = join(WORK, `${board.family}__${board.board}`);
+    if (existsSync(backupCheckpoint) && !existsSync(liveCheckpoint)) {
+      if (write) { mkdirSync(dirname(liveCheckpoint), { recursive: true }); renameSync(backupCheckpoint, liveCheckpoint); }
+      checkpoints += 1;
+    } else if (!existsSync(backupCheckpoint) && !existsSync(liveCheckpoint)) {
+      missing += 1;
+    }
+    if (existsSync(backupWork) && !existsSync(liveWork)) {
+      if (write) renameSync(backupWork, liveWork);
+      works += 1;
+    }
+  }
+  console.log(`Vrácení nastagovaného ze zálohy ${folder}`);
+  console.log("");
+  console.log(`desek v záloze: ${manifest.boards.length}`);
+  console.log(`vrátí se: ${checkpoints} checkpointů, ${works} rozkladů`);
+  if (missing > 0) console.log(`bez checkpointu (deska se mezitím dosolvila nebo nikdy neměla): ${missing}`);
+  console.log(write ? "" : "Nic nezapsáno. Zápis: přidej --write");
+  process.exit(0);
+}
 
 const SEATS: readonly Position[] = ["UTG", "UTG+1", "UTG+2", "LJ", "HJ", "CO", "BTN", "SB", "BB"];
 const asToken = (seat: Position): string => seat.replace("+", "_");

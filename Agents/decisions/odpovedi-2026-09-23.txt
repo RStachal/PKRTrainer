@@ -1,0 +1,74 @@
+# DrillEV — 23. 9. 2026, odpovědi vlastníka (rozhodnutí i čtení mřížek).
+# Přišlo v jednom souboru; zpracuje se dvakrát:
+#   npm run mtt:decision-answers -- --answers-file=Agents/decisions/odpovedi-2026-09-23.txt
+#   npm run mtt:rye-answers -- --answers-file=Agents/decisions/odpovedi-2026-09-23.txt
+
+DRILLEV-DECISIONS-V1 54a0eadc 1a 2a 3c
+DRILLEV-REVIEW-V2 0o 1o 2o 3o 4x5 48o 116o 117o 118o 119o 120o 121o 122o 123o 124o 125o 126o 127o 128o 129o 130o 131o 132o 133o 134o 135o 136o 137o 138o 139o 140o 141o 142o 143o 144o 145o 146o 147o 148o 149o 158x3 159o 160o 161o 162o 163o 164o 165o
+T1: Ber i EV čísla, ale ne jako cenu - jako kontrolu dekódování a jako míru marginality. Proč ne jako cenu: EV v obrázcích je spočítané v modelu RYE proti jeho předpokládaným call ranžím, kdežto produkt oceňuje jamy z ALL_IN_EQUITY (rozhodnutí 8a ze 17. 9.); dvě různě vzniklé EV v jednom profilu by si protiřečily, takže zobrazovat se má dál ta produktová. Zato jako kontrola je EV mnohem silnější než šířka range v hlavičce: ta ověří jen součet, kdežto znaménko EV se dá ověřit u každé ruky zvlášť - v jamovací mřížce má mít každá ruka uvnitř EV >= 0 a každá venku < 0. Přesně to chytí chybu, kterou dnes dělá prototyp (zelená v rámečku u sousedních buněk): špatně přečtená buňka se prozradí obráceným znaménkem i tehdy, když součet vyjde. Navrhuju tedy EV ukládat jako pole zdroje, tvrdě na neshodě znaménka failovat import, a v trenažéru ho použít nejvýš na rozlišení „jasný jam" vs „těsný jam" (pásmo kolem nuly), ne jako zobrazenou cenu.
+
+# ── Co vlastník ověřil u mřížek ──────────────────────────────────────────────
+#
+# Stáhl všech 48 zdrojových stránek z RYE db a porovnal šířku range v draftu
+# s hlavičkou zdroje („X% of hands"). Sedí všech 48 na 0,05 procentního bodu.
+# Překlad je věrný; posuzoval tedy jen strategii.
+#
+# RFI podle sedačky a hloubky (% otevření, spočteno z mřížek):
+#
+#   sedačka    20bb   30bb   40bb   60bb  100bb
+#   UTG        14,3   15,7   15,4   15,5   12,7
+#   UTG+1      16,3   16,6   16,9   15,6   13,7
+#   UTG+2      18,6   19,2   20,2   18,3   17,8
+#   LJ         21,3   22,0   22,5   21,9   20,7
+#   HJ         26,2   26,1   28,2      -   27,6
+#   CO         33,8   35,3   37,0   36,7   35,4
+#   BTN        40,0   46,3   49,5   50,8   52,6
+#
+# Monotónní v každém sloupci, malé páry přibývají s hloubkou a ubývají s ranou
+# pozicí, offsuit spodek je „jen konektory" (T9o, 98o, 87o ano; 97o, 86o ne) -
+# to je tvar, jaký solver dělá. Proti tomu, co hráč dostane dnes, je to všude
+# širší, a to je přesně ta díra, kterou vytkl kouč (BTN 50 %+, měl jsi 31 %).
+#
+# Dvě výjimky:
+#
+#  4x5  VS_LIMP BB 50 bb (BBSTR-vs-SB-Limp-50BBMAIS)
+#       Jediná mřížka, kde zdroj mixuje DVĚ různé velikosti isa: poznámky uvádějí
+#       „isuje na 3,5x" i „isuje na 4x" a produkt obojí slučuje do ISO_3X.
+#       U ostatních čtyř je to jen nepřesný název, tady se ztrácí rozdíl, který
+#       zdroj dělá. Proto příznak 5.
+#
+#  158x3 SQUEEZE CO 100 bb proti UTG
+#       (SQU-40BBMais-90BB-CO-vs-UTG-OPEN-Mais-Fish-Call-HJ)
+#       Zdrojová stránka se jmenuje doslova „90BB CO vs UTG Open + Fish Call HJ".
+#       Je to jediná stránka v celém korpusu stavěná proti konkrétnímu typu
+#       soupeře. Range to ukazuje: 99, TT, AJo, KQo ve value části a jen 16
+#       kombinací blafů (12,9 %). Proti rekreačnímu callerovi to sedí, proti
+#       schopnému je AJo/KQo/99 tenké value, které se 4betem trestá. Produkt to
+#       ale vydá jako obecné „CO 100 bb proti UTG", kde soupeře rozlišit neumí.
+#       Příznak 3 (špatné ruce) - ne šířka, ale výběr rukou pro jiného soupeře.
+#
+# ── Tři věci mimo formulář ───────────────────────────────────────────────────
+#
+# 1) CHYBÍ JEDNA MŘÍŽKA. V matici RFI je díra: HJ 60 bb. OP-60BB-HJ.html
+#    v korpusu JE (27,5 % of hands, 364 kombinací), jen se do draftu nedostala.
+#    Všech ostatních 34 kombinací sedačka x hloubka tam je, takže je to jediná
+#    díra - vypadá to na výpadek importu, ne na chybějící zdroj.
+#
+# 2) PÁSMA HLOUBEK SE PŘEKRÝVAJÍ. Na 20, 40 i 50 bb si o stejnou hloubku říkají
+#    dva různé záznamy. Na 20 bb si přitom odporují nejvíc: záznam 0 tam jamuje
+#    18,9 % rukou, záznam 1 nejamuje vůbec (0 %). Hráč dostane buď „jam 19 %",
+#    nebo „nikdy nejamuj", podle toho, který záznam vyhraje. Vyřešit dřív, než
+#    to půjde do packu - buď pásma zkrátit na 15-19 / 20-29 / 30-39 / 40-49 /
+#    50+, nebo u kolize dát přednost užšímu (nižšímu) zdrojovému pásmu.
+#
+# 3) ZÁZNAMY 1 A 2 JSOU STEJNÁ RANGE. BBSTR-vs-SB-Limp-20-25BB.html a
+#    BBSTR-vs-SB-Limp-30-40BB.html mají obsah mřížky identický (soubory se liší
+#    jen zvýrazněním v navigaci). Není to chyba překladu - RYE opravdu dodává
+#    pro 20-25 a 30-40 bb stejnou strategii. Stojí za zmínku proto, že po
+#    roztažení pásem bude jedna 20bb range platit až do 40 bb.
+#
+# A poznámka k předpokladům v hlavičce draftu: stojí tam „Zdroj neuvádí ante;
+# draft předpokládá OFF". To si odporuje s odpovědí 7a ze 17. 9., kde jsme RYE
+# změřili jako ante sadu (push ranges 10 bb sedí na chart s 10 % ante a jsou
+# o 5-8 bodů širší než no-ante Nash). Když zůstane OFF, jde celý tenhle import
+# do profilu, do kterého podle 7a nepatří.

@@ -103,8 +103,9 @@ export function actionsNotOffered(record: DraftRecord): string[] {
   const problems: string[] = [];
   for (const hand of Object.keys(record.lenient)) {
     const strict = (record.strict[hand] ?? []) as ActionKey[];
-    const offered = new Set(offeredPreflopActionKeys(state, strict, bucket));
-    const wanted = new Set([...(record.lenient[hand] ?? []), ...strict]);
+    const lenient = (record.lenient[hand] ?? []) as ActionKey[];
+    const offered = new Set(offeredPreflopActionKeys(state, strict, bucket, lenient));
+    const wanted = new Set([...lenient, ...strict]);
     for (const action of wanted) {
       if (!offered.has(action as ActionKey)) problems.push(`${hand}:${action}`);
     }
@@ -214,6 +215,14 @@ export function selectRefinedRecords(
     actionNotOffered: 0, notDealt: 0, duplicateCell: 0,
   };
   const takenCells = new Map<string, string>();
+  // Stránky s pásmem hloubek počkají na druhý průchod (viz níž).
+  const spanQueue: {
+    record: DraftRecord;
+    context: ActionContext;
+    provenance: string;
+    strict: ReturnType<typeof fillFolds>;
+    lenient: ReturnType<typeof fillFolds>;
+  }[] = [];
 
   const refuse = (record: DraftRecord, reason: RefusalReason, detail = ""): void => {
     counts[reason] += 1;
@@ -262,13 +271,29 @@ export function selectRefinedRecords(
       lenient,
     });
 
-    // Stránka, která platí pro pásmo hloubek, obsadí celé pásmo.
-    //
-    // Squeeze („40 bb a víc") a BB proti limpu („20-25BB") mluví o rozsahu, ne
-    // o bodu; jeden záznam na spodní hranici by nechal zbytek pásma prázdný,
-    // přestože zdroj o něm mluví. Kopie nese v provenience, odkud a proč je -
-    // a nikdy nepřepíše buňku, kterou už drží jiná stránka: ta je konkrétnější.
-    // Strop pásma je 75 bb (rozhodnutí vlastníka 1c, 22. 9. 2026).
+    if ((record.bucketSpan ?? []).length > 1) {
+      spanQueue.push({ record, context, provenance, strict, lenient });
+    }
+  }
+
+  // Stránka, která platí pro pásmo hloubek, obsadí celé pásmo - ale až teď,
+  // po všech primárních hloubkách, a nikdy nepřebije tu, na které jiná
+  // stránka **začíná**.
+  //
+  // Pásma zdroje na sebe nasedají: `15-20BB` a `20-25BB` si obě říkají o 20 bb,
+  // `30-40BB` a `40-50BB` o 40, `40-50BB` a `50BBMAIS` o 50. Dokud se pásmo
+  // dopisovalo hned u své stránky, vyhrála ta, která byla v draftu dřív - a na
+  // 20 bb je ten rozdíl vidět nejvíc: stránka 15-20 tam jamuje 18,9 % rukou,
+  // stránka 20-25 nejamuje vůbec. Hráč by dostal jednu z těch dvou odpovědí
+  // podle pořadí v souboru, což není rozhodnutí, ale náhoda (nález vlastníka
+  // 23. 9. 2026).
+  //
+  // Pravidlo je proto stejné jako u konkrétnější stránky: **primární hloubka je
+  // silnější než pásmo**. Na 20 bb platí `20-25BB`, na 40 `40-50BB`, na 50
+  // `50BBMAIS` - vždycky ta stránka, jejíž jméno tou hloubkou začíná. Zbytek
+  // pásma se dopíše jen tam, kde nikdo nezačíná. Strop pásma je 75 bb
+  // (rozhodnutí vlastníka 1c, 22. 9. 2026).
+  for (const { record, context, provenance, strict, lenient } of spanQueue) {
     for (const bucket of record.bucketSpan ?? []) {
       if (bucket === record.bucket) continue;
       if (!bucketsForContext(context).includes(bucket as StackBucket)) continue;

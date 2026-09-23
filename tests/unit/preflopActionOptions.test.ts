@@ -3,6 +3,22 @@ import { describe, expect, it } from "vitest";
 import { offeredPreflopActionKeysForContext } from "../../src/core/preflopActionOptions";
 
 describe("preflop action options", () => {
+  it("bere velikost isa i z benevolentní odpovědi, když striktní je limp", () => {
+    // BB proti limpu na 15 bb: zdroj hraje 73s z poloviny jako iso 3,5x a
+    // z poloviny limp, takže striktně je to limp a velikost isa v něm není.
+    // Do 23. 9. 2026 dostalo tlačítko výchozí ISO_25X, kdežto správná odpověď
+    // zněla ISO_3X - hráč tu ruku nemohl zahrát správně, ať klikl na cokoli,
+    // a celá stránka kvůli tomu propadla sítkem (nález vlastníka).
+    expect(offeredPreflopActionKeysForContext("VS_LIMP", "BB", 15, ["LIMP"], ["ISO_3X", "LIMP"]))
+      .toEqual(["LIMP", "ISO_3X", "JAM"]);
+    // Bez benevolentní odpovědi zůstává výchozí velikost, jak byla.
+    expect(offeredPreflopActionKeysForContext("VS_LIMP", "BB", 15, ["LIMP"]))
+      .toEqual(["LIMP", "ISO_25X", "JAM"]);
+    // Striktní odpověď je silnější: co se má hrát vždycky, určuje tlačítko.
+    expect(offeredPreflopActionKeysForContext("VS_LIMP", "BB", 15, ["ISO_25X"], ["ISO_3X"]))
+      .toEqual(["LIMP", "ISO_25X", "JAM"]);
+  });
+
   it("returns the counterfactual actions actually offered for each common node", () => {
     expect(offeredPreflopActionKeysForContext("RFI", "BTN", 25, ["OPEN_2X"]))
       .toEqual(["OPEN_2X", "LIMP", "FOLD"]);

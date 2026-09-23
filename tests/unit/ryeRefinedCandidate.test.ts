@@ -134,6 +134,36 @@ describe("pásmo hloubek: stránka platná od-do obsadí celé pásmo", () => {
     expect(refused.find((row) => row.reason === "duplicateCell")?.detail).toContain("60 bb z pásma");
   });
 
+  /**
+   * Pásma zdroje na sebe nasedají a na 20 bb si odporují: stránka 15-20 tam
+   * jamuje, stránka 20-25 ne. Nález vlastníka z 23. 9. 2026 - do té doby
+   * vyhrávala ta, která byla v draftu dřív, takže odpověď hráče záležela na
+   * pořadí v souboru. Test drží obojí: kdo vyhraje, a že na pořadí nezáleží.
+   */
+  const limpPage = (
+    bucket: number, span: number[], file: string, jam: boolean,
+  ): DraftRecord => grid({
+    context: "VS_LIMP", position: "BB", bucket, vsSeat: "SB", sourceStackBB: bucket,
+    stackSetupId: "BBSTR", sourceFile: file, bucketSpan: span,
+    strict: { AA: ["ISO_3X"], "22": jam ? ["JAM"] : ["LIMP"] },
+    lenient: { AA: ["ISO_3X"], "22": jam ? ["JAM"] : ["LIMP"] },
+  });
+
+  it("na překryvu pásem vyhraje stránka, která tou hloubkou začíná", () => {
+    const shallow = limpPage(15, [15, 20], "BBSTR-vs-SB-Limp-15-20BB.html", true);
+    const deeper = limpPage(20, [20, 25], "BBSTR-vs-SB-Limp-20-25BB.html", false);
+    for (const order of [[shallow, deeper], [deeper, shallow]]) {
+      const { accepted } = selectRefinedRecords(order, history([approved(shallow), approved(deeper)]));
+      const at20 = accepted.filter((row) => row.bucket === 20);
+      expect(at20).toHaveLength(1);
+      // Na 20 bb platí stránka 20-25, tedy ta, která tam nejamuje.
+      expect(at20[0].provenance).toContain("BBSTR-vs-SB-Limp-20-25BB.html");
+      expect(at20[0].strict["22"]).toEqual(["LIMP"]);
+      // A 15 i 25 bb zůstanou obsazené, pásmo se tím neztratí.
+      expect(accepted.map((row) => row.bucket).sort((l, r) => l - r)).toEqual([15, 20, 25]);
+    }
+  });
+
   it("BB proti limpu jde jako VS_LIMP z SB a obsadí své pásmo", () => {
     const limp = grid({
       context: "VS_LIMP", position: "BB", bucket: 20, vsSeat: "SB", sourceStackBB: 20,

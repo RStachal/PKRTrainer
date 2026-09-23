@@ -1,6 +1,6 @@
 {
   "schemaVersion": "PKRTRAINER_NIGHT_PRIORITY_V1",
   "decidedAt": "2026-09-23",
-  "priority": "NEW_FAMILIES",
-  "reason": "přesolv 10a pokračuje, ale jen dvěma rodinami (24 desek ≈ 3 h): čtyři přesolvené rodiny mají rozložených 6 z 12 desek a jejich turn a river pořád stojí na starých ranžích, takže zbytek noci patří rozkladu"
+  "priority": "DECOMPOSITION",
+  "reason": "rozhodnutí vlastníka 3c (23. 9. 2026): nejdřív dorozložit, co je přesolvené. Čtyři přesolvené rodiny mají rozložených 6 z 12 desek, takže si flop a turn uvnitř jedné rodiny odporují; nastagovaných 24 desek bylo vráceno zpět (mtt:resolve-stage --restore=2026-09-23), aby expanze o okno nesoupeřila. Po dorozložení se vrací kadence 3a: dvě rodiny za noc, zbytek rozkladu"
 }

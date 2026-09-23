@@ -336,7 +336,9 @@ const draft = {
   confidence: "LOW",
   assumptions: [
     "Zdroj neuvádí rychlost blindů; draft předpokládá REGULAR.",
-    "Zdroj neuvádí ante; draft předpokládá OFF.",
+    "Zdroj ante neuvádí, ale změřili jsme ho jako ante sadu: push ranže na 10 bb sedí"
+      + " na vlastníkův chart s 10 % ante a jsou o 5-8 bodů širší než Nash bez ante. Draft proto"
+      + " platí pro ante ON a u ante OFF zůstává vlastní export (rozhodnutí vlastníka 7a, 22. 9. 2026).",
     "Hloubka soupeře se do klíče nepromítá - změřeno, že rozpory neodstraní.",
     "Obsah nikdo nečetl; mechanická kontrola pozná rozbitý tvar, ne špatnou hru.",
   ],
