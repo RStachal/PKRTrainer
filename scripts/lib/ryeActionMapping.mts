@@ -121,6 +121,11 @@ const ACTIONS_BY_CONTEXT: ReadonlyMap<MappedContext, ReadonlyMap<string, MappedA
       }],
       ["call / fold vs squeeze", { action: "CALL", lost: "zdroj plánuje složit proti squeezi" }],
       ["call / jam vs squeeze", { action: "CALL", lost: "zdroj plánuje jamnout proti squeezi" }],
+      // Pátý pravopis téhož plánu; na 14 hlubokých stránkách obrany je jediný,
+      // který slovník neznal, a tím padaly celé (naměřeno 24. 9. 2026).
+      ["call / call or jam vs squeeze", {
+        action: "CALL", lost: "zdroj plánuje proti squeezi dorovnat nebo jamnout",
+      }],
     ])],
     // Squeeze: před hrdinou je otevření **a** dorovnání. Velikost v názvu
     // (`to 11bb`) je sizing zdroje; produkt u squeeze jednu akci nerozlišuje
@@ -138,6 +143,12 @@ const ACTIONS_BY_CONTEXT: ReadonlyMap<MappedContext, ReadonlyMap<string, MappedA
       ["squeeze/call range", { action: "SQUEEZE", lost: "zdroj říká, že proti 4betu se dorovnává" }],
       ["squeeze for value but fold", { action: "SQUEEZE", lost: "zdroj říká, že proti 4betu se skládá" }],
       ["bluff squeezes", { action: "SQUEEZE", lost: "zdroj to vede jako bluffovou část range" }],
+      // Multiway stránky píšou barvu jen „Bluff Squeeze to 13bb": po odloupnutí
+      // velikosti a blafu zbude holé `squeeze`, které slovník neznal - a protože
+      // kontext se hledá podle **všech** barev, padala celá stránka. Plán proti
+      // 4betu tu zdroj neuvádí, takže se ani nepředstírá.
+      ["squeeze", { action: "SQUEEZE", lost: "" }],
+      ["3bet/call", { action: "3BET", lost: "zdroj říká, že proti 4betu se dorovnává" }],
     ])],
     // BB proti limpu malého blindu (odpověď vlastníka 2a, 22. 9. 2026).
     //
@@ -419,15 +430,27 @@ export interface RyeSituation {
  * `UTG UTG+1 UTG+2 LJ HJ CO BTN SB BB` seat po seatu. `MP` je tedy **čtvrtá
  * sedačka**, ne skupina, a odmítat ji znamenalo zahodit celou třetinu korpusu.
  *
- * `EP` zůstává nepřeložené a je to jiný případ: objevuje se ve víceslovných
- * multiway zápisech (`BB-vs-EP_MP`), kde označuje ranou pozici obecně, ne
- * konkrétní místo u stolu.
+ * `EP` je **skupina tří sedaček**, ne čtvrtá sedačka jako `MP`: navigace ho
+ * jako místo u stolu neuvádí. Do 23. 9. 2026 zůstávalo nepřeložené a leželo
+ * kvůli tomu **44 stránek** (multiway 36, squeeze 5, BB proti limpu 3) - ve
+ * všech otevírá. Vlastník to rozhodl (2a): **`EP` se čte jako UTG**, tedy
+ * nejranější sedačka z té trojice, a doložil to směrem chyby: obrana postavená
+ * proti UTG je z trojice nejužší, takže hráč dostane spíš opatrnější odpověď
+ * než přehnaně volnou. Opak - vydat tutéž mřížku pro UTG, UTG+1 i UTG+2 - by
+ * tvrdil něco, co zdroj neřekl, a mýlil se ve směru, který je u vlastníka
+ * doložený leak („overfold BvB", příliš mnoho flat callů z blindů).
+ *
+ * Každý záznam z takové stránky to nese v poznámce, ať se na to nezapomene.
  */
 const SEAT_ALIASES = new Map<string, string>([
   ["UTG", "UTG"], ["UTG1", "UTG+1"], ["UTG2", "UTG+2"],
+  ["EP", "UTG"],
   ["MP", "LJ"], ["LJ", "LJ"], ["HJ", "HJ"], ["CO", "CO"],
   ["BU", "BTN"], ["BTN", "BTN"], ["SB", "SB"], ["BB", "BB"],
 ]);
+
+/** Zkratky zdroje, které nejsou sedačka, ale skupina - poznámka to řekne. */
+export const SEAT_GROUP_ALIASES = new Map<string, string>([["EP", "UTG"]]);
 
 /**
  * Situace ze jména souboru, přes obě konvence, které korpus používá.

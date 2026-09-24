@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 import {
-  OWNER_DECISIONS_2026_09_23, OWNER_DECISIONS_2026_09_23_INTRO, renderOwnerDecisionsPage,
+  OWNER_DECISIONS_2026_09_24, OWNER_DECISIONS_2026_09_24_INTRO, renderOwnerDecisionsPage,
 } from "./lib/ownerDecisions.mts";
 
 /**
@@ -22,13 +22,13 @@ const outPath = process.argv.find((arg) => arg.startsWith("--out="))?.split("=")
 // Vykresluje se **nejnovější** sada. Zodpovězená sada ze 17. 9. zůstává
 // v knihovně kvůli otisku: odpovědi, které z ní vznikly, se musí dát přečíst
 // i po přidání dalších otázek.
-const html = renderOwnerDecisionsPage(OWNER_DECISIONS_2026_09_23, {
-  dateLabel: "23. 9. 2026",
-  intro: OWNER_DECISIONS_2026_09_23_INTRO,
-  storageKey: "drillev-decisions-2026-09-23",
+const html = renderOwnerDecisionsPage(OWNER_DECISIONS_2026_09_24, {
+  dateLabel: "24. 9. 2026",
+  intro: OWNER_DECISIONS_2026_09_24_INTRO,
+  storageKey: "drillev-decisions-2026-09-24",
 });
 
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, html, "utf8");
-console.log(`Vykresleno ${OWNER_DECISIONS_2026_09_23.length} rozhodnutí do ${outPath}`);
+console.log(`Vykresleno ${OWNER_DECISIONS_2026_09_24.length} rozhodnutí do ${outPath}`);
 console.log("Otevři to v prohlížeči; stránka je statická a funguje offline.");

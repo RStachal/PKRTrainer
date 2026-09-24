@@ -14,8 +14,21 @@ import { APP_LANGUAGE_STORAGE_KEY } from "../../src/ui/cs";
  *
  * Strop není kontrola správnosti, jen pojistka proti zaseknutí: rozbitý test
  * spadne na tvrzení, ne na čase.
+ *
+ * **Počtvrté 24. 9. 2026, ze stejného důvodu.** Ráno se přegeneroval turn
+ * a river čtyř přesolvených rodin a tříd rukou v nich přibylo o třetinu
+ * (73 285 → 97 442); dodávaného obsahu je dnes 21 MB riveru, 17 MB turnu
+ * a 4,9 MB flopu. Test „MTT preflop gate" startuje aplikaci pro každou
+ * kombinaci formátu, rychlosti a ante, takže dotahování packů platí pokaždé
+ * znovu - a v plné sadě, kde o stroj soupeří ostatní soubory, vypršel.
+ *
+ * Naměřeno týž den: **soubor sám projde celý, 16 testů za 532 s**, z toho
+ * 185 s je transformace packů. Je to tedy zátěž, ne vada, a strop se zvedá
+ * na 240 s. Až tohle přestane stačit, nezvedat ho popáté: to už bude
+ * odpověď na příznak, ne na příčinu, a příčina je, že se při startu relace
+ * dotahuje celá knihovna.
  */
-vi.setConfig({ testTimeout: 90000 });
+vi.setConfig({ testTimeout: 240000 });
 
 class MemoryStorage implements Storage {
   protected readonly data = new Map<string, string>();

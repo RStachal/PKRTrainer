@@ -299,6 +299,17 @@ for (const file of htmlFiles(source).sort()) {
     .filter((mapped) => mapped.lost !== "")
     .map((mapped) => `${mapped.action}: ${mapped.lost}`);
 
+  // Stránka, která místo sedačky jmenuje skupinu, to musí nést s sebou.
+  //
+  // `EP` není čtvrtá sedačka jako `MP`, ale trojice UTG, UTG+1 a UTG+2; čte se
+  // jako UTG (rozhodnutí vlastníka 2a, 23. 9. 2026). Kdyby to záznam
+  // neřekl, vypadal by v draftu jako každý jiný a nikdo by se už nedozvěděl,
+  // že jedna ze tří sedaček byla vybrána za zdroj.
+  if (/(?:^|[-_])EP(?![A-Za-z0-9])/i.test(name)) {
+    notes.push("Zdroj tu jmenuje ranou pozici jako skupinu („EP\u201c), ne sedačku; záznam je "
+      + "veden proti UTG, tedy nejranější z trojice (rozhodnutí vlastníka 2a, 23. 9. 2026).");
+  }
+
   // Stránka, jejíž jméno mluví o pásmu hloubek, si pásmo odnese s sebou -
   // a čtenář se o něm dozví. Bez toho by posuzoval range, jako by platila jen
   // na spodní hranici, a hlubší koše by buď zůstaly prázdné, nebo by se

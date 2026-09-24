@@ -381,6 +381,104 @@ export const OWNER_DECISIONS_2026_09_23: readonly OwnerDecision[] = [
   },
 ];
 
+/**
+ * Otázky z 24. 9. 2026.
+ *
+ * Tři věci, které vyplynuly z noci a z rozhodnutí 2a: kadence nocí nemá kde
+ * bydlet, produkční pack čeká na nové povolení, a multiway squeeze si v klíči
+ * leze do zelí sám se sebou.
+ */
+export const OWNER_DECISIONS_2026_09_24: readonly OwnerDecision[] = [
+  {
+    id: 1,
+    title: "Kadence nocí nemá kde bydlet: `tonight.json` píše stroj, ne ty",
+    context: "Tvoje rozhodnutí 3c („nejdřív dorozložit, co je přesolvené“) jsem zapsal do "
+      + "<code>Agents/daily/tonight.json</code>. Ve 21:00 ho orchestrátor <b>přepsal zpátky</b> na "
+      + "<code>NEW_FAMILIES</code> s odůvodněním z minulého týdne. Noc nakonec dopadla podle tebe, ale "
+      + "<b>jen náhodou</b>: fronta expanze byla prázdná, protože jsem ji ráno vyprázdnil ručně. Kdyby "
+      + "prázdná nebyla, rozklad by ustoupil a tvoje rozhodnutí by se tiše nekonalo. "
+      + "Ten soubor je výstup stroje, ne vstup od tebe - a zatím je to jediné místo, kam se priorita "
+      + "na noc píše.",
+    options: [
+      { code: "a", label: "Tvoje rozhodnutí do zvláštního souboru, který stroj jen čte", detail: "orchestrátor smí přebít jen tam, kde nic neříkáš; co řekneš, platí, dokud to nezměníš." },
+      { code: "b", label: "Nechat na stroji, 3c byla jednorázová výjimka", detail: "dnešní stav; každá další výjimka se musí udělat ručně a může se ztratit." },
+      { code: "c", label: "Ptát se tě každý večer", detail: "nic se neztratí, ale je to jedna otázka denně navíc." },
+    ],
+    recommended: "a",
+    diary: "267",
+  },
+  {
+    id: 2,
+    title: "Produkční pack čeká na nové přečtení povolení - 97 záznamů stojí",
+    context: "Kandidát je hotový a ověřený: <b>97 zpřesněných záznamů</b> a <b>42 obecných nahrazených</b> "
+      + "(z 62 a 8), 601 záznamů celkem, 0 duplicit, <code>valid true, productionReady true</code>. "
+      + "Do modulu ale nesmí, dokud nepřečteš <code>permission.json</code> znovu <b>pro novou verzi</b>: "
+      + "pack mění původ dat, protože vedle tvého vlastního exportu teď stojí koupené charty. "
+      + "Týká se to dvou packů - devítistolový regular a turbo, oba ante ON (podle 7a jinam RYE nepatří).",
+    options: [
+      { code: "a", label: "Schvaluji pro oba ante ON packy", detail: "97 zpřesněných a 42 nahrazených záznamů dojde k hráči; ante OFF zůstává na vlastním exportu." },
+      { code: "b", label: "Zatím jen devítistolový regular", detail: "turbo počká; ověří se to na jednom profilu." },
+      { code: "c", label: "Zatím neschvaluji", detail: "kandidát počká; hráč dostává dál dnešní obsah." },
+    ],
+    recommended: "a",
+    freeText: "Co má v povolení stát navíc, aby ti dávalo smysl i za rok?",
+    diary: "264",
+  },
+  {
+    id: 3,
+    title: "Multiway squeeze: čtyřiadvacet mřížek z 57 by se zahodilo, protože produkt neví, kdo dorovnal",
+    context: "Po tvém 2a („EP = UTG“) a doplnění tří pravopisů do slovníku má draft <b>57 squeeze "
+      + "mřížek</b>, z toho <b>44 multiway</b> (dva a víc dorovnávajících) a 13 proti jednomu. Vejdou se ale "
+      + "jen do <b>33 buněk</b>: produkt má v klíči hrdinu, hloubku a otvírače, kdežto <b>kdo dorovnal, "
+      + "v něm není</b>. U 15 buněk se proto pere víc stránek naráz a při dnešním pravidle „první bere“ by "
+      + "se <b>24 mřížek zahodilo</b> - dvě pětiny toho, co zdroj o squeezi říká. "
+      + "Příklad: <code>BTN 20 bb proti UTG</code> je v korpusu třikrát, pokaždé s jiným dorovnávajícím "
+      + "(CO, EP, MP), a range se mezi nimi liší - proti volnému callerovi se squeezuje jinak než proti "
+      + "těsnému.",
+    options: [
+      { code: "a", label: "Přidat do klíče, kdo dorovnal", detail: "všech 57 mřížek se vejde; drill se musí naučit rozdat i dorovnávajícího a zeptat se na něj." },
+      { code: "b", label: "Nechat „první bere“ a 24 mřížek zahodit", detail: "dnešní chování; obsah se ztratí a o tom, která stránka vyhraje, rozhoduje pořadí v souboru." },
+      { code: "c", label: "Brát jen squeeze proti jednomu dorovnávajícímu", detail: "13 mřížek, žádná kolize; multiway se odloží celé, ale nic se netváří jinak, než je." },
+    ],
+    recommended: "a",
+    diary: "267",
+  },
+  {
+    id: 4,
+    title: "Knihovna roste rychleji než to, co ji obsluhuje - čtvrtá záplata za měsíc",
+    context: "Dodávaného obsahu je dnes <b>21 MB riveru, 17 MB turnu a 4,9 MB flopu</b> a build i testy "
+      + "ho drží v paměti naráz. Za měsíc to vynutilo čtyři zásahy, pokaždé se stejným odůvodněním "
+      + "„vyrostl obsah, ne pomalost kódu“: limit čekání na dashboard 10 → 25 s (24. 8.), limit testu "
+      + "30 → 90 s (25. 8.), a dnes 90 → <b>240 s</b>. K tomu včera <b>spadl produkční build na paměť</b> "
+      + "(11 422 MB proti stropu 12 288 MB); podruhé prošel, ale jen o vlásek. "
+      + "Měřeno dnes: soubor `bootstrapIntegration` sám projde za <b>532 s</b>, z toho 185 s je jen "
+      + "transformace packů - test startuje aplikaci pro každou kombinaci formátu, rychlosti a ante "
+      + "a pokaždé se dotahuje celá knihovna. "
+      + "<b>Zvedat limity dál je odpověď na příznak.</b> Příčina je, že se knihovna načítá celá i tam, "
+      + "kde by nemusela, a s každou přesolvenou rodinou to bude horší - zbývá jich 23.",
+    options: [
+      { code: "a", label: "Líné načítání i pro build a testy", detail: "pack se načte, až když ho někdo chce; práce na jeden až dva bloky, ale limity se přestanou zvedat." },
+      { code: "b", label: "Zvedat limity dál, dokud to jde", detail: "nic se nezdrží teď; příště to bude pátá záplata a build je už o vlásek od stropu." },
+      { code: "c", label: "Omezit, co se dodává", detail: "méně rodin v balíku; hráč dostane míň obsahu, zato se nic nezasekne." },
+    ],
+    recommended: "a",
+    diary: "266",
+  },
+];
+
+/** Úvod stránky k rozhodnutím z 24. 9. 2026. */
+export const OWNER_DECISIONS_2026_09_24_INTRO = `<p><b>Tři otázky.</b> Dvě z nich blokují obsah, který je hotový a čeká.</p>
+<ol>
+<li><b>Hotovo od minulé stránky:</b> tvých 46 mřížek je zpracovaných, tvoje tři nálezy opravené, a
+rozhodnutí 2a („EP = UTG“) zvedlo draft ze 166 na 187 mřížek - squeeze z 11 na 26, multiway ze 3 na 13.</li>
+<li><b>Noc 23./24.</b> rozložila čtyři přesolvené rodiny (467 vrstev) a jejich turn i river jsou
+přegenerované: 2 240 pravidel, tříd 73 285 → 97 442, a doporučení se nezměnilo ani jednou.</li>
+<li><b>Ke čtení máš 54 mřížek</b> (<code>ranze-nove.html</code>): 52 nových a 2, které se od tvého
+schválení překreslily.</li>
+</ol>
+<p>U každé otázky je doporučení a číslo, ze kterého plyne. Vyplň, ulož stránku (Ctrl+S) nebo zkopíruj
+odpovědi tlačítkem, a pošli.</p>`;
+
 /** Úvod stránky k rozhodnutím z 23. 9. 2026. */
 export const OWNER_DECISIONS_2026_09_23_INTRO = `<p><b>Tři otázky z měření zbytku korpusu.</b> Všechny vznikly dnes, když jsem
 zjišťoval, co ze zdroje ještě nikdo nepřečetl.</p>

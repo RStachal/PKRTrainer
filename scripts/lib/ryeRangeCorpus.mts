@@ -109,7 +109,14 @@ export function readRyeGrid(path: string): RyeGrid | undefined {
     // `display: none` znamená barvu, kterou tahle stránka nepoužívá.
     if (/display:\s*none/.test(attributes)) continue;
     const title = /<span class="title">([^<]*)<\/span>/.exec(inner)?.[1]?.trim();
-    const combos = /([\d\s]+)\s*combos?/.exec(inner)?.[1]?.replace(/\s/g, "");
+    // Kombinace umí být psané i s desetinnou tečkou: `flatcall 42.11% (48.00
+    // combos)`. Vzor jen z číslic a mezer z toho přečetl „00", tedy **nulu** -
+    // a protože se mřížka proti legendě ověřuje, celá stránka pak neprošla.
+    // Naměřeno 24. 9. 2026: tahle jediná tečka shodila 117 neshod na 141
+    // odmítnutých stránkách, nejvíc v ICM (65) a HU (24).
+    const combos = /([\d\s]+(?:[.,]\d+)?)\s*combos?/.exec(inner)?.[1]
+      ?.replace(/\s/g, "")
+      .replace(",", ".");
     if (title === undefined || title === "" || combos === undefined) continue;
     legend.push({ color, action: title, combos: Number(combos) });
   }
