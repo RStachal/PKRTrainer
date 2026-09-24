@@ -160,6 +160,7 @@ const REASON_LABEL: Record<RefusalReason, string> = {
   actionNotOffered: "doporučení, které produkt nenabízí",
   notDealt: "sedačka nebo hloubka, na kterou se drill v tom kontextu neptá",
   duplicateCell: "táž buňka, otvírač i scénář podruhé",
+  partialPage: "stránka kreslí jen jednu větev strategie",
 };
 
 console.log("Kandidát $EV packu se scénářem (ICM preview)");

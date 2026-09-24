@@ -464,17 +464,41 @@ export const OWNER_DECISIONS_2026_09_24: readonly OwnerDecision[] = [
     recommended: "a",
     diary: "266",
   },
+  {
+    id: 5,
+    title: "Sedmdesát dva stránek, kde si zdroj protiřečí sám - brát je jako přibližné, nebo je nechat ležet?",
+    context: "Domeřil jsem zbylých 115 odmítnutých stránek korpusu. <b>36 z nich vůbec nejsou ranže</b> "
+      + "(rozcestníky se 169 buňkami a bez legendy), takže skutečný jmenovatel je 500 a ověřených 421 je "
+      + "<b>84,2 %</b>. U zbylých 79 se <b>zdroj rozchází sám se sebou</b>: mřížka namaluje míň, než legenda "
+      + "napočítá. Že to není chyba čtení, se dá ukázat - součet barev a foldu dává na <b>všech 536 mřížkách "
+      + "přesně 1326 kombinací</b>, takže se nic neztrácí, a legenda je sama se sebou v souladu (procento vedle "
+      + "počtu kombinací sedí na ten počet u 65 rozporných položek a na mřížku ani u jedné). "
+      + "Rozdíly jsou přitom <b>malé</b>: u 59 ze 78 drží mřížka přes <b>95 %</b> toho, co legenda tvrdí. "
+      + "Příklad: <code>F3B-30BB-BTN-vs-CO</code> má jam 54 kombinací v mřížce a 60 v legendě - chybí přesně "
+      + "jeden pár a <b>není jak zjistit který</b>. "
+      + "Lepší čtení tady neodemkne nic; odemkne to jen tvoje rozhodnutí, co s takovou stránkou.",
+    options: [
+      { code: "a", label: "Nechat je ležet", detail: "dnešní chování; hráč nedostane nic, co by zdroj netvrdil, a 72 stránek zůstane stranou." },
+      { code: "b", label: "Brát je, když rozdíl drží nad 95 %", detail: "asi 59 stránek navíc; každý záznam ponese poznámku, že mřížka a legenda se u něj rozcházejí." },
+      { code: "c", label: "Brát je všechny, jak jsou", detail: "všech 72; u nejhoršího chybí v mřížce skoro polovina toho, co legenda tvrdí." },
+    ],
+    recommended: "a",
+    diary: "269",
+  },
 ];
 
 /** Úvod stránky k rozhodnutím z 24. 9. 2026. */
-export const OWNER_DECISIONS_2026_09_24_INTRO = `<p><b>Tři otázky.</b> Dvě z nich blokují obsah, který je hotový a čeká.</p>
+export const OWNER_DECISIONS_2026_09_24_INTRO = `<p><b>Pět otázek.</b> Dvě z nich blokují obsah, který je hotový a čeká.</p>
 <ol>
 <li><b>Hotovo od minulé stránky:</b> tvých 46 mřížek je zpracovaných, tvoje tři nálezy opravené, a
-rozhodnutí 2a („EP = UTG“) zvedlo draft ze 166 na 187 mřížek - squeeze z 11 na 26, multiway ze 3 na 13.</li>
+rozhodnutí 2a („EP = UTG“) spolu s třemi doplněnými pravopisy zvedlo draft ze 166 na 220 mřížek -
+squeeze z 11 na 57.</li>
 <li><b>Noc 23./24.</b> rozložila čtyři přesolvené rodiny (467 vrstev) a jejich turn i river jsou
 přegenerované: 2 240 pravidel, tříd 73 285 → 97 442, a doporučení se nezměnilo ani jednou.</li>
-<li><b>Ke čtení máš 54 mřížek</b> (<code>ranze-nove.html</code>): 52 nových a 2, které se od tvého
-schválení překreslily.</li>
+<li><b>Zbytek korpusu je doměřený</b> a vyšla z něj otázka 5: ze 115 odmítnutých stránek jich 36 vůbec
+nejsou ranže, takže ověřených je 84,2 % z 500 - a u zbylých 79 si zdroj protiřečí sám.</li>
+<li><b>Ke čtení máš mřížky</b> v <code>ranze-nove.html</code>; dokud je nepřečteš, squeeze se do packu
+nedostane.</li>
 </ol>
 <p>U každé otázky je doporučení a číslo, ze kterého plyne. Vyplň, ulož stránku (Ctrl+S) nebo zkopíruj
 odpovědi tlačítkem, a pošli.</p>`;
@@ -552,6 +576,19 @@ export function decisionsHash(decisions: readonly OwnerDecision[]): string {
   let hash = 5381;
   for (let index = 0; index < text.length; index += 1) hash = ((hash * 33) ^ text.charCodeAt(index)) >>> 0;
   return hash.toString(16).padStart(8, "0");
+}
+
+/**
+ * Popisek stránky s datem **i časem**, protože jich za den vzniká víc.
+ *
+ * Vlastník 24. 9. 2026: „tyto vždy označuj datumem a časem, ať víme, jaký
+ * soubor chceš“. Ve složce už tou dobou ležely dvě různé dnešní verze pod
+ * stejným jménem. Čas je proto i v nadpisu, ne jen v názvu souboru - jméno se
+ * po stažení ztratí, nadpis zůstane.
+ */
+export function stampLabel(day: string, now: Date = new Date()): string {
+  const pad = (value: number): string => String(value).padStart(2, "0");
+  return `${day} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 }
 
 export function renderOwnerDecisionsPage(

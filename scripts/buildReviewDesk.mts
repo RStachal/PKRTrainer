@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 
 import {
-  OWNER_DECISIONS_2026_09_24, OWNER_DECISIONS_2026_09_24_INTRO, renderOwnerDecisionsPage,
+  OWNER_DECISIONS_2026_09_24, OWNER_DECISIONS_2026_09_24_INTRO, renderOwnerDecisionsPage, stampLabel,
 } from "./lib/ownerDecisions.mts";
 
 /**
@@ -362,7 +362,7 @@ for (const document of rendered) {
 // Rozhodnutí, která nejsou mřížka: od 17. 9. 2026 jedna definice otázek
 // (`lib/ownerDecisions.mts`), tatáž stránka jako `npm run mtt:decisions`.
 writeFileSync(`${outDir}/rozhodnuti.html`, renderOwnerDecisionsPage(OWNER_DECISIONS_2026_09_24, {
-  dateLabel: "24. 9. 2026",
+  dateLabel: stampLabel("24. 9. 2026"),
   intro: OWNER_DECISIONS_2026_09_24_INTRO,
   storageKey: "drillev-decisions-2026-09-24",
 }), "utf8");

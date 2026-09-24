@@ -32,6 +32,8 @@ export interface RyeLegendEntry {
   action: string;
   /** Kolik kombinací té akci legenda přisuzuje. */
   combos: number;
+  /** Procento, které legenda u té akce uvádí. */
+  percent: number;
 }
 
 export interface RyeHandWeight {
@@ -55,6 +57,24 @@ export interface RyeGrid {
    * shodly do jedné kombinace - a jen takový soubor se smí použít.
    */
   mismatches: readonly string[];
+  /**
+   * Stránka kreslí jen **jednu větev** strategie, ne celou.
+   *
+   * Pozná se z legendy samotné: procenta sečtou sto, ale obarvená je zlomek
+   * mřížky - tedy nejsou počítaná z 1326 kombinací, ale ze zvolené podmnožiny.
+   * `SQU-40BBMais-BB-vs-CO-BU-SB` má „Squeeze/call 56,58 % | squeeze/fold
+   * 43,42 %“, dohromady sto procent, a obarvených 4 % mřížky: o zbylých 96 %
+   * rukou ta stránka **neříká nic**. Neobarvená buňka tam neznamená fold,
+   * znamená „tahle stránka to neřeší“.
+   *
+   * Naměřeno 24. 9. 2026: takových je **49 ze 421 ověřených** stránek
+   * (CALLRE 16, HU 16, SQU 10, BBSTR 2, F3B 2, OP 2, PU 1).
+   */
+  partial: boolean;
+  /** Součet procent v legendě; kolem sta u dílčí stránky. */
+  legendPercentSum: number;
+  /** Podíl kombinací, které mřížka vůbec obarví (0 až 1). */
+  colouredShare: number;
 }
 
 /** Kolik kombinací drží třída ruky: pár 6, suited 4, offsuit 12. */
@@ -155,7 +175,14 @@ export function readRyeGrid(path: string): RyeGrid | undefined {
       ?.replace(/\s/g, "")
       .replace(",", ".");
     if (title === undefined || title === "" || combos === undefined) continue;
-    legend.push({ color, action: title, combos: Number(combos) });
+    const percent = /([\d]+(?:[.,][\d]+)?)\s*%/.exec(inner.replace(/<[^>]*>/g, " "))?.[1]
+      ?.replace(",", ".");
+    legend.push({
+      color,
+      action: title,
+      combos: Number(combos),
+      percent: percent === undefined ? Number.NaN : Number(percent),
+    });
   }
 
   const mismatches: string[] = [];
@@ -197,5 +224,17 @@ export function readRyeGrid(path: string): RyeGrid | undefined {
     ?? /<h[1-5][^>]*>([^<]{3,80})<\/h[1-5]>/.exec(text)?.[1]?.trim()
     ?? "";
 
-  return { file: path, title, legend, hands, combosByColor, mismatches };
+  // Kreslí stránka celou strategii, nebo jen jednu větev? Viz `partial`.
+  const legendPercentSum = legend.reduce(
+    (sum, entry) => sum + (Number.isFinite(entry.percent) ? entry.percent : 0),
+    0,
+  );
+  const coloured = [...combosByColor.values()].reduce((sum, value) => sum + value, 0);
+  const colouredShare = coloured / 1326;
+  const partial = Math.abs(legendPercentSum - 100) <= 2 && colouredShare < 0.9;
+
+  return {
+    file: path, title, legend, hands, combosByColor, mismatches,
+    partial, legendPercentSum, colouredShare,
+  };
 }

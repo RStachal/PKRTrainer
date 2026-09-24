@@ -46,6 +46,12 @@ export interface DraftRecord {
   openedShare?: Record<string, number>;
   notes: string[];
   sourceFile: string;
+  /**
+   * Stránka kreslí jen jednu větev strategie (viz `RyeGrid.partial`), takže
+   * neobarvená buňka na ní neznamená fold, ale „o téhle ruce nic neříkám“.
+   * Takový záznam se do packu nepouští.
+   */
+  partial?: true;
 }
 
 export interface DraftFile {

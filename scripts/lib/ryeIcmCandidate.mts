@@ -54,7 +54,7 @@ const SIX_MAX_SEATS = new Set<string>(positionsForFormat("SIX_MAX"));
 function emptyCounts(): Record<RefusalReason, number> {
   return {
     unanswered: 0, rejected: 0, stale: 0, icm: 0, noOpponent: 0, contextNotRefined: 0,
-    actionNotOffered: 0, notDealt: 0, duplicateCell: 0,
+    actionNotOffered: 0, notDealt: 0, duplicateCell: 0, partialPage: 0,
   };
 }
 
@@ -94,6 +94,13 @@ export function selectIcmRecords(
     if (answer === undefined) { refuse(record, "unanswered"); continue; }
     if (answer.verdict !== "sedí") { refuse(record, "rejected", answer.verdict); continue; }
     if (isStale(record, answer)) { refuse(record, "stale", `odpověď z ${answer.readAt}`); continue; }
+    // Dílčí stránka neprojde ani se schválením - viz `RyeGrid.partial`.
+    // Schválení potvrzuje, že mřížka sedí na zdroj, ne že se na zbylých
+    // rukách skládá; ten fold dodává `fillFolds`.
+    if (record.partial === true) {
+      refuse(record, "partialPage", "stránka kreslí jen jednu větev strategie");
+      continue;
+    }
     if (!ICM_CONTEXTS.has(record.context)) { refuse(record, "contextNotRefined", record.context); continue; }
     if (record.vsSeat === "") { refuse(record, "noOpponent"); continue; }
     const context = record.context as ActionContext;

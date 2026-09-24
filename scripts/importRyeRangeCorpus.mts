@@ -104,6 +104,14 @@ interface DraftRecord {
   /** Co se překladem ztratilo, po akcích. Pro člověka, který to bude číst. */
   notes: string[];
   sourceFile: string;
+  /**
+   * Stránka kreslí jen jednu větev strategie, ne celou (viz `RyeGrid.partial`).
+   *
+   * U takové stránky **neobarvená buňka neznamená fold**, ale „tahle stránka
+   * o té ruce nic neříká“. Do packu se proto nesmí dostat: `fillFolds` z ní
+   * udělá fold a hráč by se učil skládat ruce, o kterých zdroj mlčí.
+   */
+  partial?: true;
 }
 
 function htmlFiles(directory: string): string[] {
@@ -299,6 +307,19 @@ for (const file of htmlFiles(source).sort()) {
     .filter((mapped) => mapped.lost !== "")
     .map((mapped) => `${mapped.action}: ${mapped.lost}`);
 
+  // Stránka, která kreslí jen jednu větev, to musí nést s sebou.
+  //
+  // Procenta v její legendě sečtou sto, ale obarvená je jen část mřížky, takže
+  // se nepočítají z 1326 kombinací, ale ze zvolené podmnožiny. O zbylých
+  // rukách tedy neříká nic, a kdyby to záznam nenesl, `fillFolds` by z nich
+  // udělal fold - u `SQU-40BBMais-BB-vs-CO-BU-SB` z 96 % mřížky.
+  if (grid.partial) {
+    notes.push(`Stránka kreslí jen jednu větev strategie: legenda sečte `
+      + `${grid.legendPercentSum.toFixed(0)} %, ale mřížka obarví `
+      + `${(grid.colouredShare * 100).toFixed(1)} % kombinací. O zbytku rukou zdroj nic netvrdí, `
+      + "takže se záznam do packu nepouští.");
+  }
+
   // Stránka, která místo sedačky jmenuje skupinu, to musí nést s sebou.
   //
   // `EP` není čtvrtá sedačka jako `MP`, ale trojice UTG, UTG+1 a UTG+2; čte se
@@ -339,6 +360,7 @@ for (const file of htmlFiles(source).sort()) {
     ...(Object.keys(openedShare).length > 0 ? { openedShare } : {}),
     notes: [...new Set(notes)].sort(),
     sourceFile: name,
+    ...(grid.partial ? { partial: true as const } : {}),
   });
 }
 

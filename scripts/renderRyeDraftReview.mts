@@ -471,9 +471,24 @@ const legend = Object.entries(COLORS)
   + '<span class="key"><i class="part c" style="background:#556"></i>šrafování: u čelení 3betu ruka,'
   + ' kterou zdroj otevírá jen zčásti - odpověď platí, když se otevřela</span>';
 
+/**
+ * Kdy stránka vznikla, s přesností na minuty.
+ *
+ * Draft se za den staví víckrát a vlastník čte offline, takže potřebuje na
+ * první pohled poznat, kterou verzi má otevřenou. Datum na to nestačí -
+ * 24. 9. 2026 jich vzniklo několik. Stojí to i v názvu souboru, jenže ten se
+ * po stažení nebo přeposlání ztratí; nadpis zůstane.
+ */
+const pageStamp = (() => {
+  const now = new Date();
+  const pad = (value: number): string => String(value).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} `
+    + `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+})();
+
 const html = `<!doctype html>
 <html lang="cs"><head><meta charset="utf-8">
-<title>DrillEV – draft ranží ke kontrole</title>
+<title>DrillEV – draft ranží ke kontrole (${pageStamp})</title>
 <style>
  body{font:14px/1.5 system-ui,sans-serif;margin:24px;background:#12161f;color:#e8eef7}
  h1{font-size:20px;margin:0 0 4px}
@@ -528,7 +543,7 @@ ${REVIEW_ANSWER_STYLES}
  }
 </style></head><body>
 ${reviewAnswerBar()}
-<h1>Draft ranží ke kontrole</h1>
+<h1>Draft ranží ke kontrole <small style="font-weight:400;color:#9fb3cd">${pageStamp}</small></h1>
 <div class="intro">
 <p><b>${draft.recordCount} záznamů</b>, vytvořeno ${escapeHtml(draft.createdAt)}, důvěra
    <b>${escapeHtml(draft.confidence)}</b>. Nic z toho zatím není v produktu.</p>

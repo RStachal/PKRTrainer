@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 import {
-  OWNER_DECISIONS_2026_09_24, OWNER_DECISIONS_2026_09_24_INTRO, renderOwnerDecisionsPage,
+  OWNER_DECISIONS_2026_09_24, OWNER_DECISIONS_2026_09_24_INTRO, renderOwnerDecisionsPage, stampLabel,
 } from "./lib/ownerDecisions.mts";
 
 /**
@@ -23,7 +23,7 @@ const outPath = process.argv.find((arg) => arg.startsWith("--out="))?.split("=")
 // v knihovně kvůli otisku: odpovědi, které z ní vznikly, se musí dát přečíst
 // i po přidání dalších otázek.
 const html = renderOwnerDecisionsPage(OWNER_DECISIONS_2026_09_24, {
-  dateLabel: "24. 9. 2026",
+  dateLabel: stampLabel("24. 9. 2026"),
   intro: OWNER_DECISIONS_2026_09_24_INTRO,
   storageKey: "drillev-decisions-2026-09-24",
 });

@@ -216,6 +216,7 @@ const REASON_LABEL: Record<RefusalReason, string> = {
   actionNotOffered: "doporučení, které produkt nenabízí",
   notDealt: "sedačka nebo hloubka, na kterou se drill v tom kontextu neptá",
   duplicateCell: "táž buňka a otvírač podruhé",
+  partialPage: "stránka kreslí jen jednu větev strategie",
 };
 
 console.log("Kandidát produkčního packu se zpřesněnými záznamy");

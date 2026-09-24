@@ -44,7 +44,8 @@ export type RefusalReason =
   | "contextNotRefined"
   | "actionNotOffered"
   | "notDealt"
-  | "duplicateCell";
+  | "duplicateCell"
+  | "partialPage";
 
 export interface Refusal {
   sourceFile: string;
@@ -157,7 +158,7 @@ export function selectGeneralOverrides(
   const refused: Refusal[] = [];
   const counts: Record<RefusalReason, number> = {
     unanswered: 0, rejected: 0, stale: 0, icm: 0, noOpponent: 0, contextNotRefined: 0,
-    actionNotOffered: 0, notDealt: 0, duplicateCell: 0,
+    actionNotOffered: 0, notDealt: 0, duplicateCell: 0, partialPage: 0,
   };
   const takenCells = new Map<string, string>();
   const refuse = (record: DraftRecord, reason: RefusalReason, detail = ""): void => {
@@ -173,6 +174,17 @@ export function selectGeneralOverrides(
     if (answer === undefined) { refuse(record, "unanswered"); continue; }
     if (answer.verdict !== "sedí") { refuse(record, "rejected", answer.verdict); continue; }
     if (isStale(record, answer)) { refuse(record, "stale", `odpověď z ${answer.readAt}`); continue; }
+    // Dílčí stránka neprojde ani se schválením.
+    //
+    // Schválení říká „mřížka sedí na zdroj“, a to je pravda - jenže u stránky,
+    // která kreslí jen jednu větev, se tím neschvaluje fold na zbylých rukách.
+    // Ten do záznamu dodává `fillFolds`, ne zdroj a ne čtenář. Naměřeno
+    // 24. 9. 2026: v kandidátu měl squeeze záznam **157 ze 169 tříd jako FOLD**
+    // (92,9 %) z mřížky, která obarvila 4 % kombinací.
+    if (record.partial === true) {
+      refuse(record, "partialPage", "stránka kreslí jen jednu větev strategie");
+      continue;
+    }
     if (/^ICM/i.test(record.stackSetupId)) { refuse(record, "icm", record.stackSetupId); continue; }
     if (!positionsForContext(context).includes(record.position as Position)
       || !bucketsForContext(context).includes(record.bucket as StackBucket)) {
@@ -212,7 +224,7 @@ export function selectRefinedRecords(
   const refused: Refusal[] = [];
   const counts: Record<RefusalReason, number> = {
     unanswered: 0, rejected: 0, stale: 0, icm: 0, noOpponent: 0, contextNotRefined: 0,
-    actionNotOffered: 0, notDealt: 0, duplicateCell: 0,
+    actionNotOffered: 0, notDealt: 0, duplicateCell: 0, partialPage: 0,
   };
   const takenCells = new Map<string, string>();
   // Stránky s pásmem hloubek počkají na druhý průchod (viz níž).
@@ -234,6 +246,17 @@ export function selectRefinedRecords(
     if (answer === undefined) { refuse(record, "unanswered"); continue; }
     if (answer.verdict !== "sedí") { refuse(record, "rejected", answer.verdict); continue; }
     if (isStale(record, answer)) { refuse(record, "stale", `odpověď z ${answer.readAt}`); continue; }
+    // Dílčí stránka neprojde ani se schválením.
+    //
+    // Schválení říká „mřížka sedí na zdroj“, a to je pravda - jenže u stránky,
+    // která kreslí jen jednu větev, se tím neschvaluje fold na zbylých rukách.
+    // Ten do záznamu dodává `fillFolds`, ne zdroj a ne čtenář. Naměřeno
+    // 24. 9. 2026: v kandidátu měl squeeze záznam **157 ze 169 tříd jako FOLD**
+    // (92,9 %) z mřížky, která obarvila 4 % kombinací.
+    if (record.partial === true) {
+      refuse(record, "partialPage", "stránka kreslí jen jednu větev strategie");
+      continue;
+    }
     if (/^ICM/i.test(record.stackSetupId)) { refuse(record, "icm", record.stackSetupId); continue; }
     if (!REFINED_CONTEXTS.has(record.context)) { refuse(record, "contextNotRefined", record.context); continue; }
     if (record.vsSeat === "") { refuse(record, "noOpponent"); continue; }

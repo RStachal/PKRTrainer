@@ -51,6 +51,26 @@ describe("výběr zpřesněných záznamů", () => {
     expect(Object.keys(out.lenient)).toHaveLength(ALL_HAND_CLASSES.length);
   });
 
+  it("dílčí stránka neprojde ani schválená - fold na zbytku rukou zdroj netvrdí", () => {
+    // Stránka, jejíž legenda sečte sto procent na obarvené desetině mřížky,
+    // popisuje jednu větev strategie. Schválení říká „mřížka sedí na zdroj“,
+    // ne „na zbylých rukách se skládá“ - ten fold dodává `fillFolds`.
+    // Naměřeno 24. 9. 2026: devět takových záznamů bylo v draftu, šest z nich
+    // schválených, a do packu by šly se 143 až 159 ze 169 tříd jako FOLD.
+    const record = grid({
+      sourceFile: "SQU-40BBMais-BU-vs-EP-MP.html",
+      context: "SQUEEZE",
+      position: "BTN",
+      vsSeat: "UTG",
+      bucket: 40,
+      partial: true,
+    });
+    const { accepted, refused } = selectRefinedRecords([record], history([approved(record)]));
+    expect(accepted).toEqual([]);
+    expect(refused).toHaveLength(1);
+    expect(refused[0].reason).toBe("partialPage");
+  });
+
   it("BB proti SB jde jako VS_OPEN z SB - rozhodnutí vlastníka 16. 9. 2026 držet RYE", () => {
     const bvb = grid({ sourceFile: "F3B-20BB-BB-vs-SB.html", vsSeat: "SB" });
     const { accepted, refused } = selectRefinedRecords([bvb], history([approved(bvb)]));
@@ -84,7 +104,7 @@ describe("výběr zpřesněných záznamů", () => {
     expect(accepted.map((record) => record.provenance)).toHaveLength(1);
     expect(counts).toEqual({
       unanswered: 1, rejected: 1, stale: 1, icm: 1, noOpponent: 0, contextNotRefined: 1,
-      actionNotOffered: 1, notDealt: 1, duplicateCell: 1,
+      actionNotOffered: 1, notDealt: 1, duplicateCell: 1, partialPage: 0,
     });
     expect(refused.find((row) => row.reason === "actionNotOffered")?.detail).toContain("AA:JAM");
     expect(refused.find((row) => row.reason === "duplicateCell")?.detail).toContain("F3B-20BB-BB-vs-BTN.html");
