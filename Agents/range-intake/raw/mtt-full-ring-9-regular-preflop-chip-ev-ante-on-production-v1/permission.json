@@ -1,7 +1,7 @@
 {
   "packId": "mtt-full-ring-9-regular-preflop-chip-ev-ante-on-production-v1",
-  "version": "permission-user-confirmed-v2",
-  "reviewedAt": "2026-09-17",
+  "version": "permission-user-confirmed-v3",
+  "reviewedAt": "2026-09-24",
   "reviewer": "PKRTrainer owner (user-confirmed)",
   "rightsOwner": "PKRTrainer owner (user-confirmed owned solver export)",
   "licenseKind": "OWNED_SOLVER_EXPORT",
@@ -11,14 +11,20 @@
   "notes": [
     "User confirmed: source is owned solver export.",
     "User confirmed right to distribute in PKRTrainer runtime bundle.",
-    "User confirmed 2026-09-17: refined records (vsSeat) derived from the owner's purchased RYE Rangeviewer 2021 charts may ship in this profile's runtime bundle (reuse across ante/blind speed); see additionalSources."
+    "User confirmed 2026-09-17: refined records (vsSeat) derived from the owner's purchased RYE Rangeviewer 2021 charts may ship in this profile's runtime bundle (reuse across ante/blind speed); see additionalSources.",
+    "User confirmed 2026-09-24 (own words): RYE Rangeviewer is paid for and may be used for this product's development; the ranges themselves may be used unchanged, but the visual presentation must not be 1:1 with the source - different colour scaling and similar, enough to differ visibly, while the range content stays as it is."
   ],
   "additionalSources": [
     {
       "source": "RYE Rangeviewer 2021 (koupené charty vlastníka)",
-      "reviewedAt": "2026-09-17",
+      "reviewedAt": "2026-09-24",
       "reviewer": "PKRTrainer owner (user-confirmed)",
-      "rationale": "Vlastník 16. 9. 2026 zdroj uznal (RYE je reference) a 17. 9. 2026 rozhodl, že zpřesněné záznamy (vsSeat) jdou i do ante ON a turbo profilů - zdroj ante ani rychlost blindů neuvádí, jde o rozhodnutí o rozsahu (reuse). Přenášejí se seznamy akcí po třídách rukou (strict/lenient), ne obrázky ani soubory zdroje; každý záznam nese provenance."
+      "rationale": "Vlastník 16. 9. 2026 zdroj uznal (RYE je reference), 17. 9. 2026 rozhodl o rozsahu (reuse přes ante a rychlost blindů) a **24. 9. 2026 to potvrdil sám, vlastními slovy**: „zde máme RYE zaplaceno a můžeme použít pro náš vývoj, jen grafická - vizuální podoba nemůže být 1:1, ale musíme použít jiné barevné škálování atp, prostě se lehce odlišit, ale ne v rozsahu range.“ Přenášejí se seznamy akcí po třídách rukou (strict/lenient), ne obrázky ani soubory zdroje; každý záznam nese provenance.",
+      "conditions": [
+        "Rozsah range se nemění - obsah jde ze zdroje tak, jak je.",
+        "Vizuální podoba se musí lišit: jiné barevné škálování matice než má zdroj, ne kopie 1:1.",
+        "Vlastník 24. 9. 2026 mluví o užití pro vývoj tohoto produktu; rozsah za hranicí vývoje (placené vydání) tím není pokrytý a je potřeba se na něj zeptat zvlášť."
+      ]
     }
   ]
 }

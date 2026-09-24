@@ -84,6 +84,25 @@ interface CategoryDef {
 /**
  * Mapa kategorií na popisek + barvu. Fold je záměrně neutrální (šedá) a
  * vizuálně odlišený od všech akčních kategorií (Req 10.2).
+ *
+ * ## Proč se paleta nesmí přiblížit zdroji
+ *
+ * Část ranží pochází z vlastníkových koupených chartů RYE Rangeviewer. Vlastník
+ * 24. 9. 2026 určil rozsah toho užití: *„zde máme RYE zaplaceno a můžeme použít
+ * pro náš vývoj, jen grafická - vizuální podoba nemůže být 1:1, ale musíme
+ * použít jiné barevné škálování atp, prostě se lehce odlišit, ale ne v rozsahu
+ * range.“* Obsah ranží tedy zůstává, jak je; podoba se musí lišit.
+ *
+ * Zdroj maluje mřížku paletou Material Design (`mdl-color--green` a spol.).
+ * Změřeno týž den: čtyři naše barvy k ní ležely blíž, než je práh splývání -
+ * `JAM` byla od `red` vzdálená **35**, `4BET` 56, `CALL_JAM` 57, `3BET` 68.
+ * Posunuly se tak, aby každá byla aspoň **70** od každé barvy zdroje a zároveň
+ * aspoň **60** od ostatních našich, jinak by se matice stala nečitelnou.
+ * Posun je 40, tedy nad prahem splývání: změna je vidět, ale význam zůstal
+ * (jam je dál červený, 3bet oranžový, call all-in tmavě modrý).
+ *
+ * Hlídá to `rangeMatrixPalette.test.ts`, aby se nová barva nedala přidat
+ * nedopatřením tak, že na zdroj zase sedne.
  */
 const CATEGORIES: Record<ActionCategory, CategoryDef> = {
   FOLD: { label: "Fold", color: "#3a3f4b" },
@@ -92,12 +111,23 @@ const CATEGORIES: Record<ActionCategory, CategoryDef> = {
   OVERLIMP: { label: "Over-limp", color: "#1c7d77" },
   OPEN: { label: "Open / RFI", color: "#2bd576" },
   ISO: { label: "Iso-raise", color: "#7bd86a" },
-  "3BET": { label: "3bet", color: "#f0922b" },
+  "3BET": { label: "3bet", color: "#dc8830" },
   SQUEEZE: { label: "Squeeze", color: "#9b6cf0" },
-  "4BET": { label: "4bet", color: "#d9512b" },
-  JAM: { label: "All-in (jam)", color: "#e23b3b" },
-  CALL_JAM: { label: "Call all-in", color: "#274b9b" },
+  "4BET": { label: "4bet", color: "#c44c20" },
+  JAM: { label: "All-in (jam)", color: "#cc3440" },
+  CALL_JAM: { label: "Call all-in", color: "#243894" },
 };
+
+/**
+ * Barvy matice pro bránu nad podobou - viz komentář u `CATEGORIES`.
+ *
+ * Je to export kvůli testu, ne kvůli dalšímu použití: podmínka vlastníka
+ * o odlišení od zdroje se musí dát ověřit, jinak ji příští přidaná barva tiše
+ * poruší.
+ */
+export const RANGE_MATRIX_COLORS: Readonly<Record<string, string>> = Object.freeze(
+  Object.fromEntries(Object.entries(CATEGORIES).map(([key, def]) => [key, def.color])),
+);
 
 /**
  * Priorita kategorií pro výběr zobrazené barvy, má-li ruka více doporučených
